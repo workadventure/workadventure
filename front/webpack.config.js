@@ -6,6 +6,8 @@ module.exports = {
     devtool: 'inline-source-map',
     devServer: {
         contentBase: './dist',
+        host: '0.0.0.0',
+        disableHostCheck: true,
     },
     module: {
         rules: [
@@ -26,6 +28,7 @@ module.exports = {
     plugins: [
         new webpack.ProvidePlugin({
             Phaser: 'phaser'
-        })
+        }),
+        new webpack.EnvironmentPlugin(['API_URL'])
     ]
 };

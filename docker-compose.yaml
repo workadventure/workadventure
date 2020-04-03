@@ -1,0 +1,25 @@
+version: "3"
+services:
+  reverse-proxy:
+    image: traefik:v2.0
+    command: --api.insecure=true --providers.docker
+    ports:
+      - "80:80"
+      # The Web UI (enabled by --api.insecure=true)
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  front:
+    image: thecodingmachine/nodejs:12
+    environment:
+      HOST: "0.0.0.0"
+      NODE_ENV: development
+      API_URL: http://api.workadventure.localhost
+      STARTUP_COMMAND_1: yarn install
+    command: yarn run start
+    volumes:
+      - ./front:/usr/src/app
+    labels:
+      - "traefik.http.routers.front.rule=Host(`workadventure.localhost`)"
+      - "traefik.http.services.front.loadbalancer.server.port=8080"
