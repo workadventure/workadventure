@@ -28,6 +28,8 @@ jobs:
 
       - name: "Build"
         run: yarn run build
+        env:
+          API_URL: "http://localhost:8080"
         working-directory: "front"
 
   continuous-integration-back:
