@@ -55,7 +55,7 @@ let createGroups = function(distances) {
                 groups[i] = [];
             }
 
-            if(groups[i].indexOf(dist.first) && typeof alreadyInGroup[dist.first.id] === 'undefined') {
+            if(!groups[i].indexOf(dist.first) && typeof alreadyInGroup[dist.first.id] === 'undefined') {
                 groups[i].push(dist.first);
                 alreadyInGroup [dist.first.id] = true;
             }
@@ -69,7 +69,7 @@ let createGroups = function(distances) {
                 continue;
             }
 
-            if(groups[i].indexOf(dist.second) && typeof alreadyInGroup[dist.second.id] === 'undefined') {
+            if(!groups[i].indexOf(dist.second) && typeof alreadyInGroup[dist.second.id] === 'undefined') {
                 groups[i].push(dist.second);
                 alreadyInGroup [dist.second.id] = true;
             }
