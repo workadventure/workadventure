@@ -1,0 +1,80 @@
+# encoding: utf-8
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+# Box / OS
+VAGRANT_BOX = 'bento/ubuntu-19.10'
+
+# VM User — 'vagrant' by default
+VM_USER = 'vagrant'
+
+VM_NAME = 'workadventure'
+VM_GUEST_PATH = '/opt/workadventure'
+VM_HOST_PATH = '#VM_HOST_PATH#'
+
+# # VM Port — uncomment this to use NAT instead of DHCP
+# VM_PORT = 8080
+Vagrant.configure(2) do |config|
+  # Vagrant box from Hashicorp
+  config.vm.box = VAGRANT_BOX
+
+  # Actual machine name
+  config.vm.hostname = VM_NAME
+
+  # Set VM name in Virtualbox
+  config.vm.provider "virtualbox" do |v|
+    v.name = VM_NAME
+    v.memory = 8192
+    v.cpus = 4
+  end
+
+  #DHCP — comment this out if planning on using NAT instead
+  #config.vm.network "private_network", type: "dhcp"
+  config.vm.network :forwarded_port, guest: 80, host: 80
+  config.vm.network :forwarded_port, guest: 8080, host: 8080
+
+  # Sync folder
+  config.vm.synced_folder VM_HOST_PATH, VM_GUEST_PATH
+    #,type: "smb"
+    #if you push directly credential to access at your sharing file, you can use :
+    #,smb_password: "#MAC_PASSWORD#"
+    #,smb_username: "#MAC_USER#"
+    #,mount_options: [ "username=#MAC_USER#", "password=#MAC_PASSWORD#" ]
+
+  # Disable default Vagrant folder, use a unique path per project
+  config.vm.synced_folder '.', '/home/'+VM_USER+'', disabled: true
+
+  # Use config of you local machine for root user
+  #config.vm.provision "file", source: "~/.ssh/id_rsa", destination: '/home/'+VM_USER+'/.ssh/id_rsa'
+  #config.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: '/home/'+VM_USER+'/.ssh/id_rsa.pub'
+  #config.vm.provision "file", source: "~/.ssh/known_hosts", destination: '/home/'+VM_USER+'/.ssh/known_hosts'
+  #config.vm.provision "file", source: "~/.bash_profile", destination: '/home/'+VM_USER+'/.bash_profile'
+  #config.vm.provision "file", source: "~/.gitconfig", destination: '/home/'+VM_USER+'/.gitconfig'
+
+  #Install package for your VM
+  config.vm.provision "shell",
+  env: {"VM_GUEST_PATH" => VM_GUEST_PATH},
+  inline: <<-SHELL
+    echo
+    apt-get update -y
+    apt-get install -y git
+    apt-get install -y apt-transport-https
+    apt-get install -y build-essential
+    apt-get install -y curl
+    apt-get install -y gnupg-agent
+    apt-get install -y software-properties-common
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+    apt-key fingerprint 0EBFCD88
+    add-apt-repository \
+       "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+       $(lsb_release -cs) \
+       stable"
+    apt-get update -y
+    apt-get install -y docker-ce docker-ce-cli containerd.io
+    curl -L "https://github.com/docker/compose/releases/download/1.25.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    chmod +x /usr/local/bin/docker-compose
+    ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+    usermod -aG docker vagrant
+    newgrp docker
+    echo "cd ${VM_GUEST_PATH}" >> /home/vagrant/.bashrc
+  SHELL
+end
