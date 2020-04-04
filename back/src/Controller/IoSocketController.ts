@@ -41,8 +41,8 @@ export class IoSocketController{
 
             socket.on('join-room', (message : string) => {
                 let messageUserPosition = this.hydrateMessageReceive(message);
-                if(!messageUserPosition){
-                    return socket.emit("message-error", JSON.stringify({message: "Error format message"}))
+                if(messageUserPosition instanceof Error){
+                    return socket.emit("message-error", JSON.stringify({message: messageUserPosition.message}))
                 }
                 //join user in room
                 socket.join(messageUserPosition.roomId);
@@ -53,8 +53,8 @@ export class IoSocketController{
 
             socket.on('user-position', (message : string) => {
                 let messageUserPosition = this.hydrateMessageReceive(message);
-                if(!messageUserPosition){
-                    return socket.emit("message-error", JSON.stringify({message: "Error format message"}));
+                if(messageUserPosition instanceof Error){
+                    return socket.emit("message-error", JSON.stringify({message: messageUserPosition.message}));
                 }
                 // sending to all clients in room except sender
                 this.saveUserPosition((socket as ExSocketInterface), messageUserPosition);
@@ -69,12 +69,12 @@ export class IoSocketController{
     }
 
     //Hydrate and manage error
-    hydrateMessageReceive(message : string) : MessageUserPosition | null{
+    hydrateMessageReceive(message : string) : MessageUserPosition | Error{
         try {
             return new MessageUserPosition(message);
         }catch (err) {
             //TODO log error
-            return null;
+            return new Error(err);
         }
     }
 }
