@@ -2,7 +2,7 @@
 
 ## Login
 To start your game, you must authenticate on the server back.
-When you are authenticated, the back server return token and rooms started.
+When you are authenticated, the back server return token and room starting.
 ```
 POST => /login 
 Params : 
