@@ -1,11 +1,10 @@
 import socketIO = require('socket.io');
 import {Socket} from "socket.io";
 import * as http from "http";
-import {MessageUserPosition} from "../Model/Websocket/MessageUserPosition"; //TODO fix to use "_Model/.."
-import {ExSocketInterface} from "../Model/Websocket/ExSocketInterface"; //TODO fix to use "_Model/.."
+import {MessageUserPosition} from "../Model/Websocket/MessageUserPosition"; //TODO fix import by "_Model/.."
+import {ExSocketInterface} from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
 import Jwt, {JsonWebTokenError} from "jsonwebtoken";
-
-const SECRET_KEY = process.env.SECRET_KEY || "THECODINGMACHINE_SECRET_KEY";
+import {SECRET_KEY} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 
 export class IoSocketController{
     Io: socketIO.Server;
@@ -39,8 +38,13 @@ export class IoSocketController{
                         x: user x position on map
                         y: user y position on map
             */
+
             socket.on('join-room', (message : string) => {
-                let messageUserPosition = new MessageUserPosition(message);
+                let messageUserPosition = this.hydrateMessageReceive(message);
+                if(!messageUserPosition){
+                    return socket.emit("message-error", JSON.stringify({message: "Error format message"}))
+                }
+                //join user in room
                 socket.join(messageUserPosition.roomId);
                 // sending to all clients in room except sender
                 this.saveUserPosition((socket as ExSocketInterface), messageUserPosition);
@@ -48,7 +52,10 @@ export class IoSocketController{
             });
 
             socket.on('user-position', (message : string) => {
-                let messageUserPosition = new MessageUserPosition(message);
+                let messageUserPosition = this.hydrateMessageReceive(message);
+                if(!messageUserPosition){
+                    return socket.emit("message-error", JSON.stringify({message: "Error format message"}));
+                }
                 // sending to all clients in room except sender
                 this.saveUserPosition((socket as ExSocketInterface), messageUserPosition);
                 socket.to(messageUserPosition.roomId).emit('join-room', messageUserPosition.toString());
@@ -59,5 +66,15 @@ export class IoSocketController{
     //permit to save user position in socket
     saveUserPosition(socket : ExSocketInterface, message : MessageUserPosition){
         socket.position = message.position;
+    }
+
+    //Hydrate and manage error
+    hydrateMessageReceive(message : string) : MessageUserPosition | null{
+        try {
+            return new MessageUserPosition(message);
+        }catch (err) {
+            //TODO log error
+            return null;
+        }
     }
 }
