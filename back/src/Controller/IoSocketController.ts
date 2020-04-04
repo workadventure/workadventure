@@ -26,6 +26,7 @@ export class IoSocketController{
         });
 
         this.ioConnection();
+        this.shareUsersPosition();
     }
 
     ioConnection() {
@@ -38,7 +39,6 @@ export class IoSocketController{
                         x: user x position on map
                         y: user y position on map
             */
-
             socket.on('join-room', (message : string) => {
                 let messageUserPosition = this.hydrateMessageReceive(message);
                 if(messageUserPosition instanceof Error){
@@ -47,7 +47,7 @@ export class IoSocketController{
                 //join user in room
                 socket.join(messageUserPosition.roomId);
                 // sending to all clients in room except sender
-                this.saveUserPosition((socket as ExSocketInterface), messageUserPosition);
+                this.saveUserInformation((socket as ExSocketInterface), messageUserPosition);
                 socket.to(messageUserPosition.roomId).emit('join-room', messageUserPosition.toString());
             });
 
@@ -57,15 +57,17 @@ export class IoSocketController{
                     return socket.emit("message-error", JSON.stringify({message: messageUserPosition.message}));
                 }
                 // sending to all clients in room except sender
-                this.saveUserPosition((socket as ExSocketInterface), messageUserPosition);
+                this.saveUserInformation((socket as ExSocketInterface), messageUserPosition);
                 socket.to(messageUserPosition.roomId).emit('join-room', messageUserPosition.toString());
             });
         });
     }
 
     //permit to save user position in socket
-    saveUserPosition(socket : ExSocketInterface, message : MessageUserPosition){
+    saveUserInformation(socket : ExSocketInterface, message : MessageUserPosition){
         socket.position = message.position;
+        socket.roomId = message.roomId;
+        socket.userId = message.userId;
     }
 
     //Hydrate and manage error
@@ -76,5 +78,62 @@ export class IoSocketController{
             //TODO log error
             return new Error(err);
         }
+    }
+
+    /** permit to share user position
+        ** users position will send in event 'user-position'
+        ** The data sent is an array with information for each user :
+        [
+          {
+            userId: <string>,
+            roomId: <string>,
+            position: {
+                x : <number>,
+                y : <number>
+            }
+          },
+          ...
+        ]
+     **/
+    seTimeOutInProgress : any = null;
+    shareUsersPosition(){
+        if(!this.seTimeOutInProgress) {
+            clearTimeout(this.seTimeOutInProgress);
+        }
+        let clients = this.Io.clients();
+        let socketsKey = Object.keys(this.Io.clients().sockets);
+
+        //create mapping with all users in all rooms
+        let mapPositionUserByRoom = new Map();
+        for(let i = 0; i < socketsKey.length; i++){
+            let socket = clients.sockets[socketsKey[i]];
+            if(!(socket as ExSocketInterface).position){
+                continue;
+            }
+            let data = {
+                userId : (socket as ExSocketInterface).userId,
+                roomId : (socket as ExSocketInterface).roomId,
+                position : (socket as ExSocketInterface).position,
+            };
+            let dataArray = <any>[];
+            if(mapPositionUserByRoom.get(data.roomId)){
+                dataArray = mapPositionUserByRoom.get(data.roomId);
+                dataArray.push(data);
+            }else{
+                dataArray = [data];
+            }
+            mapPositionUserByRoom.set(data.roomId, dataArray);
+        }
+
+        //send for each room, all data of position user
+        let arrayMap = Array.from(mapPositionUserByRoom);
+        arrayMap.forEach((value) => {
+            let roomId = value[0];
+            let data = value[1];
+            this.Io.in(roomId).emit('user-position', JSON.stringify(data));
+        });
+        this.seTimeOutInProgress = setTimeout(() => {
+            this.shareUsersPosition();
+        }, 10);
     }
 }
