@@ -32,6 +32,10 @@ jobs:
           API_URL: "http://localhost:8080"
         working-directory: "front"
 
+      - name: "Lint"
+        run: yarn run lint
+        working-directory: "front"
+
   continuous-integration-back:
     name: "Continuous Integration Back"
 
