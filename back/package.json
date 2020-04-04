@@ -14,7 +14,7 @@
     "url": "git+https://github.com/thecodingmachine/workadventure.git"
   },
   "author": "g.parant@thecodingmachine.com",
-  "license": "ISC",
+  "license": "AGPL",
   "bugs": {
     "url": "https://github.com/thecodingmachine/workadventure/issues"
   },
