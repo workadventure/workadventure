@@ -29,6 +29,7 @@ services:
     command: yarn dev
     environment:
       STARTUP_COMMAND_1: yarn install
+      SECRET_KEY: yourSecretKey
     volumes:
       - ./back:/usr/src/app
     labels:
