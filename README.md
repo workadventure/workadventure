@@ -1,3 +1,5 @@
+![](https://github.com/thecodingmachine/workadventure/workflows/Continuous%20Integration/badge.svg)
+
 # Work Adventure
 
 ## Work in progress

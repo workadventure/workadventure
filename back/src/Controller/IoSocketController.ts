@@ -11,7 +11,7 @@ export class IoSocketController{
     constructor(server : http.Server) {
         this.Io = socketIO(server);
 
-        //authentication with token. it will be decodes and stock in socket.
+        // Authentication with token. it will be decoded and stored in the socket.
         this.Io.use( (socket: Socket, next) => {
             if (!socket.handshake.query || !socket.handshake.query.token) {
                 return next(new Error('Authentication error'));
