@@ -23,3 +23,14 @@ services:
     labels:
       - "traefik.http.routers.front.rule=Host(`workadventure.localhost`)"
       - "traefik.http.services.front.loadbalancer.server.port=8080"
+
+  back:
+    image: thecodingmachine/nodejs:12
+    command: yarn dev
+    environment:
+      STARTUP_COMMAND_1: yarn install
+    volumes:
+      - ./back:/usr/src/app
+    labels:
+      - "traefik.http.routers.back.rule=Host(`back.workadventure.localhost`)"
+      - "traefik.http.services.back.loadbalancer.server.port=8080"
