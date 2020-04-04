@@ -22,7 +22,7 @@ export class Point implements PointInterface{
 }
 
 export class MessageUserPosition extends Message{
-    position: PointInterface
+    position: PointInterface;
 
     constructor(message: string) {
         super(message);

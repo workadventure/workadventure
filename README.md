@@ -94,3 +94,6 @@ Vagrant destroy
 * `Vagrant ssh`: connect on your VM Vagrant.
 * `Vagrant halt`: stop your VM Vagrant.
 * `Vagrant destroy`: delete your VM Vagrant.
+
+## Features developed
+You have more details of features developed in back [README.md](./back/README.md).
