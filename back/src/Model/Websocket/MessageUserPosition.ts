@@ -1,14 +1,30 @@
 import {Message} from "./Message";
+import {PointInterface} from "./PointInterface";
+
+export class Point implements PointInterface{
+    x: number;
+    y: number;
+
+    constructor(x : number, y : number) {
+        this.x = x;
+        this.y = y;
+    }
+
+    toJson(){
+        return {
+            x : this.x,
+            y: this.y
+        }
+    }
+}
 
 export class MessageUserPosition extends Message{
-    positionXUser: string;
-    positionYUser: string;
+    position: PointInterface
 
     constructor(message: string) {
         super(message);
         let data = JSON.parse(message);
-        this.positionXUser = data.positionXUser;
-        this.positionYUser = data.positionYUser;
+        this.position = new Point(data.position.x, data.position.y);
     }
 
     toString() {
@@ -16,8 +32,7 @@ export class MessageUserPosition extends Message{
             Object.assign(
                 super.toJson(),
                 {
-                    positionXUser: this.positionXUser,
-                    positionYUser: this.positionYUser
+                    position: this.position.toJson()
                 })
         );
     }
