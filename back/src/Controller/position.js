@@ -1,5 +1,5 @@
 // Constants
-let MIN_DISTANCE = 15;
+let MIN_DISTANCE = 12;
 let MAX_PER_GROUP = 3;
 let NB_USERS = 4;
 
@@ -8,6 +8,20 @@ let rand = function(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+
+let compareDistances = function(distA, distB) {
+    if (distA.distance < distB.distance) {
+        return -1;
+    }
+    if (distA.distance > distB.distance) {
+        return 1;
+    }
+    return 0;
+};
+
+let computeDistance = function (user1, user2) {
+    return Math.sqrt(Math.pow(user2.X - user1.X, 2) + Math.pow(user2.Y - user1.Y, 2));
 };
 
 // Test Data
@@ -23,7 +37,7 @@ for(let i = 1; i <= NB_USERS; i++) {
 console.log(users);
 
 // Compute distance between each user
-let computeDistance = function(users) {
+let getDistanceOfEachUser = function(users) {
     let i = 0;
     let distances = [];
 
@@ -31,7 +45,7 @@ let computeDistance = function(users) {
         users.forEach(function(user2, key2) {
             if(key1 < key2) {
                 let distanceObj = {};
-                distanceObj.distance = Math.sqrt(Math.pow(user2.X - user1.X, 2) + Math.pow(user2.Y - user1.Y, 2));
+                distanceObj.distance = computeDistance(user1, user2);
                 distanceObj.first = user1;
                 distanceObj.second = user2;
 
@@ -58,9 +72,20 @@ let createGroups = function(distances) {
                 groups[i] = [];
             }
 
-            if(groups[i].indexOf(dist.first) === -1 && typeof alreadyInAGroup[dist.first.id] == 'undefined') {
-                groups[i].push(dist.first);
-                alreadyInAGroup[dist.first.id] = true;
+            if(groups[i].indexOf(dist.first) === -1 && typeof alreadyInAGroup[dist.first.id] === 'undefined') {
+                if(groups[i].length > 1) {
+                    for(let l = 0; groups[i].length; l++) {
+                        let userTotest = groups[i][l];
+                        if(computeDistance(dist.first, userTotest) <= MIN_DISTANCE) {
+                            groups[i].push(dist.first);
+                            alreadyInAGroup[dist.first.id] = true;
+                            break;
+                        }
+                    }
+                } else {
+                    groups[i].push(dist.first);
+                    alreadyInAGroup[dist.first.id] = true;
+                }
             }
 
             if(groups[i].length === MAX_PER_GROUP) {
@@ -72,9 +97,20 @@ let createGroups = function(distances) {
                 continue;
             }
 
-            if(groups[i].indexOf(dist.second) === -1 && typeof alreadyInAGroup[dist.second.id] == 'undefined') {
-                groups[i].push(dist.second);
-                alreadyInAGroup [dist.second.id] = true;
+            if(groups[i].indexOf(dist.second) === -1 && typeof alreadyInAGroup[dist.second.id] === 'undefined') {
+                if(groups[i].length > 1) {
+                    for(let l = 0; groups[i].length; l++) {
+                        let userTotest = groups[i][l];
+                        if(computeDistance(dist.second, userTotest) <= MIN_DISTANCE) {
+                            groups[i].push(dist.second);
+                            alreadyInAGroup[dist.second.id] = true;
+                            break;
+                        }
+                    }
+                } else {
+                    groups[i].push(dist.second);
+                    alreadyInAGroup[dist.second.id] = true;
+                }
             }
         }
     }
@@ -82,7 +118,11 @@ let createGroups = function(distances) {
     return groups;
 };
 
-let distances = computeDistance(users);
+let distances = getDistanceOfEachUser(users);
+
+// ordonner par distance pour prioriser l'association en groupe des utilisateurs les plus proches
+distances.sort(compareDistances);
+
 let groups = createGroups(distances);
 
 // TODO : Créer une méthode pour checker la distance entre les membres du groupes pour savoir s'il faut les dissoudre ou non
