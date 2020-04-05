@@ -5,6 +5,8 @@ import {MessageUserPosition} from "../Model/Websocket/MessageUserPosition"; //TO
 import {ExSocketInterface} from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
 import Jwt, {JsonWebTokenError} from "jsonwebtoken";
 import {SECRET_KEY} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
+import {ExtRooms, RefreshUserPositionFunction} from "../Model/Websocket/ExtRoom";
+import {ExtRoomsInterface} from "_Model/Websocket/ExtRoomsInterface";
 
 export class IoSocketController{
     Io: socketIO.Server;
@@ -44,21 +46,33 @@ export class IoSocketController{
                 if(messageUserPosition instanceof Error){
                     return socket.emit("message-error", JSON.stringify({message: messageUserPosition.message}))
                 }
+
                 //join user in room
                 socket.join(messageUserPosition.roomId);
+
                 // sending to all clients in room except sender
                 this.saveUserInformation((socket as ExSocketInterface), messageUserPosition);
+
+                //add function to refresh position user in real time.
+                let rooms = (this.Io.sockets.adapter.rooms as ExtRoomsInterface);
+                rooms.refreshUserPosition = RefreshUserPositionFunction;
+                rooms.refreshUserPosition(rooms, this.Io);
+
                 socket.to(messageUserPosition.roomId).emit('join-room', messageUserPosition.toString());
             });
 
             socket.on('user-position', (message : string) => {
                 let messageUserPosition = this.hydrateMessageReceive(message);
-                if(messageUserPosition instanceof Error){
+                if (messageUserPosition instanceof Error) {
                     return socket.emit("message-error", JSON.stringify({message: messageUserPosition.message}));
                 }
+
                 // sending to all clients in room except sender
                 this.saveUserInformation((socket as ExSocketInterface), messageUserPosition);
-                socket.to(messageUserPosition.roomId).emit('join-room', messageUserPosition.toString());
+
+                //refresh position of all user in all rooms in real time
+                let rooms = (this.Io.sockets.adapter.rooms as ExtRoomsInterface)
+                rooms.refreshUserPosition(rooms, this.Io);
             });
         });
     }
@@ -97,37 +111,18 @@ export class IoSocketController{
      **/
     seTimeOutInProgress : any = null;
     shareUsersPosition(){
-        if(!this.seTimeOutInProgress) {
+        if(this.seTimeOutInProgress){
             clearTimeout(this.seTimeOutInProgress);
         }
-        let clients = this.Io.clients();
-        let socketsKey = Object.keys(this.Io.clients().sockets);
-
-        //create mapping with all users in all rooms
-        let mapPositionUserByRoom = new Map();
-        for(let i = 0; i < socketsKey.length; i++){
-            let socket = clients.sockets[socketsKey[i]];
-            if(!(socket as ExSocketInterface).position){
-                continue;
-            }
-            let data = {
-                userId : (socket as ExSocketInterface).userId,
-                roomId : (socket as ExSocketInterface).roomId,
-                position : (socket as ExSocketInterface).position,
-            };
-            let dataArray = <any>[];
-            if(mapPositionUserByRoom.get(data.roomId)){
-                dataArray = mapPositionUserByRoom.get(data.roomId);
-                dataArray.push(data);
-            }else{
-                dataArray = [data];
-            }
-            mapPositionUserByRoom.set(data.roomId, dataArray);
-        }
-
         //send for each room, all data of position user
-        let arrayMap = Array.from(mapPositionUserByRoom);
-        arrayMap.forEach((value) => {
+        let arrayMap = (this.Io.sockets.adapter.rooms as ExtRooms).userPositionMapByRoom;
+        if(!arrayMap){
+            this.seTimeOutInProgress = setTimeout(() => {
+                this.shareUsersPosition();
+            }, 10);
+            return;
+        }
+        arrayMap.forEach((value : any) => {
             let roomId = value[0];
             let data = value[1];
             this.Io.in(roomId).emit('user-position', JSON.stringify(data));
