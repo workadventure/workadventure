@@ -1,7 +1,7 @@
 // Constants
 let MIN_DISTANCE = 12;
 let MAX_PER_GROUP = 3;
-let NB_USERS = 4;
+let NB_USERS = 10;
 
 // Utils
 let rand = function(min, max) {
@@ -33,8 +33,6 @@ for(let i = 1; i <= NB_USERS; i++) {
     user.Y = rand(0, 40);
     users.push(user);
 }
-
-console.log(users);
 
 // Compute distance between each user
 let getDistanceOfEachUser = function(users) {
@@ -74,7 +72,7 @@ let createGroups = function(distances) {
 
             if(groups[i].indexOf(dist.first) === -1 && typeof alreadyInAGroup[dist.first.id] === 'undefined') {
                 if(groups[i].length > 1) {
-                    for(let l = 0; groups[i].length; l++) {
+                    for(let l = 0; l < groups[i].length; l++) {
                         let userTotest = groups[i][l];
                         if(computeDistance(dist.first, userTotest) <= MIN_DISTANCE) {
                             groups[i].push(dist.first);
@@ -99,7 +97,7 @@ let createGroups = function(distances) {
 
             if(groups[i].indexOf(dist.second) === -1 && typeof alreadyInAGroup[dist.second.id] === 'undefined') {
                 if(groups[i].length > 1) {
-                    for(let l = 0; groups[i].length; l++) {
+                    for(let l = 0; l < groups[i].length; l++) {
                         let userTotest = groups[i][l];
                         if(computeDistance(dist.second, userTotest) <= MIN_DISTANCE) {
                             groups[i].push(dist.second);
@@ -127,6 +125,7 @@ let groups = createGroups(distances);
 
 // TODO : Créer une méthode pour checker la distance entre les membres du groupes pour savoir s'il faut les dissoudre ou non
 
+console.log(users);
 console.log(distances);
 console.log(groups);
 
