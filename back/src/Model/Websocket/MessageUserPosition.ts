@@ -6,7 +6,7 @@ export class Point implements PointInterface{
     y: number;
 
     constructor(x : number, y : number) {
-        if(!x || !y){
+        if(x === null || y === null){
             throw Error("position x and y cannot be null");
         }
         this.x = x;

@@ -22,7 +22,7 @@ export class AuthenticateController{
             }
             //TODO check user email for The Coding Machine game
             let token = Jwt.sign({email: param.email, roomId: ROOM}, SECRET_KEY, {expiresIn: '24h'});
-            return res.status(OK).send({token: token});
+            return res.status(OK).send({token: token, roomId: ROOM});
         });
     }
 }
