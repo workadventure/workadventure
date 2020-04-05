@@ -1,7 +1,7 @@
 import {Application, Request, Response} from "express";
-import Jwt, {JsonWebTokenError} from "jsonwebtoken";
+import Jwt from "jsonwebtoken";
 import {BAD_REQUEST, OK} from "http-status-codes";
-import {SECRET_KEY, ROOM} from "../Enum/EnvironmentVariable";
+import {SECRET_KEY, ROOM} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 
 export class AuthenticateController{
     App : Application;
