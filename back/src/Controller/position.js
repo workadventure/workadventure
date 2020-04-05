@@ -1,7 +1,7 @@
 // Constants
-let MIN_DISTANCE = 80;
+let MIN_DISTANCE = 15;
 let MAX_PER_GROUP = 3;
-let NB_USERS = 10;
+let NB_USERS = 4;
 
 // Utils
 let rand = function(min, max) {
@@ -15,10 +15,12 @@ let users = [];
 for(let i = 1; i <= NB_USERS; i++) {
     let user = {};
     user.id = rand(0,99999);
-    user.X = rand(0, 60);
-    user.Y = rand(0, 60);
+    user.X = rand(0, 40);
+    user.Y = rand(0, 40);
     users.push(user);
 }
+
+console.log(users);
 
 // Compute distance between each user
 let computeDistance = function(users) {
@@ -27,7 +29,7 @@ let computeDistance = function(users) {
 
     users.forEach(function(user1, key1) {
         users.forEach(function(user2, key2) {
-            if(key1 !== key2 && key1 < key2) {
+            if(key1 < key2) {
                 let distanceObj = {};
                 distanceObj.distance = Math.sqrt(Math.pow(user2.X - user1.X, 2) + Math.pow(user2.Y - user1.Y, 2));
                 distanceObj.first = user1;
@@ -46,18 +48,19 @@ let computeDistance = function(users) {
 let createGroups = function(distances) {
     let i = 0;
     let groups = [];
-    let alreadyInGroup = [];
+    let alreadyInAGroup = [];
 
     for(let j = 0; j < distances.length; j++) {
-        let dist = distances[i];
+        let dist = distances[j];
+
         if(dist.distance <= MIN_DISTANCE) {
             if(typeof groups[i] === 'undefined') {
                 groups[i] = [];
             }
 
-            if(!groups[i].indexOf(dist.first) && typeof alreadyInGroup[dist.first.id] === 'undefined') {
+            if(groups[i].indexOf(dist.first) === -1 && typeof alreadyInAGroup[dist.first.id] == 'undefined') {
                 groups[i].push(dist.first);
-                alreadyInGroup [dist.first.id] = true;
+                alreadyInAGroup[dist.first.id] = true;
             }
 
             if(groups[i].length === MAX_PER_GROUP) {
@@ -69,9 +72,9 @@ let createGroups = function(distances) {
                 continue;
             }
 
-            if(!groups[i].indexOf(dist.second) && typeof alreadyInGroup[dist.second.id] === 'undefined') {
+            if(groups[i].indexOf(dist.second) === -1 && typeof alreadyInAGroup[dist.second.id] == 'undefined') {
                 groups[i].push(dist.second);
-                alreadyInGroup [dist.second.id] = true;
+                alreadyInAGroup [dist.second.id] = true;
             }
         }
     }
@@ -81,6 +84,7 @@ let createGroups = function(distances) {
 
 let distances = computeDistance(users);
 let groups = createGroups(distances);
+
 // TODO : Créer une méthode pour checker la distance entre les membres du groupes pour savoir s'il faut les dissoudre ou non
 
 console.log(distances);
