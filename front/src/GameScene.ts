@@ -1,5 +1,7 @@
 
 export class GameScene extends Phaser.Scene {
+    private player: Phaser.GameObjects.Sprite;
+    
     private keyZ: Phaser.Input.Keyboard.Key;
     private keyQ: Phaser.Input.Keyboard.Key;
     private keyS: Phaser.Input.Keyboard.Key;
@@ -54,28 +56,28 @@ export class GameScene extends Phaser.Scene {
         // Let's manage animations of the player
         this.anims.create({
             key: 'down',
-            frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }),
+            frames: this.anims.generateFrameNumbers('player', { start: 0, end: 2 }),
             frameRate: 10,
             repeat: -1
         });
 
         this.anims.create({
             key: 'left',
-            frames: this.anims.generateFrameNumbers('player', { start: 4, end: 8 }),
+            frames: this.anims.generateFrameNumbers('player', { start: 3, end: 5 }),
             frameRate: 10,
             repeat: -1
         });
 
         this.anims.create({
             key: 'right',
-            frames: this.anims.generateFrameNumbers('player', { start: 9, end: 12 }),
+            frames: this.anims.generateFrameNumbers('player', { start: 6, end: 8 }),
             frameRate: 10,
             repeat: -1
         });
 
         this.anims.create({
             key: 'up',
-            frames: this.anims.generateFrameNumbers('player', { start: 13, end: 16 }),
+            frames: this.anims.generateFrameNumbers('player', { start: 9, end: 11 }),
             frameRate: 10,
             repeat: -1
         });
@@ -84,7 +86,7 @@ export class GameScene extends Phaser.Scene {
         //player.anims.play('down');
         //player.setBounce(0.2);
         //player.setCollideWorldBounds(true);
-
+        this.player = this.add.sprite(450, 450, 'player');
 
     }
 
@@ -94,22 +96,45 @@ export class GameScene extends Phaser.Scene {
         let speedMultiplier = this.keyShift.isDown ? 5 : 1;
         
         
-        if (this.keyZ.isDown || this.keyUp.isDown) {
+        if (this.keyUp.isDown) {
             this.moveCamera(0, -1, speedMultiplier);
         }
-        if (this.keyQ.isDown || this.keyLeft.isDown) {
+        if (this.keyLeft.isDown) {
             this.moveCamera(-1, 0, speedMultiplier);
         }
-        if (this.keyS.isDown || this.keyDown.isDown) {
+        if (this.keyDown.isDown) {
             this.moveCamera(0, 1, speedMultiplier);
         }
-        if (this.keyD.isDown || this.keyRight.isDown) {
+        if (this.keyRight.isDown) {
             this.moveCamera(1, 0, speedMultiplier);
         }
         
+        if (this.keyZ.isDown) {
+            this.managePlayerAnimation('up');
+            this.player.setY(this.player.y - 2)
+        } else if (this.keyQ.isDown) {
+            this.managePlayerAnimation('left');
+            this.player.setX(this.player.x - 2)
+        } else if (this.keyS.isDown) {
+            this.managePlayerAnimation('down');
+            this.player.setY(this.player.y + 2)
+        } else if (this.keyD.isDown) {
+            this.managePlayerAnimation('right');
+            this.player.setX(this.player.x + 2)
+        } else {
+            this.managePlayerAnimation('none');
+        }
         /*this.cameras.main.scrollX = Math.floor(300 + 300 * Math.cos(this.angle));
         this.cameras.main.scrollY = Math.floor(300 + 300 * Math.sin(this.angle));
 
         this.angle = dt * 0.0001;*/
+    }
+    
+    managePlayerAnimation(direction: string) {
+        if (!this.player.anims.currentAnim || this.player.anims.currentAnim.key !== direction) {
+            this.player.anims.play(direction);
+        } else if (direction === 'none' && this.player.anims.currentAnim) {
+            this.player.anims.currentAnim.destroy();
+        } 
     }
 }
