@@ -14,7 +14,10 @@
     "webpack-dev-server": "^3.10.3"
   },
   "dependencies": {
-    "phaser": "^3.22.0"
+    "@types/axios": "^0.14.0",
+    "@types/socket.io-client": "^1.4.32",
+    "phaser": "^3.22.0",
+    "socket.io-client": "^2.3.0"
   },
   "scripts": {
     "start": "webpack-dev-server --open",
