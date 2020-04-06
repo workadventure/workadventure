@@ -63,5 +63,5 @@ jobs:
         working-directory: "back"
 
       - name: "Jasmine"
-          run: yarn test
-          working-directory: "back"
+        run: yarn test
+        working-directory: "back"
