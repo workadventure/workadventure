@@ -1,3 +1,4 @@
+import {RESOLUTION} from "./Enum/EnvironmentVariable";
 
 export class GameScene extends Phaser.Scene {
     private player: Phaser.GameObjects.Sprite;
@@ -11,6 +12,8 @@ export class GameScene extends Phaser.Scene {
     private keyUp: Phaser.Input.Keyboard.Key;
     private keyDown: Phaser.Input.Keyboard.Key;
     private keyShift: Phaser.Input.Keyboard.Key;
+
+    private Mappy : Phaser.Tilemaps.Tilemap;
 
     constructor() {
         super({
@@ -47,11 +50,11 @@ export class GameScene extends Phaser.Scene {
     }
 
     create(): void {
-        let mappy = this.add.tilemap("map");
-        let terrain = mappy.addTilesetImage("tiles", "tiles");
+        this.Mappy = this.add.tilemap("map");
+        let terrain = this.Mappy.addTilesetImage("tiles", "tiles");
 
-        let bottomLayer = mappy.createStaticLayer("Calque 1", [terrain], 0, 0);
-        let topLayer = mappy.createStaticLayer("Calque 2", [terrain], 0, 0);
+        let bottomLayer = this.Mappy.createStaticLayer("Calque 1", [terrain], 0, 0);
+        let topLayer = this.Mappy.createStaticLayer("Calque 2", [terrain], 0, 0);
 
         // Let's manage animations of the player
         this.anims.create({
@@ -87,26 +90,43 @@ export class GameScene extends Phaser.Scene {
         //player.setBounce(0.2);
         //player.setCollideWorldBounds(true);
         this.player = this.add.sprite(450, 450, 'player');
-
     }
 
     private angle: number = 0;
 
     update(dt: number): void {
+        let xCameraPosition = this.cameras.main.scrollX;
+        let yCameraPosition = this.cameras.main.scrollY;
+
         let speedMultiplier = this.keyShift.isDown ? 5 : 1;
-        
-        
+
         if (this.keyUp.isDown) {
-            this.moveCamera(0, -1, speedMultiplier);
+            if(yCameraPosition > 0) {
+                this.moveCamera(0, -1, speedMultiplier);
+            }else {
+                this.cameras.main.scrollY = 0;
+            }
         }
         if (this.keyLeft.isDown) {
-            this.moveCamera(-1, 0, speedMultiplier);
+            if(xCameraPosition > 0) {
+                this.moveCamera(-1, 0, speedMultiplier);
+            }else{
+                this.cameras.main.scrollX = 0;
+            }
         }
         if (this.keyDown.isDown) {
-            this.moveCamera(0, 1, speedMultiplier);
+            if(this.Mappy.heightInPixels > (yCameraPosition + (window.innerHeight / RESOLUTION))) {
+                this.moveCamera(0, 1, speedMultiplier);
+            }else{
+                this.cameras.main.scrollY = (this.Mappy.heightInPixels - (window.innerHeight / RESOLUTION));
+            }
         }
         if (this.keyRight.isDown) {
-            this.moveCamera(1, 0, speedMultiplier);
+            if(this.Mappy.widthInPixels > (xCameraPosition + (window.innerWidth / RESOLUTION))) {
+                this.moveCamera(1, 0, speedMultiplier);
+            }else{
+                this.cameras.main.scrollX = (this.Mappy.widthInPixels - (window.innerWidth / RESOLUTION));
+            }
         }
         
         if (this.keyZ.isDown) {
