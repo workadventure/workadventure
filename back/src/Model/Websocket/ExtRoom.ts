@@ -16,14 +16,14 @@ let RefreshUserPositionFunction = function(rooms : ExtRooms, Io: socketIO.Server
     //create mapping with all users in all rooms
     let mapPositionUserByRoom = new Map();
     for(let i = 0; i < socketsKey.length; i++){
-        let socket = clients.sockets[socketsKey[i]];
-        if(!(socket as ExSocketInterface).position){
+        let socket = clients.sockets[socketsKey[i]] as ExSocketInterface;
+        if(!socket.position){
             continue;
         }
         let data = {
-            userId : (socket as ExSocketInterface).userId,
-            roomId : (socket as ExSocketInterface).roomId,
-            position : (socket as ExSocketInterface).position,
+            userId : socket.userId,
+            roomId : socket.roomId,
+            position : socket.position,
         };
         let dataArray = <any>[];
         if(mapPositionUserByRoom.get(data.roomId)){

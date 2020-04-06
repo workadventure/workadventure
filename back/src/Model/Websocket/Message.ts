@@ -5,7 +5,7 @@ export class Message {
     constructor(message: string) {
         let data = JSON.parse(message);
         if(!data.userId || !data.roomId){
-            throw Error("userId and roomId cannot be null");
+            throw Error("userId or roomId cannot be null");
         }
         this.userId = data.userId;
         this.roomId = data.roomId;
