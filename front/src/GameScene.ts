@@ -1,5 +1,13 @@
 
 export class GameScene extends Phaser.Scene {
+    private keyZ: Phaser.Input.Keyboard.Key;
+    private keyQ: Phaser.Input.Keyboard.Key;
+    private keyS: Phaser.Input.Keyboard.Key;
+    private keyD: Phaser.Input.Keyboard.Key;
+    private keyRight: Phaser.Input.Keyboard.Key;
+    private keyLeft: Phaser.Input.Keyboard.Key;
+    private keyUp: Phaser.Input.Keyboard.Key;
+    private keyDown: Phaser.Input.Keyboard.Key;
 
     constructor() {
         super({
@@ -13,6 +21,20 @@ export class GameScene extends Phaser.Scene {
     }
 
     init(): void {
+        this.keyZ = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
+        this.keyQ = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
+        this.keyS = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
+        this.keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+
+        this.keyUp = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
+        this.keyLeft = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
+        this.keyDown = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
+        this.keyRight = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
+    }
+    
+    private moveCamera(x:number, y:number): void {
+        this.cameras.main.scrollX += 2 * x;
+        this.cameras.main.scrollY += 2 * y;
     }
 
     create(): void {
@@ -27,9 +49,23 @@ export class GameScene extends Phaser.Scene {
     private angle: number = 0;
 
     update(dt: number): void {
-        this.cameras.main.scrollX = Math.floor(300 + 300 * Math.cos(this.angle));
+        
+        if (this.keyZ.isDown || this.keyUp.isDown) {
+            this.moveCamera(0, -1);
+        }
+        if (this.keyQ.isDown || this.keyLeft.isDown) {
+            this.moveCamera(-1, 0);
+        }
+        if (this.keyS.isDown || this.keyDown.isDown) {
+            this.moveCamera(0, 1);
+        }
+        if (this.keyD.isDown || this.keyRight.isDown) {
+            this.moveCamera(1, 0);
+        }
+        
+        /*this.cameras.main.scrollX = Math.floor(300 + 300 * Math.cos(this.angle));
         this.cameras.main.scrollY = Math.floor(300 + 300 * Math.sin(this.angle));
 
-        this.angle = dt * 0.0001;
+        this.angle = dt * 0.0001;*/
     }
 }
