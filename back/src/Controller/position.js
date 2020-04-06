@@ -72,6 +72,7 @@ let createGroups = function(distances) {
 
             if(groups[i].indexOf(dist.first) === -1 && typeof alreadyInAGroup[dist.first.id] === 'undefined') {
                 if(groups[i].length > 1) {
+                    // if group is not empty we check current user can be added in the group according to its distance to the others already in it
                     for(let l = 0; l < groups[i].length; l++) {
                         let userTotest = groups[i][l];
                         if(computeDistance(dist.first, userTotest) <= MIN_DISTANCE) {
@@ -97,6 +98,7 @@ let createGroups = function(distances) {
 
             if(groups[i].indexOf(dist.second) === -1 && typeof alreadyInAGroup[dist.second.id] === 'undefined') {
                 if(groups[i].length > 1) {
+                    // if group is not empty we check current user can be added in the group according to its distance to the others already in it
                     for(let l = 0; l < groups[i].length; l++) {
                         let userTotest = groups[i][l];
                         if(computeDistance(dist.second, userTotest) <= MIN_DISTANCE) {
@@ -123,7 +125,22 @@ distances.sort(compareDistances);
 
 let groups = createGroups(distances);
 
-// TODO : Créer une méthode pour checker la distance entre les membres du groupes pour savoir s'il faut les dissoudre ou non
+// Compute distance between each user of a already existing group
+let checkGroupDistance = function(groups) {
+    for(let i = 0; i < groups.length; i++) {
+        let group = groups[i];
+            group.forEach(function(user1, key1) {
+                group.forEach(function(user2, key2) {
+                    if(key1 < key2) {
+                        let distance = computeDistance(user1, user2);
+                        if(distance > MIN_DISTANCE) {
+                            // TODO : message a user1 et user2
+                        }
+                    }
+            });
+        });
+    }
+};
 
 console.log(users);
 console.log(distances);
