@@ -15,6 +15,9 @@ export class GameScene extends Phaser.Scene {
 
     private Mappy : Phaser.Tilemaps.Tilemap;
 
+    private startX = ((window.innerWidth / 2) / RESOLUTION);
+    private startY = ((window.innerHeight / 2) / RESOLUTION);
+
     constructor() {
         super({
             key: "GameScene"
@@ -89,7 +92,7 @@ export class GameScene extends Phaser.Scene {
         //player.anims.play('down');
         //player.setBounce(0.2);
         //player.setCollideWorldBounds(true);
-        this.player = this.add.sprite(450, 450, 'player');
+        this.player = this.add.sprite(this.startX, this.startY, 'player');
     }
 
     private angle: number = 0;
@@ -100,47 +103,69 @@ export class GameScene extends Phaser.Scene {
 
         let speedMultiplier = this.keyShift.isDown ? 5 : 1;
 
-        if (this.keyUp.isDown) {
-            if(yCameraPosition > 0) {
-                this.moveCamera(0, -1, speedMultiplier);
-            }else {
+        if (this.keyZ.isDown || this.keyUp.isDown) {
+            this.managePlayerAnimation('up');
+            if (this.player.y > 0) {
+                this.player.setY(this.player.y - 2);
+            } else {
+                this.player.setY(0);
+            }
+
+            if (yCameraPosition > 0) {
+                if (this.player.y < (this.Mappy.widthInPixels - this.startY)) {
+                    this.moveCamera(0, -1, speedMultiplier);
+                }
+            } else {
                 this.cameras.main.scrollY = 0;
             }
-        }
-        if (this.keyLeft.isDown) {
-            if(xCameraPosition > 0) {
-                this.moveCamera(-1, 0, speedMultiplier);
-            }else{
+        } else if (this.keyQ.isDown || this.keyLeft.isDown) {
+
+            this.managePlayerAnimation('left');
+            if (this.player.x > 0) {
+                this.player.setX(this.player.x - 2);
+            } else {
+                this.player.setX(0);
+            }
+
+            if (xCameraPosition > 0) {
+                if (this.player.x < (this.Mappy.heightInPixels - this.startX)) {
+                    this.moveCamera(-1, 0, speedMultiplier);
+                }
+            } else {
                 this.cameras.main.scrollX = 0;
             }
-        }
-        if (this.keyDown.isDown) {
-            if(this.Mappy.heightInPixels > (yCameraPosition + (window.innerHeight / RESOLUTION))) {
-                this.moveCamera(0, 1, speedMultiplier);
-            }else{
+        } else if (this.keyS.isDown || this.keyDown.isDown) {
+
+            this.managePlayerAnimation('down');
+            if (this.Mappy.heightInPixels > this.player.y) {
+                this.player.setY(this.player.y + 2);
+            } else {
+                this.player.setY(this.Mappy.heightInPixels);
+            }
+
+            if (this.Mappy.heightInPixels > (yCameraPosition + (window.innerHeight / RESOLUTION))) {
+                if (this.player.y > this.startY) {
+                    this.moveCamera(0, 1, speedMultiplier);
+                }
+            } else {
                 this.cameras.main.scrollY = (this.Mappy.heightInPixels - (window.innerHeight / RESOLUTION));
             }
-        }
-        if (this.keyRight.isDown) {
-            if(this.Mappy.widthInPixels > (xCameraPosition + (window.innerWidth / RESOLUTION))) {
-                this.moveCamera(1, 0, speedMultiplier);
-            }else{
+        } else if (this.keyD.isDown || this.keyRight.isDown) {
+
+            this.managePlayerAnimation('right');
+            if (this.Mappy.widthInPixels > this.player.x) {
+                this.player.setX(this.player.x + 2)
+            } else {
+                this.player.setX(this.Mappy.widthInPixels)
+            }
+
+            if (this.Mappy.widthInPixels > (xCameraPosition + (window.innerWidth / RESOLUTION))) {
+                if (this.player.x > this.startX) {
+                    this.moveCamera(1, 0, speedMultiplier);
+                }
+            } else {
                 this.cameras.main.scrollX = (this.Mappy.widthInPixels - (window.innerWidth / RESOLUTION));
             }
-        }
-        
-        if (this.keyZ.isDown) {
-            this.managePlayerAnimation('up');
-            this.player.setY(this.player.y - 2)
-        } else if (this.keyQ.isDown) {
-            this.managePlayerAnimation('left');
-            this.player.setX(this.player.x - 2)
-        } else if (this.keyS.isDown) {
-            this.managePlayerAnimation('down');
-            this.player.setY(this.player.y + 2)
-        } else if (this.keyD.isDown) {
-            this.managePlayerAnimation('right');
-            this.player.setX(this.player.x + 2)
         } else {
             this.managePlayerAnimation('none');
         }
