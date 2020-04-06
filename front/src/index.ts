@@ -1,6 +1,7 @@
 import 'phaser';
 import GameConfig = Phaser.Types.Core.GameConfig;
 import {GameScene} from "./GameScene";
+import {Connexion} from "./Connexion";
 
 const resolution = 2;
 
@@ -18,3 +19,5 @@ let game = new Phaser.Game(config);
 window.addEventListener('resize', function (event) {
     game.scale.resize(window.innerWidth / resolution, window.innerHeight / resolution);
 });
+
+const connexion = new Connexion("test@gmail.com");
