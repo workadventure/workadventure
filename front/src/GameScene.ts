@@ -1,4 +1,5 @@
 import {RESOLUTION} from "./Enum/EnvironmentVariable";
+import {RessourceManager, RessourceNames} from "./RessourceManager";
 
 export class GameScene extends Phaser.Scene {
     private player: Phaser.GameObjects.Sprite;
@@ -12,6 +13,7 @@ export class GameScene extends Phaser.Scene {
     private keyUp: Phaser.Input.Keyboard.Key;
     private keyDown: Phaser.Input.Keyboard.Key;
     private keyShift: Phaser.Input.Keyboard.Key;
+    private ressourceManager: RessourceManager;
 
     private Mappy : Phaser.Tilemaps.Tilemap;
 
@@ -22,15 +24,11 @@ export class GameScene extends Phaser.Scene {
         super({
             key: "GameScene"
         });
+        this.ressourceManager = new RessourceManager();
     }
 
     preload(): void {
-        this.load.image('tiles', 'maps/tiles.png');
-        this.load.tilemapTiledJSON('map', 'maps/map2.json');
-        this.load.spritesheet('player',
-            'resources/characters/pipoya/Male 01-1.png',
-            { frameWidth: 32, frameHeight: 32 }
-        );
+        this.ressourceManager.load(this.load)
     }
 
     init(): void {
@@ -62,37 +60,37 @@ export class GameScene extends Phaser.Scene {
         // Let's manage animations of the player
         this.anims.create({
             key: 'down',
-            frames: this.anims.generateFrameNumbers('player', { start: 0, end: 2 }),
+            frames: this.anims.generateFrameNumbers(RessourceNames.Player, { start: 0, end: 2 }),
             frameRate: 10,
             repeat: -1
         });
 
         this.anims.create({
             key: 'left',
-            frames: this.anims.generateFrameNumbers('player', { start: 3, end: 5 }),
+            frames: this.anims.generateFrameNumbers(RessourceNames.Player, { start: 3, end: 5 }),
             frameRate: 10,
             repeat: -1
         });
 
         this.anims.create({
             key: 'right',
-            frames: this.anims.generateFrameNumbers('player', { start: 6, end: 8 }),
+            frames: this.anims.generateFrameNumbers(RessourceNames.Player, { start: 6, end: 8 }),
             frameRate: 10,
             repeat: -1
         });
 
         this.anims.create({
             key: 'up',
-            frames: this.anims.generateFrameNumbers('player', { start: 9, end: 11 }),
+            frames: this.anims.generateFrameNumbers(RessourceNames.Player, { start: 9, end: 11 }),
             frameRate: 10,
             repeat: -1
         });
 
-        //let player = this.add.sprite(450, 450, 'player');
+        //let player = this.add.sprite(450, 450, RessourceNames.Player);
         //player.anims.play('down');
         //player.setBounce(0.2);
         //player.setCollideWorldBounds(true);
-        this.player = this.add.sprite(this.startX, this.startY, 'player');
+        this.player = this.add.sprite(this.startX, this.startY, RessourceNames.Player);
     }
 
     private angle: number = 0;
