@@ -1,7 +1,7 @@
 import {Application, Request, Response} from "express";
-import Jwt, {JsonWebTokenError} from "jsonwebtoken";
+import Jwt from "jsonwebtoken";
 import {BAD_REQUEST, OK} from "http-status-codes";
-import {SECRET_KEY} from "../Enum/EnvironmentVariable";
+import {SECRET_KEY, ROOM} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 
 export class AuthenticateController{
     App : Application;
@@ -21,8 +21,8 @@ export class AuthenticateController{
                 });
             }
             //TODO check user email for The Coding Machine game
-            let token = Jwt.sign({email: param.email}, SECRET_KEY, {expiresIn: '24h'});
-            return res.status(OK).send({token: token});
+            let token = Jwt.sign({email: param.email, roomId: ROOM}, SECRET_KEY, {expiresIn: '24h'});
+            return res.status(OK).send({token: token, roomId: ROOM});
         });
     }
 }
