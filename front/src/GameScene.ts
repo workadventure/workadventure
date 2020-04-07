@@ -1,4 +1,5 @@
 import {RESOLUTION} from "./Enum/EnvironmentVariable";
+import {getAllAnimationsData, manageCaracterWalkAnimation} from "./Managers/Animation.manager";
 
 export class GameScene extends Phaser.Scene {
     private player: Phaser.GameObjects.Sprite;
@@ -60,32 +61,13 @@ export class GameScene extends Phaser.Scene {
         let topLayer = this.Mappy.createStaticLayer("Calque 2", [terrain], 0, 0);
 
         // Let's manage animations of the player
-        this.anims.create({
-            key: 'down',
-            frames: this.anims.generateFrameNumbers('player', { start: 0, end: 2 }),
-            frameRate: 10,
-            repeat: -1
-        });
-
-        this.anims.create({
-            key: 'left',
-            frames: this.anims.generateFrameNumbers('player', { start: 3, end: 5 }),
-            frameRate: 10,
-            repeat: -1
-        });
-
-        this.anims.create({
-            key: 'right',
-            frames: this.anims.generateFrameNumbers('player', { start: 6, end: 8 }),
-            frameRate: 10,
-            repeat: -1
-        });
-
-        this.anims.create({
-            key: 'up',
-            frames: this.anims.generateFrameNumbers('player', { start: 9, end: 11 }),
-            frameRate: 10,
-            repeat: -1
+        getAllAnimationsData().forEach(d => {
+            this.anims.create({
+                key: d.key,
+                frames: this.anims.generateFrameNumbers(d.frameModel, { start: d.frameStart, end: d.frameEnd }),
+                frameRate: d.frameRate,
+                repeat: d.repeat
+            });
         });
 
         //let player = this.add.sprite(450, 450, 'player');
@@ -104,7 +86,7 @@ export class GameScene extends Phaser.Scene {
         let speedMultiplier = this.keyShift.isDown ? 5 : 1;
 
         if (this.keyZ.isDown || this.keyUp.isDown) {
-            this.managePlayerAnimation('up');
+            manageCaracterWalkAnimation(this.player, 'up');
             if (this.player.y > 0) {
                 this.player.setY(this.player.y - 2);
             } else {
@@ -120,7 +102,7 @@ export class GameScene extends Phaser.Scene {
             }
         } else if (this.keyQ.isDown || this.keyLeft.isDown) {
 
-            this.managePlayerAnimation('left');
+            manageCaracterWalkAnimation(this.player, 'left');
             if (this.player.x > 0) {
                 this.player.setX(this.player.x - 2);
             } else {
@@ -136,7 +118,7 @@ export class GameScene extends Phaser.Scene {
             }
         } else if (this.keyS.isDown || this.keyDown.isDown) {
 
-            this.managePlayerAnimation('down');
+            manageCaracterWalkAnimation(this.player, 'down');
             if (this.Mappy.heightInPixels > this.player.y) {
                 this.player.setY(this.player.y + 2);
             } else {
@@ -152,7 +134,7 @@ export class GameScene extends Phaser.Scene {
             }
         } else if (this.keyD.isDown || this.keyRight.isDown) {
 
-            this.managePlayerAnimation('right');
+            manageCaracterWalkAnimation(this.player, 'right');
             if (this.Mappy.widthInPixels > this.player.x) {
                 this.player.setX(this.player.x + 2)
             } else {
@@ -167,19 +149,11 @@ export class GameScene extends Phaser.Scene {
                 this.cameras.main.scrollX = (this.Mappy.widthInPixels - (window.innerWidth / RESOLUTION));
             }
         } else {
-            this.managePlayerAnimation('none');
+            manageCaracterWalkAnimation(this.player, 'none');
         }
         /*this.cameras.main.scrollX = Math.floor(300 + 300 * Math.cos(this.angle));
         this.cameras.main.scrollY = Math.floor(300 + 300 * Math.sin(this.angle));
 
         this.angle = dt * 0.0001;*/
-    }
-    
-    managePlayerAnimation(direction: string) {
-        if (!this.player.anims.currentAnim || this.player.anims.currentAnim.key !== direction) {
-            this.player.anims.play(direction);
-        } else if (direction === 'none' && this.player.anims.currentAnim) {
-            this.player.anims.currentAnim.destroy();
-        } 
     }
 }
