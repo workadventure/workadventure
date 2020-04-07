@@ -13,7 +13,7 @@ export enum PlayerAnimationNames {
     WalkUp = 'up',
     WalkRight = 'right',
     None = 'none',
-};
+}
 
 export const getPlayerAnimations = (PlayerValue : string): AnimationData[] => {
     return [{

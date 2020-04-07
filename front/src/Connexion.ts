@@ -119,6 +119,9 @@ export class Connexion {
      * @param y
      */
     sharePosition(roomId : string, x : number, y : number){
+        if(!this.socket){
+            return;
+        }
         let messageUserPosition = new MessageUserPosition(this.email, roomId, new Point(x, y));
         this.socket.emit('user-position', messageUserPosition.toString());
     }

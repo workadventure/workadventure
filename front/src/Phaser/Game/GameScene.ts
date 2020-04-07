@@ -27,7 +27,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     }
 
     //hook initialisation
-    init(){};
+    init(){}
 
     //hook create scene
     create(): void {
