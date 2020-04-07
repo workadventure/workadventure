@@ -1,3 +1,4 @@
+import {RESOLUTION} from "./Enum/EnvironmentVariable";
 
 export class GameScene extends Phaser.Scene {
     private player: Phaser.GameObjects.Sprite;
@@ -11,6 +12,11 @@ export class GameScene extends Phaser.Scene {
     private keyUp: Phaser.Input.Keyboard.Key;
     private keyDown: Phaser.Input.Keyboard.Key;
     private keyShift: Phaser.Input.Keyboard.Key;
+
+    private Mappy : Phaser.Tilemaps.Tilemap;
+
+    private startX = ((window.innerWidth / 2) / RESOLUTION);
+    private startY = ((window.innerHeight / 2) / RESOLUTION);
 
     constructor() {
         super({
@@ -47,11 +53,11 @@ export class GameScene extends Phaser.Scene {
     }
 
     create(): void {
-        let mappy = this.add.tilemap("map");
-        let terrain = mappy.addTilesetImage("tiles", "tiles");
+        this.Mappy = this.add.tilemap("map");
+        let terrain = this.Mappy.addTilesetImage("tiles", "tiles");
 
-        let bottomLayer = mappy.createStaticLayer("Calque 1", [terrain], 0, 0);
-        let topLayer = mappy.createStaticLayer("Calque 2", [terrain], 0, 0);
+        let bottomLayer = this.Mappy.createStaticLayer("Calque 1", [terrain], 0, 0);
+        let topLayer = this.Mappy.createStaticLayer("Calque 2", [terrain], 0, 0);
 
         // Let's manage animations of the player
         this.anims.create({
@@ -86,41 +92,80 @@ export class GameScene extends Phaser.Scene {
         //player.anims.play('down');
         //player.setBounce(0.2);
         //player.setCollideWorldBounds(true);
-        this.player = this.add.sprite(450, 450, 'player');
-
+        this.player = this.add.sprite(this.startX, this.startY, 'player');
     }
 
     private angle: number = 0;
 
     update(dt: number): void {
+        let xCameraPosition = this.cameras.main.scrollX;
+        let yCameraPosition = this.cameras.main.scrollY;
+
         let speedMultiplier = this.keyShift.isDown ? 5 : 1;
-        
-        
-        if (this.keyUp.isDown) {
-            this.moveCamera(0, -1, speedMultiplier);
-        }
-        if (this.keyLeft.isDown) {
-            this.moveCamera(-1, 0, speedMultiplier);
-        }
-        if (this.keyDown.isDown) {
-            this.moveCamera(0, 1, speedMultiplier);
-        }
-        if (this.keyRight.isDown) {
-            this.moveCamera(1, 0, speedMultiplier);
-        }
-        
-        if (this.keyZ.isDown) {
+
+        if (this.keyZ.isDown || this.keyUp.isDown) {
             this.managePlayerAnimation('up');
-            this.player.setY(this.player.y - 2)
-        } else if (this.keyQ.isDown) {
+            if (this.player.y > 0) {
+                this.player.setY(this.player.y - 2);
+            } else {
+                this.player.setY(0);
+            }
+
+            if (yCameraPosition > 0) {
+                if (this.player.y < (this.Mappy.widthInPixels - this.startY)) {
+                    this.moveCamera(0, -1, speedMultiplier);
+                }
+            } else {
+                this.cameras.main.scrollY = 0;
+            }
+        } else if (this.keyQ.isDown || this.keyLeft.isDown) {
+
             this.managePlayerAnimation('left');
-            this.player.setX(this.player.x - 2)
-        } else if (this.keyS.isDown) {
+            if (this.player.x > 0) {
+                this.player.setX(this.player.x - 2);
+            } else {
+                this.player.setX(0);
+            }
+
+            if (xCameraPosition > 0) {
+                if (this.player.x < (this.Mappy.heightInPixels - this.startX)) {
+                    this.moveCamera(-1, 0, speedMultiplier);
+                }
+            } else {
+                this.cameras.main.scrollX = 0;
+            }
+        } else if (this.keyS.isDown || this.keyDown.isDown) {
+
             this.managePlayerAnimation('down');
-            this.player.setY(this.player.y + 2)
-        } else if (this.keyD.isDown) {
+            if (this.Mappy.heightInPixels > this.player.y) {
+                this.player.setY(this.player.y + 2);
+            } else {
+                this.player.setY(this.Mappy.heightInPixels);
+            }
+
+            if (this.Mappy.heightInPixels > (yCameraPosition + (window.innerHeight / RESOLUTION))) {
+                if (this.player.y > this.startY) {
+                    this.moveCamera(0, 1, speedMultiplier);
+                }
+            } else {
+                this.cameras.main.scrollY = (this.Mappy.heightInPixels - (window.innerHeight / RESOLUTION));
+            }
+        } else if (this.keyD.isDown || this.keyRight.isDown) {
+
             this.managePlayerAnimation('right');
-            this.player.setX(this.player.x + 2)
+            if (this.Mappy.widthInPixels > this.player.x) {
+                this.player.setX(this.player.x + 2)
+            } else {
+                this.player.setX(this.Mappy.widthInPixels)
+            }
+
+            if (this.Mappy.widthInPixels > (xCameraPosition + (window.innerWidth / RESOLUTION))) {
+                if (this.player.x > this.startX) {
+                    this.moveCamera(1, 0, speedMultiplier);
+                }
+            } else {
+                this.cameras.main.scrollX = (this.Mappy.widthInPixels - (window.innerWidth / RESOLUTION));
+            }
         } else {
             this.managePlayerAnimation('none');
         }
