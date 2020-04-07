@@ -87,7 +87,8 @@ export class IoSocketController{
     //Hydrate and manage error
     hydrateMessageReceive(message : string) : MessageUserPosition | Error{
         try {
-            return new MessageUserPosition(message);
+            let data = JSON.parse(message);
+            return new MessageUserPosition(data);
         }catch (err) {
             //TODO log error
             return new Error(err);
