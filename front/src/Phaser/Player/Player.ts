@@ -1,18 +1,19 @@
 import {MapManagerInterface} from "../Game/MapManager";
 import {getPlayerAnimations, playAnimation, PlayerAnimationNames} from "./Animation";
-import {Connexion} from "../../Connexion";
 import {GameSceneInterface} from "../Game/GameScene";
 import {ConnexionInstance} from "../Game/GameManager";
+import {CameraManagerInterface} from "../Game/CameraManager";
 
 export class Player extends Phaser.GameObjects.Sprite{
     MapManager : MapManagerInterface;
     PlayerValue : string;
-    Connexion: Connexion;
+    CameraManager: CameraManagerInterface;
 
     constructor(
         Scene : GameSceneInterface,
         x : number,
         y : number,
+        CameraManager: CameraManagerInterface,
         MapManager: MapManagerInterface,
         PlayerValue : string = "player"
     ) {
@@ -20,6 +21,7 @@ export class Player extends Phaser.GameObjects.Sprite{
         this.PlayerValue = PlayerValue;
         Scene.add.existing(this);
         this.MapManager = MapManager;
+        this.CameraManager = CameraManager;
     }
 
 
@@ -41,7 +43,7 @@ export class Player extends Phaser.GameObjects.Sprite{
         let direction = null;
 
         if((this.MapManager.keyZ.isDown || this.MapManager.keyUp.isDown)){
-            if(!this.CanToMoveUp()){
+            if(!this.CanMoveUp()){
                 return;
             }
             playAnimation(this, PlayerAnimationNames.WalkUp);
@@ -50,7 +52,7 @@ export class Player extends Phaser.GameObjects.Sprite{
             direction = PlayerAnimationNames.WalkUp;
         }
         if((this.MapManager.keyQ.isDown || this.MapManager.keyLeft.isDown)){
-            if(!this.CanToMoveLeft()){
+            if(!this.CanMoveLeft()){
                 return;
             }
             playAnimation(this, PlayerAnimationNames.WalkLeft);
@@ -59,7 +61,7 @@ export class Player extends Phaser.GameObjects.Sprite{
             direction = PlayerAnimationNames.WalkLeft;
         }
         if((this.MapManager.keyS.isDown || this.MapManager.keyDown.isDown)){
-            if(!this.CanToMoveDown()){
+            if(!this.CanMoveDown()){
                 return;
             }
             playAnimation(this, PlayerAnimationNames.WalkDown);
@@ -68,7 +70,7 @@ export class Player extends Phaser.GameObjects.Sprite{
             direction = PlayerAnimationNames.WalkDown;
         }
         if((this.MapManager.keyD.isDown || this.MapManager.keyRight.isDown)){
-            if(!this.CanToMoveRight()){
+            if(!this.CanMoveRight()){
                 return;
             }
             playAnimation(this, PlayerAnimationNames.WalkRight);
@@ -81,6 +83,8 @@ export class Player extends Phaser.GameObjects.Sprite{
         }else{
             this.sharePosition(direction);
         }
+
+        this.CameraManager.moveCamera(this);
     }
 
     private sharePosition(direction : string){
@@ -89,19 +93,19 @@ export class Player extends Phaser.GameObjects.Sprite{
         }
     }
 
-    private CanToMoveUp(){
+    private CanMoveUp(){
         return this.y > 0;
     }
 
-    private CanToMoveLeft(){
+    private CanMoveLeft(){
         return this.x > 0;
     }
 
-    private CanToMoveDown(){
+    private CanMoveDown(){
         return this.MapManager.Map.heightInPixels > this.y;
     }
 
-    private CanToMoveRight(){
+    private CanMoveRight(){
         return this.MapManager.Map.widthInPixels > this.x;
     }
 }

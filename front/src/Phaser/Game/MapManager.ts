@@ -52,17 +52,17 @@ export class MapManager implements MapManagerInterface{
         //initialise keyboard
         this.initKeyBoard();
 
+        //initialise camera
+        this.Camera = new CameraManager(this.Scene, this.Scene.cameras.main, this);
         //initialise player
         this.CurrentPlayer = new Player(
             this.Scene,
             this.startX,
             this.startY,
+            this.Camera,
             this
         );
         this.CurrentPlayer.initAnimation();
-
-        //initialise camera
-        this.Camera = new CameraManager(this.Scene, this.Scene.cameras.main, this, this.CurrentPlayer);
     }
 
 
@@ -82,6 +82,5 @@ export class MapManager implements MapManagerInterface{
 
     update() : void {
         this.CurrentPlayer.move();
-        this.Camera.moveCamera()
     }
 }
