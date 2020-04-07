@@ -38,6 +38,7 @@ export class Player extends Phaser.GameObjects.Sprite{
         //if user client on shift, camera and player speed
         let speedMultiplier = this.MapManager.keyShift.isDown ? 5 : 1;
         let haveMove = false;
+        let direction = null;
 
         if((this.MapManager.keyZ.isDown || this.MapManager.keyUp.isDown)){
             if(!this.CanToMoveUp()){
@@ -46,6 +47,7 @@ export class Player extends Phaser.GameObjects.Sprite{
             playAnimation(this, PlayerAnimationNames.WalkUp);
             this.setY(this.y - (2 * speedMultiplier));
             haveMove = true;
+            direction = PlayerAnimationNames.WalkUp;
         }
         if((this.MapManager.keyQ.isDown || this.MapManager.keyLeft.isDown)){
             if(!this.CanToMoveLeft()){
@@ -54,6 +56,7 @@ export class Player extends Phaser.GameObjects.Sprite{
             playAnimation(this, PlayerAnimationNames.WalkLeft);
             this.setX(this.x - (2 * speedMultiplier));
             haveMove = true;
+            direction = PlayerAnimationNames.WalkLeft;
         }
         if((this.MapManager.keyS.isDown || this.MapManager.keyDown.isDown)){
             if(!this.CanToMoveDown()){
@@ -62,6 +65,7 @@ export class Player extends Phaser.GameObjects.Sprite{
             playAnimation(this, PlayerAnimationNames.WalkDown);
             this.setY(this.y + (2 * speedMultiplier));
             haveMove = true;
+            direction = PlayerAnimationNames.WalkDown;
         }
         if((this.MapManager.keyD.isDown || this.MapManager.keyRight.isDown)){
             if(!this.CanToMoveRight()){
@@ -70,17 +74,18 @@ export class Player extends Phaser.GameObjects.Sprite{
             playAnimation(this, PlayerAnimationNames.WalkRight);
             this.setX(this.x + (2 * speedMultiplier));
             haveMove = true;
+            direction = PlayerAnimationNames.WalkRight;
         }
         if(!haveMove){
             playAnimation(this, PlayerAnimationNames.None);
         }else{
-            this.sharePosition();
+            this.sharePosition(direction);
         }
     }
 
-    private sharePosition(){
+    private sharePosition(direction : string){
         if(ConnexionInstance) {
-            ConnexionInstance.sharePosition((this.scene as GameSceneInterface).RoomId, this.x, this.y);
+            ConnexionInstance.sharePosition((this.scene as GameSceneInterface).RoomId, this.x, this.y, direction);
         }
     }
 

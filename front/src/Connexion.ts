@@ -30,19 +30,22 @@ export class Message {
 export class Point implements PointInterface{
     x: number;
     y: number;
+    direction : string;
 
-    constructor(x : number, y : number) {
+    constructor(x : number, y : number, direction : string = "none") {
         if(x  === null || y === null){
             throw Error("position x and y cannot be null");
         }
         this.x = x;
         this.y = y;
+        this.direction = direction;
     }
 
     toJson(){
         return {
             x : this.x,
-            y: this.y
+            y: this.y,
+            direction: this.direction
         }
     }
 }
@@ -114,15 +117,17 @@ export class Connexion {
     }
 
     /**
-     * Permit to share your position in map
+     *
+     * @param roomId
      * @param x
      * @param y
+     * @param direction
      */
-    sharePosition(roomId : string, x : number, y : number){
+    sharePosition(roomId : string, x : number, y : number, direction : string = "none"){
         if(!this.socket){
             return;
         }
-        let messageUserPosition = new MessageUserPosition(this.email, roomId, new Point(x, y));
+        let messageUserPosition = new MessageUserPosition(this.email, roomId, new Point(x, y, direction));
         this.socket.emit('user-position', messageUserPosition.toString());
     }
 
