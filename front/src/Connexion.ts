@@ -139,7 +139,8 @@ export class Connexion {
      *       roomId: <string>,
      *       position: {
      *           x : <number>,
-     *           y : <number>
+     *           y : <number>,
+     *           direction: <string>
      *       }
      *     },
      * ...
