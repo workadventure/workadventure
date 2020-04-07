@@ -49,11 +49,7 @@ export const getPlayerAnimations = (PlayerValue : string): AnimationData[] => {
 
 export const playAnimation = (Player : Phaser.GameObjects.Sprite, direction : string) => {
     if (!Player.anims.currentAnim || Player.anims.currentAnim.key !== direction) {
-        if (direction !== PlayerAnimationNames.None) {
-            Player.anims.play(direction);
-        } else if (Player.anims.isPlaying) {
-            Player.anims.stop();
-        }
+        Player.anims.play(direction);
     } else if (direction === PlayerAnimationNames.None && Player.anims.currentAnim) {
         Player.anims.currentAnim.destroy();
     }
