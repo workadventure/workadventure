@@ -1,3 +1,5 @@
+import {GameManagerInterface} from "./Phaser/Game/GameManager";
+
 const SocketIo = require('socket.io-client');
 import Axios from "axios";
 import {API_URL} from "./Enum/EnvironmentVariable";
@@ -70,8 +72,11 @@ export class Connexion {
     email : string;
     startedRoom : string;
 
-    constructor(email : string) {
+    GameManager: GameManagerInterface;
+
+    constructor(email : string, GameManager: GameManagerInterface) {
         this.email = email;
+        this.GameManager = GameManager;
         Axios.post(`${API_URL}/login`, {email: email})
             .then((res) => {
                 this.token = res.data.token;
@@ -87,9 +92,8 @@ export class Connexion {
                 this.joinARoom(this.startedRoom);
 
                 //share your first position
-                this.sharePosition(0, 0);
+                this.sharePosition(this.startedRoom, 0, 0);
 
-                //create listen event to get all data user shared by the back
                 this.positionOfAllUser();
 
                 this.errorMessage();
@@ -114,8 +118,8 @@ export class Connexion {
      * @param x
      * @param y
      */
-    sharePosition(x : number, y : number){
-        let messageUserPosition = new MessageUserPosition(this.email, this.startedRoom, new Point(x, y));
+    sharePosition(roomId : string, x : number, y : number){
+        let messageUserPosition = new MessageUserPosition(this.email, roomId, new Point(x, y));
         this.socket.emit('user-position', messageUserPosition.toString());
     }
 
@@ -135,8 +139,10 @@ export class Connexion {
      **/
     positionOfAllUser(){
         this.socket.on("user-position", (message : string) => {
-            //TODO show all user in map
-            console.info("user-position", message);
+            let data = JSON.parse(message);
+            data.forEach((UserPositions : any) => {
+                this.GameManager.sharedUserPosition(UserPositions);
+            });
         });
     }
 

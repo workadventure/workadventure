@@ -1,12 +1,16 @@
-import {MapManagerInterface} from "./MapManager";
-import {getPlayerAnimations, playAnimation, PlayerAnimationNames} from "./Player/Animation";
+import {MapManagerInterface} from "../Game/MapManager";
+import {getPlayerAnimations, playAnimation, PlayerAnimationNames} from "./Animation";
+import {Connexion} from "../../Connexion";
+import {GameSceneInterface} from "../Game/GameScene";
+import {ConnexionInstance} from "../Game/GameManager";
 
 export class Player extends Phaser.GameObjects.Sprite{
     MapManager : MapManagerInterface;
     PlayerValue : string;
+    Connexion: Connexion;
 
     constructor(
-        Scene : Phaser.Scene,
+        Scene : GameSceneInterface,
         x : number,
         y : number,
         MapManager: MapManagerInterface,
@@ -69,6 +73,14 @@ export class Player extends Phaser.GameObjects.Sprite{
         }
         if(!haveMove){
             playAnimation(this, PlayerAnimationNames.None);
+        }else{
+            this.sharePosition();
+        }
+    }
+
+    private sharePosition(){
+        if(ConnexionInstance) {
+            ConnexionInstance.sharePosition((this.scene as GameSceneInterface).RoomId, this.x, this.y);
         }
     }
 

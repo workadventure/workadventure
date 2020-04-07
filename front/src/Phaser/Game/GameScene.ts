@@ -1,12 +1,19 @@
 import {MapManagerInterface, MapManager} from "./MapManager";
+import {GameManagerInterface} from "./GameManager";
 
-export class GameScene extends Phaser.Scene {
+export interface GameSceneInterface extends Phaser.Scene {
+    RoomId : string;
+    sharedUserPosition(data : []): void;
+}
+export class GameScene extends Phaser.Scene implements GameSceneInterface{
     private MapManager : MapManagerInterface;
+    RoomId : string;
 
-    constructor() {
+    constructor(RoomId : string, GameManager : GameManagerInterface) {
         super({
             key: "GameScene"
         });
+        this.RoomId = RoomId;
     }
 
     //hook preload scene
@@ -31,5 +38,10 @@ export class GameScene extends Phaser.Scene {
     //hook update
     update(dt: number): void {
         this.MapManager.update();
+    }
+
+    sharedUserPosition(data: []): void {
+        //TODO share position of all user
+        //console.log("sharedUserPosition", data);
     }
 }

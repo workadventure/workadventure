@@ -1,5 +1,5 @@
-import {RESOLUTION} from "../Enum/EnvironmentVariable";
-import {Player} from "./Player";
+import {RESOLUTION} from "../../Enum/EnvironmentVariable";
+import {Player} from "../Player/Player";
 import {MapManagerInterface} from "./MapManager";
 
 export interface CameraManagerInterface {

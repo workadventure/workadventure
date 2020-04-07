@@ -1,6 +1,7 @@
 import {CameraManager, CameraManagerInterface} from "./CameraManager";
-import {RESOLUTION} from "../Enum/EnvironmentVariable";
-import {Player} from "./Player";
+import {RESOLUTION} from "../../Enum/EnvironmentVariable";
+import {Player} from "../Player/Player";
+import {GameScene, GameSceneInterface} from "./GameScene";
 
 export interface MapManagerInterface {
     keyZ: Phaser.Input.Keyboard.Key;
@@ -16,6 +17,7 @@ export interface MapManagerInterface {
     Map: Phaser.Tilemaps.Tilemap;
     Terrain: Phaser.Tilemaps.Tileset;
     Camera: CameraManagerInterface;
+    Scene: GameSceneInterface;
     update(): void;
 }
 export class MapManager implements MapManagerInterface{
@@ -32,12 +34,12 @@ export class MapManager implements MapManagerInterface{
     Terrain : Phaser.Tilemaps.Tileset;
     Camera: CameraManagerInterface;
     CurrentPlayer: Player;
-    Scene: Phaser.Scene;
+    Scene: GameSceneInterface;
     Map: Phaser.Tilemaps.Tilemap;
     startX = (window.innerWidth / 2) / RESOLUTION;
     startY = (window.innerHeight / 2) / RESOLUTION;
 
-    constructor(scene: Phaser.Scene){
+    constructor(scene: GameSceneInterface){
         this.Scene = scene;
 
         //initalise map
