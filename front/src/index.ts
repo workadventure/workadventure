@@ -1,6 +1,6 @@
 import 'phaser';
 import GameConfig = Phaser.Types.Core.GameConfig;
-import {GameScene} from "./GameScene";
+import {GameScene} from "./Phaser/GameScene";
 import {Connexion} from "./Connexion";
 import {RESOLUTION} from "./Enum/EnvironmentVariable";
 
