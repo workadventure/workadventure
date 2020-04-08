@@ -1,3 +1,5 @@
+import {GameManagerInterface} from "./Phaser/Game/GameManager";
+
 const SocketIo = require('socket.io-client');
 import Axios from "axios";
 import {API_URL} from "./Enum/EnvironmentVariable";
@@ -28,19 +30,22 @@ export class Message {
 export class Point implements PointInterface{
     x: number;
     y: number;
+    direction : string;
 
-    constructor(x : number, y : number) {
+    constructor(x : number, y : number, direction : string = "none") {
         if(x  === null || y === null){
             throw Error("position x and y cannot be null");
         }
         this.x = x;
         this.y = y;
+        this.direction = direction;
     }
 
     toJson(){
         return {
             x : this.x,
-            y: this.y
+            y: this.y,
+            direction: this.direction
         }
     }
 }
@@ -70,8 +75,11 @@ export class Connexion {
     email : string;
     startedRoom : string;
 
-    constructor(email : string) {
+    GameManager: GameManagerInterface;
+
+    constructor(email : string, GameManager: GameManagerInterface) {
         this.email = email;
+        this.GameManager = GameManager;
         Axios.post(`${API_URL}/login`, {email: email})
             .then((res) => {
                 this.token = res.data.token;
@@ -87,9 +95,8 @@ export class Connexion {
                 this.joinARoom(this.startedRoom);
 
                 //share your first position
-                this.sharePosition(0, 0);
+                this.sharePosition(this.startedRoom, 0, 0);
 
-                //create listen event to get all data user shared by the back
                 this.positionOfAllUser();
 
                 this.errorMessage();
@@ -110,12 +117,17 @@ export class Connexion {
     }
 
     /**
-     * Permit to share your position in map
+     *
+     * @param roomId
      * @param x
      * @param y
+     * @param direction
      */
-    sharePosition(x : number, y : number){
-        let messageUserPosition = new MessageUserPosition(this.email, this.startedRoom, new Point(x, y));
+    sharePosition(roomId : string, x : number, y : number, direction : string = "none"){
+        if(!this.socket){
+            return;
+        }
+        let messageUserPosition = new MessageUserPosition(this.email, roomId, new Point(x, y, direction));
         this.socket.emit('user-position', messageUserPosition.toString());
     }
 
@@ -127,7 +139,8 @@ export class Connexion {
      *       roomId: <string>,
      *       position: {
      *           x : <number>,
-     *           y : <number>
+     *           y : <number>,
+     *           direction: <string>
      *       }
      *     },
      * ...
@@ -135,8 +148,10 @@ export class Connexion {
      **/
     positionOfAllUser(){
         this.socket.on("user-position", (message : string) => {
-            //TODO show all user in map
-            console.info("user-position", message);
+            let data = JSON.parse(message);
+            data.forEach((UserPositions : any) => {
+                this.GameManager.sharedUserPosition(UserPositions);
+            });
         });
     }
 
