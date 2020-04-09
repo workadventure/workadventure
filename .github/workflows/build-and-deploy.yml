@@ -68,4 +68,4 @@ jobs:
           KUBE_CONFIG_FILE: ${{ secrets.KUBE_CONFIG_FILE }}
           AUTOCONNECT: 1
         with:
-          namespace: workadventure-${GITHUB_REF#refs/heads/}
+          namespace: workadventure-master
