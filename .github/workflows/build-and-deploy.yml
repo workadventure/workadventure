@@ -26,6 +26,7 @@ jobs:
       - name: "Build and push front image"
         uses: docker/build-push-action@v1
         with:
+          dockerfile: front/Dockerfile
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-front
@@ -45,12 +46,12 @@ jobs:
       - name: "Build and push back image"
         uses: docker/build-push-action@v1
         with:
+          dockerfile: back/Dockerfile
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-back
           tag_with_ref: true
           add_git_labels: true
-        working-directory: "back"
 
   deeploy:
     needs:
