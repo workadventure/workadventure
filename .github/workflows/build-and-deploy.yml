@@ -1,0 +1,65 @@
+name: Build, push and deploy Docker image
+
+on:
+  push:
+    branches:
+      - master
+      - cd
+#    tags:
+#      - '*'
+
+# Enables BuildKit
+env:
+  DOCKER_BUILDKIT: 1
+
+jobs:
+
+  build-front:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: "Build and push front image"
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: thecodingmachine/workadventure-front
+          tag_with_ref: true
+          add_git_labels: true
+        working-directory: "front"
+
+  build-back:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: "Build and push back image"
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: thecodingmachine/workadventure-back
+          tag_with_ref: true
+          add_git_labels: true
+        working-directory: "back"
+
+  deeploy:
+    needs:
+      - build-front
+      - build-back
+    runs-on: ubuntu-latest
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: "Deploy"
+        uses: thecodingmachine/deeployer@master

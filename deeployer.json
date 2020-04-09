@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/thecodingmachine/deeployer/master/deeployer.schema.json",
+  "containers": {
+     "back": {
+       "image": "",
+       "host": "http://api.workadventure.test.thecodingmachine.com",
+       "env": {
+         "SECRET_KEY": "tempSecretKeyNeedsToChange"
+       }
+     },
+    "front": {
+      "image": "",
+      "host": "http://workadventure.test.thecodingmachine.com",
+      "env": {
+        "API_URL": "http://api.workadventure.test.thecodingmachine.com"
+      }
+    }
+  }
+}
