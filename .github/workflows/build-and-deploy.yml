@@ -32,7 +32,6 @@ jobs:
           repository: thecodingmachine/workadventure-front
           tag_with_ref: true
           add_git_labels: true
-        working-directory: "front"
 
   build-back:
 
