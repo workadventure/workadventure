@@ -32,12 +32,28 @@ describe("World", () => {
         world.updatePosition(new MessageUserPosition({
             userId: "bar",
             roomId: 1,
+            position: new Point(261, 100)
+        }));
+
+        expect(connectCalled).toBe(false);
+
+        world.updatePosition(new MessageUserPosition({
+            userId: "bar",
+            roomId: 1,
             position: new Point(101, 100)
         }));
 
-        //expect(connectCalled).toBe(true);
+        expect(connectCalled).toBe(true);
 
-    }),
+        connectCalled = false;
+        world.updatePosition(new MessageUserPosition({
+            userId: "bar",
+            roomId: 1,
+            position: new Point(102, 100)
+        }));
+        expect(connectCalled).toBe(false);
+    });
+    /** 
     it('Should return the distances between all users', () => {
         let connectCalled: boolean = false;
         let connect = (user1: string, user2: string): void => {
@@ -83,4 +99,5 @@ describe("World", () => {
 
         //expect(distances).toBe([]);
     })
+    **/
 })
