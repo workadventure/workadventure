@@ -64,5 +64,8 @@ jobs:
 
       - name: Deploy
         uses: thecodingmachine/deeployer@master
+        env:
+          KUBE_CONFIG_FILE: ${{ secrets.KUBE_CONFIG_FILE }}
+          AUTOCONNECT: 1
         with:
           namespace: workadventure-${GITHUB_REF#refs/heads/}
