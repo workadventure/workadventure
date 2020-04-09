@@ -62,5 +62,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: "Deploy"
+      - name: Deploy
         uses: thecodingmachine/deeployer@master
+        with:
+          namespace: workadventure-${GITHUB_REF#refs/heads/}
