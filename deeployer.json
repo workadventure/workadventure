@@ -2,15 +2,17 @@
   "$schema": "https://raw.githubusercontent.com/thecodingmachine/deeployer/master/deeployer.schema.json",
   "containers": {
      "back": {
-       "image": "",
+       "image": "thecodingmachine/workadventure-back:cd",
        "host": "http://api.workadventure.test.thecodingmachine.com",
+       "ports": [8080],
        "env": {
          "SECRET_KEY": "tempSecretKeyNeedsToChange"
        }
      },
     "front": {
-      "image": "",
+      "image": "thecodingmachine/workadventure-front:cd",
       "host": "http://workadventure.test.thecodingmachine.com",
+      "ports": [80],
       "env": {
         "API_URL": "http://api.workadventure.test.thecodingmachine.com"
       }
