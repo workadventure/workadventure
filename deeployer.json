@@ -3,7 +3,7 @@
   "containers": {
      "back": {
        "image": "thecodingmachine/workadventure-back:cd",
-       "host": "http://api.workadventure.test.thecodingmachine.com",
+       "host": "api.workadventure.test.thecodingmachine.com",
        "ports": [8080],
        "env": {
          "SECRET_KEY": "tempSecretKeyNeedsToChange"
@@ -11,7 +11,7 @@
      },
     "front": {
       "image": "thecodingmachine/workadventure-front:cd",
-      "host": "http://workadventure.test.thecodingmachine.com",
+      "host": "workadventure.test.thecodingmachine.com",
       "ports": [80],
       "env": {
         "API_URL": "http://api.workadventure.test.thecodingmachine.com"
