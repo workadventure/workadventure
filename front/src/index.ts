@@ -12,6 +12,9 @@ const config: GameConfig = {
     parent: "game",
     scene: gameManager.GameScenes,
     zoom: RESOLUTION,
+    physics: {
+        default: 'impact'
+    },
 };
 
 let game = new Phaser.Game(config);

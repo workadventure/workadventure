@@ -1,8 +1,9 @@
 import {CameraManager, CameraManagerInterface} from "./CameraManager";
 import {RESOLUTION} from "../../Enum/EnvironmentVariable";
 import {Player} from "../Player/Player";
-import {GameScene, GameSceneInterface} from "./GameScene";
-import {UserInputManager} from "../UserInput/UserInputManager";
+import {Rock} from "../Rock/Rock";
+import {GameSceneInterface} from "./GameScene";
+import {UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
 
 export interface MapManagerInterface {
     Map: Phaser.Tilemaps.Tilemap;
@@ -21,6 +22,7 @@ export class MapManager implements MapManagerInterface{
     startX = (window.innerWidth / 2) / RESOLUTION;
     startY = (window.innerHeight / 2) / RESOLUTION;
     userInputManager: UserInputManager;
+    private rock: Rock;
 
     constructor(scene: GameSceneInterface){
         this.Scene = scene;
@@ -44,11 +46,21 @@ export class MapManager implements MapManagerInterface{
             this
         );
         this.CurrentPlayer.initAnimation();
+        this.rock = new Rock(
+            this.Scene,
+            100,
+            300,
+        );
+        //this.rock.set()
     }
 
     update() : void {
         let activeEvents = this.userInputManager.getEventListForGameTick();
         
         this.CurrentPlayer.move(activeEvents);
+        
+        /*if (activeEvents.get(UserInputEvent.Interact)) {
+            
+        }*/
     }
 }

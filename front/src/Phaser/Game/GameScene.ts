@@ -1,6 +1,10 @@
 import {MapManagerInterface, MapManager} from "./MapManager";
 import {GameManagerInterface} from "./GameManager";
 
+export enum Textures {
+    Rock = 'rock',
+}
+
 export interface GameSceneInterface extends Phaser.Scene {
     RoomId : string;
     sharedUserPosition(data : []): void;
@@ -18,6 +22,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
     //hook preload scene
     preload(): void {
+        this.load.image(Textures.Rock, 'resources/objects/rockSprite.png');
         this.load.image('tiles', 'maps/tiles.png');
         this.load.tilemapTiledJSON('map', 'maps/map2.json');
         this.load.spritesheet('player',
