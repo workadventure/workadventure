@@ -1,8 +1,8 @@
 FROM thecodingmachine/nodejs:12
 
-COPY . .
+COPY --chown=docker:docker . .
 RUN yarn install
 
 ENV NODE_ENV=production
 
-CMD ['yarn', 'run', 'prod']
+CMD ["yarn", "run", "prod"]
