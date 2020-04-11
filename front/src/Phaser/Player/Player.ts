@@ -3,6 +3,7 @@ import {getPlayerAnimations, playAnimation, PlayerAnimationNames} from "./Animat
 import {GameSceneInterface} from "../Game/GameScene";
 import {ConnexionInstance} from "../Game/GameManager";
 import {CameraManagerInterface} from "../Game/CameraManager";
+import {ActiveEventList, UserInputEvent} from "../UserInput/UserInputManager";
 
 export class Player extends Phaser.GameObjects.Sprite{
     MapManager : MapManagerInterface;
@@ -36,13 +37,13 @@ export class Player extends Phaser.GameObjects.Sprite{
         })
     }
 
-    move(){
+    move(activeEvents: ActiveEventList){
         //if user client on shift, camera and player speed
-        let speedMultiplier = this.MapManager.keyShift.isDown ? 5 : 1;
+        let speedMultiplier = activeEvents.get(UserInputEvent.SpeedUp) ? 5 : 1;
         let haveMove = false;
         let direction = null;
 
-        if((this.MapManager.keyZ.isDown || this.MapManager.keyUp.isDown)){
+        if(activeEvents.get(UserInputEvent.MoveUp)){
             if(!this.CanMoveUp()){
                 return;
             }
@@ -51,7 +52,7 @@ export class Player extends Phaser.GameObjects.Sprite{
             haveMove = true;
             direction = PlayerAnimationNames.WalkUp;
         }
-        if((this.MapManager.keyQ.isDown || this.MapManager.keyLeft.isDown)){
+        if(activeEvents.get(UserInputEvent.MoveLeft)){
             if(!this.CanMoveLeft()){
                 return;
             }
@@ -60,7 +61,7 @@ export class Player extends Phaser.GameObjects.Sprite{
             haveMove = true;
             direction = PlayerAnimationNames.WalkLeft;
         }
-        if((this.MapManager.keyS.isDown || this.MapManager.keyDown.isDown)){
+        if(activeEvents.get(UserInputEvent.MoveDown)){
             if(!this.CanMoveDown()){
                 return;
             }
@@ -69,7 +70,7 @@ export class Player extends Phaser.GameObjects.Sprite{
             haveMove = true;
             direction = PlayerAnimationNames.WalkDown;
         }
-        if((this.MapManager.keyD.isDown || this.MapManager.keyRight.isDown)){
+        if(activeEvents.get(UserInputEvent.MoveRight)){
             if(!this.CanMoveRight()){
                 return;
             }
