@@ -1,7 +1,6 @@
 import {RESOLUTION} from "../../Enum/EnvironmentVariable";
 import {Player} from "../Player/Player";
 import {MapManagerInterface} from "./MapManager";
-import {PlayerAnimationNames} from "../Player/Animation";
 
 export interface CameraManagerInterface {
     MapManager : MapManagerInterface;

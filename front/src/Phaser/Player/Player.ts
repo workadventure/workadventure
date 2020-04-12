@@ -5,7 +5,25 @@ import {ConnexionInstance} from "../Game/GameManager";
 import {CameraManagerInterface} from "../Game/CameraManager";
 import {MessageUserPositionInterface} from "../../Connexion";
 
-export class Player extends Phaser.GameObjects.Sprite{
+export interface CurrentGamerInterface{
+    userId : string;
+    MapManager : MapManagerInterface;
+    PlayerValue : string;
+    CameraManager: CameraManagerInterface;
+    initAnimation() : void;
+    move() : void;
+}
+
+export interface GamerInterface{
+    userId : string;
+    MapManager : MapManagerInterface;
+    PlayerValue : string;
+    CameraManager: CameraManagerInterface;
+    initAnimation() : void;
+    updatePosition(MessageUserPosition : MessageUserPositionInterface) : void;
+}
+
+export class Player extends Phaser.GameObjects.Sprite implements CurrentGamerInterface, GamerInterface{
     userId : string;
     MapManager : MapManagerInterface;
     PlayerValue : string;
@@ -28,7 +46,7 @@ export class Player extends Phaser.GameObjects.Sprite{
         this.CameraManager = CameraManager;
     }
 
-    initAnimation(){
+    initAnimation() : void{
         getPlayerAnimations(this.PlayerValue).forEach(d => {
             this.scene.anims.create({
                 key: d.key,
@@ -39,7 +57,7 @@ export class Player extends Phaser.GameObjects.Sprite{
         })
     }
 
-    move(){
+    move() : void{
         //if user client on shift, camera and player speed
         let speedMultiplier = this.MapManager.keyShift.isDown ? 5 : 1;
         let haveMove = false;

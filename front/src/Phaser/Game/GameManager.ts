@@ -1,13 +1,13 @@
 import {GameSceneInterface, GameScene} from "./GameScene";
 import {ROOM} from "../../Enum/EnvironmentVariable"
-import {Connexion, ListMessageUserPositionInterface} from "../../Connexion";
+import {Connexion, ConnexionInterface, ListMessageUserPositionInterface} from "../../Connexion";
 
 export enum StatusGameManagerEnum {
     IN_PROGRESS = 1,
     CURRENT_USER_CREATED = 2
 }
 
-export let ConnexionInstance : Connexion;
+export let ConnexionInstance : ConnexionInterface;
 
 export interface GameManagerInterface {
     GameScenes: Array<GameSceneInterface>;
@@ -25,7 +25,7 @@ export class GameManager implements GameManagerInterface {
     }
 
     createGame(){
-        return ConnexionInstance.createConnexion().then((data: any) => {
+        return ConnexionInstance.createConnexion().then(() => {
             this.configureGame();
             /** TODO add loader in the page **/
         }).catch((err) => {

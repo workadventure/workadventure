@@ -1,6 +1,6 @@
 import {CameraManager, CameraManagerInterface} from "./CameraManager";
 import {RESOLUTION} from "../../Enum/EnvironmentVariable";
-import {Player} from "../Player/Player";
+import {CurrentGamerInterface, GamerInterface, Player} from "../Player/Player";
 import {GameSceneInterface} from "./GameScene";
 import {MessageUserPositionInterface} from "../../Connexion";
 
@@ -37,8 +37,8 @@ export class MapManager implements MapManagerInterface{
 
     Terrain : Phaser.Tilemaps.Tileset;
     Camera: CameraManagerInterface;
-    CurrentPlayer: Player;
-    MapPlayers : Player[];
+    CurrentPlayer: CurrentGamerInterface;
+    MapPlayers : GamerInterface[];
     Scene: GameSceneInterface;
     Map: Phaser.Tilemaps.Tilemap;
     startX = (window.innerWidth / 2) / RESOLUTION;
@@ -59,7 +59,7 @@ export class MapManager implements MapManagerInterface{
         //initialise camera
         this.Camera = new CameraManager(this.Scene, this.Scene.cameras.main, this);
         //initialise list of other player
-        this.MapPlayers = new Array<Player>();
+        this.MapPlayers = new Array<GamerInterface>();
     }
 
     createCurrentPlayer(UserId : string){

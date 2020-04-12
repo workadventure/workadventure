@@ -99,8 +99,18 @@ class ListMessageUserPosition{
         });
     }
 }
-
-export class Connexion {
+export interface ConnexionInterface {
+    socket : any;
+    token : string;
+    email : string;
+    userId: string;
+    startedRoom : string;
+    createConnexion() : Promise<any>;
+    joinARoom(roomId : string) : void;
+    sharePosition(roomId : string, x : number, y : number, direction : string) : void;
+    positionOfAllUser() : void;
+}
+export class Connexion implements ConnexionInterface{
     socket : any;
     token : string;
     email : string;
@@ -114,7 +124,7 @@ export class Connexion {
         this.GameManager = GameManager;
     }
 
-    createConnexion(){
+    createConnexion() : Promise<ConnexionInterface>{
         return Axios.post(`${API_URL}/login`, {email: this.email})
             .then((res) => {
                 this.token = res.data.token;
@@ -137,10 +147,7 @@ export class Connexion {
 
                 this.errorMessage();
 
-                return{
-                    userId: this.userId,
-                    roomId: this.startedRoom
-                }
+                return this;
             })
             .catch((err) => {
                 console.error(err);
@@ -152,7 +159,7 @@ export class Connexion {
      * Permit to join a room
      * @param roomId
      */
-    joinARoom(roomId : string){
+    joinARoom(roomId : string) : void {
         let messageUserPosition = new MessageUserPosition(this.userId, this.startedRoom, new Point(0, 0));
         this.socket.emit('join-room', messageUserPosition.toString());
     }
@@ -164,7 +171,7 @@ export class Connexion {
      * @param y
      * @param direction
      */
-    sharePosition(roomId : string, x : number, y : number, direction : string = "none"){
+    sharePosition(roomId : string, x : number, y : number, direction : string = "none") : void{
         if(!this.socket){
             return;
         }
@@ -187,7 +194,7 @@ export class Connexion {
      * ...
      * ]
      **/
-    positionOfAllUser() {
+    positionOfAllUser() : void {
         this.socket.on("user-position", (message: string) => {
             let dataList = JSON.parse(message);
             dataList.forEach((UserPositions: any) => {
@@ -197,7 +204,7 @@ export class Connexion {
         });
     }
 
-    errorMessage(){
+    errorMessage() : void {
         this.socket.on('message-error', (message : string) => {
             console.error("message-error", message);
         })
