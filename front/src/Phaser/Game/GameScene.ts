@@ -2,6 +2,7 @@ import {GameManagerInterface} from "./GameManager";
 import {UserInputManager} from "../UserInput/UserInputManager";
 import {getPlayerAnimations, PlayerAnimationNames} from "../Player/Animation";
 import {Player} from "../Player/Player";
+import {NonPlayer} from "../NonPlayer/NonPlayer";
 
 export enum Textures {
     Rock = 'rock',
@@ -20,6 +21,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     private player: Player;
     private rock: Phaser.Physics.Arcade.Sprite;
     private userInputManager: UserInputManager;
+    private otherPlayers: Phaser.Physics.Arcade.Group;
 
     constructor(RoomId : string, GameManager : GameManagerInterface) {
         super({
@@ -55,9 +57,13 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         //create entities
         this.player = new Player(this, 400, 400);
         this.rock = this.physics.add.sprite(200, 400, Textures.Rock, 26).setImmovable(true);
-        this.physics.world.addCollider(this.player, this.rock, (player: Player, rock) => {
-            rock.destroy();
-        });
+        this.physics.add.collider(this.player, this.rock);
+        
+        this.otherPlayers = this.physics.add.group({ immovable: true });
+        this.otherPlayers.add(new NonPlayer(this, 200, 600));
+        this.otherPlayers.add(new NonPlayer(this, 400, 600));
+
+        this.physics.add.collider(this.player, this.otherPlayers);
         
         //create map
         let currentMap = this.add.tilemap(Textures.Map);
