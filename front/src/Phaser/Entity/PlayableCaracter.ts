@@ -13,4 +13,20 @@ export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
         this.setImmovable(true);
         this.setCollideWorldBounds(true)
     }
+
+    move(x: number, y: number){
+
+        this.setVelocity(x, y);
+
+        //todo improve animations to better account for diagonal movement
+        if (this.body.velocity.x > 0) { //moving right
+            this.play(PlayerAnimationNames.WalkRight, true);
+        } else if (this.body.velocity.x < 0) { //moving left
+            this.anims.playReverse(PlayerAnimationNames.WalkLeft, true);
+        } else if (this.body.velocity.y < 0) { //moving up
+            this.play(PlayerAnimationNames.WalkUp, true);
+        } else if (this.body.velocity.y > 0) { //moving down
+            this.play(PlayerAnimationNames.WalkDown, true);
+        }
+    }
 }

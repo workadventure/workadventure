@@ -1,5 +1,5 @@
 import {GameManagerInterface} from "./GameManager";
-import {UserInputManager} from "../UserInput/UserInputManager";
+import {UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
 import {getPlayerAnimations, PlayerAnimationNames} from "../Player/Animation";
 import {Player} from "../Player/Player";
 import {NonPlayer} from "../NonPlayer/NonPlayer";
@@ -64,7 +64,10 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         this.otherPlayers.add(new NonPlayer(this, 200, 600));
         this.otherPlayers.add(new NonPlayer(this, 400, 600));
 
-        this.physics.add.collider(this.player, this.otherPlayers);
+        this.physics.add.collider(this.player, this.otherPlayers, (player: Player, otherPlayer: NonPlayer) => {
+            console.log("Don't touch me!");
+            otherPlayer.fleeFrom(player)
+        });
         
         //create map
         let currentMap = this.add.tilemap(Textures.Map);
@@ -101,13 +104,31 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
     //hook update
     update(dt: number): void {
-        let eventList = this.userInputManager.getEventListForGameTick();
+        //user inputs
+        let activeEvents = this.userInputManager.getEventListForGameTick();
+        let speed = activeEvents.get(UserInputEvent.SpeedUp) ? 500 : 100;
+
+        if(activeEvents.get(UserInputEvent.MoveUp)){
+            this.player.move(0, -speed)
+        } else if(activeEvents.get(UserInputEvent.MoveLeft)){
+            this.player.move(-speed, 0)
+        } else if(activeEvents.get(UserInputEvent.MoveDown)){
+            this.player.move(0, speed)
+        } else if(activeEvents.get(UserInputEvent.MoveRight)){
+            this.player.move(speed, 0)
+        } else {
+            this.player.move(0, 0)
+        }
         
-        this.player.move(eventList);
         
+        //updates other players
         this.otherPlayers.getChildren().forEach((otherPlayer: NonPlayer) => {
             //this.physics.accelerateToObject(otherPlayer, this.player); //this line make the models chase the player
-            otherPlayer.setVelocity(20, 5);
+            if (otherPlayer.isFleeing) {
+                otherPlayer.move(otherPlayer.fleeingDirection.x, otherPlayer.fleeingDirection.y);
+            } else {
+                otherPlayer.move(0, 0);
+            }
         })
     }
 
