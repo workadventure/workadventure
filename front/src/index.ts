@@ -14,8 +14,10 @@ const config: GameConfig = {
     zoom: RESOLUTION,
 };
 
-let game = new Phaser.Game(config);
+gameManager.createGame().then(() => {
+    let game = new Phaser.Game(config);
 
-window.addEventListener('resize', function (event) {
-    game.scale.resize(window.innerWidth / RESOLUTION, window.innerHeight / RESOLUTION);
+    window.addEventListener('resize', function (event) {
+        game.scale.resize(window.innerWidth / RESOLUTION, window.innerHeight / RESOLUTION);
+    });
 });

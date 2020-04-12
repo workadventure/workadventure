@@ -1,12 +1,15 @@
 import {MapManagerInterface, MapManager} from "./MapManager";
-import {GameManagerInterface} from "./GameManager";
+import {GameManagerInterface, StatusGameManagerEnum} from "./GameManager";
+import {MessageUserPositionInterface} from "../../Connexion";
 
 export interface GameSceneInterface extends Phaser.Scene {
     RoomId : string;
-    sharedUserPosition(data : []): void;
+    createCurrentPlayer(UserId : string) : void;
+    shareUserPosition(UsersPosition : Array<MessageUserPositionInterface>): void;
 }
 export class GameScene extends Phaser.Scene implements GameSceneInterface{
     private MapManager : MapManagerInterface;
+    GameManager : GameManagerInterface;
     RoomId : string;
 
     constructor(RoomId : string, GameManager : GameManagerInterface) {
@@ -14,6 +17,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             key: "GameScene"
         });
         this.RoomId = RoomId;
+        this.GameManager = GameManager;
     }
 
     //hook preload scene
@@ -33,15 +37,31 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     create(): void {
         //create map manager
         this.MapManager = new MapManager(this);
+        //notify game manager can to create currentUser in map
+        this.GameManager.createCurrentPlayer();
+    }
+
+    /**
+     * Create current player
+     * @param UserId
+     */
+    createCurrentPlayer(UserId : string): void {
+        this.MapManager.createCurrentPlayer(UserId)
     }
 
     //hook update
     update(dt: number): void {
+        if(this.GameManager.status === StatusGameManagerEnum.IN_PROGRESS){
+            return;
+        }
         this.MapManager.update();
     }
 
-    sharedUserPosition(data: []): void {
-        //TODO share position of all user
-        //console.log("sharedUserPosition", data);
+    /**
+     * Share position in scene
+     * @param UsersPosition
+     */
+    shareUserPosition(UsersPosition : Array<MessageUserPositionInterface>): void {
+        this.MapManager.updateOrCreateMapPlayer(UsersPosition);
     }
 }

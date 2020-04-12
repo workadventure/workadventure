@@ -1,7 +1,8 @@
 import {CameraManager, CameraManagerInterface} from "./CameraManager";
 import {RESOLUTION} from "../../Enum/EnvironmentVariable";
-import {Player} from "../Player/Player";
-import {GameScene, GameSceneInterface} from "./GameScene";
+import {CurrentGamerInterface, GamerInterface, Player} from "../Player/Player";
+import {GameSceneInterface} from "./GameScene";
+import {MessageUserPositionInterface} from "../../Connexion";
 
 export interface MapManagerInterface {
     keyZ: Phaser.Input.Keyboard.Key;
@@ -18,7 +19,10 @@ export interface MapManagerInterface {
     Terrain: Phaser.Tilemaps.Tileset;
     Camera: CameraManagerInterface;
     Scene: GameSceneInterface;
+
+    createCurrentPlayer(UserId : string): void;
     update(): void;
+    updateOrCreateMapPlayer(UsersPosition : Array<MessageUserPositionInterface>): void;
 }
 export class MapManager implements MapManagerInterface{
     keyZ: Phaser.Input.Keyboard.Key;
@@ -33,7 +37,8 @@ export class MapManager implements MapManagerInterface{
 
     Terrain : Phaser.Tilemaps.Tileset;
     Camera: CameraManagerInterface;
-    CurrentPlayer: Player;
+    CurrentPlayer: CurrentGamerInterface;
+    MapPlayers : GamerInterface[];
     Scene: GameSceneInterface;
     Map: Phaser.Tilemaps.Tilemap;
     startX = (window.innerWidth / 2) / RESOLUTION;
@@ -51,11 +56,16 @@ export class MapManager implements MapManagerInterface{
 
         //initialise keyboard
         this.initKeyBoard();
-
         //initialise camera
         this.Camera = new CameraManager(this.Scene, this.Scene.cameras.main, this);
+        //initialise list of other player
+        this.MapPlayers = new Array<GamerInterface>();
+    }
+
+    createCurrentPlayer(UserId : string){
         //initialise player
         this.CurrentPlayer = new Player(
+            UserId,
             this.Scene,
             this.startX,
             this.startY,
@@ -64,7 +74,6 @@ export class MapManager implements MapManagerInterface{
         );
         this.CurrentPlayer.initAnimation();
     }
-
 
     initKeyBoard() {
         this.keyShift = this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
@@ -82,5 +91,58 @@ export class MapManager implements MapManagerInterface{
 
     update() : void {
         this.CurrentPlayer.move();
+    }
+
+    /**
+     * Create new player and clean the player on the map
+     * @param UsersPosition
+     */
+    updateOrCreateMapPlayer(UsersPosition : Array<MessageUserPositionInterface>){
+        if(!this.CurrentPlayer){
+            return;
+        }
+
+        //add or create new user
+        UsersPosition.forEach((userPosition : MessageUserPositionInterface) => {
+            if(userPosition.userId === this.CurrentPlayer.userId){
+                return;
+            }
+            let player = this.MapPlayers.find((player: Player) => userPosition.userId === player.userId);
+            if(!player){
+                this.addPlayer(userPosition);
+            }else{
+                player.updatePosition(userPosition);
+            }
+        });
+
+        //clean map
+        let mapPlayers = new Array<Player>();
+        this.MapPlayers.forEach((player: Player) => {
+            if(UsersPosition.find((message : MessageUserPositionInterface) => message.userId === player.userId)){
+                mapPlayers.push(player);
+                return;
+            }
+            player.destroy();
+        });
+        this.MapPlayers = mapPlayers;
+    }
+
+    /**
+     * Create new player
+     * @param MessageUserPosition
+     */
+    addPlayer(MessageUserPosition : MessageUserPositionInterface){
+        //initialise player
+        let player = new Player(
+            MessageUserPosition.userId,
+            this.Scene,
+            MessageUserPosition.position.x,
+            MessageUserPosition.position.y,
+            this.Camera,
+            this
+        );
+        player.initAnimation();
+        this.MapPlayers.push(player);
+        player.updatePosition(MessageUserPosition)
     }
 }

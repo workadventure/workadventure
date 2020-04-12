@@ -3,13 +3,34 @@ import {getPlayerAnimations, playAnimation, PlayerAnimationNames} from "./Animat
 import {GameSceneInterface} from "../Game/GameScene";
 import {ConnexionInstance} from "../Game/GameManager";
 import {CameraManagerInterface} from "../Game/CameraManager";
+import {MessageUserPositionInterface} from "../../Connexion";
 
-export class Player extends Phaser.GameObjects.Sprite{
+export interface CurrentGamerInterface{
+    userId : string;
+    MapManager : MapManagerInterface;
+    PlayerValue : string;
+    CameraManager: CameraManagerInterface;
+    initAnimation() : void;
+    move() : void;
+}
+
+export interface GamerInterface{
+    userId : string;
+    MapManager : MapManagerInterface;
+    PlayerValue : string;
+    CameraManager: CameraManagerInterface;
+    initAnimation() : void;
+    updatePosition(MessageUserPosition : MessageUserPositionInterface) : void;
+}
+
+export class Player extends Phaser.GameObjects.Sprite implements CurrentGamerInterface, GamerInterface{
+    userId : string;
     MapManager : MapManagerInterface;
     PlayerValue : string;
     CameraManager: CameraManagerInterface;
 
     constructor(
+        userId: string,
         Scene : GameSceneInterface,
         x : number,
         y : number,
@@ -18,14 +39,14 @@ export class Player extends Phaser.GameObjects.Sprite{
         PlayerValue : string = "player"
     ) {
         super(Scene, x, y, PlayerValue);
+        this.userId = userId;
         this.PlayerValue = PlayerValue;
         Scene.add.existing(this);
         this.MapManager = MapManager;
         this.CameraManager = CameraManager;
     }
 
-
-    initAnimation(){
+    initAnimation() : void{
         getPlayerAnimations(this.PlayerValue).forEach(d => {
             this.scene.anims.create({
                 key: d.key,
@@ -36,7 +57,7 @@ export class Player extends Phaser.GameObjects.Sprite{
         })
     }
 
-    move(){
+    move() : void{
         //if user client on shift, camera and player speed
         let speedMultiplier = this.MapManager.keyShift.isDown ? 5 : 1;
         let haveMove = false;
@@ -80,10 +101,9 @@ export class Player extends Phaser.GameObjects.Sprite{
         }
         if(!haveMove){
             playAnimation(this, PlayerAnimationNames.None);
-        }else{
-            this.sharePosition(direction);
+            direction = PlayerAnimationNames.None;
         }
-
+        this.sharePosition(direction);
         this.CameraManager.moveCamera(this);
     }
 
@@ -107,5 +127,11 @@ export class Player extends Phaser.GameObjects.Sprite{
 
     private CanMoveRight(){
         return this.MapManager.Map.widthInPixels > this.x;
+    }
+
+    updatePosition(MessageUserPosition : MessageUserPositionInterface){
+        playAnimation(this, MessageUserPosition.position.direction);
+        this.setX(MessageUserPosition.position.x);
+        this.setY(MessageUserPosition.position.y);
     }
 }

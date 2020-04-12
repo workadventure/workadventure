@@ -25,13 +25,15 @@
     "@types/http-status-codes": "^1.2.0",
     "@types/jsonwebtoken": "^8.3.8",
     "@types/socket.io": "^2.1.4",
+    "@types/uuidv4": "^5.0.0",
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
     "http-status-codes": "^1.4.0",
     "jsonwebtoken": "^8.5.1",
     "socket.io": "^2.3.0",
     "ts-node-dev": "^1.0.0-pre.44",
-    "typescript": "^3.8.3"
+    "typescript": "^3.8.3",
+    "uuidv4": "^6.0.7"
   },
   "devDependencies": {
     "@types/jasmine": "^3.5.10",

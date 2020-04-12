@@ -1,31 +1,76 @@
 import {GameSceneInterface, GameScene} from "./GameScene";
 import {ROOM} from "../../Enum/EnvironmentVariable"
-import {Connexion} from "../../Connexion";
+import {Connexion, ConnexionInterface, ListMessageUserPositionInterface} from "../../Connexion";
 
-export let ConnexionInstance : Connexion;
+export enum StatusGameManagerEnum {
+    IN_PROGRESS = 1,
+    CURRENT_USER_CREATED = 2
+}
+
+export let ConnexionInstance : ConnexionInterface;
 
 export interface GameManagerInterface {
     GameScenes: Array<GameSceneInterface>;
-
-    sharedUserPosition(UserPositions: any): void;
+    status : number;
+    createCurrentPlayer() : void;
+    shareUserPosition(ListMessageUserPosition : ListMessageUserPositionInterface): void;
 }
 export class GameManager implements GameManagerInterface {
     GameScenes: Array<GameSceneInterface> = [];
+    status: number;
 
     constructor() {
-        this.configureGame();
+        this.status = StatusGameManagerEnum.IN_PROGRESS;
         ConnexionInstance = new Connexion("test@gmail.com", this);
     }
 
-    configureGame() {
-        ROOM.forEach((roomId) => {
-            let newGame = new GameScene(roomId, this);
-            this.GameScenes.push(newGame);
+    createGame(){
+        return ConnexionInstance.createConnexion().then(() => {
+            this.configureGame();
+            /** TODO add loader in the page **/
+        }).catch((err) => {
+            console.error(err);
+            throw err;
         });
     }
 
-    sharedUserPosition(UserPositions: any) {
-        let Game: GameSceneInterface = this.GameScenes.find((Game: GameSceneInterface) => Game.RoomId === UserPositions.roomId);
-        Game.sharedUserPosition(UserPositions)
+    /**
+     * permit to config rooms
+     */
+    configureGame() {
+        ROOM.forEach((roomId) => {
+            let newGame = new GameScene(roomId, this);
+            this.GameScenes.push((newGame as GameSceneInterface));
+        });
+    }
+
+    /**
+     * Permit to create player in started room
+     * @param RoomId
+     * @param UserId
+     */
+    createCurrentPlayer(): void {
+        let game: GameSceneInterface = this.GameScenes.find((Game: GameSceneInterface) => Game.RoomId === ConnexionInstance.startedRoom);
+        game.createCurrentPlayer(ConnexionInstance.userId);
+        this.status = StatusGameManagerEnum.CURRENT_USER_CREATED;
+    }
+
+    /**
+     * Share position in game
+     * @param ListMessageUserPosition
+     */
+    shareUserPosition(ListMessageUserPosition: ListMessageUserPositionInterface): void {
+        if (this.status === StatusGameManagerEnum.IN_PROGRESS) {
+            return;
+        }
+        try {
+            let Game: GameSceneInterface = this.GameScenes.find((Game: GameSceneInterface) => Game.RoomId === ListMessageUserPosition.roomId);
+            if (!Game) {
+                return;
+            }
+            Game.shareUserPosition(ListMessageUserPosition.listUsersPosition)
+        } catch (e) {
+            console.error(e);
+        }
     }
 }
