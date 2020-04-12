@@ -103,6 +103,10 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         let eventList = this.userInputManager.getEventListForGameTick();
         
         this.player.move(eventList);
+        
+        this.otherPlayers.getChildren().forEach((otherPlayer: NonPlayer) => {
+            otherPlayer.setVelocity(20, 5);
+        })
     }
 
     sharedUserPosition(data: []): void {
