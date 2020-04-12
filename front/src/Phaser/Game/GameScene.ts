@@ -1,8 +1,13 @@
-import {MapManagerInterface, MapManager} from "./MapManager";
 import {GameManagerInterface} from "./GameManager";
+import {UserInputManager} from "../UserInput/UserInputManager";
+import {getPlayerAnimations, PlayerAnimationNames} from "../Player/Animation";
+import {Player} from "../Player/Player";
 
 export enum Textures {
     Rock = 'rock',
+    Player = 'player',
+    Map = 'map',
+    Tiles = 'tiles'
 }
 
 export interface GameSceneInterface extends Phaser.Scene {
@@ -10,8 +15,11 @@ export interface GameSceneInterface extends Phaser.Scene {
     sharedUserPosition(data : []): void;
 }
 export class GameScene extends Phaser.Scene implements GameSceneInterface{
-    private MapManager : MapManagerInterface;
+    //private MapManager : MapManagerInterface;
     RoomId : string;
+    private player: Player;
+    private rock: Phaser.Physics.Arcade.Sprite;
+    private userInputManager: UserInputManager;
 
     constructor(RoomId : string, GameManager : GameManagerInterface) {
         super({
@@ -23,26 +31,72 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     //hook preload scene
     preload(): void {
         this.load.image(Textures.Rock, 'resources/objects/rockSprite.png');
-        this.load.image('tiles', 'maps/tiles.png');
-        this.load.tilemapTiledJSON('map', 'maps/map2.json');
-        this.load.spritesheet('player',
+        this.load.image(Textures.Tiles, 'maps/tiles.png');
+        this.load.tilemapTiledJSON(Textures.Map, 'maps/map2.json');
+        this.load.spritesheet(Textures.Player,
             'resources/characters/pipoya/Male 01-1.png',
             { frameWidth: 32, frameHeight: 32 }
         );
-    }
 
-    //hook initialisation
-    init(){}
+        getPlayerAnimations().forEach(d => {
+            this.anims.create({
+                key: d.key,
+                frames: this.anims.generateFrameNumbers(d.frameModel, { start: d.frameStart, end: d.frameEnd }),
+                frameRate: d.frameRate,
+                //repeat: d.repeat
+            });
+        });
+    }
 
     //hook create scene
     create(): void {
-        //create map manager
-        this.MapManager = new MapManager(this);
+        this.userInputManager = new UserInputManager(this);
+
+        //create entities
+        this.player = new Player(this, 400, 400);
+        this.rock = this.physics.add.sprite(200, 400, Textures.Rock, 26).setImmovable(true);
+        this.physics.world.addCollider(this.player, this.rock, (player: Player, rock) => {
+            rock.destroy();
+        });
+        
+        //create map
+        let currentMap = this.add.tilemap(Textures.Map);
+        let terrain = currentMap.addTilesetImage(Textures.Tiles, "tiles");
+        let bottomLayer = currentMap.createStaticLayer("Calque 1", [terrain], 0, 0).setDepth(-1);
+        let topLayer =  currentMap.createStaticLayer("Calque 2", [terrain], 0, 0);
+        this.physics.world.setBounds(0,0, currentMap.widthInPixels, currentMap.heightInPixels);
+        
+        this.physics.add.collider(this.player, topLayer);
+        topLayer.setCollisionByProperty({collides:true});
+
+        
+        this.cameras.main.startFollow(this.player);
+
+        
+        
+        //debug code
+        //debug code to see the collision hitbox of the object in the top layer
+        topLayer.renderDebug(this.add.graphics(),{
+            tileColor: null, //non-colliding tiles
+            collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles,
+            faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Colliding face edges
+        })
+        
+        // debug code to get a tile properties by clicking on it
+        this.input.on("pointerdown", (pointer: Phaser.Input.Pointer)=>{
+            //pixel position to tile position
+            let tile = currentMap.getTileAt(currentMap.worldToTileX(pointer.worldX), currentMap.worldToTileY(pointer.worldY));
+            if(tile){
+                console.log(tile);
+            }
+        });
     }
 
     //hook update
     update(dt: number): void {
-        this.MapManager.update();
+        let eventList = this.userInputManager.getEventListForGameTick();
+        
+        this.player.move(eventList);
     }
 
     sharedUserPosition(data: []): void {

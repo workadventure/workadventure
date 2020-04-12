@@ -13,8 +13,11 @@ const config: GameConfig = {
     scene: gameManager.GameScenes,
     zoom: RESOLUTION,
     physics: {
-        default: 'impact'
-    },
+        default: "arcade",
+        arcade: {
+            debug: true
+        }
+    }
 };
 
 let game = new Phaser.Game(config);

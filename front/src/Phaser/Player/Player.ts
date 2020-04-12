@@ -1,112 +1,44 @@
-import {MapManagerInterface} from "../Game/MapManager";
 import {getPlayerAnimations, playAnimation, PlayerAnimationNames} from "./Animation";
-import {GameSceneInterface} from "../Game/GameScene";
+import {GameSceneInterface, Textures} from "../Game/GameScene";
 import {ConnexionInstance} from "../Game/GameManager";
-import {CameraManagerInterface} from "../Game/CameraManager";
 import {ActiveEventList, UserInputEvent} from "../UserInput/UserInputManager";
+import {PlayableCaracter} from "../Entity/PlayableCaracter";
 
-export class Player extends Phaser.GameObjects.Sprite{
-    MapManager : MapManagerInterface;
-    PlayerValue : string;
-    CameraManager: CameraManagerInterface;
-
-    constructor(
-        Scene : GameSceneInterface,
-        x : number,
-        y : number,
-        CameraManager: CameraManagerInterface,
-        MapManager: MapManagerInterface,
-        PlayerValue : string = "player"
-    ) {
-        super(Scene, x, y, PlayerValue);
-        this.PlayerValue = PlayerValue;
-        Scene.add.existing(this);
-        this.MapManager = MapManager;
-        this.CameraManager = CameraManager;
-    }
-
-
-    initAnimation(){
-        getPlayerAnimations(this.PlayerValue).forEach(d => {
-            this.scene.anims.create({
-                key: d.key,
-                frames: this.scene.anims.generateFrameNumbers(d.frameModel, { start: d.frameStart, end: d.frameEnd }),
-                frameRate: d.frameRate,
-                repeat: d.repeat
-            });
-        })
+export class Player extends PlayableCaracter{
+    
+    constructor(scene: Phaser.Scene, x: number, y: number) {
+        super(scene, x, y, Textures.Player, 26);
+        this.setSize(32, 32); //edit the hitbox to better match the caracter model
     }
 
     move(activeEvents: ActiveEventList){
-        //if user client on shift, camera and player speed
-        let speedMultiplier = activeEvents.get(UserInputEvent.SpeedUp) ? 5 : 1;
+        let speed = activeEvents.get(UserInputEvent.SpeedUp) ? 500 : 100;
         let haveMove = false;
         let direction = null;
 
         if(activeEvents.get(UserInputEvent.MoveUp)){
-            if(!this.CanMoveUp()){
-                return;
-            }
+            this.setVelocity(0, -speed)
             playAnimation(this, PlayerAnimationNames.WalkUp);
-            this.setY(this.y - (2 * speedMultiplier));
-            haveMove = true;
-            direction = PlayerAnimationNames.WalkUp;
-        }
-        if(activeEvents.get(UserInputEvent.MoveLeft)){
-            if(!this.CanMoveLeft()){
-                return;
-            }
-            playAnimation(this, PlayerAnimationNames.WalkLeft);
-            this.setX(this.x - (2 * speedMultiplier));
-            haveMove = true;
-            direction = PlayerAnimationNames.WalkLeft;
-        }
-        if(activeEvents.get(UserInputEvent.MoveDown)){
-            if(!this.CanMoveDown()){
-                return;
-            }
+        } else if(activeEvents.get(UserInputEvent.MoveLeft)){
+            this.setVelocity(-speed, 0)
+        } else if(activeEvents.get(UserInputEvent.MoveDown)){
             playAnimation(this, PlayerAnimationNames.WalkDown);
-            this.setY(this.y + (2 * speedMultiplier));
-            haveMove = true;
-            direction = PlayerAnimationNames.WalkDown;
-        }
-        if(activeEvents.get(UserInputEvent.MoveRight)){
-            if(!this.CanMoveRight()){
-                return;
-            }
-            playAnimation(this, PlayerAnimationNames.WalkRight);
-            this.setX(this.x + (2 * speedMultiplier));
-            haveMove = true;
-            direction = PlayerAnimationNames.WalkRight;
-        }
-        if(!haveMove){
+            this.setVelocity(0, speed)
+        } else if(activeEvents.get(UserInputEvent.MoveRight)){
+            this.setVelocity(speed, 0)
+        } else {
+            this.setVelocity(0, 0)
             playAnimation(this, PlayerAnimationNames.None);
-        }else{
-            this.sharePosition(direction);
         }
-
-        this.CameraManager.moveCamera(this);
     }
 
-    private sharePosition(direction : string){
+    stop() {
+        this.setVelocity(0, 0)
+    }
+
+    /*private sharePosition(direction : string){
         if(ConnexionInstance) {
             ConnexionInstance.sharePosition((this.scene as GameSceneInterface).RoomId, this.x, this.y, direction);
         }
-    }
-
-    private CanMoveUp(){
-        return this.y > 0;
-    }
-
-    private CanMoveLeft(){
-        return this.x > 0;
-    }
-
-    private CanMoveDown(){
-        return this.MapManager.Map.heightInPixels > this.y;
-    }
-
-    private CanMoveRight(){
-        return this.MapManager.Map.widthInPixels > this.x;
-    }
+    }*/
 }
