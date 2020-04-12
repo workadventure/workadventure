@@ -14,6 +14,7 @@ export enum UserInputEvent {
     MoveDown,
     SpeedUp,
     Interact,
+    Shout,
 }
 
 //we cannot the map structure so we have to create a replacment
@@ -46,6 +47,7 @@ export class UserInputManager {
         {keyCode: Phaser.Input.Keyboard.KeyCodes.SHIFT, event: UserInputEvent.SpeedUp, keyInstance: null},
         
         {keyCode: Phaser.Input.Keyboard.KeyCodes.E, event: UserInputEvent.Interact, keyInstance: null},
+        {keyCode: Phaser.Input.Keyboard.KeyCodes.F, event: UserInputEvent.Shout, keyInstance: null},
     ];
     
     constructor(Scene : GameSceneInterface) {

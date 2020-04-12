@@ -1,6 +1,6 @@
 import {GameManagerInterface} from "./GameManager";
 import {UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
-import {getPlayerAnimations, PlayerAnimationNames} from "../Player/Animation";
+import {getPlayerAnimations} from "../Player/Animation";
 import {Player} from "../Player/Player";
 import {NonPlayer} from "../NonPlayer/NonPlayer";
 
@@ -65,7 +65,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         this.otherPlayers.add(new NonPlayer(this, 400, 600));
 
         this.physics.add.collider(this.player, this.otherPlayers, (player: Player, otherPlayer: NonPlayer) => {
-            console.log("Don't touch me!");
             otherPlayer.fleeFrom(player)
         });
         
@@ -118,6 +117,10 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             this.player.move(speed, 0)
         } else {
             this.player.move(0, 0)
+        }
+        
+        if(activeEvents.get(UserInputEvent.Shout)) {
+            this.player.say('HEHO!');
         }
         
         

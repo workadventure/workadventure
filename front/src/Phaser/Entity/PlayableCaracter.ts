@@ -1,7 +1,9 @@
 import {getPlayerAnimations, playAnimation, PlayerAnimationNames} from "../Player/Animation";
 import {ActiveEventList, UserInputEvent} from "../UserInput/UserInputManager";
+import {SpeechBubble} from "./SpeechBubble";
 
 export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
+    private bubble: SpeechBubble;
 
     constructor(scene: Phaser.Scene, x: number, y: number, texture: string, frame?: string | number) {
         super(scene, x, y, texture, frame);
@@ -28,5 +30,15 @@ export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
         } else if (this.body.velocity.y > 0) { //moving down
             this.play(PlayerAnimationNames.WalkDown, true);
         }
+    }
+    
+    say(text: string) {
+        if (this.bubble) return;
+        this.bubble = new SpeechBubble(this.scene, this, text)
+        //todo make the buble destroy on player movement?
+        setTimeout(() => {
+            this.bubble.destroy();
+            this.bubble = null;
+        }, 3000)
     }
 }

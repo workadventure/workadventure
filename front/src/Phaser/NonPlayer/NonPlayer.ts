@@ -15,10 +15,11 @@ export class NonPlayer extends PlayableCaracter {
 
     fleeFrom(player:Player) {
         if (this.isFleeing) return;
+        this.say("Don't touch me!");
         this.isFleeing = true;
         
         setTimeout(() => {
-            console.log("I escaped");
+            this.say("Feww, I escaped.");
             this.isFleeing = false
             this.fleeingDirection = null
         }, 3000);
