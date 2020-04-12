@@ -6,3 +6,4 @@ RUN yarn install
 ENV NODE_ENV=production
 
 CMD ["yarn", "run", "prod"]
+
