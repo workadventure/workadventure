@@ -7,7 +7,7 @@ import {PlayableCaracter} from "../Entity/PlayableCaracter";
 export class Player extends PlayableCaracter{
     
     constructor(scene: Phaser.Scene, x: number, y: number) {
-        super(scene, x, y, Textures.Player, 26);
+        super(scene, x, y, Textures.Player, 1);
         this.setImmovable(false); //the current player model should be push away by other players to prevent conflict
         this.setSize(32, 32); //edit the hitbox to better match the caracter model
     }
@@ -19,27 +19,28 @@ export class Player extends PlayableCaracter{
 
         if(activeEvents.get(UserInputEvent.MoveUp)){
             this.setVelocity(0, -speed)
-            playAnimation(this, PlayerAnimationNames.WalkUp);
         } else if(activeEvents.get(UserInputEvent.MoveLeft)){
             this.setVelocity(-speed, 0)
         } else if(activeEvents.get(UserInputEvent.MoveDown)){
-            playAnimation(this, PlayerAnimationNames.WalkDown);
             this.setVelocity(0, speed)
         } else if(activeEvents.get(UserInputEvent.MoveRight)){
             this.setVelocity(speed, 0)
         } else {
             this.setVelocity(0, 0)
-            playAnimation(this, PlayerAnimationNames.None);
+        }
+
+        if (this.body.velocity.x > 0) { //moving right
+            this.play("right", true);
+        } else if (this.body.velocity.x < 0) { //moving left
+            this.anims.playReverse("left", true);
+        } else if (this.body.velocity.y < 0) { //moving up
+            this.play("up", true);
+        } else if (this.body.velocity.y > 0) { //moving down
+            this.play("down", true);
         }
     }
 
     stop() {
         this.setVelocity(0, 0)
     }
-
-    /*private sharePosition(direction : string){
-        if(ConnexionInstance) {
-            ConnexionInstance.sharePosition((this.scene as GameSceneInterface).RoomId, this.x, this.y, direction);
-        }
-    }*/
 }

@@ -6,7 +6,7 @@ import {NonPlayer} from "../NonPlayer/NonPlayer";
 
 export enum Textures {
     Rock = 'rock',
-    Player = 'player',
+    Player = 'playerModel',
     Map = 'map',
     Tiles = 'tiles'
 }
@@ -39,7 +39,11 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             'resources/characters/pipoya/Male 01-1.png',
             { frameWidth: 32, frameHeight: 32 }
         );
+    }
 
+    //hook create scene
+    create(): void {
+        //anims cannot be in preload because it needs to wait to the sprit to be loaded
         getPlayerAnimations().forEach(d => {
             this.anims.create({
                 key: d.key,
@@ -48,10 +52,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
                 //repeat: d.repeat
             });
         });
-    }
-
-    //hook create scene
-    create(): void {
+        
         this.userInputManager = new UserInputManager(this);
 
         //create entities
@@ -68,8 +69,8 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         //create map
         let currentMap = this.add.tilemap(Textures.Map);
         let terrain = currentMap.addTilesetImage(Textures.Tiles, "tiles");
-        let bottomLayer = currentMap.createStaticLayer("Calque 1", [terrain], 0, 0).setDepth(-1);
-        let topLayer =  currentMap.createStaticLayer("Calque 2", [terrain], 0, 0);
+        let bottomLayer = currentMap.createStaticLayer("Calque 1", [terrain], 0, 0).setDepth(-2);
+        let topLayer =  currentMap.createStaticLayer("Calque 2", [terrain], 0, 0).setDepth(-1);
         this.physics.world.setBounds(0,0, currentMap.widthInPixels, currentMap.heightInPixels);
         
         this.physics.add.collider(this.player, topLayer);
@@ -105,6 +106,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         this.player.move(eventList);
         
         this.otherPlayers.getChildren().forEach((otherPlayer: NonPlayer) => {
+            //this.physics.accelerateToObject(otherPlayer, this.player); //this line make the models chase the player
             otherPlayer.setVelocity(20, 5);
         })
     }
