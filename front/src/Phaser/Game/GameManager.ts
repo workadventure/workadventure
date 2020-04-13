@@ -50,6 +50,7 @@ export class GameManager implements GameManagerInterface {
      * @param UserId
      */
     createCurrentPlayer(): void {
+        //Get started room send by the backend
         let game: GameSceneInterface = this.GameScenes.find((Game: GameSceneInterface) => Game.RoomId === ConnexionInstance.startedRoom);
         game.createCurrentPlayer(ConnexionInstance.userId);
         this.status = StatusGameManagerEnum.CURRENT_USER_CREATED;
