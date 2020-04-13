@@ -94,16 +94,16 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         //add collision layer
         this.Layers.forEach((Layer: Phaser.Tilemaps.StaticTilemapLayer) => {
             this.physics.add.collider(this.CurrentPlayer, Layer, (object1: any, object2: any) => {
-                this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
+                //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
             });
             Layer.setCollisionByProperty({collides: true});
             //debug code
             //debug code to see the collision hitbox of the object in the top layer
-            Layer.renderDebug(this.add.graphics(), {
+            /*Layer.renderDebug(this.add.graphics(), {
                 tileColor: null, //non-colliding tiles
                 collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles,
                 faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Colliding face edges
-            });
+            });*/
         });
     }
 
@@ -115,7 +115,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     createCollisionObject(){
         this.Objects.forEach((Object : Phaser.Physics.Arcade.Sprite) => {
             this.physics.add.collider(this.CurrentPlayer, Object, (object1: any, object2: any) => {
-                this.CurrentPlayer.say("Collision with object : " + (object2 as Phaser.Physics.Arcade.Sprite).texture.key)
+                //this.CurrentPlayer.say("Collision with object : " + (object2 as Phaser.Physics.Arcade.Sprite).texture.key)
             });
         })
     }
