@@ -77,7 +77,7 @@ jobs:
           namespace: workadventure-${{ env.GITHUB_REF_SLUG }}
 
       - name: Add a comment in PR
-        uses: unsplash/comment-on-pr@1.2.0
+        uses: unsplash/comment-on-pr@v1.2.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
