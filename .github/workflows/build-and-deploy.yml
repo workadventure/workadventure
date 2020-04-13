@@ -75,3 +75,11 @@ jobs:
           KUBE_CONFIG_FILE: ${{ secrets.KUBE_CONFIG_FILE }}
         with:
           namespace: workadventure-${{ env.GITHUB_REF_SLUG }}
+
+      - name: Add a comment in PR
+        uses: unsplash/comment-on-pr@1.2.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          msg: Environment deployed at http://${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com
+          check_for_duplicate_msg: true
