@@ -24,17 +24,25 @@ export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
         //todo improve animations to better account for diagonal movement
         if (this.body.velocity.x > 0) { //moving right
             this.play(PlayerAnimationNames.WalkRight, true);
-        } else if (this.body.velocity.x < 0) { //moving left
+        }
+        if (this.body.velocity.x < 0) { //moving left
             this.anims.playReverse(PlayerAnimationNames.WalkLeft, true);
-        } else if (this.body.velocity.y < 0) { //moving up
+        }
+        if (this.body.velocity.y < 0) { //moving up
             this.play(PlayerAnimationNames.WalkUp, true);
-        } else if (this.body.velocity.y > 0) { //moving down
+        }
+        if (this.body.velocity.y > 0) { //moving down
             this.play(PlayerAnimationNames.WalkDown, true);
         }
 
         if(this.bubble) {
             this.bubble.moveBubble(this.x, this.y);
         }
+    }
+
+    stop(){
+        this.setVelocity(0, 0);
+        this.play(PlayerAnimationNames.None, true);
     }
     
     say(text: string) {

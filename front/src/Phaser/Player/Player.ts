@@ -95,7 +95,7 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
         }
         if (!haveMove) {
             direction = PlayerAnimationNames.None;
-            this.move(0, 0)
+            this.stop();
         }
         this.sharePosition(direction);
         this.CameraManager.moveCamera(this);
