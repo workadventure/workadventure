@@ -9,7 +9,8 @@ export enum Textures {
     Rock = 'rock',
     Player = 'playerModel',
     Map = 'map',
-    Tiles = 'tiles'
+    Tiles = 'tiles',
+    Tiles2 = 'tiles2'
 }
 
 export interface GameSceneInterface extends Phaser.Scene {
@@ -42,7 +43,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     //hook preload scene
     preload(): void {
         this.load.image(Textures.Tiles, 'maps/floortileset.png');
-        this.load.image(Textures.Tiles, 'maps/tilesets_deviant_milkian_1.png');
+        this.load.image(Textures.Tiles2, 'maps/tilesets_deviant_milkian_1.png');
         this.load.tilemapTiledJSON(Textures.Map, 'maps/map.json');
         this.load.image(Textures.Rock, 'resources/objects/rockSprite.png');
         this.load.spritesheet(Textures.Player,
@@ -61,6 +62,8 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         this.Map = this.add.tilemap("map");
         this.Terrain = this.Map.addTilesetImage("tiles", "tiles");
         this.Map.createStaticLayer("tiles", "tiles");
+        this.Terrain = this.Map.addTilesetImage("tiles2", "tiles2");
+        this.Map.createStaticLayer("tiles2", "tiles2");
 
         //permit to set bound collision
         this.physics.world.setBounds(0,0, this.Map.widthInPixels, this.Map.heightInPixels);
