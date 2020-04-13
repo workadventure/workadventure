@@ -67,4 +67,4 @@ jobs:
         env:
           KUBE_CONFIG_FILE: ${{ secrets.KUBE_CONFIG_FILE }}
         with:
-          namespace: workadventure-${{GITHUB_REF_SLUG}}
+          namespace: workadventure-${{ env.GITHUB_REF_SLUG }}

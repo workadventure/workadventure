@@ -1,6 +1,5 @@
 {
   local env = std.extVar("env"),
-  # FIXME: namespace does not work if the branch contains a "/"
   local namespace = env.GITHUB_REF_SLUG,
   local tag = if namespace == "master" then "latest" else namespace,
   "$schema": "https://raw.githubusercontent.com/thecodingmachine/deeployer/master/deeployer.schema.json",
