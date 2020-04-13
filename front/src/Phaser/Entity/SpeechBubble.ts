@@ -5,7 +5,13 @@ export class SpeechBubble {
     private bubble: Phaser.GameObjects.Graphics;
     private content: Phaser.GameObjects.Text;
 
-    constructor(scene: Scene, player: PlayableCaracter, text: string) {
+    /**
+     *
+     * @param scene
+     * @param player
+     * @param text
+     */
+    constructor(scene: Scene, player: PlayableCaracter, text: string = "") {
 
         let bubbleHeight = 50;
         let bubblePadding = 10;
@@ -49,14 +55,34 @@ export class SpeechBubble {
         this.content = scene.add.text(0, 0, text, { fontFamily: 'Arial', fontSize: 20, color: '#000000', align: 'center', wordWrap: { width: bubbleWidth - (bubblePadding * 2) } });
 
         let bounds = this.content.getBounds();
-
         this.content.setPosition(this.bubble.x + (bubbleWidth / 2) - (bounds.width / 2), this.bubble.y + (bubbleHeight / 2) - (bounds.height / 2));
-        
+    }
+
+    /**
+     *
+     * @param x
+     * @param y
+     */
+    moveBubble(x : number, y : number) {
+        if (this.bubble) {
+            this.bubble.setPosition((x + 16), (y - 80));
+        }
+        if (this.content) {
+            let bubbleHeight = 50;
+            let bubblePadding = 10;
+            let bubbleWidth = bubblePadding * 2 + this.content.text.length * 10;
+            let bounds = this.content.getBounds();
+            //this.content.setPosition(x, y);
+            this.content.setPosition(this.bubble.x + (bubbleWidth / 2) - (bounds.width / 2), this.bubble.y + (bubbleHeight / 2) - (bounds.height / 2));
+        }
     }
     
     destroy(): void {
         this.bubble.setVisible(false) //todo find a better way
-        this.content.destroy()
+        this.bubble.destroy();
+        this.bubble = null;
+        this.content.destroy();
+        this.content = null;
     }
 
 }

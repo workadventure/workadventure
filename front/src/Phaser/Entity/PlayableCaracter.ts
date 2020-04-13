@@ -31,6 +31,10 @@ export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
         } else if (this.body.velocity.y > 0) { //moving down
             this.play(PlayerAnimationNames.WalkDown, true);
         }
+
+        if(this.bubble) {
+            this.bubble.moveBubble(this.x, this.y);
+        }
     }
     
     say(text: string) {

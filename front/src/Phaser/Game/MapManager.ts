@@ -4,6 +4,8 @@ import {CurrentGamerInterface, GamerInterface, Player} from "../Player/Player";
 import {GameSceneInterface, Textures} from "./GameScene";
 import {MessageUserPositionInterface} from "../../Connexion";
 import {NonPlayer} from "../NonPlayer/NonPlayer";
+import GameObject = Phaser.GameObjects.GameObject;
+import Tile = Phaser.Tilemaps.Tile;
 
 export interface MapManagerInterface {
     Map: Phaser.Tilemaps.Tilemap;
@@ -22,13 +24,10 @@ export class MapManager implements MapManagerInterface{
     MapPlayers : Phaser.Physics.Arcade.Group;
     Scene: GameSceneInterface;
     Map: Phaser.Tilemaps.Tilemap;
-    BottomLayer: Phaser.Tilemaps.StaticTilemapLayer;
-    TopLayer: Phaser.Tilemaps.StaticTilemapLayer;
+    Layers : Array<Phaser.Tilemaps.StaticTilemapLayer>;
+    Objects : Array<Phaser.Physics.Arcade.Sprite>;
     startX = (window.innerWidth / 2) / RESOLUTION;
     startY = (window.innerHeight / 2) / RESOLUTION;
-
-    //entities
-    private rock: Phaser.Physics.Arcade.Sprite;
 
     constructor(scene: GameSceneInterface){
         this.Scene = scene;
@@ -37,20 +36,26 @@ export class MapManager implements MapManagerInterface{
         this.Map = this.Scene.add.tilemap("map");
         this.Terrain = this.Map.addTilesetImage("tiles", "tiles");
         this.Map.createStaticLayer("tiles", "tiles");
-        this.BottomLayer = this.Map.createStaticLayer("Calque 1", [this.Terrain], 0, 0).setDepth(-2);
-        this.TopLayer = this.Map.createStaticLayer("Calque 2", [this.Terrain], 0, 0).setDepth(-1);
+
+        //permit to set bound collision
         this.Scene.physics.world.setBounds(0,0, this.Map.widthInPixels, this.Map.heightInPixels);
 
-        //add entitites
-        this.rock = this.Scene.physics.add.sprite(200, 400, Textures.Rock, 26).setImmovable(true);
+        //add layer on map
+        this.Layers = new Array<Phaser.Tilemaps.StaticTilemapLayer>();
+        this.addLayer( this.Map.createStaticLayer("Calque 1", [this.Terrain], 0, 0).setDepth(-2) );
+        this.addLayer( this.Map.createStaticLayer("Calque 2", [this.Terrain], 0, 0).setDepth(-1) );
+
+        //add entities
+        this.Objects = new Array<Phaser.Physics.Arcade.Sprite>();
+        this.addSpite(this.Scene.physics.add.sprite(200, 400, Textures.Rock, 26));
 
         //debug code
         //debug code to see the collision hitbox of the object in the top layer
-        this.TopLayer.renderDebug(this.Scene.add.graphics(),{
+        /*this.TopLayer.renderDebug(this.Scene.add.graphics(),{
             tileColor: null, //non-colliding tiles
             collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles,
             faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Colliding face edges
-        });
+        });*/
 
         //init event click
         this.EventToClickOnTile();
@@ -60,6 +65,36 @@ export class MapManager implements MapManagerInterface{
 
         //initialise list of other player
         this.MapPlayers = this.Scene.physics.add.group({ immovable: true });
+    }
+
+    addLayer(Layer : Phaser.Tilemaps.StaticTilemapLayer){
+        this.Layers.push(Layer);
+    }
+
+    createCollisionWithPlayer() {
+        //add collision layer
+        this.Layers.forEach((Layer: Phaser.Tilemaps.StaticTilemapLayer) => {
+            this.Scene.physics.add.collider(this.CurrentPlayer, Layer);
+            Layer.setCollisionByProperty({collides: true});
+            //debug code
+            //debug code to see the collision hitbox of the object in the top layer
+            Layer.renderDebug(this.Scene.add.graphics(), {
+                tileColor: null, //non-colliding tiles
+                collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles,
+                faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Colliding face edges
+            });
+        });
+    }
+
+    addSpite(Object : Phaser.Physics.Arcade.Sprite){
+        Object.setImmovable(true);
+        this.Objects.push(Object);
+    }
+
+    createCollisionObject(){
+        this.Objects.forEach((Object : Phaser.Physics.Arcade.Sprite) => {
+            this.Scene.physics.add.collider(this.CurrentPlayer, Object);
+        })
     }
 
     createCurrentPlayer(UserId : string){
@@ -75,10 +110,8 @@ export class MapManager implements MapManagerInterface{
         this.CurrentPlayer.initAnimation();
 
         //create collision
-        this.Scene.physics.add.collider(this.CurrentPlayer, this.rock);
-        //add collision layer
-        this.Scene.physics.add.collider(this.CurrentPlayer, this.TopLayer);
-        this.TopLayer.setCollisionByProperty({collides:true});
+        this.createCollisionWithPlayer();
+        this.createCollisionObject();
     }
 
     EventToClickOnTile(){
