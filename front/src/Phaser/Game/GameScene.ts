@@ -2,7 +2,7 @@ import {GameManagerInterface, StatusGameManagerEnum} from "./GameManager";
 import {MessageUserPositionInterface} from "../../Connexion";
 import {CameraManager, CameraManagerInterface} from "./CameraManager";
 import {CurrentGamerInterface, GamerInterface, Player} from "../Player/Player";
-import {RESOLUTION} from "../../Enum/EnvironmentVariable";
+import {DEBUG_MODE, RESOLUTION} from "../../Enum/EnvironmentVariable";
 import Tile = Phaser.Tilemaps.Tile;
 
 export enum Textures {
@@ -97,13 +97,14 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
                 //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
             });
             Layer.setCollisionByProperty({collides: true});
-            //debug code
-            //debug code to see the collision hitbox of the object in the top layer
-            /*Layer.renderDebug(this.add.graphics(), {
-                tileColor: null, //non-colliding tiles
-                collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles,
-                faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Colliding face edges
-            });*/
+            if (DEBUG_MODE) {
+                //debug code to see the collision hitbox of the object in the top layer
+                Layer.renderDebug(this.add.graphics(), {
+                    tileColor: null, //non-colliding tiles
+                    collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles,
+                    faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Colliding face edges
+                });
+            }
         });
     }
 
@@ -142,6 +143,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             //pixel position toz tile position
             let tile = this.Map.getTileAt(this.Map.worldToTileX(pointer.worldX), this.Map.worldToTileY(pointer.worldY));
             if(tile){
+                console.log(tile)
                 this.CurrentPlayer.say("Your touch " + tile.layer.name);
             }
         });
