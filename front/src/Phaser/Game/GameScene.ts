@@ -41,8 +41,9 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
     //hook preload scene
     preload(): void {
-        this.load.image(Textures.Tiles, 'maps/tiles.png');
-        this.load.tilemapTiledJSON(Textures.Map, 'maps/map2.json');
+        this.load.image(Textures.Tiles, 'maps/floortileset.png');
+        this.load.image(Textures.Tiles, 'maps/tilesets_deviant_milkian_1.png');
+        this.load.tilemapTiledJSON(Textures.Map, 'maps/map.json');
         this.load.image(Textures.Rock, 'resources/objects/rockSprite.png');
         this.load.spritesheet(Textures.Player,
             'resources/characters/pipoya/Male 01-1.png',
