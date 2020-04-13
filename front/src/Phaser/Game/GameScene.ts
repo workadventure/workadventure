@@ -1,8 +1,7 @@
 import {GameManagerInterface, StatusGameManagerEnum} from "./GameManager";
 import {MessageUserPositionInterface} from "../../Connexion";
-import {CameraManager, CameraManagerInterface} from "./CameraManager";
 import {CurrentGamerInterface, GamerInterface, Player} from "../Player/Player";
-import {DEBUG_MODE, RESOLUTION} from "../../Enum/EnvironmentVariable";
+import {DEBUG_MODE, RESOLUTION, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import Tile = Phaser.Tilemaps.Tile;
 
 export enum Textures {
@@ -22,7 +21,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     GameManager : GameManagerInterface;
     RoomId : string;
     Terrain : Phaser.Tilemaps.Tileset;
-    Camera: CameraManagerInterface;
     CurrentPlayer: CurrentGamerInterface;
     MapPlayers : Phaser.Physics.Arcade.Group;
     Map: Phaser.Tilemaps.Tilemap;
@@ -76,14 +74,22 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         //init event click
         this.EventToClickOnTile();
 
-        //initialise camera
-        this.Camera = new CameraManager(this, this.cameras.main);
-
         //initialise list of other player
         this.MapPlayers = this.physics.add.group({ immovable: true });
 
         //notify game manager can to create currentUser in map
         this.GameManager.createCurrentPlayer();
+
+
+        //initialise camera
+        this.initCamera();
+    }
+
+    //todo: in a dedicated class/function?
+    initCamera() {
+        this.cameras.main.setBounds(0,0, this.Map.widthInPixels, this.Map.heightInPixels);
+        this.cameras.main.startFollow(this.CurrentPlayer);
+        this.cameras.main.setZoom(ZOOM_LEVEL);
     }
 
     addLayer(Layer : Phaser.Tilemaps.StaticTilemapLayer){
@@ -128,7 +134,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             this,
             this.startX,
             this.startY,
-            this.Camera,
         );
         this.CurrentPlayer.initAnimation();
 
@@ -212,7 +217,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             this,
             MessageUserPosition.position.x,
             MessageUserPosition.position.y,
-            this.Camera,
         );
         player.initAnimation();
         this.MapPlayers.add(player);
