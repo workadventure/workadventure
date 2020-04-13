@@ -1,24 +1,20 @@
 import {RESOLUTION} from "../../Enum/EnvironmentVariable";
 import {Player} from "../Player/Player";
-import {MapManagerInterface} from "./MapManager";
+import {GameSceneInterface} from "./GameScene";
 
 export interface CameraManagerInterface {
-    MapManager : MapManagerInterface;
     moveCamera(CurrentPlayer : Player) : void;
 }
 
 export class CameraManager implements CameraManagerInterface{
-    Scene : Phaser.Scene;
+    Scene : GameSceneInterface;
     Camera : Phaser.Cameras.Scene2D.Camera;
-    MapManager : MapManagerInterface;
 
     constructor(
-        Scene: Phaser.Scene,
+        Scene: GameSceneInterface,
         Camera : Phaser.Cameras.Scene2D.Camera,
-        MapManager: MapManagerInterface,
     ) {
         this.Scene = Scene;
-        this.MapManager = MapManager;
         this.Camera = Camera;
     }
 
@@ -30,8 +26,8 @@ export class CameraManager implements CameraManagerInterface{
         let limit = {
             top: startY,
             left: startX,
-            bottom : this.MapManager.Map.heightInPixels - startY,
-            right: this.MapManager.Map.widthInPixels - startX,
+            bottom : this.Scene.Map.heightInPixels - startY,
+            right: this.Scene.Map.widthInPixels - startX,
         };
 
         if(CurrentPlayer.x < limit.left){
