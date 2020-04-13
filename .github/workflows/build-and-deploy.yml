@@ -27,6 +27,7 @@ jobs:
         uses: docker/build-push-action@v1
         with:
           dockerfile: front/Dockerfile
+          path: front/
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-front
@@ -46,6 +47,7 @@ jobs:
         uses: docker/build-push-action@v1
         with:
           dockerfile: back/Dockerfile
+          path: back/
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-back
