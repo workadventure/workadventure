@@ -1,11 +1,12 @@
 {
   local env = std.extVar("env"),
   # FIXME: namespace does not work if the branch contains a "/"
-  local namespace = std.split(env.GITHUB_REF, "/")[2],
+  local namespace = env.GITHUB_REF_SLUG,
+  local tag = if namespace == "master" then "latest" else namespace,
   "$schema": "https://raw.githubusercontent.com/thecodingmachine/deeployer/master/deeployer.schema.json",
   "containers": {
      "back": {
-       "image": "thecodingmachine/workadventure-back:"+(if namespace == "master" then "latest" else namespace),
+       "image": "thecodingmachine/workadventure-back:"+tag,
        "host": "api."+namespace+".workadventure.test.thecodingmachine.com",
        "ports": [8080],
        "env": {
@@ -13,7 +14,7 @@
        }
      },
     "front": {
-      "image": "thecodingmachine/workadventure-front:"+(if namespace == "master" then "latest" else namespace),
+      "image": "thecodingmachine/workadventure-front:"+tag,
       "host": namespace+".workadventure.test.thecodingmachine.com",
       "ports": [80],
       "env": {

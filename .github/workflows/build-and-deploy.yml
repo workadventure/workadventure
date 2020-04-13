@@ -59,9 +59,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      # Create a slugified value of the branch
+      - uses: rlespinasse/github-slug-action@master
+
       - name: Deploy
         uses: thecodingmachine/deeployer@master
         env:
           KUBE_CONFIG_FILE: ${{ secrets.KUBE_CONFIG_FILE }}
         with:
-          namespace: workadventure-${GITHUB_REF##*/}
+          namespace: workadventure-${{GITHUB_REF_SLUG}}
