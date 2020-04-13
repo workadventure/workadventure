@@ -1,3 +1,5 @@
+import {Textures} from "../Game/GameScene";
+
 interface AnimationData {
     key: string;
     frameRate: number;
@@ -15,31 +17,31 @@ export enum PlayerAnimationNames {
     None = 'none',
 }
 
-export const getPlayerAnimations = (PlayerValue : string): AnimationData[] => {
+export const getPlayerAnimations = (): AnimationData[] => {
     return [{
         key: PlayerAnimationNames.WalkDown,
-        frameModel: PlayerValue,
+        frameModel: Textures.Player,
         frameStart: 0,
         frameEnd: 2,
         frameRate: 10,
         repeat: -1
     }, {
         key: PlayerAnimationNames.WalkLeft,
-        frameModel: PlayerValue,
+        frameModel: Textures.Player,
         frameStart: 3,
         frameEnd: 5,
         frameRate: 10,
         repeat: -1
     }, {
         key: PlayerAnimationNames.WalkRight,
-        frameModel: PlayerValue,
+        frameModel: Textures.Player,
         frameStart: 6,
         frameEnd: 8,
         frameRate: 10,
         repeat: -1
     }, {
         key: PlayerAnimationNames.WalkUp,
-        frameModel: PlayerValue,
+        frameModel: Textures.Player,
         frameStart: 9,
         frameEnd: 11,
         frameRate: 10,
@@ -53,4 +55,4 @@ export const playAnimation = (Player : Phaser.GameObjects.Sprite, direction : st
     } else if (direction === PlayerAnimationNames.None && Player.anims.currentAnim) {
         Player.anims.currentAnim.destroy();
     }
-};
+}

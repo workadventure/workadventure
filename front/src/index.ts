@@ -12,6 +12,12 @@ const config: GameConfig = {
     parent: "game",
     scene: gameManager.GameScenes,
     zoom: RESOLUTION,
+    physics: {
+        default: "arcade",
+        arcade: {
+            debug: true
+        }
+    }
 };
 
 gameManager.createGame().then(() => {

@@ -1,33 +1,38 @@
-import {MapManagerInterface} from "../Game/MapManager";
 import {getPlayerAnimations, playAnimation, PlayerAnimationNames} from "./Animation";
-import {GameSceneInterface} from "../Game/GameScene";
+import {GameSceneInterface, Textures} from "../Game/GameScene";
 import {ConnexionInstance} from "../Game/GameManager";
 import {CameraManagerInterface} from "../Game/CameraManager";
 import {MessageUserPositionInterface} from "../../Connexion";
+import {ActiveEventList, UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
+import {PlayableCaracter} from "../Entity/PlayableCaracter";
+import {MapManagerInterface} from "../Game/MapManager";
 
-export interface CurrentGamerInterface{
+export interface CurrentGamerInterface extends PlayableCaracter{
     userId : string;
     MapManager : MapManagerInterface;
     PlayerValue : string;
     CameraManager: CameraManagerInterface;
     initAnimation() : void;
-    move() : void;
+    moveUser() : void;
+    say(text : string) : void;
 }
 
-export interface GamerInterface{
+export interface GamerInterface extends PlayableCaracter{
     userId : string;
     MapManager : MapManagerInterface;
     PlayerValue : string;
     CameraManager: CameraManagerInterface;
     initAnimation() : void;
     updatePosition(MessageUserPosition : MessageUserPositionInterface) : void;
+    say(text : string) : void;
 }
 
-export class Player extends Phaser.GameObjects.Sprite implements CurrentGamerInterface, GamerInterface{
+export class Player extends PlayableCaracter implements CurrentGamerInterface, GamerInterface{
     userId : string;
     MapManager : MapManagerInterface;
     PlayerValue : string;
     CameraManager: CameraManagerInterface;
+    userInputManager: UserInputManager;
 
     constructor(
         userId: string,
@@ -36,72 +41,80 @@ export class Player extends Phaser.GameObjects.Sprite implements CurrentGamerInt
         y : number,
         CameraManager: CameraManagerInterface,
         MapManager: MapManagerInterface,
-        PlayerValue : string = "player"
+        PlayerValue : string = Textures.Player
     ) {
-        super(Scene, x, y, PlayerValue);
+        super(Scene, x, y, PlayerValue, 1);
+
+        //create input to move
+        this.userInputManager = new UserInputManager(Scene);
+
+        //set data
         this.userId = userId;
         this.PlayerValue = PlayerValue;
-        Scene.add.existing(this);
         this.MapManager = MapManager;
         this.CameraManager = CameraManager;
+
+        //the current player model should be push away by other players to prevent conflict
+        this.setImmovable(false);
+        //edit the hitbox to better match the caracter model
+        this.setSize(32, 32);
     }
 
-    initAnimation() : void{
-        getPlayerAnimations(this.PlayerValue).forEach(d => {
+    initAnimation() : void {
+        getPlayerAnimations().forEach(d => {
             this.scene.anims.create({
                 key: d.key,
-                frames: this.scene.anims.generateFrameNumbers(d.frameModel, { start: d.frameStart, end: d.frameEnd }),
+                frames: this.scene.anims.generateFrameNumbers(d.frameModel, {start: d.frameStart, end: d.frameEnd}),
                 frameRate: d.frameRate,
                 repeat: d.repeat
             });
         })
     }
 
-    move() : void{
+    moveUser() : void {
         //if user client on shift, camera and player speed
-        let speedMultiplier = this.MapManager.keyShift.isDown ? 5 : 1;
+        //let speedMultiplier = this.MapManager.keyShift.isDown ? 5 : 1;
         let haveMove = false;
         let direction = null;
 
-        if((this.MapManager.keyZ.isDown || this.MapManager.keyUp.isDown)){
-            if(!this.CanMoveUp()){
+        let activeEvents = this.userInputManager.getEventListForGameTick();
+        let speedMultiplier = activeEvents.get(UserInputEvent.SpeedUp) ? 500 : 100;
+
+        if (activeEvents.get(UserInputEvent.MoveUp)) {
+            if (!this.CanMoveUp()) {
                 return;
             }
-            playAnimation(this, PlayerAnimationNames.WalkUp);
-            this.setY(this.y - (2 * speedMultiplier));
+            this.move(0, -speedMultiplier);
             haveMove = true;
             direction = PlayerAnimationNames.WalkUp;
         }
-        if((this.MapManager.keyQ.isDown || this.MapManager.keyLeft.isDown)){
-            if(!this.CanMoveLeft()){
+        if (activeEvents.get(UserInputEvent.MoveLeft)) {
+            if (!this.CanMoveLeft()) {
                 return;
             }
-            playAnimation(this, PlayerAnimationNames.WalkLeft);
-            this.setX(this.x - (2 * speedMultiplier));
+            this.move(-speedMultiplier, 0);
             haveMove = true;
             direction = PlayerAnimationNames.WalkLeft;
         }
-        if((this.MapManager.keyS.isDown || this.MapManager.keyDown.isDown)){
-            if(!this.CanMoveDown()){
+        if (activeEvents.get(UserInputEvent.MoveDown)) {
+            if (!this.CanMoveDown()) {
                 return;
             }
-            playAnimation(this, PlayerAnimationNames.WalkDown);
-            this.setY(this.y + (2 * speedMultiplier));
+            this.move(0, speedMultiplier);
             haveMove = true;
             direction = PlayerAnimationNames.WalkDown;
         }
-        if((this.MapManager.keyD.isDown || this.MapManager.keyRight.isDown)){
-            if(!this.CanMoveRight()){
+        if (activeEvents.get(UserInputEvent.MoveRight)) {
+            if (!this.CanMoveRight()) {
                 return;
             }
-            playAnimation(this, PlayerAnimationNames.WalkRight);
-            this.setX(this.x + (2 * speedMultiplier));
+            this.move(speedMultiplier, 0);
             haveMove = true;
             direction = PlayerAnimationNames.WalkRight;
         }
-        if(!haveMove){
-            playAnimation(this, PlayerAnimationNames.None);
+        if (!haveMove) {
             direction = PlayerAnimationNames.None;
+            this.move(0, 0)
         }
         this.sharePosition(direction);
         this.CameraManager.moveCamera(this);
@@ -125,8 +138,12 @@ export class Player extends Phaser.GameObjects.Sprite implements CurrentGamerInt
         return this.MapManager.Map.heightInPixels > this.y;
     }
 
-    private CanMoveRight(){
+    private CanMoveRight() {
         return this.MapManager.Map.widthInPixels > this.x;
+    }
+
+    stop() {
+        this.setVelocity(0, 0)
     }
 
     updatePosition(MessageUserPosition : MessageUserPositionInterface){

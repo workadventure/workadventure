@@ -155,6 +155,12 @@
                 }, 
                 {
                  "id":77,
+                  "properties":[
+                    {
+                      "name":"collides",
+                      "type":"bool",
+                      "value":true
+                    }],
                  "terrain":[2, 2, 2, 2]
                 }, 
                 {

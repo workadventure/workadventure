@@ -2,6 +2,13 @@ import {MapManagerInterface, MapManager} from "./MapManager";
 import {GameManagerInterface, StatusGameManagerEnum} from "./GameManager";
 import {MessageUserPositionInterface} from "../../Connexion";
 
+export enum Textures {
+    Rock = 'rock',
+    Player = 'playerModel',
+    Map = 'map',
+    Tiles = 'tiles'
+}
+
 export interface GameSceneInterface extends Phaser.Scene {
     RoomId : string;
     createCurrentPlayer(UserId : string) : void;
@@ -22,9 +29,10 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
     //hook preload scene
     preload(): void {
-        this.load.image('tiles', 'maps/tiles.png');
-        this.load.tilemapTiledJSON('map', 'maps/map2.json');
-        this.load.spritesheet('player',
+        this.load.image(Textures.Tiles, 'maps/tiles.png');
+        this.load.tilemapTiledJSON(Textures.Map, 'maps/map2.json');
+        this.load.image(Textures.Rock, 'resources/objects/rockSprite.png');
+        this.load.spritesheet(Textures.Player,
             'resources/characters/pipoya/Male 01-1.png',
             { frameWidth: 32, frameHeight: 32 }
         );
