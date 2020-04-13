@@ -66,8 +66,8 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
         //add layer on map
         this.Layers = new Array<Phaser.Tilemaps.StaticTilemapLayer>();
-        this.addLayer( this.Map.createStaticLayer("Calque 1", [this.Terrain], 0, 0).setDepth(-2) );
-        this.addLayer( this.Map.createStaticLayer("Calque 2", [this.Terrain], 0, 0).setDepth(-1) );
+        this.addLayer( this.Map.createStaticLayer("bottom", [this.Terrain], 0, 0).setDepth(-2) );
+        this.addLayer( this.Map.createStaticLayer("top", [this.Terrain], 0, 0).setDepth(-1) );
 
         //add entities
         this.Objects = new Array<Phaser.Physics.Arcade.Sprite>();
