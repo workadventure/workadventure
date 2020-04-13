@@ -1,12 +1,7 @@
 name: Build, push and deploy Docker image
 
 on:
-  push:
-    branches:
-      - master
-      - cd
-#    tags:
-#      - '*'
+  - push
 
 # Enables BuildKit
 env:
