@@ -50,8 +50,6 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
 
         //the current player model should be push away by other players to prevent conflict
         this.setImmovable(false);
-        //edit the hitbox to better match the caracter model
-        this.setSize(32, 32);
     }
 
     initAnimation(): void {

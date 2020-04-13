@@ -14,7 +14,8 @@ export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
         this.scene.physics.world.enableBody(this);
         this.setImmovable(true);
         this.setCollideWorldBounds(true);
-        this.setSize(32, 32); //edit the hitbox to better match the caracter model
+        this.setSize(16, 16); //edit the hitbox to better match the caracter model
+        this.setOffset(8, 16);
     }
 
     move(x: number, y: number){
