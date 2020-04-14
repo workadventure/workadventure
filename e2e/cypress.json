@@ -1,0 +1,6 @@
+{
+	"baseUrl": "http://workadventure.localhost",
+	"video": false,
+	"pluginsFile": false,
+	"supportFile": false
+}

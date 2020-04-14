@@ -3,6 +3,7 @@ import {MessageUserPositionInterface} from "../../Connexion";
 import {CurrentGamerInterface, GamerInterface, Player} from "../Player/Player";
 import {DEBUG_MODE, RESOLUTION, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import Tile = Phaser.Tilemaps.Tile;
+import {cypressAsserter} from "../../Cypress/CypressAsserter";
 
 export enum Textures {
     Rock = 'rock',
@@ -39,6 +40,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
     //hook preload scene
     preload(): void {
+        cypressAsserter.preloadStarted();
         this.load.image(Textures.Tiles, 'maps/tiles.png');
         this.load.tilemapTiledJSON(Textures.Map, 'maps/map2.json');
         this.load.image(Textures.Rock, 'resources/objects/rockSprite.png');
@@ -46,6 +48,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             'resources/characters/pipoya/Male 01-1.png',
             { frameWidth: 32, frameHeight: 32 }
         );
+        cypressAsserter.preloadFinished();
     }
 
     //hook initialisation
@@ -53,6 +56,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
     //hook create scene
     create(): void {
+        cypressAsserter.initStarted();
 
         //initalise map
         this.Map = this.add.tilemap("map");
@@ -83,6 +87,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
         //initialise camera
         this.initCamera();
+        cypressAsserter.initFinished();
     }
 
     //todo: in a dedicated class/function?
