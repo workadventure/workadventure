@@ -9,7 +9,7 @@ services:
     command: front:8080
   cypress:
     # the Docker image to use from https://github.com/cypress-io/cypress-docker-images
-    image: "cypress/included:3.2.0"
+    image: "cypress/included:3.8.3"
     depends_on:
       - reverse-proxy
     environment:
