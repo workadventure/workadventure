@@ -1,17 +1,17 @@
-version: '3.3'
+version: '3'
 
 services:
 
   wait_app:
     image: dadarek/wait-for-dependencies
     depends_on:
-      - traefik
+      - reverse-proxy
     command: front:8080
   cypress:
     # the Docker image to use from https://github.com/cypress-io/cypress-docker-images
     image: "cypress/included:3.2.0"
     depends_on:
-      - traefik
+      - reverse-proxy
     environment:
       # pass base url to test pointing at the web application
       - CYPRESS_baseUrl=http://front:8080
