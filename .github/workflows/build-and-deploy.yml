@@ -86,6 +86,8 @@ jobs:
 
       - name: Run Cypress tests
         uses: cypress-io/github-action@v1
+        env:
+          CYPRESS_BASE_URL: http://${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com
         with:
           env: host=${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com,port=80
           spec: cypress/integration/spec1.js
