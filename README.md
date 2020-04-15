@@ -32,6 +32,17 @@ Note: on some OSes, you will need to add this line to your `/etc/hosts` file:
 workadventure.localhost 127.0.0.1
 ```
 
+## Designing a map
+
+If you want to design your own map, you can use [Tiled](https://www.mapeditor.org/).
+
+A few things to notice:
+
+- your map can have as many layers as your want
+- your map MUST contain a layer named "floorLayer" of type "objectgroup" that represents the layer on which characters will be drawn.
+
+![](doc/images/tiled_screenshot_1.png)
+
 ### MacOS developers, your environment with Vagrant
 
 If you are using MacOS, you can increase Docker performance using Vagrant. If you want more explanations, you can read [this medium article](https://medium.com/better-programming/vagrant-to-increase-docker-performance-with-macos-25b354b0c65c).

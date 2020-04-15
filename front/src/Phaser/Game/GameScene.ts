@@ -3,13 +3,13 @@ import {MessageUserPositionInterface} from "../../Connexion";
 import {CurrentGamerInterface, GamerInterface, Player} from "../Player/Player";
 import {DEBUG_MODE, RESOLUTION, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import Tile = Phaser.Tilemaps.Tile;
+import {ITiledMap, ITiledTileSet} from "../Map/ITiledMap";
 import {cypressAsserter} from "../../Cypress/CypressAsserter";
 
 export enum Textures {
     Rock = 'rock',
     Player = 'playerModel',
-    Map = 'map',
-    Tiles = 'tiles'
+    Map = 'map'
 }
 
 export interface GameSceneInterface extends Phaser.Scene {
@@ -21,14 +21,16 @@ export interface GameSceneInterface extends Phaser.Scene {
 export class GameScene extends Phaser.Scene implements GameSceneInterface{
     GameManager : GameManagerInterface;
     RoomId : string;
-    Terrain : Phaser.Tilemaps.Tileset;
+    Terrains : Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer: CurrentGamerInterface;
     MapPlayers : Phaser.Physics.Arcade.Group;
     Map: Phaser.Tilemaps.Tilemap;
     Layers : Array<Phaser.Tilemaps.StaticTilemapLayer>;
     Objects : Array<Phaser.Physics.Arcade.Sprite>;
+    map: ITiledMap;
     startX = (window.innerWidth / 2) / RESOLUTION;
     startY = (window.innerHeight / 2) / RESOLUTION;
+
 
     constructor(RoomId : string, GameManager : GameManagerInterface) {
         super({
@@ -36,13 +38,23 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         });
         this.RoomId = RoomId;
         this.GameManager = GameManager;
+        this.Terrains = [];
     }
 
     //hook preload scene
     preload(): void {
         cypressAsserter.preloadStarted();
-        this.load.image(Textures.Tiles, 'maps/tiles.png');
-        this.load.tilemapTiledJSON(Textures.Map, 'maps/map2.json');
+        let mapUrl = 'maps/map2.json';
+        this.load.on('filecomplete-tilemapJSON-'+Textures.Map, (key: string, type: string, data: any) => {
+            // Triggered when the map is loaded
+            // Load tiles attached to the map recursively
+            this.map = data.data;
+            this.map.tilesets.forEach((tileset) => {
+                let path = mapUrl.substr(0, mapUrl.lastIndexOf('/'));
+                this.load.image(tileset.name, path + '/' + tileset.image);
+            })
+        });
+        this.load.tilemapTiledJSON(Textures.Map, mapUrl);
         this.load.image(Textures.Rock, 'resources/objects/rockSprite.png');
         this.load.spritesheet(Textures.Player,
             'resources/characters/pipoya/Male 01-1.png',
@@ -60,16 +72,27 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
         //initalise map
         this.Map = this.add.tilemap("map");
-        this.Terrain = this.Map.addTilesetImage("tiles", "tiles");
-        this.Map.createStaticLayer("tiles", "tiles");
+        this.map.tilesets.forEach((tileset: ITiledTileSet) => {
+            this.Terrains.push(this.Map.addTilesetImage(tileset.name, tileset.name));
+        });
 
         //permit to set bound collision
         this.physics.world.setBounds(0,0, this.Map.widthInPixels, this.Map.heightInPixels);
 
         //add layer on map
         this.Layers = new Array<Phaser.Tilemaps.StaticTilemapLayer>();
-        this.addLayer( this.Map.createStaticLayer("Calque 1", [this.Terrain], 0, 0).setDepth(-2) );
-        this.addLayer( this.Map.createStaticLayer("Calque 2", [this.Terrain], 0, 0).setDepth(-1) );
+        let depth = -2;
+        this.map.layers.forEach((layer) => {
+            if (layer.type === 'tilelayer') {
+                this.addLayer( this.Map.createStaticLayer(layer.name, this.Terrains, 0, 0).setDepth(depth) );
+            } else if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
+                depth = -1;
+            }
+        });
+
+        if (depth === -2) {
+            throw new Error('Your map MUST contain a layer of type "objectgroup" whose name is "floorLayer" that represents the layer characters are drawn at.');
+        }
 
         //add entities
         this.Objects = new Array<Phaser.Physics.Arcade.Sprite>();
