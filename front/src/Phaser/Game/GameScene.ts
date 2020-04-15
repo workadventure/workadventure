@@ -3,6 +3,7 @@ import {MessageUserPositionInterface} from "../../Connexion";
 import {CurrentGamerInterface, GamerInterface, Player} from "../Player/Player";
 import {DEBUG_MODE, RESOLUTION, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import Tile = Phaser.Tilemaps.Tile;
+import {ITiledMap} from "../Map/ITiledMap";
 
 export enum Textures {
     Rock = 'rock',
@@ -39,8 +40,17 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
     //hook preload scene
     preload(): void {
-        this.load.image(Textures.Tiles, 'maps/tiles.png');
-        this.load.tilemapTiledJSON(Textures.Map, 'maps/map2.json');
+        let mapUrl = 'maps/map2.json';
+        this.load.on('filecomplete-tilemapJSON-'+Textures.Map, (key: string, type: string, data: any) => {
+            // Triggered when the map is loaded
+            // Load tiles attached to the map recursively
+            let map: ITiledMap = data.data;
+            map.tilesets.forEach((tileset) => {
+                let path = mapUrl.substr(0, mapUrl.lastIndexOf('/'));
+                this.load.image(tileset.name, path + '/' + tileset.image);
+            })
+        });
+        this.load.tilemapTiledJSON(Textures.Map, mapUrl);
         this.load.image(Textures.Rock, 'resources/objects/rockSprite.png');
         this.load.spritesheet(Textures.Player,
             'resources/characters/pipoya/Male 01-1.png',
