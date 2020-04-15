@@ -1,7 +1,6 @@
 import {getPlayerAnimations, playAnimation, PlayerAnimationNames} from "./Animation";
 import {GameSceneInterface, Textures} from "../Game/GameScene";
 import {ConnexionInstance} from "../Game/GameManager";
-import {CameraManagerInterface} from "../Game/CameraManager";
 import {MessageUserPositionInterface} from "../../Connexion";
 import {ActiveEventList, UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
 import {PlayableCaracter} from "../Entity/PlayableCaracter";
@@ -9,7 +8,6 @@ import {PlayableCaracter} from "../Entity/PlayableCaracter";
 export interface CurrentGamerInterface extends PlayableCaracter{
     userId : string;
     PlayerValue : string;
-    CameraManager: CameraManagerInterface;
     initAnimation() : void;
     moveUser() : void;
     say(text : string) : void;
@@ -18,7 +16,6 @@ export interface CurrentGamerInterface extends PlayableCaracter{
 export interface GamerInterface extends PlayableCaracter{
     userId : string;
     PlayerValue : string;
-    CameraManager: CameraManagerInterface;
     initAnimation() : void;
     updatePosition(MessageUserPosition : MessageUserPositionInterface) : void;
     say(text : string) : void;
@@ -27,7 +24,6 @@ export interface GamerInterface extends PlayableCaracter{
 export class Player extends PlayableCaracter implements CurrentGamerInterface, GamerInterface {
     userId: string;
     PlayerValue: string;
-    CameraManager: CameraManagerInterface;
     userInputManager: UserInputManager;
 
     constructor(
@@ -35,7 +31,6 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
         Scene: GameSceneInterface,
         x: number,
         y: number,
-        CameraManager: CameraManagerInterface,
         PlayerValue: string = Textures.Player
     ) {
         super(Scene, x, y, PlayerValue, 1);
@@ -46,7 +41,6 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
         //set data
         this.userId = userId;
         this.PlayerValue = PlayerValue;
-        this.CameraManager = CameraManager;
 
         //the current player model should be push away by other players to prevent conflict
         this.setImmovable(false);
@@ -96,7 +90,6 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
             this.stop();
         }
         this.sharePosition(direction);
-        this.CameraManager.moveCamera(this);
     }
 
     private sharePosition(direction: string) {

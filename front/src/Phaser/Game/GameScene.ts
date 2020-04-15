@@ -1,9 +1,9 @@
 import {GameManagerInterface, StatusGameManagerEnum} from "./GameManager";
 import {MessageUserPositionInterface} from "../../Connexion";
-import {CameraManager, CameraManagerInterface} from "./CameraManager";
 import {CurrentGamerInterface, GamerInterface, Player} from "../Player/Player";
-import {RESOLUTION} from "../../Enum/EnvironmentVariable";
+import {DEBUG_MODE, RESOLUTION, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import Tile = Phaser.Tilemaps.Tile;
+import {ITiledMap} from "../Map/ITiledMap";
 
 export enum Textures {
     Rock = 'rock',
@@ -23,7 +23,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     GameManager : GameManagerInterface;
     RoomId : string;
     Terrain : Phaser.Tilemaps.Tileset;
-    Camera: CameraManagerInterface;
     CurrentPlayer: CurrentGamerInterface;
     MapPlayers : Phaser.Physics.Arcade.Group;
     Map: Phaser.Tilemaps.Tilemap;
@@ -42,9 +41,17 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
     //hook preload scene
     preload(): void {
-        this.load.image(Textures.Tiles, 'maps/floortileset.png');
-        this.load.image(Textures.Tiles2, 'maps/tilesets_deviant_milkian_1.png');
-        this.load.tilemapTiledJSON(Textures.Map, 'maps/map.json');
+        let mapUrl = 'maps/map.json';
+        this.load.on('filecomplete-tilemapJSON-'+Textures.Map, (key: string, type: string, data: any) => {
+            // Triggered when the map is loaded
+            // Load tiles attached to the map recursively
+            let map: ITiledMap = data.data;
+            map.tilesets.forEach((tileset) => {
+                let path = mapUrl.substr(0, mapUrl.lastIndexOf('/'));
+                this.load.image(tileset.name, path + '/' + tileset.image);
+            })
+        });
+        this.load.tilemapTiledJSON(Textures.Map, mapUrl);
         this.load.image(Textures.Rock, 'resources/objects/rockSprite.png');
         this.load.spritesheet(Textures.Player,
             'resources/characters/pipoya/Male 01-1.png',
@@ -80,14 +87,22 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         //init event click
         this.EventToClickOnTile();
 
-        //initialise camera
-        this.Camera = new CameraManager(this, this.cameras.main);
-
         //initialise list of other player
         this.MapPlayers = this.physics.add.group({ immovable: true });
 
         //notify game manager can to create currentUser in map
         this.GameManager.createCurrentPlayer();
+
+
+        //initialise camera
+        this.initCamera();
+    }
+
+    //todo: in a dedicated class/function?
+    initCamera() {
+        this.cameras.main.setBounds(0,0, this.Map.widthInPixels, this.Map.heightInPixels);
+        this.cameras.main.startFollow(this.CurrentPlayer);
+        this.cameras.main.setZoom(ZOOM_LEVEL);
     }
 
     addLayer(Layer : Phaser.Tilemaps.StaticTilemapLayer){
@@ -101,13 +116,14 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
                 //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
             });
             Layer.setCollisionByProperty({collides: true});
-            //debug code
-            //debug code to see the collision hitbox of the object in the top layer
-            /*Layer.renderDebug(this.add.graphics(), {
-                tileColor: null, //non-colliding tiles
-                collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles,
-                faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Colliding face edges
-            });*/
+            if (DEBUG_MODE) {
+                //debug code to see the collision hitbox of the object in the top layer
+                Layer.renderDebug(this.add.graphics(), {
+                    tileColor: null, //non-colliding tiles
+                    collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles,
+                    faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Colliding face edges
+                });
+            }
         });
     }
 
@@ -131,7 +147,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             this,
             this.startX,
             this.startY,
-            this.Camera,
         );
         this.CurrentPlayer.initAnimation();
 
@@ -146,6 +161,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             //pixel position toz tile position
             let tile = this.Map.getTileAt(this.Map.worldToTileX(pointer.worldX), this.Map.worldToTileY(pointer.worldY));
             if(tile){
+                console.log(tile)
                 this.CurrentPlayer.say("Your touch " + tile.layer.name);
             }
         });
@@ -214,7 +230,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             this,
             MessageUserPosition.position.x,
             MessageUserPosition.position.y,
-            this.Camera,
         );
         player.initAnimation();
         this.MapPlayers.add(player);
