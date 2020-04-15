@@ -8,8 +8,7 @@ import {ITiledMap} from "../Map/ITiledMap";
 export enum Textures {
     Rock = 'rock',
     Player = 'playerModel',
-    Map = 'map',
-    Tiles = 'tiles'
+    Map = 'map'
 }
 
 export interface GameSceneInterface extends Phaser.Scene {
@@ -21,14 +20,16 @@ export interface GameSceneInterface extends Phaser.Scene {
 export class GameScene extends Phaser.Scene implements GameSceneInterface{
     GameManager : GameManagerInterface;
     RoomId : string;
-    Terrain : Phaser.Tilemaps.Tileset;
+    Terrains : Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer: CurrentGamerInterface;
     MapPlayers : Phaser.Physics.Arcade.Group;
     Map: Phaser.Tilemaps.Tilemap;
     Layers : Array<Phaser.Tilemaps.StaticTilemapLayer>;
     Objects : Array<Phaser.Physics.Arcade.Sprite>;
+    tilesetKeys : Array<string>;
     startX = (window.innerWidth / 2) / RESOLUTION;
     startY = (window.innerHeight / 2) / RESOLUTION;
+
 
     constructor(RoomId : string, GameManager : GameManagerInterface) {
         super({
@@ -36,6 +37,8 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         });
         this.RoomId = RoomId;
         this.GameManager = GameManager;
+        this.tilesetKeys = [];
+        this.Terrains = [];
     }
 
     //hook preload scene
@@ -48,6 +51,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             map.tilesets.forEach((tileset) => {
                 let path = mapUrl.substr(0, mapUrl.lastIndexOf('/'));
                 this.load.image(tileset.name, path + '/' + tileset.image);
+                this.tilesetKeys.push(tileset.name);
             })
         });
         this.load.tilemapTiledJSON(Textures.Map, mapUrl);
@@ -66,16 +70,17 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
         //initalise map
         this.Map = this.add.tilemap("map");
-        this.Terrain = this.Map.addTilesetImage("tiles", "tiles");
-        this.Map.createStaticLayer("tiles", "tiles");
+        this.tilesetKeys.forEach((key: string) => {
+            this.Terrains.push(this.Map.addTilesetImage(key, key));
+        });
 
         //permit to set bound collision
         this.physics.world.setBounds(0,0, this.Map.widthInPixels, this.Map.heightInPixels);
 
         //add layer on map
         this.Layers = new Array<Phaser.Tilemaps.StaticTilemapLayer>();
-        this.addLayer( this.Map.createStaticLayer("Calque 1", [this.Terrain], 0, 0).setDepth(-2) );
-        this.addLayer( this.Map.createStaticLayer("Calque 2", [this.Terrain], 0, 0).setDepth(-1) );
+        this.addLayer( this.Map.createStaticLayer("Calque 1", this.Terrains, 0, 0).setDepth(-2) );
+        this.addLayer( this.Map.createStaticLayer("Calque 2", this.Terrains, 0, 0).setDepth(-1) );
 
         //add entities
         this.Objects = new Array<Phaser.Physics.Arcade.Sprite>();
