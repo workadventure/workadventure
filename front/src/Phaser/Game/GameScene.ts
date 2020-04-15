@@ -3,7 +3,7 @@ import {MessageUserPositionInterface} from "../../Connexion";
 import {CurrentGamerInterface, GamerInterface, Player} from "../Player/Player";
 import {DEBUG_MODE, RESOLUTION, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import Tile = Phaser.Tilemaps.Tile;
-import {ITiledMap} from "../Map/ITiledMap";
+import {ITiledMap, ITiledTileSet} from "../Map/ITiledMap";
 
 export enum Textures {
     Rock = 'rock',
@@ -26,7 +26,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     Map: Phaser.Tilemaps.Tilemap;
     Layers : Array<Phaser.Tilemaps.StaticTilemapLayer>;
     Objects : Array<Phaser.Physics.Arcade.Sprite>;
-    tilesetKeys : Array<string>;
+    map: ITiledMap;
     startX = (window.innerWidth / 2) / RESOLUTION;
     startY = (window.innerHeight / 2) / RESOLUTION;
 
@@ -37,7 +37,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         });
         this.RoomId = RoomId;
         this.GameManager = GameManager;
-        this.tilesetKeys = [];
         this.Terrains = [];
     }
 
@@ -47,11 +46,10 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         this.load.on('filecomplete-tilemapJSON-'+Textures.Map, (key: string, type: string, data: any) => {
             // Triggered when the map is loaded
             // Load tiles attached to the map recursively
-            let map: ITiledMap = data.data;
-            map.tilesets.forEach((tileset) => {
+            this.map = data.data;
+            this.map.tilesets.forEach((tileset) => {
                 let path = mapUrl.substr(0, mapUrl.lastIndexOf('/'));
                 this.load.image(tileset.name, path + '/' + tileset.image);
-                this.tilesetKeys.push(tileset.name);
             })
         });
         this.load.tilemapTiledJSON(Textures.Map, mapUrl);
@@ -70,8 +68,8 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
         //initalise map
         this.Map = this.add.tilemap("map");
-        this.tilesetKeys.forEach((key: string) => {
-            this.Terrains.push(this.Map.addTilesetImage(key, key));
+        this.map.tilesets.forEach((tileset: ITiledTileSet) => {
+            this.Terrains.push(this.Map.addTilesetImage(tileset.name, tileset.name));
         });
 
         //permit to set bound collision
@@ -79,8 +77,18 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
         //add layer on map
         this.Layers = new Array<Phaser.Tilemaps.StaticTilemapLayer>();
-        this.addLayer( this.Map.createStaticLayer("Calque 1", this.Terrains, 0, 0).setDepth(-2) );
-        this.addLayer( this.Map.createStaticLayer("Calque 2", this.Terrains, 0, 0).setDepth(-1) );
+        let depth = -2;
+        this.map.layers.forEach((layer) => {
+            if (layer.type === 'tilelayer') {
+                this.addLayer( this.Map.createStaticLayer(layer.name, this.Terrains, 0, 0).setDepth(depth) );
+            } else if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
+                depth = -1;
+            }
+        });
+
+        if (depth === -2) {
+            throw new Error('Your map MUST contain a layer of type "objectgroup" whose name is "floorLayer" that represents the layer characters are drawn at.');
+        }
 
         //add entities
         this.Objects = new Array<Phaser.Physics.Arcade.Sprite>();
