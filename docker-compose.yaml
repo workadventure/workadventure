@@ -7,6 +7,9 @@ services:
       - "80:80"
       # The Web UI (enabled by --api.insecure=true)
       - "8080:8080"
+    depends_on:
+      - back
+      - front
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 

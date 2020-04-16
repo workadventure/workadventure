@@ -2,6 +2,7 @@ import 'phaser';
 import GameConfig = Phaser.Types.Core.GameConfig;
 import {GameManager} from "./Phaser/Game/GameManager";
 import {DEBUG_MODE, RESOLUTION} from "./Enum/EnvironmentVariable";
+import {cypressAsserter} from "./Cypress/CypressAsserter";
 
 let gameManager = new GameManager();
 
@@ -19,6 +20,8 @@ const config: GameConfig = {
         }
     }
 };
+
+cypressAsserter.gameStarted();
 
 gameManager.createGame().then(() => {
     let game = new Phaser.Game(config);
