@@ -1,7 +1,7 @@
 import 'phaser';
 import GameConfig = Phaser.Types.Core.GameConfig;
 import {GameManager} from "./Phaser/Game/GameManager";
-import {RESOLUTION} from "./Enum/EnvironmentVariable";
+import {DEBUG_MODE, RESOLUTION} from "./Enum/EnvironmentVariable";
 
 let gameManager = new GameManager();
 
@@ -15,7 +15,7 @@ const config: GameConfig = {
     physics: {
         default: "arcade",
         arcade: {
-            debug: true
+            debug: DEBUG_MODE
         }
     }
 };

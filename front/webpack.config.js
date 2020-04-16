@@ -29,6 +29,6 @@ module.exports = {
         new webpack.ProvidePlugin({
             Phaser: 'phaser'
         }),
-        new webpack.EnvironmentPlugin(['API_URL'])
+        new webpack.EnvironmentPlugin(['API_URL', 'DEBUG_MODE'])
     ]
 };

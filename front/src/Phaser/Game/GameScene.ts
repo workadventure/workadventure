@@ -1,16 +1,14 @@
 import {GameManagerInterface, StatusGameManagerEnum} from "./GameManager";
 import {MessageUserPositionInterface} from "../../Connexion";
-import {CameraManager, CameraManagerInterface} from "./CameraManager";
 import {CurrentGamerInterface, GamerInterface, Player} from "../Player/Player";
-import {RESOLUTION} from "../../Enum/EnvironmentVariable";
+import {DEBUG_MODE, RESOLUTION, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import Tile = Phaser.Tilemaps.Tile;
+import {ITiledMap, ITiledTileSet} from "../Map/ITiledMap";
 
 export enum Textures {
     Rock = 'rock',
     Player = 'playerModel',
-    Map = 'map',
-    Tiles = 'tiles',
-    Tiles2 = 'tiles2'
+    Map = 'map'
 }
 
 export interface GameSceneInterface extends Phaser.Scene {
@@ -22,15 +20,16 @@ export interface GameSceneInterface extends Phaser.Scene {
 export class GameScene extends Phaser.Scene implements GameSceneInterface{
     GameManager : GameManagerInterface;
     RoomId : string;
-    Terrain : Phaser.Tilemaps.Tileset;
-    Camera: CameraManagerInterface;
+    Terrains : Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer: CurrentGamerInterface;
     MapPlayers : Phaser.Physics.Arcade.Group;
     Map: Phaser.Tilemaps.Tilemap;
     Layers : Array<Phaser.Tilemaps.StaticTilemapLayer>;
     Objects : Array<Phaser.Physics.Arcade.Sprite>;
+    map: ITiledMap;
     startX = (window.innerWidth / 2) / RESOLUTION;
     startY = (window.innerHeight / 2) / RESOLUTION;
+
 
     constructor(RoomId : string, GameManager : GameManagerInterface) {
         super({
@@ -38,13 +37,26 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         });
         this.RoomId = RoomId;
         this.GameManager = GameManager;
+        this.Terrains = [];
     }
 
     //hook preload scene
     preload(): void {
-        this.load.image(Textures.Tiles, 'maps/floortileset.png');
-        this.load.image(Textures.Tiles2, 'maps/tilesets_deviant_milkian_1.png');
-        this.load.tilemapTiledJSON(Textures.Map, 'maps/map.json');
+        let mapUrl = 'maps/map.json';
+        this.load.on('filecomplete-tilemapJSON-'+Textures.Map, (key: string, type: string, data: any) => {
+            // Triggered when the map is loaded
+            // Load tiles attached to the map recursively
+            this.map = data.data;
+            this.map.tilesets.forEach((tileset) => {
+                if (typeof tileset.name === 'undefined' || typeof tileset.image === 'undefined') {
+                    console.warn("Don't know how to handle tileset ", tileset)
+                    return;
+                }
+                let path = mapUrl.substr(0, mapUrl.lastIndexOf('/'));
+                this.load.image(tileset.name, path + '/' + tileset.image);
+            })
+        });
+        this.load.tilemapTiledJSON(Textures.Map, mapUrl);
         this.load.image(Textures.Rock, 'resources/objects/rockSprite.png');
         this.load.spritesheet(Textures.Player,
             'resources/characters/pipoya/Male 01-1.png',
@@ -60,18 +72,27 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
         //initalise map
         this.Map = this.add.tilemap("map");
-        this.Terrain = this.Map.addTilesetImage("tiles", "tiles");
-        this.Map.createStaticLayer("tiles", "tiles");
-        this.Terrain = this.Map.addTilesetImage("tiles2", "tiles2");
-        this.Map.createStaticLayer("tiles2", "tiles2");
+        this.map.tilesets.forEach((tileset: ITiledTileSet) => {
+            this.Terrains.push(this.Map.addTilesetImage(tileset.name, tileset.name));
+        });
 
         //permit to set bound collision
         this.physics.world.setBounds(0,0, this.Map.widthInPixels, this.Map.heightInPixels);
 
         //add layer on map
         this.Layers = new Array<Phaser.Tilemaps.StaticTilemapLayer>();
-        this.addLayer( this.Map.createStaticLayer("bottom", [this.Terrain], 0, 0).setDepth(-2) );
-        this.addLayer( this.Map.createStaticLayer("top", [this.Terrain], 0, 0).setDepth(-1) );
+        let depth = -2;
+        this.map.layers.forEach((layer) => {
+            if (layer.type === 'tilelayer') {
+                this.addLayer( this.Map.createStaticLayer(layer.name, this.Terrains, 0, 0).setDepth(depth) );
+            } else if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
+                depth = -1;
+            }
+        });
+
+        if (depth === -2) {
+            throw new Error('Your map MUST contain a layer of type "objectgroup" whose name is "floorLayer" that represents the layer characters are drawn at.');
+        }
 
         //add entities
         this.Objects = new Array<Phaser.Physics.Arcade.Sprite>();
@@ -80,14 +101,22 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         //init event click
         this.EventToClickOnTile();
 
-        //initialise camera
-        this.Camera = new CameraManager(this, this.cameras.main);
-
         //initialise list of other player
         this.MapPlayers = this.physics.add.group({ immovable: true });
 
         //notify game manager can to create currentUser in map
         this.GameManager.createCurrentPlayer();
+
+
+        //initialise camera
+        this.initCamera();
+    }
+
+    //todo: in a dedicated class/function?
+    initCamera() {
+        this.cameras.main.setBounds(0,0, this.Map.widthInPixels, this.Map.heightInPixels);
+        this.cameras.main.startFollow(this.CurrentPlayer);
+        this.cameras.main.setZoom(ZOOM_LEVEL);
     }
 
     addLayer(Layer : Phaser.Tilemaps.StaticTilemapLayer){
@@ -101,13 +130,14 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
                 //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
             });
             Layer.setCollisionByProperty({collides: true});
-            //debug code
-            //debug code to see the collision hitbox of the object in the top layer
-            /*Layer.renderDebug(this.add.graphics(), {
-                tileColor: null, //non-colliding tiles
-                collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles,
-                faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Colliding face edges
-            });*/
+            if (DEBUG_MODE) {
+                //debug code to see the collision hitbox of the object in the top layer
+                Layer.renderDebug(this.add.graphics(), {
+                    tileColor: null, //non-colliding tiles
+                    collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles,
+                    faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Colliding face edges
+                });
+            }
         });
     }
 
@@ -131,7 +161,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             this,
             this.startX,
             this.startY,
-            this.Camera,
         );
         this.CurrentPlayer.initAnimation();
 
@@ -146,6 +175,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             //pixel position toz tile position
             let tile = this.Map.getTileAt(this.Map.worldToTileX(pointer.worldX), this.Map.worldToTileY(pointer.worldY));
             if(tile){
+                console.log(tile)
                 this.CurrentPlayer.say("Your touch " + tile.layer.name);
             }
         });
@@ -214,7 +244,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             this,
             MessageUserPosition.position.x,
             MessageUserPosition.position.y,
-            this.Camera,
         );
         player.initAnimation();
         this.MapPlayers.add(player);
