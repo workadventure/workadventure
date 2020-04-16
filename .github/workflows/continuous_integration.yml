@@ -65,28 +65,4 @@ jobs:
       - name: "Jasmine"
         run: yarn test
         working-directory: "back"
-  
-  e2e:
-    name: "End to end testing with cypress"
-    
-    runs-on: "ubuntu-latest"
 
-    steps:
-      - name: "Checkout"
-        uses: "actions/checkout@v2.0.0"
-
-      - name: "Init .env"
-        run: "cp .env.template .env"
-
-      - name: "Init containers"
-        run: "docker-compose -f docker-compose.yaml -f docker-compose.ci.yml run --rm wait_app" #start the containers and then wait for the website to be online
-
-      - name: "Run cypress"
-        run: "docker-compose -f docker-compose.yaml -f docker-compose.ci.yml up --exit-code-from cypress cypress" # run cypress in docker-compose and get its exit code
-
-      - name: "Upload the screenshot on test failure"
-        uses: actions/upload-artifact@v1
-        if: failure()
-        with:
-          name: "screenshot"
-          path: "./e2e/cypress/screenshots/spec.js/WorkAdventureGame -- loads (failed).png"
