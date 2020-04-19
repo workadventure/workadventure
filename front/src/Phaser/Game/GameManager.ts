@@ -1,6 +1,7 @@
 import {GameSceneInterface, GameScene} from "./GameScene";
 import {ROOM} from "../../Enum/EnvironmentVariable"
 import {Connexion, ConnexionInterface, ListMessageUserPositionInterface} from "../../Connexion";
+import {WebRtcEventManager} from "../../WebRtc/WebRtcEventManager";
 
 export enum StatusGameManagerEnum {
     IN_PROGRESS = 1,
@@ -28,6 +29,8 @@ export class GameManager implements GameManagerInterface {
         return ConnexionInstance.createConnexion().then(() => {
             this.configureGame();
             /** TODO add loader in the page **/
+            //initialise cam
+            new WebRtcEventManager(ConnexionInstance);
         }).catch((err) => {
             console.error(err);
             throw err;

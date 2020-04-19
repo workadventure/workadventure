@@ -1,11 +1,35 @@
 <!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
-</head>
-<body style="margin: 0"><script src="bundle.js"></script></body>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport"
+              content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <link rel="stylesheet" href="/resources/style/style.css">
+        <title>Document</title>
+    </head>
+    <body style="margin: 0">
+        <script src="bundle.js"></script>
+        <div id="webRtc" class="webrtc">
+            <div class="activeCam">
+                <video id="activeCamVideo" autoplay></video>
+            </div>
+            <div id="myCam" class="myCam active">
+                <video id="myCamVideo" autoplay></video>
+            </div>
+            <div class="btn-cam-action active">
+                <div class="btn-micro">
+                    <img id="microphone" src="resources/logos/microphone.svg">
+                    <img id="microphone-close" src="resources/logos/microphone-close.svg">
+                </div>
+                <div class="btn-video">
+                    <img id="cinema" src="resources/logos/cinema.svg">
+                    <img id="cinema-close" src="resources/logos/cinema-close.svg">
+                </div>
+                <div class="btn-call">
+                    <img src="resources/logos/phone.svg">
+                </div>
+            </div>
+        </div>
+    </body>
 </html>

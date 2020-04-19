@@ -74,6 +74,36 @@ export class IoSocketController{
                 let rooms = (this.Io.sockets.adapter.rooms as ExtRoomsInterface)
                 rooms.refreshUserPosition(rooms, this.Io);
             });
+
+            socket.on('webrtc-room', (message : string) => {
+                let data = JSON.parse(message);
+                socket.join(data.roomId);
+                (socket as ExSocketInterface).roomId = data.roomId;
+
+                //if two persone in room share
+                if(this.Io.sockets.adapter.rooms[data.roomId].length < 2) {
+                    return;
+                }
+                let clients : Array<any> = Object.values(this.Io.sockets.sockets);
+
+                //send start at one client to initialise offer webrtc
+                clients[0].emit('webrtc-start');
+            });
+
+            socket.on('video-offer', (message : string) => {
+                let data : any = JSON.parse(message);
+                socket.to(data.roomId).emit('video-offer',  message);
+            });
+
+            socket.on('video-answer', (message : string) => {
+                let data : any = JSON.parse(message);
+                socket.to(data.roomId).emit('video-answer',  message);
+            });
+
+            socket.on('ice-candidate', (message : string) => {
+                let data : any = JSON.parse(message);
+                socket.to(data.roomId).emit('ice-candidate',  message);
+            });
         });
     }
 
