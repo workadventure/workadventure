@@ -19,27 +19,27 @@ export class PeerConnexionManager {
     }
 
     createPeerConnection(data: any = null): Promise<any> {
-        this.peerConnection = new RTCPeerConnection();
+        return this.MediaManager.getCameraPromise.then(() => {
+            this.peerConnection = new RTCPeerConnection();
 
-        //init all events peer connection
-        this.createEventPeerConnection();
+            //init all events peer connection
+            this.createEventPeerConnection();
 
-        this.MediaManager.getCameraPromise.then(() => {
             this.MediaManager.localStream.getTracks().forEach(
-                (track : MediaStreamTrack) => this.peerConnection.addTrack(track,  this.MediaManager.localStream)
+                (track: MediaStreamTrack) => this.peerConnection.addTrack(track, this.MediaManager.localStream)
             );
+
+            //if no data, create offer
+            if (!data || !data.message) {
+                return this.createOffer();
+            }
+
+            let description = new RTCSessionDescription(data.message);
+            return this.peerConnection.setRemoteDescription(description).catch((err) => {
+                console.error("createPeerConnection => setRemoteDescription", err);
+                throw err;
+            });
         });
-
-        //if no data, create offer
-        if (!data || !data.message) {
-            return this.createOffer();
-        }
-
-        let description = new RTCSessionDescription(data.message);
-        return this.peerConnection.setRemoteDescription(description).catch((err) => {
-            console.error("createPeerConnection => setRemoteDescription", err);
-            throw err;
-        })
     }
 
     createOffer(): Promise<any> {
@@ -102,30 +102,31 @@ export class PeerConnexionManager {
 
     createEventPeerConnection(){
         //define creator of offer
-        this.peerConnection.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
-            let message = {message: event.candidate};
-            if (!event.candidate) {
+        this.peerConnection.addEventListener('icecandidate', ({candidate}) => {
+            let message = {message: candidate};
+            if (!candidate) {
                 return;
             }
             this.WebRtcEventManager.emitIceCandidate(message);
-        };
+        });
 
-        this.peerConnection.ontrack = (e:RTCTrackEvent) => {
-            console.info('Event:track', e);
-            this.MediaManager.remoteVideo.srcObject = e.streams[0];
-            this.MediaManager.myCamVideo.srcObject = e.streams[0];
-        };
+        this.peerConnection.addEventListener('iceconnectionstatechange', (e : Event) => {
+            console.info('oniceconnectionstatechange => iceConnectionState', this.peerConnection.iceConnectionState);
+        });
 
-        this.peerConnection.onnegotiationneeded = (e : Event) => {
+        this.peerConnection.addEventListener('negotiationneeded', (e : Event) => {
             console.info("Event:negotiationneeded => call()", e);
             this.createOffer()
-        };
-        this.peerConnection.oniceconnectionstatechange = (e) => {
-            console.info('ICE state change event: ', e);
-        };
-        this.peerConnection.oniceconnectionstatechange = (e:Event) => {
-            console.info('oniceconnectionstatechange => iceConnectionState', this.peerConnection.iceConnectionState);
-        };
+        });
+
+        this.peerConnection.addEventListener("track", (e:RTCTrackEvent) => {
+            console.info('Event:track', e);
+            if (this.MediaManager.remoteVideo.srcObject !== e.streams[0]) {
+                this.MediaManager.remoteVideo.srcObject = e.streams[0];
+                console.log('pc1 received remote stream');
+            }
+        });
+
         this.peerConnection.onicegatheringstatechange = () => {
             console.info('onicegatheringstatechange => iceConnectionState', this.peerConnection.iceConnectionState);
         };
