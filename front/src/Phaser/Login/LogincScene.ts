@@ -1,6 +1,6 @@
 import KeyboardKeydownCallback = Phaser.Types.Input.Keyboard.KeyboardKeydownCallback;
-import {connectionManager} from "../../ConnexionManager";
 import {GameSceneName} from "../Game/GameScene";
+import {connexionManager} from "../../Connexion/ConnexionManager";
 
 export const LoginSceneName = "LoginScene";
 enum LoginTextures {
@@ -46,7 +46,7 @@ export class LogincScene extends Phaser.Scene {
     async login() {
         let email = this.textEntry.text;
         if (!email) return;
-        await connectionManager.createConnexion("a.poly@thecodingmachine.com");
+        await connexionManager.createConnexion("a.poly@thecodingmachine.com");
         this.scene.start(GameSceneName);
     }
 }

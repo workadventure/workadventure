@@ -1,11 +1,12 @@
-import {gameManager, GameManagerInterface, StatusGameManagerEnum} from "./GameManager";
-import {connectionManager, MessageUserPositionInterface} from "../../ConnexionManager";
-import {CurrentGamerInterface, GamerInterface, Player} from "../Player/Player";
+import {CurrentGamerInterface, Player} from "../Player/Player";
 import {DEBUG_MODE, RESOLUTION, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import Tile = Phaser.Tilemaps.Tile;
 import {ITiledMap, ITiledTileSet} from "../Map/ITiledMap";
 import {cypressAsserter} from "../../Cypress/CypressAsserter";
 import {NonPlayer} from "../NonPlayer/NonPlayer";
+import {ConnectedUser} from "../../Connexion/ConnectedUser";
+import {gameManager, UserPositionChangeEvent} from "../../Connexion/GameManager";
+import {connexionManager} from "../../Connexion/ConnexionManager";
 
 export const GameSceneName = "GameScene";
 export enum Textures {
@@ -13,14 +14,7 @@ export enum Textures {
     Map = 'map'
 }
 
-export interface GameSceneInterface extends Phaser.Scene {
-    RoomId : string;
-    Map: Phaser.Tilemaps.Tilemap;
-    createCurrentPlayer(UserId : string) : void;
-    shareUserPosition(UsersPosition : Array<MessageUserPositionInterface>): void;
-}
-export class GameScene extends Phaser.Scene implements GameSceneInterface{
-    GameManager : GameManagerInterface;
+export class GameScene extends Phaser.Scene {
     RoomId : string;
     Terrains : Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer: CurrentGamerInterface;
@@ -37,8 +31,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         super({
             key: GameSceneName
         });
-        this.RoomId = connectionManager.startedRoom;
-        this.GameManager = gameManager;
+        this.RoomId = connexionManager.startedRoom;
         this.Terrains = [];
     }
 
@@ -105,6 +98,8 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
         //notify game manager can to create currentUser in map
         this.createCurrentPlayer();
+        
+        gameManager.otherUserPositionsChange.subscribe((list:any) => this.updateOrCreateMapPlayer(list))
 
 
         //initialise camera
@@ -157,8 +152,8 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     createCurrentPlayer(){
         //initialise player
         this.CurrentPlayer = new Player(
-            connectionManager.userId,
-            connectionManager.email,
+            connexionManager.userId,
+            connexionManager.email,
             this,
             this.startX,
             this.startY,
@@ -168,7 +163,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         //create collision
         this.createCollisionWithPlayer();
         this.createCollisionObject();
-        gameManager.createCurrentPlayer();
     }
 
     EventToClickOnTile(){
@@ -188,58 +182,41 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     }
 
     /**
-     * Share position in scene
-     * @param UsersPosition
-     */
-    shareUserPosition(UsersPosition : Array<MessageUserPositionInterface>): void {
-        this.updateOrCreateMapPlayer(UsersPosition);
-    }
-
-    /**
      * Create new player and clean the player on the map
      * @param UsersPosition
      */
-    updateOrCreateMapPlayer(UsersPosition : Array<MessageUserPositionInterface>){
-        if(!this.CurrentPlayer){
-            return;
-        }
+    updateOrCreateMapPlayer(userEvents : UserPositionChangeEvent[]){
+        
 
         //add or create new user
-        UsersPosition.forEach((userPosition : MessageUserPositionInterface) => {
-            if(userPosition.userId === this.CurrentPlayer.userId){
-                return;
-            }
-            let player = this.findPlayerInMap(userPosition.userId);
+        userEvents.forEach(userEvent => {
+            let player = this.findPlayerInMap(userEvent.userId);
             if(!player){
-                this.addPlayer(userPosition);
+                this.addPlayer(userEvent);
             }else{
-                player.updatePosition(userPosition);
+                if (userEvent.deleted) {
+                    player.destroy();
+                } else {
+                    player.updatePosition(userEvent);
+                }
             }
-        });
-
-        //clean map
-        this.MapPlayers.getChildren().forEach((player: GamerInterface) => {
-            if(UsersPosition.find((message : MessageUserPositionInterface) => message.userId === player.userId)){
-                return;
-            }
-            player.destroy();
-            this.MapPlayers.remove(player);
-        });
+            
+        })
     }
 
-    private findPlayerInMap(UserId : string) : GamerInterface | null{
+    private findPlayerInMap(UserId : string) : any | null{
         let player = this.MapPlayers.getChildren().find((player: Player) => UserId === player.userId);
         if(!player){
             return null;
         }
-        return (player as GamerInterface);
+        return player;
     }
 
     /**
      * Create new player
      * @param MessageUserPosition
      */
-    addPlayer(MessageUserPosition : MessageUserPositionInterface){
+    addPlayer(MessageUserPosition : any){
         //initialise player
         let player = new NonPlayer(
             MessageUserPosition.userId,
@@ -252,7 +229,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         player.updatePosition(MessageUserPosition);
 
         //init colision
-        this.physics.add.overlap(this.CurrentPlayer, player, (CurrentPlayer: CurrentGamerInterface, MapPlayer: GamerInterface) => {
+        this.physics.add.overlap(this.CurrentPlayer, player, (CurrentPlayer: CurrentGamerInterface, MapPlayer: any) => {
             CurrentPlayer.say("Salut ça va?");
             MapPlayer.say("Oui et toi?");
         });

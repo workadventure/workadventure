@@ -18,6 +18,17 @@ export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
         this.setOffset(8, 16);
     }
 
+    initAnimation(): void {
+        getPlayerAnimations().forEach(d => {
+            this.scene.anims.create({
+                key: d.key,
+                frames: this.scene.anims.generateFrameNumbers(d.frameModel, {start: d.frameStart, end: d.frameEnd}),
+                frameRate: d.frameRate,
+                repeat: d.repeat
+            });
+        })
+    }
+
     move(x: number, y: number){
 
         this.setVelocity(x, y);

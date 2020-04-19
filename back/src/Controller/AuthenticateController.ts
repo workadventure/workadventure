@@ -3,6 +3,7 @@ import Jwt from "jsonwebtoken";
 import {BAD_REQUEST, OK} from "http-status-codes";
 import {SECRET_KEY, ROOM} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 import { uuid } from 'uuidv4';
+import {userManager} from "_Model/Users/UserManager";
 
 export class AuthenticateController{
     App : Application;
@@ -10,6 +11,7 @@ export class AuthenticateController{
     constructor(App : Application) {
         this.App = App;
         this.login();
+        this.getAllUsers();
     }
 
     //permit to login on application. Return token to connect on Websocket IO.
@@ -22,13 +24,16 @@ export class AuthenticateController{
                 });
             }
             //TODO check user email for The Coding Machine game
-            let userId = uuid();
-            let token = Jwt.sign({email: param.email, roomId: ROOM, userId: userId}, SECRET_KEY, {expiresIn: '24h'});
-            return res.status(OK).send({
-                token: token,
-                roomId: ROOM,
-                userId: userId
-            });
+            let user = userManager.createUser(param.email);
+            let token = Jwt.sign({email: user.email, userId: user.id}, SECRET_KEY, {expiresIn: '24h'});
+            return res.status(OK).send(user);
+        });
+    }
+
+    getAllUsers(){
+        this.App.get("/users", (req: Request, res: Response) => {
+            let users = userManager.getAllUsers();
+            return res.status(OK).send(users);
         });
     }
 }

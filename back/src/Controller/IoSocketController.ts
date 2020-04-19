@@ -7,6 +7,7 @@ import Jwt, {JsonWebTokenError} from "jsonwebtoken";
 import {SECRET_KEY} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 import {ExtRooms, RefreshUserPositionFunction} from "../Model/Websocket/ExtRoom";
 import {ExtRoomsInterface} from "_Model/Websocket/ExtRoomsInterface";
+import {userManager} from "_Model/Users/UserManager";
 
 export class IoSocketController{
     Io: socketIO.Server;
@@ -112,23 +113,12 @@ export class IoSocketController{
      **/
     seTimeOutInProgress : any = null;
     shareUsersPosition(){
-        if(this.seTimeOutInProgress){
-            clearTimeout(this.seTimeOutInProgress);
-        }
-        //send for each room, all data of position user
-        let arrayMap = (this.Io.sockets.adapter.rooms as ExtRooms).userPositionMapByRoom;
-        if(!arrayMap){
-            this.seTimeOutInProgress = setTimeout(() => {
-                this.shareUsersPosition();
-            }, 10);
-            return;
-        }
-        arrayMap.forEach((value : any) => {
-            let roomId = value[0];
-            this.Io.in(roomId).emit('user-position', JSON.stringify(arrayMap));
-        });
-        this.seTimeOutInProgress = setTimeout(() => {
-            this.shareUsersPosition();
-        }, 10);
+        //every 1/10 of seconds, emit the current list of events
+        setInterval(() => {
+            let userEvents = userManager.getEventList();
+            if (userEvents.length) {
+                this.Io.emit('user-position', JSON.stringify(userEvents));
+            }
+        }, 100)
     }
 }

@@ -2,7 +2,6 @@ import {PlayableCaracter} from "../Entity/PlayableCaracter";
 import {Textures} from "../Game/GameScene";
 import {UserInputEvent} from "../UserInput/UserInputManager";
 import {Player} from "../Player/Player";
-import {MessageUserPositionInterface} from "../../ConnexionManager";
 import {getPlayerAnimations, playAnimation} from "../Player/Animation";
 
 export class NonPlayer extends PlayableCaracter {
@@ -20,7 +19,7 @@ export class NonPlayer extends PlayableCaracter {
     }
 
 
-    updatePosition(MessageUserPosition : MessageUserPositionInterface){
+    updatePosition(MessageUserPosition:any){
         playAnimation(this, MessageUserPosition.position.direction);
         this.setX(MessageUserPosition.position.x);
         this.setY(MessageUserPosition.position.y);

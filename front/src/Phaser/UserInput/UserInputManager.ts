@@ -1,5 +1,4 @@
 import Map = Phaser.Structs.Map;
-import {GameSceneInterface} from "../Game/GameScene";
 
 interface UserInputManagerDatum {
     keyCode: number;
@@ -50,7 +49,7 @@ export class UserInputManager {
         {keyCode: Phaser.Input.Keyboard.KeyCodes.F, event: UserInputEvent.Shout, keyInstance: null},
     ];
     
-    constructor(Scene : GameSceneInterface) {
+    constructor(Scene : Phaser.Scene) {
         this.KeysCode.forEach(d => {
             d.keyInstance = Scene.input.keyboard.addKey(d.keyCode);
         });

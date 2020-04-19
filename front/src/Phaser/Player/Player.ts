@@ -1,9 +1,8 @@
 import {getPlayerAnimations, playAnimation, PlayerAnimationNames} from "./Animation";
-import {GameSceneInterface, Textures} from "../Game/GameScene";
-import {ConnexionInstance} from "../Game/GameManager";
-import {MessageUserPositionInterface} from "../../ConnexionManager";
 import {ActiveEventList, UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
 import {PlayableCaracter} from "../Entity/PlayableCaracter";
+import {gameManager} from "../../Connexion/GameManager";
+import {Textures} from "../Game/GameScene";
 
 export interface CurrentGamerInterface extends PlayableCaracter{
     userId : string;
@@ -13,15 +12,7 @@ export interface CurrentGamerInterface extends PlayableCaracter{
     say(text : string) : void;
 }
 
-export interface GamerInterface extends PlayableCaracter{
-    userId : string;
-    PlayerValue : string;
-    initAnimation() : void;
-    updatePosition(MessageUserPosition : MessageUserPositionInterface) : void;
-    say(text : string) : void;
-}
-
-export class Player extends PlayableCaracter implements CurrentGamerInterface, GamerInterface {
+export class Player extends PlayableCaracter implements CurrentGamerInterface {
     userId: string;
     PlayerValue: string;
     userInputManager: UserInputManager;
@@ -30,7 +21,7 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
     constructor(
         userId: string,
         email: string,
-        Scene: GameSceneInterface,
+        Scene: Phaser.Scene,
         x: number,
         y: number,
         PlayerValue: string = Textures.Player
@@ -48,17 +39,6 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
         //the current player model should be push away by other players to prevent conflict
         this.setImmovable(false);
         this.say("My email is "+this.email)
-    }
-
-    initAnimation(): void {
-        getPlayerAnimations().forEach(d => {
-            this.scene.anims.create({
-                key: d.key,
-                frames: this.scene.anims.generateFrameNumbers(d.frameModel, {start: d.frameStart, end: d.frameEnd}),
-                frameRate: d.frameRate,
-                repeat: d.repeat
-            });
-        })
     }
 
     moveUser(): void {
@@ -93,18 +73,7 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
             direction = PlayerAnimationNames.None;
             this.stop();
         }
-        this.sharePosition(direction);
-    }
-
-    private sharePosition(direction: string) {
-        if (ConnexionInstance) {
-            ConnexionInstance.sharePosition((this.scene as GameSceneInterface).RoomId, this.x, this.y, direction);
-        }
-    }
-
-    updatePosition(MessageUserPosition: MessageUserPositionInterface) {
-        playAnimation(this, MessageUserPosition.position.direction);
-        this.setX(MessageUserPosition.position.x);
-        this.setY(MessageUserPosition.position.y);
+        
+        gameManager.updateConnectedUserPosition(this.x, this.y);
     }
 }
