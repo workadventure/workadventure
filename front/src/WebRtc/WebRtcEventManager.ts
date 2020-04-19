@@ -16,8 +16,9 @@ export class WebRtcEventManager {
         this.eventVideoAnswer();
         this.eventIceCandidate();
 
-        //connect on the room to create a meet
-        Connexion.socket.emit('webrtc-room', JSON.stringify({roomId: roomId}));
+        //start to connect on event
+        //TODO test 
+        this.emitWebRtcRoom();
     }
 
     /**
@@ -67,6 +68,11 @@ export class WebRtcEventManager {
                 console.log(`ICE candidate:\n${data.message ? data.message.candidate : '(null)'}`);
             });
         });
+    }
+
+    emitWebRtcRoom(){
+        //connect on the room to create a meet
+        this.Connexion.socket.emit('webrtc-room', JSON.stringify({roomId: this.RoomId}));
     }
 
     emitIceCandidate(message : any){

@@ -71,7 +71,10 @@ export class IoSocketController{
                 this.saveUserInformation((socket as ExSocketInterface), messageUserPosition);
 
                 //refresh position of all user in all rooms in real time
-                let rooms = (this.Io.sockets.adapter.rooms as ExtRoomsInterface)
+                let rooms = (this.Io.sockets.adapter.rooms as ExtRoomsInterface);
+                if(!rooms.refreshUserPosition){
+                    rooms.refreshUserPosition = RefreshUserPositionFunction;
+                }
                 rooms.refreshUserPosition(rooms, this.Io);
             });
 
