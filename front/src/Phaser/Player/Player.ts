@@ -1,7 +1,7 @@
 import {getPlayerAnimations, playAnimation, PlayerAnimationNames} from "./Animation";
 import {GameSceneInterface, Textures} from "../Game/GameScene";
 import {ConnexionInstance} from "../Game/GameManager";
-import {MessageUserPositionInterface} from "../../Connexion";
+import {MessageUserPositionInterface} from "../../ConnexionManager";
 import {ActiveEventList, UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
 import {PlayableCaracter} from "../Entity/PlayableCaracter";
 
@@ -25,9 +25,11 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
     userId: string;
     PlayerValue: string;
     userInputManager: UserInputManager;
+    private email: string;
 
     constructor(
         userId: string,
+        email: string,
         Scene: GameSceneInterface,
         x: number,
         y: number,
@@ -40,10 +42,12 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
 
         //set data
         this.userId = userId;
+        this.email = email;
         this.PlayerValue = PlayerValue;
 
         //the current player model should be push away by other players to prevent conflict
         this.setImmovable(false);
+        this.say("My email is "+this.email)
     }
 
     initAnimation(): void {

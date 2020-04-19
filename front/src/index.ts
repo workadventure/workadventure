@@ -1,17 +1,16 @@
 import 'phaser';
 import GameConfig = Phaser.Types.Core.GameConfig;
-import {GameManager} from "./Phaser/Game/GameManager";
 import {DEBUG_MODE, RESOLUTION} from "./Enum/EnvironmentVariable";
 import {cypressAsserter} from "./Cypress/CypressAsserter";
-
-let gameManager = new GameManager();
+import {LogincScene} from "./Phaser/Login/LogincScene";
+import {GameScene} from "./Phaser/Game/GameScene";
 
 const config: GameConfig = {
     title: "Office game",
     width: window.innerWidth / RESOLUTION,
     height: window.innerHeight / RESOLUTION,
     parent: "game",
-    scene: gameManager.GameScenes,
+    scene: [LogincScene, GameScene],
     zoom: RESOLUTION,
     physics: {
         default: "arcade",
@@ -23,10 +22,8 @@ const config: GameConfig = {
 
 cypressAsserter.gameStarted();
 
-gameManager.createGame().then(() => {
-    let game = new Phaser.Game(config);
+let game = new Phaser.Game(config);
 
-    window.addEventListener('resize', function (event) {
-        game.scale.resize(window.innerWidth / RESOLUTION, window.innerHeight / RESOLUTION);
-    });
+window.addEventListener('resize', function (event) {
+    game.scale.resize(window.innerWidth / RESOLUTION, window.innerHeight / RESOLUTION);
 });

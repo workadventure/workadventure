@@ -1,13 +1,14 @@
-import {GameManagerInterface, StatusGameManagerEnum} from "./GameManager";
-import {MessageUserPositionInterface} from "../../Connexion";
+import {gameManager, GameManagerInterface, StatusGameManagerEnum} from "./GameManager";
+import {connectionManager, MessageUserPositionInterface} from "../../ConnexionManager";
 import {CurrentGamerInterface, GamerInterface, Player} from "../Player/Player";
 import {DEBUG_MODE, RESOLUTION, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import Tile = Phaser.Tilemaps.Tile;
 import {ITiledMap, ITiledTileSet} from "../Map/ITiledMap";
 import {cypressAsserter} from "../../Cypress/CypressAsserter";
+import {NonPlayer} from "../NonPlayer/NonPlayer";
 
+export const GameSceneName = "GameScene";
 export enum Textures {
-    Rock = 'rock',
     Player = 'playerModel',
     Map = 'map'
 }
@@ -32,12 +33,12 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     startY = (window.innerHeight / 2) / RESOLUTION;
 
 
-    constructor(RoomId : string, GameManager : GameManagerInterface) {
+    constructor() {
         super({
-            key: "GameScene"
+            key: GameSceneName
         });
-        this.RoomId = RoomId;
-        this.GameManager = GameManager;
+        this.RoomId = connectionManager.startedRoom;
+        this.GameManager = gameManager;
         this.Terrains = [];
     }
 
@@ -95,7 +96,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
         //add entities
         this.Objects = new Array<Phaser.Physics.Arcade.Sprite>();
-        this.addSpite(this.physics.add.sprite(200, 400, Textures.Rock, 26));
 
         //init event click
         this.EventToClickOnTile();
@@ -104,7 +104,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         this.MapPlayers = this.physics.add.group({ immovable: true });
 
         //notify game manager can to create currentUser in map
-        this.GameManager.createCurrentPlayer();
+        this.createCurrentPlayer();
 
 
         //initialise camera
@@ -154,10 +154,11 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         })
     }
 
-    createCurrentPlayer(UserId : string){
+    createCurrentPlayer(){
         //initialise player
         this.CurrentPlayer = new Player(
-            UserId,
+            connectionManager.userId,
+            connectionManager.email,
             this,
             this.startX,
             this.startY,
@@ -167,6 +168,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         //create collision
         this.createCollisionWithPlayer();
         this.createCollisionObject();
+        gameManager.createCurrentPlayer();
     }
 
     EventToClickOnTile(){
@@ -239,7 +241,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
      */
     addPlayer(MessageUserPosition : MessageUserPositionInterface){
         //initialise player
-        let player = new Player(
+        let player = new NonPlayer(
             MessageUserPosition.userId,
             this,
             MessageUserPosition.position.x,

@@ -1,4 +1,4 @@
-import {GameManagerInterface} from "./Phaser/Game/GameManager";
+import {gameManager, GameManagerInterface} from "./Phaser/Game/GameManager";
 
 const SocketIo = require('socket.io-client');
 import Axios from "axios";
@@ -105,54 +105,43 @@ export interface ConnexionInterface {
     email : string;
     userId: string;
     startedRoom : string;
-    createConnexion() : Promise<any>;
+    createConnexion(userName:string, email: string) : Promise<any>;
     joinARoom(roomId : string) : void;
     sharePosition(roomId : string, x : number, y : number, direction : string) : void;
     positionOfAllUser() : void;
 }
-export class Connexion implements ConnexionInterface{
+export class ConnexionManager implements ConnexionInterface{
     socket : any;
     token : string;
     email : string;
     userId: string;
     startedRoom : string;
 
-    GameManager: GameManagerInterface;
+    shareUserPositionCallback: Function;
+    
 
-    constructor(email : string, GameManager: GameManagerInterface) {
-        this.email = email;
-        this.GameManager = GameManager;
+    constructor() {
     }
 
-    createConnexion() : Promise<ConnexionInterface>{
-        return Axios.post(`${API_URL}/login`, {email: this.email})
-            .then((res) => {
-                this.token = res.data.token;
-                this.startedRoom = res.data.roomId;
-                this.userId = res.data.userId;
+    async createConnexion(email : string) : Promise<ConnexionInterface>{
+        let res = await Axios.post(`${API_URL}/login`, {email});
+        this.token = res.data.token;
+        this.startedRoom = res.data.roomId;
+        this.userId = res.data.userId;
 
-                this.socket = SocketIo(`${API_URL}`, {
-                    query: {
-                        token: this.token
-                    }
-                });
+        this.socket = SocketIo(`${API_URL}`, {
+            query: {
+                token: this.token
+            }
+        });
 
-                //join the room
-                this.joinARoom(this.startedRoom);
-
-                //share your first position
-                this.sharePosition(this.startedRoom, 0, 0);
-
-                this.positionOfAllUser();
-
-                this.errorMessage();
-
-                return this;
-            })
-            .catch((err) => {
-                console.error(err);
-                throw err;
-            });
+        //join the room
+        this.joinARoom(this.startedRoom);
+        //share your first position
+        this.sharePosition(this.startedRoom, 0, 0);
+        this.positionOfAllUser();
+        this.errorMessage();
+        return this;
     }
 
     /**
@@ -199,7 +188,9 @@ export class Connexion implements ConnexionInterface{
             let dataList = JSON.parse(message);
             dataList.forEach((UserPositions: any) => {
                 let listMessageUserPosition = new ListMessageUserPosition(UserPositions[0], UserPositions[1]);
-                this.GameManager.shareUserPosition(listMessageUserPosition);
+                if (this.shareUserPositionCallback) {
+                    this.shareUserPositionCallback(listMessageUserPosition)
+                }
             });
         });
     }
@@ -209,4 +200,10 @@ export class Connexion implements ConnexionInterface{
             console.error("message-error", message);
         })
     }
+    
+    registerShareUserPositionCallback(callback: (l:ListMessageUserPosition) => {}) {
+        this.shareUserPositionCallback = callback;
+    }
 }
+
+export const connectionManager = new ConnexionManager();

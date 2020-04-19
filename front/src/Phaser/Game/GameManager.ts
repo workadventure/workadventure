@@ -1,6 +1,10 @@
 import {GameSceneInterface, GameScene} from "./GameScene";
 import {ROOM} from "../../Enum/EnvironmentVariable"
-import {Connexion, ConnexionInterface, ListMessageUserPositionInterface} from "../../Connexion";
+import {
+    ConnexionInterface,
+    ListMessageUserPositionInterface,
+    connectionManager
+} from "../../ConnexionManager";
 
 export enum StatusGameManagerEnum {
     IN_PROGRESS = 1,
@@ -21,36 +25,12 @@ export class GameManager implements GameManagerInterface {
 
     constructor() {
         this.status = StatusGameManagerEnum.IN_PROGRESS;
-        ConnexionInstance = new Connexion("test@gmail.com", this);
-    }
-
-    createGame(){
-        return ConnexionInstance.createConnexion().then(() => {
-            this.configureGame();
-            /** TODO add loader in the page **/
-        }).catch((err) => {
-            console.error(err);
-            throw err;
-        });
-    }
-
-    /**
-     * permit to config rooms
-     */
-    configureGame() {
-        ROOM.forEach((roomId) => {
-            let newGame = new GameScene(roomId, this);
-            this.GameScenes.push((newGame as GameSceneInterface));
-        });
     }
 
     /**
      * Permit to create player in started room
      */
     createCurrentPlayer(): void {
-        //Get started room send by the backend
-        let game: GameSceneInterface = this.GameScenes.find((Game: GameSceneInterface) => Game.RoomId === ConnexionInstance.startedRoom);
-        game.createCurrentPlayer(ConnexionInstance.userId);
         this.status = StatusGameManagerEnum.CURRENT_USER_CREATED;
     }
 
@@ -73,3 +53,5 @@ export class GameManager implements GameManagerInterface {
         }
     }
 }
+
+export const gameManager = new GameManager();

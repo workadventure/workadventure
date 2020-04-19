@@ -2,16 +2,20 @@ import {PlayableCaracter} from "../Entity/PlayableCaracter";
 import {Textures} from "../Game/GameScene";
 import {UserInputEvent} from "../UserInput/UserInputManager";
 import {Player} from "../Player/Player";
-import {MessageUserPositionInterface} from "../../Connexion";
-import {playAnimation} from "../Player/Animation";
+import {MessageUserPositionInterface} from "../../ConnexionManager";
+import {getPlayerAnimations, playAnimation} from "../Player/Animation";
 
 export class NonPlayer extends PlayableCaracter {
     
     isFleeing: boolean = false;
-    fleeingDirection:any = null //todo create a vector class
+    fleeingDirection:any = null
+    private userId: string;
+
+    //todo create a vector class
     
-    constructor(scene: Phaser.Scene, x: number, y: number) {
+    constructor(userId:string, scene: Phaser.Scene, x: number, y: number) {
         super(scene, x, y, Textures.Player, 1);
+        this.userId = userId
         this.setSize(32, 32); //edit the hitbox to better match the caracter model
     }
 
@@ -22,7 +26,18 @@ export class NonPlayer extends PlayableCaracter {
         this.setY(MessageUserPosition.position.y);
     }
 
-    fleeFrom(player:Player) {
+    initAnimation(): void {
+        getPlayerAnimations().forEach(d => {
+            this.scene.anims.create({
+                key: d.key,
+                frames: this.scene.anims.generateFrameNumbers(d.frameModel, {start: d.frameStart, end: d.frameEnd}),
+                frameRate: d.frameRate,
+                repeat: d.repeat
+            });
+        })
+    }
+
+    /*fleeFrom(player:Player) {
         if (this.isFleeing) return;
         this.say("Don't touch me!");
         this.isFleeing = true;
@@ -36,5 +51,5 @@ export class NonPlayer extends PlayableCaracter {
         let vectorX = this.x - player.x; 
         let vectorY = this.y - player.y;
         this.fleeingDirection = {x: vectorX, y: vectorY}
-    }
+    }*/
 }
