@@ -46,8 +46,6 @@ export class GameManager implements GameManagerInterface {
 
     /**
      * Permit to create player in started room
-     * @param RoomId
-     * @param UserId
      */
     createCurrentPlayer(): void {
         //Get started room send by the backend

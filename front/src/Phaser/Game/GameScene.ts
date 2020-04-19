@@ -55,7 +55,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             })
         });
         this.load.tilemapTiledJSON(Textures.Map, mapUrl);
-        this.load.image(Textures.Rock, 'resources/objects/rockSprite.png');
         this.load.spritesheet(Textures.Player,
             'resources/characters/pipoya/Male 01-1.png',
             { frameWidth: 32, frameHeight: 32 }
@@ -251,8 +250,9 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         player.updatePosition(MessageUserPosition);
 
         //init colision
-        this.physics.add.collider(this.CurrentPlayer, player, (CurrentPlayer: CurrentGamerInterface, MapPlayer: GamerInterface) => {
-            CurrentPlayer.say("Hello, how are you ? ");
+        this.physics.add.overlap(this.CurrentPlayer, player, (CurrentPlayer: CurrentGamerInterface, MapPlayer: GamerInterface) => {
+            CurrentPlayer.say("Salut ça va?");
+            MapPlayer.say("Oui et toi?");
         });
     }
 }
