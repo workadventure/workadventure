@@ -23,7 +23,7 @@
       },
       "ports": [80],
       "env": {
-        "API_URL": "http://api."+namespace+".workadventure.test.thecodingmachine.com"
+        "API_URL": "https://api."+namespace+".workadventure.test.thecodingmachine.com"
       }
     }
   },
