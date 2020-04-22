@@ -7,7 +7,8 @@
      "back": {
        "image": "thecodingmachine/workadventure-back:"+tag,
        "host": {
-         "url": "api."+namespace+".workadventure.test.thecodingmachine.com"
+         "url": "api."+namespace+".workadventure.test.thecodingmachine.com",
+         "https": "enable"
        },
        "ports": [8080],
        "env": {
@@ -17,12 +18,18 @@
     "front": {
       "image": "thecodingmachine/workadventure-front:"+tag,
       "host": {
-        "url": namespace+".workadventure.test.thecodingmachine.com"
+        "url": namespace+".workadventure.test.thecodingmachine.com",
+        "https": "enable"
       },
       "ports": [80],
       "env": {
         "API_URL": "http://api."+namespace+".workadventure.test.thecodingmachine.com"
       }
+    }
+  },
+  "config": {
+    "https": {
+      "mail": "d.negrier@thecodingmachine.com"
     }
   }
 }
