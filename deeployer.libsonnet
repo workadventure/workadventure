@@ -6,7 +6,9 @@
   "containers": {
      "back": {
        "image": "thecodingmachine/workadventure-back:"+tag,
-       "host": "api."+namespace+".workadventure.test.thecodingmachine.com",
+       "host": {
+         "url": "api."+namespace+".workadventure.test.thecodingmachine.com"
+       },
        "ports": [8080],
        "env": {
          "SECRET_KEY": "tempSecretKeyNeedsToChange"
@@ -14,7 +16,9 @@
      },
     "front": {
       "image": "thecodingmachine/workadventure-front:"+tag,
-      "host": namespace+".workadventure.test.thecodingmachine.com",
+      "host": {
+        "url": namespace+".workadventure.test.thecodingmachine.com"
+      },
       "ports": [80],
       "env": {
         "API_URL": "http://api."+namespace+".workadventure.test.thecodingmachine.com"
