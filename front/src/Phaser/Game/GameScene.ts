@@ -44,12 +44,16 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     //hook preload scene
     preload(): void {
         cypressAsserter.preloadStarted();
-        let mapUrl = 'maps/map2.json';
+        let mapUrl = 'maps/map.json';
         this.load.on('filecomplete-tilemapJSON-'+Textures.Map, (key: string, type: string, data: any) => {
             // Triggered when the map is loaded
             // Load tiles attached to the map recursively
             this.map = data.data;
             this.map.tilesets.forEach((tileset) => {
+                if (typeof tileset.name === 'undefined' || typeof tileset.image === 'undefined') {
+                    console.warn("Don't know how to handle tileset ", tileset)
+                    return;
+                }
                 let path = mapUrl.substr(0, mapUrl.lastIndexOf('/'));
                 this.load.image(tileset.name, path + '/' + tileset.image);
             })
