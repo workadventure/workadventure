@@ -3,7 +3,7 @@ import Jwt from "jsonwebtoken";
 import {BAD_REQUEST, OK} from "http-status-codes";
 import {SECRET_KEY, ROOM} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 import { uuid } from 'uuidv4';
-import {userManager} from "_Model/Users/UserManager";
+import {userManager} from "../Model/Users/UserManager";
 
 export class AuthenticateController{
     App : Application;

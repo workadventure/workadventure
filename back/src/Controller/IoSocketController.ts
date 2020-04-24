@@ -7,7 +7,7 @@ import Jwt, {JsonWebTokenError} from "jsonwebtoken";
 import {SECRET_KEY} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 import {ExtRooms, RefreshUserPositionFunction} from "../Model/Websocket/ExtRoom";
 import {ExtRoomsInterface} from "_Model/Websocket/ExtRoomsInterface";
-import {userManager} from "_Model/Users/UserManager";
+import {userManager} from "../Model/Users/UserManager";
 
 export class IoSocketController{
     Io: socketIO.Server;
