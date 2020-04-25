@@ -8,6 +8,7 @@ export class SimplePeer {
     RoomId: string;
 
     PeerConnexion: any;
+    PeerConnexionArray: Array<any> = new Array<any>();
 
     constructor(Connexion: ConnexionInterface, roomId: string = "test-webrtc") {
         this.Connexion = Connexion;
@@ -46,7 +47,7 @@ export class SimplePeer {
         let data = JSON.parse(message);
 
         //create pear connexion of user stared
-        this.createPeerConnexion(data.initiator);
+        this.createPeerConnexion(data.usersId, data.initiator);
     }
 
     /**
@@ -54,16 +55,23 @@ export class SimplePeer {
      * @param userId
      * @param initiator
      */
-    createPeerConnexion(initiator : boolean = false){
-        this.PeerConnexion = new Peer({initiator: initiator});
-        this.addMedia();
+    createPeerConnexion(usersId : Array<string>, initiator : boolean = false) {
+        usersId.forEach((userId: any) => {
+            if(this.PeerConnexionArray[userId]){
+                return;
+            }
+            this.PeerConnexion = new Peer({initiator: initiator});
 
-        this.PeerConnexion.on('signal', (data: any) => {
-            this.sendWebrtcSignal(data);
-        });
+            this.PeerConnexion.on('signal', (data: any) => {
+                this.sendWebrtcSignal(data);
+            });
 
-        this.PeerConnexion.on('stream', (stream: MediaStream) => {
-            this.stream(stream)
+            this.PeerConnexion.on('stream', (stream: MediaStream) => {
+                this.stream(stream);
+            });
+
+            this.PeerConnexionArray[userId] = this.PeerConnexion;
+            this.addMedia(userId);
         });
     }
 
@@ -81,10 +89,10 @@ export class SimplePeer {
      */
     receiveWebrtcSignal(message: string) {
         let data = JSON.parse(message);
-        if(!this.PeerConnexion){
+        if(!this.PeerConnexionArray[data.userId]){
             return;
         }
-        this.PeerConnexion.signal(data.signal);
+        this.PeerConnexionArray[data.userId].signal(data.signal);
     }
 
     /**
@@ -100,7 +108,7 @@ export class SimplePeer {
      * Permit to update stream
      * @param stream
      */
-     addMedia () {
-         this.PeerConnexion.addStream(this.MediaManager.localStream) // <- add streams to peer dynamically
+     addMedia (userId : any) {
+         this.PeerConnexionArray[userId].addStream(this.MediaManager.localStream) // <- add streams to peer dynamically
     }
 }

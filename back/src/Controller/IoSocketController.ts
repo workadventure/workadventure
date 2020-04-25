@@ -92,9 +92,17 @@ export class IoSocketController{
                 let clients : Array<any> = Object.values(this.Io.sockets.sockets);
 
                 //send start at one client to initialise offer webrtc
+                //send all users in room to create PeerConnection in front
+                let clientsId = clients.reduce((tabs : Array<any>, client: ExtWebSocket) => {
+                    if(!client.userId){
+                        return tabs;
+                    }
+                    tabs.push(client.userId);
+                    return tabs;
+                }, []);
                 clients.forEach((client: ExtWebSocket, index : number) => {
                     client.emit('webrtc-start', JSON.stringify({
-                        userId: client.userId,
+                        usersId: clientsId.filter((userId : any) => userId !== client.userId),
                         initiator : index === 0
                     }));
                 });
