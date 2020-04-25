@@ -26,15 +26,14 @@ export class SimplePeer {
             this.Connexion.sendWebrtcRomm(this.RoomId);
 
             //receive message start
-            this.Connexion.receiveWebrtcStart((message : string) => {
+            this.Connexion.receiveWebrtcStart((message: string) => {
                 this.receiveWebrtcStart(message);
             });
 
             //receive signal by gemer
-            this.Connexion.receiveWebrtcSignal((message : string) => {
+            this.Connexion.receiveWebrtcSignal((message: string) => {
                 this.receiveWebrtcSignal(message);
             });
-
         }).catch((err) => {
             console.error(err);
         });
@@ -60,6 +59,8 @@ export class SimplePeer {
             if(this.PeerConnexionArray[userId]){
                 return;
             }
+            this.MediaManager.addActiveVideo(userId);
+
             this.PeerConnexion = new Peer({initiator: initiator});
 
             this.PeerConnexion.on('signal', (data: any) => {
@@ -67,7 +68,7 @@ export class SimplePeer {
             });
 
             this.PeerConnexion.on('stream', (stream: MediaStream) => {
-                this.stream(stream);
+                this.stream(userId, stream);
             });
 
             this.PeerConnexionArray[userId] = this.PeerConnexion;
@@ -96,17 +97,17 @@ export class SimplePeer {
     }
 
     /**
-     * permit stream video
+     *
+     * @param userId
      * @param stream
      */
-    stream(stream: MediaStream) {
-        this.MediaManager.remoteStream = stream;
-        this.MediaManager.remoteVideo.srcObject = this.MediaManager.remoteStream;
+    stream(userId : any, stream: MediaStream) {
+        this.MediaManager.remoteVideo[userId].srcObject = stream;
     }
 
     /**
-     * Permit to update stream
-     * @param stream
+     *
+     * @param userId
      */
      addMedia (userId : any) {
          this.PeerConnexionArray[userId].addStream(this.MediaManager.localStream) // <- add streams to peer dynamically

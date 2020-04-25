@@ -1,7 +1,7 @@
 export class MediaManager {
     localStream: MediaStream;
     remoteStream: MediaStream;
-    remoteVideo: any;
+    remoteVideo: Array<any> = new Array<any>();
     myCamVideo: any;
     cinemaClose: any = null;
     cinema: any = null;
@@ -11,7 +11,6 @@ export class MediaManager {
     getCameraPromise : Promise<any> = null;
 
     constructor() {
-        this.remoteVideo = document.getElementById('activeCamVideo');
         this.myCamVideo = document.getElementById('myCamVideo');
 
         this.microphoneClose = document.getElementById('microphone-close');
@@ -111,5 +110,16 @@ export class MediaManager {
                 this.localStream = null;
                 throw err;
             });
+    }
+
+    /**
+     *
+     * @param userId
+     */
+    addActiveVideo(userId : any){
+        let elementRemoteVideo = document.getElementById("activeCam");
+        elementRemoteVideo.insertAdjacentHTML('beforeend', '<video id="myCamVideo'+userId+'" autoplay></video>');
+
+        this.remoteVideo[userId] = document.getElementById('myCamVideo'+userId);
     }
 }

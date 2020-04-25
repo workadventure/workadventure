@@ -4,12 +4,6 @@
 .webrtc.active{
     display: block;
 }
-.myCam{
-    display: none;
-}
-.myCam.active{
-    display: block;
-}
 .webrtc, .activeCam{
     position: absolute;
     left: 0;
@@ -18,10 +12,48 @@
     height: 100%;
     background: black;
 }
-.webrtc video{
+.activeCam video{
+    position: absolute;
     width: 100%;
     height: 100%;
 }
+
+/*CSS size for 2 - 3 elements*/
+video:nth-child(1):nth-last-child(3),
+video:nth-child(2):nth-last-child(2),
+video:nth-child(3):nth-last-child(1),
+video:nth-child(1):nth-last-child(2),
+video:nth-child(2):nth-last-child(1){
+    width: 50%;
+}
+video:nth-child(1):nth-last-child(3),
+video:nth-child(2):nth-last-child(2),
+video:nth-child(3):nth-last-child(1){
+    height: 50%;
+}
+
+/*CSS position for 2 elements*/
+video:nth-child(1):nth-last-child(2){
+    left: 0;
+}
+video:nth-child(2):nth-last-child(1){
+    left: 50%;
+}
+
+/*CSS position for 3 elements*/
+video:nth-child(1):nth-last-child(3){
+    top: 0;
+    left: 0;
+}
+video:nth-child(2):nth-last-child(2){
+    top: 0;
+    left: 50%;
+}
+video:nth-child(3):nth-last-child(1) {
+    top: 50%;
+    left: 25%;
+}
+
 .myCam{
     height: 200px;
     width: 300px;
@@ -33,6 +65,7 @@
     max-height: 17%;
     max-width: 17%;
     opacity: 1;
+    display: block;
     transition: opacity 1s;
 }
 .myCam video{
