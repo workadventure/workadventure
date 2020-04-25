@@ -7,6 +7,7 @@ import Jwt, {JsonWebTokenError} from "jsonwebtoken";
 import {SECRET_KEY} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 import {ExtRooms, RefreshUserPositionFunction} from "../Model/Websocket/ExtRoom";
 import {ExtRoomsInterface} from "_Model/Websocket/ExtRoomsInterface";
+import {ExtWebSocket} from "../../../../publicis/sources/api/src/Entities/WebSocket/ExtWebSocket";
 
 export class IoSocketController{
     Io: socketIO.Server;
@@ -84,28 +85,25 @@ export class IoSocketController{
                 (socket as ExSocketInterface).roomId = data.roomId;
 
                 //if two persone in room share
+                console.log("nb user => " + data.roomId, this.Io.sockets.adapter.rooms[data.roomId].length);
                 if(this.Io.sockets.adapter.rooms[data.roomId].length < 2) {
                     return;
                 }
                 let clients : Array<any> = Object.values(this.Io.sockets.sockets);
 
                 //send start at one client to initialise offer webrtc
-                clients[0].emit('webrtc-start');
+                clients.forEach((client: ExtWebSocket, index : number) => {
+                    client.emit('webrtc-start', JSON.stringify({
+                        userId: client.userId,
+                        initiator : index === 0
+                    }));
+                });
             });
 
-            socket.on('video-offer', (message : string) => {
+            socket.on('webrtc-signal', (message : string) => {
                 let data : any = JSON.parse(message);
-                socket.to(data.roomId).emit('video-offer',  message);
-            });
-
-            socket.on('video-answer', (message : string) => {
-                let data : any = JSON.parse(message);
-                socket.to(data.roomId).emit('video-answer',  message);
-            });
-
-            socket.on('ice-candidate', (message : string) => {
-                let data : any = JSON.parse(message);
-                socket.to(data.roomId).emit('ice-candidate',  message);
+                console.info('webrtc-signal', message);
+                socket.to(data.roomId).emit('webrtc-signal',  message);
             });
         });
     }

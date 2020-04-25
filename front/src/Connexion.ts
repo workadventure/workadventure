@@ -4,6 +4,15 @@ const SocketIo = require('socket.io-client');
 import Axios from "axios";
 import {API_URL} from "./Enum/EnvironmentVariable";
 
+enum EventMessage{
+    WEBRTC_SIGNAL = "webrtc-signal",
+    WEBRTC_START = "webrtc-start",
+    WEBRTC_ROOM = "webrtc-room",
+    JOIN_ROOM = "join-room",
+    USER_POSITION = "user-position",
+    MESSAGE_ERROR = "message-error"
+}
+
 class Message {
     userId: string;
     roomId: string;
@@ -56,6 +65,7 @@ export interface MessageUserPositionInterface {
     roomId: string;
     position: PointInterface;
 }
+
 class MessageUserPosition extends Message implements MessageUserPositionInterface{
     position: PointInterface;
 
@@ -76,14 +86,15 @@ class MessageUserPosition extends Message implements MessageUserPositionInterfac
 }
 
 export interface ListMessageUserPositionInterface {
-    roomId : string;
+    roomId: string;
     listUsersPosition: Array<MessageUserPosition>;
 }
-class ListMessageUserPosition{
-    roomId : string;
+
+class ListMessageUserPosition {
+    roomId: string;
     listUsersPosition: Array<MessageUserPosition>;
 
-    constructor(roomId : string, data : any) {
+    constructor(roomId: string, data: any) {
         this.roomId = roomId;
         this.listUsersPosition = new Array<MessageUserPosition>();
         data.forEach((userPosition: any) => {
@@ -99,32 +110,47 @@ class ListMessageUserPosition{
         });
     }
 }
+
 export interface ConnexionInterface {
-    socket : any;
-    token : string;
-    email : string;
+    socket: any;
+    token: string;
+    email: string;
     userId: string;
-    startedRoom : string;
-    createConnexion() : Promise<any>;
-    joinARoom(roomId : string) : void;
-    sharePosition(roomId : string, x : number, y : number, direction : string) : void;
-    positionOfAllUser() : void;
+    startedRoom: string;
+
+    createConnexion(): Promise<any>;
+
+    joinARoom(roomId: string): void;
+
+    sharePosition(roomId: string, x: number, y: number, direction: string): void;
+
+    positionOfAllUser(): void;
+
+    /*webrtc*/
+    sendWebrtcRomm(roomId: string): void;
+
+    sendWebrtcSignal(signal: any, roomId: string): void;
+
+    receiveWebrtcSignal(callBack: Function): void;
+
+    receiveWebrtcStart(callBack: Function): void;
 }
-export class Connexion implements ConnexionInterface{
-    socket : any;
-    token : string;
-    email : string;
+
+export class Connexion implements ConnexionInterface {
+    socket: any;
+    token: string;
+    email: string;
     userId: string;
-    startedRoom : string;
+    startedRoom: string;
 
     GameManager: GameManagerInterface;
 
-    constructor(email : string, GameManager: GameManagerInterface) {
+    constructor(email: string, GameManager: GameManagerInterface) {
         this.email = email;
         this.GameManager = GameManager;
     }
 
-    createConnexion() : Promise<ConnexionInterface>{
+    createConnexion(): Promise<ConnexionInterface> {
         return Axios.post(`${API_URL}/login`, {email: this.email})
             .then((res) => {
                 this.token = res.data.token;
@@ -159,9 +185,9 @@ export class Connexion implements ConnexionInterface{
      * Permit to join a room
      * @param roomId
      */
-    joinARoom(roomId : string) : void {
+    joinARoom(roomId: string): void {
         let messageUserPosition = new MessageUserPosition(this.userId, this.startedRoom, new Point(0, 0));
-        this.socket.emit('join-room', messageUserPosition.toString());
+        this.socket.emit(EventMessage.JOIN_ROOM, messageUserPosition.toString());
     }
 
     /**
@@ -171,12 +197,12 @@ export class Connexion implements ConnexionInterface{
      * @param y
      * @param direction
      */
-    sharePosition(roomId : string, x : number, y : number, direction : string = "none") : void{
-        if(!this.socket){
+    sharePosition(roomId: string, x: number, y: number, direction: string = "none"): void {
+        if (!this.socket) {
             return;
         }
         let messageUserPosition = new MessageUserPosition(this.userId, roomId, new Point(x, y, direction));
-        this.socket.emit('user-position', messageUserPosition.toString());
+        this.socket.emit(EventMessage.USER_POSITION, messageUserPosition.toString());
     }
 
     /**
@@ -194,8 +220,8 @@ export class Connexion implements ConnexionInterface{
      * ...
      * ]
      **/
-    positionOfAllUser() : void {
-        this.socket.on("user-position", (message: string) => {
+    positionOfAllUser(): void {
+        this.socket.on(EventMessage.USER_POSITION, (message: string) => {
             let dataList = JSON.parse(message);
             dataList.forEach((UserPositions: any) => {
                 let listMessageUserPosition = new ListMessageUserPosition(UserPositions[0], UserPositions[1]);
@@ -204,9 +230,29 @@ export class Connexion implements ConnexionInterface{
         });
     }
 
-    errorMessage() : void {
-        this.socket.on('message-error', (message : string) => {
-            console.error("message-error", message);
+    sendWebrtcSignal(signal: any, roomId: string) {
+        this.socket.emit(EventMessage.WEBRTC_SIGNAL, JSON.stringify({
+            userId: this.userId,
+            roomId: roomId,
+            signal: signal
+        }));
+    }
+
+    sendWebrtcRomm(roomId: string) {
+        this.socket.emit(EventMessage.WEBRTC_ROOM, JSON.stringify({roomId: roomId}));
+    }
+
+    receiveWebrtcStart(callback: Function) {
+        this.socket.on(EventMessage.WEBRTC_START, callback);
+    }
+
+    receiveWebrtcSignal(callback: Function) {
+        this.socket.on(EventMessage.WEBRTC_SIGNAL, callback);
+    }
+
+    errorMessage(): void {
+        this.socket.on(EventMessage.MESSAGE_ERROR, (message: string) => {
+            console.error(EventMessage.MESSAGE_ERROR, message);
         })
     }
 }

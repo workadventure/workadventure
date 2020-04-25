@@ -47,7 +47,7 @@ export class MediaManager {
         let webRtc = document.getElementById('webRtc');
         webRtc.classList.add('active');
 
-        this.getCamera();
+        //this.getCamera();
     }
 
     enabledCamera() {
@@ -56,7 +56,7 @@ export class MediaManager {
         this.constraintsMedia.video = true;
         this.localStream = null;
         this.myCamVideo.srcObject = null;
-        this.getCamera();
+        //this.getCamera();
     }
 
     disabledCamera() {
@@ -74,14 +74,14 @@ export class MediaManager {
         }
         this.localStream = null;
         this.myCamVideo.srcObject = null;
-        this.getCamera();
+        //this.getCamera();
     }
 
     enabledMicrophone() {
         this.microphoneClose.style.display = "none";
         this.microphone.style.display = "block";
         this.constraintsMedia.audio = true;
-        this.getCamera();
+        //this.getCamera();
     }
 
     disabledMicrophone() {
@@ -95,17 +95,17 @@ export class MediaManager {
                 }
             });
         }
-        this.getCamera();
+        //this.getCamera();
     }
 
     //get camera
     getCamera() {
-        this.getCameraPromise = navigator.mediaDevices.getUserMedia(this.constraintsMedia)
+        return this.getCameraPromise = navigator.mediaDevices.getUserMedia(this.constraintsMedia)
             .then((stream: MediaStream) => {
-                console.log("constraintsMedia", stream);
                 this.localStream = stream;
                 this.myCamVideo.srcObject = this.localStream;
                 this.myCamVideo.play();
+                return stream;
             }).catch((err) => {
                 console.error(err);
                 this.localStream = null;

@@ -15,8 +15,10 @@
   },
   "dependencies": {
     "@types/axios": "^0.14.0",
+    "@types/simple-peer": "^9.6.0",
     "@types/socket.io-client": "^1.4.32",
     "phaser": "^3.22.0",
+    "simple-peer": "^9.6.2",
     "socket.io-client": "^2.3.0"
   },
   "scripts": {
