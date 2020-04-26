@@ -104,7 +104,8 @@ export class IoSocketController{
             roomId: <string>,
             position: {
                 x : <number>,
-                y : <number>
+                y : <number>,
+               direction: <string>
             }
           },
           ...
@@ -125,8 +126,7 @@ export class IoSocketController{
         }
         arrayMap.forEach((value : any) => {
             let roomId = value[0];
-            let data = value[1];
-            this.Io.in(roomId).emit('user-position', JSON.stringify(data));
+            this.Io.in(roomId).emit('user-position', JSON.stringify(arrayMap));
         });
         this.seTimeOutInProgress = setTimeout(() => {
             this.shareUsersPosition();
