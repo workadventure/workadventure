@@ -3,7 +3,7 @@ export class Message {
     roomId: string;
 
     constructor(data: any) {
-        if(!data.userId || !data.roomId){
+        if (!data.userId || !data.roomId) {
             throw Error("userId or roomId cannot be null");
         }
         this.userId = data.userId;
@@ -13,7 +13,7 @@ export class Message {
     toJson() {
         return {
             userId: this.userId,
-            roomId: this.roomId,
+            roomId: this.roomId
         }
     }
 }

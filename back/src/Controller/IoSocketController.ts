@@ -6,10 +6,12 @@ import {ExSocketInterface} from "../Model/Websocket/ExSocketInterface"; //TODO f
 import Jwt, {JsonWebTokenError} from "jsonwebtoken";
 import {SECRET_KEY} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 import {ExtRooms, RefreshUserPositionFunction} from "../Model/Websocket/ExtRoom";
-import {ExtRoomsInterface} from "_Model/Websocket/ExtRoomsInterface";
+import {ExtRoomsInterface} from "../Model/Websocket/ExtRoomsInterface";
+import {World} from "../Model/World";
 
 export class IoSocketController{
     Io: socketIO.Server;
+    World: World;
     constructor(server : http.Server) {
         this.Io = socketIO(server);
 
@@ -29,6 +31,7 @@ export class IoSocketController{
 
         this.ioConnection();
         this.shareUsersPosition();
+        this.World = new World(this.connectedUser, this.disConnectedUser);
     }
 
     ioConnection() {
@@ -50,6 +53,9 @@ export class IoSocketController{
                 //join user in room
                 socket.join(messageUserPosition.roomId);
 
+                //join user in world
+                this.World.join(messageUserPosition);
+
                 // sending to all clients in room except sender
                 this.saveUserInformation((socket as ExSocketInterface), messageUserPosition);
 
@@ -66,6 +72,9 @@ export class IoSocketController{
                 if (messageUserPosition instanceof Error) {
                     return socket.emit("message-error", JSON.stringify({message: messageUserPosition.message}));
                 }
+
+                // update position in the worl
+                this.World.updatePosition(messageUserPosition);
 
                 // sending to all clients in room except sender
                 this.saveUserInformation((socket as ExSocketInterface), messageUserPosition);
@@ -135,8 +144,7 @@ export class IoSocketController{
     //Hydrate and manage error
     hydrateMessageReceive(message : string) : MessageUserPosition | Error{
         try {
-            let data = JSON.parse(message);
-            return new MessageUserPosition(data);
+            return new MessageUserPosition(JSON.parse(message));
         }catch (err) {
             //TODO log error
             return new Error(err);
@@ -179,5 +187,17 @@ export class IoSocketController{
         this.seTimeOutInProgress = setTimeout(() => {
             this.shareUsersPosition();
         }, 10);
+    }
+
+    //connected user
+    connectedUser(user1 : string, user2 : string){
+        console.log("connectedUser => user1", user1);
+        console.log("connectedUser => user2", user2);
+    }
+
+    //connected user
+    disConnectedUser(user1 : string, user2 : string){
+        console.log("disConnectedUser => user1", user1);
+        console.log("disConnectedUser => user2", user2);
     }
 }
