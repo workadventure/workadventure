@@ -9,7 +9,7 @@ export interface CurrentGamerInterface extends PlayableCaracter{
     userId : string;
     PlayerValue : string;
     initAnimation() : void;
-    moveUser() : void;
+    moveUser(delta: number) : void;
     say(text : string) : void;
 }
 
@@ -57,31 +57,32 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
         })
     }
 
-    moveUser(): void {
+    moveUser(delta: number): void {
         //if user client on shift, camera and player speed
         let haveMove = false;
         let direction = null;
 
         let activeEvents = this.userInputManager.getEventListForGameTick();
-        let speedMultiplier = activeEvents.get(UserInputEvent.SpeedUp) ? 500 : 100;
+        let speedMultiplier = activeEvents.get(UserInputEvent.SpeedUp) ? 25 : 9;
+        let moveAmount = speedMultiplier * delta;
 
         if (activeEvents.get(UserInputEvent.MoveUp)) {
-            this.move(0, -speedMultiplier);
+            this.move(0, -moveAmount);
             haveMove = true;
             direction = PlayerAnimationNames.WalkUp;
         }
         if (activeEvents.get(UserInputEvent.MoveLeft)) {
-            this.move(-speedMultiplier, 0);
+            this.move(-moveAmount, 0);
             haveMove = true;
             direction = PlayerAnimationNames.WalkLeft;
         }
         if (activeEvents.get(UserInputEvent.MoveDown)) {
-            this.move(0, speedMultiplier);
+            this.move(0, moveAmount);
             haveMove = true;
             direction = PlayerAnimationNames.WalkDown;
         }
         if (activeEvents.get(UserInputEvent.MoveRight)) {
-            this.move(speedMultiplier, 0);
+            this.move(moveAmount, 0);
             haveMove = true;
             direction = PlayerAnimationNames.WalkRight;
         }
