@@ -41,47 +41,61 @@ export class SimplePeer {
 
     /**
      *
+     * @param message
      */
     receiveWebrtcStart(message: string) {
         let data = JSON.parse(message);
 
         //create pear connexion of user stared
-        this.createPeerConnexion(data.usersId, data.initiator);
+        this.createPeerConnexion(data);
     }
 
     /**
      *
-     * @param userId
-     * @param initiator
+     * @param users
      */
-    createPeerConnexion(usersId : Array<string>, initiator : boolean = false) {
-        usersId.forEach((userId: any) => {
-            if(this.PeerConnexionArray[userId]){
+    createPeerConnexion(users : Array<any>) {
+        console.log("createPeerConnexion", users);
+        users.forEach((user: any) => {
+            if(this.PeerConnexionArray[user.userId]){
                 return;
             }
-            this.MediaManager.addActiveVideo(userId);
+            this.MediaManager.addActiveVideo(user.userId);
 
-            this.PeerConnexion = new Peer({initiator: initiator});
+            this.PeerConnexion = new Peer({initiator: user.initiator});
 
             this.PeerConnexion.on('signal', (data: any) => {
                 this.sendWebrtcSignal(data);
             });
 
             this.PeerConnexion.on('stream', (stream: MediaStream) => {
-                this.stream(userId, stream);
+                this.stream(user.userId, stream);
             });
 
-            this.PeerConnexionArray[userId] = this.PeerConnexion;
-            this.addMedia(userId);
+            this.PeerConnexionArray[user.userId] = this.PeerConnexion;
+            this.addMedia(user.userId);
         });
+
+        /*let elements = document.getElementById("activeCam");
+        console.log("element.childNodes", elements.childNodes);
+        elements.childNodes.forEach((element : any) => {
+            if(!element.id){
+                return;
+            }
+            if(users.find((user) => user.userId === element.id)){
+                return;
+            }
+            elements.removeChild(element);
+        });*/
     }
 
     /**
-     * permit to send signal
+     *
+     * @param userId
      * @param data
      */
-    sendWebrtcSignal(data: any) {
-        this.Connexion.sendWebrtcSignal(data, this.RoomId);
+    sendWebrtcSignal(data: any, userId : string) {
+        this.Connexion.sendWebrtcSignal(data, this.RoomId, userId);
     }
 
     /**

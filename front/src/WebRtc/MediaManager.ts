@@ -118,8 +118,8 @@ export class MediaManager {
      */
     addActiveVideo(userId : any){
         let elementRemoteVideo = document.getElementById("activeCam");
-        elementRemoteVideo.insertAdjacentHTML('beforeend', '<video id="myCamVideo'+userId+'" autoplay></video>');
+        elementRemoteVideo.insertAdjacentHTML('beforeend', '<video id="'+userId+'" autoplay></video>');
 
-        this.remoteVideo[userId] = document.getElementById('myCamVideo'+userId);
+        this.remoteVideo[userId] = document.getElementById(userId);
     }
 }
