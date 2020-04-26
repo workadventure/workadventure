@@ -253,6 +253,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         //init colision
         this.physics.add.collider(this.CurrentPlayer, player, (CurrentPlayer: CurrentGamerInterface, MapPlayer: GamerInterface) => {
             CurrentPlayer.say("Hello, how are you ? ");
+            this.GameManager.startWebRtc();
         });
     }
 }

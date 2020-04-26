@@ -1,7 +1,7 @@
 import {GameSceneInterface, GameScene} from "./GameScene";
 import {ROOM} from "../../Enum/EnvironmentVariable"
 import {Connexion, ConnexionInterface, ListMessageUserPositionInterface} from "../../Connexion";
-import {SimplePeer} from "../../WebRtc/SimplePeer";
+import {SimplePeerInterface, SimplePeer} from "../../WebRtc/SimplePeer";
 
 export enum StatusGameManagerEnum {
     IN_PROGRESS = 1,
@@ -13,12 +13,15 @@ export let ConnexionInstance : ConnexionInterface;
 export interface GameManagerInterface {
     GameScenes: Array<GameSceneInterface>;
     status : number;
+    SimplePeer: SimplePeerInterface;
     createCurrentPlayer() : void;
+    startWebRtc() : void;
     shareUserPosition(ListMessageUserPosition : ListMessageUserPositionInterface): void;
 }
 export class GameManager implements GameManagerInterface {
     GameScenes: Array<GameSceneInterface> = [];
     status: number;
+    SimplePeer : SimplePeerInterface;
 
     constructor() {
         this.status = StatusGameManagerEnum.IN_PROGRESS;
@@ -29,8 +32,8 @@ export class GameManager implements GameManagerInterface {
         return ConnexionInstance.createConnexion().then(() => {
             this.configureGame();
             /** TODO add loader in the page **/
-            //initialise cam
-            new SimplePeer(ConnexionInstance);
+            //initialise Pear Connexion of game
+            this.SimplePeer = new SimplePeer(ConnexionInstance);
         }).catch((err) => {
             console.error(err);
             throw err;
@@ -57,6 +60,10 @@ export class GameManager implements GameManagerInterface {
         let game: GameSceneInterface = this.GameScenes.find((Game: GameSceneInterface) => Game.RoomId === ConnexionInstance.startedRoom);
         game.createCurrentPlayer(ConnexionInstance.userId);
         this.status = StatusGameManagerEnum.CURRENT_USER_CREATED;
+    }
+
+    startWebRtc() : void {
+        this.SimplePeer.startWebRtc();
     }
 
     /**

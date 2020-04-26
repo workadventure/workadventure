@@ -40,13 +40,11 @@ export class MediaManager {
             //update tracking
         });
 
-        this.enabledMicrophone();
         this.enabledCamera();
+        this.enabledMicrophone();
 
         let webRtc = document.getElementById('webRtc');
         webRtc.classList.add('active');
-
-        //this.getCamera();
     }
 
     enabledCamera() {
@@ -55,7 +53,6 @@ export class MediaManager {
         this.constraintsMedia.video = true;
         this.localStream = null;
         this.myCamVideo.srcObject = null;
-        //this.getCamera();
     }
 
     disabledCamera() {
@@ -73,14 +70,12 @@ export class MediaManager {
         }
         this.localStream = null;
         this.myCamVideo.srcObject = null;
-        //this.getCamera();
     }
 
     enabledMicrophone() {
         this.microphoneClose.style.display = "none";
         this.microphone.style.display = "block";
         this.constraintsMedia.audio = true;
-        //this.getCamera();
     }
 
     disabledMicrophone() {
@@ -94,7 +89,6 @@ export class MediaManager {
                 }
             });
         }
-        //this.getCamera();
     }
 
     //get camera
@@ -103,7 +97,6 @@ export class MediaManager {
             .then((stream: MediaStream) => {
                 this.localStream = stream;
                 this.myCamVideo.srcObject = this.localStream;
-                this.myCamVideo.play();
                 return stream;
             }).catch((err) => {
                 console.error(err);
@@ -119,7 +112,6 @@ export class MediaManager {
     addActiveVideo(userId : string){
         let elementRemoteVideo = document.getElementById("activeCam");
         elementRemoteVideo.insertAdjacentHTML('beforeend', '<video id="'+userId+'" autoplay></video>');
-
         this.remoteVideo[(userId as any)] = document.getElementById(userId);
     }
 

@@ -2,6 +2,10 @@ import {ConnexionInterface} from "../Connexion";
 import {MediaManager} from "./MediaManager";
 let Peer = require('simple-peer');
 
+export interface SimplePeerInterface {
+    startWebRtc(): void;
+}
+
 export class SimplePeer {
     Connexion: ConnexionInterface;
     MediaManager: MediaManager;
@@ -11,16 +15,16 @@ export class SimplePeer {
 
     constructor(Connexion: ConnexionInterface, roomId: string = "test-webrtc") {
         this.Connexion = Connexion;
-        this.MediaManager = new MediaManager();
         this.RoomId = roomId;
-        this.initialise();
     }
 
     /**
      * server has two person connected, start the meet
      */
-    initialise() {
-        return this.MediaManager.getCamera().then(() => {
+    startWebRtc() {
+        this.MediaManager = new MediaManager();
+        return this.MediaManager.getCamera().then((stream: MediaStream) => {
+            this.MediaManager.localStream = stream;
             //send message to join a room
             this.Connexion.sendWebrtcRomm(this.RoomId);
 
