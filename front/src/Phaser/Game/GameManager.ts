@@ -18,20 +18,16 @@ export interface GameManagerInterface {
 export class GameManager implements GameManagerInterface {
     GameScenes: Array<GameSceneInterface> = [];
     status: number;
+    private ConnexionInstance: Connexion;
 
     constructor() {
         this.status = StatusGameManagerEnum.IN_PROGRESS;
-        ConnexionInstance = new Connexion("test@gmail.com", this);
+        this.configureGame();
     }
-
-    createGame(){
-        return ConnexionInstance.createConnexion().then(() => {
-            this.configureGame();
-            /** TODO add loader in the page **/
-        }).catch((err) => {
-            console.error(err);
-            throw err;
-        });
+    
+    connect(email:string) {
+        this.ConnexionInstance = new Connexion(email, this);
+        return this.ConnexionInstance.createConnexion()
     }
 
     /**
@@ -51,8 +47,8 @@ export class GameManager implements GameManagerInterface {
      */
     createCurrentPlayer(): void {
         //Get started room send by the backend
-        let game: GameSceneInterface = this.GameScenes.find((Game: GameSceneInterface) => Game.RoomId === ConnexionInstance.startedRoom);
-        game.createCurrentPlayer(ConnexionInstance.userId);
+        let game: GameSceneInterface = this.GameScenes.find((Game: GameSceneInterface) => Game.RoomId === this.ConnexionInstance.startedRoom);
+        game.createCurrentPlayer(this.ConnexionInstance.userId);
         this.status = StatusGameManagerEnum.CURRENT_USER_CREATED;
     }
 
@@ -75,3 +71,5 @@ export class GameManager implements GameManagerInterface {
         }
     }
 }
+
+export const gameManager = new GameManager();
