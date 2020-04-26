@@ -116,10 +116,22 @@ export class MediaManager {
      *
      * @param userId
      */
-    addActiveVideo(userId : any){
+    addActiveVideo(userId : string){
         let elementRemoteVideo = document.getElementById("activeCam");
         elementRemoteVideo.insertAdjacentHTML('beforeend', '<video id="'+userId+'" autoplay></video>');
 
-        this.remoteVideo[userId] = document.getElementById(userId);
+        this.remoteVideo[(userId as any)] = document.getElementById(userId);
+    }
+
+    /**
+     *
+     * @param userId
+     */
+    removeActiveVideo(userId : string){
+        let element = document.getElementById(userId);
+        if(!element){
+            return;
+        }
+        element.remove();
     }
 }

@@ -85,7 +85,6 @@ export class IoSocketController{
                 (socket as ExSocketInterface).roomId = data.roomId;
 
                 //if two persone in room share
-                console.log("nb user => " + data.roomId, this.Io.sockets.adapter.rooms[data.roomId].length);
                 if(this.Io.sockets.adapter.rooms[data.roomId].length < 2) {
                     return;
                 }
@@ -93,25 +92,36 @@ export class IoSocketController{
 
                 //send start at one client to initialise offer webrtc
                 //send all users in room to create PeerConnection in front
-                let clientsId = clients.reduce((tabs : Array<any>, client: ExtWebSocket) => {
-                    if(!client.userId){
-                        return tabs;
-                    }
-                    tabs.push(client.userId);
-                    return tabs;
-                }, []);
                 clients.forEach((client: ExtWebSocket, index : number) => {
-                    client.emit('webrtc-start', JSON.stringify({
-                        usersId: clientsId.filter((userId : any) => userId !== client.userId),
-                        initiator : index === 0
-                    }));
+
+                    let clientsId = clients.reduce((tabs : Array<any>, clientId: ExtWebSocket, indexClientId: number) => {
+                        if(!clientId.userId || clientId.userId === client.userId){
+                            return tabs;
+                        }
+                        tabs.push({
+                            userId: clientId.userId,
+                            initiator : index <= indexClientId
+                        });
+                        return tabs;
+                    }, []);
+
+                    client.emit('webrtc-start', JSON.stringify(clientsId));
                 });
             });
 
             socket.on('webrtc-signal', (message : string) => {
                 let data : any = JSON.parse(message);
-                console.info('webrtc-signal', message);
-                socket.to(data.roomId).emit('webrtc-signal',  message);
+
+                //send only at user
+                let clients: Array<any> = Object.values(this.Io.sockets.sockets);
+                for(let i = 0; i < clients.length; i++){
+                    let client : ExtWebSocket = clients[i];
+                    if(client.userId !== data.receiverId){
+                        continue
+                    }
+                    client.emit('webrtc-signal',  message);
+                    break;
+                }
             });
         });
     }

@@ -7,7 +7,6 @@ export class SimplePeer {
     MediaManager: MediaManager;
     RoomId: string;
 
-    PeerConnexion: any;
     PeerConnexionArray: Array<any> = new Array<any>();
 
     constructor(Connexion: ConnexionInterface, roomId: string = "test-webrtc") {
@@ -55,38 +54,35 @@ export class SimplePeer {
      * @param users
      */
     createPeerConnexion(users : Array<any>) {
-        console.log("createPeerConnexion", users);
         users.forEach((user: any) => {
             if(this.PeerConnexionArray[user.userId]){
                 return;
             }
             this.MediaManager.addActiveVideo(user.userId);
 
-            this.PeerConnexion = new Peer({initiator: user.initiator});
+            this.PeerConnexionArray[user.userId] = new Peer({initiator: user.initiator});
 
-            this.PeerConnexion.on('signal', (data: any) => {
-                this.sendWebrtcSignal(data);
+            this.PeerConnexionArray[user.userId].on('signal', (data: any) => {
+                this.sendWebrtcSignal(data, user.userId);
             });
 
-            this.PeerConnexion.on('stream', (stream: MediaStream) => {
+            this.PeerConnexionArray[user.userId].on('stream', (stream: MediaStream) => {
                 this.stream(user.userId, stream);
             });
 
-            this.PeerConnexionArray[user.userId] = this.PeerConnexion;
+            this.PeerConnexionArray[user.userId].on('close', () => {
+                this.closeConnexion(user.userId);
+            });
+
             this.addMedia(user.userId);
         });
 
-        /*let elements = document.getElementById("activeCam");
-        console.log("element.childNodes", elements.childNodes);
-        elements.childNodes.forEach((element : any) => {
-            if(!element.id){
-                return;
-            }
-            if(users.find((user) => user.userId === element.id)){
-                return;
-            }
-            elements.removeChild(element);
-        });*/
+    }
+
+    closeConnexion(userId : string){
+        // @ts-ignore
+        this.PeerConnexionArray[userId] = null;
+        this.MediaManager.removeActiveVideo(userId)
     }
 
     /**
@@ -95,7 +91,7 @@ export class SimplePeer {
      * @param data
      */
     sendWebrtcSignal(data: any, userId : string) {
-        this.Connexion.sendWebrtcSignal(data, this.RoomId, userId);
+        this.Connexion.sendWebrtcSignal(data, this.RoomId, null, userId);
     }
 
     /**

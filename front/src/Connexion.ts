@@ -129,7 +129,7 @@ export interface ConnexionInterface {
     /*webrtc*/
     sendWebrtcRomm(roomId: string): void;
 
-    sendWebrtcSignal(signal: any, roomId: string, userId?: string): void;
+    sendWebrtcSignal(signal: any, roomId: string, userId?: string, receiverId?: string): void;
 
     receiveWebrtcSignal(callBack: Function): void;
 
@@ -230,9 +230,10 @@ export class Connexion implements ConnexionInterface {
         });
     }
 
-    sendWebrtcSignal(signal: any, roomId: string, userId? : string ) {
+    sendWebrtcSignal(signal: any, roomId: string, userId? : string, receiverId? : string) {
         this.socket.emit(EventMessage.WEBRTC_SIGNAL, JSON.stringify({
             userId: userId ? userId : this.userId,
+            receiverId: receiverId ? receiverId : this.userId,
             roomId: roomId,
             signal: signal
         }));
