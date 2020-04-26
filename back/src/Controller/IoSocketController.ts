@@ -7,7 +7,6 @@ import Jwt, {JsonWebTokenError} from "jsonwebtoken";
 import {SECRET_KEY} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 import {ExtRooms, RefreshUserPositionFunction} from "../Model/Websocket/ExtRoom";
 import {ExtRoomsInterface} from "_Model/Websocket/ExtRoomsInterface";
-import {ExtWebSocket} from "../../../../publicis/sources/api/src/Entities/WebSocket/ExtWebSocket";
 
 export class IoSocketController{
     Io: socketIO.Server;
@@ -92,9 +91,9 @@ export class IoSocketController{
 
                 //send start at one client to initialise offer webrtc
                 //send all users in room to create PeerConnection in front
-                clients.forEach((client: ExtWebSocket, index : number) => {
+                clients.forEach((client: ExSocketInterface, index : number) => {
 
-                    let clientsId = clients.reduce((tabs : Array<any>, clientId: ExtWebSocket, indexClientId: number) => {
+                    let clientsId = clients.reduce((tabs : Array<any>, clientId: ExSocketInterface, indexClientId: number) => {
                         if(!clientId.userId || clientId.userId === client.userId){
                             return tabs;
                         }
@@ -115,7 +114,7 @@ export class IoSocketController{
                 //send only at user
                 let clients: Array<any> = Object.values(this.Io.sockets.sockets);
                 for(let i = 0; i < clients.length; i++){
-                    let client : ExtWebSocket = clients[i];
+                    let client : ExSocketInterface = clients[i];
                     if(client.userId !== data.receiverId){
                         continue
                     }
