@@ -6,7 +6,10 @@
   "containers": {
      "back": {
        "image": "thecodingmachine/workadventure-back:"+tag,
-       "host": "api."+namespace+".workadventure.test.thecodingmachine.com",
+       "host": {
+         "url": "api."+namespace+".workadventure.test.thecodingmachine.com",
+         "https": "enable"
+       },
        "ports": [8080],
        "env": {
          "SECRET_KEY": "tempSecretKeyNeedsToChange"
@@ -14,11 +17,19 @@
      },
     "front": {
       "image": "thecodingmachine/workadventure-front:"+tag,
-      "host": namespace+".workadventure.test.thecodingmachine.com",
+      "host": {
+        "url": namespace+".workadventure.test.thecodingmachine.com",
+        "https": "enable"
+      },
       "ports": [80],
       "env": {
-        "API_URL": "http://api."+namespace+".workadventure.test.thecodingmachine.com"
+        "API_URL": "https://api."+namespace+".workadventure.test.thecodingmachine.com"
       }
+    }
+  },
+  "config": {
+    "https": {
+      "mail": "d.negrier@thecodingmachine.com"
     }
   }
 }

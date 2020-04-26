@@ -186,8 +186,12 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         });
     }
 
-    update() : void {
-        this.CurrentPlayer.moveUser();
+    /**
+     * @param time
+     * @param delta The delta time in ms since the last frame. This is a smoothed and capped value based on the FPS rate.
+     */
+    update(time: number, delta: number) : void {
+        this.CurrentPlayer.moveUser(delta);
     }
 
     /**

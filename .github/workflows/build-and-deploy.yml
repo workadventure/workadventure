@@ -81,17 +81,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          msg: Environment deployed at http://${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com
+          msg: Environment deployed at https://${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com
           check_for_duplicate_msg: true
 
       - name: Run Cypress tests
         uses: cypress-io/github-action@v1
         env:
-          CYPRESS_BASE_URL: http://${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com
+          CYPRESS_BASE_URL: https://${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com
         with:
           env: host=${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com,port=80
           spec: cypress/integration/spec.js
-          wait-on: http://${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com
+          wait-on: https://${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com
           working-directory: e2e
 
       - name: "Upload the screenshot on test failure"
