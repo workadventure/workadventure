@@ -1,25 +1,23 @@
 export class MediaManager {
     localStream: MediaStream;
-    remoteStream: MediaStream;
     remoteVideo: Array<any> = new Array<any>();
     myCamVideo: any;
     cinemaClose: any = null;
     cinema: any = null;
     microphoneClose: any = null;
     microphone: any = null;
-    constraintsMedia = {audio: true, video: true};
+    constraintsMedia = {audio: false, video: true};
     getCameraPromise : Promise<any> = null;
 
     constructor() {
         this.myCamVideo = document.getElementById('myCamVideo');
-
         this.microphoneClose = document.getElementById('microphone-close');
+
         this.microphoneClose.addEventListener('click', (e: any) => {
             e.preventDefault();
             this.enabledMicrophone();
             //update tracking
         });
-
         this.microphone = document.getElementById('microphone');
         this.microphone.addEventListener('click', (e: any) => {
             e.preventDefault();
@@ -42,7 +40,9 @@ export class MediaManager {
 
         this.enabledCamera();
         this.enabledMicrophone();
+    }
 
+    activeVisio(){
         let webRtc = document.getElementById('webRtc');
         webRtc.classList.add('active');
     }
@@ -89,6 +89,18 @@ export class MediaManager {
                 }
             });
         }
+    }
+
+    getElementActivePhone(){
+        return document.getElementById('phone-open');
+    }
+
+    activePhoneOpen(){
+        return this.getElementActivePhone().classList.add("active");
+    }
+
+    disablePhoneOpen(){
+        return this.getElementActivePhone().classList.remove("active");
     }
 
     //get camera

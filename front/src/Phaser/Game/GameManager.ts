@@ -15,7 +15,6 @@ export interface GameManagerInterface {
     status : number;
     SimplePeer: SimplePeerInterface;
     createCurrentPlayer() : void;
-    startWebRtc() : void;
     shareUserPosition(ListMessageUserPosition : ListMessageUserPositionInterface): void;
 }
 export class GameManager implements GameManagerInterface {
@@ -60,10 +59,6 @@ export class GameManager implements GameManagerInterface {
         let game: GameSceneInterface = this.GameScenes.find((Game: GameSceneInterface) => Game.RoomId === ConnexionInstance.startedRoom);
         game.createCurrentPlayer(ConnexionInstance.userId);
         this.status = StatusGameManagerEnum.CURRENT_USER_CREATED;
-    }
-
-    startWebRtc() : void {
-        this.SimplePeer.startWebRtc();
     }
 
     /**

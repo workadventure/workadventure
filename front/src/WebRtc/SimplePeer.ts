@@ -3,7 +3,8 @@ import {MediaManager} from "./MediaManager";
 let Peer = require('simple-peer');
 
 export interface SimplePeerInterface {
-    startWebRtc(): void;
+    activePhone(): void;
+    disablePhone(): void;
 }
 
 export class SimplePeer {
@@ -16,13 +17,18 @@ export class SimplePeer {
     constructor(Connexion: ConnexionInterface, roomId: string = "test-webrtc") {
         this.Connexion = Connexion;
         this.RoomId = roomId;
+        this.MediaManager = new MediaManager();
+        this.MediaManager.getElementActivePhone().addEventListener("click", () => {
+            this.startWebRtc();
+            this.disablePhone();
+        });
     }
 
     /**
      * server has two person connected, start the meet
      */
     startWebRtc() {
-        this.MediaManager = new MediaManager();
+        this.MediaManager.activeVisio();
         return this.MediaManager.getCamera().then((stream: MediaStream) => {
             this.MediaManager.localStream = stream;
             //send message to join a room
@@ -125,5 +131,13 @@ export class SimplePeer {
      */
      addMedia (userId : any) {
          this.PeerConnexionArray[userId].addStream(this.MediaManager.localStream) // <- add streams to peer dynamically
+    }
+
+    activePhone(){
+         this.MediaManager.activePhoneOpen();
+    }
+
+    disablePhone(){
+        this.MediaManager.disablePhoneOpen();
     }
 }

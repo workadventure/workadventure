@@ -112,3 +112,42 @@ video:nth-child(3):nth-last-child(1) {
     left: calc(48px - 35px);
     position: relative;
 }
+.phone-open{
+    position: absolute;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    left: calc(50% - 70px);
+    padding: 20px;
+    bottom: 20px;
+    box-shadow: 2px 2px 24px #444;
+    background-color: green;
+    opacity: 0;
+    transition: all .4s ease-in-out;
+}
+.phone-open.active{
+    opacity: 1;
+    animation-name: phone-move;
+    animation-duration: 0.4s;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+}
+.phone-open:hover{
+    animation: none;
+    cursor: pointer;
+}
+
+@keyframes phone-move {
+    0%   {
+        left: calc(50% - 70px);
+        bottom: 20px;
+    }
+    25% {
+        left: calc(50% - 65px);
+        bottom: 15px;
+    }
+    25% {
+        left: calc(50% - 75px);
+        bottom: 25px;
+    }
+}
