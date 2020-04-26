@@ -1,8 +1,7 @@
-import {GameManagerInterface, StatusGameManagerEnum} from "./GameManager";
+import {GameManagerInterface} from "./GameManager";
 import {MessageUserPositionInterface} from "../../Connexion";
 import {CurrentGamerInterface, GamerInterface, Player} from "../Player/Player";
 import {DEBUG_MODE, RESOLUTION, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
-import Tile = Phaser.Tilemaps.Tile;
 import {ITiledMap, ITiledTileSet} from "../Map/ITiledMap";
 import {cypressAsserter} from "../../Cypress/CypressAsserter";
 
