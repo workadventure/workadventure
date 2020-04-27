@@ -4,6 +4,7 @@ import {ROOM} from "../../Enum/EnvironmentVariable";
 import {TextField} from "../Components/TextField";
 import {TextInput} from "../Components/TextInput";
 import {ClickButton} from "../Components/ClickButton";
+import {cypressAsserter} from "../../Cypress/CypressAsserter";
 
 //todo: put this constants in a dedicated file
 export const LoginSceneName = "LoginScene";
@@ -23,6 +24,7 @@ export class LogincScene extends Phaser.Scene {
     }
     
     preload() {
+        cypressAsserter.reachedLoginScene(this);
         this.load.image(LoginTextures.playButton, "resources/objects/play_button.png");
     }
     
@@ -42,10 +44,14 @@ export class LogincScene extends Phaser.Scene {
         
     }
     
-    async login() {
+    login() {
         let email = this.emailInput.text;
         if (!email) return;
+        return this.loginFromEmail(email);
+    }
+    
+    async loginFromEmail(email: string): Promise<void> {
         await gameManager.connect(email);
         this.scene.start("GameScene");
-    }
+    }  
 }

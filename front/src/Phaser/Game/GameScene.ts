@@ -43,7 +43,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
     //hook preload scene
     preload(): void {
-        cypressAsserter.preloadStarted();
+        cypressAsserter.reachedGameScene();
         let mapUrl = 'maps/map.json';
         this.load.on('filecomplete-tilemapJSON-'+Textures.Map, (key: string, type: string, data: any) => {
             // Triggered when the map is loaded
@@ -63,7 +63,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             'resources/characters/pipoya/Male 01-1.png',
             { frameWidth: 32, frameHeight: 32 }
         );
-        cypressAsserter.preloadFinished();
     }
 
     //hook initialisation
@@ -71,8 +70,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
     //hook create scene
     create(): void {
-        cypressAsserter.initStarted();
-
         //initalise map
         this.Map = this.add.tilemap("map");
         this.map.tilesets.forEach((tileset: ITiledTileSet) => {
@@ -112,7 +109,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
         //initialise camera
         this.initCamera();
-        cypressAsserter.initFinished();
     }
 
     //todo: in a dedicated class/function?

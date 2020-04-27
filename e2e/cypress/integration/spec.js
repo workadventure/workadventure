@@ -1,25 +1,26 @@
-Cypress.on('window:before:load', (win) => {
-	// because this is called before any scripts
-	// have loaded - the ga function is undefined
-	// so we need to create it.
-	win.cypressAsserter = cy.stub().as('ca')
-})
-
 describe('WorkAdventureGame', () => {
 	beforeEach(() => {
-		cy.visit('/', {
-			onBeforeLoad (win) {
-				cy.spy(win.console, 'log').as('console.log')
-			},
-		})
+		cy.visit('/', {})
 		
 	});
 
-	it('loads', () => {
-		cy.get('@console.log').should('be.calledWith', 'Started the game')
-		cy.get('@console.log').should('be.calledWith', 'Preloading')
-		cy.get('@console.log').should('be.calledWith', 'Preloading done')
-		cy.get('@console.log').should('be.calledWith', 'startInit')
-		cy.get('@console.log').should('be.calledWith', 'startInit done')
+	it('loads', async () => {
+		let win = await cy.window()
+		expect(win.cypressAsserter.gameStarted).to.equal(true);
+	});
+
+	it('reach the login page', async () => {
+		let win = await cy.window()
+		//todo: find a way to use a spy instead of checcking for a value
+		//cy.spy(win.cypressAsserter, 'reachedLoginScene')
+		//expect(win.cypressAsserter.reachedLoginScene).to.be.called;
+		expect(win.cypressAsserter.loginPage).to.equal(true);
+	});
+
+	it('can connect and get to the gameScene', async () => {
+		let win = await cy.window()
+		cy.spy(win.cypressAsserter, 'reachedGameScene')
+		await win.cypressAsserter.remoteConnect()
+		expect(win.cypressAsserter.reachedGameScene).to.be.called;
 	});
 });

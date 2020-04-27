@@ -20,9 +20,9 @@ const config: GameConfig = {
     }
 };
 
-cypressAsserter.gameStarted();
-
 let game = new Phaser.Game(config);
+
+cypressAsserter.gameStarted = true;
 
 window.addEventListener('resize', function (event) {
     game.scale.resize(window.innerWidth / RESOLUTION, window.innerHeight / RESOLUTION);

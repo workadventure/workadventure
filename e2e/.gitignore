@@ -1,3 +1,4 @@
 screenshots/
 videos/
 node_modules/
+cypress/fixtures
