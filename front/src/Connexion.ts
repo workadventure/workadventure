@@ -1,8 +1,8 @@
-import {GameManagerInterface} from "./Phaser/Game/GameManager";
+import {GameManager} from "./Phaser/Game/GameManager";
 
 const SocketIo = require('socket.io-client');
 import Axios from "axios";
-import {API_URL} from "./Enum/EnvironmentVariable";
+import {API_URL, ROOM} from "./Enum/EnvironmentVariable";
 
 class Message {
     userId: string;
@@ -107,7 +107,7 @@ export interface ConnexionInterface {
     startedRoom : string;
     createConnexion() : Promise<any>;
     joinARoom(roomId : string) : void;
-    sharePosition(roomId : string, x : number, y : number, direction : string) : void;
+    sharePosition(x : number, y : number, direction : string) : void;
     positionOfAllUser() : void;
 }
 export class Connexion implements ConnexionInterface{
@@ -117,9 +117,9 @@ export class Connexion implements ConnexionInterface{
     userId: string;
     startedRoom : string;
 
-    GameManager: GameManagerInterface;
+    GameManager: GameManager;
 
-    constructor(email : string, GameManager: GameManagerInterface) {
+    constructor(email : string, GameManager: GameManager) {
         this.email = email;
         this.GameManager = GameManager;
     }
@@ -141,7 +141,7 @@ export class Connexion implements ConnexionInterface{
                 this.joinARoom(this.startedRoom);
 
                 //share your first position
-                this.sharePosition(this.startedRoom, 0, 0);
+                this.sharePosition(0, 0);
 
                 this.positionOfAllUser();
 
@@ -166,16 +166,15 @@ export class Connexion implements ConnexionInterface{
 
     /**
      *
-     * @param roomId
      * @param x
      * @param y
      * @param direction
      */
-    sharePosition(roomId : string, x : number, y : number, direction : string = "none") : void{
+    sharePosition(x : number, y : number, direction : string = "none") : void{
         if(!this.socket){
             return;
         }
-        let messageUserPosition = new MessageUserPosition(this.userId, roomId, new Point(x, y, direction));
+        let messageUserPosition = new MessageUserPosition(this.userId, ROOM[0], new Point(x, y, direction));
         this.socket.emit('user-position', messageUserPosition.toString());
     }
 

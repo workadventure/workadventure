@@ -95,7 +95,7 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
 
     private sharePosition(direction: string) {
         if (ConnexionInstance) {
-            ConnexionInstance.sharePosition((this.scene as GameSceneInterface).RoomId, this.x, this.y, direction);
+            ConnexionInstance.sharePosition(this.x, this.y, direction);
         }
     }
 

@@ -1,7 +1,7 @@
-import {GameManagerInterface, StatusGameManagerEnum} from "./GameManager";
+import {GameManager, gameManager, StatusGameManagerEnum} from "./GameManager";
 import {MessageUserPositionInterface} from "../../Connexion";
 import {CurrentGamerInterface, GamerInterface, Player} from "../Player/Player";
-import {DEBUG_MODE, RESOLUTION, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
+import {DEBUG_MODE, RESOLUTION, ROOM, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import Tile = Phaser.Tilemaps.Tile;
 import {ITiledMap, ITiledTileSet} from "../Map/ITiledMap";
 import {cypressAsserter} from "../../Cypress/CypressAsserter";
@@ -13,14 +13,12 @@ export enum Textures {
 }
 
 export interface GameSceneInterface extends Phaser.Scene {
-    RoomId : string;
     Map: Phaser.Tilemaps.Tilemap;
     createCurrentPlayer(UserId : string) : void;
     shareUserPosition(UsersPosition : Array<MessageUserPositionInterface>): void;
 }
 export class GameScene extends Phaser.Scene implements GameSceneInterface{
-    GameManager : GameManagerInterface;
-    RoomId : string;
+    GameManager : GameManager;
     Terrains : Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer: CurrentGamerInterface;
     MapPlayers : Phaser.Physics.Arcade.Group;
@@ -32,17 +30,17 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     startY = (window.innerHeight / 2) / RESOLUTION;
 
 
-    constructor(RoomId : string, GameManager : GameManagerInterface) {
+    constructor() {
         super({
             key: "GameScene"
         });
-        this.RoomId = RoomId;
-        this.GameManager = GameManager;
+        this.GameManager = gameManager;
         this.Terrains = [];
     }
 
     //hook preload scene
     preload(): void {
+        this.GameManager.setCurrentGameScene(this);
         cypressAsserter.preloadStarted();
         let mapUrl = 'maps/map.json';
         this.load.on('filecomplete-tilemapJSON-'+Textures.Map, (key: string, type: string, data: any) => {
