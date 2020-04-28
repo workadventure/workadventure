@@ -58,7 +58,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             })
         });
         this.load.tilemapTiledJSON(Textures.Map, mapUrl);
-        this.load.image(Textures.Rock, 'resources/objects/rockSprite.png');
         this.load.spritesheet(Textures.Player,
             'resources/characters/pipoya/Male 01-1.png',
             { frameWidth: 32, frameHeight: 32 }
@@ -99,7 +98,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
         //add entities
         this.Objects = new Array<Phaser.Physics.Arcade.Sprite>();
-        this.addSpite(this.physics.add.sprite(200, 400, Textures.Rock, 26));
 
         //init event click
         this.EventToClickOnTile();

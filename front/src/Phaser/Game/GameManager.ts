@@ -24,19 +24,12 @@ export class GameManager implements GameManagerInterface {
 
     constructor() {
         this.status = StatusGameManagerEnum.IN_PROGRESS;
-        ConnexionInstance = new Connexion("test@gmail.com", this);
+        this.configureGame();
     }
 
-    createGame(){
-        return ConnexionInstance.createConnexion().then(() => {
-            this.configureGame();
-            /** TODO add loader in the page **/
-            //initialise Pear Connexion of game
-            this.SimplePeer = new SimplePeer(ConnexionInstance);
-        }).catch((err) => {
-            console.error(err);
-            throw err;
-        });
+    connect(email:string) {
+        ConnexionInstance = new Connexion(email, this);
+        this.SimplePeer = new SimplePeer(ConnexionInstance);
     }
 
     /**
@@ -80,3 +73,5 @@ export class GameManager implements GameManagerInterface {
         }
     }
 }
+
+export const gameManager = new GameManager();

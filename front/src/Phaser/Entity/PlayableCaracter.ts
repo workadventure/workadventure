@@ -10,7 +10,7 @@ export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
 
         this.scene.sys.updateList.add(this);
         this.scene.sys.displayList.add(this);
-        this.setScale(2);
+        //this.setScale(2);
         this.scene.physics.world.enableBody(this);
         this.setImmovable(true);
         this.setCollideWorldBounds(true);
@@ -45,7 +45,7 @@ export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
         this.setVelocity(0, 0);
         this.play(PlayerAnimationNames.None, true);
     }
-    
+
     say(text: string) {
         if (this.bubble) return;
         this.bubble = new SpeechBubble(this.scene, this, text)
