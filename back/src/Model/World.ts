@@ -14,13 +14,13 @@ export class World {
     private connectCallback: (user1: string, user2: string) => void;
     private disconnectCallback: (user1: string, user2: string) => void;
 
-    constructor(connectCallback: (user1: string, user2: string) => void, disconnectCallback: (user1: string, user2: string) => void) 
+    constructor(connectCallback: (user1: string, user2: string) => void, disconnectCallback: (user1: string, user2: string) => void)
     {
         this.users = new Map<string, UserInterface>();
         this.groups = [];
         this.connectCallback = connectCallback;
         this.disconnectCallback = disconnectCallback;
-    }    
+    }
 
     public join(userPosition: MessageUserPosition): void {
         this.users.set(userPosition.userId, {
@@ -55,9 +55,17 @@ export class World {
                     closestUser.group.join(user);
                 }
             }
-            
+
+        } else {
+            // If the user is part of a group:
+            //  should we split the group?
+
+            // TODO: analyze the group of the user:
+            //  => take one user. "walk the tree of users, each branch being a link<MIN_DISTANCE"
+            //  If some users are not in the subgroup, take the other user and loop
+            //  At the end, we will have a list of subgroups. From this list, we can send disconnect messages
+
         }
-       // TODO : vérifier qu'ils ne sont pas déja dans un groupe plein 
     }
 
     /**
@@ -96,7 +104,7 @@ export class World {
             }
 
             let distance = World.computeDistance(user, currentUser); // compute distance between peers.
-            
+
             if(distance <= minimumDistanceFound) {
 
                 if (typeof currentUser.group === 'undefined' || !currentUser.group.isFull()) {
@@ -107,11 +115,11 @@ export class World {
                 }
             /*
                 if(context.groups.length > 0) {
-                    
+
                     context.groups.forEach(group => {
                         if(group.isPartOfGroup(userPosition)) { // Is the user in a group ?
                             if(group.isStillIn(userPosition)) { // Is the user leaving the group ? (is the user at more than max distance of each player)
-                                
+
                                 // Should we split the group? (is each player reachable from the current player?)
                                 // This is needed if
                                 //         A <==> B <==> C <===> D
@@ -136,7 +144,7 @@ export class World {
                 }
             */
             }
-        
+
         }, this.users);
 
         return matchingUser;
@@ -164,7 +172,7 @@ export class World {
                 }
             });
         });
-        
+
         distances.sort(World.compareDistances);
 
         return distances;
@@ -190,7 +198,7 @@ export class World {
             // Detecte le ou les users qui se sont fait sortir du groupe
             let difference = users.filter(x => !groupTmp.includes(x));
 
-            // TODO : Notify users un difference that they have left the group 
+            // TODO : Notify users un difference that they have left the group
         }
 
         let newgroup = new Group(groupTmp);
