@@ -1,14 +1,10 @@
+import {GameManagerInterface} from "./Phaser/Game/GameManager";
+
 const SocketIo = require('socket.io-client');
 import Axios from "axios";
 import {API_URL} from "./Enum/EnvironmentVariable";
 
-export interface PointInterface {
-    x: number;
-    y: number;
-    toJson() : object;
-}
-
-export class Message {
+class Message {
     userId: string;
     roomId: string;
 
@@ -25,27 +21,42 @@ export class Message {
     }
 }
 
-export class Point implements PointInterface{
+export interface PointInterface {
     x: number;
     y: number;
+    direction : string;
+    toJson() : object;
+}
 
-    constructor(x : number, y : number) {
+class Point implements PointInterface{
+    x: number;
+    y: number;
+    direction : string;
+
+    constructor(x : number, y : number, direction : string = "none") {
         if(x  === null || y === null){
             throw Error("position x and y cannot be null");
         }
         this.x = x;
         this.y = y;
+        this.direction = direction;
     }
 
     toJson(){
         return {
             x : this.x,
-            y: this.y
+            y: this.y,
+            direction: this.direction
         }
     }
 }
 
-export class MessageUserPosition extends Message{
+export interface MessageUserPositionInterface {
+    userId: string;
+    roomId: string;
+    position: PointInterface;
+}
+class MessageUserPosition extends Message implements MessageUserPositionInterface{
     position: PointInterface;
 
     constructor(userId : string, roomId : string, point : Point) {
@@ -64,18 +75,61 @@ export class MessageUserPosition extends Message{
     }
 }
 
-export class Connexion {
+export interface ListMessageUserPositionInterface {
+    roomId : string;
+    listUsersPosition: Array<MessageUserPosition>;
+}
+class ListMessageUserPosition{
+    roomId : string;
+    listUsersPosition: Array<MessageUserPosition>;
+
+    constructor(roomId : string, data : any) {
+        this.roomId = roomId;
+        this.listUsersPosition = new Array<MessageUserPosition>();
+        data.forEach((userPosition: any) => {
+            this.listUsersPosition.push(new MessageUserPosition(
+                userPosition.userId,
+                userPosition.roomId,
+                new Point(
+                    userPosition.position.x,
+                    userPosition.position.y,
+                    userPosition.position.direction
+                )
+            ));
+        });
+    }
+}
+export interface ConnexionInterface {
     socket : any;
     token : string;
     email : string;
+    userId: string;
+    startedRoom : string;
+    createConnexion() : Promise<any>;
+    joinARoom(roomId : string) : void;
+    sharePosition(roomId : string, x : number, y : number, direction : string) : void;
+    positionOfAllUser() : void;
+}
+export class Connexion implements ConnexionInterface{
+    socket : any;
+    token : string;
+    email : string;
+    userId: string;
     startedRoom : string;
 
-    constructor(email : string) {
+    GameManager: GameManagerInterface;
+
+    constructor(email : string, GameManager: GameManagerInterface) {
         this.email = email;
-        Axios.post(`${API_URL}/login`, {email: email})
+        this.GameManager = GameManager;
+    }
+
+    createConnexion() : Promise<ConnexionInterface>{
+        return Axios.post(`${API_URL}/login`, {email: this.email})
             .then((res) => {
                 this.token = res.data.token;
                 this.startedRoom = res.data.roomId;
+                this.userId = res.data.userId;
 
                 this.socket = SocketIo(`${API_URL}`, {
                     query: {
@@ -87,12 +141,13 @@ export class Connexion {
                 this.joinARoom(this.startedRoom);
 
                 //share your first position
-                this.sharePosition(0, 0);
+                this.sharePosition(this.startedRoom, 0, 0);
 
-                //create listen event to get all data user shared by the back
                 this.positionOfAllUser();
 
                 this.errorMessage();
+
+                return this;
             })
             .catch((err) => {
                 console.error(err);
@@ -104,18 +159,23 @@ export class Connexion {
      * Permit to join a room
      * @param roomId
      */
-    joinARoom(roomId : string){
-        let messageUserPosition = new MessageUserPosition(this.email, this.startedRoom, new Point(0, 0));
+    joinARoom(roomId : string) : void {
+        let messageUserPosition = new MessageUserPosition(this.userId, this.startedRoom, new Point(0, 0));
         this.socket.emit('join-room', messageUserPosition.toString());
     }
 
     /**
-     * Permit to share your position in map
+     *
+     * @param roomId
      * @param x
      * @param y
+     * @param direction
      */
-    sharePosition(x : number, y : number){
-        let messageUserPosition = new MessageUserPosition(this.email, this.startedRoom, new Point(x, y));
+    sharePosition(roomId : string, x : number, y : number, direction : string = "none") : void{
+        if(!this.socket){
+            return;
+        }
+        let messageUserPosition = new MessageUserPosition(this.userId, roomId, new Point(x, y, direction));
         this.socket.emit('user-position', messageUserPosition.toString());
     }
 
@@ -127,20 +187,24 @@ export class Connexion {
      *       roomId: <string>,
      *       position: {
      *           x : <number>,
-     *           y : <number>
+     *           y : <number>,
+     *           direction: <string>
      *       }
      *     },
      * ...
      * ]
      **/
-    positionOfAllUser(){
-        this.socket.on("user-position", (message : string) => {
-            //TODO show all user in map
-            console.info("user-position", message);
+    positionOfAllUser() : void {
+        this.socket.on("user-position", (message: string) => {
+            let dataList = JSON.parse(message);
+            dataList.forEach((UserPositions: any) => {
+                let listMessageUserPosition = new ListMessageUserPosition(UserPositions[0], UserPositions[1]);
+                this.GameManager.shareUserPosition(listMessageUserPosition);
+            });
         });
     }
 
-    errorMessage(){
+    errorMessage() : void {
         this.socket.on('message-error', (message : string) => {
             console.error("message-error", message);
         })

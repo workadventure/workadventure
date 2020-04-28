@@ -32,6 +32,19 @@ Note: on some OSes, you will need to add this line to your `/etc/hosts` file:
 workadventure.localhost 127.0.0.1
 ```
 
+## Designing a map
+
+If you want to design your own map, you can use [Tiled](https://www.mapeditor.org/).
+
+A few things to notice:
+
+- your map can have as many layers as your want
+- your map MUST contain a layer named "floorLayer" of type "objectgroup" that represents the layer on which characters will be drawn.
+- the tilesets in your map MUST be embedded. You can refer to an external typeset in a TSX file. Click the "embed tileset" button in the tileset tab to embed tileset data.
+- your map MUST be exported in JSON format. You need to use a recent version of Tiled to get JSON format export (1.3+)
+
+![](doc/images/tiled_screenshot_1.png)
+
 ### MacOS developers, your environment with Vagrant
 
 If you are using MacOS, you can increase Docker performance using Vagrant. If you want more explanations, you can read [this medium article](https://medium.com/better-programming/vagrant-to-increase-docker-performance-with-macos-25b354b0c65c).

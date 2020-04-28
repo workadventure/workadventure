@@ -1,0 +1,102 @@
+name: Build, push and deploy Docker image
+
+on:
+  - push
+
+# Enables BuildKit
+env:
+  DOCKER_BUILDKIT: 1
+
+jobs:
+
+  build-front:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+
+      # Create a slugified value of the branch
+      - uses: rlespinasse/github-slug-action@master
+
+      - name: "Build and push front image"
+        uses: docker/build-push-action@v1
+        with:
+          dockerfile: front/Dockerfile
+          path: front/
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: thecodingmachine/workadventure-front
+          tags: ${{ env.GITHUB_REF_SLUG }}
+          add_git_labels: true
+
+  build-back:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # Create a slugified value of the branch
+      - uses: rlespinasse/github-slug-action@master
+
+      - name: "Build and push back image"
+        uses: docker/build-push-action@v1
+        with:
+          dockerfile: back/Dockerfile
+          path: back/
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: thecodingmachine/workadventure-back
+          tags: ${{ env.GITHUB_REF_SLUG }}
+          add_git_labels: true
+
+  deeploy:
+    needs:
+      - build-front
+      - build-back
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # Create a slugified value of the branch
+      - uses: rlespinasse/github-slug-action@1.1.0
+
+      - name: Deploy
+        uses: thecodingmachine/deeployer@master
+        env:
+          KUBE_CONFIG_FILE: ${{ secrets.KUBE_CONFIG_FILE }}
+        with:
+          namespace: workadventure-${{ env.GITHUB_REF_SLUG }}
+
+      - name: Add a comment in PR
+        uses: unsplash/comment-on-pr@v1.2.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          msg: Environment deployed at https://${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com
+          check_for_duplicate_msg: true
+
+      - name: Run Cypress tests
+        uses: cypress-io/github-action@v1
+        env:
+          CYPRESS_BASE_URL: https://${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com
+        with:
+          env: host=${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com,port=80
+          spec: cypress/integration/spec.js
+          wait-on: https://${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com
+          working-directory: e2e
+
+      - name: "Upload the screenshot on test failure"
+        uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: "screenshot"
+          path: "./e2e/cypress/screenshots/spec.js/WorkAdventureGame -- loads (failed).png"

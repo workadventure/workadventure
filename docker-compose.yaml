@@ -7,12 +7,16 @@ services:
       - "80:80"
       # The Web UI (enabled by --api.insecure=true)
       - "8080:8080"
+    depends_on:
+      - back
+      - front
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
   front:
     image: thecodingmachine/nodejs:12
     environment:
+      DEBUG_MODE: "$DEBUG_MODE"
       HOST: "0.0.0.0"
       NODE_ENV: development
       API_URL: http://api.workadventure.localhost
