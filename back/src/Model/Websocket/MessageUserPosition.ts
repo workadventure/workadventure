@@ -27,9 +27,8 @@ export class Point implements PointInterface{
 export class MessageUserPosition extends Message{
     position: PointInterface;
 
-    constructor(message: string) {
-        super(message);
-        let data = JSON.parse(message);
+    constructor(data: any) {
+        super(data);
         this.position = new Point(data.position.x, data.position.y, data.position.direction);
     }
 
