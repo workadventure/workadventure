@@ -10,7 +10,7 @@ const config: GameConfig = {
     width: window.innerWidth / RESOLUTION,
     height: window.innerHeight / RESOLUTION,
     parent: "game",
-    scene: [LogincScene, ...gameManager.GameScenes as any],
+    scene: gameManager.GameScenes,
     zoom: RESOLUTION,
     physics: {
         default: "arcade",

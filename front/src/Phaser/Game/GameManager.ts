@@ -2,6 +2,7 @@ import {GameSceneInterface, GameScene} from "./GameScene";
 import {ROOM} from "../../Enum/EnvironmentVariable"
 import {Connexion, ConnexionInterface, ListMessageUserPositionInterface} from "../../Connexion";
 import {SimplePeerInterface, SimplePeer} from "../../WebRtc/SimplePeer";
+import {LogincScene} from "../Login/LogincScene";
 
 export enum StatusGameManagerEnum {
     IN_PROGRESS = 1,
@@ -16,6 +17,7 @@ export interface GameManagerInterface {
     SimplePeer: SimplePeerInterface;
     createCurrentPlayer() : void;
     shareUserPosition(ListMessageUserPosition : ListMessageUserPositionInterface): void;
+    connect(email : string) : Promise<any>;
 }
 export class GameManager implements GameManagerInterface {
     GameScenes: Array<GameSceneInterface> = [];
@@ -27,15 +29,26 @@ export class GameManager implements GameManagerInterface {
         this.configureGame();
     }
 
-    connect(email:string) {
+    /**
+     *
+     * @param email
+     */
+    connect(email : string) : Promise<any> {
         ConnexionInstance = new Connexion(email, this);
-        this.SimplePeer = new SimplePeer(ConnexionInstance);
+        return ConnexionInstance.createConnexion().then(() => {
+            this.SimplePeer = new SimplePeer(ConnexionInstance);
+        });
     }
 
     /**
      * permit to config rooms
      */
     configureGame() {
+        //create login scene
+        let LoginScene = new LogincScene();
+        this.GameScenes.push(LoginScene)
+
+        //create scene
         ROOM.forEach((roomId) => {
             let newGame = new GameScene(roomId, this);
             this.GameScenes.push((newGame as GameSceneInterface));
@@ -43,13 +56,14 @@ export class GameManager implements GameManagerInterface {
     }
 
     /**
-     * Permit to create player in started room
-     * @param RoomId
-     * @param UserId
+     *
      */
     createCurrentPlayer(): void {
         //Get started room send by the backend
         let game: GameSceneInterface = this.GameScenes.find((Game: GameSceneInterface) => Game.RoomId === ConnexionInstance.startedRoom);
+        if(!game){
+            return;
+        }
         game.createCurrentPlayer(ConnexionInstance.userId);
         this.status = StatusGameManagerEnum.CURRENT_USER_CREATED;
     }
