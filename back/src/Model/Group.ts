@@ -4,7 +4,7 @@ import { UserInterface } from "./UserInterface";
 
 export class Group {
     static readonly MAX_PER_GROUP = 4;
-    
+
     private users: UserInterface[];
     private connectCallback: (user1: string, user2: string) => void;
     private disconnectCallback: (user1: string, user2: string) => void;
@@ -14,7 +14,7 @@ export class Group {
         this.users = [];
         this.connectCallback = connectCallback;
         this.disconnectCallback = disconnectCallback;
-        
+
         users.forEach((user: UserInterface) => {
             this.join(user);
         });
@@ -62,7 +62,7 @@ export class Group {
 
     removeFromGroup(users: UserInterface[]): void
     {
-        for(let i = 0; i < users.length; i++) {
+        for(let i = 0; i < users.length; i++){
             let user = users[i];
             const index = this.users.indexOf(user, 0);
             if (index > -1) {
