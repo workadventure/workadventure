@@ -8,6 +8,17 @@ import {SECRET_KEY} from "../Enum/EnvironmentVariable"; //TODO fix import by "_E
 import {ExtRooms, RefreshUserPositionFunction} from "../Model/Websocket/ExtRoom";
 import {ExtRoomsInterface} from "../Model/Websocket/ExtRoomsInterface";
 import {World} from "../Model/World";
+import { uuid } from 'uuidv4';
+
+enum SockerIoEvent {
+    CONNECTION = "connection",
+    DISCONNECTION = "disconnect",
+    JOIN_ROOM = "join-room",
+    USER_POSITION = "user-position",
+    WEBRTC_SIGNAL = "webrtc-signal",
+    WEBRTC_START = "webrtc-start",
+    MESSAGE_ERROR = "message-error",
+}
 
 export class IoSocketController{
     Io: socketIO.Server;
@@ -31,11 +42,17 @@ export class IoSocketController{
 
         this.ioConnection();
         this.shareUsersPosition();
-        this.World = new World(this.connectedUser, this.disConnectedUser);
+
+        //don't send only function because the context will be not this
+        this.World = new World((user1 : string, user2 : string) => {
+            this.connectedUser(user1, user2);
+        }, (user1 : string, user2 : string) => {
+            this.disConnectedUser(user1, user2);
+        });
     }
 
     ioConnection() {
-        this.Io.on('connection',  (socket: Socket) => {
+        this.Io.on(SockerIoEvent.CONNECTION,  (socket: Socket) => {
             /*join-rom event permit to join one room.
                 message :
                     userId : user identification
@@ -44,10 +61,10 @@ export class IoSocketController{
                         x: user x position on map
                         y: user y position on map
             */
-            socket.on('join-room', (message : string) => {
+            socket.on(SockerIoEvent.JOIN_ROOM, (message : string) => {
                 let messageUserPosition = this.hydrateMessageReceive(message);
                 if(messageUserPosition instanceof Error){
-                    return socket.emit("message-error", JSON.stringify({message: messageUserPosition.message}))
+                    return socket.emit(SockerIoEvent.MESSAGE_ERROR, JSON.stringify({message: messageUserPosition.message}))
                 }
 
                 //join user in room
@@ -64,13 +81,13 @@ export class IoSocketController{
                 rooms.refreshUserPosition = RefreshUserPositionFunction;
                 rooms.refreshUserPosition(rooms, this.Io);
 
-                socket.to(messageUserPosition.roomId).emit('join-room', messageUserPosition.toString());
+                socket.to(messageUserPosition.roomId).emit(SockerIoEvent.JOIN_ROOM, messageUserPosition.toString());
             });
 
-            socket.on('user-position', (message : string) => {
+            socket.on(SockerIoEvent.USER_POSITION, (message : string) => {
                 let messageUserPosition = this.hydrateMessageReceive(message);
                 if (messageUserPosition instanceof Error) {
-                    return socket.emit("message-error", JSON.stringify({message: messageUserPosition.message}));
+                    return socket.emit(SockerIoEvent.MESSAGE_ERROR, JSON.stringify({message: messageUserPosition.message}));
                 }
 
                 // update position in the worl
@@ -87,37 +104,7 @@ export class IoSocketController{
                 rooms.refreshUserPosition(rooms, this.Io);
             });
 
-            socket.on('webrtc-room', (message : string) => {
-                let data = JSON.parse(message);
-                socket.join(data.roomId);
-                (socket as ExSocketInterface).roomId = data.roomId;
-
-                //if two persone in room share
-                if(this.Io.sockets.adapter.rooms[data.roomId].length < 2) {
-                    return;
-                }
-                let clients : Array<any> = Object.values(this.Io.sockets.sockets);
-
-                //send start at one client to initialise offer webrtc
-                //send all users in room to create PeerConnection in front
-                clients.forEach((client: ExSocketInterface, index : number) => {
-
-                    let clientsId = clients.reduce((tabs : Array<any>, clientId: ExSocketInterface, indexClientId: number) => {
-                        if(!clientId.userId || clientId.userId === client.userId){
-                            return tabs;
-                        }
-                        tabs.push({
-                            userId: clientId.userId,
-                            initiator : index <= indexClientId
-                        });
-                        return tabs;
-                    }, []);
-
-                    client.emit('webrtc-start', JSON.stringify(clientsId));
-                });
-            });
-
-            socket.on('webrtc-signal', (message : string) => {
+            socket.on(SockerIoEvent.WEBRTC_SIGNAL, (message : string) => {
                 let data : any = JSON.parse(message);
 
                 //send only at user
@@ -127,10 +114,63 @@ export class IoSocketController{
                     if(client.userId !== data.receiverId){
                         continue
                     }
-                    client.emit('webrtc-signal',  message);
+                    client.emit(SockerIoEvent.WEBRTC_SIGNAL,  message);
                     break;
                 }
             });
+
+            socket.on(SockerIoEvent.DISCONNECTION, (reason : string) => {
+                let Client = (socket as ExSocketInterface);
+                //leave group of user
+                this.World.leave(Client);
+
+                //leave room
+                socket.leave(Client.roomId);
+                socket.leave(Client.webRtcRoomId);
+
+                //delete all socket information
+                delete Client.userId;
+                delete Client.webRtcRoomId;
+                delete Client.roomId;
+                delete Client.token;
+                delete Client.position;
+            });
+        });
+    }
+
+    /**
+     *
+     * @param socket
+     * @param roomId
+     */
+    joinWebRtcRoom(socket : ExSocketInterface, roomId : string) {
+        if(socket.webRtcRoomId === roomId){
+            return;
+        }
+        socket.join(roomId);
+        socket.webRtcRoomId = roomId;
+        //if two persone in room share
+        if (this.Io.sockets.adapter.rooms[roomId].length < 2) {
+            return;
+        }
+        let clients: Array<any> = Object.values(this.Io.sockets.sockets);
+
+        //send start at one client to initialise offer webrtc
+        //send all users in room to create PeerConnection in front
+        clients.forEach((client: ExSocketInterface, index: number) => {
+
+            let clientsId = clients.reduce((tabs: Array<any>, clientId: ExSocketInterface, indexClientId: number) => {
+                if (!clientId.userId || clientId.userId === client.userId) {
+                    return tabs;
+                }
+                tabs.push({
+                    userId: clientId.userId,
+                    initiator: index <= indexClientId
+                });
+                return tabs;
+            }, []);
+
+            client.emit(SockerIoEvent.WEBRTC_START, JSON.stringify({clients: clientsId, roomId: roomId}));
         });
     }
 
@@ -191,8 +231,18 @@ export class IoSocketController{
 
     //connected user
     connectedUser(user1 : string, user2 : string){
-        console.log("connectedUser => user1", user1);
-        console.log("connectedUser => user2", user2);
+        /* TODO manager room and group user to enter and leave */
+        let roomId = uuid();
+        let clients : Array<any> = Object.values(this.Io.sockets.sockets);
+        let User1 = clients.find((user : ExSocketInterface) => user.userId === user1);
+        let User2 = clients.find((user : ExSocketInterface) => user.userId === user2);
+
+        if(User1) {
+            this.joinWebRtcRoom(User1, roomId);
+        }
+        if(User2) {
+            this.joinWebRtcRoom(User2, roomId);
+        }
     }
 
     //connected user

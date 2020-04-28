@@ -3,6 +3,7 @@ import {PointInterface} from "./Websocket/PointInterface";
 import {Group} from "./Group";
 import {Distance} from "./Distance";
 import {UserInterface} from "./UserInterface";
+import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
 
 export class World {
     static readonly MIN_DISTANCE = 160;
@@ -29,8 +30,12 @@ export class World {
         });
     }
 
+    public leave(user : ExSocketInterface){
+        /*TODO leaver user in group*/
+        this.users.delete(user.userId);
+    }
+
     public updatePosition(userPosition: MessageUserPosition): void {
-        let context = this;
         let user = this.users.get(userPosition.userId);
         if(typeof user === 'undefined') {
             return;

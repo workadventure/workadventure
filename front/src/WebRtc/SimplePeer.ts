@@ -3,14 +3,13 @@ import {MediaManager} from "./MediaManager";
 let Peer = require('simple-peer');
 
 export interface SimplePeerInterface {
-    activePhone(): void;
-    disablePhone(): void;
 }
 
 export class SimplePeer {
     Connexion: ConnexionInterface;
     MediaManager: MediaManager;
     RoomId: string;
+    Users: Array<any>;
 
     PeerConnexionArray: Array<any> = new Array<any>();
 
@@ -18,12 +17,25 @@ export class SimplePeer {
         this.Connexion = Connexion;
         this.RoomId = roomId;
         this.MediaManager = new MediaManager();
+        this.initialise();
+    }
+
+    /**
+     * permit to listen when user could start visio
+     */
+    private initialise(){
+
+        //receive message start
+        this.Connexion.receiveWebrtcStart((message: string) => {
+            this.receiveWebrtcStart(message);
+        });
+
+        //when button to call is clicked, start video
         this.MediaManager.getElementActivePhone().addEventListener("click", () => {
             this.startWebRtc();
             this.disablePhone();
         });
     }
-
     /**
      * server has two person connected, start the meet
      */
@@ -31,13 +43,9 @@ export class SimplePeer {
         this.MediaManager.activeVisio();
         return this.MediaManager.getCamera().then((stream: MediaStream) => {
             this.MediaManager.localStream = stream;
-            //send message to join a room
-            this.Connexion.sendWebrtcRomm(this.RoomId);
 
-            //receive message start
-            this.Connexion.receiveWebrtcStart((message: string) => {
-                this.receiveWebrtcStart(message);
-            });
+            //create pear connexion
+            this.createPeerConnexion();
 
             //receive signal by gemer
             this.Connexion.receiveWebrtcSignal((message: string) => {
@@ -54,17 +62,16 @@ export class SimplePeer {
      */
     receiveWebrtcStart(message: string) {
         let data = JSON.parse(message);
+        this.RoomId = data.roomId;
+        this.Users = data.clients;
 
-        //create pear connexion of user stared
-        this.createPeerConnexion(data);
+        //active button for player
+        this.activePhone();
     }
 
-    /**
-     *
-     * @param users
-     */
-    createPeerConnexion(users : Array<any>) {
-        users.forEach((user: any) => {
+
+    createPeerConnexion() {
+        this.Users.forEach((user: any) => {
             if(this.PeerConnexionArray[user.userId]){
                 return;
             }

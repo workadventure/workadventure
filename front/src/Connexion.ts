@@ -7,7 +7,6 @@ import {API_URL} from "./Enum/EnvironmentVariable";
 enum EventMessage{
     WEBRTC_SIGNAL = "webrtc-signal",
     WEBRTC_START = "webrtc-start",
-    WEBRTC_ROOM = "webrtc-room",
     JOIN_ROOM = "join-room",
     USER_POSITION = "user-position",
     MESSAGE_ERROR = "message-error"
@@ -127,8 +126,6 @@ export interface ConnexionInterface {
     positionOfAllUser(): void;
 
     /*webrtc*/
-    sendWebrtcRomm(roomId: string): void;
-
     sendWebrtcSignal(signal: any, roomId: string, userId?: string, receiverId?: string): void;
 
     receiveWebrtcSignal(callBack: Function): void;
@@ -237,10 +234,6 @@ export class Connexion implements ConnexionInterface {
             roomId: roomId,
             signal: signal
         }));
-    }
-
-    sendWebrtcRomm(roomId: string) {
-        this.socket.emit(EventMessage.WEBRTC_ROOM, JSON.stringify({roomId: roomId}));
     }
 
     receiveWebrtcStart(callback: Function) {
