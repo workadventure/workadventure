@@ -1,6 +1,6 @@
-import {MessageUserPosition} from "./Websocket/MessageUserPosition";
 import { World } from "./World";
 import { UserInterface } from "./UserInterface";
+import {PositionInterface} from "_Model/PositionInterface";
 
 export class Group {
     static readonly MAX_PER_GROUP = 4;
@@ -22,6 +22,25 @@ export class Group {
 
     getUsers(): UserInterface[] {
         return this.users;
+    }
+
+    /**
+     * Returns the barycenter of all users (i.e. the center of the group)
+     */
+    getPosition(): PositionInterface {
+        let x = 0;
+        let y = 0;
+        // Let's compute the barycenter of all users.
+        this.users.forEach((user: UserInterface) => {
+            x += user.position.x;
+            y += user.position.y;
+        });
+        x /= this.users.length;
+        y /= this.users.length;
+        return {
+            x,
+            y
+        };
     }
 
     isFull(): boolean {

@@ -4,6 +4,7 @@ import {Group} from "./Group";
 import {Distance} from "./Distance";
 import {UserInterface} from "./UserInterface";
 import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
+import {PositionInterface} from "_Model/PositionInterface";
 
 export class World {
     static readonly MIN_DISTANCE = 160;
@@ -47,17 +48,18 @@ export class World {
         if (typeof user.group === 'undefined') {
             // If the user is not part of a group:
             //  should he join a group?
-            let closestUser: UserInterface|null = this.searchClosestAvailableUser(user);
+            let closestItem: UserInterface|Group|null = this.searchClosestAvailableUserOrGroup(user);
 
-            if (closestUser !== null) {
-                // Is the closest user part of a group?
-                if (typeof closestUser.group === 'undefined') {
+            if (closestItem !== null) {
+                if (closestItem instanceof Group) {
+                    // Let's join the group!
+                    closestItem.join(user);
+                } else {
+                    let closestUser : UserInterface = closestItem;
                     let group: Group = new Group([
                         user,
                         closestUser
                     ], this.connectCallback, this.disconnectCallback);
-                } else {
-                    closestUser.group.join(user);
                 }
             }
 
@@ -78,32 +80,16 @@ export class World {
      * - close enough (distance <= MIN_DISTANCE)
      * - not in a group OR in a group that is not full
      */
-    private searchClosestAvailableUser(user: UserInterface): UserInterface|null
+    private searchClosestAvailableUserOrGroup(user: UserInterface): UserInterface|Group|null
     {
-/*
-        let sortedUsersByDistance: UserInteface[] = Array.from(this.users.values()).sort((user1: UserInteface, user2: UserInteface): number => {
-            let distance1 = World.computeDistance(user, user1);
-            let distance2 = World.computeDistance(user, user2);
-            return distance1 - distance2;
-        });
-
-        // The first element should be the current user (distance 0). Let's remove it.
-        if (sortedUsersByDistance[0] === user) {
-            sortedUsersByDistance.shift();
-        }
-
-        for(let i = 0; i < sortedUsersByDistance.length; i++) {
-            let currentUser = sortedUsersByDistance[i];
-            let distance = World.computeDistance(currentUser, user);
-            if(distance > World.MIN_DISTANCE) {
-                return;
-            }
-        }
-*/
         let usersToBeGroupedWith: Distance[] = [];
         let minimumDistanceFound: number = World.MIN_DISTANCE;
-        let matchingUser: UserInterface | null = null;
+        let matchingItem: UserInterface | Group | null = null;
         this.users.forEach(function(currentUser, userId) {
+            // Let's only check users that are not part of a group
+            if (typeof currentUser.group !== 'undefined') {
+                return;
+            }
             if(currentUser === user) {
                 return;
             }
@@ -111,13 +97,13 @@ export class World {
             let distance = World.computeDistance(user, currentUser); // compute distance between peers.
 
             if(distance <= minimumDistanceFound) {
-
-                if (typeof currentUser.group === 'undefined' || !currentUser.group.isFull()) {
+                minimumDistanceFound = distance;
+                matchingItem = currentUser;
+            }
+                /*if (typeof currentUser.group === 'undefined' || !currentUser.group.isFull()) {
                     // We found a user we can bind to.
-                    minimumDistanceFound = distance;
-                    matchingUser = currentUser;
                     return;
-                }
+                }*/
             /*
                 if(context.groups.length > 0) {
 
@@ -148,16 +134,31 @@ export class World {
                     usersToBeGroupedWith.push(dist);
                 }
             */
+        });
+
+        this.groups.forEach(function(group: Group) {
+            if (group.isFull()) {
+                return;
             }
+            let distance = World.computeDistanceBetweenPositions(user.position, group.getPosition());
 
-        }, this.users);
+            if(distance <= minimumDistanceFound) {
+                minimumDistanceFound = distance;
+                matchingItem = group;
+            }
+        });
 
-        return matchingUser;
+        return matchingItem;
     }
 
     public static computeDistance(user1: UserInterface, user2: UserInterface): number
     {
         return Math.sqrt(Math.pow(user2.position.x - user1.position.x, 2) + Math.pow(user2.position.y - user1.position.y, 2));
+    }
+
+    public static computeDistanceBetweenPositions(position1: PositionInterface, position2: PositionInterface): number
+    {
+        return Math.sqrt(Math.pow(position2.x - position1.x, 2) + Math.pow(position2.y - position1.y, 2));
     }
 
     /*getDistancesBetweenGroupUsers(group: Group): Distance[]
