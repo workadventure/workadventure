@@ -54,6 +54,50 @@ describe("World", () => {
         expect(connectCalled).toBe(false);
     });
 
+    it("should connect 3 users", () => {
+        let connectCalled: boolean = false;
+        let connect = (user1: string, user2: string): void => {
+            connectCalled = true;
+        }
+        let disconnect = (user1: string, user2: string): void => {
+
+        }
+
+        let world = new World(connect, disconnect);
+
+        world.join(new MessageUserPosition({
+            userId: "foo",
+            roomId: 1,
+            position: new Point(100, 100)
+        }));
+
+        world.join(new MessageUserPosition({
+            userId: "bar",
+            roomId: 1,
+            position: new Point(200, 100)
+        }));
+
+        expect(connectCalled).toBe(true);
+        connectCalled = false;
+
+        // baz joins at the outer limit of the group
+        world.join(new MessageUserPosition({
+            userId: "baz",
+            roomId: 1,
+            position: new Point(311, 100)
+        }));
+
+        expect(connectCalled).toBe(false);
+
+        world.updatePosition(new MessageUserPosition({
+            userId: "baz",
+            roomId: 1,
+            position: new Point(309, 100)
+        }));
+
+        expect(connectCalled).toBe(true);
+    });
+
     it("should disconnect user1 and user2", () => {
         let connectCalled: boolean = false;
         let disconnectCalled: boolean = false;
@@ -78,12 +122,13 @@ describe("World", () => {
             position: new Point(259, 100)
         }));
 
-        expect(connectCalled).toBe(false);
+        expect(connectCalled).toBe(true);
+        expect(disconnectCalled).toBe(false);
 
         world.updatePosition(new MessageUserPosition({
             userId: "bar",
             roomId: 1,
-            position: new Point(261, 100)
+            position: new Point(100+160+160+1, 100)
         }));
 
         expect(disconnectCalled).toBe(true);

@@ -47,6 +47,10 @@ export class Group {
         return this.users.length >= Group.MAX_PER_GROUP;
     }
 
+    isEmpty(): boolean {
+        return this.users.length <= 1;
+    }
+
     join(user: UserInterface): void
     {
         // Broadcast on the right event
@@ -79,7 +83,7 @@ export class Group {
         return stillIn;
     }
 
-    removeFromGroup(users: UserInterface[]): void
+    /*removeFromGroup(users: UserInterface[]): void
     {
         for(let i = 0; i < users.length; i++){
             let user = users[i];
@@ -88,5 +92,32 @@ export class Group {
                 this.users.splice(index, 1);
             }
         }
+    }*/
+
+    leave(user: UserInterface): void
+    {
+        const index = this.users.indexOf(user, 0);
+        if (index === -1) {
+            throw new Error("Could not find user in the group");
+        }
+
+        this.users.splice(index, 1);
+        user.group = undefined;
+
+        // Broadcast on the right event
+        this.users.forEach((groupUser: UserInterface) => {
+            this.disconnectCallback(user.id, groupUser.id);
+        });
+    }
+
+    /**
+     * Let's kick everybody out.
+     * Usually used when there is only one user left.
+     */
+    destroy(): void
+    {
+        this.users.forEach((user: UserInterface) => {
+            this.leave(user);
+        })
     }
 }

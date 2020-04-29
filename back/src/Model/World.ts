@@ -29,6 +29,8 @@ export class World {
             id: userPosition.userId,
             position: userPosition.position
         });
+        // Let's call update position to trigger the join / leave room
+        this.updatePosition(userPosition);
     }
 
     public leave(user : ExSocketInterface){
@@ -60,18 +62,39 @@ export class World {
                         user,
                         closestUser
                     ], this.connectCallback, this.disconnectCallback);
+                    this.groups.push(group);
                 }
             }
 
         } else {
             // If the user is part of a group:
-            //  should we split the group?
+            //  should he leave the group?
+            let distance = World.computeDistanceBetweenPositions(user.position, user.group.getPosition());
+            if (distance > World.MIN_DISTANCE) {
+                this.leaveGroup(user);
+            }
+        }
+    }
 
-            // TODO: analyze the group of the user:
-            //  => take one user. "walk the tree of users, each branch being a link<MIN_DISTANCE"
-            //  If some users are not in the subgroup, take the other user and loop
-            //  At the end, we will have a list of subgroups. From this list, we can send disconnect messages
+    /**
+     * Makes a user leave a group and closes and destroy the group if the group contains only one remaining person.
+     *
+     * @param user
+     */
+    private leaveGroup(user: UserInterface): void {
+        let group = user.group;
+        if (typeof group === 'undefined') {
+            throw new Error("The user is part of no group");
+        }
+        group.leave(user);
 
+        if (group.isEmpty()) {
+            group.destroy();
+            const index = this.groups.indexOf(group, 0);
+            if (index === -1) {
+                throw new Error("Could not find group");
+            }
+            this.groups.splice(index, 1);
         }
     }
 
@@ -141,7 +164,6 @@ export class World {
                 return;
             }
             let distance = World.computeDistanceBetweenPositions(user.position, group.getPosition());
-
             if(distance <= minimumDistanceFound) {
                 minimumDistanceFound = distance;
                 matchingItem = group;
