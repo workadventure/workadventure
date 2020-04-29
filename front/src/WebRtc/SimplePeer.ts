@@ -8,14 +8,14 @@ export interface SimplePeerInterface {
 export class SimplePeer {
     Connexion: ConnexionInterface;
     MediaManager: MediaManager;
-    RoomId: string;
+    WebRtcRoomId: string;
     Users: Array<any>;
 
     PeerConnexionArray: Array<any> = new Array<any>();
 
-    constructor(Connexion: ConnexionInterface, roomId: string = "test-webrtc") {
+    constructor(Connexion: ConnexionInterface, WebRtcRoomId: string = "test-webrtc") {
         this.Connexion = Connexion;
-        this.RoomId = roomId;
+        this.WebRtcRoomId = WebRtcRoomId;
         this.MediaManager = new MediaManager();
         this.initialise();
     }
@@ -62,7 +62,7 @@ export class SimplePeer {
      */
     receiveWebrtcStart(message: string) {
         let data = JSON.parse(message);
-        this.RoomId = data.roomId;
+        this.WebRtcRoomId = data.roomId;
         this.Users = data.clients;
 
         //active button for player
@@ -108,7 +108,7 @@ export class SimplePeer {
      * @param data
      */
     sendWebrtcSignal(data: any, userId : string) {
-        this.Connexion.sendWebrtcSignal(data, this.RoomId, null, userId);
+        this.Connexion.sendWebrtcSignal(data, this.WebRtcRoomId, null, userId);
     }
 
     /**
