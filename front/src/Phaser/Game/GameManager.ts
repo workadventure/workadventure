@@ -1,6 +1,8 @@
 import {GameScene} from "./GameScene";
 import {ROOM} from "../../Enum/EnvironmentVariable"
 import {Connexion, ConnexionInterface, ListMessageUserPositionInterface} from "../../Connexion";
+import {SimplePeerInterface, SimplePeer} from "../../WebRtc/SimplePeer";
+import {LogincScene} from "../Login/LogincScene";
 
 export enum StatusGameManagerEnum {
     IN_PROGRESS = 1,
@@ -13,6 +15,7 @@ export class GameManager {
     status: number;
     private ConnexionInstance: Connexion;
     private currentGameScene: GameScene;
+    SimplePeer : SimplePeerInterface;
 
     constructor() {
         this.status = StatusGameManagerEnum.IN_PROGRESS;
@@ -21,9 +24,11 @@ export class GameManager {
     connect(email:string) {
         this.ConnexionInstance = new Connexion(email, this);
         ConnexionInstance = this.ConnexionInstance;
-        return this.ConnexionInstance.createConnexion()
+        return this.ConnexionInstance.createConnexion().then(() => {
+            this.SimplePeer = new SimplePeer(ConnexionInstance);
+        });
     }
-    
+
     setCurrentGameScene(gameScene: GameScene) {
         this.currentGameScene = gameScene;
     }

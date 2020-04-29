@@ -1,0 +1,153 @@
+.webrtc{
+    display: none;
+}
+.webrtc.active{
+    display: block;
+}
+.webrtc, .activeCam{
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: black;
+}
+.activeCam video{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+/*CSS size for 2 - 3 elements*/
+video:nth-child(1):nth-last-child(3),
+video:nth-child(2):nth-last-child(2),
+video:nth-child(3):nth-last-child(1),
+video:nth-child(1):nth-last-child(2),
+video:nth-child(2):nth-last-child(1){
+    width: 50%;
+}
+video:nth-child(1):nth-last-child(3),
+video:nth-child(2):nth-last-child(2),
+video:nth-child(3):nth-last-child(1){
+    height: 50%;
+}
+
+/*CSS position for 2 elements*/
+video:nth-child(1):nth-last-child(2){
+    left: 0;
+}
+video:nth-child(2):nth-last-child(1){
+    left: 50%;
+}
+
+/*CSS position for 3 elements*/
+video:nth-child(1):nth-last-child(3){
+    top: 0;
+    left: 0;
+}
+video:nth-child(2):nth-last-child(2){
+    top: 0;
+    left: 50%;
+}
+video:nth-child(3):nth-last-child(1) {
+    top: 50%;
+    left: 25%;
+}
+
+.myCam{
+    height: 200px;
+    width: 300px;
+    position: absolute;
+    right: 10px;
+    background: black;
+    border: none;
+    bottom: 20px;
+    max-height: 17%;
+    max-width: 17%;
+    opacity: 1;
+    display: block;
+    transition: opacity 1s;
+}
+.myCam video{
+    width: 100%;
+    height: 100%;
+}
+.btn-cam-action div{
+    cursor: pointer;
+    position: absolute;
+    border: solid 0px black;
+    width: 64px;
+    height: 64px;
+    background: #666;
+    left: 6vw;
+    box-shadow: 2px 2px 24px #444;
+    border-radius: 48px;
+    transform: translateX(calc(-6vw - 96px));
+    transition-timing-function: ease-in-out;
+}
+.webrtc:hover .btn-cam-action.active div{
+    transform: translateX(0);
+}
+.btn-cam-action div:hover{
+    background: #407cf7;
+    box-shadow: 4px 4px 48px #666;
+    transition: 280ms;
+}
+.btn-micro{
+    bottom: 277px;
+    transition: all .3s;
+}
+.btn-video{
+    bottom: 177px;
+    transition: all .2s;
+}
+.btn-call{
+    bottom: 77px;
+    transition: all .1s;
+}
+.btn-cam-action div img{
+    height: 32px;
+    width: 40px;
+    top: calc(48px - 32px);
+    left: calc(48px - 35px);
+    position: relative;
+}
+.phone-open{
+    position: absolute;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    left: calc(50% - 70px);
+    padding: 20px;
+    bottom: 20px;
+    box-shadow: 2px 2px 24px #444;
+    background-color: green;
+    opacity: 0;
+    transition: all .4s ease-in-out;
+}
+.phone-open.active{
+    opacity: 1;
+    animation-name: phone-move;
+    animation-duration: 0.4s;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+}
+.phone-open:hover{
+    animation: none;
+    cursor: pointer;
+}
+
+@keyframes phone-move {
+    0%   {
+        left: calc(50% - 70px);
+        bottom: 20px;
+    }
+    25% {
+        left: calc(50% - 65px);
+        bottom: 15px;
+    }
+    25% {
+        left: calc(50% - 75px);
+        bottom: 25px;
+    }
+}
