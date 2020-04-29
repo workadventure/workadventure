@@ -12,7 +12,7 @@ describe("World", () => {
             connectCalled = true;
         }
         let disconnect = (user1: string, user2: string): void => {
-            
+
         }
 
         let world = new World(connect, disconnect);
@@ -53,14 +53,58 @@ describe("World", () => {
         }));
         expect(connectCalled).toBe(false);
     });
-    /** 
+
+    it("should disconnect user1 and user2", () => {
+        let connectCalled: boolean = false;
+        let disconnectCalled: boolean = false;
+        let connect = (user1: string, user2: string): void => {
+            connectCalled = true;
+        }
+        let disconnect = (user1: string, user2: string): void => {
+            disconnectCalled = true;
+        }
+
+        let world = new World(connect, disconnect);
+
+        world.join(new MessageUserPosition({
+            userId: "foo",
+            roomId: 1,
+            position: new Point(100, 100)
+        }));
+
+        world.join(new MessageUserPosition({
+            userId: "bar",
+            roomId: 1,
+            position: new Point(259, 100)
+        }));
+
+        expect(connectCalled).toBe(false);
+
+        world.updatePosition(new MessageUserPosition({
+            userId: "bar",
+            roomId: 1,
+            position: new Point(261, 100)
+        }));
+
+        expect(disconnectCalled).toBe(true);
+
+        disconnectCalled = false;
+        world.updatePosition(new MessageUserPosition({
+            userId: "bar",
+            roomId: 1,
+            position: new Point(262, 100)
+        }));
+        expect(disconnectCalled).toBe(false);
+    });
+
+    /**
     it('Should return the distances between all users', () => {
         let connectCalled: boolean = false;
         let connect = (user1: string, user2: string): void => {
             connectCalled = true;
         }
         let disconnect = (user1: string, user2: string): void => {
-            
+
         }
 
         let world = new World(connect, disconnect);
