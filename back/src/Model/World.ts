@@ -34,7 +34,10 @@ export class World {
     }
 
     public leave(user : ExSocketInterface){
-        /*TODO leaver user in group*/
+        let userObj = this.users.get(user.id);
+        if (userObj !== undefined && typeof userObj.group !== 'undefined') {
+            this.leaveGroup(user);
+        }
         this.users.delete(user.userId);
     }
 
