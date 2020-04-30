@@ -2,8 +2,7 @@ import {gameManager} from "../Game/GameManager";
 import {TextField} from "../Components/TextField";
 import {TextInput} from "../Components/TextInput";
 import {ClickButton} from "../Components/ClickButton";
-import {GameSceneInterface} from "../Game/GameScene";
-import {MessageUserPositionInterface} from "../../Connexion";
+import {GameSceneName} from "../Game/GameScene";
 
 //todo: put this constants in a dedicated file
 export const LoginSceneName = "LoginScene";
@@ -11,7 +10,7 @@ enum LoginTextures {
     playButton = "play_button",
 }
 
-export class LogincScene extends Phaser.Scene  implements GameSceneInterface {
+export class LogincScene extends Phaser.Scene {
     private emailInput: TextInput;
     private textField: TextField;
     private playButton: ClickButton;
@@ -47,16 +46,7 @@ export class LogincScene extends Phaser.Scene  implements GameSceneInterface {
         let email = this.emailInput.text;
         if (!email) return;
         gameManager.connect(email).then(() => {
-            this.scene.start("GameScene");
+            this.scene.start(GameSceneName);
         });
-    }
-
-    Map: Phaser.Tilemaps.Tilemap;
-    RoomId: string;
-
-    createCurrentPlayer(UserId: string): void {
-    }
-
-    shareUserPosition(UsersPosition: Array<MessageUserPositionInterface>): void {
     }
 }

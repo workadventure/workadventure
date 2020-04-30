@@ -6,8 +6,8 @@ import Tile = Phaser.Tilemaps.Tile;
 import {ITiledMap, ITiledTileSet} from "../Map/ITiledMap";
 import {cypressAsserter} from "../../Cypress/CypressAsserter";
 
+export const GameSceneName = "GameScene";
 export enum Textures {
-    Rock = 'rock',
     Player = 'playerModel',
     Map = 'map'
 }
@@ -32,7 +32,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
     constructor() {
         super({
-            key: "GameScene"
+            key: GameSceneName
         });
         this.GameManager = gameManager;
         this.Terrains = [];
