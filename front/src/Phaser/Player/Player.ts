@@ -66,27 +66,25 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
         let speedMultiplier = activeEvents.get(UserInputEvent.SpeedUp) ? 25 : 9;
         let moveAmount = speedMultiplier * delta;
 
+        let x = 0;
+        let y = 0;
         if (activeEvents.get(UserInputEvent.MoveUp)) {
-            this.move(0, -moveAmount);
-            haveMove = true;
+            y = - moveAmount;
             direction = PlayerAnimationNames.WalkUp;
-        }
-        if (activeEvents.get(UserInputEvent.MoveLeft)) {
-            this.move(-moveAmount, 0);
-            haveMove = true;
-            direction = PlayerAnimationNames.WalkLeft;
-        }
-        if (activeEvents.get(UserInputEvent.MoveDown)) {
-            this.move(0, moveAmount);
-            haveMove = true;
+        } else if (activeEvents.get(UserInputEvent.MoveDown)) {
+            y = moveAmount;
             direction = PlayerAnimationNames.WalkDown;
         }
-        if (activeEvents.get(UserInputEvent.MoveRight)) {
-            this.move(moveAmount, 0);
-            haveMove = true;
+        if (activeEvents.get(UserInputEvent.MoveLeft)) {
+            x = -moveAmount;
+            direction = PlayerAnimationNames.WalkLeft;
+        } else if (activeEvents.get(UserInputEvent.MoveRight)) {
+            x = moveAmount;
             direction = PlayerAnimationNames.WalkRight;
         }
-        if (!haveMove) {
+        if (x !== 0 || y !== 0) {
+            this.move(x, y);
+        } else {
             direction = PlayerAnimationNames.None;
             this.stop();
         }
