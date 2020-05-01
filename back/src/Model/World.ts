@@ -12,10 +12,10 @@ export class World {
     private users: Map<string, UserInterface>;
     private groups: Group[];
 
-    private connectCallback: (user1: string, user2: string) => void;
-    private disconnectCallback: (user1: string, user2: string) => void;
+    private connectCallback: (user1: string, user2: string, group: Group) => void;
+    private disconnectCallback: (user1: string, user2: string, group: Group) => void;
 
-    constructor(connectCallback: (user1: string, user2: string) => void, disconnectCallback: (user1: string, user2: string) => void) 
+    constructor(connectCallback: (user1: string, user2: string, group: Group) => void, disconnectCallback: (user1: string, user2: string, group: Group) => void)
     {
         this.users = new Map<string, UserInterface>();
         this.groups = [];
@@ -48,7 +48,6 @@ export class World {
             // If the user is not part of a group:
             //  should he join a group?
             let closestUser: UserInterface|null = this.searchClosestAvailableUser(user);
-
             if (closestUser !== null) {
                 // Is the closest user part of a group?
                 if (typeof closestUser.group === 'undefined') {
@@ -60,9 +59,8 @@ export class World {
                     closestUser.group.join(user);
                 }
             }
-            
         }
-       // TODO : vérifier qu'ils ne sont pas déja dans un groupe plein 
+       // TODO : vérifier qu'ils ne sont pas déja dans un groupe plein
     }
 
     /**

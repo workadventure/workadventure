@@ -8,7 +8,7 @@ import {SECRET_KEY} from "../Enum/EnvironmentVariable"; //TODO fix import by "_E
 import {ExtRooms, RefreshUserPositionFunction} from "../Model/Websocket/ExtRoom";
 import {ExtRoomsInterface} from "../Model/Websocket/ExtRoomsInterface";
 import {World} from "../Model/World";
-import { uuid } from 'uuidv4';
+import {Group} from "_Model/Group";
 
 enum SockerIoEvent {
     CONNECTION = "connection",
@@ -44,10 +44,10 @@ export class IoSocketController{
         this.shareUsersPosition();
 
         //don't send only function because the context will be not this
-        this.World = new World((user1 : string, user2 : string) => {
-            this.connectedUser(user1, user2);
-        }, (user1 : string, user2 : string) => {
-            this.disConnectedUser(user1, user2);
+        this.World = new World((user1 : string, user2 : string, group: Group) => {
+            this.connectedUser(user1, user2, group);
+        }, (user1 : string, user2 : string, group: Group) => {
+            this.disConnectedUser(user1, user2, group);
         });
     }
 
@@ -230,24 +230,27 @@ export class IoSocketController{
     }
 
     //connected user
-    connectedUser(user1 : string, user2 : string){
-        /* TODO manager room and group user to enter and leave */
-        let roomId = uuid();
-        let clients : Array<any> = Object.values(this.Io.sockets.sockets);
-        let User1 = clients.find((user : ExSocketInterface) => user.userId === user1);
-        let User2 = clients.find((user : ExSocketInterface) => user.userId === user2);
-
-        if(User1) {
-            this.joinWebRtcRoom(User1, roomId);
+    connectedUser(user1 : string, user2 : string, group : Group) {
+        if(!group){
+            return;
         }
-        if(User2) {
-            this.joinWebRtcRoom(User2, roomId);
+        /* TODO manager room and group user to enter and leave */
+        let clients: Array<any> = Object.values(this.Io.sockets.sockets);
+        let User1 = clients.find((user: ExSocketInterface) => user.userId === user1);
+        let User2 = clients.find((user: ExSocketInterface) => user.userId === user2);
+
+        if (User1) {
+            this.joinWebRtcRoom(User1, group.getId());
+        }
+        if (User2) {
+            this.joinWebRtcRoom(User2, group.getId());
         }
     }
 
     //connected user
-    disConnectedUser(user1 : string, user2 : string){
+    disConnectedUser(user1 : string, user2 : string, group : Group){
         console.log("disConnectedUser => user1", user1);
         console.log("disConnectedUser => user2", user2);
+        console.log("group", group);
     }
 }

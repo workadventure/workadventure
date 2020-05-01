@@ -25,6 +25,7 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
     userId: string;
     PlayerValue: string;
     userInputManager: UserInputManager;
+    previousMove: string;
 
     constructor(
         userId: string,
@@ -90,7 +91,10 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
             direction = PlayerAnimationNames.None;
             this.stop();
         }
-        this.sharePosition(direction);
+        if(this.previousMove !== PlayerAnimationNames.None || direction !== PlayerAnimationNames.None){
+            this.sharePosition(direction);
+        }
+        this.previousMove = direction;
     }
 
     private sharePosition(direction: string) {
