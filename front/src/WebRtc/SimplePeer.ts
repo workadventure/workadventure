@@ -97,7 +97,7 @@ export class SimplePeer {
             });
 
             //add lof info PeerConnexionArray
-            this.PeerConnexionArray[user.userId]._debug = console.info;
+            //this.PeerConnexionArray[user.userId]._debug = console.info;
 
             this.PeerConnexionArray[user.userId].on('signal', (data: any) => {
                 console.info("createPeerConnexion => sendWebrtcSignal : "+user.userId, data);
@@ -138,8 +138,8 @@ export class SimplePeer {
      */
     private receiveWebrtcSignal(message: string) {
         let data = JSON.parse(message);
-        console.log("receiveWebrtcSignal", data);
-        console.log("this.PeerConnexionArray[data.userId]", this.PeerConnexionArray[data.userId]);
+        console.log("receiveWebrtcSignal", data.userId);
+        console.log("receiveWebrtcSignal => data", data);
         if(!this.PeerConnexionArray[data.userId]){
             return;
         }
