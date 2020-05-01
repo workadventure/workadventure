@@ -5,6 +5,7 @@ import {DEBUG_MODE, RESOLUTION, ROOM, ZOOM_LEVEL} from "../../Enum/EnvironmentVa
 import Tile = Phaser.Tilemaps.Tile;
 import {ITiledMap, ITiledTileSet} from "../Map/ITiledMap";
 import {cypressAsserter} from "../../Cypress/CypressAsserter";
+import { GameSceneInitDataInterface } from "./GameSceneInitDataInterface";
 
 export const GameSceneName = "GameScene";
 export enum Textures {
@@ -28,6 +29,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     map: ITiledMap;
     startX = (window.innerWidth / 2) / RESOLUTION;
     startY = (window.innerHeight / 2) / RESOLUTION;
+    playerName: string;
 
 
     constructor() {
@@ -65,7 +67,9 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     }
 
     //hook initialisation
-    init(){}
+    init(data: GameSceneInitDataInterface) {
+        this.playerName = data.name;
+    }
 
     //hook create scene
     create(): void {

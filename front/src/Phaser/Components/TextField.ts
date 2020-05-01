@@ -1,7 +1,7 @@
 
-export class TextField extends Phaser.GameObjects.Text {
+export class TextField extends Phaser.GameObjects.BitmapText {
     constructor(scene: Phaser.Scene, x: number, y: number, text: string | string[]) {
-        super(scene, x, y, text, { fontFamily: 'Arial', fontSize: "15px", color: '#ffffff'});
+        super(scene, x, y, 'main_font', text, 8);
         this.scene.add.existing(this)
     }
 }
