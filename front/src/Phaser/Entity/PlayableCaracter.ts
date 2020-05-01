@@ -1,12 +1,19 @@
 import {getPlayerAnimations, playAnimation, PlayerAnimationNames} from "../Player/Animation";
 import {ActiveEventList, UserInputEvent} from "../UserInput/UserInputManager";
 import {SpeechBubble} from "./SpeechBubble";
+import BitmapText = Phaser.GameObjects.BitmapText;
 
 export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
     private bubble: SpeechBubble;
+    private playerName: BitmapText;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, texture: string, frame?: string | number) {
+    constructor(scene: Phaser.Scene, x: number, y: number, texture: string, name: string, frame?: string | number) {
         super(scene, x, y, texture, frame);
+
+        // Yes, I know, I'm declaring a sprite inside a sprite. ARP, save me from this madness :)
+        this.playerName = new BitmapText(scene, x, y - 32, 'main_font', name, 8);
+        this.playerName.setOrigin(0.5).setCenterAlign();
+        scene.add.existing(this.playerName);
 
         this.scene.sys.updateList.add(this);
         this.scene.sys.displayList.add(this);
@@ -36,6 +43,7 @@ export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
         if(this.bubble) {
             this.bubble.moveBubble(this.x, this.y);
         }
+        this.playerName.setPosition(this.x, this.y - 32);
     }
 
     stop(){
