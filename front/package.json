@@ -24,6 +24,7 @@
   "scripts": {
     "start": "webpack-dev-server --open",
     "build": "webpack",
-    "lint": "node_modules/.bin/eslint src/ . --ext .ts"
+    "lint": "node_modules/.bin/eslint src/ . --ext .ts",
+    "fix": "node_modules/.bin/eslint --fix src/ . --ext .ts"
   }
 }

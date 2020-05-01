@@ -57,7 +57,7 @@ export class LogincScene extends Phaser.Scene {
             let name = this.nameInput.getText();
             if (name === '') {
                 return
-            };
+            }
             gameManager.connect(name).then(() => {
                 this.scene.start(GameSceneName, { name });
             });

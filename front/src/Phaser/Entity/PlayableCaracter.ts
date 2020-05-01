@@ -11,7 +11,7 @@ export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
         super(scene, x, y, texture, frame);
 
         // Yes, I know, I'm declaring a sprite inside a sprite. ARP, save me from this madness :)
-        this.playerName = new BitmapText(scene, x, y - 32, 'main_font', name, 8);
+        this.playerName = new BitmapText(scene, x, y - 25, 'main_font', name, 8);
         this.playerName.setOrigin(0.5).setCenterAlign();
         scene.add.existing(this.playerName);
 
@@ -43,7 +43,7 @@ export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
         if(this.bubble) {
             this.bubble.moveBubble(this.x, this.y);
         }
-        this.playerName.setPosition(this.x, this.y - 32);
+        this.playerName.setPosition(this.x, this.y - 25);
     }
 
     stop(){
@@ -54,7 +54,7 @@ export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
     say(text: string) {
         if (this.bubble) return;
         this.bubble = new SpeechBubble(this.scene, this, text)
-        //todo make the buble destroy on player movement?
+        //todo make the bubble destroy on player movement?
         setTimeout(() => {
             this.bubble.destroy();
             this.bubble = null;
