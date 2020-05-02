@@ -116,7 +116,7 @@ export class Group {
 
         // Broadcast on the right event
         this.users.forEach((groupUser: UserInterface) => {
-            this.disconnectCallback(user.id, groupUser.id);
+            this.disconnectCallback(user.id, groupUser.id, this);
         });
     }
 
