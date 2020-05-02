@@ -12,11 +12,13 @@ import {Group} from "_Model/Group";
 
 enum SockerIoEvent {
     CONNECTION = "connection",
-    DISCONNECTION = "disconnect",
+    DISCONNECT = "disconnect",
     JOIN_ROOM = "join-room",
     USER_POSITION = "user-position",
     WEBRTC_SIGNAL = "webrtc-signal",
+    WEBRTC_OFFER = "webrtc-offer",
     WEBRTC_START = "webrtc-start",
+    WEBRTC_DISCONNECT = "webrtc-disconect",
     MESSAGE_ERROR = "message-error",
 }
 
@@ -77,9 +79,7 @@ export class IoSocketController{
                 this.saveUserInformation((socket as ExSocketInterface), messageUserPosition);
 
                 //add function to refresh position user in real time.
-                let rooms = (this.Io.sockets.adapter.rooms as ExtRoomsInterface);
-                rooms.refreshUserPosition = RefreshUserPositionFunction;
-                rooms.refreshUserPosition(rooms, this.Io);
+                this.refreshUserPosition();
 
                 socket.to(messageUserPosition.roomId).emit(SockerIoEvent.JOIN_ROOM, messageUserPosition.toString());
             });
@@ -97,30 +97,41 @@ export class IoSocketController{
                 this.saveUserInformation((socket as ExSocketInterface), messageUserPosition);
 
                 //refresh position of all user in all rooms in real time
-                let rooms = (this.Io.sockets.adapter.rooms as ExtRoomsInterface);
-                if(!rooms.refreshUserPosition){
-                    rooms.refreshUserPosition = RefreshUserPositionFunction;
-                }
-                rooms.refreshUserPosition(rooms, this.Io);
+                this.refreshUserPosition();
             });
 
             socket.on(SockerIoEvent.WEBRTC_SIGNAL, (message : string) => {
                 let data : any = JSON.parse(message);
-
                 //send only at user
-                let clients: Array<any> = Object.values(this.Io.sockets.sockets);
-                for(let i = 0; i < clients.length; i++){
-                    let client : ExSocketInterface = clients[i];
-                    if(client.userId !== data.receiverId){
-                        continue
-                    }
-                    client.emit(SockerIoEvent.WEBRTC_SIGNAL,  message);
-                    break;
+                let client = this.searchClientById(data.receiverId);
+                if(!client){
+                    console.error("client doesn't exist for ", data.receiverId);
+                    return;
                 }
+                return client.emit(SockerIoEvent.WEBRTC_SIGNAL,  message);
             });
 
-            socket.on(SockerIoEvent.DISCONNECTION, (reason : string) => {
+            socket.on(SockerIoEvent.WEBRTC_OFFER, (message : string) => {
+                let data : any = JSON.parse(message);
+
+                //send only at user
+                let client = this.searchClientById(data.receiverId);
+                if(!client){
+                    console.error("client doesn't exist for ", data.receiverId);
+                    return;
+                }
+                client.emit(SockerIoEvent.WEBRTC_OFFER,  message);
+            });
+
+            socket.on(SockerIoEvent.DISCONNECT, () => {
                 let Client = (socket as ExSocketInterface);
+                socket.broadcast.emit(SockerIoEvent.WEBRTC_DISCONNECT, JSON.stringify({
+                    userId: Client.userId
+                }));
+
+                //refresh position of all user in all rooms in real time
+                this.refreshUserPosition();
+
                 //leave group of user
                 this.World.leave(Client);
 
@@ -138,6 +149,21 @@ export class IoSocketController{
         });
     }
 
+    /**
+     *
+     * @param userId
+     */
+    searchClientById(userId : string) : ExSocketInterface | null{
+        let clients: Array<any> = Object.values(this.Io.sockets.sockets);
+        for(let i = 0; i < clients.length; i++){
+            let client : ExSocketInterface = clients[i];
+            if(client.userId !== userId){
+                continue
+            }
+            return client;
+        }
+        return null;
+    }
     /**
      *
      * @param socket
@@ -179,6 +205,15 @@ export class IoSocketController{
         socket.position = message.position;
         socket.roomId = message.roomId;
         socket.userId = message.userId;
+    }
+
+    refreshUserPosition(){
+        //refresh position of all user in all rooms in real time
+        let rooms = (this.Io.sockets.adapter.rooms as ExtRoomsInterface);
+        if(!rooms.refreshUserPosition){
+            rooms.refreshUserPosition = RefreshUserPositionFunction;
+        }
+        rooms.refreshUserPosition(rooms, this.Io);
     }
 
     //Hydrate and manage error

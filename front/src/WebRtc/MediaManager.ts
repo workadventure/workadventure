@@ -6,7 +6,7 @@ export class MediaManager {
     cinema: any = null;
     microphoneClose: any = null;
     microphone: any = null;
-    constraintsMedia = {audio: false, video: true};
+    constraintsMedia = {audio: true, video: true};
     getCameraPromise : Promise<any> = null;
 
     constructor() {
@@ -37,9 +37,6 @@ export class MediaManager {
             this.disabledCamera();
             //update tracking
         });
-
-        this.enabledCamera();
-        this.enabledMicrophone();
     }
 
     activeVisio(){
@@ -125,6 +122,15 @@ export class MediaManager {
         let elementRemoteVideo = document.getElementById("activeCam");
         elementRemoteVideo.insertAdjacentHTML('beforeend', '<video id="'+userId+'" autoplay></video>');
         this.remoteVideo[(userId as any)] = document.getElementById(userId);
+    }
+
+    /**
+     *
+     * @param userId
+     * @param stream
+     */
+    addStreamRemoteVideo(userId : string, stream : MediaStream){
+        this.remoteVideo[(userId as any)].srcObject = stream;
     }
 
     /**

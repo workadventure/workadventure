@@ -3,6 +3,8 @@ import {TextField} from "../Components/TextField";
 import {TextInput} from "../Components/TextInput";
 import {ClickButton} from "../Components/ClickButton";
 import {GameSceneName} from "../Game/GameScene";
+import {SimplePeer} from "../../WebRtc/SimplePeer";
+import {Connexion} from "../../Connexion";
 
 //todo: put this constants in a dedicated file
 export const LoginSceneName = "LoginScene";
