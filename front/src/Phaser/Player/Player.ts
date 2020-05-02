@@ -1,10 +1,11 @@
 import {getPlayerAnimations, playAnimation, PlayerAnimationNames} from "./Animation";
 import {GameSceneInterface, Textures} from "../Game/GameScene";
-import {ConnexionInstance} from "../Game/GameManager";
 import {MessageUserPositionInterface} from "../../Connexion";
 import {ActiveEventList, UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
 import {PlayableCaracter} from "../Entity/PlayableCaracter";
 
+
+export const hasMovedEventName = "hasMoved";
 export interface CurrentGamerInterface extends PlayableCaracter{
     userId : string;
     PlayerValue : string;
@@ -89,18 +90,11 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
             direction = PlayerAnimationNames.None;
             this.stop();
         }
-        if(this.previousMove !== PlayerAnimationNames.None || direction !== PlayerAnimationNames.None){
-            this.sharePosition(direction);
-        }
-        this.previousMove = direction;
+
+        this.emit(hasMovedEventName, {direction, x: this.x, y: this.y});
     }
 
-    private sharePosition(direction: string) {
-        if (ConnexionInstance) {
-            ConnexionInstance.sharePosition(this.x, this.y, direction);
-        }
-    }
-
+    //todo: put this method into the NonPlayer class instead
     updatePosition(MessageUserPosition: MessageUserPositionInterface) {
         playAnimation(this, MessageUserPosition.position.direction);
         this.setX(MessageUserPosition.position.x);

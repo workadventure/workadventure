@@ -1,6 +1,6 @@
-import {GameManager, gameManager, StatusGameManagerEnum} from "./GameManager";
+import {GameManager, gameManager, HasMovedEvent, StatusGameManagerEnum} from "./GameManager";
 import {MessageUserPositionInterface} from "../../Connexion";
-import {CurrentGamerInterface, GamerInterface, Player} from "../Player/Player";
+import {CurrentGamerInterface, GamerInterface, hasMovedEventName, Player} from "../Player/Player";
 import {DEBUG_MODE, RESOLUTION, ROOM, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import Tile = Phaser.Tilemaps.Tile;
 import {ITiledMap, ITiledTileSet} from "../Map/ITiledMap";
@@ -168,6 +168,11 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         //create collision
         this.createCollisionWithPlayer();
         this.createCollisionObject();
+        this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this))
+    }
+    
+    pushPlayerPosition(event: HasMovedEvent) {
+        this.GameManager.pushPlayerPosition(event);
     }
 
     EventToClickOnTile(){
