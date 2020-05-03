@@ -12,7 +12,7 @@ describe("Message Model", () => {
     it("should expose a toJson method", () => {
         let message = {userId: "test1", roomId: "test2"};
         let messageObject = new Message(message);
-        expect(messageObject.toJson()).toEqual({userId: "test1", roomId: "test2"});
+        expect(messageObject.toJson()).toEqual({userId: "test1", roomId: "test2", name: "foo"});
     })
 
     it("should find throw error when no userId", () => {
