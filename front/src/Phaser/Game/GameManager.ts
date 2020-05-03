@@ -9,7 +9,11 @@ export enum StatusGameManagerEnum {
     CURRENT_USER_CREATED = 2
 }
 
-export let ConnexionInstance : ConnexionInterface;
+export interface HasMovedEvent {
+    direction: string;
+    x: number;
+    y: number;
+}
 
 export class GameManager {
     status: number;
@@ -25,9 +29,8 @@ export class GameManager {
     connect(name:string) {
         this.playerName = name;
         this.ConnexionInstance = new Connexion(name, this);
-        ConnexionInstance = this.ConnexionInstance;
         return this.ConnexionInstance.createConnexion().then(() => {
-            this.SimplePeer = new SimplePeer(ConnexionInstance);
+            this.SimplePeer = new SimplePeer(this.ConnexionInstance);
         });
     }
 
@@ -62,6 +65,10 @@ export class GameManager {
 
     getPlayerName(): string {
         return this.playerName;
+    }
+
+    pushPlayerPosition(event: HasMovedEvent) {
+        this.ConnexionInstance.sharePosition(event.x, event.y, event.direction);
     }
 }
 
