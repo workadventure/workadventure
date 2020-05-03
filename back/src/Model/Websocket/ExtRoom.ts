@@ -9,27 +9,28 @@ export class ExtRooms implements ExtRoomsInterface{
     [room: string]: SocketIO.Room;
 }
 
-let RefreshUserPositionFunction = function(rooms : ExtRooms, Io: socketIO.Server){
+let RefreshUserPositionFunction = function(rooms : ExtRooms, Io: socketIO.Server) {
     let clients = Io.clients();
     let socketsKey = Object.keys(Io.clients().sockets);
 
     //create mapping with all users in all rooms
     let mapPositionUserByRoom = new Map();
-    for(let i = 0; i < socketsKey.length; i++){
+    for (let i = 0; i < socketsKey.length; i++) {
         let socket = clients.sockets[socketsKey[i]] as ExSocketInterface;
-        if(!socket.position){
+        if (!socket.position) {
             continue;
         }
         let data = {
-            userId : socket.userId,
-            roomId : socket.roomId,
-            position : socket.position,
+            userId: socket.userId,
+            roomId: socket.roomId,
+            position: socket.position,
+            name: socket.name,
         };
         let dataArray = <any>[];
-        if(mapPositionUserByRoom.get(data.roomId)){
+        if (mapPositionUserByRoom.get(data.roomId)) {
             dataArray = mapPositionUserByRoom.get(data.roomId);
             dataArray.push(data);
-        }else{
+        } else {
             dataArray = [data];
         }
         mapPositionUserByRoom.set(data.roomId, dataArray);

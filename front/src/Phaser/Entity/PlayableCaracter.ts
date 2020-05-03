@@ -42,7 +42,11 @@ export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
         if(this.bubble) {
             this.bubble.moveBubble(this.x, this.y);
         }
-        this.playerName.setPosition(this.x, this.y - 25);
+        this.updatePlayerNamePosition(this.x, this.y);
+    }
+
+    updatePlayerNamePosition(x: number, y: number){
+        this.playerName.setPosition(x, y - 25);
     }
 
     stop(){
@@ -58,5 +62,10 @@ export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
             this.bubble.destroy();
             this.bubble = null;
         }, 3000)
+    }
+
+    destroy(fromScene?: boolean): void {
+        super.destroy(fromScene);
+        this.playerName.destroy();
     }
 }

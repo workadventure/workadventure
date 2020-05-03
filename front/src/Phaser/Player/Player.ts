@@ -100,5 +100,6 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
         playAnimation(this, MessageUserPosition.position.direction);
         this.setX(MessageUserPosition.position.x);
         this.setY(MessageUserPosition.position.y);
+        this.updatePlayerNamePosition(MessageUserPosition.position.x, MessageUserPosition.position.y);
     }
 }

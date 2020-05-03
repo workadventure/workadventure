@@ -17,16 +17,19 @@ enum EventMessage{
 class Message {
     userId: string;
     roomId: string;
+    name: string;
 
-    constructor(userId : string, roomId : string) {
+    constructor(userId : string, roomId : string, name: string) {
         this.userId = userId;
         this.roomId = roomId;
+        this.name = name;
     }
 
     toJson() {
         return {
             userId: this.userId,
             roomId: this.roomId,
+            name: this.name
         }
     }
 }
@@ -64,14 +67,15 @@ class Point implements PointInterface{
 export interface MessageUserPositionInterface {
     userId: string;
     roomId: string;
+    name: string;
     position: PointInterface;
 }
 
 class MessageUserPosition extends Message implements MessageUserPositionInterface{
     position: PointInterface;
 
-    constructor(userId : string, roomId : string, point : Point) {
-        super(userId, roomId);
+    constructor(userId : string, roomId : string, point : Point, name: string) {
+        super(userId, roomId, name);
         this.position = point;
     }
 
@@ -106,7 +110,8 @@ class ListMessageUserPosition {
                     userPosition.position.x,
                     userPosition.position.y,
                     userPosition.position.direction
-                )
+                ),
+                userPosition.name
             ));
         });
     }
@@ -187,7 +192,7 @@ export class Connexion implements ConnexionInterface {
      * @param roomId
      */
     joinARoom(roomId: string): void {
-        let messageUserPosition = new MessageUserPosition(this.userId, this.startedRoom, new Point(0, 0));
+        let messageUserPosition = new MessageUserPosition(this.userId, this.startedRoom, new Point(0, 0), this.email);
         this.socket.emit(EventMessage.JOIN_ROOM, messageUserPosition.toString());
     }
 
@@ -201,7 +206,7 @@ export class Connexion implements ConnexionInterface {
         if(!this.socket){
             return;
         }
-        let messageUserPosition = new MessageUserPosition(this.userId, ROOM[0], new Point(x, y, direction));
+        let messageUserPosition = new MessageUserPosition(this.userId, ROOM[0], new Point(x, y, direction), this.email);
         this.socket.emit(EventMessage.USER_POSITION, messageUserPosition.toString());
     }
 

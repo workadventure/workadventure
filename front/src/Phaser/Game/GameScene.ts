@@ -258,7 +258,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             this,
             MessageUserPosition.position.x,
             MessageUserPosition.position.y,
-            'Foo'
+            MessageUserPosition.name
         );
         player.initAnimation();
         this.MapPlayers.add(player);
