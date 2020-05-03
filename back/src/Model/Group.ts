@@ -1,4 +1,4 @@
-import { World } from "./World";
+import { World, ConnectCallback, DisconnectCallback } from "./World";
 import { UserInterface } from "./UserInterface";
 import {PositionInterface} from "_Model/PositionInterface";
 import {uuid} from "uuidv4";
@@ -8,14 +8,11 @@ export class Group {
 
     private id: string;
     private users: UserInterface[];
-    private connectCallback: (user1: string, user2: string, group: Group) => void;
-    private disconnectCallback: (user1: string, user2: string, group: Group) => void;
+    private connectCallback: ConnectCallback;
+    private disconnectCallback: DisconnectCallback;
 
 
-    constructor(users: UserInterface[],
-                connectCallback: (user1: string, user2: string, group: Group) => void,
-                disconnectCallback: (user1: string, user2: string, group: Group) => void
-    ) {
+    constructor(users: UserInterface[], connectCallback: ConnectCallback, disconnectCallback: DisconnectCallback) {
         this.users = [];
         this.connectCallback = connectCallback;
         this.disconnectCallback = disconnectCallback;
@@ -64,9 +61,7 @@ export class Group {
     join(user: UserInterface): void
     {
         // Broadcast on the right event
-        this.users.forEach((groupUser: UserInterface) => {
-            this.connectCallback(user.id, groupUser.id, this);
-        });
+        this.connectCallback(user.id, this);
         this.users.push(user);
         user.group = this;
     }
@@ -115,9 +110,7 @@ export class Group {
         user.group = undefined;
 
         // Broadcast on the right event
-        this.users.forEach((groupUser: UserInterface) => {
-            this.disconnectCallback(user.id, groupUser.id, this);
-        });
+        this.disconnectCallback(user.id, this);
     }
 
     /**

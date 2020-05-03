@@ -6,6 +6,9 @@ import {UserInterface} from "./UserInterface";
 import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
 import {PositionInterface} from "_Model/PositionInterface";
 
+export type ConnectCallback = (user: string, group: Group) => void;
+export type DisconnectCallback = (user: string, group: Group) => void;
+
 export class World {
     static readonly MIN_DISTANCE = 160;
 
@@ -13,10 +16,10 @@ export class World {
     private users: Map<string, UserInterface>;
     private groups: Group[];
 
-    private connectCallback: (user1: string, user2: string, group: Group) => void;
-    private disconnectCallback: (user1: string, user2: string, group: Group) => void;
+    private connectCallback: ConnectCallback;
+    private disconnectCallback: DisconnectCallback;
 
-    constructor(connectCallback: (user1: string, user2: string, group: Group) => void, disconnectCallback: (user1: string, user2: string, group: Group) => void)
+    constructor(connectCallback: ConnectCallback, disconnectCallback: DisconnectCallback)
     {
         this.users = new Map<string, UserInterface>();
         this.groups = [];
