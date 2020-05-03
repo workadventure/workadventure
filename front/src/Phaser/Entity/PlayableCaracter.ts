@@ -10,7 +10,6 @@ export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
     constructor(scene: Phaser.Scene, x: number, y: number, texture: string, name: string, frame?: string | number) {
         super(scene, x, y, texture, frame);
 
-        // Yes, I know, I'm declaring a sprite inside a sprite. ARP, save me from this madness :)
         this.playerName = new BitmapText(scene, x, y - 25, 'main_font', name, 8);
         this.playerName.setOrigin(0.5).setCenterAlign();
         scene.add.existing(this.playerName);
