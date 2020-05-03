@@ -6,53 +6,51 @@ export interface SimplePeerInterface {
 }
 
 export class SimplePeer {
-    Connexion: ConnexionInterface;
-    MediaManager: MediaManager;
-    WebRtcRoomId: string;
-    Users: Array<any>;
+    private Connexion: ConnexionInterface;
+    private WebRtcRoomId: string;
+    private Users: Array<any>;
 
-    PeerConnexionArray: Array<any> = new Array<any>();
+    private MediaManager: MediaManager;
+
+    private PeerConnexionArray: Array<any> = new Array<any>();
 
     constructor(Connexion: ConnexionInterface, WebRtcRoomId: string = "test-webrtc") {
         this.Connexion = Connexion;
         this.WebRtcRoomId = WebRtcRoomId;
-        this.MediaManager = new MediaManager();
+        this.MediaManager = new MediaManager((stream : MediaStream) => {
+            this.updatedLocalStream();
+        });
+        this.PeerConnexionArray = new Array<any>();
+
         this.initialise();
     }
 
     /**
      * permit to listen when user could start visio
      */
-    private initialise(){
+    private initialise() {
 
-        //receive message start
-        this.Connexion.receiveWebrtcStart((message: string) => {
-            this.receiveWebrtcStart(message);
+        //receive signal by gemer
+        this.Connexion.receiveWebrtcSignal((message: string) => {
+            this.receiveWebrtcSignal(message);
         });
 
-        //when button to call is clicked, start video
-        this.MediaManager.getElementActivePhone().addEventListener("click", () => {
-            this.startWebRtc();
-            this.disablePhone();
-        });
-    }
-    /**
-     * server has two person connected, start the meet
-     */
-    startWebRtc() {
         this.MediaManager.activeVisio();
-        return this.MediaManager.getCamera().then((stream: MediaStream) => {
-            this.MediaManager.localStream = stream;
+        this.MediaManager.getCamera().then(() => {
 
-            //create pear connexion
-            this.createPeerConnexion();
-
-            //receive signal by gemer
-            this.Connexion.receiveWebrtcSignal((message: string) => {
-                this.receiveWebrtcSignal(message);
+            //receive message start
+            this.Connexion.receiveWebrtcStart((message: string) => {
+                this.receiveWebrtcStart(message);
             });
+
         }).catch((err) => {
-            console.error(err);
+            console.error("err", err);
+        });
+
+        //receive signal by gemer
+        this.Connexion.disconnectMessage((message: string) => {
+            let data = JSON.parse(message);
+            this.closeConnexion(data.userId);
         });
     }
 
@@ -60,46 +58,97 @@ export class SimplePeer {
      *
      * @param message
      */
-    receiveWebrtcStart(message: string) {
+    private receiveWebrtcStart(message: string) {
         let data = JSON.parse(message);
         this.WebRtcRoomId = data.roomId;
         this.Users = data.clients;
 
-        //active button for player
-        this.activePhone();
+        //start connexion
+        this.startWebRtc();
     }
 
-
-    createPeerConnexion() {
+    /**
+     * server has two person connected, start the meet
+     */
+    private startWebRtc() {
         this.Users.forEach((user: any) => {
-            if(this.PeerConnexionArray[user.userId]){
+            //if it's not an initiator, peer connexion will be created when gamer will receive offer signal
+            if(!user.initiator){
                 return;
             }
-            this.MediaManager.addActiveVideo(user.userId);
-
-            this.PeerConnexionArray[user.userId] = new Peer({initiator: user.initiator});
-
-            this.PeerConnexionArray[user.userId].on('signal', (data: any) => {
-                this.sendWebrtcSignal(data, user.userId);
-            });
-
-            this.PeerConnexionArray[user.userId].on('stream', (stream: MediaStream) => {
-                this.stream(user.userId, stream);
-            });
-
-            this.PeerConnexionArray[user.userId].on('close', () => {
-                this.closeConnexion(user.userId);
-            });
-
-            this.addMedia(user.userId);
+            this.createPeerConnexion(user);
         });
-
     }
 
-    closeConnexion(userId : string){
-        // @ts-ignore
-        this.PeerConnexionArray[userId] = null;
-        this.MediaManager.removeActiveVideo(userId)
+    /**
+     * create peer connexion to bind users
+     */
+    private createPeerConnexion(user : any) {
+        if(this.PeerConnexionArray[user.userId]) {
+            return;
+        }
+
+        this.MediaManager.removeActiveVideo(user.userId);
+        this.MediaManager.addActiveVideo(user.userId);
+
+        this.PeerConnexionArray[user.userId] = new Peer({
+            initiator: user.initiator ? user.initiator : false,
+            reconnectTimer: 10000,
+            config: {
+                iceServers: [
+                    {
+                        urls: 'stun:stun.l.google.com:19302'
+                    },
+                    {
+                        urls: 'turn:numb.viagenie.ca',
+                        username: 'g.parant@thecodingmachine.com',
+                        credential: 'itcugcOHxle9Acqi$'
+                    },
+                ]
+            },
+        });
+
+        //start listen signal for the peer connexion
+        this.PeerConnexionArray[user.userId].on('signal', (data: any) => {
+            this.sendWebrtcSignal(data, user.userId);
+        });
+
+        this.PeerConnexionArray[user.userId].on('stream', (stream: MediaStream) => {
+            this.stream(user.userId, stream);
+        });
+
+        this.PeerConnexionArray[user.userId].on('track', (track: MediaStreamTrack, stream: MediaStream) => {
+            this.stream(user.userId, stream);
+        });
+
+        this.PeerConnexionArray[user.userId].on('close', () => {
+            this.closeConnexion(user.userId);
+        });
+
+        this.PeerConnexionArray[user.userId].on('error', (err: any) => {
+            console.error(`error => ${user.userId} => ${err.code}`, err);
+        });
+
+        this.PeerConnexionArray[user.userId].on('connect', () => {
+            console.info(`connect => ${user.userId}`);
+        });
+
+        this.addMedia(user.userId);
+    }
+
+    private closeConnexion(userId : string) {
+        try {
+            this.MediaManager.removeActiveVideo(userId);
+            if (!this.PeerConnexionArray[(userId as any)]) {
+                return;
+            }
+            // @ts-ignore
+            this.PeerConnexionArray[(userId as any)].destroy();
+            this.PeerConnexionArray[(userId as any)] = null;
+            delete this.PeerConnexionArray[(userId as any)];
+        } catch (err) {
+            console.error("closeConnexion", err)
+        }
     }
 
     /**
@@ -107,20 +156,29 @@ export class SimplePeer {
      * @param userId
      * @param data
      */
-    sendWebrtcSignal(data: any, userId : string) {
-        this.Connexion.sendWebrtcSignal(data, this.WebRtcRoomId, null, userId);
+    private sendWebrtcSignal(data: any, userId : string) {
+        try {
+            this.Connexion.sendWebrtcSignal(data, this.WebRtcRoomId, null, userId);
+        }catch (e) {
+            console.error(`sendWebrtcSignal => ${userId}`, e);
+        }
     }
 
     /**
      *
      * @param message
      */
-    receiveWebrtcSignal(message: string) {
+    private receiveWebrtcSignal(message: string) {
         let data = JSON.parse(message);
-        if(!this.PeerConnexionArray[data.userId]){
-            return;
+        try {
+            //if offer type, create peer connexion
+            if(data.signal.type === "offer"){
+                this.createPeerConnexion(data);
+            }
+            this.PeerConnexionArray[data.userId].signal(data.signal);
+        } catch (e) {
+            console.error(`receiveWebrtcSignal => ${data.userId}`, e);
         }
-        this.PeerConnexionArray[data.userId].signal(data.signal);
     }
 
     /**
@@ -128,23 +186,28 @@ export class SimplePeer {
      * @param userId
      * @param stream
      */
-    stream(userId : any, stream: MediaStream) {
-        this.MediaManager.remoteVideo[userId].srcObject = stream;
+    private stream(userId : any, stream: MediaStream) {
+        this.MediaManager.addStreamRemoteVideo(userId, stream);
     }
 
     /**
      *
      * @param userId
      */
-     addMedia (userId : any) {
-         this.PeerConnexionArray[userId].addStream(this.MediaManager.localStream) // <- add streams to peer dynamically
+    private addMedia (userId : any = null) {
+        try {
+            let transceiver : any = null;
+            this.MediaManager.localStream.getTracks().forEach(
+                transceiver = (track: MediaStreamTrack) => this.PeerConnexionArray[userId].addTrack(track, this.MediaManager.localStream)
+            )
+        }catch (e) {
+            console.error(`addMedia => addMedia => ${userId}`, e);
+        }
     }
 
-    activePhone(){
-         this.MediaManager.activePhoneOpen();
-    }
-
-    disablePhone(){
-        this.MediaManager.disablePhoneOpen();
+    updatedLocalStream(){
+        this.Users.forEach((user) => {
+            this.addMedia(user.userId);
+        })
     }
 }

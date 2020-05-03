@@ -1,10 +1,12 @@
 import { World, ConnectCallback, DisconnectCallback } from "./World";
 import { UserInterface } from "./UserInterface";
 import {PositionInterface} from "_Model/PositionInterface";
+import {uuid} from "uuidv4";
 
 export class Group {
     static readonly MAX_PER_GROUP = 4;
 
+    private id: string;
     private users: UserInterface[];
     private connectCallback: ConnectCallback;
     private disconnectCallback: DisconnectCallback;
@@ -14,6 +16,7 @@ export class Group {
         this.users = [];
         this.connectCallback = connectCallback;
         this.disconnectCallback = disconnectCallback;
+        this.id = uuid();
 
         users.forEach((user: UserInterface) => {
             this.join(user);
@@ -22,6 +25,10 @@ export class Group {
 
     getUsers(): UserInterface[] {
         return this.users;
+    }
+
+    getId() : string{
+        return this.id;
     }
 
     /**
@@ -62,23 +69,6 @@ export class Group {
     isPartOfGroup(user: UserInterface): boolean
     {
         return this.users.indexOf(user) !== -1;
-    }
-
-    isStillIn(user: UserInterface): boolean
-    {
-        if(!this.isPartOfGroup(user)) {
-            return false;
-        }
-        let stillIn = true;
-        for(let i = 0; i <= this.users.length; i++) {
-            let userInGroup = this.users[i];
-            let distance = World.computeDistance(user, userInGroup);
-            if(distance > World.MIN_DISTANCE) {
-                stillIn = false;
-                break;
-            }
-        }
-        return stillIn;
     }
 
     /*removeFromGroup(users: UserInterface[]): void

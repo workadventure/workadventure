@@ -26,6 +26,7 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
     userId: string;
     PlayerValue: string;
     userInputManager: UserInputManager;
+    previousMove: string;
 
     constructor(
         userId: string,
@@ -89,7 +90,7 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
             direction = PlayerAnimationNames.None;
             this.stop();
         }
-        
+
         this.emit(hasMovedEventName, {direction, x: this.x, y: this.y});
     }
 
