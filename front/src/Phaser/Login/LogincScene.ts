@@ -4,7 +4,6 @@ import {TextInput} from "../Components/TextInput";
 import {ClickButton} from "../Components/ClickButton";
 import {GameSceneName} from "../Game/GameScene";
 import Image = Phaser.GameObjects.Image;
-import Key = Phaser.Input.Keyboard.Key;
 
 //todo: put this constants in a dedicated file
 export const LoginSceneName = "LoginScene";

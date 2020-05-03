@@ -1,3 +1,8 @@
+const videoConstraint: {width : any, height: any, facingMode : string} = {
+    width: { ideal: 1280 },
+    height: { ideal: 720 },
+    facingMode: "user"
+};
 export class MediaManager {
     localStream: MediaStream;
     remoteVideo: Array<any> = new Array<any>();
@@ -6,13 +11,20 @@ export class MediaManager {
     cinema: any = null;
     microphoneClose: any = null;
     microphone: any = null;
-    constraintsMedia = {audio: false, video: true};
+    constraintsMedia : {audio : any, video : any} = {
+        audio: true,
+        video: videoConstraint
+    };
     getCameraPromise : Promise<any> = null;
+    updatedLocalStreamCallBack : Function;
 
-    constructor() {
+    constructor(updatedLocalStreamCallBack : Function) {
+        this.updatedLocalStreamCallBack = updatedLocalStreamCallBack;
+
         this.myCamVideo = document.getElementById('myCamVideo');
-        this.microphoneClose = document.getElementById('microphone-close');
 
+        this.microphoneClose = document.getElementById('microphone-close');
+        this.microphoneClose.style.display = "none";
         this.microphoneClose.addEventListener('click', (e: any) => {
             e.preventDefault();
             this.enabledMicrophone();
@@ -26,6 +38,7 @@ export class MediaManager {
         });
 
         this.cinemaClose = document.getElementById('cinema-close');
+        this.cinemaClose.style.display = "none";
         this.cinemaClose.addEventListener('click', (e: any) => {
             e.preventDefault();
             this.enabledCamera();
@@ -37,9 +50,6 @@ export class MediaManager {
             this.disabledCamera();
             //update tracking
         });
-
-        this.enabledCamera();
-        this.enabledMicrophone();
     }
 
     activeVisio(){
@@ -50,9 +60,12 @@ export class MediaManager {
     enabledCamera() {
         this.cinemaClose.style.display = "none";
         this.cinema.style.display = "block";
-        this.constraintsMedia.video = true;
+        this.constraintsMedia.video = videoConstraint;
         this.localStream = null;
         this.myCamVideo.srcObject = null;
+        this.getCamera().then((stream) => {
+            this.updatedLocalStreamCallBack(stream);
+        });
     }
 
     disabledCamera() {
@@ -70,12 +83,18 @@ export class MediaManager {
         }
         this.localStream = null;
         this.myCamVideo.srcObject = null;
+        this.getCamera().then((stream) => {
+            this.updatedLocalStreamCallBack(stream);
+        });
     }
 
     enabledMicrophone() {
         this.microphoneClose.style.display = "none";
         this.microphone.style.display = "block";
         this.constraintsMedia.audio = true;
+        this.getCamera().then((stream) => {
+            this.updatedLocalStreamCallBack(stream);
+        });
     }
 
     disabledMicrophone() {
@@ -89,18 +108,9 @@ export class MediaManager {
                 }
             });
         }
-    }
-
-    getElementActivePhone(){
-        return document.getElementById('phone-open');
-    }
-
-    activePhoneOpen(){
-        return this.getElementActivePhone().classList.add("active");
-    }
-
-    disablePhoneOpen(){
-        return this.getElementActivePhone().classList.remove("active");
+        this.getCamera().then((stream) => {
+            this.updatedLocalStreamCallBack(stream);
+        });
     }
 
     //get camera
@@ -109,6 +119,13 @@ export class MediaManager {
             .then((stream: MediaStream) => {
                 this.localStream = stream;
                 this.myCamVideo.srcObject = this.localStream;
+
+                //TODO resize remote cam
+                /*console.log(this.localStream.getTracks());
+                let videoMediaStreamTrack =  this.localStream.getTracks().find((media : MediaStreamTrack) => media.kind === "video");
+                let {width, height} = videoMediaStreamTrack.getSettings();
+                console.info(`${width}x${height}`); // 6*/
+
                 return stream;
             }).catch((err) => {
                 console.error(err);
@@ -125,6 +142,15 @@ export class MediaManager {
         let elementRemoteVideo = document.getElementById("activeCam");
         elementRemoteVideo.insertAdjacentHTML('beforeend', '<video id="'+userId+'" autoplay></video>');
         this.remoteVideo[(userId as any)] = document.getElementById(userId);
+    }
+
+    /**
+     *
+     * @param userId
+     * @param stream
+     */
+    addStreamRemoteVideo(userId : string, stream : MediaStream){
+        this.remoteVideo[(userId as any)].srcObject = stream;
     }
 
     /**
