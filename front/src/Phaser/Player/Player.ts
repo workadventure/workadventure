@@ -33,9 +33,10 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
         Scene: GameSceneInterface,
         x: number,
         y: number,
+        name: string,
         PlayerValue: string = Textures.Player
     ) {
-        super(Scene, x, y, PlayerValue, 1);
+        super(Scene, x, y, PlayerValue, name, 1);
 
         //create input to move
         this.userInputManager = new UserInputManager(Scene);

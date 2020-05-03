@@ -19,14 +19,16 @@ export class GameManager {
     status: number;
     private ConnexionInstance: Connexion;
     private currentGameScene: GameScene;
+    private playerName: string;
     SimplePeer : SimplePeerInterface;
 
     constructor() {
         this.status = StatusGameManagerEnum.IN_PROGRESS;
     }
-    
-    connect(email:string) {
-        this.ConnexionInstance = new Connexion(email, this);
+
+    connect(name:string) {
+        this.playerName = name;
+        this.ConnexionInstance = new Connexion(name, this);
         return this.ConnexionInstance.createConnexion().then(() => {
             this.SimplePeer = new SimplePeer(this.ConnexionInstance);
         });
@@ -59,6 +61,10 @@ export class GameManager {
         } catch (e) {
             console.error(e);
         }
+    }
+
+    getPlayerName(): string {
+        return this.playerName;
     }
 
     pushPlayerPosition(event: HasMovedEvent) {

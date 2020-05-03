@@ -61,11 +61,14 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             'resources/characters/pipoya/Male 01-1.png',
             { frameWidth: 32, frameHeight: 32 }
         );
+        this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
+
         cypressAsserter.preloadFinished();
     }
 
     //hook initialisation
-    init(){}
+    init() {
+    }
 
     //hook create scene
     create(): void {
@@ -162,6 +165,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             this,
             this.startX,
             this.startY,
+            this.GameManager.getPlayerName()
         );
         this.CurrentPlayer.initAnimation();
 
@@ -254,6 +258,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             this,
             MessageUserPosition.position.x,
             MessageUserPosition.position.y,
+            'Foo'
         );
         player.initAnimation();
         this.MapPlayers.add(player);

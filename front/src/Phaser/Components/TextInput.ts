@@ -1,25 +1,25 @@
 
-export class TextInput extends Phaser.GameObjects.Text {
+export class TextInput extends Phaser.GameObjects.BitmapText {
     private underLineLength = 10;
     private underLine: Phaser.GameObjects.Text;
-    constructor(scene: Phaser.Scene, x: number, y: number) {
-        super(scene, x, y, '', { fontFamily: 'Arial', fontSize: "20px", color: '#ffffff'});
+    constructor(scene: Phaser.Scene, x: number, y: number, maxLength: number) {
+        super(scene, x, y, 'main_font', '', 32);
         this.scene.add.existing(this);
 
-        this.underLine = this.scene.add.text(x, y+1, '__________', { fontFamily: 'Arial', fontSize: "20px", color: '#ffffff'})
+        this.underLine = this.scene.add.text(x, y+1, '_______', { fontFamily: 'Arial', fontSize: "32px", color: '#ffffff'})
 
-        
+
         let keySpace = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
         let keyBackspace = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.BACKSPACE);
         this.scene.input.keyboard.on('keydown', (event: any) => {
             if (event.keyCode === 8 && this.text.length > 0) {
                 this.deleteLetter();
-            } else if (event.keyCode === 32 || (event.keyCode >= 48 && event.keyCode < 90)) {
+            } else if ((event.keyCode === 32 || (event.keyCode >= 48 && event.keyCode <= 90)) && this.text.length < maxLength) {
                 this.addLetter(event.key);
             }
         });
     }
-    
+
     private deleteLetter() {
         this.text = this.text.substr(0, this.text.length - 1);
         if (this.underLine.text.length > this.underLineLength) {
