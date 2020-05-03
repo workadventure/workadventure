@@ -58,9 +58,7 @@ export class LogincScene extends Phaser.Scene {
             if (name === '') {
                 return
             }
-            gameManager.connect(name).then(() => {
-                this.scene.start(GameSceneName, { name });
-            });
+            return this.login(name);
         });
 
     }
@@ -73,11 +71,9 @@ export class LogincScene extends Phaser.Scene {
         }
     }
 
-    /*async login() {
-        let name = this.nameInput.text;
-        if (!name) return;
+    private async login(name: string) {
         gameManager.connect(name).then(() => {
             this.scene.start(GameSceneName);
         });
-    }*/
+    }
 }
