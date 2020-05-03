@@ -47,10 +47,10 @@ export class IoSocketController {
         this.shareUsersPosition();
 
         //don't send only function because the context will be not this
-        this.World = new World((user1: string, user2: string, group: Group) => {
-            this.connectedUser(user1, user2, group);
-        }, (user1: string, user2: string, group: Group) => {
-            this.disConnectedUser(user1, user2, group);
+        this.World = new World((user1: string, group: Group) => {
+            this.connectedUser(user1, group);
+        }, (user1: string, group: Group) => {
+            this.disConnectedUser(user1, group);
         });
     }
 
