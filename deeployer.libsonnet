@@ -1,7 +1,7 @@
 {
   local env = std.extVar("env"),
   local namespace = env.GITHUB_REF_SLUG,
-  local tag = if namespace == "master" then "latest" else namespace,
+  local tag = namespace,
   "$schema": "https://raw.githubusercontent.com/thecodingmachine/deeployer/master/deeployer.schema.json",
   "containers": {
      "back": {
