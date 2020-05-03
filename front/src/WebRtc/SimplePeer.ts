@@ -17,7 +17,9 @@ export class SimplePeer {
     constructor(Connexion: ConnexionInterface, WebRtcRoomId: string = "test-webrtc") {
         this.Connexion = Connexion;
         this.WebRtcRoomId = WebRtcRoomId;
-        this.MediaManager = new MediaManager();
+        this.MediaManager = new MediaManager((stream : MediaStream) => {
+            this.updatedLocalStream();
+        });
         this.PeerConnexionArray = new Array<any>();
 
         this.initialise();
@@ -100,7 +102,7 @@ export class SimplePeer {
                     {
                         urls: 'turn:numb.viagenie.ca',
                         username: 'g.parant@thecodingmachine.com',
-                        credential: 'Muzuvo$6'
+                        credential: 'itcugcOHxle9Acqi$'
                     },
                 ]
             },
@@ -201,5 +203,11 @@ export class SimplePeer {
         }catch (e) {
             console.error(`addMedia => addMedia => ${userId}`, e);
         }
+    }
+
+    updatedLocalStream(){
+        this.Users.forEach((user) => {
+            this.addMedia(user.userId);
+        })
     }
 }

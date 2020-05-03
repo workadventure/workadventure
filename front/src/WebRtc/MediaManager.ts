@@ -16,11 +16,15 @@ export class MediaManager {
         video: videoConstraint
     };
     getCameraPromise : Promise<any> = null;
+    updatedLocalStreamCallBack : Function;
 
-    constructor() {
+    constructor(updatedLocalStreamCallBack : Function) {
+        this.updatedLocalStreamCallBack = updatedLocalStreamCallBack;
+
         this.myCamVideo = document.getElementById('myCamVideo');
-        this.microphoneClose = document.getElementById('microphone-close');
 
+        this.microphoneClose = document.getElementById('microphone-close');
+        this.microphoneClose.style.display = "none";
         this.microphoneClose.addEventListener('click', (e: any) => {
             e.preventDefault();
             this.enabledMicrophone();
@@ -34,6 +38,7 @@ export class MediaManager {
         });
 
         this.cinemaClose = document.getElementById('cinema-close');
+        this.cinemaClose.style.display = "none";
         this.cinemaClose.addEventListener('click', (e: any) => {
             e.preventDefault();
             this.enabledCamera();
@@ -58,6 +63,9 @@ export class MediaManager {
         this.constraintsMedia.video = videoConstraint;
         this.localStream = null;
         this.myCamVideo.srcObject = null;
+        this.getCamera().then((stream) => {
+            this.updatedLocalStreamCallBack(stream);
+        });
     }
 
     disabledCamera() {
@@ -75,12 +83,18 @@ export class MediaManager {
         }
         this.localStream = null;
         this.myCamVideo.srcObject = null;
+        this.getCamera().then((stream) => {
+            this.updatedLocalStreamCallBack(stream);
+        });
     }
 
     enabledMicrophone() {
         this.microphoneClose.style.display = "none";
         this.microphone.style.display = "block";
         this.constraintsMedia.audio = true;
+        this.getCamera().then((stream) => {
+            this.updatedLocalStreamCallBack(stream);
+        });
     }
 
     disabledMicrophone() {
@@ -94,18 +108,9 @@ export class MediaManager {
                 }
             });
         }
-    }
-
-    getElementActivePhone(){
-        return document.getElementById('phone-open');
-    }
-
-    activePhoneOpen(){
-        return this.getElementActivePhone().classList.add("active");
-    }
-
-    disablePhoneOpen(){
-        return this.getElementActivePhone().classList.remove("active");
+        this.getCamera().then((stream) => {
+            this.updatedLocalStreamCallBack(stream);
+        });
     }
 
     //get camera

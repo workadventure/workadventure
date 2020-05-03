@@ -21,7 +21,7 @@ video{
     right: -100px;
     transition: all 0.2s ease;
 }
-.activeCam:hover video{
+.webrtc:hover .activeCam video{
     right: 10px;
 }
 .activeCam video#myCamVideo{
@@ -58,7 +58,7 @@ video{
     transition-timing-function: ease-in-out;
     bottom: 20px;
 }
-.webrtc:hover .btn-cam-action.active div{
+.webrtc:hover .btn-cam-action div{
     transform: translateY(0);
 }
 .btn-cam-action div:hover{
@@ -68,60 +68,20 @@ video{
 }
 .btn-micro{
     transition: all .3s;
-    left: 168px;
+    right: 10px;
 }
 .btn-video{
     transition: all .2s;
-    left: 84px;
+    right: 114px;
 }
-.btn-call{
+/*.btn-call{
     transition: all .1s;
     left: 0px;
-}
+}*/
 .btn-cam-action div img{
     height: 32px;
     width: 40px;
     top: calc(48px - 32px);
     left: calc(48px - 35px);
     position: relative;
-}
-
-/*Phone Animation*/
-.phone-open{
-    position: absolute;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    left: calc(50% - 70px);
-    padding: 20px;
-    bottom: 20px;
-    box-shadow: 2px 2px 24px #444;
-    background-color: green;
-    opacity: 0;
-    transition: all .4s ease-in-out;
-}
-.phone-open.active{
-    opacity: 1;
-    animation-name: phone-move;
-    animation-duration: 0.4s;
-    animation-iteration-count: infinite;
-    animation-timing-function: linear;
-}
-.phone-open:hover{
-    animation: none;
-    cursor: pointer;
-}
-@keyframes phone-move {
-    0%   {
-        left: calc(50% - 70px);
-        bottom: 20px;
-    }
-    25% {
-        left: calc(50% - 65px);
-        bottom: 15px;
-    }
-    25% {
-        left: calc(50% - 75px);
-        bottom: 25px;
-    }
 }
