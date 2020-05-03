@@ -26,8 +26,8 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     Layers : Array<Phaser.Tilemaps.StaticTilemapLayer>;
     Objects : Array<Phaser.Physics.Arcade.Sprite>;
     map: ITiledMap;
-    startX = (window.innerWidth / 2) / RESOLUTION;
-    startY = (window.innerHeight / 2) / RESOLUTION;
+    startX = 704;// 22 case
+    startY = 32; // 1 case
 
 
     constructor() {

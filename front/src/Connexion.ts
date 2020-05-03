@@ -7,9 +7,11 @@ import {API_URL, ROOM} from "./Enum/EnvironmentVariable";
 enum EventMessage{
     WEBRTC_SIGNAL = "webrtc-signal",
     WEBRTC_START = "webrtc-start",
+    WEBRTC_JOIN_ROOM = "webrtc-join-room",
     JOIN_ROOM = "join-room",
     USER_POSITION = "user-position",
-    MESSAGE_ERROR = "message-error"
+    MESSAGE_ERROR = "message-error",
+    WEBRTC_DISCONNECT = "webrtc-disconect"
 }
 
 class Message {
@@ -131,6 +133,8 @@ export interface ConnexionInterface {
     receiveWebrtcSignal(callBack: Function): void;
 
     receiveWebrtcStart(callBack: Function): void;
+
+    disconnectMessage(callBack: Function): void;
 }
 
 export class Connexion implements ConnexionInterface {
@@ -227,7 +231,7 @@ export class Connexion implements ConnexionInterface {
     }
 
     sendWebrtcSignal(signal: any, roomId: string, userId? : string, receiverId? : string) {
-        this.socket.emit(EventMessage.WEBRTC_SIGNAL, JSON.stringify({
+        return this.socket.emit(EventMessage.WEBRTC_SIGNAL, JSON.stringify({
             userId: userId ? userId : this.userId,
             receiverId: receiverId ? receiverId : this.userId,
             roomId: roomId,
@@ -240,12 +244,16 @@ export class Connexion implements ConnexionInterface {
     }
 
     receiveWebrtcSignal(callback: Function) {
-        this.socket.on(EventMessage.WEBRTC_SIGNAL, callback);
+        return this.socket.on(EventMessage.WEBRTC_SIGNAL, callback);
     }
 
     errorMessage(): void {
         this.socket.on(EventMessage.MESSAGE_ERROR, (message: string) => {
             console.error(EventMessage.MESSAGE_ERROR, message);
         })
+    }
+
+    disconnectMessage(callback: Function): void {
+        this.socket.on(EventMessage.WEBRTC_DISCONNECT, callback);
     }
 }
