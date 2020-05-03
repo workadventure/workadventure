@@ -7,9 +7,9 @@ import {Distance} from "../src/Model//Distance";
 
 describe("World", () => {
     it("should connect user1 and user2", () => {
-        let connectCalled: boolean = false;
+        let connectCalledNumber: number = 0;
         let connect = (user: string, group: Group): void => {
-            connectCalled = true;
+            connectCalledNumber++;
         }
         let disconnect = (user: string, group: Group): void => {
 
@@ -35,7 +35,7 @@ describe("World", () => {
             position: new Point(261, 100)
         }));
 
-        expect(connectCalled).toBe(false);
+        expect(connectCalledNumber).toBe(0);
 
         world.updatePosition(new MessageUserPosition({
             userId: "bar",
@@ -43,15 +43,14 @@ describe("World", () => {
             position: new Point(101, 100)
         }));
 
-        expect(connectCalled).toBe(true);
+        expect(connectCalledNumber).toBe(2);
 
-        connectCalled = false;
         world.updatePosition(new MessageUserPosition({
             userId: "bar",
             roomId: 1,
             position: new Point(102, 100)
         }));
-        expect(connectCalled).toBe(false);
+        expect(connectCalledNumber).toBe(2);
     });
 
     it("should connect 3 users", () => {
@@ -100,12 +99,12 @@ describe("World", () => {
 
     it("should disconnect user1 and user2", () => {
         let connectCalled: boolean = false;
-        let disconnectCalled: boolean = false;
+        let disconnectCallNumber: number = 0;
         let connect = (user: string, group: Group): void => {
             connectCalled = true;
         }
         let disconnect = (user: string, group: Group): void => {
-            disconnectCalled = true;
+            disconnectCallNumber++;
         }
 
         let world = new World(connect, disconnect);
@@ -123,7 +122,7 @@ describe("World", () => {
         }));
 
         expect(connectCalled).toBe(true);
-        expect(disconnectCalled).toBe(false);
+        expect(disconnectCallNumber).toBe(0);
 
         world.updatePosition(new MessageUserPosition({
             userId: "bar",
@@ -131,15 +130,14 @@ describe("World", () => {
             position: new Point(100+160+160+1, 100)
         }));
 
-        expect(disconnectCalled).toBe(true);
+        expect(disconnectCallNumber).toBe(2);
 
-        disconnectCalled = false;
         world.updatePosition(new MessageUserPosition({
             userId: "bar",
             roomId: 1,
             position: new Point(262, 100)
         }));
-        expect(disconnectCalled).toBe(false);
+        expect(disconnectCallNumber).toBe(2);
     });
 
 })
