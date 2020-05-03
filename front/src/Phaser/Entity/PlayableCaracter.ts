@@ -1,5 +1,4 @@
-import {getPlayerAnimations, playAnimation, PlayerAnimationNames} from "../Player/Animation";
-import {ActiveEventList, UserInputEvent} from "../UserInput/UserInputManager";
+import {PlayerAnimationNames} from "../Player/Animation";
 import {SpeechBubble} from "./SpeechBubble";
 import BitmapText = Phaser.GameObjects.BitmapText;
 
