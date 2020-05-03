@@ -4,7 +4,7 @@ import * as http from "http";
 import {MessageUserPosition} from "../Model/Websocket/MessageUserPosition"; //TODO fix import by "_Model/.."
 import {ExSocketInterface} from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
 import Jwt, {JsonWebTokenError} from "jsonwebtoken";
-import {SECRET_KEY} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
+import {SECRET_KEY, MINIMUM_DISTANCE, GROUP_RADIUS} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 import {ExtRooms, RefreshUserPositionFunction} from "../Model/Websocket/ExtRoom";
 import {ExtRoomsInterface} from "../Model/Websocket/ExtRoomsInterface";
 import {World} from "../Model/World";
@@ -48,7 +48,7 @@ export class IoSocketController{
             this.connectedUser(user1, user2);
         }, (user1 : string, user2 : string) => {
             this.disConnectedUser(user1, user2);
-        });
+        }, MINIMUM_DISTANCE, GROUP_RADIUS);
     }
 
     ioConnection() {

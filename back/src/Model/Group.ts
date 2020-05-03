@@ -66,23 +66,6 @@ export class Group {
         return this.users.indexOf(user) !== -1;
     }
 
-    isStillIn(user: UserInterface): boolean
-    {
-        if(!this.isPartOfGroup(user)) {
-            return false;
-        }
-        let stillIn = true;
-        for(let i = 0; i <= this.users.length; i++) {
-            let userInGroup = this.users[i];
-            let distance = World.computeDistance(user, userInGroup);
-            if(distance > World.MIN_DISTANCE) {
-                stillIn = false;
-                break;
-            }
-        }
-        return stillIn;
-    }
-
     /*removeFromGroup(users: UserInterface[]): void
     {
         for(let i = 0; i < users.length; i++){
