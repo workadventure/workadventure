@@ -1,3 +1,7 @@
+video{
+    -webkit-transform: scaleX(-1);
+    transform: scaleX(-1);
+}
 .webrtc{
     display: none;
     position: absolute;
@@ -11,15 +15,18 @@
 .webrtc, .activeCam{}
 .activeCam video{
     position: absolute;
-    width: 300px;
-    height: 20%;
+    height: 25%;
     top: 10px;
-    right: 10px;
     margin: 5px;
+    right: -100px;
+    transition: all 0.2s ease;
+}
+.activeCam:hover video{
+    right: 10px;
 }
 .activeCam video#myCamVideo{
     width: 200px;
-    height: 100px;
+    height: 113px;
 }
 
 /*CSS size for 2 - 3 elements*/

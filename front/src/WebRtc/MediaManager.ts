@@ -1,3 +1,8 @@
+const videoConstraint: {width : any, height: any, facingMode : string} = {
+    width: { ideal: 1280 },
+    height: { ideal: 720 },
+    facingMode: "user"
+};
 export class MediaManager {
     localStream: MediaStream;
     remoteVideo: Array<any> = new Array<any>();
@@ -6,7 +11,10 @@ export class MediaManager {
     cinema: any = null;
     microphoneClose: any = null;
     microphone: any = null;
-    constraintsMedia = {audio: true, video: true};
+    constraintsMedia : {audio : any, video : any} = {
+        audio: true,
+        video: videoConstraint
+    };
     getCameraPromise : Promise<any> = null;
 
     constructor() {
@@ -47,7 +55,7 @@ export class MediaManager {
     enabledCamera() {
         this.cinemaClose.style.display = "none";
         this.cinema.style.display = "block";
-        this.constraintsMedia.video = true;
+        this.constraintsMedia.video = videoConstraint;
         this.localStream = null;
         this.myCamVideo.srcObject = null;
     }
@@ -106,6 +114,13 @@ export class MediaManager {
             .then((stream: MediaStream) => {
                 this.localStream = stream;
                 this.myCamVideo.srcObject = this.localStream;
+
+                //TODO resize remote cam
+                /*console.log(this.localStream.getTracks());
+                let videoMediaStreamTrack =  this.localStream.getTracks().find((media : MediaStreamTrack) => media.kind === "video");
+                let {width, height} = videoMediaStreamTrack.getSettings();
+                console.info(`${width}x${height}`); // 6*/
+
                 return stream;
             }).catch((err) => {
                 console.error(err);
