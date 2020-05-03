@@ -10,7 +10,8 @@ export type ConnectCallback = (user: string, group: Group) => void;
 export type DisconnectCallback = (user: string, group: Group) => void;
 
 export class World {
-    static readonly MIN_DISTANCE = 160;
+    private minDistance: number;
+    private groupRadius: number;
 
     // Users, sorted by ID
     private users: Map<string, UserInterface>;
@@ -19,12 +20,17 @@ export class World {
     private connectCallback: ConnectCallback;
     private disconnectCallback: DisconnectCallback;
 
-    constructor(connectCallback: ConnectCallback, disconnectCallback: DisconnectCallback)
+    constructor(connectCallback: ConnectCallback,
+                disconnectCallback: DisconnectCallback,
+                minDistance: number,
+                groupRadius: number)
     {
         this.users = new Map<string, UserInterface>();
         this.groups = [];
         this.connectCallback = connectCallback;
         this.disconnectCallback = disconnectCallback;
+        this.minDistance = minDistance;
+        this.groupRadius = groupRadius;
     }
 
     public join(userPosition: MessageUserPosition): void {
@@ -76,7 +82,7 @@ export class World {
             // If the user is part of a group:
             //  should he leave the group?
             let distance = World.computeDistanceBetweenPositions(user.position, user.group.getPosition());
-            if (distance > World.MIN_DISTANCE) {
+            if (distance > this.groupRadius) {
                 this.leaveGroup(user);
             }
         }
@@ -106,15 +112,16 @@ export class World {
 
     /**
      * Looks for the closest user that is:
-     * - close enough (distance <= MIN_DISTANCE)
-     * - not in a group OR in a group that is not full
+     * - close enough (distance <= minDistance)
+     * - not in a group
+     * OR
+     * - close enough to a group (distance <= groupRadius)
      */
     private searchClosestAvailableUserOrGroup(user: UserInterface): UserInterface|Group|null
     {
-        let usersToBeGroupedWith: Distance[] = [];
-        let minimumDistanceFound: number = World.MIN_DISTANCE;
+        let minimumDistanceFound: number = Math.max(this.minDistance, this.groupRadius);
         let matchingItem: UserInterface | Group | null = null;
-        this.users.forEach(function(currentUser, userId) {
+        this.users.forEach((currentUser, userId) => {
             // Let's only check users that are not part of a group
             if (typeof currentUser.group !== 'undefined') {
                 return;
@@ -125,7 +132,7 @@ export class World {
 
             let distance = World.computeDistance(user, currentUser); // compute distance between peers.
 
-            if(distance <= minimumDistanceFound) {
+            if(distance <= minimumDistanceFound && distance <= this.minDistance) {
                 minimumDistanceFound = distance;
                 matchingItem = currentUser;
             }
@@ -165,12 +172,12 @@ export class World {
             */
         });
 
-        this.groups.forEach(function(group: Group) {
+        this.groups.forEach((group: Group) => {
             if (group.isFull()) {
                 return;
             }
             let distance = World.computeDistanceBetweenPositions(user.position, group.getPosition());
-            if(distance <= minimumDistanceFound) {
+            if(distance <= minimumDistanceFound && distance <= this.groupRadius) {
                 minimumDistanceFound = distance;
                 matchingItem = group;
             }
