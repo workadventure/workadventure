@@ -50,7 +50,7 @@ export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
 
     stop(){
         this.setVelocity(0, 0);
-        this.play(PlayerAnimationNames.None, true);
+        this.anims.stop();
     }
 
     say(text: string) {
