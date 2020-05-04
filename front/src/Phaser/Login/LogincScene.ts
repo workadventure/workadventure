@@ -4,6 +4,7 @@ import {TextInput} from "../Components/TextInput";
 import {ClickButton} from "../Components/ClickButton";
 import {GameSceneName} from "../Game/GameScene";
 import Image = Phaser.GameObjects.Image;
+import {cypressAsserter} from "../../Cypress/CypressAsserter";
 
 //todo: put this constants in a dedicated file
 export const LoginSceneName = "LoginScene";
@@ -28,13 +29,17 @@ export class LogincScene extends Phaser.Scene {
     }
 
     preload() {
+        cypressAsserter.preloadStarted();
         //this.load.image(LoginTextures.playButton, "resources/objects/play_button.png");
         this.load.image(LoginTextures.icon, "resources/logos/tcm_full.png");
         // Note: arcade.png from the Phaser 3 examples at: https://github.com/photonstorm/phaser3-examples/tree/master/public/assets/fonts/bitmap
         this.load.bitmapFont(LoginTextures.mainFont, 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
+        cypressAsserter.preloadFinished();
     }
 
     create() {
+        cypressAsserter.initStarted();
+
         this.textField = new TextField(this, this.game.renderer.width / 2, 50, 'Enter your name:');
         this.textField.setOrigin(0.5).setCenterAlign()
         this.nameInput = new TextInput(this, this.game.renderer.width / 2 - 64, 70, 4);
@@ -59,7 +64,7 @@ export class LogincScene extends Phaser.Scene {
             }
             return this.login(name);
         });
-
+        cypressAsserter.initFinished();
     }
 
     update(time: number, delta: number): void {
