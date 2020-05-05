@@ -59,7 +59,6 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
 
     moveUser(delta: number): void {
         //if user client on shift, camera and player speed
-        let haveMove = false;
         let direction = null;
 
         let activeEvents = this.userInputManager.getEventListForGameTick();
@@ -84,11 +83,18 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
         }
         if (x !== 0 || y !== 0) {
             this.move(x, y);
+            this.emit(hasMovedEventName, {direction, x: this.x, y: this.y});
         } else {
-            direction = PlayerAnimationNames.None;
-            this.stop();
+            if (this.previousMove !== PlayerAnimationNames.None) {
+                direction = PlayerAnimationNames.None;
+                this.stop();
+                this.emit(hasMovedEventName, {direction, x: this.x, y: this.y});
+            }
         }
-        this.emit(hasMovedEventName, {direction, x: this.x, y: this.y, frame: this.PlayerTexture});
+
+        if (direction !== null) {
+            this.previousMove = direction;
+        }
     }
 
     //todo: put this method into the NonPlayer class instead
