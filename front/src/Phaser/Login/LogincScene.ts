@@ -1,4 +1,4 @@
-import {gameManager, HasMovedEvent} from "../Game/GameManager";
+import {gameManager} from "../Game/GameManager";
 import {TextField} from "../Components/TextField";
 import {TextInput} from "../Components/TextInput";
 import {ClickButton} from "../Components/ClickButton";
@@ -7,6 +7,7 @@ import Image = Phaser.GameObjects.Image;
 import {Player} from "../Player/Player";
 import {getPlayerAnimations, PlayerAnimationNames} from "../Player/Animation";
 import Rectangle = Phaser.GameObjects.Rectangle;
+import {PLAYER_RESOURCES} from "../Entity/PlayableCaracter";
 
 //todo: put this constants in a dedicated file
 export const LoginSceneName = "LoginScene";
@@ -28,28 +29,6 @@ export class LogincScene extends Phaser.Scene implements GameSceneInterface {
     private selectedPlayer: Phaser.Physics.Arcade.Sprite;
     private players: Array<Phaser.Physics.Arcade.Sprite> = new Array<Phaser.Physics.Arcade.Sprite>();
 
-    private playerResources: Array<any> = [
-        {name: "male1", img: "resources/characters/pipoya/Male 01-1.png", x: 32, y: 32},
-        {name: "male2", img: "resources/characters/pipoya/Male 02-2.png", x: 64, y: 32},
-        {name: "male3", img: "resources/characters/pipoya/Male 03-4.png", x: 96, y: 32},
-        {name: "male4", img: "resources/characters/pipoya/Male 09-1.png", x: 128, y: 32},
-
-        {name: "male5", img: "resources/characters/pipoya/Male 10-3.png", x: 32, y: 64},
-        {name: "male6", img: "resources/characters/pipoya/Male 17-2.png", x: 64, y: 64},
-        {name: "male7", img: "resources/characters/pipoya/Male 18-1.png", x: 96, y: 64},
-        {name: "male8", img: "resources/characters/pipoya/Male 16-4.png", x: 128, y: 64},
-
-        {name: "Female1", img: "resources/characters/pipoya/Female 01-1.png", x: 32, y: 96},
-        {name: "Female2", img: "resources/characters/pipoya/Female 02-2.png", x: 64, y: 96},
-        {name: "Female3", img: "resources/characters/pipoya/Female 03-4.png", x: 96, y: 96},
-        {name: "Female4", img: "resources/characters/pipoya/Female 09-1.png", x: 128, y: 96},
-
-        {name: "Female5", img: "resources/characters/pipoya/Female 10-3.png", x: 32, y: 128},
-        {name: "Female6", img: "resources/characters/pipoya/Female 17-2.png", x: 64, y: 128},
-        {name: "Female7", img: "resources/characters/pipoya/Female 18-1.png", x: 96, y: 128},
-        {name: "Female8", img: "resources/characters/pipoya/Female 16-4.png", x: 128, y: 128}
-    ];
-
     constructor() {
         super({
             key: LoginSceneName
@@ -62,7 +41,7 @@ export class LogincScene extends Phaser.Scene implements GameSceneInterface {
         // Note: arcade.png from the Phaser 3 examples at: https://github.com/photonstorm/phaser3-examples/tree/master/public/assets/fonts/bitmap
         this.load.bitmapFont(LoginTextures.mainFont, 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
         //add player png
-        this.playerResources.forEach((playerResource: any) => {
+        PLAYER_RESOURCES.forEach((playerResource: any) => {
             this.load.spritesheet(
                 playerResource.name,
                 playerResource.img,
@@ -108,7 +87,7 @@ export class LogincScene extends Phaser.Scene implements GameSceneInterface {
     }
 
     private async login(name: string) {
-        gameManager.connect(name).then(() => {
+        gameManager.connect(name, this.selectedPlayer.texture.key).then(() => {
             this.scene.start(GameSceneName);
         });
     }
@@ -120,8 +99,8 @@ export class LogincScene extends Phaser.Scene implements GameSceneInterface {
     }
 
     createCurrentPlayer(UserId: string): void {
-        for (let i = 0; i < this.playerResources.length; i++) {
-            let playerResource = this.playerResources[i];
+        for (let i = 0; i <PLAYER_RESOURCES.length; i++) {
+            let playerResource = PLAYER_RESOURCES[i];
             let player = this.physics.add.sprite(playerResource.x, playerResource.y, playerResource.name, playerResource.name);
             player.setBounce(0.2);
             player.setCollideWorldBounds(true);
@@ -141,7 +120,7 @@ export class LogincScene extends Phaser.Scene implements GameSceneInterface {
             this.players.push(player);
         }
         this.selectedPlayer = this.players[0];
-        this.selectedPlayer.play(this.playerResources[0].name);
+        this.selectedPlayer.play(PLAYER_RESOURCES[0].name);
     }
 
     shareUserPosition(UsersPosition: import("../../Connexion").MessageUserPositionInterface[]): void {

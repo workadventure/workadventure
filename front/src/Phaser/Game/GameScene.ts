@@ -5,10 +5,11 @@ import {DEBUG_MODE, RESOLUTION, ROOM, ZOOM_LEVEL} from "../../Enum/EnvironmentVa
 import Tile = Phaser.Tilemaps.Tile;
 import {ITiledMap, ITiledTileSet} from "../Map/ITiledMap";
 import {cypressAsserter} from "../../Cypress/CypressAsserter";
+import {PLAYER_RESOURCES} from "../Entity/PlayableCaracter";
 
 export const GameSceneName = "GameScene";
 export enum Textures {
-    Player = 'playerModel',
+    Player = 'male1',
     Map = 'map'
 }
 
@@ -57,10 +58,16 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             })
         });
         this.load.tilemapTiledJSON(Textures.Map, mapUrl);
-        this.load.spritesheet(Textures.Player,
-            'resources/characters/pipoya/Male 01-1.png',
-            { frameWidth: 32, frameHeight: 32 }
-        );
+
+        //add player png
+        PLAYER_RESOURCES.forEach((playerResource: any) => {
+            this.load.spritesheet(
+                playerResource.name,
+                playerResource.img,
+                {frameWidth: 32, frameHeight: 32}
+            );
+        });
+
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
 
         cypressAsserter.preloadFinished();
@@ -165,7 +172,8 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             this,
             this.startX,
             this.startY,
-            this.GameManager.getPlayerName()
+            this.GameManager.getPlayerName(),
+            this.GameManager.getFrameSelected()
         );
         this.CurrentPlayer.initAnimation();
 
@@ -258,7 +266,8 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             this,
             MessageUserPosition.position.x,
             MessageUserPosition.position.y,
-            MessageUserPosition.name
+            MessageUserPosition.name,
+            MessageUserPosition.frame
         );
         player.initAnimation();
         this.MapPlayers.add(player);

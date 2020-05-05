@@ -13,6 +13,7 @@ export interface HasMovedEvent {
     direction: string;
     x: number;
     y: number;
+    frame: string;
 }
 
 export class GameManager {
@@ -21,15 +22,17 @@ export class GameManager {
     private currentGameScene: GameScene;
     private playerName: string;
     SimplePeer : SimplePeerInterface;
+    private frameUserSelected: string;
 
     constructor() {
         this.status = StatusGameManagerEnum.IN_PROGRESS;
     }
 
-    connect(name:string) {
+    connect(name: string, frameUserSelected : string) {
         this.playerName = name;
+        this.frameUserSelected = frameUserSelected;
         this.ConnexionInstance = new Connexion(name, this);
-        return this.ConnexionInstance.createConnexion().then(() => {
+        return this.ConnexionInstance.createConnexion(frameUserSelected).then(() => {
             this.SimplePeer = new SimplePeer(this.ConnexionInstance);
         });
     }
@@ -67,8 +70,12 @@ export class GameManager {
         return this.playerName;
     }
 
+    getFrameSelected(): string {
+        return this.frameUserSelected;
+    }
+
     pushPlayerPosition(event: HasMovedEvent) {
-        this.ConnexionInstance.sharePosition(event.x, event.y, event.direction);
+        this.ConnexionInstance.sharePosition(event.x, event.y, event.frame, event.direction);
     }
 }
 
