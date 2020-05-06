@@ -19,7 +19,7 @@ export enum PlayerAnimationNames {
 
 export const getPlayerAnimations = (name: string = Textures.Player): AnimationData[] => {
     return [{
-        key: `${name}-${PlayerAnimationNames.WalkDown}`, //TODO chnage, it's a key for one anumation of ine user type.
+        key: `${name}-${PlayerAnimationNames.WalkDown}`,
         frameModel: name,
         frameStart: 0,
         frameEnd: 2,
