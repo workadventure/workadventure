@@ -1,6 +1,8 @@
 export class Message {
     userId: string;
     roomId: string;
+    name: string;
+    frame: string;
 
     constructor(data: any) {
         if (!data.userId || !data.roomId) {
@@ -8,12 +10,16 @@ export class Message {
         }
         this.userId = data.userId;
         this.roomId = data.roomId;
+        this.name = data.name;
+        this.frame = data.frame;
     }
 
     toJson() {
         return {
             userId: this.userId,
-            roomId: this.roomId
+            roomId: this.roomId,
+            name: this.name,
+            frame: this.frame
         }
     }
 }

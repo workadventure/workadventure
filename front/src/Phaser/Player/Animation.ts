@@ -17,31 +17,31 @@ export enum PlayerAnimationNames {
     None = 'none',
 }
 
-export const getPlayerAnimations = (): AnimationData[] => {
+export const getPlayerAnimations = (name: string = Textures.Player): AnimationData[] => {
     return [{
-        key: PlayerAnimationNames.WalkDown,
-        frameModel: Textures.Player,
+        key: `${name}-${PlayerAnimationNames.WalkDown}`,
+        frameModel: name,
         frameStart: 0,
         frameEnd: 2,
         frameRate: 10,
         repeat: -1
     }, {
-        key: PlayerAnimationNames.WalkLeft,
-        frameModel: Textures.Player,
+        key: `${name}-${PlayerAnimationNames.WalkLeft}`,
+        frameModel: name,
         frameStart: 3,
         frameEnd: 5,
         frameRate: 10,
         repeat: -1
     }, {
-        key: PlayerAnimationNames.WalkRight,
-        frameModel: Textures.Player,
+        key: `${name}-${PlayerAnimationNames.WalkRight}`,
+        frameModel: name,
         frameStart: 6,
         frameEnd: 8,
         frameRate: 10,
         repeat: -1
     }, {
-        key: PlayerAnimationNames.WalkUp,
-        frameModel: Textures.Player,
+        key: `${name}-${PlayerAnimationNames.WalkUp}`,
+        frameModel: name,
         frameStart: 9,
         frameEnd: 11,
         frameRate: 10,

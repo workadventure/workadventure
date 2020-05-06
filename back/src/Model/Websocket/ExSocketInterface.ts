@@ -6,5 +6,7 @@ export interface ExSocketInterface extends Socket {
     roomId: string;
     webRtcRoomId: string;
     userId: string;
+    name: string;
+    frame: string;
     position: PointInterface;
 }

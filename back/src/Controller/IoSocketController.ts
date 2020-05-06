@@ -215,6 +215,8 @@ export class IoSocketController {
         socket.position = message.position;
         socket.roomId = message.roomId;
         socket.userId = message.userId;
+        socket.name = message.name;
+        socket.frame = message.frame;
     }
 
     refreshUserPosition() {

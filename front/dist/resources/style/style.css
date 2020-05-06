@@ -49,8 +49,8 @@ video{
     cursor: pointer;
     position: absolute;
     border: solid 0px black;
-    width: 64px;
-    height: 64px;
+    width: 44px;
+    height: 44px;
     background: #666;
     box-shadow: 2px 2px 24px #444;
     border-radius: 48px;
@@ -68,20 +68,20 @@ video{
 }
 .btn-micro{
     transition: all .3s;
-    right: 10px;
+    right: 44px;
 }
 .btn-video{
     transition: all .2s;
-    right: 114px;
+    right: 134px;
 }
 /*.btn-call{
     transition: all .1s;
     left: 0px;
 }*/
 .btn-cam-action div img{
-    height: 32px;
-    width: 40px;
-    top: calc(48px - 32px);
-    left: calc(48px - 35px);
+    height: 22px;
+    width: 30px;
+    top: calc(48px - 37px);
+    left: calc(48px - 41px);
     position: relative;
 }

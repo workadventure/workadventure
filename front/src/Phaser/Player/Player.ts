@@ -8,7 +8,6 @@ import {PlayableCaracter} from "../Entity/PlayableCaracter";
 export const hasMovedEventName = "hasMoved";
 export interface CurrentGamerInterface extends PlayableCaracter{
     userId : string;
-    PlayerValue : string;
     initAnimation() : void;
     moveUser(delta: number) : void;
     say(text : string) : void;
@@ -16,7 +15,6 @@ export interface CurrentGamerInterface extends PlayableCaracter{
 
 export interface GamerInterface extends PlayableCaracter{
     userId : string;
-    PlayerValue : string;
     initAnimation() : void;
     updatePosition(MessageUserPosition : MessageUserPositionInterface) : void;
     say(text : string) : void;
@@ -24,7 +22,6 @@ export interface GamerInterface extends PlayableCaracter{
 
 export class Player extends PlayableCaracter implements CurrentGamerInterface, GamerInterface {
     userId: string;
-    PlayerValue: string;
     userInputManager: UserInputManager;
     previousMove: string;
 
@@ -34,23 +31,23 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
         x: number,
         y: number,
         name: string,
-        PlayerValue: string = Textures.Player
+        PlayerTexture: string = Textures.Player
     ) {
-        super(Scene, x, y, PlayerValue, name, 1);
+        super(Scene, x, y, PlayerTexture, name, 1);
 
         //create input to move
         this.userInputManager = new UserInputManager(Scene);
 
         //set data
         this.userId = userId;
-        this.PlayerValue = PlayerValue;
+
 
         //the current player model should be push away by other players to prevent conflict
         this.setImmovable(false);
     }
 
     initAnimation(): void {
-        getPlayerAnimations().forEach(d => {
+        getPlayerAnimations(this.PlayerTexture).forEach(d => {
             this.scene.anims.create({
                 key: d.key,
                 frames: this.scene.anims.generateFrameNumbers(d.frameModel, {start: d.frameStart, end: d.frameEnd}),
@@ -62,7 +59,6 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
 
     moveUser(delta: number): void {
         //if user client on shift, camera and player speed
-        let haveMove = false;
         let direction = null;
 
         let activeEvents = this.userInputManager.getEventListForGameTick();
@@ -73,26 +69,32 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
         let y = 0;
         if (activeEvents.get(UserInputEvent.MoveUp)) {
             y = - moveAmount;
-            direction = PlayerAnimationNames.WalkUp;
+            direction = `${this.PlayerTexture}-${PlayerAnimationNames.WalkUp}`;
         } else if (activeEvents.get(UserInputEvent.MoveDown)) {
             y = moveAmount;
-            direction = PlayerAnimationNames.WalkDown;
+            direction = `${this.PlayerTexture}-${PlayerAnimationNames.WalkDown}`;
         }
         if (activeEvents.get(UserInputEvent.MoveLeft)) {
             x = -moveAmount;
-            direction = PlayerAnimationNames.WalkLeft;
+            direction = `${this.PlayerTexture}-${PlayerAnimationNames.WalkLeft}`;
         } else if (activeEvents.get(UserInputEvent.MoveRight)) {
             x = moveAmount;
-            direction = PlayerAnimationNames.WalkRight;
+            direction = `${this.PlayerTexture}-${PlayerAnimationNames.WalkRight}`;
         }
         if (x !== 0 || y !== 0) {
             this.move(x, y);
+            this.emit(hasMovedEventName, {direction, x: this.x, y: this.y, frame: this.PlayerTexture});
         } else {
-            direction = PlayerAnimationNames.None;
-            this.stop();
+            if (this.previousMove !== PlayerAnimationNames.None) {
+                direction = PlayerAnimationNames.None;
+                this.stop();
+                this.emit(hasMovedEventName, {direction, x: this.x, y: this.y, frame: this.PlayerTexture});
+            }
         }
 
-        this.emit(hasMovedEventName, {direction, x: this.x, y: this.y});
+        if (direction !== null) {
+            this.previousMove = direction;
+        }
     }
 
     //todo: put this method into the NonPlayer class instead
@@ -100,5 +102,6 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
         playAnimation(this, MessageUserPosition.position.direction);
         this.setX(MessageUserPosition.position.x);
         this.setY(MessageUserPosition.position.y);
+        this.updatePlayerNamePosition(MessageUserPosition.position.x, MessageUserPosition.position.y);
     }
 }

@@ -2,8 +2,12 @@ import {gameManager} from "../Game/GameManager";
 import {TextField} from "../Components/TextField";
 import {TextInput} from "../Components/TextInput";
 import {ClickButton} from "../Components/ClickButton";
-import {GameSceneName} from "../Game/GameScene";
+import {GameSceneInterface, GameSceneName, Textures} from "../Game/GameScene";
 import Image = Phaser.GameObjects.Image;
+import {Player} from "../Player/Player";
+import {getPlayerAnimations, PlayerAnimationNames} from "../Player/Animation";
+import Rectangle = Phaser.GameObjects.Rectangle;
+import {PLAYER_RESOURCES} from "../Entity/PlayableCaracter";
 import {cypressAsserter} from "../../Cypress/CypressAsserter";
 
 //todo: put this constants in a dedicated file
@@ -14,13 +18,17 @@ enum LoginTextures {
     mainFont = "main_font"
 }
 
-export class LogincScene extends Phaser.Scene {
+export class LogincScene extends Phaser.Scene implements GameSceneInterface {
     private nameInput: TextInput;
     private textField: TextField;
     private playButton: ClickButton;
     private infoTextField: TextField;
     private pressReturnField: TextField;
     private logo: Image;
+
+    private selectedRectangle: Rectangle;
+    private selectedPlayer: Phaser.Physics.Arcade.Sprite;
+    private players: Array<Phaser.Physics.Arcade.Sprite> = new Array<Phaser.Physics.Arcade.Sprite>();
 
     constructor() {
         super({
@@ -35,6 +43,14 @@ export class LogincScene extends Phaser.Scene {
         // Note: arcade.png from the Phaser 3 examples at: https://github.com/photonstorm/phaser3-examples/tree/master/public/assets/fonts/bitmap
         this.load.bitmapFont(LoginTextures.mainFont, 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
         cypressAsserter.preloadFinished();
+        //add player png
+        PLAYER_RESOURCES.forEach((playerResource: any) => {
+            this.load.spritesheet(
+                playerResource.name,
+                playerResource.img,
+                {frameWidth: 32, frameHeight: 32}
+            );
+        });
     }
 
     create() {
@@ -47,9 +63,7 @@ export class LogincScene extends Phaser.Scene {
         this.pressReturnField = new TextField(this, this.game.renderer.width / 2, 130, 'Press enter to start');
         this.pressReturnField.setOrigin(0.5).setCenterAlign()
 
-        //let x = this.game.renderer.width / 2;
-        //let y = this.game.renderer.height / 2;
-        //this.playButton = new ClickButton(this, x, y, LoginTextures.playButton, this.login.bind(this));
+        this.selectedRectangle = this.add.rectangle(32, 32, 32, 32).setStrokeStyle(2, 0xFFFFFF);
 
         this.logo = new Image(this, this.game.renderer.width - 30, this.game.renderer.height - 20, LoginTextures.icon);
         this.add.existing(this.logo);
@@ -64,6 +78,9 @@ export class LogincScene extends Phaser.Scene {
             }
             return this.login(name);
         });
+
+        /*create user*/
+        this.createCurrentPlayer("test");
         cypressAsserter.initFinished();
     }
 
@@ -76,8 +93,43 @@ export class LogincScene extends Phaser.Scene {
     }
 
     private async login(name: string) {
-        gameManager.connect(name).then(() => {
+        gameManager.connect(name, this.selectedPlayer.texture.key).then(() => {
             this.scene.start(GameSceneName);
         });
+    }
+
+    Map: Phaser.Tilemaps.Tilemap;
+
+    initAnimation(): void {
+
+    }
+
+    createCurrentPlayer(UserId: string): void {
+        for (let i = 0; i <PLAYER_RESOURCES.length; i++) {
+            let playerResource = PLAYER_RESOURCES[i];
+            let player = this.physics.add.sprite(playerResource.x, playerResource.y, playerResource.name, playerResource.name);
+            player.setBounce(0.2);
+            player.setCollideWorldBounds(true);
+            this.anims.create({
+                key: playerResource.name,
+                frames: this.anims.generateFrameNumbers(playerResource.name, {start: 0, end: 2,}),
+                frameRate: 10,
+                repeat: -1
+            });
+            player.setInteractive().on("pointerdown", () => {
+                this.selectedPlayer.anims.pause();
+                this.selectedRectangle.setY(player.y);
+                this.selectedRectangle.setX(player.x);
+                player.play(playerResource.name);
+                this.selectedPlayer = player;
+            });
+            this.players.push(player);
+        }
+        this.selectedPlayer = this.players[0];
+        this.selectedPlayer.play(PLAYER_RESOURCES[0].name);
+    }
+
+    shareUserPosition(UsersPosition: import("../../Connexion").MessageUserPositionInterface[]): void {
+        throw new Error("Method not implemented.");
     }
 }
