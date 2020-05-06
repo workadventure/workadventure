@@ -42,7 +42,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     //hook preload scene
     preload(): void {
         this.GameManager.setCurrentGameScene(this);
-        cypressAsserter.preloadStarted();
         let mapUrl = 'maps/map.json';
         this.load.on('filecomplete-tilemapJSON-'+Textures.Map, (key: string, type: string, data: any) => {
             // Triggered when the map is loaded
@@ -69,8 +68,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         });
 
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
-
-        cypressAsserter.preloadFinished();
     }
 
     //hook initialisation
@@ -79,8 +76,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
     //hook create scene
     create(): void {
-        cypressAsserter.initStarted();
-
         //initalise map
         this.Map = this.add.tilemap("map");
         this.map.tilesets.forEach((tileset: ITiledTileSet) => {
@@ -120,7 +115,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
         //initialise camera
         this.initCamera();
-        cypressAsserter.initFinished();
     }
 
     //todo: in a dedicated class/function?
@@ -182,7 +176,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         this.createCollisionObject();
         this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this))
     }
-    
+
     pushPlayerPosition(event: HasMovedEvent) {
         this.GameManager.pushPlayerPosition(event);
     }
