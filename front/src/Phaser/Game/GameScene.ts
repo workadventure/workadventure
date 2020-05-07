@@ -1,11 +1,13 @@
 import {GameManager, gameManager, HasMovedEvent, StatusGameManagerEnum} from "./GameManager";
-import {MessageUserPositionInterface} from "../../Connexion";
+import {GroupCreatedUpdatedMessageInterface, MessageUserPositionInterface} from "../../Connexion";
 import {CurrentGamerInterface, GamerInterface, hasMovedEventName, Player} from "../Player/Player";
 import {DEBUG_MODE, RESOLUTION, ROOM, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import Tile = Phaser.Tilemaps.Tile;
 import {ITiledMap, ITiledTileSet} from "../Map/ITiledMap";
 import {cypressAsserter} from "../../Cypress/CypressAsserter";
 import {PLAYER_RESOURCES} from "../Entity/PlayableCaracter";
+import Circle = Phaser.Geom.Circle;
+import Graphics = Phaser.GameObjects.Graphics;
 
 export const GameSceneName = "GameScene";
 export enum Textures {
@@ -27,9 +29,12 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     Layers : Array<Phaser.Tilemaps.StaticTilemapLayer>;
     Objects : Array<Phaser.Physics.Arcade.Sprite>;
     map: ITiledMap;
+    groups: Map<string, Circle>
     startX = 704;// 22 case
     startY = 32; // 1 case
 
+    // Note: graphics object is costly to generate. We should find another way (maybe sprite based way to draw circles)
+    graphics: Graphics;
 
     constructor() {
         super({
@@ -37,6 +42,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         });
         this.GameManager = gameManager;
         this.Terrains = [];
+        this.groups = new Map<string, Circle>();
     }
 
     //hook preload scene
@@ -115,6 +121,8 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
         //initialise camera
         this.initCamera();
+
+        this.graphics = this.add.graphics();
     }
 
     //todo: in a dedicated class/function?
@@ -199,6 +207,13 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
      */
     update(time: number, delta: number) : void {
         this.CurrentPlayer.moveUser(delta);
+
+        // Also, let's redraw the circle (can be costly, we need to change this!)
+        this.graphics.clear();
+        this.graphics.lineStyle(1, 0x00ff00, 0.4);
+        this.groups.forEach((circle: Circle) => {
+            this.graphics.strokeCircleShape(circle);
+        })
     }
 
     /**
@@ -271,5 +286,22 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         this.physics.add.collider(this.CurrentPlayer, player, (CurrentPlayer: CurrentGamerInterface, MapPlayer: GamerInterface) => {
             CurrentPlayer.say("Hello, how are you ? ");
         });
+    }
+
+    shareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface) {
+        let groupId = groupPositionMessage.groupId;
+
+        if (this.groups.has(groupId)) {
+            this.groups.get(groupId).setPosition(groupPositionMessage.position.x, groupPositionMessage.position.y);
+        } else {
+            //console.log('Adding group ', groupId, ' to the scene');
+            // TODO: circle radius should not be hard stored
+            this.groups.set(groupId, new Circle(groupPositionMessage.position.x, groupPositionMessage.position.y, 48));
+        }
+    }
+
+    deleteGroup(groupId: string): void {
+        //console.log('Deleting group ', groupId);
+        this.groups.delete(groupId);
     }
 }
