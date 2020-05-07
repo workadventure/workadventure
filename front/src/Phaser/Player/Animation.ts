@@ -50,9 +50,10 @@ export const getPlayerAnimations = (name: string = Textures.Player): AnimationDa
 };
 
 export const playAnimation = (Player : Phaser.GameObjects.Sprite, direction : string) => {
-    if (!Player.anims.currentAnim || Player.anims.currentAnim.key !== direction) {
+    if (direction !== PlayerAnimationNames.None && (!Player.anims.currentAnim || Player.anims.currentAnim.key !== direction)) {
         Player.anims.play(direction);
     } else if (direction === PlayerAnimationNames.None && Player.anims.currentAnim) {
-        Player.anims.currentAnim.destroy();
+        //Player.anims.currentAnim.destroy();
+        Player.anims.stop();
     }
 }
