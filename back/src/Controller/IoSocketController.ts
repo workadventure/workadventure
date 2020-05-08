@@ -205,7 +205,11 @@ export class IoSocketController {
         }));
 
         //disconnect webrtc room
+        if(!Client.webRtcRoomId){
+            return;
+        }
         Client.leave(Client.webRtcRoomId);
+        delete Client.webRtcRoomId;
     }
 
     /**
