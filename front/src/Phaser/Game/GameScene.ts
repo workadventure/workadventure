@@ -8,6 +8,9 @@ import {cypressAsserter} from "../../Cypress/CypressAsserter";
 import {PLAYER_RESOURCES} from "../Entity/PlayableCaracter";
 import Circle = Phaser.Geom.Circle;
 import Graphics = Phaser.GameObjects.Graphics;
+import Texture = Phaser.Textures.Texture;
+import Sprite = Phaser.GameObjects.Sprite;
+import CanvasTexture = Phaser.Textures.CanvasTexture;
 
 export const GameSceneName = "GameScene";
 export enum Textures {
@@ -29,12 +32,10 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     Layers : Array<Phaser.Tilemaps.StaticTilemapLayer>;
     Objects : Array<Phaser.Physics.Arcade.Sprite>;
     map: ITiledMap;
-    groups: Map<string, Circle>
+    groups: Map<string, Sprite>
     startX = 704;// 22 case
     startY = 32; // 1 case
-
-    // Note: graphics object is costly to generate. We should find another way (maybe sprite based way to draw circles)
-    graphics: Graphics;
+    circleTexture: CanvasTexture;
 
     constructor() {
         super({
@@ -42,7 +43,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         });
         this.GameManager = gameManager;
         this.Terrains = [];
-        this.groups = new Map<string, Circle>();
+        this.groups = new Map<string, Sprite>();
     }
 
     //hook preload scene
@@ -122,7 +123,18 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         //initialise camera
         this.initCamera();
 
-        this.graphics = this.add.graphics();
+
+        // Let's generate the circle for the group delimiter
+
+        this.circleTexture = this.textures.createCanvas('circleSprite', 96, 96);
+        let context = this.circleTexture.context;
+        context.beginPath();
+        context.arc(48, 48, 48, 0, 2 * Math.PI, false);
+        // context.lineWidth = 5;
+        context.strokeStyle = '#ffffff';
+        context.stroke();
+
+        this.circleTexture.refresh();
     }
 
     //todo: in a dedicated class/function?
@@ -207,13 +219,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
      */
     update(time: number, delta: number) : void {
         this.CurrentPlayer.moveUser(delta);
-
-        // Also, let's redraw the circle (can be costly, we need to change this!)
-        this.graphics.clear();
-        this.graphics.lineStyle(1, 0x00ff00, 0.4);
-        this.groups.forEach((circle: Circle) => {
-            this.graphics.strokeCircleShape(circle);
-        })
     }
 
     /**
@@ -292,16 +297,18 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         let groupId = groupPositionMessage.groupId;
 
         if (this.groups.has(groupId)) {
-            this.groups.get(groupId).setPosition(groupPositionMessage.position.x, groupPositionMessage.position.y);
+            this.groups.get(groupId).setPosition(Math.round(groupPositionMessage.position.x), Math.round(groupPositionMessage.position.y));
         } else {
-            //console.log('Adding group ', groupId, ' to the scene');
             // TODO: circle radius should not be hard stored
-            this.groups.set(groupId, new Circle(groupPositionMessage.position.x, groupPositionMessage.position.y, 48));
+            let sprite = new Sprite(this, Math.round(groupPositionMessage.position.x), Math.round(groupPositionMessage.position.y), 'circleSprite');
+            sprite.setDisplayOrigin(48, 48);
+            this.add.existing(sprite);
+            this.groups.set(groupId, sprite);
         }
     }
 
     deleteGroup(groupId: string): void {
-        //console.log('Deleting group ', groupId);
+        this.groups.get(groupId).destroy();
         this.groups.delete(groupId);
     }
 }
