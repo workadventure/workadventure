@@ -1,6 +1,11 @@
 import {GameScene} from "./GameScene";
 import {ROOM} from "../../Enum/EnvironmentVariable"
-import {Connexion, ConnexionInterface, ListMessageUserPositionInterface} from "../../Connexion";
+import {
+    Connexion,
+    ConnexionInterface,
+    GroupCreatedUpdatedMessageInterface,
+    ListMessageUserPositionInterface
+} from "../../Connexion";
 import {SimplePeerInterface, SimplePeer} from "../../WebRtc/SimplePeer";
 import {LogincScene} from "../Login/LogincScene";
 
@@ -61,6 +66,31 @@ export class GameManager {
         }
         try {
             this.currentGameScene.shareUserPosition(ListMessageUserPosition.listUsersPosition)
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    /**
+     * Share group position in game
+     */
+    shareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface): void {
+        if (this.status === StatusGameManagerEnum.IN_PROGRESS) {
+            return;
+        }
+        try {
+            this.currentGameScene.shareGroupPosition(groupPositionMessage)
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    deleteGroup(groupId: string): void {
+        if (this.status === StatusGameManagerEnum.IN_PROGRESS) {
+            return;
+        }
+        try {
+            this.currentGameScene.deleteGroup(groupId)
         } catch (e) {
             console.error(e);
         }

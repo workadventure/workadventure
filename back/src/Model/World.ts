@@ -9,6 +9,10 @@ import {PositionInterface} from "_Model/PositionInterface";
 export type ConnectCallback = (user: string, group: Group) => void;
 export type DisconnectCallback = (user: string, group: Group) => void;
 
+// callback called when a group is created or moved or changes users
+export type GroupUpdatedCallback = (group: Group) => void;
+export type GroupDeletedCallback = (uuid: string, lastUser: UserInterface) => void;
+
 export class World {
     private minDistance: number;
     private groupRadius: number;
@@ -19,11 +23,15 @@ export class World {
 
     private connectCallback: ConnectCallback;
     private disconnectCallback: DisconnectCallback;
+    private groupUpdatedCallback: GroupUpdatedCallback;
+    private groupDeletedCallback: GroupDeletedCallback;
 
     constructor(connectCallback: ConnectCallback,
                 disconnectCallback: DisconnectCallback,
                 minDistance: number,
-                groupRadius: number)
+                groupRadius: number,
+                groupUpdatedCallback: GroupUpdatedCallback,
+                groupDeletedCallback: GroupDeletedCallback)
     {
         this.users = new Map<string, UserInterface>();
         this.groups = [];
@@ -31,6 +39,8 @@ export class World {
         this.disconnectCallback = disconnectCallback;
         this.minDistance = minDistance;
         this.groupRadius = groupRadius;
+        this.groupUpdatedCallback = groupUpdatedCallback;
+        this.groupDeletedCallback = groupDeletedCallback;
     }
 
     public join(userPosition: MessageUserPosition): void {
@@ -86,6 +96,11 @@ export class World {
                 this.leaveGroup(user);
             }
         }
+
+        // At the very end, if the user is part of a group, let's call the callback to update group position
+        if (typeof user.group !== 'undefined') {
+            this.groupUpdatedCallback(user.group);
+        }
     }
 
     /**
@@ -101,12 +116,15 @@ export class World {
         group.leave(user);
 
         if (group.isEmpty()) {
+            this.groupDeletedCallback(group.getId(), user);
             group.destroy();
             const index = this.groups.indexOf(group, 0);
             if (index === -1) {
                 throw new Error("Could not find group");
             }
             this.groups.splice(index, 1);
+        } else {
+            this.groupUpdatedCallback(group);
         }
     }
 

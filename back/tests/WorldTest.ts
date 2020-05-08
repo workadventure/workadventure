@@ -15,7 +15,7 @@ describe("World", () => {
 
         }
 
-        let world = new World(connect, disconnect, 160, 160);
+        let world = new World(connect, disconnect, 160, 160, () => {}, () => {});
 
         world.join(new MessageUserPosition({
             userId: "foo",
@@ -62,7 +62,7 @@ describe("World", () => {
 
         }
 
-        let world = new World(connect, disconnect, 160, 160);
+        let world = new World(connect, disconnect, 160, 160, () => {}, () => {});
 
         world.join(new MessageUserPosition({
             userId: "foo",
@@ -107,7 +107,7 @@ describe("World", () => {
             disconnectCallNumber++;
         }
 
-        let world = new World(connect, disconnect, 160, 160);
+        let world = new World(connect, disconnect, 160, 160, () => {}, () => {});
 
         world.join(new MessageUserPosition({
             userId: "foo",

@@ -53,7 +53,6 @@ export const playAnimation = (Player : Phaser.GameObjects.Sprite, direction : st
     if (direction !== PlayerAnimationNames.None && (!Player.anims.currentAnim || Player.anims.currentAnim.key !== direction)) {
         Player.anims.play(direction);
     } else if (direction === PlayerAnimationNames.None && Player.anims.currentAnim) {
-        //Player.anims.currentAnim.destroy();
         Player.anims.stop();
     }
 }

@@ -1,11 +1,16 @@
 import {GameManager, gameManager, HasMovedEvent, StatusGameManagerEnum} from "./GameManager";
-import {MessageUserPositionInterface} from "../../Connexion";
+import {GroupCreatedUpdatedMessageInterface, MessageUserPositionInterface} from "../../Connexion";
 import {CurrentGamerInterface, GamerInterface, hasMovedEventName, Player} from "../Player/Player";
 import {DEBUG_MODE, RESOLUTION, ROOM, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import Tile = Phaser.Tilemaps.Tile;
 import {ITiledMap, ITiledTileSet} from "../Map/ITiledMap";
 import {cypressAsserter} from "../../Cypress/CypressAsserter";
 import {PLAYER_RESOURCES} from "../Entity/PlayableCaracter";
+import Circle = Phaser.Geom.Circle;
+import Graphics = Phaser.GameObjects.Graphics;
+import Texture = Phaser.Textures.Texture;
+import Sprite = Phaser.GameObjects.Sprite;
+import CanvasTexture = Phaser.Textures.CanvasTexture;
 
 export const GameSceneName = "GameScene";
 export enum Textures {
@@ -27,9 +32,10 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     Layers : Array<Phaser.Tilemaps.StaticTilemapLayer>;
     Objects : Array<Phaser.Physics.Arcade.Sprite>;
     map: ITiledMap;
+    groups: Map<string, Sprite>
     startX = 704;// 22 case
     startY = 32; // 1 case
-
+    circleTexture: CanvasTexture;
 
     constructor() {
         super({
@@ -37,6 +43,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         });
         this.GameManager = gameManager;
         this.Terrains = [];
+        this.groups = new Map<string, Sprite>();
     }
 
     //hook preload scene
@@ -120,6 +127,19 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
         //initialise camera
         this.initCamera();
+
+
+        // Let's generate the circle for the group delimiter
+
+        this.circleTexture = this.textures.createCanvas('circleSprite', 96, 96);
+        let context = this.circleTexture.context;
+        context.beginPath();
+        context.arc(48, 48, 48, 0, 2 * Math.PI, false);
+        // context.lineWidth = 5;
+        context.strokeStyle = '#ffffff';
+        context.stroke();
+
+        this.circleTexture.refresh();
     }
 
     //todo: in a dedicated class/function?
@@ -276,5 +296,24 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         this.physics.add.collider(this.CurrentPlayer, player, (CurrentPlayer: CurrentGamerInterface, MapPlayer: GamerInterface) => {
             CurrentPlayer.say("Hello, how are you ? ");
         });
+    }
+
+    shareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface) {
+        let groupId = groupPositionMessage.groupId;
+
+        if (this.groups.has(groupId)) {
+            this.groups.get(groupId).setPosition(Math.round(groupPositionMessage.position.x), Math.round(groupPositionMessage.position.y));
+        } else {
+            // TODO: circle radius should not be hard stored
+            let sprite = new Sprite(this, Math.round(groupPositionMessage.position.x), Math.round(groupPositionMessage.position.y), 'circleSprite');
+            sprite.setDisplayOrigin(48, 48);
+            this.add.existing(sprite);
+            this.groups.set(groupId, sprite);
+        }
+    }
+
+    deleteGroup(groupId: string): void {
+        this.groups.get(groupId).destroy();
+        this.groups.delete(groupId);
     }
 }

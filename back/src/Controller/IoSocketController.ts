@@ -9,6 +9,7 @@ import {ExtRooms, RefreshUserPositionFunction} from "../Model/Websocket/ExtRoom"
 import {ExtRoomsInterface} from "../Model/Websocket/ExtRoomsInterface";
 import {World} from "../Model/World";
 import {Group} from "_Model/Group";
+import {UserInterface} from "_Model/UserInterface";
 
 enum SockerIoEvent {
     CONNECTION = "connection",
@@ -20,6 +21,8 @@ enum SockerIoEvent {
     WEBRTC_START = "webrtc-start",
     WEBRTC_DISCONNECT = "webrtc-disconect",
     MESSAGE_ERROR = "message-error",
+    GROUP_CREATE_UPDATE = "group-create-update",
+    GROUP_DELETE = "group-delete",
 }
 
 export class IoSocketController {
@@ -51,7 +54,38 @@ export class IoSocketController {
             this.connectedUser(user1, group);
         }, (user1: string, group: Group) => {
             this.disConnectedUser(user1, group);
-        }, MINIMUM_DISTANCE, GROUP_RADIUS);
+        }, MINIMUM_DISTANCE, GROUP_RADIUS, (group: Group) => {
+            this.sendUpdateGroupEvent(group);
+        }, (groupUuid: string, lastUser: UserInterface) => {
+            this.sendDeleteGroupEvent(groupUuid, lastUser);
+        });
+    }
+
+    private sendUpdateGroupEvent(group: Group): void {
+        // Let's get the room of the group. To do this, let's get anyone in the group and find its room.
+        // Note: this is suboptimal
+        let userId = group.getUsers()[0].id;
+        let client: ExSocketInterface|null = this.searchClientById(userId);
+        if (client === null) {
+            return;
+        }
+        let roomId = client.roomId;
+        this.Io.in(roomId).emit(SockerIoEvent.GROUP_CREATE_UPDATE, {
+            position: group.getPosition(),
+            groupId: group.getId()
+        });
+    }
+
+    private sendDeleteGroupEvent(uuid: string, lastUser: UserInterface): void {
+        // Let's get the room of the group. To do this, let's get anyone in the group and find its room.
+        // Note: this is suboptimal
+        let userId = lastUser.id;
+        let client: ExSocketInterface|null = this.searchClientById(userId);
+        if (client === null) {
+            return;
+        }
+        let roomId = client.roomId;
+        this.Io.in(roomId).emit(SockerIoEvent.GROUP_DELETE, uuid);
     }
 
     ioConnection() {
@@ -146,7 +180,7 @@ export class IoSocketController {
     }
 
     /**
-     *
+     * TODO: each call to this method is suboptimal. It means that instead of passing an ID, we should pass a client object.
      * @param userId
      */
     searchClientById(userId: string): ExSocketInterface | null {
@@ -286,7 +320,7 @@ export class IoSocketController {
         this.joinWebRtcRoom(Client, group.getId());
     }
 
-    //connected user
+    //disconnect user
     disConnectedUser(userId: string, group: Group) {
         let Client = this.searchClientById(userId);
         if (!Client) {

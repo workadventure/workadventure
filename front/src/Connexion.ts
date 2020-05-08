@@ -11,7 +11,9 @@ enum EventMessage{
     JOIN_ROOM = "join-room",
     USER_POSITION = "user-position",
     MESSAGE_ERROR = "message-error",
-    WEBRTC_DISCONNECT = "webrtc-disconect"
+    WEBRTC_DISCONNECT = "webrtc-disconect",
+    GROUP_CREATE_UPDATE = "group-create-update",
+    GROUP_DELETE = "group-delete",
 }
 
 class Message {
@@ -122,6 +124,16 @@ class ListMessageUserPosition {
     }
 }
 
+export interface PositionInterface {
+    x: number,
+    y: number
+}
+
+export interface GroupCreatedUpdatedMessageInterface {
+    position: PositionInterface,
+    groupId: string
+}
+
 export interface ConnexionInterface {
     socket: any;
     token: string;
@@ -183,6 +195,9 @@ export class Connexion implements ConnexionInterface {
                 this.positionOfAllUser();
 
                 this.errorMessage();
+
+                this.groupUpdatedOrCreated();
+                this.groupDeleted();
 
                 return this;
             })
@@ -252,6 +267,19 @@ export class Connexion implements ConnexionInterface {
                 this.GameManager.shareUserPosition(listMessageUserPosition);
             });
         });
+    }
+
+    private groupUpdatedOrCreated(): void {
+        this.socket.on(EventMessage.GROUP_CREATE_UPDATE, (groupCreateUpdateMessage: GroupCreatedUpdatedMessageInterface) => {
+            //console.log('Group ', groupCreateUpdateMessage.groupId, " position :", groupCreateUpdateMessage.position.x, groupCreateUpdateMessage.position.y)
+            this.GameManager.shareGroupPosition(groupCreateUpdateMessage);
+        })
+    }
+
+    private groupDeleted(): void {
+        this.socket.on(EventMessage.GROUP_DELETE, (groupId: string) => {
+            this.GameManager.deleteGroup(groupId);
+        })
     }
 
     sendWebrtcSignal(signal: any, roomId: string, userId? : string, receiverId? : string) {
