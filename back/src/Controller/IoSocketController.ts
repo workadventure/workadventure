@@ -172,6 +172,9 @@ export class IoSocketController {
         Client.broadcast.emit(SockerIoEvent.WEBRTC_DISCONNECT, JSON.stringify({
             userId: Client.userId
         }));
+
+        //disconnect webrtc room
+        Client.leave(Client.webRtcRoomId);
     }
 
     /**
@@ -186,7 +189,7 @@ export class IoSocketController {
         socket.join(roomId);
         socket.webRtcRoomId = roomId;
         //if two persone in room share
-        if (this.Io.sockets.adapter.rooms[roomId].length < 2) {
+        if (this.Io.sockets.adapter.rooms[roomId].length < 2 || this.Io.sockets.adapter.rooms[roomId].length >= 4) {
             return;
         }
         let clients: Array<any> = Object.values(this.Io.sockets.sockets);
