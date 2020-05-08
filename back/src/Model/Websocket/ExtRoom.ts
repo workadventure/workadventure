@@ -25,7 +25,7 @@ let RefreshUserPositionFunction = function(rooms : ExtRooms, Io: socketIO.Server
             roomId: socket.roomId,
             position: socket.position,
             name: socket.name,
-            frame: socket.frame,
+            character: socket.character,
         };
         let dataArray = <any>[];
         if (mapPositionUserByRoom.get(data.roomId)) {

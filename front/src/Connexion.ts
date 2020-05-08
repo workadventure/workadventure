@@ -18,13 +18,13 @@ class Message {
     userId: string;
     roomId: string;
     name: string;
-    frame: string;
+    character: string;
 
-    constructor(userId : string, roomId : string, name: string, frame: string) {
+    constructor(userId : string, roomId : string, name: string, character: string) {
         this.userId = userId;
         this.roomId = roomId;
         this.name = name;
-        this.frame = frame;
+        this.character = character;
     }
 
     toJson() {
@@ -32,7 +32,7 @@ class Message {
             userId: this.userId,
             roomId: this.roomId,
             name: this.name,
-            frame: this.frame
+            character: this.character
         }
     }
 }
@@ -71,15 +71,15 @@ export interface MessageUserPositionInterface {
     userId: string;
     roomId: string;
     name: string;
-    frame: string;
+    character: string;
     position: PointInterface;
 }
 
 class MessageUserPosition extends Message implements MessageUserPositionInterface{
     position: PointInterface;
 
-    constructor(userId : string, roomId : string, point : Point, name: string, frame: string) {
-        super(userId, roomId, name, frame);
+    constructor(userId : string, roomId : string, point : Point, name: string, character: string) {
+        super(userId, roomId, name, character);
         this.position = point;
     }
 
@@ -116,7 +116,7 @@ class ListMessageUserPosition {
                     userPosition.position.direction
                 ),
                 userPosition.name,
-                userPosition.frame
+                userPosition.character
             ));
         });
     }
@@ -129,11 +129,11 @@ export interface ConnexionInterface {
     userId: string;
     startedRoom: string;
 
-    createConnexion(frameSelected: string): Promise<any>;
+    createConnexion(characterSelected: string): Promise<any>;
 
-    joinARoom(roomId: string, frame: string): void;
+    joinARoom(roomId: string, character: string): void;
 
-    sharePosition(x: number, y: number, direction: string, frame: string): void;
+    sharePosition(x: number, y: number, direction: string, character: string): void;
 
     positionOfAllUser(): void;
 
@@ -161,7 +161,7 @@ export class Connexion implements ConnexionInterface {
         this.GameManager = GameManager;
     }
 
-    createConnexion(frameSelected: string): Promise<ConnexionInterface> {
+    createConnexion(characterSelected: string): Promise<ConnexionInterface> {
         return Axios.post(`${API_URL}/login`, {email: this.email})
             .then((res) => {
                 this.token = res.data.token;
@@ -175,10 +175,10 @@ export class Connexion implements ConnexionInterface {
                 });
 
                 //join the room
-                this.joinARoom(this.startedRoom, frameSelected);
+                this.joinARoom(this.startedRoom, characterSelected);
 
                 //share your first position
-                this.sharePosition(0, 0, frameSelected);
+                this.sharePosition(0, 0, characterSelected);
 
                 this.positionOfAllUser();
 
@@ -195,15 +195,15 @@ export class Connexion implements ConnexionInterface {
     /**
      *
      * @param roomId
-     * @param frame
+     * @param character
      */
-    joinARoom(roomId: string, frame: string): void {
+    joinARoom(roomId: string, character: string): void {
         let messageUserPosition = new MessageUserPosition(
             this.userId,
             this.startedRoom,
             new Point(0, 0),
             this.email,
-            frame
+            character
         );
         this.socket.emit(EventMessage.JOIN_ROOM, messageUserPosition.toString());
     }
@@ -212,10 +212,10 @@ export class Connexion implements ConnexionInterface {
      *
      * @param x
      * @param y
-     * @param frame
+     * @param character
      * @param direction
      */
-    sharePosition(x : number, y : number, frame : string, direction : string = "none") : void{
+    sharePosition(x : number, y : number, character : string, direction : string = "none") : void{
         if(!this.socket){
             return;
         }
@@ -224,7 +224,7 @@ export class Connexion implements ConnexionInterface {
             ROOM[0],
             new Point(x, y, direction),
             this.email,
-            frame
+            character
         );
         this.socket.emit(EventMessage.USER_POSITION, messageUserPosition.toString());
     }

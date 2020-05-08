@@ -8,7 +8,7 @@ describe("Message Model", () => {
         expect(messageObject.userId).toBe("test1");
         expect(messageObject.roomId).toBe("test2");
         expect(messageObject.name).toBe("foo");
-        expect(messageObject.frame).toBe("user");
+        expect(messageObject.character).toBe("user");
     })
 
     it("should expose a toJson method", () => {
