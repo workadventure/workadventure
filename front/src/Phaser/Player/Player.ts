@@ -83,12 +83,12 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
         }
         if (x !== 0 || y !== 0) {
             this.move(x, y);
-            this.emit(hasMovedEventName, {direction, x: this.x, y: this.y, frame: this.PlayerTexture});
+            this.emit(hasMovedEventName, {direction, x: this.x, y: this.y, character: this.PlayerTexture});
         } else {
             if (this.previousMove !== PlayerAnimationNames.None) {
                 direction = PlayerAnimationNames.None;
                 this.stop();
-                this.emit(hasMovedEventName, {direction, x: this.x, y: this.y, frame: this.PlayerTexture});
+                this.emit(hasMovedEventName, {direction, x: this.x, y: this.y, character: this.PlayerTexture});
             }
         }
 

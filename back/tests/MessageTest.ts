@@ -3,18 +3,18 @@ import {Message} from "../src/Model/Websocket/Message";
 
 describe("Message Model", () => {
     it("should find userId and roomId", () => {
-        let message = {userId: "test1", roomId: "test2", name: "foo", frame: "user"};
+        let message = {userId: "test1", roomId: "test2", name: "foo", character: "user"};
         let messageObject = new Message(message);
         expect(messageObject.userId).toBe("test1");
         expect(messageObject.roomId).toBe("test2");
         expect(messageObject.name).toBe("foo");
-        expect(messageObject.frame).toBe("user");
+        expect(messageObject.character).toBe("user");
     })
 
     it("should expose a toJson method", () => {
-        let message = {userId: "test1", roomId: "test2", name: "foo", frame: "user"};
+        let message = {userId: "test1", roomId: "test2", name: "foo", character: "user"};
         let messageObject = new Message(message);
-        expect(messageObject.toJson()).toEqual({userId: "test1", roomId: "test2", name: "foo", frame: "user"});
+        expect(messageObject.toJson()).toEqual({userId: "test1", roomId: "test2", name: "foo", character: "user"});
     });
 
     it("should find throw error when no userId", () => {

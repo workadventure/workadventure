@@ -250,7 +250,7 @@ export class IoSocketController {
         socket.roomId = message.roomId;
         socket.userId = message.userId;
         socket.name = message.name;
-        socket.frame = message.frame;
+        socket.character = message.character;
     }
 
     refreshUserPosition() {

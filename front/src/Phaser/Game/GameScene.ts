@@ -192,7 +192,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             this.startX,
             this.startY,
             this.GameManager.getPlayerName(),
-            this.GameManager.getFrameSelected()
+            this.GameManager.getCharacterSelected()
         );
         this.CurrentPlayer.initAnimation();
 
@@ -286,16 +286,16 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             MessageUserPosition.position.x,
             MessageUserPosition.position.y,
             MessageUserPosition.name,
-            MessageUserPosition.frame
+            MessageUserPosition.character
         );
         player.initAnimation();
         this.MapPlayers.add(player);
         player.updatePosition(MessageUserPosition);
 
-        //init colision
-        this.physics.add.collider(this.CurrentPlayer, player, (CurrentPlayer: CurrentGamerInterface, MapPlayer: GamerInterface) => {
+        //init collision
+        /*this.physics.add.collider(this.CurrentPlayer, player, (CurrentPlayer: CurrentGamerInterface, MapPlayer: GamerInterface) => {
             CurrentPlayer.say("Hello, how are you ? ");
-        });
+        });*/
     }
 
     shareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface) {
