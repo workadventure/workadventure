@@ -96,15 +96,11 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         this.Layers = new Array<Phaser.Tilemaps.StaticTilemapLayer>();
         let depth = -2;
         this.map.layers.forEach((layer) => {
-            if (layer.type === 'tilelayer' && layer.name === "override") {
-                let tab : Array<any> = (layer.properties as any);
-                let propertiesDepth = tab.find((props : any) => props.name === "depth");
-                this.addLayer( this.Map.createStaticLayer(layer.name, this.Terrains, 0, 0).setDepth(propertiesDepth ? propertiesDepth.value : 2) );
+            if (layer.type === 'tilelayer') {
+                this.addLayer(this.Map.createStaticLayer(layer.name, this.Terrains, 0, 0).setDepth(depth));
             }
-            else if (layer.type === 'tilelayer') {
-                this.addLayer( this.Map.createStaticLayer(layer.name, this.Terrains, 0, 0).setDepth(depth) );
-            } else if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
-                depth = -1;
+            if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
+                depth = 10000;
             }
         });
 

@@ -48,6 +48,7 @@ export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
         this.setCollideWorldBounds(true);
         this.setSize(16, 16); //edit the hitbox to better match the caracter model
         this.setOffset(8, 16);
+        this.setDepth(-1);
     }
 
     move(x: number, y: number) {
@@ -69,6 +70,9 @@ export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
             this.bubble.moveBubble(this.x, this.y);
         }
         this.updatePlayerNamePosition(this.x, this.y);
+
+        //update depth user
+        this.setDepth(this.y);
     }
 
     updatePlayerNamePosition(x: number, y: number){
