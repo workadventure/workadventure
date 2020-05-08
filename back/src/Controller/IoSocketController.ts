@@ -189,7 +189,7 @@ export class IoSocketController {
         if (this.Io.sockets.adapter.rooms[roomId].length < 2 || this.Io.sockets.adapter.rooms[roomId].length >= 4) {
             return;
         }
-        let clients: Array<ExSocketInterface> = Object.values(this.Io.sockets.sockets)
+        let clients: Array<ExSocketInterface> = (Object.values(this.Io.sockets.sockets) as Array<ExSocketInterface>)
             .filter((client: ExSocketInterface) => client.webRtcRoomId && client.webRtcRoomId === roomId);
         //send start at one client to initialise offer webrtc
         //send all users in room to create PeerConnection in front
