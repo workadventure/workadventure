@@ -5,12 +5,16 @@ import express from "express";
 import {Application, Request, Response} from 'express';
 import bodyParser = require('body-parser');
 import * as http from "http";
+import {MapController} from "./Controller/MapController";
+import {AuthenticateMiddleware} from "./Middleware/AuthenticateMiddleware";
 
 class App {
     public app: Application;
     public server: http.Server;
     public ioSocketController: IoSocketController;
     public authenticateController: AuthenticateController;
+    public AuthenticateMiddleware: AuthenticateMiddleware;
+    public mapController: MapController;
 
     constructor() {
         this.app = express();
@@ -19,9 +23,11 @@ class App {
         this.config();
         this.server = http.createServer(this.app);
 
-        //create controllers
+        //create socket controllers
         this.ioSocketController = new IoSocketController(this.server);
         this.authenticateController = new AuthenticateController(this.app);
+        this.AuthenticateMiddleware = new AuthenticateMiddleware(this.app);
+        this.mapController = new MapController(this.app);
     }
 
     // TODO add session user
