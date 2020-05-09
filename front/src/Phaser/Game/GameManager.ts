@@ -18,6 +18,11 @@ export interface HasMovedEvent {
     character: string;
 }
 
+export interface MapObject {
+    key: string,
+    url: string
+}
+
 export class GameManager {
     status: number;
     private ConnexionInstance: Connexion;
@@ -25,6 +30,7 @@ export class GameManager {
     private playerName: string;
     SimplePeer : SimplePeerInterface;
     private characterUserSelected: string;
+    Maps: Array<MapObject>;
 
     constructor() {
         this.status = StatusGameManagerEnum.IN_PROGRESS;
@@ -43,8 +49,9 @@ export class GameManager {
     }
 
     loadMaps(){
-        return this.ConnexionInstance.loadMaps().then((maps) => {
-            return maps;
+        return this.ConnexionInstance.loadMaps().then((data) => {
+            this.Maps = data.maps;
+            return data;
         }).catch((err) => {
             throw err;
         });

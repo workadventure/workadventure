@@ -20,10 +20,10 @@ export class MapController {
     getMpas() {
         this.App.get("/maps", (req: Request, res: Response) => {
             return res.status(OK).send({
-                startMapKey: "floor0",
+                mapStart: {key: "floor0", url: "/map/files/Floor0"},
                 maps: [
-                    {mapKey: "floor0", mapUrl: "/map/files/Floor0"},
-                    {mapKey: "floor1", mapUrl: "/map/files/Floor1"},
+                    {key: "floor0", url: "/map/files/Floor0"},
+                    {key: "floor1", url: "/map/files/Floor1"},
                 ]
             });
         });

@@ -101,11 +101,9 @@ export class LogincScene extends Phaser.Scene implements GameSceneInterface {
                 return;
             }
             let scene: any = data[1];
-            scene.maps.forEach((map : any) => {
-                let game = new GameScene(map.mapKey, `${API_URL}${map.mapUrl}`);
-                this.scene.add(map.mapKey, game, false);
-            });
-            this.scene.start(scene.startMapKey);
+            let game = new GameScene(scene.mapStart.key, `${API_URL}${scene.mapStart.url}`);
+            this.scene.add(scene.mapStart.key, game, false);
+            this.scene.start(scene.mapStart.key);
         }).catch((err) => {
             console.error(err);
             throw err;
