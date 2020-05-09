@@ -11,17 +11,23 @@ import Graphics = Phaser.GameObjects.Graphics;
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
+import {Floor1Name} from "./GameSceneFloor1";
 
-export const GameSceneName = "GameScene";
 export enum Textures {
-    Player = 'male1',
-    Map = 'map'
+    Player = "male1",
+    Map = 'floor0',
+    MapUrl = 'maps/floor0.json'
 }
+
+export const Floor0Name = "Floor0";
 
 export interface GameSceneInterface extends Phaser.Scene {
     Map: Phaser.Tilemaps.Tilemap;
     createCurrentPlayer(UserId : string) : void;
     shareUserPosition(UsersPosition : Array<MessageUserPositionInterface>): void;
+    shareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface): void;
+    updateOrCreateMapPlayer(UsersPosition : Array<MessageUserPositionInterface>): void;
+    deleteGroup(groupId: string): void;
 }
 export class GameScene extends Phaser.Scene implements GameSceneInterface{
     GameManager : GameManager;
@@ -39,7 +45,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
     constructor() {
         super({
-            key: GameSceneName
+            key: Floor0Name
         });
         this.GameManager = gameManager;
         this.Terrains = [];
@@ -49,7 +55,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     //hook preload scene
     preload(): void {
         this.GameManager.setCurrentGameScene(this);
-        let mapUrl = 'maps/map.json';
         this.load.on('filecomplete-tilemapJSON-'+Textures.Map, (key: string, type: string, data: any) => {
             // Triggered when the map is loaded
             // Load tiles attached to the map recursively
@@ -59,11 +64,11 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
                     console.warn("Don't know how to handle tileset ", tileset)
                     return;
                 }
-                let path = mapUrl.substr(0, mapUrl.lastIndexOf('/'));
+                let path = Textures.MapUrl.substr(0, Textures.MapUrl.lastIndexOf('/'));
                 this.load.image(tileset.name, path + '/' + tileset.image);
             })
         });
-        this.load.tilemapTiledJSON(Textures.Map, mapUrl);
+        this.load.tilemapTiledJSON(Textures.Map, Textures.MapUrl);
 
         //add player png
         PLAYER_RESOURCES.forEach((playerResource: any) => {
@@ -78,13 +83,12 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     }
 
     //hook initialisation
-    init() {
-    }
+    init() {}
 
     //hook create scene
     create(): void {
         //initalise map
-        this.Map = this.add.tilemap("map");
+        this.Map = this.add.tilemap(Textures.Map);
         this.map.tilesets.forEach((tileset: ITiledTileSet) => {
             this.Terrains.push(this.Map.addTilesetImage(tileset.name, tileset.name));
         });
@@ -274,7 +278,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
      * Create new player
      * @param MessageUserPosition
      */
-    addPlayer(MessageUserPosition : MessageUserPositionInterface){
+    addPlayer(MessageUserPosition : MessageUserPositionInterface) : void{
         //initialise player
         let player = new Player(
             MessageUserPosition.userId,

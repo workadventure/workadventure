@@ -2,13 +2,14 @@ import {gameManager} from "../Game/GameManager";
 import {TextField} from "../Components/TextField";
 import {TextInput} from "../Components/TextInput";
 import {ClickButton} from "../Components/ClickButton";
-import {GameSceneInterface, GameSceneName, Textures} from "../Game/GameScene";
+import {GameSceneInterface, Floor0Name, Textures} from "../Game/GameScene";
 import Image = Phaser.GameObjects.Image;
 import {Player} from "../Player/Player";
 import {getPlayerAnimations, PlayerAnimationNames} from "../Player/Animation";
 import Rectangle = Phaser.GameObjects.Rectangle;
 import {PLAYER_RESOURCES} from "../Entity/PlayableCaracter";
 import {cypressAsserter} from "../../Cypress/CypressAsserter";
+import {GroupCreatedUpdatedMessageInterface, MessageUserPositionInterface} from "../../Connexion";
 
 //todo: put this constants in a dedicated file
 export const LoginSceneName = "LoginScene";
@@ -94,7 +95,7 @@ export class LogincScene extends Phaser.Scene implements GameSceneInterface {
 
     private async login(name: string) {
         gameManager.connect(name, this.selectedPlayer.texture.key).then(() => {
-            this.scene.start(GameSceneName);
+            this.scene.start(Floor0Name);
         });
     }
 
@@ -130,6 +131,18 @@ export class LogincScene extends Phaser.Scene implements GameSceneInterface {
     }
 
     shareUserPosition(UsersPosition: import("../../Connexion").MessageUserPositionInterface[]): void {
+        throw new Error("Method not implemented.");
+    }
+
+    deleteGroup(groupId: string): void {
+        throw new Error("Method not implemented.");
+    }
+
+    shareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface): void {
+        throw new Error("Method not implemented.");
+    }
+
+    updateOrCreateMapPlayer(UsersPosition: Array<MessageUserPositionInterface>): void {
         throw new Error("Method not implemented.");
     }
 }
