@@ -13,7 +13,7 @@ class App {
     public server: http.Server;
     public ioSocketController: IoSocketController;
     public authenticateController: AuthenticateController;
-    public AuthenticateMiddleware: AuthenticateMiddleware;
+    //public AuthenticateMiddleware: AuthenticateMiddleware;
     public mapController: MapController;
 
     constructor() {
@@ -26,7 +26,7 @@ class App {
         //create socket controllers
         this.ioSocketController = new IoSocketController(this.server);
         this.authenticateController = new AuthenticateController(this.app);
-        this.AuthenticateMiddleware = new AuthenticateMiddleware(this.app);
+        //this.AuthenticateMiddleware = new AuthenticateMiddleware(this.app);
         this.mapController = new MapController(this.app);
     }
 

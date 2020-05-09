@@ -27,7 +27,11 @@ export class AuthenticateController{
             return res.status(OK).send({
                 token: token,
                 roomId: ROOM,
-                userId: userId
+                userId: userId,
+                maps: [
+                    "floor0",
+                    "floor1"
+                ]
             });
         });
     }

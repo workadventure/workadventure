@@ -11,15 +11,11 @@ import Graphics = Phaser.GameObjects.Graphics;
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
-import {Floor1Name} from "./GameSceneFloor1";
+import CreateSceneFromObjectConfig = Phaser.Types.Scenes.CreateSceneFromObjectConfig;
 
 export enum Textures {
-    Player = "male1",
-    Map = 'floor0',
-    MapUrl = 'maps/floor0.json'
+    Player = "male1"
 }
-
-export const Floor0Name = "Floor0";
 
 export interface GameSceneInterface extends Phaser.Scene {
     Map: Phaser.Tilemaps.Tilemap;
@@ -29,7 +25,7 @@ export interface GameSceneInterface extends Phaser.Scene {
     updateOrCreateMapPlayer(UsersPosition : Array<MessageUserPositionInterface>): void;
     deleteGroup(groupId: string): void;
 }
-export class GameScene extends Phaser.Scene implements GameSceneInterface{
+export class GameScene extends Phaser.Scene implements GameSceneInterface, CreateSceneFromObjectConfig{
     GameManager : GameManager;
     Terrains : Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer: CurrentGamerInterface;
@@ -38,24 +34,31 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     Layers : Array<Phaser.Tilemaps.StaticTilemapLayer>;
     Objects : Array<Phaser.Physics.Arcade.Sprite>;
     map: ITiledMap;
-    groups: Map<string, Sprite>
+    groups: Map<string, Sprite>;
     startX = 704;// 22 case
     startY = 32; // 1 case
     circleTexture: CanvasTexture;
 
-    constructor() {
+    MapKey: string;
+    MapUrlFile: string;
+
+    constructor(MapKey : string = "", MapUrlFile: string = "") {
         super({
-            key: Floor0Name
+            key: MapKey
         });
+
         this.GameManager = gameManager;
         this.Terrains = [];
         this.groups = new Map<string, Sprite>();
+
+        this.MapKey =  MapKey;
+        this.MapUrlFile = MapUrlFile;
     }
 
     //hook preload scene
     preload(): void {
         this.GameManager.setCurrentGameScene(this);
-        this.load.on('filecomplete-tilemapJSON-'+Textures.Map, (key: string, type: string, data: any) => {
+        this.load.on('filecomplete-tilemapJSON-'+this.MapKey, (key: string, type: string, data: any) => {
             // Triggered when the map is loaded
             // Load tiles attached to the map recursively
             this.map = data.data;
@@ -64,11 +67,13 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
                     console.warn("Don't know how to handle tileset ", tileset)
                     return;
                 }
-                let path = Textures.MapUrl.substr(0, Textures.MapUrl.lastIndexOf('/'));
-                this.load.image(tileset.name, path + '/' + tileset.image);
+                console.log(tileset);
+                console.log(tileset.name, `${this.MapUrlFile}/${tileset.image}`);
+                this.load.image(tileset.name, `${this.MapUrlFile}/${tileset.image}`);
             })
         });
-        this.load.tilemapTiledJSON(Textures.Map, Textures.MapUrl);
+        console.log(this.MapKey, `${this.MapUrlFile}/${this.MapKey}.json`);
+        this.load.tilemapTiledJSON(this.MapKey, `${this.MapUrlFile}/${this.MapKey}.json`);
 
         //add player png
         PLAYER_RESOURCES.forEach((playerResource: any) => {
@@ -88,7 +93,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     //hook create scene
     create(): void {
         //initalise map
-        this.Map = this.add.tilemap(Textures.Map);
+        this.Map = this.add.tilemap(this.MapKey);
         this.map.tilesets.forEach((tileset: ITiledTileSet) => {
             this.Terrains.push(this.Map.addTilesetImage(tileset.name, tileset.name));
         });
@@ -132,6 +137,9 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         // Let's generate the circle for the group delimiter
 
         this.circleTexture = this.textures.createCanvas('circleSprite', 96, 96);
+        if(!this.circleTexture || this.circleTexture.context){
+            return;
+        }
         let context = this.circleTexture.context;
         context.beginPath();
         context.arc(48, 48, 48, 0, 2 * Math.PI, false);
@@ -224,6 +232,12 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
      */
     update(time: number, delta: number) : void {
         this.CurrentPlayer.moveUser(delta);
+        if(
+           832 <= this.CurrentPlayer.x && this.CurrentPlayer.x <= 864
+            && 0 <= this.CurrentPlayer.y && this.CurrentPlayer.y <= 64
+        ){
+            //this.scene.start(Floor1Name);
+        }
     }
 
     /**

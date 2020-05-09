@@ -1,13 +1,10 @@
-import {GameScene} from "./GameScene";
-import {ROOM} from "../../Enum/EnvironmentVariable"
+import {GameScene, GameSceneInterface} from "./GameScene";
 import {
     Connexion,
-    ConnexionInterface,
     GroupCreatedUpdatedMessageInterface,
     ListMessageUserPositionInterface
 } from "../../Connexion";
 import {SimplePeerInterface, SimplePeer} from "../../WebRtc/SimplePeer";
-import {LogincScene} from "../Login/LogincScene";
 
 export enum StatusGameManagerEnum {
     IN_PROGRESS = 1,
@@ -24,7 +21,7 @@ export interface HasMovedEvent {
 export class GameManager {
     status: number;
     private ConnexionInstance: Connexion;
-    private currentGameScene: GameScene;
+    private currentGameScene: GameSceneInterface;
     private playerName: string;
     SimplePeer : SimplePeerInterface;
     private characterUserSelected: string;
@@ -37,12 +34,23 @@ export class GameManager {
         this.playerName = name;
         this.characterUserSelected = characterUserSelected;
         this.ConnexionInstance = new Connexion(name, this);
-        return this.ConnexionInstance.createConnexion(characterUserSelected).then(() => {
+        return this.ConnexionInstance.createConnexion(characterUserSelected).then((data : any) => {
             this.SimplePeer = new SimplePeer(this.ConnexionInstance);
+            return data;
+        }).catch((err) => {
+          throw err;
         });
     }
 
-    setCurrentGameScene(gameScene: GameScene) {
+    loadMaps(){
+        return this.ConnexionInstance.loadMaps().then((maps) => {
+            return maps;
+        }).catch((err) => {
+            throw err;
+        });
+    }
+
+    setCurrentGameScene(gameScene: GameSceneInterface) {
         this.currentGameScene = gameScene;
     }
 

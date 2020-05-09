@@ -143,6 +143,8 @@ export interface ConnexionInterface {
 
     createConnexion(characterSelected: string): Promise<any>;
 
+    loadMaps(): Promise<any>;
+
     joinARoom(roomId: string, character: string): void;
 
     sharePosition(x: number, y: number, direction: string, character: string): void;
@@ -173,6 +175,9 @@ export class Connexion implements ConnexionInterface {
         this.GameManager = GameManager;
     }
 
+    /**
+     * @param characterSelected
+     */
     createConnexion(characterSelected: string): Promise<ConnexionInterface> {
         return Axios.post(`${API_URL}/login`, {email: this.email})
             .then((res) => {
@@ -199,12 +204,21 @@ export class Connexion implements ConnexionInterface {
                 this.groupUpdatedOrCreated();
                 this.groupDeleted();
 
-                return this;
+                return res.data;
             })
             .catch((err) => {
                 console.error(err);
                 throw err;
             });
+    }
+    
+    loadMaps() : Promise<any>{
+        return Axios.get(`${API_URL}/maps`).then((res) => {
+            return res.data;
+        }).catch((err) => {
+            console.error(err);
+            throw err;
+        });
     }
 
     /**

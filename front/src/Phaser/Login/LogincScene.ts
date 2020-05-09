@@ -2,14 +2,13 @@ import {gameManager} from "../Game/GameManager";
 import {TextField} from "../Components/TextField";
 import {TextInput} from "../Components/TextInput";
 import {ClickButton} from "../Components/ClickButton";
-import {GameSceneInterface, Floor0Name, Textures} from "../Game/GameScene";
+import {GameScene, GameSceneInterface} from "../Game/GameScene";
 import Image = Phaser.GameObjects.Image;
-import {Player} from "../Player/Player";
-import {getPlayerAnimations, PlayerAnimationNames} from "../Player/Animation";
 import Rectangle = Phaser.GameObjects.Rectangle;
 import {PLAYER_RESOURCES} from "../Entity/PlayableCaracter";
 import {cypressAsserter} from "../../Cypress/CypressAsserter";
 import {GroupCreatedUpdatedMessageInterface, MessageUserPositionInterface} from "../../Connexion";
+import {API_URL} from "../../Enum/EnvironmentVariable";
 
 //todo: put this constants in a dedicated file
 export const LoginSceneName = "LoginScene";
@@ -94,15 +93,29 @@ export class LogincScene extends Phaser.Scene implements GameSceneInterface {
     }
 
     private async login(name: string) {
-        gameManager.connect(name, this.selectedPlayer.texture.key).then(() => {
-            this.scene.start(Floor0Name);
+        Promise.all([
+            gameManager.connect(name, this.selectedPlayer.texture.key),
+            gameManager.loadMaps()
+        ]).then((data) => {
+            if (!data) {
+                return;
+            }
+            let scene: any = data[1];
+            scene.maps.forEach((map : any) => {
+                let game = new GameScene(map.mapKey, `${API_URL}${map.mapUrl}`);
+                this.scene.add(map.mapKey, game, false);
+            });
+            this.scene.start(scene.startMapKey);
+        }).catch((err) => {
+            console.error(err);
+            throw err;
         });
     }
 
     Map: Phaser.Tilemaps.Tilemap;
 
     initAnimation(): void {
-
+        throw new Error("Method not implemented.");
     }
 
     createCurrentPlayer(UserId: string): void {

@@ -3,33 +3,29 @@ import path from "path";
 import {Application, Request, Response} from "express";
 import {OK} from "http-status-codes";
 
-const MapFloor0 = require('../Assets/Maps/Floor0/floor0.json');
-const MapFloor1 = require('../Assets/Maps/Floor1/floor1.json');
+export class MapController {
+    App: Application;
 
-export class MapController{
-    App : Application;
-
-    constructor(App : Application) {
+    constructor(App: Application) {
         this.App = App;
-        this.getFloor0();
-        this.getFloor1();
+        this.getMpas();
         this.assetMaps();
     }
 
-    assetMaps(){
-        this.App.use('/maps', express.static('src/Assets/Maps'));
+    assetMaps() {
+        this.App.use('/map/files', express.static('src/Assets/Maps'));
     }
 
     //permit to login on application. Return token to connect on Websocket IO.
-    getFloor0(){
-        this.App.get("/floor0", (req: Request, res: Response) => {
-            return res.status(OK).send(MapFloor0);
-        });
-    }
-
-    getFloor1(){
-        this.App.get("/floor1", (req: Request, res: Response) => {
-            return res.status(OK).send(MapFloor1);
+    getMpas() {
+        this.App.get("/maps", (req: Request, res: Response) => {
+            return res.status(OK).send({
+                startMapKey: "floor0",
+                maps: [
+                    {mapKey: "floor0", mapUrl: "/map/files/Floor0"},
+                    {mapKey: "floor1", mapUrl: "/map/files/Floor1"},
+                ]
+            });
         });
     }
 }
