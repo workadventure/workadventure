@@ -17,7 +17,7 @@ export class MapController {
         this.App.use('/map/files', express.static('src/Assets/Maps'));
     }
 
-    //permit to login on application. Return token to connect on Websocket IO.
+    // Returns a map mapping map name to file name of the map
     getMpas() {
         this.App.get("/maps", (req: Request, res: Response) => {
             return res.status(OK).send({
