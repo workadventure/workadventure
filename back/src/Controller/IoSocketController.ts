@@ -5,7 +5,7 @@ import {MessageUserPosition} from "../Model/Websocket/MessageUserPosition"; //TO
 import {ExSocketInterface} from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
 import Jwt, {JsonWebTokenError} from "jsonwebtoken";
 import {SECRET_KEY, MINIMUM_DISTANCE, GROUP_RADIUS} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
-import {ExtRooms, RefreshUserPositionFunction} from "../Model/Websocket/ExtRoom";
+import {ExtRooms, RefreshUserPositionFunction} from "../Model/Websocket/ExtRooms";
 import {ExtRoomsInterface} from "../Model/Websocket/ExtRoomsInterface";
 import {World} from "../Model/World";
 import {Group} from "_Model/Group";
@@ -27,7 +27,7 @@ enum SockerIoEvent {
 
 export class IoSocketController {
     Io: socketIO.Server;
-    World: World;
+    Worlds: Map<string, World> = new Map<string, World>();
 
     constructor(server: http.Server) {
         this.Io = socketIO(server);
@@ -48,17 +48,6 @@ export class IoSocketController {
 
         this.ioConnection();
         this.shareUsersPosition();
-
-        //don't send only function because the context will be not this
-        this.World = new World((user1: string, group: Group) => {
-            this.connectedUser(user1, group);
-        }, (user1: string, group: Group) => {
-            this.disConnectedUser(user1, group);
-        }, MINIMUM_DISTANCE, GROUP_RADIUS, (group: Group) => {
-            this.sendUpdateGroupEvent(group);
-        }, (groupUuid: string, lastUser: UserInterface) => {
-            this.sendDeleteGroupEvent(groupUuid, lastUser);
-        });
     }
 
     private sendUpdateGroupEvent(group: Group): void {
@@ -108,22 +97,51 @@ export class IoSocketController {
                     return;
                 }
 
-                //lease previous room
+                //lease previous room and world
                 if((socket as ExSocketInterface).roomId){
-                    socket.leave((socket as ExSocketInterface).roomId);
+                    let Client = (socket as ExSocketInterface);
+                    //user leave previous room
+                    socket.leave(Client.roomId);
+                    //user leave previous world
+                    let world : World|undefined = this.Worlds.get(Client.roomId);
+                    if(world){
+                        world.leave(Client);
+                        this.Worlds.set(Client.roomId, world);
+                    }
                 }
 
                 //join user in room
                 socket.join(messageUserPosition.roomId);
 
-                //join user in world
-                this.World.join(messageUserPosition);
+                //check and create new world for a room
+                if(!this.Worlds.get(messageUserPosition.roomId)){
+                    let world = new World((user1: string, group: Group) => {
+                        this.connectedUser(user1, group);
+                    }, (user1: string, group: Group) => {
+                        this.disConnectedUser(user1, group);
+                    }, MINIMUM_DISTANCE, GROUP_RADIUS, (group: Group) => {
+                        this.sendUpdateGroupEvent(group);
+                    }, (groupUuid: string, lastUser: UserInterface) => {
+                        this.sendDeleteGroupEvent(groupUuid, lastUser);
+                    });
+                    this.Worlds.set(messageUserPosition.roomId, world);
+                }
+
+                //join world
+                let world : World|undefined = this.Worlds.get(messageUserPosition.roomId);
+                if(world) {
+                    world.join(messageUserPosition);
+                    this.Worlds.set(messageUserPosition.roomId, world);
+                }
 
                 // sending to all clients in room except sender
                 this.saveUserInformation((socket as ExSocketInterface), messageUserPosition);
 
                 //add function to refresh position user in real time.
                 this.refreshUserPosition();
+
+                //refresh position in world
+                this.refreshWorldPosition(messageUserPosition);
 
                 socket.to(messageUserPosition.roomId).emit(SockerIoEvent.JOIN_ROOM, messageUserPosition.toString());
             });
@@ -139,6 +157,9 @@ export class IoSocketController {
 
                 //refresh position of all user in all rooms in real time
                 this.refreshUserPosition();
+
+                //refresh position in world
+                this.refreshWorldPosition(messageUserPosition);
             });
 
             socket.on(SockerIoEvent.WEBRTC_SIGNAL, (message: string) => {
@@ -171,8 +192,11 @@ export class IoSocketController {
                 //refresh position of all user in all rooms in real time
                 this.refreshUserPosition();
 
-                //leave group of user
-                this.World.leave(Client);
+                let world : World|undefined = this.Worlds.get(Client.roomId);
+                if(world){
+                    world.leave(Client);
+                    this.Worlds.set(Client.roomId, world);
+                }
 
                 //leave room
                 socket.leave(Client.roomId);
@@ -272,7 +296,16 @@ export class IoSocketController {
         if (!rooms.refreshUserPosition) {
             rooms.refreshUserPosition = RefreshUserPositionFunction;
         }
-        rooms.refreshUserPosition(rooms, this.Io, this.World);
+        rooms.refreshUserPosition(rooms, this.Io);
+    }
+
+    refreshWorldPosition(messageUserPosition : MessageUserPosition){
+        // update position in the worl
+        let world = this.Worlds.get(messageUserPosition.roomId);
+        if(world) {
+            world.updatePosition(messageUserPosition);
+            this.Worlds.set(messageUserPosition.roomId, world);
+        }
     }
 
     //Hydrate and manage error

@@ -7,11 +7,12 @@ import {World} from "_Model/World";
 export class ExtRooms implements ExtRoomsInterface{
     userPositionMapByRoom: any;
     refreshUserPosition: any;
+    Worlds: any;
 
     [room: string]: SocketIO.Room;
 }
 
-let RefreshUserPositionFunction = function(rooms : ExtRooms, Io: socketIO.Server, World : World) {
+let RefreshUserPositionFunction = function(rooms : ExtRooms, Io: socketIO.Server) {
     let clients = Io.clients();
     let socketsKey = Object.keys(Io.clients().sockets);
 
@@ -37,10 +38,6 @@ let RefreshUserPositionFunction = function(rooms : ExtRooms, Io: socketIO.Server
             dataArray = [data];
         }
         mapPositionUserByRoom.set(data.roomId, dataArray);
-
-        // update position in the worl
-        let messageUserPosition = new MessageUserPosition(data);
-        World.updatePosition(messageUserPosition);
     }
     rooms.userPositionMapByRoom = Array.from(mapPositionUserByRoom);
 }
