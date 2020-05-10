@@ -2,7 +2,7 @@ import {GameManager} from "./Phaser/Game/GameManager";
 
 const SocketIo = require('socket.io-client');
 import Axios from "axios";
-import {API_URL, ROOM} from "./Enum/EnvironmentVariable";
+import {API_URL} from "./Enum/EnvironmentVariable";
 
 enum EventMessage{
     WEBRTC_SIGNAL = "webrtc-signal",
@@ -211,14 +211,16 @@ export class Connexion implements ConnexionInterface {
                 throw err;
             });
     }
-    
-    loadMaps() : Promise<any>{
-        return Axios.get(`${API_URL}/maps`).then((res) => {
-            return res.data;
-        }).catch((err) => {
-            console.error(err);
-            throw err;
-        });
+
+    //TODO add middleware with access token to secure api
+    loadMaps() : Promise<any> {
+        return Axios.get(`${API_URL}/maps`)
+            .then((res) => {
+                return res.data;
+            }).catch((err) => {
+                console.error(err);
+                throw err;
+            });
     }
 
     /**

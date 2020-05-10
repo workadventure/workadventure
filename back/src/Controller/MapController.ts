@@ -1,5 +1,4 @@
 import express from "express";
-import path from "path";
 import {Application, Request, Response} from "express";
 import {OK} from "http-status-codes";
 import {ROOM_STARTED, ROOMS, URL_ROOM_STARTED} from "../Enum/EnvironmentVariable";
@@ -9,7 +8,7 @@ export class MapController {
 
     constructor(App: Application) {
         this.App = App;
-        this.getMpas();
+        this.getMaps();
         this.assetMaps();
     }
 

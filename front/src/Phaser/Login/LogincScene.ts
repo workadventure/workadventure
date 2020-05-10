@@ -93,17 +93,19 @@ export class LogincScene extends Phaser.Scene implements GameSceneInterface {
     }
 
     private async login(name: string) {
-        Promise.all([
-            gameManager.connect(name, this.selectedPlayer.texture.key),
-            gameManager.loadMaps()
-        ]).then((data) => {
-            if (!data) {
-                return;
-            }
-            let scene: any = data[1];
-            let game = new GameScene(scene.mapStart.key, `${API_URL}${scene.mapStart.url}`);
-            this.scene.add(scene.mapStart.key, game, false);
-            this.scene.start(scene.mapStart.key);
+        return gameManager.connect(name, this.selectedPlayer.texture.key).then(() => {
+            return gameManager.loadMaps().then((scene : any) => {
+                if (!scene) {
+                    return;
+                }
+                let game = new GameScene(scene.mapStart.key, `${API_URL}${scene.mapStart.url}`);
+                this.scene.add(scene.mapStart.key, game, false);
+                this.scene.start(scene.mapStart.key);
+                return scene;
+            }).catch((err) => {
+                console.error(err);
+                throw err;
+            });
         }).catch((err) => {
             console.error(err);
             throw err;
