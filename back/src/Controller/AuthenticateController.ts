@@ -1,7 +1,7 @@
 import {Application, Request, Response} from "express";
 import Jwt from "jsonwebtoken";
 import {BAD_REQUEST, OK} from "http-status-codes";
-import {SECRET_KEY, ROOM_STARTED, URL_ROOM_STARTED} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
+import {SECRET_KEY, URL_ROOM_STARTED} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 import { uuid } from 'uuidv4';
 
 export class AuthenticateController{
@@ -26,7 +26,7 @@ export class AuthenticateController{
             let token = Jwt.sign({email: param.email, userId: userId}, SECRET_KEY, {expiresIn: '24h'});
             return res.status(OK).send({
                 token: token,
-                startedRoom: {key: ROOM_STARTED, url: URL_ROOM_STARTED},
+                mapUrlStart: URL_ROOM_STARTED,
                 userId: userId,
             });
         });

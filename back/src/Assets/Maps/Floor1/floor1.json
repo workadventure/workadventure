@@ -41,9 +41,9 @@
          "opacity":1,
          "properties":[
                 {
-                 "name":"exitSceneKey",
+                 "name":"exitSceneUrl",
                  "type":"string",
-                 "value":"floor0"
+                 "value":"\/map\/files\/Floor0\/floor0.json"
                 }],
          "type":"tilelayer",
          "visible":true,

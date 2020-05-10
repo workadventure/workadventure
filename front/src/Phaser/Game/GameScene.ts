@@ -12,6 +12,7 @@ import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
 import CreateSceneFromObjectConfig = Phaser.Types.Scenes.CreateSceneFromObjectConfig;
+import {getMapKeyByUrl} from "../Login/LogincScene";
 
 export enum Textures {
     Player = "male1"
@@ -64,17 +65,18 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
             // Triggered when the map is loaded
             // Load tiles attached to the map recursively
             this.map = data.data;
+            let url = this.MapUrlFile.substr(0, this.MapUrlFile.indexOf(`${this.MapKey}.json`));
             this.map.tilesets.forEach((tileset) => {
                 if (typeof tileset.name === 'undefined' || typeof tileset.image === 'undefined') {
                     console.warn("Don't know how to handle tileset ", tileset)
                     return;
                 }
                 //TODO strategy to add access token
-                this.load.image(tileset.name, `${this.MapUrlFile}/${tileset.image}`);
+                this.load.image(tileset.name, `${url}/${tileset.image}`);
             })
         });
         //TODO strategy to add access token
-        this.load.tilemapTiledJSON(this.MapKey, `${this.MapUrlFile}/${this.MapKey}.json`);
+        this.load.tilemapTiledJSON(this.MapKey, this.MapUrlFile);
 
         //add player png
         PLAYER_RESOURCES.forEach((playerResource: any) => {
@@ -164,16 +166,17 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
      */
     private loadNextGame(layer: ITiledMapLayer, mapWidth: number, tileWidth: number, tileHeight: number){
         let properties : any = layer.properties;
-        let nextSceneKey = properties.find((property:any) => property.name === "exitSceneKey");
-        let nextMap : MapObject = gameManager.Maps.find((map: MapObject) => map.key === nextSceneKey.value);
+        let exitSceneUrl = properties.find((property:any) => property.name === "exitSceneUrl");
 
-        let gameIndex = this.scene.getIndex(nextMap.key);
+        let exitSceneKey = getMapKeyByUrl(exitSceneUrl.value);
+
+        let gameIndex = this.scene.getIndex(exitSceneKey);
         let game : Phaser.Scene = null;
         if(gameIndex === -1){
-            game = new GameScene(nextMap.key, `${API_URL}${nextMap.url}`);
-            this.scene.add(nextSceneKey, game, false);
+            game = new GameScene(exitSceneKey, `${API_URL}${exitSceneUrl.value}`);
+            this.scene.add(exitSceneKey, game, false);
         }else{
-            game = this.scene.get(nextMap.key);
+            game = this.scene.get(exitSceneKey);
         }
         if(!game){
             return;
@@ -192,7 +195,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
                 yStart: (y * tileWidth),
                 xEnd: ((x +1) * tileHeight),
                 yEnd: ((y + 1) * tileHeight),
-                key: nextMap.key
+                key: exitSceneKey
             })
         });
     }

@@ -10,6 +10,11 @@ import {cypressAsserter} from "../../Cypress/CypressAsserter";
 import {GroupCreatedUpdatedMessageInterface, MessageUserPositionInterface} from "../../Connexion";
 import {API_URL} from "../../Enum/EnvironmentVariable";
 
+export function getMapKeyByUrl(mapUrlStart: string){
+    let tab = mapUrlStart.split("/");
+    return tab[tab.length -1].substr(0, tab[tab.length -1].indexOf(".json"));
+}
+
 //todo: put this constants in a dedicated file
 export const LoginSceneName = "LoginScene";
 enum LoginTextures {
@@ -98,9 +103,10 @@ export class LogincScene extends Phaser.Scene implements GameSceneInterface {
                 if (!scene) {
                     return;
                 }
-                let game = new GameScene(scene.mapStart.key, `${API_URL}${scene.mapStart.url}`);
-                this.scene.add(scene.mapStart.key, game, false);
-                this.scene.start(scene.mapStart.key);
+                let key = getMapKeyByUrl(scene.mapUrlStart);
+                let game = new GameScene(key,`${API_URL}${scene.mapUrlStart}`);
+                this.scene.add(key, game, false);
+                this.scene.start(key);
                 return scene;
             }).catch((err) => {
                 console.error(err);

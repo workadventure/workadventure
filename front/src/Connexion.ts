@@ -3,6 +3,7 @@ import {GameManager} from "./Phaser/Game/GameManager";
 const SocketIo = require('socket.io-client');
 import Axios from "axios";
 import {API_URL} from "./Enum/EnvironmentVariable";
+import {getMapKeyByUrl} from "./Phaser/Login/LogincScene";
 
 enum EventMessage{
     WEBRTC_SIGNAL = "webrtc-signal",
@@ -182,7 +183,8 @@ export class Connexion implements ConnexionInterface {
         return Axios.post(`${API_URL}/login`, {email: this.email})
             .then((res) => {
                 this.token = res.data.token;
-                this.startedRoom = res.data.startedRoom.key;
+
+                this.startedRoom = getMapKeyByUrl(res.data.mapUrlStart);
                 this.userId = res.data.userId;
 
                 this.socket = SocketIo(`${API_URL}`, {

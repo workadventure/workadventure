@@ -5,6 +5,7 @@ import {
     ListMessageUserPositionInterface
 } from "../../Connexion";
 import {SimplePeerInterface, SimplePeer} from "../../WebRtc/SimplePeer";
+import {API_URL} from "../../Enum/EnvironmentVariable";
 
 export enum StatusGameManagerEnum {
     IN_PROGRESS = 1,
@@ -30,7 +31,6 @@ export class GameManager {
     private playerName: string;
     SimplePeer : SimplePeerInterface;
     private characterUserSelected: string;
-    Maps: Array<MapObject>;
 
     constructor() {
         this.status = StatusGameManagerEnum.IN_PROGRESS;
@@ -50,7 +50,6 @@ export class GameManager {
 
     loadMaps(){
         return this.ConnexionInstance.loadMaps().then((data) => {
-            this.Maps = data.maps;
             return data;
         }).catch((err) => {
             throw err;
