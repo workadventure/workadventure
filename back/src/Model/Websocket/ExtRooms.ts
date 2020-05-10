@@ -12,7 +12,7 @@ export class ExtRooms implements ExtRoomsInterface{
     [room: string]: SocketIO.Room;
 }
 
-let RefreshUserPositionFunction = function(rooms : ExtRooms, Io: socketIO.Server) {
+let RefreshUserPositionFunction = function(rooms : ExtRooms, Io: socketIO.Server, Worlds: Map<string, World>) {
     let clients = Io.clients();
     let socketsKey = Object.keys(Io.clients().sockets);
 
@@ -38,6 +38,14 @@ let RefreshUserPositionFunction = function(rooms : ExtRooms, Io: socketIO.Server
             dataArray = [data];
         }
         mapPositionUserByRoom.set(data.roomId, dataArray);
+
+        // update position in the worl
+        let messageUserPosition = new MessageUserPosition(data);
+        let world = Worlds.get(messageUserPosition.roomId);
+        if(world) {
+            world.updatePosition(messageUserPosition);
+            Worlds.set(messageUserPosition.roomId, world);
+        }
     }
     rooms.userPositionMapByRoom = Array.from(mapPositionUserByRoom);
 }
