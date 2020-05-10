@@ -108,7 +108,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
                 this.addLayer(this.Map.createStaticLayer(layer.name, this.Terrains, 0, 0).setDepth(depth));
             }
             if (layer.type === 'tilelayer' && layer.name === "exit") {
-                this.loadNextGame(layer);
+                this.loadNextGame(layer, this.map.width, this.map.tilewidth, this.map.tileheight);
             }
             if (layer.type === 'tilelayer' && layer.name === "start") {
                 this.startUser(layer);
@@ -155,15 +155,19 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
     }
 
     /**
-     * @param layer : ITiledMapLayer
+     *
+     * @param layer
+     * @param mapWidth
+     * @param tileWidth
+     * @param tileHeight
      */
-    private loadNextGame(layer: ITiledMapLayer){
+    private loadNextGame(layer: ITiledMapLayer, mapWidth: number, tileWidth: number, tileHeight: number){
         let properties : any = layer.properties;
         let nextSceneKey = properties.find((property:any) => property.name === "exitSceneKey");
         let nextMap : MapObject = gameManager.Maps.find((map: MapObject) => map.key === nextSceneKey.value);
 
         let gameIndex = this.scene.getIndex(nextMap.key);
-        let game = null;
+        let game : Phaser.Scene = null;
         if(gameIndex === -1){
             game = new GameScene(nextMap.key, `${API_URL}${nextMap.url}`);
             this.scene.add(nextSceneKey, game, false);
@@ -173,20 +177,20 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
         if(!game){
             return;
         }
-
         let tiles : any = layer.data;
         tiles.forEach((objectKey : number, key: number) => {
             if(objectKey === 0){
                 return;
             }
-            let y = (key / 45);
-            y = parseInt(`${y}`);
-            let x = key - (y * 46);
+            //key + 1 because the start x = 0;
+            let y : number = parseInt(((key + 1) / mapWidth).toString());
+            let x : number = key - (y * mapWidth);
+            //push and save switching case
             this.PositionNextScene.push({
-                xStart: (x * 32),
-                yStart: (y * 32),
-                xEnd: ((x +1) * 32),
-                yEnd: ((y + 1) * 32),
+                xStart: (x * tileWidth),
+                yStart: (y * tileWidth),
+                xEnd: ((x +1) * tileHeight),
+                yEnd: ((y + 1) * tileHeight),
                 key: nextMap.key
             })
         });

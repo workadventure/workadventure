@@ -45,6 +45,12 @@ A few things to notice:
 
 ![](doc/images/tiled_screenshot_1.png)
 
+If you have exit scene
+- You must create layer "exit". The layer have cases where the gamer can switch to the next scene.
+- In layer properties, you must add "exitSceneKey" property. It represent a key map of the next scene. Be careful, if you want that the next map will be correctly loaded, you must check that the map exists in the list of the maps application. The variable that represents maps in the application is "ROOMS" constant variable.
+
+![](doc/images/exit_layer_map.png)
+
 ### MacOS developers, your environment with Vagrant
 
 If you are using MacOS, you can increase Docker performance using Vagrant. If you want more explanations, you can read [this medium article](https://medium.com/better-programming/vagrant-to-increase-docker-performance-with-macos-25b354b0c65c).
