@@ -69,9 +69,11 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
                     console.warn("Don't know how to handle tileset ", tileset)
                     return;
                 }
+                //TODO strategy to add access token
                 this.load.image(tileset.name, `${this.MapUrlFile}/${tileset.image}`);
             })
         });
+        //TODO strategy to add access token
         this.load.tilemapTiledJSON(this.MapKey, `${this.MapUrlFile}/${this.MapKey}.json`);
 
         //add player png
@@ -139,18 +141,17 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
 
 
         // Let's generate the circle for the group delimiter
-        //TODO they are error with cercle
-        this.circleTexture = this.textures.createCanvas('circleSprite', 96, 96);
-        if(!this.circleTexture || this.circleTexture.context){
-            return;
+        let circleElement = Object.values(this.textures.list).find((object: Texture) => object.key === 'circleSprite');
+        if(circleElement) {
+            this.textures.remove('circleSprite');
         }
+        this.circleTexture = this.textures.createCanvas('circleSprite', 96, 96);
         let context = this.circleTexture.context;
         context.beginPath();
         context.arc(48, 48, 48, 0, 2 * Math.PI, false);
         // context.lineWidth = 5;
         context.strokeStyle = '#ffffff';
         context.stroke();
-
         this.circleTexture.refresh();
     }
 
@@ -399,7 +400,11 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
             this.groups.get(groupId).setPosition(Math.round(groupPositionMessage.position.x), Math.round(groupPositionMessage.position.y));
         } else {
             // TODO: circle radius should not be hard stored
-            let sprite = new Sprite(this, Math.round(groupPositionMessage.position.x), Math.round(groupPositionMessage.position.y), 'circleSprite');
+            let sprite = new Sprite(
+                this,
+                Math.round(groupPositionMessage.position.x),
+                Math.round(groupPositionMessage.position.y),
+                'circleSprite');
             sprite.setDisplayOrigin(48, 48);
             this.add.existing(sprite);
             this.groups.set(groupId, sprite);
