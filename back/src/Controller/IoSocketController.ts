@@ -104,6 +104,15 @@ export class IoSocketController {
                     return socket.emit(SockerIoEvent.MESSAGE_ERROR, JSON.stringify({message: messageUserPosition.message}))
                 }
 
+                if((socket as ExSocketInterface).roomId === messageUserPosition.roomId){
+                    return;
+                }
+
+                //lease previous room
+                if((socket as ExSocketInterface).roomId){
+                    socket.leave((socket as ExSocketInterface).roomId);
+                }
+
                 //join user in room
                 socket.join(messageUserPosition.roomId);
 
@@ -308,7 +317,7 @@ export class IoSocketController {
         }
         arrayMap.forEach((value: any) => {
             let roomId = value[0];
-            this.Io.in(roomId).emit(SockerIoEvent.USER_POSITION, JSON.stringify(arrayMap));
+            this.Io.in(roomId).emit(SockerIoEvent.USER_POSITION, JSON.stringify(value));
         });
         this.seTimeOutInProgress = setTimeout(() => {
             this.shareUsersPosition();

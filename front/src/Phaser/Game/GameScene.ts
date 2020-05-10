@@ -139,7 +139,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
 
 
         // Let's generate the circle for the group delimiter
-
+        //TODO they are error with cercle
         this.circleTexture = this.textures.createCanvas('circleSprite', 96, 96);
         if(!this.circleTexture || this.circleTexture.context){
             return;
@@ -268,6 +268,11 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
         //create collision
         this.createCollisionWithPlayer();
         this.createCollisionObject();
+
+        //join room
+        this.GameManager.joinRoom(this.scene.key, this.CurrentPlayer.PlayerTexture);
+
+        //listen event to share position of user
         this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this))
     }
 

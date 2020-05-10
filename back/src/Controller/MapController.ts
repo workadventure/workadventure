@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import {Application, Request, Response} from "express";
 import {OK} from "http-status-codes";
+import {ROOM_STARTED, ROOMS, URL_ROOM_STARTED} from "../Enum/EnvironmentVariable";
 
 export class MapController {
     App: Application;
@@ -20,11 +21,8 @@ export class MapController {
     getMpas() {
         this.App.get("/maps", (req: Request, res: Response) => {
             return res.status(OK).send({
-                mapStart: {key: "floor0", url: "/map/files/Floor0"},
-                maps: [
-                    {key: "floor0", url: "/map/files/Floor0"},
-                    {key: "floor1", url: "/map/files/Floor1"},
-                ]
+                mapStart: {key: ROOM_STARTED, url: URL_ROOM_STARTED},
+                maps: ROOMS
             });
         });
     }

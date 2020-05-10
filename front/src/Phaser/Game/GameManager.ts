@@ -71,6 +71,10 @@ export class GameManager {
         this.status = StatusGameManagerEnum.CURRENT_USER_CREATED;
     }
 
+    joinRoom(sceneKey : string, character: string){
+        this.ConnexionInstance.joinARoom(sceneKey, character);
+    }
+
     /**
      * Share position in game
      * @param ListMessageUserPosition
@@ -120,7 +124,7 @@ export class GameManager {
     }
 
     pushPlayerPosition(event: HasMovedEvent) {
-        this.ConnexionInstance.sharePosition(event.x, event.y, event.character, event.direction);
+        this.ConnexionInstance.sharePosition(event.x, event.y, event.character, this.currentGameScene.scene.key, event.direction);
     }
 }
 
