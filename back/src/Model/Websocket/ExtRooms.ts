@@ -40,12 +40,16 @@ let RefreshUserPositionFunction = function(rooms : ExtRooms, Io: socketIO.Server
         mapPositionUserByRoom.set(data.roomId, dataArray);
 
         // update position in the worl
+        if (!Worlds) {
+            return;
+        }
         let messageUserPosition = new MessageUserPosition(data);
         let world = Worlds.get(messageUserPosition.roomId);
-        if(world) {
-            world.updatePosition(messageUserPosition);
-            Worlds.set(messageUserPosition.roomId, world);
+        if (!world) {
+            return;
         }
+        world.updatePosition(messageUserPosition);
+        Worlds.set(messageUserPosition.roomId, world);
     }
     rooms.userPositionMapByRoom = Array.from(mapPositionUserByRoom);
 }

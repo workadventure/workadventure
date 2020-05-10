@@ -47,7 +47,7 @@ A few things to notice:
 
 If you have exit scene
 - You must create layer "exit". The layer have cases where the gamer can switch to the next scene.
-- In layer properties, you must add "exitSceneUrl" property. It represents a url map of the next scene. Be careful, if you want that the next map will be correctly loaded, you must check that the map files are in folder  `back/src/Assets/Maps/<your map folder>`. The files will be accessible by url `<HOST>/map/files/<your map folder>/...`.
+- In layer properties, you must add "exitSceneUrl" property. It represents a url map of the next scene For exemple : `/<map folder>/<map>.json`. Be careful, if you want that the next map will be correctly loaded, you must check that the map files are in folder  `back/src/Assets/Maps/<your map folder>`. The files will be accessible by url `<HOST>/map/files/<your map folder>/...`.
 
 ![](doc/images/exit_layer_map.png)
 

@@ -305,7 +305,7 @@ export class IoSocketController {
         if (!rooms.refreshUserPosition) {
             rooms.refreshUserPosition = RefreshUserPositionFunction;
         }
-        rooms.refreshUserPosition(rooms, this.Io);
+        rooms.refreshUserPosition(rooms, this.Io, this.Worlds);
     }
 
     //Hydrate and manage error

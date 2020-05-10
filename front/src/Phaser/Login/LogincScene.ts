@@ -8,7 +8,7 @@ import Rectangle = Phaser.GameObjects.Rectangle;
 import {PLAYER_RESOURCES} from "../Entity/PlayableCaracter";
 import {cypressAsserter} from "../../Cypress/CypressAsserter";
 import {GroupCreatedUpdatedMessageInterface, MessageUserPositionInterface} from "../../Connexion";
-import {API_URL} from "../../Enum/EnvironmentVariable";
+import {MAP_FILE_URL} from "../../Enum/EnvironmentVariable";
 
 export function getMapKeyByUrl(mapUrlStart: string){
     let tab = mapUrlStart.split("/");
@@ -104,7 +104,7 @@ export class LogincScene extends Phaser.Scene implements GameSceneInterface {
                     return;
                 }
                 let key = getMapKeyByUrl(scene.mapUrlStart);
-                let game = new GameScene(key,`${API_URL}${scene.mapUrlStart}`);
+                let game = new GameScene(key,`${MAP_FILE_URL}${scene.mapUrlStart}`);
                 this.scene.add(key, game, false);
                 this.scene.start(key);
                 return scene;
