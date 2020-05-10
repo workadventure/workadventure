@@ -18,7 +18,7 @@ export class MapController {
     }
 
     // Returns a map mapping map name to file name of the map
-    getMpas() {
+    getMaps() {
         this.App.get("/maps", (req: Request, res: Response) => {
             return res.status(OK).send({
                 mapStart: {key: ROOM_STARTED, url: URL_ROOM_STARTED},
