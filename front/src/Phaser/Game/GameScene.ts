@@ -1,13 +1,9 @@
 import {GameManager, gameManager, HasMovedEvent, MapObject, StatusGameManagerEnum} from "./GameManager";
 import {GroupCreatedUpdatedMessageInterface, MessageUserPositionInterface} from "../../Connexion";
 import {CurrentGamerInterface, GamerInterface, hasMovedEventName, Player} from "../Player/Player";
-import {API_URL, DEBUG_MODE, RESOLUTION, ROOM, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
-import Tile = Phaser.Tilemaps.Tile;
+import { DEBUG_MODE, MAP_FILE_URL, RESOLUTION, ROOM, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import {ITiledMap, ITiledMapLayer, ITiledTileSet} from "../Map/ITiledMap";
-import {cypressAsserter} from "../../Cypress/CypressAsserter";
 import {PLAYER_RESOURCES} from "../Entity/PlayableCaracter";
-import Circle = Phaser.Geom.Circle;
-import Graphics = Phaser.GameObjects.Graphics;
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
@@ -173,7 +169,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
         let gameIndex = this.scene.getIndex(exitSceneKey);
         let game : Phaser.Scene = null;
         if(gameIndex === -1){
-            game = new GameScene(exitSceneKey, `${API_URL}${exitSceneUrl.value}`);
+            game = new GameScene(exitSceneKey, `${MAP_FILE_URL}${exitSceneUrl.value}`);
             this.scene.add(exitSceneKey, game, false);
         }else{
             game = this.scene.get(exitSceneKey);
