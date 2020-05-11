@@ -37,7 +37,7 @@ export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
         this.PlayerValue = name;
         this.PlayerTexture = texture;
         this.playerName = new BitmapText(scene, x, y - 25, 'main_font', name, 8);
-        this.playerName.setOrigin(0.5).setCenterAlign();
+        this.playerName.setOrigin(0.5).setCenterAlign().setDepth(99999);
         scene.add.existing(this.playerName);
 
         this.scene.sys.updateList.add(this);
