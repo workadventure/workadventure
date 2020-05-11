@@ -175,7 +175,8 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
     private loadNextGame(layer: ITiledMapLayer, mapWidth: number, tileWidth: number, tileHeight: number){
         let exitSceneUrl = this.getExitSceneUrl(layer);
 
-        let exitSceneKey = getMapKeyByUrl(exitSceneUrl);
+        let exitSceneKey = gameManager.loadMap(exitSceneUrl, this.scene);
+        /*let exitSceneKey = getMapKeyByUrl(exitSceneUrl);
 
         let gameIndex = this.scene.getIndex(exitSceneKey);
         let game : Phaser.Scene = null;
@@ -187,7 +188,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
         }
         if(!game){
             return;
-        }
+        }*/
         let tiles : any = layer.data;
         tiles.forEach((objectKey : number, key: number) => {
             if(objectKey === 0){

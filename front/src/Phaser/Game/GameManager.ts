@@ -5,6 +5,10 @@ import {
     ListMessageUserPositionInterface
 } from "../../Connexion";
 import {SimplePeerInterface, SimplePeer} from "../../WebRtc/SimplePeer";
+import {MAP_FILE_URL} from "../../Enum/EnvironmentVariable";
+import {getMapKeyByUrl} from "../Login/LogincScene";
+import SceneManager = Phaser.Scenes.SceneManager;
+import ScenePlugin = Phaser.Scenes.ScenePlugin;
 
 export enum StatusGameManagerEnum {
     IN_PROGRESS = 1,
@@ -123,6 +127,18 @@ export class GameManager {
 
     pushPlayerPosition(event: HasMovedEvent) {
         this.ConnexionInstance.sharePosition(event.x, event.y, event.character, this.currentGameScene.scene.key, event.direction);
+    }
+
+    loadMap(mapUrl: string, scene: ScenePlugin): string {
+        let sceneKey = getMapKeyByUrl(mapUrl);
+
+        let gameIndex = scene.getIndex(sceneKey);
+        let game : Phaser.Scene = null;
+        if(gameIndex === -1){
+            game = new GameScene(sceneKey, `${MAP_FILE_URL}${mapUrl}`);
+            scene.add(sceneKey, game, false);
+        }
+        return sceneKey;
     }
 }
 
