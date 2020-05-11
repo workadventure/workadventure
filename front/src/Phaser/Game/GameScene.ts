@@ -151,6 +151,15 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
         context.strokeStyle = '#ffffff';
         context.stroke();
         this.circleTexture.refresh();
+
+        // Let's alter browser history
+        let url = new URL(this.MapUrlFile);
+        let path = '/_/'+url.host+url.pathname;
+        if (url.hash) {
+            // FIXME: entry should be dictated by a property passed to init()
+            path += '#'+url.hash;
+        }
+        window.history.pushState({}, null, path);
     }
 
     private getExitSceneUrl(layer: ITiledMapLayer): string|undefined {
