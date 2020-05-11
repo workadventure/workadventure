@@ -109,7 +109,7 @@ export class IoSocketController {
                 this.saveUserInformation(Client, messageUserPosition);
 
                 //add function to refresh position user in real time.
-                this.refreshUserPosition();
+                this.refreshUserPosition(Client);
 
                 socket.to(messageUserPosition.roomId).emit(SockerIoEvent.JOIN_ROOM, messageUserPosition.toString());
             });
@@ -120,11 +120,13 @@ export class IoSocketController {
                     return socket.emit(SockerIoEvent.MESSAGE_ERROR, JSON.stringify({message: messageUserPosition.message}));
                 }
 
+                let Client = (socket as ExSocketInterface);
+
                 // sending to all clients in room except sender
-                this.saveUserInformation((socket as ExSocketInterface), messageUserPosition);
+                this.saveUserInformation(Client, messageUserPosition);
 
                 //refresh position of all user in all rooms in real time
-                this.refreshUserPosition();
+                this.refreshUserPosition(Client);
             });
 
             socket.on(SockerIoEvent.WEBRTC_SIGNAL, (message: string) => {
@@ -155,7 +157,7 @@ export class IoSocketController {
                 this.sendDisconnectedEvent(Client);
 
                 //refresh position of all user in all rooms in real time
-                this.refreshUserPosition();
+                this.refreshUserPosition(Client);
 
                 //leave room
                 this.leaveRoom(Client);
@@ -299,13 +301,29 @@ export class IoSocketController {
         socket.character = message.character;
     }
 
-    refreshUserPosition() {
+    refreshUserPosition(Client : ExSocketInterface) {
         //refresh position of all user in all rooms in real time
         let rooms = (this.Io.sockets.adapter.rooms as ExtRoomsInterface);
         if (!rooms.refreshUserPosition) {
             rooms.refreshUserPosition = RefreshUserPositionFunction;
         }
-        rooms.refreshUserPosition(rooms, this.Io, this.Worlds);
+        rooms.refreshUserPosition(rooms, this.Io);
+
+        // update position in the worl
+        let data = {
+            userId: Client.userId,
+            roomId: Client.roomId,
+            position: Client.position,
+            name: Client.name,
+            character: Client.character,
+        };
+        let messageUserPosition = new MessageUserPosition(data);
+        let world = this.Worlds.get(messageUserPosition.roomId);
+        if (!world) {
+            return;
+        }
+        world.updatePosition(messageUserPosition);
+        this.Worlds.set(messageUserPosition.roomId, world);
     }
 
     //Hydrate and manage error
