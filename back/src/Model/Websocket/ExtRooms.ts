@@ -8,7 +8,7 @@ export class ExtRooms implements ExtRoomsInterface{
     Worlds: any;
 
     [room: string]: SocketIO.Room;
-};
+}
 
 let RefreshUserPositionFunction = function(rooms : ExtRooms, Io: socketIO.Server) {
     let clients = Io.clients();
