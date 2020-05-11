@@ -107,7 +107,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
             if (layer.type === 'tilelayer') {
                 this.addLayer(this.Map.createStaticLayer(layer.name, this.Terrains, 0, 0).setDepth(depth));
             }
-            if (layer.type === 'tilelayer' && layer.name === "exit") {
+            if (layer.type === 'tilelayer' && this.getExitSceneUrl(layer) !== undefined) {
                 this.loadNextGame(layer, this.map.width, this.map.tilewidth, this.map.tileheight);
             }
             if (layer.type === 'tilelayer' && layer.name === "start") {
@@ -153,6 +153,18 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
         this.circleTexture.refresh();
     }
 
+    private getExitSceneUrl(layer: ITiledMapLayer): string|undefined {
+        let properties : any = layer.properties;
+        if (!properties) {
+            return undefined;
+        }
+        let obj = properties.find((property:any) => property.name === "exitSceneUrl");
+        if (obj === undefined) {
+            return undefined;
+        }
+        return obj.value;
+    }
+
     /**
      *
      * @param layer
@@ -161,15 +173,14 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
      * @param tileHeight
      */
     private loadNextGame(layer: ITiledMapLayer, mapWidth: number, tileWidth: number, tileHeight: number){
-        let properties : any = layer.properties;
-        let exitSceneUrl = properties.find((property:any) => property.name === "exitSceneUrl");
+        let exitSceneUrl = this.getExitSceneUrl(layer);
 
-        let exitSceneKey = getMapKeyByUrl(exitSceneUrl.value);
+        let exitSceneKey = getMapKeyByUrl(exitSceneUrl);
 
         let gameIndex = this.scene.getIndex(exitSceneKey);
         let game : Phaser.Scene = null;
         if(gameIndex === -1){
-            game = new GameScene(exitSceneKey, `${MAP_FILE_URL}${exitSceneUrl.value}`);
+            game = new GameScene(exitSceneKey, `${MAP_FILE_URL}${exitSceneUrl}`);
             this.scene.add(exitSceneKey, game, false);
         }else{
             game = this.scene.get(exitSceneKey);
@@ -186,6 +197,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
             let y : number = parseInt(((key + 1) / mapWidth).toString());
             let x : number = key - (y * mapWidth);
             //push and save switching case
+            // TODO: this is not efficient. We should refactor that to enable a search by key. For instance: this.PositionNextScene[y][x] = exitSceneKey
             this.PositionNextScene.push({
                 xStart: (x * tileWidth),
                 yStart: (y * tileWidth),
@@ -205,9 +217,8 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
             if(objectKey === 0){
                 return;
             }
-            let y = (key / 45);
-            y = parseInt(`${y}`);
-            let x = key - (y * 46);
+            let y = Math.floor(key / layer.width);
+            let x = key % layer.width;
 
             this.startX = (x * 32);
             this.startY = (y * 32);
@@ -411,6 +422,9 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
     }
 
     deleteGroup(groupId: string): void {
+        if(!this.groups.get(groupId)){
+            return;
+        }
         this.groups.get(groupId).destroy();
         this.groups.delete(groupId);
     }

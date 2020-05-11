@@ -47,7 +47,7 @@ A few things to notice:
 
 In order to place an on your scene that leads to another scene:
 
-- You must create an "exit" layer. The layer name MUST be "exit".
+- You must create an specific layer. When a character reaches ANY tile of that layer, it will exit the scene.
 - In layer properties, you must add "exitSceneUrl" property. It represents the map URL of the next scene. For example : `/<map folder>/<map>.json`. Be careful, if you want the next map to be correctly loaded, you must check that the map files are in folder `back/src/Assets/Maps/<your map folder>`. The files will be accessible by url `<HOST>/map/files/<your map folder>/...`.
 - If you want to have multiple exits, you can create many layers with name "exit". Each layer has a different key `exitSceneUrl` and have tiles that represent exits to another scene.
 
