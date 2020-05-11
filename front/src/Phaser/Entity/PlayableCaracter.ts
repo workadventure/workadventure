@@ -46,7 +46,7 @@ export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
         this.scene.physics.world.enableBody(this);
         this.setImmovable(true);
         this.setCollideWorldBounds(true);
-        this.setSize(16, 16); //edit the hitbox to better match the caracter model
+        this.setSize(16, 16); //edit the hitbox to better match the character model
         this.setOffset(8, 16);
         this.setDepth(-1);
     }
@@ -55,7 +55,7 @@ export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
 
         this.setVelocity(x, y);
 
-        //up or down animationss are prioritized over left and right
+        // up or down animations are prioritized over left and right
         if (this.body.velocity.y < 0) { //moving up
             this.play(`${this.PlayerTexture}-${PlayerAnimationNames.WalkUp}`, true);
         } else if (this.body.velocity.y > 0) { //moving down
