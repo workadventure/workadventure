@@ -5,7 +5,6 @@ import {
     ListMessageUserPositionInterface
 } from "../../Connexion";
 import {SimplePeerInterface, SimplePeer} from "../../WebRtc/SimplePeer";
-import {API_URL} from "../../Enum/EnvironmentVariable";
 
 export enum StatusGameManagerEnum {
     IN_PROGRESS = 1,
