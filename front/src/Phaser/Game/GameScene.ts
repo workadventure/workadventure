@@ -422,6 +422,9 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
     }
 
     deleteGroup(groupId: string): void {
+        if(!this.groups.get(groupId)){
+            return;
+        }
         this.groups.get(groupId).destroy();
         this.groups.delete(groupId);
     }
