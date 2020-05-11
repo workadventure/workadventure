@@ -1,13 +1,11 @@
-import {GameScene} from "./GameScene";
-import {ROOM} from "../../Enum/EnvironmentVariable"
+import {GameScene, GameSceneInterface} from "./GameScene";
 import {
     Connexion,
-    ConnexionInterface,
     GroupCreatedUpdatedMessageInterface,
     ListMessageUserPositionInterface
 } from "../../Connexion";
 import {SimplePeerInterface, SimplePeer} from "../../WebRtc/SimplePeer";
-import {LogincScene} from "../Login/LogincScene";
+import {API_URL} from "../../Enum/EnvironmentVariable";
 
 export enum StatusGameManagerEnum {
     IN_PROGRESS = 1,
@@ -21,10 +19,15 @@ export interface HasMovedEvent {
     character: string;
 }
 
+export interface MapObject {
+    key: string,
+    url: string
+}
+
 export class GameManager {
     status: number;
     private ConnexionInstance: Connexion;
-    private currentGameScene: GameScene;
+    private currentGameScene: GameSceneInterface;
     private playerName: string;
     SimplePeer : SimplePeerInterface;
     private characterUserSelected: string;
@@ -37,12 +40,23 @@ export class GameManager {
         this.playerName = name;
         this.characterUserSelected = characterUserSelected;
         this.ConnexionInstance = new Connexion(name, this);
-        return this.ConnexionInstance.createConnexion(characterUserSelected).then(() => {
+        return this.ConnexionInstance.createConnexion(characterUserSelected).then((data : any) => {
             this.SimplePeer = new SimplePeer(this.ConnexionInstance);
+            return data;
+        }).catch((err) => {
+          throw err;
         });
     }
 
-    setCurrentGameScene(gameScene: GameScene) {
+    loadMaps(){
+        return this.ConnexionInstance.loadMaps().then((data) => {
+            return data;
+        }).catch((err) => {
+            throw err;
+        });
+    }
+
+    setCurrentGameScene(gameScene: GameSceneInterface) {
         this.currentGameScene = gameScene;
     }
 
@@ -54,6 +68,10 @@ export class GameManager {
         //Get started room send by the backend
         this.currentGameScene.createCurrentPlayer(this.ConnexionInstance.userId);
         this.status = StatusGameManagerEnum.CURRENT_USER_CREATED;
+    }
+
+    joinRoom(sceneKey : string, character: string){
+        this.ConnexionInstance.joinARoom(sceneKey, character);
     }
 
     /**
@@ -105,7 +123,7 @@ export class GameManager {
     }
 
     pushPlayerPosition(event: HasMovedEvent) {
-        this.ConnexionInstance.sharePosition(event.x, event.y, event.character, event.direction);
+        this.ConnexionInstance.sharePosition(event.x, event.y, event.character, this.currentGameScene.scene.key, event.direction);
     }
 }
 

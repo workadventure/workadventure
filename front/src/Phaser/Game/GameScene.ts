@@ -1,29 +1,28 @@
-import {GameManager, gameManager, HasMovedEvent, StatusGameManagerEnum} from "./GameManager";
+import {GameManager, gameManager, HasMovedEvent, MapObject, StatusGameManagerEnum} from "./GameManager";
 import {GroupCreatedUpdatedMessageInterface, MessageUserPositionInterface} from "../../Connexion";
 import {CurrentGamerInterface, GamerInterface, hasMovedEventName, Player} from "../Player/Player";
-import {DEBUG_MODE, RESOLUTION, ROOM, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
-import Tile = Phaser.Tilemaps.Tile;
-import {ITiledMap, ITiledTileSet} from "../Map/ITiledMap";
-import {cypressAsserter} from "../../Cypress/CypressAsserter";
+import { DEBUG_MODE, MAP_FILE_URL, RESOLUTION, ROOM, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
+import {ITiledMap, ITiledMapLayer, ITiledTileSet} from "../Map/ITiledMap";
 import {PLAYER_RESOURCES} from "../Entity/PlayableCaracter";
-import Circle = Phaser.Geom.Circle;
-import Graphics = Phaser.GameObjects.Graphics;
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
+import CreateSceneFromObjectConfig = Phaser.Types.Scenes.CreateSceneFromObjectConfig;
+import {getMapKeyByUrl} from "../Login/LogincScene";
 
-export const GameSceneName = "GameScene";
 export enum Textures {
-    Player = 'male1',
-    Map = 'map'
+    Player = "male1"
 }
 
 export interface GameSceneInterface extends Phaser.Scene {
     Map: Phaser.Tilemaps.Tilemap;
     createCurrentPlayer(UserId : string) : void;
     shareUserPosition(UsersPosition : Array<MessageUserPositionInterface>): void;
+    shareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface): void;
+    updateOrCreateMapPlayer(UsersPosition : Array<MessageUserPositionInterface>): void;
+    deleteGroup(groupId: string): void;
 }
-export class GameScene extends Phaser.Scene implements GameSceneInterface{
+export class GameScene extends Phaser.Scene implements GameSceneInterface, CreateSceneFromObjectConfig{
     GameManager : GameManager;
     Terrains : Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer: CurrentGamerInterface;
@@ -32,38 +31,48 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     Layers : Array<Phaser.Tilemaps.StaticTilemapLayer>;
     Objects : Array<Phaser.Physics.Arcade.Sprite>;
     map: ITiledMap;
-    groups: Map<string, Sprite>
+    groups: Map<string, Sprite>;
     startX = 704;// 22 case
     startY = 32; // 1 case
     circleTexture: CanvasTexture;
 
-    constructor() {
+    MapKey: string;
+    MapUrlFile: string;
+
+    PositionNextScene: Array<any> = new Array<any>();
+
+    constructor(MapKey : string = "", MapUrlFile: string = "") {
         super({
-            key: GameSceneName
+            key: MapKey
         });
+
         this.GameManager = gameManager;
         this.Terrains = [];
         this.groups = new Map<string, Sprite>();
+
+        this.MapKey =  MapKey;
+        this.MapUrlFile = MapUrlFile;
     }
 
     //hook preload scene
     preload(): void {
         this.GameManager.setCurrentGameScene(this);
-        let mapUrl = 'maps/map.json';
-        this.load.on('filecomplete-tilemapJSON-'+Textures.Map, (key: string, type: string, data: any) => {
+        this.load.on('filecomplete-tilemapJSON-'+this.MapKey, (key: string, type: string, data: any) => {
             // Triggered when the map is loaded
             // Load tiles attached to the map recursively
             this.map = data.data;
+            let url = this.MapUrlFile.substr(0, this.MapUrlFile.indexOf(`${this.MapKey}.json`));
             this.map.tilesets.forEach((tileset) => {
                 if (typeof tileset.name === 'undefined' || typeof tileset.image === 'undefined') {
                     console.warn("Don't know how to handle tileset ", tileset)
                     return;
                 }
-                let path = mapUrl.substr(0, mapUrl.lastIndexOf('/'));
-                this.load.image(tileset.name, path + '/' + tileset.image);
+                //TODO strategy to add access token
+                this.load.image(tileset.name, `${url}/${tileset.image}`);
             })
         });
-        this.load.tilemapTiledJSON(Textures.Map, mapUrl);
+        //TODO strategy to add access token
+        this.load.tilemapTiledJSON(this.MapKey, this.MapUrlFile);
 
         //add player png
         PLAYER_RESOURCES.forEach((playerResource: any) => {
@@ -78,13 +87,12 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
     }
 
     //hook initialisation
-    init() {
-    }
+    init() {}
 
     //hook create scene
     create(): void {
         //initalise map
-        this.Map = this.add.tilemap("map");
+        this.Map = this.add.tilemap(this.MapKey);
         this.map.tilesets.forEach((tileset: ITiledTileSet) => {
             this.Terrains.push(this.Map.addTilesetImage(tileset.name, tileset.name));
         });
@@ -95,9 +103,15 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         //add layer on map
         this.Layers = new Array<Phaser.Tilemaps.StaticTilemapLayer>();
         let depth = -2;
-        this.map.layers.forEach((layer) => {
+        this.map.layers.forEach((layer : ITiledMapLayer) => {
             if (layer.type === 'tilelayer') {
                 this.addLayer(this.Map.createStaticLayer(layer.name, this.Terrains, 0, 0).setDepth(depth));
+            }
+            if (layer.type === 'tilelayer' && layer.name === "exit") {
+                this.loadNextGame(layer, this.map.width, this.map.tilewidth, this.map.tileheight);
+            }
+            if (layer.type === 'tilelayer' && layer.name === "start") {
+                this.startUser(layer);
             }
             if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
                 depth = 10000;
@@ -120,13 +134,15 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         //notify game manager can to create currentUser in map
         this.GameManager.createCurrentPlayer();
 
-
         //initialise camera
         this.initCamera();
 
 
         // Let's generate the circle for the group delimiter
-
+        let circleElement = Object.values(this.textures.list).find((object: Texture) => object.key === 'circleSprite');
+        if(circleElement) {
+            this.textures.remove('circleSprite');
+        }
         this.circleTexture = this.textures.createCanvas('circleSprite', 96, 96);
         let context = this.circleTexture.context;
         context.beginPath();
@@ -134,8 +150,68 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         // context.lineWidth = 5;
         context.strokeStyle = '#ffffff';
         context.stroke();
-
         this.circleTexture.refresh();
+    }
+
+    /**
+     *
+     * @param layer
+     * @param mapWidth
+     * @param tileWidth
+     * @param tileHeight
+     */
+    private loadNextGame(layer: ITiledMapLayer, mapWidth: number, tileWidth: number, tileHeight: number){
+        let properties : any = layer.properties;
+        let exitSceneUrl = properties.find((property:any) => property.name === "exitSceneUrl");
+
+        let exitSceneKey = getMapKeyByUrl(exitSceneUrl.value);
+
+        let gameIndex = this.scene.getIndex(exitSceneKey);
+        let game : Phaser.Scene = null;
+        if(gameIndex === -1){
+            game = new GameScene(exitSceneKey, `${MAP_FILE_URL}${exitSceneUrl.value}`);
+            this.scene.add(exitSceneKey, game, false);
+        }else{
+            game = this.scene.get(exitSceneKey);
+        }
+        if(!game){
+            return;
+        }
+        let tiles : any = layer.data;
+        tiles.forEach((objectKey : number, key: number) => {
+            if(objectKey === 0){
+                return;
+            }
+            //key + 1 because the start x = 0;
+            let y : number = parseInt(((key + 1) / mapWidth).toString());
+            let x : number = key - (y * mapWidth);
+            //push and save switching case
+            this.PositionNextScene.push({
+                xStart: (x * tileWidth),
+                yStart: (y * tileWidth),
+                xEnd: ((x +1) * tileHeight),
+                yEnd: ((y + 1) * tileHeight),
+                key: exitSceneKey
+            })
+        });
+    }
+
+    /**
+     * @param layer
+     */
+    private startUser(layer: ITiledMapLayer){
+        let tiles : any = layer.data;
+        tiles.forEach((objectKey : number, key: number) => {
+            if(objectKey === 0){
+                return;
+            }
+            let y = (key / 45);
+            y = parseInt(`${y}`);
+            let x = key - (y * 46);
+
+            this.startX = (x * 32);
+            this.startY = (y * 32);
+        });
     }
 
     //todo: in a dedicated class/function?
@@ -182,6 +258,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
 
     createCurrentPlayer(UserId : string){
         //initialise player
+        //TODO create animation moving between exit and strat
         this.CurrentPlayer = new Player(
             UserId,
             this,
@@ -195,6 +272,11 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
         //create collision
         this.createCollisionWithPlayer();
         this.createCollisionObject();
+
+        //join room
+        this.GameManager.joinRoom(this.scene.key, this.CurrentPlayer.PlayerTexture);
+
+        //listen event to share position of user
         this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this))
     }
 
@@ -208,7 +290,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             //pixel position toz tile position
             let tile = this.Map.getTileAt(this.Map.worldToTileX(pointer.worldX), this.Map.worldToTileY(pointer.worldY));
             if(tile){
-                console.log(tile)
                 this.CurrentPlayer.say("Your touch " + tile.layer.name);
             }
         });
@@ -220,6 +301,23 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
      */
     update(time: number, delta: number) : void {
         this.CurrentPlayer.moveUser(delta);
+        let nextSceneKey = this.checkToExit();
+        if(nextSceneKey){
+            this.scene.start(nextSceneKey.key);
+        }
+    }
+
+    /**
+     *
+     */
+    checkToExit(){
+        if(this.PositionNextScene.length === 0){
+            return null;
+        }
+        return this.PositionNextScene.find((position : any) => {
+            return position.xStart <= this.CurrentPlayer.x && this.CurrentPlayer.x <= position.xEnd
+            && position.yStart <= this.CurrentPlayer.y && this.CurrentPlayer.y <= position.yEnd
+        })
     }
 
     /**
@@ -274,7 +372,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
      * Create new player
      * @param MessageUserPosition
      */
-    addPlayer(MessageUserPosition : MessageUserPositionInterface){
+    addPlayer(MessageUserPosition : MessageUserPositionInterface) : void{
         //initialise player
         let player = new Player(
             MessageUserPosition.userId,
@@ -301,7 +399,11 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface{
             this.groups.get(groupId).setPosition(Math.round(groupPositionMessage.position.x), Math.round(groupPositionMessage.position.y));
         } else {
             // TODO: circle radius should not be hard stored
-            let sprite = new Sprite(this, Math.round(groupPositionMessage.position.x), Math.round(groupPositionMessage.position.y), 'circleSprite');
+            let sprite = new Sprite(
+                this,
+                Math.round(groupPositionMessage.position.x),
+                Math.round(groupPositionMessage.position.y),
+                'circleSprite');
             sprite.setDisplayOrigin(48, 48);
             this.add.existing(sprite);
             this.groups.set(groupId, sprite);

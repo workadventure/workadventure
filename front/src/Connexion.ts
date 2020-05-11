@@ -2,7 +2,8 @@ import {GameManager} from "./Phaser/Game/GameManager";
 
 const SocketIo = require('socket.io-client');
 import Axios from "axios";
-import {API_URL, ROOM} from "./Enum/EnvironmentVariable";
+import {API_URL} from "./Enum/EnvironmentVariable";
+import {getMapKeyByUrl} from "./Phaser/Login/LogincScene";
 
 enum EventMessage{
     WEBRTC_SIGNAL = "webrtc-signal",
@@ -143,9 +144,11 @@ export interface ConnexionInterface {
 
     createConnexion(characterSelected: string): Promise<any>;
 
+    loadMaps(): Promise<any>;
+
     joinARoom(roomId: string, character: string): void;
 
-    sharePosition(x: number, y: number, direction: string, character: string): void;
+    sharePosition(x: number, y: number, direction: string, roomId: string, character: string): void;
 
     positionOfAllUser(): void;
 
@@ -173,11 +176,15 @@ export class Connexion implements ConnexionInterface {
         this.GameManager = GameManager;
     }
 
+    /**
+     * @param characterSelected
+     */
     createConnexion(characterSelected: string): Promise<ConnexionInterface> {
         return Axios.post(`${API_URL}/login`, {email: this.email})
             .then((res) => {
                 this.token = res.data.token;
-                this.startedRoom = res.data.roomId;
+
+                this.startedRoom = getMapKeyByUrl(res.data.mapUrlStart);
                 this.userId = res.data.userId;
 
                 this.socket = SocketIo(`${API_URL}`, {
@@ -190,7 +197,7 @@ export class Connexion implements ConnexionInterface {
                 this.joinARoom(this.startedRoom, characterSelected);
 
                 //share your first position
-                this.sharePosition(0, 0, characterSelected);
+                this.sharePosition(0, 0, characterSelected, this.startedRoom);
 
                 this.positionOfAllUser();
 
@@ -199,9 +206,20 @@ export class Connexion implements ConnexionInterface {
                 this.groupUpdatedOrCreated();
                 this.groupDeleted();
 
-                return this;
+                return res.data;
             })
             .catch((err) => {
+                console.error(err);
+                throw err;
+            });
+    }
+
+    //TODO add middleware with access token to secure api
+    loadMaps() : Promise<any> {
+        return Axios.get(`${API_URL}/maps`)
+            .then((res) => {
+                return res.data;
+            }).catch((err) => {
                 console.error(err);
                 throw err;
             });
@@ -215,7 +233,7 @@ export class Connexion implements ConnexionInterface {
     joinARoom(roomId: string, character: string): void {
         let messageUserPosition = new MessageUserPosition(
             this.userId,
-            this.startedRoom,
+            roomId,
             new Point(0, 0),
             this.email,
             character
@@ -228,15 +246,16 @@ export class Connexion implements ConnexionInterface {
      * @param x
      * @param y
      * @param character
+     * @param roomId
      * @param direction
      */
-    sharePosition(x : number, y : number, character : string, direction : string = "none") : void{
+    sharePosition(x : number, y : number, character : string, roomId : string, direction : string = "none") : void{
         if(!this.socket){
             return;
         }
         let messageUserPosition = new MessageUserPosition(
             this.userId,
-            ROOM[0],
+            roomId,
             new Point(x, y, direction),
             this.email,
             character
@@ -262,10 +281,9 @@ export class Connexion implements ConnexionInterface {
     positionOfAllUser(): void {
         this.socket.on(EventMessage.USER_POSITION, (message: string) => {
             let dataList = JSON.parse(message);
-            dataList.forEach((UserPositions: any) => {
-                let listMessageUserPosition = new ListMessageUserPosition(UserPositions[0], UserPositions[1]);
-                this.GameManager.shareUserPosition(listMessageUserPosition);
-            });
+            let UserPositions : Array<any> = Object.values(dataList);
+            let listMessageUserPosition =  new ListMessageUserPosition(UserPositions[0], UserPositions[1]);
+            this.GameManager.shareUserPosition(listMessageUserPosition);
         });
     }
 

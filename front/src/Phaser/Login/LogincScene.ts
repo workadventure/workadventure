@@ -2,13 +2,18 @@ import {gameManager} from "../Game/GameManager";
 import {TextField} from "../Components/TextField";
 import {TextInput} from "../Components/TextInput";
 import {ClickButton} from "../Components/ClickButton";
-import {GameSceneInterface, GameSceneName, Textures} from "../Game/GameScene";
+import {GameScene, GameSceneInterface} from "../Game/GameScene";
 import Image = Phaser.GameObjects.Image;
-import {Player} from "../Player/Player";
-import {getPlayerAnimations, PlayerAnimationNames} from "../Player/Animation";
 import Rectangle = Phaser.GameObjects.Rectangle;
 import {PLAYER_RESOURCES} from "../Entity/PlayableCaracter";
 import {cypressAsserter} from "../../Cypress/CypressAsserter";
+import {GroupCreatedUpdatedMessageInterface, MessageUserPositionInterface} from "../../Connexion";
+import {MAP_FILE_URL} from "../../Enum/EnvironmentVariable";
+
+export function getMapKeyByUrl(mapUrlStart: string){
+    let tab = mapUrlStart.split("/");
+    return tab[tab.length -1].substr(0, tab[tab.length -1].indexOf(".json"));
+}
 
 //todo: put this constants in a dedicated file
 export const LoginSceneName = "LoginScene";
@@ -93,15 +98,30 @@ export class LogincScene extends Phaser.Scene implements GameSceneInterface {
     }
 
     private async login(name: string) {
-        gameManager.connect(name, this.selectedPlayer.texture.key).then(() => {
-            this.scene.start(GameSceneName);
+        return gameManager.connect(name, this.selectedPlayer.texture.key).then(() => {
+            return gameManager.loadMaps().then((scene : any) => {
+                if (!scene) {
+                    return;
+                }
+                let key = getMapKeyByUrl(scene.mapUrlStart);
+                let game = new GameScene(key,`${MAP_FILE_URL}${scene.mapUrlStart}`);
+                this.scene.add(key, game, false);
+                this.scene.start(key);
+                return scene;
+            }).catch((err) => {
+                console.error(err);
+                throw err;
+            });
+        }).catch((err) => {
+            console.error(err);
+            throw err;
         });
     }
 
     Map: Phaser.Tilemaps.Tilemap;
 
     initAnimation(): void {
-
+        throw new Error("Method not implemented.");
     }
 
     createCurrentPlayer(UserId: string): void {
@@ -130,6 +150,18 @@ export class LogincScene extends Phaser.Scene implements GameSceneInterface {
     }
 
     shareUserPosition(UsersPosition: import("../../Connexion").MessageUserPositionInterface[]): void {
+        throw new Error("Method not implemented.");
+    }
+
+    deleteGroup(groupId: string): void {
+        throw new Error("Method not implemented.");
+    }
+
+    shareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface): void {
+        throw new Error("Method not implemented.");
+    }
+
+    updateOrCreateMapPlayer(UsersPosition: Array<MessageUserPositionInterface>): void {
         throw new Error("Method not implemented.");
     }
 }

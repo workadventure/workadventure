@@ -45,6 +45,14 @@ A few things to notice:
 
 ![](doc/images/tiled_screenshot_1.png)
 
+In order to place an on your scene that leads to another scene:
+
+- You must create an "exit" layer. The layer name MUST be "exit".
+- In layer properties, you must add "exitSceneUrl" property. It represents the map URL of the next scene. For example : `/<map folder>/<map>.json`. Be careful, if you want the next map to be correctly loaded, you must check that the map files are in folder `back/src/Assets/Maps/<your map folder>`. The files will be accessible by url `<HOST>/map/files/<your map folder>/...`.
+- If you want to have multiple exits, you can create many layers with name "exit". Each layer has a different key `exitSceneUrl` and have tiles that represent exits to another scene.
+
+![](doc/images/exit_layer_map.png)
+
 ### MacOS developers, your environment with Vagrant
 
 If you are using MacOS, you can increase Docker performance using Vagrant. If you want more explanations, you can read [this medium article](https://medium.com/better-programming/vagrant-to-increase-docker-performance-with-macos-25b354b0c65c).

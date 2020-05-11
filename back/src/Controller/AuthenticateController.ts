@@ -1,7 +1,7 @@
 import {Application, Request, Response} from "express";
 import Jwt from "jsonwebtoken";
 import {BAD_REQUEST, OK} from "http-status-codes";
-import {SECRET_KEY, ROOM} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
+import {SECRET_KEY, URL_ROOM_STARTED} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 import { uuid } from 'uuidv4';
 
 export class AuthenticateController{
@@ -23,11 +23,11 @@ export class AuthenticateController{
             }
             //TODO check user email for The Coding Machine game
             let userId = uuid();
-            let token = Jwt.sign({email: param.email, roomId: ROOM, userId: userId}, SECRET_KEY, {expiresIn: '24h'});
+            let token = Jwt.sign({email: param.email, userId: userId}, SECRET_KEY, {expiresIn: '24h'});
             return res.status(OK).send({
                 token: token,
-                roomId: ROOM,
-                userId: userId
+                mapUrlStart: URL_ROOM_STARTED,
+                userId: userId,
             });
         });
     }
