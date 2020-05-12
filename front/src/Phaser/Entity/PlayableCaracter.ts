@@ -49,6 +49,8 @@ export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
         this.setSize(16, 16); //edit the hitbox to better match the character model
         this.setOffset(8, 16);
         this.setDepth(-1);
+
+        this.scene.events.on('postupdate', this.postupdate.bind(this));
     }
 
     move(x: number, y: number) {
@@ -69,14 +71,14 @@ export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
         if (this.bubble) {
             this.bubble.moveBubble(this.x, this.y);
         }
-        this.updatePlayerNamePosition(this.x, this.y);
 
         //update depth user
         this.setDepth(this.y);
     }
 
-    updatePlayerNamePosition(x: number, y: number){
-        this.playerName.setPosition(x, y - 25);
+    postupdate(time: number, delta: number) {
+        //super.update(delta);
+        this.playerName.setPosition(this.x, this.y - 25);
     }
 
     stop(){
@@ -95,6 +97,9 @@ export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
     }
 
     destroy(fromScene?: boolean): void {
+        if (this.scene) {
+            this.scene.events.removeListener('postupdate', this.postupdate.bind(this));
+        }
         super.destroy(fromScene);
         this.playerName.destroy();
     }

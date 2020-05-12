@@ -88,46 +88,56 @@ export class IoSocketController {
                         y: user y position on map
             */
             socket.on(SockerIoEvent.JOIN_ROOM, (message: string) => {
-                let messageUserPosition = this.hydrateMessageReceive(message);
-                if (messageUserPosition instanceof Error) {
-                    return socket.emit(SockerIoEvent.MESSAGE_ERROR, JSON.stringify({message: messageUserPosition.message}))
+                try {
+                    let messageUserPosition = this.hydrateMessageReceive(message);
+                    if (messageUserPosition instanceof Error) {
+                        return socket.emit(SockerIoEvent.MESSAGE_ERROR, JSON.stringify({message: messageUserPosition.message}))
+                    }
+
+                    let Client = (socket as ExSocketInterface);
+
+                    if(Client.roomId === messageUserPosition.roomId){
+                        return;
+                    }
+
+                    //leave previous room
+                    this.leaveRoom(Client);
+
+                    //join new previous room
+                    this.joinRoom(Client, messageUserPosition);
+
+                    // sending to all clients in room except sender
+                    this.saveUserInformation(Client, messageUserPosition);
+
+                    //add function to refresh position user in real time.
+                    this.refreshUserPosition(Client);
+
+                    socket.to(messageUserPosition.roomId).emit(SockerIoEvent.JOIN_ROOM, messageUserPosition.toString());
+                } catch (e) {
+                    console.error('An error occurred on "join_room" event');
+                    console.error(e);
                 }
-
-                let Client = (socket as ExSocketInterface);
-
-                if(Client.roomId === messageUserPosition.roomId){
-                    return;
-                }
-
-                //leave previous room
-                this.leaveRoom(Client);
-
-                //join new previous room
-                this.joinRoom(Client, messageUserPosition);
-
-                // sending to all clients in room except sender
-                this.saveUserInformation(Client, messageUserPosition);
-
-                //add function to refresh position user in real time.
-                this.refreshUserPosition(Client);
-
-                socket.to(messageUserPosition.roomId).emit(SockerIoEvent.JOIN_ROOM, messageUserPosition.toString());
             });
 
             socket.on(SockerIoEvent.USER_POSITION, (message: string) => {
-                let messageUserPosition = this.hydrateMessageReceive(message);
-                if (messageUserPosition instanceof Error) {
-                    return socket.emit(SockerIoEvent.MESSAGE_ERROR, JSON.stringify({message: messageUserPosition.message}));
+                try {
+                    let messageUserPosition = this.hydrateMessageReceive(message);
+                    if (messageUserPosition instanceof Error) {
+                        return socket.emit(SockerIoEvent.MESSAGE_ERROR, JSON.stringify({message: messageUserPosition.message}));
+                    }
+
+                    let Client = (socket as ExSocketInterface);
+
+                    // sending to all clients in room except sender
+                    this.saveUserInformation(Client, messageUserPosition);
+
+                    //refresh position of all user in all rooms in real time
+                    this.refreshUserPosition(Client);
+                } catch (e) {
+                    console.error('An error occurred on "user_position" event');
+                    console.error(e);
                 }
-
-                let Client = (socket as ExSocketInterface);
-
-                // sending to all clients in room except sender
-                this.saveUserInformation(Client, messageUserPosition);
-
-                //refresh position of all user in all rooms in real time
-                this.refreshUserPosition(Client);
-            });
+        });
 
             socket.on(SockerIoEvent.WEBRTC_SIGNAL, (message: string) => {
                 let data: any = JSON.parse(message);
@@ -153,24 +163,29 @@ export class IoSocketController {
             });
 
             socket.on(SockerIoEvent.DISCONNECT, () => {
-                let Client = (socket as ExSocketInterface);
-                this.sendDisconnectedEvent(Client);
+                try {
+                    let Client = (socket as ExSocketInterface);
+                    this.sendDisconnectedEvent(Client);
 
-                //refresh position of all user in all rooms in real time
-                this.refreshUserPosition(Client);
+                    //refresh position of all user in all rooms in real time
+                    this.refreshUserPosition(Client);
 
-                //leave room
-                this.leaveRoom(Client);
+                    //leave room
+                    this.leaveRoom(Client);
 
-                //leave webrtc room
-                socket.leave(Client.webRtcRoomId);
+                    //leave webrtc room
+                    socket.leave(Client.webRtcRoomId);
 
-                //delete all socket information
-                delete Client.userId;
-                delete Client.webRtcRoomId;
-                delete Client.roomId;
-                delete Client.token;
-                delete Client.position;
+                    //delete all socket information
+                    delete Client.userId;
+                    delete Client.webRtcRoomId;
+                    delete Client.roomId;
+                    delete Client.token;
+                    delete Client.position;
+                } catch (e) {
+                    console.error('An error occurred on "disconnect"');
+                    console.error(e);
+                }
             });
         });
     }
