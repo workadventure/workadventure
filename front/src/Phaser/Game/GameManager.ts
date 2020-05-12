@@ -5,7 +5,6 @@ import {
     ListMessageUserPositionInterface
 } from "../../Connexion";
 import {SimplePeerInterface, SimplePeer} from "../../WebRtc/SimplePeer";
-import {MAP_FILE_URL} from "../../Enum/EnvironmentVariable";
 import {getMapKeyByUrl} from "../Login/LogincScene";
 import SceneManager = Phaser.Scenes.SceneManager;
 import ScenePlugin = Phaser.Scenes.ScenePlugin;
@@ -135,7 +134,7 @@ export class GameManager {
         let gameIndex = scene.getIndex(sceneKey);
         let game : Phaser.Scene = null;
         if(gameIndex === -1){
-            game = new GameScene(sceneKey, `${MAP_FILE_URL}${mapUrl}`);
+            game = new GameScene(sceneKey, mapUrl);
             scene.add(sceneKey, game, false);
         }
         return sceneKey;

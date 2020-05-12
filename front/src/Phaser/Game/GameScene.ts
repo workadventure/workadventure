@@ -1,14 +1,13 @@
 import {GameManager, gameManager, HasMovedEvent, MapObject, StatusGameManagerEnum} from "./GameManager";
 import {GroupCreatedUpdatedMessageInterface, MessageUserPositionInterface} from "../../Connexion";
 import {CurrentGamerInterface, GamerInterface, hasMovedEventName, Player} from "../Player/Player";
-import { DEBUG_MODE, MAP_FILE_URL, RESOLUTION, ROOM, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
+import { DEBUG_MODE, RESOLUTION, ROOM, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import {ITiledMap, ITiledMapLayer, ITiledTileSet} from "../Map/ITiledMap";
 import {PLAYER_RESOURCES} from "../Entity/PlayableCaracter";
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
 import CreateSceneFromObjectConfig = Phaser.Types.Scenes.CreateSceneFromObjectConfig;
-import {getMapKeyByUrl} from "../Login/LogincScene";
 
 export enum Textures {
     Player = "male1"
@@ -61,7 +60,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
             // Triggered when the map is loaded
             // Load tiles attached to the map recursively
             this.map = data.data;
-            let url = this.MapUrlFile.substr(0, this.MapUrlFile.indexOf(`${this.MapKey}.json`));
+            let url = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf('/'));
             this.map.tilesets.forEach((tileset) => {
                 if (typeof tileset.name === 'undefined' || typeof tileset.image === 'undefined') {
                     console.warn("Don't know how to handle tileset ", tileset)
@@ -184,20 +183,11 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
     private loadNextGame(layer: ITiledMapLayer, mapWidth: number, tileWidth: number, tileHeight: number){
         let exitSceneUrl = this.getExitSceneUrl(layer);
 
-        let exitSceneKey = gameManager.loadMap(exitSceneUrl, this.scene);
-        /*let exitSceneKey = getMapKeyByUrl(exitSceneUrl);
+        // TODO: eventually compute a relative URL
+        let absoluteExitSceneUrl = new URL(exitSceneUrl, this.MapUrlFile).href;
+        console.log('absoluteExitSceneUrl ', absoluteExitSceneUrl);
+        let exitSceneKey = gameManager.loadMap(absoluteExitSceneUrl, this.scene);
 
-        let gameIndex = this.scene.getIndex(exitSceneKey);
-        let game : Phaser.Scene = null;
-        if(gameIndex === -1){
-            game = new GameScene(exitSceneKey, `${MAP_FILE_URL}${exitSceneUrl}`);
-            this.scene.add(exitSceneKey, game, false);
-        }else{
-            game = this.scene.get(exitSceneKey);
-        }
-        if(!game){
-            return;
-        }*/
         let tiles : any = layer.data;
         tiles.forEach((objectKey : number, key: number) => {
             if(objectKey === 0){

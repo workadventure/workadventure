@@ -8,9 +8,15 @@ import Rectangle = Phaser.GameObjects.Rectangle;
 import {PLAYER_RESOURCES} from "../Entity/PlayableCaracter";
 import {cypressAsserter} from "../../Cypress/CypressAsserter";
 import {GroupCreatedUpdatedMessageInterface, MessageUserPositionInterface} from "../../Connexion";
-import {MAP_FILE_URL} from "../../Enum/EnvironmentVariable";
 
 export function getMapKeyByUrl(mapUrlStart: string){
+    // FIXME: the key should be computed from the full URL of the map.
+    let startPos = mapUrlStart.indexOf('://')+3;
+    let endPos = mapUrlStart.indexOf(".json");
+    console.log('MAP KEY '+mapUrlStart.substring(startPos, endPos));
+    return mapUrlStart.substring(startPos, endPos);
+
+
     let tab = mapUrlStart.split("/");
     return tab[tab.length -1].substr(0, tab[tab.length -1].indexOf(".json"));
 }
@@ -99,21 +105,38 @@ export class LogincScene extends Phaser.Scene implements GameSceneInterface {
 
     private async login(name: string) {
         return gameManager.connect(name, this.selectedPlayer.texture.key).then(() => {
-            return gameManager.loadMaps().then((scene : any) => {
-                if (!scene) {
-                    return;
-                }
-                let key = gameManager.loadMap(scene.mapUrlStart, this.scene);
+            // Do we have a start URL in the address bar? If so, let's redirect to this address
+            let mapUrl = this.findMapUrl();
+            if (mapUrl !== null) {
+                let key = gameManager.loadMap(mapUrl, this.scene);
                 this.scene.start(key);
-                return scene;
-            }).catch((err) => {
-                console.error(err);
-                throw err;
-            });
+                return mapUrl;
+            } else {
+                // If we do not have a map address in the URL, let's ask the server for a start map.
+                return gameManager.loadMaps().then((scene : any) => {
+                    if (!scene) {
+                        return;
+                    }
+                    let key = gameManager.loadMap(window.location.protocol+"//"+scene.mapUrlStart, this.scene);
+                    this.scene.start(key);
+                    return scene;
+                }).catch((err) => {
+                    console.error(err);
+                    throw err;
+                });
+            }
         }).catch((err) => {
             console.error(err);
             throw err;
         });
+    }
+
+    private findMapUrl(): string|null {
+        let path = window.location.pathname;
+        if (!path.startsWith('/_/')) {
+            return null;
+        }
+        return window.location.protocol+'//'+path.substr(3);
     }
 
     Map: Phaser.Tilemaps.Tilemap;
