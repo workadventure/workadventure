@@ -62,7 +62,7 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
 
         let activeEvents = this.userInputManager.getEventListForGameTick();
         let speedMultiplier = activeEvents.get(UserInputEvent.SpeedUp) ? 25 : 9;
-        let moveAmount = speedMultiplier * delta;
+        let moveAmount = speedMultiplier * 20;
 
         let x = 0;
         let y = 0;
@@ -102,6 +102,5 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
         this.setX(MessageUserPosition.position.x);
         this.setY(MessageUserPosition.position.y);
         this.setDepth(MessageUserPosition.position.y);
-        this.updatePlayerNamePosition(MessageUserPosition.position.x, MessageUserPosition.position.y);
     }
 }
