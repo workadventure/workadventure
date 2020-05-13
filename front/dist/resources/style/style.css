@@ -1,6 +1,28 @@
 body{
     overflow: hidden;
 }
+body .message-info{
+    width: 20%;
+    height: auto;
+    min-height: 30px;
+    position: absolute;
+    top: 5px;
+    left: 40%;
+    padding-top: 10px;
+    text-align: center;
+}
+body .message-info.error{
+    background: red;
+}
+body .message-info.success{
+    background: green;
+}
+body .message-info.info{
+    background: dodgerblue;
+}
+body .message-info.warning{
+    background: #ffa500d6;
+}
 video{
     -webkit-transform: scaleX(-1);
     transform: scaleX(-1);

@@ -37,6 +37,9 @@ export class IoSocketController {
             if (!socket.handshake.query || !socket.handshake.query.token) {
                 return next(new Error('Authentication error'));
             }
+            if(this.searchClientByToken(socket.handshake.query.token)){
+                return next(new Error('Authentication error'));
+            }
             Jwt.verify(socket.handshake.query.token, SECRET_KEY, (err: JsonWebTokenError, tokenDecoded: object) => {
                 if (err) {
                     return next(new Error('Authentication error'));
@@ -195,6 +198,21 @@ export class IoSocketController {
      * @param userId
      */
     searchClientById(userId: string): ExSocketInterface | null {
+        let clients: Array<any> = Object.values(this.Io.sockets.sockets);
+        for (let i = 0; i < clients.length; i++) {
+            let client: ExSocketInterface = clients[i];
+            if (client.userId !== userId) {
+                continue
+            }
+            return client;
+        }
+        return null;
+    }
+
+    /**
+     * @param userId
+     */
+    searchClientByToken(userId: string): ExSocketInterface | null {
         let clients: Array<any> = Object.values(this.Io.sockets.sockets);
         for (let i = 0; i < clients.length; i++) {
             let client: ExSocketInterface = clients[i];

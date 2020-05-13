@@ -185,7 +185,6 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
 
         // TODO: eventually compute a relative URL
         let absoluteExitSceneUrl = new URL(exitSceneUrl, this.MapUrlFile).href;
-        console.log('absoluteExitSceneUrl ', absoluteExitSceneUrl);
         let exitSceneKey = gameManager.loadMap(absoluteExitSceneUrl, this.scene);
 
         let tiles : any = layer.data;
