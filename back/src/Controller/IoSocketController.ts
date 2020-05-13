@@ -282,8 +282,8 @@ export class IoSocketController {
         }
         socket.join(roomId);
         socket.webRtcRoomId = roomId;
-        //if two persone in room share
-        if (this.Io.sockets.adapter.rooms[roomId].length < 2 || this.Io.sockets.adapter.rooms[roomId].length >= 4) {
+        //if two persons in room share
+        if (this.Io.sockets.adapter.rooms[roomId].length < 2 /*|| this.Io.sockets.adapter.rooms[roomId].length >= 4*/) {
             return;
         }
         let clients: Array<ExSocketInterface> = (Object.values(this.Io.sockets.sockets) as Array<ExSocketInterface>)
