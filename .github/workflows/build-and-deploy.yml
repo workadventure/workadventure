@@ -78,6 +78,7 @@ jobs:
 
       - name: Add a comment in PR
         uses: unsplash/comment-on-pr@v1.2.0
+        if: ${{ github.event_name == 'pull_request' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
