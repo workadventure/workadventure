@@ -281,12 +281,23 @@ export class IoSocketController {
             this.Worlds.set(messageUserPosition.roomId, world);
         }
 
-        //join world
         let world : World|undefined = this.Worlds.get(messageUserPosition.roomId);
+
+
         if(world) {
+            // Dispatch groups position to newly connected user
+            world.getGroups().forEach((group: Group) => {
+                Client.emit(SockerIoEvent.GROUP_CREATE_UPDATE, {
+                    position: group.getPosition(),
+                    groupId: group.getId()
+                });
+            });
+            //join world
             world.join(messageUserPosition);
             this.Worlds.set(messageUserPosition.roomId, world);
         }
+
+
     }
 
     /**
