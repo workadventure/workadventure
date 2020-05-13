@@ -140,7 +140,6 @@ export interface ConnexionInterface {
     token: string;
     email: string;
     userId: string;
-    startedRoom: string;
 
     createConnexion(characterSelected: string): Promise<any>;
 
@@ -167,7 +166,6 @@ export class Connexion implements ConnexionInterface {
     token: string;
     email: string;
     userId: string;
-    startedRoom: string;
 
     GameManager: GameManager;
 
@@ -183,8 +181,6 @@ export class Connexion implements ConnexionInterface {
         return Axios.post(`${API_URL}/login`, {email: this.email})
             .then((res) => {
                 this.token = res.data.token;
-
-                this.startedRoom = getMapKeyByUrl(res.data.mapUrlStart);
                 this.userId = res.data.userId;
 
                 this.socket = SocketIo(`${API_URL}`, {
@@ -194,10 +190,10 @@ export class Connexion implements ConnexionInterface {
                 });
 
                 //join the room
-                this.joinARoom(this.startedRoom, characterSelected);
+                //this.joinARoom(this.startedRoom, characterSelected);
 
                 //share your first position
-                this.sharePosition(0, 0, characterSelected, this.startedRoom);
+                //this.sharePosition(0, 0, characterSelected, this.startedRoom);
 
                 this.positionOfAllUser();
 

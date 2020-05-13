@@ -8,6 +8,12 @@ module.exports = {
         contentBase: './dist',
         host: '0.0.0.0',
         disableHostCheck: true,
+        historyApiFallback: {
+            rewrites: [
+                { from: /^_\/.*$/, to: '/index.html' }
+            ],
+            disableDotRule: true
+        },
     },
     module: {
         rules: [
@@ -24,6 +30,7 @@ module.exports = {
     output: {
         filename: 'bundle.js',
         path: path.resolve(__dirname, 'dist'),
+        publicPath: '/'
     },
     plugins: [
         new webpack.ProvidePlugin({
