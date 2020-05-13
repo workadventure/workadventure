@@ -4,6 +4,7 @@ const SocketIo = require('socket.io-client');
 import Axios from "axios";
 import {API_URL} from "./Enum/EnvironmentVariable";
 import {getMapKeyByUrl} from "./Phaser/Login/LogincScene";
+import {MessageUI} from "./Logger/MessageUI";
 
 enum EventMessage{
     WEBRTC_SIGNAL = "webrtc-signal",
@@ -15,6 +16,9 @@ enum EventMessage{
     WEBRTC_DISCONNECT = "webrtc-disconect",
     GROUP_CREATE_UPDATE = "group-create-update",
     GROUP_DELETE = "group-delete",
+
+    CONNECT_ERROR = "connect_error",
+    RECONNECT = "reconnect"
 }
 
 class Message {
@@ -169,6 +173,8 @@ export class Connexion implements ConnexionInterface {
 
     GameManager: GameManager;
 
+    lastPositionShared: MessageUserPosition = null;
+
     constructor(email : string, GameManager: GameManager) {
         this.email = email;
         this.GameManager = GameManager;
@@ -189,18 +195,7 @@ export class Connexion implements ConnexionInterface {
                     }
                 });
 
-                //join the room
-                //this.joinARoom(this.startedRoom, characterSelected);
-
-                //share your first position
-                //this.sharePosition(0, 0, characterSelected, this.startedRoom);
-
-                this.positionOfAllUser();
-
-                this.errorMessage();
-
-                this.groupUpdatedOrCreated();
-                this.groupDeleted();
+                this.connectSocketServer();
 
                 return res.data;
             })
@@ -208,6 +203,37 @@ export class Connexion implements ConnexionInterface {
                 console.error(err);
                 throw err;
             });
+    }
+
+    /**
+     *
+     * @param character
+     */
+    connectSocketServer(character : string = null){
+        //if try to reconnect with last position
+        if(this.lastPositionShared) {
+            //join the room
+            this.joinARoom(
+                this.lastPositionShared.roomId,
+                this.lastPositionShared.character
+            );
+
+            //share your first position
+            this.sharePosition(
+                this.lastPositionShared ? this.lastPositionShared.position.x : 0,
+                this.lastPositionShared ? this.lastPositionShared.position.y : 0,
+                this.lastPositionShared.character,
+                this.lastPositionShared.roomId,
+                this.lastPositionShared.position.direction
+            );
+        }
+
+        //listen event
+        this.positionOfAllUser();
+        this.disconnectServer();
+        this.errorMessage();
+        this.groupUpdatedOrCreated();
+        this.groupDeleted();
     }
 
     //TODO add middleware with access token to secure api
@@ -256,6 +282,7 @@ export class Connexion implements ConnexionInterface {
             this.email,
             character
         );
+        this.lastPositionShared = messageUserPosition;
         this.socket.emit(EventMessage.USER_POSITION, messageUserPosition.toString());
     }
 
@@ -317,6 +344,17 @@ export class Connexion implements ConnexionInterface {
         this.socket.on(EventMessage.MESSAGE_ERROR, (message: string) => {
             console.error(EventMessage.MESSAGE_ERROR, message);
         })
+    }
+
+    disconnectServer(): void {
+        this.socket.on(EventMessage.CONNECT_ERROR, () => {
+            MessageUI.warningMessage("Trying to connect!");
+        });
+
+        this.socket.on(EventMessage.RECONNECT, () => {
+            MessageUI.removeMessage();
+            this.connectSocketServer();
+        });
     }
 
     disconnectMessage(callback: Function): void {

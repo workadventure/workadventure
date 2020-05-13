@@ -13,7 +13,6 @@ export function getMapKeyByUrl(mapUrlStart: string){
     // FIXME: the key should be computed from the full URL of the map.
     let startPos = mapUrlStart.indexOf('://')+3;
     let endPos = mapUrlStart.indexOf(".json");
-    console.log('MAP KEY '+mapUrlStart.substring(startPos, endPos));
     return mapUrlStart.substring(startPos, endPos);
 
 
