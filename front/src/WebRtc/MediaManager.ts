@@ -115,23 +115,29 @@ export class MediaManager {
 
     //get camera
     getCamera() {
-        return this.getCameraPromise = navigator.mediaDevices.getUserMedia(this.constraintsMedia)
-            .then((stream: MediaStream) => {
-                this.localStream = stream;
-                this.myCamVideo.srcObject = this.localStream;
+        let promise = null;
+        try {
+            promise = navigator.mediaDevices.getUserMedia(this.constraintsMedia)
+                .then((stream: MediaStream) => {
+                    this.localStream = stream;
+                    this.myCamVideo.srcObject = this.localStream;
 
-                //TODO resize remote cam
-                /*console.log(this.localStream.getTracks());
-                let videoMediaStreamTrack =  this.localStream.getTracks().find((media : MediaStreamTrack) => media.kind === "video");
-                let {width, height} = videoMediaStreamTrack.getSettings();
-                console.info(`${width}x${height}`); // 6*/
+                    //TODO resize remote cam
+                    /*console.log(this.localStream.getTracks());
+                    let videoMediaStreamTrack =  this.localStream.getTracks().find((media : MediaStreamTrack) => media.kind === "video");
+                    let {width, height} = videoMediaStreamTrack.getSettings();
+                    console.info(`${width}x${height}`); // 6*/
 
-                return stream;
-            }).catch((err) => {
-                console.error(err);
-                this.localStream = null;
-                throw err;
-            });
+                    return stream;
+                }).catch((err) => {
+                    console.error(err);
+                    this.localStream = null;
+                    throw err;
+                });
+        } catch (e) {
+            promise = Promise.reject(false);
+        }
+        return this.getCameraPromise = promise;
     }
 
     /**
