@@ -88,6 +88,7 @@ jobs:
       - name: Run Cypress tests
         uses: cypress-io/github-action@v1
         env:
+          # FIXME: for master, the URL is not the same!
           CYPRESS_BASE_URL: https://${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com
         with:
           env: host=${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com,port=80

@@ -2,7 +2,7 @@
   local env = std.extVar("env"),
   local namespace = env.GITHUB_REF_SLUG,
   local tag = namespace,
-  local url = if namespace == "master" then "wordadventu.re" else namespace+".workadventure.test.thecodingmachine.com",
+  local url = if namespace == "master" then "workadventu.re" else namespace+".workadventure.test.thecodingmachine.com",
   "$schema": "https://raw.githubusercontent.com/thecodingmachine/deeployer/master/deeployer.schema.json",
   "containers": {
      "back": {
