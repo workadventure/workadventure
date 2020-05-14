@@ -11,6 +11,7 @@ export class MediaManager {
     cinema: any = null;
     microphoneClose: any = null;
     microphone: any = null;
+    webrtcInAudio: any;
     constraintsMedia : {audio : any, video : any} = {
         audio: true,
         video: videoConstraint
@@ -22,6 +23,8 @@ export class MediaManager {
         this.updatedLocalStreamCallBack = updatedLocalStreamCallBack;
 
         this.myCamVideo = document.getElementById('myCamVideo');
+        this.webrtcInAudio = document.getElementById('audio-webrtc-in');
+        this.webrtcInAudio.volume = 0.2;
 
         this.microphoneClose = document.getElementById('microphone-close');
         this.microphoneClose.style.display = "none";
@@ -61,8 +64,6 @@ export class MediaManager {
         this.cinemaClose.style.display = "none";
         this.cinema.style.display = "block";
         this.constraintsMedia.video = videoConstraint;
-        this.localStream = null;
-        this.myCamVideo.srcObject = null;
         this.getCamera().then((stream) => {
             this.updatedLocalStreamCallBack(stream);
         });
@@ -72,17 +73,12 @@ export class MediaManager {
         this.cinemaClose.style.display = "block";
         this.cinema.style.display = "none";
         this.constraintsMedia.video = false;
-
-        this.myCamVideo.pause();
-        if(this.localStream) {
-            this.localStream.getTracks().forEach((MediaStreamTrack: MediaStreamTrack) => {
-                if (MediaStreamTrack.kind === "video") {
-                    MediaStreamTrack.stop();
-                }
+        this.myCamVideo.srcObject = null;
+        if (this.localStream) {
+            this.localStream.getVideoTracks().forEach((MediaStreamTrack: MediaStreamTrack) => {
+                MediaStreamTrack.stop();
             });
         }
-        this.localStream = null;
-        this.myCamVideo.srcObject = null;
         this.getCamera().then((stream) => {
             this.updatedLocalStreamCallBack(stream);
         });
@@ -102,10 +98,8 @@ export class MediaManager {
         this.microphone.style.display = "none";
         this.constraintsMedia.audio = false;
         if(this.localStream) {
-            this.localStream.getTracks().forEach((MediaStreamTrack: MediaStreamTrack) => {
-                if (MediaStreamTrack.kind === "audio") {
-                    MediaStreamTrack.stop();
-                }
+            this.localStream.getAudioTracks().forEach((MediaStreamTrack: MediaStreamTrack) => {
+                MediaStreamTrack.stop();
             });
         }
         this.getCamera().then((stream) => {
@@ -130,9 +124,8 @@ export class MediaManager {
 
                     return stream;
                 }).catch((err) => {
-                    console.error(err);
+                    console.info(`error get media {video: ${this.constraintsMedia.video}},{audio: ${this.constraintsMedia.audio}}`,err);
                     this.localStream = null;
-                    throw err;
                 });
         } catch (e) {
             promise = Promise.reject(false);
@@ -144,10 +137,75 @@ export class MediaManager {
      *
      * @param userId
      */
-    addActiveVideo(userId : string){
+    addActiveVideo(userId : string, userName: string = ""){
+        this.webrtcInAudio.play();
         let elementRemoteVideo = document.getElementById("activeCam");
-        elementRemoteVideo.insertAdjacentHTML('beforeend', '<video id="'+userId+'" autoplay></video>');
+        userName = userName.toUpperCase();
+        let color = this.getColorByString(userName);
+        elementRemoteVideo.insertAdjacentHTML('beforeend', `
+            <div id="div-${userId}" class="video-container" style="border-color: ${color};">
+                <i style="background-color: ${color};">${userName}</i>
+                <img id="microphone-${userId}" src="resources/logos/microphone-close.svg">
+                <video id="${userId}" autoplay></video>
+            </div>
+        `);
         this.remoteVideo[(userId as any)] = document.getElementById(userId);
+    }
+
+    /**
+     *
+     * @param userId
+     */
+    disabledMicrophoneByUserId(userId: string){
+        let element = document.getElementById(`microphone-${userId}`);
+        if(!element){
+            return;
+        }
+        element.classList.add('active')
+    }
+
+    /**
+     *
+     * @param userId
+     */
+    enabledMicrophoneByUserId(userId: string){
+        let element = document.getElementById(`microphone-${userId}`);
+        if(!element){
+            return;
+        }
+        element.classList.remove('active')
+    }
+
+    /**
+     *
+     * @param userId
+     */
+    disabledVideoByUserId(userId: string) {
+        let element = document.getElementById(`${userId}`);
+        if (element) {
+            element.style.opacity = "0";
+        }
+        element = document.getElementById(`div-${userId}`);
+        if (!element) {
+            return;
+        }
+        element.style.borderStyle = "solid";
+    }
+
+    /**
+     *
+     * @param userId
+     */
+    enabledVideoByUserId(userId: string){
+        let element = document.getElementById(`${userId}`);
+        if(element){
+            element.style.opacity = "1";
+        }
+        element = document.getElementById(`div-${userId}`);
+        if(!element){
+            return;
+        }
+        element.style.borderStyle = "none";
     }
 
     /**
@@ -164,10 +222,29 @@ export class MediaManager {
      * @param userId
      */
     removeActiveVideo(userId : string){
-        let element = document.getElementById(userId);
+        let element = document.getElementById(`div-${userId}`);
         if(!element){
             return;
         }
         element.remove();
+    }
+
+    /**
+     *
+     * @param str
+     */
+    private getColorByString(str: String) : String|null {
+        let hash = 0;
+        if (str.length === 0) return null;
+        for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            hash = hash & hash;
+        }
+        let color = '#';
+        for (let i = 0; i < 3; i++) {
+            let value = (hash >> (i * 8)) & 255;
+            color += ('00' + value.toString(16)).substr(-2);
+        }
+        return color;
     }
 }

@@ -99,7 +99,7 @@ export class IoSocketController {
 
                     let Client = (socket as ExSocketInterface);
 
-                    if(Client.roomId === messageUserPosition.roomId){
+                    if (Client.roomId === messageUserPosition.roomId) {
                         return;
                     }
 
@@ -140,7 +140,7 @@ export class IoSocketController {
                     console.error('An error occurred on "user_position" event');
                     console.error(e);
                 }
-        });
+            });
 
             socket.on(SockerIoEvent.WEBRTC_SIGNAL, (message: string) => {
                 let data: any = JSON.parse(message);
@@ -316,6 +316,7 @@ export class IoSocketController {
                 }
                 tabs.push({
                     userId: clientId.userId,
+                    name: clientId.name,
                     initiator: index <= indexClientId
                 });
                 return tabs;
