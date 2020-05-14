@@ -97,7 +97,6 @@ export class SimplePeer implements SimplePeerInterface{
             }
         }
         this.MediaManager.removeActiveVideo(user.userId);
-        console.log("name", name);
         this.MediaManager.addActiveVideo(user.userId, name);
 
         let peer : any = new Peer({
