@@ -180,12 +180,16 @@ export class MediaManager {
      *
      * @param userId
      */
-    disabledVideoByUserId(userId: string){
+    disabledVideoByUserId(userId: string) {
         let element = document.getElementById(`${userId}`);
-        if(!element){
+        if (element) {
+            element.style.opacity = "0";
+        }
+        element = document.getElementById(`div-${userId}`);
+        if (!element) {
             return;
         }
-        element.style.opacity = "0";
+        element.style.borderStyle = "solid";
     }
 
     /**
@@ -194,10 +198,14 @@ export class MediaManager {
      */
     enabledVideoByUserId(userId: string){
         let element = document.getElementById(`${userId}`);
+        if(element){
+            element.style.opacity = "1";
+        }
+        element = document.getElementById(`div-${userId}`);
         if(!element){
             return;
         }
-        element.style.opacity = "1";
+        element.style.borderStyle = "none";
     }
 
     /**
