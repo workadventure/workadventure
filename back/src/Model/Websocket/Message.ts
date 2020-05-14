@@ -16,6 +16,7 @@ export class Message {
     }
 
     toJson() {
+
         return {
             userId: this.userId,
             roomId: this.roomId,

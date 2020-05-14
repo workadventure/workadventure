@@ -7,7 +7,6 @@ import {PlayableCaracter} from "../Entity/PlayableCaracter";
 
 export const hasMovedEventName = "hasMoved";
 export interface CurrentGamerInterface extends PlayableCaracter{
-    userId : string;
     initAnimation() : void;
     moveUser(delta: number) : void;
     say(text : string) : void;

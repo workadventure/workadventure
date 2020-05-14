@@ -17,36 +17,36 @@ describe("World", () => {
 
         let world = new World(connect, disconnect, 160, 160, () => {}, () => {});
 
-        world.join(new MessageUserPosition({
-            userId: "foo",
+        world.join({ id: "foo" }, new MessageUserPosition({
+            userId: "foofoo",
             roomId: 1,
             position: new Point(100, 100)
         }));
 
-        world.join(new MessageUserPosition({
-            userId: "bar",
+        world.join({ id: "bar" }, new MessageUserPosition({
+            userId: "barbar",
             roomId: 1,
             position: new Point(500, 100)
         }));
 
-        world.updatePosition(new MessageUserPosition({
-            userId: "bar",
+        world.updatePosition({ id: "bar" }, new MessageUserPosition({
+            userId: "barbar",
             roomId: 1,
             position: new Point(261, 100)
         }));
 
         expect(connectCalledNumber).toBe(0);
 
-        world.updatePosition(new MessageUserPosition({
-            userId: "bar",
+        world.updatePosition({ id: "bar" }, new MessageUserPosition({
+            userId: "barbar",
             roomId: 1,
             position: new Point(101, 100)
         }));
 
         expect(connectCalledNumber).toBe(2);
 
-        world.updatePosition(new MessageUserPosition({
-            userId: "bar",
+        world.updatePosition({ id: "bar" }, new MessageUserPosition({
+            userId: "barbar",
             roomId: 1,
             position: new Point(102, 100)
         }));
@@ -64,14 +64,14 @@ describe("World", () => {
 
         let world = new World(connect, disconnect, 160, 160, () => {}, () => {});
 
-        world.join(new MessageUserPosition({
-            userId: "foo",
+        world.join({ id: "foo" }, new MessageUserPosition({
+            userId: "foofoo",
             roomId: 1,
             position: new Point(100, 100)
         }));
 
-        world.join(new MessageUserPosition({
-            userId: "bar",
+        world.join({ id: "bar" }, new MessageUserPosition({
+            userId: "barbar",
             roomId: 1,
             position: new Point(200, 100)
         }));
@@ -80,16 +80,16 @@ describe("World", () => {
         connectCalled = false;
 
         // baz joins at the outer limit of the group
-        world.join(new MessageUserPosition({
-            userId: "baz",
+        world.join({ id: "baz" }, new MessageUserPosition({
+            userId: "bazbaz",
             roomId: 1,
             position: new Point(311, 100)
         }));
 
         expect(connectCalled).toBe(false);
 
-        world.updatePosition(new MessageUserPosition({
-            userId: "baz",
+        world.updatePosition({ id: "baz" }, new MessageUserPosition({
+            userId: "bazbaz",
             roomId: 1,
             position: new Point(309, 100)
         }));
@@ -109,14 +109,14 @@ describe("World", () => {
 
         let world = new World(connect, disconnect, 160, 160, () => {}, () => {});
 
-        world.join(new MessageUserPosition({
-            userId: "foo",
+        world.join({ id: "foo" }, new MessageUserPosition({
+            userId: "foofoo",
             roomId: 1,
             position: new Point(100, 100)
         }));
 
-        world.join(new MessageUserPosition({
-            userId: "bar",
+        world.join({ id: "bar" }, new MessageUserPosition({
+            userId: "barbar",
             roomId: 1,
             position: new Point(259, 100)
         }));
@@ -124,16 +124,16 @@ describe("World", () => {
         expect(connectCalled).toBe(true);
         expect(disconnectCallNumber).toBe(0);
 
-        world.updatePosition(new MessageUserPosition({
-            userId: "bar",
+        world.updatePosition({ id: "bar" }, new MessageUserPosition({
+            userId: "barbar",
             roomId: 1,
             position: new Point(100+160+160+1, 100)
         }));
 
         expect(disconnectCallNumber).toBe(2);
 
-        world.updatePosition(new MessageUserPosition({
-            userId: "bar",
+        world.updatePosition({ id: "bar" }, new MessageUserPosition({
+            userId: "barbar",
             roomId: 1,
             position: new Point(262, 100)
         }));

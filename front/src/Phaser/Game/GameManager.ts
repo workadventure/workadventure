@@ -67,7 +67,7 @@ export class GameManager {
      */
     createCurrentPlayer(): void {
         //Get started room send by the backend
-        this.currentGameScene.createCurrentPlayer(this.ConnexionInstance.userId);
+        this.currentGameScene.createCurrentPlayer();
         this.status = StatusGameManagerEnum.CURRENT_USER_CREATED;
     }
 
@@ -117,6 +117,10 @@ export class GameManager {
 
     getPlayerName(): string {
         return this.playerName;
+    }
+
+    getPlayerId(): string {
+        return this.ConnexionInstance.userId;
     }
 
     getCharacterSelected(): string {

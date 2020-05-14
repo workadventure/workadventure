@@ -15,7 +15,7 @@ export enum Textures {
 
 export interface GameSceneInterface extends Phaser.Scene {
     Map: Phaser.Tilemaps.Tilemap;
-    createCurrentPlayer(UserId : string) : void;
+    createCurrentPlayer() : void;
     shareUserPosition(UsersPosition : Array<MessageUserPositionInterface>): void;
     shareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface): void;
     updateOrCreateMapPlayer(UsersPosition : Array<MessageUserPositionInterface>): void;
@@ -266,11 +266,11 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
         })
     }
 
-    createCurrentPlayer(UserId : string){
+    createCurrentPlayer(){
         //initialise player
         //TODO create animation moving between exit and strat
         this.CurrentPlayer = new Player(
-            UserId,
+            null, // The current player is not has no id (because the id can change if connexion is lost and we should check that id using the GameManager.
             this,
             this.startX,
             this.startY,
@@ -347,9 +347,11 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
             return;
         }
 
+        let currentPlayerId = this.GameManager.getPlayerId();
+
         //add or create new user
         UsersPosition.forEach((userPosition : MessageUserPositionInterface) => {
-            if(userPosition.userId === this.CurrentPlayer.userId){
+            if(userPosition.userId === currentPlayerId){
                 return;
             }
             let player = this.findPlayerInMap(userPosition.userId);

@@ -22,7 +22,7 @@ let RefreshUserPositionFunction = function(rooms : ExtRooms, Io: socketIO.Server
             continue;
         }
         let data = {
-            userId: socket.userId,
+            userId: socket.id,
             roomId: socket.roomId,
             position: socket.position,
             name: socket.name,
