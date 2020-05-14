@@ -37,35 +37,74 @@ video{
 .webrtc.active{
     display: block;
 }
+
 .webrtc, .activeCam{}
-.activeCam video{
+.activeCam .video-container{
     position: absolute;
     height: 25%;
     top: 10px;
     margin: 5px;
     right: -100px;
     transition: all 0.2s ease;
+    border-color: black;
+    border-style: solid;
+    border-width: 0.2px;
 }
-.webrtc:hover .activeCam video{
+.activeCam .video-container i{
+    position: absolute;
+    width: 100px;
+    height: 65px;
+    left: calc(50% - 50px);
+    top: calc(50% - 50px);
+    background-color: black;
+    border-radius: 50%;
+    text-align: center;
+    padding-top: 35px;
+    font-size: 28px;
+    color: white;
+}
+.activeCam .video-container img.active{
+    display: block;
+}
+.activeCam .video-container img{
+    position: absolute;
+    display: none;
+    width: 15px;
+    height: 15px;
+    background: #d93025;
+    border-radius: 48px;
+    left: 5px;
+    bottom: 5px;
+    padding: 10px;
+    z-index: 2;
+}
+.activeCam .video-container video{
+    height: 100%;
+}
+
+.webrtc:hover .activeCam .video-container{
     right: 10px;
 }
-.activeCam video#myCamVideo{
+.activeCam .video-container#div-myCamVideo{
+    border: none;
+}
+.activeCam .video-container video#myCamVideo{
     width: 200px;
     height: 113px;
 }
 
 /*CSS size for 2 - 3 elements*/
-.activeCam video:nth-child(1){
+.activeCam .video-container:nth-child(1){
     /*this is for camera of user*/
     top: 75%;
 }
-.activeCam video:nth-child(2){
+.activeCam .video-container:nth-child(2){
     top: 0%;
 }
-.activeCam video:nth-child(3){
+.activeCam .video-container:nth-child(3){
     top: 25%;
 }
-.activeCam video:nth-child(4) {
+.activeCam .video-container:nth-child(4) {
     top: 50%;
 }
 

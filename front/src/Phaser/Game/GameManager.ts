@@ -6,7 +6,6 @@ import {
 } from "../../Connexion";
 import {SimplePeerInterface, SimplePeer} from "../../WebRtc/SimplePeer";
 import {getMapKeyByUrl} from "../Login/LogincScene";
-import SceneManager = Phaser.Scenes.SceneManager;
 import ScenePlugin = Phaser.Scenes.ScenePlugin;
 
 export enum StatusGameManagerEnum {

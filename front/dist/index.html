@@ -13,7 +13,9 @@
         <script src="bundle.js"></script>
         <div id="webRtc" class="webrtc">
             <div id="activeCam" class="activeCam">
-                <video id="myCamVideo" autoplay muted></video>
+                <div id="div-myCamVideo" class="video-container">
+                    <video id="myCamVideo" autoplay muted></video>
+                </div>
             </div>
             <div class="btn-cam-action">
                 <div class="btn-micro">
@@ -29,5 +31,8 @@
                 </div>-->
             </div>
         </div>
+        <audio id="audio-webrtc-in">
+            <source src="/resources/objects/webrtc-in.mp3" type="audio/mp3">
+        </audio>
     </body>
 </html>
