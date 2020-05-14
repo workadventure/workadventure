@@ -43,6 +43,10 @@ export class World {
         this.groupDeletedCallback = groupDeletedCallback;
     }
 
+    public getGroups(): Group[] {
+        return this.groups;
+    }
+
     public join(userPosition: MessageUserPosition): void {
         this.users.set(userPosition.userId, {
             id: userPosition.userId,
