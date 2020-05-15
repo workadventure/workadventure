@@ -48,10 +48,10 @@ export class World {
         return this.groups;
     }
 
-    public join(socket : Identificable, userPosition: MessageUserPosition): void {
+    public join(socket : Identificable, userPosition: PointInterface): void {
         this.users.set(socket.id, {
             id: socket.id,
-            position: userPosition.position
+            position: userPosition
         });
         // Let's call update position to trigger the join / leave room
         this.updatePosition(socket, userPosition);
@@ -69,14 +69,14 @@ export class World {
         this.users.delete(user.id);
     }
 
-    public updatePosition(socket : Identificable, userPosition: MessageUserPosition): void {
+    public updatePosition(socket : Identificable, userPosition: PointInterface): void {
         let user = this.users.get(socket.id);
         if(typeof user === 'undefined') {
             return;
         }
 
-        user.position.x = userPosition.position.x;
-        user.position.y = userPosition.position.y;
+        user.position.x = userPosition.x;
+        user.position.y = userPosition.y;
 
         if (typeof user.group === 'undefined') {
             // If the user is not part of a group:

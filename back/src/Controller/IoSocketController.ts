@@ -1,7 +1,7 @@
 import socketIO = require('socket.io');
 import {Socket} from "socket.io";
 import * as http from "http";
-import {MessageUserPosition} from "../Model/Websocket/MessageUserPosition"; //TODO fix import by "_Model/.."
+import {MessageUserPosition, Point} from "../Model/Websocket/MessageUserPosition"; //TODO fix import by "_Model/.."
 import {ExSocketInterface} from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
 import Jwt, {JsonWebTokenError} from "jsonwebtoken";
 import {SECRET_KEY, MINIMUM_DISTANCE, GROUP_RADIUS} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
@@ -11,6 +11,7 @@ import {World} from "../Model/World";
 import {Group} from "_Model/Group";
 import {UserInterface} from "_Model/UserInterface";
 import {SetPlayerDetailsMessage} from "_Model/Websocket/SetPlayerDetailsMessage";
+import {MessageUserPositionInterface} from "../../../front/src/Connexion";
 
 enum SockerIoEvent {
     CONNECTION = "connection",
@@ -94,16 +95,15 @@ export class IoSocketController {
                         x: user x position on map
                         y: user y position on map
             */
-            socket.on(SockerIoEvent.JOIN_ROOM, (message: string) => {
+            socket.on(SockerIoEvent.JOIN_ROOM, (roomId: any) => {
                 try {
-                    let messageUserPosition = this.hydrateMessageReceive(message);
-                    if (messageUserPosition instanceof Error) {
-                        return socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: messageUserPosition.message})
+                    if (typeof(roomId) !== 'string') {
+                        return socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Expected roomId as a string.'})
                     }
 
                     let Client = (socket as ExSocketInterface);
 
-                    if (Client.roomId === messageUserPosition.roomId) {
+                    if (Client.roomId === roomId) {
                         return;
                     }
 
@@ -111,15 +111,20 @@ export class IoSocketController {
                     this.leaveRoom(Client);
 
                     //join new previous room
-                    this.joinRoom(Client, messageUserPosition);
-
-                    // sending to all clients in room except sender
-                    this.saveUserInformation(Client, messageUserPosition);
+                    this.joinRoom(Client, roomId);
 
                     //add function to refresh position user in real time.
                     this.refreshUserPosition(Client);
 
-                    socket.to(messageUserPosition.roomId).emit(SockerIoEvent.JOIN_ROOM, messageUserPosition.toString());
+                    let messageUserPosition = new MessageUserPosition({
+                        userId: Client.id,
+                        roomId: Client.roomId,
+                        name: Client.name,
+                        character: Client.character,
+                        position: new Point(0, 0, 'none')
+                    });
+
+                    socket.to(roomId).emit(SockerIoEvent.JOIN_ROOM, messageUserPosition);
                 } catch (e) {
                     console.error('An error occurred on "join_room" event');
                     console.error(e);
@@ -150,7 +155,7 @@ export class IoSocketController {
                 //send only at user
                 let client = this.searchClientById(data.receiverId);
                 if (!client) {
-                    console.error("client doesn't exist for ", data.receiverId);
+                    console.error("While exchanging a WebRTC signal: client doesn't exist for ", data.receiverId);
                     return;
                 }
                 return client.emit(SockerIoEvent.WEBRTC_SIGNAL, data);
@@ -216,7 +221,7 @@ export class IoSocketController {
             return client;
         }
         console.log("Could not find user with id ", userId);
-        throw new Error("Could not find user with id " + userId);
+        //throw new Error("Could not find user with id " + userId);
         return null;
     }
 
@@ -252,10 +257,6 @@ export class IoSocketController {
         delete Client.webRtcRoomId;
     }
 
-    /**
-     *
-     * @param Client
-     */
     leaveRoom(Client : ExSocketInterface){
         //lease previous room and world
         if(Client.roomId){
@@ -270,17 +271,15 @@ export class IoSocketController {
             delete Client.roomId;
         }
     }
-    /**
-     *
-     * @param Client
-     * @param messageUserPosition
-     */
-    joinRoom(Client : ExSocketInterface, messageUserPosition: MessageUserPosition){
+
+    joinRoom(Client : ExSocketInterface, roomId: string){
         //join user in room
-        Client.join(messageUserPosition.roomId);
+        Client.join(roomId);
+        Client.roomId = roomId;
+        Client.position = new Point(-1000, -1000);
 
         //check and create new world for a room
-        if(!this.Worlds.get(messageUserPosition.roomId)){
+        if(!this.Worlds.get(roomId)){
             let world = new World((user1: string, group: Group) => {
                 this.connectedUser(user1, group);
             }, (user1: string, group: Group) => {
@@ -290,11 +289,10 @@ export class IoSocketController {
             }, (groupUuid: string, lastUser: UserInterface) => {
                 this.sendDeleteGroupEvent(groupUuid, lastUser);
             });
-            this.Worlds.set(messageUserPosition.roomId, world);
+            this.Worlds.set(roomId, world);
         }
 
-        let world : World|undefined = this.Worlds.get(messageUserPosition.roomId);
-
+        let world : World|undefined = this.Worlds.get(roomId);
 
         if(world) {
             // Dispatch groups position to newly connected user
@@ -305,11 +303,9 @@ export class IoSocketController {
                 });
             });
             //join world
-            world.join(Client, messageUserPosition);
-            this.Worlds.set(messageUserPosition.roomId, world);
+            world.join(Client, Client.position);
+            this.Worlds.set(roomId, world);
         }
-
-
     }
 
     /**
@@ -373,13 +369,13 @@ export class IoSocketController {
             position: Client.position,
             name: Client.name,
             character: Client.character,
-        };
+        } as MessageUserPositionInterface;
         let messageUserPosition = new MessageUserPosition(data);
         let world = this.Worlds.get(messageUserPosition.roomId);
         if (!world) {
             return;
         }
-        world.updatePosition(Client, messageUserPosition);
+        world.updatePosition(Client, messageUserPosition.position);
         this.Worlds.set(messageUserPosition.roomId, world);
     }
 

@@ -150,6 +150,7 @@ export class Connexion implements ConnexionInterface {
     GameManager: GameManager;
 
     lastPositionShared: MessageUserPosition = null;
+    lastRoom: string|null = null;
 
     constructor(GameManager: GameManager) {
         this.GameManager = GameManager;
@@ -185,12 +186,14 @@ export class Connexion implements ConnexionInterface {
      */
     connectSocketServer(): Promise<ConnexionInterface>{
         //if try to reconnect with last position
-        if(this.lastPositionShared) {
+        if(this.lastRoom) {
             //join the room
             this.joinARoom(
-                this.lastPositionShared.roomId,
-                this.lastPositionShared.character
+                this.lastRoom
             );
+        }
+
+        if(this.lastPositionShared) {
 
             //share your first position
             this.sharePosition(
@@ -236,15 +239,9 @@ export class Connexion implements ConnexionInterface {
      * @param roomId
      * @param character
      */
-    joinARoom(roomId: string, character: string): void {
-        let messageUserPosition = new MessageUserPosition(
-            this.userId,
-            roomId,
-            new Point(0, 0),
-            this.name,
-            character
-        );
-        this.socket.emit(EventMessage.JOIN_ROOM, messageUserPosition);
+    joinARoom(roomId: string): void {
+        this.socket.emit(EventMessage.JOIN_ROOM, roomId);
+        this.lastRoom = roomId;
     }
 
     /**
