@@ -40,8 +40,8 @@ export class GameManager {
     connect(name: string, characterUserSelected : string) {
         this.playerName = name;
         this.characterUserSelected = characterUserSelected;
-        this.ConnexionInstance = new Connexion(name, this);
-        return this.ConnexionInstance.createConnexion(characterUserSelected).then((data : any) => {
+        this.ConnexionInstance = new Connexion(this);
+        return this.ConnexionInstance.createConnexion(name, characterUserSelected).then((data : any) => {
             this.SimplePeer = new SimplePeer(this.ConnexionInstance);
             return data;
         }).catch((err) => {

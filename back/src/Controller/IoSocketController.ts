@@ -10,11 +10,11 @@ import {ExtRoomsInterface} from "../Model/Websocket/ExtRoomsInterface";
 import {World} from "../Model/World";
 import {Group} from "_Model/Group";
 import {UserInterface} from "_Model/UserInterface";
+import {SetPlayerDetailsMessage} from "_Model/Websocket/SetPlayerDetailsMessage";
 
 enum SockerIoEvent {
     CONNECTION = "connection",
     DISCONNECT = "disconnect",
-    ATTRIBUTE_USER_ID = "attribute-user-id", // Sent from server to client just after the connexion is established to give the client its unique id.
     JOIN_ROOM = "join-room",
     USER_POSITION = "user-position",
     WEBRTC_SIGNAL = "webrtc-signal",
@@ -24,6 +24,7 @@ enum SockerIoEvent {
     MESSAGE_ERROR = "message-error",
     GROUP_CREATE_UPDATE = "group-create-update",
     GROUP_DELETE = "group-delete",
+    SET_PLAYER_DETAILS = "set-player-details"
 }
 
 export class IoSocketController {
@@ -125,7 +126,7 @@ export class IoSocketController {
                 }
             });
 
-            socket.on(SockerIoEvent.USER_POSITION, (message: string) => {
+            socket.on(SockerIoEvent.USER_POSITION, (message: any) => {
                 try {
                     let messageUserPosition = this.hydrateMessageReceive(message);
                     if (messageUserPosition instanceof Error) {
@@ -192,7 +193,12 @@ export class IoSocketController {
             });
 
             // Let's send the user id to the user
-            socket.emit(SockerIoEvent.ATTRIBUTE_USER_ID, socket.id);
+            socket.on(SockerIoEvent.SET_PLAYER_DETAILS, (playerDetails: SetPlayerDetailsMessage, answerFn) => {
+                let Client = (socket as ExSocketInterface);
+                Client.name = playerDetails.name;
+                Client.character = playerDetails.character;
+                answerFn(socket.id);
+            });
         });
     }
 

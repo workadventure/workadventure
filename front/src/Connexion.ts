@@ -1,10 +1,12 @@
 import {GameManager} from "./Phaser/Game/GameManager";
-
-const SocketIo = require('socket.io-client');
 import Axios from "axios";
 import {API_URL} from "./Enum/EnvironmentVariable";
-import {getMapKeyByUrl} from "./Phaser/Login/LogincScene";
 import {MessageUI} from "./Logger/MessageUI";
+import {SetPlayerDetailsMessage} from "./Messages/SetPlayerDetailsMessage";
+
+const SocketIo = require('socket.io-client');
+import Socket = SocketIOClient.Socket;
+
 
 enum EventMessage{
     WEBRTC_SIGNAL = "webrtc-signal",
@@ -19,7 +21,7 @@ enum EventMessage{
 
     CONNECT_ERROR = "connect_error",
     RECONNECT = "reconnect",
-    ATTRIBUTE_USER_ID = "attribute-user-id" // Sent from server to client just after the connexion is established to give the client its unique id.
+    SET_PLAYER_DETAILS = "set-player-details" // Send the name and character to the server (on connect), receive back the id.
 }
 
 class Message {
@@ -115,10 +117,10 @@ export interface GroupCreatedUpdatedMessageInterface {
 export interface ConnexionInterface {
     socket: any;
     token: string;
-    email: string;
+    name: string;
     userId: string;
 
-    createConnexion(characterSelected: string): Promise<any>;
+    createConnexion(name: string, characterSelected: string): Promise<any>;
 
     loadMaps(): Promise<any>;
 
@@ -139,24 +141,23 @@ export interface ConnexionInterface {
 }
 
 export class Connexion implements ConnexionInterface {
-    socket: any;
+    socket: Socket;
     token: string;
-    email: string;
+    name: string; // TODO: drop "name" storage here
+    character: string;
     userId: string;
 
     GameManager: GameManager;
 
     lastPositionShared: MessageUserPosition = null;
 
-    constructor(email : string, GameManager: GameManager) {
-        this.email = email;
+    constructor(GameManager: GameManager) {
         this.GameManager = GameManager;
     }
 
-    /**
-     * @param characterSelected
-     */
-    createConnexion(characterSelected: string): Promise<ConnexionInterface> {
+    createConnexion(name: string, characterSelected: string): Promise<ConnexionInterface> {
+        this.name = name;
+        this.character = characterSelected;
         /*return Axios.post(`${API_URL}/login`, {email: this.email})
             .then((res) => {
                 this.token = res.data.token;
@@ -168,19 +169,7 @@ export class Connexion implements ConnexionInterface {
                     }*/
                 });
 
-                this.connectSocketServer();
-
-                // TODO: maybe trigger promise only when connexion is established?
-                let promise = new Promise<ConnexionInterface>((resolve, reject) => {
-                    /*console.log('PROMISE CREATED')
-                    this.socket.on('connection', () => {
-                        console.log('CONNECTED');
-                        resolve(this);
-                    });*/
-                    resolve(this);
-                });
-
-                return promise;
+                return this.connectSocketServer();
 
          /*       return res.data;
             })
@@ -194,7 +183,7 @@ export class Connexion implements ConnexionInterface {
      *
      * @param character
      */
-    connectSocketServer(character : string = null){
+    connectSocketServer(): Promise<ConnexionInterface>{
         //if try to reconnect with last position
         if(this.lastPositionShared) {
             //join the room
@@ -214,12 +203,21 @@ export class Connexion implements ConnexionInterface {
         }
 
         //listen event
-        this.attributeUserId();
         this.positionOfAllUser();
         this.disconnectServer();
         this.errorMessage();
         this.groupUpdatedOrCreated();
         this.groupDeleted();
+
+        return new Promise<ConnexionInterface>((resolve, reject) => {
+            this.socket.emit(EventMessage.SET_PLAYER_DETAILS, {
+                name: this.name,
+                character: this.character
+            } as SetPlayerDetailsMessage, (id: string) => {
+                this.userId = id;
+            });
+            resolve(this);
+        });
     }
 
     //TODO add middleware with access token to secure api
@@ -243,7 +241,7 @@ export class Connexion implements ConnexionInterface {
             this.userId,
             roomId,
             new Point(0, 0),
-            this.email,
+            this.name,
             character
         );
         this.socket.emit(EventMessage.JOIN_ROOM, messageUserPosition);
@@ -265,20 +263,11 @@ export class Connexion implements ConnexionInterface {
             this.userId,
             roomId,
             new Point(x, y, direction),
-            this.email,
+            this.name,
             character
         );
         this.lastPositionShared = messageUserPosition;
         this.socket.emit(EventMessage.USER_POSITION, messageUserPosition);
-    }
-
-    attributeUserId(): void {
-        // This event is received as soon as the connexion is established.
-        // It allows informing the browser of its own user id.
-        this.socket.on(EventMessage.ATTRIBUTE_USER_ID, (userId: string) => {
-            console.log('Received my user id: ', userId);
-            this.userId = userId;
-        });
     }
 
     /**
