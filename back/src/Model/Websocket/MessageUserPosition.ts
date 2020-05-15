@@ -14,14 +14,6 @@ export class Point implements PointInterface{
         this.y = y;
         this.direction = direction;
     }
-
-    toJson(){
-        return {
-            x : this.x,
-            y: this.y,
-            direction: this.direction
-        }
-    }
 }
 
 export class MessageUserPosition extends Message{
@@ -30,15 +22,5 @@ export class MessageUserPosition extends Message{
     constructor(message: any) {
         super(message);
         this.position = new Point(message.position.x, message.position.y, message.position.direction);
-    }
-
-    toString() {
-        return JSON.stringify(
-            Object.assign(
-                super.toJson(),
-                {
-                    position: this.position.toJson()
-                })
-        );
     }
 }
