@@ -34,22 +34,12 @@ class Message {
         this.name = name;
         this.character = character;
     }
-
-    toJson() {
-        return {
-            userId: this.userId,
-            roomId: this.roomId,
-            name: this.name,
-            character: this.character
-        }
-    }
 }
 
 export interface PointInterface {
     x: number;
     y: number;
     direction : string;
-    toJson() : object;
 }
 
 class Point implements PointInterface{
@@ -64,14 +54,6 @@ class Point implements PointInterface{
         this.x = x;
         this.y = y;
         this.direction = direction;
-    }
-
-    toJson(){
-        return {
-            x : this.x,
-            y: this.y,
-            direction: this.direction
-        }
     }
 }
 
@@ -89,16 +71,6 @@ class MessageUserPosition extends Message implements MessageUserPositionInterfac
     constructor(userId : string, roomId : string, point : Point, name: string, character: string) {
         super(userId, roomId, name, character);
         this.position = point;
-    }
-
-    toString() {
-        return JSON.stringify(
-            Object.assign(
-                super.toJson(),
-                {
-                    position: this.position.toJson()
-                })
-        );
     }
 }
 
@@ -274,7 +246,7 @@ export class Connexion implements ConnexionInterface {
             this.email,
             character
         );
-        this.socket.emit(EventMessage.JOIN_ROOM, messageUserPosition.toString());
+        this.socket.emit(EventMessage.JOIN_ROOM, messageUserPosition);
     }
 
     /**
@@ -297,7 +269,7 @@ export class Connexion implements ConnexionInterface {
             character
         );
         this.lastPositionShared = messageUserPosition;
-        this.socket.emit(EventMessage.USER_POSITION, messageUserPosition.toString());
+        this.socket.emit(EventMessage.USER_POSITION, messageUserPosition);
     }
 
     attributeUserId(): void {
@@ -326,7 +298,7 @@ export class Connexion implements ConnexionInterface {
      **/
     positionOfAllUser(): void {
         this.socket.on(EventMessage.USER_POSITION, (message: string) => {
-            let dataList = JSON.parse(message);
+            let dataList = message;
             let UserPositions : Array<any> = Object.values(dataList);
             let listMessageUserPosition =  new ListMessageUserPosition(UserPositions[0], UserPositions[1]);
             this.GameManager.shareUserPosition(listMessageUserPosition);
@@ -347,12 +319,12 @@ export class Connexion implements ConnexionInterface {
     }
 
     sendWebrtcSignal(signal: any, roomId: string, userId? : string, receiverId? : string) {
-        return this.socket.emit(EventMessage.WEBRTC_SIGNAL, JSON.stringify({
+        return this.socket.emit(EventMessage.WEBRTC_SIGNAL, {
             userId: userId ? userId : this.userId,
             receiverId: receiverId ? receiverId : this.userId,
             roomId: roomId,
             signal: signal
-        }));
+        });
     }
 
     receiveWebrtcStart(callback: Function) {

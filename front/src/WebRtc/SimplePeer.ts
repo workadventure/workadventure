@@ -32,7 +32,7 @@ export class SimplePeer implements SimplePeerInterface{
     private initialise() {
 
         //receive signal by gemer
-        this.Connexion.receiveWebrtcSignal((message: string) => {
+        this.Connexion.receiveWebrtcSignal((message: any) => {
             this.receiveWebrtcSignal(message);
         });
 
@@ -40,7 +40,7 @@ export class SimplePeer implements SimplePeerInterface{
         this.MediaManager.getCamera().then(() => {
 
             //receive message start
-            this.Connexion.receiveWebrtcStart((message: string) => {
+            this.Connexion.receiveWebrtcStart((message: any) => {
                 this.receiveWebrtcStart(message);
             });
 
@@ -49,8 +49,8 @@ export class SimplePeer implements SimplePeerInterface{
         });
 
         //receive signal by gemer
-        this.Connexion.disconnectMessage((message: string) => {
-            let data = JSON.parse(message);
+        this.Connexion.disconnectMessage((message: any) => {
+            let data = message;
             this.closeConnexion(data.userId);
         });
     }
@@ -59,8 +59,8 @@ export class SimplePeer implements SimplePeerInterface{
      *
      * @param message
      */
-    private receiveWebrtcStart(message: string) {
-        let data = JSON.parse(message);
+    private receiveWebrtcStart(message: any) {
+        let data = message;
         this.WebRtcRoomId = data.roomId;
         this.Users = data.clients;
 
@@ -197,8 +197,8 @@ export class SimplePeer implements SimplePeerInterface{
      *
      * @param message
      */
-    private receiveWebrtcSignal(message: string) {
-        let data = JSON.parse(message);
+    private receiveWebrtcSignal(message: any) {
+        let data = message;
         try {
             //if offer type, create peer connexion
             if(data.signal.type === "offer"){

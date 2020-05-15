@@ -97,7 +97,7 @@ export class IoSocketController {
                 try {
                     let messageUserPosition = this.hydrateMessageReceive(message);
                     if (messageUserPosition instanceof Error) {
-                        return socket.emit(SockerIoEvent.MESSAGE_ERROR, JSON.stringify({message: messageUserPosition.message}))
+                        return socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: messageUserPosition.message})
                     }
 
                     let Client = (socket as ExSocketInterface);
@@ -129,7 +129,7 @@ export class IoSocketController {
                 try {
                     let messageUserPosition = this.hydrateMessageReceive(message);
                     if (messageUserPosition instanceof Error) {
-                        return socket.emit(SockerIoEvent.MESSAGE_ERROR, JSON.stringify({message: messageUserPosition.message}));
+                        return socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: messageUserPosition.message});
                     }
 
                     let Client = (socket as ExSocketInterface);
@@ -145,19 +145,17 @@ export class IoSocketController {
                 }
             });
 
-            socket.on(SockerIoEvent.WEBRTC_SIGNAL, (message: string) => {
-                let data: any = JSON.parse(message);
+            socket.on(SockerIoEvent.WEBRTC_SIGNAL, (data: any) => {
                 //send only at user
                 let client = this.searchClientById(data.receiverId);
                 if (!client) {
                     console.error("client doesn't exist for ", data.receiverId);
                     return;
                 }
-                return client.emit(SockerIoEvent.WEBRTC_SIGNAL, message);
+                return client.emit(SockerIoEvent.WEBRTC_SIGNAL, data);
             });
 
-            socket.on(SockerIoEvent.WEBRTC_OFFER, (message: string) => {
-                let data: any = JSON.parse(message);
+            socket.on(SockerIoEvent.WEBRTC_OFFER, (data: any) => {
 
                 //send only at user
                 let client = this.searchClientById(data.receiverId);
@@ -165,7 +163,7 @@ export class IoSocketController {
                     console.error("client doesn't exist for ", data.receiverId);
                     return;
                 }
-                client.emit(SockerIoEvent.WEBRTC_OFFER, message);
+                client.emit(SockerIoEvent.WEBRTC_OFFER, data);
             });
 
             socket.on(SockerIoEvent.DISCONNECT, () => {
@@ -212,6 +210,7 @@ export class IoSocketController {
             return client;
         }
         console.log("Could not find user with id ", userId);
+        throw new Error("Could not find user with id " + userId);
         return null;
     }
 
@@ -235,9 +234,9 @@ export class IoSocketController {
      * @param Client: ExSocketInterface
      */
     sendDisconnectedEvent(Client: ExSocketInterface) {
-        Client.broadcast.emit(SockerIoEvent.WEBRTC_DISCONNECT, JSON.stringify({
+        Client.broadcast.emit(SockerIoEvent.WEBRTC_DISCONNECT, {
             userId: Client.id
-        }));
+        });
 
         //disconnect webrtc room
         if(!Client.webRtcRoomId){
@@ -257,7 +256,6 @@ export class IoSocketController {
             //user leave previous world
             let world : World|undefined = this.Worlds.get(Client.roomId);
             if(world){
-                console.log('Entering world.leave')
                 world.leave(Client);
                 //this.Worlds.set(Client.roomId, world);
             }
@@ -341,7 +339,7 @@ export class IoSocketController {
                 return tabs;
             }, []);
 
-            client.emit(SockerIoEvent.WEBRTC_START, JSON.stringify({clients: clientsId, roomId: roomId}));
+            client.emit(SockerIoEvent.WEBRTC_START, {clients: clientsId, roomId: roomId});
         });
     }
 
@@ -382,7 +380,7 @@ export class IoSocketController {
     //Hydrate and manage error
     hydrateMessageReceive(message: string): MessageUserPosition | Error {
         try {
-            return new MessageUserPosition(JSON.parse(message));
+            return new MessageUserPosition(message);
         } catch (err) {
             //TODO log error
             return new Error(err);
@@ -421,7 +419,7 @@ export class IoSocketController {
         }
         arrayMap.forEach((value: any) => {
             let roomId = value[0];
-            this.Io.in(roomId).emit(SockerIoEvent.USER_POSITION, JSON.stringify(value));
+            this.Io.in(roomId).emit(SockerIoEvent.USER_POSITION, value);
         });
         this.seTimeOutInProgress = setTimeout(() => {
             this.shareUsersPosition();
