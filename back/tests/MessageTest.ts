@@ -11,12 +11,6 @@ describe("Message Model", () => {
         expect(messageObject.character).toBe("user");
     })
 
-    it("should expose a toJson method", () => {
-        let message = {userId: "test1", roomId: "test2", name: "foo", character: "user"};
-        let messageObject = new Message(message);
-        expect(messageObject.toJson()).toEqual({userId: "test1", roomId: "test2", name: "foo", character: "user"});
-    });
-
     it("should find throw error when no userId", () => {
         let message = {roomId: "test2"};
         expect(() => {
