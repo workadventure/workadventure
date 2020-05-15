@@ -14,6 +14,7 @@ import {UserInterface} from "_Model/UserInterface";
 enum SockerIoEvent {
     CONNECTION = "connection",
     DISCONNECT = "disconnect",
+    ATTRIBUTE_USER_ID = "attribute-user-id", // Sent from server to client just after the connexion is established to give the client its unique id.
     JOIN_ROOM = "join-room",
     USER_POSITION = "user-position",
     WEBRTC_SIGNAL = "webrtc-signal",
@@ -33,7 +34,8 @@ export class IoSocketController {
         this.Io = socketIO(server);
 
         // Authentication with token. it will be decoded and stored in the socket.
-        this.Io.use((socket: Socket, next) => {
+        // Completely commented for now, as we do not use the "/login" route at all.
+        /*this.Io.use((socket: Socket, next) => {
             if (!socket.handshake.query || !socket.handshake.query.token) {
                 return next(new Error('Authentication error'));
             }
@@ -47,7 +49,7 @@ export class IoSocketController {
                 (socket as ExSocketInterface).token = tokenDecoded;
                 next();
             });
-        });
+        });*/
 
         this.ioConnection();
         this.shareUsersPosition();
@@ -74,6 +76,7 @@ export class IoSocketController {
         let userId = lastUser.id;
         let client: ExSocketInterface|null = this.searchClientById(userId);
         if (client === null) {
+            console.warn('Could not find client ', userId, ' in group')
             return;
         }
         let roomId = client.roomId;
@@ -180,7 +183,6 @@ export class IoSocketController {
                     socket.leave(Client.webRtcRoomId);
 
                     //delete all socket information
-                    delete Client.userId;
                     delete Client.webRtcRoomId;
                     delete Client.roomId;
                     delete Client.token;
@@ -190,6 +192,9 @@ export class IoSocketController {
                     console.error(e);
                 }
             });
+
+            // Let's send the user id to the user
+            socket.emit(SockerIoEvent.ATTRIBUTE_USER_ID, socket.id);
         });
     }
 
@@ -201,11 +206,12 @@ export class IoSocketController {
         let clients: Array<any> = Object.values(this.Io.sockets.sockets);
         for (let i = 0; i < clients.length; i++) {
             let client: ExSocketInterface = clients[i];
-            if (client.userId !== userId) {
-                continue
+            if (client.id !== userId) {
+                continue;
             }
             return client;
         }
+        console.log("Could not find user with id ", userId);
         return null;
     }
 
@@ -216,7 +222,7 @@ export class IoSocketController {
         let clients: Array<any> = Object.values(this.Io.sockets.sockets);
         for (let i = 0; i < clients.length; i++) {
             let client: ExSocketInterface = clients[i];
-            if (client.userId !== userId) {
+            if (client.id !== userId) {
                 continue
             }
             return client;
@@ -230,7 +236,7 @@ export class IoSocketController {
      */
     sendDisconnectedEvent(Client: ExSocketInterface) {
         Client.broadcast.emit(SockerIoEvent.WEBRTC_DISCONNECT, JSON.stringify({
-            userId: Client.userId
+            userId: Client.id
         }));
 
         //disconnect webrtc room
@@ -248,14 +254,16 @@ export class IoSocketController {
     leaveRoom(Client : ExSocketInterface){
         //lease previous room and world
         if(Client.roomId){
-            //user leave previous room
-            Client.leave(Client.roomId);
             //user leave previous world
             let world : World|undefined = this.Worlds.get(Client.roomId);
             if(world){
+                console.log('Entering world.leave')
                 world.leave(Client);
-                this.Worlds.set(Client.roomId, world);
+                //this.Worlds.set(Client.roomId, world);
             }
+            //user leave previous room
+            Client.leave(Client.roomId);
+            delete Client.roomId;
         }
     }
     /**
@@ -293,7 +301,7 @@ export class IoSocketController {
                 });
             });
             //join world
-            world.join(messageUserPosition);
+            world.join(Client, messageUserPosition);
             this.Worlds.set(messageUserPosition.roomId, world);
         }
 
@@ -322,11 +330,11 @@ export class IoSocketController {
         clients.forEach((client: ExSocketInterface, index: number) => {
 
             let clientsId = clients.reduce((tabs: Array<any>, clientId: ExSocketInterface, indexClientId: number) => {
-                if (!clientId.userId || clientId.userId === client.userId) {
+                if (!clientId.id || clientId.id === client.id) {
                     return tabs;
                 }
                 tabs.push({
-                    userId: clientId.userId,
+                    userId: clientId.id,
                     name: clientId.name,
                     initiator: index <= indexClientId
                 });
@@ -341,7 +349,7 @@ export class IoSocketController {
     saveUserInformation(socket: ExSocketInterface, message: MessageUserPosition) {
         socket.position = message.position;
         socket.roomId = message.roomId;
-        socket.userId = message.userId;
+        //socket.userId = message.userId;
         socket.name = message.name;
         socket.character = message.character;
     }
@@ -354,9 +362,9 @@ export class IoSocketController {
         }
         rooms.refreshUserPosition(rooms, this.Io);
 
-        // update position in the worl
+        // update position in the world
         let data = {
-            userId: Client.userId,
+            userId: Client.id,
             roomId: Client.roomId,
             position: Client.position,
             name: Client.name,
@@ -367,7 +375,7 @@ export class IoSocketController {
         if (!world) {
             return;
         }
-        world.updatePosition(messageUserPosition);
+        world.updatePosition(Client, messageUserPosition);
         this.Worlds.set(messageUserPosition.roomId, world);
     }
 

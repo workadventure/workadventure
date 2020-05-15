@@ -18,7 +18,8 @@ enum EventMessage{
     GROUP_DELETE = "group-delete",
 
     CONNECT_ERROR = "connect_error",
-    RECONNECT = "reconnect"
+    RECONNECT = "reconnect",
+    ATTRIBUTE_USER_ID = "attribute-user-id" // Sent from server to client just after the connexion is established to give the client its unique id.
 }
 
 class Message {
@@ -184,25 +185,37 @@ export class Connexion implements ConnexionInterface {
      * @param characterSelected
      */
     createConnexion(characterSelected: string): Promise<ConnexionInterface> {
-        return Axios.post(`${API_URL}/login`, {email: this.email})
+        /*return Axios.post(`${API_URL}/login`, {email: this.email})
             .then((res) => {
                 this.token = res.data.token;
-                this.userId = res.data.userId;
+                this.userId = res.data.userId;*/
 
                 this.socket = SocketIo(`${API_URL}`, {
-                    query: {
+                    /*query: {
                         token: this.token
-                    }
+                    }*/
                 });
 
                 this.connectSocketServer();
 
-                return res.data;
+                // TODO: maybe trigger promise only when connexion is established?
+                let promise = new Promise<ConnexionInterface>((resolve, reject) => {
+                    /*console.log('PROMISE CREATED')
+                    this.socket.on('connection', () => {
+                        console.log('CONNECTED');
+                        resolve(this);
+                    });*/
+                    resolve(this);
+                });
+
+                return promise;
+
+         /*       return res.data;
             })
             .catch((err) => {
                 console.error(err);
                 throw err;
-            });
+            });*/
     }
 
     /**
@@ -229,6 +242,7 @@ export class Connexion implements ConnexionInterface {
         }
 
         //listen event
+        this.attributeUserId();
         this.positionOfAllUser();
         this.disconnectServer();
         this.errorMessage();
@@ -284,6 +298,15 @@ export class Connexion implements ConnexionInterface {
         );
         this.lastPositionShared = messageUserPosition;
         this.socket.emit(EventMessage.USER_POSITION, messageUserPosition.toString());
+    }
+
+    attributeUserId(): void {
+        // This event is received as soon as the connexion is established.
+        // It allows informing the browser of its own user id.
+        this.socket.on(EventMessage.ATTRIBUTE_USER_ID, (userId: string) => {
+            console.log('Received my user id: ', userId);
+            this.userId = userId;
+        });
     }
 
     /**

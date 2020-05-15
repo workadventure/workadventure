@@ -90,7 +90,7 @@ export class LogincScene extends Phaser.Scene implements GameSceneInterface {
         });
 
         /*create user*/
-        this.createCurrentPlayer("test");
+        this.createCurrentPlayer();
         cypressAsserter.initFinished();
     }
 
@@ -144,7 +144,7 @@ export class LogincScene extends Phaser.Scene implements GameSceneInterface {
         throw new Error("Method not implemented.");
     }
 
-    createCurrentPlayer(UserId: string): void {
+    createCurrentPlayer(): void {
         for (let i = 0; i <PLAYER_RESOURCES.length; i++) {
             let playerResource = PLAYER_RESOURCES[i];
             let player = this.physics.add.sprite(playerResource.x, playerResource.y, playerResource.name, playerResource.name);

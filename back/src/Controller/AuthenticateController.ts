@@ -4,7 +4,7 @@ import {BAD_REQUEST, OK} from "http-status-codes";
 import {SECRET_KEY, URL_ROOM_STARTED} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 import { uuid } from 'uuidv4';
 
-export class AuthenticateController{
+export class AuthenticateController {
     App : Application;
 
     constructor(App : Application) {
@@ -14,7 +14,8 @@ export class AuthenticateController{
 
     //permit to login on application. Return token to connect on Websocket IO.
     login(){
-        this.App.post("/login", (req: Request, res: Response) => {
+        // For now, let's completely forget the /login route.
+        /*this.App.post("/login", (req: Request, res: Response) => {
             let param = req.body;
             if(!param.email){
                 return res.status(BAD_REQUEST).send({
@@ -29,6 +30,6 @@ export class AuthenticateController{
                 mapUrlStart: URL_ROOM_STARTED,
                 userId: userId,
             });
-        });
+        });*/
     }
 }

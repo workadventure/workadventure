@@ -5,6 +5,7 @@ import {Distance} from "./Distance";
 import {UserInterface} from "./UserInterface";
 import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
 import {PositionInterface} from "_Model/PositionInterface";
+import {Identificable} from "_Model/Websocket/Identificable";
 
 export type ConnectCallback = (user: string, group: Group) => void;
 export type DisconnectCallback = (user: string, group: Group) => void;
@@ -14,17 +15,17 @@ export type GroupUpdatedCallback = (group: Group) => void;
 export type GroupDeletedCallback = (uuid: string, lastUser: UserInterface) => void;
 
 export class World {
-    private minDistance: number;
-    private groupRadius: number;
+    private readonly minDistance: number;
+    private readonly groupRadius: number;
 
     // Users, sorted by ID
-    private users: Map<string, UserInterface>;
-    private groups: Group[];
+    private readonly users: Map<string, UserInterface>;
+    private readonly groups: Group[];
 
-    private connectCallback: ConnectCallback;
-    private disconnectCallback: DisconnectCallback;
-    private groupUpdatedCallback: GroupUpdatedCallback;
-    private groupDeletedCallback: GroupDeletedCallback;
+    private readonly connectCallback: ConnectCallback;
+    private readonly disconnectCallback: DisconnectCallback;
+    private readonly groupUpdatedCallback: GroupUpdatedCallback;
+    private readonly groupDeletedCallback: GroupDeletedCallback;
 
     constructor(connectCallback: ConnectCallback,
                 disconnectCallback: DisconnectCallback,
@@ -47,25 +48,29 @@ export class World {
         return this.groups;
     }
 
-    public join(userPosition: MessageUserPosition): void {
-        this.users.set(userPosition.userId, {
-            id: userPosition.userId,
+    public join(socket : Identificable, userPosition: MessageUserPosition): void {
+        this.users.set(socket.id, {
+            id: socket.id,
             position: userPosition.position
         });
         // Let's call update position to trigger the join / leave room
-        this.updatePosition(userPosition);
+        this.updatePosition(socket, userPosition);
     }
 
-    public leave(user : ExSocketInterface){
+    public leave(user : Identificable){
         let userObj = this.users.get(user.id);
-        if (userObj !== undefined && typeof userObj.group !== 'undefined') {
-            this.leaveGroup(user);
+        if (userObj === undefined) {
+            // FIXME: this seems always wrong. I guess user.id is different from userPosition.userId
+            console.warn('User ', user.id, 'does not belong to world! It should!');
         }
-        this.users.delete(user.userId);
+        if (userObj !== undefined && typeof userObj.group !== 'undefined') {
+            this.leaveGroup(userObj);
+        }
+        this.users.delete(user.id);
     }
 
-    public updatePosition(userPosition: MessageUserPosition): void {
-        let user = this.users.get(userPosition.userId);
+    public updatePosition(socket : Identificable, userPosition: MessageUserPosition): void {
+        let user = this.users.get(socket.id);
         if(typeof user === 'undefined') {
             return;
         }
@@ -118,7 +123,6 @@ export class World {
             throw new Error("The user is part of no group");
         }
         group.leave(user);
-
         if (group.isEmpty()) {
             this.groupDeletedCallback(group.getId(), user);
             group.destroy();
