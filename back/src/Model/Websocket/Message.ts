@@ -14,14 +14,4 @@ export class Message {
         this.name = data.name;
         this.character = data.character;
     }
-
-    toJson() {
-
-        return {
-            userId: this.userId,
-            roomId: this.roomId,
-            name: this.name,
-            character: this.character
-        }
-    }
 }
