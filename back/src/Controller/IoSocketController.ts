@@ -11,7 +11,6 @@ import {World} from "../Model/World";
 import {Group} from "_Model/Group";
 import {UserInterface} from "_Model/UserInterface";
 import {SetPlayerDetailsMessage} from "_Model/Websocket/SetPlayerDetailsMessage";
-import {MessageUserPositionInterface} from "../../../front/src/Connexion";
 
 enum SockerIoEvent {
     CONNECTION = "connection",
@@ -133,15 +132,15 @@ export class IoSocketController {
 
             socket.on(SockerIoEvent.USER_POSITION, (message: any) => {
                 try {
-                    let messageUserPosition = this.hydrateMessageReceive(message);
-                    if (messageUserPosition instanceof Error) {
-                        return socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: messageUserPosition.message});
+                    let position = this.hydratePositionReceive(message);
+                    if (position instanceof Error) {
+                        return socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: position.message});
                     }
 
                     let Client = (socket as ExSocketInterface);
 
                     // sending to all clients in room except sender
-                    this.saveUserInformation(Client, messageUserPosition);
+                    Client.position = position;
 
                     //refresh position of all user in all rooms in real time
                     this.refreshUserPosition(Client);
@@ -345,15 +344,6 @@ export class IoSocketController {
         });
     }
 
-    //permit to save user position in socket
-    saveUserInformation(socket: ExSocketInterface, message: MessageUserPosition) {
-        socket.position = message.position;
-        socket.roomId = message.roomId;
-        //socket.userId = message.userId;
-        socket.name = message.name;
-        socket.character = message.character;
-    }
-
     refreshUserPosition(Client : ExSocketInterface) {
         //refresh position of all user in all rooms in real time
         let rooms = (this.Io.sockets.adapter.rooms as ExtRoomsInterface);
@@ -369,7 +359,7 @@ export class IoSocketController {
             position: Client.position,
             name: Client.name,
             character: Client.character,
-        } as MessageUserPositionInterface;
+        };
         let messageUserPosition = new MessageUserPosition(data);
         let world = this.Worlds.get(messageUserPosition.roomId);
         if (!world) {
@@ -380,9 +370,12 @@ export class IoSocketController {
     }
 
     //Hydrate and manage error
-    hydrateMessageReceive(message: string): MessageUserPosition | Error {
+    hydratePositionReceive(message: any): Point | Error {
         try {
-            return new MessageUserPosition(message);
+            if (!message.x || !message.y || !message.direction) {
+                return new Error("invalid point message sent");
+            }
+            return new Point(message.x, message.y, message.direction);
         } catch (err) {
             //TODO log error
             return new Error(err);

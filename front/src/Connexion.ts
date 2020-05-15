@@ -149,7 +149,7 @@ export class Connexion implements ConnexionInterface {
 
     GameManager: GameManager;
 
-    lastPositionShared: MessageUserPosition = null;
+    lastPositionShared: PointInterface = null;
     lastRoom: string|null = null;
 
     constructor(GameManager: GameManager) {
@@ -185,26 +185,6 @@ export class Connexion implements ConnexionInterface {
      * @param character
      */
     connectSocketServer(): Promise<ConnexionInterface>{
-        //if try to reconnect with last position
-        if(this.lastRoom) {
-            //join the room
-            this.joinARoom(
-                this.lastRoom
-            );
-        }
-
-        if(this.lastPositionShared) {
-
-            //share your first position
-            this.sharePosition(
-                this.lastPositionShared ? this.lastPositionShared.position.x : 0,
-                this.lastPositionShared ? this.lastPositionShared.position.y : 0,
-                this.lastPositionShared.character,
-                this.lastPositionShared.roomId,
-                this.lastPositionShared.position.direction
-            );
-        }
-
         //listen event
         this.positionOfAllUser();
         this.disconnectServer();
@@ -219,6 +199,25 @@ export class Connexion implements ConnexionInterface {
             } as SetPlayerDetailsMessage, (id: string) => {
                 this.userId = id;
             });
+
+            //if try to reconnect with last position
+            if(this.lastRoom) {
+                //join the room
+                this.joinARoom(
+                    this.lastRoom
+                );
+            }
+
+            if(this.lastPositionShared) {
+
+                //share your first position
+                this.sharePosition(
+                    this.lastPositionShared ? this.lastPositionShared.x : 0,
+                    this.lastPositionShared ? this.lastPositionShared.y : 0,
+                    this.lastPositionShared.direction
+                );
+            }
+
             resolve(this);
         });
     }
@@ -252,19 +251,13 @@ export class Connexion implements ConnexionInterface {
      * @param roomId
      * @param direction
      */
-    sharePosition(x : number, y : number, character : string, roomId : string, direction : string = "none") : void{
+    sharePosition(x : number, y : number, direction : string = "none") : void{
         if(!this.socket){
             return;
         }
-        let messageUserPosition = new MessageUserPosition(
-            this.userId,
-            roomId,
-            new Point(x, y, direction),
-            this.name,
-            character
-        );
-        this.lastPositionShared = messageUserPosition;
-        this.socket.emit(EventMessage.USER_POSITION, messageUserPosition);
+        let point = new Point(x, y, direction);
+        this.lastPositionShared = point;
+        this.socket.emit(EventMessage.USER_POSITION, point);
     }
 
     /**

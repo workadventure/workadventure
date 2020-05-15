@@ -17,7 +17,6 @@ export interface HasMovedEvent {
     direction: string;
     x: number;
     y: number;
-    character: string;
 }
 
 export interface MapObject {
@@ -71,8 +70,8 @@ export class GameManager {
         this.status = StatusGameManagerEnum.CURRENT_USER_CREATED;
     }
 
-    joinRoom(sceneKey : string, character: string){
-        this.ConnexionInstance.joinARoom(sceneKey, character);
+    joinRoom(sceneKey : string){
+        this.ConnexionInstance.joinARoom(sceneKey);
     }
 
     /**
@@ -128,7 +127,7 @@ export class GameManager {
     }
 
     pushPlayerPosition(event: HasMovedEvent) {
-        this.ConnexionInstance.sharePosition(event.x, event.y, event.character, this.currentGameScene.scene.key, event.direction);
+        this.ConnexionInstance.sharePosition(event.x, event.y, event.direction);
     }
 
     loadMap(mapUrl: string, scene: ScenePlugin): string {

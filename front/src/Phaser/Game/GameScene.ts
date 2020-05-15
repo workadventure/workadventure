@@ -284,7 +284,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
         this.createCollisionObject();
 
         //join room
-        this.GameManager.joinRoom(this.scene.key, this.CurrentPlayer.PlayerTexture);
+        this.GameManager.joinRoom(this.scene.key);
 
         //listen event to share position of user
         this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this))
