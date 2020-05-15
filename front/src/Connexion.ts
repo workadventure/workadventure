@@ -26,13 +26,11 @@ enum EventMessage{
 
 class Message {
     userId: string;
-    roomId: string;
     name: string;
     character: string;
 
-    constructor(userId : string, roomId : string, name: string, character: string) {
+    constructor(userId : string, name: string, character: string) {
         this.userId = userId;
-        this.roomId = roomId;
         this.name = name;
         this.character = character;
     }
@@ -61,7 +59,6 @@ class Point implements PointInterface{
 
 export interface MessageUserPositionInterface {
     userId: string;
-    roomId: string;
     name: string;
     character: string;
     position: PointInterface;
@@ -70,8 +67,8 @@ export interface MessageUserPositionInterface {
 class MessageUserPosition extends Message implements MessageUserPositionInterface{
     position: PointInterface;
 
-    constructor(userId : string, roomId : string, point : Point, name: string, character: string) {
-        super(userId, roomId, name, character);
+    constructor(userId : string, point : Point, name: string, character: string) {
+        super(userId, name, character);
         this.position = point;
     }
 }
@@ -91,7 +88,6 @@ class ListMessageUserPosition {
         data.forEach((userPosition: any) => {
             this.listUsersPosition.push(new MessageUserPosition(
                 userPosition.userId,
-                userPosition.roomId,
                 new Point(
                     userPosition.position.x,
                     userPosition.position.y,

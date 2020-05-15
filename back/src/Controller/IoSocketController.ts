@@ -361,12 +361,12 @@ export class IoSocketController {
             character: Client.character,
         };
         let messageUserPosition = new MessageUserPosition(data);
-        let world = this.Worlds.get(messageUserPosition.roomId);
+        let world = this.Worlds.get(Client.roomId);
         if (!world) {
             return;
         }
         world.updatePosition(Client, messageUserPosition.position);
-        this.Worlds.set(messageUserPosition.roomId, world);
+        this.Worlds.set(Client.roomId, world);
     }
 
     //Hydrate and manage error
