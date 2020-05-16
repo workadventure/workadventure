@@ -94,10 +94,11 @@ export class IoSocketController {
                         x: user x position on map
                         y: user y position on map
             */
-            socket.on(SockerIoEvent.JOIN_ROOM, (roomId: any) => {
+            socket.on(SockerIoEvent.JOIN_ROOM, (roomId: any): void => {
                 try {
                     if (typeof(roomId) !== 'string') {
-                        return socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Expected roomId as a string.'})
+                        socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Expected roomId as a string.'});
+                        return;
                     }
 
                     let Client = (socket as ExSocketInterface);
@@ -124,11 +125,12 @@ export class IoSocketController {
                 }
             });
 
-            socket.on(SockerIoEvent.USER_POSITION, (message: any) => {
+            socket.on(SockerIoEvent.USER_POSITION, (message: any): void => {
                 try {
                     let position = this.hydratePositionReceive(message);
                     if (position instanceof Error) {
-                        return socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: position.message});
+                        socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: position.message});
+                        return;
                     }
 
                     let Client = (socket as ExSocketInterface);

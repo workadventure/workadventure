@@ -49,18 +49,12 @@ export class SimplePeer implements SimplePeerInterface{
         });
 
         //receive signal by gemer
-        this.Connexion.disconnectMessage((message: any) => {
-            let data = message;
+        this.Connexion.disconnectMessage((data: any) => {
             this.closeConnexion(data.userId);
         });
     }
 
-    /**
-     *
-     * @param message
-     */
-    private receiveWebrtcStart(message: any) {
-        let data = message;
+    private receiveWebrtcStart(data: any) {
         this.WebRtcRoomId = data.roomId;
         this.Users = data.clients;
 
@@ -193,12 +187,7 @@ export class SimplePeer implements SimplePeerInterface{
         }
     }
 
-    /**
-     *
-     * @param message
-     */
-    private receiveWebrtcSignal(message: any) {
-        let data = message;
+    private receiveWebrtcSignal(data: any) {
         try {
             //if offer type, create peer connexion
             if(data.signal.type === "offer"){
