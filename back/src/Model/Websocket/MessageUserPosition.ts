@@ -1,4 +1,3 @@
-import {Message} from "./Message";
 import {PointInterface} from "./PointInterface";
 
 export class Point implements PointInterface{
