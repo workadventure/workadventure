@@ -1,17 +1,15 @@
 import "jasmine";
-import {Message} from "../src/Model/Websocket/Message";
 import {World, ConnectCallback, DisconnectCallback } from "../src/Model/World";
-import {MessageUserPosition, Point} from "../src/Model/Websocket/MessageUserPosition";
+import {Point} from "../src/Model/Websocket/MessageUserPosition";
 import { Group } from "../src/Model/Group";
-import {Distance} from "../src/Model//Distance";
 
 describe("World", () => {
     it("should connect user1 and user2", () => {
         let connectCalledNumber: number = 0;
-        let connect = (user: string, group: Group): void => {
+        let connect: ConnectCallback = (user: string, group: Group): void => {
             connectCalledNumber++;
         }
-        let disconnect = (user: string, group: Group): void => {
+        let disconnect: DisconnectCallback = (user: string, group: Group): void => {
 
         }
 
@@ -35,10 +33,10 @@ describe("World", () => {
 
     it("should connect 3 users", () => {
         let connectCalled: boolean = false;
-        let connect = (user: string, group: Group): void => {
+        let connect: ConnectCallback = (user: string, group: Group): void => {
             connectCalled = true;
         }
-        let disconnect = (user: string, group: Group): void => {
+        let disconnect: DisconnectCallback = (user: string, group: Group): void => {
 
         }
 
@@ -64,10 +62,10 @@ describe("World", () => {
     it("should disconnect user1 and user2", () => {
         let connectCalled: boolean = false;
         let disconnectCallNumber: number = 0;
-        let connect = (user: string, group: Group): void => {
+        let connect: ConnectCallback = (user: string, group: Group): void => {
             connectCalled = true;
         }
-        let disconnect = (user: string, group: Group): void => {
+        let disconnect: DisconnectCallback = (user: string, group: Group): void => {
             disconnectCallNumber++;
         }
 
