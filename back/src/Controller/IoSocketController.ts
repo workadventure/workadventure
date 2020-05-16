@@ -115,13 +115,7 @@ export class IoSocketController {
                     //add function to refresh position user in real time.
                     this.refreshUserPosition(Client);
 
-                    let messageUserPosition = new MessageUserPosition({
-                        userId: Client.id,
-                        roomId: Client.roomId,
-                        name: Client.name,
-                        character: Client.character,
-                        position: new Point(0, 0, 'none')
-                    });
+                    let messageUserPosition = new MessageUserPosition(Client.id, Client.name, Client.character,new Point(0, 0, 'none'));
 
                     socket.to(roomId).emit(SockerIoEvent.JOIN_ROOM, messageUserPosition);
                 } catch (e) {
@@ -353,14 +347,7 @@ export class IoSocketController {
         rooms.refreshUserPosition(rooms, this.Io);
 
         // update position in the world
-        let data = {
-            userId: Client.id,
-            roomId: Client.roomId,
-            position: Client.position,
-            name: Client.name,
-            character: Client.character,
-        };
-        let messageUserPosition = new MessageUserPosition(data);
+        let messageUserPosition = new MessageUserPosition(Client.id, Client.name, Client.character, Client.position);
         let world = this.Worlds.get(Client.roomId);
         if (!world) {
             return;
