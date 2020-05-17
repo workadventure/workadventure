@@ -1,10 +1,12 @@
 import {GameManager} from "./Phaser/Game/GameManager";
-
-const SocketIo = require('socket.io-client');
 import Axios from "axios";
 import {API_URL} from "./Enum/EnvironmentVariable";
-import {getMapKeyByUrl} from "./Phaser/Login/LogincScene";
 import {MessageUI} from "./Logger/MessageUI";
+import {SetPlayerDetailsMessage} from "./Messages/SetPlayerDetailsMessage";
+
+const SocketIo = require('socket.io-client');
+import Socket = SocketIOClient.Socket;
+
 
 enum EventMessage{
     WEBRTC_SIGNAL = "webrtc-signal",
@@ -19,29 +21,18 @@ enum EventMessage{
 
     CONNECT_ERROR = "connect_error",
     RECONNECT = "reconnect",
-    ATTRIBUTE_USER_ID = "attribute-user-id" // Sent from server to client just after the connexion is established to give the client its unique id.
+    SET_PLAYER_DETAILS = "set-player-details" // Send the name and character to the server (on connect), receive back the id.
 }
 
 class Message {
     userId: string;
-    roomId: string;
     name: string;
     character: string;
 
-    constructor(userId : string, roomId : string, name: string, character: string) {
+    constructor(userId : string, name: string, character: string) {
         this.userId = userId;
-        this.roomId = roomId;
         this.name = name;
         this.character = character;
-    }
-
-    toJson() {
-        return {
-            userId: this.userId,
-            roomId: this.roomId,
-            name: this.name,
-            character: this.character
-        }
     }
 }
 
@@ -49,7 +40,6 @@ export interface PointInterface {
     x: number;
     y: number;
     direction : string;
-    toJson() : object;
 }
 
 class Point implements PointInterface{
@@ -65,19 +55,10 @@ class Point implements PointInterface{
         this.y = y;
         this.direction = direction;
     }
-
-    toJson(){
-        return {
-            x : this.x,
-            y: this.y,
-            direction: this.direction
-        }
-    }
 }
 
 export interface MessageUserPositionInterface {
     userId: string;
-    roomId: string;
     name: string;
     character: string;
     position: PointInterface;
@@ -86,19 +67,9 @@ export interface MessageUserPositionInterface {
 class MessageUserPosition extends Message implements MessageUserPositionInterface{
     position: PointInterface;
 
-    constructor(userId : string, roomId : string, point : Point, name: string, character: string) {
-        super(userId, roomId, name, character);
+    constructor(userId : string, point : Point, name: string, character: string) {
+        super(userId, name, character);
         this.position = point;
-    }
-
-    toString() {
-        return JSON.stringify(
-            Object.assign(
-                super.toJson(),
-                {
-                    position: this.position.toJson()
-                })
-        );
     }
 }
 
@@ -117,7 +88,6 @@ class ListMessageUserPosition {
         data.forEach((userPosition: any) => {
             this.listUsersPosition.push(new MessageUserPosition(
                 userPosition.userId,
-                userPosition.roomId,
                 new Point(
                     userPosition.position.x,
                     userPosition.position.y,
@@ -143,10 +113,10 @@ export interface GroupCreatedUpdatedMessageInterface {
 export interface ConnexionInterface {
     socket: any;
     token: string;
-    email: string;
+    name: string;
     userId: string;
 
-    createConnexion(characterSelected: string): Promise<any>;
+    createConnexion(name: string, characterSelected: string): Promise<any>;
 
     loadMaps(): Promise<any>;
 
@@ -167,24 +137,24 @@ export interface ConnexionInterface {
 }
 
 export class Connexion implements ConnexionInterface {
-    socket: any;
+    socket: Socket;
     token: string;
-    email: string;
+    name: string; // TODO: drop "name" storage here
+    character: string;
     userId: string;
 
     GameManager: GameManager;
 
-    lastPositionShared: MessageUserPosition = null;
+    lastPositionShared: PointInterface = null;
+    lastRoom: string|null = null;
 
-    constructor(email : string, GameManager: GameManager) {
-        this.email = email;
+    constructor(GameManager: GameManager) {
         this.GameManager = GameManager;
     }
 
-    /**
-     * @param characterSelected
-     */
-    createConnexion(characterSelected: string): Promise<ConnexionInterface> {
+    createConnexion(name: string, characterSelected: string): Promise<ConnexionInterface> {
+        this.name = name;
+        this.character = characterSelected;
         /*return Axios.post(`${API_URL}/login`, {email: this.email})
             .then((res) => {
                 this.token = res.data.token;
@@ -196,19 +166,7 @@ export class Connexion implements ConnexionInterface {
                     }*/
                 });
 
-                this.connectSocketServer();
-
-                // TODO: maybe trigger promise only when connexion is established?
-                let promise = new Promise<ConnexionInterface>((resolve, reject) => {
-                    /*console.log('PROMISE CREATED')
-                    this.socket.on('connection', () => {
-                        console.log('CONNECTED');
-                        resolve(this);
-                    });*/
-                    resolve(this);
-                });
-
-                return promise;
+                return this.connectSocketServer();
 
          /*       return res.data;
             })
@@ -222,32 +180,42 @@ export class Connexion implements ConnexionInterface {
      *
      * @param character
      */
-    connectSocketServer(character : string = null){
-        //if try to reconnect with last position
-        if(this.lastPositionShared) {
-            //join the room
-            this.joinARoom(
-                this.lastPositionShared.roomId,
-                this.lastPositionShared.character
-            );
-
-            //share your first position
-            this.sharePosition(
-                this.lastPositionShared ? this.lastPositionShared.position.x : 0,
-                this.lastPositionShared ? this.lastPositionShared.position.y : 0,
-                this.lastPositionShared.character,
-                this.lastPositionShared.roomId,
-                this.lastPositionShared.position.direction
-            );
-        }
-
+    connectSocketServer(): Promise<ConnexionInterface>{
         //listen event
-        this.attributeUserId();
         this.positionOfAllUser();
         this.disconnectServer();
         this.errorMessage();
         this.groupUpdatedOrCreated();
         this.groupDeleted();
+
+        return new Promise<ConnexionInterface>((resolve, reject) => {
+            this.socket.emit(EventMessage.SET_PLAYER_DETAILS, {
+                name: this.name,
+                character: this.character
+            } as SetPlayerDetailsMessage, (id: string) => {
+                this.userId = id;
+            });
+
+            //if try to reconnect with last position
+            if(this.lastRoom) {
+                //join the room
+                this.joinARoom(
+                    this.lastRoom
+                );
+            }
+
+            if(this.lastPositionShared) {
+
+                //share your first position
+                this.sharePosition(
+                    this.lastPositionShared ? this.lastPositionShared.x : 0,
+                    this.lastPositionShared ? this.lastPositionShared.y : 0,
+                    this.lastPositionShared.direction
+                );
+            }
+
+            resolve(this);
+        });
     }
 
     //TODO add middleware with access token to secure api
@@ -266,15 +234,9 @@ export class Connexion implements ConnexionInterface {
      * @param roomId
      * @param character
      */
-    joinARoom(roomId: string, character: string): void {
-        let messageUserPosition = new MessageUserPosition(
-            this.userId,
-            roomId,
-            new Point(0, 0),
-            this.email,
-            character
-        );
-        this.socket.emit(EventMessage.JOIN_ROOM, messageUserPosition.toString());
+    joinARoom(roomId: string): void {
+        this.socket.emit(EventMessage.JOIN_ROOM, roomId);
+        this.lastRoom = roomId;
     }
 
     /**
@@ -285,28 +247,13 @@ export class Connexion implements ConnexionInterface {
      * @param roomId
      * @param direction
      */
-    sharePosition(x : number, y : number, character : string, roomId : string, direction : string = "none") : void{
+    sharePosition(x : number, y : number, direction : string = "none") : void{
         if(!this.socket){
             return;
         }
-        let messageUserPosition = new MessageUserPosition(
-            this.userId,
-            roomId,
-            new Point(x, y, direction),
-            this.email,
-            character
-        );
-        this.lastPositionShared = messageUserPosition;
-        this.socket.emit(EventMessage.USER_POSITION, messageUserPosition.toString());
-    }
-
-    attributeUserId(): void {
-        // This event is received as soon as the connexion is established.
-        // It allows informing the browser of its own user id.
-        this.socket.on(EventMessage.ATTRIBUTE_USER_ID, (userId: string) => {
-            console.log('Received my user id: ', userId);
-            this.userId = userId;
-        });
+        let point = new Point(x, y, direction);
+        this.lastPositionShared = point;
+        this.socket.emit(EventMessage.USER_POSITION, point);
     }
 
     /**
@@ -326,7 +273,7 @@ export class Connexion implements ConnexionInterface {
      **/
     positionOfAllUser(): void {
         this.socket.on(EventMessage.USER_POSITION, (message: string) => {
-            let dataList = JSON.parse(message);
+            let dataList = message;
             let UserPositions : Array<any> = Object.values(dataList);
             let listMessageUserPosition =  new ListMessageUserPosition(UserPositions[0], UserPositions[1]);
             this.GameManager.shareUserPosition(listMessageUserPosition);
@@ -347,12 +294,12 @@ export class Connexion implements ConnexionInterface {
     }
 
     sendWebrtcSignal(signal: any, roomId: string, userId? : string, receiverId? : string) {
-        return this.socket.emit(EventMessage.WEBRTC_SIGNAL, JSON.stringify({
+        return this.socket.emit(EventMessage.WEBRTC_SIGNAL, {
             userId: userId ? userId : this.userId,
             receiverId: receiverId ? receiverId : this.userId,
             roomId: roomId,
             signal: signal
-        }));
+        });
     }
 
     receiveWebrtcStart(callback: Function) {

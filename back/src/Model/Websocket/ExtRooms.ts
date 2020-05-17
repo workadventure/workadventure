@@ -23,19 +23,18 @@ let RefreshUserPositionFunction = function(rooms : ExtRooms, Io: socketIO.Server
         }
         let data = {
             userId: socket.id,
-            roomId: socket.roomId,
             position: socket.position,
             name: socket.name,
             character: socket.character,
         };
         let dataArray = <any>[];
-        if (mapPositionUserByRoom.get(data.roomId)) {
-            dataArray = mapPositionUserByRoom.get(data.roomId);
+        if (mapPositionUserByRoom.get(socket.roomId)) {
+            dataArray = mapPositionUserByRoom.get(socket.roomId);
             dataArray.push(data);
         } else {
             dataArray = [data];
         }
-        mapPositionUserByRoom.set(data.roomId, dataArray);
+        mapPositionUserByRoom.set(socket.roomId, dataArray);
     }
     rooms.userPositionMapByRoom = Array.from(mapPositionUserByRoom);
 };
