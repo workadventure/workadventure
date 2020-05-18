@@ -60,7 +60,6 @@ export class World {
     public leave(user : Identificable){
         let userObj = this.users.get(user.id);
         if (userObj === undefined) {
-            // FIXME: this seems always wrong. I guess user.id is different from userPosition.userId
             console.warn('User ', user.id, 'does not belong to world! It should!');
         }
         if (userObj !== undefined && typeof userObj.group !== 'undefined') {
