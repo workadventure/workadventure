@@ -1,12 +1,13 @@
-import {GameScene, GameSceneInterface} from "./GameScene";
+import {GameScene} from "./GameScene";
 import {
     Connexion,
     GroupCreatedUpdatedMessageInterface,
-    ListMessageUserPositionInterface
+    ListMessageUserPositionInterface, MessageUserJoined, MessageUserMovedInterface, MessageUserPositionInterface, Point
 } from "../../Connexion";
 import {SimplePeerInterface, SimplePeer} from "../../WebRtc/SimplePeer";
 import {getMapKeyByUrl} from "../Login/LogincScene";
 import ScenePlugin = Phaser.Scenes.ScenePlugin;
+import {AddPlayerInterface} from "./AddPlayerInterface";
 
 export enum StatusGameManagerEnum {
     IN_PROGRESS = 1,
@@ -27,7 +28,7 @@ export interface MapObject {
 export class GameManager {
     status: number;
     private ConnexionInstance: Connexion;
-    private currentGameScene: GameSceneInterface;
+    private currentGameScene: GameScene;
     private playerName: string;
     SimplePeer : SimplePeerInterface;
     private characterUserSelected: string;
@@ -56,7 +57,7 @@ export class GameManager {
         });
     }
 
-    setCurrentGameScene(gameScene: GameSceneInterface) {
+    setCurrentGameScene(gameScene: GameScene) {
         this.currentGameScene = gameScene;
     }
 
@@ -74,9 +75,28 @@ export class GameManager {
         this.ConnexionInstance.joinARoom(sceneKey);
     }
 
+    onUserJoins(message: MessageUserJoined): void {
+        let userMessage: AddPlayerInterface = {
+            userId: message.userId,
+            character: message.character,
+            name: message.name,
+            position: new Point(-1000, -1000)
+        }
+        this.currentGameScene.addPlayer(userMessage);
+    }
+
+    onUserMoved(message: MessageUserMovedInterface): void {
+        this.currentGameScene.updatePlayerPosition(message);
+    }
+
+    onUserLeft(userId: string): void {
+        this.currentGameScene.removePlayer(userId);
+    }
+
     /**
      * Share position in game
      * @param ListMessageUserPosition
+     * @deprecated
      */
     shareUserPosition(ListMessageUserPosition: ListMessageUserPositionInterface): void {
         if (this.status === StatusGameManagerEnum.IN_PROGRESS) {
@@ -84,6 +104,18 @@ export class GameManager {
         }
         try {
             this.currentGameScene.shareUserPosition(ListMessageUserPosition.listUsersPosition)
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    initUsersPosition(usersPosition: MessageUserPositionInterface[]): void {
+        // Shall we wait for room to be loaded?
+        /*if (this.status === StatusGameManagerEnum.IN_PROGRESS) {
+            return;
+        }*/
+        try {
+            this.currentGameScene.initUsersPosition(usersPosition)
         } catch (e) {
             console.error(e);
         }

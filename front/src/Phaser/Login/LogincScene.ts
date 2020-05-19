@@ -2,12 +2,11 @@ import {gameManager} from "../Game/GameManager";
 import {TextField} from "../Components/TextField";
 import {TextInput} from "../Components/TextInput";
 import {ClickButton} from "../Components/ClickButton";
-import {GameScene, GameSceneInterface} from "../Game/GameScene";
 import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
 import {PLAYER_RESOURCES} from "../Entity/PlayableCaracter";
 import {cypressAsserter} from "../../Cypress/CypressAsserter";
-import {GroupCreatedUpdatedMessageInterface, MessageUserPositionInterface} from "../../Connexion";
+import {GroupCreatedUpdatedMessageInterface, MessageUserJoined, MessageUserPositionInterface} from "../../Connexion";
 
 export function getMapKeyByUrl(mapUrlStart: string){
     // FIXME: the key should be computed from the full URL of the map.
@@ -28,7 +27,7 @@ enum LoginTextures {
     mainFont = "main_font"
 }
 
-export class LogincScene extends Phaser.Scene implements GameSceneInterface {
+export class LogincScene extends Phaser.Scene {
     private nameInput: TextInput;
     private textField: TextField;
     private playButton: ClickButton;
@@ -167,21 +166,5 @@ export class LogincScene extends Phaser.Scene implements GameSceneInterface {
         }
         this.selectedPlayer = this.players[0];
         this.selectedPlayer.play(PLAYER_RESOURCES[0].name);
-    }
-
-    shareUserPosition(UsersPosition: import("../../Connexion").MessageUserPositionInterface[]): void {
-        throw new Error("Method not implemented.");
-    }
-
-    deleteGroup(groupId: string): void {
-        throw new Error("Method not implemented.");
-    }
-
-    shareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface): void {
-        throw new Error("Method not implemented.");
-    }
-
-    updateOrCreateMapPlayer(UsersPosition: Array<MessageUserPositionInterface>): void {
-        throw new Error("Method not implemented.");
     }
 }

@@ -11,12 +11,16 @@ import {World} from "../Model/World";
 import {Group} from "_Model/Group";
 import {UserInterface} from "_Model/UserInterface";
 import {SetPlayerDetailsMessage} from "_Model/Websocket/SetPlayerDetailsMessage";
+import {MessageUserJoined} from "../Model/Websocket/MessageUserJoined";
+import {MessageUserMoved} from "../Model/Websocket/MessageUserMoved";
 
 enum SockerIoEvent {
     CONNECTION = "connection",
     DISCONNECT = "disconnect",
-    JOIN_ROOM = "join-room",
-    USER_POSITION = "user-position",
+    JOIN_ROOM = "join-room", // bi-directional
+    USER_POSITION = "user-position", // bi-directional
+    USER_MOVED = "user-moved", // From server to client
+    USER_LEFT = "user-left", // From server to client
     WEBRTC_SIGNAL = "webrtc-signal",
     WEBRTC_OFFER = "webrtc-offer",
     WEBRTC_START = "webrtc-start",
@@ -88,7 +92,7 @@ export class IoSocketController {
                         x: user x position on map
                         y: user y position on map
             */
-            socket.on(SockerIoEvent.JOIN_ROOM, (roomId: any): void => {
+            socket.on(SockerIoEvent.JOIN_ROOM, (roomId: any, answerFn): void => {
                 try {
                     if (typeof(roomId) !== 'string') {
                         socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Expected roomId as a string.'});
@@ -105,14 +109,21 @@ export class IoSocketController {
                     this.leaveRoom(Client);
 
                     //join new previous room
-                    this.joinRoom(Client, roomId);
+                    let world = this.joinRoom(Client, roomId);
 
                     //add function to refresh position user in real time.
-                    this.refreshUserPosition(Client);
+                    //this.refreshUserPosition(Client);
 
-                    let messageUserPosition = new MessageUserPosition(Client.id, Client.name, Client.character,new Point(0, 0, 'none'));
+                    let messageUserJoined = new MessageUserJoined(Client.id, Client.name, Client.character);
 
-                    socket.to(roomId).emit(SockerIoEvent.JOIN_ROOM, messageUserPosition);
+                    socket.to(roomId).emit(SockerIoEvent.JOIN_ROOM, messageUserJoined);
+
+                    // The answer shall contain the list of all users of the room with their positions:
+                    let listOfUsers = Array.from(world.getUsers(), ([key, user]) => {
+                        let player = this.searchClientByIdOrFail(user.id);
+                        return new MessageUserPosition(user.id, player.name, player.character, player.position);
+                    });
+                    answerFn(listOfUsers);
                 } catch (e) {
                     console.error('An error occurred on "join_room" event');
                     console.error(e);
@@ -133,7 +144,17 @@ export class IoSocketController {
                     Client.position = position;
 
                     //refresh position of all user in all rooms in real time
-                    this.refreshUserPosition(Client);
+                    //this.refreshUserPosition(Client);
+
+                    // update position in the world
+                    let world = this.Worlds.get(Client.roomId);
+                    if (!world) {
+                        console.error("Could not find world with id '", Client.roomId, "'");
+                        return;
+                    }
+                    world.updatePosition(Client, Client.position);
+
+                    socket.to(Client.roomId).emit(SockerIoEvent.USER_MOVED, new MessageUserMoved(Client.id, Client.position));
                 } catch (e) {
                     console.error('An error occurred on "user_position" event');
                     console.error(e);
@@ -163,10 +184,10 @@ export class IoSocketController {
             socket.on(SockerIoEvent.DISCONNECT, () => {
                 try {
                     let Client = (socket as ExSocketInterface);
-                    //this.sendDisconnectedEvent(Client);
 
-                    //refresh position of all user in all rooms in real time (to remove the disconnected user)
-                    this.refreshUserPosition(Client);
+                    if (Client.roomId) {
+                        socket.to(Client.roomId).emit(SockerIoEvent.USER_LEFT, socket.id);
+                    }
 
                     //leave room
                     this.leaveRoom(Client);
@@ -205,13 +226,14 @@ export class IoSocketController {
     }
 
     leaveRoom(Client : ExSocketInterface){
-        //lease previous room and world
+        // leave previous room and world
         if(Client.roomId){
+            Client.to(Client.roomId).emit(SockerIoEvent.USER_LEFT, Client.id);
+
             //user leave previous world
             let world : World|undefined = this.Worlds.get(Client.roomId);
             if(world){
                 world.leave(Client);
-                //this.Worlds.set(Client.roomId, world);
             }
             //user leave previous room
             Client.leave(Client.roomId);
@@ -219,15 +241,16 @@ export class IoSocketController {
         }
     }
 
-    joinRoom(Client : ExSocketInterface, roomId: string){
+    private joinRoom(Client : ExSocketInterface, roomId: string): World {
         //join user in room
         Client.join(roomId);
         Client.roomId = roomId;
         Client.position = new Point(-1000, -1000);
 
         //check and create new world for a room
-        if(!this.Worlds.get(roomId)){
-            let world = new World((user1: string, group: Group) => {
+        let world = this.Worlds.get(roomId)
+        if(world === undefined){
+            world = new World((user1: string, group: Group) => {
                 this.connectedUser(user1, group);
             }, (user1: string, group: Group) => {
                 this.disConnectedUser(user1, group);
@@ -239,20 +262,16 @@ export class IoSocketController {
             this.Worlds.set(roomId, world);
         }
 
-        let world : World|undefined = this.Worlds.get(roomId);
-
-        if(world) {
-            // Dispatch groups position to newly connected user
-            world.getGroups().forEach((group: Group) => {
-                Client.emit(SockerIoEvent.GROUP_CREATE_UPDATE, {
-                    position: group.getPosition(),
-                    groupId: group.getId()
-                });
+        // Dispatch groups position to newly connected user
+        world.getGroups().forEach((group: Group) => {
+            Client.emit(SockerIoEvent.GROUP_CREATE_UPDATE, {
+                position: group.getPosition(),
+                groupId: group.getId()
             });
-            //join world
-            world.join(Client, Client.position);
-            this.Worlds.set(roomId, world);
-        }
+        });
+        //join world
+        world.join(Client, Client.position);
+        return world;
     }
 
     /**
@@ -306,7 +325,6 @@ export class IoSocketController {
             return;
         }
         world.updatePosition(Client, Client.position);
-        this.Worlds.set(Client.roomId, world);
     }
 
     //Hydrate and manage error

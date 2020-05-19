@@ -12,8 +12,10 @@ enum EventMessage{
     WEBRTC_SIGNAL = "webrtc-signal",
     WEBRTC_START = "webrtc-start",
     WEBRTC_JOIN_ROOM = "webrtc-join-room",
-    JOIN_ROOM = "join-room",
-    USER_POSITION = "user-position",
+    JOIN_ROOM = "join-room", // bi-directional
+    USER_POSITION = "user-position", // bi-directional
+    USER_MOVED = "user-moved", // From server to client
+    USER_LEFT = "user-left", // From server to client
     MESSAGE_ERROR = "message-error",
     WEBRTC_DISCONNECT = "webrtc-disconect",
     GROUP_CREATE_UPDATE = "group-create-update",
@@ -42,7 +44,7 @@ export interface PointInterface {
     direction : string;
 }
 
-class Point implements PointInterface{
+export class Point implements PointInterface{
     x: number;
     y: number;
     direction : string;
@@ -64,6 +66,11 @@ export interface MessageUserPositionInterface {
     position: PointInterface;
 }
 
+export interface MessageUserMovedInterface {
+    userId: string;
+    position: PointInterface;
+}
+
 class MessageUserPosition extends Message implements MessageUserPositionInterface{
     position: PointInterface;
 
@@ -71,6 +78,12 @@ class MessageUserPosition extends Message implements MessageUserPositionInterfac
         super(userId, name, character);
         this.position = point;
     }
+}
+
+export interface MessageUserJoined {
+    userId: string;
+    name: string;
+    character: string;
 }
 
 export interface ListMessageUserPositionInterface {
@@ -187,6 +200,9 @@ export class Connexion implements ConnexionInterface {
         this.errorMessage();
         this.groupUpdatedOrCreated();
         this.groupDeleted();
+        this.onUserJoins();
+        this.onUserMoved();
+        this.onUserLeft();
 
         return new Promise<ConnexionInterface>((resolve, reject) => {
             this.socket.emit(EventMessage.SET_PLAYER_DETAILS, {
@@ -235,7 +251,10 @@ export class Connexion implements ConnexionInterface {
      * @param character
      */
     joinARoom(roomId: string): void {
-        this.socket.emit(EventMessage.JOIN_ROOM, roomId);
+        this.socket.emit(EventMessage.JOIN_ROOM, roomId, (userPositions: MessageUserPositionInterface[]) => {
+            console.log("GOT AN ANSWER FROM JOIN_ROOM");
+            this.GameManager.initUsersPosition(userPositions);
+        });
         this.lastRoom = roomId;
     }
 
@@ -277,6 +296,24 @@ export class Connexion implements ConnexionInterface {
             let UserPositions : Array<any> = Object.values(dataList);
             let listMessageUserPosition =  new ListMessageUserPosition(UserPositions[0], UserPositions[1]);
             this.GameManager.shareUserPosition(listMessageUserPosition);
+        });
+    }
+
+    onUserJoins(): void {
+        this.socket.on(EventMessage.JOIN_ROOM, (message: MessageUserJoined) => {
+            this.GameManager.onUserJoins(message);
+        });
+    }
+
+    onUserMoved(): void {
+        this.socket.on(EventMessage.USER_MOVED, (message: MessageUserMovedInterface) => {
+            this.GameManager.onUserMoved(message);
+        });
+    }
+
+    onUserLeft(): void {
+        this.socket.on(EventMessage.USER_LEFT, (userId: string) => {
+            this.GameManager.onUserLeft(userId);
         });
     }
 

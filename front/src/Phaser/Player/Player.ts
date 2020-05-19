@@ -1,6 +1,6 @@
 import {getPlayerAnimations, playAnimation, PlayerAnimationNames} from "./Animation";
-import {GameSceneInterface, Textures} from "../Game/GameScene";
-import {MessageUserPositionInterface} from "../../Connexion";
+import {GameScene, Textures} from "../Game/GameScene";
+import {MessageUserPositionInterface, PointInterface} from "../../Connexion";
 import {ActiveEventList, UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
 import {PlayableCaracter} from "../Entity/PlayableCaracter";
 
@@ -15,7 +15,7 @@ export interface CurrentGamerInterface extends PlayableCaracter{
 export interface GamerInterface extends PlayableCaracter{
     userId : string;
     initAnimation() : void;
-    updatePosition(MessageUserPosition : MessageUserPositionInterface) : void;
+    updatePosition(position: PointInterface): void;
     say(text : string) : void;
 }
 
@@ -26,7 +26,7 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
 
     constructor(
         userId: string,
-        Scene: GameSceneInterface,
+        Scene: GameScene,
         x: number,
         y: number,
         name: string,
@@ -96,10 +96,10 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
     }
 
     //todo: put this method into the NonPlayer class instead
-    updatePosition(MessageUserPosition: MessageUserPositionInterface) {
-        playAnimation(this, MessageUserPosition.position.direction);
-        this.setX(MessageUserPosition.position.x);
-        this.setY(MessageUserPosition.position.y);
-        this.setDepth(MessageUserPosition.position.y);
+    updatePosition(position: PointInterface): void {
+        playAnimation(this, position.direction);
+        this.setX(position.x);
+        this.setY(position.y);
+        this.setDepth(position.y);
     }
 }

@@ -48,6 +48,10 @@ export class World {
         return this.groups;
     }
 
+    public getUsers(): Map<string, UserInterface> {
+        return this.users;
+    }
+
     public join(socket : Identificable, userPosition: PointInterface): void {
         this.users.set(socket.id, {
             id: socket.id,
@@ -74,8 +78,7 @@ export class World {
             return;
         }
 
-        user.position.x = userPosition.x;
-        user.position.y = userPosition.y;
+        user.position = userPosition;
 
         if (typeof user.group === 'undefined') {
             // If the user is not part of a group:

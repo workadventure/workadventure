@@ -1,5 +1,5 @@
 export interface PointInterface {
-    x: number;
-    y: number;
-    direction: string;
+    readonly x: number;
+    readonly y: number;
+    readonly direction: string;
 }
