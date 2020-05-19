@@ -5,8 +5,6 @@ import {MessageUserPosition, Point} from "../Model/Websocket/MessageUserPosition
 import {ExSocketInterface} from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
 import Jwt, {JsonWebTokenError} from "jsonwebtoken";
 import {SECRET_KEY, MINIMUM_DISTANCE, GROUP_RADIUS} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
-import {ExtRooms, RefreshUserPositionFunction} from "../Model/Websocket/ExtRooms";
-import {ExtRoomsInterface} from "../Model/Websocket/ExtRoomsInterface";
 import {World} from "../Model/World";
 import {Group} from "_Model/Group";
 import {UserInterface} from "_Model/UserInterface";
@@ -58,7 +56,6 @@ export class IoSocketController {
         });*/
 
         this.ioConnection();
-        this.shareUsersPosition();
     }
 
     private sendUpdateGroupEvent(group: Group): void {
@@ -311,22 +308,6 @@ export class IoSocketController {
         });
     }
 
-    refreshUserPosition(Client : ExSocketInterface) {
-        //refresh position of all user in all rooms in real time
-        let rooms = (this.Io.sockets.adapter.rooms as ExtRoomsInterface);
-        if (!rooms.refreshUserPosition) {
-            rooms.refreshUserPosition = RefreshUserPositionFunction;
-        }
-        rooms.refreshUserPosition(rooms, this.Io);
-
-        // update position in the world
-        let world = this.Worlds.get(Client.roomId);
-        if (!world) {
-            return;
-        }
-        world.updatePosition(Client, Client.position);
-    }
-
     //Hydrate and manage error
     hydratePositionReceive(message: any): Point | Error {
         try {
@@ -356,28 +337,6 @@ export class IoSocketController {
      ...
      ]
      **/
-    seTimeOutInProgress: any = null;
-
-    shareUsersPosition() {
-        if (this.seTimeOutInProgress) {
-            clearTimeout(this.seTimeOutInProgress);
-        }
-        //send for each room, all data of position user
-        let arrayMap = (this.Io.sockets.adapter.rooms as ExtRooms).userPositionMapByRoom;
-        if (!arrayMap) {
-            this.seTimeOutInProgress = setTimeout(() => {
-                this.shareUsersPosition();
-            }, 10);
-            return;
-        }
-        arrayMap.forEach((value: any) => {
-            let roomId = value[0];
-            this.Io.in(roomId).emit(SockerIoEvent.USER_POSITION, value);
-        });
-        this.seTimeOutInProgress = setTimeout(() => {
-            this.shareUsersPosition();
-        }, 10);
-    }
 
     //connected user
     connectedUser(userId: string, group: Group) {
