@@ -392,10 +392,7 @@ export class GameScene extends Phaser.Scene {
                 return;
             }
             this.addPlayer(userPosition);
-            console.log("Added player ", userPosition)
         });
-
-        console.log("Initialized with ", usersPosition);
     }
 
     private findPlayerInMap(UserId : string) : GamerInterface | null{

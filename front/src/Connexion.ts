@@ -252,7 +252,6 @@ export class Connexion implements ConnexionInterface {
      */
     joinARoom(roomId: string): void {
         this.socket.emit(EventMessage.JOIN_ROOM, roomId, (userPositions: MessageUserPositionInterface[]) => {
-            console.log("GOT AN ANSWER FROM JOIN_ROOM");
             this.GameManager.initUsersPosition(userPositions);
         });
         this.lastRoom = roomId;
