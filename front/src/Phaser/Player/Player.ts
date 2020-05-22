@@ -1,4 +1,4 @@
-import {getPlayerAnimations, playAnimation, PlayerAnimationNames} from "./Animation";
+import {getPlayerAnimations, PlayerAnimationNames} from "./Animation";
 import {GameScene, Textures} from "../Game/GameScene";
 import {MessageUserPositionInterface, PointInterface} from "../../Connexion";
 import {ActiveEventList, UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
@@ -7,14 +7,12 @@ import {PlayableCaracter} from "../Entity/PlayableCaracter";
 
 export const hasMovedEventName = "hasMoved";
 export interface CurrentGamerInterface extends PlayableCaracter{
-    initAnimation() : void;
     moveUser(delta: number) : void;
     say(text : string) : void;
 }
 
 export interface GamerInterface extends PlayableCaracter{
     userId : string;
-    initAnimation() : void;
     updatePosition(position: PointInterface): void;
     say(text : string) : void;
 }
@@ -22,7 +20,8 @@ export interface GamerInterface extends PlayableCaracter{
 export class Player extends PlayableCaracter implements CurrentGamerInterface, GamerInterface {
     userId: string;
     userInputManager: UserInputManager;
-    previousMove: string;
+    previousDirection: string;
+    wasMoving: boolean;
 
     constructor(
         userId: string,
@@ -30,7 +29,9 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
         x: number,
         y: number,
         name: string,
-        PlayerTexture: string = Textures.Player
+        PlayerTexture: string,
+        direction: string,
+        moving: boolean
     ) {
         super(Scene, x, y, PlayerTexture, name, 1);
 
@@ -42,9 +43,18 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
 
         //the current player model should be push away by other players to prevent conflict
         this.setImmovable(false);
+        this.initAnimation();
+
+        console.warn("Start direction for added player ", direction)
+        console.warn("Position ", x, y)
+        /*this.play(`${PlayerTexture}-${direction}`, true);
+        if (!moving) {
+            this.stop();
+        }*/
+        this.playAnimation(direction, moving);
     }
 
-    initAnimation(): void {
+    private initAnimation(): void {
         getPlayerAnimations(this.PlayerTexture).forEach(d => {
             this.scene.anims.create({
                 key: d.key,
@@ -58,6 +68,7 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
     moveUser(delta: number): void {
         //if user client on shift, camera and player speed
         let direction = null;
+        let moving = false;
 
         let activeEvents = this.userInputManager.getEventListForGameTick();
         let speedMultiplier = activeEvents.get(UserInputEvent.SpeedUp) ? 25 : 9;
@@ -67,39 +78,56 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
         let y = 0;
         if (activeEvents.get(UserInputEvent.MoveUp)) {
             y = - moveAmount;
-            direction = `${this.PlayerTexture}-${PlayerAnimationNames.WalkUp}`;
+            direction = PlayerAnimationNames.WalkUp;
+            moving = true;
         } else if (activeEvents.get(UserInputEvent.MoveDown)) {
             y = moveAmount;
-            direction = `${this.PlayerTexture}-${PlayerAnimationNames.WalkDown}`;
+            direction = PlayerAnimationNames.WalkDown;
+            moving = true;
         }
         if (activeEvents.get(UserInputEvent.MoveLeft)) {
             x = -moveAmount;
-            direction = `${this.PlayerTexture}-${PlayerAnimationNames.WalkLeft}`;
+            direction = PlayerAnimationNames.WalkLeft;
+            moving = true;
         } else if (activeEvents.get(UserInputEvent.MoveRight)) {
             x = moveAmount;
-            direction = `${this.PlayerTexture}-${PlayerAnimationNames.WalkRight}`;
+            direction = PlayerAnimationNames.WalkRight;
+            moving = true;
         }
         if (x !== 0 || y !== 0) {
             this.move(x, y);
-            this.emit(hasMovedEventName, {direction, x: this.x, y: this.y});
+            this.emit(hasMovedEventName, {moving, direction, x: this.x, y: this.y});
         } else {
-            if (this.previousMove !== PlayerAnimationNames.None) {
-                direction = PlayerAnimationNames.None;
+            if (this.wasMoving) {
+                //direction = PlayerAnimationNames.None;
                 this.stop();
-                this.emit(hasMovedEventName, {direction, x: this.x, y: this.y});
+                this.emit(hasMovedEventName, {moving, direction: this.previousDirection, x: this.x, y: this.y});
             }
         }
 
         if (direction !== null) {
-            this.previousMove = direction;
+            this.previousDirection = direction;
         }
+        this.wasMoving = moving;
     }
 
     //todo: put this method into the NonPlayer class instead
     updatePosition(position: PointInterface): void {
-        playAnimation(this, position.direction);
+        this.playAnimation(position.direction, position.moving);
         this.setX(position.x);
         this.setY(position.y);
         this.setDepth(position.y);
+    }
+
+    private playAnimation(direction : string, moving: boolean): void {
+        if (moving && (!this.anims.currentAnim || this.anims.currentAnim.key !== direction)) {
+            this.anims.play(this.PlayerTexture+'-'+direction);
+        } else if (!moving) {
+            /*if (this.anims.currentAnim) {
+                this.anims.stop();
+            }*/
+            this.anims.play(this.PlayerTexture+'-'+direction);
+            this.anims.stop();
+        }
     }
 }

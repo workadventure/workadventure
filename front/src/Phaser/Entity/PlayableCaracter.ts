@@ -26,7 +26,7 @@ export const PLAYER_RESOURCES: Array<any> = [
 
 export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
     private bubble: SpeechBubble;
-    private playerName: BitmapText;
+    private readonly playerName: BitmapText;
     public PlayerValue: string;
     public PlayerTexture: string;
 

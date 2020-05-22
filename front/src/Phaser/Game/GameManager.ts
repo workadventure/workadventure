@@ -16,6 +16,7 @@ export enum StatusGameManagerEnum {
 
 export interface HasMovedEvent {
     direction: string;
+    moving: boolean;
     x: number;
     y: number;
 }
@@ -71,8 +72,8 @@ export class GameManager {
         this.status = StatusGameManagerEnum.CURRENT_USER_CREATED;
     }
 
-    joinRoom(sceneKey : string){
-        this.ConnexionInstance.joinARoom(sceneKey);
+    joinRoom(sceneKey: string, startX: number, startY: number, direction: string, moving: boolean){
+        this.ConnexionInstance.joinARoom(sceneKey, startX, startY, direction, moving);
     }
 
     onUserJoins(message: MessageUserJoined): void {
@@ -80,7 +81,7 @@ export class GameManager {
             userId: message.userId,
             character: message.character,
             name: message.name,
-            position: new Point(-1000, -1000)
+            position: message.position
         }
         this.currentGameScene.addPlayer(userMessage);
     }
@@ -159,7 +160,7 @@ export class GameManager {
     }
 
     pushPlayerPosition(event: HasMovedEvent) {
-        this.ConnexionInstance.sharePosition(event.x, event.y, event.direction);
+        this.ConnexionInstance.sharePosition(event.x, event.y, event.direction, event.moving);
     }
 
     loadMap(mapUrl: string, scene: ScenePlugin): string {

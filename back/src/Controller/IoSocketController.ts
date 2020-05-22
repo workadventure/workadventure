@@ -89,10 +89,17 @@ export class IoSocketController {
                         x: user x position on map
                         y: user y position on map
             */
-            socket.on(SockerIoEvent.JOIN_ROOM, (roomId: any, answerFn): void => {
+            socket.on(SockerIoEvent.JOIN_ROOM, (message: any, answerFn): void => {
                 try {
+                    let roomId = message.roomId;
+
                     if (typeof(roomId) !== 'string') {
                         socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Expected roomId as a string.'});
+                        return;
+                    }
+                    let position = this.hydratePositionReceive(message.position);
+                    if (position instanceof Error) {
+                        socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: position.message});
                         return;
                     }
 
@@ -106,12 +113,12 @@ export class IoSocketController {
                     this.leaveRoom(Client);
 
                     //join new previous room
-                    let world = this.joinRoom(Client, roomId);
+                    let world = this.joinRoom(Client, roomId, position);
 
                     //add function to refresh position user in real time.
                     //this.refreshUserPosition(Client);
 
-                    let messageUserJoined = new MessageUserJoined(Client.id, Client.name, Client.character);
+                    let messageUserJoined = new MessageUserJoined(Client.id, Client.name, Client.character, Client.position);
 
                     socket.to(roomId).emit(SockerIoEvent.JOIN_ROOM, messageUserJoined);
 
@@ -140,16 +147,13 @@ export class IoSocketController {
                     // sending to all clients in room except sender
                     Client.position = position;
 
-                    //refresh position of all user in all rooms in real time
-                    //this.refreshUserPosition(Client);
-
                     // update position in the world
                     let world = this.Worlds.get(Client.roomId);
                     if (!world) {
                         console.error("Could not find world with id '", Client.roomId, "'");
                         return;
                     }
-                    world.updatePosition(Client, Client.position);
+                    world.updatePosition(Client, position);
 
                     socket.to(Client.roomId).emit(SockerIoEvent.USER_MOVED, new MessageUserMoved(Client.id, Client.position));
                 } catch (e) {
@@ -181,10 +185,6 @@ export class IoSocketController {
             socket.on(SockerIoEvent.DISCONNECT, () => {
                 try {
                     let Client = (socket as ExSocketInterface);
-
-                    if (Client.roomId) {
-                        socket.to(Client.roomId).emit(SockerIoEvent.USER_LEFT, socket.id);
-                    }
 
                     //leave room
                     this.leaveRoom(Client);
@@ -238,11 +238,11 @@ export class IoSocketController {
         }
     }
 
-    private joinRoom(Client : ExSocketInterface, roomId: string): World {
+    private joinRoom(Client : ExSocketInterface, roomId: string, position: Point): World {
         //join user in room
         Client.join(roomId);
         Client.roomId = roomId;
-        Client.position = new Point(-1000, -1000);
+        Client.position = position;
 
         //check and create new world for a room
         let world = this.Worlds.get(roomId)
@@ -311,10 +311,10 @@ export class IoSocketController {
     //Hydrate and manage error
     hydratePositionReceive(message: any): Point | Error {
         try {
-            if (!message.x || !message.y || !message.direction) {
+            if (!message.x || !message.y || !message.direction || message.moving === undefined) {
                 return new Error("invalid point message sent");
             }
-            return new Point(message.x, message.y, message.direction);
+            return new Point(message.x, message.y, message.direction, message.moving);
         } catch (err) {
             //TODO log error
             return new Error(err);

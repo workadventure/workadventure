@@ -13,6 +13,7 @@ import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
 import {AddPlayerInterface} from "./AddPlayerInterface";
+import {PlayerAnimationNames} from "../Player/Animation";
 
 export enum Textures {
     Player = "male1"
@@ -273,16 +274,17 @@ export class GameScene extends Phaser.Scene {
             this.startX,
             this.startY,
             this.GameManager.getPlayerName(),
-            this.GameManager.getCharacterSelected()
+            this.GameManager.getCharacterSelected(),
+            PlayerAnimationNames.WalkDown,
+            false
         );
-        this.CurrentPlayer.initAnimation();
 
         //create collision
         this.createCollisionWithPlayer();
         this.createCollisionObject();
 
         //join room
-        this.GameManager.joinRoom(this.scene.key);
+        this.GameManager.joinRoom(this.scene.key, this.startX, this.startY, PlayerAnimationNames.WalkDown, false);
 
         //listen event to share position of user
         this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this))
@@ -415,9 +417,10 @@ export class GameScene extends Phaser.Scene {
             addPlayerData.position.x,
             addPlayerData.position.y,
             addPlayerData.name,
-            addPlayerData.character
+            addPlayerData.character,
+            addPlayerData.position.direction,
+            addPlayerData.position.moving
         );
-        player.initAnimation();
         this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);
         player.updatePosition(addPlayerData.position);
@@ -429,6 +432,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     public removePlayer(userId: string) {
+        console.log('Removing player ', userId)
         let player = this.MapPlayersByKey.get(userId);
         if (player === undefined) {
             console.error('Cannot find user with id ', userId);
