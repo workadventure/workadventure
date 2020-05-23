@@ -10,8 +10,6 @@ import {
     PointInterface
 } from "../../Connexion";
 import {SimplePeerInterface, SimplePeer} from "../../WebRtc/SimplePeer";
-import {getMapKeyByUrl} from "../Login/LogincScene";
-import ScenePlugin = Phaser.Scenes.ScenePlugin;
 import {AddPlayerInterface} from "./AddPlayerInterface";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
 
@@ -169,13 +167,13 @@ export class GameManager {
         this.ConnexionInstance.sharePosition(event.x, event.y, event.direction, event.moving);
     }
 
-    loadMap(mapUrl: string, scene: ScenePlugin): string {
-        let sceneKey = getMapKeyByUrl(mapUrl);
+    loadMap(mapUrl: string, scene: Phaser.Scenes.ScenePlugin, instance: string): string {
+        let sceneKey = GameScene.getMapKeyByUrl(mapUrl);
 
         let gameIndex = scene.getIndex(sceneKey);
         let game : Phaser.Scene = null;
         if(gameIndex === -1){
-            game = new GameScene(sceneKey, mapUrl);
+            game = GameScene.createFromUrl(mapUrl, instance);
             scene.add(sceneKey, game, false);
         }
         return sceneKey;

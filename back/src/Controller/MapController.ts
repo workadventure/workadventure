@@ -20,7 +20,8 @@ export class MapController {
     getMaps() {
         this.App.get("/maps", (req: Request, res: Response) => {
             return res.status(OK).send({
-                mapUrlStart: req.headers.host + "/map/files" + URL_ROOM_STARTED
+                mapUrlStart: req.headers.host + "/map/files" + URL_ROOM_STARTED,
+                startInstance: "global"
             });
         });
     }

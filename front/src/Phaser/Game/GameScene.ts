@@ -40,10 +40,17 @@ export class GameScene extends Phaser.Scene {
 
     MapKey: string;
     MapUrlFile: string;
+    RoomId: string;
+    instance: string;
 
     PositionNextScene: Array<any> = new Array<any>();
 
-    constructor(MapKey : string = "", MapUrlFile: string = "") {
+    static createFromUrl(mapUrlFile: string, instance: string): GameScene {
+        let key = GameScene.getMapKeyByUrl(mapUrlFile);
+        return new GameScene(key, mapUrlFile, instance);
+    }
+
+    constructor(MapKey : string, MapUrlFile: string, instance: string) {
         super({
             key: MapKey
         });
@@ -51,9 +58,11 @@ export class GameScene extends Phaser.Scene {
         this.GameManager = gameManager;
         this.Terrains = [];
         this.groups = new Map<string, Sprite>();
+        this.instance = instance;
 
-        this.MapKey =  MapKey;
+        this.MapKey = MapKey;
         this.MapUrlFile = MapUrlFile;
+        this.RoomId = this.instance + '__' + this.MapKey;
     }
 
     //hook preload scene
@@ -158,7 +167,7 @@ export class GameScene extends Phaser.Scene {
 
         // Let's alter browser history
         let url = new URL(this.MapUrlFile);
-        let path = '/_/'+url.host+url.pathname;
+        let path = '/_/'+this.instance+'/'+url.host+url.pathname;
         if (url.hash) {
             // FIXME: entry should be dictated by a property passed to init()
             path += '#'+url.hash;
@@ -178,6 +187,18 @@ export class GameScene extends Phaser.Scene {
         return obj.value;
     }
 
+    private getExitSceneInstance(layer: ITiledMapLayer): string|undefined {
+        let properties : any = layer.properties;
+        if (!properties) {
+            return undefined;
+        }
+        let obj = properties.find((property:any) => property.name === "exitInstance");
+        if (obj === undefined) {
+            return undefined;
+        }
+        return obj.value;
+    }
+
     /**
      *
      * @param layer
@@ -187,10 +208,14 @@ export class GameScene extends Phaser.Scene {
      */
     private loadNextGame(layer: ITiledMapLayer, mapWidth: number, tileWidth: number, tileHeight: number){
         let exitSceneUrl = this.getExitSceneUrl(layer);
+        let instance = this.getExitSceneInstance(layer);
+        if (instance === undefined) {
+            instance = this.instance;
+        }
 
         // TODO: eventually compute a relative URL
         let absoluteExitSceneUrl = new URL(exitSceneUrl, this.MapUrlFile).href;
-        let exitSceneKey = gameManager.loadMap(absoluteExitSceneUrl, this.scene);
+        let exitSceneKey = gameManager.loadMap(absoluteExitSceneUrl, this.scene, instance);
 
         let tiles : any = layer.data;
         tiles.forEach((objectKey : number, key: number) => {
@@ -264,11 +289,6 @@ export class GameScene extends Phaser.Scene {
         });
     }
 
-    addSpite(Object : Phaser.Physics.Arcade.Sprite){
-        Object.setImmovable(true);
-        this.Objects.push(Object);
-    }
-
     createCollisionObject(){
         this.Objects.forEach((Object : Phaser.Physics.Arcade.Sprite) => {
             this.physics.add.collider(this.CurrentPlayer, Object, (object1: any, object2: any) => {
@@ -279,7 +299,7 @@ export class GameScene extends Phaser.Scene {
 
     createCurrentPlayer(){
         //initialise player
-        //TODO create animation moving between exit and strat
+        //TODO create animation moving between exit and start
         this.CurrentPlayer = new Player(
             null, // The current player is not has no id (because the id can change if connexion is lost and we should check that id using the GameManager.
             this,
@@ -296,7 +316,7 @@ export class GameScene extends Phaser.Scene {
         this.createCollisionObject();
 
         //join room
-        this.GameManager.joinRoom(this.scene.key, this.startX, this.startY, PlayerAnimationNames.WalkDown, false);
+        this.GameManager.joinRoom(this.RoomId, this.startX, this.startY, PlayerAnimationNames.WalkDown, false);
 
         //listen event to share position of user
         this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this))
@@ -494,5 +514,16 @@ export class GameScene extends Phaser.Scene {
         }
         this.groups.get(groupId).destroy();
         this.groups.delete(groupId);
+    }
+
+    public static getMapKeyByUrl(mapUrlStart: string) : string {
+        // FIXME: the key should be computed from the full URL of the map.
+        let startPos = mapUrlStart.indexOf('://')+3;
+        let endPos = mapUrlStart.indexOf(".json");
+        return mapUrlStart.substring(startPos, endPos);
+
+
+        let tab = mapUrlStart.split("/");
+        return tab[tab.length -1].substr(0, tab[tab.length -1].indexOf(".json"));
     }
 }

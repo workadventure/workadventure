@@ -8,17 +8,6 @@ import {PLAYER_RESOURCES} from "../Entity/PlayableCaracter";
 import {cypressAsserter} from "../../Cypress/CypressAsserter";
 import {GroupCreatedUpdatedMessageInterface, MessageUserJoined, MessageUserPositionInterface} from "../../Connexion";
 
-export function getMapKeyByUrl(mapUrlStart: string){
-    // FIXME: the key should be computed from the full URL of the map.
-    let startPos = mapUrlStart.indexOf('://')+3;
-    let endPos = mapUrlStart.indexOf(".json");
-    return mapUrlStart.substring(startPos, endPos);
-
-
-    let tab = mapUrlStart.split("/");
-    return tab[tab.length -1].substr(0, tab[tab.length -1].indexOf(".json"));
-}
-
 //todo: put this constants in a dedicated file
 export const LoginSceneName = "LoginScene";
 enum LoginTextures {
@@ -104,9 +93,10 @@ export class LogincScene extends Phaser.Scene {
     private async login(name: string) {
         return gameManager.connect(name, this.selectedPlayer.texture.key).then(() => {
             // Do we have a start URL in the address bar? If so, let's redirect to this address
-            let mapUrl = this.findMapUrl();
-            if (mapUrl !== null) {
-                let key = gameManager.loadMap(mapUrl, this.scene);
+            let instanceAndMapUrl = this.findMapUrl();
+            if (instanceAndMapUrl !== null) {
+                let [mapUrl, instance] = instanceAndMapUrl;
+                let key = gameManager.loadMap(mapUrl, this.scene, instance);
                 this.scene.start(key);
                 return mapUrl;
             } else {
@@ -115,7 +105,7 @@ export class LogincScene extends Phaser.Scene {
                     if (!scene) {
                         return;
                     }
-                    let key = gameManager.loadMap(window.location.protocol+"//"+scene.mapUrlStart, this.scene);
+                    let key = gameManager.loadMap(window.location.protocol + "//" + scene.mapUrlStart, this.scene, scene.startInstance);
                     this.scene.start(key);
                     return scene;
                 }).catch((err) => {
@@ -129,12 +119,21 @@ export class LogincScene extends Phaser.Scene {
         });
     }
 
-    private findMapUrl(): string|null {
+    /**
+     * Returns the map URL and the instance from the current URL
+     */
+    private findMapUrl(): [string, string]|null {
         let path = window.location.pathname;
         if (!path.startsWith('/_/')) {
             return null;
         }
-        return window.location.protocol+'//'+path.substr(3);
+        let instanceAndMap = path.substr(3);
+        let firstSlash = instanceAndMap.indexOf('/');
+        if (firstSlash === -1) {
+            return null;
+        }
+        let instance = instanceAndMap.substr(0, firstSlash);
+        return [window.location.protocol+'//'+instanceAndMap.substr(firstSlash+1), instance];
     }
 
     Map: Phaser.Tilemaps.Tilemap;
