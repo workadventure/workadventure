@@ -3,7 +3,7 @@ import {
     GroupCreatedUpdatedMessageInterface,
     MessageUserJoined,
     MessageUserMovedInterface,
-    MessageUserPositionInterface
+    MessageUserPositionInterface, PointInterface, PositionInterface
 } from "../../Connexion";
 import {CurrentGamerInterface, GamerInterface, hasMovedEventName, Player} from "../Player/Player";
 import { DEBUG_MODE, RESOLUTION, ROOM, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
@@ -17,6 +17,10 @@ import {PlayerAnimationNames} from "../Player/Animation";
 
 export enum Textures {
     Player = "male1"
+}
+
+interface GameSceneInitInterface {
+    initPosition: PointInterface|null
 }
 
 export class GameScene extends Phaser.Scene {
@@ -33,6 +37,7 @@ export class GameScene extends Phaser.Scene {
     startX = 704;// 22 case
     startY = 32; // 1 case
     circleTexture: CanvasTexture;
+    initPosition: PositionInterface;
 
     MapKey: string;
     MapUrlFile: string;
@@ -85,7 +90,9 @@ export class GameScene extends Phaser.Scene {
     }
 
     //hook initialisation
-    init() {}
+    init(initData : GameSceneInitInterface) {
+        this.initPosition = initData.initPosition;
+    }
 
     //hook create scene
     create(): void {
@@ -209,7 +216,13 @@ export class GameScene extends Phaser.Scene {
     /**
      * @param layer
      */
-    private startUser(layer: ITiledMapLayer){
+    private startUser(layer: ITiledMapLayer): void {
+        if (this.initPosition !== undefined) {
+            this.startX = this.initPosition.x;
+            this.startY = this.initPosition.y;
+            return;
+        }
+
         let tiles : any = layer.data;
         tiles.forEach((objectKey : number, key: number) => {
             if(objectKey === 0){
