@@ -15,19 +15,19 @@ describe("World", () => {
 
         let world = new World(connect, disconnect, 160, 160, () => {}, () => {});
 
-        world.join({ id: "foo" }, new Point(100, 100));
+        world.join({ userId: "foo" }, new Point(100, 100));
 
-        world.join({ id: "bar" }, new Point(500, 100));
+        world.join({ userId: "bar" }, new Point(500, 100));
 
-        world.updatePosition({ id: "bar" }, new Point(261, 100));
+        world.updatePosition({ userId: "bar" }, new Point(261, 100));
 
         expect(connectCalledNumber).toBe(0);
 
-        world.updatePosition({ id: "bar" }, new Point(101, 100));
+        world.updatePosition({ userId: "bar" }, new Point(101, 100));
 
         expect(connectCalledNumber).toBe(2);
 
-        world.updatePosition({ id: "bar" }, new Point(102, 100));
+        world.updatePosition({ userId: "bar" }, new Point(102, 100));
         expect(connectCalledNumber).toBe(2);
     });
 
@@ -42,19 +42,19 @@ describe("World", () => {
 
         let world = new World(connect, disconnect, 160, 160, () => {}, () => {});
 
-        world.join({ id: "foo" }, new Point(100, 100));
+        world.join({ userId: "foo" }, new Point(100, 100));
 
-        world.join({ id: "bar" }, new Point(200, 100));
+        world.join({ userId: "bar" }, new Point(200, 100));
 
         expect(connectCalled).toBe(true);
         connectCalled = false;
 
         // baz joins at the outer limit of the group
-        world.join({ id: "baz" }, new Point(311, 100));
+        world.join({ userId: "baz" }, new Point(311, 100));
 
         expect(connectCalled).toBe(false);
 
-        world.updatePosition({ id: "baz" }, new Point(309, 100));
+        world.updatePosition({ userId: "baz" }, new Point(309, 100));
 
         expect(connectCalled).toBe(true);
     });
@@ -71,18 +71,18 @@ describe("World", () => {
 
         let world = new World(connect, disconnect, 160, 160, () => {}, () => {});
 
-        world.join({ id: "foo" }, new Point(100, 100));
+        world.join({ userId: "foo" }, new Point(100, 100));
 
-        world.join({ id: "bar" }, new Point(259, 100));
+        world.join({ userId: "bar" }, new Point(259, 100));
 
         expect(connectCalled).toBe(true);
         expect(disconnectCallNumber).toBe(0);
 
-        world.updatePosition({ id: "bar" }, new Point(100+160+160+1, 100));
+        world.updatePosition({ userId: "bar" }, new Point(100+160+160+1, 100));
 
         expect(disconnectCallNumber).toBe(2);
 
-        world.updatePosition({ id: "bar" }, new Point(262, 100));
+        world.updatePosition({ userId: "bar" }, new Point(262, 100));
         expect(disconnectCallNumber).toBe(2);
     });
 
