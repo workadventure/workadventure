@@ -1,12 +1,11 @@
-import {GameManager, gameManager, HasMovedEvent, MapObject, StatusGameManagerEnum} from "./GameManager";
+import {GameManager, gameManager, HasMovedEvent} from "./GameManager";
 import {
     GroupCreatedUpdatedMessageInterface,
-    MessageUserJoined,
     MessageUserMovedInterface,
-    MessageUserPositionInterface, PointInterface
+    MessageUserPositionInterface
 } from "../../Connexion";
 import {CurrentGamerInterface, GamerInterface, hasMovedEventName, Player} from "../Player/Player";
-import { DEBUG_MODE, RESOLUTION, ROOM, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
+import { DEBUG_MODE, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import {ITiledMap, ITiledMapLayer, ITiledTileSet} from "../Map/ITiledMap";
 import {PLAYER_RESOURCES} from "../Entity/PlayableCaracter";
 import Texture = Phaser.Textures.Texture;
@@ -14,7 +13,6 @@ import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
 import {AddPlayerInterface} from "./AddPlayerInterface";
 import {PlayerAnimationNames} from "../Player/Animation";
-import {MessageUserMoved} from "../../../../back/src/Model/Websocket/MessageUserMoved";
 
 export enum Textures {
     Player = "male1"
