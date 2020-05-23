@@ -39,23 +39,40 @@ export class IoSocketController {
 
         // Authentication with token. it will be decoded and stored in the socket.
         // Completely commented for now, as we do not use the "/login" route at all.
-        /*this.Io.use((socket: Socket, next) => {
+        this.Io.use((socket: Socket, next) => {
             if (!socket.handshake.query || !socket.handshake.query.token) {
                 return next(new Error('Authentication error'));
             }
             if(this.searchClientByToken(socket.handshake.query.token)){
                 return next(new Error('Authentication error'));
             }
-            Jwt.verify(socket.handshake.query.token, SECRET_KEY, (err: JsonWebTokenError, tokenDecoded: object) => {
+            Jwt.verify(socket.handshake.query.token, SECRET_KEY, (err: JsonWebTokenError, tokenDecoded: any) => {
                 if (err) {
                     return next(new Error('Authentication error'));
                 }
                 (socket as ExSocketInterface).token = tokenDecoded;
+                (socket as ExSocketInterface).userId = tokenDecoded.userId;
                 next();
             });
-        });*/
+        });
 
         this.ioConnection();
+    }
+
+    /**
+     *
+     * @param token
+     */
+    searchClientByToken(token: string): ExSocketInterface | null {
+        let clients: Array<any> = Object.values(this.Io.sockets.sockets);
+        for (let i = 0; i < clients.length; i++) {
+            let client: ExSocketInterface = clients[i];
+            if (client.token !== token) {
+                continue
+            }
+            return client;
+        }
+        return null;
     }
 
     private sendUpdateGroupEvent(group: Group): void {
@@ -80,7 +97,8 @@ export class IoSocketController {
 
     ioConnection() {
         this.Io.on(SockerIoEvent.CONNECTION, (socket: Socket) => {
-            this.sockets.set(socket.id, socket as ExSocketInterface);
+            let client : ExSocketInterface = socket as ExSocketInterface;
+            this.sockets.set(client.userId, client);
             /*join-rom event permit to join one room.
                 message :
                     userId : user identification
@@ -118,7 +136,7 @@ export class IoSocketController {
                     //add function to refresh position user in real time.
                     //this.refreshUserPosition(Client);
 
-                    let messageUserJoined = new MessageUserJoined(Client.id, Client.name, Client.character, Client.position);
+                    let messageUserJoined = new MessageUserJoined(Client.userId, Client.name, Client.character, Client.position);
 
                     socket.to(roomId).emit(SockerIoEvent.JOIN_ROOM, messageUserJoined);
 
@@ -155,7 +173,7 @@ export class IoSocketController {
                     }
                     world.updatePosition(Client, position);
 
-                    socket.to(Client.roomId).emit(SockerIoEvent.USER_MOVED, new MessageUserMoved(Client.id, Client.position));
+                    socket.to(Client.roomId).emit(SockerIoEvent.USER_MOVED, new MessageUserMoved(Client.userId, Client.position));
                 } catch (e) {
                     console.error('An error occurred on "user_position" event');
                     console.error(e);
@@ -183,9 +201,8 @@ export class IoSocketController {
             });
 
             socket.on(SockerIoEvent.DISCONNECT, () => {
+                let Client = (socket as ExSocketInterface);
                 try {
-                    let Client = (socket as ExSocketInterface);
-
                     //leave room
                     this.leaveRoom(Client);
 
@@ -201,7 +218,7 @@ export class IoSocketController {
                     console.error('An error occurred on "disconnect"');
                     console.error(e);
                 }
-                this.sockets.delete(socket.id);
+                this.sockets.delete(Client.userId);
             });
 
             // Let's send the user id to the user
@@ -209,7 +226,7 @@ export class IoSocketController {
                 let Client = (socket as ExSocketInterface);
                 Client.name = playerDetails.name;
                 Client.character = playerDetails.character;
-                answerFn(socket.id);
+                answerFn(Client.userId);
             });
         });
     }
@@ -225,7 +242,7 @@ export class IoSocketController {
     leaveRoom(Client : ExSocketInterface){
         // leave previous room and world
         if(Client.roomId){
-            Client.to(Client.roomId).emit(SockerIoEvent.USER_LEFT, Client.id);
+            Client.to(Client.roomId).emit(SockerIoEvent.USER_LEFT, Client.userId);
 
             //user leave previous world
             let world : World|undefined = this.Worlds.get(Client.roomId);
@@ -293,11 +310,11 @@ export class IoSocketController {
         clients.forEach((client: ExSocketInterface, index: number) => {
 
             let clientsId = clients.reduce((tabs: Array<any>, clientId: ExSocketInterface, indexClientId: number) => {
-                if (!clientId.id || clientId.id === client.id) {
+                if (!clientId.userId || clientId.userId === client.userId) {
                     return tabs;
                 }
                 tabs.push({
-                    userId: clientId.id,
+                    userId: clientId.userId,
                     name: clientId.name,
                     initiator: index <= indexClientId
                 });

@@ -1,12 +1,11 @@
-import {GameManager, gameManager, HasMovedEvent, MapObject, StatusGameManagerEnum} from "./GameManager";
+import {GameManager, gameManager, HasMovedEvent} from "./GameManager";
 import {
     GroupCreatedUpdatedMessageInterface,
-    MessageUserJoined,
     MessageUserMovedInterface,
     MessageUserPositionInterface
 } from "../../Connexion";
 import {CurrentGamerInterface, GamerInterface, hasMovedEventName, Player} from "../Player/Player";
-import { DEBUG_MODE, RESOLUTION, ROOM, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
+import { DEBUG_MODE, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import {ITiledMap, ITiledMapLayer, ITiledTileSet} from "../Map/ITiledMap";
 import {PLAYER_RESOURCES} from "../Entity/PlayableCaracter";
 import Texture = Phaser.Textures.Texture;
@@ -410,6 +409,14 @@ export class GameScene extends Phaser.Scene {
      * Create new player
      */
     public addPlayer(addPlayerData : AddPlayerInterface) : void{
+        //check if exist player, if exist, move position
+        if(this.MapPlayersByKey.has(addPlayerData.userId)){
+            this.updatePlayerPosition({
+                userId: addPlayerData.userId,
+                position: addPlayerData.position
+            });
+            return;
+        }
         //initialise player
         let player = new Player(
             addPlayerData.userId,

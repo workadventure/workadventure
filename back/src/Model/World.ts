@@ -53,8 +53,8 @@ export class World {
     }
 
     public join(socket : Identificable, userPosition: PointInterface): void {
-        this.users.set(socket.id, {
-            id: socket.id,
+        this.users.set(socket.userId, {
+            id: socket.userId,
             position: userPosition
         });
         // Let's call update position to trigger the join / leave room
@@ -62,18 +62,18 @@ export class World {
     }
 
     public leave(user : Identificable){
-        let userObj = this.users.get(user.id);
+        let userObj = this.users.get(user.userId);
         if (userObj === undefined) {
-            console.warn('User ', user.id, 'does not belong to world! It should!');
+            console.warn('User ', user.userId, 'does not belong to world! It should!');
         }
         if (userObj !== undefined && typeof userObj.group !== 'undefined') {
             this.leaveGroup(userObj);
         }
-        this.users.delete(user.id);
+        this.users.delete(user.userId);
     }
 
     public updatePosition(socket : Identificable, userPosition: PointInterface): void {
-        let user = this.users.get(socket.id);
+        let user = this.users.get(socket.userId);
         if(typeof user === 'undefined') {
             return;
         }
