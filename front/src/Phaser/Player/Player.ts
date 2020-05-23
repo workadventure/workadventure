@@ -45,12 +45,6 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
         this.setImmovable(false);
         this.initAnimation();
 
-        console.warn("Start direction for added player ", direction)
-        console.warn("Position ", x, y)
-        /*this.play(`${PlayerTexture}-${direction}`, true);
-        if (!moving) {
-            this.stop();
-        }*/
         this.playAnimation(direction, moving);
     }
 
