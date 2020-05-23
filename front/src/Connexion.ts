@@ -165,25 +165,20 @@ export class Connexion implements ConnexionInterface {
     createConnexion(name: string, characterSelected: string): Promise<ConnexionInterface> {
         this.name = name;
         this.character = characterSelected;
-        /*return Axios.post(`${API_URL}/login`, {email: this.email})
+        return Axios.post(`${API_URL}/login`, {name: name})
             .then((res) => {
                 this.token = res.data.token;
-                this.userId = res.data.userId;*/
-
                 this.socket = SocketIo(`${API_URL}`, {
-                    /*query: {
+                    query: {
                         token: this.token
-                    }*/
+                    }
                 });
-
                 return this.connectSocketServer();
-
-         /*       return res.data;
             })
             .catch((err) => {
                 console.error(err);
                 throw err;
-            });*/
+            });
     }
 
     /**

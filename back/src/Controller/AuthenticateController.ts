@@ -15,21 +15,21 @@ export class AuthenticateController {
     //permit to login on application. Return token to connect on Websocket IO.
     login(){
         // For now, let's completely forget the /login route.
-        /*this.App.post("/login", (req: Request, res: Response) => {
+        this.App.post("/login", (req: Request, res: Response) => {
             let param = req.body;
-            if(!param.email){
+            /*if(!param.name){
                 return res.status(BAD_REQUEST).send({
                     message: "email parameter is empty"
                 });
-            }
+            }*/
             //TODO check user email for The Coding Machine game
             let userId = uuid();
-            let token = Jwt.sign({email: param.email, userId: userId}, SECRET_KEY, {expiresIn: '24h'});
+            let token = Jwt.sign({name: param.name, userId: userId}, SECRET_KEY, {expiresIn: '24h'});
             return res.status(OK).send({
                 token: token,
                 mapUrlStart: URL_ROOM_STARTED,
                 userId: userId,
             });
-        });*/
+        });
     }
 }

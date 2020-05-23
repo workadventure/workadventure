@@ -3,7 +3,7 @@ import {
     GroupCreatedUpdatedMessageInterface,
     MessageUserJoined,
     MessageUserMovedInterface,
-    MessageUserPositionInterface
+    MessageUserPositionInterface, PointInterface
 } from "../../Connexion";
 import {CurrentGamerInterface, GamerInterface, hasMovedEventName, Player} from "../Player/Player";
 import { DEBUG_MODE, RESOLUTION, ROOM, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
@@ -14,6 +14,7 @@ import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
 import {AddPlayerInterface} from "./AddPlayerInterface";
 import {PlayerAnimationNames} from "../Player/Animation";
+import {MessageUserMoved} from "../../../../back/src/Model/Websocket/MessageUserMoved";
 
 export enum Textures {
     Player = "male1"
@@ -410,6 +411,14 @@ export class GameScene extends Phaser.Scene {
      * Create new player
      */
     public addPlayer(addPlayerData : AddPlayerInterface) : void{
+        //check if exist player, if exist, move position
+        if(this.MapPlayersByKey.has(addPlayerData.userId)){
+            this.updatePlayerPosition({
+                userId: addPlayerData.userId,
+                position: addPlayerData.position
+            });
+            return;
+        }
         //initialise player
         let player = new Player(
             addPlayerData.userId,

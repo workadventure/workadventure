@@ -141,9 +141,9 @@ export class SimplePeer implements SimplePeerInterface{
             this.stream(user.userId, stream);
         });
 
-        this.PeerConnexionArray.get(user.userId).on('track', (track: MediaStreamTrack, stream: MediaStream) => {
+        /*this.PeerConnexionArray.get(user.userId).on('track', (track: MediaStreamTrack, stream: MediaStream) => {
             this.stream(user.userId, stream);
-        });
+        });*/
 
         this.PeerConnexionArray.get(user.userId).on('close', () => {
             this.closeConnexion(user.userId);
@@ -155,6 +155,13 @@ export class SimplePeer implements SimplePeerInterface{
 
         this.PeerConnexionArray.get(user.userId).on('connect', () => {
             console.info(`connect => ${user.userId}`);
+        });
+
+        this.PeerConnexionArray.get(user.userId).on('data',  (chunk: Buffer) => {
+            let data = JSON.parse(chunk.toString('utf8'));
+            if(data.type === "stream"){
+                this.stream(user.userId, data.stream);
+            }
         });
 
         this.addMedia(user.userId);
@@ -205,6 +212,11 @@ export class SimplePeer implements SimplePeerInterface{
      * @param stream
      */
     private stream(userId : any, stream: MediaStream) {
+        if(!stream){
+            this.MediaManager.disabledVideoByUserId(userId);
+            this.MediaManager.disabledMicrophoneByUserId(userId);
+            return;
+        }
         this.MediaManager.addStreamRemoteVideo(userId, stream);
     }
 
@@ -216,6 +228,14 @@ export class SimplePeer implements SimplePeerInterface{
         try {
             let transceiver : any = null;
             if(!this.MediaManager.localStream){
+                //send fake signal
+                if(!this.PeerConnexionArray.has(userId)){
+                    return;
+                }
+                this.PeerConnexionArray.get(userId).write(new Buffer(JSON.stringify({
+                    type: "stream",
+                    stream: null
+                })));
                 return;
             }
             this.MediaManager.localStream.getTracks().forEach(

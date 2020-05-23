@@ -39,23 +39,40 @@ export class IoSocketController {
 
         // Authentication with token. it will be decoded and stored in the socket.
         // Completely commented for now, as we do not use the "/login" route at all.
-        /*this.Io.use((socket: Socket, next) => {
+        this.Io.use((socket: Socket, next) => {
             if (!socket.handshake.query || !socket.handshake.query.token) {
                 return next(new Error('Authentication error'));
             }
             if(this.searchClientByToken(socket.handshake.query.token)){
                 return next(new Error('Authentication error'));
             }
-            Jwt.verify(socket.handshake.query.token, SECRET_KEY, (err: JsonWebTokenError, tokenDecoded: object) => {
+            Jwt.verify(socket.handshake.query.token, SECRET_KEY, (err: JsonWebTokenError, tokenDecoded: any) => {
                 if (err) {
                     return next(new Error('Authentication error'));
                 }
                 (socket as ExSocketInterface).token = tokenDecoded;
+                (socket as ExSocketInterface).id = tokenDecoded.userId;
                 next();
             });
-        });*/
+        });
 
         this.ioConnection();
+    }
+
+    /**
+     *
+     * @param token
+     */
+    searchClientByToken(token: string): ExSocketInterface | null {
+        let clients: Array<any> = Object.values(this.Io.sockets.sockets);
+        for (let i = 0; i < clients.length; i++) {
+            let client: ExSocketInterface = clients[i];
+            if (client.token !== token) {
+                continue
+            }
+            return client;
+        }
+        return null;
     }
 
     private sendUpdateGroupEvent(group: Group): void {
