@@ -48,9 +48,13 @@ export class World {
         return this.groups;
     }
 
+    public getUsers(): Map<string, UserInterface> {
+        return this.users;
+    }
+
     public join(socket : Identificable, userPosition: PointInterface): void {
-        this.users.set(socket.id, {
-            id: socket.id,
+        this.users.set(socket.userId, {
+            id: socket.userId,
             position: userPosition
         });
         // Let's call update position to trigger the join / leave room
@@ -58,25 +62,23 @@ export class World {
     }
 
     public leave(user : Identificable){
-        let userObj = this.users.get(user.id);
+        let userObj = this.users.get(user.userId);
         if (userObj === undefined) {
-            // FIXME: this seems always wrong. I guess user.id is different from userPosition.userId
-            console.warn('User ', user.id, 'does not belong to world! It should!');
+            console.warn('User ', user.userId, 'does not belong to world! It should!');
         }
         if (userObj !== undefined && typeof userObj.group !== 'undefined') {
             this.leaveGroup(userObj);
         }
-        this.users.delete(user.id);
+        this.users.delete(user.userId);
     }
 
     public updatePosition(socket : Identificable, userPosition: PointInterface): void {
-        let user = this.users.get(socket.id);
+        let user = this.users.get(socket.userId);
         if(typeof user === 'undefined') {
             return;
         }
 
-        user.position.x = userPosition.x;
-        user.position.y = userPosition.y;
+        user.position = userPosition;
 
         if (typeof user.group === 'undefined') {
             // If the user is not part of a group:

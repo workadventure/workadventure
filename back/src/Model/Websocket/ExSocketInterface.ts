@@ -6,7 +6,7 @@ export interface ExSocketInterface extends Socket, Identificable {
     token: any;
     roomId: string;
     webRtcRoomId: string;
-    //userId: string;
+    userId: string;
     name: string;
     character: string;
     position: PointInterface;

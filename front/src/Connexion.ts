@@ -6,14 +6,17 @@ import {SetPlayerDetailsMessage} from "./Messages/SetPlayerDetailsMessage";
 
 const SocketIo = require('socket.io-client');
 import Socket = SocketIOClient.Socket;
+import {PlayerAnimationNames} from "./Phaser/Player/Animation";
 
 
 enum EventMessage{
     WEBRTC_SIGNAL = "webrtc-signal",
     WEBRTC_START = "webrtc-start",
     WEBRTC_JOIN_ROOM = "webrtc-join-room",
-    JOIN_ROOM = "join-room",
-    USER_POSITION = "user-position",
+    JOIN_ROOM = "join-room", // bi-directional
+    USER_POSITION = "user-position", // bi-directional
+    USER_MOVED = "user-moved", // From server to client
+    USER_LEFT = "user-left", // From server to client
     MESSAGE_ERROR = "message-error",
     WEBRTC_DISCONNECT = "webrtc-disconect",
     GROUP_CREATE_UPDATE = "group-create-update",
@@ -40,20 +43,14 @@ export interface PointInterface {
     x: number;
     y: number;
     direction : string;
+    moving: boolean;
 }
 
-class Point implements PointInterface{
-    x: number;
-    y: number;
-    direction : string;
-
-    constructor(x : number, y : number, direction : string = "none") {
+export class Point implements PointInterface{
+    constructor(public x : number, public y : number, public direction : string = PlayerAnimationNames.WalkDown, public moving : boolean = false) {
         if(x  === null || y === null){
             throw Error("position x and y cannot be null");
         }
-        this.x = x;
-        this.y = y;
-        this.direction = direction;
     }
 }
 
@@ -64,6 +61,11 @@ export interface MessageUserPositionInterface {
     position: PointInterface;
 }
 
+export interface MessageUserMovedInterface {
+    userId: string;
+    position: PointInterface;
+}
+
 class MessageUserPosition extends Message implements MessageUserPositionInterface{
     position: PointInterface;
 
@@ -71,6 +73,13 @@ class MessageUserPosition extends Message implements MessageUserPositionInterfac
         super(userId, name, character);
         this.position = point;
     }
+}
+
+export interface MessageUserJoined {
+    userId: string;
+    name: string;
+    character: string;
+    position: PointInterface
 }
 
 export interface ListMessageUserPositionInterface {
@@ -91,7 +100,8 @@ class ListMessageUserPosition {
                 new Point(
                     userPosition.position.x,
                     userPosition.position.y,
-                    userPosition.position.direction
+                    userPosition.position.direction,
+                    userPosition.position.moving
                 ),
                 userPosition.name,
                 userPosition.character
@@ -120,9 +130,9 @@ export interface ConnexionInterface {
 
     loadMaps(): Promise<any>;
 
-    joinARoom(roomId: string, character: string): void;
+    joinARoom(roomId: string, startX: number, startY: number, direction: string, moving: boolean): void;
 
-    sharePosition(x: number, y: number, direction: string, roomId: string, character: string): void;
+    sharePosition(x: number, y: number, direction: string, moving: boolean): void;
 
     positionOfAllUser(): void;
 
@@ -155,25 +165,20 @@ export class Connexion implements ConnexionInterface {
     createConnexion(name: string, characterSelected: string): Promise<ConnexionInterface> {
         this.name = name;
         this.character = characterSelected;
-        /*return Axios.post(`${API_URL}/login`, {email: this.email})
+        return Axios.post(`${API_URL}/login`, {name: name})
             .then((res) => {
                 this.token = res.data.token;
-                this.userId = res.data.userId;*/
-
                 this.socket = SocketIo(`${API_URL}`, {
-                    /*query: {
+                    query: {
                         token: this.token
-                    }*/
+                    }
                 });
-
                 return this.connectSocketServer();
-
-         /*       return res.data;
             })
             .catch((err) => {
                 console.error(err);
                 throw err;
-            });*/
+            });
     }
 
     /**
@@ -187,6 +192,9 @@ export class Connexion implements ConnexionInterface {
         this.errorMessage();
         this.groupUpdatedOrCreated();
         this.groupDeleted();
+        this.onUserJoins();
+        this.onUserMoved();
+        this.onUserLeft();
 
         return new Promise<ConnexionInterface>((resolve, reject) => {
             this.socket.emit(EventMessage.SET_PLAYER_DETAILS, {
@@ -197,22 +205,25 @@ export class Connexion implements ConnexionInterface {
             });
 
             //if try to reconnect with last position
-            if(this.lastRoom) {
+            /*if(this.lastRoom) {
                 //join the room
-                this.joinARoom(
-                    this.lastRoom
-                );
-            }
+                this.joinARoom(this.lastRoom,
+                    this.lastPositionShared ? this.lastPositionShared.x : 0,
+                    this.lastPositionShared ? this.lastPositionShared.y : 0,
+                    this.lastPositionShared ? this.lastPositionShared.direction : PlayerAnimationNames.WalkDown,
+                    this.lastPositionShared ? this.lastPositionShared.moving : false);
+            }*/
 
-            if(this.lastPositionShared) {
+            /*if(this.lastPositionShared) {
 
                 //share your first position
                 this.sharePosition(
                     this.lastPositionShared ? this.lastPositionShared.x : 0,
                     this.lastPositionShared ? this.lastPositionShared.y : 0,
-                    this.lastPositionShared.direction
+                    this.lastPositionShared.direction,
+                    this.lastPositionShared.moving
                 );
-            }
+            }*/
 
             resolve(this);
         });
@@ -229,29 +240,18 @@ export class Connexion implements ConnexionInterface {
             });
     }
 
-    /**
-     *
-     * @param roomId
-     * @param character
-     */
-    joinARoom(roomId: string): void {
-        this.socket.emit(EventMessage.JOIN_ROOM, roomId);
+    joinARoom(roomId: string, startX: number, startY: number, direction: string, moving: boolean): void {
+        this.socket.emit(EventMessage.JOIN_ROOM, { roomId, position: {x: startX, y: startY, direction, moving }}, (userPositions: MessageUserPositionInterface[]) => {
+            this.GameManager.initUsersPosition(userPositions);
+        });
         this.lastRoom = roomId;
     }
 
-    /**
-     *
-     * @param x
-     * @param y
-     * @param character
-     * @param roomId
-     * @param direction
-     */
-    sharePosition(x : number, y : number, direction : string = "none") : void{
+    sharePosition(x : number, y : number, direction : string, moving: boolean) : void{
         if(!this.socket){
             return;
         }
-        let point = new Point(x, y, direction);
+        let point = new Point(x, y, direction, moving);
         this.lastPositionShared = point;
         this.socket.emit(EventMessage.USER_POSITION, point);
     }
@@ -261,11 +261,11 @@ export class Connexion implements ConnexionInterface {
      * [
      * {
      *       userId: <string>,
-     *       roomId: <string>,
      *       position: {
      *           x : <number>,
      *           y : <number>,
-     *           direction: <string>
+     *           direction: <string>,
+     *           moving: <bool>
      *       }
      *     },
      * ...
@@ -277,6 +277,24 @@ export class Connexion implements ConnexionInterface {
             let UserPositions : Array<any> = Object.values(dataList);
             let listMessageUserPosition =  new ListMessageUserPosition(UserPositions[0], UserPositions[1]);
             this.GameManager.shareUserPosition(listMessageUserPosition);
+        });
+    }
+
+    onUserJoins(): void {
+        this.socket.on(EventMessage.JOIN_ROOM, (message: MessageUserJoined) => {
+            this.GameManager.onUserJoins(message);
+        });
+    }
+
+    onUserMoved(): void {
+        this.socket.on(EventMessage.USER_MOVED, (message: MessageUserMovedInterface) => {
+            this.GameManager.onUserMoved(message);
+        });
+    }
+
+    onUserLeft(): void {
+        this.socket.on(EventMessage.USER_LEFT, (userId: string) => {
+            this.GameManager.onUserLeft(userId);
         });
     }
 
@@ -318,12 +336,12 @@ export class Connexion implements ConnexionInterface {
 
     disconnectServer(): void {
         this.socket.on(EventMessage.CONNECT_ERROR, () => {
-            MessageUI.warningMessage("Trying to connect!");
+            this.GameManager.switchToDisconnectedScene();
         });
 
         this.socket.on(EventMessage.RECONNECT, () => {
-            MessageUI.removeMessage();
             this.connectSocketServer();
+            this.GameManager.reconnectToGameScene(this.lastPositionShared);
         });
     }
 

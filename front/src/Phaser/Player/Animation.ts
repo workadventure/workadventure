@@ -14,7 +14,6 @@ export enum PlayerAnimationNames {
     WalkLeft = 'left',
     WalkUp = 'up',
     WalkRight = 'right',
-    None = 'none',
 }
 
 export const getPlayerAnimations = (name: string = Textures.Player): AnimationData[] => {
@@ -48,11 +47,3 @@ export const getPlayerAnimations = (name: string = Textures.Player): AnimationDa
         repeat: -1
     }];
 };
-
-export const playAnimation = (Player : Phaser.GameObjects.Sprite, direction : string) => {
-    if (direction !== PlayerAnimationNames.None && (!Player.anims.currentAnim || Player.anims.currentAnim.key !== direction)) {
-        Player.anims.play(direction);
-    } else if (direction === PlayerAnimationNames.None && Player.anims.currentAnim) {
-        Player.anims.stop();
-    }
-}

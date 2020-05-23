@@ -1,12 +1,19 @@
-import {GameScene, GameSceneInterface} from "./GameScene";
+import {GameScene} from "./GameScene";
 import {
     Connexion,
     GroupCreatedUpdatedMessageInterface,
-    ListMessageUserPositionInterface
+    ListMessageUserPositionInterface,
+    MessageUserJoined,
+    MessageUserMovedInterface,
+    MessageUserPositionInterface,
+    Point,
+    PointInterface
 } from "../../Connexion";
 import {SimplePeerInterface, SimplePeer} from "../../WebRtc/SimplePeer";
 import {getMapKeyByUrl} from "../Login/LogincScene";
 import ScenePlugin = Phaser.Scenes.ScenePlugin;
+import {AddPlayerInterface} from "./AddPlayerInterface";
+import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
 
 export enum StatusGameManagerEnum {
     IN_PROGRESS = 1,
@@ -15,6 +22,7 @@ export enum StatusGameManagerEnum {
 
 export interface HasMovedEvent {
     direction: string;
+    moving: boolean;
     x: number;
     y: number;
 }
@@ -27,7 +35,7 @@ export interface MapObject {
 export class GameManager {
     status: number;
     private ConnexionInstance: Connexion;
-    private currentGameScene: GameSceneInterface;
+    private currentGameScene: GameScene;
     private playerName: string;
     SimplePeer : SimplePeerInterface;
     private characterUserSelected: string;
@@ -56,7 +64,7 @@ export class GameManager {
         });
     }
 
-    setCurrentGameScene(gameScene: GameSceneInterface) {
+    setCurrentGameScene(gameScene: GameScene) {
         this.currentGameScene = gameScene;
     }
 
@@ -70,13 +78,32 @@ export class GameManager {
         this.status = StatusGameManagerEnum.CURRENT_USER_CREATED;
     }
 
-    joinRoom(sceneKey : string){
-        this.ConnexionInstance.joinARoom(sceneKey);
+    joinRoom(sceneKey: string, startX: number, startY: number, direction: string, moving: boolean){
+        this.ConnexionInstance.joinARoom(sceneKey, startX, startY, direction, moving);
+    }
+
+    onUserJoins(message: MessageUserJoined): void {
+        let userMessage: AddPlayerInterface = {
+            userId: message.userId,
+            character: message.character,
+            name: message.name,
+            position: message.position
+        }
+        this.currentGameScene.addPlayer(userMessage);
+    }
+
+    onUserMoved(message: MessageUserMovedInterface): void {
+        this.currentGameScene.updatePlayerPosition(message);
+    }
+
+    onUserLeft(userId: string): void {
+        this.currentGameScene.removePlayer(userId);
     }
 
     /**
      * Share position in game
      * @param ListMessageUserPosition
+     * @deprecated
      */
     shareUserPosition(ListMessageUserPosition: ListMessageUserPositionInterface): void {
         if (this.status === StatusGameManagerEnum.IN_PROGRESS) {
@@ -84,6 +111,18 @@ export class GameManager {
         }
         try {
             this.currentGameScene.shareUserPosition(ListMessageUserPosition.listUsersPosition)
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    initUsersPosition(usersPosition: MessageUserPositionInterface[]): void {
+        // Shall we wait for room to be loaded?
+        /*if (this.status === StatusGameManagerEnum.IN_PROGRESS) {
+            return;
+        }*/
+        try {
+            this.currentGameScene.initUsersPosition(usersPosition)
         } catch (e) {
             console.error(e);
         }
@@ -127,7 +166,7 @@ export class GameManager {
     }
 
     pushPlayerPosition(event: HasMovedEvent) {
-        this.ConnexionInstance.sharePosition(event.x, event.y, event.direction);
+        this.ConnexionInstance.sharePosition(event.x, event.y, event.direction, event.moving);
     }
 
     loadMap(mapUrl: string, scene: ScenePlugin): string {
@@ -140,6 +179,16 @@ export class GameManager {
             scene.add(sceneKey, game, false);
         }
         return sceneKey;
+    }
+
+    private oldSceneKey : string;
+    switchToDisconnectedScene(): void {
+        this.oldSceneKey = this.currentGameScene.scene.key;
+        this.currentGameScene.scene.start(ReconnectingSceneName);
+    }
+
+    reconnectToGameScene(lastPositionShared: PointInterface) {
+        this.currentGameScene.scene.start(this.oldSceneKey, { initPosition: lastPositionShared });
     }
 }
 

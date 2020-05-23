@@ -1,31 +1,33 @@
-import {GameManager, gameManager, HasMovedEvent, MapObject, StatusGameManagerEnum} from "./GameManager";
-import {GroupCreatedUpdatedMessageInterface, MessageUserPositionInterface} from "../../Connexion";
+import {GameManager, gameManager, HasMovedEvent} from "./GameManager";
+import {
+    GroupCreatedUpdatedMessageInterface,
+    MessageUserMovedInterface,
+    MessageUserPositionInterface, PointInterface, PositionInterface
+} from "../../Connexion";
 import {CurrentGamerInterface, GamerInterface, hasMovedEventName, Player} from "../Player/Player";
-import { DEBUG_MODE, RESOLUTION, ROOM, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
+import { DEBUG_MODE, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import {ITiledMap, ITiledMapLayer, ITiledTileSet} from "../Map/ITiledMap";
 import {PLAYER_RESOURCES} from "../Entity/PlayableCaracter";
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
-import CreateSceneFromObjectConfig = Phaser.Types.Scenes.CreateSceneFromObjectConfig;
+import {AddPlayerInterface} from "./AddPlayerInterface";
+import {PlayerAnimationNames} from "../Player/Animation";
 
 export enum Textures {
     Player = "male1"
 }
 
-export interface GameSceneInterface extends Phaser.Scene {
-    Map: Phaser.Tilemaps.Tilemap;
-    createCurrentPlayer() : void;
-    shareUserPosition(UsersPosition : Array<MessageUserPositionInterface>): void;
-    shareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface): void;
-    updateOrCreateMapPlayer(UsersPosition : Array<MessageUserPositionInterface>): void;
-    deleteGroup(groupId: string): void;
+interface GameSceneInitInterface {
+    initPosition: PointInterface|null
 }
-export class GameScene extends Phaser.Scene implements GameSceneInterface, CreateSceneFromObjectConfig{
+
+export class GameScene extends Phaser.Scene {
     GameManager : GameManager;
     Terrains : Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer: CurrentGamerInterface;
     MapPlayers : Phaser.Physics.Arcade.Group;
+    MapPlayersByKey : Map<string, GamerInterface> = new Map<string, GamerInterface>();
     Map: Phaser.Tilemaps.Tilemap;
     Layers : Array<Phaser.Tilemaps.StaticTilemapLayer>;
     Objects : Array<Phaser.Physics.Arcade.Sprite>;
@@ -34,6 +36,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
     startX = 704;// 22 case
     startY = 32; // 1 case
     circleTexture: CanvasTexture;
+    initPosition: PositionInterface;
 
     MapKey: string;
     MapUrlFile: string;
@@ -86,7 +89,9 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
     }
 
     //hook initialisation
-    init() {}
+    init(initData : GameSceneInitInterface) {
+        this.initPosition = initData.initPosition;
+    }
 
     //hook create scene
     create(): void {
@@ -210,7 +215,13 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
     /**
      * @param layer
      */
-    private startUser(layer: ITiledMapLayer){
+    private startUser(layer: ITiledMapLayer): void {
+        if (this.initPosition !== undefined) {
+            this.startX = this.initPosition.x;
+            this.startY = this.initPosition.y;
+            return;
+        }
+
         let tiles : any = layer.data;
         tiles.forEach((objectKey : number, key: number) => {
             if(objectKey === 0){
@@ -275,16 +286,17 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
             this.startX,
             this.startY,
             this.GameManager.getPlayerName(),
-            this.GameManager.getCharacterSelected()
+            this.GameManager.getCharacterSelected(),
+            PlayerAnimationNames.WalkDown,
+            false
         );
-        this.CurrentPlayer.initAnimation();
 
         //create collision
         this.createCollisionWithPlayer();
         this.createCollisionObject();
 
         //join room
-        this.GameManager.joinRoom(this.scene.key);
+        this.GameManager.joinRoom(this.scene.key, this.startX, this.startY, PlayerAnimationNames.WalkDown, false);
 
         //listen event to share position of user
         this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this))
@@ -333,6 +345,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
     /**
      * Share position in scene
      * @param UsersPosition
+     * @deprecated
      */
     shareUserPosition(UsersPosition : Array<MessageUserPositionInterface>): void {
         this.updateOrCreateMapPlayer(UsersPosition);
@@ -358,7 +371,7 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
             if(!player){
                 this.addPlayer(userPosition);
             }else{
-                player.updatePosition(userPosition);
+                player.updatePosition(userPosition.position);
             }
         });
 
@@ -372,36 +385,89 @@ export class GameScene extends Phaser.Scene implements GameSceneInterface, Creat
         });
     }
 
+    public initUsersPosition(usersPosition: MessageUserPositionInterface[]): void {
+        if(!this.CurrentPlayer){
+            console.error('Cannot initiate users list because map is not loaded yet')
+            return;
+        }
+
+        let currentPlayerId = this.GameManager.getPlayerId();
+
+        // clean map
+        this.MapPlayersByKey.forEach((player: GamerInterface) => {
+            player.destroy();
+            this.MapPlayers.remove(player);
+        });
+        this.MapPlayersByKey = new Map<string, GamerInterface>();
+
+        // load map
+        usersPosition.forEach((userPosition : MessageUserPositionInterface) => {
+            if(userPosition.userId === currentPlayerId){
+                return;
+            }
+            this.addPlayer(userPosition);
+        });
+    }
+
     private findPlayerInMap(UserId : string) : GamerInterface | null{
-        let player = this.MapPlayers.getChildren().find((player: Player) => UserId === player.userId);
+        return this.MapPlayersByKey.get(UserId);
+        /*let player = this.MapPlayers.getChildren().find((player: Player) => UserId === player.userId);
         if(!player){
             return null;
         }
-        return (player as GamerInterface);
+        return (player as GamerInterface);*/
     }
 
     /**
      * Create new player
-     * @param MessageUserPosition
      */
-    addPlayer(MessageUserPosition : MessageUserPositionInterface) : void{
+    public addPlayer(addPlayerData : AddPlayerInterface) : void{
+        //check if exist player, if exist, move position
+        if(this.MapPlayersByKey.has(addPlayerData.userId)){
+            this.updatePlayerPosition({
+                userId: addPlayerData.userId,
+                position: addPlayerData.position
+            });
+            return;
+        }
         //initialise player
         let player = new Player(
-            MessageUserPosition.userId,
+            addPlayerData.userId,
             this,
-            MessageUserPosition.position.x,
-            MessageUserPosition.position.y,
-            MessageUserPosition.name,
-            MessageUserPosition.character
+            addPlayerData.position.x,
+            addPlayerData.position.y,
+            addPlayerData.name,
+            addPlayerData.character,
+            addPlayerData.position.direction,
+            addPlayerData.position.moving
         );
-        player.initAnimation();
         this.MapPlayers.add(player);
-        player.updatePosition(MessageUserPosition);
+        this.MapPlayersByKey.set(player.userId, player);
+        player.updatePosition(addPlayerData.position);
 
         //init collision
         /*this.physics.add.collider(this.CurrentPlayer, player, (CurrentPlayer: CurrentGamerInterface, MapPlayer: GamerInterface) => {
             CurrentPlayer.say("Hello, how are you ? ");
         });*/
+    }
+
+    public removePlayer(userId: string) {
+        console.log('Removing player ', userId)
+        let player = this.MapPlayersByKey.get(userId);
+        if (player === undefined) {
+            console.error('Cannot find user with id ', userId);
+        }
+        player.destroy();
+        this.MapPlayers.remove(player);
+        this.MapPlayersByKey.delete(userId);
+    }
+
+    updatePlayerPosition(message: MessageUserMovedInterface): void {
+        let player : GamerInterface | undefined = this.MapPlayersByKey.get(message.userId);
+        if (player === undefined) {
+            throw new Error('Cannot find player with ID "' + message.userId +'"');
+        }
+        player.updatePosition(message.position);
     }
 
     shareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface) {
