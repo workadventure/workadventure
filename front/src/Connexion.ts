@@ -205,14 +205,14 @@ export class Connexion implements ConnexionInterface {
             });
 
             //if try to reconnect with last position
-            if(this.lastRoom) {
+            /*if(this.lastRoom) {
                 //join the room
                 this.joinARoom(this.lastRoom,
                     this.lastPositionShared ? this.lastPositionShared.x : 0,
                     this.lastPositionShared ? this.lastPositionShared.y : 0,
                     this.lastPositionShared ? this.lastPositionShared.direction : PlayerAnimationNames.WalkDown,
                     this.lastPositionShared ? this.lastPositionShared.moving : false);
-            }
+            }*/
 
             /*if(this.lastPositionShared) {
 
@@ -336,12 +336,12 @@ export class Connexion implements ConnexionInterface {
 
     disconnectServer(): void {
         this.socket.on(EventMessage.CONNECT_ERROR, () => {
-            MessageUI.warningMessage("Trying to connect!");
+            this.GameManager.switchToDisconnectedScene();
         });
 
         this.socket.on(EventMessage.RECONNECT, () => {
-            MessageUI.removeMessage();
             this.connectSocketServer();
+            this.GameManager.reconnectToGameScene(this.lastPositionShared);
         });
     }
 

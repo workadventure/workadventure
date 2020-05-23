@@ -2,12 +2,18 @@ import {GameScene} from "./GameScene";
 import {
     Connexion,
     GroupCreatedUpdatedMessageInterface,
-    ListMessageUserPositionInterface, MessageUserJoined, MessageUserMovedInterface, MessageUserPositionInterface, Point
+    ListMessageUserPositionInterface,
+    MessageUserJoined,
+    MessageUserMovedInterface,
+    MessageUserPositionInterface,
+    Point,
+    PointInterface
 } from "../../Connexion";
 import {SimplePeerInterface, SimplePeer} from "../../WebRtc/SimplePeer";
 import {getMapKeyByUrl} from "../Login/LogincScene";
 import ScenePlugin = Phaser.Scenes.ScenePlugin;
 import {AddPlayerInterface} from "./AddPlayerInterface";
+import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
 
 export enum StatusGameManagerEnum {
     IN_PROGRESS = 1,
@@ -173,6 +179,16 @@ export class GameManager {
             scene.add(sceneKey, game, false);
         }
         return sceneKey;
+    }
+
+    private oldSceneKey : string;
+    switchToDisconnectedScene(): void {
+        this.oldSceneKey = this.currentGameScene.scene.key;
+        this.currentGameScene.scene.start(ReconnectingSceneName);
+    }
+
+    reconnectToGameScene(lastPositionShared: PointInterface) {
+        this.currentGameScene.scene.start(this.oldSceneKey, { initPosition: lastPositionShared });
     }
 }
 
