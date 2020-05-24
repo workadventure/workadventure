@@ -120,13 +120,13 @@ export interface GroupCreatedUpdatedMessageInterface {
     groupId: string
 }
 
-export interface ConnexionInterface {
+export interface ConnectionInterface {
     socket: any;
     token: string;
     name: string;
     userId: string;
 
-    createConnexion(name: string, characterSelected: string): Promise<any>;
+    createConnection(name: string, characterSelected: string): Promise<any>;
 
     loadStartMap(): Promise<any>;
 
@@ -146,7 +146,7 @@ export interface ConnexionInterface {
     disconnectMessage(callBack: Function): void;
 }
 
-export class Connexion implements ConnexionInterface {
+export class Connection implements ConnectionInterface {
     socket: Socket;
     token: string;
     name: string; // TODO: drop "name" storage here
@@ -162,7 +162,7 @@ export class Connexion implements ConnexionInterface {
         this.GameManager = GameManager;
     }
 
-    createConnexion(name: string, characterSelected: string): Promise<ConnexionInterface> {
+    createConnection(name: string, characterSelected: string): Promise<ConnectionInterface> {
         this.name = name;
         this.character = characterSelected;
         return Axios.post(`${API_URL}/login`, {name: name})
@@ -185,7 +185,7 @@ export class Connexion implements ConnexionInterface {
      *
      * @param character
      */
-    connectSocketServer(): Promise<ConnexionInterface>{
+    connectSocketServer(): Promise<ConnectionInterface>{
         //listen event
         this.positionOfAllUser();
         this.disconnectServer();
@@ -196,7 +196,7 @@ export class Connexion implements ConnexionInterface {
         this.onUserMoved();
         this.onUserLeft();
 
-        return new Promise<ConnexionInterface>((resolve, reject) => {
+        return new Promise<ConnectionInterface>((resolve, reject) => {
             this.socket.emit(EventMessage.SET_PLAYER_DETAILS, {
                 name: this.name,
                 character: this.character

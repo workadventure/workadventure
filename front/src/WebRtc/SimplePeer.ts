@@ -1,4 +1,4 @@
-import {ConnexionInterface} from "../Connexion";
+import {ConnectionInterface} from "../Connection";
 import {MediaManager} from "./MediaManager";
 let Peer = require('simple-peer');
 
@@ -9,16 +9,16 @@ class UserSimplePear{
 }
 export class SimplePeerInterface {}
 export class SimplePeer implements SimplePeerInterface{
-    private Connexion: ConnexionInterface;
+    private Connection: ConnectionInterface;
     private WebRtcRoomId: string;
     private Users: Array<UserSimplePear> = new Array<UserSimplePear>();
 
     private MediaManager: MediaManager;
 
-    private PeerConnexionArray: Map<string, any> = new Map<string, any>();
+    private PeerConnectionArray: Map<string, any> = new Map<string, any>();
 
-    constructor(Connexion: ConnexionInterface, WebRtcRoomId: string = "test-webrtc") {
-        this.Connexion = Connexion;
+    constructor(Connection: ConnectionInterface, WebRtcRoomId: string = "test-webrtc") {
+        this.Connection = Connection;
         this.WebRtcRoomId = WebRtcRoomId;
         this.MediaManager = new MediaManager((stream : MediaStream) => {
             this.updatedLocalStream();
@@ -32,7 +32,7 @@ export class SimplePeer implements SimplePeerInterface{
     private initialise() {
 
         //receive signal by gemer
-        this.Connexion.receiveWebrtcSignal((message: any) => {
+        this.Connection.receiveWebrtcSignal((message: any) => {
             this.receiveWebrtcSignal(message);
         });
 
@@ -40,7 +40,7 @@ export class SimplePeer implements SimplePeerInterface{
         this.MediaManager.getCamera().then(() => {
 
             //receive message start
-            this.Connexion.receiveWebrtcStart((message: any) => {
+            this.Connection.receiveWebrtcStart((message: any) => {
                 this.receiveWebrtcStart(message);
             });
 
@@ -49,8 +49,8 @@ export class SimplePeer implements SimplePeerInterface{
         });
 
         //receive signal by gemer
-        this.Connexion.disconnectMessage((data: any) => {
-            this.closeConnexion(data.userId);
+        this.Connection.disconnectMessage((data: any) => {
+            this.closeConnection(data.userId);
         });
     }
 
@@ -58,7 +58,7 @@ export class SimplePeer implements SimplePeerInterface{
         this.WebRtcRoomId = data.roomId;
         this.Users = data.clients;
 
-        //start connexion
+        //start connection
         this.startWebRtc();
     }
 
@@ -67,19 +67,19 @@ export class SimplePeer implements SimplePeerInterface{
      */
     private startWebRtc() {
         this.Users.forEach((user: UserSimplePear) => {
-            //if it's not an initiator, peer connexion will be created when gamer will receive offer signal
+            //if it's not an initiator, peer connection will be created when gamer will receive offer signal
             if(!user.initiator){
                 return;
             }
-            this.createPeerConnexion(user);
+            this.createPeerConnection(user);
         });
     }
 
     /**
-     * create peer connexion to bind users
+     * create peer connection to bind users
      */
-    private createPeerConnexion(user : UserSimplePear) {
-        if(this.PeerConnexionArray.has(user.userId)) {
+    private createPeerConnection(user : UserSimplePear) {
+        if(this.PeerConnectionArray.has(user.userId)) {
             return;
         }
 
@@ -109,14 +109,14 @@ export class SimplePeer implements SimplePeerInterface{
                 ]
             },
         });
-        this.PeerConnexionArray.set(user.userId, peer);
+        this.PeerConnectionArray.set(user.userId, peer);
 
-        //start listen signal for the peer connexion
-        this.PeerConnexionArray.get(user.userId).on('signal', (data: any) => {
+        //start listen signal for the peer connection
+        this.PeerConnectionArray.get(user.userId).on('signal', (data: any) => {
             this.sendWebrtcSignal(data, user.userId);
         });
 
-        this.PeerConnexionArray.get(user.userId).on('stream', (stream: MediaStream) => {
+        this.PeerConnectionArray.get(user.userId).on('stream', (stream: MediaStream) => {
             let videoActive = false;
             let microphoneActive = false;
             stream.getTracks().forEach((track :  MediaStreamTrack) => {
@@ -141,23 +141,23 @@ export class SimplePeer implements SimplePeerInterface{
             this.stream(user.userId, stream);
         });
 
-        /*this.PeerConnexionArray.get(user.userId).on('track', (track: MediaStreamTrack, stream: MediaStream) => {
+        /*this.PeerConnectionArray.get(user.userId).on('track', (track: MediaStreamTrack, stream: MediaStream) => {
             this.stream(user.userId, stream);
         });*/
 
-        this.PeerConnexionArray.get(user.userId).on('close', () => {
-            this.closeConnexion(user.userId);
+        this.PeerConnectionArray.get(user.userId).on('close', () => {
+            this.closeConnection(user.userId);
         });
 
-        this.PeerConnexionArray.get(user.userId).on('error', (err: any) => {
+        this.PeerConnectionArray.get(user.userId).on('error', (err: any) => {
             console.error(`error => ${user.userId} => ${err.code}`, err);
         });
 
-        this.PeerConnexionArray.get(user.userId).on('connect', () => {
+        this.PeerConnectionArray.get(user.userId).on('connect', () => {
             console.info(`connect => ${user.userId}`);
         });
 
-        this.PeerConnexionArray.get(user.userId).on('data',  (chunk: Buffer) => {
+        this.PeerConnectionArray.get(user.userId).on('data',  (chunk: Buffer) => {
             let data = JSON.parse(chunk.toString('utf8'));
             if(data.type === "stream"){
                 this.stream(user.userId, data.stream);
@@ -167,17 +167,17 @@ export class SimplePeer implements SimplePeerInterface{
         this.addMedia(user.userId);
     }
 
-    private closeConnexion(userId : string) {
+    private closeConnection(userId : string) {
         try {
             this.MediaManager.removeActiveVideo(userId);
-            if (!this.PeerConnexionArray.get(userId)) {
+            if (!this.PeerConnectionArray.get(userId)) {
                 return;
             }
             // @ts-ignore
-            this.PeerConnexionArray.get(userId).destroy();
-            this.PeerConnexionArray.delete(userId)
+            this.PeerConnectionArray.get(userId).destroy();
+            this.PeerConnectionArray.delete(userId)
         } catch (err) {
-            console.error("closeConnexion", err)
+            console.error("closeConnection", err)
         }
     }
 
@@ -188,7 +188,7 @@ export class SimplePeer implements SimplePeerInterface{
      */
     private sendWebrtcSignal(data: any, userId : string) {
         try {
-            this.Connexion.sendWebrtcSignal(data, this.WebRtcRoomId, null, userId);
+            this.Connection.sendWebrtcSignal(data, this.WebRtcRoomId, null, userId);
         }catch (e) {
             console.error(`sendWebrtcSignal => ${userId}`, e);
         }
@@ -196,11 +196,11 @@ export class SimplePeer implements SimplePeerInterface{
 
     private receiveWebrtcSignal(data: any) {
         try {
-            //if offer type, create peer connexion
+            //if offer type, create peer connection
             if(data.signal.type === "offer"){
-                this.createPeerConnexion(data);
+                this.createPeerConnection(data);
             }
-            this.PeerConnexionArray.get(data.userId).signal(data.signal);
+            this.PeerConnectionArray.get(data.userId).signal(data.signal);
         } catch (e) {
             console.error(`receiveWebrtcSignal => ${data.userId}`, e);
         }
@@ -229,17 +229,17 @@ export class SimplePeer implements SimplePeerInterface{
             let transceiver : any = null;
             if(!this.MediaManager.localStream){
                 //send fake signal
-                if(!this.PeerConnexionArray.has(userId)){
+                if(!this.PeerConnectionArray.has(userId)){
                     return;
                 }
-                this.PeerConnexionArray.get(userId).write(new Buffer(JSON.stringify({
+                this.PeerConnectionArray.get(userId).write(new Buffer(JSON.stringify({
                     type: "stream",
                     stream: null
                 })));
                 return;
             }
             this.MediaManager.localStream.getTracks().forEach(
-                transceiver = (track: MediaStreamTrack) => this.PeerConnexionArray.get(userId).addTrack(track, this.MediaManager.localStream)
+                transceiver = (track: MediaStreamTrack) => this.PeerConnectionArray.get(userId).addTrack(track, this.MediaManager.localStream)
             )
         }catch (e) {
             console.error(`addMedia => addMedia => ${userId}`, e);

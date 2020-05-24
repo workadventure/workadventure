@@ -1,6 +1,6 @@
 import {getPlayerAnimations, PlayerAnimationNames} from "./Animation";
 import {GameScene, Textures} from "../Game/GameScene";
-import {MessageUserPositionInterface, PointInterface} from "../../Connexion";
+import {MessageUserPositionInterface, PointInterface} from "../../Connection";
 import {ActiveEventList, UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
 import {PlayableCaracter} from "../Entity/PlayableCaracter";
 
