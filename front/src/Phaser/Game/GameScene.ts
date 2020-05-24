@@ -145,7 +145,7 @@ export class GameScene extends Phaser.Scene {
         this.MapPlayers = this.physics.add.group({ immovable: true });
 
         //notify game manager can to create currentUser in map
-        this.GameManager.createCurrentPlayer();
+        this.createCurrentPlayer();
 
         //initialise camera
         this.initCamera();
