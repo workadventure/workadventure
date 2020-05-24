@@ -8,7 +8,7 @@ export class MapController {
 
     constructor(App: Application) {
         this.App = App;
-        this.getMaps();
+        this.getStartMap();
         this.assetMaps();
     }
 
@@ -17,8 +17,8 @@ export class MapController {
     }
 
     // Returns a map mapping map name to file name of the map
-    getMaps() {
-        this.App.get("/maps", (req: Request, res: Response) => {
+    getStartMap() {
+        this.App.get("/start-map", (req: Request, res: Response) => {
             return res.status(OK).send({
                 mapUrlStart: req.headers.host + "/map/files" + URL_ROOM_STARTED,
                 startInstance: "global"

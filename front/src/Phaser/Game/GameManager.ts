@@ -54,8 +54,8 @@ export class GameManager {
         });
     }
 
-    loadMaps(){
-        return this.ConnexionInstance.loadMaps().then((data) => {
+    loadStartMap(){
+        return this.ConnexionInstance.loadStartMap().then((data) => {
             return data;
         }).catch((err) => {
             throw err;
