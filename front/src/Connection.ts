@@ -87,29 +87,6 @@ export interface ListMessageUserPositionInterface {
     listUsersPosition: Array<MessageUserPosition>;
 }
 
-class ListMessageUserPosition {
-    roomId: string;
-    listUsersPosition: Array<MessageUserPosition>;
-
-    constructor(roomId: string, data: any) {
-        this.roomId = roomId;
-        this.listUsersPosition = new Array<MessageUserPosition>();
-        data.forEach((userPosition: any) => {
-            this.listUsersPosition.push(new MessageUserPosition(
-                userPosition.userId,
-                new Point(
-                    userPosition.position.x,
-                    userPosition.position.y,
-                    userPosition.position.direction,
-                    userPosition.position.moving
-                ),
-                userPosition.name,
-                userPosition.character
-            ));
-        });
-    }
-}
-
 export interface PositionInterface {
     x: number,
     y: number
