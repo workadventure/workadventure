@@ -6,7 +6,7 @@ import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
 import {PLAYER_RESOURCES} from "../Entity/PlayableCaracter";
 import {cypressAsserter} from "../../Cypress/CypressAsserter";
-import {GroupCreatedUpdatedMessageInterface, MessageUserJoined, MessageUserPositionInterface} from "../../Connexion";
+import {GroupCreatedUpdatedMessageInterface, MessageUserJoined, MessageUserPositionInterface} from "../../Connection";
 
 //todo: put this constants in a dedicated file
 export const LoginSceneName = "LoginScene";
@@ -16,7 +16,7 @@ enum LoginTextures {
     mainFont = "main_font"
 }
 
-export class LogincScene extends Phaser.Scene {
+export class LoginScene extends Phaser.Scene {
     private nameInput: TextInput;
     private textField: TextField;
     private playButton: ClickButton;

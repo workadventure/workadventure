@@ -1,4 +1,4 @@
-import {PointInterface} from "../../Connexion";
+import {PointInterface} from "../../Connection";
 
 export interface AddPlayerInterface {
     userId: string;

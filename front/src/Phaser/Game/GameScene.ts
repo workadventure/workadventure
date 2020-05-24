@@ -3,7 +3,7 @@ import {
     GroupCreatedUpdatedMessageInterface,
     MessageUserMovedInterface,
     MessageUserPositionInterface, PointInterface, PositionInterface
-} from "../../Connexion";
+} from "../../Connection";
 import {CurrentGamerInterface, GamerInterface, hasMovedEventName, Player} from "../Player/Player";
 import { DEBUG_MODE, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import {ITiledMap, ITiledMapLayer, ITiledTileSet} from "../Map/ITiledMap";
@@ -301,7 +301,7 @@ export class GameScene extends Phaser.Scene {
         //initialise player
         //TODO create animation moving between exit and start
         this.CurrentPlayer = new Player(
-            null, // The current player is not has no id (because the id can change if connexion is lost and we should check that id using the GameManager.
+            null, // The current player is not has no id (because the id can change if connection is lost and we should check that id using the GameManager.
             this,
             this.startX,
             this.startY,

@@ -1,6 +1,6 @@
 import {GameScene} from "./GameScene";
 import {
-    Connexion,
+    Connection,
     GroupCreatedUpdatedMessageInterface,
     ListMessageUserPositionInterface,
     MessageUserJoined,
@@ -8,7 +8,7 @@ import {
     MessageUserPositionInterface,
     Point,
     PointInterface
-} from "../../Connexion";
+} from "../../Connection";
 import {SimplePeerInterface, SimplePeer} from "../../WebRtc/SimplePeer";
 import {AddPlayerInterface} from "./AddPlayerInterface";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
@@ -32,7 +32,7 @@ export interface MapObject {
 
 export class GameManager {
     status: number;
-    private ConnexionInstance: Connexion;
+    private ConnectionInstance: Connection;
     private currentGameScene: GameScene;
     private playerName: string;
     SimplePeer : SimplePeerInterface;
@@ -45,9 +45,9 @@ export class GameManager {
     connect(name: string, characterUserSelected : string) {
         this.playerName = name;
         this.characterUserSelected = characterUserSelected;
-        this.ConnexionInstance = new Connexion(this);
-        return this.ConnexionInstance.createConnexion(name, characterUserSelected).then((data : any) => {
-            this.SimplePeer = new SimplePeer(this.ConnexionInstance);
+        this.ConnectionInstance = new Connection(this);
+        return this.ConnectionInstance.createConnection(name, characterUserSelected).then((data : any) => {
+            this.SimplePeer = new SimplePeer(this.ConnectionInstance);
             return data;
         }).catch((err) => {
           throw err;
@@ -55,7 +55,7 @@ export class GameManager {
     }
 
     loadStartMap(){
-        return this.ConnexionInstance.loadStartMap().then((data) => {
+        return this.ConnectionInstance.loadStartMap().then((data) => {
             return data;
         }).catch((err) => {
             throw err;
@@ -77,7 +77,7 @@ export class GameManager {
     }
 
     joinRoom(sceneKey: string, startX: number, startY: number, direction: string, moving: boolean){
-        this.ConnexionInstance.joinARoom(sceneKey, startX, startY, direction, moving);
+        this.ConnectionInstance.joinARoom(sceneKey, startX, startY, direction, moving);
     }
 
     onUserJoins(message: MessageUserJoined): void {
@@ -156,7 +156,7 @@ export class GameManager {
     }
 
     getPlayerId(): string {
-        return this.ConnexionInstance.userId;
+        return this.ConnectionInstance.userId;
     }
 
     getCharacterSelected(): string {
@@ -164,7 +164,7 @@ export class GameManager {
     }
 
     pushPlayerPosition(event: HasMovedEvent) {
-        this.ConnexionInstance.sharePosition(event.x, event.y, event.direction, event.moving);
+        this.ConnectionInstance.sharePosition(event.x, event.y, event.direction, event.moving);
     }
 
     loadMap(mapUrl: string, scene: Phaser.Scenes.ScenePlugin, instance: string): string {
