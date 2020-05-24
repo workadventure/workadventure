@@ -128,7 +128,7 @@ export interface ConnexionInterface {
 
     createConnexion(name: string, characterSelected: string): Promise<any>;
 
-    loadMaps(): Promise<any>;
+    loadStartMap(): Promise<any>;
 
     joinARoom(roomId: string, startX: number, startY: number, direction: string, moving: boolean): void;
 
@@ -230,8 +230,8 @@ export class Connexion implements ConnexionInterface {
     }
 
     //TODO add middleware with access token to secure api
-    loadMaps() : Promise<any> {
-        return Axios.get(`${API_URL}/maps`)
+    loadStartMap() : Promise<any> {
+        return Axios.get(`${API_URL}/start-map`)
             .then((res) => {
                 return res.data;
             }).catch((err) => {

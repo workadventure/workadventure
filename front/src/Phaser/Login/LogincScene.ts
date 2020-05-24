@@ -101,7 +101,7 @@ export class LogincScene extends Phaser.Scene {
                 return mapUrl;
             } else {
                 // If we do not have a map address in the URL, let's ask the server for a start map.
-                return gameManager.loadMaps().then((scene : any) => {
+                return gameManager.loadStartMap().then((scene : any) => {
                     if (!scene) {
                         return;
                     }
