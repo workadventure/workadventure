@@ -362,49 +362,6 @@ export class GameScene extends Phaser.Scene {
         })
     }
 
-    /**
-     * Share position in scene
-     * @param UsersPosition
-     * @deprecated
-     */
-    shareUserPosition(UsersPosition : Array<MessageUserPositionInterface>): void {
-        this.updateOrCreateMapPlayer(UsersPosition);
-    }
-
-    /**
-     * Create new player and clean the player on the map
-     * @param UsersPosition
-     */
-    updateOrCreateMapPlayer(UsersPosition : Array<MessageUserPositionInterface>){
-        if(!this.CurrentPlayer){
-            return;
-        }
-
-        let currentPlayerId = this.GameManager.getPlayerId();
-
-        //add or create new user
-        UsersPosition.forEach((userPosition : MessageUserPositionInterface) => {
-            if(userPosition.userId === currentPlayerId){
-                return;
-            }
-            let player = this.findPlayerInMap(userPosition.userId);
-            if(!player){
-                this.addPlayer(userPosition);
-            }else{
-                player.updatePosition(userPosition.position);
-            }
-        });
-
-        //clean map
-        this.MapPlayers.getChildren().forEach((player: GamerInterface) => {
-            if(UsersPosition.find((message : MessageUserPositionInterface) => message.userId === player.userId)){
-                return;
-            }
-            player.destroy();
-            this.MapPlayers.remove(player);
-        });
-    }
-
     public initUsersPosition(usersPosition: MessageUserPositionInterface[]): void {
         if(!this.CurrentPlayer){
             console.error('Cannot initiate users list because map is not loaded yet')

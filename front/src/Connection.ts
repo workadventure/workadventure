@@ -134,8 +134,6 @@ export interface ConnectionInterface {
 
     sharePosition(x: number, y: number, direction: string, moving: boolean): void;
 
-    positionOfAllUser(): void;
-
     /*webrtc*/
     sendWebrtcSignal(signal: any, roomId: string, userId?: string, receiverId?: string): void;
 
@@ -187,7 +185,6 @@ export class Connection implements ConnectionInterface {
      */
     connectSocketServer(): Promise<ConnectionInterface>{
         //listen event
-        this.positionOfAllUser();
         this.disconnectServer();
         this.errorMessage();
         this.groupUpdatedOrCreated();
@@ -256,43 +253,19 @@ export class Connection implements ConnectionInterface {
         this.socket.emit(EventMessage.USER_POSITION, point);
     }
 
-    /**
-     * The data sent is an array with information for each user :
-     * [
-     * {
-     *       userId: <string>,
-     *       position: {
-     *           x : <number>,
-     *           y : <number>,
-     *           direction: <string>,
-     *           moving: <bool>
-     *       }
-     *     },
-     * ...
-     * ]
-     **/
-    positionOfAllUser(): void {
-        this.socket.on(EventMessage.USER_POSITION, (message: string) => {
-            let dataList = message;
-            let UserPositions : Array<any> = Object.values(dataList);
-            let listMessageUserPosition =  new ListMessageUserPosition(UserPositions[0], UserPositions[1]);
-            this.GameManager.shareUserPosition(listMessageUserPosition);
-        });
-    }
-
-    onUserJoins(): void {
+    private onUserJoins(): void {
         this.socket.on(EventMessage.JOIN_ROOM, (message: MessageUserJoined) => {
             this.GameManager.onUserJoins(message);
         });
     }
 
-    onUserMoved(): void {
+    private onUserMoved(): void {
         this.socket.on(EventMessage.USER_MOVED, (message: MessageUserMovedInterface) => {
             this.GameManager.onUserMoved(message);
         });
     }
 
-    onUserLeft(): void {
+    private onUserLeft(): void {
         this.socket.on(EventMessage.USER_LEFT, (userId: string) => {
             this.GameManager.onUserLeft(userId);
         });
@@ -328,13 +301,13 @@ export class Connection implements ConnectionInterface {
         return this.socket.on(EventMessage.WEBRTC_SIGNAL, callback);
     }
 
-    errorMessage(): void {
+    private errorMessage(): void {
         this.socket.on(EventMessage.MESSAGE_ERROR, (message: string) => {
             console.error(EventMessage.MESSAGE_ERROR, message);
         })
     }
 
-    disconnectServer(): void {
+    private disconnectServer(): void {
         this.socket.on(EventMessage.CONNECT_ERROR, () => {
             this.GameManager.switchToDisconnectedScene();
         });

@@ -98,22 +98,6 @@ export class GameManager {
         this.currentGameScene.removePlayer(userId);
     }
 
-    /**
-     * Share position in game
-     * @param ListMessageUserPosition
-     * @deprecated
-     */
-    shareUserPosition(ListMessageUserPosition: ListMessageUserPositionInterface): void {
-        if (this.status === StatusGameManagerEnum.IN_PROGRESS) {
-            return;
-        }
-        try {
-            this.currentGameScene.shareUserPosition(ListMessageUserPosition.listUsersPosition)
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
     initUsersPosition(usersPosition: MessageUserPositionInterface[]): void {
         // Shall we wait for room to be loaded?
         /*if (this.status === StatusGameManagerEnum.IN_PROGRESS) {
