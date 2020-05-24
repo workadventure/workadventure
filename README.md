@@ -42,6 +42,8 @@ A few things to notice:
 - your map MUST contain a layer named "floorLayer" of type "objectgroup" that represents the layer on which characters will be drawn.
 - the tilesets in your map MUST be embedded. You can refer to an external typeset in a TSX file. Click the "embed tileset" button in the tileset tab to embed tileset data.
 - your map MUST be exported in JSON format. You need to use a recent version of Tiled to get JSON format export (1.3+)
+- WorkAdventure doesn't support object layers and will ignore them
+- If you are starting from a blank map, your map MUST be orthogonal and tiles size should be 32x32. 
 
 ![](doc/images/tiled_screenshot_1.png)
 
