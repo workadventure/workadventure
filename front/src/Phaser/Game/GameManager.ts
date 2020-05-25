@@ -13,10 +13,10 @@ import {SimplePeerInterface, SimplePeer} from "../../WebRtc/SimplePeer";
 import {AddPlayerInterface} from "./AddPlayerInterface";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
 
-export enum StatusGameManagerEnum {
+/*export enum StatusGameManagerEnum {
     IN_PROGRESS = 1,
     CURRENT_USER_CREATED = 2
-}
+}*/
 
 export interface HasMovedEvent {
     direction: string;
@@ -31,7 +31,7 @@ export interface MapObject {
 }
 
 export class GameManager {
-    status: number;
+    //status: number;
     private ConnectionInstance: Connection;
     private currentGameScene: GameScene;
     private playerName: string;
@@ -39,7 +39,7 @@ export class GameManager {
     private characterUserSelected: string;
 
     constructor() {
-        this.status = StatusGameManagerEnum.IN_PROGRESS;
+        //this.status = StatusGameManagerEnum.IN_PROGRESS;
     }
 
     connect(name: string, characterUserSelected : string) {
@@ -70,11 +70,11 @@ export class GameManager {
     /**
      * Permit to create player in started room
      */
-    createCurrentPlayer(): void {
+    /*createCurrentPlayer(): void {
         //Get started room send by the backend
         this.currentGameScene.createCurrentPlayer();
-        this.status = StatusGameManagerEnum.CURRENT_USER_CREATED;
-    }
+        //this.status = StatusGameManagerEnum.CURRENT_USER_CREATED;
+    }*/
 
     joinRoom(sceneKey: string, startX: number, startY: number, direction: string, moving: boolean){
         this.ConnectionInstance.joinARoom(sceneKey, startX, startY, direction, moving);
@@ -98,22 +98,6 @@ export class GameManager {
         this.currentGameScene.removePlayer(userId);
     }
 
-    /**
-     * Share position in game
-     * @param ListMessageUserPosition
-     * @deprecated
-     */
-    shareUserPosition(ListMessageUserPosition: ListMessageUserPositionInterface): void {
-        if (this.status === StatusGameManagerEnum.IN_PROGRESS) {
-            return;
-        }
-        try {
-            this.currentGameScene.shareUserPosition(ListMessageUserPosition.listUsersPosition)
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
     initUsersPosition(usersPosition: MessageUserPositionInterface[]): void {
         // Shall we wait for room to be loaded?
         /*if (this.status === StatusGameManagerEnum.IN_PROGRESS) {
@@ -130,9 +114,9 @@ export class GameManager {
      * Share group position in game
      */
     shareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface): void {
-        if (this.status === StatusGameManagerEnum.IN_PROGRESS) {
+        /*if (this.status === StatusGameManagerEnum.IN_PROGRESS) {
             return;
-        }
+        }*/
         try {
             this.currentGameScene.shareGroupPosition(groupPositionMessage)
         } catch (e) {
@@ -141,9 +125,9 @@ export class GameManager {
     }
 
     deleteGroup(groupId: string): void {
-        if (this.status === StatusGameManagerEnum.IN_PROGRESS) {
+        /*if (this.status === StatusGameManagerEnum.IN_PROGRESS) {
             return;
-        }
+        }*/
         try {
             this.currentGameScene.deleteGroup(groupId)
         } catch (e) {
