@@ -27,8 +27,8 @@ export class LoginScene extends Phaser.Scene {
         super({
             key: LoginSceneName
         });
-        if (window.localStorage && window.localStorage.playerName) {
-            this.name = window.localStorage.getItem('playerName');
+        if (window.localStorage) {
+            this.name = window.localStorage.getItem('playerName') ?? '';
         }
     }
 

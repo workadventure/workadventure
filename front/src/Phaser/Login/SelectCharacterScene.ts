@@ -100,6 +100,14 @@ export class SelectCharacterScene extends Phaser.Scene {
 
         /*create user*/
         this.createCurrentPlayer();
+
+        if (window.localStorage) {
+            let playerNumberStr: string = window.localStorage.getItem('selectedPlayer') ?? '0';
+            let playerNumber: number = Number(playerNumberStr);
+            this.selectedRectangleXPos = playerNumber % this.nbCharactersPerRow;
+            this.selectedRectangleYPos = Math.floor(playerNumber / this.nbCharactersPerRow);
+            this.updateSelectedPlayer();
+        }
     }
 
     update(time: number, delta: number): void {
@@ -170,13 +178,9 @@ export class SelectCharacterScene extends Phaser.Scene {
                 repeat: -1
             });
             player.setInteractive().on("pointerdown", () => {
-                this.selectedPlayer.anims.pause();
-                this.selectedRectangle.setY(player.y);
-                this.selectedRectangle.setX(player.x);
-                player.play(playerResource.name);
-                this.selectedPlayer = player;
                 this.selectedRectangleXPos = col;
                 this.selectedRectangleYPos = row;
+                this.updateSelectedPlayer();
             });
             this.players.push(player);
         }
@@ -203,5 +207,8 @@ export class SelectCharacterScene extends Phaser.Scene {
         let player = this.players[playerNumber];
         player.play(PLAYER_RESOURCES[playerNumber].name);
         this.selectedPlayer = player;
+        if (window.localStorage) {
+            window.localStorage.setItem('selectedPlayer', String(playerNumber));
+        }
     }
 }
