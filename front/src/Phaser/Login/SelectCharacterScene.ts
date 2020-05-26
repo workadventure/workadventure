@@ -13,7 +13,7 @@ enum LoginTextures {
     mainFont = "main_font"
 }
 
-interface InitDataInterface {
+export interface SelectCharacterSceneInitDataInterface {
     name: string
 }
 
@@ -36,7 +36,7 @@ export class SelectCharacterScene extends Phaser.Scene {
         });
     }
 
-    init({ name }: InitDataInterface) {
+    init({ name }: SelectCharacterSceneInitDataInterface) {
         this.loginName = name;
     }
 

@@ -17,6 +17,16 @@ export interface GamerInterface extends PlayableCaracter{
     say(text : string) : void;
 }
 
+interface AnimationData {
+    key: string;
+    frameRate: number;
+    repeat: number;
+    frameModel: string; //todo use an enum
+    frameStart: number;
+    frameEnd: number;
+}
+
+
 export class Player extends PlayableCaracter implements CurrentGamerInterface, GamerInterface {
     userId: string;
     userInputManager: UserInputManager;
@@ -49,7 +59,7 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
     }
 
     private initAnimation(): void {
-        getPlayerAnimations(this.PlayerTexture).forEach(d => {
+        this.getPlayerAnimations(this.PlayerTexture).forEach(d => {
             this.scene.anims.create({
                 key: d.key,
                 frames: this.scene.anims.generateFrameNumbers(d.frameModel, {start: d.frameStart, end: d.frameEnd}),
@@ -58,6 +68,38 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
             });
         })
     }
+
+    private getPlayerAnimations(name: string): AnimationData[] {
+        return [{
+            key: `${name}-${PlayerAnimationNames.WalkDown}`,
+            frameModel: name,
+            frameStart: 0,
+            frameEnd: 2,
+            frameRate: 10,
+            repeat: -1
+        }, {
+            key: `${name}-${PlayerAnimationNames.WalkLeft}`,
+            frameModel: name,
+            frameStart: 3,
+            frameEnd: 5,
+            frameRate: 10,
+            repeat: -1
+        }, {
+            key: `${name}-${PlayerAnimationNames.WalkRight}`,
+            frameModel: name,
+            frameStart: 6,
+            frameEnd: 8,
+            frameRate: 10,
+            repeat: -1
+        }, {
+            key: `${name}-${PlayerAnimationNames.WalkUp}`,
+            frameModel: name,
+            frameStart: 9,
+            frameEnd: 11,
+            frameRate: 10,
+            repeat: -1
+        }];
+    };
 
     moveUser(delta: number): void {
         //if user client on shift, camera and player speed
