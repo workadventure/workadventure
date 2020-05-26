@@ -156,8 +156,10 @@ export class SelectCharacterScene extends Phaser.Scene {
         for (let i = 0; i <PLAYER_RESOURCES.length; i++) {
             let playerResource = PLAYER_RESOURCES[i];
 
+            let col = i % this.nbCharactersPerRow;
+            let row = Math.floor(i / this.nbCharactersPerRow);
 
-            let [x, y] = this.getCharacterPosition(i % this.nbCharactersPerRow, Math.floor(i / this.nbCharactersPerRow));
+            let [x, y] = this.getCharacterPosition(col, row);
             let player = this.physics.add.sprite(x, y, playerResource.name, playerResource.name);
             player.setBounce(0.2);
             player.setCollideWorldBounds(true);
@@ -173,6 +175,8 @@ export class SelectCharacterScene extends Phaser.Scene {
                 this.selectedRectangle.setX(player.x);
                 player.play(playerResource.name);
                 this.selectedPlayer = player;
+                this.selectedRectangleXPos = col;
+                this.selectedRectangleYPos = row;
             });
             this.players.push(player);
         }
