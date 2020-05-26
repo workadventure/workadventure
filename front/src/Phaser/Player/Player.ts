@@ -99,7 +99,7 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
             frameRate: 10,
             repeat: -1
         }];
-    };
+    }
 
     moveUser(delta: number): void {
         //if user client on shift, camera and player speed
