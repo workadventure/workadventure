@@ -1,4 +1,4 @@
-import {getPlayerAnimations, PlayerAnimationNames} from "./Animation";
+import {PlayerAnimationNames} from "./Animation";
 import {GameScene, Textures} from "../Game/GameScene";
 import {MessageUserPositionInterface, PointInterface} from "../../Connection";
 import {ActiveEventList, UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
