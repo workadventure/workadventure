@@ -21,11 +21,15 @@ export class LoginScene extends Phaser.Scene {
     private infoTextField: TextField;
     private pressReturnField: TextField;
     private logo: Image;
+    private name: string;
 
     constructor() {
         super({
             key: LoginSceneName
         });
+        if (window.localStorage && window.localStorage.playerName) {
+            this.name = window.localStorage.getItem('playerName');
+        }
     }
 
     preload() {
@@ -50,7 +54,12 @@ export class LoginScene extends Phaser.Scene {
 
         this.textField = new TextField(this, this.game.renderer.width / 2, 50, 'Enter your name:');
         this.textField.setOrigin(0.5).setCenterAlign()
-        this.nameInput = new TextInput(this, this.game.renderer.width / 2 - 64, 70, 4);
+        this.nameInput = new TextInput(this, this.game.renderer.width / 2 - 64, 70, 4, this.name,(text: string) => {
+            this.name = text;
+            if (window.localStorage) {
+                window.localStorage.setItem('playerName', text);
+            }
+        });
 
         this.pressReturnField = new TextField(this, this.game.renderer.width / 2, 130, 'Press enter to start');
         this.pressReturnField.setOrigin(0.5).setCenterAlign()
@@ -62,18 +71,17 @@ export class LoginScene extends Phaser.Scene {
         this.infoTextField = new TextField(this, 10, this.game.renderer.height - 35, infoText);
 
         this.input.keyboard.on('keyup-ENTER', () => {
-            let name = this.nameInput.getText();
-            if (name === '') {
+            if (this.name === '') {
                 return
             }
-            this.login(name);
+            this.login(this.name);
         });
 
         cypressAsserter.initFinished();
     }
 
     update(time: number, delta: number): void {
-        if (this.nameInput.getText() == '') {
+        if (this.name == '') {
             this.pressReturnField.setVisible(false);
         } else {
             this.pressReturnField.setVisible(!!(Math.floor(time / 500) % 2));
