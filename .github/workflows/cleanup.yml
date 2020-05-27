@@ -17,7 +17,7 @@ jobs:
       - uses: rlespinasse/github-slug-action@1.1.0
 
       - name: Cleanup
-        uses: docker://thecodingmachine/deeployer-cleanup-action@master
+        uses: thecodingmachine/deeployer-cleanup-action@master
         env:
           KUBE_CONFIG_FILE: ${{ secrets.KUBE_CONFIG_FILE }}
         with:
