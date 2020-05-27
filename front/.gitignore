@@ -1,3 +1,6 @@
 /node_modules/
 /dist/bundle.js
 /yarn-error.log
+/dist/webpack.config.js
+/dist/webpack.config.js.map
+/dist/src

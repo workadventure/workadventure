@@ -2,8 +2,9 @@
 export class TextInput extends Phaser.GameObjects.BitmapText {
     private underLineLength = 10;
     private underLine: Phaser.GameObjects.Text;
-    constructor(scene: Phaser.Scene, x: number, y: number, maxLength: number) {
-        super(scene, x, y, 'main_font', '', 32);
+
+    constructor(scene: Phaser.Scene, x: number, y: number, maxLength: number, text: string, onChange: (text: string) => void) {
+        super(scene, x, y, 'main_font', text, 32);
         this.scene.add.existing(this);
 
         this.underLine = this.scene.add.text(x, y+1, '_______', { fontFamily: 'Arial', fontSize: "32px", color: '#ffffff'})
@@ -17,6 +18,7 @@ export class TextInput extends Phaser.GameObjects.BitmapText {
             } else if ((event.keyCode === 32 || (event.keyCode >= 48 && event.keyCode <= 90)) && this.text.length < maxLength) {
                 this.addLetter(event.key);
             }
+            onChange(this.text);
         });
     }
 
@@ -38,6 +40,4 @@ export class TextInput extends Phaser.GameObjects.BitmapText {
     getText(): string {
         return this.text;
     }
-
-
 }
