@@ -11,6 +11,7 @@ import {UserInterface} from "_Model/UserInterface";
 import {SetPlayerDetailsMessage} from "_Model/Websocket/SetPlayerDetailsMessage";
 import {MessageUserJoined} from "../Model/Websocket/MessageUserJoined";
 import {MessageUserMoved} from "../Model/Websocket/MessageUserMoved";
+import si from "systeminformation";
 
 enum SockerIoEvent {
     CONNECTION = "connection",
@@ -99,6 +100,14 @@ export class IoSocketController {
         this.Io.on(SockerIoEvent.CONNECTION, (socket: Socket) => {
             let client : ExSocketInterface = socket as ExSocketInterface;
             this.sockets.set(client.userId, client);
+
+            // Let's log server load when a user joins
+            let srvSockets = this.Io.sockets.sockets;
+            console.log('A user joined (', Object.keys(srvSockets).length, ' connected users)');
+            si.currentLoad().then(data => console.log('Current load: ', data.avgload));
+            si.currentLoad().then(data => console.log('CPU: ', data.currentload, '%'));
+            // End log server load
+
             /*join-rom event permit to join one room.
                 message :
                     userId : user identification
@@ -219,6 +228,13 @@ export class IoSocketController {
                     console.error(e);
                 }
                 this.sockets.delete(Client.userId);
+
+                // Let's log server load when a user leaves
+                let srvSockets = this.Io.sockets.sockets;
+                console.log('A user left (', Object.keys(srvSockets).length, ' connected users)');
+                si.currentLoad().then(data => console.log('Current load: ', data.avgload));
+                si.currentLoad().then(data => console.log('CPU: ', data.currentload, '%'));
+                // End log server load
             });
 
             // Let's send the user id to the user
