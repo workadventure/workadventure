@@ -32,6 +32,7 @@
     "http-status-codes": "^1.4.0",
     "jsonwebtoken": "^8.5.1",
     "socket.io": "^2.3.0",
+    "systeminformation": "^4.26.5",
     "ts-node-dev": "^1.0.0-pre.44",
     "typescript": "^3.8.3",
     "uuidv4": "^6.0.7"
