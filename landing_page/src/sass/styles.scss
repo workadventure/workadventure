@@ -1,0 +1,131 @@
+@import "custom";
+@import "~bootstrap/scss/bootstrap";
+
+@font-face {
+    font-family: OpenSans;
+    src: url('../fonts/OpenSans-Regular.ttf');
+}
+
+@font-face {
+    font-family: '04b03';
+    font-style: normal;
+    font-weight: normal;
+    src: local('04b03'), url('../fonts/04B_03.woff') format('woff');
+}
+
+header {
+    background: url("../images/header.png") no-repeat;
+    background-size: 100%;
+    height: 28rem;
+    position: relative;
+
+    .over-image {
+        bottom: 0;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+
+        .logo{
+            margin: 1rem 0 0 5rem
+        }
+
+        .title {
+            padding: 5rem 0;
+        }
+    }
+
+}
+.custom-link{
+    display: block;
+    margin: 0 auto;
+    width: 250px;
+    height: 80px;
+    background-image: url('../images/btn-bg.png');
+    background-repeat: no-repeat;
+    background-size: 100%;
+    position: relative;
+
+    &.light{
+        background-image: url('../images/btn-bg-light.png');
+    }
+
+    &::after{
+        content: "";
+        position: absolute;
+        background-size: 60%;
+        width: 100%;
+        height: 100%;
+    }
+
+    &.start::after{
+        background: url("../images/start.png") no-repeat center center;
+    }
+
+    &.demo::after{
+        background: url("../images/demo.png") no-repeat center center;
+    }
+}
+
+img{
+    max-width: 100%;
+}
+
+.bg-white{
+    color: #000000;
+}
+.bg-gray{
+    background-color: #3b3b3b !important;
+}
+.section{
+    padding-top: 2rem;
+    padding-bottom: 5rem;
+
+    &.used-by{
+        img{
+            padding: 0 1rem;
+        }
+    }
+
+    &.how-to{
+        .image-item{
+            height: 100%;
+            max-width: 300px;
+            margin: 0 auto;
+            background-color: #f9dcb0;
+            padding: 1rem;
+
+            h2{
+                padding: 1rem 0;
+                margin: 0;
+            }
+        }
+    }
+
+    &.used-by{
+        img{
+
+        }
+    }
+
+    &.quotes{
+        h2{
+            font-size: 2rem;
+        }
+
+        .quote-item{
+            padding: 1rem 0;
+            text-align: right;
+            .quote{
+                font-size: 1.5rem;
+                margin-right: 3rem;
+                margin-bottom: 0.5rem;
+                letter-spacing: 2px;
+            }
+            .author{
+
+            }
+        }
+    }
+}
+
