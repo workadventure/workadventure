@@ -1,5 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
     entry: './src/index.ts',
@@ -28,11 +29,16 @@ module.exports = {
         extensions: [ '.tsx', '.ts', '.js' ],
     },
     output: {
-        filename: 'bundle.js',
+        filename: '[name].[contenthash].js',
         path: path.resolve(__dirname, 'dist'),
         publicPath: '/'
     },
     plugins: [
+        new HtmlWebpackPlugin(
+            {
+                template: './dist/index.html'
+            }
+        ),
         new webpack.ProvidePlugin({
             Phaser: 'phaser'
         }),

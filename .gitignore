@@ -2,3 +2,4 @@
 .idea
 .vagrant
 Vagrantfile
+docker-compose.override.yaml
