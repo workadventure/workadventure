@@ -1,2 +1,5 @@
 /node_modules/
-/dist/
+/dist/bundle.js
+/dist/main.css
+/dist/fonts
+/dist/images
