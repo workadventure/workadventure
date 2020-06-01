@@ -17,7 +17,10 @@ header {
     background: url("../images/header.png") no-repeat;
     background-size: 100%;
     height: 28rem;
-    position: relative;
+
+    .section{
+        position: relative;
+    }
 
     .over-image {
         bottom: 0;
@@ -27,7 +30,7 @@ header {
         right: 0;
 
         .logo{
-            margin: 1rem 0 0 5rem
+            margin: 1rem 0;
         }
 
         .title {
