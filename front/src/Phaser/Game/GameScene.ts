@@ -5,7 +5,7 @@ import {
     MessageUserPositionInterface, PointInterface, PositionInterface
 } from "../../Connection";
 import {CurrentGamerInterface, GamerInterface, hasMovedEventName, Player} from "../Player/Player";
-import { DEBUG_MODE, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
+import { DEBUG_MODE, ZOOM_LEVEL, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
 import {ITiledMap, ITiledMapLayer, ITiledTileSet} from "../Map/ITiledMap";
 import {PLAYER_RESOURCES} from "../Entity/PlayableCaracter";
 import Texture = Phaser.Textures.Texture;
@@ -42,6 +42,15 @@ export class GameScene extends Phaser.Scene {
     MapUrlFile: string;
     RoomId: string;
     instance: string;
+
+    currentTick: number;
+    lastSentTick: number; // The last tick at which a position was sent.
+    lastMoveEventSent: HasMovedEvent = {
+        direction: '',
+        moving: false,
+        x: -1000,
+        y: -1000
+    }
 
     PositionNextScene: Array<any> = new Array<any>();
 
@@ -323,6 +332,34 @@ export class GameScene extends Phaser.Scene {
     }
 
     pushPlayerPosition(event: HasMovedEvent) {
+        if (this.lastMoveEventSent === event) {
+            return;
+        }
+
+        // If the player is not moving, let's send the info right now.
+        if (event.moving === false) {
+            this.doPushPlayerPosition(event);
+            return;
+        }
+
+        // If the player is moving, and if it changed direction, let's send an event
+        if (event.direction !== this.lastMoveEventSent.direction) {
+            this.doPushPlayerPosition(event);
+            return;
+        }
+
+        // If more than 200ms happened since last event sent
+        if (this.currentTick - this.lastSentTick >= POSITION_DELAY) {
+            this.doPushPlayerPosition(event);
+            return;
+        }
+
+        // Otherwise, do nothing.
+    }
+
+    private doPushPlayerPosition(event: HasMovedEvent): void {
+        this.lastMoveEventSent = event;
+        this.lastSentTick = this.currentTick;
         this.GameManager.pushPlayerPosition(event);
     }
 
@@ -342,6 +379,7 @@ export class GameScene extends Phaser.Scene {
      * @param delta The delta time in ms since the last frame. This is a smoothed and capped value based on the FPS rate.
      */
     update(time: number, delta: number) : void {
+        this.currentTick = time;
         this.CurrentPlayer.moveUser(delta);
         let nextSceneKey = this.checkToExit();
         if(nextSceneKey){
