@@ -7,6 +7,12 @@
 
     <link rel="stylesheet" href="main.css">
     <script src="bundle.js"></script>
+    <script>
+        function startGame() {
+            let playUrl = window.location.protocol + "//play."+window.location.host;
+            window.location.assign(playUrl);
+        }
+    </script>
 </head>
 
 <body>
@@ -21,7 +27,7 @@
                     <h2>Start a casual conversation</h2>
                 </div>
                 <div>
-                    <a class="custom-link start" href="#" title="START !">
+                    <a class="custom-link start" href="#" title="START !" onclick="startGame()">
                     </a>
                 </div>
             </div>
@@ -50,11 +56,11 @@
         </div>
         <div class="row justify-content-md-center pt-5">
             <div class="col col-lg-3">
-                <a class="custom-link light demo" href="#" title="DEMO !">
+                <a class="custom-link light demo" href="#" title="DEMO !" onclick="startGame()">
                 </a>
             </div>
             <div class="col col-lg-3">
-                <a class="custom-link start" href="#" title="START !">
+                <a class="custom-link start" href="#" title="START !" onclick="startGame()">
                 </a>
             </div>
         </div>
