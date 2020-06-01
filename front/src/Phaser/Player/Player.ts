@@ -157,13 +157,13 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
 
     private playAnimation(direction : string, moving: boolean): void {
         if (moving && (!this.anims.currentAnim || this.anims.currentAnim.key !== direction)) {
-            this.anims.play(this.PlayerTexture+'-'+direction);
+            this.play(this.PlayerTexture+'-'+direction, true);
         } else if (!moving) {
             /*if (this.anims.currentAnim) {
                 this.anims.stop();
             }*/
-            this.anims.play(this.PlayerTexture+'-'+direction);
-            this.anims.stop();
+            this.play(this.PlayerTexture+'-'+direction, true);
+            this.stop();
         }
     }
 }
