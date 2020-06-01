@@ -8,6 +8,7 @@ import {PlayableCaracter} from "../Entity/PlayableCaracter";
 export const hasMovedEventName = "hasMoved";
 export interface CurrentGamerInterface extends PlayableCaracter{
     moveUser(delta: number) : void;
+    startAnimation(): void;
     say(text : string) : void;
 }
 
@@ -32,6 +33,11 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
     userInputManager: UserInputManager;
     previousDirection: string;
     wasMoving: boolean;
+
+    startedAnimationVelocityX : number = 0;
+    startedAnimationVelocityY: number = 0;
+    startedAnimationDirection: string = PlayerAnimationNames.WalkDown;
+    lock: boolean;
 
     constructor(
         userId: string,
@@ -67,6 +73,30 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
                 repeat: d.repeat
             });
         })
+    }
+
+    /**
+     * TODO : personalize start animation by map with start case animation and end case animation ?
+     * This could be optional in a map?
+     */
+    startAnimation(){
+        this.lock = true;
+        this.startedAnimationVelocityX = -16;
+        this.startedAnimationVelocityY = 0;
+        this.startedAnimationDirection = PlayerAnimationNames.WalkLeft;
+        setTimeout(() => {
+            this.stop();
+            this.move(0, 16);
+            this.startedAnimationVelocityX = 0;
+            this.startedAnimationVelocityY = 16;
+            this.startedAnimationDirection = PlayerAnimationNames.WalkDown;
+            setTimeout(() => {
+                this.startedAnimationVelocityX = 0;
+                this.startedAnimationVelocityY = 0;
+                this.stop();
+                this.lock = false;
+            }, 500);
+        }, 500);
     }
 
     private getPlayerAnimations(name: string): AnimationData[] {
@@ -112,23 +142,31 @@ export class Player extends PlayableCaracter implements CurrentGamerInterface, G
 
         let x = 0;
         let y = 0;
-        if (activeEvents.get(UserInputEvent.MoveUp)) {
-            y = - moveAmount;
-            direction = PlayerAnimationNames.WalkUp;
+
+        if(this.lock){
+            x = this.startedAnimationVelocityX;
+            y = this.startedAnimationVelocityY;
+            direction = this.startedAnimationDirection;
             moving = true;
-        } else if (activeEvents.get(UserInputEvent.MoveDown)) {
-            y = moveAmount;
-            direction = PlayerAnimationNames.WalkDown;
-            moving = true;
-        }
-        if (activeEvents.get(UserInputEvent.MoveLeft)) {
-            x = -moveAmount;
-            direction = PlayerAnimationNames.WalkLeft;
-            moving = true;
-        } else if (activeEvents.get(UserInputEvent.MoveRight)) {
-            x = moveAmount;
-            direction = PlayerAnimationNames.WalkRight;
-            moving = true;
+        }else {
+            if (activeEvents.get(UserInputEvent.MoveUp)) {
+                y = -moveAmount;
+                direction = PlayerAnimationNames.WalkUp;
+                moving = true;
+            } else if (activeEvents.get(UserInputEvent.MoveDown)) {
+                y = moveAmount;
+                direction = PlayerAnimationNames.WalkDown;
+                moving = true;
+            }
+            if (activeEvents.get(UserInputEvent.MoveLeft)) {
+                x = -moveAmount;
+                direction = PlayerAnimationNames.WalkLeft;
+                moving = true;
+            } else if (activeEvents.get(UserInputEvent.MoveRight)) {
+                x = moveAmount;
+                direction = PlayerAnimationNames.WalkRight;
+                moving = true;
+            }
         }
         if (x !== 0 || y !== 0) {
             this.move(x, y);

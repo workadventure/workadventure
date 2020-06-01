@@ -319,7 +319,10 @@ export class GameScene extends Phaser.Scene {
         this.GameManager.joinRoom(this.RoomId, this.startX, this.startY, PlayerAnimationNames.WalkDown, false);
 
         //listen event to share position of user
-        this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this))
+        this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this));
+
+        //play animation when the user enter in new map
+        this.CurrentPlayer.startAnimation();
     }
 
     pushPlayerPosition(event: HasMovedEvent) {
