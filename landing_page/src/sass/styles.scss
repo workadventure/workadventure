@@ -173,7 +173,6 @@ img{
             margin: 0 auto;
             padding: 20px;
             transition: all .25s cubic-bezier(0.000, -0.600, 1.000, 1.650); /* custom */
-            border-radius: 10px;
             &:hover {
                 transform: scale(1.1);
             }
@@ -193,6 +192,7 @@ img{
                     width: 100%;
                     z-index: 2;
                     position: relative;
+                    border-radius: 10px;
                 }
             }
             h2{
