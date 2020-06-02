@@ -66,6 +66,14 @@ header {
         overflow: hidden;
         width: 100%;
         z-index: 1;
+        &.clouds-2 {
+            bottom: 25px;
+            .cloud {
+                transform: translateX(50px);
+                -webkit-animation-duration: 80s;
+                opacity: .6;
+            }
+        }
         .cloud {
             background: url('../images/cloud.png') repeat-x;
             height: 162px;
@@ -194,7 +202,7 @@ img{
             .step-image {
                 position: relative;
                 &:after {
-                    transition: all .25s cubic-bezier(0.000, -0.600, 1.000, 1.650); /* custom */
+                    transition: all .25s cubic-bezier(0.000, -0.600, 1.000, 1.650);
                     content:"";
                     height: 100%;
                     width: 100%;
@@ -202,13 +210,12 @@ img{
                     position: absolute;
                     bottom: -25px;
                     left: 25px;
-                    border-radius: 10px;
+                    background: url('../images/bg-step.png') no-repeat bottom right;
                 }
                 img {
                     width: 100%;
                     z-index: 2;
                     position: relative;
-                    border-radius: 10px;
                 }
             }
             h2{
@@ -240,7 +247,6 @@ img{
             text-align: center;
             .quote{
                 font-size: 1.5rem;
-                margin-right: 3rem;
                 margin-bottom: 0.5rem;
                 letter-spacing: 2px;
             }
