@@ -21,6 +21,17 @@ body.choose-map{
     text-decoration: underline;
   }
 
+  #url-copied{
+    display: none;
+    font-size: 20px;
+
+    img{
+      height: 20px;
+      display: inline-block;
+      margin-right: 10px;
+    }
+  }
+
   .copy-btn{
     font-family: "Karmatic Arcade";
     font-size: 30px;
