@@ -4,7 +4,7 @@ import {PlayerMovement} from "../../../src/Phaser/Game/PlayerMovement";
 describe("Interpolation / Extrapolation", () => {
     it("should interpolate", () => {
         let playerMovement = new PlayerMovement({
-            x: 100, y: 200, moving: true, direction: "right"
+            x: 100, y: 200
         }, 42000,
             {
                 x: 200, y: 100, moving: true, direction: "up"
@@ -33,6 +33,42 @@ describe("Interpolation / Extrapolation", () => {
         expect(playerMovement.getPosition(42300)).toEqual({
             x: 250,
             y: 50,
+            direction: 'up',
+            moving: true
+        });
+    });
+
+    it("should not extrapolate if we stop", () => {
+        let playerMovement = new PlayerMovement({
+                x: 100, y: 200
+            }, 42000,
+            {
+                x: 200, y: 100, moving: false, direction: "up"
+            },
+            42200
+        );
+
+        expect(playerMovement.getPosition(42300)).toEqual({
+            x: 200,
+            y: 100,
+            direction: 'up',
+            moving: false
+        });
+    });
+
+    it("should should keep moving until it stops", () => {
+        let playerMovement = new PlayerMovement({
+                x: 100, y: 200
+            }, 42000,
+            {
+                x: 200, y: 100, moving: false, direction: "up"
+            },
+            42200
+        );
+
+        expect(playerMovement.getPosition(42100)).toEqual({
+            x: 150,
+            y: 150,
             direction: 'up',
             moving: true
         });
