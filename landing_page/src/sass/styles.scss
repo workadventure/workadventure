@@ -89,7 +89,7 @@ header {
 .custom-link{
     font-family: "VCR OSD Mono";
     font-size: 18px;
-    letter-spacing: 3,75;
+    letter-spacing: 5px;
     color: white;
     display: block;
     margin: 0 auto;
@@ -108,14 +108,24 @@ header {
     transition: all .1s cubic-bezier(0.000, -0.600, 1.000, 1.650); /* custom */
     //transition-timing-function: cubic-bezier(0.000, -0.600, 1.000, 1.650); /* custom */
     &:hover {
-        transform: scale(1.1);
         color: white;
-        font-size: 24px;
-        padding: 12px;
+        transform: translateY(-6px);
         text-decoration: none;
     }
     &.contribute {
         background-image: url('../images/btn-bg-2.png');
+    }
+    &.start {
+        padding-left: 55px;
+        &:before {
+            content: "";
+            position: absolute;
+            background: url('../images/playicon.png') no-repeat;
+            height: 20px;
+            width: 21px;
+            left: 36px;
+            top: 23px;
+        }
     }
     &.light{
         background-image: url('../images/btn-bg-light.png');
@@ -128,14 +138,6 @@ header {
         width: 100%;
         height: 100%;
     }*/
-
-    &.start::after{
-        background: url("../images/start.png") no-repeat center center;
-    }
-
-    &.demo::after{
-        background: url("../images/demo.png") no-repeat center center;
-    }
 }
 
 img{
@@ -251,6 +253,7 @@ img{
 .footer {
     padding: 2rem;
     .floppy {
+        text-align: right;
         img {
             float: right;
             margin-left: 20px;
@@ -258,8 +261,10 @@ img{
         div {
             float: right;
             margin-left: 15px;
+            font-size: 16px;
             span {
                 color: grey;
+                font-size: 13px;
             }
         }
     }
