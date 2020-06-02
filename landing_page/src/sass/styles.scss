@@ -176,6 +176,7 @@ img{
 
     &.how-to{
         padding: 175px 0;
+        background: url('../images/bg-briques.jpg') repeat-x bottom;
         .image-item{
             height: 100%;
             margin: 0 auto;
@@ -262,6 +263,8 @@ img{
             float: right;
             margin-left: 15px;
             font-size: 16px;
+            line-height: 16px;
+            padding-top: 10px;
             span {
                 color: grey;
                 font-size: 13px;
