@@ -36,6 +36,10 @@ jobs:
         run: yarn run lint
         working-directory: "front"
 
+      - name: "Jasmine"
+        run: yarn test
+        working-directory: "front"
+
   continuous-integration-back:
     name: "Continuous Integration Back"
 
