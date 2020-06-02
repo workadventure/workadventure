@@ -40,7 +40,13 @@ header {
         .logo{
             margin: 1rem 0;
         }
-
+        .social-links {
+            text-align: right;
+            padding-top: 36px;
+            a {
+                margin-left: 20px;
+            }
+        }
         .title {
             padding: 5rem 0;
             color: black;
@@ -65,7 +71,7 @@ header {
             height: 162px;
             width: 4000px;
             -webkit-animation-name: prop-600;
-            -webkit-animation-duration: 60s;
+            -webkit-animation-duration: 50s;
             -webkit-animation-iteration-count: infinite;
             -webkit-animation-direction:alternate;
         }
@@ -175,10 +181,17 @@ img{
             transition: all .25s cubic-bezier(0.000, -0.600, 1.000, 1.650); /* custom */
             &:hover {
                 transform: scale(1.1);
+                .step-image {
+                    &:after {
+                        bottom: -10px;
+                        left: 10px;
+                    }
+                }
             }
             .step-image {
                 position: relative;
                 &:after {
+                    transition: all .25s cubic-bezier(0.000, -0.600, 1.000, 1.650); /* custom */
                     content:"";
                     height: 100%;
                     width: 100%;
@@ -237,5 +250,18 @@ img{
 }
 .footer {
     padding: 2rem;
+    .floppy {
+        img {
+            float: right;
+            margin-left: 20px;
+        }
+        div {
+            float: right;
+            margin-left: 15px;
+            span {
+                color: grey;
+            }
+        }
+    }
 }
 
