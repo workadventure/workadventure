@@ -4,11 +4,14 @@
   "main": "index.js",
   "license": "AGPL",
   "devDependencies": {
+    "@types/jasmine": "^3.5.10",
     "@typescript-eslint/eslint-plugin": "^2.26.0",
     "@typescript-eslint/parser": "^2.26.0",
     "eslint": "^6.8.0",
     "html-webpack-plugin": "^4.3.0",
+    "jasmine": "^3.5.0",
     "ts-loader": "^6.2.2",
+    "ts-node": "^8.10.2",
     "typescript": "^3.8.3",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11",
@@ -25,6 +28,7 @@
   "scripts": {
     "start": "webpack-dev-server --open",
     "build": "webpack",
+    "test": "ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
     "lint": "node_modules/.bin/eslint src/ . --ext .ts",
     "fix": "node_modules/.bin/eslint --fix src/ . --ext .ts"
   }
