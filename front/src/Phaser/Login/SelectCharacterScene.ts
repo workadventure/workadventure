@@ -168,7 +168,7 @@ export class SelectCharacterScene extends Phaser.Scene {
             let row = Math.floor(i / this.nbCharactersPerRow);
 
             let [x, y] = this.getCharacterPosition(col, row);
-            let player = this.physics.add.sprite(x, y, playerResource.name, playerResource.name);
+            let player = this.physics.add.sprite(x, y, playerResource.name, 0);
             player.setBounce(0.2);
             player.setCollideWorldBounds(true);
             this.anims.create({
