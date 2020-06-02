@@ -1,5 +1,6 @@
 @import "custom";
 @import "~bootstrap/scss/bootstrap";
+@import "_choose-map";
 
 @font-face {
     font-family: OpenSans;
@@ -279,3 +280,6 @@ img{
     }
 }
 
+.pixel-title{
+    font-family: "Karmatic Arcade" !important;
+}
