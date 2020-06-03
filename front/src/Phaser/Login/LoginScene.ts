@@ -16,12 +16,12 @@ enum LoginTextures {
 }
 
 export class LoginScene extends Phaser.Scene {
-    private nameInput: TextInput;
-    private textField: TextField;
-    private infoTextField: TextField;
-    private pressReturnField: TextField;
-    private logo: Image;
-    private name: string;
+    private nameInput: TextInput|null = null;
+    private textField: TextField|null = null;
+    private infoTextField: TextField|null = null;
+    private pressReturnField: TextField|null = null;
+    private logo: Image|null = null;
+    private name: string = '';
 
     constructor() {
         super({
@@ -82,9 +82,9 @@ export class LoginScene extends Phaser.Scene {
 
     update(time: number, delta: number): void {
         if (this.name == '') {
-            this.pressReturnField.setVisible(false);
+            this.pressReturnField?.setVisible(false);
         } else {
-            this.pressReturnField.setVisible(!!(Math.floor(time / 500) % 2));
+            this.pressReturnField?.setVisible(!!(Math.floor(time / 500) % 2));
         }
     }
 

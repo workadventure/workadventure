@@ -4,26 +4,25 @@ const videoConstraint: {width : any, height: any, facingMode : string} = {
     facingMode: "user"
 };
 export class MediaManager {
-    localStream: MediaStream;
+    localStream: MediaStream|null = null;
     remoteVideo: Array<any> = new Array<any>();
-    myCamVideo: any;
+    myCamVideo: HTMLVideoElement;
     cinemaClose: any = null;
     cinema: any = null;
     microphoneClose: any = null;
     microphone: any = null;
-    webrtcInAudio: any;
+    webrtcInAudio: HTMLAudioElement;
     constraintsMedia : {audio : any, video : any} = {
         audio: true,
         video: videoConstraint
     };
-    getCameraPromise : Promise<any> = null;
     updatedLocalStreamCallBack : Function;
 
     constructor(updatedLocalStreamCallBack : Function) {
         this.updatedLocalStreamCallBack = updatedLocalStreamCallBack;
 
-        this.myCamVideo = document.getElementById('myCamVideo');
-        this.webrtcInAudio = document.getElementById('audio-webrtc-in');
+        this.myCamVideo = this.getElementByIdOrFail<HTMLVideoElement>('myCamVideo');
+        this.webrtcInAudio = this.getElementByIdOrFail<HTMLAudioElement>('audio-webrtc-in');
         this.webrtcInAudio.volume = 0.2;
 
         this.microphoneClose = document.getElementById('microphone-close');
@@ -56,7 +55,7 @@ export class MediaManager {
     }
 
     activeVisio(){
-        let webRtc = document.getElementById('webRtc');
+        let webRtc = this.getElementByIdOrFail('webRtc');
         webRtc.classList.add('active');
     }
 
@@ -130,7 +129,7 @@ export class MediaManager {
         } catch (e) {
             promise = Promise.reject(false);
         }
-        return this.getCameraPromise = promise;
+        return promise;
     }
 
     /**
@@ -139,7 +138,7 @@ export class MediaManager {
      */
     addActiveVideo(userId : string, userName: string = ""){
         this.webrtcInAudio.play();
-        let elementRemoteVideo = document.getElementById("activeCam");
+        let elementRemoteVideo = this.getElementByIdOrFail("activeCam");
         userName = userName.toUpperCase();
         let color = this.getColorByString(userName);
         elementRemoteVideo.insertAdjacentHTML('beforeend', `
@@ -247,4 +246,14 @@ export class MediaManager {
         }
         return color;
     }
+
+    private getElementByIdOrFail<T extends HTMLElement>(id: string): T {
+        let elem = document.getElementById("activeCam");
+        if (elem === null) {
+            throw new Error("Cannot find HTML element with id '"+id+"'");
+        }
+        // FIXME: does not check the type of the returned type
+        return elem as T;
+    }
+
 }

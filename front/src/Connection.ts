@@ -98,10 +98,10 @@ export interface GroupCreatedUpdatedMessageInterface {
 }
 
 export interface ConnectionInterface {
-    socket: any;
-    token: string;
-    name: string;
-    userId: string;
+    socket: Socket|null;
+    token: string|null;
+    name: string|null;
+    userId: string|null;
 
     createConnection(name: string, characterSelected: string): Promise<any>;
 
@@ -122,15 +122,15 @@ export interface ConnectionInterface {
 }
 
 export class Connection implements ConnectionInterface {
-    socket: Socket;
-    token: string;
-    name: string; // TODO: drop "name" storage here
-    character: string;
-    userId: string;
+    socket: Socket|null = null;
+    token: string|null = null;
+    name: string|null = null; // TODO: drop "name" storage here
+    character: string|null = null;
+    userId: string|null = null;
 
     GameManager: GameManager;
 
-    lastPositionShared: PointInterface = null;
+    lastPositionShared: PointInterface|null = null;
     lastRoom: string|null = null;
 
     constructor(GameManager: GameManager) {
@@ -156,6 +156,13 @@ export class Connection implements ConnectionInterface {
             });
     }
 
+    private getSocket(): Socket {
+        if (this.socket === null) {
+            throw new Error('Socket not initialized while using Connection')
+        }
+        return this.socket;
+    }
+
     /**
      *
      * @param character
@@ -171,7 +178,7 @@ export class Connection implements ConnectionInterface {
         this.onUserLeft();
 
         return new Promise<ConnectionInterface>((resolve, reject) => {
-            this.socket.emit(EventMessage.SET_PLAYER_DETAILS, {
+            this.getSocket().emit(EventMessage.SET_PLAYER_DETAILS, {
                 name: this.name,
                 character: this.character
             } as SetPlayerDetailsMessage, (id: string) => {
@@ -215,7 +222,7 @@ export class Connection implements ConnectionInterface {
     }
 
     joinARoom(roomId: string, startX: number, startY: number, direction: string, moving: boolean): void {
-        this.socket.emit(EventMessage.JOIN_ROOM, { roomId, position: {x: startX, y: startY, direction, moving }}, (userPositions: MessageUserPositionInterface[]) => {
+        this.getSocket().emit(EventMessage.JOIN_ROOM, { roomId, position: {x: startX, y: startY, direction, moving }}, (userPositions: MessageUserPositionInterface[]) => {
             this.GameManager.initUsersPosition(userPositions);
         });
         this.lastRoom = roomId;
@@ -227,42 +234,42 @@ export class Connection implements ConnectionInterface {
         }
         let point = new Point(x, y, direction, moving);
         this.lastPositionShared = point;
-        this.socket.emit(EventMessage.USER_POSITION, point);
+        this.getSocket().emit(EventMessage.USER_POSITION, point);
     }
 
     private onUserJoins(): void {
-        this.socket.on(EventMessage.JOIN_ROOM, (message: MessageUserJoined) => {
+        this.getSocket().on(EventMessage.JOIN_ROOM, (message: MessageUserJoined) => {
             this.GameManager.onUserJoins(message);
         });
     }
 
     private onUserMoved(): void {
-        this.socket.on(EventMessage.USER_MOVED, (message: MessageUserMovedInterface) => {
+        this.getSocket().on(EventMessage.USER_MOVED, (message: MessageUserMovedInterface) => {
             this.GameManager.onUserMoved(message);
         });
     }
 
     private onUserLeft(): void {
-        this.socket.on(EventMessage.USER_LEFT, (userId: string) => {
+        this.getSocket().on(EventMessage.USER_LEFT, (userId: string) => {
             this.GameManager.onUserLeft(userId);
         });
     }
 
     private groupUpdatedOrCreated(): void {
-        this.socket.on(EventMessage.GROUP_CREATE_UPDATE, (groupCreateUpdateMessage: GroupCreatedUpdatedMessageInterface) => {
+        this.getSocket().on(EventMessage.GROUP_CREATE_UPDATE, (groupCreateUpdateMessage: GroupCreatedUpdatedMessageInterface) => {
             //console.log('Group ', groupCreateUpdateMessage.groupId, " position :", groupCreateUpdateMessage.position.x, groupCreateUpdateMessage.position.y)
             this.GameManager.shareGroupPosition(groupCreateUpdateMessage);
         })
     }
 
     private groupDeleted(): void {
-        this.socket.on(EventMessage.GROUP_DELETE, (groupId: string) => {
+        this.getSocket().on(EventMessage.GROUP_DELETE, (groupId: string) => {
             this.GameManager.deleteGroup(groupId);
         })
     }
 
     sendWebrtcSignal(signal: any, roomId: string, userId? : string, receiverId? : string) {
-        return this.socket.emit(EventMessage.WEBRTC_SIGNAL, {
+        return this.getSocket().emit(EventMessage.WEBRTC_SIGNAL, {
             userId: userId ? userId : this.userId,
             receiverId: receiverId ? receiverId : this.userId,
             roomId: roomId,
@@ -271,31 +278,34 @@ export class Connection implements ConnectionInterface {
     }
 
     receiveWebrtcStart(callback: Function) {
-        this.socket.on(EventMessage.WEBRTC_START, callback);
+        this.getSocket().on(EventMessage.WEBRTC_START, callback);
     }
 
     receiveWebrtcSignal(callback: Function) {
-        return this.socket.on(EventMessage.WEBRTC_SIGNAL, callback);
+        return this.getSocket().on(EventMessage.WEBRTC_SIGNAL, callback);
     }
 
     private errorMessage(): void {
-        this.socket.on(EventMessage.MESSAGE_ERROR, (message: string) => {
+        this.getSocket().on(EventMessage.MESSAGE_ERROR, (message: string) => {
             console.error(EventMessage.MESSAGE_ERROR, message);
         })
     }
 
     private disconnectServer(): void {
-        this.socket.on(EventMessage.CONNECT_ERROR, () => {
+        this.getSocket().on(EventMessage.CONNECT_ERROR, () => {
             this.GameManager.switchToDisconnectedScene();
         });
 
-        this.socket.on(EventMessage.RECONNECT, () => {
+        this.getSocket().on(EventMessage.RECONNECT, () => {
             this.connectSocketServer();
+            if (this.lastPositionShared === null) {
+                throw new Error('No last position shared found while reconnecting');
+            }
             this.GameManager.reconnectToGameScene(this.lastPositionShared);
         });
     }
 
     disconnectMessage(callback: Function): void {
-        this.socket.on(EventMessage.WEBRTC_DISCONNECT, callback);
+        this.getSocket().on(EventMessage.WEBRTC_DISCONNECT, callback);
     }
 }
