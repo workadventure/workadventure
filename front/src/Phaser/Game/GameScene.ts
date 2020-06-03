@@ -81,21 +81,16 @@ export class GameScene extends Phaser.Scene {
     preload(): void {
         this.GameManager.setCurrentGameScene(this);
         this.load.on('filecomplete-tilemapJSON-'+this.MapKey, (key: string, type: string, data: any) => {
-            // Triggered when the map is loaded
-            // Load tiles attached to the map recursively
-            this.map = data.data;
-            let url = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf('/'));
-            this.map.tilesets.forEach((tileset) => {
-                if (typeof tileset.name === 'undefined' || typeof tileset.image === 'undefined') {
-                    console.warn("Don't know how to handle tileset ", tileset)
-                    return;
-                }
-                //TODO strategy to add access token
-                this.load.image(tileset.name, `${url}/${tileset.image}`);
-            })
+            this.onMapLoad(data);
         });
         //TODO strategy to add access token
         this.load.tilemapTiledJSON(this.MapKey, this.MapUrlFile);
+        // If the map has already been loaded as part of another GameScene, the "on load" event will not be triggered.
+        // In this case, we check in the cache to see if the map is here and trigger the event manually.
+        if (this.cache.tilemap.exists(this.MapKey)) {
+            let data = this.cache.tilemap.get(this.MapKey);
+            this.onMapLoad(data);
+        }
 
         //add player png
         PLAYER_RESOURCES.forEach((playerResource: any) => {
@@ -107,6 +102,21 @@ export class GameScene extends Phaser.Scene {
         });
 
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
+    }
+
+    private onMapLoad(data: any): void {
+        // Triggered when the map is loaded
+        // Load tiles attached to the map recursively
+        this.map = data.data;
+        let url = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf('/'));
+        this.map.tilesets.forEach((tileset) => {
+            if (typeof tileset.name === 'undefined' || typeof tileset.image === 'undefined') {
+                console.warn("Don't know how to handle tileset ", tileset)
+                return;
+            }
+            //TODO strategy to add access token
+            this.load.image(tileset.name, `${url}/${tileset.image}`);
+        })
     }
 
     //hook initialisation
@@ -397,6 +407,8 @@ export class GameScene extends Phaser.Scene {
 
         let nextSceneKey = this.checkToExit();
         if(nextSceneKey){
+            // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
+            this.scene.remove(this.scene.key);
             this.scene.start(nextSceneKey.key);
         }
     }
@@ -526,9 +538,5 @@ export class GameScene extends Phaser.Scene {
         let startPos = mapUrlStart.indexOf('://')+3;
         let endPos = mapUrlStart.indexOf(".json");
         return mapUrlStart.substring(startPos, endPos);
-
-
-        let tab = mapUrlStart.split("/");
-        return tab[tab.length -1].substr(0, tab[tab.length -1].indexOf(".json"));
     }
 }
