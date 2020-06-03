@@ -232,20 +232,25 @@ export class SimplePeer {
     private addMedia (userId : any = null) {
         try {
             let transceiver : any = null;
-            if(!this.MediaManager.localStream){
+            let localStream: MediaStream|null = this.MediaManager.localStream;
+            let peer = this.PeerConnectionArray.get(userId);
+            if(localStream === null) {
                 //send fake signal
-                if(!this.PeerConnectionArray.has(userId)){
+                if(peer === undefined){
                     return;
                 }
-                this.PeerConnectionArray.get(userId).write(new Buffer(JSON.stringify({
+                peer.write(new Buffer(JSON.stringify({
                     type: "stream",
                     stream: null
                 })));
                 return;
             }
-            this.MediaManager.localStream.getTracks().forEach(
-                transceiver = (track: MediaStreamTrack) => this.PeerConnectionArray.get(userId).addTrack(track, this.MediaManager.localStream)
-            )
+            if (peer === undefined) {
+                throw new Error('While adding media, cannot find user with ID '+userId);
+            }
+            for (const track of localStream.getTracks()) {
+                peer.addTrack(track, localStream);
+            }
         }catch (e) {
             console.error(`addMedia => addMedia => ${userId}`, e);
         }

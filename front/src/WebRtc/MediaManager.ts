@@ -248,7 +248,7 @@ export class MediaManager {
     }
 
     private getElementByIdOrFail<T extends HTMLElement>(id: string): T {
-        let elem = document.getElementById("activeCam");
+        let elem = document.getElementById(id);
         if (elem === null) {
             throw new Error("Cannot find HTML element with id '"+id+"'");
         }
