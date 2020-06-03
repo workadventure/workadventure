@@ -31,6 +31,7 @@ services:
   back:
     image: thecodingmachine/nodejs:12
     command: yarn dev
+    #command: yarn run profile
     environment:
       STARTUP_COMMAND_1: yarn install
       SECRET_KEY: yourSecretKey
