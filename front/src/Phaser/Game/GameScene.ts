@@ -30,15 +30,15 @@ export class GameScene extends Phaser.Scene {
     CurrentPlayer: CurrentGamerInterface;
     MapPlayers : Phaser.Physics.Arcade.Group;
     MapPlayersByKey : Map<string, GamerInterface> = new Map<string, GamerInterface>();
-    Map: Phaser.Tilemaps.Tilemap;
+    Map: Phaser.Tilemaps.Tilemap|null = null;
     Layers : Array<Phaser.Tilemaps.StaticTilemapLayer>;
     Objects : Array<Phaser.Physics.Arcade.Sprite>;
-    map: ITiledMap;
+    mapFile: ITiledMap|null;
     groups: Map<string, Sprite>;
     startX = 704;// 22 case
     startY = 32; // 1 case
     circleTexture: CanvasTexture;
-    initPosition: PositionInterface;
+    initPosition: PositionInterface|null = null;
     private playersPositionInterpolator = new PlayersPositionInterpolator();
 
     MapKey: string;
@@ -107,9 +107,9 @@ export class GameScene extends Phaser.Scene {
     private onMapLoad(data: any): void {
         // Triggered when the map is loaded
         // Load tiles attached to the map recursively
-        this.map = data.data;
+        this.mapFile = data.data;
         let url = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf('/'));
-        this.map.tilesets.forEach((tileset) => {
+        this.mapFile.tilesets.forEach((tileset) => {
             if (typeof tileset.name === 'undefined' || typeof tileset.image === 'undefined') {
                 console.warn("Don't know how to handle tileset ", tileset)
                 return;
@@ -128,7 +128,7 @@ export class GameScene extends Phaser.Scene {
     create(): void {
         //initalise map
         this.Map = this.add.tilemap(this.MapKey);
-        this.map.tilesets.forEach((tileset: ITiledTileSet) => {
+        this.mapFile.tilesets.forEach((tileset: ITiledTileSet) => {
             this.Terrains.push(this.Map.addTilesetImage(tileset.name, tileset.name));
         });
 
@@ -138,12 +138,12 @@ export class GameScene extends Phaser.Scene {
         //add layer on map
         this.Layers = new Array<Phaser.Tilemaps.StaticTilemapLayer>();
         let depth = -2;
-        this.map.layers.forEach((layer : ITiledMapLayer) => {
+        this.mapFile.layers.forEach((layer : ITiledMapLayer) => {
             if (layer.type === 'tilelayer') {
                 this.addLayer(this.Map.createStaticLayer(layer.name, this.Terrains, 0, 0).setDepth(depth));
             }
             if (layer.type === 'tilelayer' && this.getExitSceneUrl(layer) !== undefined) {
-                this.loadNextGame(layer, this.map.width, this.map.tilewidth, this.map.tileheight);
+                this.loadNextGame(layer, this.mapFile.width, this.mapFile.tilewidth, this.mapFile.tileheight);
             }
             if (layer.type === 'tilelayer' && layer.name === "start") {
                 let startPosition = this.startUser(layer);
@@ -265,7 +265,7 @@ export class GameScene extends Phaser.Scene {
      * @param layer
      */
     private startUser(layer: ITiledMapLayer): PositionInterface {
-        if (this.initPosition !== undefined) {
+        if (this.initPosition !== null) {
             this.startX = this.initPosition.x;
             this.startY = this.initPosition.y;
             return {
