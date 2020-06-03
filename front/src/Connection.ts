@@ -112,7 +112,7 @@ export interface ConnectionInterface {
     sharePosition(x: number, y: number, direction: string, moving: boolean): void;
 
     /*webrtc*/
-    sendWebrtcSignal(signal: any, roomId: string, userId?: string, receiverId?: string): void;
+    sendWebrtcSignal(signal: any, roomId: string, userId?: string|null, receiverId?: string): void;
 
     receiveWebrtcSignal(callBack: Function): void;
 
@@ -268,7 +268,7 @@ export class Connection implements ConnectionInterface {
         })
     }
 
-    sendWebrtcSignal(signal: any, roomId: string, userId? : string, receiverId? : string) {
+    sendWebrtcSignal(signal: any, roomId: string, userId? : string|null, receiverId? : string) {
         return this.getSocket().emit(EventMessage.WEBRTC_SIGNAL, {
             userId: userId ? userId : this.userId,
             receiverId: receiverId ? receiverId : this.userId,

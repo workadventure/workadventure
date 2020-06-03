@@ -9,7 +9,7 @@ import {
     Point,
     PointInterface
 } from "../../Connection";
-import {SimplePeerInterface, SimplePeer} from "../../WebRtc/SimplePeer";
+import {SimplePeer} from "../../WebRtc/SimplePeer";
 import {AddPlayerInterface} from "./AddPlayerInterface";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
 
@@ -35,7 +35,7 @@ export class GameManager {
     private ConnectionInstance: Connection;
     private currentGameScene: GameScene;
     private playerName: string;
-    SimplePeer : SimplePeerInterface;
+    SimplePeer : SimplePeer;
     private characterUserSelected: string;
 
     constructor() {

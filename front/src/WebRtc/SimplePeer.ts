@@ -1,21 +1,21 @@
 import {ConnectionInterface} from "../Connection";
 import {MediaManager} from "./MediaManager";
-let Peer = require('simple-peer');
+import * as SimplePeerNamespace from "simple-peer";
+let Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
-class UserSimplePear{
+class UserSimplePeer{
     userId: string;
     name?: string;
     initiator?: boolean;
 }
-export class SimplePeerInterface {}
-export class SimplePeer implements SimplePeerInterface{
+export class SimplePeer {
     private Connection: ConnectionInterface;
     private WebRtcRoomId: string;
-    private Users: Array<UserSimplePear> = new Array<UserSimplePear>();
+    private Users: Array<UserSimplePeer> = new Array<UserSimplePeer>();
 
     private MediaManager: MediaManager;
 
-    private PeerConnectionArray: Map<string, any> = new Map<string, any>();
+    private PeerConnectionArray: Map<string, SimplePeerNamespace.Instance> = new Map<string, SimplePeerNamespace.Instance>();
 
     constructor(Connection: ConnectionInterface, WebRtcRoomId: string = "test-webrtc") {
         this.Connection = Connection;
@@ -66,7 +66,7 @@ export class SimplePeer implements SimplePeerInterface{
      * server has two person connected, start the meet
      */
     private startWebRtc() {
-        this.Users.forEach((user: UserSimplePear) => {
+        this.Users.forEach((user: UserSimplePeer) => {
             //if it's not an initiator, peer connection will be created when gamer will receive offer signal
             if(!user.initiator){
                 return;
@@ -78,14 +78,14 @@ export class SimplePeer implements SimplePeerInterface{
     /**
      * create peer connection to bind users
      */
-    private createPeerConnection(user : UserSimplePear) {
+    private createPeerConnection(user : UserSimplePeer) {
         if(this.PeerConnectionArray.has(user.userId)) {
             return;
         }
 
         let name = user.name;
         if(!name){
-            let userSearch = this.Users.find((userSearch: UserSimplePear) => userSearch.userId === user.userId);
+            let userSearch = this.Users.find((userSearch: UserSimplePeer) => userSearch.userId === user.userId);
             if(userSearch) {
                 name = userSearch.name;
             }
@@ -112,11 +112,11 @@ export class SimplePeer implements SimplePeerInterface{
         this.PeerConnectionArray.set(user.userId, peer);
 
         //start listen signal for the peer connection
-        this.PeerConnectionArray.get(user.userId).on('signal', (data: any) => {
+        peer.on('signal', (data: any) => {
             this.sendWebrtcSignal(data, user.userId);
         });
 
-        this.PeerConnectionArray.get(user.userId).on('stream', (stream: MediaStream) => {
+        peer.on('stream', (stream: MediaStream) => {
             let videoActive = false;
             let microphoneActive = false;
             stream.getTracks().forEach((track :  MediaStreamTrack) => {
@@ -141,23 +141,23 @@ export class SimplePeer implements SimplePeerInterface{
             this.stream(user.userId, stream);
         });
 
-        /*this.PeerConnectionArray.get(user.userId).on('track', (track: MediaStreamTrack, stream: MediaStream) => {
+        /*peer.on('track', (track: MediaStreamTrack, stream: MediaStream) => {
             this.stream(user.userId, stream);
         });*/
 
-        this.PeerConnectionArray.get(user.userId).on('close', () => {
+        peer.on('close', () => {
             this.closeConnection(user.userId);
         });
 
-        this.PeerConnectionArray.get(user.userId).on('error', (err: any) => {
+        peer.on('error', (err: any) => {
             console.error(`error => ${user.userId} => ${err.code}`, err);
         });
 
-        this.PeerConnectionArray.get(user.userId).on('connect', () => {
+        peer.on('connect', () => {
             console.info(`connect => ${user.userId}`);
         });
 
-        this.PeerConnectionArray.get(user.userId).on('data',  (chunk: Buffer) => {
+        peer.on('data',  (chunk: Buffer) => {
             let data = JSON.parse(chunk.toString('utf8'));
             if(data.type === "stream"){
                 this.stream(user.userId, data.stream);
@@ -174,7 +174,7 @@ export class SimplePeer implements SimplePeerInterface{
                 return;
             }
             // @ts-ignore
-            this.PeerConnectionArray.get(userId).destroy();
+            this.PeerConnectionArray.get(userId)?.destroy();
             this.PeerConnectionArray.delete(userId)
         } catch (err) {
             console.error("closeConnection", err)
@@ -200,7 +200,12 @@ export class SimplePeer implements SimplePeerInterface{
             if(data.signal.type === "offer"){
                 this.createPeerConnection(data);
             }
-            this.PeerConnectionArray.get(data.userId).signal(data.signal);
+            let peer = this.PeerConnectionArray.get(data.userId);
+            if (peer !== undefined) {
+                peer.signal(data.signal);
+            } else {
+                console.error('Could not find peer whose ID is "'+data.userId+'" in PeerConnectionArray');
+            }
         } catch (e) {
             console.error(`receiveWebrtcSignal => ${data.userId}`, e);
         }
@@ -247,7 +252,7 @@ export class SimplePeer implements SimplePeerInterface{
     }
 
     updatedLocalStream(){
-        this.Users.forEach((user: UserSimplePear) => {
+        this.Users.forEach((user: UserSimplePeer) => {
             this.addMedia(user.userId);
         })
     }
