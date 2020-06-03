@@ -136,7 +136,9 @@ export class GameScene extends Phaser.Scene {
                 this.loadNextGame(layer, this.map.width, this.map.tilewidth, this.map.tileheight);
             }
             if (layer.type === 'tilelayer' && layer.name === "start") {
-                this.startUser(layer);
+                let startPosition = this.startUser(layer);
+                this.startX = startPosition.x;
+                this.startY = startPosition.y;
             }
             if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
                 depth = 10000;
@@ -252,14 +254,18 @@ export class GameScene extends Phaser.Scene {
     /**
      * @param layer
      */
-    private startUser(layer: ITiledMapLayer): void {
+    private startUser(layer: ITiledMapLayer): PositionInterface {
         if (this.initPosition !== undefined) {
             this.startX = this.initPosition.x;
             this.startY = this.initPosition.y;
-            return;
+            return {
+                x: this.initPosition.x,
+                y: this.initPosition.y
+            };
         }
 
         let tiles : any = layer.data;
+        let possibleStartPositions : PositionInterface[]  = [];
         tiles.forEach((objectKey : number, key: number) => {
             if(objectKey === 0){
                 return;
@@ -267,9 +273,18 @@ export class GameScene extends Phaser.Scene {
             let y = Math.floor(key / layer.width);
             let x = key % layer.width;
 
-            this.startX = (x * 32);
-            this.startY = (y * 32);
+            possibleStartPositions.push({x: x*32, y: y*32});
         });
+        // Get a value at random amongst allowed values
+        if (possibleStartPositions.length === 0) {
+            console.warn('The start layer "'+layer.name+'" for this map is empty.');
+            return {
+                x: 0,
+                y: 0
+            };
+        }
+        // Choose one of the available start positions at random amongst the list of available start positions.
+        return possibleStartPositions[Math.floor(Math.random() * possibleStartPositions.length)];
     }
 
     //todo: in a dedicated class/function?
