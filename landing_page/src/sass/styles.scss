@@ -124,16 +124,19 @@ header {
     &.contribute {
         background-image: url('../images/btn-bg-2.png');
     }
+    &.play {
+        background-image: url('../images/btn-bg-3.png');
+    }
     &.start {
-        padding-left: 55px;
+        /*padding-left: 55px;*/
         &:before {
-            content: "";
+            /*content: "";
             position: absolute;
             background: url('../images/playicon.png') no-repeat;
             height: 20px;
             width: 21px;
             left: 36px;
-            top: 23px;
+            top: 23px;*/
         }
     }
     &.light{
@@ -184,13 +187,13 @@ img{
     }
 
     &.how-to{
-        padding: 175px 0;
+        padding: 100px 0;
         background: url('../images/bg-briques.jpg') repeat-x bottom;
         .image-item{
             height: 100%;
             margin: 0 auto;
             padding: 20px;
-            transition: all .25s cubic-bezier(0.000, -0.600, 1.000, 1.650); /* custom */
+            /*transition: all .25s cubic-bezier(0.000, -0.600, 1.000, 1.650);
             &:hover {
                 transform: scale(1.1);
                 .step-image {
@@ -218,7 +221,7 @@ img{
                     z-index: 2;
                     position: relative;
                 }
-            }
+            }*/
             h2{
                 padding: 1rem 0;
                 margin: 0;

@@ -13,10 +13,10 @@
     "file-loader": "^3.0.1",
     "mini-css-extract-plugin": "^0.5.0",
     "postcss-loader": "^3.0.0",
-    "sass": "^1.17.2",
+    "sass": "^1.26.7",
     "sass-loader": "^7.1.0",
     "webpack": "^4.29.6",
-    "webpack-cli": "^3.2.3"
+    "webpack-cli": "^3.3.11"
   },
   "dependencies": {
     "bootstrap": "^4.5.0",
