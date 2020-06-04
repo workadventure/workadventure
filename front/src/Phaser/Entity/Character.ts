@@ -24,14 +24,31 @@ export const PLAYER_RESOURCES: Array<any> = [
     {name: "Female8", img: "resources/characters/pipoya/Female 16-4.png"/*, x: 128, y: 128*/}
 ];
 
-export class PlayableCharacter extends Phaser.Physics.Arcade.Sprite {
+interface AnimationData {
+    key: string;
+    frameRate: number;
+    repeat: number;
+    frameModel: string; //todo use an enum
+    frameStart: number;
+    frameEnd: number;
+}
+
+export abstract class Character extends Phaser.Physics.Arcade.Sprite {
     private bubble: SpeechBubble|null = null;
     private readonly playerName: BitmapText;
     public PlayerValue: string;
     public PlayerTexture: string;
 
 
-    constructor(scene: Phaser.Scene, x: number, y: number, texture: string, name: string, frame?: string | number) {
+    constructor(scene: Phaser.Scene,
+                x: number,
+                y: number,
+                texture: string,
+                name: string,
+                direction: string,
+                moving: boolean,
+                frame?: string | number
+    ) {
         super(scene, x, y, texture, frame);
 
         this.PlayerValue = name;
@@ -51,6 +68,64 @@ export class PlayableCharacter extends Phaser.Physics.Arcade.Sprite {
         this.setDepth(-1);
 
         this.scene.events.on('postupdate', this.postupdate.bind(this));
+
+        this.initAnimation();
+        this.playAnimation(direction, moving);
+    }
+
+    private initAnimation(): void {
+        this.getPlayerAnimations(this.PlayerTexture).forEach(d => {
+            this.scene.anims.create({
+                key: d.key,
+                frames: this.scene.anims.generateFrameNumbers(d.frameModel, {start: d.frameStart, end: d.frameEnd}),
+                frameRate: d.frameRate,
+                repeat: d.repeat
+            });
+        })
+    }
+
+    private getPlayerAnimations(name: string): AnimationData[] {
+        return [{
+            key: `${name}-${PlayerAnimationNames.WalkDown}`,
+            frameModel: name,
+            frameStart: 0,
+            frameEnd: 2,
+            frameRate: 10,
+            repeat: -1
+        }, {
+            key: `${name}-${PlayerAnimationNames.WalkLeft}`,
+            frameModel: name,
+            frameStart: 3,
+            frameEnd: 5,
+            frameRate: 10,
+            repeat: -1
+        }, {
+            key: `${name}-${PlayerAnimationNames.WalkRight}`,
+            frameModel: name,
+            frameStart: 6,
+            frameEnd: 8,
+            frameRate: 10,
+            repeat: -1
+        }, {
+            key: `${name}-${PlayerAnimationNames.WalkUp}`,
+            frameModel: name,
+            frameStart: 9,
+            frameEnd: 11,
+            frameRate: 10,
+            repeat: -1
+        }];
+    }
+
+    protected playAnimation(direction : string, moving: boolean): void {
+        if (moving && (!this.anims.currentAnim || this.anims.currentAnim.key !== direction)) {
+            this.play(this.PlayerTexture+'-'+direction, true);
+        } else if (!moving) {
+            /*if (this.anims.currentAnim) {
+                this.anims.stop();
+            }*/
+            this.play(this.PlayerTexture+'-'+direction, true);
+            this.stop();
+        }
     }
 
     move(x: number, y: number) {

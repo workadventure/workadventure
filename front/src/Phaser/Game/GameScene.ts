@@ -4,10 +4,10 @@ import {
     MessageUserMovedInterface,
     MessageUserPositionInterface, PointInterface, PositionInterface
 } from "../../Connection";
-import {CurrentGamerInterface, GamerInterface, hasMovedEventName, Player} from "../Player/Player";
+import {CurrentGamerInterface, hasMovedEventName, Player} from "../Player/Player";
 import { DEBUG_MODE, ZOOM_LEVEL, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
 import {ITiledMap, ITiledMapLayer, ITiledTileSet} from "../Map/ITiledMap";
-import {PLAYER_RESOURCES} from "../Entity/PlayableCharacter";
+import {PLAYER_RESOURCES} from "../Entity/Character";
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
@@ -15,6 +15,7 @@ import {AddPlayerInterface} from "./AddPlayerInterface";
 import {PlayerAnimationNames} from "../Player/Animation";
 import {PlayerMovement} from "./PlayerMovement";
 import {PlayersPositionInterpolator} from "./PlayersPositionInterpolator";
+import {RemotePlayer} from "../Entity/RemotePlayer";
 
 export enum Textures {
     Player = "male1"
@@ -29,11 +30,11 @@ export class GameScene extends Phaser.Scene {
     Terrains : Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer: CurrentGamerInterface;
     MapPlayers : Phaser.Physics.Arcade.Group;
-    MapPlayersByKey : Map<string, GamerInterface> = new Map<string, GamerInterface>();
+    MapPlayersByKey : Map<string, RemotePlayer> = new Map<string, RemotePlayer>();
     Map: Phaser.Tilemaps.Tilemap;
     Layers : Array<Phaser.Tilemaps.StaticTilemapLayer>;
     Objects : Array<Phaser.Physics.Arcade.Sprite>;
-    mapFile: ITiledMap|null;
+    mapFile: ITiledMap;
     groups: Map<string, Sprite>;
     startX = 704;// 22 case
     startY = 32; // 1 case
@@ -198,7 +199,7 @@ export class GameScene extends Phaser.Scene {
             // FIXME: entry should be dictated by a property passed to init()
             path += '#'+url.hash;
         }
-        window.history.pushState({}, null, path);
+        window.history.pushState({}, 'WorkAdventure', path);
     }
 
     private getExitSceneUrl(layer: ITiledMapLayer): string|undefined {
@@ -234,6 +235,9 @@ export class GameScene extends Phaser.Scene {
      */
     private loadNextGame(layer: ITiledMapLayer, mapWidth: number, tileWidth: number, tileHeight: number){
         let exitSceneUrl = this.getExitSceneUrl(layer);
+        if (exitSceneUrl === undefined) {
+            throw new Error('Layer is not an exit scene layer.');
+        }
         let instance = this.getExitSceneInstance(layer);
         if (instance === undefined) {
             instance = this.instance;
@@ -340,7 +344,6 @@ export class GameScene extends Phaser.Scene {
         //initialise player
         //TODO create animation moving between exit and start
         this.CurrentPlayer = new Player(
-            null, // The current player has no id (because the id can change if connection is lost and we should check that id using the GameManager.)
             this,
             this.startX,
             this.startY,
@@ -415,7 +418,7 @@ export class GameScene extends Phaser.Scene {
         // Let's move all users
         let updatedPlayersPositions = this.playersPositionInterpolator.getUpdatedPositions(time);
         updatedPlayersPositions.forEach((moveEvent: HasMovedEvent, userId: string) => {
-            let player : GamerInterface | undefined = this.MapPlayersByKey.get(userId);
+            let player : RemotePlayer | undefined = this.MapPlayersByKey.get(userId);
             if (player === undefined) {
                 throw new Error('Cannot find player with ID "' + userId +'"');
             }
@@ -452,11 +455,11 @@ export class GameScene extends Phaser.Scene {
         let currentPlayerId = this.GameManager.getPlayerId();
 
         // clean map
-        this.MapPlayersByKey.forEach((player: GamerInterface) => {
+        this.MapPlayersByKey.forEach((player: RemotePlayer) => {
             player.destroy();
             this.MapPlayers.remove(player);
         });
-        this.MapPlayersByKey = new Map<string, GamerInterface>();
+        this.MapPlayersByKey = new Map<string, RemotePlayer>();
 
         // load map
         usersPosition.forEach((userPosition : MessageUserPositionInterface) => {
@@ -480,7 +483,7 @@ export class GameScene extends Phaser.Scene {
             return;
         }
         //initialise player
-        let player = new Player(
+        let player = new RemotePlayer(
             addPlayerData.userId,
             this,
             addPlayerData.position.x,
@@ -514,7 +517,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     updatePlayerPosition(message: MessageUserMovedInterface): void {
-        let player : GamerInterface | undefined = this.MapPlayersByKey.get(message.userId);
+        let player : RemotePlayer | undefined = this.MapPlayersByKey.get(message.userId);
         if (player === undefined) {
             throw new Error('Cannot find player with ID "' + message.userId +'"');
         }

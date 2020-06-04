@@ -139,7 +139,7 @@ export class GameManager {
         return this.playerName;
     }
 
-    getPlayerId(): string {
+    getPlayerId(): string|null {
         return this.ConnectionInstance.userId;
     }
 

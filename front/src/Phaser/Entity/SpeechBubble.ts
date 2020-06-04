@@ -1,5 +1,5 @@
 import Scene = Phaser.Scene;
-import {PlayableCharacter} from "./PlayableCharacter";
+import {Character} from "./Character";
 
 export class SpeechBubble {
     private bubble: Phaser.GameObjects.Graphics;
@@ -11,7 +11,7 @@ export class SpeechBubble {
      * @param player
      * @param text
      */
-    constructor(scene: Scene, player: PlayableCharacter, text: string = "") {
+    constructor(scene: Scene, player: Character, text: string = "") {
 
         let bubbleHeight = 50;
         let bubblePadding = 10;
