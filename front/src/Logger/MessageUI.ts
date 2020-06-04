@@ -3,18 +3,18 @@ export class MessageUI {
     static warningMessage(text: string){
         this.removeMessage();
         let body = document.getElementById("body");
-        body.insertAdjacentHTML('afterbegin', `
+        body?.insertAdjacentHTML('afterbegin', `
                 <div id="message-reconnect" class="message-info warning">
                     ${text}
                 </div>
          `);
     }
 
-    static removeMessage(id : string = null) {
+    static removeMessage(id : string|null = null) {
         if(!id){
             let messages = document.getElementsByClassName("message-info");
             for (let i = 0; i < messages.length; i++){
-                messages.item(i).remove();
+                messages.item(i)?.remove();
             }
             return;
         }

@@ -9,7 +9,7 @@ import {
     Point,
     PointInterface
 } from "../../Connection";
-import {SimplePeerInterface, SimplePeer} from "../../WebRtc/SimplePeer";
+import {SimplePeer} from "../../WebRtc/SimplePeer";
 import {AddPlayerInterface} from "./AddPlayerInterface";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
 
@@ -35,7 +35,7 @@ export class GameManager {
     private ConnectionInstance: Connection;
     private currentGameScene: GameScene;
     private playerName: string;
-    SimplePeer : SimplePeerInterface;
+    SimplePeer : SimplePeer;
     private characterUserSelected: string;
 
     constructor() {
@@ -139,7 +139,7 @@ export class GameManager {
         return this.playerName;
     }
 
-    getPlayerId(): string {
+    getPlayerId(): string|null {
         return this.ConnectionInstance.userId;
     }
 
@@ -155,9 +155,8 @@ export class GameManager {
         let sceneKey = GameScene.getMapKeyByUrl(mapUrl);
 
         let gameIndex = scene.getIndex(sceneKey);
-        let game : Phaser.Scene = null;
         if(gameIndex === -1){
-            game = GameScene.createFromUrl(mapUrl, instance);
+            let game : Phaser.Scene = GameScene.createFromUrl(mapUrl, instance);
             scene.add(sceneKey, game, false);
         }
         return sceneKey;
