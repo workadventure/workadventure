@@ -47,7 +47,7 @@ services:
       STARTUP_COMMAND_2: npm run watch &
       APACHE_DOCUMENT_ROOT: dist/
     volumes:
-      - ./landing_page:/var/www/html
+      - ./website:/var/www/html
     labels:
       - "traefik.http.routers.website.rule=Host(`workadventure.localhost`)"
       - "traefik.http.services.website.loadbalancer.server.port=80"

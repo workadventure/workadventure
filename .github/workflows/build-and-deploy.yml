@@ -71,8 +71,8 @@ jobs:
       - name: "Build and push back image"
         uses: docker/build-push-action@v1
         with:
-          dockerfile: landing_page/Dockerfile
-          path: landing_page/
+          dockerfile: website/Dockerfile
+          path: website/
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-website
