@@ -9,7 +9,7 @@
     <script src="bundle.js"></script>
     <script>
         function startGame() {
-            let playUrl = window.location.protocol + "//play."+window.location.host;
+            let playUrl = window.location.protocol + "//play."+window.location.host+"/_/global/npeguin.github.io/office-map/map.json";
             window.location.assign(playUrl);
         }
     </script>
@@ -46,7 +46,7 @@
                 </div>
                 <div class="row justify-content-md-center pt-5" style="margin-top: 65px;">
                     <div class="col col-lg-3">
-                        <a class="custom-link play" target="_BLANK" href="https://workadventu.re/_/global/npeguin.github.io/office-map/map.json" title="PLAY ONLINE">
+                        <a class="custom-link play" target="_BLANK" onclick="startGame()" title="PLAY ONLINE">
                             PLAY ONLINE
                         </a>
                     </div>
