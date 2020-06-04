@@ -25,7 +25,7 @@ services:
     volumes:
       - ./front:/usr/src/app
     labels:
-      - "traefik.http.routers.front.rule=Host(`workadventure.localhost`)"
+      - "traefik.http.routers.front.rule=Host(`play.workadventure.localhost`)"
       - "traefik.http.services.front.loadbalancer.server.port=8080"
 
   back:
@@ -39,3 +39,15 @@ services:
     labels:
       - "traefik.http.routers.back.rule=Host(`api.workadventure.localhost`)"
       - "traefik.http.services.back.loadbalancer.server.port=8080"
+
+  website:
+    image: thecodingmachine/nodejs:12-apache
+    environment:
+      STARTUP_COMMAND_1: npm install
+      STARTUP_COMMAND_2: npm run watch &
+      APACHE_DOCUMENT_ROOT: dist/
+    volumes:
+      - ./website:/var/www/html
+    labels:
+      - "traefik.http.routers.website.rule=Host(`workadventure.localhost`)"
+      - "traefik.http.services.website.loadbalancer.server.port=80"

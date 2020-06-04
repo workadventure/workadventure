@@ -19,12 +19,23 @@
     "front": {
       "image": "thecodingmachine/workadventure-front:"+tag,
       "host": {
-        "url": url,
+        "url": "play."+url,
         "https": "enable"
       },
       "ports": [80],
       "env": {
         "API_URL": "https://api."+url
+      }
+    },
+    "website": {
+      "image": "thecodingmachine/workadventure-website:"+tag,
+      "host": {
+        "url": url,
+        "https": "enable"
+      },
+      "ports": [80],
+      "env": {
+        "GAME_URL": "https://play."+url
       }
     }
   },

@@ -1,0 +1,292 @@
+@import "custom";
+@import "~bootstrap/scss/bootstrap";
+@import "_choose-map";
+
+@font-face {
+    font-family: OpenSans;
+    src: url('../fonts/OpenSans-Regular.ttf');
+}
+
+@font-face {
+    font-family: '04b03';
+    font-style: normal;
+    font-weight: normal;
+    src: local('04b03'), url('../fonts/04B_03.woff') format('woff');
+}
+@font-face {
+    font-family: 'Karmatic Arcade';
+    src: url('../fonts/ka1.ttf') format('truetype');
+}
+@font-face {
+    font-family: 'VCR OSD Mono';
+    src: url('../fonts/VCR_OSD.ttf') format('truetype');
+}
+
+header {
+    background: #28A7FC url("../images/sky.jpg") no-repeat bottom;
+    background-size: 100%;
+    height: 37rem;
+    position: relative;
+    .section{
+        position: relative;
+    }
+
+    .over-image {
+        bottom: 0;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 33rem;
+        .logo{
+            margin: 1rem 0;
+        }
+        .social-links {
+            text-align: right;
+            padding-top: 36px;
+            a {
+                margin-left: 20px;
+            }
+        }
+        .title {
+            padding: 5rem 0;
+            color: black;
+            h1 {
+                font-family: 'Karmatic Arcade';
+                font-size: 44px;
+                margin-bottom: 20px;
+            }
+        }
+    }
+    .clouds {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        height: 162px;
+        overflow: hidden;
+        width: 100%;
+        z-index: 1;
+        &.clouds-2 {
+            bottom: 25px;
+            .cloud {
+                transform: translateX(50px);
+                -webkit-animation-duration: 80s;
+                opacity: .6;
+            }
+        }
+        .cloud {
+            background: url('../images/cloud.png') repeat-x;
+            height: 162px;
+            width: 4000px;
+            -webkit-animation-name: prop-600;
+            -webkit-animation-duration: 50s;
+            -webkit-animation-iteration-count: infinite;
+            -webkit-animation-direction:alternate;
+        }
+    }
+
+}
+@-webkit-keyframes prop-600 {
+    0% {
+        -webkit-transform: translateX(0px);
+    }
+    100% {
+        -webkit-transform: translateX(-400px);
+    }
+}
+.custom-link{
+    font-family: "VCR OSD Mono";
+    font-size: 18px;
+    letter-spacing: 5px;
+    color: white;
+    display: block;
+    margin: 0 auto;
+    width: 250px;
+    height: 64px;
+    background-image: url('../images/btn-bg.png');
+    background-repeat: no-repeat;
+    background-size: 100%;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -24px;
+    padding: 20px;
+    text-align: center;
+    z-index: 2;
+    transition: all .1s cubic-bezier(0.000, -0.600, 1.000, 1.650); /* custom */
+    //transition-timing-function: cubic-bezier(0.000, -0.600, 1.000, 1.650); /* custom */
+    &:hover {
+        color: white;
+        transform: translateY(-6px);
+        text-decoration: none;
+    }
+    &.contribute {
+        background-image: url('../images/btn-bg-2.png');
+    }
+    &.play {
+        background-image: url('../images/btn-bg-3.png');
+    }
+    &.start {
+        /*padding-left: 55px;*/
+        &:before {
+            /*content: "";
+            position: absolute;
+            background: url('../images/playicon.png') no-repeat;
+            height: 20px;
+            width: 21px;
+            left: 36px;
+            top: 23px;*/
+        }
+    }
+    &.light{
+        background-image: url('../images/btn-bg-light.png');
+    }
+
+    /*&::after{
+        content: "";
+        position: absolute;
+        background-size: 60%;
+        width: 100%;
+        height: 100%;
+    }*/
+}
+
+img{
+    max-width: 100%;
+}
+
+.bg-white{
+    color: #000000;
+}
+.bg-gray{
+    background-color: #3b3b3b !important;
+}
+.credits {
+    text-align: center;
+    h2{
+        padding: 1rem 0;
+        margin: 0;
+        min-height: 6rem;
+        font-family: 'Karmatic Arcade';
+        font-size: 34px;
+        margin-bottom: 20px;
+    }
+    p {
+
+    }
+}
+.section{
+    padding-top: 2rem;
+    padding-bottom: 5rem;
+
+    &.used-by{
+        img{
+            padding: 0 1rem;
+        }
+    }
+
+    &.how-to{
+        padding: 100px 0;
+        background: url('../images/bg-briques.jpg') repeat-x bottom;
+        .image-item{
+            height: 100%;
+            margin: 0 auto;
+            padding: 20px;
+            /*transition: all .25s cubic-bezier(0.000, -0.600, 1.000, 1.650);
+            &:hover {
+                transform: scale(1.1);
+                .step-image {
+                    &:after {
+                        bottom: -10px;
+                        left: 10px;
+                    }
+                }
+            }
+            .step-image {
+                position: relative;
+                &:after {
+                    transition: all .25s cubic-bezier(0.000, -0.600, 1.000, 1.650);
+                    content:"";
+                    height: 100%;
+                    width: 100%;
+                    background: #dcdcdc;
+                    position: absolute;
+                    bottom: -25px;
+                    left: 25px;
+                    background: url('../images/bg-step.png') no-repeat bottom right;
+                }
+                img {
+                    width: 100%;
+                    z-index: 2;
+                    position: relative;
+                }
+            }*/
+            h2{
+                padding: 1rem 0;
+                margin: 0;
+                min-height: 6rem;
+                font-family: 'Karmatic Arcade';
+                font-size: 22px;
+                margin-bottom: 20px;
+            }
+        }
+    }
+
+    &.used-by{
+        img{
+
+        }
+    }
+
+    &.quotes{
+        h2{
+            font-family: 'Karmatic Arcade';
+            font-size: 34px;
+            margin: 40px 0;
+        }
+
+        .quote-item{
+            padding: 1rem 0;
+            text-align: center;
+            .quote{
+                font-size: 1.5rem;
+                margin-bottom: 0.5rem;
+                letter-spacing: 2px;
+            }
+            .author{
+                font-size: 1rem;
+                letter-spacing: 0px;
+            }
+        }
+    }
+}
+.footer {
+    padding: 2rem;
+    .floppy {
+        text-align: right;
+        img {
+            float: right;
+            margin-left: 20px;
+        }
+        div {
+            float: right;
+            margin-left: 15px;
+            font-size: 16px;
+            line-height: 16px;
+            padding-top: 10px;
+            span {
+                color: grey;
+                font-size: 13px;
+            }
+        }
+    }
+}
+
+.pixel-title{
+    font-family: "Karmatic Arcade" !important;
+}
+
+h3 {
+	font-weight: 800;
+}
