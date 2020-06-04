@@ -24,8 +24,8 @@ export const PLAYER_RESOURCES: Array<any> = [
     {name: "Female8", img: "resources/characters/pipoya/Female 16-4.png"/*, x: 128, y: 128*/}
 ];
 
-export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
-    private bubble: SpeechBubble;
+export class PlayableCharacter extends Phaser.Physics.Arcade.Sprite {
+    private bubble: SpeechBubble|null = null;
     private readonly playerName: BitmapText;
     public PlayerValue: string;
     public PlayerTexture: string;
@@ -91,8 +91,10 @@ export class PlayableCaracter extends Phaser.Physics.Arcade.Sprite {
         this.bubble = new SpeechBubble(this.scene, this, text)
         //todo make the bubble destroy on player movement?
         setTimeout(() => {
-            this.bubble.destroy();
-            this.bubble = null;
+            if (this.bubble !== null) {
+                this.bubble.destroy();
+                this.bubble = null;
+            }
         }, 3000)
     }
 

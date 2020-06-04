@@ -7,7 +7,7 @@ import {
 import {CurrentGamerInterface, GamerInterface, hasMovedEventName, Player} from "../Player/Player";
 import { DEBUG_MODE, ZOOM_LEVEL, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
 import {ITiledMap, ITiledMapLayer, ITiledTileSet} from "../Map/ITiledMap";
-import {PLAYER_RESOURCES} from "../Entity/PlayableCaracter";
+import {PLAYER_RESOURCES} from "../Entity/PlayableCharacter";
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
@@ -30,7 +30,7 @@ export class GameScene extends Phaser.Scene {
     CurrentPlayer: CurrentGamerInterface;
     MapPlayers : Phaser.Physics.Arcade.Group;
     MapPlayersByKey : Map<string, GamerInterface> = new Map<string, GamerInterface>();
-    Map: Phaser.Tilemaps.Tilemap|null = null;
+    Map: Phaser.Tilemaps.Tilemap;
     Layers : Array<Phaser.Tilemaps.StaticTilemapLayer>;
     Objects : Array<Phaser.Physics.Arcade.Sprite>;
     mapFile: ITiledMap|null;
@@ -38,7 +38,7 @@ export class GameScene extends Phaser.Scene {
     startX = 704;// 22 case
     startY = 32; // 1 case
     circleTexture: CanvasTexture;
-    initPosition: PositionInterface|null = null;
+    private initPosition: PositionInterface|null = null;
     private playersPositionInterpolator = new PlayersPositionInterpolator();
 
     MapKey: string;
@@ -121,7 +121,9 @@ export class GameScene extends Phaser.Scene {
 
     //hook initialisation
     init(initData : GameSceneInitInterface) {
-        this.initPosition = initData.initPosition;
+        if (initData.initPosition !== undefined) {
+            this.initPosition = initData.initPosition;
+        }
     }
 
     //hook create scene
@@ -338,7 +340,7 @@ export class GameScene extends Phaser.Scene {
         //initialise player
         //TODO create animation moving between exit and start
         this.CurrentPlayer = new Player(
-            null, // The current player is not has no id (because the id can change if connection is lost and we should check that id using the GameManager.
+            null, // The current player has no id (because the id can change if connection is lost and we should check that id using the GameManager.)
             this,
             this.startX,
             this.startY,
@@ -503,9 +505,10 @@ export class GameScene extends Phaser.Scene {
         let player = this.MapPlayersByKey.get(userId);
         if (player === undefined) {
             console.error('Cannot find user with id ', userId);
+        } else {
+            player.destroy();
+            this.MapPlayers.remove(player);
         }
-        player.destroy();
-        this.MapPlayers.remove(player);
         this.MapPlayersByKey.delete(userId);
         this.playersPositionInterpolator.removePlayer(userId);
     }
@@ -525,8 +528,9 @@ export class GameScene extends Phaser.Scene {
     shareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface) {
         let groupId = groupPositionMessage.groupId;
 
-        if (this.groups.has(groupId)) {
-            this.groups.get(groupId).setPosition(Math.round(groupPositionMessage.position.x), Math.round(groupPositionMessage.position.y));
+        let group = this.groups.get(groupId);
+        if (group !== undefined) {
+            group.setPosition(Math.round(groupPositionMessage.position.x), Math.round(groupPositionMessage.position.y));
         } else {
             // TODO: circle radius should not be hard stored
             let sprite = new Sprite(
@@ -541,10 +545,11 @@ export class GameScene extends Phaser.Scene {
     }
 
     deleteGroup(groupId: string): void {
-        if(!this.groups.get(groupId)){
+        let group = this.groups.get(groupId);
+        if(!group){
             return;
         }
-        this.groups.get(groupId).destroy();
+        group.destroy();
         this.groups.delete(groupId);
     }
 

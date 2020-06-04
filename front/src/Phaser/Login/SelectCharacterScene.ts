@@ -3,7 +3,7 @@ import {TextField} from "../Components/TextField";
 import {ClickButton} from "../Components/ClickButton";
 import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
-import {PLAYER_RESOURCES} from "../Entity/PlayableCaracter";
+import {PLAYER_RESOURCES} from "../Entity/PlayableCharacter";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";

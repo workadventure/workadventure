@@ -1,5 +1,5 @@
 import Scene = Phaser.Scene;
-import {PlayableCaracter} from "./PlayableCaracter";
+import {PlayableCharacter} from "./PlayableCharacter";
 
 export class SpeechBubble {
     private bubble: Phaser.GameObjects.Graphics;
@@ -11,7 +11,7 @@ export class SpeechBubble {
      * @param player
      * @param text
      */
-    constructor(scene: Scene, player: PlayableCaracter, text: string = "") {
+    constructor(scene: Scene, player: PlayableCharacter, text: string = "") {
 
         let bubbleHeight = 50;
         let bubblePadding = 10;
@@ -76,13 +76,10 @@ export class SpeechBubble {
             this.content.setPosition(this.bubble.x + (bubbleWidth / 2) - (bounds.width / 2), this.bubble.y + (bubbleHeight / 2) - (bounds.height / 2));
         }
     }
-    
+
     destroy(): void {
         this.bubble.setVisible(false) //todo find a better way
         this.bubble.destroy();
-        this.bubble = null;
         this.content.destroy();
-        this.content = null;
     }
-
 }

@@ -2,7 +2,6 @@ import Map = Phaser.Structs.Map;
 import {GameScene} from "../Game/GameScene";
 
 interface UserInputManagerDatum {
-    keyCode: number;
     keyInstance: Phaser.Input.Keyboard.Key;
     event: UserInputEvent
 }
@@ -33,27 +32,26 @@ export class ActiveEventList {
 
 //this class is responsible for catching user inputs and listing all active user actions at every game tick events.
 export class UserInputManager {
-    private KeysCode: UserInputManagerDatum[] = [
-        {keyCode: Phaser.Input.Keyboard.KeyCodes.Z, event: UserInputEvent.MoveUp, keyInstance: null},
-        {keyCode: Phaser.Input.Keyboard.KeyCodes.Q, event: UserInputEvent.MoveLeft, keyInstance: null},
-        {keyCode: Phaser.Input.Keyboard.KeyCodes.S, event: UserInputEvent.MoveDown, keyInstance: null},
-        {keyCode: Phaser.Input.Keyboard.KeyCodes.D, event: UserInputEvent.MoveRight, keyInstance: null},
-
-        {keyCode: Phaser.Input.Keyboard.KeyCodes.UP, event: UserInputEvent.MoveUp, keyInstance: null},
-        {keyCode: Phaser.Input.Keyboard.KeyCodes.LEFT, event: UserInputEvent.MoveLeft, keyInstance: null},
-        {keyCode: Phaser.Input.Keyboard.KeyCodes.DOWN, event: UserInputEvent.MoveDown, keyInstance: null},
-        {keyCode: Phaser.Input.Keyboard.KeyCodes.RIGHT, event: UserInputEvent.MoveRight, keyInstance: null},
-
-        {keyCode: Phaser.Input.Keyboard.KeyCodes.SHIFT, event: UserInputEvent.SpeedUp, keyInstance: null},
-
-        {keyCode: Phaser.Input.Keyboard.KeyCodes.E, event: UserInputEvent.Interact, keyInstance: null},
-        {keyCode: Phaser.Input.Keyboard.KeyCodes.F, event: UserInputEvent.Shout, keyInstance: null},
-    ];
+    private KeysCode: UserInputManagerDatum[];
 
     constructor(Scene : GameScene) {
-        this.KeysCode.forEach(d => {
-            d.keyInstance = Scene.input.keyboard.addKey(d.keyCode);
-        });
+
+        this.KeysCode = [
+            {event: UserInputEvent.MoveUp, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z) },
+            {event: UserInputEvent.MoveLeft, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q) },
+            {event: UserInputEvent.MoveDown, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S) },
+            {event: UserInputEvent.MoveRight, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D) },
+
+            {event: UserInputEvent.MoveUp, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP) },
+            {event: UserInputEvent.MoveLeft, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT) },
+            {event: UserInputEvent.MoveDown, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN) },
+            {event: UserInputEvent.MoveRight, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT) },
+
+            {event: UserInputEvent.SpeedUp, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT) },
+
+            {event: UserInputEvent.Interact, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E) },
+            {event: UserInputEvent.Shout, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F) },
+        ];
     }
 
     getEventListForGameTick(): ActiveEventList {

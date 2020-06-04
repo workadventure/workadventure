@@ -155,9 +155,8 @@ export class GameManager {
         let sceneKey = GameScene.getMapKeyByUrl(mapUrl);
 
         let gameIndex = scene.getIndex(sceneKey);
-        let game : Phaser.Scene = null;
         if(gameIndex === -1){
-            game = GameScene.createFromUrl(mapUrl, instance);
+            let game : Phaser.Scene = GameScene.createFromUrl(mapUrl, instance);
             scene.add(sceneKey, game, false);
         }
         return sceneKey;

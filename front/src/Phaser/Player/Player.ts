@@ -2,16 +2,16 @@ import {PlayerAnimationNames} from "./Animation";
 import {GameScene, Textures} from "../Game/GameScene";
 import {MessageUserPositionInterface, PointInterface} from "../../Connection";
 import {ActiveEventList, UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
-import {PlayableCaracter} from "../Entity/PlayableCaracter";
+import {PlayableCharacter} from "../Entity/PlayableCharacter";
 
 
 export const hasMovedEventName = "hasMoved";
-export interface CurrentGamerInterface extends PlayableCaracter{
+export interface CurrentGamerInterface extends PlayableCharacter{
     moveUser(delta: number) : void;
     say(text : string) : void;
 }
 
-export interface GamerInterface extends PlayableCaracter{
+export interface GamerInterface extends PlayableCharacter{
     userId : string;
     updatePosition(position: PointInterface): void;
     say(text : string) : void;
@@ -27,7 +27,7 @@ interface AnimationData {
 }
 
 
-export class Player extends PlayableCaracter implements CurrentGamerInterface, GamerInterface {
+export class Player extends PlayableCharacter implements CurrentGamerInterface, GamerInterface {
     userId: string;
     userInputManager: UserInputManager;
     previousDirection: string;
