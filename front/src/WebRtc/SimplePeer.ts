@@ -1,13 +1,17 @@
-import {ConnectionInterface} from "../Connection";
+import {ConnectionInterface, WebRtcDisconnectMessageInterface, WebRtcStartMessageInterface} from "../Connection";
 import {MediaManager} from "./MediaManager";
 import * as SimplePeerNamespace from "simple-peer";
 let Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
-class UserSimplePeer{
+export interface UserSimplePeer{
     userId: string;
     name?: string;
     initiator?: boolean;
 }
+
+/**
+ * This class manages connections to all the peers in the same group as me.
+ */
 export class SimplePeer {
     private Connection: ConnectionInterface;
     private WebRtcRoomId: string;
@@ -40,7 +44,7 @@ export class SimplePeer {
         this.MediaManager.getCamera().then(() => {
 
             //receive message start
-            this.Connection.receiveWebrtcStart((message: any) => {
+            this.Connection.receiveWebrtcStart((message: WebRtcStartMessageInterface) => {
                 this.receiveWebrtcStart(message);
             });
 
@@ -48,22 +52,26 @@ export class SimplePeer {
             console.error("err", err);
         });
 
-        //receive signal by gemer
-        this.Connection.disconnectMessage((data: any) => {
+        this.Connection.disconnectMessage((data: WebRtcDisconnectMessageInterface): void => {
             this.closeConnection(data.userId);
         });
     }
 
-    private receiveWebrtcStart(data: any) {
+    private receiveWebrtcStart(data: WebRtcStartMessageInterface) {
         this.WebRtcRoomId = data.roomId;
         this.Users = data.clients;
+        // Note: the clients array contain the list of all clients (event the ones we are already connected to in case a user joints a group)
+        // So we can receive a request we already had before. (which will abort at the first line of createPeerConnection)
+        // TODO: refactor this to only send a message to connect to one user (rather than several users).
+        // This would be symmetrical to the way we handle disconnection.
+        //console.log('Start message', data);
 
         //start connection
         this.startWebRtc();
     }
 
     /**
-     * server has two person connected, start the meet
+     * server has two people connected, start the meet
      */
     private startWebRtc() {
         this.Users.forEach((user: UserSimplePeer) => {
@@ -83,6 +91,8 @@ export class SimplePeer {
             return;
         }
 
+        //console.log("Creating connection with peer "+user.userId);
+
         let name = user.name;
         if(!name){
             let userSearch = this.Users.find((userSearch: UserSimplePeer) => userSearch.userId === user.userId);
@@ -93,7 +103,7 @@ export class SimplePeer {
         this.MediaManager.removeActiveVideo(user.userId);
         this.MediaManager.addActiveVideo(user.userId, name);
 
-        let peer : any = new Peer({
+        let peer : SimplePeerNamespace.Instance = new Peer({
             initiator: user.initiator ? user.initiator : false,
             reconnectTimer: 10000,
             config: {
@@ -167,15 +177,25 @@ export class SimplePeer {
         this.addMedia(user.userId);
     }
 
+    /**
+     * This is triggered twice. Once by the server, and once by a remote client disconnecting
+     *
+     * @param userId
+     */
     private closeConnection(userId : string) {
         try {
             this.MediaManager.removeActiveVideo(userId);
-            if (!this.PeerConnectionArray.get(userId)) {
+            let peer = this.PeerConnectionArray.get(userId);
+            if (peer === undefined) {
+                console.warn("Tried to close connection for user "+userId+" but could not find user")
                 return;
             }
-            // @ts-ignore
-            this.PeerConnectionArray.get(userId)?.destroy();
+            // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
+            // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
+            //console.log('Closing connection with '+userId);
+            peer.destroy();
             this.PeerConnectionArray.delete(userId)
+            //console.log('Nb users in peerConnectionArray '+this.PeerConnectionArray.size);
         } catch (err) {
             console.error("closeConnection", err)
         }
@@ -216,7 +236,7 @@ export class SimplePeer {
      * @param userId
      * @param stream
      */
-    private stream(userId : any, stream: MediaStream) {
+    private stream(userId : string, stream: MediaStream) {
         if(!stream){
             this.MediaManager.disabledVideoByUserId(userId);
             this.MediaManager.disabledMicrophoneByUserId(userId);
@@ -231,7 +251,6 @@ export class SimplePeer {
      */
     private addMedia (userId : any = null) {
         try {
-            let transceiver : any = null;
             let localStream: MediaStream|null = this.MediaManager.localStream;
             let peer = this.PeerConnectionArray.get(userId);
             if(localStream === null) {
