@@ -180,14 +180,13 @@ export class SimplePeer {
 
         peer.on('data',  (chunk: Buffer) => {
             let constraint = JSON.parse(chunk.toString('utf8'));
-
             if (constraint.audio) {
                 mediaManager.enabledMicrophoneByUserId(user.userId);
             } else {
                 mediaManager.disabledMicrophoneByUserId(user.userId);
             }
 
-            if (constraint.video) {
+            if (constraint.video || constraint.screen) {
                 mediaManager.enabledVideoByUserId(user.userId);
             } else {
                 this.stream(user.userId);
@@ -295,18 +294,30 @@ export class SimplePeer {
         try {
             let localStream: MediaStream | null = mediaManager.localStream;
             let localScreenCapture: MediaStream | null = mediaManager.localScreenCapture;
-            let peer = this.PeerConnectionArray.get(userId);
-            if (peer === undefined) {
+            let PeerConnection : any = this.PeerConnectionArray.get(userId);
+            if (PeerConnection === undefined) {
                 throw new Error('While adding media, cannot find user with ID ' + userId);
             }
-            peer.write(new Buffer(JSON.stringify(mediaManager.constraintsMedia)));
+            PeerConnection.write(new Buffer(JSON.stringify(Object.assign(mediaManager.constraintsMedia, {screen: localScreenCapture !== null}))));
+
+            //remove current stream
+            try {
+                if (PeerConnection._pc) {
+                    PeerConnection._pc.getRemoteStreams().forEach((stream: MediaStream) => {
+                        stream.getTracks().forEach((track: MediaStreamTrack) => {
+                            PeerConnection.removeTrack(track, stream);
+                        });
+                    });
+                }
+            }catch (e) {}
+
             if (localScreenCapture !== null) {
                 for (const track of localScreenCapture.getTracks()) {
-                    peer.addTrack(track, localScreenCapture);
+                    PeerConnection.addTrack(track, localScreenCapture);
                 }
             } else if (localStream) {
                 for (const track of localStream.getTracks()) {
-                    peer.addTrack(track, localStream);
+                    PeerConnection.addTrack(track, localStream);
                 }
             }
         }catch (e) {
