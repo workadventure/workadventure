@@ -5,6 +5,9 @@ const videoConstraint: boolean|MediaTrackConstraints = {
     height: { ideal: 720 },
     facingMode: "user"
 };
+interface MediaServiceInterface extends MediaDevices{
+    getDisplayMedia(constrain: any) : Promise<any>;
+}
 
 type UpdatedLocalStreamCallback = (media: MediaStream) => void;
 
@@ -12,10 +15,13 @@ type UpdatedLocalStreamCallback = (media: MediaStream) => void;
 // TODO: verify that microphone event listeners are not triggered plenty of time NOW (since MediaManager is created many times!!!!)
 export class MediaManager {
     localStream: MediaStream|null = null;
+    localScreenCapture: MediaStream|null = null;
     private remoteVideo: Map<string, HTMLVideoElement> = new Map<string, HTMLVideoElement>();
     myCamVideo: HTMLVideoElement;
     cinemaClose: HTMLImageElement;
     cinema: HTMLImageElement;
+    monitorClose: HTMLImageElement;
+    monitor: HTMLImageElement;
     microphoneClose: HTMLImageElement;
     microphone: HTMLImageElement;
     webrtcInAudio: HTMLAudioElement;
@@ -55,6 +61,21 @@ export class MediaManager {
         this.cinema.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
             this.disabledCamera();
+            //update tracking
+        });
+
+        this.monitorClose = document.getElementById('monitor-close');
+        this.monitorClose.style.display = "block";
+        this.monitorClose.addEventListener('click', (e: any) => {
+            e.preventDefault();
+            this.enabledMonitor();
+            //update tracking
+        });
+        this.monitor = document.getElementById('monitor');
+        this.monitor.style.display = "none";
+        this.monitor.addEventListener('click', (e: any) => {
+            e.preventDefault();
+            this.disabledMonitor();
             //update tracking
         });
     }
@@ -124,6 +145,58 @@ export class MediaManager {
         this.getCamera().then((stream) => {
             this.triggerUpdatedLocalStreamCallbacks(stream);
         });
+    }
+
+    enabledMonitor() {
+        this.monitorClose.style.display = "none";
+        this.monitor.style.display = "block";
+        this.getScreenMedia().then((stream) => {
+            this.updatedLocalStreamCallBack(stream);
+        });
+    }
+
+    disabledMonitor() {
+        this.monitorClose.style.display = "block";
+        this.monitor.style.display = "none";
+        this.localScreenCapture?.getTracks().forEach((track: MediaStreamTrack) => {
+            track.stop();
+        });
+        this.localScreenCapture = null;
+        this.getCamera().then((stream) => {
+            this.updatedLocalStreamCallBack(stream);
+        });
+    }
+
+    //get screen
+    getScreenMedia() : Promise<MediaStream>{
+        try {
+            return this._startScreenCapture()
+                .then((stream: MediaStream) => {
+                    this.localScreenCapture = stream;
+                    return stream;
+                })
+                .catch((err: any) => {
+                    console.error("Error => getScreenMedia => " + err);
+                    throw err;
+                });
+        }catch (err) {
+            return new Promise((resolve, reject) => { // eslint-disable-line no-unused-vars
+                reject(err);
+            });
+        }
+    }
+
+    private _startScreenCapture() {
+        if ((navigator as any).getDisplayMedia) {
+            return (navigator as any).getDisplayMedia({video: true});
+        } else if ((navigator.mediaDevices as any).getDisplayMedia) {
+            return (navigator.mediaDevices as any).getDisplayMedia({video: true});
+        } else {
+            //return navigator.mediaDevices.getUserMedia(({video: {mediaSource: 'screen'}} as any));
+            return new Promise((resolve, reject) => { // eslint-disable-line no-unused-vars
+                reject("error sharing screen");
+            });
+        }
     }
 
     //get camera

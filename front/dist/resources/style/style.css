@@ -109,6 +109,10 @@ video#myCamVideo{
     transition: all .2s;
     right: 134px;
 }
+.btn-monitor{
+    transition: all .2s;
+    right: 224px;
+}
 /*.btn-call{
     transition: all .1s;
     left: 0px;
