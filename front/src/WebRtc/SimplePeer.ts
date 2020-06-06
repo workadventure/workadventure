@@ -161,9 +161,11 @@ export class SimplePeer {
 
         peer.on('error', (err: any) => {
             console.error(`error => ${user.userId} => ${err.code}`, err);
+            this.MediaManager.isError(user.userId);
         });
 
         peer.on('connect', () => {
+            this.MediaManager.isConnected(user.userId);
             console.info(`connect => ${user.userId}`);
         });
 

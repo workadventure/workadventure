@@ -143,6 +143,8 @@ export class MediaManager {
         let color = this.getColorByString(userName);
         elementRemoteVideo.insertAdjacentHTML('beforeend', `
             <div id="div-${userId}" class="video-container" style="border-color: ${color};">
+                <div class="connecting-spinner"></div>
+                <div class="rtc-error" style="display: none"></div>
                 <i style="background-color: ${color};">${userName}</i>
                 <img id="microphone-${userId}" src="resources/logos/microphone-close.svg">
                 <video id="${userId}" autoplay></video>
@@ -226,6 +228,43 @@ export class MediaManager {
             return;
         }
         element.remove();
+    }
+
+    isConnecting(userId : string): void {
+        let connectingSpinnerDiv = this.getSpinner(userId);
+        if (connectingSpinnerDiv === null) {
+            return;
+        }
+        connectingSpinnerDiv.style.display = 'block';
+    }
+
+    isConnected(userId : string): void {
+        let connectingSpinnerDiv = this.getSpinner(userId);
+        if (connectingSpinnerDiv === null) {
+            return;
+        }
+        connectingSpinnerDiv.style.display = 'none';
+    }
+
+    isError(userId : string): void {
+        let element = document.getElementById(`div-${userId}`);
+        if(!element){
+            return;
+        }
+        let errorDiv = element.getElementsByClassName('rtc-error').item(0) as HTMLDivElement|null;
+        if (errorDiv === null) {
+            return;
+        }
+        errorDiv.style.display = 'block';
+    }
+
+    private getSpinner(userId : string): HTMLDivElement|null {
+        let element = document.getElementById(`div-${userId}`);
+        if(!element){
+            return null;
+        }
+        let connnectingSpinnerDiv = element.getElementsByClassName('connecting-spinner').item(0) as HTMLDivElement|null;
+        return connnectingSpinnerDiv;
     }
 
     /**
