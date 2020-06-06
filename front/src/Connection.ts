@@ -7,6 +7,7 @@ import {SetPlayerDetailsMessage} from "./Messages/SetPlayerDetailsMessage";
 const SocketIo = require('socket.io-client');
 import Socket = SocketIOClient.Socket;
 import {PlayerAnimationNames} from "./Phaser/Player/Animation";
+import {UserSimplePeer} from "./WebRtc/SimplePeer";
 
 
 enum EventMessage{
@@ -97,6 +98,15 @@ export interface GroupCreatedUpdatedMessageInterface {
     groupId: string
 }
 
+export interface WebRtcStartMessageInterface {
+    roomId: string,
+    clients: UserSimplePeer[]
+}
+
+export interface WebRtcDisconnectMessageInterface {
+    userId: string
+}
+
 export interface ConnectionInterface {
     socket: Socket|null;
     token: string|null;
@@ -116,9 +126,9 @@ export interface ConnectionInterface {
 
     receiveWebrtcSignal(callBack: Function): void;
 
-    receiveWebrtcStart(callBack: Function): void;
+    receiveWebrtcStart(callBack: (message: WebRtcStartMessageInterface) => void): void;
 
-    disconnectMessage(callBack: Function): void;
+    disconnectMessage(callBack: (message: WebRtcDisconnectMessageInterface) => void): void;
 }
 
 export class Connection implements ConnectionInterface {
@@ -277,7 +287,7 @@ export class Connection implements ConnectionInterface {
         });
     }
 
-    receiveWebrtcStart(callback: Function) {
+    receiveWebrtcStart(callback: (message: WebRtcStartMessageInterface) => void) {
         this.getSocket().on(EventMessage.WEBRTC_START, callback);
     }
 
@@ -305,7 +315,7 @@ export class Connection implements ConnectionInterface {
         });
     }
 
-    disconnectMessage(callback: Function): void {
+    disconnectMessage(callback: (message: WebRtcDisconnectMessageInterface) => void): void {
         this.getSocket().on(EventMessage.WEBRTC_DISCONNECT, callback);
     }
 }
