@@ -231,22 +231,12 @@ export class SimplePeer {
         try {
             let localStream: MediaStream | null = this.MediaManager.localStream;
             let localScreenCapture: MediaStream | null = this.MediaManager.localScreenCapture;
-            let PeerConnection : any = this.PeerConnectionArray.get(userId);
-            if (PeerConnection === undefined) {
+            let PeerConnection = this.PeerConnectionArray.get(userId);
+
+            if (!PeerConnection || PeerConnection === undefined) {
                 throw new Error('While adding media, cannot find user with ID ' + userId);
             }
             PeerConnection.write(new Buffer(JSON.stringify(Object.assign(this.MediaManager.constraintsMedia, {screen: localScreenCapture !== null}))));
-
-            //remove current stream
-            try {
-                if (PeerConnection._pc) {
-                    PeerConnection._pc.getRemoteStreams().forEach((stream: MediaStream) => {
-                        stream.getTracks().forEach((track: MediaStreamTrack) => {
-                            PeerConnection.removeTrack(track, stream);
-                        });
-                    });
-                }
-            }catch (e) {}
 
             if (localScreenCapture !== null) {
                 for (const track of localScreenCapture.getTracks()) {
