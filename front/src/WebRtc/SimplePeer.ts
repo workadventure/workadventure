@@ -127,22 +127,11 @@ export class SimplePeer {
                     videoActive = true;
                 }
             });
-            if(microphoneActive){
-                this.MediaManager.enabledMicrophoneByUserId(user.userId);
-            }else{
-                this.MediaManager.disabledMicrophoneByUserId(user.userId);
-            }
 
-            if(videoActive){
-                this.MediaManager.enabledVideoByUserId(user.userId);
-            }else{
-                this.MediaManager.disabledVideoByUserId(user.userId);
-            }
             this.stream(user.userId, stream);
         });
 
         /*peer.on('track', (track: MediaStreamTrack, stream: MediaStream) => {
-            this.stream(user.userId, stream);
         });*/
 
         peer.on('close', () => {
@@ -158,9 +147,19 @@ export class SimplePeer {
         });
 
         peer.on('data',  (chunk: Buffer) => {
-            let data = JSON.parse(chunk.toString('utf8'));
-            if(data.type === "stream"){
-                this.stream(user.userId, data.stream);
+            let constraint = JSON.parse(chunk.toString('utf8'));
+
+            if (constraint.audio) {
+                this.MediaManager.enabledMicrophoneByUserId(user.userId);
+            } else {
+                this.MediaManager.disabledMicrophoneByUserId(user.userId);
+            }
+
+            if (constraint.video) {
+                this.MediaManager.enabledVideoByUserId(user.userId);
+            } else {
+                this.stream(user.userId);
+                this.MediaManager.disabledVideoByUserId(user.userId);
             }
         });
 
@@ -216,7 +215,7 @@ export class SimplePeer {
      * @param userId
      * @param stream
      */
-    private stream(userId : any, stream: MediaStream) {
+    private stream(userId : any, stream?: MediaStream) {
         if(!stream){
             this.MediaManager.disabledVideoByUserId(userId);
             this.MediaManager.disabledMicrophoneByUserId(userId);
@@ -231,25 +230,21 @@ export class SimplePeer {
      */
     private addMedia (userId : any = null) {
         try {
-            let transceiver : any = null;
-            let localStream: MediaStream|null = this.MediaManager.localStream;
+            let localStream: MediaStream | null = this.MediaManager.localStream;
+            let localScreenCapture: MediaStream | null = this.MediaManager.localScreenCapture;
             let peer = this.PeerConnectionArray.get(userId);
-            if(localStream === null) {
-                //send fake signal
-                if(peer === undefined){
-                    return;
-                }
-                peer.write(new Buffer(JSON.stringify({
-                    type: "stream",
-                    stream: null
-                })));
-                return;
-            }
             if (peer === undefined) {
-                throw new Error('While adding media, cannot find user with ID '+userId);
+                throw new Error('While adding media, cannot find user with ID ' + userId);
             }
-            for (const track of localStream.getTracks()) {
-                peer.addTrack(track, localStream);
+            peer.write(new Buffer(JSON.stringify(this.MediaManager.constraintsMedia)));
+            if (localScreenCapture !== null) {
+                for (const track of localScreenCapture.getTracks()) {
+                    peer.addTrack(track, localScreenCapture);
+                }
+            } else if (localStream) {
+                for (const track of localStream.getTracks()) {
+                    peer.addTrack(track, localStream);
+                }
             }
         }catch (e) {
             console.error(`addMedia => addMedia => ${userId}`, e);
