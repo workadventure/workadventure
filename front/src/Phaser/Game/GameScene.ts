@@ -21,8 +21,9 @@ export enum Textures {
     Player = "male1"
 }
 
-interface GameSceneInitInterface {
-    initPosition: PointInterface|null
+export interface GameSceneInitInterface {
+    initPosition: PointInterface|null,
+    startLayerName: string|undefined
 }
 
 export class GameScene extends Phaser.Scene {
@@ -36,8 +37,8 @@ export class GameScene extends Phaser.Scene {
     Objects : Array<Phaser.Physics.Arcade.Sprite>;
     mapFile: ITiledMap;
     groups: Map<string, Sprite>;
-    startX = 704;// 22 case
-    startY = 32; // 1 case
+    startX: number;
+    startY: number;
     circleTexture: CanvasTexture;
     private initPosition: PositionInterface|null = null;
     private playersPositionInterpolator = new PlayersPositionInterpolator();
@@ -57,6 +58,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     PositionNextScene: Array<any> = new Array<any>();
+    private startLayerName: string|undefined;
 
     static createFromUrl(mapUrlFile: string, instance: string): GameScene {
         let key = GameScene.getMapKeyByUrl(mapUrlFile);
@@ -124,6 +126,8 @@ export class GameScene extends Phaser.Scene {
     init(initData : GameSceneInitInterface) {
         if (initData.initPosition !== undefined) {
             this.initPosition = initData.initPosition;
+        } else if (initData.startLayerName !== undefined) {
+            this.startLayerName = initData.startLayerName;
         }
     }
 
@@ -141,25 +145,47 @@ export class GameScene extends Phaser.Scene {
         //add layer on map
         this.Layers = new Array<Phaser.Tilemaps.StaticTilemapLayer>();
         let depth = -2;
-        this.mapFile.layers.forEach((layer : ITiledMapLayer) => {
+        for (let layer of this.mapFile.layers) {
             if (layer.type === 'tilelayer') {
                 this.addLayer(this.Map.createStaticLayer(layer.name, this.Terrains, 0, 0).setDepth(depth));
             }
             if (layer.type === 'tilelayer' && this.getExitSceneUrl(layer) !== undefined) {
                 this.loadNextGame(layer, this.mapFile.width, this.mapFile.tilewidth, this.mapFile.tileheight);
             }
-            if (layer.type === 'tilelayer' && layer.name === "start") {
-                let startPosition = this.startUser(layer);
-                this.startX = startPosition.x;
-                this.startY = startPosition.y;
-            }
             if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
                 depth = 10000;
             }
-        });
-
+        };
         if (depth === -2) {
             throw new Error('Your map MUST contain a layer of type "objectgroup" whose name is "floorLayer" that represents the layer characters are drawn at.');
+        }
+
+        // Now, let's find the start layer
+        if (this.startLayerName) {
+            for (let layer of this.mapFile.layers) {
+                if (this.startLayerName === layer.name && layer.type === 'tilelayer' && this.isStartLayer(layer)) {
+                    let startPosition = this.startUser(layer);
+                    this.startX = startPosition.x;
+                    this.startY = startPosition.y;
+                }
+            }
+        }
+        if (this.startX === undefined) {
+            // If we have no start layer specified or if the hash passed does not exist, let's go with the default start position.
+            for (let layer of this.mapFile.layers) {
+                if (layer.type === 'tilelayer' && layer.name === "start") {
+                    let startPosition = this.startUser(layer);
+                    this.startX = startPosition.x;
+                    this.startY = startPosition.y;
+                }
+            }
+        }
+        // Still no start position? Something is wrong with the map, we need a "start" layer.
+        if (this.startX === undefined) {
+            console.warn('This map is missing a layer named "start" that contains the available default start positions.');
+            // Let's start in the middle of the map
+            this.startX = this.mapFile.width * 16;
+            this.startY = this.mapFile.height * 16;
         }
 
         //add entities
@@ -195,31 +221,30 @@ export class GameScene extends Phaser.Scene {
         // Let's alter browser history
         let url = new URL(this.MapUrlFile);
         let path = '/_/'+this.instance+'/'+url.host+url.pathname;
-        if (url.hash) {
-            // FIXME: entry should be dictated by a property passed to init()
-            path += '#'+url.hash;
+        if (this.startLayerName) {
+            path += '#'+this.startLayerName;
         }
         window.history.pushState({}, 'WorkAdventure', path);
     }
 
     private getExitSceneUrl(layer: ITiledMapLayer): string|undefined {
-        let properties : any = layer.properties;
-        if (!properties) {
-            return undefined;
-        }
-        let obj = properties.find((property:any) => property.name === "exitSceneUrl");
-        if (obj === undefined) {
-            return undefined;
-        }
-        return obj.value;
+        return this.getProperty(layer, "exitSceneUrl") as string|undefined;
     }
 
     private getExitSceneInstance(layer: ITiledMapLayer): string|undefined {
+        return this.getProperty(layer, "exitInstance") as string|undefined;
+    }
+
+    private isStartLayer(layer: ITiledMapLayer): boolean {
+        return this.getProperty(layer, "startLayer") == true;
+    }
+
+    private getProperty(layer: ITiledMapLayer, name: string): string|boolean|number|undefined {
         let properties : any = layer.properties;
         if (!properties) {
             return undefined;
         }
-        let obj = properties.find((property:any) => property.name === "exitInstance");
+        let obj = properties.find((property:any) => property.name === name);
         if (obj === undefined) {
             return undefined;
         }
