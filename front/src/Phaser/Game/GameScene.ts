@@ -272,14 +272,21 @@ export class GameScene extends Phaser.Scene {
         let absoluteExitSceneUrl = new URL(exitSceneUrl, this.MapUrlFile).href;
         let exitSceneKey = gameManager.loadMap(absoluteExitSceneUrl, this.scene, instance);
 
-        let tiles : any = layer.data;
-        tiles.forEach((objectKey : number, key: number) => {
+        let tiles : number[] = layer.data as number[];
+        for (let key=0; key < tiles.length; key++) {
+            let objectKey = tiles[key];
             if(objectKey === 0){
-                return;
+                continue;
             }
             //key + 1 because the start x = 0;
             let y : number = parseInt(((key + 1) / mapWidth).toString());
             let x : number = key - (y * mapWidth);
+
+            let hash = new URL(exitSceneUrl, this.MapUrlFile).hash;
+            if (hash) {
+                hash = hash.substr(1);
+            }
+
             //push and save switching case
             // TODO: this is not efficient. We should refactor that to enable a search by key. For instance: this.PositionNextScene[y][x] = exitSceneKey
             this.PositionNextScene.push({
@@ -287,9 +294,10 @@ export class GameScene extends Phaser.Scene {
                 yStart: (y * tileWidth),
                 xEnd: ((x +1) * tileHeight),
                 yEnd: ((y + 1) * tileHeight),
-                key: exitSceneKey
+                key: exitSceneKey,
+                hash
             })
-        });
+        };
     }
 
     /**
@@ -454,7 +462,9 @@ export class GameScene extends Phaser.Scene {
         if(nextSceneKey){
             // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
             this.scene.remove(this.scene.key);
-            this.scene.start(nextSceneKey.key);
+            this.scene.start(nextSceneKey.key, {
+                startLayerName: nextSceneKey.hash
+            });
         }
     }
 
