@@ -155,7 +155,7 @@ export class GameScene extends Phaser.Scene {
             if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
                 depth = 10000;
             }
-        };
+        }
         if (depth === -2) {
             throw new Error('Your map MUST contain a layer of type "objectgroup" whose name is "floorLayer" that represents the layer characters are drawn at.');
         }
@@ -297,7 +297,7 @@ export class GameScene extends Phaser.Scene {
                 key: exitSceneKey,
                 hash
             })
-        };
+        }
     }
 
     /**
