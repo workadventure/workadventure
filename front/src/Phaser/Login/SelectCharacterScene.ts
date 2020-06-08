@@ -4,6 +4,7 @@ import {ClickButton} from "../Components/ClickButton";
 import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
 import {PLAYER_RESOURCES} from "../Entity/Character";
+import {GameSceneInitInterface} from "../Game/GameScene";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
@@ -121,7 +122,9 @@ export class SelectCharacterScene extends Phaser.Scene {
             if (instanceAndMapUrl !== null) {
                 let [mapUrl, instance] = instanceAndMapUrl;
                 let key = gameManager.loadMap(mapUrl, this.scene, instance);
-                this.scene.start(key);
+                this.scene.start(key, {
+                    startLayerName: window.location.hash ? window.location.hash.substr(1) : undefined
+                } as GameSceneInitInterface);
                 return mapUrl;
             } else {
                 // If we do not have a map address in the URL, let's ask the server for a start map.
