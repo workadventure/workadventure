@@ -365,3 +365,33 @@ body {
 .chat-mode > div:last-child {
     flex-grow: 5;
 }
+
+/*SCREEN SHARING*/
+.active-screen-sharing video{
+    transform: scaleX(1);
+}
+.active-screen-sharing .screen-sharing-video-container video:hover{
+    width: 50%;
+}
+.active-screen-sharing .screen-sharing-video-container video{
+    position: absolute;
+    width: 25%;
+    height: auto;
+    left: 0;
+    top: 0;
+    transition: all 0.2s ease;
+}
+
+.active-screen-sharing .screen-sharing-video-container video:nth-child(1){
+    /*this is for camera of user*/
+    top: 0%;
+}
+.active-screen-sharing .screen-sharing-video-container video:nth-child(2){
+    top: 25%;
+}
+.active-screen-sharing .screen-sharing-video-container video:nth-child(3){
+    top: 50%;
+}
+.active-screen-sharing .screen-sharing-video-container video:nth-child(4) {
+    top: 75%;
+}

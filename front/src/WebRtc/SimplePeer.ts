@@ -289,14 +289,22 @@ export class SimplePeer {
      */
     private addMedia (userId : string) {
         try {
-            let localStream: MediaStream | null = mediaManager.localStream;
-            let localScreenCapture: MediaStream | null = mediaManager.localScreenCapture;
             let PeerConnection = this.PeerConnectionArray.get(userId);
-
-            if (!PeerConnection || PeerConnection === undefined) {
+            if (!PeerConnection) {
                 throw new Error('While adding media, cannot find user with ID ' + userId);
             }
-            PeerConnection.write(new Buffer(JSON.stringify(Object.assign(mediaManager.constraintsMedia, {screen: localScreenCapture !== null}))));
+
+            if(userId.indexOf("screenSharing") > -1 && mediaManager.localScreenCapture){
+                for (const track of mediaManager.localScreenCapture.getTracks()) {
+                    PeerConnection.addTrack(track, mediaManager.localScreenCapture);
+                }
+                return;
+            }
+
+            let localStream: MediaStream | null = mediaManager.localStream;
+            let localScreenCapture: MediaStream | null = mediaManager.localScreenCapture;
+
+            PeerConnection.write(new Buffer(JSON.stringify(Object.assign(this.MediaManager.constraintsMedia, {screen: localScreenCapture !== null}))));
 
             if(!localStream){
                 return;
@@ -321,15 +329,21 @@ export class SimplePeer {
         if (this.MediaManager.localScreenCapture) {
             let screenSharingUser: UserSimplePeerInterface = {
                 userId: `screenSharing-${this.Connection.userId}`,
+                name: 'screenSharing',
                 initiator: true
             };
             let PeerConnectionScreenSharing = this.createPeerConnection(screenSharingUser);
             if (!PeerConnectionScreenSharing) {
                 return;
             }
-            for (const track of this.MediaManager.localScreenCapture.getTracks()) {
-                PeerConnectionScreenSharing.addTrack(track, this.MediaManager.localScreenCapture);
+            try {
+                for (const track of this.MediaManager.localScreenCapture.getTracks()) {
+                    PeerConnectionScreenSharing.addTrack(track, this.MediaManager.localScreenCapture);
+                }
+            }catch (e) {
+                console.error("updatedScreenSharing => ", e);
             }
+            this.MediaManager.addStreamRemoteVideo(screenSharingUser.userId, this.MediaManager.localScreenCapture);
         } else {
             if (!this.PeerConnectionArray.has(`screenSharing-${this.Connection.userId}`)) {
                 return;
