@@ -11,7 +11,7 @@ interface MediaServiceInterface extends MediaDevices{
 }
 export class MediaManager {
     // @ts-ignore
-    remoteVideo: Map<string, any> = new Map<string, any>();
+    remoteVideo: Map<string, HTMLVideoElement> = new Map<string, HTMLVideoElement>();
 
     localStream: MediaStream|null = null;
     localScreenCapture: MediaStream|null = null;
@@ -228,7 +228,11 @@ export class MediaManager {
                 <video id="${userId}" autoplay></video>
             </div>
         `);
-        this.remoteVideo.set(userId, document.getElementById(userId));
+        let activeHTMLVideoElement : HTMLElement|null = document.getElementById(userId);
+        if(!activeHTMLVideoElement){
+            return;
+        }
+        this.remoteVideo.set(userId, (activeHTMLVideoElement as HTMLVideoElement));
     }
 
     /**
@@ -245,7 +249,11 @@ export class MediaManager {
                 <video id="${userId}" autoplay></video>
             </div>
         `);
-        this.remoteVideo.set(userId, document.getElementById(userId));
+        let activeHTMLVideoElement : HTMLElement|null = document.getElementById(userId);
+        if(!activeHTMLVideoElement){
+            return;
+        }
+        this.remoteVideo.set(userId, (activeHTMLVideoElement as HTMLVideoElement));
     }
 
     /**

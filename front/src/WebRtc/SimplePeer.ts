@@ -105,9 +105,11 @@ export class SimplePeer {
         }
 
         let screenSharing : boolean = name !== undefined && name.indexOf("screenSharing") > -1;
+        this.MediaManager.removeActiveVideo(user.userId);
         if(!screenSharing) {
-            this.MediaManager.removeActiveVideo(user.userId);
             this.MediaManager.addActiveVideo(user.userId, name);
+        }else{
+            this.MediaManager.addScreenSharingActiveVideo(user.userId, name);
         }
 
         let peer : SimplePeerNamespace.Instance = new Peer({
@@ -134,32 +136,6 @@ export class SimplePeer {
         });
 
         peer.on('stream', (stream: MediaStream) => {
-            if(screenSharing){
-                //add stream video on
-                return;
-            }
-
-            let videoActive = false;
-            let microphoneActive = false;
-            stream.getTracks().forEach((track :  MediaStreamTrack) => {
-                if(track.kind === "audio"){
-                    microphoneActive = true;
-                }
-                if(track.kind === "video"){
-                    videoActive = true;
-                }
-            });
-            if(microphoneActive){
-                this.MediaManager.enabledMicrophoneByUserId(user.userId);
-            }else{
-                this.MediaManager.disabledMicrophoneByUserId(user.userId);
-            }
-
-            if(videoActive){
-                this.MediaManager.enabledVideoByUserId(user.userId);
-            }else{
-                this.MediaManager.disabledVideoByUserId(user.userId);
-            }
             this.stream(user.userId, stream);
         });
 
