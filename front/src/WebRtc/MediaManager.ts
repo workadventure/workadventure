@@ -298,7 +298,11 @@ export class MediaManager {
                 <video id="${userId}" autoplay></video>
             </div>
         `);
-        this.remoteVideo.set(userId, document.getElementById(userId));
+        let activeHTMLVideoElement : HTMLElement|null = document.getElementById(userId);
+        if(!activeHTMLVideoElement){
+            return;
+        }
+        this.remoteVideo.set(userId, (activeHTMLVideoElement as HTMLVideoElement));
     }
 
     /**
