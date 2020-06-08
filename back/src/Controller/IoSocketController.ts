@@ -388,6 +388,17 @@ export class IoSocketController {
             userId: userId
         });
 
+        // Most of the time, sending a disconnect event to one of the players is enough (the player will close the connection
+        // which will be shut for the other player).
+        // However! In the rare case where the WebRTC connection is not yet established, if we close the connection on one of the player,
+        // the other player will try connecting until a timeout happens (during this time, the connection icon will be displayed for nothing).
+        // So we also send the disconnect event to the other player.
+        for (let user of group.getUsers()) {
+            Client.emit(SockerIoEvent.WEBRTC_DISCONNECT, {
+                userId: user.id
+            });
+        }
+
         //disconnect webrtc room
         if(!Client.webRtcRoomId){
             return;
