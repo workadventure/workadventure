@@ -3,7 +3,7 @@ import {MediaManager} from "./MediaManager";
 import * as SimplePeerNamespace from "simple-peer";
 let Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
-export interface UserSimplePeer{
+export interface UserSimplePeerInterface{
     userId: string;
     name?: string;
     initiator?: boolean;
@@ -15,7 +15,7 @@ export interface UserSimplePeer{
 export class SimplePeer {
     private Connection: ConnectionInterface;
     private WebRtcRoomId: string;
-    private Users: Array<UserSimplePeer> = new Array<UserSimplePeer>();
+    private Users: Array<UserSimplePeerInterface> = new Array<UserSimplePeerInterface>();
 
     private MediaManager: MediaManager;
 
@@ -24,9 +24,14 @@ export class SimplePeer {
     constructor(Connection: ConnectionInterface, WebRtcRoomId: string = "test-webrtc") {
         this.Connection = Connection;
         this.WebRtcRoomId = WebRtcRoomId;
-        this.MediaManager = new MediaManager((stream : MediaStream) => {
-            this.updatedLocalStream();
-        });
+        this.MediaManager = new MediaManager(
+            (stream: MediaStream) => {
+                this.updatedLocalStream();
+            },
+            () => {
+                this.updatedScreenSharing();
+            }
+        );
         this.initialise();
     }
 
@@ -74,7 +79,7 @@ export class SimplePeer {
      * server has two people connected, start the meet
      */
     private startWebRtc() {
-        this.Users.forEach((user: UserSimplePeer) => {
+        this.Users.forEach((user: UserSimplePeerInterface) => {
             //if it's not an initiator, peer connection will be created when gamer will receive offer signal
             if(!user.initiator){
                 return;
@@ -86,22 +91,24 @@ export class SimplePeer {
     /**
      * create peer connection to bind users
      */
-    private createPeerConnection(user : UserSimplePeer) {
+    private createPeerConnection(user : UserSimplePeerInterface) : SimplePeerNamespace.Instance | null{
         if(this.PeerConnectionArray.has(user.userId)) {
-            return;
+            return null;
         }
-
-        //console.log("Creating connection with peer "+user.userId);
 
         let name = user.name;
         if(!name){
-            let userSearch = this.Users.find((userSearch: UserSimplePeer) => userSearch.userId === user.userId);
+            let userSearch = this.Users.find((userSearch: UserSimplePeerInterface) => userSearch.userId === user.userId);
             if(userSearch) {
                 name = userSearch.name;
             }
         }
-        this.MediaManager.removeActiveVideo(user.userId);
-        this.MediaManager.addActiveVideo(user.userId, name);
+
+        let screenSharing : boolean = name !== undefined && name.indexOf("screenSharing") > -1;
+        if(!screenSharing) {
+            this.MediaManager.removeActiveVideo(user.userId);
+            this.MediaManager.addActiveVideo(user.userId, name);
+        }
 
         let peer : SimplePeerNamespace.Instance = new Peer({
             initiator: user.initiator ? user.initiator : false,
@@ -127,6 +134,11 @@ export class SimplePeer {
         });
 
         peer.on('stream', (stream: MediaStream) => {
+            if(screenSharing){
+                //add stream video on
+                return;
+            }
+
             let videoActive = false;
             let microphoneActive = false;
             stream.getTracks().forEach((track :  MediaStreamTrack) => {
@@ -183,6 +195,7 @@ export class SimplePeer {
         });
 
         this.addMedia(user.userId);
+        return peer;
     }
 
     /**
@@ -268,11 +281,10 @@ export class SimplePeer {
             }
             PeerConnection.write(new Buffer(JSON.stringify(Object.assign(this.MediaManager.constraintsMedia, {screen: localScreenCapture !== null}))));
 
-            if (localScreenCapture !== null) {
-                for (const track of localScreenCapture.getTracks()) {
-                    PeerConnection.addTrack(track, localScreenCapture);
-                }
-            } else if (localStream) {
+            if(!localStream){
+                return;
+            }
+            if (localStream) {
                 for (const track of localStream.getTracks()) {
                     PeerConnection.addTrack(track, localStream);
                 }
@@ -283,8 +295,33 @@ export class SimplePeer {
     }
 
     updatedLocalStream(){
-        this.Users.forEach((user: UserSimplePeer) => {
+        this.Users.forEach((user: UserSimplePeerInterface) => {
             this.addMedia(user.userId);
         })
+    }
+
+    updatedScreenSharing() {
+        if (this.MediaManager.localScreenCapture) {
+            let screenSharingUser: UserSimplePeerInterface = {
+                userId: `screenSharing-${this.Connection.userId}`,
+                initiator: true
+            };
+            let PeerConnectionScreenSharing = this.createPeerConnection(screenSharingUser);
+            if (!PeerConnectionScreenSharing) {
+                return;
+            }
+            for (const track of this.MediaManager.localScreenCapture.getTracks()) {
+                PeerConnectionScreenSharing.addTrack(track, this.MediaManager.localScreenCapture);
+            }
+        } else {
+            if (!this.PeerConnectionArray.has(`screenSharing-${this.Connection.userId}`)) {
+                return;
+            }
+            let PeerConnectionScreenSharing = this.PeerConnectionArray.get(`screenSharing-${this.Connection.userId}`);
+            if (!PeerConnectionScreenSharing) {
+                return;
+            }
+            PeerConnectionScreenSharing.destroy();
+        }
     }
 }

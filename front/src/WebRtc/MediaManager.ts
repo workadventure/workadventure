@@ -1,3 +1,6 @@
+import Map = Phaser.Structs.Map;
+import * as SimplePeerNamespace from "simple-peer";
+
 const videoConstraint: {width : any, height: any, facingMode : string} = {
     width: { ideal: 1280 },
     height: { ideal: 720 },
@@ -7,9 +10,11 @@ interface MediaServiceInterface extends MediaDevices{
     getDisplayMedia(constrain: any) : Promise<any>;
 }
 export class MediaManager {
+    // @ts-ignore
+    remoteVideo: Map<string, any> = new Map<string, any>();
+
     localStream: MediaStream|null = null;
     localScreenCapture: MediaStream|null = null;
-    remoteVideo: Array<any> = new Array<any>();
     myCamVideo: HTMLVideoElement;
     cinemaClose: any = null;
     cinema: any = null;
@@ -23,9 +28,11 @@ export class MediaManager {
         video: videoConstraint
     };
     updatedLocalStreamCallBack : Function;
+    updatedScreenSharingCallBack : Function;
 
-    constructor(updatedLocalStreamCallBack : Function) {
+    constructor(updatedLocalStreamCallBack : Function, updatedScreenSharingCallBack : Function) {
         this.updatedLocalStreamCallBack = updatedLocalStreamCallBack;
+        this.updatedScreenSharingCallBack = updatedScreenSharingCallBack;
 
         this.myCamVideo = this.getElementByIdOrFail<HTMLVideoElement>('myCamVideo');
         this.webrtcInAudio = this.getElementByIdOrFail<HTMLAudioElement>('audio-webrtc-in');
@@ -131,7 +138,7 @@ export class MediaManager {
         this.monitorClose.style.display = "none";
         this.monitor.style.display = "block";
         this.getScreenMedia().then((stream) => {
-            this.updatedLocalStreamCallBack(stream);
+            this.updatedScreenSharingCallBack(stream);
         });
     }
 
@@ -143,7 +150,7 @@ export class MediaManager {
         });
         this.localScreenCapture = null;
         this.getCamera().then((stream) => {
-            this.updatedLocalStreamCallBack(stream);
+            this.updatedScreenSharingCallBack(stream);
         });
     }
 
@@ -221,7 +228,24 @@ export class MediaManager {
                 <video id="${userId}" autoplay></video>
             </div>
         `);
-        this.remoteVideo[(userId as any)] = document.getElementById(userId);
+        this.remoteVideo.set(userId, document.getElementById(userId));
+    }
+
+    /**
+     *
+     * @param userId
+     */
+    addScreenSharingActiveVideo(userId : string, userName: string = ""){
+        this.webrtcInAudio.play();
+        let elementRemoteVideo = this.getElementByIdOrFail("activeScreenSharing");
+        userName = userName.toUpperCase();
+        let color = this.getColorByString(userName);
+        elementRemoteVideo.insertAdjacentHTML('beforeend', `
+            <div id="div-${userId}" class="screen-sharing-video-container" style="border-color: ${color};">
+                <video id="${userId}" autoplay></video>
+            </div>
+        `);
+        this.remoteVideo.set(userId, document.getElementById(userId));
     }
 
     /**
@@ -286,7 +310,7 @@ export class MediaManager {
      * @param stream
      */
     addStreamRemoteVideo(userId : string, stream : MediaStream){
-        this.remoteVideo[(userId as any)].srcObject = stream;
+        this.remoteVideo.get(userId).srcObject = stream;
     }
 
     /**
