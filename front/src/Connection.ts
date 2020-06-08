@@ -6,7 +6,7 @@ import {SetPlayerDetailsMessage} from "./Messages/SetPlayerDetailsMessage";
 const SocketIo = require('socket.io-client');
 import Socket = SocketIOClient.Socket;
 import {PlayerAnimationNames} from "./Phaser/Player/Animation";
-import {UserSimplePeer} from "./WebRtc/SimplePeer";
+import {UserSimplePeerInterface} from "./WebRtc/SimplePeer";
 import {SignalData} from "simple-peer";
 
 
@@ -72,7 +72,7 @@ export interface GroupCreatedUpdatedMessageInterface {
 
 export interface WebRtcStartMessageInterface {
     roomId: string,
-    clients: UserSimplePeer[]
+    clients: UserSimplePeerInterface[]
 }
 
 export interface WebRtcDisconnectMessageInterface {

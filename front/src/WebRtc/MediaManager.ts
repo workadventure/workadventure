@@ -1,3 +1,4 @@
+import * as SimplePeerNamespace from "simple-peer";
 import {DivImportance, layoutManager} from "./LayoutManager";
 
 const videoConstraint: boolean|MediaTrackConstraints = {
@@ -30,8 +31,12 @@ export class MediaManager {
         video: videoConstraint
     };
     updatedLocalStreamCallBacks : Set<UpdatedLocalStreamCallback> = new Set<UpdatedLocalStreamCallback>();
+    // TODO: updatedScreenSharingCallBack should have same signature as updatedLocalStreamCallBacks
+    updatedScreenSharingCallBack : Function;
 
-    constructor() {
+    constructor(updatedScreenSharingCallBack : Function) {
+        this.updatedScreenSharingCallBack = updatedScreenSharingCallBack;
+
         this.myCamVideo = this.getElementByIdOrFail<HTMLVideoElement>('myCamVideo');
         this.webrtcInAudio = this.getElementByIdOrFail<HTMLAudioElement>('audio-webrtc-in');
         this.webrtcInAudio.volume = 0.2;
@@ -151,7 +156,7 @@ export class MediaManager {
         this.monitorClose.style.display = "none";
         this.monitor.style.display = "block";
         this.getScreenMedia().then((stream) => {
-            this.updatedLocalStreamCallBack(stream);
+            this.updatedScreenSharingCallBack(stream);
         });
     }
 
@@ -163,7 +168,7 @@ export class MediaManager {
         });
         this.localScreenCapture = null;
         this.getCamera().then((stream) => {
-            this.updatedLocalStreamCallBack(stream);
+            this.updatedScreenSharingCallBack(stream);
         });
     }
 
@@ -276,6 +281,24 @@ export class MediaManager {
         layoutManager.add(DivImportance.Normal, userId, html);
 
         this.remoteVideo.set(userId, this.getElementByIdOrFail<HTMLVideoElement>(userId));
+    }
+
+    /**
+     *
+     * @param userId
+     */
+    addScreenSharingActiveVideo(userId : string, userName: string = ""){
+        this.webrtcInAudio.play();
+        // FIXME: switch to DisplayManager!
+        let elementRemoteVideo = this.getElementByIdOrFail("activeScreenSharing");
+        userName = userName.toUpperCase();
+        let color = this.getColorByString(userName);
+        elementRemoteVideo.insertAdjacentHTML('beforeend', `
+            <div id="div-${userId}" class="screen-sharing-video-container" style="border-color: ${color};">
+                <video id="${userId}" autoplay></video>
+            </div>
+        `);
+        this.remoteVideo.set(userId, document.getElementById(userId));
     }
 
     /**

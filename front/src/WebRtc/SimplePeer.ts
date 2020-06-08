@@ -8,7 +8,7 @@ import { mediaManager } from "./MediaManager";
 import * as SimplePeerNamespace from "simple-peer";
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
-export interface UserSimplePeer{
+export interface UserSimplePeerInterface{
     userId: string;
     name?: string;
     initiator?: boolean;
@@ -26,10 +26,11 @@ export interface PeerConnectionListener {
 export class SimplePeer {
     private Connection: Connection;
     private WebRtcRoomId: string;
-    private Users: Array<UserSimplePeer> = new Array<UserSimplePeer>();
+    private Users: Array<UserSimplePeerInterface> = new Array<UserSimplePeerInterface>();
 
     private PeerConnectionArray: Map<string, SimplePeerNamespace.Instance> = new Map<string, SimplePeerNamespace.Instance>();
     private readonly updateLocalStreamCallback: (media: MediaStream) => void;
+    private readonly updateScreenSharingCallback: (media: MediaStream) => void;
     private readonly peerConnectionListeners: Array<PeerConnectionListener> = new Array<PeerConnectionListener>();
 
     constructor(Connection: Connection, WebRtcRoomId: string = "test-webrtc") {
@@ -37,7 +38,9 @@ export class SimplePeer {
         this.WebRtcRoomId = WebRtcRoomId;
         // We need to go through this weird bound function pointer in order to be able to "free" this reference later.
         this.updateLocalStreamCallback = this.updatedLocalStream.bind(this);
+        this.updateScreenSharingCallback = this.updatedScreenSharing.bind(this);
         mediaManager.onUpdateLocalStream(this.updateLocalStreamCallback);
+        mediaManager.onUpdateScreenSharing(this.updateScreenSharingCallback);
         this.initialise();
     }
 
@@ -93,7 +96,7 @@ export class SimplePeer {
      * server has two people connected, start the meet
      */
     private startWebRtc() {
-        this.Users.forEach((user: UserSimplePeer) => {
+        this.Users.forEach((user: UserSimplePeerInterface) => {
             //if it's not an initiator, peer connection will be created when gamer will receive offer signal
             if(!user.initiator){
                 return;
@@ -105,22 +108,24 @@ export class SimplePeer {
     /**
      * create peer connection to bind users
      */
-    private createPeerConnection(user : UserSimplePeer) {
+    private createPeerConnection(user : UserSimplePeerInterface) : SimplePeerNamespace.Instance | null{
         if(this.PeerConnectionArray.has(user.userId)) {
-            return;
+            return null;
         }
-
-        //console.log("Creating connection with peer "+user.userId);
 
         let name = user.name;
         if(!name){
-            const userSearch = this.Users.find((userSearch: UserSimplePeer) => userSearch.userId === user.userId);
+            const userSearch = this.Users.find((userSearch: UserSimplePeerInterface) => userSearch.userId === user.userId);
             if(userSearch) {
                 name = userSearch.name;
             }
         }
-        mediaManager.removeActiveVideo(user.userId);
-        mediaManager.addActiveVideo(user.userId, name);
+
+        let screenSharing : boolean = name !== undefined && name.indexOf("screenSharing") > -1;
+        if(!screenSharing) {
+            mediaManager.removeActiveVideo(user.userId);
+            mediaManager.addActiveVideo(user.userId, name);
+        }
 
         const peer : SimplePeerNamespace.Instance = new Peer({
             initiator: user.initiator ? user.initiator : false,
@@ -146,6 +151,11 @@ export class SimplePeer {
         });
 
         peer.on('stream', (stream: MediaStream) => {
+            if(screenSharing){
+                //add stream video on
+                return;
+            }
+
             let videoActive = false;
             let microphoneActive = false;
             stream.getTracks().forEach((track :  MediaStreamTrack) => {
@@ -199,6 +209,7 @@ export class SimplePeer {
         for (const peerConnectionListener of this.peerConnectionListeners) {
             peerConnectionListener.onConnect(user);
         }
+        return peer;
     }
 
     /**
@@ -301,11 +312,10 @@ export class SimplePeer {
             }
             PeerConnection.write(new Buffer(JSON.stringify(Object.assign(mediaManager.constraintsMedia, {screen: localScreenCapture !== null}))));
 
-            if (localScreenCapture !== null) {
-                for (const track of localScreenCapture.getTracks()) {
-                    PeerConnection.addTrack(track, localScreenCapture);
-                }
-            } else if (localStream) {
+            if(!localStream){
+                return;
+            }
+            if (localStream) {
                 for (const track of localStream.getTracks()) {
                     PeerConnection.addTrack(track, localStream);
                 }
@@ -316,8 +326,33 @@ export class SimplePeer {
     }
 
     updatedLocalStream(){
-        this.Users.forEach((user: UserSimplePeer) => {
+        this.Users.forEach((user: UserSimplePeerInterface) => {
             this.addMedia(user.userId);
         })
+    }
+
+    updatedScreenSharing() {
+        if (this.MediaManager.localScreenCapture) {
+            let screenSharingUser: UserSimplePeerInterface = {
+                userId: `screenSharing-${this.Connection.userId}`,
+                initiator: true
+            };
+            let PeerConnectionScreenSharing = this.createPeerConnection(screenSharingUser);
+            if (!PeerConnectionScreenSharing) {
+                return;
+            }
+            for (const track of this.MediaManager.localScreenCapture.getTracks()) {
+                PeerConnectionScreenSharing.addTrack(track, this.MediaManager.localScreenCapture);
+            }
+        } else {
+            if (!this.PeerConnectionArray.has(`screenSharing-${this.Connection.userId}`)) {
+                return;
+            }
+            let PeerConnectionScreenSharing = this.PeerConnectionArray.get(`screenSharing-${this.Connection.userId}`);
+            if (!PeerConnectionScreenSharing) {
+                return;
+            }
+            PeerConnectionScreenSharing.destroy();
+        }
     }
 }
