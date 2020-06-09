@@ -6,14 +6,14 @@ import { Group } from "../src/Model/Group";
 describe("World", () => {
     it("should connect user1 and user2", () => {
         let connectCalledNumber: number = 0;
-        let connect: ConnectCallback = (user: string, group: Group): void => {
+        const connect: ConnectCallback = (user: string, group: Group): void => {
             connectCalledNumber++;
         }
-        let disconnect: DisconnectCallback = (user: string, group: Group): void => {
+        const disconnect: DisconnectCallback = (user: string, group: Group): void => {
 
         }
 
-        let world = new World(connect, disconnect, 160, 160, () => {}, () => {});
+        const world = new World(connect, disconnect, 160, 160, () => {}, () => {});
 
         world.join({ userId: "foo" }, new Point(100, 100));
 
@@ -33,14 +33,14 @@ describe("World", () => {
 
     it("should connect 3 users", () => {
         let connectCalled: boolean = false;
-        let connect: ConnectCallback = (user: string, group: Group): void => {
+        const connect: ConnectCallback = (user: string, group: Group): void => {
             connectCalled = true;
         }
-        let disconnect: DisconnectCallback = (user: string, group: Group): void => {
+        const disconnect: DisconnectCallback = (user: string, group: Group): void => {
 
         }
 
-        let world = new World(connect, disconnect, 160, 160, () => {}, () => {});
+        const world = new World(connect, disconnect, 160, 160, () => {}, () => {});
 
         world.join({ userId: "foo" }, new Point(100, 100));
 
@@ -62,14 +62,14 @@ describe("World", () => {
     it("should disconnect user1 and user2", () => {
         let connectCalled: boolean = false;
         let disconnectCallNumber: number = 0;
-        let connect: ConnectCallback = (user: string, group: Group): void => {
+        const connect: ConnectCallback = (user: string, group: Group): void => {
             connectCalled = true;
         }
-        let disconnect: DisconnectCallback = (user: string, group: Group): void => {
+        const disconnect: DisconnectCallback = (user: string, group: Group): void => {
             disconnectCallNumber++;
         }
 
-        let world = new World(connect, disconnect, 160, 160, () => {}, () => {});
+        const world = new World(connect, disconnect, 160, 160, () => {}, () => {});
 
         world.join({ userId: "foo" }, new Point(100, 100));
 

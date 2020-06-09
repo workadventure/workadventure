@@ -68,7 +68,7 @@ export class Group {
 
     isPartOfGroup(user: UserInterface): boolean
     {
-        return this.users.indexOf(user) !== -1;
+        return this.users.includes(user);
     }
 
     /*removeFromGroup(users: UserInterface[]): void
