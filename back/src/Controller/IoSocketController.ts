@@ -283,7 +283,7 @@ export class IoSocketController {
             }
             //user leave previous room
             Client.leave(Client.roomId);
-            this.nbClientsPerRoomGauge.inc({ host: os.hostname(), room: Client.roomId });
+            this.nbClientsPerRoomGauge.dec({ host: os.hostname(), room: Client.roomId });
             delete Client.roomId;
         }
     }
