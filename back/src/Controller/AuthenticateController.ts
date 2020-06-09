@@ -4,6 +4,11 @@ import {BAD_REQUEST, OK} from "http-status-codes";
 import {SECRET_KEY, URL_ROOM_STARTED} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 import { uuid } from 'uuidv4';
 
+export interface TokenInterface {
+    name: string,
+    userId: string
+}
+
 export class AuthenticateController {
     App : Application;
 
@@ -24,7 +29,7 @@ export class AuthenticateController {
             }*/
             //TODO check user email for The Coding Machine game
             const userId = uuid();
-            const token = Jwt.sign({name: param.name, userId: userId}, SECRET_KEY, {expiresIn: '24h'});
+            const token = Jwt.sign({name: param.name, userId: userId} as TokenInterface, SECRET_KEY, {expiresIn: '24h'});
             return res.status(OK).send({
                 token: token,
                 mapUrlStart: URL_ROOM_STARTED,

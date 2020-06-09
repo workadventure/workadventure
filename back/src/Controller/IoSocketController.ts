@@ -8,12 +8,17 @@ import {SECRET_KEY, MINIMUM_DISTANCE, GROUP_RADIUS} from "../Enum/EnvironmentVar
 import {World} from "../Model/World";
 import {Group} from "_Model/Group";
 import {UserInterface} from "_Model/UserInterface";
-import {SetPlayerDetailsMessage} from "_Model/Websocket/SetPlayerDetailsMessage";
+import {isSetPlayerDetailsMessage,} from "../Model/Websocket/SetPlayerDetailsMessage";
 import {MessageUserJoined} from "../Model/Websocket/MessageUserJoined";
 import {MessageUserMoved} from "../Model/Websocket/MessageUserMoved";
 import si from "systeminformation";
 import {Gauge} from "prom-client";
 import os from 'os';
+import {TokenInterface} from "../Controller/AuthenticateController";
+import {isJoinRoomMessageInterface} from "../Model/Websocket/JoinRoomMessage";
+import {isPointInterface, PointInterface} from "../Model/Websocket/PointInterface";
+import {isWebRtcSignalMessageInterface} from "../Model/Websocket/WebRtcSignalMessage";
+import {UserInGroupInterface} from "../Model/Websocket/UserInGroupInterface";
 
 enum SockerIoEvent {
     CONNECTION = "connection",
@@ -23,7 +28,6 @@ enum SockerIoEvent {
     USER_MOVED = "user-moved", // From server to client
     USER_LEFT = "user-left", // From server to client
     WEBRTC_SIGNAL = "webrtc-signal",
-    WEBRTC_OFFER = "webrtc-offer",
     WEBRTC_START = "webrtc-start",
     WEBRTC_DISCONNECT = "webrtc-disconect",
     MESSAGE_ERROR = "message-error",
@@ -61,10 +65,15 @@ export class IoSocketController {
             if(this.searchClientByToken(socket.handshake.query.token)){
                 return next(new Error('Authentication error'));
             }
-            Jwt.verify(socket.handshake.query.token, SECRET_KEY, (err: JsonWebTokenError, tokenDecoded: any) => {
+            Jwt.verify(socket.handshake.query.token, SECRET_KEY, (err: JsonWebTokenError, tokenDecoded: object) => {
                 if (err) {
                     return next(new Error('Authentication error'));
                 }
+
+                if (!this.isValidToken(tokenDecoded)) {
+                    return next(new Error('Authentication error, invalid token structure'));
+                }
+
                 (socket as ExSocketInterface).token = tokenDecoded;
                 (socket as ExSocketInterface).userId = tokenDecoded.userId;
                 next();
@@ -74,14 +83,24 @@ export class IoSocketController {
         this.ioConnection();
     }
 
+    private isValidToken(token: object): token is TokenInterface {
+        if (typeof((token as TokenInterface).userId) !== 'string') {
+            return false;
+        }
+        if (typeof((token as TokenInterface).name) !== 'string') {
+            return false;
+        }
+        return true;
+    }
+
     /**
      *
      * @param token
      */
     searchClientByToken(token: string): ExSocketInterface | null {
-        const clients: Array<any> = Object.values(this.Io.sockets.sockets);
+        const clients: ExSocketInterface[] = Object.values(this.Io.sockets.sockets) as ExSocketInterface[];
         for (let i = 0; i < clients.length; i++) {
-            const client: ExSocketInterface = clients[i];
+            const client = clients[i];
             if (client.token !== token) {
                 continue
             }
@@ -131,19 +150,14 @@ export class IoSocketController {
                         x: user x position on map
                         y: user y position on map
             */
-            socket.on(SockerIoEvent.JOIN_ROOM, (message: any, answerFn): void => {
+            socket.on(SockerIoEvent.JOIN_ROOM, (message: unknown, answerFn): void => {
                 try {
+                    if (!isJoinRoomMessageInterface(message)) {
+                        socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid JOIN_ROOM message.'});
+                        console.warn('Invalid JOIN_ROOM message received: ', message);
+                        return;
+                    }
                     const roomId = message.roomId;
-
-                    if (typeof(roomId) !== 'string') {
-                        socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Expected roomId as a string.'});
-                        return;
-                    }
-                    const position = this.hydratePositionReceive(message.position);
-                    if (position instanceof Error) {
-                        socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: position.message});
-                        return;
-                    }
 
                     const Client = (socket as ExSocketInterface);
 
@@ -155,7 +169,7 @@ export class IoSocketController {
                     this.leaveRoom(Client);
 
                     //join new previous room
-                    const world = this.joinRoom(Client, roomId, position);
+                    const world = this.joinRoom(Client, roomId, message.position);
 
                     //add function to refresh position user in real time.
                     //this.refreshUserPosition(Client);
@@ -176,11 +190,11 @@ export class IoSocketController {
                 }
             });
 
-            socket.on(SockerIoEvent.USER_POSITION, (message: any): void => {
+            socket.on(SockerIoEvent.USER_POSITION, (position: unknown): void => {
                 try {
-                    const position = this.hydratePositionReceive(message);
-                    if (position instanceof Error) {
-                        socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: position.message});
+                    if (!isPointInterface(position)) {
+                        socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid USER_POSITION message.'});
+                        console.warn('Invalid USER_POSITION message received: ', position);
                         return;
                     }
 
@@ -204,7 +218,12 @@ export class IoSocketController {
                 }
             });
 
-            socket.on(SockerIoEvent.WEBRTC_SIGNAL, (data: any) => {
+            socket.on(SockerIoEvent.WEBRTC_SIGNAL, (data: unknown) => {
+                if (!isWebRtcSignalMessageInterface(data)) {
+                    socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid WEBRTC_SIGNAL message.'});
+                    console.warn('Invalid WEBRTC_SIGNAL message received: ', data);
+                    return;
+                }
                 //send only at user
                 const client = this.sockets.get(data.receiverId);
                 if (client === undefined) {
@@ -212,16 +231,6 @@ export class IoSocketController {
                     return;
                 }
                 return client.emit(SockerIoEvent.WEBRTC_SIGNAL, data);
-            });
-
-            socket.on(SockerIoEvent.WEBRTC_OFFER, (data: any) => {
-                //send only at user
-                const client = this.sockets.get(data.receiverId);
-                if (client === undefined) {
-                    console.warn("While exchanging a WebRTC offer: client with id ", data.receiverId, " does not exist. This might be a race condition.");
-                    return;
-                }
-                client.emit(SockerIoEvent.WEBRTC_OFFER, data);
             });
 
             socket.on(SockerIoEvent.DISCONNECT, () => {
@@ -254,7 +263,12 @@ export class IoSocketController {
             });
 
             // Let's send the user id to the user
-            socket.on(SockerIoEvent.SET_PLAYER_DETAILS, (playerDetails: SetPlayerDetailsMessage, answerFn) => {
+            socket.on(SockerIoEvent.SET_PLAYER_DETAILS, (playerDetails: unknown, answerFn) => {
+                if (!isSetPlayerDetailsMessage(playerDetails)) {
+                    socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid SET_PLAYER_DETAILS message.'});
+                    console.warn('Invalid SET_PLAYER_DETAILS message received: ', playerDetails);
+                    return;
+                }
                 const Client = (socket as ExSocketInterface);
                 Client.name = playerDetails.name;
                 Client.character = playerDetails.character;
@@ -288,7 +302,7 @@ export class IoSocketController {
         }
     }
 
-    private joinRoom(Client : ExSocketInterface, roomId: string, position: Point): World {
+    private joinRoom(Client : ExSocketInterface, roomId: string, position: PointInterface): World {
         //join user in room
         Client.join(roomId);
         this.nbClientsPerRoomGauge.inc({ host: os.hostname(), room: roomId });
@@ -343,7 +357,7 @@ export class IoSocketController {
         //send all users in room to create PeerConnection in front
         clients.forEach((client: ExSocketInterface, index: number) => {
 
-            const clientsId = clients.reduce((tabs: Array<any>, clientId: ExSocketInterface, indexClientId: number) => {
+            const clientsId = clients.reduce((tabs: Array<UserInGroupInterface>, clientId: ExSocketInterface, indexClientId: number) => {
                 if (!clientId.userId || clientId.userId === client.userId) {
                     return tabs;
                 }
@@ -357,19 +371,6 @@ export class IoSocketController {
 
             client.emit(SockerIoEvent.WEBRTC_START, {clients: clientsId, roomId: roomId});
         });
-    }
-
-    //Hydrate and manage error
-    hydratePositionReceive(message: any): Point | Error {
-        try {
-            if (!message.x || !message.y || !message.direction || message.moving === undefined) {
-                return new Error("invalid point message sent");
-            }
-            return new Point(message.x, message.y, message.direction, message.moving);
-        } catch (err) {
-            //TODO log error
-            return new Error(err);
-        }
     }
 
     /** permit to share user position
