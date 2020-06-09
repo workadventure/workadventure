@@ -1,7 +1,7 @@
 import {ConnectionInterface, WebRtcDisconnectMessageInterface, WebRtcStartMessageInterface} from "../Connection";
 import {MediaManager} from "./MediaManager";
 import * as SimplePeerNamespace from "simple-peer";
-let Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
+const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
 export interface UserSimplePeer{
     userId: string;
@@ -95,7 +95,7 @@ export class SimplePeer {
 
         let name = user.name;
         if(!name){
-            let userSearch = this.Users.find((userSearch: UserSimplePeer) => userSearch.userId === user.userId);
+            const userSearch = this.Users.find((userSearch: UserSimplePeer) => userSearch.userId === user.userId);
             if(userSearch) {
                 name = userSearch.name;
             }
@@ -103,7 +103,7 @@ export class SimplePeer {
         this.MediaManager.removeActiveVideo(user.userId);
         this.MediaManager.addActiveVideo(user.userId, name);
 
-        let peer : SimplePeerNamespace.Instance = new Peer({
+        const peer : SimplePeerNamespace.Instance = new Peer({
             initiator: user.initiator ? user.initiator : false,
             reconnectTimer: 10000,
             config: {
@@ -170,7 +170,7 @@ export class SimplePeer {
         });
 
         peer.on('data',  (chunk: Buffer) => {
-            let data = JSON.parse(chunk.toString('utf8'));
+            const data = JSON.parse(chunk.toString('utf8'));
             if(data.type === "stream"){
                 this.stream(user.userId, data.stream);
             }
@@ -187,7 +187,7 @@ export class SimplePeer {
     private closeConnection(userId : string) {
         try {
             this.MediaManager.removeActiveVideo(userId);
-            let peer = this.PeerConnectionArray.get(userId);
+            const peer = this.PeerConnectionArray.get(userId);
             if (peer === undefined) {
                 console.warn("Tried to close connection for user "+userId+" but could not find user")
                 return;
@@ -222,7 +222,7 @@ export class SimplePeer {
             if(data.signal.type === "offer"){
                 this.createPeerConnection(data);
             }
-            let peer = this.PeerConnectionArray.get(data.userId);
+            const peer = this.PeerConnectionArray.get(data.userId);
             if (peer !== undefined) {
                 peer.signal(data.signal);
             } else {
@@ -253,8 +253,8 @@ export class SimplePeer {
      */
     private addMedia (userId : any = null) {
         try {
-            let localStream: MediaStream|null = this.MediaManager.localStream;
-            let peer = this.PeerConnectionArray.get(userId);
+            const localStream: MediaStream|null = this.MediaManager.localStream;
+            const peer = this.PeerConnectionArray.get(userId);
             if(localStream === null) {
                 //send fake signal
                 if(peer === undefined){

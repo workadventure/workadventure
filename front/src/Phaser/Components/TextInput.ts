@@ -10,8 +10,8 @@ export class TextInput extends Phaser.GameObjects.BitmapText {
         this.underLine = this.scene.add.text(x, y+1, '_______', { fontFamily: 'Arial', fontSize: "32px", color: '#ffffff'})
 
 
-        let keySpace = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-        let keyBackspace = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.BACKSPACE);
+        const keySpace = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        const keyBackspace = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.BACKSPACE);
         this.scene.input.keyboard.on('keydown', (event: any) => {
             if (event.keyCode === 8 && this.text.length > 0) {
                 this.deleteLetter();

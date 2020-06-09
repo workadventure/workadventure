@@ -62,7 +62,7 @@ export class GameScene extends Phaser.Scene {
     private startLayerName: string|undefined;
 
     static createFromUrl(mapUrlFile: string, instance: string): GameScene {
-        let key = GameScene.getMapKeyByUrl(mapUrlFile);
+        const key = GameScene.getMapKeyByUrl(mapUrlFile);
         return new GameScene(key, mapUrlFile, instance);
     }
 
@@ -92,7 +92,7 @@ export class GameScene extends Phaser.Scene {
         // If the map has already been loaded as part of another GameScene, the "on load" event will not be triggered.
         // In this case, we check in the cache to see if the map is here and trigger the event manually.
         if (this.cache.tilemap.exists(this.MapKey)) {
-            let data = this.cache.tilemap.get(this.MapKey);
+            const data = this.cache.tilemap.get(this.MapKey);
             this.onMapLoad(data);
         }
 
@@ -112,7 +112,7 @@ export class GameScene extends Phaser.Scene {
         // Triggered when the map is loaded
         // Load tiles attached to the map recursively
         this.mapFile = data.data;
-        let url = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf('/'));
+        const url = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf('/'));
         this.mapFile.tilesets.forEach((tileset) => {
             if (typeof tileset.name === 'undefined' || typeof tileset.image === 'undefined') {
                 console.warn("Don't know how to handle tileset ", tileset)
@@ -146,7 +146,7 @@ export class GameScene extends Phaser.Scene {
         //add layer on map
         this.Layers = new Array<Phaser.Tilemaps.StaticTilemapLayer>();
         let depth = -2;
-        for (let layer of this.mapFile.layers) {
+        for (const layer of this.mapFile.layers) {
             if (layer.type === 'tilelayer') {
                 this.addLayer(this.Map.createStaticLayer(layer.name, this.Terrains, 0, 0).setDepth(depth));
             }
@@ -168,9 +168,9 @@ export class GameScene extends Phaser.Scene {
         } else {
             // Now, let's find the start layer
             if (this.startLayerName) {
-                for (let layer of this.mapFile.layers) {
+                for (const layer of this.mapFile.layers) {
                     if (this.startLayerName === layer.name && layer.type === 'tilelayer' && this.isStartLayer(layer)) {
-                        let startPosition = this.startUser(layer);
+                        const startPosition = this.startUser(layer);
                         this.startX = startPosition.x;
                         this.startY = startPosition.y;
                     }
@@ -178,9 +178,9 @@ export class GameScene extends Phaser.Scene {
             }
             if (this.startX === undefined) {
                 // If we have no start layer specified or if the hash passed does not exist, let's go with the default start position.
-                for (let layer of this.mapFile.layers) {
+                for (const layer of this.mapFile.layers) {
                     if (layer.type === 'tilelayer' && layer.name === "start") {
-                        let startPosition = this.startUser(layer);
+                        const startPosition = this.startUser(layer);
                         this.startX = startPosition.x;
                         this.startY = startPosition.y;
                     }
@@ -212,12 +212,12 @@ export class GameScene extends Phaser.Scene {
 
 
         // Let's generate the circle for the group delimiter
-        let circleElement = Object.values(this.textures.list).find((object: Texture) => object.key === 'circleSprite');
+        const circleElement = Object.values(this.textures.list).find((object: Texture) => object.key === 'circleSprite');
         if(circleElement) {
             this.textures.remove('circleSprite');
         }
         this.circleTexture = this.textures.createCanvas('circleSprite', 96, 96);
-        let context = this.circleTexture.context;
+        const context = this.circleTexture.context;
         context.beginPath();
         context.arc(48, 48, 48, 0, 2 * Math.PI, false);
         // context.lineWidth = 5;
@@ -226,7 +226,7 @@ export class GameScene extends Phaser.Scene {
         this.circleTexture.refresh();
 
         // Let's alter browser history
-        let url = new URL(this.MapUrlFile);
+        const url = new URL(this.MapUrlFile);
         let path = '/_/'+this.instance+'/'+url.host+url.pathname;
         if (this.startLayerName) {
             path += '#'+this.startLayerName;
@@ -247,11 +247,11 @@ export class GameScene extends Phaser.Scene {
     }
 
     private getProperty(layer: ITiledMapLayer, name: string): string|boolean|number|undefined {
-        let properties : any = layer.properties;
+        const properties : any = layer.properties;
         if (!properties) {
             return undefined;
         }
-        let obj = properties.find((property:any) => property.name === name);
+        const obj = properties.find((property:any) => property.name === name);
         if (obj === undefined) {
             return undefined;
         }
@@ -266,7 +266,7 @@ export class GameScene extends Phaser.Scene {
      * @param tileHeight
      */
     private loadNextGame(layer: ITiledMapLayer, mapWidth: number, tileWidth: number, tileHeight: number){
-        let exitSceneUrl = this.getExitSceneUrl(layer);
+        const exitSceneUrl = this.getExitSceneUrl(layer);
         if (exitSceneUrl === undefined) {
             throw new Error('Layer is not an exit scene layer.');
         }
@@ -276,18 +276,18 @@ export class GameScene extends Phaser.Scene {
         }
 
         // TODO: eventually compute a relative URL
-        let absoluteExitSceneUrl = new URL(exitSceneUrl, this.MapUrlFile).href;
-        let exitSceneKey = gameManager.loadMap(absoluteExitSceneUrl, this.scene, instance);
+        const absoluteExitSceneUrl = new URL(exitSceneUrl, this.MapUrlFile).href;
+        const exitSceneKey = gameManager.loadMap(absoluteExitSceneUrl, this.scene, instance);
 
-        let tiles : number[] = layer.data as number[];
+        const tiles : number[] = layer.data as number[];
         for (let key=0; key < tiles.length; key++) {
-            let objectKey = tiles[key];
+            const objectKey = tiles[key];
             if(objectKey === 0){
                 continue;
             }
             //key + 1 because the start x = 0;
-            let y : number = parseInt(((key + 1) / mapWidth).toString());
-            let x : number = key - (y * mapWidth);
+            const y : number = parseInt(((key + 1) / mapWidth).toString());
+            const x : number = key - (y * mapWidth);
 
             let hash = new URL(exitSceneUrl, this.MapUrlFile).hash;
             if (hash) {
@@ -317,8 +317,8 @@ export class GameScene extends Phaser.Scene {
             if(objectKey === 0){
                 return;
             }
-            let y = Math.floor(key / layer.width);
-            let x = key % layer.width;
+            const y = Math.floor(key / layer.width);
+            const x = key % layer.width;
 
             possibleStartPositions.push({x: x*32, y: y*32});
         });
@@ -431,7 +431,7 @@ export class GameScene extends Phaser.Scene {
         // debug code to get a tile properties by clicking on it
         this.input.on("pointerdown", (pointer: Phaser.Input.Pointer)=>{
             //pixel position toz tile position
-            let tile = this.Map.getTileAt(this.Map.worldToTileX(pointer.worldX), this.Map.worldToTileY(pointer.worldY));
+            const tile = this.Map.getTileAt(this.Map.worldToTileX(pointer.worldX), this.Map.worldToTileY(pointer.worldY));
             if(tile){
                 this.CurrentPlayer.say("Your touch " + tile.layer.name);
             }
@@ -447,16 +447,16 @@ export class GameScene extends Phaser.Scene {
         this.CurrentPlayer.moveUser(delta);
 
         // Let's move all users
-        let updatedPlayersPositions = this.playersPositionInterpolator.getUpdatedPositions(time);
+        const updatedPlayersPositions = this.playersPositionInterpolator.getUpdatedPositions(time);
         updatedPlayersPositions.forEach((moveEvent: HasMovedEvent, userId: string) => {
-            let player : RemotePlayer | undefined = this.MapPlayersByKey.get(userId);
+            const player : RemotePlayer | undefined = this.MapPlayersByKey.get(userId);
             if (player === undefined) {
                 throw new Error('Cannot find player with ID "' + userId +'"');
             }
             player.updatePosition(moveEvent);
         });
 
-        let nextSceneKey = this.checkToExit();
+        const nextSceneKey = this.checkToExit();
         if(nextSceneKey){
             // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
             this.scene.remove(this.scene.key);
@@ -485,7 +485,7 @@ export class GameScene extends Phaser.Scene {
             return;
         }
 
-        let currentPlayerId = this.GameManager.getPlayerId();
+        const currentPlayerId = this.GameManager.getPlayerId();
 
         // clean map
         this.MapPlayersByKey.forEach((player: RemotePlayer) => {
@@ -516,7 +516,7 @@ export class GameScene extends Phaser.Scene {
             return;
         }
         //initialise player
-        let player = new RemotePlayer(
+        const player = new RemotePlayer(
             addPlayerData.userId,
             this,
             addPlayerData.position.x,
@@ -538,7 +538,7 @@ export class GameScene extends Phaser.Scene {
 
     public removePlayer(userId: string) {
         console.log('Removing player ', userId)
-        let player = this.MapPlayersByKey.get(userId);
+        const player = this.MapPlayersByKey.get(userId);
         if (player === undefined) {
             console.error('Cannot find user with id ', userId);
         } else {
@@ -550,26 +550,26 @@ export class GameScene extends Phaser.Scene {
     }
 
     updatePlayerPosition(message: MessageUserMovedInterface): void {
-        let player : RemotePlayer | undefined = this.MapPlayersByKey.get(message.userId);
+        const player : RemotePlayer | undefined = this.MapPlayersByKey.get(message.userId);
         if (player === undefined) {
             throw new Error('Cannot find player with ID "' + message.userId +'"');
         }
 
         // We do not update the player position directly (because it is sent only every 200ms).
         // Instead we use the PlayersPositionInterpolator that will do a smooth animation over the next 200ms.
-        let playerMovement = new PlayerMovement({ x: player.x, y: player.y }, this.currentTick, message.position, this.currentTick + POSITION_DELAY);
+        const playerMovement = new PlayerMovement({ x: player.x, y: player.y }, this.currentTick, message.position, this.currentTick + POSITION_DELAY);
         this.playersPositionInterpolator.updatePlayerPosition(player.userId, playerMovement);
     }
 
     shareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface) {
-        let groupId = groupPositionMessage.groupId;
+        const groupId = groupPositionMessage.groupId;
 
-        let group = this.groups.get(groupId);
+        const group = this.groups.get(groupId);
         if (group !== undefined) {
             group.setPosition(Math.round(groupPositionMessage.position.x), Math.round(groupPositionMessage.position.y));
         } else {
             // TODO: circle radius should not be hard stored
-            let sprite = new Sprite(
+            const sprite = new Sprite(
                 this,
                 Math.round(groupPositionMessage.position.x),
                 Math.round(groupPositionMessage.position.y),
@@ -581,7 +581,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     deleteGroup(groupId: string): void {
-        let group = this.groups.get(groupId);
+        const group = this.groups.get(groupId);
         if(!group){
             return;
         }
@@ -591,8 +591,8 @@ export class GameScene extends Phaser.Scene {
 
     public static getMapKeyByUrl(mapUrlStart: string) : string {
         // FIXME: the key should be computed from the full URL of the map.
-        let startPos = mapUrlStart.indexOf('://')+3;
-        let endPos = mapUrlStart.indexOf(".json");
+        const startPos = mapUrlStart.indexOf('://')+3;
+        const endPos = mapUrlStart.indexOf(".json");
         return mapUrlStart.substring(startPos, endPos);
     }
 }

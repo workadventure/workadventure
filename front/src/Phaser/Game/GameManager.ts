@@ -83,7 +83,7 @@ export class GameManager {
     }
 
     onUserJoins(message: MessageUserJoined): void {
-        let userMessage: AddPlayerInterface = {
+        const userMessage: AddPlayerInterface = {
             userId: message.userId,
             character: message.character,
             name: message.name,
@@ -154,11 +154,11 @@ export class GameManager {
     }
 
     loadMap(mapUrl: string, scene: Phaser.Scenes.ScenePlugin, instance: string): string {
-        let sceneKey = GameScene.getMapKeyByUrl(mapUrl);
+        const sceneKey = GameScene.getMapKeyByUrl(mapUrl);
 
-        let gameIndex = scene.getIndex(sceneKey);
+        const gameIndex = scene.getIndex(sceneKey);
         if(gameIndex === -1){
-            let game : Phaser.Scene = GameScene.createFromUrl(mapUrl, instance);
+            const game : Phaser.Scene = GameScene.createFromUrl(mapUrl, instance);
             scene.add(sceneKey, game, false);
         }
         return sceneKey;

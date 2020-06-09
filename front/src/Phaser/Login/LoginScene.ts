@@ -67,7 +67,7 @@ export class LoginScene extends Phaser.Scene {
         this.logo = new Image(this, this.game.renderer.width - 30, this.game.renderer.height - 20, LoginTextures.icon);
         this.add.existing(this.logo);
 
-        let infoText = "Commands: \n - Arrows or Z,Q,S,D to move\n - SHIFT to run";
+        const infoText = "Commands: \n - Arrows or Z,Q,S,D to move\n - SHIFT to run";
         this.infoTextField = new TextField(this, 10, this.game.renderer.height - 35, infoText);
 
         this.input.keyboard.on('keyup-ENTER', () => {

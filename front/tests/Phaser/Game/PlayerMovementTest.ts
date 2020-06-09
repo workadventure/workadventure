@@ -3,7 +3,7 @@ import {PlayerMovement} from "../../../src/Phaser/Game/PlayerMovement";
 
 describe("Interpolation / Extrapolation", () => {
     it("should interpolate", () => {
-        let playerMovement = new PlayerMovement({
+        const playerMovement = new PlayerMovement({
             x: 100, y: 200
         }, 42000,
             {
@@ -39,7 +39,7 @@ describe("Interpolation / Extrapolation", () => {
     });
 
     it("should not extrapolate if we stop", () => {
-        let playerMovement = new PlayerMovement({
+        const playerMovement = new PlayerMovement({
                 x: 100, y: 200
             }, 42000,
             {
@@ -57,7 +57,7 @@ describe("Interpolation / Extrapolation", () => {
     });
 
     it("should should keep moving until it stops", () => {
-        let playerMovement = new PlayerMovement({
+        const playerMovement = new PlayerMovement({
                 x: 100, y: 200
             }, 42000,
             {

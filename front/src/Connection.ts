@@ -248,7 +248,7 @@ export class Connection implements ConnectionInterface {
         if(!this.socket){
             return;
         }
-        let point = new Point(x, y, direction, moving);
+        const point = new Point(x, y, direction, moving);
         this.lastPositionShared = point;
         this.getSocket().emit(EventMessage.USER_POSITION, point);
     }

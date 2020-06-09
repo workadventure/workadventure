@@ -55,7 +55,7 @@ export class UserInputManager {
     }
 
     getEventListForGameTick(): ActiveEventList {
-        let eventsMap = new ActiveEventList();
+        const eventsMap = new ActiveEventList();
         this.KeysCode.forEach(d => {
             if (d. keyInstance.isDown) {
                 eventsMap.set(d.event, true);

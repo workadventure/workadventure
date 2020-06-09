@@ -63,7 +63,7 @@ export class SelectCharacterScene extends Phaser.Scene {
         this.pressReturnField = new TextField(this, this.game.renderer.width / 2, 230, 'Press enter to start');
         this.pressReturnField.setOrigin(0.5).setCenterAlign()
 
-        let rectangleXStart = this.game.renderer.width / 2 - (this.nbCharactersPerRow / 2) * 32 + 16;
+        const rectangleXStart = this.game.renderer.width / 2 - (this.nbCharactersPerRow / 2) * 32 + 16;
 
         this.selectedRectangle = this.add.rectangle(rectangleXStart, 90, 32, 32).setStrokeStyle(2, 0xFFFFFF);
 
@@ -103,8 +103,8 @@ export class SelectCharacterScene extends Phaser.Scene {
         this.createCurrentPlayer();
 
         if (window.localStorage) {
-            let playerNumberStr: string = window.localStorage.getItem('selectedPlayer') ?? '0';
-            let playerNumber: number = Number(playerNumberStr);
+            const playerNumberStr: string = window.localStorage.getItem('selectedPlayer') ?? '0';
+            const playerNumber: number = Number(playerNumberStr);
             this.selectedRectangleXPos = playerNumber % this.nbCharactersPerRow;
             this.selectedRectangleYPos = Math.floor(playerNumber / this.nbCharactersPerRow);
             this.updateSelectedPlayer();
@@ -118,10 +118,10 @@ export class SelectCharacterScene extends Phaser.Scene {
     private async login(name: string) {
         return gameManager.connect(name, this.selectedPlayer.texture.key).then(() => {
             // Do we have a start URL in the address bar? If so, let's redirect to this address
-            let instanceAndMapUrl = this.findMapUrl();
+            const instanceAndMapUrl = this.findMapUrl();
             if (instanceAndMapUrl !== null) {
-                let [mapUrl, instance] = instanceAndMapUrl;
-                let key = gameManager.loadMap(mapUrl, this.scene, instance);
+                const [mapUrl, instance] = instanceAndMapUrl;
+                const key = gameManager.loadMap(mapUrl, this.scene, instance);
                 this.scene.start(key, {
                     startLayerName: window.location.hash ? window.location.hash.substr(1) : undefined
                 } as GameSceneInitInterface);
@@ -132,7 +132,7 @@ export class SelectCharacterScene extends Phaser.Scene {
                     if (!scene) {
                         return;
                     }
-                    let key = gameManager.loadMap(window.location.protocol + "//" + scene.mapUrlStart, this.scene, scene.startInstance);
+                    const key = gameManager.loadMap(window.location.protocol + "//" + scene.mapUrlStart, this.scene, scene.startInstance);
                     this.scene.start(key);
                     return scene;
                 }).catch((err) => {
@@ -150,28 +150,28 @@ export class SelectCharacterScene extends Phaser.Scene {
      * Returns the map URL and the instance from the current URL
      */
     private findMapUrl(): [string, string]|null {
-        let path = window.location.pathname;
+        const path = window.location.pathname;
         if (!path.startsWith('/_/')) {
             return null;
         }
-        let instanceAndMap = path.substr(3);
-        let firstSlash = instanceAndMap.indexOf('/');
+        const instanceAndMap = path.substr(3);
+        const firstSlash = instanceAndMap.indexOf('/');
         if (firstSlash === -1) {
             return null;
         }
-        let instance = instanceAndMap.substr(0, firstSlash);
+        const instance = instanceAndMap.substr(0, firstSlash);
         return [window.location.protocol+'//'+instanceAndMap.substr(firstSlash+1), instance];
     }
 
     createCurrentPlayer(): void {
         for (let i = 0; i <PLAYER_RESOURCES.length; i++) {
-            let playerResource = PLAYER_RESOURCES[i];
+            const playerResource = PLAYER_RESOURCES[i];
 
-            let col = i % this.nbCharactersPerRow;
-            let row = Math.floor(i / this.nbCharactersPerRow);
+            const col = i % this.nbCharactersPerRow;
+            const row = Math.floor(i / this.nbCharactersPerRow);
 
-            let [x, y] = this.getCharacterPosition(col, row);
-            let player = this.physics.add.sprite(x, y, playerResource.name, 0);
+            const [x, y] = this.getCharacterPosition(col, row);
+            const player = this.physics.add.sprite(x, y, playerResource.name, 0);
             player.setBounce(0.2);
             player.setCollideWorldBounds(true);
             this.anims.create({
@@ -203,11 +203,11 @@ export class SelectCharacterScene extends Phaser.Scene {
 
     private updateSelectedPlayer(): void {
         this.selectedPlayer.anims.pause();
-        let [x, y] = this.getCharacterPosition(this.selectedRectangleXPos, this.selectedRectangleYPos);
+        const [x, y] = this.getCharacterPosition(this.selectedRectangleXPos, this.selectedRectangleYPos);
         this.selectedRectangle.setX(x);
         this.selectedRectangle.setY(y);
-        let playerNumber = this.selectedRectangleXPos + this.selectedRectangleYPos * this.nbCharactersPerRow;
-        let player = this.players[playerNumber];
+        const playerNumber = this.selectedRectangleXPos + this.selectedRectangleYPos * this.nbCharactersPerRow;
+        const player = this.players[playerNumber];
         player.play(PLAYER_RESOURCES[playerNumber].name);
         this.selectedPlayer = player;
         if (window.localStorage) {

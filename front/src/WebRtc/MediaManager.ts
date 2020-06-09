@@ -55,7 +55,7 @@ export class MediaManager {
     }
 
     activeVisio(){
-        let webRtc = this.getElementByIdOrFail('webRtc');
+        const webRtc = this.getElementByIdOrFail('webRtc');
         webRtc.classList.add('active');
     }
 
@@ -138,9 +138,9 @@ export class MediaManager {
      */
     addActiveVideo(userId : string, userName: string = ""){
         this.webrtcInAudio.play();
-        let elementRemoteVideo = this.getElementByIdOrFail("activeCam");
+        const elementRemoteVideo = this.getElementByIdOrFail("activeCam");
         userName = userName.toUpperCase();
-        let color = this.getColorByString(userName);
+        const color = this.getColorByString(userName);
         elementRemoteVideo.insertAdjacentHTML('beforeend', `
             <div id="div-${userId}" class="video-container" style="border-color: ${color};">
                 <div class="connecting-spinner"></div>
@@ -158,7 +158,7 @@ export class MediaManager {
      * @param userId
      */
     disabledMicrophoneByUserId(userId: string){
-        let element = document.getElementById(`microphone-${userId}`);
+        const element = document.getElementById(`microphone-${userId}`);
         if(!element){
             return;
         }
@@ -170,7 +170,7 @@ export class MediaManager {
      * @param userId
      */
     enabledMicrophoneByUserId(userId: string){
-        let element = document.getElementById(`microphone-${userId}`);
+        const element = document.getElementById(`microphone-${userId}`);
         if(!element){
             return;
         }
@@ -223,7 +223,7 @@ export class MediaManager {
      * @param userId
      */
     removeActiveVideo(userId : string){
-        let element = document.getElementById(`div-${userId}`);
+        const element = document.getElementById(`div-${userId}`);
         if(!element){
             return;
         }
@@ -231,7 +231,7 @@ export class MediaManager {
     }
 
     isConnecting(userId : string): void {
-        let connectingSpinnerDiv = this.getSpinner(userId);
+        const connectingSpinnerDiv = this.getSpinner(userId);
         if (connectingSpinnerDiv === null) {
             return;
         }
@@ -239,7 +239,7 @@ export class MediaManager {
     }
 
     isConnected(userId : string): void {
-        let connectingSpinnerDiv = this.getSpinner(userId);
+        const connectingSpinnerDiv = this.getSpinner(userId);
         if (connectingSpinnerDiv === null) {
             return;
         }
@@ -247,11 +247,11 @@ export class MediaManager {
     }
 
     isError(userId : string): void {
-        let element = document.getElementById(`div-${userId}`);
+        const element = document.getElementById(`div-${userId}`);
         if(!element){
             return;
         }
-        let errorDiv = element.getElementsByClassName('rtc-error').item(0) as HTMLDivElement|null;
+        const errorDiv = element.getElementsByClassName('rtc-error').item(0) as HTMLDivElement|null;
         if (errorDiv === null) {
             return;
         }
@@ -259,11 +259,11 @@ export class MediaManager {
     }
 
     private getSpinner(userId : string): HTMLDivElement|null {
-        let element = document.getElementById(`div-${userId}`);
+        const element = document.getElementById(`div-${userId}`);
         if(!element){
             return null;
         }
-        let connnectingSpinnerDiv = element.getElementsByClassName('connecting-spinner').item(0) as HTMLDivElement|null;
+        const connnectingSpinnerDiv = element.getElementsByClassName('connecting-spinner').item(0) as HTMLDivElement|null;
         return connnectingSpinnerDiv;
     }
 
@@ -280,14 +280,14 @@ export class MediaManager {
         }
         let color = '#';
         for (let i = 0; i < 3; i++) {
-            let value = (hash >> (i * 8)) & 255;
+            const value = (hash >> (i * 8)) & 255;
             color += ('00' + value.toString(16)).substr(-2);
         }
         return color;
     }
 
     private getElementByIdOrFail<T extends HTMLElement>(id: string): T {
-        let elem = document.getElementById(id);
+        const elem = document.getElementById(id);
         if (elem === null) {
             throw new Error("Cannot find HTML element with id '"+id+"'");
         }
