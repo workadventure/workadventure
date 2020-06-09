@@ -53,8 +53,17 @@
     <script>
         function startGame() {
             let playUrl = window.location.protocol + "//play."+window.location.host+"/_/global/npeguin.github.io/office-map/map.json";
-            window.open(playUrl, '_blank')
+            window.open(playUrl, '_blank');
         }
+		function shareFB() {
+			window.open('https://www.facebook.com/sharer/sharer.php?u=https://workadventu.re/', '_blank', 'width=500,height=500');
+		}
+		function shareLI() {
+			window.open('https://www.linkedin.com/shareArticle?mini=true&url=https://workadventu.re/&title=&summary=Your workplace but better!&source=TheCodingMachine', '_blank', 'width=500,height=500');
+		}
+		function shareTW() {
+			window.open('https://twitter.com/share?text=Your workplace but better!&url=https://workadventu.re/&hashtags=thecodingmachine', '_blank', 'width=500,height=500');
+		}
     </script>
 </head>
 
@@ -70,13 +79,14 @@
                     </div>
                     <div class="col-2 col-md-6">
                         <div class="social-links">
-                            <a href="https://www.facebook.com/thecodingmachine/" target="_BLANK">
+                            <span class="share-title">Share your experience</span>
+                            <a onclick="shareFB()">
                                 <img class="social-image" src="static/images/facebook.png" />
                             </a>
-                            <a href="https://www.linkedin.com/company/the-coding-machine/" target="_BLANK">
+                            <a onclick="shareLI()">
                                 <img class="social-image" src="static/images/linkedin.png" />
                             </a>
-                            <a href="https://twitter.com/coding_machine" target="_BLANK">
+                            <a onclick="shareTW()">
                                 <img class="social-image" src="static/images/twitter.png" />
                             </a>
                         </div>
@@ -88,7 +98,7 @@
                 </div>
                 <div class="row justify-content-md-center pt-5">
                     <div class="col col-lg-3">
-                        <a class="custom-link play" target="_BLANK" onclick="startGame()" title="PLAY ONLINE">
+                        <a class="custom-link play" onclick="startGame()" title="PLAY ONLINE">
                             PLAY ONLINE
                         </a>
                     </div>
