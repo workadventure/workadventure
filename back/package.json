@@ -16,8 +16,15 @@
     "type": "git",
     "url": "git+https://github.com/thecodingmachine/workadventure.git"
   },
-  "author": "g.parant@thecodingmachine.com",
-  "license": "AGPL",
+  "contributors": [{
+      "name": "Grégoire Parant",
+      "email": "g.parant@thecodingmachine.com"
+    },
+    {
+      "name": "David Négrier",
+      "email": "d.negrier@thecodingmachine.com"
+    }],
+  "license": "SEE LICENSE IN LICENSE.txt",
   "bugs": {
     "url": "https://github.com/thecodingmachine/workadventure/issues"
   },
