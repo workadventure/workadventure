@@ -2,6 +2,32 @@
 <html class="no-js" lang="">
 
 <head>
+	<!-- Global site tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-10196481-11"></script>
+	<script>
+	  window.dataLayer = window.dataLayer || [];
+	  function gtag(){dataLayer.push(arguments);}
+	  gtag('js', new Date());
+
+	  gtag('config', 'UA-10196481-11');
+	</script>
+    <link rel="apple-touch-icon" sizes="57x57" href="static/images/favicons/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="static/images/favicons/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="static/images/favicons/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="static/images/favicons/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="static/images/favicons/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="static/images/favicons/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="static/images/favicons/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="static/images/favicons/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="static/images/favicons/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192"  href="static/images/favicons/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="static/images/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="static/images/favicons/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="static/images/favicons/favicon-16x16.png">
+    <link rel="manifest" href="static/images/favicons/manifest.json">
+    <meta name="msapplication-TileColor" content="#000000">
+    <meta name="msapplication-TileImage" content="static/images/favicons/ms-icon-144x144.png">
+    <meta name="theme-color" content="#000000">
     <title>WorkAdventu.re</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
@@ -37,14 +63,14 @@
         <div class="container-lg section">
             <div class="over-image">
                 <div class="row">
-                    <div class="col-6 col-md-6 my-3 my-md-0">
+                    <div class="col-10 col-md-6">
                         <div class="logo">
                             <img src="static/images/logo.png">
                         </div>
                     </div>
-                    <div class="col-6 col-md-6 my-3 my-md-0">
+                    <div class="col-2 col-md-6">
                         <div class="social-links">
-                            Share your experience
+                            <span class="share-title">Share your experience</span>
                             <a href="https://www.facebook.com/sharer/sharer.php?u=https://workadventu.re/" target="_BLANK">
                                 <img class="social-image" src="static/images/facebook.png" />
                             </a>
@@ -61,7 +87,7 @@
                     <h1>Your workplace<br/>but better</h1>
                     <h3>You are impatient to discover this new world? Click on "Play online" and meet new people or share this adventure with your colleagues and friends by clicking on "Private mode"</h3>
                 </div>
-                <div class="row justify-content-md-center pt-5" style="margin-top: 65px;">
+                <div class="row justify-content-md-center pt-5">
                     <div class="col col-lg-3">
                         <a class="custom-link play" target="_BLANK" onclick="startGame()" title="PLAY ONLINE">
                             PLAY ONLINE
@@ -83,6 +109,11 @@
         </div>
     </header>
     <div class="section bg-white how-to">
+        <div class="desktop-only text-center d-block d-md-none d-lg-none d-xl-none">
+            <img src="static/images/desktop.png" width="64" /><br />
+            Well, it's not mobile friendly yet. Try with your desktop computer.
+        </div>
+
         <div class="container-fluid container-lg">
             <div class="row justify-content-md-center">
                 <div class="col-12 col-md-12 text-center">
@@ -171,10 +202,10 @@
     <div class="bg-white footer">
         <div class="container-fluid container-lg">
             <div class="row">
-                <div class="col-6 col-md-6 my-3 my-md-0">
+                <div class="col-12 col-md-6  my-3 my-md-0">
                     <a href="https://www.thecodingmachine.com/" target="_blank"><img src="static/images/Logo TCM.png"></a>
                 </div>
-                <div class="col-6 col-md-6 my-3 my-md-0 floppy">
+                <div class="col-12 col-md-6 my-3 my-md-0 floppy">
                     <img src="static/images/floppy.png" />
                     <div>Soon available on floppy !<br/><span>otherwise, available on <a href="https://github.com/thecodingmachine/workadventure" target="_BLANK">GitHub</a></span></div>
                 </div>
