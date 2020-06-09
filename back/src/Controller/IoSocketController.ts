@@ -12,6 +12,8 @@ import {SetPlayerDetailsMessage} from "_Model/Websocket/SetPlayerDetailsMessage"
 import {MessageUserJoined} from "../Model/Websocket/MessageUserJoined";
 import {MessageUserMoved} from "../Model/Websocket/MessageUserMoved";
 import si from "systeminformation";
+import {Gauge} from "prom-client";
+import os from 'os';
 
 enum SockerIoEvent {
     CONNECTION = "connection",
@@ -31,12 +33,24 @@ enum SockerIoEvent {
 }
 
 export class IoSocketController {
-    Io: socketIO.Server;
-    Worlds: Map<string, World> = new Map<string, World>();
-    sockets: Map<string, ExSocketInterface> = new Map<string, ExSocketInterface>();
+    public readonly Io: socketIO.Server;
+    private Worlds: Map<string, World> = new Map<string, World>();
+    private sockets: Map<string, ExSocketInterface> = new Map<string, ExSocketInterface>();
+    private nbClientsGauge: Gauge<string>;
+    private nbClientsPerRoomGauge: Gauge<string>;
 
     constructor(server: http.Server) {
         this.Io = socketIO(server);
+        this.nbClientsGauge = new Gauge({
+            name: 'workadventure_nb_sockets',
+            help: 'Number of connected sockets',
+            labelNames: [ 'host' ]
+        });
+        this.nbClientsPerRoomGauge = new Gauge({
+            name: 'workadventure_nb_clients_per_room',
+            help: 'Number of clients per room',
+            labelNames: [ 'host', 'room' ]
+        });
 
         // Authentication with token. it will be decoded and stored in the socket.
         // Completely commented for now, as we do not use the "/login" route at all.
@@ -103,6 +117,7 @@ export class IoSocketController {
 
             // Let's log server load when a user joins
             let srvSockets = this.Io.sockets.sockets;
+            this.nbClientsGauge.inc({ host: os.hostname() });
             console.log(new Date().toISOString() + ' A user joined (', Object.keys(srvSockets).length, ' connected users)');
             si.currentLoad().then(data => console.log('  Current load: ', data.avgload));
             si.currentLoad().then(data => console.log('  CPU: ', data.currentload, '%'));
@@ -231,6 +246,7 @@ export class IoSocketController {
 
                 // Let's log server load when a user leaves
                 let srvSockets = this.Io.sockets.sockets;
+                this.nbClientsGauge.dec({ host: os.hostname() });
                 console.log('A user left (', Object.keys(srvSockets).length, ' connected users)');
                 si.currentLoad().then(data => console.log('Current load: ', data.avgload));
                 si.currentLoad().then(data => console.log('CPU: ', data.currentload, '%'));
@@ -267,6 +283,7 @@ export class IoSocketController {
             }
             //user leave previous room
             Client.leave(Client.roomId);
+            this.nbClientsPerRoomGauge.inc({ host: os.hostname(), room: Client.roomId });
             delete Client.roomId;
         }
     }
@@ -274,6 +291,7 @@ export class IoSocketController {
     private joinRoom(Client : ExSocketInterface, roomId: string, position: Point): World {
         //join user in room
         Client.join(roomId);
+        this.nbClientsPerRoomGauge.inc({ host: os.hostname(), room: roomId });
         Client.roomId = roomId;
         Client.position = position;
 
