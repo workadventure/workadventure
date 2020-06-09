@@ -103,9 +103,9 @@ export class IoSocketController {
 
             // Let's log server load when a user joins
             let srvSockets = this.Io.sockets.sockets;
-            console.log('A user joined (', Object.keys(srvSockets).length, ' connected users)');
-            si.currentLoad().then(data => console.log('Current load: ', data.avgload));
-            si.currentLoad().then(data => console.log('CPU: ', data.currentload, '%'));
+            console.log(new Date().toISOString() + ' A user joined (', Object.keys(srvSockets).length, ' connected users)');
+            si.currentLoad().then(data => console.log('  Current load: ', data.avgload));
+            si.currentLoad().then(data => console.log('  CPU: ', data.currentload, '%'));
             // End log server load
 
             /*join-rom event permit to join one room.
