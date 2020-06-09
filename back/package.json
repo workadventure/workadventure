@@ -23,6 +23,10 @@
     {
       "name": "David Négrier",
       "email": "d.negrier@thecodingmachine.com"
+    },
+    {
+      "name": "Arthmaël Poly",
+      "email": "a.poly@thecodingmachine.com"
     }],
   "license": "SEE LICENSE IN LICENSE.txt",
   "bugs": {
