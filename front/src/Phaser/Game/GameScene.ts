@@ -16,6 +16,7 @@ import {PlayerAnimationNames} from "../Player/Animation";
 import {PlayerMovement} from "./PlayerMovement";
 import {PlayersPositionInterpolator} from "./PlayersPositionInterpolator";
 import {RemotePlayer} from "../Entity/RemotePlayer";
+import GameObject = Phaser.GameObjects.GameObject;
 
 export enum Textures {
     Player = "male1"
@@ -347,7 +348,7 @@ export class GameScene extends Phaser.Scene {
     createCollisionWithPlayer() {
         //add collision layer
         this.Layers.forEach((Layer: Phaser.Tilemaps.StaticTilemapLayer) => {
-            this.physics.add.collider(this.CurrentPlayer, Layer, (object1: any, object2: any) => {
+            this.physics.add.collider(this.CurrentPlayer, Layer, (object1: GameObject, object2: GameObject) => {
                 //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
             });
             Layer.setCollisionByProperty({collides: true});
