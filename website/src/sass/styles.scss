@@ -38,23 +38,52 @@ header {
         left: 0;
         right: 0;
         height: 33rem;
+        width: calc(100% - 15px);
         .logo{
             margin: 1rem 0;
+            @include media-breakpoint-down(sm) {
+                padding-left: 1rem;
+            }
         }
         .social-links {
             text-align: right;
-            padding-top: 36px;
+            padding-top: 2.25rem;
             a {
-                margin-left: 20px;
+                margin-left: 1.25rem;
+            }
+        }
+        @include media-breakpoint-down(sm) {
+            .social-links {
+                padding-top: 0.5rem;
+                padding-right: 0.5rem;
+                .share-title {
+                    display: none;
+                }
+                a {
+                    display: block;
+                    margin-left: 0rem;
+                    margin-top: 1rem;
+                }
             }
         }
         .title {
+            z-index: 3;
+            position: relative;
             padding: 5rem 0;
             color: black;
             h1 {
                 font-family: 'Karmatic Arcade';
-                font-size: 44px;
-                margin-bottom: 20px;
+                font-size: 2.75rem;
+                margin-bottom: 1.25rem;
+            }
+            h3 {
+                min-height: 200px;
+                padding: 1rem;
+            }
+            @include media-breakpoint-down(xs) {
+                h3 {
+                    font-size: 1rem;
+                }
             }
         }
     }
@@ -97,7 +126,7 @@ header {
 }
 .custom-link{
     font-family: "VCR OSD Mono";
-    font-size: 18px;
+    font-size: 1.125rem;
     letter-spacing: 5px;
     color: white;
     display: block;
@@ -110,12 +139,15 @@ header {
     position: absolute;
     left: 0;
     right: 0;
-    bottom: -24px;
-    padding: 20px;
+    bottom: 7px;
+    padding: 1.125rem;
     text-align: center;
     z-index: 2;
     transition: all .1s cubic-bezier(0.000, -0.600, 1.000, 1.650); /* custom */
     //transition-timing-function: cubic-bezier(0.000, -0.600, 1.000, 1.650); /* custom */
+    @include media-breakpoint-down(sm) {
+        display: none;
+    }
     &:hover {
         color: white;
         transform: translateY(-6px);
@@ -179,20 +211,21 @@ img{
 .section{
     padding-top: 2rem;
     padding-bottom: 5rem;
-
     &.used-by{
         img{
             padding: 0 1rem;
         }
     }
-
     &.how-to{
-        padding: 100px 0;
+        padding: 6.25rem 0;
         background: url('../images/bg-briques.jpg') repeat-x bottom;
+        .desktop-only {
+            padding: 0 1.25rem 4rem;
+        }
         .image-item{
             height: 100%;
             margin: 0 auto;
-            padding: 20px;
+            padding: 1.25rem;
             /*transition: all .25s cubic-bezier(0.000, -0.600, 1.000, 1.650);
             &:hover {
                 transform: scale(1.1);
@@ -228,8 +261,13 @@ img{
                 min-height: 6rem;
                 font-family: 'Karmatic Arcade';
                 font-size: 22px;
-                margin-bottom: 20px;
+                margin-bottom: 1.25rem;
             }
+        }
+    }
+    @include media-breakpoint-down(sm) {
+        &.how-to{
+            padding: 2rem 0;
         }
     }
 
@@ -242,8 +280,8 @@ img{
     &.quotes{
         h2{
             font-family: 'Karmatic Arcade';
-            font-size: 34px;
-            margin: 40px 0;
+            font-size: 1.75rem;
+            margin: 2.5rem 0;
         }
 
         .quote-item{
@@ -267,17 +305,25 @@ img{
         text-align: right;
         img {
             float: right;
-            margin-left: 20px;
+            margin-left: 1.25rem;
         }
         div {
             float: right;
-            margin-left: 15px;
-            font-size: 16px;
-            line-height: 16px;
-            padding-top: 10px;
+            margin-left: 1rem;
+            font-size: 1rem;
+            line-height: 1rem;
+            padding-top: 0.625rem;
             span {
                 color: grey;
-                font-size: 13px;
+                font-size: 0.8125rem;
+            }
+        }
+    }
+    @include media-breakpoint-down(xs) {
+        .floppy {
+            text-align: center;
+            img, div {
+                float: none;
             }
         }
     }
