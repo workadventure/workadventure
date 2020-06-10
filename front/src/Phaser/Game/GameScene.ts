@@ -160,23 +160,29 @@ export class GameScene extends Phaser.Scene {
             throw new Error('Your map MUST contain a layer of type "objectgroup" whose name is "floorLayer" that represents the layer characters are drawn at.');
         }
 
-        // Now, let's find the start layer
-        if (this.startLayerName) {
-            for (let layer of this.mapFile.layers) {
-                if (this.startLayerName === layer.name && layer.type === 'tilelayer' && this.isStartLayer(layer)) {
-                    let startPosition = this.startUser(layer);
-                    this.startX = startPosition.x;
-                    this.startY = startPosition.y;
+        // If there is an init position passed
+        if (this.initPosition !== null) {
+            this.startX = this.initPosition.x;
+            this.startY = this.initPosition.y;
+        } else {
+            // Now, let's find the start layer
+            if (this.startLayerName) {
+                for (let layer of this.mapFile.layers) {
+                    if (this.startLayerName === layer.name && layer.type === 'tilelayer' && this.isStartLayer(layer)) {
+                        let startPosition = this.startUser(layer);
+                        this.startX = startPosition.x;
+                        this.startY = startPosition.y;
+                    }
                 }
             }
-        }
-        if (this.startX === undefined) {
-            // If we have no start layer specified or if the hash passed does not exist, let's go with the default start position.
-            for (let layer of this.mapFile.layers) {
-                if (layer.type === 'tilelayer' && layer.name === "start") {
-                    let startPosition = this.startUser(layer);
-                    this.startX = startPosition.x;
-                    this.startY = startPosition.y;
+            if (this.startX === undefined) {
+                // If we have no start layer specified or if the hash passed does not exist, let's go with the default start position.
+                for (let layer of this.mapFile.layers) {
+                    if (layer.type === 'tilelayer' && layer.name === "start") {
+                        let startPosition = this.startUser(layer);
+                        this.startX = startPosition.x;
+                        this.startY = startPosition.y;
+                    }
                 }
             }
         }
@@ -304,15 +310,6 @@ export class GameScene extends Phaser.Scene {
      * @param layer
      */
     private startUser(layer: ITiledMapLayer): PositionInterface {
-        if (this.initPosition !== null) {
-            this.startX = this.initPosition.x;
-            this.startY = this.initPosition.y;
-            return {
-                x: this.initPosition.x,
-                y: this.initPosition.y
-            };
-        }
-
         let tiles : any = layer.data;
         let possibleStartPositions : PositionInterface[]  = [];
         tiles.forEach((objectKey : number, key: number) => {

@@ -11,7 +11,9 @@ import {
 } from "../../Connection";
 import {SimplePeer} from "../../WebRtc/SimplePeer";
 import {AddPlayerInterface} from "./AddPlayerInterface";
-import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
+import {ReconnectingScene, ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
+import ScenePlugin = Phaser.Scenes.ScenePlugin;
+import {Scene} from "phaser";
 
 /*export enum StatusGameManagerEnum {
     IN_PROGRESS = 1,
@@ -33,7 +35,7 @@ export interface MapObject {
 export class GameManager {
     //status: number;
     private ConnectionInstance: Connection;
-    private currentGameScene: GameScene;
+    private currentGameScene: GameScene|null;
     private playerName: string;
     SimplePeer : SimplePeer;
     private characterUserSelected: string;
@@ -87,15 +89,15 @@ export class GameManager {
             name: message.name,
             position: message.position
         }
-        this.currentGameScene.addPlayer(userMessage);
+        this.getCurrentGameScene().addPlayer(userMessage);
     }
 
     onUserMoved(message: MessageUserMovedInterface): void {
-        this.currentGameScene.updatePlayerPosition(message);
+        this.getCurrentGameScene().updatePlayerPosition(message);
     }
 
     onUserLeft(userId: string): void {
-        this.currentGameScene.removePlayer(userId);
+        this.getCurrentGameScene().removePlayer(userId);
     }
 
     initUsersPosition(usersPosition: MessageUserPositionInterface[]): void {
@@ -104,7 +106,7 @@ export class GameManager {
             return;
         }*/
         try {
-            this.currentGameScene.initUsersPosition(usersPosition)
+            this.getCurrentGameScene().initUsersPosition(usersPosition)
         } catch (e) {
             console.error(e);
         }
@@ -118,7 +120,7 @@ export class GameManager {
             return;
         }*/
         try {
-            this.currentGameScene.shareGroupPosition(groupPositionMessage)
+            this.getCurrentGameScene().shareGroupPosition(groupPositionMessage)
         } catch (e) {
             console.error(e);
         }
@@ -129,7 +131,7 @@ export class GameManager {
             return;
         }*/
         try {
-            this.currentGameScene.deleteGroup(groupId)
+            this.getCurrentGameScene().deleteGroup(groupId)
         } catch (e) {
             console.error(e);
         }
@@ -163,13 +165,36 @@ export class GameManager {
     }
 
     private oldSceneKey : string;
+    private oldMapUrlFile : string;
+    private oldInstance : string;
+    private scenePlugin: ScenePlugin;
+    private reconnectScene: Scene;
     switchToDisconnectedScene(): void {
+        if (this.currentGameScene === null) {
+            return;
+        }
+        console.log('Switching to disconnected scene');
         this.oldSceneKey = this.currentGameScene.scene.key;
+        this.oldMapUrlFile = this.currentGameScene.MapUrlFile;
+        this.oldInstance = this.currentGameScene.instance;
         this.currentGameScene.scene.start(ReconnectingSceneName);
+        this.reconnectScene = this.currentGameScene.scene.get(ReconnectingSceneName);
+        // Let's completely delete an purge the disconnected scene. We will start again from 0.
+        this.currentGameScene.scene.remove(this.oldSceneKey);
+        this.scenePlugin = this.currentGameScene.scene;
+        this.currentGameScene = null;
     }
 
     reconnectToGameScene(lastPositionShared: PointInterface) {
-        this.currentGameScene.scene.start(this.oldSceneKey, { initPosition: lastPositionShared });
+        const game : Phaser.Scene = GameScene.createFromUrl(this.oldMapUrlFile, this.oldInstance);
+        this.reconnectScene.scene.add(this.oldSceneKey, game, true, { initPosition: lastPositionShared });
+    }
+
+    private getCurrentGameScene(): GameScene {
+        if (this.currentGameScene === null) {
+            throw new Error('No current game scene enabled');
+        }
+        return this.currentGameScene;
     }
 }
 
