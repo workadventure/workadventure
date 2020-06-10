@@ -790,6 +790,11 @@ functional-red-black-tree@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/functional-red-black-tree/-/functional-red-black-tree-1.0.1.tgz#1b0ab3bd553b2a0d6399d29c0e3ea0b252078327"
 
+generic-type-guard@^3.2.0:
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/generic-type-guard/-/generic-type-guard-3.2.0.tgz#1fb136f934730c776486526b8a21fe96b067e691"
+  integrity sha512-EkkrXYbOtJ3VPB+SOrU7EhwY65rZErItGtBg5wAqywaj07BOubwOZqMYaxOWekJ9akioGqXIsw1fYk3wwbWsDQ==
+
 get-stdin@^4.0.1:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/get-stdin/-/get-stdin-4.0.1.tgz#b968c6b0a04384324902e8bf1a5df32579a450fe"
