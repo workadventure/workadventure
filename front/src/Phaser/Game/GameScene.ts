@@ -310,15 +310,6 @@ export class GameScene extends Phaser.Scene {
      * @param layer
      */
     private startUser(layer: ITiledMapLayer): PositionInterface {
-        if (this.initPosition !== null) {
-            this.startX = this.initPosition.x;
-            this.startY = this.initPosition.y;
-            return {
-                x: this.initPosition.x,
-                y: this.initPosition.y
-            };
-        }
-
         let tiles : any = layer.data;
         let possibleStartPositions : PositionInterface[]  = [];
         tiles.forEach((objectKey : number, key: number) => {
