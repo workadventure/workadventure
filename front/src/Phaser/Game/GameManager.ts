@@ -187,8 +187,7 @@ export class GameManager {
 
     reconnectToGameScene(lastPositionShared: PointInterface) {
         const game : Phaser.Scene = GameScene.createFromUrl(this.oldMapUrlFile, this.oldInstance);
-        this.reconnectScene.scene.add(this.oldSceneKey, game, false);
-        this.reconnectScene.scene.start(this.oldSceneKey, { initPosition: lastPositionShared });
+        this.reconnectScene.scene.add(this.oldSceneKey, game, true, { initPosition: lastPositionShared });
     }
 
     private getCurrentGameScene(): GameScene {
