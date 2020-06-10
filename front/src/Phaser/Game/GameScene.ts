@@ -58,7 +58,7 @@ export class GameScene extends Phaser.Scene {
         y: -1000
     }
 
-    PositionNextScene: Array<any> = new Array<any>();
+    private PositionNextScene: Array<Array<{ key: string, hash: string }>> = new Array<Array<{ key: string, hash: string }>>();
     private startLayerName: string|undefined;
 
     static createFromUrl(mapUrlFile: string, instance: string): GameScene {
@@ -295,15 +295,13 @@ export class GameScene extends Phaser.Scene {
             }
 
             //push and save switching case
-            // TODO: this is not efficient. We should refactor that to enable a search by key. For instance: this.PositionNextScene[y][x] = exitSceneKey
-            this.PositionNextScene.push({
-                xStart: (x * tileWidth),
-                yStart: (y * tileWidth),
-                xEnd: ((x +1) * tileHeight),
-                yEnd: ((y + 1) * tileHeight),
+            if (this.PositionNextScene[y] === undefined) {
+                this.PositionNextScene[y] = new Array<{key: string, hash: string}>();
+            }
+            this.PositionNextScene[y][x] = {
                 key: exitSceneKey,
                 hash
-            })
+            }
         }
     }
 
@@ -469,14 +467,15 @@ export class GameScene extends Phaser.Scene {
     /**
      *
      */
-    checkToExit(){
-        if(this.PositionNextScene.length === 0){
+    checkToExit(): {key: string, hash: string} | null  {
+        const x = Math.floor(this.CurrentPlayer.x / 32);
+        const y = Math.floor(this.CurrentPlayer.y / 32);
+
+        if (this.PositionNextScene[y] !== undefined && this.PositionNextScene[y][x] !== undefined) {
+            return this.PositionNextScene[y][x];
+        } else {
             return null;
         }
-        return this.PositionNextScene.find((position : any) => {
-            return position.xStart <= this.CurrentPlayer.x && this.CurrentPlayer.x <= position.xEnd
-            && position.yStart <= this.CurrentPlayer.y && this.CurrentPlayer.y <= position.yEnd
-        })
     }
 
     public initUsersPosition(usersPosition: MessageUserPositionInterface[]): void {

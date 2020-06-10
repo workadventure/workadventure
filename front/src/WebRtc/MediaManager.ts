@@ -1,18 +1,18 @@
-const videoConstraint: {width : any, height: any, facingMode : string} = {
+const videoConstraint: boolean|MediaTrackConstraints = {
     width: { ideal: 1280 },
     height: { ideal: 720 },
     facingMode: "user"
 };
 export class MediaManager {
     localStream: MediaStream|null = null;
-    remoteVideo: Array<any> = new Array<any>();
+    private remoteVideo: Map<string, HTMLVideoElement> = new Map<string, HTMLVideoElement>();
     myCamVideo: HTMLVideoElement;
-    cinemaClose: any = null;
-    cinema: any = null;
-    microphoneClose: any = null;
-    microphone: any = null;
+    cinemaClose: HTMLImageElement;
+    cinema: HTMLImageElement;
+    microphoneClose: HTMLImageElement;
+    microphone: HTMLImageElement;
     webrtcInAudio: HTMLAudioElement;
-    constraintsMedia : {audio : any, video : any} = {
+    constraintsMedia : MediaStreamConstraints = {
         audio: true,
         video: videoConstraint
     };
@@ -25,29 +25,29 @@ export class MediaManager {
         this.webrtcInAudio = this.getElementByIdOrFail<HTMLAudioElement>('audio-webrtc-in');
         this.webrtcInAudio.volume = 0.2;
 
-        this.microphoneClose = document.getElementById('microphone-close');
+        this.microphoneClose = this.getElementByIdOrFail<HTMLImageElement>('microphone-close');
         this.microphoneClose.style.display = "none";
-        this.microphoneClose.addEventListener('click', (e: any) => {
+        this.microphoneClose.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
             this.enabledMicrophone();
             //update tracking
         });
-        this.microphone = document.getElementById('microphone');
-        this.microphone.addEventListener('click', (e: any) => {
+        this.microphone = this.getElementByIdOrFail<HTMLImageElement>('microphone');
+        this.microphone.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
             this.disabledMicrophone();
             //update tracking
         });
 
-        this.cinemaClose = document.getElementById('cinema-close');
+        this.cinemaClose = this.getElementByIdOrFail<HTMLImageElement>('cinema-close');
         this.cinemaClose.style.display = "none";
-        this.cinemaClose.addEventListener('click', (e: any) => {
+        this.cinemaClose.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
             this.enabledCamera();
             //update tracking
         });
-        this.cinema = document.getElementById('cinema');
-        this.cinema.addEventListener('click', (e: any) => {
+        this.cinema = this.getElementByIdOrFail<HTMLImageElement>('cinema');
+        this.cinema.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
             this.disabledCamera();
             //update tracking
@@ -150,7 +150,7 @@ export class MediaManager {
                 <video id="${userId}" autoplay></video>
             </div>
         `);
-        this.remoteVideo[(userId as any)] = document.getElementById(userId);
+        this.remoteVideo.set(userId, this.getElementByIdOrFail<HTMLVideoElement>(userId));
     }
 
     /**
@@ -215,7 +215,12 @@ export class MediaManager {
      * @param stream
      */
     addStreamRemoteVideo(userId : string, stream : MediaStream){
-        this.remoteVideo[(userId as any)].srcObject = stream;
+        const remoteVideo = this.remoteVideo.get(userId);
+        if (remoteVideo === undefined) {
+            console.error('Unable to find video for ', userId);
+            return;
+        }
+        remoteVideo.srcObject = stream;
     }
 
     /**
@@ -228,6 +233,7 @@ export class MediaManager {
             return;
         }
         element.remove();
+        this.remoteVideo.delete(userId);
     }
 
     isConnecting(userId : string): void {

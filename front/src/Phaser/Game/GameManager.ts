@@ -1,6 +1,6 @@
 import {GameScene} from "./GameScene";
 import {
-    Connection,
+    Connection, ConnectionInterface,
     GroupCreatedUpdatedMessageInterface,
     ListMessageUserPositionInterface,
     MessageUserJoined,
@@ -44,11 +44,11 @@ export class GameManager {
         //this.status = StatusGameManagerEnum.IN_PROGRESS;
     }
 
-    connect(name: string, characterUserSelected : string) {
+    public connect(name: string, characterUserSelected : string): Promise<ConnectionInterface> {
         this.playerName = name;
         this.characterUserSelected = characterUserSelected;
         this.ConnectionInstance = new Connection(this);
-        return this.ConnectionInstance.createConnection(name, characterUserSelected).then((data : any) => {
+        return this.ConnectionInstance.createConnection(name, characterUserSelected).then((data : ConnectionInterface) => {
             this.SimplePeer = new SimplePeer(this.ConnectionInstance);
             return data;
         }).catch((err) => {

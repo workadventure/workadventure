@@ -1,4 +1,3 @@
-import Map = Phaser.Structs.Map;
 import {GameScene} from "../Game/GameScene";
 
 interface UserInputManagerDatum {
@@ -18,15 +17,13 @@ export enum UserInputEvent {
 
 //we cannot the map structure so we have to create a replacment
 export class ActiveEventList {
-    private KeysCode : any;
-    constructor() {
-        this.KeysCode = {};
-    }
+    private KeysCode : Map<UserInputEvent, boolean> = new Map<UserInputEvent, boolean>();
+
     get(event: UserInputEvent): boolean {
-        return this.KeysCode[event] || false;
+        return this.KeysCode.get(event) || false;
     }
-    set(event: UserInputEvent, value: boolean): boolean {
-        return this.KeysCode[event] = true;
+    set(event: UserInputEvent, value: boolean): void {
+        this.KeysCode.set(event, value);
     }
 }
 
