@@ -4,7 +4,7 @@ import {Identificable} from "./Identificable";
 import {TokenInterface} from "../../Controller/AuthenticateController";
 
 export interface ExSocketInterface extends Socket, Identificable {
-    token: TokenInterface;
+    token: string;
     roomId: string;
     webRtcRoomId: string;
     userId: string;

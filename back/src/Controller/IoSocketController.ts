@@ -60,13 +60,16 @@ export class IoSocketController {
         // Completely commented for now, as we do not use the "/login" route at all.
         this.Io.use((socket: Socket, next) => {
             if (!socket.handshake.query || !socket.handshake.query.token) {
+                console.error('An authentication error happened, a user tried to connect without a token.');
                 return next(new Error('Authentication error'));
             }
             if(this.searchClientByToken(socket.handshake.query.token)){
+                console.error('An authentication error happened, a user tried to connect while its token is already connected.');
                 return next(new Error('Authentication error'));
             }
             Jwt.verify(socket.handshake.query.token, SECRET_KEY, (err: JsonWebTokenError, tokenDecoded: object) => {
                 if (err) {
+                    console.error('An authentication error happened, invalid JsonWebToken.', err);
                     return next(new Error('Authentication error'));
                 }
 
@@ -74,7 +77,7 @@ export class IoSocketController {
                     return next(new Error('Authentication error, invalid token structure'));
                 }
 
-                (socket as ExSocketInterface).token = tokenDecoded;
+                (socket as ExSocketInterface).token = socket.handshake.query.token;
                 (socket as ExSocketInterface).userId = tokenDecoded.userId;
                 next();
             });
