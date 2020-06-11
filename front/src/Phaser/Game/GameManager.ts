@@ -168,7 +168,7 @@ export class GameManager {
     private oldMapUrlFile : string;
     private oldInstance : string;
     private scenePlugin: ScenePlugin;
-    private reconnectScene: Scene;
+    private reconnectScene: Scene|null;
     switchToDisconnectedScene(): void {
         if (this.currentGameScene === null) {
             return;
@@ -186,8 +186,12 @@ export class GameManager {
     }
 
     reconnectToGameScene(lastPositionShared: PointInterface) {
+        if (this.reconnectScene === null && this.currentGameScene) {
+            // In case we are asked to reconnect even if switchToDisconnectedScene was not triggered (can happen when a laptop goes to sleep)
+            this.switchToDisconnectedScene();
+        }
         const game : Phaser.Scene = GameScene.createFromUrl(this.oldMapUrlFile, this.oldInstance);
-        this.reconnectScene.scene.add(this.oldSceneKey, game, true, { initPosition: lastPositionShared });
+        this.reconnectScene?.scene.add(this.oldSceneKey, game, true, { initPosition: lastPositionShared });
     }
 
     private getCurrentGameScene(): GameScene {
