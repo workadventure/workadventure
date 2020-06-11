@@ -188,15 +188,18 @@ export class GameManager {
     private timeoutCallback: NodeJS.Timeout|null = null;
     reconnectToGameScene(lastPositionShared: PointInterface) {
         if (this.reconnectScene === null && this.currentGameScene && this.timeoutCallback === null) {
+            console.log('Reconnect called without switchToDisconnectedScene called first');
             // In case we are asked to reconnect even if switchToDisconnectedScene was not triggered (can happen when a laptop goes to sleep)
             this.switchToDisconnectedScene();
             // Wait a bit for scene to load. Otherwise, starting ReconnectingSceneName and then starting GameScene one after the other fails for some reason.
             this.timeoutCallback = setTimeout(() => {
+                console.log('Reconnecting to game scene from setTimeout');
                 this.reconnectToGameScene(lastPositionShared);
                 this.timeoutCallback = null;
             }, 500);
             return;
         }
+        console.log('Reconnecting to game scene');
         const game : Phaser.Scene = GameScene.createFromUrl(this.oldMapUrlFile, this.oldInstance);
         this.reconnectScene?.scene.add(this.oldSceneKey, game, true, { initPosition: lastPositionShared });
     }
