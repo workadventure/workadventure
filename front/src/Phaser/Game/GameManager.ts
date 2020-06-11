@@ -35,7 +35,7 @@ export interface MapObject {
 export class GameManager {
     //status: number;
     private ConnectionInstance: Connection;
-    private currentGameScene: GameScene|null;
+    private currentGameScene: GameScene|null = null;
     private playerName: string;
     SimplePeer : SimplePeer;
     private characterUserSelected: string;
@@ -168,7 +168,7 @@ export class GameManager {
     private oldMapUrlFile : string;
     private oldInstance : string;
     private scenePlugin: ScenePlugin;
-    private reconnectScene: Scene|null;
+    private reconnectScene: Scene|null = null;
     switchToDisconnectedScene(): void {
         if (this.currentGameScene === null) {
             return;
