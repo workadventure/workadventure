@@ -189,6 +189,9 @@ export class GameManager {
         if (this.reconnectScene === null && this.currentGameScene) {
             // In case we are asked to reconnect even if switchToDisconnectedScene was not triggered (can happen when a laptop goes to sleep)
             this.switchToDisconnectedScene();
+            // Wait a bit for scene to load. Otherwise, starting ReconnectingSceneName and then starting GameScene one after the other fails for some reason.
+            setTimeout(() => this.reconnectToGameScene(lastPositionShared), 500);
+            return;
         }
         const game : Phaser.Scene = GameScene.createFromUrl(this.oldMapUrlFile, this.oldInstance);
         this.reconnectScene?.scene.add(this.oldSceneKey, game, true, { initPosition: lastPositionShared });
