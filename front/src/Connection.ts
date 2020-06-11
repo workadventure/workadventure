@@ -232,6 +232,8 @@ export class Connection implements ConnectionInterface {
     }
 
     joinARoom(roomId: string, startX: number, startY: number, direction: string, moving: boolean): void {
+        let point = new Point(startX, startY, direction, moving);
+        this.lastPositionShared = point;
         this.getSocket().emit(EventMessage.JOIN_ROOM, { roomId, position: {x: startX, y: startY, direction, moving }}, (userPositions: MessageUserPositionInterface[]) => {
             this.GameManager.initUsersPosition(userPositions);
         });
