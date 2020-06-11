@@ -188,6 +188,7 @@ export class GameManager {
     private timeoutCallback: NodeJS.Timeout|null = null;
     reconnectToGameScene(lastPositionShared: PointInterface): void {
         if (this.timeoutCallback !== null) {
+            console.log('Reconnect called but setTimeout in progress for the reconnection');
             return;
         }
         if (this.reconnectScene === null) {
