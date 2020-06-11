@@ -117,6 +117,10 @@ export abstract class Character extends Phaser.Physics.Arcade.Sprite {
     }
 
     protected playAnimation(direction : string, moving: boolean): void {
+        if (!this.anims) {
+            console.error('ANIMS IS NOT DEFINED!!!');
+            return;
+        }
         if (moving && (!this.anims.currentAnim || this.anims.currentAnim.key !== direction)) {
             this.play(this.PlayerTexture+'-'+direction, true);
         } else if (!moving) {

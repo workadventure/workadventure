@@ -1,4 +1,3 @@
-import {Point} from "./MessageUserPosition";
 import {PointInterface} from "_Model/Websocket/PointInterface";
 
 export class MessageUserJoined {

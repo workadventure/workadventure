@@ -2,6 +2,32 @@
 <html class="no-js" lang="">
 
 <head>
+	<!-- Global site tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=UA-10196481-11"></script>
+	<script>
+	  window.dataLayer = window.dataLayer || [];
+	  function gtag(){dataLayer.push(arguments);}
+	  gtag('js', new Date());
+
+	  gtag('config', 'UA-10196481-11');
+	</script>
+    <link rel="apple-touch-icon" sizes="57x57" href="static/images/favicons/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="static/images/favicons/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="static/images/favicons/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="static/images/favicons/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="static/images/favicons/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="static/images/favicons/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="static/images/favicons/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="static/images/favicons/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="static/images/favicons/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192"  href="static/images/favicons/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="static/images/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="static/images/favicons/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="static/images/favicons/favicon-16x16.png">
+    <link rel="manifest" href="static/images/favicons/manifest.json">
+    <meta name="msapplication-TileColor" content="#000000">
+    <meta name="msapplication-TileImage" content="static/images/favicons/ms-icon-144x144.png">
+    <meta name="theme-color" content="#000000">
     <title>WorkAdventu.re</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
@@ -27,8 +53,17 @@
     <script>
         function startGame() {
             let playUrl = window.location.protocol + "//play."+window.location.host+"/_/global/npeguin.github.io/office-map/map.json";
-            window.location.assign(playUrl);
+            window.open(playUrl, '_blank');
         }
+		function shareFB() {
+			window.open('https://www.facebook.com/sharer/sharer.php?u=https://workadventu.re/', '_blank', 'width=500,height=500');
+		}
+		function shareLI() {
+			window.open('https://www.linkedin.com/shareArticle?mini=true&url=https://workadventu.re/&title=&summary=Your workplace but better!&source=TheCodingMachine', '_blank', 'width=500,height=500');
+		}
+		function shareTW() {
+			window.open('https://twitter.com/share?text=Your workplace but better!&url=https://workadventu.re/&hashtags=thecodingmachine', '_blank', 'width=500,height=500');
+		}
     </script>
 </head>
 
@@ -37,21 +72,21 @@
         <div class="container-lg section">
             <div class="over-image">
                 <div class="row">
-                    <div class="col-6 col-md-6 my-3 my-md-0">
+                    <div class="col-10 col-md-6">
                         <div class="logo">
                             <img src="static/images/logo.png">
                         </div>
                     </div>
-                    <div class="col-6 col-md-6 my-3 my-md-0">
+                    <div class="col-2 col-md-6">
                         <div class="social-links">
-                            Share your experience
-                            <a href="https://www.facebook.com/sharer/sharer.php?u=https://workadventu.re/" target="_BLANK">
+                            <span class="share-title">Share your experience</span>
+                            <a onclick="shareFB()">
                                 <img class="social-image" src="static/images/facebook.png" />
                             </a>
-                            <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://workadventu.re/&title=&summary=Discover a pixelated new world and start a casual conversation !&source=TheCodingMachine" target="_BLANK">
+                            <a onclick="shareLI()">
                                 <img class="social-image" src="static/images/linkedin.png" />
                             </a>
-                            <a href="https://twitter.com/home?status=https://workadventu.re/ Discover a pixelated new world and start a casual conversation !" target="_BLANK">
+                            <a onclick="shareTW()">
                                 <img class="social-image" src="static/images/twitter.png" />
                             </a>
                         </div>
@@ -61,9 +96,9 @@
                     <h1>Your workplace<br/>but better</h1>
                     <h3>You are impatient to discover this new world? Click on "Play online" and meet new people or share this adventure with your colleagues and friends by clicking on "Private mode"</h3>
                 </div>
-                <div class="row justify-content-md-center pt-5" style="margin-top: 65px;">
+                <div class="row justify-content-md-center pt-5">
                     <div class="col col-lg-3">
-                        <a class="custom-link play" target="_BLANK" onclick="startGame()" title="PLAY ONLINE">
+                        <a class="custom-link play" onclick="startGame()" title="PLAY ONLINE">
                             PLAY ONLINE
                         </a>
                     </div>
@@ -83,6 +118,11 @@
         </div>
     </header>
     <div class="section bg-white how-to">
+        <div class="desktop-only text-center d-block d-md-none d-lg-none d-xl-none">
+            <img src="static/images/desktop.png" width="64" /><br />
+            Unfortunately, it's not mobile friendly yet. But we are happy to invite you to try it on your desktop. Enjoy!
+        </div>
+
         <div class="container-fluid container-lg">
             <div class="row justify-content-md-center">
                 <div class="col-12 col-md-12 text-center">
@@ -171,10 +211,10 @@
     <div class="bg-white footer">
         <div class="container-fluid container-lg">
             <div class="row">
-                <div class="col-6 col-md-6 my-3 my-md-0">
+                <div class="col-12 col-md-6  my-3 my-md-0">
                     <a href="https://www.thecodingmachine.com/" target="_blank"><img src="static/images/Logo TCM.png"></a>
                 </div>
-                <div class="col-6 col-md-6 my-3 my-md-0 floppy">
+                <div class="col-12 col-md-6 my-3 my-md-0 floppy">
                     <img src="static/images/floppy.png" />
                     <div>Soon available on floppy !<br/><span>otherwise, available on <a href="https://github.com/thecodingmachine/workadventure" target="_BLANK">GitHub</a></span></div>
                 </div>

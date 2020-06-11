@@ -2,7 +2,7 @@
   "name": "workadventurefront",
   "version": "1.0.0",
   "main": "index.js",
-  "license": "AGPL",
+  "license": "SEE LICENSE IN LICENSE.txt",
   "devDependencies": {
     "@types/jasmine": "^3.5.10",
     "@typescript-eslint/eslint-plugin": "^2.26.0",
