@@ -9,9 +9,9 @@ import Socket = SocketIOClient.Socket;
 import {PlayerAnimationNames} from "./Phaser/Player/Animation";
 import {UserSimplePeerInterface} from "./WebRtc/SimplePeer";
 
-
 enum EventMessage{
     WEBRTC_SIGNAL = "webrtc-signal",
+    WEBRTC_SCREEN_SHARING_SIGNAL = "webrtc-screen-sharing-signal",
     WEBRTC_START = "webrtc-start",
     WEBRTC_JOIN_ROOM = "webrtc-join-room",
     JOIN_ROOM = "join-room", // bi-directional
@@ -124,7 +124,11 @@ export interface ConnectionInterface {
     /*webrtc*/
     sendWebrtcSignal(signal: any, roomId: string, userId?: string|null, receiverId?: string): void;
 
+    sendWebrtcScreenSharingSignal(signal: any, roomId: string, userId?: string|null, receiverId?: string): void;
+
     receiveWebrtcSignal(callBack: Function): void;
+
+    receiveWebrtcScreenSharingSignal(callBack: Function): void;
 
     receiveWebrtcStart(callBack: (message: WebRtcStartMessageInterface) => void): void;
 
@@ -290,12 +294,25 @@ export class Connection implements ConnectionInterface {
         });
     }
 
+    sendWebrtcScreenSharingSignal(signal: any, roomId: string, userId? : string|null, receiverId? : string) {
+        return this.getSocket().emit(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, {
+            userId: userId ? userId : this.userId,
+            receiverId: receiverId ? receiverId : this.userId,
+            roomId: roomId,
+            signal: signal
+        });
+    }
+
     receiveWebrtcStart(callback: (message: WebRtcStartMessageInterface) => void) {
         this.getSocket().on(EventMessage.WEBRTC_START, callback);
     }
 
     receiveWebrtcSignal(callback: Function) {
         return this.getSocket().on(EventMessage.WEBRTC_SIGNAL, callback);
+    }
+
+    receiveWebrtcScreenSharingSignal(callback: Function) {
+        return this.getSocket().on(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, callback);
     }
 
     private errorMessage(): void {

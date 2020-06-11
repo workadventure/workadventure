@@ -19,6 +19,7 @@ export class SimplePeer {
 
     private MediaManager: MediaManager;
 
+    private PeerScreenSharingConnectionArray: Map<string, SimplePeerNamespace.Instance> = new Map<string, SimplePeerNamespace.Instance>();
     private PeerConnectionArray: Map<string, SimplePeerNamespace.Instance> = new Map<string, SimplePeerNamespace.Instance>();
 
     constructor(Connection: ConnectionInterface, WebRtcRoomId: string = "test-webrtc") {
@@ -43,6 +44,11 @@ export class SimplePeer {
         //receive signal by gemer
         this.Connection.receiveWebrtcSignal((message: any) => {
             this.receiveWebrtcSignal(message);
+        });
+
+        //receive signal by gemer
+        this.Connection.receiveWebrtcScreenSharingSignal((message: any) => {
+            this.receiveWebrtcScreenSharingSignal(message);
         });
 
         this.MediaManager.activeVisio();
@@ -91,7 +97,8 @@ export class SimplePeer {
     /**
      * create peer connection to bind users
      */
-    private createPeerConnection(user : UserSimplePeerInterface) : SimplePeerNamespace.Instance | null{
+    private createPeerConnection(user : UserSimplePeerInterface, screenSharing: boolean = false) : SimplePeerNamespace.Instance | null{
+        console.log("createPeerConnection => screenSharing", screenSharing)
         if(this.PeerConnectionArray.has(user.userId)) {
             return null;
         }
@@ -104,12 +111,11 @@ export class SimplePeer {
             }
         }
 
-        let screenSharing : boolean = name !== undefined && name.indexOf("screenSharing") > -1;
         this.MediaManager.removeActiveVideo(user.userId);
-        if(!screenSharing) {
-            this.MediaManager.addActiveVideo(user.userId, name);
+        if(screenSharing) {
+            this.MediaManager.addScreenSharingActiveVideo(user.userId);
         }else{
-            this.MediaManager.addScreenSharingActiveVideo(user.userId, name);
+            this.MediaManager.addActiveVideo(user.userId, name);
         }
 
         let peer : SimplePeerNamespace.Instance = new Peer({
@@ -128,10 +134,19 @@ export class SimplePeer {
                 ]
             },
         });
-        this.PeerConnectionArray.set(user.userId, peer);
+        if(screenSharing){
+            this.PeerScreenSharingConnectionArray.set(user.userId, peer);
+        }else {
+            this.PeerConnectionArray.set(user.userId, peer);
+        }
 
         //start listen signal for the peer connection
         peer.on('signal', (data: any) => {
+            console.log("screenSharing", screenSharing);
+            if(screenSharing){
+                this.sendWebrtcScreenSharingSignal(data, user.userId);
+                return;
+            }
             this.sendWebrtcSignal(data, user.userId);
         });
 
@@ -143,6 +158,9 @@ export class SimplePeer {
         });*/
 
         peer.on('close', () => {
+            if(screenSharing){
+                this.closeScreenSharingConnection(user.userId);
+            }
             this.closeConnection(user.userId);
         });
 
@@ -172,7 +190,11 @@ export class SimplePeer {
             }
         });
 
-        this.addMedia(user.userId);
+        if(screenSharing){
+            this.addMediaScreenSharing(user.userId);
+        }else {
+            this.addMedia(user.userId);
+        }
         return peer;
     }
 
@@ -201,11 +223,36 @@ export class SimplePeer {
     }
 
     /**
+     * This is triggered twice. Once by the server, and once by a remote client disconnecting
+     *
+     * @param userId
+     */
+    private closeScreenSharingConnection(userId : string) {
+        try {
+            this.MediaManager.removeActiveScreenSharingVideo(userId);
+            let peer = this.PeerScreenSharingConnectionArray.get(userId);
+            if (peer === undefined) {
+                console.warn("Tried to close connection for user "+userId+" but could not find user")
+                return;
+            }
+            // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
+            // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
+            //console.log('Closing connection with '+userId);
+            peer.destroy();
+            this.PeerScreenSharingConnectionArray.delete(userId)
+            //console.log('Nb users in peerConnectionArray '+this.PeerConnectionArray.size);
+        } catch (err) {
+            console.error("closeConnection", err)
+        }
+    }
+
+    /**
      *
      * @param userId
      * @param data
      */
     private sendWebrtcSignal(data: any, userId : string) {
+        console.log("sendWebrtcSignal", data);
         try {
             this.Connection.sendWebrtcSignal(data, this.WebRtcRoomId, null, userId);
         }catch (e) {
@@ -213,11 +260,44 @@ export class SimplePeer {
         }
     }
 
+    /**
+     *
+     * @param userId
+     * @param data
+     */
+    private sendWebrtcScreenSharingSignal(data: any, userId : string) {
+        console.log("sendWebrtcScreenSharingSignal", data);
+        try {
+            this.Connection.sendWebrtcScreenSharingSignal(data, this.WebRtcRoomId, null, userId);
+        }catch (e) {
+            console.error(`sendWebrtcSignal => ${userId}`, e);
+        }
+    }
+
     private receiveWebrtcSignal(data: any) {
+        console.log("receiveWebrtcSignal", data);
         try {
             //if offer type, create peer connection
             if(data.signal.type === "offer"){
                 this.createPeerConnection(data);
+            }
+            let peer = this.PeerConnectionArray.get(data.userId);
+            if (peer !== undefined) {
+                peer.signal(data.signal);
+            } else {
+                console.error('Could not find peer whose ID is "'+data.userId+'" in PeerConnectionArray');
+            }
+        } catch (e) {
+            console.error(`receiveWebrtcSignal => ${data.userId}`, e);
+        }
+    }
+
+    private receiveWebrtcScreenSharingSignal(data: any) {
+        console.log("receiveWebrtcScreenSharingSignal", data);
+        try {
+            //if offer type, create peer connection
+            if(data.signal.type === "offer"){
+                this.createPeerConnection(data, true);
             }
             let peer = this.PeerConnectionArray.get(data.userId);
             if (peer !== undefined) {
@@ -254,18 +334,8 @@ export class SimplePeer {
             if (!PeerConnection) {
                 throw new Error('While adding media, cannot find user with ID ' + userId);
             }
-
-            if(userId.indexOf("screenSharing") > -1 && this.MediaManager.localScreenCapture){
-                for (const track of this.MediaManager.localScreenCapture.getTracks()) {
-                    PeerConnection.addTrack(track, this.MediaManager.localScreenCapture);
-                }
-                return;
-            }
-
             let localStream: MediaStream | null = this.MediaManager.localStream;
-            let localScreenCapture: MediaStream | null = this.MediaManager.localScreenCapture;
-
-            PeerConnection.write(new Buffer(JSON.stringify(Object.assign(this.MediaManager.constraintsMedia, {screen: localScreenCapture !== null}))));
+            PeerConnection.write(new Buffer(JSON.stringify(this.MediaManager.constraintsMedia)));
 
             if(!localStream){
                 return;
@@ -280,6 +350,21 @@ export class SimplePeer {
         }
     }
 
+    private addMediaScreenSharing (userId : any = null) {
+        let PeerConnection = this.PeerScreenSharingConnectionArray.get(userId);
+        if (!PeerConnection) {
+            throw new Error('While adding media, cannot find user with ID ' + userId);
+        }
+        let localScreenCapture: MediaStream | null = this.MediaManager.localScreenCapture;
+        if(!localScreenCapture){
+            return;
+        }
+        /*for (const track of localScreenCapture.getTracks()) {
+            PeerConnection.addTrack(track, localScreenCapture);
+        }*/
+        return;
+    }
+
     updatedLocalStream(){
         this.Users.forEach((user: UserSimplePeerInterface) => {
             this.addMedia(user.userId);
@@ -288,12 +373,14 @@ export class SimplePeer {
 
     updatedScreenSharing() {
         if (this.MediaManager.localScreenCapture) {
+            if(!this.Connection.userId){
+                return;
+            }
             let screenSharingUser: UserSimplePeerInterface = {
-                userId: `screenSharing-${this.Connection.userId}`,
-                name: 'screenSharing',
+                userId: this.Connection.userId,
                 initiator: true
             };
-            let PeerConnectionScreenSharing = this.createPeerConnection(screenSharingUser);
+            let PeerConnectionScreenSharing = this.createPeerConnection(screenSharingUser, true);
             if (!PeerConnectionScreenSharing) {
                 return;
             }
@@ -304,12 +391,12 @@ export class SimplePeer {
             }catch (e) {
                 console.error("updatedScreenSharing => ", e);
             }
-            this.MediaManager.addStreamRemoteVideo(screenSharingUser.userId, this.MediaManager.localScreenCapture);
+            this.MediaManager.addStreamRemoteScreenSharing(screenSharingUser.userId, this.MediaManager.localScreenCapture);
         } else {
-            if (!this.PeerConnectionArray.has(`screenSharing-${this.Connection.userId}`)) {
+            if (!this.Connection.userId || !this.PeerScreenSharingConnectionArray.has(this.Connection.userId)) {
                 return;
             }
-            let PeerConnectionScreenSharing = this.PeerConnectionArray.get(`screenSharing-${this.Connection.userId}`);
+            let PeerConnectionScreenSharing = this.PeerScreenSharingConnectionArray.get(this.Connection.userId);
             if (!PeerConnectionScreenSharing) {
                 return;
             }
