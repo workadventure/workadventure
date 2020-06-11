@@ -158,6 +158,16 @@ export class Connection implements ConnectionInterface {
                         token: this.token
                     }
                 });
+
+                //listen event
+                this.disconnectServer();
+                this.errorMessage();
+                this.groupUpdatedOrCreated();
+                this.groupDeleted();
+                this.onUserJoins();
+                this.onUserMoved();
+                this.onUserLeft();
+
                 return this.connectSocketServer();
             })
             .catch((err) => {
@@ -178,15 +188,6 @@ export class Connection implements ConnectionInterface {
      * @param character
      */
     connectSocketServer(): Promise<ConnectionInterface>{
-        //listen event
-        this.disconnectServer();
-        this.errorMessage();
-        this.groupUpdatedOrCreated();
-        this.groupDeleted();
-        this.onUserJoins();
-        this.onUserMoved();
-        this.onUserLeft();
-
         return new Promise<ConnectionInterface>((resolve, reject) => {
             this.getSocket().emit(EventMessage.SET_PLAYER_DETAILS, {
                 name: this.name,
