@@ -287,14 +287,13 @@ export class MediaManager {
      *
      * @param userId
      */
-    addScreenSharingActiveVideo(userId : string, userName: string = ""){
+    addScreenSharingActiveVideo(userId : string){
+        userId = `screen-sharing-${userId}`;
         this.webrtcInAudio.play();
         // FIXME: switch to DisplayManager!
         let elementRemoteVideo = this.getElementByIdOrFail("activeScreenSharing");
-        userName = userName.toUpperCase();
-        let color = this.getColorByString(userName);
         elementRemoteVideo.insertAdjacentHTML('beforeend', `
-            <div id="div-${userId}" class="screen-sharing-video-container" style="border-color: ${color};">
+            <div id="div-${userId}" class="screen-sharing-video-container">
                 <video id="${userId}" autoplay></video>
             </div>
         `);
@@ -302,6 +301,7 @@ export class MediaManager {
         if(!activeHTMLVideoElement){
             return;
         }
+        console.log(userId, (activeHTMLVideoElement as HTMLVideoElement));
         this.remoteVideo.set(userId, (activeHTMLVideoElement as HTMLVideoElement));
     }
 
@@ -372,6 +372,9 @@ export class MediaManager {
         }
         remoteVideo.srcObject = stream;
     }
+    addStreamRemoteScreenSharing(userId : string, stream : MediaStream){
+        this.addStreamRemoteVideo(`screen-sharing-${userId}`, stream);
+    }
 
     /**
      *
@@ -380,6 +383,9 @@ export class MediaManager {
     removeActiveVideo(userId : string){
         layoutManager.remove(userId);
         this.remoteVideo.delete(userId);
+    }
+    removeActiveScreenSharingVideo(userId : string) {
+        this.removeActiveVideo(`screen-sharing-${userId}`)
     }
 
     isConnecting(userId : string): void {

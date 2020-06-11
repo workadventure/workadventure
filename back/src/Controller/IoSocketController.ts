@@ -28,6 +28,7 @@ enum SockerIoEvent {
     USER_MOVED = "user-moved", // From server to client
     USER_LEFT = "user-left", // From server to client
     WEBRTC_SIGNAL = "webrtc-signal",
+    WEBRTC_SCREEN_SHARING_SIGNAL = "webrtc-screen-sharing-signal",
     WEBRTC_START = "webrtc-start",
     WEBRTC_DISCONNECT = "webrtc-disconect",
     MESSAGE_ERROR = "message-error",
@@ -226,18 +227,11 @@ export class IoSocketController {
             });
 
             socket.on(SockerIoEvent.WEBRTC_SIGNAL, (data: unknown) => {
-                if (!isWebRtcSignalMessageInterface(data)) {
-                    socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid WEBRTC_SIGNAL message.'});
-                    console.warn('Invalid WEBRTC_SIGNAL message received: ', data);
-                    return;
-                }
-                //send only at user
-                const client = this.sockets.get(data.receiverId);
-                if (client === undefined) {
-                    console.warn("While exchanging a WebRTC signal: client with id ", data.receiverId, " does not exist. This might be a race condition.");
-                    return;
-                }
-                return client.emit(SockerIoEvent.WEBRTC_SIGNAL, data);
+                this.emit((socket as ExSocketInterface), data, SockerIoEvent.WEBRTC_SIGNAL);
+            });
+
+            socket.on(SockerIoEvent.WEBRTC_SCREEN_SHARING_SIGNAL, (data: unknown) => {
+                this.emit((socket as ExSocketInterface), data, SockerIoEvent.WEBRTC_SCREEN_SHARING_SIGNAL);
             });
 
             socket.on(SockerIoEvent.DISCONNECT, () => {
@@ -282,6 +276,21 @@ export class IoSocketController {
                 answerFn(Client.userId);
             });
         });
+    }
+
+    emit(socket: ExSocketInterface, data: unknown, event: SockerIoEvent){
+        if (!isWebRtcSignalMessageInterface(data)) {
+            socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid WEBRTC_SIGNAL message.'});
+            console.warn('Invalid WEBRTC_SIGNAL message received: ', data);
+            return;
+        }
+        //send only at user
+        const client = this.sockets.get(data.receiverId);
+        if (client === undefined) {
+            console.warn("While exchanging a WebRTC signal: client with id ", data.receiverId, " does not exist. This might be a race condition.");
+            return;
+        }
+        return client.emit(event, data);
     }
 
     searchClientByIdOrFail(userId: string): ExSocketInterface {

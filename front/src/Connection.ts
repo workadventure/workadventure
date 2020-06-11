@@ -9,9 +9,9 @@ import {PlayerAnimationNames} from "./Phaser/Player/Animation";
 import {UserSimplePeerInterface} from "./WebRtc/SimplePeer";
 import {SignalData} from "simple-peer";
 
-
 enum EventMessage{
     WEBRTC_SIGNAL = "webrtc-signal",
+    WEBRTC_SCREEN_SHARING_SIGNAL = "webrtc-screen-sharing-signal",
     WEBRTC_START = "webrtc-start",
     JOIN_ROOM = "join-room", // bi-directional
     USER_POSITION = "user-position", // bi-directional
@@ -197,12 +197,38 @@ export class Connection implements Connection {
         });
     }
 
+    sendWebrtcScreenSharingSignal(signal: any, roomId: string, userId? : string|null, receiverId? : string) {
+        return this.getSocket().emit(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, {
+            userId: userId ? userId : this.userId,
+            receiverId: receiverId ? receiverId : this.userId,
+            roomId: roomId,
+            signal: signal
+        });
+    }
+
     public receiveWebrtcStart(callback: (message: WebRtcStartMessageInterface) => void) {
         this.socket.on(EventMessage.WEBRTC_START, callback);
     }
 
     public receiveWebrtcSignal(callback: (message: WebRtcSignalMessageInterface) => void) {
         return this.socket.on(EventMessage.WEBRTC_SIGNAL, callback);
+    }
+
+    receiveWebrtcScreenSharingSignal(callback: Function) {
+        return this.getSocket().on(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, callback);
+    }
+
+    private errorMessage(): void {
+        this.getSocket().on(EventMessage.MESSAGE_ERROR, (message: string) => {
+            console.error(EventMessage.MESSAGE_ERROR, message);
+        })
+    }
+
+    private disconnectServer(): void {
+        this.getSocket().on(EventMessage.CONNECT_ERROR, () => {
+            this.GameManager.switchToDisconnectedScene();
+        });
+
     }
 
     public onServerDisconnected(callback: (reason: string) => void): void {
