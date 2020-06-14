@@ -86,11 +86,11 @@
                         </div>
                     </div>
                 </div>
-                <div class="title text-center">
+                <div class="title title-main text-center">
                     <h1>Your workplace<br/>but better</h1>
                     <h3>You are impatient to discover this new world? Click on "Play online" and meet new people or share this adventure with your colleagues and friends by clicking on "Private mode"</h3>
                 </div>
-                <div class="row justify-content-md-center pt-5">
+                <div class="row buttons-row justify-content-md-center pt-5">
                     <div class="col col-lg-3">
                         <a class="custom-link start" href="/choose-map.html" title="PRIVATE MODE">
                             PRIVATE MODE
@@ -112,6 +112,12 @@
         </div>
     </header>
     <section class="story-wrapper">
+        <div class="clouds clouds-2">
+            <div class="cloud"></div>
+        </div>
+        <div class="clouds">
+            <div class="cloud"></div>
+        </div>
         <div class="sky"></div>
         <div class="mountains"></div>
         <img src="static/images/story/story-map-bg.png" height="672" class="story-1" />
@@ -153,16 +159,41 @@
             <div>
                 <p>You can also create a private room with your friends or your team ! </p>
                 <p class="bubble-legend">To try, press button private mode</p>
-                <p class="bubble-action"><span onclick="startGame()">
+                <p class="bubble-action"><a href="/choose-map.html">
                     <img src="static/images/playicon.png" />
                     START IN PRIVATE MODE
-                </span></p>
+                </a></p>
             </div>
         </div>
         <!-- PRELOADING (hidden elements) -->
         <img src="static/images/story/character-walk-right.gif" style="display:none;" />
     </section>
     <script>
+
+        gsap.to(".title-main", {
+            //y:-1000,
+            scale: 0,
+            opacity: 0,
+            ease: "none",
+            scrollTrigger: {
+                trigger: "header",
+                 start: "top top", // the default values
+                // end: "bottom top",
+                scrub: true
+            },
+        });
+
+        gsap.to(".over-image .clouds", {
+            y: 100,
+            ease: "none",
+            scrollTrigger: {
+                trigger: "header",
+                 start: "top top", // the default values
+                // end: "bottom top",
+                scrub: true
+            },
+        });
+
         var maxImageTranslateValue = 3507 - window.innerWidth;
         var bubbleNumber = document.getElementsByClassName("bubble").length;
         var charWalkToRightImage = "static/images/story/character-walk-right.gif";
@@ -177,11 +208,6 @@
                 scrub: 1, // smooth scrubbing, takes 1 second to "catch up" to the scrollbar
             }
         });
-        var moveMountains = function() {
-            storyScrollTrigger.to(".mountains", {
-                x: -100
-            })
-        };
 
         storyScrollTrigger.to(".birds", {
             x: (-window.innerWidth -200)
@@ -206,7 +232,6 @@
             x: -maxImageTranslateValue * (2/bubbleNumber),
             onStart: function() {
                 document.getElementById("leymah").src = charWalkToRightImage;
-                moveMountains();
             },
             onComplete: function() {
                 document.getElementById("leymah").src = charStaticImage;
@@ -223,7 +248,6 @@
             x: -maxImageTranslateValue * (3/bubbleNumber),
             onStart: function() {
                 document.getElementById("leymah").src = charWalkToRightImage;
-                moveMountains();
             },
             onComplete: function() {
                 document.getElementById("leymah").src = charStaticImage;
@@ -240,7 +264,6 @@
             x: -maxImageTranslateValue,
             onStart: function() {
                 document.getElementById("leymah").src = "static/images/story/character-walk-right.gif";
-                moveMountains();
             },
             onComplete: function() {
                 document.getElementById("leymah").src = "static/images/story/character-static.png";

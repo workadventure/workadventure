@@ -75,10 +75,12 @@ header {
                 font-family: 'Karmatic Arcade';
                 font-size: 2.75rem;
                 margin-bottom: 1.25rem;
+                color: white;
             }
             h3 {
                 min-height: 200px;
                 padding: 1rem;
+                color: #106ca2;
             }
             @include media-breakpoint-down(xs) {
                 h3 {
@@ -87,34 +89,34 @@ header {
             }
         }
     }
-    .clouds {
-        content: "";
-        position: absolute;
-        bottom: 0;
-        right: 0;
-        height: 162px;
-        overflow: hidden;
-        width: 100%;
-        z-index: 1;
-        &.clouds-2 {
-            bottom: 25px;
-            .cloud {
-                transform: translateX(50px);
-                -webkit-animation-duration: 80s;
-                opacity: .6;
-            }
-        }
+
+}
+.clouds {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    height: 162px;
+    overflow: hidden;
+    width: 100%;
+    z-index: 1;
+    &.clouds-2 {
+        bottom: 25px;
         .cloud {
-            background: url('../images/cloud.png') repeat-x;
-            height: 162px;
-            width: 4000px;
-            -webkit-animation-name: prop-600;
-            -webkit-animation-duration: 50s;
-            -webkit-animation-iteration-count: infinite;
-            -webkit-animation-direction:alternate;
+            transform: translateX(50px);
+            -webkit-animation-duration: 80s;
+            opacity: .6;
         }
     }
-
+    .cloud {
+        background: url('../images/cloud.png') repeat-x;
+        height: 162px;
+        width: 4000px;
+        -webkit-animation-name: prop-600;
+        -webkit-animation-duration: 50s;
+        -webkit-animation-iteration-count: infinite;
+        -webkit-animation-direction:alternate;
+    }
 }
 @-webkit-keyframes prop-600 {
     0% {
@@ -124,6 +126,7 @@ header {
         -webkit-transform: translateX(-400px);
     }
 }
+
 .custom-link{
     cursor: pointer;
     font-family: "VCR OSD Mono";
@@ -212,6 +215,7 @@ img{
 .story-wrapper {
     background: white;
     position: relative;
+    height: 100vh;
     min-height: calc(672px + 75px);
     padding-top: 75px;
     width: 100%;
@@ -223,12 +227,19 @@ img{
         max-width: none;
     }
     .sky {
+        margin-top: 8vh;
         z-index: 1;
         position: absolute;
         top: 0;
         width: 100%;
         height: 242px;
         background: url(../images/story/sky.jpg) repeat-x top left;
+    }
+    .clouds {
+        bottom: auto;
+        top: 0;
+        z-index: 2;
+        transform: scaleY(-1);
     }
     .mountains {
         z-index: 5;
@@ -242,6 +253,7 @@ img{
         position: absolute;
         z-index: 10;
         left: 0;
+        bottom: 0;
         overflow: hidden;
     }
     .character {
