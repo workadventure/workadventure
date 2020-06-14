@@ -46,14 +46,6 @@ export class SimplePeer {
             this.receiveWebrtcSignal(message);
         });
 
-        this.Connection.receiveWebrtcScreenSharingStart((message: WebRtcDisconnectMessageInterface) => {
-            console.log("receiveWebrtcScreenSharingStart => initiator", message.userId === this.Connection.userId);
-            if(message.userId === this.Connection.userId) {
-                console.log("receiveWebrtcScreenSharingStart => initiator => create peer connexion");
-                this.receiveWebrtcScreenSharingStart(message);
-            }
-        });
-
         //receive signal by gemer
         this.Connection.receiveWebrtcScreenSharingSignal((message: WebRtcDisconnectMessageInterface) => {
             this.receiveWebrtcScreenSharingSignal(message);
@@ -87,31 +79,6 @@ export class SimplePeer {
 
         //start connection
         this.startWebRtc();
-    }
-
-    private receiveWebrtcScreenSharingStart(data: WebRtcDisconnectMessageInterface) {
-        console.log("receiveWebrtcScreenSharingStart", data);
-        let screenSharingUser: UserSimplePeerInterface = {
-            userId: data.userId,
-            initiator: this.Connection.userId === data.userId
-        };
-        let PeerConnectionScreenSharing = this.createPeerConnection(screenSharingUser, true);
-        if (!PeerConnectionScreenSharing) {
-            console.error("receiveWebrtcScreenSharingStart => cannot create peer connexion", PeerConnectionScreenSharing);
-            return;
-        }
-        console.log(`receiveWebrtcScreenSharingStart => ${screenSharingUser.initiator}`, this.MediaManager.localScreenCapture)
-        if (!this.MediaManager.localScreenCapture) {
-            return;
-        }
-        try {
-            for (const track of this.MediaManager.localScreenCapture.getTracks()) {
-                PeerConnectionScreenSharing.addTrack(track, this.MediaManager.localScreenCapture);
-            }
-        } catch (e) {
-            console.error("updatedScreenSharing => ", e);
-        }
-        this.MediaManager.addStreamRemoteScreenSharing(screenSharingUser.userId, this.MediaManager.localScreenCapture);
     }
 
     /**
@@ -426,7 +393,28 @@ export class SimplePeer {
 
     updatedScreenSharing() {
         if (this.MediaManager.localScreenCapture) {
-            this.Connection.sendWebrtcScreenSharingStart(this.WebRtcRoomId);
+
+            //this.Connection.sendWebrtcScreenSharingStart(this.WebRtcRoomId);
+
+            if(!this.Connection.userId){
+                return;
+            }
+            let screenSharingUser: UserSimplePeerInterface = {
+                userId: this.Connection.userId,
+                initiator: true
+            };
+            let PeerConnectionScreenSharing = this.createPeerConnection(screenSharingUser, true);
+            if (!PeerConnectionScreenSharing) {
+                return;
+            }
+            try {
+                for (const track of this.MediaManager.localScreenCapture.getTracks()) {
+                    PeerConnectionScreenSharing.addTrack(track, this.MediaManager.localScreenCapture);
+                }
+            }catch (e) {
+                console.error("updatedScreenSharing => ", e);
+            }
+            this.MediaManager.addStreamRemoteScreenSharing(screenSharingUser.userId, this.MediaManager.localScreenCapture);
         } else {
             if (!this.Connection.userId || !this.PeerScreenSharingConnectionArray.has(this.Connection.userId)) {
                 return;

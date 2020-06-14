@@ -13,7 +13,6 @@ enum EventMessage{
     WEBRTC_SIGNAL = "webrtc-signal",
     WEBRTC_SCREEN_SHARING_SIGNAL = "webrtc-screen-sharing-signal",
     WEBRTC_START = "webrtc-start",
-    WEBRTC_SCREEN_SHARING_START = "webrtc-screen-sharing-start",
     JOIN_ROOM = "join-room", // bi-directional
     USER_POSITION = "user-position", // bi-directional
     USER_MOVED = "user-moved", // From server to client
@@ -133,13 +132,9 @@ export interface ConnectionInterface {
 
     /*webrtc - screen sharing*/
 
-    sendWebrtcScreenSharingStart(roomId: string): void;
-
     sendWebrtcScreenSharingSignal(signal: any, roomId: string, userId?: string|null): void;
 
     receiveWebrtcScreenSharingSignal(callBack: Function): void;
-
-    receiveWebrtcScreenSharingStart(callBack: (message: WebRtcDisconnectMessageInterface) => void): void;
 }
 
 export class Connection implements ConnectionInterface {
@@ -301,13 +296,6 @@ export class Connection implements ConnectionInterface {
         });
     }
 
-    sendWebrtcScreenSharingStart(roomId: string) {
-        return this.getSocket().emit(EventMessage.WEBRTC_SCREEN_SHARING_START, {
-            userId: this.userId,
-            roomId: roomId
-        });
-    }
-
     sendWebrtcScreenSharingSignal(signal: any, roomId: string, userId? : string|null) {
         return this.getSocket().emit(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, {
             userId: userId,
@@ -318,10 +306,6 @@ export class Connection implements ConnectionInterface {
 
     receiveWebrtcStart(callback: (message: WebRtcStartMessageInterface) => void) {
         this.getSocket().on(EventMessage.WEBRTC_START, callback);
-    }
-
-    receiveWebrtcScreenSharingStart(callback: (message: WebRtcDisconnectMessageInterface) => void) {
-        this.getSocket().on(EventMessage.WEBRTC_SCREEN_SHARING_START, callback);
     }
 
     receiveWebrtcSignal(callback: Function) {
