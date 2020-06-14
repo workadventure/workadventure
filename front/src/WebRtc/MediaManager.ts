@@ -320,7 +320,6 @@ export class MediaManager {
      * @param stream
      */
     addStreamRemoteVideo(userId : string, stream : MediaStream){
-        console.log("this.remoteVideo.get(userId)"+" => "+userId, this.remoteVideo.get(userId));
         this.remoteVideo.get(userId).srcObject = stream;
     }
     addStreamRemoteScreenSharing(userId : string, stream : MediaStream){
@@ -331,9 +330,15 @@ export class MediaManager {
      *
      * @param userId
      */
-    removeActiveVideo(userId : string){
+    removeActiveVideo(userId : string) {
+        console.log("removeActiveVideo", userId);
+        try {
+            throw `removeActiveVideo ${userId}`;
+        } catch (e) {
+            console.error(e);
+        }
         let element = document.getElementById(`div-${userId}`);
-        if(!element){
+        if (!element) {
             return;
         }
         element.remove();
@@ -359,6 +364,7 @@ export class MediaManager {
     }
 
     isError(userId : string): void {
+        console.log("isError", `div-${userId}`);
         let element = document.getElementById(`div-${userId}`);
         if(!element){
             return;
@@ -369,6 +375,10 @@ export class MediaManager {
         }
         errorDiv.style.display = 'block';
     }
+    isErrorScreenSharing(userId : string): void {
+        this.isError(`screen-sharing-${userId}`);
+    }
+
 
     private getSpinner(userId : string): HTMLDivElement|null {
         let element = document.getElementById(`div-${userId}`);
