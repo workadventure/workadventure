@@ -30,7 +30,6 @@ enum SockerIoEvent {
     WEBRTC_SIGNAL = "webrtc-signal",
     WEBRTC_SCREEN_SHARING_SIGNAL = "webrtc-screen-sharing-signal",
     WEBRTC_START = "webrtc-start",
-    WEBRTC_SCREEN_SHARING_START = "webrtc-screen-sharing-start",
     WEBRTC_DISCONNECT = "webrtc-disconect",
     MESSAGE_ERROR = "message-error",
     GROUP_CREATE_UPDATE = "group-create-update",
@@ -44,6 +43,8 @@ export class IoSocketController {
     private sockets: Map<string, ExSocketInterface> = new Map<string, ExSocketInterface>();
     private nbClientsGauge: Gauge<string>;
     private nbClientsPerRoomGauge: Gauge<string>;
+
+    private offerScreenSharingByClient: Map<string, Map<string, unknown>> = new Map<string, Map<string, unknown>>();
 
     constructor(server: http.Server) {
         this.Io = socketIO(server);
@@ -235,16 +236,6 @@ export class IoSocketController {
                 this.emitScreenSharing((socket as ExSocketInterface), data, SockerIoEvent.WEBRTC_SCREEN_SHARING_SIGNAL);
             });
 
-            socket.on(SockerIoEvent.WEBRTC_SCREEN_SHARING_START, (data: unknown) => {
-                console.log(SockerIoEvent.WEBRTC_SCREEN_SHARING_START, data);
-                if (!isWebRtcScreenSharingStartMessageInterface(data)) {
-                    socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid WEBRTC_SIGNAL message.'});
-                    console.warn('Invalid WEBRTC_SIGNAL message received: ', data);
-                    return;
-                }
-                this.Io.in(data.roomId).emit(SockerIoEvent.WEBRTC_SCREEN_SHARING_START, data);
-            });
-
             socket.on(SockerIoEvent.DISCONNECT, () => {
                 const Client = (socket as ExSocketInterface);
                 try {
@@ -310,8 +301,16 @@ export class IoSocketController {
             console.warn('Invalid WEBRTC_SIGNAL message received: ', data);
             return;
         }
+        if(data && data.signal && (data.signal as any).type === "offer"){
+            let roomOffer = this.offerScreenSharingByClient.get(data.roomId);
+            if(!roomOffer){
+                roomOffer = new Map<string, unknown>();
+            }
+            roomOffer.set(data.userId, data.signal);
+            this.offerScreenSharingByClient.set(data.roomId, roomOffer);
+        }
         //share at all others clients send only at user
-        return socket.broadcast.emit(event, data);
+        return socket.in(data.roomId).emit(event, data);
     }
 
     searchClientByIdOrFail(userId: string): ExSocketInterface {

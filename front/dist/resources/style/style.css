@@ -370,28 +370,34 @@ body {
 .active-screen-sharing video{
     transform: scaleX(1);
 }
+.screen-sharing-video-container {
+    width: 25%;
+    position: absolute;
+}
 .active-screen-sharing .screen-sharing-video-container video:hover{
-    width: 50%;
+    width: 200%;
+    z-index: 11;
 }
 .active-screen-sharing .screen-sharing-video-container video{
     position: absolute;
-    width: 25%;
+    width: 100%;
     height: auto;
     left: 0;
     top: 0;
     transition: all 0.2s ease;
+    z-index: 1;
 }
 
-.active-screen-sharing .screen-sharing-video-container video:nth-child(1){
+.active-screen-sharing .screen-sharing-video-container:nth-child(1){
     /*this is for camera of user*/
     top: 0%;
 }
-.active-screen-sharing .screen-sharing-video-container video:nth-child(2){
+.active-screen-sharing .screen-sharing-video-container:nth-child(2){
     top: 25%;
 }
-.active-screen-sharing .screen-sharing-video-container video:nth-child(3){
+.active-screen-sharing .screen-sharing-video-container:nth-child(3){
     top: 50%;
 }
-.active-screen-sharing .screen-sharing-video-container video:nth-child(4) {
+.active-screen-sharing .screen-sharing-video-container:nth-child(4) {
     top: 75%;
 }
