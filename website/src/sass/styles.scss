@@ -125,6 +125,7 @@ header {
     }
 }
 .custom-link{
+    cursor: pointer;
     font-family: "VCR OSD Mono";
     font-size: 1.125rem;
     letter-spacing: 5px;
@@ -207,6 +208,138 @@ img{
     p {
 
     }
+}
+.story-wrapper {
+    background: white;
+    position: relative;
+    min-height: calc(672px + 75px);
+    padding-top: 75px;
+    width: 100%;
+    overflow: hidden;
+    @include media-breakpoint-down(sm) {
+        display: none;
+    }
+    img {
+        max-width: none;
+    }
+    .sky {
+        z-index: 1;
+        position: absolute;
+        top: 0;
+        width: 100%;
+        height: 242px;
+        background: url(../images/story/sky.jpg) repeat-x top left;
+    }
+    .mountains {
+        z-index: 5;
+        position: absolute;
+        bottom: 200px;
+        width: calc(100% + 200px);
+        height: 242px;
+        background: url(../images/story/mountains.png) repeat-x top center;
+    }
+    .story-1 {
+        position: absolute;
+        z-index: 10;
+        left: 0;
+        overflow: hidden;
+    }
+    .character {
+        position: absolute;
+        z-index: 15;
+        bottom: 75px;
+        left: 0;
+        right: 0;
+        margin: auto;
+    }
+    .birds {
+        position: absolute;
+        z-index: 20;
+        right: -200px;
+        $birds: 8;
+        @for $i from 1 through $birds {
+            @keyframes fly-#{$i} {
+                0% {
+                    transform: translate(0px, 0px);
+                }
+                25% {
+                    transform: translate(#{25+random(50)}px, #{10+random(35)}px);
+                }
+                50% {
+                    transform: translate(#{25+random(50)}px, #{10+random(35)}px);
+                }
+                75% {
+                    transform: translate(#{25+random(50)}px, #{10+random(35)}px);
+                }
+                100% {
+                    transform: translate(#{25+random(50)}px, #{10+random(35)}px);
+                }
+            }
+            .bird-#{$i} {
+                margin: 0 #{random(7)}vw;
+                transition-timing-function: cubic-bezier(0.150, -0.600, 0.155, 1.650);
+                animation-duration: 15s;
+                animation-name: fly-#{$i};
+                animation-iteration-count: infinite;
+                animation-direction: alternate;
+            }
+        }
+    }
+    .bubble {
+        color: black;
+        position: absolute;
+        z-index: 25;
+        bottom: 160px;
+        left: 263px;
+        right: -50px;
+        margin: auto;
+        opacity: 0;
+        height: 151px;
+        width: 289px;
+        line-height: 22px;
+        padding: 5px;
+        background: black;
+        transform: translateY(25px);
+        & > div {
+            padding: 15px 15px 30px;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: white;
+            &:before {
+                content: "";
+                position: absolute;
+                background: url(../images/story/bubble-border-bottom-left.png) no-repeat bottom left;
+                left: -4px;
+                width: 28px;
+                height: 25px;
+                bottom: -20px;
+            }
+            p {
+                &.bubble-legend {
+                    font-size: 12px;
+                    color: grey;
+                    margin: 0;
+                }
+                &.bubble-action {
+                    cursor: pointer;
+                    text-decoration: underline
+                }
+
+            }
+        }
+        &.b-revert {
+            left: -363px;
+            & > div:before {
+                left: auto;
+                right: -4px;
+                background: url(../images/story/bubble-border-bottom-right.png) no-repeat bottom left;
+            }
+        }
+    }
+}
+.pin-spacer {
+    background: white;
 }
 .section{
     padding-top: 2rem;

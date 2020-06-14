@@ -56,6 +56,9 @@
             window.location.assign(playUrl);
         }
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.3.1/gsap.min.js" integrity="sha256-MVs0yHYDQBhIRZrNeWB1YaNMrGbFwowIEPIl3um5MZE=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.3.1/ScrollTrigger.min.js" integrity="sha256-FEFPM9cOclVyq+lIim2xnU/dAgrALF+g4M8kYm2tbX0=" crossorigin="anonymous"></script>
+
 </head>
 
 <body>
@@ -108,6 +111,150 @@
             <div class="cloud"></div>
         </div>
     </header>
+    <section class="story-wrapper">
+        <div class="sky"></div>
+        <div class="mountains"></div>
+        <img src="static/images/story/story-map-1.png" height="672" class="story-1" />
+        <img src="static/images/story/character-static.png" class="character" id="leymah" />
+        <div class="birds">
+            <img class="bird bird-1" src="static/images/story/bird.gif" />
+            <img class="bird bird-2" src="static/images/story/bird.gif" />
+            <img class="bird bird-3" src="static/images/story/bird.gif" />
+            <img class="bird bird-4" src="static/images/story/bird.gif" />
+            <img class="bird bird-5" src="static/images/story/bird.gif" />
+            <img class="bird bird-6" src="static/images/story/bird.gif" />
+            <img class="bird bird-7" src="static/images/story/bird.gif" />
+            <img class="bird bird-8" src="static/images/story/bird.gif" />
+        </div>
+        <div class="bubble bubble-1" style="width: 320px;height: 164px;">
+            <div>
+                <p><strong>Hello,</strong></p>
+                <p>I'm Leymah of WorkAdventure !</p>
+                <p>During COVID, everybody were far from each other.</p>
+            </div>
+        </div>
+        <div class="bubble bubble-2 b-revert" style="height: 164px;">
+            <div>
+                <p>So, my developper’s team decide to build a plateform to keep proximity.</p>
+                <p>This is how I’m born.</p>
+            </div>
+        </div>
+        <div class="bubble bubble-3" style="height: 164px;">
+            <div>
+                <p>With WorkAdventure, you can meet people and discuss with them.</p>
+                <p class="bubble-legend">To try, press button public mode</p>
+                <p class="bubble-action"><span onclick="startGame()">
+                    <img src="static/images/playicon.png" />
+                    START IN PUBLIC MODE
+                </span></p>
+            </div>
+        </div>
+        <div class="bubble bubble-4 b-revert" style="height: 164px;">
+            <div>
+                <p>You can also create a private room with your friends or your team ! </p>
+                <p class="bubble-legend">To try, press button private mode</p>
+                <p class="bubble-action"><span onclick="startGame()">
+                    <img src="static/images/playicon.png" />
+                    START IN PRIVATE MODE
+                </span></p>
+            </div>
+        </div>
+        <!-- PRELOADING (hidden elements) -->
+        <img src="static/images/story/character-walk-right.gif" style="display:none;" />
+    </section>
+    <script>
+        var maxImageTranslateValue = 3507 - window.innerWidth;
+        var bubbleNumber = document.getElementsByClassName("bubble").length;
+        var charWalkToRightImage = "static/images/story/character-walk-right.gif";
+        var charStaticImage = "static/images/story/character-static.png";
+
+        var storyScrollTrigger = gsap.timeline({
+            scrollTrigger: {
+                trigger: ".story-wrapper",
+                pin: true,   // pin the trigger element while active
+                start: "top top", // when the top of the trigger hits the top of the viewport
+                //end: "+=500", // end after scrolling 500px beyond the start
+                scrub: 1, // smooth scrubbing, takes 1 second to "catch up" to the scrollbar
+            }
+        });
+        var moveMountains = function() {
+            storyScrollTrigger.to(".mountains", {
+                x: -100
+            })
+        };
+
+        storyScrollTrigger.to(".birds", {
+            x: (-window.innerWidth -200)
+        });
+        storyScrollTrigger.from(".character", {
+            x: -maxImageTranslateValue * (1/bubbleNumber),
+            onStart: function() {
+                document.getElementById("leymah").src = charWalkToRightImage;
+            },
+            onComplete: function() {
+                document.getElementById("leymah").src = charStaticImage;
+            }
+        })
+        .to(".bubble-1", {
+            opacity: 1,
+            y: 0
+        })
+        .to(".bubble-1", {
+            opacity: 0
+        })
+        .to(".story-1", {
+            x: -maxImageTranslateValue * (2/bubbleNumber),
+            onStart: function() {
+                document.getElementById("leymah").src = charWalkToRightImage;
+                moveMountains();
+            },
+            onComplete: function() {
+                document.getElementById("leymah").src = charStaticImage;
+            }
+        })
+        .to(".bubble-2", {
+            opacity: 1,
+            y: 0
+        })
+        .to(".bubble-2", {
+            opacity: 0
+        })
+        .to(".story-1", {
+            x: -maxImageTranslateValue * (3/bubbleNumber),
+            onStart: function() {
+                document.getElementById("leymah").src = charWalkToRightImage;
+                moveMountains();
+            },
+            onComplete: function() {
+                document.getElementById("leymah").src = charStaticImage;
+            }
+        })
+        .to(".bubble-3", {
+            opacity: 1,
+            y: 0
+        })
+        .to(".bubble-3", {
+            opacity: 0
+        })
+        .to(".story-1", {
+            x: -maxImageTranslateValue,
+            onStart: function() {
+                document.getElementById("leymah").src = "static/images/story/character-walk-right.gif";
+                moveMountains();
+            },
+            onComplete: function() {
+                document.getElementById("leymah").src = "static/images/story/character-static.png";
+            }
+        })
+        .to(".bubble-4", {
+            opacity: 1,
+            y: 0
+        })
+        .to(".bubble-4", {
+            opacity: 0
+        });
+
+    </script>
     <div class="section bg-white how-to">
         <div class="desktop-only text-center d-block d-md-none d-lg-none d-xl-none">
             <img src="static/images/desktop.png" width="64" /><br />
