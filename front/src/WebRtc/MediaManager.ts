@@ -405,6 +405,7 @@ export class MediaManager {
     }
 
     isError(userId : string): void {
+        console.log("isError", `div-${userId}`);
         const element = document.getElementById(`div-${userId}`);
         if(!element){
             return;
@@ -415,6 +416,10 @@ export class MediaManager {
         }
         errorDiv.style.display = 'block';
     }
+    isErrorScreenSharing(userId : string): void {
+        this.isError(`screen-sharing-${userId}`);
+    }
+
 
     private getSpinner(userId : string): HTMLDivElement|null {
         const element = document.getElementById(`div-${userId}`);

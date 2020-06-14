@@ -17,7 +17,7 @@ import os from 'os';
 import {TokenInterface} from "../Controller/AuthenticateController";
 import {isJoinRoomMessageInterface} from "../Model/Websocket/JoinRoomMessage";
 import {isPointInterface, PointInterface} from "../Model/Websocket/PointInterface";
-import {isWebRtcSignalMessageInterface} from "../Model/Websocket/WebRtcSignalMessage";
+import {isWebRtcSignalMessageInterface, isWebRtcScreenSharingSignalMessageInterface, isWebRtcScreenSharingStartMessageInterface} from "../Model/Websocket/WebRtcSignalMessage";
 import {UserInGroupInterface} from "../Model/Websocket/UserInGroupInterface";
 
 enum SockerIoEvent {
@@ -30,6 +30,7 @@ enum SockerIoEvent {
     WEBRTC_SIGNAL = "webrtc-signal",
     WEBRTC_SCREEN_SHARING_SIGNAL = "webrtc-screen-sharing-signal",
     WEBRTC_START = "webrtc-start",
+    WEBRTC_SCREEN_SHARING_START = "webrtc-screen-sharing-start",
     WEBRTC_DISCONNECT = "webrtc-disconect",
     MESSAGE_ERROR = "message-error",
     GROUP_CREATE_UPDATE = "group-create-update",
@@ -231,7 +232,17 @@ export class IoSocketController {
             });
 
             socket.on(SockerIoEvent.WEBRTC_SCREEN_SHARING_SIGNAL, (data: unknown) => {
-                this.emit((socket as ExSocketInterface), data, SockerIoEvent.WEBRTC_SCREEN_SHARING_SIGNAL);
+                this.emitScreenSharing((socket as ExSocketInterface), data, SockerIoEvent.WEBRTC_SCREEN_SHARING_SIGNAL);
+            });
+
+            socket.on(SockerIoEvent.WEBRTC_SCREEN_SHARING_START, (data: unknown) => {
+                console.log(SockerIoEvent.WEBRTC_SCREEN_SHARING_START, data);
+                if (!isWebRtcScreenSharingStartMessageInterface(data)) {
+                    socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid WEBRTC_SIGNAL message.'});
+                    console.warn('Invalid WEBRTC_SIGNAL message received: ', data);
+                    return;
+                }
+                this.Io.in(data.roomId).emit(SockerIoEvent.WEBRTC_SCREEN_SHARING_START, data);
             });
 
             socket.on(SockerIoEvent.DISCONNECT, () => {
@@ -291,6 +302,16 @@ export class IoSocketController {
             return;
         }
         return client.emit(event, data);
+    }
+
+    emitScreenSharing(socket: ExSocketInterface, data: unknown, event: SockerIoEvent){
+        if (!isWebRtcScreenSharingSignalMessageInterface(data)) {
+            socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid WEBRTC_SIGNAL message.'});
+            console.warn('Invalid WEBRTC_SIGNAL message received: ', data);
+            return;
+        }
+        //share at all others clients send only at user
+        return socket.broadcast.emit(event, data);
     }
 
     searchClientByIdOrFail(userId: string): ExSocketInterface {
