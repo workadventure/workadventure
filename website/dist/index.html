@@ -225,9 +225,6 @@
             opacity: 1,
             y: 0
         })
-        .to(".bubble-1", {
-            opacity: 0
-        })
         .to(".story-1", {
             x: -maxImageTranslateValue * (2/bubbleNumber),
             onStart: function() {
@@ -237,12 +234,12 @@
                 document.getElementById("leymah").src = charStaticImage;
             }
         })
+        .to(".bubble-1", {
+            opacity: 0
+        })
         .to(".bubble-2", {
             opacity: 1,
             y: 0
-        })
-        .to(".bubble-2", {
-            opacity: 0
         })
         .to(".story-1", {
             x: -maxImageTranslateValue * (3/bubbleNumber),
@@ -253,12 +250,12 @@
                 document.getElementById("leymah").src = charStaticImage;
             }
         })
+        .to(".bubble-2", {
+            opacity: 0
+        })
         .to(".bubble-3", {
             opacity: 1,
             y: 0
-        })
-        .to(".bubble-3", {
-            opacity: 0
         })
         .to(".story-1", {
             x: -maxImageTranslateValue,
@@ -269,9 +266,18 @@
                 document.getElementById("leymah").src = "static/images/story/character-static.png";
             }
         })
+        .to(".bubble-3", {
+            opacity: 0
+        })
         .to(".bubble-4", {
             opacity: 1,
             y: 0
+        })
+        .to(".character, .bubble-4", {
+            x: "51vw",
+            onStart: function() {
+                document.getElementById("leymah").src = "static/images/story/character-walk-right.gif";
+            },
         })
         .to(".bubble-4", {
             opacity: 0

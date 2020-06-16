@@ -21,6 +21,12 @@
     font-family: 'VCR OSD Mono';
     src: url('../fonts/VCR_OSD.ttf') format('truetype');
 }
+@function randomNum($min, $max) {
+    $rand: random();
+    $randomNum: $min + floor($rand * (($max - $min) + 1));
+
+    @return $randomNum;
+}
 
 header {
     background: #28A7FC url("../images/sky.jpg") no-repeat bottom;
@@ -275,20 +281,20 @@ img{
                     transform: translate(0px, 0px);
                 }
                 25% {
-                    transform: translate(#{25+random(50)}px, #{10+random(35)}px);
+                    transform: translate(#{randomNum(0, 50)}px, #{randomNum(0, 50)}px);
                 }
                 50% {
-                    transform: translate(#{25+random(50)}px, #{10+random(35)}px);
+                    transform: translate(#{randomNum(0, 50)}px, #{randomNum(0, 50)}px);
                 }
                 75% {
-                    transform: translate(#{25+random(50)}px, #{10+random(35)}px);
+                    transform: translate(#{randomNum(0, 50)}px, #{randomNum(0, 50)}px);
                 }
                 100% {
-                    transform: translate(#{25+random(50)}px, #{10+random(35)}px);
+                    transform: translate(#{randomNum(0, 50)}px, #{randomNum(0, 50)}px);
                 }
             }
             .bird-#{$i} {
-                margin: 0 #{random(7)}vw;
+                margin: 0 #{randomNum(0, 10)}vw;
                 transition-timing-function: cubic-bezier(0.150, -0.600, 0.155, 1.650);
                 animation-duration: 15s;
                 animation-name: fly-#{$i};
