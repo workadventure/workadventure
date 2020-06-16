@@ -81,12 +81,12 @@ header {
                 font-family: 'Karmatic Arcade';
                 font-size: 2.75rem;
                 margin-bottom: 1.25rem;
-                color: white;
+                color: #0C476C;
             }
             h3 {
                 min-height: 200px;
                 padding: 1rem;
-                color: #106ca2;
+                color: #0C476C;
             }
             @include media-breakpoint-down(xs) {
                 h3 {
