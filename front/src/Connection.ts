@@ -22,10 +22,13 @@ enum EventMessage{
     WEBRTC_DISCONNECT = "webrtc-disconect",
     GROUP_CREATE_UPDATE = "group-create-update",
     GROUP_DELETE = "group-delete",
+    SET_PLAYER_DETAILS = "set-player-details", // Send the name and character to the server (on connect), receive back the id.
 
     CONNECT_ERROR = "connect_error",
     RECONNECT = "reconnect",
-    SET_PLAYER_DETAILS = "set-player-details" // Send the name and character to the server (on connect), receive back the id.
+    RECONNECTING = "reconnecting",
+    RECONNECT_ERROR = "reconnect_error",
+    RECONNECT_FAILED = "reconnect_failed"
 }
 
 class Message {
@@ -306,6 +309,18 @@ export class Connection implements ConnectionInterface {
     private disconnectServer(): void {
         this.getSocket().on(EventMessage.CONNECT_ERROR, () => {
             this.GameManager.switchToDisconnectedScene();
+        });
+
+        this.getSocket().on(EventMessage.RECONNECTING, () => {
+            console.log('Trying to reconnect');
+        });
+
+        this.getSocket().on(EventMessage.RECONNECT_ERROR, () => {
+            console.log('Error while trying to reconnect.');
+        });
+
+        this.getSocket().on(EventMessage.RECONNECT_FAILED, () => {
+            console.error('Reconnection failed. Giving up.');
         });
 
         this.getSocket().on(EventMessage.RECONNECT, () => {
