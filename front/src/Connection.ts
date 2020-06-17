@@ -325,6 +325,7 @@ export class Connection implements ConnectionInterface {
         });
 
         this.getSocket().on(EventMessage.RECONNECT, () => {
+            console.log('Reconnect event triggered');
             this.connectSocketServer();
             if (this.lastPositionShared === null) {
                 throw new Error('No last position shared found while reconnecting');
