@@ -204,8 +204,8 @@ export class GameManager {
             // Wait a bit for scene to load. Otherwise, starting ReconnectingSceneName and then starting GameScene one after the other fails for some reason.
             this.timeoutCallback = setTimeout(() => {
                 console.log('Reconnecting to game scene from setTimeout');
-                this.reconnectToGameScene(lastPositionShared);
                 this.timeoutCallback = null;
+                this.reconnectToGameScene(lastPositionShared);
             }, 500);
             return;
         }
