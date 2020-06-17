@@ -42,6 +42,23 @@
   "config": {
     "https": {
       "mail": "d.negrier@thecodingmachine.com"
-    }
+    },
+    k8sextension(k8sConf)::
+        k8sConf + {
+          back+: {
+            deployment+: {
+              spec+: {
+                template+: {
+                  metadata+: {
+                    annotations+: {
+                      "prometheus.io/port": "8080",
+                      "prometheus.io/scrape": "true"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
   }
 }
