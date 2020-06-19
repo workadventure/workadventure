@@ -1,6 +1,6 @@
 import {GameScene} from "./GameScene";
 import {
-    Connection,
+    Connection, ConnectionInterface,
     GroupCreatedUpdatedMessageInterface,
     ListMessageUserPositionInterface,
     MessageUserJoined,
@@ -44,11 +44,11 @@ export class GameManager {
         //this.status = StatusGameManagerEnum.IN_PROGRESS;
     }
 
-    connect(name: string, characterUserSelected : string) {
+    public connect(name: string, characterUserSelected : string): Promise<ConnectionInterface> {
         this.playerName = name;
         this.characterUserSelected = characterUserSelected;
         this.ConnectionInstance = new Connection(this);
-        return this.ConnectionInstance.createConnection(name, characterUserSelected).then((data : any) => {
+        return this.ConnectionInstance.createConnection(name, characterUserSelected).then((data : ConnectionInterface) => {
             this.SimplePeer = new SimplePeer(this.ConnectionInstance);
             return data;
         }).catch((err) => {
@@ -83,7 +83,7 @@ export class GameManager {
     }
 
     onUserJoins(message: MessageUserJoined): void {
-        let userMessage: AddPlayerInterface = {
+        const userMessage: AddPlayerInterface = {
             userId: message.userId,
             character: message.character,
             name: message.name,
@@ -154,11 +154,11 @@ export class GameManager {
     }
 
     loadMap(mapUrl: string, scene: Phaser.Scenes.ScenePlugin, instance: string): string {
-        let sceneKey = GameScene.getMapKeyByUrl(mapUrl);
+        const sceneKey = GameScene.getMapKeyByUrl(mapUrl);
 
-        let gameIndex = scene.getIndex(sceneKey);
+        const gameIndex = scene.getIndex(sceneKey);
         if(gameIndex === -1){
-            let game : Phaser.Scene = GameScene.createFromUrl(mapUrl, instance);
+            const game : Phaser.Scene = GameScene.createFromUrl(mapUrl, instance);
             scene.add(sceneKey, game, false);
         }
         return sceneKey;
