@@ -488,8 +488,8 @@ export class GameScene extends Phaser.Scene {
         this.CurrentPlayer.moveUser(delta);
 
         // Let's handle all events
-        let event = null;
-        while (event = this.pendingEvents.dequeue()) {
+        while (this.pendingEvents.length !== 0) {
+            const event = this.pendingEvents.dequeue();
             switch (event.type) {
                 case "InitUserPositionEvent":
                     this.doInitUsersPosition(event.event);
