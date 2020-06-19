@@ -22,6 +22,8 @@ import {PlayerMovement} from "./PlayerMovement";
 import {PlayersPositionInterpolator} from "./PlayersPositionInterpolator";
 import {RemotePlayer} from "../Entity/RemotePlayer";
 import GameObject = Phaser.GameObjects.GameObject;
+import { Queue } from 'queue-typescript';
+
 
 export enum Textures {
     Player = "male1"
@@ -30,6 +32,36 @@ export enum Textures {
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
     startLayerName: string|undefined
+}
+
+interface InitUserPositionEventInterface {
+    type: 'InitUserPositionEvent'
+    event: MessageUserPositionInterface[]
+}
+
+interface AddPlayerEventInterface {
+    type: 'AddPlayerEvent'
+    event: AddPlayerInterface
+}
+
+interface RemovePlayerEventInterface {
+    type: 'RemovePlayerEvent'
+    userId: string
+}
+
+interface UserMovedEventInterface {
+    type: 'UserMovedEvent'
+    event: MessageUserMovedInterface
+}
+
+interface GroupCreatedUpdatedEventInterface {
+    type: 'GroupCreatedUpdatedEvent'
+    event: GroupCreatedUpdatedMessageInterface
+}
+
+interface DeleteGroupEventInterface {
+    type: 'DeleteGroupEvent'
+    groupId: string
 }
 
 export class GameScene extends Phaser.Scene {
@@ -46,6 +78,7 @@ export class GameScene extends Phaser.Scene {
     startX: number;
     startY: number;
     circleTexture: CanvasTexture;
+    pendingEvents: Queue<InitUserPositionEventInterface|AddPlayerEventInterface|RemovePlayerEventInterface|UserMovedEventInterface|GroupCreatedUpdatedEventInterface|DeleteGroupEventInterface> = new Queue<InitUserPositionEventInterface|AddPlayerEventInterface|RemovePlayerEventInterface|UserMovedEventInterface|GroupCreatedUpdatedEventInterface|DeleteGroupEventInterface>();
     private initPosition: PositionInterface|null = null;
     private playersPositionInterpolator = new PlayersPositionInterpolator();
 
@@ -437,13 +470,13 @@ export class GameScene extends Phaser.Scene {
 
     EventToClickOnTile(){
         // debug code to get a tile properties by clicking on it
-        this.input.on("pointerdown", (pointer: Phaser.Input.Pointer)=>{
+        /*this.input.on("pointerdown", (pointer: Phaser.Input.Pointer)=>{
             //pixel position toz tile position
             const tile = this.Map.getTileAt(this.Map.worldToTileX(pointer.worldX), this.Map.worldToTileY(pointer.worldY));
             if(tile){
                 this.CurrentPlayer.say("Your touch " + tile.layer.name);
             }
-        });
+        });*/
     }
 
     /**
@@ -453,6 +486,31 @@ export class GameScene extends Phaser.Scene {
     update(time: number, delta: number) : void {
         this.currentTick = time;
         this.CurrentPlayer.moveUser(delta);
+
+        // Let's handle all events
+        while (this.pendingEvents.length !== 0) {
+            const event = this.pendingEvents.dequeue();
+            switch (event.type) {
+                case "InitUserPositionEvent":
+                    this.doInitUsersPosition(event.event);
+                    break;
+                case "AddPlayerEvent":
+                    this.doAddPlayer(event.event);
+                    break;
+                case "RemovePlayerEvent":
+                    this.doRemovePlayer(event.userId);
+                    break;
+                case "UserMovedEvent":
+                    this.doUpdatePlayerPosition(event.event);
+                    break;
+                case "GroupCreatedUpdatedEvent":
+                    this.doShareGroupPosition(event.event);
+                    break;
+                case "DeleteGroupEvent":
+                    this.doDeleteGroup(event.groupId);
+                    break;
+            }
+        }
 
         // Let's move all users
         const updatedPlayersPositions = this.playersPositionInterpolator.getUpdatedPositions(time);
@@ -488,12 +546,21 @@ export class GameScene extends Phaser.Scene {
         }
     }
 
+    /**
+     * Called by the connexion when the full list of user position is received.
+     */
     public initUsersPosition(usersPosition: MessageUserPositionInterface[]): void {
-        if(!this.CurrentPlayer){
-            console.error('Cannot initiate users list because map is not loaded yet')
-            return;
-        }
+        this.pendingEvents.enqueue({
+            type: "InitUserPositionEvent",
+            event: usersPosition
+        });
 
+    }
+
+    /**
+     * Put all the players on the map on map load.
+     */
+    private doInitUsersPosition(usersPosition: MessageUserPositionInterface[]): void {
         const currentPlayerId = this.GameManager.getPlayerId();
 
         // clean map
@@ -513,9 +580,19 @@ export class GameScene extends Phaser.Scene {
     }
 
     /**
+     * Called by the connexion when a new player arrives on a map
+     */
+    public addPlayer(addPlayerData : AddPlayerInterface) : void {
+        this.pendingEvents.enqueue({
+            type: "AddPlayerEvent",
+            event: addPlayerData
+        });
+    }
+
+    /**
      * Create new player
      */
-    public addPlayer(addPlayerData : AddPlayerInterface) : void{
+    private doAddPlayer(addPlayerData : AddPlayerInterface) : void {
         //check if exist player, if exist, move position
         if(this.MapPlayersByKey.has(addPlayerData.userId)){
             this.updatePlayerPosition({
@@ -545,8 +622,18 @@ export class GameScene extends Phaser.Scene {
         });*/
     }
 
+    /**
+     * Called by the connexion when a player is removed from the map
+     */
     public removePlayer(userId: string) {
-        console.log('Removing player ', userId)
+        this.pendingEvents.enqueue({
+            type: "RemovePlayerEvent",
+            userId
+        });
+    }
+
+    private doRemovePlayer(userId: string) {
+        //console.log('Removing player ', userId)
         const player = this.MapPlayersByKey.get(userId);
         if (player === undefined) {
             console.error('Cannot find user with id ', userId);
@@ -558,7 +645,14 @@ export class GameScene extends Phaser.Scene {
         this.playersPositionInterpolator.removePlayer(userId);
     }
 
-    updatePlayerPosition(message: MessageUserMovedInterface): void {
+    public updatePlayerPosition(message: MessageUserMovedInterface): void {
+        this.pendingEvents.enqueue({
+            type: "UserMovedEvent",
+            event: message
+        });
+    }
+
+    private doUpdatePlayerPosition(message: MessageUserMovedInterface): void {
         const player : RemotePlayer | undefined = this.MapPlayersByKey.get(message.userId);
         if (player === undefined) {
             throw new Error('Cannot find player with ID "' + message.userId +'"');
@@ -570,7 +664,14 @@ export class GameScene extends Phaser.Scene {
         this.playersPositionInterpolator.updatePlayerPosition(player.userId, playerMovement);
     }
 
-    shareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface) {
+    public shareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface) {
+        this.pendingEvents.enqueue({
+            type: "GroupCreatedUpdatedEvent",
+            event: groupPositionMessage
+        });
+    }
+
+    private doShareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface) {
         const groupId = groupPositionMessage.groupId;
 
         const group = this.groups.get(groupId);
@@ -590,6 +691,13 @@ export class GameScene extends Phaser.Scene {
     }
 
     deleteGroup(groupId: string): void {
+        this.pendingEvents.enqueue({
+            type: "DeleteGroupEvent",
+            groupId
+        });
+    }
+
+    doDeleteGroup(groupId: string): void {
         const group = this.groups.get(groupId);
         if(!group){
             return;
