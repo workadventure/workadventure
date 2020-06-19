@@ -6,8 +6,13 @@ import {
 } from "../../Connection";
 import {CurrentGamerInterface, hasMovedEventName, Player} from "../Player/Player";
 import { DEBUG_MODE, ZOOM_LEVEL, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
-import {ITiledMap, ITiledMapLayer, ITiledTileSet} from "../Map/ITiledMap";
-import {PLAYER_RESOURCES} from "../Entity/Character";
+import {
+    ITiledMap,
+    ITiledMapLayer,
+    ITiledMapLayerProperty,
+    ITiledTileSet
+} from "../Map/ITiledMap";
+import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Character";
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
@@ -84,7 +89,7 @@ export class GameScene extends Phaser.Scene {
     //hook preload scene
     preload(): void {
         this.GameManager.setCurrentGameScene(this);
-        this.load.on('filecomplete-tilemapJSON-'+this.MapKey, (key: string, type: string, data: any) => {
+        this.load.on('filecomplete-tilemapJSON-'+this.MapKey, (key: string, type: string, data: unknown) => {
             this.onMapLoad(data);
         });
         //TODO strategy to add access token
@@ -97,7 +102,7 @@ export class GameScene extends Phaser.Scene {
         }
 
         //add player png
-        PLAYER_RESOURCES.forEach((playerResource: any) => {
+        PLAYER_RESOURCES.forEach((playerResource: PlayerResourceDescriptionInterface) => {
             this.load.spritesheet(
                 playerResource.name,
                 playerResource.img,
@@ -108,6 +113,8 @@ export class GameScene extends Phaser.Scene {
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
     }
 
+    // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private onMapLoad(data: any): void {
         // Triggered when the map is loaded
         // Load tiles attached to the map recursively
@@ -247,11 +254,11 @@ export class GameScene extends Phaser.Scene {
     }
 
     private getProperty(layer: ITiledMapLayer, name: string): string|boolean|number|undefined {
-        const properties : any = layer.properties;
+        const properties = layer.properties;
         if (!properties) {
             return undefined;
         }
-        const obj = properties.find((property:any) => property.name === name);
+        const obj = properties.find((property: ITiledMapLayerProperty) => property.name === name);
         if (obj === undefined) {
             return undefined;
         }
@@ -309,8 +316,11 @@ export class GameScene extends Phaser.Scene {
      * @param layer
      */
     private startUser(layer: ITiledMapLayer): PositionInterface {
-        let tiles : any = layer.data;
-        let possibleStartPositions : PositionInterface[]  = [];
+        const tiles = layer.data;
+        if (typeof(tiles) === 'string') {
+            throw new Error('The content of a JSON map must be filled as a JSON array, not as a string');
+        }
+        const possibleStartPositions : PositionInterface[]  = [];
         tiles.forEach((objectKey : number, key: number) => {
             if(objectKey === 0){
                 return;
@@ -362,11 +372,11 @@ export class GameScene extends Phaser.Scene {
     }
 
     createCollisionObject(){
-        this.Objects.forEach((Object : Phaser.Physics.Arcade.Sprite) => {
-            this.physics.add.collider(this.CurrentPlayer, Object, (object1: any, object2: any) => {
-                //this.CurrentPlayer.say("Collision with object : " + (object2 as Phaser.Physics.Arcade.Sprite).texture.key)
+        /*this.Objects.forEach((Object : Phaser.Physics.Arcade.Sprite) => {
+            this.physics.add.collider(this.CurrentPlayer, Object, (object1, object2) => {
+                this.CurrentPlayer.say("Collision with object : " + (object2 as Phaser.Physics.Arcade.Sprite).texture.key)
             });
-        })
+        })*/
     }
 
     createCurrentPlayer(){

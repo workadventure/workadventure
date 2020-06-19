@@ -3,8 +3,9 @@ import {TextField} from "../Components/TextField";
 import {ClickButton} from "../Components/ClickButton";
 import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
-import {PLAYER_RESOURCES} from "../Entity/Character";
+import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Character";
 import {GameSceneInitInterface} from "../Game/GameScene";
+import {StartMapInterface} from "../../Connection";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
@@ -47,7 +48,7 @@ export class SelectCharacterScene extends Phaser.Scene {
         // Note: arcade.png from the Phaser 3 examples at: https://github.com/photonstorm/phaser3-examples/tree/master/public/assets/fonts/bitmap
         this.load.bitmapFont(LoginTextures.mainFont, 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
         //add player png
-        PLAYER_RESOURCES.forEach((playerResource: any) => {
+        PLAYER_RESOURCES.forEach((playerResource: PlayerResourceDescriptionInterface) => {
             this.load.spritesheet(
                 playerResource.name,
                 playerResource.img,
@@ -115,7 +116,7 @@ export class SelectCharacterScene extends Phaser.Scene {
         this.pressReturnField.setVisible(!!(Math.floor(time / 500) % 2));
     }
 
-    private async login(name: string) {
+    private async login(name: string): Promise<StartMapInterface> {
         return gameManager.connect(name, this.selectedPlayer.texture.key).then(() => {
             // Do we have a start URL in the address bar? If so, let's redirect to this address
             const instanceAndMapUrl = this.findMapUrl();
@@ -125,16 +126,16 @@ export class SelectCharacterScene extends Phaser.Scene {
                 this.scene.start(key, {
                     startLayerName: window.location.hash ? window.location.hash.substr(1) : undefined
                 } as GameSceneInitInterface);
-                return mapUrl;
+                return {
+                    mapUrlStart: mapUrl,
+                    startInstance: instance
+                };
             } else {
                 // If we do not have a map address in the URL, let's ask the server for a start map.
-                return gameManager.loadStartMap().then((scene : any) => {
-                    if (!scene) {
-                        return;
-                    }
-                    const key = gameManager.loadMap(window.location.protocol + "//" + scene.mapUrlStart, this.scene, scene.startInstance);
+                return gameManager.loadStartMap().then((startMap: StartMapInterface) => {
+                    const key = gameManager.loadMap(window.location.protocol + "//" + startMap.mapUrlStart, this.scene, startMap.startInstance);
                     this.scene.start(key);
-                    return scene;
+                    return startMap;
                 }).catch((err) => {
                     console.error(err);
                     throw err;

@@ -1,4 +1,4 @@
-const DEBUG_MODE: boolean = process.env.DEBUG_MODE as any === true;
+const DEBUG_MODE: boolean = process.env.DEBUG_MODE == "true";
 const API_URL = process.env.API_URL || "http://api.workadventure.localhost";
 const RESOLUTION = 3;
 const ZOOM_LEVEL = 1/*3/4*/;

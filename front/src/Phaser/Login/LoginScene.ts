@@ -4,7 +4,7 @@ import {TextInput} from "../Components/TextInput";
 import {ClickButton} from "../Components/ClickButton";
 import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
-import {PLAYER_RESOURCES} from "../Entity/Character";
+import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Character";
 import {cypressAsserter} from "../../Cypress/CypressAsserter";
 import {SelectCharacterSceneInitDataInterface, SelectCharacterSceneName} from "./SelectCharacterScene";
 
@@ -40,7 +40,7 @@ export class LoginScene extends Phaser.Scene {
         this.load.bitmapFont(LoginTextures.mainFont, 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
         cypressAsserter.preloadFinished();
         //add player png
-        PLAYER_RESOURCES.forEach((playerResource: any) => {
+        PLAYER_RESOURCES.forEach((playerResource: PlayerResourceDescriptionInterface) => {
             this.load.spritesheet(
                 playerResource.name,
                 playerResource.img,

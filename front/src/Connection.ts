@@ -8,6 +8,7 @@ const SocketIo = require('socket.io-client');
 import Socket = SocketIOClient.Socket;
 import {PlayerAnimationNames} from "./Phaser/Player/Animation";
 import {UserSimplePeer} from "./WebRtc/SimplePeer";
+import {SignalData} from "simple-peer";
 
 
 enum EventMessage{
@@ -110,28 +111,40 @@ export interface WebRtcDisconnectMessageInterface {
     userId: string
 }
 
+export interface WebRtcSignalMessageInterface {
+    userId: string,
+    receiverId: string,
+    roomId: string,
+    signal: SignalData
+}
+
 export interface ConnectionInterface {
     socket: Socket|null;
     token: string|null;
     name: string|null;
     userId: string|null;
 
-    createConnection(name: string, characterSelected: string): Promise<any>;
+    createConnection(name: string, characterSelected: string): Promise<ConnectionInterface>;
 
-    loadStartMap(): Promise<any>;
+    loadStartMap(): Promise<StartMapInterface>;
 
     joinARoom(roomId: string, startX: number, startY: number, direction: string, moving: boolean): void;
 
     sharePosition(x: number, y: number, direction: string, moving: boolean): void;
 
     /*webrtc*/
-    sendWebrtcSignal(signal: any, roomId: string, userId?: string|null, receiverId?: string): void;
+    sendWebrtcSignal(signal: unknown, roomId: string, userId?: string|null, receiverId?: string): void;
 
     receiveWebrtcSignal(callBack: Function): void;
 
     receiveWebrtcStart(callBack: (message: WebRtcStartMessageInterface) => void): void;
 
     disconnectMessage(callBack: (message: WebRtcDisconnectMessageInterface) => void): void;
+}
+
+export interface StartMapInterface {
+    mapUrlStart: string,
+    startInstance: string
 }
 
 export class Connection implements ConnectionInterface {
@@ -225,7 +238,7 @@ export class Connection implements ConnectionInterface {
     }
 
     //TODO add middleware with access token to secure api
-    loadStartMap() : Promise<any> {
+    loadStartMap() : Promise<StartMapInterface> {
         return Axios.get(`${API_URL}/start-map`)
             .then((res) => {
                 return res.data;
@@ -236,7 +249,7 @@ export class Connection implements ConnectionInterface {
     }
 
     joinARoom(roomId: string, startX: number, startY: number, direction: string, moving: boolean): void {
-        let point = new Point(startX, startY, direction, moving);
+        const point = new Point(startX, startY, direction, moving);
         this.lastPositionShared = point;
         this.getSocket().emit(EventMessage.JOIN_ROOM, { roomId, position: {x: startX, y: startY, direction, moving }}, (userPositions: MessageUserPositionInterface[]) => {
             this.GameManager.initUsersPosition(userPositions);
@@ -284,7 +297,7 @@ export class Connection implements ConnectionInterface {
         })
     }
 
-    sendWebrtcSignal(signal: any, roomId: string, userId? : string|null, receiverId? : string) {
+    sendWebrtcSignal(signal: unknown, roomId: string, userId? : string|null, receiverId? : string) {
         return this.getSocket().emit(EventMessage.WEBRTC_SIGNAL, {
             userId: userId ? userId : this.userId,
             receiverId: receiverId ? receiverId : this.userId,
@@ -297,7 +310,7 @@ export class Connection implements ConnectionInterface {
         this.getSocket().on(EventMessage.WEBRTC_START, callback);
     }
 
-    receiveWebrtcSignal(callback: Function) {
+    receiveWebrtcSignal(callback: (message: WebRtcSignalMessageInterface) => void) {
         return this.getSocket().on(EventMessage.WEBRTC_SIGNAL, callback);
     }
 

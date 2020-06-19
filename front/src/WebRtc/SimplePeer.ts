@@ -1,4 +1,9 @@
-import {ConnectionInterface, WebRtcDisconnectMessageInterface, WebRtcStartMessageInterface} from "../Connection";
+import {
+    ConnectionInterface,
+    WebRtcDisconnectMessageInterface,
+    WebRtcSignalMessageInterface,
+    WebRtcStartMessageInterface
+} from "../Connection";
 import {MediaManager} from "./MediaManager";
 import * as SimplePeerNamespace from "simple-peer";
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
@@ -36,7 +41,7 @@ export class SimplePeer {
     private initialise() {
 
         //receive signal by gemer
-        this.Connection.receiveWebrtcSignal((message: any) => {
+        this.Connection.receiveWebrtcSignal((message: WebRtcSignalMessageInterface) => {
             this.receiveWebrtcSignal(message);
         });
 
@@ -122,7 +127,7 @@ export class SimplePeer {
         this.PeerConnectionArray.set(user.userId, peer);
 
         //start listen signal for the peer connection
-        peer.on('signal', (data: any) => {
+        peer.on('signal', (data: unknown) => {
             this.sendWebrtcSignal(data, user.userId);
         });
 
@@ -159,6 +164,7 @@ export class SimplePeer {
             this.closeConnection(user.userId);
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         peer.on('error', (err: any) => {
             console.error(`error => ${user.userId} => ${err.code}`, err);
             this.MediaManager.isError(user.userId);
@@ -208,7 +214,7 @@ export class SimplePeer {
      * @param userId
      * @param data
      */
-    private sendWebrtcSignal(data: any, userId : string) {
+    private sendWebrtcSignal(data: unknown, userId : string) {
         try {
             this.Connection.sendWebrtcSignal(data, this.WebRtcRoomId, null, userId);
         }catch (e) {
@@ -216,7 +222,8 @@ export class SimplePeer {
         }
     }
 
-    private receiveWebrtcSignal(data: any) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private receiveWebrtcSignal(data: WebRtcSignalMessageInterface) {
         try {
             //if offer type, create peer connection
             if(data.signal.type === "offer"){
@@ -251,7 +258,7 @@ export class SimplePeer {
      *
      * @param userId
      */
-    private addMedia (userId : any = null) {
+    private addMedia (userId : string) {
         try {
             const localStream: MediaStream|null = this.MediaManager.localStream;
             const peer = this.PeerConnectionArray.get(userId);
