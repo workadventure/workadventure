@@ -106,15 +106,16 @@ export class GameScene extends Phaser.Scene {
     private startLayerName: string|undefined;
 
     static createFromUrl(mapUrlFile: string, instance: string, key: string|null = null): GameScene {
+        const mapKey = GameScene.getMapKeyByUrl(mapUrlFile);
         if (key === null) {
-            key = GameScene.getMapKeyByUrl(mapUrlFile);
+            key = mapKey;
         }
-        return new GameScene(key, mapUrlFile, instance);
+        return new GameScene(mapKey, mapUrlFile, instance, key);
     }
 
-    constructor(MapKey : string, MapUrlFile: string, instance: string) {
+    constructor(MapKey : string, MapUrlFile: string, instance: string, key: string) {
         super({
-            key: MapKey
+            key: key
         });
 
         this.GameManager = gameManager;
@@ -124,7 +125,7 @@ export class GameScene extends Phaser.Scene {
 
         this.MapKey = MapKey;
         this.MapUrlFile = MapUrlFile;
-        this.RoomId = this.instance + '__' + GameScene.getMapKeyByUrl(MapUrlFile);
+        this.RoomId = this.instance + '__' + MapKey;
     }
 
     //hook preload scene
