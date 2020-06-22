@@ -124,7 +124,7 @@ export interface StartMapInterface {
 }
 
 export class Connection implements Connection {
-    socket: Socket|null = null;
+    socket: Socket;
     token: string|null = null;
     name: string|null = null; // TODO: drop "name" storage here
     character: string|null = null;
@@ -135,53 +135,59 @@ export class Connection implements Connection {
     lastPositionShared: PointInterface|null = null;
     lastRoom: string|null = null;
 
-    private constructor(GameManager: GameManager) {
+    private constructor(GameManager: GameManager, name: string, character: string, token: string) {
         this.GameManager = GameManager;
+        this.name = name;
+        this.character = character;
+        this.token = token;
+
+        this.socket = SocketIo(`${API_URL}`, {
+            query: {
+                token: this.token
+            },
+            reconnection: false // Reconnection is handled by the application itself
+        });
+
+        this.socket.on(EventMessage.CONNECT_ERROR, () => {
+            console.error("Connection failed")
+        });
+
+        this.socket.on(EventMessage.MESSAGE_ERROR, (message: string) => {
+            console.error(EventMessage.MESSAGE_ERROR, message);
+        })
     }
 
     public static createConnection(name: string, characterSelected: string): Promise<Connection> {
-        let connection = new Connection(gameManager);
-        connection.name = name;
-        connection.character = characterSelected;
         return Axios.post(`${API_URL}/login`, {name: name})
             .then((res) => {
-                connection.token = res.data.token;
-                connection.socket = SocketIo(`${API_URL}`, {
-                    query: {
-                        token: connection.token
-                    }
-                });
+                let connection = new Connection(gameManager, name, characterSelected, res.data.token);
 
-                //listen event
-                connection.disconnectServer();
-                connection.errorMessage();
-
+                // FIXME: we should wait for the complete connexion here (i.e. the "connected" message from socket.io)!
+                // Otherwise, the connection MAY fail and we will never know!
                 return connection.connectSocketServer();
             })
             .catch((err) => {
-                console.error(err);
-                throw err;
+                // Let's retry in 4-6 seconds
+                return new Promise<Connection>((resolve, reject) => {
+                    setTimeout(() => {
+                        resolve(Connection.createConnection(name, characterSelected));
+                    }, 4000 + Math.floor(Math.random() * 2000) );
+                });
+
+                //console.error(err);
+                //throw err;
             });
     }
 
     public closeConnection(): void {
         this.socket?.close();
-        this.socket = null;
         this.lastPositionShared = null;
         this.lastRoom = null;
-
-    }
-
-    private getSocket(): Socket {
-        if (this.socket === null) {
-            throw new Error('Socket not initialized while using Connection')
-        }
-        return this.socket;
     }
 
     connectSocketServer(): Promise<Connection>{
         return new Promise<Connection>((resolve, reject) => {
-            this.getSocket().emit(EventMessage.SET_PLAYER_DETAILS, {
+            this.socket.emit(EventMessage.SET_PLAYER_DETAILS, {
                 name: this.name,
                 character: this.character
             } as SetPlayerDetailsMessage, (id: string) => {
@@ -218,7 +224,7 @@ export class Connection implements Connection {
         const point = new Point(startX, startY, direction, moving);
         this.lastPositionShared = point;
         let promise = new Promise<MessageUserPositionInterface[]>((resolve, reject) => {
-            this.getSocket().emit(EventMessage.JOIN_ROOM, { roomId, position: {x: startX, y: startY, direction, moving }}, (userPositions: MessageUserPositionInterface[]) => {
+            this.socket.emit(EventMessage.JOIN_ROOM, { roomId, position: {x: startX, y: startY, direction, moving }}, (userPositions: MessageUserPositionInterface[]) => {
                 //this.GameManager.initUsersPosition(userPositions);
                 resolve(userPositions);
             });
@@ -233,31 +239,31 @@ export class Connection implements Connection {
         }
         const point = new Point(x, y, direction, moving);
         this.lastPositionShared = point;
-        this.getSocket().emit(EventMessage.USER_POSITION, point);
+        this.socket.emit(EventMessage.USER_POSITION, point);
     }
 
     public onUserJoins(callback: (message: MessageUserJoined) => void): void {
-        this.getSocket().on(EventMessage.JOIN_ROOM, callback);
+        this.socket.on(EventMessage.JOIN_ROOM, callback);
     }
 
     public onUserMoved(callback: (message: MessageUserMovedInterface) => void): void {
-        this.getSocket().on(EventMessage.USER_MOVED, callback);
+        this.socket.on(EventMessage.USER_MOVED, callback);
     }
 
     public onUserLeft(callback: (userId: string) => void): void {
-        this.getSocket().on(EventMessage.USER_LEFT, callback);
+        this.socket.on(EventMessage.USER_LEFT, callback);
     }
 
     public onGroupUpdatedOrCreated(callback: (groupCreateUpdateMessage: GroupCreatedUpdatedMessageInterface) => void): void {
-        this.getSocket().on(EventMessage.GROUP_CREATE_UPDATE, callback);
+        this.socket.on(EventMessage.GROUP_CREATE_UPDATE, callback);
     }
 
     public onGroupDeleted(callback: (groupId: string) => void): void {
-        this.getSocket().on(EventMessage.GROUP_DELETE, callback)
+        this.socket.on(EventMessage.GROUP_DELETE, callback)
     }
 
     sendWebrtcSignal(signal: unknown, roomId: string, userId? : string|null, receiverId? : string) {
-        return this.getSocket().emit(EventMessage.WEBRTC_SIGNAL, {
+        return this.socket.emit(EventMessage.WEBRTC_SIGNAL, {
             userId: userId ? userId : this.userId,
             receiverId: receiverId ? receiverId : this.userId,
             roomId: roomId,
@@ -266,47 +272,53 @@ export class Connection implements Connection {
     }
 
     receiveWebrtcStart(callback: (message: WebRtcStartMessageInterface) => void) {
-        this.getSocket().on(EventMessage.WEBRTC_START, callback);
+        this.socket.on(EventMessage.WEBRTC_START, callback);
     }
 
     receiveWebrtcSignal(callback: (message: WebRtcSignalMessageInterface) => void) {
-        return this.getSocket().on(EventMessage.WEBRTC_SIGNAL, callback);
+        return this.socket.on(EventMessage.WEBRTC_SIGNAL, callback);
     }
 
-    private errorMessage(): void {
-        this.getSocket().on(EventMessage.MESSAGE_ERROR, (message: string) => {
-            console.error(EventMessage.MESSAGE_ERROR, message);
-        })
-    }
+    public onServerDisconnected(callback: (reason: string) => void): void {
+        /*this.socket.on(EventMessage.CONNECT_ERROR, (error: object) => {
+            callback(error);
+        });*/
 
-    private disconnectServer(): void {
-        this.getSocket().on(EventMessage.CONNECT_ERROR, () => {
-            this.GameManager.switchToDisconnectedScene();
+        this.socket.on('disconnect', (reason: string) => {
+            if (reason === 'io client disconnect') {
+                // The client asks for disconnect, let's not trigger any event.
+                return;
+            }
+            callback(reason);
         });
 
-        this.getSocket().on(EventMessage.RECONNECTING, () => {
+        /*this.socket.on(EventMessage.CONNECT_ERROR, (error: object) => {
+            this.GameManager.switchToDisconnectedScene();
+        });*/
+
+        /*this.socket.on(EventMessage.RECONNECTING, () => {
             console.log('Trying to reconnect');
         });
 
-        this.getSocket().on(EventMessage.RECONNECT_ERROR, () => {
+        this.socket.on(EventMessage.RECONNECT_ERROR, () => {
             console.log('Error while trying to reconnect.');
         });
 
-        this.getSocket().on(EventMessage.RECONNECT_FAILED, () => {
+        this.socket.on(EventMessage.RECONNECT_FAILED, () => {
             console.error('Reconnection failed. Giving up.');
         });
 
-        this.getSocket().on(EventMessage.RECONNECT, () => {
+        this.socket.on(EventMessage.RECONNECT, () => {
             console.log('Reconnect event triggered');
             this.connectSocketServer();
             if (this.lastPositionShared === null) {
                 throw new Error('No last position shared found while reconnecting');
             }
             this.GameManager.reconnectToGameScene(this.lastPositionShared);
-        });
+        });*/
     }
 
     disconnectMessage(callback: (message: WebRtcDisconnectMessageInterface) => void): void {
-        this.getSocket().on(EventMessage.WEBRTC_DISCONNECT, callback);
+        this.socket.on(EventMessage.WEBRTC_DISCONNECT, callback);
     }
 }

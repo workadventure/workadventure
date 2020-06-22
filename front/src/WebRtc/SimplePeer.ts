@@ -209,6 +209,12 @@ export class SimplePeer {
         }
     }
 
+    public closeAllConnections() {
+        for (const userId of this.PeerConnectionArray.keys()) {
+            this.closeConnection(userId);
+        }
+    }
+
     /**
      *
      * @param userId

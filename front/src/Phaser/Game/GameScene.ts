@@ -25,6 +25,7 @@ import {RemotePlayer} from "../Entity/RemotePlayer";
 import GameObject = Phaser.GameObjects.GameObject;
 import { Queue } from 'queue-typescript';
 import {SimplePeer} from "../../WebRtc/SimplePeer";
+import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
 
 
 export enum Textures {
@@ -123,8 +124,7 @@ export class GameScene extends Phaser.Scene {
 
         this.MapKey = MapKey;
         this.MapUrlFile = MapUrlFile;
-        this.RoomId = this.instance + '__' + this.MapKey;
-
+        this.RoomId = this.instance + '__' + GameScene.getMapKeyByUrl(MapUrlFile);
     }
 
     //hook preload scene
@@ -186,11 +186,29 @@ export class GameScene extends Phaser.Scene {
                 }
             })
 
+            connection.onServerDisconnected(() => {
+                console.log('Player disconnected from server. Reloading scene.');
+
+                this.simplePeer.closeAllConnections();
+
+                let key = 'somekey'+Math.round(Math.random()*10000);
+                const game : Phaser.Scene = GameScene.createFromUrl(this.MapUrlFile, this.instance, key);
+                this.scene.add(key, game, false,
+                    {
+                        initPosition: {
+                            x: this.CurrentPlayer.x,
+                            y: this.CurrentPlayer.y
+                        }
+                    });
+                this.scene.start(key);
+            })
+
             // When connection is performed, let's connect SimplePeer
             this.simplePeer = new SimplePeer(this.connection);
 
-            if (this.scene.isPaused()) {
-                this.scene.resume();
+            if (this.scene.isSleeping()) {
+                this.scene.wake();
+                this.scene.sleep(ReconnectingSceneName);
             }
 
             return connection;
@@ -326,7 +344,13 @@ export class GameScene extends Phaser.Scene {
 
         // Let's pause the scene if the connection is not established yet
         if (this.connection === undefined) {
-            this.scene.pause();
+            // Let's wait 0.5 seconds before printing the "connecting" screen to avoid blinking
+            setTimeout(() => {
+                if (this.connection === undefined) {
+                    this.scene.sleep();
+                    this.scene.launch(ReconnectingSceneName);
+                }
+            }, 500);
         }
     }
 

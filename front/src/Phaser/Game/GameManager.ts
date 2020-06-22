@@ -122,7 +122,7 @@ export class GameManager {
         this.currentGameScene = null;
     }
 
-    private timeoutCallback: NodeJS.Timeout|null = null;
+    /*private timeoutCallback: NodeJS.Timeout|null = null;
     reconnectToGameScene(lastPositionShared: PointInterface): void {
         if (this.timeoutCallback !== null) {
             console.log('Reconnect called but setTimeout in progress for the reconnection');
@@ -150,7 +150,7 @@ export class GameManager {
         const game : Phaser.Scene = GameScene.createFromUrl(this.oldMapUrlFile, this.oldInstance);
         this.reconnectScene.scene.add(this.oldSceneKey, game, true, { initPosition: lastPositionShared });
         this.reconnectScene = null;
-    }
+    }*/
 
     private getCurrentGameScene(): GameScene {
         if (this.currentGameScene === null) {
