@@ -1,6 +1,7 @@
 import {GameManager, gameManager, HasMovedEvent} from "./GameManager";
 import {
-    GroupCreatedUpdatedMessageInterface,
+    Connection,
+    GroupCreatedUpdatedMessageInterface, MessageUserJoined,
     MessageUserMovedInterface,
     MessageUserPositionInterface, PointInterface, PositionInterface
 } from "../../Connection";
@@ -23,6 +24,8 @@ import {PlayersPositionInterpolator} from "./PlayersPositionInterpolator";
 import {RemotePlayer} from "../Entity/RemotePlayer";
 import GameObject = Phaser.GameObjects.GameObject;
 import { Queue } from 'queue-typescript';
+import {SimplePeer} from "../../WebRtc/SimplePeer";
+import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
 
 
 export enum Textures {
@@ -81,6 +84,9 @@ export class GameScene extends Phaser.Scene {
     pendingEvents: Queue<InitUserPositionEventInterface|AddPlayerEventInterface|RemovePlayerEventInterface|UserMovedEventInterface|GroupCreatedUpdatedEventInterface|DeleteGroupEventInterface> = new Queue<InitUserPositionEventInterface|AddPlayerEventInterface|RemovePlayerEventInterface|UserMovedEventInterface|GroupCreatedUpdatedEventInterface|DeleteGroupEventInterface>();
     private initPosition: PositionInterface|null = null;
     private playersPositionInterpolator = new PlayersPositionInterpolator();
+    private connection: Connection;
+    private simplePeer : SimplePeer;
+    private connectionPromise: Promise<Connection>
 
     MapKey: string;
     MapUrlFile: string;
@@ -99,14 +105,17 @@ export class GameScene extends Phaser.Scene {
     private PositionNextScene: Array<Array<{ key: string, hash: string }>> = new Array<Array<{ key: string, hash: string }>>();
     private startLayerName: string|undefined;
 
-    static createFromUrl(mapUrlFile: string, instance: string): GameScene {
-        const key = GameScene.getMapKeyByUrl(mapUrlFile);
-        return new GameScene(key, mapUrlFile, instance);
+    static createFromUrl(mapUrlFile: string, instance: string, key: string|null = null): GameScene {
+        const mapKey = GameScene.getMapKeyByUrl(mapUrlFile);
+        if (key === null) {
+            key = mapKey;
+        }
+        return new GameScene(mapKey, mapUrlFile, instance, key);
     }
 
-    constructor(MapKey : string, MapUrlFile: string, instance: string) {
+    constructor(MapKey : string, MapUrlFile: string, instance: string, key: string) {
         super({
-            key: MapKey
+            key: key
         });
 
         this.GameManager = gameManager;
@@ -116,12 +125,11 @@ export class GameScene extends Phaser.Scene {
 
         this.MapKey = MapKey;
         this.MapUrlFile = MapUrlFile;
-        this.RoomId = this.instance + '__' + this.MapKey;
+        this.RoomId = this.instance + '__' + MapKey;
     }
 
     //hook preload scene
     preload(): void {
-        this.GameManager.setCurrentGameScene(this);
         this.load.on('filecomplete-tilemapJSON-'+this.MapKey, (key: string, type: string, data: unknown) => {
             this.onMapLoad(data);
         });
@@ -144,6 +152,67 @@ export class GameScene extends Phaser.Scene {
         });
 
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
+
+        this.connectionPromise = Connection.createConnection(gameManager.getPlayerName(), gameManager.getCharacterSelected()).then((connection : Connection) => {
+            this.connection = connection;
+
+            connection.onUserJoins((message: MessageUserJoined) => {
+                const userMessage: AddPlayerInterface = {
+                    userId: message.userId,
+                    character: message.character,
+                    name: message.name,
+                    position: message.position
+                }
+                this.addPlayer(userMessage);
+            });
+
+            connection.onUserMoved((message: MessageUserMovedInterface) => {
+                this.updatePlayerPosition(message);
+            });
+
+            connection.onUserLeft((userId: string) => {
+                this.removePlayer(userId);
+            });
+
+            connection.onGroupUpdatedOrCreated((groupPositionMessage: GroupCreatedUpdatedMessageInterface) => {
+                this.shareGroupPosition(groupPositionMessage);
+            })
+
+            connection.onGroupDeleted((groupId: string) => {
+                try {
+                    this.deleteGroup(groupId);
+                } catch (e) {
+                    console.error(e);
+                }
+            })
+
+            connection.onServerDisconnected(() => {
+                console.log('Player disconnected from server. Reloading scene.');
+
+                this.simplePeer.closeAllConnections();
+
+                const key = 'somekey'+Math.round(Math.random()*10000);
+                const game : Phaser.Scene = GameScene.createFromUrl(this.MapUrlFile, this.instance, key);
+                this.scene.add(key, game, true,
+                    {
+                        initPosition: {
+                            x: this.CurrentPlayer.x,
+                            y: this.CurrentPlayer.y
+                        }
+                    });
+
+                this.scene.stop(this.scene.key);
+                this.scene.remove(this.scene.key);
+            })
+
+            // When connection is performed, let's connect SimplePeer
+            this.simplePeer = new SimplePeer(this.connection);
+
+            this.scene.wake();
+            this.scene.sleep(ReconnectingSceneName);
+
+            return connection;
+        });
     }
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
@@ -272,6 +341,17 @@ export class GameScene extends Phaser.Scene {
             path += '#'+this.startLayerName;
         }
         window.history.pushState({}, 'WorkAdventure', path);
+
+        // Let's pause the scene if the connection is not established yet
+        if (this.connection === undefined) {
+            // Let's wait 0.5 seconds before printing the "connecting" screen to avoid blinking
+            setTimeout(() => {
+                if (this.connection === undefined) {
+                    this.scene.sleep();
+                    this.scene.launch(ReconnectingSceneName);
+                }
+            }, 500);
+        }
     }
 
     private getExitSceneUrl(layer: ITiledMapLayer): string|undefined {
@@ -430,10 +510,14 @@ export class GameScene extends Phaser.Scene {
         this.createCollisionObject();
 
         //join room
-        this.GameManager.joinRoom(this.RoomId, this.startX, this.startY, PlayerAnimationNames.WalkDown, false);
+        this.connectionPromise.then((connection: Connection) => {
+            connection.joinARoom(this.RoomId, this.startX, this.startY, PlayerAnimationNames.WalkDown, false).then((userPositions: MessageUserPositionInterface[]) => {
+                this.initUsersPosition(userPositions);
+            });
 
-        //listen event to share position of user
-        this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this))
+            //listen event to share position of user
+            this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this))
+        });
     }
 
     pushPlayerPosition(event: HasMovedEvent) {
@@ -465,7 +549,7 @@ export class GameScene extends Phaser.Scene {
     private doPushPlayerPosition(event: HasMovedEvent): void {
         this.lastMoveEventSent = event;
         this.lastSentTick = this.currentTick;
-        this.GameManager.pushPlayerPosition(event);
+        this.connection.sharePosition(event.x, event.y, event.direction, event.moving);
     }
 
     EventToClickOnTile(){
@@ -525,6 +609,8 @@ export class GameScene extends Phaser.Scene {
         const nextSceneKey = this.checkToExit();
         if(nextSceneKey){
             // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
+            this.connection.closeConnection();
+            this.scene.stop();
             this.scene.remove(this.scene.key);
             this.scene.start(nextSceneKey.key, {
                 startLayerName: nextSceneKey.hash
@@ -549,7 +635,7 @@ export class GameScene extends Phaser.Scene {
     /**
      * Called by the connexion when the full list of user position is received.
      */
-    public initUsersPosition(usersPosition: MessageUserPositionInterface[]): void {
+    private initUsersPosition(usersPosition: MessageUserPositionInterface[]): void {
         this.pendingEvents.enqueue({
             type: "InitUserPositionEvent",
             event: usersPosition
@@ -561,7 +647,7 @@ export class GameScene extends Phaser.Scene {
      * Put all the players on the map on map load.
      */
     private doInitUsersPosition(usersPosition: MessageUserPositionInterface[]): void {
-        const currentPlayerId = this.GameManager.getPlayerId();
+        const currentPlayerId = this.connection.userId;
 
         // clean map
         this.MapPlayersByKey.forEach((player: RemotePlayer) => {
@@ -633,7 +719,6 @@ export class GameScene extends Phaser.Scene {
     }
 
     private doRemovePlayer(userId: string) {
-        //console.log('Removing player ', userId)
         const player = this.MapPlayersByKey.get(userId);
         if (player === undefined) {
             console.error('Cannot find user with id ', userId);

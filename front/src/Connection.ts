@@ -1,4 +1,4 @@
-import {GameManager} from "./Phaser/Game/GameManager";
+import {gameManager, GameManager} from "./Phaser/Game/GameManager";
 import Axios from "axios";
 import {API_URL} from "./Enum/EnvironmentVariable";
 import {MessageUI} from "./Logger/MessageUI";
@@ -118,37 +118,13 @@ export interface WebRtcSignalMessageInterface {
     signal: SignalData
 }
 
-export interface ConnectionInterface {
-    socket: Socket|null;
-    token: string|null;
-    name: string|null;
-    userId: string|null;
-
-    createConnection(name: string, characterSelected: string): Promise<ConnectionInterface>;
-
-    loadStartMap(): Promise<StartMapInterface>;
-
-    joinARoom(roomId: string, startX: number, startY: number, direction: string, moving: boolean): void;
-
-    sharePosition(x: number, y: number, direction: string, moving: boolean): void;
-
-    /*webrtc*/
-    sendWebrtcSignal(signal: unknown, roomId: string, userId?: string|null, receiverId?: string): void;
-
-    receiveWebrtcSignal(callBack: Function): void;
-
-    receiveWebrtcStart(callBack: (message: WebRtcStartMessageInterface) => void): void;
-
-    disconnectMessage(callBack: (message: WebRtcDisconnectMessageInterface) => void): void;
-}
-
 export interface StartMapInterface {
     mapUrlStart: string,
     startInstance: string
 }
 
-export class Connection implements ConnectionInterface {
-    socket: Socket|null = null;
+export class Connection implements Connection {
+    socket: Socket;
     token: string|null = null;
     name: string|null = null; // TODO: drop "name" storage here
     character: string|null = null;
@@ -159,102 +135,78 @@ export class Connection implements ConnectionInterface {
     lastPositionShared: PointInterface|null = null;
     lastRoom: string|null = null;
 
-    constructor(GameManager: GameManager) {
+    private constructor(GameManager: GameManager, name: string, character: string, token: string) {
         this.GameManager = GameManager;
+        this.name = name;
+        this.character = character;
+        this.token = token;
+
+        this.socket = SocketIo(`${API_URL}`, {
+            query: {
+                token: this.token
+            },
+            reconnection: false // Reconnection is handled by the application itself
+        });
+
+        this.socket.on(EventMessage.MESSAGE_ERROR, (message: string) => {
+            console.error(EventMessage.MESSAGE_ERROR, message);
+        })
     }
 
-    createConnection(name: string, characterSelected: string): Promise<ConnectionInterface> {
-        this.name = name;
-        this.character = characterSelected;
+    public static createConnection(name: string, characterSelected: string): Promise<Connection> {
         return Axios.post(`${API_URL}/login`, {name: name})
             .then((res) => {
-                this.token = res.data.token;
-                this.socket = SocketIo(`${API_URL}`, {
-                    query: {
-                        token: this.token
-                    }
+
+                return new Promise<Connection>((resolve, reject) => {
+                    const connection = new Connection(gameManager, name, characterSelected, res.data.token);
+
+                    connection.onConnectError((error: object) => {
+                        console.log('An error occurred while connecting to socket server. Retrying');
+                        reject(error);
+                    });
+
+                    connection.socket.emit(EventMessage.SET_PLAYER_DETAILS, {
+                        name: connection.name,
+                        character: connection.character
+                    } as SetPlayerDetailsMessage, (id: string) => {
+                        connection.userId = id;
+                    });
+
+                    resolve(connection);
                 });
-
-                //listen event
-                this.disconnectServer();
-                this.errorMessage();
-                this.groupUpdatedOrCreated();
-                this.groupDeleted();
-                this.onUserJoins();
-                this.onUserMoved();
-                this.onUserLeft();
-
-                return this.connectSocketServer();
             })
             .catch((err) => {
-                console.error(err);
-                throw err;
+                // Let's retry in 4-6 seconds
+                return new Promise<Connection>((resolve, reject) => {
+                    setTimeout(() => {
+                        Connection.createConnection(name, characterSelected).then((connection) => resolve(connection))
+                            .catch((error) => reject(error));
+                    }, 4000 + Math.floor(Math.random() * 2000) );
+                });
+
+                //console.error(err);
+                //throw err;
             });
     }
 
-    private getSocket(): Socket {
-        if (this.socket === null) {
-            throw new Error('Socket not initialized while using Connection')
-        }
-        return this.socket;
+    public closeConnection(): void {
+        this.socket?.close();
+        this.lastPositionShared = null;
+        this.lastRoom = null;
     }
 
-    /**
-     *
-     * @param character
-     */
-    connectSocketServer(): Promise<ConnectionInterface>{
-        return new Promise<ConnectionInterface>((resolve, reject) => {
-            this.getSocket().emit(EventMessage.SET_PLAYER_DETAILS, {
-                name: this.name,
-                character: this.character
-            } as SetPlayerDetailsMessage, (id: string) => {
-                this.userId = id;
-            });
 
-            //if try to reconnect with last position
-            /*if(this.lastRoom) {
-                //join the room
-                this.joinARoom(this.lastRoom,
-                    this.lastPositionShared ? this.lastPositionShared.x : 0,
-                    this.lastPositionShared ? this.lastPositionShared.y : 0,
-                    this.lastPositionShared ? this.lastPositionShared.direction : PlayerAnimationNames.WalkDown,
-                    this.lastPositionShared ? this.lastPositionShared.moving : false);
-            }*/
-
-            /*if(this.lastPositionShared) {
-
-                //share your first position
-                this.sharePosition(
-                    this.lastPositionShared ? this.lastPositionShared.x : 0,
-                    this.lastPositionShared ? this.lastPositionShared.y : 0,
-                    this.lastPositionShared.direction,
-                    this.lastPositionShared.moving
-                );
-            }*/
-
-            resolve(this);
-        });
-    }
-
-    //TODO add middleware with access token to secure api
-    loadStartMap() : Promise<StartMapInterface> {
-        return Axios.get(`${API_URL}/start-map`)
-            .then((res) => {
-                return res.data;
-            }).catch((err) => {
-                console.error(err);
-                throw err;
-            });
-    }
-
-    joinARoom(roomId: string, startX: number, startY: number, direction: string, moving: boolean): void {
+    joinARoom(roomId: string, startX: number, startY: number, direction: string, moving: boolean): Promise<MessageUserPositionInterface[]> {
         const point = new Point(startX, startY, direction, moving);
         this.lastPositionShared = point;
-        this.getSocket().emit(EventMessage.JOIN_ROOM, { roomId, position: {x: startX, y: startY, direction, moving }}, (userPositions: MessageUserPositionInterface[]) => {
-            this.GameManager.initUsersPosition(userPositions);
-        });
+        const promise = new Promise<MessageUserPositionInterface[]>((resolve, reject) => {
+            this.socket.emit(EventMessage.JOIN_ROOM, { roomId, position: {x: startX, y: startY, direction, moving }}, (userPositions: MessageUserPositionInterface[]) => {
+                //this.GameManager.initUsersPosition(userPositions);
+                resolve(userPositions);
+            });
+        })
         this.lastRoom = roomId;
+        return promise;
     }
 
     sharePosition(x : number, y : number, direction : string, moving: boolean) : void{
@@ -263,42 +215,35 @@ export class Connection implements ConnectionInterface {
         }
         const point = new Point(x, y, direction, moving);
         this.lastPositionShared = point;
-        this.getSocket().emit(EventMessage.USER_POSITION, point);
+        this.socket.emit(EventMessage.USER_POSITION, point);
     }
 
-    private onUserJoins(): void {
-        this.getSocket().on(EventMessage.JOIN_ROOM, (message: MessageUserJoined) => {
-            this.GameManager.onUserJoins(message);
-        });
+    public onUserJoins(callback: (message: MessageUserJoined) => void): void {
+        this.socket.on(EventMessage.JOIN_ROOM, callback);
     }
 
-    private onUserMoved(): void {
-        this.getSocket().on(EventMessage.USER_MOVED, (message: MessageUserMovedInterface) => {
-            this.GameManager.onUserMoved(message);
-        });
+    public onUserMoved(callback: (message: MessageUserMovedInterface) => void): void {
+        this.socket.on(EventMessage.USER_MOVED, callback);
     }
 
-    private onUserLeft(): void {
-        this.getSocket().on(EventMessage.USER_LEFT, (userId: string) => {
-            this.GameManager.onUserLeft(userId);
-        });
+    public onUserLeft(callback: (userId: string) => void): void {
+        this.socket.on(EventMessage.USER_LEFT, callback);
     }
 
-    private groupUpdatedOrCreated(): void {
-        this.getSocket().on(EventMessage.GROUP_CREATE_UPDATE, (groupCreateUpdateMessage: GroupCreatedUpdatedMessageInterface) => {
-            //console.log('Group ', groupCreateUpdateMessage.groupId, " position :", groupCreateUpdateMessage.position.x, groupCreateUpdateMessage.position.y)
-            this.GameManager.shareGroupPosition(groupCreateUpdateMessage);
-        })
+    public onGroupUpdatedOrCreated(callback: (groupCreateUpdateMessage: GroupCreatedUpdatedMessageInterface) => void): void {
+        this.socket.on(EventMessage.GROUP_CREATE_UPDATE, callback);
     }
 
-    private groupDeleted(): void {
-        this.getSocket().on(EventMessage.GROUP_DELETE, (groupId: string) => {
-            this.GameManager.deleteGroup(groupId);
-        })
+    public onGroupDeleted(callback: (groupId: string) => void): void {
+        this.socket.on(EventMessage.GROUP_DELETE, callback)
+    }
+
+    public onConnectError(callback: (error: object) => void): void {
+        this.socket.on(EventMessage.CONNECT_ERROR, callback)
     }
 
     sendWebrtcSignal(signal: unknown, roomId: string, userId? : string|null, receiverId? : string) {
-        return this.getSocket().emit(EventMessage.WEBRTC_SIGNAL, {
+        return this.socket.emit(EventMessage.WEBRTC_SIGNAL, {
             userId: userId ? userId : this.userId,
             receiverId: receiverId ? receiverId : this.userId,
             roomId: roomId,
@@ -307,47 +252,53 @@ export class Connection implements ConnectionInterface {
     }
 
     receiveWebrtcStart(callback: (message: WebRtcStartMessageInterface) => void) {
-        this.getSocket().on(EventMessage.WEBRTC_START, callback);
+        this.socket.on(EventMessage.WEBRTC_START, callback);
     }
 
     receiveWebrtcSignal(callback: (message: WebRtcSignalMessageInterface) => void) {
-        return this.getSocket().on(EventMessage.WEBRTC_SIGNAL, callback);
+        return this.socket.on(EventMessage.WEBRTC_SIGNAL, callback);
     }
 
-    private errorMessage(): void {
-        this.getSocket().on(EventMessage.MESSAGE_ERROR, (message: string) => {
-            console.error(EventMessage.MESSAGE_ERROR, message);
-        })
-    }
+    public onServerDisconnected(callback: (reason: string) => void): void {
+        /*this.socket.on(EventMessage.CONNECT_ERROR, (error: object) => {
+            callback(error);
+        });*/
 
-    private disconnectServer(): void {
-        this.getSocket().on(EventMessage.CONNECT_ERROR, () => {
-            this.GameManager.switchToDisconnectedScene();
+        this.socket.on('disconnect', (reason: string) => {
+            if (reason === 'io client disconnect') {
+                // The client asks for disconnect, let's not trigger any event.
+                return;
+            }
+            callback(reason);
         });
 
-        this.getSocket().on(EventMessage.RECONNECTING, () => {
+        /*this.socket.on(EventMessage.CONNECT_ERROR, (error: object) => {
+            this.GameManager.switchToDisconnectedScene();
+        });*/
+
+        /*this.socket.on(EventMessage.RECONNECTING, () => {
             console.log('Trying to reconnect');
         });
 
-        this.getSocket().on(EventMessage.RECONNECT_ERROR, () => {
+        this.socket.on(EventMessage.RECONNECT_ERROR, () => {
             console.log('Error while trying to reconnect.');
         });
 
-        this.getSocket().on(EventMessage.RECONNECT_FAILED, () => {
+        this.socket.on(EventMessage.RECONNECT_FAILED, () => {
             console.error('Reconnection failed. Giving up.');
         });
 
-        this.getSocket().on(EventMessage.RECONNECT, () => {
+        this.socket.on(EventMessage.RECONNECT, () => {
             console.log('Reconnect event triggered');
             this.connectSocketServer();
             if (this.lastPositionShared === null) {
                 throw new Error('No last position shared found while reconnecting');
             }
             this.GameManager.reconnectToGameScene(this.lastPositionShared);
-        });
+        });*/
     }
 
     disconnectMessage(callback: (message: WebRtcDisconnectMessageInterface) => void): void {
-        this.getSocket().on(EventMessage.WEBRTC_DISCONNECT, callback);
+        this.socket.on(EventMessage.WEBRTC_DISCONNECT, callback);
     }
 }
