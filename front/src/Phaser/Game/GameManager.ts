@@ -1,19 +1,21 @@
 import {GameScene} from "./GameScene";
 import {
-    Connection, ConnectionInterface,
+    Connection,
     GroupCreatedUpdatedMessageInterface,
     ListMessageUserPositionInterface,
     MessageUserJoined,
     MessageUserMovedInterface,
     MessageUserPositionInterface,
     Point,
-    PointInterface
+    PointInterface, StartMapInterface
 } from "../../Connection";
 import {SimplePeer} from "../../WebRtc/SimplePeer";
 import {AddPlayerInterface} from "./AddPlayerInterface";
 import {ReconnectingScene, ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
 import ScenePlugin = Phaser.Scenes.ScenePlugin;
 import {Scene} from "phaser";
+import Axios from "axios";
+import {API_URL} from "../../Enum/EnvironmentVariable";
 
 /*export enum StatusGameManagerEnum {
     IN_PROGRESS = 1,
@@ -34,7 +36,7 @@ export interface MapObject {
 
 export class GameManager {
     //status: number;
-    private ConnectionInstance: Connection;
+    //private ConnectionInstance: Connection;
     private currentGameScene: GameScene|null = null;
     private playerName: string;
     SimplePeer : SimplePeer;
@@ -44,24 +46,26 @@ export class GameManager {
         //this.status = StatusGameManagerEnum.IN_PROGRESS;
     }
 
-    public connect(name: string, characterUserSelected : string): Promise<ConnectionInterface> {
+    public storePlayerDetails(name: string, characterUserSelected : string) /*: Promise<Connection>*/ {
         this.playerName = name;
         this.characterUserSelected = characterUserSelected;
-        this.ConnectionInstance = new Connection(this);
-        return this.ConnectionInstance.createConnection(name, characterUserSelected).then((data : ConnectionInterface) => {
+        /*this.ConnectionInstance = new Connection(this);
+        return this.ConnectionInstance.createConnection(name, characterUserSelected).then((data : Connection) => {
             this.SimplePeer = new SimplePeer(this.ConnectionInstance);
             return data;
         }).catch((err) => {
           throw err;
-        });
+        });*/
     }
 
-    loadStartMap(){
-        return this.ConnectionInstance.loadStartMap().then((data) => {
-            return data;
-        }).catch((err) => {
-            throw err;
-        });
+    loadStartMap() : Promise<StartMapInterface> {
+        return Axios.get(`${API_URL}/start-map`)
+            .then((res) => {
+                return res.data;
+            }).catch((err) => {
+                console.error(err);
+                throw err;
+            });
     }
 
     setCurrentGameScene(gameScene: GameScene) {
@@ -78,79 +82,12 @@ export class GameManager {
         //this.status = StatusGameManagerEnum.CURRENT_USER_CREATED;
     }*/
 
-    joinRoom(sceneKey: string, startX: number, startY: number, direction: string, moving: boolean){
-        this.ConnectionInstance.joinARoom(sceneKey, startX, startY, direction, moving);
-    }
-
-    onUserJoins(message: MessageUserJoined): void {
-        const userMessage: AddPlayerInterface = {
-            userId: message.userId,
-            character: message.character,
-            name: message.name,
-            position: message.position
-        }
-        this.getCurrentGameScene().addPlayer(userMessage);
-    }
-
-    onUserMoved(message: MessageUserMovedInterface): void {
-        this.getCurrentGameScene().updatePlayerPosition(message);
-    }
-
-    onUserLeft(userId: string): void {
-        this.getCurrentGameScene().removePlayer(userId);
-    }
-
-    initUsersPosition(usersPosition: MessageUserPositionInterface[]): void {
-        // Shall we wait for room to be loaded?
-        /*if (this.status === StatusGameManagerEnum.IN_PROGRESS) {
-            return;
-        }*/
-        try {
-            this.getCurrentGameScene().initUsersPosition(usersPosition)
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
-    /**
-     * Share group position in game
-     */
-    shareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface): void {
-        /*if (this.status === StatusGameManagerEnum.IN_PROGRESS) {
-            return;
-        }*/
-        try {
-            this.getCurrentGameScene().shareGroupPosition(groupPositionMessage)
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
-    deleteGroup(groupId: string): void {
-        /*if (this.status === StatusGameManagerEnum.IN_PROGRESS) {
-            return;
-        }*/
-        try {
-            this.getCurrentGameScene().deleteGroup(groupId)
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
     getPlayerName(): string {
         return this.playerName;
     }
 
-    getPlayerId(): string|null {
-        return this.ConnectionInstance.userId;
-    }
-
     getCharacterSelected(): string {
         return this.characterUserSelected;
-    }
-
-    pushPlayerPosition(event: HasMovedEvent) {
-        this.ConnectionInstance.sharePosition(event.x, event.y, event.direction, event.moving);
     }
 
     loadMap(mapUrl: string, scene: Phaser.Scenes.ScenePlugin, instance: string): string {

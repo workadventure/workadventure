@@ -117,34 +117,31 @@ export class SelectCharacterScene extends Phaser.Scene {
     }
 
     private async login(name: string): Promise<StartMapInterface> {
-        return gameManager.connect(name, this.selectedPlayer.texture.key).then(() => {
-            // Do we have a start URL in the address bar? If so, let's redirect to this address
-            const instanceAndMapUrl = this.findMapUrl();
-            if (instanceAndMapUrl !== null) {
-                const [mapUrl, instance] = instanceAndMapUrl;
-                const key = gameManager.loadMap(mapUrl, this.scene, instance);
-                this.scene.start(key, {
-                    startLayerName: window.location.hash ? window.location.hash.substr(1) : undefined
-                } as GameSceneInitInterface);
-                return {
-                    mapUrlStart: mapUrl,
-                    startInstance: instance
-                };
-            } else {
-                // If we do not have a map address in the URL, let's ask the server for a start map.
-                return gameManager.loadStartMap().then((startMap: StartMapInterface) => {
-                    const key = gameManager.loadMap(window.location.protocol + "//" + startMap.mapUrlStart, this.scene, startMap.startInstance);
-                    this.scene.start(key);
-                    return startMap;
-                }).catch((err) => {
-                    console.error(err);
-                    throw err;
-                });
-            }
-        }).catch((err) => {
-            console.error(err);
-            throw err;
-        });
+        gameManager.storePlayerDetails(name, this.selectedPlayer.texture.key);
+
+        // Do we have a start URL in the address bar? If so, let's redirect to this address
+        const instanceAndMapUrl = this.findMapUrl();
+        if (instanceAndMapUrl !== null) {
+            const [mapUrl, instance] = instanceAndMapUrl;
+            const key = gameManager.loadMap(mapUrl, this.scene, instance);
+            this.scene.start(key, {
+                startLayerName: window.location.hash ? window.location.hash.substr(1) : undefined
+            } as GameSceneInitInterface);
+            return {
+                mapUrlStart: mapUrl,
+                startInstance: instance
+            };
+        } else {
+            // If we do not have a map address in the URL, let's ask the server for a start map.
+            return gameManager.loadStartMap().then((startMap: StartMapInterface) => {
+                const key = gameManager.loadMap(window.location.protocol + "//" + startMap.mapUrlStart, this.scene, startMap.startInstance);
+                this.scene.start(key);
+                return startMap;
+            }).catch((err) => {
+                console.error(err);
+                throw err;
+            });
+        }
     }
 
     /**

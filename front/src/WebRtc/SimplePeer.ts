@@ -1,5 +1,5 @@
 import {
-    ConnectionInterface,
+    Connection,
     WebRtcDisconnectMessageInterface,
     WebRtcSignalMessageInterface,
     WebRtcStartMessageInterface
@@ -18,7 +18,7 @@ export interface UserSimplePeer{
  * This class manages connections to all the peers in the same group as me.
  */
 export class SimplePeer {
-    private Connection: ConnectionInterface;
+    private Connection: Connection;
     private WebRtcRoomId: string;
     private Users: Array<UserSimplePeer> = new Array<UserSimplePeer>();
 
@@ -26,7 +26,7 @@ export class SimplePeer {
 
     private PeerConnectionArray: Map<string, SimplePeerNamespace.Instance> = new Map<string, SimplePeerNamespace.Instance>();
 
-    constructor(Connection: ConnectionInterface, WebRtcRoomId: string = "test-webrtc") {
+    constructor(Connection: Connection, WebRtcRoomId: string = "test-webrtc") {
         this.Connection = Connection;
         this.WebRtcRoomId = WebRtcRoomId;
         this.MediaManager = new MediaManager((stream : MediaStream) => {

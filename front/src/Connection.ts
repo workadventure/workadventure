@@ -1,4 +1,4 @@
-import {GameManager} from "./Phaser/Game/GameManager";
+import {gameManager, GameManager} from "./Phaser/Game/GameManager";
 import Axios from "axios";
 import {API_URL} from "./Enum/EnvironmentVariable";
 import {MessageUI} from "./Logger/MessageUI";
@@ -118,36 +118,12 @@ export interface WebRtcSignalMessageInterface {
     signal: SignalData
 }
 
-export interface ConnectionInterface {
-    socket: Socket|null;
-    token: string|null;
-    name: string|null;
-    userId: string|null;
-
-    createConnection(name: string, characterSelected: string): Promise<ConnectionInterface>;
-
-    loadStartMap(): Promise<StartMapInterface>;
-
-    joinARoom(roomId: string, startX: number, startY: number, direction: string, moving: boolean): void;
-
-    sharePosition(x: number, y: number, direction: string, moving: boolean): void;
-
-    /*webrtc*/
-    sendWebrtcSignal(signal: unknown, roomId: string, userId?: string|null, receiverId?: string): void;
-
-    receiveWebrtcSignal(callBack: Function): void;
-
-    receiveWebrtcStart(callBack: (message: WebRtcStartMessageInterface) => void): void;
-
-    disconnectMessage(callBack: (message: WebRtcDisconnectMessageInterface) => void): void;
-}
-
 export interface StartMapInterface {
     mapUrlStart: string,
     startInstance: string
 }
 
-export class Connection implements ConnectionInterface {
+export class Connection implements Connection {
     socket: Socket|null = null;
     token: string|null = null;
     name: string|null = null; // TODO: drop "name" storage here
@@ -159,37 +135,41 @@ export class Connection implements ConnectionInterface {
     lastPositionShared: PointInterface|null = null;
     lastRoom: string|null = null;
 
-    constructor(GameManager: GameManager) {
+    private constructor(GameManager: GameManager) {
         this.GameManager = GameManager;
     }
 
-    createConnection(name: string, characterSelected: string): Promise<ConnectionInterface> {
-        this.name = name;
-        this.character = characterSelected;
+    public static createConnection(name: string, characterSelected: string): Promise<Connection> {
+        let connection = new Connection(gameManager);
+        connection.name = name;
+        connection.character = characterSelected;
         return Axios.post(`${API_URL}/login`, {name: name})
             .then((res) => {
-                this.token = res.data.token;
-                this.socket = SocketIo(`${API_URL}`, {
+                connection.token = res.data.token;
+                connection.socket = SocketIo(`${API_URL}`, {
                     query: {
-                        token: this.token
+                        token: connection.token
                     }
                 });
 
                 //listen event
-                this.disconnectServer();
-                this.errorMessage();
-                this.groupUpdatedOrCreated();
-                this.groupDeleted();
-                this.onUserJoins();
-                this.onUserMoved();
-                this.onUserLeft();
+                connection.disconnectServer();
+                connection.errorMessage();
 
-                return this.connectSocketServer();
+                return connection.connectSocketServer();
             })
             .catch((err) => {
                 console.error(err);
                 throw err;
             });
+    }
+
+    public closeConnection(): void {
+        this.socket?.close();
+        this.socket = null;
+        this.lastPositionShared = null;
+        this.lastRoom = null;
+
     }
 
     private getSocket(): Socket {
@@ -199,12 +179,8 @@ export class Connection implements ConnectionInterface {
         return this.socket;
     }
 
-    /**
-     *
-     * @param character
-     */
-    connectSocketServer(): Promise<ConnectionInterface>{
-        return new Promise<ConnectionInterface>((resolve, reject) => {
+    connectSocketServer(): Promise<Connection>{
+        return new Promise<Connection>((resolve, reject) => {
             this.getSocket().emit(EventMessage.SET_PLAYER_DETAILS, {
                 name: this.name,
                 character: this.character
@@ -237,24 +213,18 @@ export class Connection implements ConnectionInterface {
         });
     }
 
-    //TODO add middleware with access token to secure api
-    loadStartMap() : Promise<StartMapInterface> {
-        return Axios.get(`${API_URL}/start-map`)
-            .then((res) => {
-                return res.data;
-            }).catch((err) => {
-                console.error(err);
-                throw err;
-            });
-    }
 
-    joinARoom(roomId: string, startX: number, startY: number, direction: string, moving: boolean): void {
+    joinARoom(roomId: string, startX: number, startY: number, direction: string, moving: boolean): Promise<MessageUserPositionInterface[]> {
         const point = new Point(startX, startY, direction, moving);
         this.lastPositionShared = point;
-        this.getSocket().emit(EventMessage.JOIN_ROOM, { roomId, position: {x: startX, y: startY, direction, moving }}, (userPositions: MessageUserPositionInterface[]) => {
-            this.GameManager.initUsersPosition(userPositions);
-        });
+        let promise = new Promise<MessageUserPositionInterface[]>((resolve, reject) => {
+            this.getSocket().emit(EventMessage.JOIN_ROOM, { roomId, position: {x: startX, y: startY, direction, moving }}, (userPositions: MessageUserPositionInterface[]) => {
+                //this.GameManager.initUsersPosition(userPositions);
+                resolve(userPositions);
+            });
+        })
         this.lastRoom = roomId;
+        return promise;
     }
 
     sharePosition(x : number, y : number, direction : string, moving: boolean) : void{
@@ -266,35 +236,24 @@ export class Connection implements ConnectionInterface {
         this.getSocket().emit(EventMessage.USER_POSITION, point);
     }
 
-    private onUserJoins(): void {
-        this.getSocket().on(EventMessage.JOIN_ROOM, (message: MessageUserJoined) => {
-            this.GameManager.onUserJoins(message);
-        });
+    public onUserJoins(callback: (message: MessageUserJoined) => void): void {
+        this.getSocket().on(EventMessage.JOIN_ROOM, callback);
     }
 
-    private onUserMoved(): void {
-        this.getSocket().on(EventMessage.USER_MOVED, (message: MessageUserMovedInterface) => {
-            this.GameManager.onUserMoved(message);
-        });
+    public onUserMoved(callback: (message: MessageUserMovedInterface) => void): void {
+        this.getSocket().on(EventMessage.USER_MOVED, callback);
     }
 
-    private onUserLeft(): void {
-        this.getSocket().on(EventMessage.USER_LEFT, (userId: string) => {
-            this.GameManager.onUserLeft(userId);
-        });
+    public onUserLeft(callback: (userId: string) => void): void {
+        this.getSocket().on(EventMessage.USER_LEFT, callback);
     }
 
-    private groupUpdatedOrCreated(): void {
-        this.getSocket().on(EventMessage.GROUP_CREATE_UPDATE, (groupCreateUpdateMessage: GroupCreatedUpdatedMessageInterface) => {
-            //console.log('Group ', groupCreateUpdateMessage.groupId, " position :", groupCreateUpdateMessage.position.x, groupCreateUpdateMessage.position.y)
-            this.GameManager.shareGroupPosition(groupCreateUpdateMessage);
-        })
+    public onGroupUpdatedOrCreated(callback: (groupCreateUpdateMessage: GroupCreatedUpdatedMessageInterface) => void): void {
+        this.getSocket().on(EventMessage.GROUP_CREATE_UPDATE, callback);
     }
 
-    private groupDeleted(): void {
-        this.getSocket().on(EventMessage.GROUP_DELETE, (groupId: string) => {
-            this.GameManager.deleteGroup(groupId);
-        })
+    public onGroupDeleted(callback: (groupId: string) => void): void {
+        this.getSocket().on(EventMessage.GROUP_DELETE, callback)
     }
 
     sendWebrtcSignal(signal: unknown, roomId: string, userId? : string|null, receiverId? : string) {
