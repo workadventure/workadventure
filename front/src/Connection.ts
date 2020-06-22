@@ -158,7 +158,7 @@ export class Connection implements Connection {
             .then((res) => {
 
                 return new Promise<Connection>((resolve, reject) => {
-                    let connection = new Connection(gameManager, name, characterSelected, res.data.token);
+                    const connection = new Connection(gameManager, name, characterSelected, res.data.token);
 
                     connection.onConnectError((error: object) => {
                         console.log('An error occurred while connecting to socket server. Retrying');
@@ -199,7 +199,7 @@ export class Connection implements Connection {
     joinARoom(roomId: string, startX: number, startY: number, direction: string, moving: boolean): Promise<MessageUserPositionInterface[]> {
         const point = new Point(startX, startY, direction, moving);
         this.lastPositionShared = point;
-        let promise = new Promise<MessageUserPositionInterface[]>((resolve, reject) => {
+        const promise = new Promise<MessageUserPositionInterface[]>((resolve, reject) => {
             this.socket.emit(EventMessage.JOIN_ROOM, { roomId, position: {x: startX, y: startY, direction, moving }}, (userPositions: MessageUserPositionInterface[]) => {
                 //this.GameManager.initUsersPosition(userPositions);
                 resolve(userPositions);

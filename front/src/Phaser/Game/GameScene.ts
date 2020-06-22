@@ -190,7 +190,7 @@ export class GameScene extends Phaser.Scene {
 
                 this.simplePeer.closeAllConnections();
 
-                let key = 'somekey'+Math.round(Math.random()*10000);
+                const key = 'somekey'+Math.round(Math.random()*10000);
                 const game : Phaser.Scene = GameScene.createFromUrl(this.MapUrlFile, this.instance, key);
                 this.scene.add(key, game, true,
                     {
