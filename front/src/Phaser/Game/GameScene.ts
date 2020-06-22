@@ -647,7 +647,7 @@ export class GameScene extends Phaser.Scene {
      * Put all the players on the map on map load.
      */
     private doInitUsersPosition(usersPosition: MessageUserPositionInterface[]): void {
-        const currentPlayerId = this.connection.userId;
+        const currentPlayerId = this.connection.getUserId();
 
         // clean map
         this.MapPlayersByKey.forEach((player: RemotePlayer) => {
@@ -740,7 +740,9 @@ export class GameScene extends Phaser.Scene {
     private doUpdatePlayerPosition(message: MessageUserMovedInterface): void {
         const player : RemotePlayer | undefined = this.MapPlayersByKey.get(message.userId);
         if (player === undefined) {
-            throw new Error('Cannot find player with ID "' + message.userId +'"');
+            //throw new Error('Cannot find player with ID "' + message.userId +'"');
+            console.error('Cannot update position of player with ID "' + message.userId +'": player not found');
+            return;
         }
 
         // We do not update the player position directly (because it is sent only every 200ms).
