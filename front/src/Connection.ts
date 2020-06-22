@@ -148,10 +148,6 @@ export class Connection implements Connection {
             reconnection: false // Reconnection is handled by the application itself
         });
 
-        this.socket.on(EventMessage.CONNECT_ERROR, () => {
-            console.error("Connection failed")
-        });
-
         this.socket.on(EventMessage.MESSAGE_ERROR, (message: string) => {
             console.error(EventMessage.MESSAGE_ERROR, message);
         })
@@ -160,17 +156,31 @@ export class Connection implements Connection {
     public static createConnection(name: string, characterSelected: string): Promise<Connection> {
         return Axios.post(`${API_URL}/login`, {name: name})
             .then((res) => {
-                let connection = new Connection(gameManager, name, characterSelected, res.data.token);
 
-                // FIXME: we should wait for the complete connexion here (i.e. the "connected" message from socket.io)!
-                // Otherwise, the connection MAY fail and we will never know!
-                return connection.connectSocketServer();
+                return new Promise<Connection>((resolve, reject) => {
+                    let connection = new Connection(gameManager, name, characterSelected, res.data.token);
+
+                    connection.onConnectError((error: object) => {
+                        console.log('An error occurred while connecting to socket server. Retrying');
+                        reject(error);
+                    });
+
+                    connection.socket.emit(EventMessage.SET_PLAYER_DETAILS, {
+                        name: connection.name,
+                        character: connection.character
+                    } as SetPlayerDetailsMessage, (id: string) => {
+                        connection.userId = id;
+                    });
+
+                    resolve(connection);
+                });
             })
             .catch((err) => {
                 // Let's retry in 4-6 seconds
                 return new Promise<Connection>((resolve, reject) => {
                     setTimeout(() => {
-                        resolve(Connection.createConnection(name, characterSelected));
+                        Connection.createConnection(name, characterSelected).then((connection) => resolve(connection))
+                            .catch((error) => reject(error));
                     }, 4000 + Math.floor(Math.random() * 2000) );
                 });
 
@@ -183,40 +193,6 @@ export class Connection implements Connection {
         this.socket?.close();
         this.lastPositionShared = null;
         this.lastRoom = null;
-    }
-
-    connectSocketServer(): Promise<Connection>{
-        return new Promise<Connection>((resolve, reject) => {
-            this.socket.emit(EventMessage.SET_PLAYER_DETAILS, {
-                name: this.name,
-                character: this.character
-            } as SetPlayerDetailsMessage, (id: string) => {
-                this.userId = id;
-            });
-
-            //if try to reconnect with last position
-            /*if(this.lastRoom) {
-                //join the room
-                this.joinARoom(this.lastRoom,
-                    this.lastPositionShared ? this.lastPositionShared.x : 0,
-                    this.lastPositionShared ? this.lastPositionShared.y : 0,
-                    this.lastPositionShared ? this.lastPositionShared.direction : PlayerAnimationNames.WalkDown,
-                    this.lastPositionShared ? this.lastPositionShared.moving : false);
-            }*/
-
-            /*if(this.lastPositionShared) {
-
-                //share your first position
-                this.sharePosition(
-                    this.lastPositionShared ? this.lastPositionShared.x : 0,
-                    this.lastPositionShared ? this.lastPositionShared.y : 0,
-                    this.lastPositionShared.direction,
-                    this.lastPositionShared.moving
-                );
-            }*/
-
-            resolve(this);
-        });
     }
 
 
@@ -260,6 +236,10 @@ export class Connection implements Connection {
 
     public onGroupDeleted(callback: (groupId: string) => void): void {
         this.socket.on(EventMessage.GROUP_DELETE, callback)
+    }
+
+    public onConnectError(callback: (error: object) => void): void {
+        this.socket.on(EventMessage.CONNECT_ERROR, callback)
     }
 
     sendWebrtcSignal(signal: unknown, roomId: string, userId? : string|null, receiverId? : string) {
