@@ -129,7 +129,6 @@ export class GameScene extends Phaser.Scene {
 
     //hook preload scene
     preload(): void {
-        this.GameManager.setCurrentGameScene(this);
         this.load.on('filecomplete-tilemapJSON-'+this.MapKey, (key: string, type: string, data: unknown) => {
             this.onMapLoad(data);
         });
@@ -193,23 +192,23 @@ export class GameScene extends Phaser.Scene {
 
                 let key = 'somekey'+Math.round(Math.random()*10000);
                 const game : Phaser.Scene = GameScene.createFromUrl(this.MapUrlFile, this.instance, key);
-                this.scene.add(key, game, false,
+                this.scene.add(key, game, true,
                     {
                         initPosition: {
                             x: this.CurrentPlayer.x,
                             y: this.CurrentPlayer.y
                         }
                     });
-                this.scene.start(key);
+
+                this.scene.stop(this.scene.key);
+                this.scene.remove(this.scene.key);
             })
 
             // When connection is performed, let's connect SimplePeer
             this.simplePeer = new SimplePeer(this.connection);
 
-            if (this.scene.isSleeping()) {
-                this.scene.wake();
-                this.scene.sleep(ReconnectingSceneName);
-            }
+            this.scene.wake();
+            this.scene.sleep(ReconnectingSceneName);
 
             return connection;
         });
@@ -719,7 +718,6 @@ export class GameScene extends Phaser.Scene {
     }
 
     private doRemovePlayer(userId: string) {
-        //console.log('Removing player ', userId)
         const player = this.MapPlayersByKey.get(userId);
         if (player === undefined) {
             console.error('Cannot find user with id ', userId);
