@@ -1,19 +1,7 @@
 import {GameScene} from "./GameScene";
 import {
-    Connection,
-    GroupCreatedUpdatedMessageInterface,
-    ListMessageUserPositionInterface,
-    MessageUserJoined,
-    MessageUserMovedInterface,
-    MessageUserPositionInterface,
-    Point,
-    PointInterface, StartMapInterface
+    StartMapInterface
 } from "../../Connection";
-import {SimplePeer} from "../../WebRtc/SimplePeer";
-import {AddPlayerInterface} from "./AddPlayerInterface";
-import {ReconnectingScene, ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
-import ScenePlugin = Phaser.Scenes.ScenePlugin;
-import {Scene} from "phaser";
 import Axios from "axios";
 import {API_URL} from "../../Enum/EnvironmentVariable";
 
@@ -22,11 +10,6 @@ export interface HasMovedEvent {
     moving: boolean;
     x: number;
     y: number;
-}
-
-export interface MapObject {
-    key: string,
-    url: string
 }
 
 export class GameManager {
