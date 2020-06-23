@@ -190,6 +190,7 @@ export class GameScene extends Phaser.Scene {
                 console.log('Player disconnected from server. Reloading scene.');
 
                 this.simplePeer.closeAllConnections();
+                this.simplePeer.unregister();
 
                 const key = 'somekey'+Math.round(Math.random()*10000);
                 const game : Phaser.Scene = GameScene.createFromUrl(this.MapUrlFile, this.instance, key);
@@ -610,6 +611,7 @@ export class GameScene extends Phaser.Scene {
         if(nextSceneKey){
             // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
             this.connection.closeConnection();
+            this.simplePeer.unregister();
             this.scene.stop();
             this.scene.remove(this.scene.key);
             this.scene.start(nextSceneKey.key, {
