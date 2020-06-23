@@ -16,9 +16,9 @@ export class MediaManager {
         audio: true,
         video: videoConstraint
     };
-    updatedLocalStreamCallBack : Function;
+    updatedLocalStreamCallBack : (media: MediaStream) => void;
 
-    constructor(updatedLocalStreamCallBack : Function) {
+    constructor(updatedLocalStreamCallBack : (media: MediaStream) => void) {
         this.updatedLocalStreamCallBack = updatedLocalStreamCallBack;
 
         this.myCamVideo = this.getElementByIdOrFail<HTMLVideoElement>('myCamVideo');
@@ -63,7 +63,7 @@ export class MediaManager {
         this.cinemaClose.style.display = "none";
         this.cinema.style.display = "block";
         this.constraintsMedia.video = videoConstraint;
-        this.getCamera().then((stream) => {
+        this.getCamera().then((stream: MediaStream) => {
             this.updatedLocalStreamCallBack(stream);
         });
     }
@@ -107,8 +107,13 @@ export class MediaManager {
     }
 
     //get camera
-    getCamera() {
+    getCamera(): Promise<MediaStream> {
         let promise = null;
+
+        if (navigator.mediaDevices === undefined) {
+            return Promise.reject<MediaStream>(new Error('Unable to access your camera or microphone. Your browser is too old (or you are running a development version of WorkAdventure on Firefox)'));
+        }
+
         try {
             promise = navigator.mediaDevices.getUserMedia(this.constraintsMedia)
                 .then((stream: MediaStream) => {
@@ -123,11 +128,12 @@ export class MediaManager {
 
                     return stream;
                 }).catch((err) => {
-                    console.info(`error get media {video: ${this.constraintsMedia.video}},{audio: ${this.constraintsMedia.audio}}`,err);
+                    console.info("error get media ", this.constraintsMedia.video, this.constraintsMedia.audio, err);
                     this.localStream = null;
+                    throw err;
                 });
         } catch (e) {
-            promise = Promise.reject(false);
+            promise = Promise.reject<MediaStream>(e);
         }
         return promise;
     }
