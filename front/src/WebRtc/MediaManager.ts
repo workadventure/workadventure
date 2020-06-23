@@ -3,7 +3,10 @@ const videoConstraint: boolean|MediaTrackConstraints = {
     height: { ideal: 720 },
     facingMode: "user"
 };
-export class MediaManager {
+
+type UpdatedLocalStreamCallback = (media: MediaStream) => void;
+
+class MediaManager {
     localStream: MediaStream|null = null;
     private remoteVideo: Map<string, HTMLVideoElement> = new Map<string, HTMLVideoElement>();
     myCamVideo: HTMLVideoElement;
@@ -16,11 +19,9 @@ export class MediaManager {
         audio: true,
         video: videoConstraint
     };
-    updatedLocalStreamCallBack : (media: MediaStream) => void;
+    updatedLocalStreamCallBacks : Set<UpdatedLocalStreamCallback> = new Set<UpdatedLocalStreamCallback>();
 
-    constructor(updatedLocalStreamCallBack : (media: MediaStream) => void) {
-        this.updatedLocalStreamCallBack = updatedLocalStreamCallBack;
-
+    constructor() {
         this.myCamVideo = this.getElementByIdOrFail<HTMLVideoElement>('myCamVideo');
         this.webrtcInAudio = this.getElementByIdOrFail<HTMLAudioElement>('audio-webrtc-in');
         this.webrtcInAudio.volume = 0.2;
@@ -54,6 +55,21 @@ export class MediaManager {
         });
     }
 
+    onUpdateLocalStream(callback: UpdatedLocalStreamCallback): void {
+
+        this.updatedLocalStreamCallBacks.add(callback);
+    }
+
+    removeUpdateLocalStreamEventListener(callback: UpdatedLocalStreamCallback): void {
+        this.updatedLocalStreamCallBacks.delete(callback);
+    }
+
+    private triggerUpdatedLocalStreamCallbacks(stream: MediaStream): void {
+        for (const callback of this.updatedLocalStreamCallBacks) {
+            callback(stream);
+        }
+    }
+
     activeVisio(){
         const webRtc = this.getElementByIdOrFail('webRtc');
         webRtc.classList.add('active');
@@ -64,7 +80,7 @@ export class MediaManager {
         this.cinema.style.display = "block";
         this.constraintsMedia.video = videoConstraint;
         this.getCamera().then((stream: MediaStream) => {
-            this.updatedLocalStreamCallBack(stream);
+            this.triggerUpdatedLocalStreamCallbacks(stream);
         });
     }
 
@@ -79,7 +95,7 @@ export class MediaManager {
             });
         }
         this.getCamera().then((stream) => {
-            this.updatedLocalStreamCallBack(stream);
+            this.triggerUpdatedLocalStreamCallbacks(stream);
         });
     }
 
@@ -88,7 +104,7 @@ export class MediaManager {
         this.microphone.style.display = "block";
         this.constraintsMedia.audio = true;
         this.getCamera().then((stream) => {
-            this.updatedLocalStreamCallBack(stream);
+            this.triggerUpdatedLocalStreamCallbacks(stream);
         });
     }
 
@@ -102,7 +118,7 @@ export class MediaManager {
             });
         }
         this.getCamera().then((stream) => {
-            this.updatedLocalStreamCallBack(stream);
+            this.triggerUpdatedLocalStreamCallbacks(stream);
         });
     }
 
@@ -308,3 +324,5 @@ export class MediaManager {
     }
 
 }
+
+export const mediaManager = new MediaManager();
