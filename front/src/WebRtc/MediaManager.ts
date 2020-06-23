@@ -6,7 +6,9 @@ const videoConstraint: boolean|MediaTrackConstraints = {
 
 type UpdatedLocalStreamCallback = (media: MediaStream) => void;
 
-class MediaManager {
+// TODO: Split MediaManager in 2 classes: MediaManagerUI (in charge of HTML) and MediaManager (singleton in charge of the camera only)
+// TODO: verify that microphone event listeners are not triggered plenty of time NOW (since MediaManager is created many times!!!!)
+export class MediaManager {
     localStream: MediaStream|null = null;
     private remoteVideo: Map<string, HTMLVideoElement> = new Map<string, HTMLVideoElement>();
     myCamVideo: HTMLVideoElement;
@@ -152,6 +154,26 @@ class MediaManager {
             promise = Promise.reject<MediaStream>(e);
         }
         return promise;
+    }
+
+    setCamera(id: string): Promise<MediaStream> {
+        let video = this.constraintsMedia.video;
+        if (typeof(video) === 'boolean' || video === undefined) {
+            video = {}
+        }
+        video.deviceId = id;
+
+        return this.getCamera();
+    }
+
+    setMicrophone(id: string): Promise<MediaStream> {
+        let audio = this.constraintsMedia.audio;
+        if (typeof(audio) === 'boolean' || audio === undefined) {
+            audio = {}
+        }
+        audio.deviceId = id;
+
+        return this.getCamera();
     }
 
     /**

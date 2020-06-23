@@ -6,13 +6,14 @@ import {LoginScene} from "./Phaser/Login/LoginScene";
 import {ReconnectingScene} from "./Phaser/Reconnecting/ReconnectingScene";
 import {gameManager} from "./Phaser/Game/GameManager";
 import {SelectCharacterScene} from "./Phaser/Login/SelectCharacterScene";
+import {EnableCameraScene} from "./Phaser/Login/EnableCameraScene";
 
 const config: GameConfig = {
     title: "Office game",
     width: window.innerWidth / RESOLUTION,
     height: window.innerHeight / RESOLUTION,
     parent: "game",
-    scene: [LoginScene, SelectCharacterScene, ReconnectingScene],
+    scene: [LoginScene, SelectCharacterScene, EnableCameraScene, ReconnectingScene],
     zoom: RESOLUTION,
     physics: {
         default: "arcade",

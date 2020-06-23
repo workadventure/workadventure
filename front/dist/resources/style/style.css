@@ -207,3 +207,29 @@ video{
         opacity: 0;
     }
 }
+
+.webrtcsetup{
+    display: none;
+    position: absolute;
+    top: 230px;
+    left: 0;
+    right: 0;
+    margin-left: auto;
+    margin-right: auto;
+    height: 50%;
+    width: 50%;
+}
+.webrtcsetup .background-img {
+    position: relative;
+    display: block;
+    width: 40%;
+    height: 60%;
+    margin-left: auto;
+    margin-right: auto;
+}
+#myCamVideoSetup {
+    width: 100%;
+}
+.webrtcsetup.active{
+    display: block;
+}
