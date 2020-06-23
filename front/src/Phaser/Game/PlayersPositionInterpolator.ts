@@ -17,7 +17,7 @@ export class PlayersPositionInterpolator {
     }
 
     getUpdatedPositions(tick: number) : Map<string, HasMovedEvent> {
-        let positions = new Map<string, HasMovedEvent>();
+        const positions = new Map<string, HasMovedEvent>();
         this.playerMovements.forEach((playerMovement: PlayerMovement, userId: string) => {
             if (playerMovement.isOutdated(tick)) {
                 //console.log("outdated")

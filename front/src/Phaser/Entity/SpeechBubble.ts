@@ -13,10 +13,10 @@ export class SpeechBubble {
      */
     constructor(scene: Scene, player: Character, text: string = "") {
 
-        let bubbleHeight = 50;
-        let bubblePadding = 10;
-        let bubbleWidth = bubblePadding * 2 + text.length * 10;
-        let arrowHeight = bubbleHeight / 4;
+        const bubbleHeight = 50;
+        const bubblePadding = 10;
+        const bubbleWidth = bubblePadding * 2 + text.length * 10;
+        const arrowHeight = bubbleHeight / 4;
 
         this.bubble = scene.add.graphics({ x: player.x + 16, y: player.y - 80 });
 
@@ -35,12 +35,12 @@ export class SpeechBubble {
         this.bubble.fillRoundedRect(0, 0, bubbleWidth, bubbleHeight, 16);
 
         //  Calculate arrow coordinates
-        let point1X = Math.floor(bubbleWidth / 7);
-        let point1Y = bubbleHeight;
-        let point2X = Math.floor((bubbleWidth / 7) * 2);
-        let point2Y = bubbleHeight;
-        let point3X = Math.floor(bubbleWidth / 7);
-        let point3Y = Math.floor(bubbleHeight + arrowHeight);
+        const point1X = Math.floor(bubbleWidth / 7);
+        const point1Y = bubbleHeight;
+        const point2X = Math.floor((bubbleWidth / 7) * 2);
+        const point2Y = bubbleHeight;
+        const point3X = Math.floor(bubbleWidth / 7);
+        const point3Y = Math.floor(bubbleHeight + arrowHeight);
 
         //  bubble arrow shadow
         this.bubble.lineStyle(4, 0x222222, 0.5);
@@ -54,7 +54,7 @@ export class SpeechBubble {
 
         this.content = scene.add.text(0, 0, text, { fontFamily: 'Arial', fontSize: 20, color: '#000000', align: 'center', wordWrap: { width: bubbleWidth - (bubblePadding * 2) } });
 
-        let bounds = this.content.getBounds();
+        const bounds = this.content.getBounds();
         this.content.setPosition(this.bubble.x + (bubbleWidth / 2) - (bounds.width / 2), this.bubble.y + (bubbleHeight / 2) - (bounds.height / 2));
     }
 
@@ -68,10 +68,10 @@ export class SpeechBubble {
             this.bubble.setPosition((x + 16), (y - 80));
         }
         if (this.content) {
-            let bubbleHeight = 50;
-            let bubblePadding = 10;
-            let bubbleWidth = bubblePadding * 2 + this.content.text.length * 10;
-            let bounds = this.content.getBounds();
+            const bubbleHeight = 50;
+            const bubblePadding = 10;
+            const bubbleWidth = bubblePadding * 2 + this.content.text.length * 10;
+            const bounds = this.content.getBounds();
             //this.content.setPosition(x, y);
             this.content.setPosition(this.bubble.x + (bubbleWidth / 2) - (bounds.width / 2), this.bubble.y + (bubbleHeight / 2) - (bounds.height / 2));
         }

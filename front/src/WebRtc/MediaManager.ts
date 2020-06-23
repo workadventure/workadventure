@@ -1,53 +1,53 @@
-const videoConstraint: {width : any, height: any, facingMode : string} = {
+const videoConstraint: boolean|MediaTrackConstraints = {
     width: { ideal: 1280 },
     height: { ideal: 720 },
     facingMode: "user"
 };
 export class MediaManager {
     localStream: MediaStream|null = null;
-    remoteVideo: Array<any> = new Array<any>();
+    private remoteVideo: Map<string, HTMLVideoElement> = new Map<string, HTMLVideoElement>();
     myCamVideo: HTMLVideoElement;
-    cinemaClose: any = null;
-    cinema: any = null;
-    microphoneClose: any = null;
-    microphone: any = null;
+    cinemaClose: HTMLImageElement;
+    cinema: HTMLImageElement;
+    microphoneClose: HTMLImageElement;
+    microphone: HTMLImageElement;
     webrtcInAudio: HTMLAudioElement;
-    constraintsMedia : {audio : any, video : any} = {
+    constraintsMedia : MediaStreamConstraints = {
         audio: true,
         video: videoConstraint
     };
-    updatedLocalStreamCallBack : Function;
+    updatedLocalStreamCallBack : (media: MediaStream) => void;
 
-    constructor(updatedLocalStreamCallBack : Function) {
+    constructor(updatedLocalStreamCallBack : (media: MediaStream) => void) {
         this.updatedLocalStreamCallBack = updatedLocalStreamCallBack;
 
         this.myCamVideo = this.getElementByIdOrFail<HTMLVideoElement>('myCamVideo');
         this.webrtcInAudio = this.getElementByIdOrFail<HTMLAudioElement>('audio-webrtc-in');
         this.webrtcInAudio.volume = 0.2;
 
-        this.microphoneClose = document.getElementById('microphone-close');
+        this.microphoneClose = this.getElementByIdOrFail<HTMLImageElement>('microphone-close');
         this.microphoneClose.style.display = "none";
-        this.microphoneClose.addEventListener('click', (e: any) => {
+        this.microphoneClose.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
             this.enabledMicrophone();
             //update tracking
         });
-        this.microphone = document.getElementById('microphone');
-        this.microphone.addEventListener('click', (e: any) => {
+        this.microphone = this.getElementByIdOrFail<HTMLImageElement>('microphone');
+        this.microphone.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
             this.disabledMicrophone();
             //update tracking
         });
 
-        this.cinemaClose = document.getElementById('cinema-close');
+        this.cinemaClose = this.getElementByIdOrFail<HTMLImageElement>('cinema-close');
         this.cinemaClose.style.display = "none";
-        this.cinemaClose.addEventListener('click', (e: any) => {
+        this.cinemaClose.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
             this.enabledCamera();
             //update tracking
         });
-        this.cinema = document.getElementById('cinema');
-        this.cinema.addEventListener('click', (e: any) => {
+        this.cinema = this.getElementByIdOrFail<HTMLImageElement>('cinema');
+        this.cinema.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
             this.disabledCamera();
             //update tracking
@@ -55,7 +55,7 @@ export class MediaManager {
     }
 
     activeVisio(){
-        let webRtc = this.getElementByIdOrFail('webRtc');
+        const webRtc = this.getElementByIdOrFail('webRtc');
         webRtc.classList.add('active');
     }
 
@@ -63,7 +63,7 @@ export class MediaManager {
         this.cinemaClose.style.display = "none";
         this.cinema.style.display = "block";
         this.constraintsMedia.video = videoConstraint;
-        this.getCamera().then((stream) => {
+        this.getCamera().then((stream: MediaStream) => {
             this.updatedLocalStreamCallBack(stream);
         });
     }
@@ -107,8 +107,13 @@ export class MediaManager {
     }
 
     //get camera
-    getCamera() {
+    getCamera(): Promise<MediaStream> {
         let promise = null;
+
+        if (navigator.mediaDevices === undefined) {
+            return Promise.reject<MediaStream>(new Error('Unable to access your camera or microphone. Your browser is too old (or you are running a development version of WorkAdventure on Firefox)'));
+        }
+
         try {
             promise = navigator.mediaDevices.getUserMedia(this.constraintsMedia)
                 .then((stream: MediaStream) => {
@@ -123,11 +128,12 @@ export class MediaManager {
 
                     return stream;
                 }).catch((err) => {
-                    console.info(`error get media {video: ${this.constraintsMedia.video}},{audio: ${this.constraintsMedia.audio}}`,err);
+                    console.info("error get media ", this.constraintsMedia.video, this.constraintsMedia.audio, err);
                     this.localStream = null;
+                    throw err;
                 });
         } catch (e) {
-            promise = Promise.reject(false);
+            promise = Promise.reject<MediaStream>(e);
         }
         return promise;
     }
@@ -138,9 +144,9 @@ export class MediaManager {
      */
     addActiveVideo(userId : string, userName: string = ""){
         this.webrtcInAudio.play();
-        let elementRemoteVideo = this.getElementByIdOrFail("activeCam");
+        const elementRemoteVideo = this.getElementByIdOrFail("activeCam");
         userName = userName.toUpperCase();
-        let color = this.getColorByString(userName);
+        const color = this.getColorByString(userName);
         elementRemoteVideo.insertAdjacentHTML('beforeend', `
             <div id="div-${userId}" class="video-container" style="border-color: ${color};">
                 <div class="connecting-spinner"></div>
@@ -150,7 +156,7 @@ export class MediaManager {
                 <video id="${userId}" autoplay></video>
             </div>
         `);
-        this.remoteVideo[(userId as any)] = document.getElementById(userId);
+        this.remoteVideo.set(userId, this.getElementByIdOrFail<HTMLVideoElement>(userId));
     }
 
     /**
@@ -158,7 +164,7 @@ export class MediaManager {
      * @param userId
      */
     disabledMicrophoneByUserId(userId: string){
-        let element = document.getElementById(`microphone-${userId}`);
+        const element = document.getElementById(`microphone-${userId}`);
         if(!element){
             return;
         }
@@ -170,7 +176,7 @@ export class MediaManager {
      * @param userId
      */
     enabledMicrophoneByUserId(userId: string){
-        let element = document.getElementById(`microphone-${userId}`);
+        const element = document.getElementById(`microphone-${userId}`);
         if(!element){
             return;
         }
@@ -215,7 +221,12 @@ export class MediaManager {
      * @param stream
      */
     addStreamRemoteVideo(userId : string, stream : MediaStream){
-        this.remoteVideo[(userId as any)].srcObject = stream;
+        const remoteVideo = this.remoteVideo.get(userId);
+        if (remoteVideo === undefined) {
+            console.error('Unable to find video for ', userId);
+            return;
+        }
+        remoteVideo.srcObject = stream;
     }
 
     /**
@@ -223,15 +234,16 @@ export class MediaManager {
      * @param userId
      */
     removeActiveVideo(userId : string){
-        let element = document.getElementById(`div-${userId}`);
+        const element = document.getElementById(`div-${userId}`);
         if(!element){
             return;
         }
         element.remove();
+        this.remoteVideo.delete(userId);
     }
 
     isConnecting(userId : string): void {
-        let connectingSpinnerDiv = this.getSpinner(userId);
+        const connectingSpinnerDiv = this.getSpinner(userId);
         if (connectingSpinnerDiv === null) {
             return;
         }
@@ -239,7 +251,7 @@ export class MediaManager {
     }
 
     isConnected(userId : string): void {
-        let connectingSpinnerDiv = this.getSpinner(userId);
+        const connectingSpinnerDiv = this.getSpinner(userId);
         if (connectingSpinnerDiv === null) {
             return;
         }
@@ -247,11 +259,11 @@ export class MediaManager {
     }
 
     isError(userId : string): void {
-        let element = document.getElementById(`div-${userId}`);
+        const element = document.getElementById(`div-${userId}`);
         if(!element){
             return;
         }
-        let errorDiv = element.getElementsByClassName('rtc-error').item(0) as HTMLDivElement|null;
+        const errorDiv = element.getElementsByClassName('rtc-error').item(0) as HTMLDivElement|null;
         if (errorDiv === null) {
             return;
         }
@@ -259,11 +271,11 @@ export class MediaManager {
     }
 
     private getSpinner(userId : string): HTMLDivElement|null {
-        let element = document.getElementById(`div-${userId}`);
+        const element = document.getElementById(`div-${userId}`);
         if(!element){
             return null;
         }
-        let connnectingSpinnerDiv = element.getElementsByClassName('connecting-spinner').item(0) as HTMLDivElement|null;
+        const connnectingSpinnerDiv = element.getElementsByClassName('connecting-spinner').item(0) as HTMLDivElement|null;
         return connnectingSpinnerDiv;
     }
 
@@ -280,14 +292,14 @@ export class MediaManager {
         }
         let color = '#';
         for (let i = 0; i < 3; i++) {
-            let value = (hash >> (i * 8)) & 255;
+            const value = (hash >> (i * 8)) & 255;
             color += ('00' + value.toString(16)).substr(-2);
         }
         return color;
     }
 
     private getElementByIdOrFail<T extends HTMLElement>(id: string): T {
-        let elem = document.getElementById(id);
+        const elem = document.getElementById(id);
         if (elem === null) {
             throw new Error("Cannot find HTML element with id '"+id+"'");
         }

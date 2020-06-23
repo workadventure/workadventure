@@ -1,13 +1,17 @@
-declare let window:any;
+declare let window:WindowWithCypressAsserter;
+
+interface WindowWithCypressAsserter extends Window {
+    cypressAsserter: CypressAsserter;
+}
 
 //this class is used to communicate with cypress, our e2e testing client
 //Since cypress cannot manipulate canvas, we notified it with console logs
 class CypressAsserter {
-    
+
     constructor() {
         window.cypressAsserter = this
     }
-    
+
     gameStarted() {
         console.log('Started the game')
     }

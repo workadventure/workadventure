@@ -2,7 +2,12 @@ import {PlayerAnimationNames} from "../Player/Animation";
 import {SpeechBubble} from "./SpeechBubble";
 import BitmapText = Phaser.GameObjects.BitmapText;
 
-export const PLAYER_RESOURCES: Array<any> = [
+export interface PlayerResourceDescriptionInterface {
+    name: string,
+    img: string
+}
+
+export const PLAYER_RESOURCES: Array<PlayerResourceDescriptionInterface> = [
     {name: "male1", img: "resources/characters/pipoya/Male 01-1.png" /*, x: 32, y: 32*/},
     {name: "male2", img: "resources/characters/pipoya/Male 02-2.png"/*, x: 64, y: 32*/},
     {name: "male3", img: "resources/characters/pipoya/Male 03-4.png"/*, x: 96, y: 32*/},
