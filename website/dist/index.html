@@ -132,23 +132,21 @@
             <img class="bird bird-7" src="static/images/story/bird.gif" />
             <img class="bird bird-8" src="static/images/story/bird.gif" />
         </div>
-        <div class="bubble bubble-1" style="width: 320px;height: 164px;">
+        <div class="bubble bubble-1" style="width: 320px;height: 209px;">
             <div>
-                <p><strong>Hello World !</strong></p>
-                <p>I'm Leymah of WorkAdventure.</p>
-                <p>During COVID-19, we were missing our office…</p>
+                <p>WorkAdventure is a video-conference application that lets people hold multiple parallel conversations in a virtual universe. </p>
+                <p>Walk in, out, speak to anyone just like in real-life!</p>
             </div>
         </div>
-        <div class="bubble bubble-2 b-revert" style="height: 164px;">
-            <div>
-                <p>So our team of developer decided to build a platform so we can be together..</p>
-                <p>This is how I was born.</p>
+        <div class="bubble bubble-thinking" style="width: 269px;height: 211px;">
+            <div class="demo-gif">
+                <img src="static/images/story/WA-Demo.gif" />
             </div>
         </div>
-        <div class="bubble bubble-3" style="height: 164px;">
+        <div class="bubble bubble-3" style="height: 209px;">
             <div>
-                <p>With WorkAdventure, you can meet people and discuss with them.</p>
-                <p class="bubble-legend">To try, press button public mode</p>
+                <p>Remote work? Friend party? Use WorkAdventure as you prefer.</p>
+                <p>Click the button below to come and say hi!</p>
                 <p class="bubble-action"><span onclick="startGame()">
                     <img src="static/images/playicon.png" />
                     START IN PUBLIC MODE
@@ -224,7 +222,7 @@
                 document.getElementById("leymah").src = charStaticImage;
             }
         })
-        .to(".bubble-1", {
+        .to(".bubble-1, .bubble-thinking", {
             opacity: 1,
             y: 0
         })
@@ -237,23 +235,7 @@
                 document.getElementById("leymah").src = charStaticImage;
             }
         })
-        .to(".bubble-1", {
-            opacity: 0
-        })
-        .to(".bubble-2", {
-            opacity: 1,
-            y: 0
-        })
-        .to(".story-1", {
-            x: -maxImageTranslateValue * (3/bubbleNumber),
-            onStart: function() {
-                document.getElementById("leymah").src = charWalkToRightImage;
-            },
-            onComplete: function() {
-                document.getElementById("leymah").src = charStaticImage;
-            }
-        })
-        .to(".bubble-2", {
+        .to(".bubble-1, .bubble-thinking", {
             opacity: 0
         })
         .to(".bubble-3", {
@@ -277,7 +259,7 @@
             y: 0
         })
         .to(".character, .bubble-4", {
-            x: "51vw",
+            x: "53vw",
             onStart: function() {
                 document.getElementById("leymah").src = "static/images/story/character-walk-right.gif";
             },

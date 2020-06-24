@@ -318,7 +318,7 @@ img{
         padding: 5px;
         background: black;
         transform: translateY(25px);
-        & > div {
+        & > div:not(.demo-gif) {
             padding: 15px 15px 30px;
             position: relative;
             width: 100%;
@@ -344,6 +344,20 @@ img{
                     text-decoration: underline
                 }
 
+            }
+        }
+        &.bubble-thinking {
+            background: url(../images/story/thinking.png) no-repeat bottom right;
+            left: -406px;
+            & > .demo-gif {
+                width: 241px;
+                border-radius: 15px;
+                img {
+                    width: calc(100% + 1px);
+                    border-radius: 16px;
+                    margin-top: -1px;
+                    margin-left: -1px;
+                }
             }
         }
         &.b-revert {
