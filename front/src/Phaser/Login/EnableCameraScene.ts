@@ -36,7 +36,7 @@ export class EnableCameraScene extends Phaser.Scene {
     private soundMeter: SoundMeter;
     private soundMeterSprite: SoundMeterSprite;
     private microphoneNameField: TextField;
-    private repositionCallback: (this: Window, ev: UIEvent) => any;
+    private repositionCallback: (this: Window, ev: UIEvent) => void;
 
     constructor() {
         super({
@@ -164,6 +164,7 @@ export class EnableCameraScene extends Phaser.Scene {
         div.srcObject = stream;
 
         this.soundMeter.connectToSource(stream, new window.AudioContext());
+        this.soundMeterSprite.setVisible(true);
 
         this.updateWebCamName();
     }
@@ -217,14 +218,17 @@ export class EnableCameraScene extends Phaser.Scene {
     }
 
     private reposition(): void {
-        const div = this.getElementByIdOrFail<HTMLVideoElement>('myCamVideoSetup');
-        const bounds = div.getBoundingClientRect();
+        let div = this.getElementByIdOrFail<HTMLVideoElement>('myCamVideoSetup');
+        let bounds = div.getBoundingClientRect();
+        if (!div.srcObject) {
+            div = this.getElementByIdOrFail<HTMLVideoElement>('webRtcSetup');
+            bounds = div.getBoundingClientRect();
+        }
 
         this.cameraNameField.y = bounds.top / RESOLUTION - 8;
 
         this.soundMeterSprite.x = this.game.renderer.width / 2 - this.soundMeterSprite.getWidth() / 2;
         this.soundMeterSprite.y = bounds.bottom / RESOLUTION + 16;
-        this.soundMeterSprite.setVisible(true);
 
         this.microphoneNameField.y = this.soundMeterSprite.y + 22;
 

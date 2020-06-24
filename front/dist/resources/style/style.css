@@ -218,6 +218,7 @@ video{
     margin-right: auto;
     height: 50%;
     width: 50%;
+    border: white 6px solid;
 }
 .webrtcsetup .background-img {
     position: relative;
@@ -226,6 +227,8 @@ video{
     height: 60%;
     margin-left: auto;
     margin-right: auto;
+    top: 50%;
+    transform: translateY(-50%);
 }
 #myCamVideoSetup {
     width: 100%;
