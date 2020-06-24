@@ -225,6 +225,12 @@ export class EnableCameraScene extends Phaser.Scene {
             bounds = div.getBoundingClientRect();
         }
 
+        this.textField.x = this.game.renderer.width / 2;
+        this.cameraNameField.x = this.game.renderer.width / 2;
+        this.microphoneNameField.x = this.game.renderer.width / 2;
+        this.pressReturnField.x = this.game.renderer.width / 2;
+        this.pressReturnField.x = this.game.renderer.width / 2;
+
         this.cameraNameField.y = bounds.top / RESOLUTION - 8;
 
         this.soundMeterSprite.x = this.game.renderer.width / 2 - this.soundMeterSprite.getWidth() / 2;
@@ -245,6 +251,7 @@ export class EnableCameraScene extends Phaser.Scene {
         this.arrowUp.y = this.microphoneNameField.y;
 
         this.pressReturnField.y = Math.max(this.game.renderer.height - 30, this.microphoneNameField.y + 20);
+        this.logo.x = this.game.renderer.width - 30;
         this.logo.y = Math.max(this.game.renderer.height - 20, this.microphoneNameField.y + 30);
     }
 
