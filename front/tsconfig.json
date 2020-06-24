@@ -6,6 +6,7 @@
     "noImplicitAny": true,
     "module": "CommonJS",
     "target": "es5",
+    "downlevelIteration": true,
     "jsx": "react",
     "allowJs": true,
 

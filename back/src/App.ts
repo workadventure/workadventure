@@ -6,6 +6,7 @@ import {Application, Request, Response} from 'express';
 import bodyParser = require('body-parser');
 import * as http from "http";
 import {MapController} from "./Controller/MapController";
+import {PrometheusController} from "./Controller/PrometheusController";
 
 class App {
     public app: Application;
@@ -13,6 +14,7 @@ class App {
     public ioSocketController: IoSocketController;
     public authenticateController: AuthenticateController;
     public mapController: MapController;
+    public prometheusController: PrometheusController;
 
     constructor() {
         this.app = express();
@@ -29,6 +31,7 @@ class App {
         this.ioSocketController = new IoSocketController(this.server);
         this.authenticateController = new AuthenticateController(this.app);
         this.mapController = new MapController(this.app);
+        this.prometheusController = new PrometheusController(this.app, this.ioSocketController);
     }
 
     // TODO add session user

@@ -163,9 +163,13 @@ header {
     }
     &.contribute {
         background-image: url('../images/btn-bg-2.png');
+		@include media-breakpoint-down(sm) {
+			display: block;
+		}
     }
     &.play {
         background-image: url('../images/btn-bg-3.png');
+		cursor: pointer;
     }
     &.start {
         /*padding-left: 55px;*/
@@ -190,6 +194,10 @@ header {
         width: 100%;
         height: 100%;
     }*/
+}
+
+.social-links a {
+	cursor: pointer;
 }
 
 img{

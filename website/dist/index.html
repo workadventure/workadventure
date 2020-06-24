@@ -53,8 +53,17 @@
     <script>
         function startGame() {
             let playUrl = window.location.protocol + "//play."+window.location.host+"/_/global/npeguin.github.io/office-map/map.json";
-            window.location.assign(playUrl);
+            window.open(playUrl, '_blank');
         }
+		function shareFB() {
+			window.open('https://www.facebook.com/sharer/sharer.php?u=https://workadventu.re/', '_blank', 'width=500,height=500');
+		}
+		function shareLI() {
+			window.open('https://www.linkedin.com/shareArticle?mini=true&url=https://workadventu.re/&title=&summary=Your workplace but better!&source=TheCodingMachine', '_blank', 'width=500,height=500');
+		}
+		function shareTW() {
+			window.open('https://twitter.com/share?text=Your workplace but better!&url=https://workadventu.re/&hashtags=thecodingmachine', '_blank', 'width=500,height=500');
+		}
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.3.1/gsap.min.js" integrity="sha256-MVs0yHYDQBhIRZrNeWB1YaNMrGbFwowIEPIl3um5MZE=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.3.1/ScrollTrigger.min.js" integrity="sha256-FEFPM9cOclVyq+lIim2xnU/dAgrALF+g4M8kYm2tbX0=" crossorigin="anonymous"></script>
@@ -74,13 +83,13 @@
                     <div class="col-2 col-md-6">
                         <div class="social-links">
                             <span class="share-title">Share your experience</span>
-                            <a href="https://www.facebook.com/sharer/sharer.php?u=https://workadventu.re/" target="_BLANK">
+                            <a onclick="shareFB()">
                                 <img class="social-image" src="static/images/facebook.png" />
                             </a>
-                            <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://workadventu.re/&title=&summary=Discover a pixelated new world and start a casual conversation !&source=TheCodingMachine" target="_BLANK">
+                            <a onclick="shareLI()">
                                 <img class="social-image" src="static/images/linkedin.png" />
                             </a>
-                            <a href="https://twitter.com/home?status=https://workadventu.re/ Discover a pixelated new world and start a casual conversation !" target="_BLANK">
+                            <a onclick="shareTW()">
                                 <img class="social-image" src="static/images/twitter.png" />
                             </a>
                         </div>
@@ -272,7 +281,7 @@
     <div class="section bg-white how-to">
         <div class="desktop-only text-center d-block d-md-none d-lg-none d-xl-none">
             <img src="static/images/desktop.png" width="64" /><br />
-            Well, it's not mobile friendly yet. Try with your desktop computer.
+            Unfortunately, it's not mobile friendly yet. But we are happy to invite you to try it on your desktop. Enjoy!
         </div>
 
         <div class="container-fluid container-lg">

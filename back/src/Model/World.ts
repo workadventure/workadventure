@@ -62,7 +62,7 @@ export class World {
     }
 
     public leave(user : Identificable){
-        let userObj = this.users.get(user.userId);
+        const userObj = this.users.get(user.userId);
         if (userObj === undefined) {
             console.warn('User ', user.userId, 'does not belong to world! It should!');
         }
@@ -73,7 +73,7 @@ export class World {
     }
 
     public updatePosition(socket : Identificable, userPosition: PointInterface): void {
-        let user = this.users.get(socket.userId);
+        const user = this.users.get(socket.userId);
         if(typeof user === 'undefined') {
             return;
         }
@@ -83,15 +83,15 @@ export class World {
         if (typeof user.group === 'undefined') {
             // If the user is not part of a group:
             //  should he join a group?
-            let closestItem: UserInterface|Group|null = this.searchClosestAvailableUserOrGroup(user);
+            const closestItem: UserInterface|Group|null = this.searchClosestAvailableUserOrGroup(user);
 
             if (closestItem !== null) {
                 if (closestItem instanceof Group) {
                     // Let's join the group!
                     closestItem.join(user);
                 } else {
-                    let closestUser : UserInterface = closestItem;
-                    let group: Group = new Group([
+                    const closestUser : UserInterface = closestItem;
+                    const group: Group = new Group([
                         user,
                         closestUser
                     ], this.connectCallback, this.disconnectCallback);
@@ -102,7 +102,7 @@ export class World {
         } else {
             // If the user is part of a group:
             //  should he leave the group?
-            let distance = World.computeDistanceBetweenPositions(user.position, user.group.getPosition());
+            const distance = World.computeDistanceBetweenPositions(user.position, user.group.getPosition());
             if (distance > this.groupRadius) {
                 this.leaveGroup(user);
             }
@@ -120,7 +120,7 @@ export class World {
      * @param user
      */
     private leaveGroup(user: UserInterface): void {
-        let group = user.group;
+        const group = user.group;
         if (typeof group === 'undefined') {
             throw new Error("The user is part of no group");
         }
@@ -158,7 +158,7 @@ export class World {
                 return;
             }
 
-            let distance = World.computeDistance(user, currentUser); // compute distance between peers.
+            const distance = World.computeDistance(user, currentUser); // compute distance between peers.
 
             if(distance <= minimumDistanceFound && distance <= this.minDistance) {
                 minimumDistanceFound = distance;
@@ -204,7 +204,7 @@ export class World {
             if (group.isFull()) {
                 return;
             }
-            let distance = World.computeDistanceBetweenPositions(user.position, group.getPosition());
+            const distance = World.computeDistanceBetweenPositions(user.position, group.getPosition());
             if(distance <= minimumDistanceFound && distance <= this.groupRadius) {
                 minimumDistanceFound = distance;
                 matchingItem = group;

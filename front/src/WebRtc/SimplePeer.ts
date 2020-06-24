@@ -1,7 +1,12 @@
-import {ConnectionInterface, WebRtcDisconnectMessageInterface, WebRtcStartMessageInterface} from "../Connection";
+import {
+    Connection,
+    WebRtcDisconnectMessageInterface,
+    WebRtcSignalMessageInterface,
+    WebRtcStartMessageInterface
+} from "../Connection";
 import {MediaManager} from "./MediaManager";
 import * as SimplePeerNamespace from "simple-peer";
-let Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
+const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
 export interface UserSimplePeer{
     userId: string;
@@ -13,7 +18,7 @@ export interface UserSimplePeer{
  * This class manages connections to all the peers in the same group as me.
  */
 export class SimplePeer {
-    private Connection: ConnectionInterface;
+    private Connection: Connection;
     private WebRtcRoomId: string;
     private Users: Array<UserSimplePeer> = new Array<UserSimplePeer>();
 
@@ -21,7 +26,7 @@ export class SimplePeer {
 
     private PeerConnectionArray: Map<string, SimplePeerNamespace.Instance> = new Map<string, SimplePeerNamespace.Instance>();
 
-    constructor(Connection: ConnectionInterface, WebRtcRoomId: string = "test-webrtc") {
+    constructor(Connection: Connection, WebRtcRoomId: string = "test-webrtc") {
         this.Connection = Connection;
         this.WebRtcRoomId = WebRtcRoomId;
         this.MediaManager = new MediaManager((stream : MediaStream) => {
@@ -36,7 +41,7 @@ export class SimplePeer {
     private initialise() {
 
         //receive signal by gemer
-        this.Connection.receiveWebrtcSignal((message: any) => {
+        this.Connection.receiveWebrtcSignal((message: WebRtcSignalMessageInterface) => {
             this.receiveWebrtcSignal(message);
         });
 
@@ -95,7 +100,7 @@ export class SimplePeer {
 
         let name = user.name;
         if(!name){
-            let userSearch = this.Users.find((userSearch: UserSimplePeer) => userSearch.userId === user.userId);
+            const userSearch = this.Users.find((userSearch: UserSimplePeer) => userSearch.userId === user.userId);
             if(userSearch) {
                 name = userSearch.name;
             }
@@ -103,7 +108,7 @@ export class SimplePeer {
         this.MediaManager.removeActiveVideo(user.userId);
         this.MediaManager.addActiveVideo(user.userId, name);
 
-        let peer : SimplePeerNamespace.Instance = new Peer({
+        const peer : SimplePeerNamespace.Instance = new Peer({
             initiator: user.initiator ? user.initiator : false,
             reconnectTimer: 10000,
             config: {
@@ -122,7 +127,7 @@ export class SimplePeer {
         this.PeerConnectionArray.set(user.userId, peer);
 
         //start listen signal for the peer connection
-        peer.on('signal', (data: any) => {
+        peer.on('signal', (data: unknown) => {
             this.sendWebrtcSignal(data, user.userId);
         });
 
@@ -159,6 +164,7 @@ export class SimplePeer {
             this.closeConnection(user.userId);
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         peer.on('error', (err: any) => {
             console.error(`error => ${user.userId} => ${err.code}`, err);
             this.MediaManager.isError(user.userId);
@@ -170,7 +176,7 @@ export class SimplePeer {
         });
 
         peer.on('data',  (chunk: Buffer) => {
-            let data = JSON.parse(chunk.toString('utf8'));
+            const data = JSON.parse(chunk.toString('utf8'));
             if(data.type === "stream"){
                 this.stream(user.userId, data.stream);
             }
@@ -187,7 +193,7 @@ export class SimplePeer {
     private closeConnection(userId : string) {
         try {
             this.MediaManager.removeActiveVideo(userId);
-            let peer = this.PeerConnectionArray.get(userId);
+            const peer = this.PeerConnectionArray.get(userId);
             if (peer === undefined) {
                 console.warn("Tried to close connection for user "+userId+" but could not find user")
                 return;
@@ -203,12 +209,18 @@ export class SimplePeer {
         }
     }
 
+    public closeAllConnections() {
+        for (const userId of this.PeerConnectionArray.keys()) {
+            this.closeConnection(userId);
+        }
+    }
+
     /**
      *
      * @param userId
      * @param data
      */
-    private sendWebrtcSignal(data: any, userId : string) {
+    private sendWebrtcSignal(data: unknown, userId : string) {
         try {
             this.Connection.sendWebrtcSignal(data, this.WebRtcRoomId, null, userId);
         }catch (e) {
@@ -216,13 +228,14 @@ export class SimplePeer {
         }
     }
 
-    private receiveWebrtcSignal(data: any) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private receiveWebrtcSignal(data: WebRtcSignalMessageInterface) {
         try {
             //if offer type, create peer connection
             if(data.signal.type === "offer"){
                 this.createPeerConnection(data);
             }
-            let peer = this.PeerConnectionArray.get(data.userId);
+            const peer = this.PeerConnectionArray.get(data.userId);
             if (peer !== undefined) {
                 peer.signal(data.signal);
             } else {
@@ -251,10 +264,10 @@ export class SimplePeer {
      *
      * @param userId
      */
-    private addMedia (userId : any = null) {
+    private addMedia (userId : string) {
         try {
-            let localStream: MediaStream|null = this.MediaManager.localStream;
-            let peer = this.PeerConnectionArray.get(userId);
+            const localStream: MediaStream|null = this.MediaManager.localStream;
+            const peer = this.PeerConnectionArray.get(userId);
             if(localStream === null) {
                 //send fake signal
                 if(peer === undefined){

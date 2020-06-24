@@ -26,12 +26,24 @@ export interface ITiledMap {
     version: number;
 }
 
+export interface ITiledMapLayerProperty {
+    name: string;
+    type: string;
+    value: string|boolean|number|undefined;
+}
+
+/*export interface ITiledMapLayerBooleanProperty {
+    name: string,
+    type: 'bool',
+    value: boolean
+}*/
+
 export interface ITiledMapLayer {
     data: number[]|string;
     height: number;
     name: string;
     opacity: number;
-    properties: {[key: string]: string};
+    properties: ITiledMapLayerProperty[];
     encoding: string;
     compression?: string;
 
