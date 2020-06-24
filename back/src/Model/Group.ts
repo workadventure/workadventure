@@ -4,7 +4,7 @@ import {PositionInterface} from "_Model/PositionInterface";
 import {uuid} from "uuidv4";
 
 export class Group {
-    static readonly MAX_PER_GROUP = 4;
+    static readonly MAX_PER_GROUP = 6;
 
     private id: string;
     private users: UserInterface[];

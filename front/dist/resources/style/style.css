@@ -41,7 +41,7 @@ video{
 .webrtc, .activeCam{}
 .activeCam .video-container{
     position: absolute;
-    height: 25%;
+    height: 16%;
     top: 10px;
     margin: 5px;
     right: -100px;
@@ -96,16 +96,22 @@ video{
 /*CSS size for 2 - 3 elements*/
 .activeCam .video-container:nth-child(1){
     /*this is for camera of user*/
-    top: 75%;
+    top: 84%;
 }
 .activeCam .video-container:nth-child(2){
     top: 0%;
 }
 .activeCam .video-container:nth-child(3){
-    top: 25%;
+    top: 16%;
 }
 .activeCam .video-container:nth-child(4) {
-    top: 50%;
+    top: 32%;
+}
+.activeCam .video-container:nth-child(5) {
+    top: 48%;
+}
+.activeCam .video-container:nth-child(6) {
+    top: 64%;
 }
 
 /*btn animation*/
