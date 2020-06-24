@@ -1,5 +1,9 @@
 ![](https://github.com/thecodingmachine/workadventure/workflows/Continuous%20Integration/badge.svg)
 
+![WorkAdventure landscape image](README-INTRO.jpg)
+
+Demo here : [https://workadventu.re/](https://workadventu.re/).
+
 # Work Adventure
 
 ## Work in progress
