@@ -36,6 +36,7 @@ export class EnableCameraScene extends Phaser.Scene {
     private soundMeter: SoundMeter;
     private soundMeterSprite: SoundMeterSprite;
     private microphoneNameField: TextField;
+    private repositionCallback: (this: Window, ev: UIEvent) => any;
 
     constructor() {
         super({
@@ -54,7 +55,7 @@ export class EnableCameraScene extends Phaser.Scene {
     }
 
     create() {
-        this.textField = new TextField(this, this.game.renderer.width / 2, 50, 'Turn on your camera and microphone');
+        this.textField = new TextField(this, this.game.renderer.width / 2, 20, 'Turn on your camera and microphone');
         this.textField.setOrigin(0.5).setCenterAlign();
 
         this.pressReturnField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height - 30, 'Press enter to start');
@@ -69,23 +70,27 @@ export class EnableCameraScene extends Phaser.Scene {
         this.arrowRight = new Image(this, 0, 0, LoginTextures.arrowRight);
         this.arrowRight.setOrigin(0.5, 0.5);
         this.arrowRight.setVisible(false);
+        this.arrowRight.setInteractive().on('pointerdown', this.nextCam.bind(this));
         this.add.existing(this.arrowRight);
 
         this.arrowLeft = new Image(this, 0, 0, LoginTextures.arrowRight);
         this.arrowLeft.setOrigin(0.5, 0.5);
         this.arrowLeft.setVisible(false);
         this.arrowLeft.flipX = true;
+        this.arrowLeft.setInteractive().on('pointerdown', this.previousCam.bind(this));
         this.add.existing(this.arrowLeft);
 
         this.arrowUp = new Image(this, 0, 0, LoginTextures.arrowUp);
         this.arrowUp.setOrigin(0.5, 0.5);
         this.arrowUp.setVisible(false);
+        this.arrowUp.setInteractive().on('pointerdown', this.previousMic.bind(this));
         this.add.existing(this.arrowUp);
 
         this.arrowDown = new Image(this, 0, 0, LoginTextures.arrowUp);
         this.arrowDown.setOrigin(0.5, 0.5);
         this.arrowDown.setVisible(false);
         this.arrowDown.flipY = true;
+        this.arrowDown.setInteractive().on('pointerdown', this.nextMic.bind(this));
         this.add.existing(this.arrowDown);
 
         this.logo = new Image(this, this.game.renderer.width - 30, this.game.renderer.height - 20, LoginTextures.icon);
@@ -101,40 +106,51 @@ export class EnableCameraScene extends Phaser.Scene {
         mediaPromise.then(this.getDevices.bind(this));
         mediaPromise.then(this.setupStream.bind(this));
 
-        this.input.keyboard.on('keydown-RIGHT', () => {
-            if (this.cameraSelected === this.camerasList.length - 1) {
-                return;
-            }
-            this.cameraSelected++;
-            // TODO: the change of camera should be OBSERVED (reactive)
-            mediaManager.setCamera(this.camerasList[this.cameraSelected].deviceId).then(this.setupStream.bind(this));
-        });
-        this.input.keyboard.on('keydown-LEFT', () => {
-            if (this.cameraSelected === 0) {
-                return;
-            }
-            this.cameraSelected--;
-            mediaManager.setCamera(this.camerasList[this.cameraSelected].deviceId).then(this.setupStream.bind(this));
-        });
-        this.input.keyboard.on('keydown-DOWN', () => {
-            if (this.microphoneSelected === this.microphonesList.length - 1) {
-                return;
-            }
-            this.microphoneSelected++;
-            // TODO: the change of camera should be OBSERVED (reactive)
-            mediaManager.setMicrophone(this.microphonesList[this.microphoneSelected].deviceId).then(this.setupStream.bind(this));
-        });
-        this.input.keyboard.on('keydown-UP', () => {
-            if (this.microphoneSelected === 0) {
-                return;
-            }
-            this.microphoneSelected--;
-            mediaManager.setMicrophone(this.microphonesList[this.microphoneSelected].deviceId).then(this.setupStream.bind(this));
-        });
+        this.input.keyboard.on('keydown-RIGHT', this.nextCam.bind(this));
+        this.input.keyboard.on('keydown-LEFT', this.previousCam.bind(this));
+        this.input.keyboard.on('keydown-DOWN', this.nextMic.bind(this));
+        this.input.keyboard.on('keydown-UP', this.previousMic.bind(this));
 
         this.soundMeterSprite = new SoundMeterSprite(this, 50, 50);
         this.soundMeterSprite.setVisible(false);
         this.add.existing(this.soundMeterSprite);
+
+        this.repositionCallback = this.reposition.bind(this);
+        window.addEventListener('resize', this.repositionCallback);
+    }
+
+    private previousCam(): void {
+        if (this.cameraSelected === 0) {
+            return;
+        }
+        this.cameraSelected--;
+        mediaManager.setCamera(this.camerasList[this.cameraSelected].deviceId).then(this.setupStream.bind(this));
+    }
+
+    private nextCam(): void {
+        if (this.cameraSelected === this.camerasList.length - 1) {
+            return;
+        }
+        this.cameraSelected++;
+        // TODO: the change of camera should be OBSERVED (reactive)
+        mediaManager.setCamera(this.camerasList[this.cameraSelected].deviceId).then(this.setupStream.bind(this));
+    }
+
+    private previousMic(): void {
+        if (this.microphoneSelected === 0) {
+            return;
+        }
+        this.microphoneSelected--;
+        mediaManager.setMicrophone(this.microphonesList[this.microphoneSelected].deviceId).then(this.setupStream.bind(this));
+    }
+
+    private nextMic(): void {
+        if (this.microphoneSelected === this.microphonesList.length - 1) {
+            return;
+        }
+        this.microphoneSelected++;
+        // TODO: the change of camera should be OBSERVED (reactive)
+        mediaManager.setMicrophone(this.microphonesList[this.microphoneSelected].deviceId).then(this.setupStream.bind(this));
     }
 
     /**
@@ -149,18 +165,12 @@ export class EnableCameraScene extends Phaser.Scene {
 
         this.soundMeter.connectToSource(stream, new window.AudioContext());
 
-        const bounds = div.getBoundingClientRect();
-        this.soundMeterSprite.x = this.game.renderer.width / 2 - this.soundMeterSprite.getWidth() / 2;
-        this.soundMeterSprite.y = bounds.bottom / RESOLUTION + 64;
-        this.soundMeterSprite.setVisible(true);
-
         this.updateWebCamName();
     }
 
     private updateWebCamName(): void {
         if (this.camerasList.length > 1) {
             const div = this.getElementByIdOrFail<HTMLVideoElement>('myCamVideoSetup');
-            const bounds = div.getBoundingClientRect();
 
             let label = this.camerasList[this.cameraSelected].label;
             // remove text in parenthesis
@@ -168,25 +178,19 @@ export class EnableCameraScene extends Phaser.Scene {
             // remove accents
             label = label.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             this.cameraNameField.text = label;
-            this.cameraNameField.y = bounds.bottom / RESOLUTION + 30;
 
             if (this.cameraSelected < this.camerasList.length - 1) {
-                this.arrowRight.x = bounds.right / RESOLUTION + 16;
-                this.arrowRight.y = (bounds.top + bounds.height / 2) / RESOLUTION;
                 this.arrowRight.setVisible(true);
             } else {
                 this.arrowRight.setVisible(false);
             }
 
             if (this.cameraSelected > 0) {
-                this.arrowLeft.x = bounds.left / RESOLUTION - 16;
-                this.arrowLeft.y = (bounds.top + bounds.height / 2) / RESOLUTION;
                 this.arrowLeft.setVisible(true);
             } else {
                 this.arrowLeft.setVisible(false);
             }
         }
-
         if (this.microphonesList.length > 1) {
             let label = this.microphonesList[this.microphoneSelected].label;
             // remove text in parenthesis
@@ -195,37 +199,61 @@ export class EnableCameraScene extends Phaser.Scene {
             label = label.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
             this.microphoneNameField.text = label;
-            this.microphoneNameField.y = this.soundMeterSprite.y + 22;
 
             if (this.microphoneSelected < this.microphonesList.length - 1) {
-                this.arrowDown.x = this.microphoneNameField.x + this.microphoneNameField.width / 2 + 16;
-                this.arrowDown.y = this.microphoneNameField.y;
                 this.arrowDown.setVisible(true);
             } else {
                 this.arrowDown.setVisible(false);
             }
 
             if (this.microphoneSelected > 0) {
-                this.arrowUp.x = this.microphoneNameField.x - this.microphoneNameField.width / 2 - 16;
-                this.arrowUp.y = this.microphoneNameField.y;
                 this.arrowUp.setVisible(true);
             } else {
                 this.arrowUp.setVisible(false);
             }
 
         }
+        this.reposition();
+    }
+
+    private reposition(): void {
+        const div = this.getElementByIdOrFail<HTMLVideoElement>('myCamVideoSetup');
+        const bounds = div.getBoundingClientRect();
+
+        this.cameraNameField.y = bounds.top / RESOLUTION - 8;
+
+        this.soundMeterSprite.x = this.game.renderer.width / 2 - this.soundMeterSprite.getWidth() / 2;
+        this.soundMeterSprite.y = bounds.bottom / RESOLUTION + 16;
+        this.soundMeterSprite.setVisible(true);
+
+        this.microphoneNameField.y = this.soundMeterSprite.y + 22;
+
+        this.arrowRight.x = bounds.right / RESOLUTION + 16;
+        this.arrowRight.y = (bounds.top + bounds.height / 2) / RESOLUTION;
+
+        this.arrowLeft.x = bounds.left / RESOLUTION - 16;
+        this.arrowLeft.y = (bounds.top + bounds.height / 2) / RESOLUTION;
+
+        this.arrowDown.x = this.microphoneNameField.x + this.microphoneNameField.width / 2 + 16;
+        this.arrowDown.y = this.microphoneNameField.y;
+
+        this.arrowUp.x = this.microphoneNameField.x - this.microphoneNameField.width / 2 - 16;
+        this.arrowUp.y = this.microphoneNameField.y;
+
+        this.pressReturnField.y = Math.max(this.game.renderer.height - 30, this.microphoneNameField.y + 20);
+        this.logo.y = Math.max(this.game.renderer.height - 20, this.microphoneNameField.y + 30);
     }
 
     update(time: number, delta: number): void {
         this.pressReturnField.setVisible(!!(Math.floor(time / 500) % 2));
 
-        console.log(this.soundMeter.getVolume());
         this.soundMeterSprite.setVolume(this.soundMeter.getVolume());
     }
 
     private async login(): Promise<StartMapInterface> {
         this.getElementByIdOrFail<HTMLDivElement>('webRtcSetup').style.display = 'none';
         this.soundMeter.stop();
+        window.removeEventListener('resize', this.repositionCallback);
 
         // Do we have a start URL in the address bar? If so, let's redirect to this address
         const instanceAndMapUrl = this.findMapUrl();

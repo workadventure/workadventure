@@ -211,7 +211,7 @@ video{
 .webrtcsetup{
     display: none;
     position: absolute;
-    top: 230px;
+    top: 140px;
     left: 0;
     right: 0;
     margin-left: auto;
@@ -229,6 +229,7 @@ video{
 }
 #myCamVideoSetup {
     width: 100%;
+    height: 100%;
 }
 .webrtcsetup.active{
     display: block;
