@@ -29,8 +29,8 @@ export class EnableCameraScene extends Phaser.Scene {
     private arrowRight: Image;
     private arrowDown: Image;
     private arrowUp: Image;
-    private microphonesList: InputDeviceInfo[] = new Array<InputDeviceInfo>();
-    private camerasList: InputDeviceInfo[] = new Array<InputDeviceInfo>();
+    private microphonesList: MediaDeviceInfo[] = new Array<MediaDeviceInfo>();
+    private camerasList: MediaDeviceInfo[] = new Array<MediaDeviceInfo>();
     private cameraSelected: number = 0;
     private microphoneSelected: number = 0;
     private soundMeter: SoundMeter;
@@ -311,12 +311,10 @@ export class EnableCameraScene extends Phaser.Scene {
     private async getDevices() {
         const mediaDeviceInfos = await navigator.mediaDevices.enumerateDevices();
         for (const mediaDeviceInfo of mediaDeviceInfos) {
-            if (mediaDeviceInfo instanceof InputDeviceInfo) {
-                if (mediaDeviceInfo.kind === 'audioinput') {
-                    this.microphonesList.push(mediaDeviceInfo);
-                } else if (mediaDeviceInfo.kind === 'videoinput') {
-                    this.camerasList.push(mediaDeviceInfo);
-                }
+            if (mediaDeviceInfo.kind === 'audioinput') {
+                this.microphonesList.push(mediaDeviceInfo);
+            } else if (mediaDeviceInfo.kind === 'videoinput') {
+                this.camerasList.push(mediaDeviceInfo);
             }
         }
         this.updateWebCamName();
