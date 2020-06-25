@@ -4,6 +4,7 @@
   local tag = namespace,
   local url = if namespace == "master" then "workadventu.re" else namespace+".workadventure.test.thecodingmachine.com",
   "$schema": "https://raw.githubusercontent.com/thecodingmachine/deeployer/master/deeployer.schema.json",
+  "version": "1.0",
   "containers": {
      "back": {
        "image": "thecodingmachine/workadventure-back:"+tag,
