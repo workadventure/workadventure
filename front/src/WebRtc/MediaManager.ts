@@ -171,7 +171,9 @@ export class MediaManager {
         if (typeof(audio) === 'boolean' || audio === undefined) {
             audio = {}
         }
-        audio.deviceId = id;
+        audio.deviceId = {
+            exact: id
+        };
 
         return this.getCamera();
     }
