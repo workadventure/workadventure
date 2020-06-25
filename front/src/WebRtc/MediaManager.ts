@@ -135,7 +135,7 @@ export class MediaManager {
         }
 
         try {
-            let stream = await navigator.mediaDevices.getUserMedia(this.constraintsMedia);
+            const stream = await navigator.mediaDevices.getUserMedia(this.constraintsMedia);
 
             this.localStream = stream;
             this.myCamVideo.srcObject = this.localStream;
