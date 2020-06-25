@@ -6,6 +6,7 @@ import Rectangle = Phaser.GameObjects.Rectangle;
 import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Character";
 import {GameSceneInitInterface} from "../Game/GameScene";
 import {StartMapInterface} from "../../Connection";
+import {EnableCameraSceneName} from "./EnableCameraScene";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
@@ -116,11 +117,13 @@ export class SelectCharacterScene extends Phaser.Scene {
         this.pressReturnField.setVisible(!!(Math.floor(time / 500) % 2));
     }
 
-    private async login(name: string): Promise<StartMapInterface> {
+    private login(name: string): void {
         gameManager.storePlayerDetails(name, this.selectedPlayer.texture.key);
 
+        this.scene.start(EnableCameraSceneName);
+
         // Do we have a start URL in the address bar? If so, let's redirect to this address
-        const instanceAndMapUrl = this.findMapUrl();
+        /*const instanceAndMapUrl = this.findMapUrl();
         if (instanceAndMapUrl !== null) {
             const [mapUrl, instance] = instanceAndMapUrl;
             const key = gameManager.loadMap(mapUrl, this.scene, instance);
@@ -141,7 +144,7 @@ export class SelectCharacterScene extends Phaser.Scene {
                 console.error(err);
                 throw err;
             });
-        }
+        }*/
     }
 
     /**

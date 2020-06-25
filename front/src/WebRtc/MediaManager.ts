@@ -6,7 +6,9 @@ const videoConstraint: boolean|MediaTrackConstraints = {
 
 type UpdatedLocalStreamCallback = (media: MediaStream) => void;
 
-class MediaManager {
+// TODO: Split MediaManager in 2 classes: MediaManagerUI (in charge of HTML) and MediaManager (singleton in charge of the camera only)
+// TODO: verify that microphone event listeners are not triggered plenty of time NOW (since MediaManager is created many times!!!!)
+export class MediaManager {
     localStream: MediaStream|null = null;
     private remoteVideo: Map<string, HTMLVideoElement> = new Map<string, HTMLVideoElement>();
     myCamVideo: HTMLVideoElement;
@@ -123,35 +125,57 @@ class MediaManager {
     }
 
     //get camera
-    getCamera(): Promise<MediaStream> {
-        let promise = null;
-
+    async getCamera(): Promise<MediaStream> {
         if (navigator.mediaDevices === undefined) {
-            return Promise.reject<MediaStream>(new Error('Unable to access your camera or microphone. Your browser is too old (or you are running a development version of WorkAdventure on Firefox)'));
+            if (window.location.protocol === 'http:') {
+                throw new Error('Unable to access your camera or microphone. You need to use a HTTPS connection.');
+            } else {
+                throw new Error('Unable to access your camera or microphone. Your browser is too old.');
+            }
         }
 
         try {
-            promise = navigator.mediaDevices.getUserMedia(this.constraintsMedia)
-                .then((stream: MediaStream) => {
-                    this.localStream = stream;
-                    this.myCamVideo.srcObject = this.localStream;
+            const stream = await navigator.mediaDevices.getUserMedia(this.constraintsMedia);
 
-                    //TODO resize remote cam
-                    /*console.log(this.localStream.getTracks());
-                    let videoMediaStreamTrack =  this.localStream.getTracks().find((media : MediaStreamTrack) => media.kind === "video");
-                    let {width, height} = videoMediaStreamTrack.getSettings();
-                    console.info(`${width}x${height}`); // 6*/
+            this.localStream = stream;
+            this.myCamVideo.srcObject = this.localStream;
 
-                    return stream;
-                }).catch((err) => {
-                    console.info("error get media ", this.constraintsMedia.video, this.constraintsMedia.audio, err);
-                    this.localStream = null;
-                    throw err;
-                });
-        } catch (e) {
-            promise = Promise.reject<MediaStream>(e);
+            return stream;
+
+            //TODO resize remote cam
+            /*console.log(this.localStream.getTracks());
+            let videoMediaStreamTrack =  this.localStream.getTracks().find((media : MediaStreamTrack) => media.kind === "video");
+            let {width, height} = videoMediaStreamTrack.getSettings();
+            console.info(`${width}x${height}`); // 6*/
+        } catch (err) {
+            console.info("error get media ", this.constraintsMedia.video, this.constraintsMedia.audio, err);
+            this.localStream = null;
+            throw err;
         }
-        return promise;
+    }
+
+    setCamera(id: string): Promise<MediaStream> {
+        let video = this.constraintsMedia.video;
+        if (typeof(video) === 'boolean' || video === undefined) {
+            video = {}
+        }
+        video.deviceId = {
+            exact: id
+        };
+
+        return this.getCamera();
+    }
+
+    setMicrophone(id: string): Promise<MediaStream> {
+        let audio = this.constraintsMedia.audio;
+        if (typeof(audio) === 'boolean' || audio === undefined) {
+            audio = {}
+        }
+        audio.deviceId = {
+            exact: id
+        };
+
+        return this.getCamera();
     }
 
     /**
