@@ -120,7 +120,7 @@ export class EnableCameraScene extends Phaser.Scene {
     }
 
     private previousCam(): void {
-        if (this.cameraSelected === 0) {
+        if (this.cameraSelected === 0 || this.camerasList.length === 0) {
             return;
         }
         this.cameraSelected--;
@@ -128,7 +128,7 @@ export class EnableCameraScene extends Phaser.Scene {
     }
 
     private nextCam(): void {
-        if (this.cameraSelected === this.camerasList.length - 1) {
+        if (this.cameraSelected === this.camerasList.length - 1 || this.camerasList.length === 0) {
             return;
         }
         this.cameraSelected++;
@@ -137,7 +137,7 @@ export class EnableCameraScene extends Phaser.Scene {
     }
 
     private previousMic(): void {
-        if (this.microphoneSelected === 0) {
+        if (this.microphoneSelected === 0 || this.microphonesList.length === 0) {
             return;
         }
         this.microphoneSelected--;
@@ -145,7 +145,7 @@ export class EnableCameraScene extends Phaser.Scene {
     }
 
     private nextMic(): void {
-        if (this.microphoneSelected === this.microphonesList.length - 1) {
+        if (this.microphoneSelected === this.microphonesList.length - 1 || this.microphonesList.length === 0) {
             return;
         }
         this.microphoneSelected++;
