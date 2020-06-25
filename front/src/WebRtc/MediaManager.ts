@@ -161,7 +161,9 @@ export class MediaManager {
         if (typeof(video) === 'boolean' || video === undefined) {
             video = {}
         }
-        video.deviceId = id;
+        video.deviceId = {
+            exact: id
+        };
 
         return this.getCamera();
     }
