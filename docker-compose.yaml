@@ -31,7 +31,7 @@ services:
       - ./front:/usr/src/app
     labels:
       - "traefik.http.routers.front.rule=Host(`play.workadventure.localhost`)"
-      - "traefik.http.routers.front.entryPoints=web"
+      - "traefik.http.routers.front.entryPoints=web,traefik"
       - "traefik.http.services.front.loadbalancer.server.port=8080"
       - "traefik.http.routers.front-ssl.rule=Host(`play.workadventure.localhost`)"
       - "traefik.http.routers.front-ssl.entryPoints=websecure"
