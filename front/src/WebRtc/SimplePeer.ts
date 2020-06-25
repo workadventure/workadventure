@@ -4,7 +4,7 @@ import {
     WebRtcSignalMessageInterface,
     WebRtcStartMessageInterface
 } from "../Connection";
-import {MediaManager} from "./MediaManager";
+import { mediaManager } from "./MediaManager";
 import * as SimplePeerNamespace from "simple-peer";
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
@@ -22,16 +22,15 @@ export class SimplePeer {
     private WebRtcRoomId: string;
     private Users: Array<UserSimplePeer> = new Array<UserSimplePeer>();
 
-    private MediaManager: MediaManager;
-
     private PeerConnectionArray: Map<string, SimplePeerNamespace.Instance> = new Map<string, SimplePeerNamespace.Instance>();
+    private readonly updateLocalStreamCallback: (media: MediaStream) => void;
 
     constructor(Connection: Connection, WebRtcRoomId: string = "test-webrtc") {
         this.Connection = Connection;
         this.WebRtcRoomId = WebRtcRoomId;
-        this.MediaManager = new MediaManager((stream : MediaStream) => {
-            this.updatedLocalStream();
-        });
+        // We need to go through this weird bound function pointer in order to be able to "free" this reference later.
+        this.updateLocalStreamCallback = this.updatedLocalStream.bind(this);
+        mediaManager.onUpdateLocalStream(this.updateLocalStreamCallback);
         this.initialise();
     }
 
@@ -45,8 +44,8 @@ export class SimplePeer {
             this.receiveWebrtcSignal(message);
         });
 
-        this.MediaManager.activeVisio();
-        this.MediaManager.getCamera().then(() => {
+        mediaManager.activeVisio();
+        mediaManager.getCamera().then(() => {
 
             //receive message start
             this.Connection.receiveWebrtcStart((message: WebRtcStartMessageInterface) => {
@@ -105,8 +104,8 @@ export class SimplePeer {
                 name = userSearch.name;
             }
         }
-        this.MediaManager.removeActiveVideo(user.userId);
-        this.MediaManager.addActiveVideo(user.userId, name);
+        mediaManager.removeActiveVideo(user.userId);
+        mediaManager.addActiveVideo(user.userId, name);
 
         const peer : SimplePeerNamespace.Instance = new Peer({
             initiator: user.initiator ? user.initiator : false,
@@ -143,15 +142,15 @@ export class SimplePeer {
                 }
             });
             if(microphoneActive){
-                this.MediaManager.enabledMicrophoneByUserId(user.userId);
+                mediaManager.enabledMicrophoneByUserId(user.userId);
             }else{
-                this.MediaManager.disabledMicrophoneByUserId(user.userId);
+                mediaManager.disabledMicrophoneByUserId(user.userId);
             }
 
             if(videoActive){
-                this.MediaManager.enabledVideoByUserId(user.userId);
+                mediaManager.enabledVideoByUserId(user.userId);
             }else{
-                this.MediaManager.disabledVideoByUserId(user.userId);
+                mediaManager.disabledVideoByUserId(user.userId);
             }
             this.stream(user.userId, stream);
         });
@@ -167,11 +166,11 @@ export class SimplePeer {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         peer.on('error', (err: any) => {
             console.error(`error => ${user.userId} => ${err.code}`, err);
-            this.MediaManager.isError(user.userId);
+            mediaManager.isError(user.userId);
         });
 
         peer.on('connect', () => {
-            this.MediaManager.isConnected(user.userId);
+            mediaManager.isConnected(user.userId);
             console.info(`connect => ${user.userId}`);
         });
 
@@ -192,7 +191,7 @@ export class SimplePeer {
      */
     private closeConnection(userId : string) {
         try {
-            this.MediaManager.removeActiveVideo(userId);
+            mediaManager.removeActiveVideo(userId);
             const peer = this.PeerConnectionArray.get(userId);
             if (peer === undefined) {
                 console.warn("Tried to close connection for user "+userId+" but could not find user")
@@ -213,6 +212,13 @@ export class SimplePeer {
         for (const userId of this.PeerConnectionArray.keys()) {
             this.closeConnection(userId);
         }
+    }
+
+    /**
+     * Unregisters any held event handler.
+     */
+    public unregister() {
+        mediaManager.removeUpdateLocalStreamEventListener(this.updateLocalStreamCallback);
     }
 
     /**
@@ -253,11 +259,11 @@ export class SimplePeer {
      */
     private stream(userId : string, stream: MediaStream) {
         if(!stream){
-            this.MediaManager.disabledVideoByUserId(userId);
-            this.MediaManager.disabledMicrophoneByUserId(userId);
+            mediaManager.disabledVideoByUserId(userId);
+            mediaManager.disabledMicrophoneByUserId(userId);
             return;
         }
-        this.MediaManager.addStreamRemoteVideo(userId, stream);
+        mediaManager.addStreamRemoteVideo(userId, stream);
     }
 
     /**
@@ -266,7 +272,7 @@ export class SimplePeer {
      */
     private addMedia (userId : string) {
         try {
-            const localStream: MediaStream|null = this.MediaManager.localStream;
+            const localStream: MediaStream|null = mediaManager.localStream;
             const peer = this.PeerConnectionArray.get(userId);
             if(localStream === null) {
                 //send fake signal

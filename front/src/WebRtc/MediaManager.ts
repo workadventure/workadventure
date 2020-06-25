@@ -3,6 +3,11 @@ const videoConstraint: boolean|MediaTrackConstraints = {
     height: { ideal: 720 },
     facingMode: "user"
 };
+
+type UpdatedLocalStreamCallback = (media: MediaStream) => void;
+
+// TODO: Split MediaManager in 2 classes: MediaManagerUI (in charge of HTML) and MediaManager (singleton in charge of the camera only)
+// TODO: verify that microphone event listeners are not triggered plenty of time NOW (since MediaManager is created many times!!!!)
 export class MediaManager {
     localStream: MediaStream|null = null;
     private remoteVideo: Map<string, HTMLVideoElement> = new Map<string, HTMLVideoElement>();
@@ -16,11 +21,9 @@ export class MediaManager {
         audio: true,
         video: videoConstraint
     };
-    updatedLocalStreamCallBack : (media: MediaStream) => void;
+    updatedLocalStreamCallBacks : Set<UpdatedLocalStreamCallback> = new Set<UpdatedLocalStreamCallback>();
 
-    constructor(updatedLocalStreamCallBack : (media: MediaStream) => void) {
-        this.updatedLocalStreamCallBack = updatedLocalStreamCallBack;
-
+    constructor() {
         this.myCamVideo = this.getElementByIdOrFail<HTMLVideoElement>('myCamVideo');
         this.webrtcInAudio = this.getElementByIdOrFail<HTMLAudioElement>('audio-webrtc-in');
         this.webrtcInAudio.volume = 0.2;
@@ -54,6 +57,21 @@ export class MediaManager {
         });
     }
 
+    onUpdateLocalStream(callback: UpdatedLocalStreamCallback): void {
+
+        this.updatedLocalStreamCallBacks.add(callback);
+    }
+
+    removeUpdateLocalStreamEventListener(callback: UpdatedLocalStreamCallback): void {
+        this.updatedLocalStreamCallBacks.delete(callback);
+    }
+
+    private triggerUpdatedLocalStreamCallbacks(stream: MediaStream): void {
+        for (const callback of this.updatedLocalStreamCallBacks) {
+            callback(stream);
+        }
+    }
+
     activeVisio(){
         const webRtc = this.getElementByIdOrFail('webRtc');
         webRtc.classList.add('active');
@@ -64,7 +82,7 @@ export class MediaManager {
         this.cinema.style.display = "block";
         this.constraintsMedia.video = videoConstraint;
         this.getCamera().then((stream: MediaStream) => {
-            this.updatedLocalStreamCallBack(stream);
+            this.triggerUpdatedLocalStreamCallbacks(stream);
         });
     }
 
@@ -79,7 +97,7 @@ export class MediaManager {
             });
         }
         this.getCamera().then((stream) => {
-            this.updatedLocalStreamCallBack(stream);
+            this.triggerUpdatedLocalStreamCallbacks(stream);
         });
     }
 
@@ -88,7 +106,7 @@ export class MediaManager {
         this.microphone.style.display = "block";
         this.constraintsMedia.audio = true;
         this.getCamera().then((stream) => {
-            this.updatedLocalStreamCallBack(stream);
+            this.triggerUpdatedLocalStreamCallbacks(stream);
         });
     }
 
@@ -102,40 +120,62 @@ export class MediaManager {
             });
         }
         this.getCamera().then((stream) => {
-            this.updatedLocalStreamCallBack(stream);
+            this.triggerUpdatedLocalStreamCallbacks(stream);
         });
     }
 
     //get camera
-    getCamera(): Promise<MediaStream> {
-        let promise = null;
-
+    async getCamera(): Promise<MediaStream> {
         if (navigator.mediaDevices === undefined) {
-            return Promise.reject<MediaStream>(new Error('Unable to access your camera or microphone. Your browser is too old (or you are running a development version of WorkAdventure on Firefox)'));
+            if (window.location.protocol === 'http:') {
+                throw new Error('Unable to access your camera or microphone. You need to use a HTTPS connection.');
+            } else {
+                throw new Error('Unable to access your camera or microphone. Your browser is too old.');
+            }
         }
 
         try {
-            promise = navigator.mediaDevices.getUserMedia(this.constraintsMedia)
-                .then((stream: MediaStream) => {
-                    this.localStream = stream;
-                    this.myCamVideo.srcObject = this.localStream;
+            const stream = await navigator.mediaDevices.getUserMedia(this.constraintsMedia);
 
-                    //TODO resize remote cam
-                    /*console.log(this.localStream.getTracks());
-                    let videoMediaStreamTrack =  this.localStream.getTracks().find((media : MediaStreamTrack) => media.kind === "video");
-                    let {width, height} = videoMediaStreamTrack.getSettings();
-                    console.info(`${width}x${height}`); // 6*/
+            this.localStream = stream;
+            this.myCamVideo.srcObject = this.localStream;
 
-                    return stream;
-                }).catch((err) => {
-                    console.info("error get media ", this.constraintsMedia.video, this.constraintsMedia.audio, err);
-                    this.localStream = null;
-                    throw err;
-                });
-        } catch (e) {
-            promise = Promise.reject<MediaStream>(e);
+            return stream;
+
+            //TODO resize remote cam
+            /*console.log(this.localStream.getTracks());
+            let videoMediaStreamTrack =  this.localStream.getTracks().find((media : MediaStreamTrack) => media.kind === "video");
+            let {width, height} = videoMediaStreamTrack.getSettings();
+            console.info(`${width}x${height}`); // 6*/
+        } catch (err) {
+            console.info("error get media ", this.constraintsMedia.video, this.constraintsMedia.audio, err);
+            this.localStream = null;
+            throw err;
         }
-        return promise;
+    }
+
+    setCamera(id: string): Promise<MediaStream> {
+        let video = this.constraintsMedia.video;
+        if (typeof(video) === 'boolean' || video === undefined) {
+            video = {}
+        }
+        video.deviceId = {
+            exact: id
+        };
+
+        return this.getCamera();
+    }
+
+    setMicrophone(id: string): Promise<MediaStream> {
+        let audio = this.constraintsMedia.audio;
+        if (typeof(audio) === 'boolean' || audio === undefined) {
+            audio = {}
+        }
+        audio.deviceId = {
+            exact: id
+        };
+
+        return this.getCamera();
     }
 
     /**
@@ -308,3 +348,5 @@ export class MediaManager {
     }
 
 }
+
+export const mediaManager = new MediaManager();
