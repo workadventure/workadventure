@@ -2,9 +2,14 @@ version: "3"
 services:
   reverse-proxy:
     image: traefik:v2.0
-    command: --api.insecure=true --providers.docker
+    command:
+      - --api.insecure=true
+      - --providers.docker
+      - --entryPoints.web.address=:80
+      - --entryPoints.websecure.address=:443
     ports:
       - "80:80"
+      - "443:443"
       # The Web UI (enabled by --api.insecure=true)
       - "8080:8080"
     depends_on:
@@ -19,14 +24,20 @@ services:
       DEBUG_MODE: "$DEBUG_MODE"
       HOST: "0.0.0.0"
       NODE_ENV: development
-      API_URL: http://api.workadventure.localhost
+      API_URL: api.workadventure.localhost
       STARTUP_COMMAND_1: yarn install
     command: yarn run start
     volumes:
       - ./front:/usr/src/app
     labels:
       - "traefik.http.routers.front.rule=Host(`play.workadventure.localhost`)"
+      - "traefik.http.routers.front.entryPoints=web"
       - "traefik.http.services.front.loadbalancer.server.port=8080"
+      - "traefik.http.routers.front-ssl.rule=Host(`play.workadventure.localhost`)"
+      - "traefik.http.routers.front-ssl.entryPoints=websecure"
+      - "traefik.http.routers.front-ssl.tls=true"
+      - "traefik.http.routers.front-ssl.service=front"
+
 
   back:
     image: thecodingmachine/nodejs:12
@@ -39,7 +50,13 @@ services:
       - ./back:/usr/src/app
     labels:
       - "traefik.http.routers.back.rule=Host(`api.workadventure.localhost`)"
+      - "traefik.http.routers.back.entryPoints=web"
       - "traefik.http.services.back.loadbalancer.server.port=8080"
+      - "traefik.http.routers.back-ssl.rule=Host(`api.workadventure.localhost`)"
+      - "traefik.http.routers.back-ssl.entryPoints=websecure"
+      - "traefik.http.routers.back-ssl.tls=true"
+      - "traefik.http.routers.back-ssl.service=back"
+
 
   website:
     image: thecodingmachine/nodejs:12-apache
@@ -51,4 +68,9 @@ services:
       - ./website:/var/www/html
     labels:
       - "traefik.http.routers.website.rule=Host(`workadventure.localhost`)"
+      - "traefik.http.routers.website.entryPoints=web"
       - "traefik.http.services.website.loadbalancer.server.port=80"
+      - "traefik.http.routers.website-ssl.rule=Host(`workadventure.localhost`)"
+      - "traefik.http.routers.website-ssl.entryPoints=websecure"
+      - "traefik.http.routers.website-ssl.tls=true"
+      - "traefik.http.routers.website-ssl.service=website"

@@ -24,7 +24,7 @@
       },
       "ports": [80],
       "env": {
-        "API_URL": "https://api."+url
+        "API_URL": "api."+url
       }
     },
     "website": {
