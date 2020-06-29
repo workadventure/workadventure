@@ -48,12 +48,12 @@ export class IoSocketController {
         this.nbClientsGauge = new Gauge({
             name: 'workadventure_nb_sockets',
             help: 'Number of connected sockets',
-            labelNames: [ 'host' ]
+            labelNames: [ ]
         });
         this.nbClientsPerRoomGauge = new Gauge({
             name: 'workadventure_nb_clients_per_room',
             help: 'Number of clients per room',
-            labelNames: [ 'host', 'room' ]
+            labelNames: [ 'room' ]
         });
 
         // Authentication with token. it will be decoded and stored in the socket.
@@ -139,7 +139,7 @@ export class IoSocketController {
 
             // Let's log server load when a user joins
             const srvSockets = this.Io.sockets.sockets;
-            this.nbClientsGauge.inc({ host: os.hostname() });
+            this.nbClientsGauge.inc();
             console.log(new Date().toISOString() + ' A user joined (', Object.keys(srvSockets).length, ' connected users)');
             si.currentLoad().then(data => console.log('  Current load: ', data.avgload));
             si.currentLoad().then(data => console.log('  CPU: ', data.currentload, '%'));
@@ -262,7 +262,7 @@ export class IoSocketController {
 
                 // Let's log server load when a user leaves
                 const srvSockets = this.Io.sockets.sockets;
-                this.nbClientsGauge.dec({ host: os.hostname() });
+                this.nbClientsGauge.dec();
                 console.log('A user left (', Object.keys(srvSockets).length, ' connected users)');
                 si.currentLoad().then(data => console.log('Current load: ', data.avgload));
                 si.currentLoad().then(data => console.log('CPU: ', data.currentload, '%'));
@@ -309,7 +309,7 @@ export class IoSocketController {
                 //user leave previous room
                 Client.leave(Client.roomId);
             } finally {
-                this.nbClientsPerRoomGauge.dec({ host: os.hostname(), room: Client.roomId });
+                this.nbClientsPerRoomGauge.dec({ room: Client.roomId });
                 delete Client.roomId;
             }
         }
@@ -318,7 +318,7 @@ export class IoSocketController {
     private joinRoom(Client : ExSocketInterface, roomId: string, position: PointInterface): World {
         //join user in room
         Client.join(roomId);
-        this.nbClientsPerRoomGauge.inc({ host: os.hostname(), room: roomId });
+        this.nbClientsPerRoomGauge.inc({ room: roomId });
         Client.roomId = roomId;
         Client.position = position;
 
