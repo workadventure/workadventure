@@ -183,9 +183,13 @@ export class IoSocketController {
 
                     // The answer shall contain the list of all users of the room with their positions:
                     const listOfUsers = Array.from(world.getUsers(), ([key, user]) => {
-                        const player = this.searchClientByIdOrFail(user.id);
+                        const player: ExSocketInterface|undefined = this.sockets.get(user.id);
+                        if (player === undefined) {
+                            console.warn('Something went wrong. The World contains a user "'+user.id+"' but this user does not exist in the sockets list!");
+                            return null;
+                        }
                         return new MessageUserPosition(user.id, player.name, player.character, player.position);
-                    });
+                    }).filter((item: MessageUserPosition|null) => item !== null);
                     answerFn(listOfUsers);
                 } catch (e) {
                     console.error('An error occurred on "join_room" event');
