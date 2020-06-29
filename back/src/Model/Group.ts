@@ -68,7 +68,7 @@ export class Group {
 
     leave(user: UserInterface): void
     {
-        let success = this.users.delete(user);
+        const success = this.users.delete(user);
         if (success === false) {
             throw new Error("Could not find user "+user.id+" in the group "+this.id);
         }
@@ -84,7 +84,7 @@ export class Group {
      */
     destroy(): void
     {
-        for (let user of this.users) {
+        for (const user of this.users) {
             this.leave(user);
         }
     }
