@@ -72,6 +72,10 @@ export class World {
         this.users.delete(user.userId);
     }
 
+    public isEmpty(): boolean {
+        return this.users.size === 0;
+    }
+
     public updatePosition(socket : Identificable, userPosition: PointInterface): void {
         const user = this.users.get(socket.userId);
         if(typeof user === 'undefined') {
