@@ -295,20 +295,23 @@ export class IoSocketController {
     leaveRoom(Client : ExSocketInterface){
         // leave previous room and world
         if(Client.roomId){
-            Client.to(Client.roomId).emit(SockerIoEvent.USER_LEFT, Client.userId);
+            try {
+                Client.to(Client.roomId).emit(SockerIoEvent.USER_LEFT, Client.userId);
 
-            //user leave previous world
-            const world : World|undefined = this.Worlds.get(Client.roomId);
-            if(world){
-                world.leave(Client);
-                if (world.isEmpty()) {
-                    this.Worlds.delete(Client.roomId);
+                //user leave previous world
+                const world: World | undefined = this.Worlds.get(Client.roomId);
+                if (world) {
+                    world.leave(Client);
+                    if (world.isEmpty()) {
+                        this.Worlds.delete(Client.roomId);
+                    }
                 }
+                //user leave previous room
+                Client.leave(Client.roomId);
+            } finally {
+                this.nbClientsPerRoomGauge.dec({ host: os.hostname(), room: Client.roomId });
+                delete Client.roomId;
             }
-            //user leave previous room
-            Client.leave(Client.roomId);
-            this.nbClientsPerRoomGauge.dec({ host: os.hostname(), room: Client.roomId });
-            delete Client.roomId;
         }
     }
 
