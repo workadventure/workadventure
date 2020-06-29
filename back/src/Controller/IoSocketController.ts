@@ -297,6 +297,9 @@ export class IoSocketController {
             const world : World|undefined = this.Worlds.get(Client.roomId);
             if(world){
                 world.leave(Client);
+                if (world.isEmpty()) {
+                    this.Worlds.delete(Client.roomId);
+                }
             }
             //user leave previous room
             Client.leave(Client.roomId);
