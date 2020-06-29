@@ -20,7 +20,7 @@ export class World {
 
     // Users, sorted by ID
     private readonly users: Map<string, UserInterface>;
-    private readonly groups: Group[];
+    private readonly groups: Set<Group>;
 
     private readonly connectCallback: ConnectCallback;
     private readonly disconnectCallback: DisconnectCallback;
@@ -35,7 +35,7 @@ export class World {
                 groupDeletedCallback: GroupDeletedCallback)
     {
         this.users = new Map<string, UserInterface>();
-        this.groups = [];
+        this.groups = new Set<Group>();
         this.connectCallback = connectCallback;
         this.disconnectCallback = disconnectCallback;
         this.minDistance = minDistance;
@@ -45,7 +45,7 @@ export class World {
     }
 
     public getGroups(): Group[] {
-        return this.groups;
+        return Array.from(this.groups.values());
     }
 
     public getUsers(): Map<string, UserInterface> {
@@ -99,7 +99,7 @@ export class World {
                         user,
                         closestUser
                     ], this.connectCallback, this.disconnectCallback);
-                    this.groups.push(group);
+                    this.groups.add(group);
                 }
             }
 
@@ -132,11 +132,10 @@ export class World {
         if (group.isEmpty()) {
             this.groupDeletedCallback(group.getId(), user);
             group.destroy();
-            const index = this.groups.indexOf(group, 0);
-            if (index === -1) {
-                throw new Error("Could not find group");
+            if (!this.groups.has(group)) {
+                throw new Error("Could not find group "+group.getId()+" referenced by user "+user.id+" in World.");
             }
-            this.groups.splice(index, 1);
+            this.groups.delete(group);
         } else {
             this.groupUpdatedCallback(group);
         }
