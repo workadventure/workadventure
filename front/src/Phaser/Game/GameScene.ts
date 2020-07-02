@@ -213,6 +213,10 @@ export class GameScene extends Phaser.Scene {
             this.scene.sleep(ReconnectingSceneName);
 
             return connection;
+        }).catch(err => {
+            console.log(err);
+            // TODO: go to error screen / reconnect
+            throw err;
         });
     }
 

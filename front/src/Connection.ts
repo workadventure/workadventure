@@ -23,6 +23,7 @@ enum EventMessage{
     GROUP_DELETE = "group-delete",
     SET_PLAYER_DETAILS = "set-player-details", // Send the name and character to the server (on connect), receive back the id.
 
+    CONNECT = "connect",
     CONNECT_ERROR = "connect_error",
 }
 
@@ -109,37 +110,38 @@ export class Connection implements Connection {
         })
     }
 
-    public static createConnection(name: string, characterSelected: string): Promise<Connection> {
-        return Axios.post(`${API_URL}/login`, {name: name})
-            .then((res) => {
+    public static async createConnection(name: string, characterSelected: string): Promise<Connection> {
+        try {
+            const res = await Axios.post(`${API_URL}/login`, {name: name})
 
-                return new Promise<Connection>((resolve, reject) => {
-                    const connection = new Connection(res.data.token);
+            return new Promise<Connection>((resolve, reject) => {
+                const connection = new Connection(res.data.token);
 
-                    connection.onConnectError((error: object) => {
-                        console.log('An error occurred while connecting to socket server. Retrying');
-                        reject(error);
-                    });
-
-                    connection.socket.emit(EventMessage.SET_PLAYER_DETAILS, {
-                        name: name,
-                        character: characterSelected
-                    } as SetPlayerDetailsMessage, (id: string) => {
-                        connection.userId = id;
-                    });
-
+                connection.onConnect(() => {
                     resolve(connection);
                 });
-            })
-            .catch((err) => {
-                // Let's retry in 4-6 seconds
-                return new Promise<Connection>((resolve, reject) => {
-                    setTimeout(() => {
-                        Connection.createConnection(name, characterSelected).then((connection) => resolve(connection))
-                            .catch((error) => reject(error));
-                    }, 4000 + Math.floor(Math.random() * 2000) );
+
+                connection.onConnectError((error: object) => {
+                    console.log('An error occurred while connecting to socket server. Retrying');
+                    reject(error);
+                });
+
+                connection.socket.emit(EventMessage.SET_PLAYER_DETAILS, {
+                    name: name,
+                    character: characterSelected
+                } as SetPlayerDetailsMessage, (id: string) => {
+                    connection.userId = id;
                 });
             });
+        } catch (err) {
+            // Let's retry in 4-6 seconds
+            return new Promise<Connection>((resolve, reject) => {
+                setTimeout(() => {
+                    Connection.createConnection(name, characterSelected).then((connection) => resolve(connection))
+                        .catch((error) => reject(error));
+                }, 4000 + Math.floor(Math.random() * 2000) );
+            });
+        }
     }
 
     public closeConnection(): void {
@@ -182,6 +184,10 @@ export class Connection implements Connection {
 
     public onGroupDeleted(callback: (groupId: string) => void): void {
         this.socket.on(EventMessage.GROUP_DELETE, callback)
+    }
+
+    public onConnect(callback: () => void): void {
+        this.socket.on(EventMessage.CONNECT, callback)
     }
 
     public onConnectError(callback: (error: object) => void): void {
