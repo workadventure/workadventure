@@ -7,13 +7,13 @@ export class Group {
     static readonly MAX_PER_GROUP = 4;
 
     private id: string;
-    private users: UserInterface[];
+    private users: Set<UserInterface>;
     private connectCallback: ConnectCallback;
     private disconnectCallback: DisconnectCallback;
 
 
     constructor(users: UserInterface[], connectCallback: ConnectCallback, disconnectCallback: DisconnectCallback) {
-        this.users = [];
+        this.users = new Set<UserInterface>();
         this.connectCallback = connectCallback;
         this.disconnectCallback = disconnectCallback;
         this.id = uuid();
@@ -24,7 +24,7 @@ export class Group {
     }
 
     getUsers(): UserInterface[] {
-        return this.users;
+        return Array.from(this.users.values());
     }
 
     getId() : string{
@@ -42,8 +42,8 @@ export class Group {
             x += user.position.x;
             y += user.position.y;
         });
-        x /= this.users.length;
-        y /= this.users.length;
+        x /= this.users.size;
+        y /= this.users.size;
         return {
             x,
             y
@@ -51,45 +51,27 @@ export class Group {
     }
 
     isFull(): boolean {
-        return this.users.length >= Group.MAX_PER_GROUP;
+        return this.users.size >= Group.MAX_PER_GROUP;
     }
 
     isEmpty(): boolean {
-        return this.users.length <= 1;
+        return this.users.size <= 1;
     }
 
     join(user: UserInterface): void
     {
         // Broadcast on the right event
         this.connectCallback(user.id, this);
-        this.users.push(user);
+        this.users.add(user);
         user.group = this;
     }
 
-    isPartOfGroup(user: UserInterface): boolean
-    {
-        return this.users.includes(user);
-    }
-
-    /*removeFromGroup(users: UserInterface[]): void
-    {
-        for(let i = 0; i < users.length; i++){
-            let user = users[i];
-            const index = this.users.indexOf(user, 0);
-            if (index > -1) {
-                this.users.splice(index, 1);
-            }
-        }
-    }*/
-
     leave(user: UserInterface): void
     {
-        const index = this.users.indexOf(user, 0);
-        if (index === -1) {
-            throw new Error("Could not find user in the group");
+        const success = this.users.delete(user);
+        if (success === false) {
+            throw new Error("Could not find user "+user.id+" in the group "+this.id);
         }
-
-        this.users.splice(index, 1);
         user.group = undefined;
 
         // Broadcast on the right event
@@ -102,8 +84,8 @@ export class Group {
      */
     destroy(): void
     {
-        this.users.forEach((user: UserInterface) => {
+        for (const user of this.users) {
             this.leave(user);
-        })
+        }
     }
 }
