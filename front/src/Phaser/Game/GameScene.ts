@@ -247,7 +247,7 @@ export class GameScene extends Phaser.Scene {
         //initalise map
         this.Map = this.add.tilemap(this.MapKey);
         this.mapFile.tilesets.forEach((tileset: ITiledTileSet) => {
-            this.Terrains.push(this.Map.addTilesetImage(tileset.name, tileset.name));
+            this.Terrains.push(this.Map.addTilesetImage(tileset.name, tileset.name, tileset.tilewidth, tileset.tileheight, tileset.margin, tileset.spacing/*, tileset.firstgid*/));
         });
 
         //permit to set bound collision
