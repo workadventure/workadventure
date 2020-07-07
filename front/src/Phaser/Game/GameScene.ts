@@ -229,7 +229,7 @@ export class GameScene extends Phaser.Scene {
                 return;
             }
             //TODO strategy to add access token
-            this.load.image(tileset.name, `${url}/${tileset.image}`);
+            this.load.image(`${url}/${tileset.image}`, `${url}/${tileset.image}`);
         })
     }
 
@@ -246,8 +246,9 @@ export class GameScene extends Phaser.Scene {
     create(): void {
         //initalise map
         this.Map = this.add.tilemap(this.MapKey);
+        const mapDirUrl = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf('/'));
         this.mapFile.tilesets.forEach((tileset: ITiledTileSet) => {
-            this.Terrains.push(this.Map.addTilesetImage(tileset.name, tileset.name, tileset.tilewidth, tileset.tileheight, tileset.margin, tileset.spacing/*, tileset.firstgid*/));
+            this.Terrains.push(this.Map.addTilesetImage(tileset.name, `${mapDirUrl}/${tileset.image}`, tileset.tilewidth, tileset.tileheight, tileset.margin, tileset.spacing/*, tileset.firstgid*/));
         });
 
         //permit to set bound collision
