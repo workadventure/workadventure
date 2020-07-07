@@ -26,6 +26,8 @@ import GameObject = Phaser.GameObjects.GameObject;
 import { Queue } from 'queue-typescript';
 import {SimplePeer} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
+import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
+import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
 
 
 export enum Textures {
@@ -130,6 +132,11 @@ export class GameScene extends Phaser.Scene {
 
     //hook preload scene
     preload(): void {
+        this.load.on(FILE_LOAD_ERROR, (file: {src: string}) => {
+            this.scene.start(FourOFourSceneName, {
+                file: file.src
+            });
+        });
         this.load.on('filecomplete-tilemapJSON-'+this.MapKey, (key: string, type: string, data: unknown) => {
             this.onMapLoad(data);
         });
