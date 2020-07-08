@@ -2,7 +2,7 @@ import {PlayerAnimationNames} from "./Animation";
 import {GameScene, Textures} from "../Game/GameScene";
 import {MessageUserPositionInterface, PointInterface} from "../../Connection";
 import {ActiveEventList, UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
-import {Character} from "../Entity/Character";
+import {Character} from "../Entity/character_animation";
 
 
 export const hasMovedEventName = "hasMoved";

@@ -7,7 +7,7 @@ import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Ch
 import {GameSceneInitInterface} from "../Game/GameScene";
 import {StartMapInterface} from "../../Connection";
 import {EnableCameraSceneName} from "./EnableCameraScene";
-
+import {CustomizeSceneName} from "./CustomizeScene";
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
 enum LoginTextures {
@@ -24,6 +24,7 @@ export class SelectCharacterScene extends Phaser.Scene {
     private readonly nbCharactersPerRow = 4;
     private textField: TextField;
     private pressReturnField: TextField;
+    private pressSpaceField: TextField;
     private logo: Image;
     private loginName: string;
 
@@ -64,6 +65,13 @@ export class SelectCharacterScene extends Phaser.Scene {
 
         this.pressReturnField = new TextField(this, this.game.renderer.width / 2, 230, 'Press enter to start');
         this.pressReturnField.setOrigin(0.5).setCenterAlign()
+
+        this.pressSpaceField = new TextField(this, this.game.renderer.width / 2, 210, 'or create your own.. [click SPACE]')
+        this.pressSpaceField.setOrigin(0.5).setCenterAlign()
+
+        this.input.keyboard.on('keyup-SPACE', () =>{
+            return this.customize();
+            });
 
         const rectangleXStart = this.game.renderer.width / 2 - (this.nbCharactersPerRow / 2) * 32 + 16;
 
@@ -115,6 +123,10 @@ export class SelectCharacterScene extends Phaser.Scene {
 
     update(time: number, delta: number): void {
         this.pressReturnField.setVisible(!!(Math.floor(time / 500) % 2));
+    }
+
+    private customize():void {
+        this.scene.start(CustomizeSceneName);
     }
 
     private login(name: string): void {

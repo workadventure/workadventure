@@ -1,5 +1,5 @@
 import Scene = Phaser.Scene;
-import {Character} from "./Character";
+import {Character} from "./character_animation";
 
 export class SpeechBubble {
     private bubble: Phaser.GameObjects.Graphics;

@@ -39,14 +39,6 @@ export class LoginScene extends Phaser.Scene {
         // Note: arcade.png from the Phaser 3 examples at: https://github.com/photonstorm/phaser3-examples/tree/master/public/assets/fonts/bitmap
         this.load.bitmapFont(LoginTextures.mainFont, 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
         cypressAsserter.preloadFinished();
-        //add player png
-        PLAYER_RESOURCES.forEach((playerResource: PlayerResourceDescriptionInterface) => {
-            this.load.spritesheet(
-                playerResource.name,
-                playerResource.img,
-                {frameWidth: 32, frameHeight: 32}
-            );
-        });
     }
 
     create() {
@@ -63,6 +55,7 @@ export class LoginScene extends Phaser.Scene {
 
         this.pressReturnField = new TextField(this, this.game.renderer.width / 2, 130, 'Press enter to start');
         this.pressReturnField.setOrigin(0.5).setCenterAlign()
+
 
         this.logo = new Image(this, this.game.renderer.width - 30, this.game.renderer.height - 20, LoginTextures.icon);
         this.add.existing(this.logo);

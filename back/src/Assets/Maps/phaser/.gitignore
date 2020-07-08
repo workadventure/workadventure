@@ -1,0 +1,20 @@
+# System and IDE files
+Thumbs.db
+.DS_Store
+.idea
+.vscode
+*.suo
+*.sublime-project
+*.sublime-workspace
+
+# Vendors
+node_modules/
+
+# Build
+/npm-debug.log
+build/
+out/
+scripts/tsgen/test/bin/
+scripts/tsgen/test/output.txt
+
+plugins/spine/spine-runtimes/
