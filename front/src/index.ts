@@ -8,6 +8,8 @@ import {gameManager} from "./Phaser/Game/GameManager";
 import {SelectCharacterScene} from "./Phaser/Login/SelectCharacterScene";
 import {EnableCameraScene} from "./Phaser/Login/EnableCameraScene";
 import {FourOFourScene} from "./Phaser/Reconnecting/FourOFourScene";
+import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
+import {OutlinePipeline} from "./Phaser/Shaders/OutlinePipeline";
 
 const config: GameConfig = {
     title: "Office game",
@@ -20,6 +22,13 @@ const config: GameConfig = {
         default: "arcade",
         arcade: {
             debug: DEBUG_MODE
+        }
+    },
+    callbacks: {
+        postBoot: game => {
+            // FIXME: we should fore WebGL in the config.
+            let renderer = game.renderer as WebGLRenderer;
+            renderer.addPipeline(OutlinePipeline.KEY, new OutlinePipeline(game));
         }
     }
 };

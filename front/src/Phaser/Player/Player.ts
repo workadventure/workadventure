@@ -3,6 +3,7 @@ import {GameScene, Textures} from "../Game/GameScene";
 import {MessageUserPositionInterface, PointInterface} from "../../Connection";
 import {ActiveEventList, UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
 import {Character} from "../Entity/Character";
+import {OutlinePipeline} from "../Shaders/OutlinePipeline";
 
 
 export const hasMovedEventName = "hasMoved";
@@ -32,6 +33,10 @@ export class Player extends Character implements CurrentGamerInterface {
 
         //the current player model should be push away by other players to prevent conflict
         this.setImmovable(false);
+
+        this.setPipeline(OutlinePipeline.KEY);
+        this.pipeline.setFloat2('uTextureSize',
+            this.texture.getSourceImage().width, this.texture.getSourceImage().height);
     }
 
     moveUser(delta: number): void {
