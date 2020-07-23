@@ -50,7 +50,7 @@ export class OutlinePipeline extends Phaser.Renderer.WebGL.Pipelines.TextureTint
 
           if (texture.a == 0.0 && max(max(upAlpha, downAlpha), max(leftAlpha, rightAlpha)) == 1.0) 
           {
-            color = vec4(1.0, 1.0, 1.0, 1.0);
+            color = vec4(1.0, 1.0, 0.0, 1.0);
           }
 
           gl_FragColor = color;

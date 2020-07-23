@@ -33,10 +33,6 @@ export class Player extends Character implements CurrentGamerInterface {
 
         //the current player model should be push away by other players to prevent conflict
         this.setImmovable(false);
-
-        this.setPipeline(OutlinePipeline.KEY);
-        this.pipeline.setFloat2('uTextureSize',
-            this.texture.getSourceImage().width, this.texture.getSourceImage().height);
     }
 
     moveUser(delta: number): void {

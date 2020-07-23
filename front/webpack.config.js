@@ -33,6 +33,9 @@ module.exports = {
         path: path.resolve(__dirname, 'dist'),
         publicPath: '/'
     },
+    externals:[
+        require('webpack-require-http')
+    ],
     plugins: [
         new HtmlWebpackPlugin(
             {

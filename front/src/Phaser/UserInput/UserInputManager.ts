@@ -47,6 +47,7 @@ export class UserInputManager {
             {event: UserInputEvent.SpeedUp, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT) },
 
             {event: UserInputEvent.Interact, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E) },
+            {event: UserInputEvent.Interact, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE) },
             {event: UserInputEvent.Shout, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F) },
         ];
     }

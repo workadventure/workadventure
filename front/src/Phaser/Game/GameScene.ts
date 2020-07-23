@@ -10,7 +10,7 @@ import { DEBUG_MODE, ZOOM_LEVEL, POSITION_DELAY } from "../../Enum/EnvironmentVa
 import {
     ITiledMap,
     ITiledMapLayer,
-    ITiledMapLayerProperty,
+    ITiledMapLayerProperty, ITiledMapObject,
     ITiledTileSet
 } from "../Map/ITiledMap";
 import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Character";
@@ -28,6 +28,8 @@ import {SimplePeer} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
+import {ItemFactoryInterface} from "../Items/ItemFactoryInterface";
+import {ActionableItem} from "../Items/ActionableItem";
 
 
 export enum Textures {
@@ -89,6 +91,9 @@ export class GameScene extends Phaser.Scene {
     private connection: Connection;
     private simplePeer : SimplePeer;
     private connectionPromise: Promise<Connection>
+    // A promise that will resolve when the "create" method is called (signaling loading is ended)
+    private createPromise: Promise<void>;
+    private createPromiseResolve: (value?: void | PromiseLike<void>) => void;
 
     MapKey: string;
     MapUrlFile: string;
@@ -106,6 +111,9 @@ export class GameScene extends Phaser.Scene {
 
     private PositionNextScene: Array<Array<{ key: string, hash: string }>> = new Array<Array<{ key: string, hash: string }>>();
     private startLayerName: string|undefined;
+    private actionableItems: Array<ActionableItem> = new Array<ActionableItem>();
+    // The item that can be selected by pressing the space key.
+    private outlinedItem: ActionableItem|null = null;
 
     static createFromUrl(mapUrlFile: string, instance: string, key: string|null = null): GameScene {
         const mapKey = GameScene.getMapKeyByUrl(mapUrlFile);
@@ -128,6 +136,10 @@ export class GameScene extends Phaser.Scene {
         this.MapKey = MapKey;
         this.MapUrlFile = MapUrlFile;
         this.RoomId = this.instance + '__' + MapKey;
+
+        this.createPromise = new Promise<void>((resolve, reject): void => {
+            this.createPromiseResolve = resolve;
+        })
     }
 
     //hook preload scene
@@ -225,7 +237,7 @@ export class GameScene extends Phaser.Scene {
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private onMapLoad(data: any): void {
+    private async onMapLoad(data: any): Promise<void> {
         // Triggered when the map is loaded
         // Load tiles attached to the map recursively
         this.mapFile = data.data;
@@ -238,6 +250,85 @@ export class GameScene extends Phaser.Scene {
             //TODO strategy to add access token
             this.load.image(`${url}/${tileset.image}`, `${url}/${tileset.image}`);
         })
+
+        // Scan the object layers for objects to load and load them.
+        let objects = new Map<string, ITiledMapObject[]>();
+
+        for (let layer of this.mapFile.layers) {
+            if (layer.type === 'objectgroup') {
+                for (let object of layer.objects) {
+                    let objectsOfType: ITiledMapObject[]|undefined;
+                    if (!objects.has(object.type)) {
+                        objectsOfType = new Array<ITiledMapObject>();
+                    } else {
+                        objectsOfType = objects.get(object.type);
+                        if (objectsOfType === undefined) {
+                            throw new Error('Unexpected object type not found');
+                        }
+                    }
+                    objectsOfType.push(object);
+                    objects.set(object.type, objectsOfType);
+                }
+            }
+        }
+
+        for (let [itemType, objectsOfType] of objects) {
+            // FIXME: we would ideally need for the loader to WAIT for the import to be performed, which means writing our own loader plugin.
+
+            let itemFactory: ItemFactoryInterface;
+
+            switch (itemType) {
+                case 'computer':
+                    let module = await import('../Items/Computer/computer');
+                    itemFactory = module.default as ItemFactoryInterface;
+                    break;
+                default:
+                    throw new Error('Unsupported object type: "'+ itemType +'"');
+            }
+
+            itemFactory.preload(this.load);
+            this.load.start(); // Let's manually start the loader because the import might be over AFTER the loading ends.
+
+            this.load.on('complete', () => {
+                // FIXME: the factory might fail because the resources might not be loaded yet...
+                // We would need to add a loader ended event in addition to the createPromise
+                this.createPromise.then(() => {
+                    itemFactory.create(this);
+
+                    for (let object of objectsOfType) {
+                        // TODO: we should pass here a factory to create sprites (maybe?)
+                        let actionableItem = itemFactory.factory(this, object);
+                        this.actionableItems.push(actionableItem);
+                    }
+                });
+            });
+
+            // import(/* webpackIgnore: true */ scriptUrl).then(result => {
+            //
+            //     result.default.preload(this.load);
+            //
+            //     this.load.start(); // Let's manually start the loader because the import might be over AFTER the loading ends.
+            //     this.load.on('complete', () => {
+            //         // FIXME: the factory might fail because the resources might not be loaded yet...
+            //         // We would need to add a loader ended event in addition to the createPromise
+            //         this.createPromise.then(() => {
+            //             result.default.create(this);
+            //
+            //             for (let object of objectsOfType) {
+            //                 // TODO: we should pass here a factory to create sprites (maybe?)
+            //                 let objectSprite = result.default.factory(this, object);
+            //             }
+            //         });
+            //     });
+            // });
+        }
+
+        // TEST: let's load a module dynamically!
+        /*let foo = "http://maps.workadventure.localhost/computer.js";
+        import(/* webpackIgnore: true * / foo).then(result => {
+            console.log(result);
+
+        });*/
     }
 
     //hook initialisation
@@ -361,6 +452,8 @@ export class GameScene extends Phaser.Scene {
                 }
             }, 500);
         }
+
+        this.createPromiseResolve();
     }
 
     private getExitSceneUrl(layer: ITiledMapLayer): string|undefined {
@@ -526,6 +619,7 @@ export class GameScene extends Phaser.Scene {
 
             //listen event to share position of user
             this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this))
+            this.CurrentPlayer.on(hasMovedEventName, this.outlineItem.bind(this))
         });
     }
 
@@ -553,6 +647,49 @@ export class GameScene extends Phaser.Scene {
         }
 
         // Otherwise, do nothing.
+    }
+
+    /**
+     * Finds the correct item to outline and outline it (if there is an item to be outlined)
+     * @param event
+     */
+    private outlineItem(event: HasMovedEvent): void {
+        let x = event.x;
+        let y = event.y;
+        switch (event.direction) {
+            case PlayerAnimationNames.WalkUp:
+                y -= 32;
+                break;
+            case PlayerAnimationNames.WalkDown:
+                y += 32;
+                break;
+            case PlayerAnimationNames.WalkLeft:
+                x -= 32;
+                break;
+            case PlayerAnimationNames.WalkRight:
+                x += 32;
+                break;
+            default:
+                throw new Error('Unexpected direction "' + event.direction + '"');
+        }
+
+        let shortestDistance: number = Infinity;
+        let selectedItem: ActionableItem|null = null;
+        for (let item of this.actionableItems) {
+            let distance = item.actionableDistance(x, y);
+            if (distance !== null && distance < shortestDistance) {
+                shortestDistance = distance;
+                selectedItem = item;
+            }
+        }
+
+        if (this.outlinedItem === selectedItem) {
+            return;
+        }
+
+        this.outlinedItem?.notSelectable();
+        this.outlinedItem = selectedItem;
+        this.outlinedItem?.selectable();
     }
 
     private doPushPlayerPosition(event: HasMovedEvent): void {
