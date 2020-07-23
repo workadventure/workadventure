@@ -79,6 +79,30 @@ jobs:
           tags: ${{ env.GITHUB_REF_SLUG }}
           add_git_labels: true
 
+  build-maps:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+
+      # Create a slugified value of the branch
+      - uses: rlespinasse/github-slug-action@master
+
+      - name: "Build and push front image"
+        uses: docker/build-push-action@v1
+        with:
+          dockerfile: maps/Dockerfile
+          path: maps/
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: thecodingmachine/workadventure-maps
+          tags: ${{ env.GITHUB_REF_SLUG }}
+          add_git_labels: true
+
   deeploy:
     needs:
       - build-front

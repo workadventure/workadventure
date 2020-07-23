@@ -42,7 +42,7 @@ class MySprite extends Sprite {
 
 export default {
     preload: (loader: Phaser.Loader.LoaderPlugin) => {
-        loader.atlas('computer', 'http://maps.workadventure.localhost/computer/computer.png', 'http://maps.workadventure.localhost/computer/computer_atlas.json');
+        loader.atlas('computer', '/resources/items/computer/computer.png', '/resources/items/computer/computer_atlas.json');
     },
     create: (scene: Scene) => {
 

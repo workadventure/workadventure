@@ -8,7 +8,7 @@ import {ActionableItem} from "../ActionableItem";
 
 export default {
     preload: (loader: Phaser.Loader.LoaderPlugin): void => {
-        loader.atlas('computer', 'http://maps.workadventure.localhost/computer/computer.png', 'http://maps.workadventure.localhost/computer/computer_atlas.json');
+        loader.atlas('computer', '/resources/items/computer/computer.png', '/resources/items/computer/computer_atlas.json');
     },
     create: (scene: GameScene): void => {
 

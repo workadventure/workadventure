@@ -44,7 +44,7 @@ services:
       DEBUG_MODE: "$DEBUG_MODE"
       HOST: "0.0.0.0"
       NODE_ENV: development
-      APACHE_DOCUMENT_ROOT: dist/
+      #APACHE_DOCUMENT_ROOT: dist/
       #APACHE_EXTENSIONS: headers
       #APACHE_EXTENSION_HEADERS: 1
       STARTUP_COMMAND_0: sudo a2enmod headers
