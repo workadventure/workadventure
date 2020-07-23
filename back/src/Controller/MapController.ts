@@ -19,7 +19,7 @@ export class MapController {
     // Returns a map mapping map name to file name of the map
     getStartMap() {
         this.App.get("/start-map", (req: Request, res: Response) => {
-            let url = req.headers.host?.replace('api.', 'maps.') + URL_ROOM_STARTED;
+            const url = req.headers.host?.replace('api.', 'maps.') + URL_ROOM_STARTED;
             res.status(OK).send({
                 mapUrlStart: url,
                 startInstance: "global"

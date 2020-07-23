@@ -18,7 +18,7 @@ export class ActionableItem {
      * OR null if we are out of range.
      */
     public actionableDistance(x: number, y: number): number|null {
-        let distanceSquared = (x - this.sprite.x)*(x - this.sprite.x) + (y - this.sprite.y)*(y - this.sprite.y);
+        const distanceSquared = (x - this.sprite.x)*(x - this.sprite.x) + (y - this.sprite.y)*(y - this.sprite.y);
         if (distanceSquared < this.activationRadiusSquared) {
             return distanceSquared;
         } else {

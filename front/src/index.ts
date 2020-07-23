@@ -27,7 +27,7 @@ const config: GameConfig = {
     callbacks: {
         postBoot: game => {
             // FIXME: we should fore WebGL in the config.
-            let renderer = game.renderer as WebGLRenderer;
+            const renderer = game.renderer as WebGLRenderer;
             renderer.addPipeline(OutlinePipeline.KEY, new OutlinePipeline(game));
         }
     }

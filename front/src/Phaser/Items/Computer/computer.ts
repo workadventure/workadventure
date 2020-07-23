@@ -15,7 +15,7 @@ export default {
     },
     factory: (scene: GameScene, object: ITiledMapObject): ActionableItem => {
         // Idée: ESSAYER WebPack? https://paultavares.wordpress.com/2018/07/02/webpack-how-to-generate-an-es-module-bundle/
-        let foo = new Sprite(scene, object.x, object.y, 'computer');
+        const foo = new Sprite(scene, object.x, object.y, 'computer');
         scene.add.existing(foo);
 
         return new ActionableItem(foo, 32);

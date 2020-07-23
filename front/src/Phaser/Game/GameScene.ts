@@ -252,11 +252,11 @@ export class GameScene extends Phaser.Scene {
         })
 
         // Scan the object layers for objects to load and load them.
-        let objects = new Map<string, ITiledMapObject[]>();
+        const objects = new Map<string, ITiledMapObject[]>();
 
-        for (let layer of this.mapFile.layers) {
+        for (const layer of this.mapFile.layers) {
             if (layer.type === 'objectgroup') {
-                for (let object of layer.objects) {
+                for (const object of layer.objects) {
                     let objectsOfType: ITiledMapObject[]|undefined;
                     if (!objects.has(object.type)) {
                         objectsOfType = new Array<ITiledMapObject>();
@@ -272,16 +272,17 @@ export class GameScene extends Phaser.Scene {
             }
         }
 
-        for (let [itemType, objectsOfType] of objects) {
+        for (const [itemType, objectsOfType] of objects) {
             // FIXME: we would ideally need for the loader to WAIT for the import to be performed, which means writing our own loader plugin.
 
             let itemFactory: ItemFactoryInterface;
 
             switch (itemType) {
-                case 'computer':
-                    let module = await import('../Items/Computer/computer');
-                    itemFactory = module.default as ItemFactoryInterface;
+                case 'computer': {
+                    const module = await import('../Items/Computer/computer');
+                    itemFactory = module.default;
                     break;
+                }
                 default:
                     throw new Error('Unsupported object type: "'+ itemType +'"');
             }
@@ -295,9 +296,9 @@ export class GameScene extends Phaser.Scene {
                 this.createPromise.then(() => {
                     itemFactory.create(this);
 
-                    for (let object of objectsOfType) {
+                    for (const object of objectsOfType) {
                         // TODO: we should pass here a factory to create sprites (maybe?)
-                        let actionableItem = itemFactory.factory(this, object);
+                        const actionableItem = itemFactory.factory(this, object);
                         this.actionableItems.push(actionableItem);
                     }
                 });
@@ -675,8 +676,8 @@ export class GameScene extends Phaser.Scene {
 
         let shortestDistance: number = Infinity;
         let selectedItem: ActionableItem|null = null;
-        for (let item of this.actionableItems) {
-            let distance = item.actionableDistance(x, y);
+        for (const item of this.actionableItems) {
+            const distance = item.actionableDistance(x, y);
             if (distance !== null && distance < shortestDistance) {
                 shortestDistance = distance;
                 selectedItem = item;
