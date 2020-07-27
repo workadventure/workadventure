@@ -13,9 +13,8 @@ export interface CurrentGamerInterface extends Character{
 }
 
 export class Player extends Character implements CurrentGamerInterface {
-    userInputManager: UserInputManager;
-    previousDirection: string;
-    wasMoving: boolean;
+    private previousDirection: string;
+    private wasMoving: boolean;
 
     constructor(
         Scene: GameScene,
@@ -24,12 +23,10 @@ export class Player extends Character implements CurrentGamerInterface {
         name: string,
         PlayerTexture: string,
         direction: string,
-        moving: boolean
+        moving: boolean,
+        private userInputManager: UserInputManager
     ) {
         super(Scene, x, y, PlayerTexture, name, direction, moving, 1);
-
-        //create input to move
-        this.userInputManager = new UserInputManager(Scene);
 
         //the current player model should be push away by other players to prevent conflict
         this.setImmovable(false);

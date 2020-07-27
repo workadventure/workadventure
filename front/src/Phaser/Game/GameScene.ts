@@ -3,7 +3,7 @@ import {
     Connection,
     GroupCreatedUpdatedMessageInterface, MessageUserJoined,
     MessageUserMovedInterface,
-    MessageUserPositionInterface, PointInterface, PositionInterface
+    MessageUserPositionInterface, PointInterface, PositionInterface, RoomJoinedMessageInterface
 } from "../../Connection";
 import {CurrentGamerInterface, hasMovedEventName, Player} from "../Player/Player";
 import { DEBUG_MODE, ZOOM_LEVEL, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
@@ -30,6 +30,7 @@ import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
 import {ItemFactoryInterface} from "../Items/ItemFactoryInterface";
 import {ActionableItem} from "../Items/ActionableItem";
+import {UserInputManager} from "../UserInput/UserInputManager";
 
 
 export enum Textures {
@@ -91,6 +92,8 @@ export class GameScene extends Phaser.Scene {
     private connection: Connection;
     private simplePeer : SimplePeer;
     private connectionPromise: Promise<Connection>
+    private connectionAnswerPromise: Promise<RoomJoinedMessageInterface>;
+    private connectionAnswerPromiseResolve: (value?: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>) => void;
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
     private createPromise: Promise<void>;
     private createPromiseResolve: (value?: void | PromiseLike<void>) => void;
@@ -111,9 +114,10 @@ export class GameScene extends Phaser.Scene {
 
     private PositionNextScene: Array<Array<{ key: string, hash: string }>> = new Array<Array<{ key: string, hash: string }>>();
     private startLayerName: string|undefined;
-    private actionableItems: Array<ActionableItem> = new Array<ActionableItem>();
+    private actionableItems: Map<number, ActionableItem> = new Map<number, ActionableItem>();
     // The item that can be selected by pressing the space key.
     private outlinedItem: ActionableItem|null = null;
+    private userInputManager: UserInputManager;
 
     static createFromUrl(mapUrlFile: string, instance: string, key: string|null = null): GameScene {
         const mapKey = GameScene.getMapKeyByUrl(mapUrlFile);
@@ -139,6 +143,9 @@ export class GameScene extends Phaser.Scene {
 
         this.createPromise = new Promise<void>((resolve, reject): void => {
             this.createPromiseResolve = resolve;
+        })
+        this.connectionAnswerPromise = new Promise<RoomJoinedMessageInterface>((resolve, reject): void => {
+            this.connectionAnswerPromiseResolve = resolve;
         })
     }
 
@@ -225,6 +232,15 @@ export class GameScene extends Phaser.Scene {
                 this.scene.remove(this.scene.key);
             })
 
+            connection.onActionableEvent((message => {
+                const item = this.actionableItems.get(message.itemId);
+                if (item === undefined) {
+                    console.warn('Received an event about object "'+message.itemId+'" but cannot find this item on the map.');
+                    return;
+                }
+                item.fire(message.event, message.state, message.parameters);
+            }));
+
             // When connection is performed, let's connect SimplePeer
             this.simplePeer = new SimplePeer(this.connection);
 
@@ -293,13 +309,19 @@ export class GameScene extends Phaser.Scene {
             this.load.on('complete', () => {
                 // FIXME: the factory might fail because the resources might not be loaded yet...
                 // We would need to add a loader ended event in addition to the createPromise
-                this.createPromise.then(() => {
+                this.createPromise.then(async () => {
                     itemFactory.create(this);
+
+                    const roomJoinedAnswer = await this.connectionAnswerPromise;
 
                     for (const object of objectsOfType) {
                         // TODO: we should pass here a factory to create sprites (maybe?)
-                        const actionableItem = itemFactory.factory(this, object);
-                        this.actionableItems.push(actionableItem);
+
+                        // Do we have a state for this object?
+                        const state = roomJoinedAnswer.items[object.id];
+
+                        const actionableItem = itemFactory.factory(this, object, state);
+                        this.actionableItems.set(actionableItem.getId(), actionableItem);
                     }
                 });
             });
@@ -414,12 +436,14 @@ export class GameScene extends Phaser.Scene {
         //initialise list of other player
         this.MapPlayers = this.physics.add.group({ immovable: true });
 
+        //create input to move
+        this.userInputManager = new UserInputManager(this);
+
         //notify game manager can to create currentUser in map
         this.createCurrentPlayer();
 
         //initialise camera
         this.initCamera();
-
 
         // Let's generate the circle for the group delimiter
         const circleElement = Object.values(this.textures.list).find((object: Texture) => object.key === 'circleSprite');
@@ -455,6 +479,11 @@ export class GameScene extends Phaser.Scene {
         }
 
         this.createPromiseResolve();
+
+        // TODO: use inputmanager instead
+        this.input.keyboard.on('keyup-SPACE', () => {
+            this.outlinedItem?.activate();
+        });
     }
 
     private getExitSceneUrl(layer: ITiledMapLayer): string|undefined {
@@ -605,7 +634,8 @@ export class GameScene extends Phaser.Scene {
             this.GameManager.getPlayerName(),
             this.GameManager.getCharacterSelected(),
             PlayerAnimationNames.WalkDown,
-            false
+            false,
+            this.userInputManager
         );
 
         //create collision
@@ -614,8 +644,9 @@ export class GameScene extends Phaser.Scene {
 
         //join room
         this.connectionPromise.then((connection: Connection) => {
-            connection.joinARoom(this.RoomId, this.startX, this.startY, PlayerAnimationNames.WalkDown, false).then((userPositions: MessageUserPositionInterface[]) => {
-                this.initUsersPosition(userPositions);
+            connection.joinARoom(this.RoomId, this.startX, this.startY, PlayerAnimationNames.WalkDown, false).then((roomJoinedMessage: RoomJoinedMessageInterface) => {
+                this.initUsersPosition(roomJoinedMessage.users);
+                this.connectionAnswerPromiseResolve(roomJoinedMessage);
             });
 
             //listen event to share position of user
@@ -676,7 +707,7 @@ export class GameScene extends Phaser.Scene {
 
         let shortestDistance: number = Infinity;
         let selectedItem: ActionableItem|null = null;
-        for (const item of this.actionableItems) {
+        for (const item of this.actionableItems.values()) {
             const distance = item.actionableDistance(x, y);
             if (distance !== null && distance < shortestDistance) {
                 shortestDistance = distance;
@@ -766,10 +797,7 @@ export class GameScene extends Phaser.Scene {
         }
     }
 
-    /**
-     *
-     */
-    checkToExit(): {key: string, hash: string} | null  {
+    private checkToExit(): {key: string, hash: string} | null  {
         const x = Math.floor(this.CurrentPlayer.x / 32);
         const y = Math.floor(this.CurrentPlayer.y / 32);
 
@@ -946,5 +974,17 @@ export class GameScene extends Phaser.Scene {
         const startPos = mapUrlStart.indexOf('://')+3;
         const endPos = mapUrlStart.indexOf(".json");
         return mapUrlStart.substring(startPos, endPos);
+    }
+
+    /**
+     * Sends to the server an event emitted by one of the ActionableItems.
+     *
+     * @param itemId
+     * @param eventName
+     * @param state
+     * @param parameters
+     */
+    emitActionableEvent(itemId: number, eventName: string, state: unknown, parameters: unknown) {
+        this.connection.emitActionableEvent(itemId, eventName, state, parameters);
     }
 }

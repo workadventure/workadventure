@@ -27,6 +27,8 @@ export class World {
     private readonly groupUpdatedCallback: GroupUpdatedCallback;
     private readonly groupDeletedCallback: GroupDeletedCallback;
 
+    private itemsState: Map<number, unknown> = new Map<number, unknown>();
+
     constructor(connectCallback: ConnectCallback,
                 disconnectCallback: DisconnectCallback,
                 minDistance: number,
@@ -225,6 +227,14 @@ export class World {
     public static computeDistanceBetweenPositions(position1: PositionInterface, position2: PositionInterface): number
     {
         return Math.sqrt(Math.pow(position2.x - position1.x, 2) + Math.pow(position2.y - position1.y, 2));
+    }
+
+    public setItemState(itemId: number, state: unknown) {
+        this.itemsState.set(itemId, state);
+    }
+
+    public getItemsState(): Map<number, unknown> {
+        return this.itemsState;
     }
 
     /*getDistancesBetweenGroupUsers(group: Group): Distance[]

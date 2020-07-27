@@ -6,5 +6,5 @@ import {ActionableItem} from "./ActionableItem";
 export interface ItemFactoryInterface {
     preload: (loader: LoaderPlugin) => void;
     create: (scene: GameScene) => void;
-    factory: (scene: GameScene, object: ITiledMapObject) => ActionableItem;
+    factory: (scene: GameScene, object: ITiledMapObject, state: unknown) => ActionableItem;
 }

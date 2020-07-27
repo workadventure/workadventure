@@ -19,6 +19,7 @@ import {isJoinRoomMessageInterface} from "../Model/Websocket/JoinRoomMessage";
 import {isPointInterface, PointInterface} from "../Model/Websocket/PointInterface";
 import {isWebRtcSignalMessageInterface} from "../Model/Websocket/WebRtcSignalMessage";
 import {UserInGroupInterface} from "../Model/Websocket/UserInGroupInterface";
+import {isItemEventMessageInterface} from "../Model/Websocket/ItemEventMessage";
 
 enum SockerIoEvent {
     CONNECTION = "connection",
@@ -33,7 +34,8 @@ enum SockerIoEvent {
     MESSAGE_ERROR = "message-error",
     GROUP_CREATE_UPDATE = "group-create-update",
     GROUP_DELETE = "group-delete",
-    SET_PLAYER_DETAILS = "set-player-details"
+    SET_PLAYER_DETAILS = "set-player-details",
+    ITEM_EVENT = 'item-event',
 }
 
 export class IoSocketController {
@@ -190,7 +192,16 @@ export class IoSocketController {
                         }
                         return new MessageUserPosition(user.id, player.name, player.character, player.position);
                     }).filter((item: MessageUserPosition|null) => item !== null);
-                    answerFn(listOfUsers);
+
+                    const listOfItems: {[itemId: string]: unknown} = {};
+                    for (const [itemId, item] of world.getItemsState().entries()) {
+                        listOfItems[itemId] = item;
+                    }
+
+                    answerFn({
+                        users: listOfUsers,
+                        items: listOfItems
+                    });
                 } catch (e) {
                     console.error('An error occurred on "join_room" event');
                     console.error(e);
@@ -280,6 +291,29 @@ export class IoSocketController {
                 Client.name = playerDetails.name;
                 Client.character = playerDetails.character;
                 answerFn(Client.userId);
+            });
+
+            socket.on(SockerIoEvent.ITEM_EVENT, (itemEvent: unknown) => {
+                if (!isItemEventMessageInterface(itemEvent)) {
+                    socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid ITEM_EVENT message.'});
+                    console.warn('Invalid ITEM_EVENT message received: ', itemEvent);
+                    return;
+                }
+                try {
+                    const Client = (socket as ExSocketInterface);
+
+                    socket.to(Client.roomId).emit(SockerIoEvent.ITEM_EVENT, itemEvent);
+
+                    const world = this.Worlds.get(Client.roomId);
+                    if (!world) {
+                        console.error("Could not find world with id '", Client.roomId, "'");
+                        return;
+                    }
+                    world.setItemState(itemEvent.itemId, itemEvent.state);
+                } catch (e) {
+                    console.error('An error occurred on "item_event"');
+                    console.error(e);
+                }
             });
         });
     }

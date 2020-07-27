@@ -4,13 +4,21 @@
  */
 import Sprite = Phaser.GameObjects.Sprite;
 import {OutlinePipeline} from "../Shaders/OutlinePipeline";
+import {GameScene} from "../Game/GameScene";
+
+type EventCallback = (state: unknown, parameters: unknown) => void;
 
 export class ActionableItem {
     private readonly activationRadiusSquared : number;
     private isSelectable: boolean = false;
+    private callbacks: Map<string, Array<EventCallback>> = new Map<string, Array<EventCallback>>();
 
-    public constructor(private sprite: Sprite, private activationRadius: number) {
+    public constructor(private id: number, private sprite: Sprite, private eventHandler: GameScene, private activationRadius: number, private onActivateCallback: (item: ActionableItem) => void) {
         this.activationRadiusSquared = activationRadius * activationRadius;
+    }
+
+    public getId(): number {
+        return this.id;
     }
 
     /**
@@ -54,7 +62,31 @@ export class ActionableItem {
      * Triggered when the "space" key is pressed and the object is in range of being activated.
      */
     public activate(): void {
+        this.onActivateCallback(this);
+    }
 
+    public emit(eventName: string, state: unknown, parameters: unknown = null): void {
+        this.eventHandler.emitActionableEvent(this.id, eventName, state, parameters);
+        // Also, execute the action locally.
+        this.fire(eventName, state, parameters);
+    }
+
+    public on(eventName: string, callback: EventCallback): void {
+        let callbacksArray: Array<EventCallback>|undefined = this.callbacks.get(eventName);
+        if (callbacksArray === undefined) {
+            callbacksArray = new Array<EventCallback>();
+            this.callbacks.set(eventName, callbacksArray);
+        }
+        callbacksArray.push(callback);
+    }
+
+    public fire(eventName: string, state: unknown, parameters: unknown): void {
+        const callbacksArray = this.callbacks.get(eventName);
+        if (callbacksArray === undefined) {
+            return;
+        }
+        for (const callback of callbacksArray) {
+            callback(state, parameters);
+        }
     }
 }
-
