@@ -19,7 +19,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 
   front:
-    image: thecodingmachine/nodejs:12
+    image: thecodingmachine/nodejs:14
     environment:
       DEBUG_MODE: "$DEBUG_MODE"
       HOST: "0.0.0.0"

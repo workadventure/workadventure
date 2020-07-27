@@ -1,5 +1,5 @@
 # we are rebuilding on each deploy to cope with the API_URL environment URL
-FROM thecodingmachine/nodejs:12-apache
+FROM thecodingmachine/nodejs:14-apache
 
 COPY --chown=docker:docker . .
 RUN yarn install

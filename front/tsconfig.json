@@ -3,7 +3,7 @@
     "outDir": "./dist/",
     "sourceMap": true,
     "moduleResolution": "node",
-    "module": "ESNext",
+    "module": "CommonJS",
     "target": "ES2015",
     "downlevelIteration": true,
     "jsx": "react",
