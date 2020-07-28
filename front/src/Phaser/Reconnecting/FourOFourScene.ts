@@ -1,7 +1,6 @@
 import {TextField} from "../Components/TextField";
 import Image = Phaser.GameObjects.Image;
 import Sprite = Phaser.GameObjects.Sprite;
-import {SelectCharacterSceneInitDataInterface} from "../Login/SelectCharacterScene";
 import Text = Phaser.GameObjects.Text;
 
 export const FourOFourSceneName = "FourOFourScene";

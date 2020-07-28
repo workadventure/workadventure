@@ -15,7 +15,7 @@ const config: GameConfig = {
     width: window.innerWidth / RESOLUTION,
     height: window.innerHeight / RESOLUTION,
     parent: "game",
-    scene: [LoginScene, SelectCharacterScene, EnableCameraScene, ReconnectingScene, FourOFourScene],
+    scene: [LoginScene, SelectCharacterScene, EnableCameraScene, ReconnectingScene, FourOFourScene, CustomizeScene],
     zoom: RESOLUTION,
     physics: {
         default: "arcade",

@@ -5,6 +5,7 @@ import Rectangle = Phaser.GameObjects.Rectangle;
 import {LAYERS} from "../Entity/body_character";
 import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
+import {gameManager} from "../Game/GameManager";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -13,10 +14,6 @@ enum CustomizeTextures{
     arrowRight = "arrow_right",
     mainFont = "main_font",
     arrowUp = "arrow_up",
-}
-
-export interface CustomizeSceneInitDataInterface {
-    name: string
 }
 
 export class CustomizeScene extends Phaser.Scene {
@@ -34,8 +31,6 @@ export class CustomizeScene extends Phaser.Scene {
 
     private logo: Image;
 
-    private loginName: String;
-
     private selectedLayers: Array<number> = [0];
     private containersRow: Array<Array<Container>> = new Array<Array<Container>>();
     private activeRow = 0;
@@ -46,10 +41,6 @@ export class CustomizeScene extends Phaser.Scene {
         super({
             key: CustomizeSceneName
         });
-    }
-
-    init({name}: CustomizeSceneInitDataInterface) {
-        this.loginName = name;
     }
 
     preload() {
@@ -111,6 +102,19 @@ export class CustomizeScene extends Phaser.Scene {
 
         this.moveLayers();
         this.input.keyboard.on('keyup-ENTER', () => {
+            const layers: string[] = [];
+            let i = 0;
+            for (let layerItem of this.selectedLayers) {
+                console.log(i, layerItem, LAYERS);
+                if (layerItem !== undefined) {
+                    layers.push(LAYERS[i][layerItem].name);
+                }
+                i++;
+            }
+
+            console.log(layers);
+            gameManager.setCharacterLayers(layers);
+
             return this.scene.start(EnableCameraSceneName);
         });
 
@@ -251,10 +255,8 @@ export class CustomizeScene extends Phaser.Scene {
                const children = this.getContainerChildren(i, j);
                this.containersRow[i][j].removeAll(true);
                 this.containersRow[i][j].add(children);
-
             }
         }
-
      }
 
      private reposition() {
