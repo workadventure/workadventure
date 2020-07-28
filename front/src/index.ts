@@ -7,6 +7,7 @@ import {ReconnectingScene} from "./Phaser/Reconnecting/ReconnectingScene";
 import {gameManager} from "./Phaser/Game/GameManager";
 import {SelectCharacterScene} from "./Phaser/Login/SelectCharacterScene";
 import {EnableCameraScene} from "./Phaser/Login/EnableCameraScene";
+import {CustomizeScene} from "./Phaser/Login/CustomizeScene";
 
 const config: GameConfig = {
     title: "Office game",
