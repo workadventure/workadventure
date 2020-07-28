@@ -8,7 +8,7 @@ import {gameManager} from "./Phaser/Game/GameManager";
 import {SelectCharacterScene} from "./Phaser/Login/SelectCharacterScene";
 import {EnableCameraScene} from "./Phaser/Login/EnableCameraScene";
 import {CustomizeScene} from "./Phaser/Login/CustomizeScene";
-
+console.log(CustomizeScene);
 const config: GameConfig = {
     title: "Office game",
     width: window.innerWidth / RESOLUTION,
