@@ -1,5 +1,3 @@
-import {Character} from "./character_animation";
-
 export interface BodyResourceDescriptionInterface {
     name: string,
     img: string
