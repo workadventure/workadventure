@@ -6,7 +6,7 @@ import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
 import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Character";
 import {cypressAsserter} from "../../Cypress/CypressAsserter";
-import {SelectCharacterSceneInitDataInterface, SelectCharacterSceneName} from "./SelectCharacterScene";
+import {SelectCharacterSceneName} from "./SelectCharacterScene";
 
 //todo: put this constants in a dedicated file
 export const LoginSceneName = "LoginScene";
@@ -89,6 +89,8 @@ export class LoginScene extends Phaser.Scene {
     }
 
     private login(name: string): void {
-        this.scene.start(SelectCharacterSceneName, { name } as SelectCharacterSceneInitDataInterface);
+        gameManager.setPlayerName(name);
+
+        this.scene.start(SelectCharacterSceneName);
     }
 }
