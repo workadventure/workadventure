@@ -7,6 +7,7 @@ import {ReconnectingScene} from "./Phaser/Reconnecting/ReconnectingScene";
 import {gameManager} from "./Phaser/Game/GameManager";
 import {SelectCharacterScene} from "./Phaser/Login/SelectCharacterScene";
 import {EnableCameraScene} from "./Phaser/Login/EnableCameraScene";
+import {FourOFourScene} from "./Phaser/Reconnecting/FourOFourScene";
 import {CustomizeScene} from "./Phaser/Login/CustomizeScene";
 
 const config: GameConfig = {
@@ -14,7 +15,7 @@ const config: GameConfig = {
     width: window.innerWidth / RESOLUTION,
     height: window.innerHeight / RESOLUTION,
     parent: "game",
-    scene: [LoginScene, SelectCharacterScene, EnableCameraScene, ReconnectingScene],
+    scene: [LoginScene, SelectCharacterScene, EnableCameraScene, ReconnectingScene, FourOFourScene],
     zoom: RESOLUTION,
     physics: {
         default: "arcade",

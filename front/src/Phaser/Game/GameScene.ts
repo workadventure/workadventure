@@ -26,6 +26,8 @@ import GameObject = Phaser.GameObjects.GameObject;
 import { Queue } from 'queue-typescript';
 import {SimplePeer} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
+import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
+import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
 
 
 export enum Textures {
@@ -130,6 +132,11 @@ export class GameScene extends Phaser.Scene {
 
     //hook preload scene
     preload(): void {
+        this.load.on(FILE_LOAD_ERROR, (file: {src: string}) => {
+            this.scene.start(FourOFourSceneName, {
+                file: file.src
+            });
+        });
         this.load.on('filecomplete-tilemapJSON-'+this.MapKey, (key: string, type: string, data: unknown) => {
             this.onMapLoad(data);
         });
@@ -229,7 +236,7 @@ export class GameScene extends Phaser.Scene {
                 return;
             }
             //TODO strategy to add access token
-            this.load.image(tileset.name, `${url}/${tileset.image}`);
+            this.load.image(`${url}/${tileset.image}`, `${url}/${tileset.image}`);
         })
     }
 
@@ -246,8 +253,9 @@ export class GameScene extends Phaser.Scene {
     create(): void {
         //initalise map
         this.Map = this.add.tilemap(this.MapKey);
+        const mapDirUrl = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf('/'));
         this.mapFile.tilesets.forEach((tileset: ITiledTileSet) => {
-            this.Terrains.push(this.Map.addTilesetImage(tileset.name, tileset.name, tileset.tilewidth, tileset.tileheight, tileset.margin, tileset.spacing/*, tileset.firstgid*/));
+            this.Terrains.push(this.Map.addTilesetImage(tileset.name, `${mapDirUrl}/${tileset.image}`, tileset.tilewidth, tileset.tileheight, tileset.margin, tileset.spacing/*, tileset.firstgid*/));
         });
 
         //permit to set bound collision
