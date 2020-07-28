@@ -44,7 +44,7 @@ export class Point implements PointInterface{
 export interface MessageUserPositionInterface {
     userId: string;
     name: string;
-    character: string;
+    characterLayers: string[];
     position: PointInterface;
 }
 
@@ -56,7 +56,7 @@ export interface MessageUserMovedInterface {
 export interface MessageUserJoined {
     userId: string;
     name: string;
-    character: string;
+    characterLayers: string[];
     position: PointInterface
 }
 
@@ -109,7 +109,7 @@ export class Connection implements Connection {
         })
     }
 
-    public static createConnection(name: string, characterSelected: string): Promise<Connection> {
+    public static createConnection(name: string, characterLayersSelected: string[]): Promise<Connection> {
         return Axios.post(`${API_URL}/login`, {name: name})
             .then((res) => {
 
@@ -123,7 +123,7 @@ export class Connection implements Connection {
 
                     connection.socket.emit(EventMessage.SET_PLAYER_DETAILS, {
                         name: name,
-                        character: characterSelected
+                        characterLayers: characterLayersSelected
                     } as SetPlayerDetailsMessage, (id: string) => {
                         connection.userId = id;
                     });
@@ -135,7 +135,7 @@ export class Connection implements Connection {
                 // Let's retry in 4-6 seconds
                 return new Promise<Connection>((resolve, reject) => {
                     setTimeout(() => {
-                        Connection.createConnection(name, characterSelected).then((connection) => resolve(connection))
+                        Connection.createConnection(name, characterLayersSelected).then((connection) => resolve(connection))
                             .catch((error) => reject(error));
                     }, 4000 + Math.floor(Math.random() * 2000) );
                 });

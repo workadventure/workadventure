@@ -104,7 +104,7 @@ export class CustomizeScene extends Phaser.Scene {
         this.input.keyboard.on('keyup-ENTER', () => {
             const layers: string[] = [];
             let i = 0;
-            for (let layerItem of this.selectedLayers) {
+            for (const layerItem of this.selectedLayers) {
                 console.log(i, layerItem, LAYERS);
                 if (layerItem !== undefined) {
                     layers.push(LAYERS[i][layerItem].name);

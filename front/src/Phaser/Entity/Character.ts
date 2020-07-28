@@ -1,6 +1,8 @@
 import {PlayerAnimationNames} from "../Player/Animation";
 import {SpeechBubble} from "./SpeechBubble";
 import BitmapText = Phaser.GameObjects.BitmapText;
+import Container = Phaser.GameObjects.Container;
+import Sprite = Phaser.GameObjects.Sprite;
 
 export interface PlayerResourceDescriptionInterface {
     name: string,
@@ -38,55 +40,60 @@ interface AnimationData {
     frameEnd: number;
 }
 
-export abstract class Character extends Phaser.Physics.Arcade.Sprite {
+export abstract class Character extends Container {
     private bubble: SpeechBubble|null = null;
     private readonly playerName: BitmapText;
     public PlayerValue: string;
-    public PlayerTexture: string;
-
+    public sprites: Map<string, Sprite>;
+    private lastDirection: string = PlayerAnimationNames.WalkDown;
 
     constructor(scene: Phaser.Scene,
                 x: number,
                 y: number,
-                texture: string,
+                textures: string[],
                 name: string,
                 direction: string,
                 moving: boolean,
                 frame?: string | number
     ) {
-        super(scene, x, y, texture, frame);
+        super(scene, x, y/*, texture, frame*/);
+
+        this.sprites = new Map<string, Sprite>();
+
+        for (const texture of textures) {
+            const sprite = new Sprite(scene, 0, 0, texture, frame);
+            this.getPlayerAnimations(texture).forEach(d => {
+                this.scene.anims.create({
+                    key: d.key,
+                    frames: this.scene.anims.generateFrameNumbers(d.frameModel, {start: d.frameStart, end: d.frameEnd}),
+                    frameRate: d.frameRate,
+                    repeat: d.repeat
+                });
+            })
+            this.add(sprite);
+            this.scene.sys.updateList.add(sprite);
+            this.scene.sys.displayList.add(sprite);
+            this.sprites.set(texture, sprite);
+        }
 
         this.PlayerValue = name;
-        this.PlayerTexture = texture;
         this.playerName = new BitmapText(scene, x, y - 25, 'main_font', name, 8);
         this.playerName.setOrigin(0.5).setCenterAlign().setDepth(99999);
         scene.add.existing(this.playerName);
 
-        this.scene.sys.updateList.add(this);
-        this.scene.sys.displayList.add(this);
-        //this.setScale(2);
+        scene.add.existing(this);
+
         this.scene.physics.world.enableBody(this);
-        this.setImmovable(true);
-        this.setCollideWorldBounds(true);
-        this.setSize(16, 16); //edit the hitbox to better match the character model
-        this.setOffset(8, 16);
+        this.getBody().setImmovable(true);
+        this.getBody().setCollideWorldBounds(true);
+        this.setSize(16, 16);
+        this.getBody().setSize(16, 16); //edit the hitbox to better match the character model
+        this.getBody().setOffset(0, 8);
         this.setDepth(-1);
 
         this.scene.events.on('postupdate', this.postupdate.bind(this));
 
-        this.initAnimation();
         this.playAnimation(direction, moving);
-    }
-
-    private initAnimation(): void {
-        this.getPlayerAnimations(this.PlayerTexture).forEach(d => {
-            this.scene.anims.create({
-                key: d.key,
-                frames: this.scene.anims.generateFrameNumbers(d.frameModel, {start: d.frameStart, end: d.frameEnd}),
-                frameRate: d.frameRate,
-                repeat: d.repeat
-            });
-        })
     }
 
     private getPlayerAnimations(name: string): AnimationData[] {
@@ -122,34 +129,53 @@ export abstract class Character extends Phaser.Physics.Arcade.Sprite {
     }
 
     protected playAnimation(direction : string, moving: boolean): void {
-        if (!this.anims) {
-            console.error('ANIMS IS NOT DEFINED!!!');
-            return;
-        }
-        if (moving && (!this.anims.currentAnim || this.anims.currentAnim.key !== direction)) {
-            this.play(this.PlayerTexture+'-'+direction, true);
-        } else if (!moving) {
-            /*if (this.anims.currentAnim) {
-                this.anims.stop();
-            }*/
-            this.play(this.PlayerTexture+'-'+direction, true);
-            this.stop();
+        for (const [texture, sprite] of this.sprites.entries()) {
+            if (!sprite.anims) {
+                console.error('ANIMS IS NOT DEFINED!!!');
+                return;
+            }
+            if (moving && (!sprite.anims.currentAnim || sprite.anims.currentAnim.key !== direction)) {
+                sprite.play(texture+'-'+direction, true);
+            } else if (!moving) {
+                /*if (this.anims.currentAnim) {
+                    this.anims.stop();
+                }*/
+                sprite.play(texture+'-'+direction, true);
+                sprite.anims.stop();
+            }
         }
     }
 
-    move(x: number, y: number) {
+    protected getBody(): Phaser.Physics.Arcade.Body {
+        const body = this.body;
+        if (!(body instanceof Phaser.Physics.Arcade.Body)) {
+            throw new Error('Container does not have arcade body');
+        }
+        return body;
+    }
 
-        this.setVelocity(x, y);
+    move(x: number, y: number) {
+        const body = this.getBody();
+
+        body.setVelocity(x, y);
 
         // up or down animations are prioritized over left and right
-        if (this.body.velocity.y < 0) { //moving up
-            this.play(`${this.PlayerTexture}-${PlayerAnimationNames.WalkUp}`, true);
-        } else if (this.body.velocity.y > 0) { //moving down
-            this.play(`${this.PlayerTexture}-${PlayerAnimationNames.WalkDown}`, true);
-        } else if (this.body.velocity.x > 0) { //moving right
-            this.play(`${this.PlayerTexture}-${PlayerAnimationNames.WalkRight}`, true);
-        } else if (this.body.velocity.x < 0) { //moving left
-            this.anims.playReverse(`${this.PlayerTexture}-${PlayerAnimationNames.WalkLeft}`, true);
+        if (body.velocity.y < 0) { //moving up
+            this.lastDirection = PlayerAnimationNames.WalkUp;
+            this.playAnimation(PlayerAnimationNames.WalkUp, true);
+            //this.play(`${this.PlayerTexture}-${PlayerAnimationNames.WalkUp}`, true);
+        } else if (body.velocity.y > 0) { //moving down
+            this.lastDirection = PlayerAnimationNames.WalkDown;
+            this.playAnimation(PlayerAnimationNames.WalkDown, true);
+            //this.play(`${this.PlayerTexture}-${PlayerAnimationNames.WalkDown}`, true);
+        } else if (body.velocity.x > 0) { //moving right
+            this.lastDirection = PlayerAnimationNames.WalkRight;
+            this.playAnimation(PlayerAnimationNames.WalkRight, true);
+            //this.play(`${this.PlayerTexture}-${PlayerAnimationNames.WalkRight}`, true);
+        } else if (body.velocity.x < 0) { //moving left
+            this.lastDirection = PlayerAnimationNames.WalkLeft;
+            this.playAnimation(PlayerAnimationNames.WalkLeft, true);
+            //this.anims.playReverse(`${this.PlayerTexture}-${PlayerAnimationNames.WalkLeft}`, true);
         }
 
         if (this.bubble) {
@@ -166,8 +192,8 @@ export abstract class Character extends Phaser.Physics.Arcade.Sprite {
     }
 
     stop(){
-        this.setVelocity(0, 0);
-        this.anims.stop();
+        this.getBody().setVelocity(0, 0);
+        this.playAnimation(this.lastDirection, false);
     }
 
     say(text: string) {

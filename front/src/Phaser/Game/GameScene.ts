@@ -166,7 +166,7 @@ export class GameScene extends Phaser.Scene {
             connection.onUserJoins((message: MessageUserJoined) => {
                 const userMessage: AddPlayerInterface = {
                     userId: message.userId,
-                    character: message.character,
+                    characterLayers: message.characterLayers,
                     name: message.name,
                     position: message.position
                 }
@@ -704,7 +704,7 @@ export class GameScene extends Phaser.Scene {
             addPlayerData.position.x,
             addPlayerData.position.y,
             addPlayerData.name,
-            addPlayerData.character,
+            addPlayerData.characterLayers,
             addPlayerData.position.direction,
             addPlayerData.position.moving
         );

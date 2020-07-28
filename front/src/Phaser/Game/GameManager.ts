@@ -42,8 +42,8 @@ export class GameManager {
         return this.playerName;
     }
 
-    getCharacterSelected(): string {
-        return this.characterLayers[0];
+    getCharacterSelected(): string[] {
+        return this.characterLayers;
     }
 
     loadMap(mapUrl: string, scene: Phaser.Scenes.ScenePlugin, instance: string): string {
