@@ -1,3 +1,5 @@
+import LoaderPlugin = Phaser.Loader.LoaderPlugin;
+
 export interface BodyResourceDescriptionInterface {
     name: string,
     img: string
@@ -296,3 +298,15 @@ export const LAYERS: Array<Array<BodyResourceDescriptionInterface>> = [
     HATS_RESOURCES,
     ACCESSORIES_RESOURCES
 ];
+
+export const loadAllLayers = (load: LoaderPlugin) => {
+    for (let j = 0; j < LAYERS.length; j++) {
+        for (let i = 0; i < LAYERS[j].length; i++) {
+            load.spritesheet(
+                LAYERS[j][i].name,
+                LAYERS[j][i].img,
+                {frameWidth: 32, frameHeight: 32}
+            )
+        }
+    }
+}
