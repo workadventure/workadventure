@@ -28,6 +28,7 @@ import {SimplePeer} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
+import {LAYERS, loadAllLayers} from "../Entity/body_character";
 
 
 export enum Textures {
@@ -158,6 +159,8 @@ export class GameScene extends Phaser.Scene {
             );
         });
 
+        loadAllLayers(this.load);
+
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
 
         this.connectionPromise = Connection.createConnection(gameManager.getPlayerName(), gameManager.getCharacterSelected()).then((connection : Connection) => {
@@ -166,7 +169,7 @@ export class GameScene extends Phaser.Scene {
             connection.onUserJoins((message: MessageUserJoined) => {
                 const userMessage: AddPlayerInterface = {
                     userId: message.userId,
-                    character: message.character,
+                    characterLayers: message.characterLayers,
                     name: message.name,
                     position: message.position
                 }
@@ -704,7 +707,7 @@ export class GameScene extends Phaser.Scene {
             addPlayerData.position.x,
             addPlayerData.position.y,
             addPlayerData.name,
-            addPlayerData.character,
+            addPlayerData.characterLayers,
             addPlayerData.position.direction,
             addPlayerData.position.moving
         );

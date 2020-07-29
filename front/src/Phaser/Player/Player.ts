@@ -21,17 +21,17 @@ export class Player extends Character implements CurrentGamerInterface {
         x: number,
         y: number,
         name: string,
-        PlayerTexture: string,
+        PlayerTextures: string[],
         direction: string,
         moving: boolean
     ) {
-        super(Scene, x, y, PlayerTexture, name, direction, moving, 1);
+        super(Scene, x, y, PlayerTextures, name, direction, moving, 1);
 
         //create input to move
         this.userInputManager = new UserInputManager(Scene);
 
         //the current player model should be push away by other players to prevent conflict
-        this.setImmovable(false);
+        this.getBody().setImmovable(false);
     }
 
     moveUser(delta: number): void {

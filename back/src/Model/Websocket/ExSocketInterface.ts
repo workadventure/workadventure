@@ -9,6 +9,6 @@ export interface ExSocketInterface extends Socket, Identificable {
     webRtcRoomId: string;
     userId: string;
     name: string;
-    character: string;
+    characterLayers: string[];
     position: PointInterface;
 }
