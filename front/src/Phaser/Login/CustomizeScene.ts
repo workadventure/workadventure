@@ -2,7 +2,7 @@ import {EnableCameraSceneName} from "./EnableCameraScene";
 import {TextField} from "../Components/TextField";
 import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
-import {LAYERS} from "../Entity/body_character";
+import {LAYERS, loadAllLayers} from "../Entity/body_character";
 import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
 import {gameManager} from "../Game/GameManager";
@@ -50,15 +50,7 @@ export class CustomizeScene extends Phaser.Scene {
         this.load.bitmapFont(CustomizeTextures.mainFont, 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
 
         //load all the png files
-        for (let j = 0; j < LAYERS.length; j++) {
-            for (let i = 0; i < LAYERS[j].length; i++) {
-                this.load.spritesheet(
-                    LAYERS[j][i].name,
-                    LAYERS[j][i].img,
-                    {frameWidth: 32, frameHeight: 32}
-                )
-            }
-        }
+        loadAllLayers(this.load);
     }
 
     create() {
@@ -105,14 +97,12 @@ export class CustomizeScene extends Phaser.Scene {
             const layers: string[] = [];
             let i = 0;
             for (const layerItem of this.selectedLayers) {
-                console.log(i, layerItem, LAYERS);
                 if (layerItem !== undefined) {
                     layers.push(LAYERS[i][layerItem].name);
                 }
                 i++;
             }
 
-            console.log(layers);
             gameManager.setCharacterLayers(layers);
 
             return this.scene.start(EnableCameraSceneName);

@@ -62,6 +62,7 @@ export abstract class Character extends Container {
 
         for (const texture of textures) {
             const sprite = new Sprite(scene, 0, 0, texture, frame);
+            this.add(sprite);
             this.getPlayerAnimations(texture).forEach(d => {
                 this.scene.anims.create({
                     key: d.key,
@@ -70,9 +71,8 @@ export abstract class Character extends Container {
                     repeat: d.repeat
                 });
             })
-            this.add(sprite);
+            // Needed, otherwise, animations are not handled correctly.
             this.scene.sys.updateList.add(sprite);
-            this.scene.sys.displayList.add(sprite);
             this.sprites.set(texture, sprite);
         }
 
@@ -211,6 +211,9 @@ export abstract class Character extends Container {
     destroy(fromScene?: boolean): void {
         if (this.scene) {
             this.scene.events.removeListener('postupdate', this.postupdate.bind(this));
+        }
+        for (const sprite of this.sprites.values()) {
+            this.scene.sys.updateList.remove(sprite);
         }
         super.destroy(fromScene);
         this.playerName.destroy();

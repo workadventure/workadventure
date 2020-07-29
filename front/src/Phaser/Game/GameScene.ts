@@ -28,6 +28,7 @@ import {SimplePeer} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
+import {LAYERS, loadAllLayers} from "../Entity/body_character";
 
 
 export enum Textures {
@@ -157,6 +158,8 @@ export class GameScene extends Phaser.Scene {
                 {frameWidth: 32, frameHeight: 32}
             );
         });
+
+        loadAllLayers(this.load);
 
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
 
