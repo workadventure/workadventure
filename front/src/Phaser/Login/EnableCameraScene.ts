@@ -21,22 +21,22 @@ enum LoginTextures {
 }
 
 export class EnableCameraScene extends Phaser.Scene {
-    private textField: TextField;
-    private pressReturnField: TextField;
-    private cameraNameField: TextField;
-    private logo: Image;
-    private arrowLeft: Image;
-    private arrowRight: Image;
-    private arrowDown: Image;
-    private arrowUp: Image;
+    private textField!: TextField;
+    private pressReturnField!: TextField;
+    private cameraNameField!: TextField;
+    private logo!: Image;
+    private arrowLeft!: Image;
+    private arrowRight!: Image;
+    private arrowDown!: Image;
+    private arrowUp!: Image;
     private microphonesList: MediaDeviceInfo[] = new Array<MediaDeviceInfo>();
     private camerasList: MediaDeviceInfo[] = new Array<MediaDeviceInfo>();
     private cameraSelected: number = 0;
     private microphoneSelected: number = 0;
     private soundMeter: SoundMeter;
-    private soundMeterSprite: SoundMeterSprite;
-    private microphoneNameField: TextField;
-    private repositionCallback: (this: Window, ev: UIEvent) => void;
+    private soundMeterSprite!: SoundMeterSprite;
+    private microphoneNameField!: TextField;
+    private repositionCallback!: (this: Window, ev: UIEvent) => void;
 
     constructor() {
         super({

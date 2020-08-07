@@ -21,16 +21,16 @@ enum LoginTextures {
 
 export class SelectCharacterScene extends Phaser.Scene {
     private readonly nbCharactersPerRow = 4;
-    private textField: TextField;
-    private pressReturnField: TextField;
-    private logo: Image;
-    private customizeButton: Image;
-    private customizeButtonSelected: Image;
+    private textField!: TextField;
+    private pressReturnField!: TextField;
+    private logo!: Image;
+    private customizeButton!: Image;
+    private customizeButtonSelected!: Image;
 
-    private selectedRectangle: Rectangle;
+    private selectedRectangle!: Rectangle;
     private selectedRectangleXPos = 0; // Number of the character selected in the rows
     private selectedRectangleYPos = 0; // Number of the character selected in the columns
-    private selectedPlayer: Phaser.Physics.Arcade.Sprite|null; // null if we are selecting the "customize" option
+    private selectedPlayer!: Phaser.Physics.Arcade.Sprite|null; // null if we are selecting the "customize" option
     private players: Array<Phaser.Physics.Arcade.Sprite> = new Array<Phaser.Physics.Arcade.Sprite>();
 
     constructor() {

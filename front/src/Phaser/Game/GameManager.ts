@@ -13,8 +13,8 @@ export interface HasMovedEvent {
 }
 
 export class GameManager {
-    private playerName: string;
-    private characterLayers: string[];
+    private playerName!: string;
+    private characterLayers!: string[];
 
     public setPlayerName(name: string): void {
         this.playerName = name;
