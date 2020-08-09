@@ -13,8 +13,8 @@ export interface CurrentGamerInterface extends Character{
 
 export class Player extends Character implements CurrentGamerInterface {
     userInputManager: UserInputManager;
-    previousDirection: string;
-    wasMoving: boolean;
+    previousDirection: string = PlayerAnimationNames.WalkDown;
+    wasMoving: boolean = false;
 
     constructor(
         Scene: GameScene,

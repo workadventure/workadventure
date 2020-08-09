@@ -18,24 +18,24 @@ enum CustomizeTextures{
 
 export class CustomizeScene extends Phaser.Scene {
 
-    private textField: TextField;
-    private enterField: TextField;
+    private textField!: TextField;
+    private enterField!: TextField;
 
-    private arrowRight: Image;
-    private arrowLeft: Image;
+    private arrowRight!: Image;
+    private arrowLeft!: Image;
 
-    private arrowDown: Image;
-    private arrowUp: Image;
+    private arrowDown!: Image;
+    private arrowUp!: Image;
 
-    private Rectangle: Rectangle;
+    private Rectangle!: Rectangle;
 
-    private logo: Image;
+    private logo!: Image;
 
     private selectedLayers: Array<number> = [0];
     private containersRow: Array<Array<Container>> = new Array<Array<Container>>();
     private activeRow = 0;
 
-    private repositionCallback: (this: Window, ev: UIEvent) => void;
+    private repositionCallback!: (this: Window, ev: UIEvent) => void;
 
     constructor() {
         super({

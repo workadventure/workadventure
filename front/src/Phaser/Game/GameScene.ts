@@ -73,31 +73,31 @@ interface DeleteGroupEventInterface {
 export class GameScene extends Phaser.Scene {
     GameManager : GameManager;
     Terrains : Array<Phaser.Tilemaps.Tileset>;
-    CurrentPlayer: CurrentGamerInterface;
-    MapPlayers : Phaser.Physics.Arcade.Group;
+    CurrentPlayer!: CurrentGamerInterface;
+    MapPlayers!: Phaser.Physics.Arcade.Group;
     MapPlayersByKey : Map<string, RemotePlayer> = new Map<string, RemotePlayer>();
-    Map: Phaser.Tilemaps.Tilemap;
-    Layers : Array<Phaser.Tilemaps.StaticTilemapLayer>;
-    Objects : Array<Phaser.Physics.Arcade.Sprite>;
-    mapFile: ITiledMap;
+    Map!: Phaser.Tilemaps.Tilemap;
+    Layers!: Array<Phaser.Tilemaps.StaticTilemapLayer>;
+    Objects!: Array<Phaser.Physics.Arcade.Sprite>;
+    mapFile!: ITiledMap;
     groups: Map<string, Sprite>;
-    startX: number;
-    startY: number;
-    circleTexture: CanvasTexture;
+    startX!: number;
+    startY!: number;
+    circleTexture!: CanvasTexture;
     pendingEvents: Queue<InitUserPositionEventInterface|AddPlayerEventInterface|RemovePlayerEventInterface|UserMovedEventInterface|GroupCreatedUpdatedEventInterface|DeleteGroupEventInterface> = new Queue<InitUserPositionEventInterface|AddPlayerEventInterface|RemovePlayerEventInterface|UserMovedEventInterface|GroupCreatedUpdatedEventInterface|DeleteGroupEventInterface>();
     private initPosition: PositionInterface|null = null;
     private playersPositionInterpolator = new PlayersPositionInterpolator();
-    private connection: Connection;
-    private simplePeer : SimplePeer;
-    private connectionPromise: Promise<Connection>
+    private connection!: Connection;
+    private simplePeer!: SimplePeer;
+    private connectionPromise!: Promise<Connection>
 
     MapKey: string;
     MapUrlFile: string;
     RoomId: string;
     instance: string;
 
-    currentTick: number;
-    lastSentTick: number; // The last tick at which a position was sent.
+    currentTick!: number;
+    lastSentTick!: number; // The last tick at which a position was sent.
     lastMoveEventSent: HasMovedEvent = {
         direction: '',
         moving: false,

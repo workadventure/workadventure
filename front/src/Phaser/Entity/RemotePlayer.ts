@@ -7,8 +7,6 @@ import {Character} from "../Entity/Character";
  */
 export class RemotePlayer extends Character {
     userId: string;
-    previousDirection: string;
-    wasMoving: boolean;
 
     constructor(
         userId: string,
