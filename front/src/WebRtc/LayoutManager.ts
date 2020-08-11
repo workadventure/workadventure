@@ -43,6 +43,7 @@ export class LayoutManager {
         }
 
         this.positionDiv(div, importance);
+        this.adjustVideoChatClass();
     }
 
     private positionDiv(elem: HTMLDivElement, importance: DivImportance): void {
@@ -68,6 +69,7 @@ export class LayoutManager {
         if (div !== undefined) {
             div.remove();
             this.importantDivs.delete(userId);
+            this.adjustVideoChatClass();
             return;
         }
 
@@ -75,10 +77,28 @@ export class LayoutManager {
         if (div !== undefined) {
             div.remove();
             this.normalDivs.delete(userId);
+            this.adjustVideoChatClass();
             return;
         }
 
         throw new Error('Could not find user ID "'+userId+'"');
+    }
+
+    private adjustVideoChatClass(): void {
+        const chatModeDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('chat-mode');
+        chatModeDiv.classList.remove('one-col', 'two-col', 'three-col', 'four-col');
+
+        const nbUsers = this.importantDivs.size + this.normalDivs.size;
+
+        if (nbUsers <= 1) {
+            chatModeDiv.classList.add('one-col');
+        } else if (nbUsers <= 4) {
+            chatModeDiv.classList.add('two-col');
+        } else if (nbUsers <= 9) {
+            chatModeDiv.classList.add('three-col');
+        } else {
+            chatModeDiv.classList.add('four-col');
+        }
     }
 
     private switchLayoutMode(layoutMode: LayoutMode) {
