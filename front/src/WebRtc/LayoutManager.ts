@@ -18,7 +18,7 @@ export enum DivImportance {
  * This class is in charge of the video-conference layout.
  * It receives positioning requests for videos and does its best to place them on the screen depending on the active layout mode.
  */
-export class LayoutManager {
+class LayoutManager {
     private mode: LayoutMode = LayoutMode.Presentation;
 
     private importantDivs: Map<string, HTMLDivElement> = new Map<string, HTMLDivElement>();
@@ -26,7 +26,7 @@ export class LayoutManager {
 
     public add(importance: DivImportance, userId: string, html: string): void {
         const div = document.createElement('div');
-        div.append(html);
+        div.innerHTML = html;
         div.id = "user-"+userId;
 
         if (importance === DivImportance.Important) {
@@ -65,6 +65,7 @@ export class LayoutManager {
      * Removes the DIV matching userId.
      */
     public remove(userId: string): void {
+        console.log('Removing video for userID '+userId+'.');
         let div = this.importantDivs.get(userId);
         if (div !== undefined) {
             div.remove();
@@ -81,7 +82,8 @@ export class LayoutManager {
             return;
         }
 
-        throw new Error('Could not find user ID "'+userId+'"');
+        console.log('Cannot remove userID '+userId+'. Already removed?');
+        //throw new Error('Could not find user ID "'+userId+'"');
     }
 
     private adjustVideoChatClass(): void {
@@ -104,6 +106,16 @@ export class LayoutManager {
     private switchLayoutMode(layoutMode: LayoutMode) {
         this.mode = layoutMode;
 
+        if (layoutMode === LayoutMode.Presentation) {
+            HtmlUtils.getElementByIdOrFail<HTMLDivElement>('sidebar').style.display = 'block';
+            HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-section').style.display = 'block';
+            HtmlUtils.getElementByIdOrFail<HTMLDivElement>('chat-mode').style.display = 'none';
+        } else {
+            HtmlUtils.getElementByIdOrFail<HTMLDivElement>('sidebar').style.display = 'none';
+            HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-section').style.display = 'none';
+            HtmlUtils.getElementByIdOrFail<HTMLDivElement>('chat-mode').style.display = 'block';
+        }
+
         for (let div of this.importantDivs.values()) {
             this.positionDiv(div, DivImportance.Important);
         }
@@ -112,3 +124,7 @@ export class LayoutManager {
         }
     }
 }
+
+const layoutManager = new LayoutManager();
+
+export { layoutManager };
