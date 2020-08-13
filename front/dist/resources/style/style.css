@@ -92,7 +92,7 @@ video{
 /*.activeCam*/
 
 #div-myCamVideo {
-    position: fixed;
+    position: absolute;
     right: 0;
     bottom: 0;
 }
