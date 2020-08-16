@@ -28,6 +28,7 @@ class LayoutManager {
         const div = document.createElement('div');
         div.innerHTML = html;
         div.id = "user-"+userId;
+        div.className = "media-container"
 
         if (importance === DivImportance.Important) {
             this.importantDivs.set(userId, div);

@@ -260,7 +260,7 @@ body {
     }
 
     .sidebar > div {
-        height: 15%;
+        max-height: 21%;
     }
 }
 @media (max-aspect-ratio: 1/1) {
@@ -278,7 +278,7 @@ body {
     }
 
     .sidebar > div {
-        width: 15%;
+        max-width: 21%;
     }
 }
 
@@ -340,6 +340,14 @@ body {
 
 .sidebar > div {
     margin: 2%;
+}
+
+/* Let's make sure videos are vertically centered if they need to be cropped */
+.media-container {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .chat-mode {
