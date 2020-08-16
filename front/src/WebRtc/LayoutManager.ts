@@ -108,13 +108,13 @@ class LayoutManager {
         this.mode = layoutMode;
 
         if (layoutMode === LayoutMode.Presentation) {
-            HtmlUtils.getElementByIdOrFail<HTMLDivElement>('sidebar').style.display = 'block';
-            HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-section').style.display = 'block';
+            HtmlUtils.getElementByIdOrFail<HTMLDivElement>('sidebar').style.display = 'flex';
+            HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-section').style.display = 'flex';
             HtmlUtils.getElementByIdOrFail<HTMLDivElement>('chat-mode').style.display = 'none';
         } else {
             HtmlUtils.getElementByIdOrFail<HTMLDivElement>('sidebar').style.display = 'none';
             HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-section').style.display = 'none';
-            HtmlUtils.getElementByIdOrFail<HTMLDivElement>('chat-mode').style.display = 'block';
+            HtmlUtils.getElementByIdOrFail<HTMLDivElement>('chat-mode').style.display = 'flex';
         }
 
         for (let div of this.importantDivs.values()) {
