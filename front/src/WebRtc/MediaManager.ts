@@ -204,7 +204,7 @@ export class MediaManager {
             <div id="div-${userId}" class="video-container">
                 <div class="connecting-spinner"></div>
                 <div class="rtc-error" style="display: none"></div>
-                <i style="background-color: ${color};">${userName}</i>
+                <i id="name-${userId}" style="background-color: ${color};">${userName}</i>
                 <img id="microphone-${userId}" src="resources/logos/microphone-close.svg">
                 <video id="${userId}" autoplay></video>
             </div>
@@ -248,11 +248,10 @@ export class MediaManager {
         if (element) {
             element.style.opacity = "0";
         }
-        element = document.getElementById(`div-${userId}`);
-        if (!element) {
-            return;
+        element = document.getElementById(`name-${userId}`);
+        if (element) {
+            element.style.display = "block";
         }
-        element.style.borderStyle = "solid";
     }
 
     /**
@@ -264,11 +263,10 @@ export class MediaManager {
         if(element){
             element.style.opacity = "1";
         }
-        element = document.getElementById(`div-${userId}`);
-        if(!element){
-            return;
+        element = document.getElementById(`name-${userId}`);
+        if(element){
+            element.style.display = "none";
         }
-        element.style.borderStyle = "none";
     }
 
     /**

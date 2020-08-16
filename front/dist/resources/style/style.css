@@ -23,10 +23,6 @@ body .message-info.info{
 body .message-info.warning{
     background: #ffa500d6;
 }
-video{
-    -webkit-transform: scaleX(-1);
-    transform: scaleX(-1);
-}
 /*.webrtc{
     display: none;
     position: absolute;
@@ -99,9 +95,12 @@ video{
 
 video#myCamVideo{
     width: 15vw;
+    -webkit-transform: scaleX(-1);
+    transform: scaleX(-1);
     /*width: 200px;*/
     /*height: 113px;*/
 }
+
 
 /*btn animation*/
 .btn-cam-action div{
@@ -113,7 +112,7 @@ video#myCamVideo{
     background: #666;
     box-shadow: 2px 2px 24px #444;
     border-radius: 48px;
-    transform: translateY(12vw);
+    transform: translateY(12vh);
     transition-timing-function: ease-in-out;
     bottom: 20px;
 }
@@ -249,28 +248,37 @@ body {
 
 @media (min-aspect-ratio: 1/1) {
     .main-container {
-        flex-direction: row
+        flex-direction: row;
     }
 
     .game-overlay {
-        flex-direction: row
+        flex-direction: row;
     }
 
     .sidebar {
-        flex-direction: column
+        flex-direction: column;
+    }
+
+    .sidebar > div {
+        height: 15%;
     }
 }
 @media (max-aspect-ratio: 1/1) {
     .main-container {
-        flex-direction: column
+        flex-direction: column;
     }
 
     .game-overlay {
-        flex-direction: column
+        flex-direction: column;
     }
 
     .sidebar {
-        flex-direction: row
+        flex-direction: row;
+        align-items: flex-end;
+    }
+
+    .sidebar > div {
+        width: 15%;
     }
 }
 
@@ -319,7 +327,7 @@ body {
     flex-wrap: wrap;
 }
 
-.main-section div {
+.main-section > div {
     margin: 5%;
     flex-basis: 90%;
     /*flex-shrink: 2;*/
@@ -331,8 +339,7 @@ body {
 }
 
 .sidebar > div {
-    height: 15%;
-    margin: 5%;
+    margin: 2%;
 }
 
 .chat-mode {
@@ -348,22 +355,22 @@ body {
     margin: 1%;
 }
 
-.chat-mode.one-col div {
+.chat-mode.one-col > div {
     flex-basis: 98%;
 }
 
-.chat-mode.two-col div {
+.chat-mode.two-col > div {
     flex-basis: 48%;
 }
 
-.chat-mode.three-col div {
+.chat-mode.three-col > div {
     flex-basis: 31.333333%;
 }
 
-.chat-mode.four-col div {
+.chat-mode.four-col > div {
     flex-basis: 23%;
 }
 
-.chat-mode div:last-child {
+.chat-mode > div:last-child {
     flex-grow: 5;
 }

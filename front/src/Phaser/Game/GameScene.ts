@@ -1,34 +1,33 @@
 import {GameManager, gameManager, HasMovedEvent} from "./GameManager";
 import {
     Connection,
-    GroupCreatedUpdatedMessageInterface, MessageUserJoined,
+    GroupCreatedUpdatedMessageInterface,
+    MessageUserJoined,
     MessageUserMovedInterface,
-    MessageUserPositionInterface, PointInterface, PositionInterface
+    MessageUserPositionInterface,
+    PointInterface,
+    PositionInterface
 } from "../../Connection";
 import {CurrentGamerInterface, hasMovedEventName, Player} from "../Player/Player";
-import { DEBUG_MODE, ZOOM_LEVEL, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
-import {
-    ITiledMap,
-    ITiledMapLayer,
-    ITiledMapLayerProperty,
-    ITiledTileSet
-} from "../Map/ITiledMap";
+import {DEBUG_MODE, POSITION_DELAY, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
+import {ITiledMap, ITiledMapLayer, ITiledMapLayerProperty, ITiledTileSet} from "../Map/ITiledMap";
 import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Character";
-import Texture = Phaser.Textures.Texture;
-import Sprite = Phaser.GameObjects.Sprite;
-import CanvasTexture = Phaser.Textures.CanvasTexture;
 import {AddPlayerInterface} from "./AddPlayerInterface";
 import {PlayerAnimationNames} from "../Player/Animation";
 import {PlayerMovement} from "./PlayerMovement";
 import {PlayersPositionInterpolator} from "./PlayersPositionInterpolator";
 import {RemotePlayer} from "../Entity/RemotePlayer";
-import GameObject = Phaser.GameObjects.GameObject;
-import { Queue } from 'queue-typescript';
+import {Queue} from 'queue-typescript';
 import {SimplePeer} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
-import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
-import {LAYERS, loadAllLayers} from "../Entity/body_character";
+import {loadAllLayers} from "../Entity/body_character";
+import {layoutManager, LayoutMode} from "../../WebRtc/LayoutManager";
+import Texture = Phaser.Textures.Texture;
+import Sprite = Phaser.GameObjects.Sprite;
+import CanvasTexture = Phaser.Textures.CanvasTexture;
+import GameObject = Phaser.GameObjects.GameObject;
+import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 
 
 export enum Textures {
@@ -364,6 +363,16 @@ export class GameScene extends Phaser.Scene {
                 }
             }, 500);
         }
+
+        // FIXME: change this to use the class for input
+        this.input.keyboard.on('keyup-' + 'M', function () {
+            const mode = layoutManager.getLayoutMode();
+            if (mode === LayoutMode.Presentation) {
+                layoutManager.switchLayoutMode(LayoutMode.VideoChat);
+            } else {
+                layoutManager.switchLayoutMode(LayoutMode.Presentation);
+            }
+        });
     }
 
     private getExitSceneUrl(layer: ITiledMapLayer): string|undefined {

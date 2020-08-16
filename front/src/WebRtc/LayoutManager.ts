@@ -103,7 +103,7 @@ class LayoutManager {
         }
     }
 
-    private switchLayoutMode(layoutMode: LayoutMode) {
+    public switchLayoutMode(layoutMode: LayoutMode) {
         this.mode = layoutMode;
 
         if (layoutMode === LayoutMode.Presentation) {
@@ -122,6 +122,10 @@ class LayoutManager {
         for (let div of this.normalDivs.values()) {
             this.positionDiv(div, DivImportance.Normal);
         }
+    }
+
+    public getLayoutMode(): LayoutMode {
+        return this.mode;
     }
 }
 
