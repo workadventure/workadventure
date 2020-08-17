@@ -198,7 +198,7 @@ export class SimplePeer {
 
         this.addMedia(user.userId);
 
-        for (let peerConnectionListener of this.peerConnectionListeners) {
+        for (const peerConnectionListener of this.peerConnectionListeners) {
             peerConnectionListener.onConnect(user);
         }
     }
@@ -222,7 +222,7 @@ export class SimplePeer {
             peer.destroy();
             this.PeerConnectionArray.delete(userId)
             //console.log('Nb users in peerConnectionArray '+this.PeerConnectionArray.size);
-            for (let peerConnectionListener of this.peerConnectionListeners) {
+            for (const peerConnectionListener of this.peerConnectionListeners) {
                 peerConnectionListener.onDisconnect(userId);
             }
         } catch (err) {

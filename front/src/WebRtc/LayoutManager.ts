@@ -117,10 +117,10 @@ class LayoutManager {
             HtmlUtils.getElementByIdOrFail<HTMLDivElement>('chat-mode').style.display = 'flex';
         }
 
-        for (let div of this.importantDivs.values()) {
+        for (const div of this.importantDivs.values()) {
             this.positionDiv(div, DivImportance.Important);
         }
-        for (let div of this.normalDivs.values()) {
+        for (const div of this.normalDivs.values()) {
             this.positionDiv(div, DivImportance.Normal);
         }
     }
