@@ -15,7 +15,7 @@ export interface UserSimplePeerInterface{
 }
 
 export interface PeerConnectionListener {
-    onConnect(user: UserSimplePeer): void;
+    onConnect(user: UserSimplePeerInterface): void;
 
     onDisconnect(userId: string): void;
 }
@@ -138,7 +138,7 @@ export class SimplePeer {
             mediaManager.addActiveVideo(user.userId, name);
         }
 
-        const peerOption : SimplePeerNamespace.Instance = new Peer({
+        const peer : SimplePeerNamespace.Instance = new Peer({
             initiator: user.initiator ? user.initiator : false,
             reconnectTimer: 10000,
             config: {
@@ -153,9 +153,7 @@ export class SimplePeer {
                     },
                 ]
             }
-        };
-        console.log("peerOption", peerOption);
-        let peer : SimplePeerNamespace.Instance = new Peer(peerOption);
+        });
         if(screenSharing){
             this.PeerScreenSharingConnectionArray.set(user.userId, peer);
         }else {
@@ -434,11 +432,12 @@ export class SimplePeer {
 
             //this.Connection.sendWebrtcScreenSharingStart(this.WebRtcRoomId);
 
-            if(!this.Connection.userId){
+            const userId = this.Connection.getUserId();
+            if(!userId){
                 return;
             }
             let screenSharingUser: UserSimplePeerInterface = {
-                userId: this.Connection.userId,
+                userId,
                 initiator: true
             };
             let PeerConnectionScreenSharing = this.createPeerConnection(screenSharingUser, true);
@@ -454,16 +453,17 @@ export class SimplePeer {
             }
             mediaManager.addStreamRemoteScreenSharing(screenSharingUser.userId, mediaManager.localScreenCapture);
         } else {
-            if (!this.Connection.userId || !this.PeerScreenSharingConnectionArray.has(this.Connection.userId)) {
+            const userId = this.Connection.getUserId();
+            if (!userId || !this.PeerScreenSharingConnectionArray.has(userId)) {
                 return;
             }
-            let PeerConnectionScreenSharing = this.PeerScreenSharingConnectionArray.get(this.Connection.userId);
+            let PeerConnectionScreenSharing = this.PeerScreenSharingConnectionArray.get(userId);
             console.log("updatedScreenSharing => destroy", PeerConnectionScreenSharing);
             if (!PeerConnectionScreenSharing) {
                 return;
             }
             PeerConnectionScreenSharing.destroy();
-            this.PeerScreenSharingConnectionArray.delete(this.Connection.userId);
+            this.PeerScreenSharingConnectionArray.delete(userId);
         }
     }
 }

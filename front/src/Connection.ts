@@ -197,8 +197,8 @@ export class Connection implements Connection {
         });
     }
 
-    sendWebrtcScreenSharingSignal(signal: any, roomId: string, userId? : string|null) {
-        return this.getSocket().emit(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, {
+    public sendWebrtcScreenSharingSignal(signal: unknown, roomId: string, userId? : string|null) {
+        return this.socket.emit(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, {
             userId: userId,
             roomId: roomId,
             signal: signal
@@ -213,21 +213,8 @@ export class Connection implements Connection {
         return this.socket.on(EventMessage.WEBRTC_SIGNAL, callback);
     }
 
-    receiveWebrtcScreenSharingSignal(callback: Function) {
-        return this.getSocket().on(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, callback);
-    }
-
-    private errorMessage(): void {
-        this.getSocket().on(EventMessage.MESSAGE_ERROR, (message: string) => {
-            console.error(EventMessage.MESSAGE_ERROR, message);
-        })
-    }
-
-    private disconnectServer(): void {
-        this.getSocket().on(EventMessage.CONNECT_ERROR, () => {
-            this.GameManager.switchToDisconnectedScene();
-        });
-
+    public receiveWebrtcScreenSharingSignal(callback: Function) {
+        return this.socket.on(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, callback);
     }
 
     public onServerDisconnected(callback: (reason: string) => void): void {

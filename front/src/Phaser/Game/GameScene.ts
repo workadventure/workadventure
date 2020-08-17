@@ -18,7 +18,7 @@ import {PlayerMovement} from "./PlayerMovement";
 import {PlayersPositionInterpolator} from "./PlayersPositionInterpolator";
 import {RemotePlayer} from "../Entity/RemotePlayer";
 import {Queue} from 'queue-typescript';
-import {SimplePeer, UserSimplePeer} from "../../WebRtc/SimplePeer";
+import {SimplePeer, UserSimplePeerInterface} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
 import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
 import {loadAllLayers} from "../Entity/body_character";
@@ -229,7 +229,7 @@ export class GameScene extends Phaser.Scene {
             this.simplePeer = new SimplePeer(this.connection);
             const self = this;
             this.simplePeer.registerPeerConnectionListener({
-                onConnect(user: UserSimplePeer) {
+                onConnect(user: UserSimplePeerInterface) {
                     self.presentationModeSprite.setVisible(true);
                     self.chatModeSprite.setVisible(true);
                 },

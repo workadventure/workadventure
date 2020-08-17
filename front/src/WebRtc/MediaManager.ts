@@ -11,6 +11,7 @@ interface MediaServiceInterface extends MediaDevices{
 }
 
 type UpdatedLocalStreamCallback = (media: MediaStream) => void;
+type UpdatedScreenSharingCallback = (media: MediaStream) => void;
 
 // TODO: Split MediaManager in 2 classes: MediaManagerUI (in charge of HTML) and MediaManager (singleton in charge of the camera only)
 // TODO: verify that microphone event listeners are not triggered plenty of time NOW (since MediaManager is created many times!!!!)
@@ -31,11 +32,10 @@ export class MediaManager {
         video: videoConstraint
     };
     updatedLocalStreamCallBacks : Set<UpdatedLocalStreamCallback> = new Set<UpdatedLocalStreamCallback>();
-    // TODO: updatedScreenSharingCallBack should have same signature as updatedLocalStreamCallBacks
-    updatedScreenSharingCallBack : Function;
+    updatedScreenSharingCallBacks : Set<UpdatedScreenSharingCallback> = new Set<UpdatedScreenSharingCallback>();
 
-    constructor(updatedScreenSharingCallBack : Function) {
-        this.updatedScreenSharingCallBack = updatedScreenSharingCallBack;
+
+    constructor() {
 
         this.myCamVideo = this.getElementByIdOrFail<HTMLVideoElement>('myCamVideo');
         this.webrtcInAudio = this.getElementByIdOrFail<HTMLAudioElement>('audio-webrtc-in');
@@ -69,14 +69,14 @@ export class MediaManager {
             //update tracking
         });
 
-        this.monitorClose = document.getElementById('monitor-close');
+        this.monitorClose = this.getElementByIdOrFail<HTMLImageElement>('monitor-close');
         this.monitorClose.style.display = "block";
         this.monitorClose.addEventListener('click', (e: any) => {
             e.preventDefault();
             this.enabledMonitor();
             //update tracking
         });
-        this.monitor = document.getElementById('monitor');
+        this.monitor = this.getElementByIdOrFail<HTMLImageElement>('monitor');
         this.monitor.style.display = "none";
         this.monitor.addEventListener('click', (e: any) => {
             e.preventDefault();
@@ -90,12 +90,23 @@ export class MediaManager {
         this.updatedLocalStreamCallBacks.add(callback);
     }
 
+    onUpdateScreenSharing(callback: UpdatedScreenSharingCallback): void {
+
+        this.updatedScreenSharingCallBacks.add(callback);
+    }
+
     removeUpdateLocalStreamEventListener(callback: UpdatedLocalStreamCallback): void {
         this.updatedLocalStreamCallBacks.delete(callback);
     }
 
     private triggerUpdatedLocalStreamCallbacks(stream: MediaStream): void {
         for (const callback of this.updatedLocalStreamCallBacks) {
+            callback(stream);
+        }
+    }
+
+    private triggerUpdatedScreenSharingCallbacks(stream: MediaStream): void {
+        for (const callback of this.updatedScreenSharingCallBacks) {
             callback(stream);
         }
     }
@@ -156,7 +167,7 @@ export class MediaManager {
         this.monitorClose.style.display = "none";
         this.monitor.style.display = "block";
         this.getScreenMedia().then((stream) => {
-            this.updatedScreenSharingCallBack(stream);
+            this.triggerUpdatedScreenSharingCallbacks(stream);
         });
     }
 
@@ -168,7 +179,7 @@ export class MediaManager {
         });
         this.localScreenCapture = null;
         this.getCamera().then((stream) => {
-            this.updatedScreenSharingCallBack(stream);
+            this.triggerUpdatedScreenSharingCallbacks(stream);
         });
     }
 
