@@ -187,18 +187,8 @@ export class MediaManager {
     addActiveVideo(userId : string, userName: string = ""){
         this.webrtcInAudio.play();
 
-        //const elementRemoteVideo = this.getElementByIdOrFail("activeCam");
         userName = userName.toUpperCase();
         const color = this.getColorByString(userName);
-        /*elementRemoteVideo.insertAdjacentHTML('beforeend', `
-            <div id="div-${userId}" class="video-container" style="border-color: ${color};">
-                <div class="connecting-spinner"></div>
-                <div class="rtc-error" style="display: none"></div>
-                <i style="background-color: ${color};">${userName}</i>
-                <img id="microphone-${userId}" src="resources/logos/microphone-close.svg">
-                <video id="${userId}" autoplay></video>
-            </div>
-        `);*/
 
         const html =  `
             <div id="div-${userId}" class="video-container">
@@ -288,11 +278,6 @@ export class MediaManager {
      * @param userId
      */
     removeActiveVideo(userId : string){
-        /*const element = document.getElementById(`div-${userId}`);
-        if(!element){
-            return;
-        }
-        element.remove();*/
         layoutManager.remove(userId);
         this.remoteVideo.delete(userId);
     }
