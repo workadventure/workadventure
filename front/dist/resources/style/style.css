@@ -23,31 +23,12 @@ body .message-info.info{
 body .message-info.warning{
     background: #ffa500d6;
 }
-/*.webrtc{
-    display: none;
-    position: absolute;
-    right: 0px;
-    height: 100%;
-    width: 300px;
-}
-.webrtc.active{
-    display: block;
-}*/
-
-/*.webrtc, .activeCam{}*/
-/*.activeCam*/ .video-container{
+.video-container{
     position: relative;
-    /*height: 25%;
-    top: 10px;
-    margin: 5px;
-    right: -100px;
-    transition: all 0.2s ease;*/
-    /*border-color: black;
-    border-style: solid;
-    border-width: 0.2px;*/
+    transition: all 0.2s ease;
     background-color: #00000099;
 }
-/*.activeCam*/ .video-container i{
+.video-container i{
     position: absolute;
     width: 100px;
     height: 65px;
@@ -60,10 +41,10 @@ body .message-info.warning{
     font-size: 28px;
     color: white;
 }
-/*.activeCam*/ .video-container img.active{
+.video-container img.active{
     display: block;
 }
-/*.activeCam*/ .video-container img{
+.video-container img{
     position: absolute;
     display: none;
     width: 15px;
@@ -75,17 +56,13 @@ body .message-info.warning{
     padding: 10px;
     z-index: 2;
 }
-/*.activeCam*/ .video-container video{
+.video-container video{
     height: 100%;
 }
 
-/*.webrtc:hover .activeCam .video-container{
-    right: 10px;
-}*/
-/*.activeCam*/ .video-container#div-myCamVideo{
+.video-container#div-myCamVideo{
     border: none;
 }
-/*.activeCam*/
 
 #div-myCamVideo {
     position: absolute;
