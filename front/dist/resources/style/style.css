@@ -355,12 +355,14 @@ body {
     width: 100%;
 
     flex-wrap: wrap;
+    align-items: flex-start;
 
     padding: 1%;
 }
 
 .chat-mode div {
     margin: 1%;
+    max-height: 96%;
 }
 
 .chat-mode.one-col > div {

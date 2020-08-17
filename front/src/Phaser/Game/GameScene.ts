@@ -106,6 +106,9 @@ export class GameScene extends Phaser.Scene {
 
     private PositionNextScene: Array<Array<{ key: string, hash: string }>> = new Array<Array<{ key: string, hash: string }>>();
     private startLayerName: string|undefined;
+    private presentationModeSprite!: Sprite;
+    private chatModeSprite!: Sprite;
+    private repositionCallback!: (this: Window, ev: UIEvent) => void;
 
     static createFromUrl(mapUrlFile: string, instance: string, key: string|null = null): GameScene {
         const mapKey = GameScene.getMapKeyByUrl(mapUrlFile);
@@ -157,6 +160,12 @@ export class GameScene extends Phaser.Scene {
                 {frameWidth: 32, frameHeight: 32}
             );
         });
+
+        this.load.spritesheet(
+            'layout_modes',
+            'resources/objects/layout_modes.png',
+            {frameWidth: 32, frameHeight: 32}
+        );
 
         loadAllLayers(this.load);
 
@@ -213,6 +222,7 @@ export class GameScene extends Phaser.Scene {
 
                 this.scene.stop(this.scene.key);
                 this.scene.remove(this.scene.key);
+                window.removeEventListener('resize', this.repositionCallback);
             })
 
             // When connection is performed, let's connect SimplePeer
@@ -364,15 +374,39 @@ export class GameScene extends Phaser.Scene {
             }, 500);
         }
 
+        // FIXME: handle display / hide based on number of cameras connected
+        this.presentationModeSprite = this.add.sprite(2, this.game.renderer.height - 2, 'layout_modes', 0);
+        this.presentationModeSprite.setScrollFactor(0, 0);
+        this.presentationModeSprite.setOrigin(0, 1);
+        this.presentationModeSprite.setInteractive();
+        this.presentationModeSprite.on('pointerup', this.switchLayoutMode.bind(this));
+        this.chatModeSprite = this.add.sprite(36, this.game.renderer.height - 2, 'layout_modes', 3);
+        this.chatModeSprite.setScrollFactor(0, 0);
+        this.chatModeSprite.setOrigin(0, 1);
+        this.chatModeSprite.setInteractive();
+        this.chatModeSprite.on('pointerup', this.switchLayoutMode.bind(this));
+        
         // FIXME: change this to use the class for input
-        this.input.keyboard.on('keyup-' + 'M', function () {
-            const mode = layoutManager.getLayoutMode();
-            if (mode === LayoutMode.Presentation) {
-                layoutManager.switchLayoutMode(LayoutMode.VideoChat);
-            } else {
-                layoutManager.switchLayoutMode(LayoutMode.Presentation);
-            }
+        this.input.keyboard.on('keyup-' + 'M', () => {
+            this.switchLayoutMode();
         });
+
+        this.repositionCallback = this.reposition.bind(this);
+        window.addEventListener('resize', this.repositionCallback);
+        this.reposition();
+    }
+
+    private switchLayoutMode(): void {
+        const mode = layoutManager.getLayoutMode();
+        if (mode === LayoutMode.Presentation) {
+            layoutManager.switchLayoutMode(LayoutMode.VideoChat);
+            this.presentationModeSprite.setFrame(1);
+            this.chatModeSprite.setFrame(2);
+        } else {
+            layoutManager.switchLayoutMode(LayoutMode.Presentation);
+            this.presentationModeSprite.setFrame(0);
+            this.chatModeSprite.setFrame(3);
+        }
     }
 
     private getExitSceneUrl(layer: ITiledMapLayer): string|undefined {
@@ -634,6 +668,7 @@ export class GameScene extends Phaser.Scene {
             this.simplePeer.unregister();
             this.scene.stop();
             this.scene.remove(this.scene.key);
+            window.removeEventListener('resize', this.repositionCallback);
             this.scene.start(nextSceneKey.key, {
                 startLayerName: nextSceneKey.hash
             });
@@ -820,5 +855,10 @@ export class GameScene extends Phaser.Scene {
         const startPos = mapUrlStart.indexOf('://')+3;
         const endPos = mapUrlStart.indexOf(".json");
         return mapUrlStart.substring(startPos, endPos);
+    }
+
+    private reposition(): void {
+        this.presentationModeSprite.setY(this.game.renderer.height - 2);
+        this.chatModeSprite.setY(this.game.renderer.height - 2);
     }
 }
