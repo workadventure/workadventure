@@ -18,7 +18,7 @@ import {PlayerMovement} from "./PlayerMovement";
 import {PlayersPositionInterpolator} from "./PlayersPositionInterpolator";
 import {RemotePlayer} from "../Entity/RemotePlayer";
 import {Queue} from 'queue-typescript';
-import {SimplePeer} from "../../WebRtc/SimplePeer";
+import {SimplePeer, UserSimplePeer} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
 import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
 import {loadAllLayers} from "../Entity/body_character";
@@ -227,6 +227,19 @@ export class GameScene extends Phaser.Scene {
 
             // When connection is performed, let's connect SimplePeer
             this.simplePeer = new SimplePeer(this.connection);
+            const self = this;
+            this.simplePeer.registerPeerConnectionListener({
+                onConnect(user: UserSimplePeer) {
+                    self.presentationModeSprite.setVisible(true);
+                    self.chatModeSprite.setVisible(true);
+                },
+                onDisconnect(userId: string) {
+                    if (self.simplePeer.getNbConnections() === 0) {
+                        self.presentationModeSprite.setVisible(false);
+                        self.chatModeSprite.setVisible(false);
+                    }
+                }
+            })
 
             this.scene.wake();
             this.scene.sleep(ReconnectingSceneName);
@@ -374,19 +387,20 @@ export class GameScene extends Phaser.Scene {
             }, 500);
         }
 
-        // FIXME: handle display / hide based on number of cameras connected
         this.presentationModeSprite = this.add.sprite(2, this.game.renderer.height - 2, 'layout_modes', 0);
         this.presentationModeSprite.setScrollFactor(0, 0);
         this.presentationModeSprite.setOrigin(0, 1);
         this.presentationModeSprite.setInteractive();
+        this.presentationModeSprite.setVisible(false);
         this.presentationModeSprite.on('pointerup', this.switchLayoutMode.bind(this));
         this.chatModeSprite = this.add.sprite(36, this.game.renderer.height - 2, 'layout_modes', 3);
         this.chatModeSprite.setScrollFactor(0, 0);
         this.chatModeSprite.setOrigin(0, 1);
         this.chatModeSprite.setInteractive();
+        this.chatModeSprite.setVisible(false);
         this.chatModeSprite.on('pointerup', this.switchLayoutMode.bind(this));
-        
-        // FIXME: change this to use the class for input
+
+        // FIXME: change this to use the UserInputManager class for input
         this.input.keyboard.on('keyup-' + 'M', () => {
             this.switchLayoutMode();
         });

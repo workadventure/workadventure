@@ -14,6 +14,12 @@ export interface UserSimplePeer{
     initiator?: boolean;
 }
 
+export interface PeerConnectionListener {
+    onConnect(user: UserSimplePeer): void;
+
+    onDisconnect(userId: string): void;
+}
+
 /**
  * This class manages connections to all the peers in the same group as me.
  */
@@ -24,6 +30,7 @@ export class SimplePeer {
 
     private PeerConnectionArray: Map<string, SimplePeerNamespace.Instance> = new Map<string, SimplePeerNamespace.Instance>();
     private readonly updateLocalStreamCallback: (media: MediaStream) => void;
+    private readonly peerConnectionListeners: Array<PeerConnectionListener> = new Array<PeerConnectionListener>();
 
     constructor(Connection: Connection, WebRtcRoomId: string = "test-webrtc") {
         this.Connection = Connection;
@@ -32,6 +39,14 @@ export class SimplePeer {
         this.updateLocalStreamCallback = this.updatedLocalStream.bind(this);
         mediaManager.onUpdateLocalStream(this.updateLocalStreamCallback);
         this.initialise();
+    }
+
+    public registerPeerConnectionListener(peerConnectionListener: PeerConnectionListener) {
+        this.peerConnectionListeners.push(peerConnectionListener);
+    }
+
+    public getNbConnections(): number {
+        return this.PeerConnectionArray.size;
     }
 
     /**
@@ -182,6 +197,10 @@ export class SimplePeer {
         });
 
         this.addMedia(user.userId);
+
+        for (let peerConnectionListener of this.peerConnectionListeners) {
+            peerConnectionListener.onConnect(user);
+        }
     }
 
     /**
@@ -203,6 +222,9 @@ export class SimplePeer {
             peer.destroy();
             this.PeerConnectionArray.delete(userId)
             //console.log('Nb users in peerConnectionArray '+this.PeerConnectionArray.size);
+            for (let peerConnectionListener of this.peerConnectionListeners) {
+                peerConnectionListener.onDisconnect(userId);
+            }
         } catch (err) {
             console.error("closeConnection", err)
         }
