@@ -1,34 +1,33 @@
 import {GameManager, gameManager, HasMovedEvent} from "./GameManager";
 import {
     Connection,
-    GroupCreatedUpdatedMessageInterface, MessageUserJoined,
+    GroupCreatedUpdatedMessageInterface,
+    MessageUserJoined,
     MessageUserMovedInterface,
-    MessageUserPositionInterface, PointInterface, PositionInterface
+    MessageUserPositionInterface,
+    PointInterface,
+    PositionInterface
 } from "../../Connection";
 import {CurrentGamerInterface, hasMovedEventName, Player} from "../Player/Player";
-import { DEBUG_MODE, ZOOM_LEVEL, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
-import {
-    ITiledMap,
-    ITiledMapLayer,
-    ITiledMapLayerProperty,
-    ITiledTileSet
-} from "../Map/ITiledMap";
+import {DEBUG_MODE, POSITION_DELAY, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
+import {ITiledMap, ITiledMapLayer, ITiledMapLayerProperty, ITiledTileSet} from "../Map/ITiledMap";
 import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Character";
-import Texture = Phaser.Textures.Texture;
-import Sprite = Phaser.GameObjects.Sprite;
-import CanvasTexture = Phaser.Textures.CanvasTexture;
 import {AddPlayerInterface} from "./AddPlayerInterface";
 import {PlayerAnimationNames} from "../Player/Animation";
 import {PlayerMovement} from "./PlayerMovement";
 import {PlayersPositionInterpolator} from "./PlayersPositionInterpolator";
 import {RemotePlayer} from "../Entity/RemotePlayer";
-import GameObject = Phaser.GameObjects.GameObject;
-import { Queue } from 'queue-typescript';
-import {SimplePeer} from "../../WebRtc/SimplePeer";
+import {Queue} from 'queue-typescript';
+import {SimplePeer, UserSimplePeer} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
-import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
-import {LAYERS, loadAllLayers} from "../Entity/body_character";
+import {loadAllLayers} from "../Entity/body_character";
+import {layoutManager, LayoutMode} from "../../WebRtc/LayoutManager";
+import Texture = Phaser.Textures.Texture;
+import Sprite = Phaser.GameObjects.Sprite;
+import CanvasTexture = Phaser.Textures.CanvasTexture;
+import GameObject = Phaser.GameObjects.GameObject;
+import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 
 
 export enum Textures {
@@ -107,6 +106,9 @@ export class GameScene extends Phaser.Scene {
 
     private PositionNextScene: Array<Array<{ key: string, hash: string }>> = new Array<Array<{ key: string, hash: string }>>();
     private startLayerName: string|undefined;
+    private presentationModeSprite!: Sprite;
+    private chatModeSprite!: Sprite;
+    private repositionCallback!: (this: Window, ev: UIEvent) => void;
 
     static createFromUrl(mapUrlFile: string, instance: string, key: string|null = null): GameScene {
         const mapKey = GameScene.getMapKeyByUrl(mapUrlFile);
@@ -158,6 +160,12 @@ export class GameScene extends Phaser.Scene {
                 {frameWidth: 32, frameHeight: 32}
             );
         });
+
+        this.load.spritesheet(
+            'layout_modes',
+            'resources/objects/layout_modes.png',
+            {frameWidth: 32, frameHeight: 32}
+        );
 
         loadAllLayers(this.load);
 
@@ -214,10 +222,24 @@ export class GameScene extends Phaser.Scene {
 
                 this.scene.stop(this.scene.key);
                 this.scene.remove(this.scene.key);
+                window.removeEventListener('resize', this.repositionCallback);
             })
 
             // When connection is performed, let's connect SimplePeer
             this.simplePeer = new SimplePeer(this.connection);
+            const self = this;
+            this.simplePeer.registerPeerConnectionListener({
+                onConnect(user: UserSimplePeer) {
+                    self.presentationModeSprite.setVisible(true);
+                    self.chatModeSprite.setVisible(true);
+                },
+                onDisconnect(userId: string) {
+                    if (self.simplePeer.getNbConnections() === 0) {
+                        self.presentationModeSprite.setVisible(false);
+                        self.chatModeSprite.setVisible(false);
+                    }
+                }
+            })
 
             this.scene.wake();
             this.scene.sleep(ReconnectingSceneName);
@@ -363,6 +385,41 @@ export class GameScene extends Phaser.Scene {
                     this.scene.launch(ReconnectingSceneName);
                 }
             }, 500);
+        }
+
+        this.presentationModeSprite = this.add.sprite(2, this.game.renderer.height - 2, 'layout_modes', 0);
+        this.presentationModeSprite.setScrollFactor(0, 0);
+        this.presentationModeSprite.setOrigin(0, 1);
+        this.presentationModeSprite.setInteractive();
+        this.presentationModeSprite.setVisible(false);
+        this.presentationModeSprite.on('pointerup', this.switchLayoutMode.bind(this));
+        this.chatModeSprite = this.add.sprite(36, this.game.renderer.height - 2, 'layout_modes', 3);
+        this.chatModeSprite.setScrollFactor(0, 0);
+        this.chatModeSprite.setOrigin(0, 1);
+        this.chatModeSprite.setInteractive();
+        this.chatModeSprite.setVisible(false);
+        this.chatModeSprite.on('pointerup', this.switchLayoutMode.bind(this));
+
+        // FIXME: change this to use the UserInputManager class for input
+        this.input.keyboard.on('keyup-' + 'M', () => {
+            this.switchLayoutMode();
+        });
+
+        this.repositionCallback = this.reposition.bind(this);
+        window.addEventListener('resize', this.repositionCallback);
+        this.reposition();
+    }
+
+    private switchLayoutMode(): void {
+        const mode = layoutManager.getLayoutMode();
+        if (mode === LayoutMode.Presentation) {
+            layoutManager.switchLayoutMode(LayoutMode.VideoChat);
+            this.presentationModeSprite.setFrame(1);
+            this.chatModeSprite.setFrame(2);
+        } else {
+            layoutManager.switchLayoutMode(LayoutMode.Presentation);
+            this.presentationModeSprite.setFrame(0);
+            this.chatModeSprite.setFrame(3);
         }
     }
 
@@ -625,6 +682,7 @@ export class GameScene extends Phaser.Scene {
             this.simplePeer.unregister();
             this.scene.stop();
             this.scene.remove(this.scene.key);
+            window.removeEventListener('resize', this.repositionCallback);
             this.scene.start(nextSceneKey.key, {
                 startLayerName: nextSceneKey.hash
             });
@@ -811,5 +869,10 @@ export class GameScene extends Phaser.Scene {
         const startPos = mapUrlStart.indexOf('://')+3;
         const endPos = mapUrlStart.indexOf(".json");
         return mapUrlStart.substring(startPos, endPos);
+    }
+
+    private reposition(): void {
+        this.presentationModeSprite.setY(this.game.renderer.height - 2);
+        this.chatModeSprite.setY(this.game.renderer.height - 2);
     }
 }
