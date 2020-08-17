@@ -13,12 +13,19 @@ export interface HasMovedEvent {
 }
 
 export class GameManager {
-    private playerName: string;
-    private characterUserSelected: string;
+    private playerName!: string;
+    private characterLayers!: string[];
 
-    public storePlayerDetails(name: string, characterUserSelected : string): void {
+    public setPlayerName(name: string): void {
         this.playerName = name;
-        this.characterUserSelected = characterUserSelected;
+    }
+
+    public setCharacterUserSelected(characterUserSelected : string): void {
+        this.characterLayers = [characterUserSelected];
+    }
+
+    public setCharacterLayers(layers: string[]) {
+        this.characterLayers = layers;
     }
 
     loadStartMap() : Promise<StartMapInterface> {
@@ -35,8 +42,8 @@ export class GameManager {
         return this.playerName;
     }
 
-    getCharacterSelected(): string {
-        return this.characterUserSelected;
+    getCharacterSelected(): string[] {
+        return this.characterLayers;
     }
 
     loadMap(mapUrl: string, scene: Phaser.Scenes.ScenePlugin, instance: string): string {

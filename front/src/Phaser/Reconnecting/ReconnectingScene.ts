@@ -9,9 +9,8 @@ enum ReconnectingTextures {
 }
 
 export class ReconnectingScene extends Phaser.Scene {
-    private reconnectingField: TextField;
-    private logo: Image;
-    private cat: Sprite;
+    private reconnectingField!: TextField;
+    private logo!: Image;
 
     constructor() {
         super({

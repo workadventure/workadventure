@@ -179,7 +179,7 @@ export class IoSocketController {
                     //add function to refresh position user in real time.
                     //this.refreshUserPosition(Client);
 
-                    const messageUserJoined = new MessageUserJoined(Client.userId, Client.name, Client.character, Client.position);
+                    const messageUserJoined = new MessageUserJoined(Client.userId, Client.name, Client.characterLayers, Client.position);
 
                     socket.to(roomId).emit(SockerIoEvent.JOIN_ROOM, messageUserJoined);
 
@@ -190,7 +190,7 @@ export class IoSocketController {
                             console.warn('Something went wrong. The World contains a user "'+user.id+"' but this user does not exist in the sockets list!");
                             return null;
                         }
-                        return new MessageUserPosition(user.id, player.name, player.character, player.position);
+                        return new MessageUserPosition(user.id, player.name, player.characterLayers, player.position);
                     }).filter((item: MessageUserPosition|null) => item !== null);
 
                     const listOfItems: {[itemId: string]: unknown} = {};
@@ -289,7 +289,7 @@ export class IoSocketController {
                 }
                 const Client = (socket as ExSocketInterface);
                 Client.name = playerDetails.name;
-                Client.character = playerDetails.character;
+                Client.characterLayers = playerDetails.characterLayers;
                 answerFn(Client.userId);
             });
 

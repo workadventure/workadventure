@@ -13,23 +13,23 @@ export interface CurrentGamerInterface extends Character{
 }
 
 export class Player extends Character implements CurrentGamerInterface {
-    private previousDirection: string;
-    private wasMoving: boolean;
+    private previousDirection: string = PlayerAnimationNames.WalkDown;
+    private wasMoving: boolean = false;
 
     constructor(
         Scene: GameScene,
         x: number,
         y: number,
         name: string,
-        PlayerTexture: string,
+        PlayerTextures: string[],
         direction: string,
         moving: boolean,
         private userInputManager: UserInputManager
     ) {
-        super(Scene, x, y, PlayerTexture, name, direction, moving, 1);
+        super(Scene, x, y, PlayerTextures, name, direction, moving, 1);
 
         //the current player model should be push away by other players to prevent conflict
-        this.setImmovable(false);
+        this.getBody().setImmovable(false);
     }
 
     moveUser(delta: number): void {

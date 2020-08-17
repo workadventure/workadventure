@@ -1,3 +1,5 @@
+import {DivImportance, layoutManager} from "./LayoutManager";
+
 const videoConstraint: boolean|MediaTrackConstraints = {
     width: { ideal: 1280 },
     height: { ideal: 720 },
@@ -73,8 +75,8 @@ export class MediaManager {
     }
 
     activeVisio(){
-        const webRtc = this.getElementByIdOrFail('webRtc');
-        webRtc.classList.add('active');
+        const gameOverlay = this.getElementByIdOrFail('game-overlay');
+        gameOverlay.classList.add('active');
     }
 
     enabledCamera() {
@@ -184,18 +186,22 @@ export class MediaManager {
      */
     addActiveVideo(userId : string, userName: string = ""){
         this.webrtcInAudio.play();
-        const elementRemoteVideo = this.getElementByIdOrFail("activeCam");
+
         userName = userName.toUpperCase();
         const color = this.getColorByString(userName);
-        elementRemoteVideo.insertAdjacentHTML('beforeend', `
-            <div id="div-${userId}" class="video-container" style="border-color: ${color};">
+
+        const html =  `
+            <div id="div-${userId}" class="video-container">
                 <div class="connecting-spinner"></div>
                 <div class="rtc-error" style="display: none"></div>
-                <i style="background-color: ${color};">${userName}</i>
+                <i id="name-${userId}" style="background-color: ${color};">${userName}</i>
                 <img id="microphone-${userId}" src="resources/logos/microphone-close.svg">
                 <video id="${userId}" autoplay></video>
             </div>
-        `);
+        `;
+
+        layoutManager.add(DivImportance.Normal, userId, html);
+
         this.remoteVideo.set(userId, this.getElementByIdOrFail<HTMLVideoElement>(userId));
     }
 
@@ -232,11 +238,10 @@ export class MediaManager {
         if (element) {
             element.style.opacity = "0";
         }
-        element = document.getElementById(`div-${userId}`);
-        if (!element) {
-            return;
+        element = document.getElementById(`name-${userId}`);
+        if (element) {
+            element.style.display = "block";
         }
-        element.style.borderStyle = "solid";
     }
 
     /**
@@ -248,11 +253,10 @@ export class MediaManager {
         if(element){
             element.style.opacity = "1";
         }
-        element = document.getElementById(`div-${userId}`);
-        if(!element){
-            return;
+        element = document.getElementById(`name-${userId}`);
+        if(element){
+            element.style.display = "none";
         }
-        element.style.borderStyle = "none";
     }
 
     /**
@@ -274,11 +278,7 @@ export class MediaManager {
      * @param userId
      */
     removeActiveVideo(userId : string){
-        const element = document.getElementById(`div-${userId}`);
-        if(!element){
-            return;
-        }
-        element.remove();
+        layoutManager.remove(userId);
         this.remoteVideo.delete(userId);
     }
 

@@ -1,12 +1,16 @@
 import {GameManager, gameManager, HasMovedEvent} from "./GameManager";
 import {
     Connection,
-    GroupCreatedUpdatedMessageInterface, MessageUserJoined,
+    GroupCreatedUpdatedMessageInterface,
+    MessageUserJoined,
     MessageUserMovedInterface,
-    MessageUserPositionInterface, PointInterface, PositionInterface, RoomJoinedMessageInterface
+    MessageUserPositionInterface,
+    PointInterface,
+    PositionInterface,
+    RoomJoinedMessageInterface
 } from "../../Connection";
 import {CurrentGamerInterface, hasMovedEventName, Player} from "../Player/Player";
-import { DEBUG_MODE, ZOOM_LEVEL, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
+import {DEBUG_MODE, POSITION_DELAY, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import {
     ITiledMap,
     ITiledMapLayer,
@@ -14,18 +18,20 @@ import {
     ITiledTileSet
 } from "../Map/ITiledMap";
 import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Character";
-import Texture = Phaser.Textures.Texture;
-import Sprite = Phaser.GameObjects.Sprite;
-import CanvasTexture = Phaser.Textures.CanvasTexture;
 import {AddPlayerInterface} from "./AddPlayerInterface";
 import {PlayerAnimationNames} from "../Player/Animation";
 import {PlayerMovement} from "./PlayerMovement";
 import {PlayersPositionInterpolator} from "./PlayersPositionInterpolator";
 import {RemotePlayer} from "../Entity/RemotePlayer";
-import GameObject = Phaser.GameObjects.GameObject;
-import { Queue } from 'queue-typescript';
-import {SimplePeer} from "../../WebRtc/SimplePeer";
+import {Queue} from 'queue-typescript';
+import {SimplePeer, UserSimplePeer} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
+import {loadAllLayers} from "../Entity/body_character";
+import {layoutManager, LayoutMode} from "../../WebRtc/LayoutManager";
+import Texture = Phaser.Textures.Texture;
+import Sprite = Phaser.GameObjects.Sprite;
+import CanvasTexture = Phaser.Textures.CanvasTexture;
+import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
 import {ItemFactoryInterface} from "../Items/ItemFactoryInterface";
@@ -75,36 +81,36 @@ interface DeleteGroupEventInterface {
 export class GameScene extends Phaser.Scene {
     GameManager : GameManager;
     Terrains : Array<Phaser.Tilemaps.Tileset>;
-    CurrentPlayer: CurrentGamerInterface;
-    MapPlayers : Phaser.Physics.Arcade.Group;
+    CurrentPlayer!: CurrentGamerInterface;
+    MapPlayers!: Phaser.Physics.Arcade.Group;
     MapPlayersByKey : Map<string, RemotePlayer> = new Map<string, RemotePlayer>();
-    Map: Phaser.Tilemaps.Tilemap;
-    Layers : Array<Phaser.Tilemaps.StaticTilemapLayer>;
-    Objects : Array<Phaser.Physics.Arcade.Sprite>;
-    mapFile: ITiledMap;
+    Map!: Phaser.Tilemaps.Tilemap;
+    Layers!: Array<Phaser.Tilemaps.StaticTilemapLayer>;
+    Objects!: Array<Phaser.Physics.Arcade.Sprite>;
+    mapFile!: ITiledMap;
     groups: Map<string, Sprite>;
-    startX: number;
-    startY: number;
-    circleTexture: CanvasTexture;
+    startX!: number;
+    startY!: number;
+    circleTexture!: CanvasTexture;
     pendingEvents: Queue<InitUserPositionEventInterface|AddPlayerEventInterface|RemovePlayerEventInterface|UserMovedEventInterface|GroupCreatedUpdatedEventInterface|DeleteGroupEventInterface> = new Queue<InitUserPositionEventInterface|AddPlayerEventInterface|RemovePlayerEventInterface|UserMovedEventInterface|GroupCreatedUpdatedEventInterface|DeleteGroupEventInterface>();
     private initPosition: PositionInterface|null = null;
     private playersPositionInterpolator = new PlayersPositionInterpolator();
-    private connection: Connection;
-    private simplePeer : SimplePeer;
-    private connectionPromise: Promise<Connection>
+    private connection!: Connection;
+    private simplePeer!: SimplePeer;
+    private connectionPromise!: Promise<Connection>
     private connectionAnswerPromise: Promise<RoomJoinedMessageInterface>;
-    private connectionAnswerPromiseResolve: (value?: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>) => void;
+    private connectionAnswerPromiseResolve!: (value?: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>) => void;
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
     private createPromise: Promise<void>;
-    private createPromiseResolve: (value?: void | PromiseLike<void>) => void;
+    private createPromiseResolve!: (value?: void | PromiseLike<void>) => void;
 
     MapKey: string;
     MapUrlFile: string;
     RoomId: string;
     instance: string;
 
-    currentTick: number;
-    lastSentTick: number; // The last tick at which a position was sent.
+    currentTick!: number;
+    lastSentTick!: number; // The last tick at which a position was sent.
     lastMoveEventSent: HasMovedEvent = {
         direction: '',
         moving: false,
@@ -114,10 +120,13 @@ export class GameScene extends Phaser.Scene {
 
     private PositionNextScene: Array<Array<{ key: string, hash: string }>> = new Array<Array<{ key: string, hash: string }>>();
     private startLayerName: string|undefined;
+    private presentationModeSprite!: Sprite;
+    private chatModeSprite!: Sprite;
+    private repositionCallback!: (this: Window, ev: UIEvent) => void;
     private actionableItems: Map<number, ActionableItem> = new Map<number, ActionableItem>();
     // The item that can be selected by pressing the space key.
     private outlinedItem: ActionableItem|null = null;
-    private userInputManager: UserInputManager;
+    private userInputManager!: UserInputManager;
 
     static createFromUrl(mapUrlFile: string, instance: string, key: string|null = null): GameScene {
         const mapKey = GameScene.getMapKeyByUrl(mapUrlFile);
@@ -177,6 +186,14 @@ export class GameScene extends Phaser.Scene {
             );
         });
 
+        this.load.spritesheet(
+            'layout_modes',
+            'resources/objects/layout_modes.png',
+            {frameWidth: 32, frameHeight: 32}
+        );
+
+        loadAllLayers(this.load);
+
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
 
         this.connectionPromise = Connection.createConnection(gameManager.getPlayerName(), gameManager.getCharacterSelected()).then((connection : Connection) => {
@@ -185,7 +202,7 @@ export class GameScene extends Phaser.Scene {
             connection.onUserJoins((message: MessageUserJoined) => {
                 const userMessage: AddPlayerInterface = {
                     userId: message.userId,
-                    character: message.character,
+                    characterLayers: message.characterLayers,
                     name: message.name,
                     position: message.position
                 }
@@ -230,6 +247,7 @@ export class GameScene extends Phaser.Scene {
 
                 this.scene.stop(this.scene.key);
                 this.scene.remove(this.scene.key);
+                window.removeEventListener('resize', this.repositionCallback);
             })
 
             connection.onActionableEvent((message => {
@@ -243,6 +261,19 @@ export class GameScene extends Phaser.Scene {
 
             // When connection is performed, let's connect SimplePeer
             this.simplePeer = new SimplePeer(this.connection);
+            const self = this;
+            this.simplePeer.registerPeerConnectionListener({
+                onConnect(user: UserSimplePeer) {
+                    self.presentationModeSprite.setVisible(true);
+                    self.chatModeSprite.setVisible(true);
+                },
+                onDisconnect(userId: string) {
+                    if (self.simplePeer.getNbConnections() === 0) {
+                        self.presentationModeSprite.setVisible(false);
+                        self.chatModeSprite.setVisible(false);
+                    }
+                }
+            })
 
             this.scene.wake();
             this.scene.sleep(ReconnectingSceneName);
@@ -484,6 +515,41 @@ export class GameScene extends Phaser.Scene {
         this.input.keyboard.on('keyup-SPACE', () => {
             this.outlinedItem?.activate();
         });
+
+        this.presentationModeSprite = this.add.sprite(2, this.game.renderer.height - 2, 'layout_modes', 0);
+        this.presentationModeSprite.setScrollFactor(0, 0);
+        this.presentationModeSprite.setOrigin(0, 1);
+        this.presentationModeSprite.setInteractive();
+        this.presentationModeSprite.setVisible(false);
+        this.presentationModeSprite.on('pointerup', this.switchLayoutMode.bind(this));
+        this.chatModeSprite = this.add.sprite(36, this.game.renderer.height - 2, 'layout_modes', 3);
+        this.chatModeSprite.setScrollFactor(0, 0);
+        this.chatModeSprite.setOrigin(0, 1);
+        this.chatModeSprite.setInteractive();
+        this.chatModeSprite.setVisible(false);
+        this.chatModeSprite.on('pointerup', this.switchLayoutMode.bind(this));
+
+        // FIXME: change this to use the UserInputManager class for input
+        this.input.keyboard.on('keyup-' + 'M', () => {
+            this.switchLayoutMode();
+        });
+
+        this.repositionCallback = this.reposition.bind(this);
+        window.addEventListener('resize', this.repositionCallback);
+        this.reposition();
+    }
+
+    private switchLayoutMode(): void {
+        const mode = layoutManager.getLayoutMode();
+        if (mode === LayoutMode.Presentation) {
+            layoutManager.switchLayoutMode(LayoutMode.VideoChat);
+            this.presentationModeSprite.setFrame(1);
+            this.chatModeSprite.setFrame(2);
+        } else {
+            layoutManager.switchLayoutMode(LayoutMode.Presentation);
+            this.presentationModeSprite.setFrame(0);
+            this.chatModeSprite.setFrame(3);
+        }
     }
 
     private getExitSceneUrl(layer: ITiledMapLayer): string|undefined {
@@ -791,6 +857,7 @@ export class GameScene extends Phaser.Scene {
             this.simplePeer.unregister();
             this.scene.stop();
             this.scene.remove(this.scene.key);
+            window.removeEventListener('resize', this.repositionCallback);
             this.scene.start(nextSceneKey.key, {
                 startLayerName: nextSceneKey.hash
             });
@@ -870,7 +937,7 @@ export class GameScene extends Phaser.Scene {
             addPlayerData.position.x,
             addPlayerData.position.y,
             addPlayerData.name,
-            addPlayerData.character,
+            addPlayerData.characterLayers,
             addPlayerData.position.direction,
             addPlayerData.position.moving
         );
@@ -986,5 +1053,10 @@ export class GameScene extends Phaser.Scene {
      */
     emitActionableEvent(itemId: number, eventName: string, state: unknown, parameters: unknown) {
         this.connection.emitActionableEvent(itemId, eventName, state, parameters);
+    }
+
+    private reposition(): void {
+        this.presentationModeSprite.setY(this.game.renderer.height - 2);
+        this.chatModeSprite.setY(this.game.renderer.height - 2);
     }
 }

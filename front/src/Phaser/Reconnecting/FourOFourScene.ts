@@ -1,7 +1,6 @@
 import {TextField} from "../Components/TextField";
 import Image = Phaser.GameObjects.Image;
 import Sprite = Phaser.GameObjects.Sprite;
-import {SelectCharacterSceneInitDataInterface} from "../Login/SelectCharacterScene";
 import Text = Phaser.GameObjects.Text;
 
 export const FourOFourSceneName = "FourOFourScene";
@@ -11,12 +10,12 @@ enum Textures {
 }
 
 export class FourOFourScene extends Phaser.Scene {
-    private mapNotFoundField: TextField;
-    private couldNotFindField: TextField;
-    private fileNameField: Text;
-    private logo: Image;
-    private cat: Sprite;
-    private file: string;
+    private mapNotFoundField!: TextField;
+    private couldNotFindField!: TextField;
+    private fileNameField!: Text;
+    private logo!: Image;
+    private cat!: Sprite;
+    private file!: string;
 
     constructor() {
         super({

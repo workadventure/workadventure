@@ -23,34 +23,12 @@ body .message-info.info{
 body .message-info.warning{
     background: #ffa500d6;
 }
-video{
-    -webkit-transform: scaleX(-1);
-    transform: scaleX(-1);
-}
-.webrtc{
-    display: none;
-    position: absolute;
-    right: 0px;
-    height: 100%;
-    width: 300px;
-}
-.webrtc.active{
-    display: block;
-}
-
-.webrtc, .activeCam{}
-.activeCam .video-container{
-    position: absolute;
-    height: 25%;
-    top: 10px;
-    margin: 5px;
-    right: -100px;
+.video-container{
+    position: relative;
     transition: all 0.2s ease;
-    border-color: black;
-    border-style: solid;
-    border-width: 0.2px;
+    background-color: #00000099;
 }
-.activeCam .video-container i{
+.video-container i{
     position: absolute;
     width: 100px;
     height: 65px;
@@ -63,10 +41,10 @@ video{
     font-size: 28px;
     color: white;
 }
-.activeCam .video-container img.active{
+.video-container img.active{
     display: block;
 }
-.activeCam .video-container img{
+.video-container img{
     position: absolute;
     display: none;
     width: 15px;
@@ -78,35 +56,28 @@ video{
     padding: 10px;
     z-index: 2;
 }
-.activeCam .video-container video{
+.video-container video{
     height: 100%;
 }
 
-.webrtc:hover .activeCam .video-container{
-    right: 10px;
-}
-.activeCam .video-container#div-myCamVideo{
+.video-container#div-myCamVideo{
     border: none;
 }
-.activeCam .video-container video#myCamVideo{
-    width: 200px;
-    height: 113px;
+
+#div-myCamVideo {
+    position: absolute;
+    right: 0;
+    bottom: 0;
 }
 
-/*CSS size for 2 - 3 elements*/
-.activeCam .video-container:nth-child(1){
-    /*this is for camera of user*/
-    top: 75%;
+video#myCamVideo{
+    width: 15vw;
+    -webkit-transform: scaleX(-1);
+    transform: scaleX(-1);
+    /*width: 200px;*/
+    /*height: 113px;*/
 }
-.activeCam .video-container:nth-child(2){
-    top: 0%;
-}
-.activeCam .video-container:nth-child(3){
-    top: 25%;
-}
-.activeCam .video-container:nth-child(4) {
-    top: 50%;
-}
+
 
 /*btn animation*/
 .btn-cam-action div{
@@ -118,11 +89,11 @@ video{
     background: #666;
     box-shadow: 2px 2px 24px #444;
     border-radius: 48px;
-    transform: translateY(12vw);
+    transform: translateY(12vh);
     transition-timing-function: ease-in-out;
     bottom: 20px;
 }
-.webrtc:hover .btn-cam-action div{
+#activeCam:hover .btn-cam-action div{
     transform: translateY(0);
 }
 .btn-cam-action div:hover{
@@ -236,4 +207,157 @@ video{
 }
 .webrtcsetup.active{
     display: block;
+}
+
+
+/* New layout */
+body {
+    margin: 0;
+    height: 100vh;
+    width: 100vw;
+}
+.main-container {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    align-items: stretch;
+}
+
+@media (min-aspect-ratio: 1/1) {
+    .main-container {
+        flex-direction: row;
+    }
+
+    .game-overlay {
+        flex-direction: row;
+    }
+
+    .sidebar {
+        flex-direction: column;
+    }
+
+    .sidebar > div {
+        max-height: 21%;
+    }
+}
+@media (max-aspect-ratio: 1/1) {
+    .main-container {
+        flex-direction: column;
+    }
+
+    .game-overlay {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        flex-direction: row;
+        align-items: flex-end;
+    }
+
+    .sidebar > div {
+        max-width: 21%;
+    }
+}
+
+.game {
+    flex-basis: 100%;
+    position: relative; /* Position relative is needed for the game-overlay. */
+}
+
+/* A potentially shared website could appear in an iframe in the cowebsite space. */
+.cowebsite {
+    flex-basis: 100%;
+    transition: flex-basis 0.5s;
+}
+
+/*.cowebsite:hover {
+    flex-basis: 100%;
+}*/
+
+.cowebsite iframe {
+    width: 100%;
+    height: 100%;
+}
+
+
+.game-overlay {
+    display: none;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    /* TODO: DO WE NEED FLEX HERE???? WE WANT A SIDEBAR OF EXACTLY 25% (note: flex useful for direction!!!) */
+}
+
+.game-overlay.active {
+    display: flex;
+}
+
+.game-overlay video {
+    width: 100%
+}
+
+.main-section {
+    flex: 0 0 75%;
+    display: flex;
+    justify-content: start;
+    /*align-items: flex-start;*/
+    flex-wrap: wrap;
+}
+
+.main-section > div {
+    margin: 5%;
+    flex-basis: 90%;
+    /*flex-shrink: 2;*/
+}
+
+.sidebar {
+    flex: 0 0 25%;
+    display: flex;
+}
+
+.sidebar > div {
+    margin: 2%;
+}
+
+/* Let's make sure videos are vertically centered if they need to be cropped */
+.media-container {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.chat-mode {
+    display: flex;
+    width: 100%;
+
+    flex-wrap: wrap;
+    align-items: flex-start;
+
+    padding: 1%;
+}
+
+.chat-mode div {
+    margin: 1%;
+    max-height: 96%;
+}
+
+.chat-mode.one-col > div {
+    flex-basis: 98%;
+}
+
+.chat-mode.two-col > div {
+    flex-basis: 48%;
+}
+
+.chat-mode.three-col > div {
+    flex-basis: 31.333333%;
+}
+
+.chat-mode.four-col > div {
+    flex-basis: 23%;
+}
+
+.chat-mode > div:last-child {
+    flex-grow: 5;
 }

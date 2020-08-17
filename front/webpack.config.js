@@ -46,5 +46,6 @@ module.exports = {
             Phaser: 'phaser'
         }),
         new webpack.EnvironmentPlugin(['API_URL', 'DEBUG_MODE'])
-    ]
+    ],
+
 };
