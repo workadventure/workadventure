@@ -301,7 +301,7 @@ export class IoSocketController {
             console.warn('Invalid WEBRTC_SIGNAL message received: ', data);
             return;
         }
-        if(data && data.signal && (data.signal as any).type === "offer"){
+        if(data.signal.type === "offer"){
             let roomOffer = this.offerScreenSharingByClient.get(data.roomId);
             if(!roomOffer){
                 roomOffer = new Map<string, unknown>();
