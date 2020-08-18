@@ -81,7 +81,13 @@ export interface WebRtcDisconnectMessageInterface {
 
 export interface WebRtcSignalMessageInterface {
     userId: string,
-    receiverId: string,
+    receiverId: string, // TODO: is this needed? (can we merge this with WebRtcScreenSharingMessageInterface?)
+    roomId: string,
+    signal: SignalData
+}
+
+export interface WebRtcScreenSharingMessageInterface {
+    userId: string,
     roomId: string,
     signal: SignalData
 }
@@ -213,7 +219,7 @@ export class Connection implements Connection {
         return this.socket.on(EventMessage.WEBRTC_SIGNAL, callback);
     }
 
-    public receiveWebrtcScreenSharingSignal(callback: Function) {
+    public receiveWebrtcScreenSharingSignal(callback: (message: WebRtcScreenSharingMessageInterface) => void) {
         return this.socket.on(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, callback);
     }
 

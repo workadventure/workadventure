@@ -6,9 +6,6 @@ const videoConstraint: boolean|MediaTrackConstraints = {
     height: { ideal: 720 },
     facingMode: "user"
 };
-interface MediaServiceInterface extends MediaDevices{
-    getDisplayMedia(constrain: any) : Promise<any>;
-}
 
 type UpdatedLocalStreamCallback = (media: MediaStream) => void;
 type UpdatedScreenSharingCallback = (media: MediaStream) => void;
@@ -71,14 +68,14 @@ export class MediaManager {
 
         this.monitorClose = this.getElementByIdOrFail<HTMLImageElement>('monitor-close');
         this.monitorClose.style.display = "block";
-        this.monitorClose.addEventListener('click', (e: any) => {
+        this.monitorClose.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
             this.enabledMonitor();
             //update tracking
         });
         this.monitor = this.getElementByIdOrFail<HTMLImageElement>('monitor');
         this.monitor.style.display = "none";
-        this.monitor.addEventListener('click', (e: any) => {
+        this.monitor.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
             this.disabledMonitor();
             //update tracking
@@ -191,8 +188,8 @@ export class MediaManager {
                     this.localScreenCapture = stream;
                     return stream;
                 })
-                .catch((err: any) => {
-                    console.error("Error => getScreenMedia => " + err);
+                .catch((err: unknown) => {
+                    console.error("Error => getScreenMedia => ", err);
                     throw err;
                 });
         }catch (err) {
@@ -203,10 +200,13 @@ export class MediaManager {
     }
 
     private _startScreenCapture() {
-        if ((navigator as any).getDisplayMedia) {
-            return (navigator as any).getDisplayMedia({video: true});
-        } else if ((navigator.mediaDevices as any).getDisplayMedia) {
-            return (navigator.mediaDevices as any).getDisplayMedia({video: true});
+        // getDisplayMedia was moved to mediaDevices in 2018. Typescript definitions are not up to date yet.
+        // See: https://github.com/w3c/mediacapture-screen-share/pull/86
+        //      https://github.com/microsoft/TypeScript/issues/31821
+        if ((navigator as any).getDisplayMedia) { // eslint-disable-line @typescript-eslint/no-explicit-any
+            return (navigator as any).getDisplayMedia({video: true}); // eslint-disable-line @typescript-eslint/no-explicit-any
+        } else if ((navigator.mediaDevices as any).getDisplayMedia) { // eslint-disable-line @typescript-eslint/no-explicit-any
+            return (navigator.mediaDevices as any).getDisplayMedia({video: true}); // eslint-disable-line @typescript-eslint/no-explicit-any
         } else {
             //return navigator.mediaDevices.getUserMedia(({video: {mediaSource: 'screen'}} as any));
             return new Promise((resolve, reject) => { // eslint-disable-line no-unused-vars
@@ -302,13 +302,13 @@ export class MediaManager {
         userId = `screen-sharing-${userId}`;
         this.webrtcInAudio.play();
         // FIXME: switch to DisplayManager!
-        let elementRemoteVideo = this.getElementByIdOrFail("activeScreenSharing");
+        const elementRemoteVideo = this.getElementByIdOrFail("activeScreenSharing");
         elementRemoteVideo.insertAdjacentHTML('beforeend', `
             <div id="div-${userId}" class="screen-sharing-video-container">
                 <video id="${userId}" autoplay></video>
             </div>
         `);
-        let activeHTMLVideoElement : HTMLElement|null = document.getElementById(userId);
+        const activeHTMLVideoElement : HTMLElement|null = document.getElementById(userId);
         if(!activeHTMLVideoElement){
             return;
         }
