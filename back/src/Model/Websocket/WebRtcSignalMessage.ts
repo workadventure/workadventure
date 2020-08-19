@@ -12,16 +12,9 @@ export const isWebRtcSignalMessageInterface =
         roomId: tg.isString,
         signal: isSignalData
     }).get();
-export const isWebRtcScreenSharingSignalMessageInterface =
-    new tg.IsInterface().withProperties({
-        userId: tg.isString,
-        roomId: tg.isString,
-        signal: isSignalData
-    }).get();
 export const isWebRtcScreenSharingStartMessageInterface =
     new tg.IsInterface().withProperties({
         userId: tg.isString,
         roomId: tg.isString
     }).get();
 export type WebRtcSignalMessageInterface = tg.GuardedType<typeof isWebRtcSignalMessageInterface>;
-export type WebRtcScreenSharingMessageInterface = tg.GuardedType<typeof isWebRtcScreenSharingSignalMessageInterface>;

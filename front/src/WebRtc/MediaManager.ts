@@ -42,13 +42,13 @@ export class MediaManager {
         this.microphoneClose.style.display = "none";
         this.microphoneClose.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
-            this.enabledMicrophone();
+            this.enableMicrophone();
             //update tracking
         });
         this.microphone = this.getElementByIdOrFail<HTMLImageElement>('microphone');
         this.microphone.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
-            this.disabledMicrophone();
+            this.disableMicrophone();
             //update tracking
         });
 
@@ -56,13 +56,13 @@ export class MediaManager {
         this.cinemaClose.style.display = "none";
         this.cinemaClose.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
-            this.enabledCamera();
+            this.enableCamera();
             //update tracking
         });
         this.cinema = this.getElementByIdOrFail<HTMLImageElement>('cinema');
         this.cinema.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
-            this.disabledCamera();
+            this.disableCamera();
             //update tracking
         });
 
@@ -70,24 +70,24 @@ export class MediaManager {
         this.monitorClose.style.display = "block";
         this.monitorClose.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
-            this.enabledMonitor();
+            this.enableScreenSharing();
             //update tracking
         });
         this.monitor = this.getElementByIdOrFail<HTMLImageElement>('monitor');
         this.monitor.style.display = "none";
         this.monitor.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
-            this.disabledMonitor();
+            this.disableScreenSharing();
             //update tracking
         });
     }
 
-    onUpdateLocalStream(callback: UpdatedLocalStreamCallback): void {
+    public onUpdateLocalStream(callback: UpdatedLocalStreamCallback): void {
 
         this.updatedLocalStreamCallBacks.add(callback);
     }
 
-    onUpdateScreenSharing(callback: UpdatedScreenSharingCallback): void {
+    public onUpdateScreenSharing(callback: UpdatedScreenSharingCallback): void {
 
         this.updatedScreenSharingCallBacks.add(callback);
     }
@@ -108,12 +108,12 @@ export class MediaManager {
         }
     }
 
-    activeVisio(){
+    showGameOverlay(){
         const gameOverlay = this.getElementByIdOrFail('game-overlay');
         gameOverlay.classList.add('active');
     }
 
-    enabledCamera() {
+    private enableCamera() {
         this.cinemaClose.style.display = "none";
         this.cinema.style.display = "block";
         this.constraintsMedia.video = videoConstraint;
@@ -122,7 +122,7 @@ export class MediaManager {
         });
     }
 
-    disabledCamera() {
+    private disableCamera() {
         this.cinemaClose.style.display = "block";
         this.cinema.style.display = "none";
         this.constraintsMedia.video = false;
@@ -137,7 +137,7 @@ export class MediaManager {
         });
     }
 
-    enabledMicrophone() {
+    private enableMicrophone() {
         this.microphoneClose.style.display = "none";
         this.microphone.style.display = "block";
         this.constraintsMedia.audio = true;
@@ -146,7 +146,7 @@ export class MediaManager {
         });
     }
 
-    disabledMicrophone() {
+    private disableMicrophone() {
         this.microphoneClose.style.display = "block";
         this.microphone.style.display = "none";
         this.constraintsMedia.audio = false;
@@ -160,7 +160,7 @@ export class MediaManager {
         });
     }
 
-    enabledMonitor() {
+    private enableScreenSharing() {
         this.monitorClose.style.display = "none";
         this.monitor.style.display = "block";
         this.getScreenMedia().then((stream) => {
@@ -168,7 +168,7 @@ export class MediaManager {
         });
     }
 
-    disabledMonitor() {
+    private disableScreenSharing() {
         this.monitorClose.style.display = "block";
         this.monitor.style.display = "none";
         this.localScreenCapture?.getTracks().forEach((track: MediaStreamTrack) => {
@@ -299,21 +299,18 @@ export class MediaManager {
      * @param userId
      */
     addScreenSharingActiveVideo(userId : string){
-        userId = `screen-sharing-${userId}`;
         this.webrtcInAudio.play();
-        // FIXME: switch to DisplayManager!
-        const elementRemoteVideo = this.getElementByIdOrFail("activeScreenSharing");
-        elementRemoteVideo.insertAdjacentHTML('beforeend', `
-            <div id="div-${userId}" class="screen-sharing-video-container">
+
+        userId = `screen-sharing-${userId}`;
+        const html = `
+            <div id="div-${userId}" class="video-container">
                 <video id="${userId}" autoplay></video>
             </div>
-        `);
-        const activeHTMLVideoElement : HTMLElement|null = document.getElementById(userId);
-        if(!activeHTMLVideoElement){
-            return;
-        }
-        console.log(userId, (activeHTMLVideoElement as HTMLVideoElement));
-        this.remoteVideo.set(userId, (activeHTMLVideoElement as HTMLVideoElement));
+        `;
+
+        layoutManager.add(DivImportance.Important, userId, html);
+
+        this.remoteVideo.set(userId, this.getElementByIdOrFail<HTMLVideoElement>(userId));
     }
 
     /**
