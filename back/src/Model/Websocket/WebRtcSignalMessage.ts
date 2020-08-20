@@ -9,7 +9,6 @@ export const isWebRtcSignalMessageInterface =
     new tg.IsInterface().withProperties({
         userId: tg.isString,
         receiverId: tg.isString,
-        roomId: tg.isString,
         signal: isSignalData
     }).get();
 export const isWebRtcScreenSharingStartMessageInterface =

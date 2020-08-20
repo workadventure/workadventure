@@ -311,7 +311,7 @@ export class SimplePeer {
      */
     private sendWebrtcSignal(data: unknown, userId : string) {
         try {
-            this.Connection.sendWebrtcSignal(data, this.WebRtcRoomId, null, userId);
+            this.Connection.sendWebrtcSignal(data, null, userId);
         }catch (e) {
             console.error(`sendWebrtcSignal => ${userId}`, e);
         }
@@ -325,7 +325,7 @@ export class SimplePeer {
     private sendWebrtcScreenSharingSignal(data: unknown, userId : string) {
         console.log("sendWebrtcScreenSharingSignal", data);
         try {
-            this.Connection.sendWebrtcScreenSharingSignal(data, this.WebRtcRoomId, null, userId);
+            this.Connection.sendWebrtcScreenSharingSignal(data, null, userId);
         }catch (e) {
             console.error(`sendWebrtcScreenSharingSignal => ${userId}`, e);
         }

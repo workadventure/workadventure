@@ -82,7 +82,6 @@ export interface WebRtcDisconnectMessageInterface {
 export interface WebRtcSignalMessageInterface {
     userId: string, // TODO: is this needed?
     receiverId: string,
-    roomId: string,
     signal: SignalData
 }
 
@@ -188,22 +187,20 @@ export class Connection implements Connection {
         this.socket.on(EventMessage.CONNECT_ERROR, callback)
     }
 
-    public sendWebrtcSignal(signal: unknown, roomId: string, userId? : string|null, receiverId? : string) {
+    public sendWebrtcSignal(signal: unknown, userId? : string|null, receiverId? : string) {
         return this.socket.emit(EventMessage.WEBRTC_SIGNAL, {
             userId: userId ? userId : this.userId,
             receiverId: receiverId ? receiverId : this.userId,
-            roomId: roomId,
             signal: signal
-        });
+        } as WebRtcSignalMessageInterface);
     }
 
-    public sendWebrtcScreenSharingSignal(signal: unknown, roomId: string, userId? : string|null, receiverId? : string) {
+    public sendWebrtcScreenSharingSignal(signal: unknown, userId? : string|null, receiverId? : string) {
         return this.socket.emit(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, {
             userId: userId ? userId : this.userId,
             receiverId: receiverId ? receiverId : this.userId,
-            roomId: roomId,
             signal: signal
-        });
+        } as WebRtcSignalMessageInterface);
     }
 
     public receiveWebrtcStart(callback: (message: WebRtcStartMessageInterface) => void) {
