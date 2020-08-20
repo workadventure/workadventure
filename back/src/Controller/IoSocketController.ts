@@ -13,11 +13,10 @@ import {MessageUserJoined} from "../Model/Websocket/MessageUserJoined";
 import {MessageUserMoved} from "../Model/Websocket/MessageUserMoved";
 import si from "systeminformation";
 import {Gauge} from "prom-client";
-import os from 'os';
 import {TokenInterface} from "../Controller/AuthenticateController";
 import {isJoinRoomMessageInterface} from "../Model/Websocket/JoinRoomMessage";
 import {isPointInterface, PointInterface} from "../Model/Websocket/PointInterface";
-import {isWebRtcSignalMessageInterface, isWebRtcScreenSharingSignalMessageInterface, isWebRtcScreenSharingStartMessageInterface} from "../Model/Websocket/WebRtcSignalMessage";
+import {isWebRtcSignalMessageInterface} from "../Model/Websocket/WebRtcSignalMessage";
 import {UserInGroupInterface} from "../Model/Websocket/UserInGroupInterface";
 
 enum SockerIoEvent {
