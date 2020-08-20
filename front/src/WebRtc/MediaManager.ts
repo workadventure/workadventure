@@ -186,6 +186,14 @@ export class MediaManager {
             return this._startScreenCapture()
                 .then((stream: MediaStream) => {
                     this.localScreenCapture = stream;
+
+                    // If stream ends (for instance if user clicks the stop screen sharing button in the browser), let's close the view
+                    for (const track of stream.getTracks()) {
+                        track.onended = () => {
+                            this.disableScreenSharing();
+                        };
+                    }
+
                     return stream;
                 })
                 .catch((err: unknown) => {
