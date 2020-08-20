@@ -79,6 +79,13 @@ video#myCamVideo{
 }
 
 
+.btn-cam-action {
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    width: 450px;
+    height: 150px;
+}
 /*btn animation*/
 .btn-cam-action div{
     cursor: pointer;
@@ -93,7 +100,7 @@ video#myCamVideo{
     transition-timing-function: ease-in-out;
     bottom: 20px;
 }
-#activeCam:hover .btn-cam-action div{
+.btn-cam-action:hover div{
     transform: translateY(0);
 }
 .btn-cam-action div:hover{
@@ -106,7 +113,7 @@ video#myCamVideo{
     right: 44px;
 }
 .btn-video{
-    transition: all .2s;
+    transition: all .25s;
     right: 134px;
 }
 .btn-monitor{
