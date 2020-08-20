@@ -135,7 +135,7 @@ export class SimplePeer {
         mediaManager.removeActiveVideo(user.userId);
         mediaManager.addActiveVideo(user.userId, name);
 
-        let peer = new VideoPeer(user.userId, user.initiator ? user.initiator : false, this.Connection);
+        const peer = new VideoPeer(user.userId, user.initiator ? user.initiator : false, this.Connection);
         // When a connection is established to a video stream, and if a screen sharing is taking place,
         // the user sharing screen should also initiate a connection to the remote user!
         peer.on('connect', () => {
@@ -167,7 +167,7 @@ export class SimplePeer {
             mediaManager.addScreenSharingActiveVideo(user.userId);
         }
 
-        let peer = new ScreenSharingPeer(user.userId, user.initiator ? user.initiator : false, this.Connection);
+        const peer = new ScreenSharingPeer(user.userId, user.initiator ? user.initiator : false, this.Connection);
         this.PeerScreenSharingConnectionArray.set(user.userId, peer);
 
         for (const peerConnectionListener of this.peerConnectionListeners) {
