@@ -39,7 +39,7 @@ export class VideoPeer extends Peer {
         });*/
 
         this.on('close', () => {
-            this.closeConnection();
+            this.destroy();
         });
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -97,15 +97,15 @@ export class VideoPeer extends Peer {
     /**
      * This is triggered twice. Once by the server, and once by a remote client disconnecting
      */
-    public closeConnection() {
+    public destroy(error?: Error): void {
         try {
             mediaManager.removeActiveVideo(this.userId);
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
             //console.log('Closing connection with '+userId);
-            this.destroy();
+            super.destroy(error);
         } catch (err) {
-            console.error("closeConnection", err)
+            console.error("VideoPeer::destroy", err)
         }
     }
 
