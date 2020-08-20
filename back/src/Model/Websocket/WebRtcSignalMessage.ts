@@ -7,7 +7,6 @@ export const isSignalData =
 
 export const isWebRtcSignalMessageInterface =
     new tg.IsInterface().withProperties({
-        userId: tg.isString,
         receiverId: tg.isString,
         signal: isSignalData
     }).get();

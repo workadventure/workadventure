@@ -79,9 +79,13 @@ export interface WebRtcDisconnectMessageInterface {
     userId: string
 }
 
-export interface WebRtcSignalMessageInterface {
-    userId: string, // TODO: is this needed?
+export interface WebRtcSignalSentMessageInterface {
     receiverId: string,
+    signal: SignalData
+}
+
+export interface WebRtcSignalReceivedMessageInterface {
+    userId: string,
     signal: SignalData
 }
 
@@ -187,31 +191,29 @@ export class Connection implements Connection {
         this.socket.on(EventMessage.CONNECT_ERROR, callback)
     }
 
-    public sendWebrtcSignal(signal: unknown, userId? : string|null, receiverId? : string) {
+    public sendWebrtcSignal(signal: unknown, receiverId : string) {
         return this.socket.emit(EventMessage.WEBRTC_SIGNAL, {
-            userId: userId ? userId : this.userId,
-            receiverId: receiverId ? receiverId : this.userId,
+            receiverId: receiverId,
             signal: signal
-        } as WebRtcSignalMessageInterface);
+        } as WebRtcSignalSentMessageInterface);
     }
 
-    public sendWebrtcScreenSharingSignal(signal: unknown, userId? : string|null, receiverId? : string) {
+    public sendWebrtcScreenSharingSignal(signal: unknown, receiverId : string) {
         return this.socket.emit(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, {
-            userId: userId ? userId : this.userId,
-            receiverId: receiverId ? receiverId : this.userId,
+            receiverId: receiverId,
             signal: signal
-        } as WebRtcSignalMessageInterface);
+        } as WebRtcSignalSentMessageInterface);
     }
 
     public receiveWebrtcStart(callback: (message: WebRtcStartMessageInterface) => void) {
         this.socket.on(EventMessage.WEBRTC_START, callback);
     }
 
-    public receiveWebrtcSignal(callback: (message: WebRtcSignalMessageInterface) => void) {
+    public receiveWebrtcSignal(callback: (message: WebRtcSignalReceivedMessageInterface) => void) {
         return this.socket.on(EventMessage.WEBRTC_SIGNAL, callback);
     }
 
-    public receiveWebrtcScreenSharingSignal(callback: (message: WebRtcSignalMessageInterface) => void) {
+    public receiveWebrtcScreenSharingSignal(callback: (message: WebRtcSignalReceivedMessageInterface) => void) {
         return this.socket.on(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, callback);
     }
 

@@ -290,7 +290,10 @@ export class IoSocketController {
             console.warn("While exchanging a WebRTC signal: client with id ", data.receiverId, " does not exist. This might be a race condition.");
             return;
         }
-        return client.emit(SockerIoEvent.WEBRTC_SIGNAL, data);
+        return client.emit(SockerIoEvent.WEBRTC_SIGNAL, {
+            userId: socket.userId,
+            signal: data.signal
+        });
     }
 
     emitScreenSharing(socket: ExSocketInterface, data: unknown){
@@ -305,7 +308,10 @@ export class IoSocketController {
             console.warn("While exchanging a WEBRTC_SCREEN_SHARING signal: client with id ", data.receiverId, " does not exist. This might be a race condition.");
             return;
         }
-        return client.emit(SockerIoEvent.WEBRTC_SCREEN_SHARING_SIGNAL, data);
+        return client.emit(SockerIoEvent.WEBRTC_SCREEN_SHARING_SIGNAL, {
+            userId: socket.userId,
+            signal: data.signal
+        });
     }
 
     searchClientByIdOrFail(userId: string): ExSocketInterface {
