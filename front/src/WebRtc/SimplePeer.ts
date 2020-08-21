@@ -34,6 +34,7 @@ export class SimplePeer {
     private PeerConnectionArray: Map<string, VideoPeer> = new Map<string, VideoPeer>();
     private readonly sendLocalVideoStreamCallback: (media: MediaStream) => void;
     private readonly sendLocalScreenSharingStreamCallback: (media: MediaStream) => void;
+    private readonly stopLocalScreenSharingStreamCallback: (media: MediaStream) => void;
     private readonly peerConnectionListeners: Array<PeerConnectionListener> = new Array<PeerConnectionListener>();
 
     constructor(Connection: Connection, WebRtcRoomId: string = "test-webrtc") {
@@ -42,8 +43,10 @@ export class SimplePeer {
         // We need to go through this weird bound function pointer in order to be able to "free" this reference later.
         this.sendLocalVideoStreamCallback = this.sendLocalVideoStream.bind(this);
         this.sendLocalScreenSharingStreamCallback = this.sendLocalScreenSharingStream.bind(this);
+        this.stopLocalScreenSharingStreamCallback = this.stopLocalScreenSharingStream.bind(this);
         mediaManager.onUpdateLocalStream(this.sendLocalVideoStreamCallback);
-        mediaManager.onUpdateScreenSharing(this.sendLocalScreenSharingStreamCallback);
+        mediaManager.onStartScreenSharing(this.sendLocalScreenSharingStreamCallback);
+        mediaManager.onStopScreenSharing(this.stopLocalScreenSharingStreamCallback);
         this.initialise();
     }
 
@@ -332,14 +335,22 @@ export class SimplePeer {
      * Triggered locally when clicking on the screen sharing button
      */
     public sendLocalScreenSharingStream() {
-        if (mediaManager.localScreenCapture) {
-            for (const user of this.Users) {
-                this.sendLocalScreenSharingStreamToUser(user.userId);
-            }
-        } else {
-            for (const user of this.Users) {
-                this.stopLocalScreenSharingStreamToUser(user.userId);
-            }
+        if (!mediaManager.localScreenCapture) {
+            console.error('Could not find localScreenCapture to share')
+            return;
+        }
+
+        for (const user of this.Users) {
+            this.sendLocalScreenSharingStreamToUser(user.userId);
+        }
+    }
+
+    /**
+     * Triggered locally when clicking on the screen sharing button
+     */
+    public stopLocalScreenSharingStream(stream: MediaStream) {
+        for (const user of this.Users) {
+            this.stopLocalScreenSharingStreamToUser(user.userId, stream);
         }
     }
 
@@ -360,17 +371,21 @@ export class SimplePeer {
         }
     }
 
-    private stopLocalScreenSharingStreamToUser(userId: string): void {
+    private stopLocalScreenSharingStreamToUser(userId: string, stream: MediaStream): void {
         const PeerConnectionScreenSharing = this.PeerScreenSharingConnectionArray.get(userId);
         if (!PeerConnectionScreenSharing) {
             throw new Error('Weird, screen sharing connection to user ' + userId + 'not found')
         }
 
         console.log("updatedScreenSharing => destroy", PeerConnectionScreenSharing);
-        // FIXME: maybe we don't want to destroy the connexion if it is used in the other way around!
-        // FIXME: maybe we don't want to destroy the connexion if it is used in the other way around!
-        // FIXME: maybe we don't want to destroy the connexion if it is used in the other way around!
-        PeerConnectionScreenSharing.destroy();
-        this.PeerScreenSharingConnectionArray.delete(userId);
+
+        // Stop sending stream and close peer connection if peer is not sending stream too
+        PeerConnectionScreenSharing.stopPushingScreenSharingToRemoteUser(stream);
+
+        if (!PeerConnectionScreenSharing.isReceivingScreenSharingStream()) {
+            PeerConnectionScreenSharing.destroy();
+
+            this.PeerScreenSharingConnectionArray.delete(userId);
+        }
     }
 }

@@ -1,5 +1,5 @@
-import * as SimplePeerNamespace from "simple-peer";
 import {DivImportance, layoutManager} from "./LayoutManager";
+import {HtmlUtils} from "./HtmlUtils";
 
 const videoConstraint: boolean|MediaTrackConstraints = {
     width: { ideal: 1280 },
@@ -8,7 +8,8 @@ const videoConstraint: boolean|MediaTrackConstraints = {
 };
 
 type UpdatedLocalStreamCallback = (media: MediaStream) => void;
-type UpdatedScreenSharingCallback = (media: MediaStream) => void;
+type StartScreenSharingCallback = (media: MediaStream) => void;
+type StopScreenSharingCallback = (media: MediaStream) => void;
 
 // TODO: Split MediaManager in 2 classes: MediaManagerUI (in charge of HTML) and MediaManager (singleton in charge of the camera only)
 // TODO: verify that microphone event listeners are not triggered plenty of time NOW (since MediaManager is created many times!!!!)
@@ -29,7 +30,8 @@ export class MediaManager {
         video: videoConstraint
     };
     updatedLocalStreamCallBacks : Set<UpdatedLocalStreamCallback> = new Set<UpdatedLocalStreamCallback>();
-    updatedScreenSharingCallBacks : Set<UpdatedScreenSharingCallback> = new Set<UpdatedScreenSharingCallback>();
+    startScreenSharingCallBacks : Set<StartScreenSharingCallback> = new Set<StartScreenSharingCallback>();
+    stopScreenSharingCallBacks : Set<StopScreenSharingCallback> = new Set<StopScreenSharingCallback>();
 
 
     constructor() {
@@ -87,9 +89,14 @@ export class MediaManager {
         this.updatedLocalStreamCallBacks.add(callback);
     }
 
-    public onUpdateScreenSharing(callback: UpdatedScreenSharingCallback): void {
+    public onStartScreenSharing(callback: StartScreenSharingCallback): void {
 
-        this.updatedScreenSharingCallBacks.add(callback);
+        this.startScreenSharingCallBacks.add(callback);
+    }
+
+    public onStopScreenSharing(callback: StopScreenSharingCallback): void {
+
+        this.stopScreenSharingCallBacks.add(callback);
     }
 
     removeUpdateLocalStreamEventListener(callback: UpdatedLocalStreamCallback): void {
@@ -102,8 +109,14 @@ export class MediaManager {
         }
     }
 
-    private triggerUpdatedScreenSharingCallbacks(stream: MediaStream): void {
-        for (const callback of this.updatedScreenSharingCallBacks) {
+    private triggerStartedScreenSharingCallbacks(stream: MediaStream): void {
+        for (const callback of this.startScreenSharingCallBacks) {
+            callback(stream);
+        }
+    }
+
+    private triggerStoppedScreenSharingCallbacks(stream: MediaStream): void {
+        for (const callback of this.stopScreenSharingCallBacks) {
             callback(stream);
         }
     }
@@ -164,20 +177,26 @@ export class MediaManager {
         this.monitorClose.style.display = "none";
         this.monitor.style.display = "block";
         this.getScreenMedia().then((stream) => {
-            this.triggerUpdatedScreenSharingCallbacks(stream);
+            this.triggerStartedScreenSharingCallbacks(stream);
         });
     }
 
     private disableScreenSharing() {
         this.monitorClose.style.display = "block";
         this.monitor.style.display = "none";
+        this.removeActiveScreenSharingVideo('me');
         this.localScreenCapture?.getTracks().forEach((track: MediaStreamTrack) => {
             track.stop();
         });
-        this.localScreenCapture = null;
+        if (this.localScreenCapture === null) {
+            console.warn('Weird: trying to remove a screen sharing that is not enabled');
+            return;
+        }
+        const localScreenCapture = this.localScreenCapture;
         this.getCamera().then((stream) => {
-            this.triggerUpdatedScreenSharingCallbacks(stream);
+            this.triggerStoppedScreenSharingCallbacks(localScreenCapture);
         });
+        this.localScreenCapture = null;
     }
 
     //get screen
@@ -193,6 +212,9 @@ export class MediaManager {
                             this.disableScreenSharing();
                         };
                     }
+
+                    this.addScreenSharingActiveVideo('me', DivImportance.Normal);
+                    HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('screen-sharing-me').srcObject = stream;
 
                     return stream;
                 })
@@ -306,8 +328,8 @@ export class MediaManager {
      *
      * @param userId
      */
-    addScreenSharingActiveVideo(userId : string){
-        this.webrtcInAudio.play();
+    addScreenSharingActiveVideo(userId : string, divImportance: DivImportance = DivImportance.Important){
+        //this.webrtcInAudio.play();
 
         userId = `screen-sharing-${userId}`;
         const html = `
@@ -316,7 +338,7 @@ export class MediaManager {
             </div>
         `;
 
-        layoutManager.add(DivImportance.Important, userId, html);
+        layoutManager.add(divImportance, userId, html);
 
         this.remoteVideo.set(userId, this.getElementByIdOrFail<HTMLVideoElement>(userId));
     }
@@ -389,6 +411,12 @@ export class MediaManager {
         remoteVideo.srcObject = stream;
     }
     addStreamRemoteScreenSharing(userId : string, stream : MediaStream){
+        // In the case of screen sharing (going both ways), we may need to create the HTML element if it does not exist yet
+        const remoteVideo = this.remoteVideo.get(`screen-sharing-${userId}`);
+        if (remoteVideo === undefined) {
+            this.addScreenSharingActiveVideo(userId);
+        }
+
         this.addStreamRemoteVideo(`screen-sharing-${userId}`, stream);
     }
 

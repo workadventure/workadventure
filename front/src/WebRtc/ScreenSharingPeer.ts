@@ -8,6 +8,11 @@ const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
  * A peer connection used to transmit video / audio signals between 2 peers.
  */
 export class ScreenSharingPeer extends Peer {
+    /**
+     * Whether this connection is currently receiving a video stream from a remote user.
+     */
+    private isReceivingStream:boolean = false;
+
     constructor(private userId: string, initiator: boolean, private connection: Connection) {
         super({
             initiator: initiator ? initiator : false,
@@ -35,11 +40,18 @@ export class ScreenSharingPeer extends Peer {
             this.stream(stream);
         });
 
-        /*this.on('track', (track: MediaStreamTrack, stream: MediaStream) => {
-        });*/
-
         this.on('close', () => {
             this.destroy();
+        });
+
+        this.on('data',  (chunk: Buffer) => {
+            // We unfortunately need to rely on an event to let the other party know a stream has stopped.
+            // It seems there is no native way to detect that.
+            const message = JSON.parse(chunk.toString('utf8'));
+            if (message.streamEnded !== true) {
+                console.error('Unexpected message on screen sharing peer connection');
+            }
+            mediaManager.removeActiveScreenSharingVideo(this.userId);
         });
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -74,9 +86,15 @@ export class ScreenSharingPeer extends Peer {
         console.log(`stream => ${this.userId} => `, stream);
         if(!stream){
             mediaManager.removeActiveScreenSharingVideo(this.userId);
+            this.isReceivingStream = false;
         } else {
             mediaManager.addStreamRemoteScreenSharing(this.userId, stream);
+            this.isReceivingStream = true;
         }
+    }
+
+    public isReceivingScreenSharingStream(): boolean {
+        return this.isReceivingStream;
     }
 
     public destroy(error?: Error): void {
@@ -98,9 +116,12 @@ export class ScreenSharingPeer extends Peer {
             return;
         }
 
-        for (const track of localScreenCapture.getTracks()) {
-            this.addTrack(track, localScreenCapture);
-        }
+        this.addStream(localScreenCapture);
         return;
+    }
+
+    public stopPushingScreenSharingToRemoteUser(stream: MediaStream) {
+        this.removeStream(stream);
+        this.write(new Buffer(JSON.stringify({streamEnded: true})));
     }
 }
