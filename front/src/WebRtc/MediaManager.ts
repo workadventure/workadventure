@@ -32,6 +32,9 @@ export class MediaManager {
     updatedLocalStreamCallBacks : Set<UpdatedLocalStreamCallback> = new Set<UpdatedLocalStreamCallback>();
     startScreenSharingCallBacks : Set<StartScreenSharingCallback> = new Set<StartScreenSharingCallback>();
     stopScreenSharingCallBacks : Set<StopScreenSharingCallback> = new Set<StopScreenSharingCallback>();
+    private microphoneBtn: HTMLDivElement;
+    private cinemaBtn: HTMLDivElement;
+    private monitorBtn: HTMLDivElement;
 
 
     constructor() {
@@ -40,6 +43,7 @@ export class MediaManager {
         this.webrtcInAudio = this.getElementByIdOrFail<HTMLAudioElement>('audio-webrtc-in');
         this.webrtcInAudio.volume = 0.2;
 
+        this.microphoneBtn = this.getElementByIdOrFail<HTMLDivElement>('btn-micro');
         this.microphoneClose = this.getElementByIdOrFail<HTMLImageElement>('microphone-close');
         this.microphoneClose.style.display = "none";
         this.microphoneClose.addEventListener('click', (e: MouseEvent) => {
@@ -54,6 +58,7 @@ export class MediaManager {
             //update tracking
         });
 
+        this.cinemaBtn = this.getElementByIdOrFail<HTMLDivElement>('btn-video');
         this.cinemaClose = this.getElementByIdOrFail<HTMLImageElement>('cinema-close');
         this.cinemaClose.style.display = "none";
         this.cinemaClose.addEventListener('click', (e: MouseEvent) => {
@@ -68,6 +73,7 @@ export class MediaManager {
             //update tracking
         });
 
+        this.monitorBtn = this.getElementByIdOrFail<HTMLDivElement>('btn-monitor');
         this.monitorClose = this.getElementByIdOrFail<HTMLImageElement>('monitor-close');
         this.monitorClose.style.display = "block";
         this.monitorClose.addEventListener('click', (e: MouseEvent) => {
@@ -128,6 +134,7 @@ export class MediaManager {
 
     private enableCamera() {
         this.cinemaClose.style.display = "none";
+        this.cinemaBtn.classList.remove("disabled");
         this.cinema.style.display = "block";
         this.constraintsMedia.video = videoConstraint;
         this.getCamera().then((stream: MediaStream) => {
@@ -138,6 +145,7 @@ export class MediaManager {
     private disableCamera() {
         this.cinemaClose.style.display = "block";
         this.cinema.style.display = "none";
+        this.cinemaBtn.classList.add("disabled");
         this.constraintsMedia.video = false;
         this.myCamVideo.srcObject = null;
         if (this.localStream) {
@@ -153,6 +161,7 @@ export class MediaManager {
     private enableMicrophone() {
         this.microphoneClose.style.display = "none";
         this.microphone.style.display = "block";
+        this.microphoneBtn.classList.remove("disabled");
         this.constraintsMedia.audio = true;
         this.getCamera().then((stream) => {
             this.triggerUpdatedLocalStreamCallbacks(stream);
@@ -162,6 +171,7 @@ export class MediaManager {
     private disableMicrophone() {
         this.microphoneClose.style.display = "block";
         this.microphone.style.display = "none";
+        this.microphoneBtn.classList.add("disabled");
         this.constraintsMedia.audio = false;
         if(this.localStream) {
             this.localStream.getAudioTracks().forEach((MediaStreamTrack: MediaStreamTrack) => {
@@ -176,6 +186,7 @@ export class MediaManager {
     private enableScreenSharing() {
         this.monitorClose.style.display = "none";
         this.monitor.style.display = "block";
+        this.monitorBtn.classList.add("enabled");
         this.getScreenMedia().then((stream) => {
             this.triggerStartedScreenSharingCallbacks(stream);
         });
@@ -184,6 +195,7 @@ export class MediaManager {
     private disableScreenSharing() {
         this.monitorClose.style.display = "block";
         this.monitor.style.display = "none";
+        this.monitorBtn.classList.remove("enabled");
         this.removeActiveScreenSharingVideo('me');
         this.localScreenCapture?.getTracks().forEach((track: MediaStreamTrack) => {
             track.stop();
