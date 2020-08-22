@@ -96,9 +96,15 @@ video#myCamVideo{
     background: #666;
     box-shadow: 2px 2px 24px #444;
     border-radius: 48px;
-    transform: translateY(12vh);
+    transform: translateY(40px);
     transition-timing-function: ease-in-out;
     bottom: 20px;
+}
+.btn-cam-action div.disabled {
+    background: #d75555;
+}
+.btn-cam-action div.enabled {
+    background: #73c973;
 }
 .btn-cam-action:hover div{
     transform: translateY(0);
