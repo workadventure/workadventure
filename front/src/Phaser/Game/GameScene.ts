@@ -9,7 +9,7 @@ import {
     PositionInterface
 } from "../../Connection";
 import {CurrentGamerInterface, hasMovedEventName, Player} from "../Player/Player";
-import {DEBUG_MODE, POSITION_DELAY, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
+import {DEBUG_MODE, POSITION_DELAY, RESOLUTION, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import {ITiledMap, ITiledMapLayer, ITiledMapLayerProperty, ITiledTileSet} from "../Map/ITiledMap";
 import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Character";
 import {AddPlayerInterface} from "./AddPlayerInterface";
@@ -22,7 +22,7 @@ import {SimplePeer, UserSimplePeerInterface} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
 import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
 import {loadAllLayers} from "../Entity/body_character";
-import {layoutManager, LayoutMode} from "../../WebRtc/LayoutManager";
+import {CenterListener, layoutManager, LayoutMode} from "../../WebRtc/LayoutManager";
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
@@ -69,7 +69,7 @@ interface DeleteGroupEventInterface {
     groupId: string
 }
 
-export class GameScene extends Phaser.Scene {
+export class GameScene extends Phaser.Scene implements CenterListener {
     GameManager : GameManager;
     Terrains : Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer!: CurrentGamerInterface;
@@ -408,6 +408,9 @@ export class GameScene extends Phaser.Scene {
         this.repositionCallback = this.reposition.bind(this);
         window.addEventListener('resize', this.repositionCallback);
         this.reposition();
+
+        // From now, this game scene will be notified of reposition events
+        layoutManager.setListener(this);
     }
 
     private switchLayoutMode(): void {
@@ -527,7 +530,7 @@ export class GameScene extends Phaser.Scene {
     //todo: in a dedicated class/function?
     initCamera() {
         this.cameras.main.setBounds(0,0, this.Map.widthInPixels, this.Map.heightInPixels);
-        this.cameras.main.startFollow(this.CurrentPlayer);
+        this.updateCameraOffset();
         this.cameras.main.setZoom(ZOOM_LEVEL);
     }
 
@@ -874,5 +877,30 @@ export class GameScene extends Phaser.Scene {
     private reposition(): void {
         this.presentationModeSprite.setY(this.game.renderer.height - 2);
         this.chatModeSprite.setY(this.game.renderer.height - 2);
+
+        // Recompute camera offset if needed
+        this.updateCameraOffset();
+    }
+
+    /**
+     * Updates the offset of the character compared to the center of the screen according to the layout mananger
+     * (tries to put the character in the center of the reamining space if there is a discussion going on.
+     */
+    private updateCameraOffset(): void {
+        const array = layoutManager.findBiggestAvailableArray();
+        let xCenter = (array.xEnd - array.xStart) / 2 + array.xStart;
+        let yCenter = (array.yEnd - array.yStart) / 2 + array.yStart;
+
+        // Let's put this in Game coordinates by applying the zoom level:
+        xCenter /= ZOOM_LEVEL * RESOLUTION;
+        yCenter /= ZOOM_LEVEL * RESOLUTION;
+
+        //console.log("updateCameraOffset", array, xCenter, yCenter, this.game.renderer.width, this.game.renderer.height);
+
+        this.cameras.main.startFollow(this.CurrentPlayer, true, 1, 1,  xCenter - this.game.renderer.width / 2, yCenter - this.game.renderer.height / 2);
+    }
+
+    public onCenterChange(): void {
+        this.updateCameraOffset();
     }
 }

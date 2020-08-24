@@ -317,13 +317,13 @@ body {
     flex: 0 0 75%;
     display: flex;
     justify-content: start;
-    /*align-items: flex-start;*/
+    align-items: flex-start;
     flex-wrap: wrap;
 }
 
 .main-section > div {
-    margin: 5%;
-    flex-basis: 90%;
+    margin: 2%;
+    flex-basis: 96%;
     /*flex-shrink: 2;*/
 }
 

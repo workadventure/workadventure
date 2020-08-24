@@ -15,6 +15,14 @@ export enum DivImportance {
 }
 
 /**
+ * Classes implementing this interface can be notified when the center of the screen (the player position) should be
+ * changed.
+ */
+export interface CenterListener {
+    onCenterChange(): void;
+}
+
+/**
  * This class is in charge of the video-conference layout.
  * It receives positioning requests for videos and does its best to place them on the screen depending on the active layout mode.
  */
@@ -23,6 +31,11 @@ class LayoutManager {
 
     private importantDivs: Map<string, HTMLDivElement> = new Map<string, HTMLDivElement>();
     private normalDivs: Map<string, HTMLDivElement> = new Map<string, HTMLDivElement>();
+    private listener: CenterListener|null = null;
+
+    public setListener(centerListener: CenterListener|null) {
+        this.listener = centerListener;
+    }
 
     public add(importance: DivImportance, userId: string, html: string): void {
         const div = document.createElement('div');
@@ -45,6 +58,7 @@ class LayoutManager {
 
         this.positionDiv(div, importance);
         this.adjustVideoChatClass();
+        this.listener?.onCenterChange();
     }
 
     private positionDiv(elem: HTMLDivElement, importance: DivImportance): void {
@@ -72,6 +86,7 @@ class LayoutManager {
             div.remove();
             this.importantDivs.delete(userId);
             this.adjustVideoChatClass();
+            this.listener?.onCenterChange();
             return;
         }
 
@@ -80,6 +95,7 @@ class LayoutManager {
             div.remove();
             this.normalDivs.delete(userId);
             this.adjustVideoChatClass();
+            this.listener?.onCenterChange();
             return;
         }
 
@@ -123,10 +139,132 @@ class LayoutManager {
         for (const div of this.normalDivs.values()) {
             this.positionDiv(div, DivImportance.Normal);
         }
+        this.listener?.onCenterChange();
     }
 
     public getLayoutMode(): LayoutMode {
         return this.mode;
+    }
+
+    /*public getGameCenter(): {x: number, y: number} {
+
+    }*/
+
+    /**
+     * Tries to find the biggest available box of remaining space (this is a space where we can center the character)
+     */
+    public findBiggestAvailableArray(): {xStart: number, yStart: number, xEnd: number, yEnd: number} {
+        if (this.mode === LayoutMode.VideoChat) {
+            const children = document.querySelectorAll<HTMLDivElement>('div.chat-mode > div');
+            const htmlChildren = Array.from(children.values());
+
+            // No chat? Let's go full center
+            if (htmlChildren.length === 0) {
+                return {
+                    xStart: 0,
+                    yStart: 0,
+                    xEnd: window.innerWidth,
+                    yEnd: window.innerHeight
+                }
+            }
+
+            const lastDiv = htmlChildren[htmlChildren.length - 1];
+            // Compute area between top right of the last div and bottom right of window
+            const area1 = (window.innerWidth - (lastDiv.offsetLeft + lastDiv.offsetWidth))
+                          * (window.innerHeight - lastDiv.offsetTop);
+
+            // Compute area between bottom of last div and bottom of the screen on whole width
+            const area2 = window.innerWidth
+                * (window.innerHeight - (lastDiv.offsetTop + lastDiv.offsetHeight));
+
+            if (area1 < 0 && area2 < 0) {
+                // If screen is full, let's not attempt something foolish and simply center character in the middle.
+                return {
+                    xStart: 0,
+                    yStart: 0,
+                    xEnd: window.innerWidth,
+                    yEnd: window.innerHeight
+                }
+            }
+            if (area1 <= area2) {
+                console.log('lastDiv', lastDiv.offsetTop, lastDiv.offsetHeight);
+                return {
+                    xStart: 0,
+                    yStart: lastDiv.offsetTop + lastDiv.offsetHeight,
+                    xEnd: window.innerWidth,
+                    yEnd: window.innerHeight
+                }
+            } else {
+                console.log('lastDiv', lastDiv.offsetTop);
+                return {
+                    xStart: lastDiv.offsetLeft + lastDiv.offsetWidth,
+                    yStart: lastDiv.offsetTop,
+                    xEnd: window.innerWidth,
+                    yEnd: window.innerHeight
+                }
+            }
+        } else {
+            // Possible destinations: at the center bottom or at the right bottom.
+            const mainSectionChildren = Array.from(document.querySelectorAll<HTMLDivElement>('div.main-section > div').values());
+            const sidebarChildren = Array.from(document.querySelectorAll<HTMLDivElement>('aside.sidebar > div').values());
+
+            // Nothing? Let's center
+            if (mainSectionChildren.length === 0 && sidebarChildren.length === 0) {
+                return {
+                    xStart: 0,
+                    yStart: 0,
+                    xEnd: window.innerWidth,
+                    yEnd: window.innerHeight
+                }
+            }
+
+            if (mainSectionChildren.length === 0) {
+                const lastSidebarDiv = sidebarChildren[sidebarChildren.length-1];
+
+                // No presentation? Let's center on the main-section space
+                return {
+                    xStart: 0,
+                    yStart: 0,
+                    xEnd: lastSidebarDiv.offsetLeft,
+                    yEnd: window.innerHeight
+                }
+            }
+
+            // At this point, we know we have at least one element in the main section.
+            const lastPresentationDiv = mainSectionChildren[mainSectionChildren.length-1];
+
+            const presentationArea = (window.innerHeight - (lastPresentationDiv.offsetTop + lastPresentationDiv.offsetHeight))
+                                     * (lastPresentationDiv.offsetLeft + lastPresentationDiv.offsetWidth);
+
+            let leftSideBar: number;
+            let bottomSideBar: number;
+            if (sidebarChildren.length === 0) {
+                leftSideBar = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('sidebar').offsetLeft;
+                bottomSideBar = 0;
+            } else {
+                const lastSideBarChildren = sidebarChildren[sidebarChildren.length - 1];
+                leftSideBar = lastSideBarChildren.offsetLeft;
+                bottomSideBar = lastSideBarChildren.offsetTop + lastSideBarChildren.offsetHeight;
+            }
+            const sideBarArea = (window.innerWidth - leftSideBar)
+                * (window.innerHeight - bottomSideBar);
+
+            if (presentationArea <= sideBarArea) {
+                return {
+                    xStart: leftSideBar,
+                    yStart: bottomSideBar,
+                    xEnd: window.innerWidth,
+                    yEnd: window.innerHeight
+                }
+            } else {
+                return {
+                    xStart: 0,
+                    yStart: lastPresentationDiv.offsetTop + lastPresentationDiv.offsetHeight,
+                    xEnd: /*lastPresentationDiv.offsetLeft + lastPresentationDiv.offsetWidth*/ window.innerWidth , // To avoid flickering when a chat start, we center on the center of the screen, not the center of the main content area
+                    yEnd: window.innerHeight
+                }
+            }
+        }
     }
 }
 
