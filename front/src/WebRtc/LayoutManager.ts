@@ -208,24 +208,12 @@ class LayoutManager {
             const mainSectionChildren = Array.from(document.querySelectorAll<HTMLDivElement>('div.main-section > div').values());
             const sidebarChildren = Array.from(document.querySelectorAll<HTMLDivElement>('aside.sidebar > div').values());
 
-            // Nothing? Let's center
-            if (mainSectionChildren.length === 0 && sidebarChildren.length === 0) {
+            // No presentation? Let's center on the screen
+            if (mainSectionChildren.length === 0) {
                 return {
                     xStart: 0,
                     yStart: 0,
                     xEnd: window.innerWidth,
-                    yEnd: window.innerHeight
-                }
-            }
-
-            if (mainSectionChildren.length === 0) {
-                const lastSidebarDiv = sidebarChildren[sidebarChildren.length-1];
-
-                // No presentation? Let's center on the main-section space
-                return {
-                    xStart: 0,
-                    yStart: 0,
-                    xEnd: lastSidebarDiv.offsetLeft,
                     yEnd: window.innerHeight
                 }
             }
