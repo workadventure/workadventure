@@ -79,6 +79,13 @@ video#myCamVideo{
 }
 
 
+.btn-cam-action {
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    width: 450px;
+    height: 150px;
+}
 /*btn animation*/
 .btn-cam-action div{
     cursor: pointer;
@@ -89,11 +96,17 @@ video#myCamVideo{
     background: #666;
     box-shadow: 2px 2px 24px #444;
     border-radius: 48px;
-    transform: translateY(12vh);
+    transform: translateY(40px);
     transition-timing-function: ease-in-out;
     bottom: 20px;
 }
-#activeCam:hover .btn-cam-action div{
+.btn-cam-action div.disabled {
+    background: #d75555;
+}
+.btn-cam-action div.enabled {
+    background: #73c973;
+}
+.btn-cam-action:hover div{
     transform: translateY(0);
 }
 .btn-cam-action div:hover{
@@ -106,8 +119,12 @@ video#myCamVideo{
     right: 44px;
 }
 .btn-video{
-    transition: all .2s;
+    transition: all .25s;
     right: 134px;
+}
+.btn-monitor{
+    transition: all .2s;
+    right: 224px;
 }
 /*.btn-call{
     transition: all .1s;
@@ -300,13 +317,13 @@ body {
     flex: 0 0 75%;
     display: flex;
     justify-content: start;
-    /*align-items: flex-start;*/
+    align-items: flex-start;
     flex-wrap: wrap;
 }
 
 .main-section > div {
-    margin: 5%;
-    flex-basis: 90%;
+    margin: 2%;
+    flex-basis: 96%;
     /*flex-shrink: 2;*/
 }
 

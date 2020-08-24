@@ -13,7 +13,6 @@ import {MessageUserJoined} from "../Model/Websocket/MessageUserJoined";
 import {MessageUserMoved} from "../Model/Websocket/MessageUserMoved";
 import si from "systeminformation";
 import {Gauge} from "prom-client";
-import os from 'os';
 import {TokenInterface} from "../Controller/AuthenticateController";
 import {isJoinRoomMessageInterface} from "../Model/Websocket/JoinRoomMessage";
 import {isPointInterface, PointInterface} from "../Model/Websocket/PointInterface";
@@ -29,6 +28,7 @@ enum SockerIoEvent {
     USER_MOVED = "user-moved", // From server to client
     USER_LEFT = "user-left", // From server to client
     WEBRTC_SIGNAL = "webrtc-signal",
+    WEBRTC_SCREEN_SHARING_SIGNAL = "webrtc-screen-sharing-signal",
     WEBRTC_START = "webrtc-start",
     WEBRTC_DISCONNECT = "webrtc-disconect",
     MESSAGE_ERROR = "message-error",
@@ -237,18 +237,11 @@ export class IoSocketController {
             });
 
             socket.on(SockerIoEvent.WEBRTC_SIGNAL, (data: unknown) => {
-                if (!isWebRtcSignalMessageInterface(data)) {
-                    socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid WEBRTC_SIGNAL message.'});
-                    console.warn('Invalid WEBRTC_SIGNAL message received: ', data);
-                    return;
-                }
-                //send only at user
-                const client = this.sockets.get(data.receiverId);
-                if (client === undefined) {
-                    console.warn("While exchanging a WebRTC signal: client with id ", data.receiverId, " does not exist. This might be a race condition.");
-                    return;
-                }
-                return client.emit(SockerIoEvent.WEBRTC_SIGNAL, data);
+                this.emitVideo((socket as ExSocketInterface), data);
+            });
+
+            socket.on(SockerIoEvent.WEBRTC_SCREEN_SHARING_SIGNAL, (data: unknown) => {
+                this.emitScreenSharing((socket as ExSocketInterface), data);
             });
 
             socket.on(SockerIoEvent.DISCONNECT, () => {
@@ -315,6 +308,42 @@ export class IoSocketController {
                     console.error(e);
                 }
             });
+        });
+    }
+
+    emitVideo(socket: ExSocketInterface, data: unknown){
+        if (!isWebRtcSignalMessageInterface(data)) {
+            socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid WEBRTC_SIGNAL message.'});
+            console.warn('Invalid WEBRTC_SIGNAL message received: ', data);
+            return;
+        }
+        //send only at user
+        const client = this.sockets.get(data.receiverId);
+        if (client === undefined) {
+            console.warn("While exchanging a WebRTC signal: client with id ", data.receiverId, " does not exist. This might be a race condition.");
+            return;
+        }
+        return client.emit(SockerIoEvent.WEBRTC_SIGNAL, {
+            userId: socket.userId,
+            signal: data.signal
+        });
+    }
+
+    emitScreenSharing(socket: ExSocketInterface, data: unknown){
+        if (!isWebRtcSignalMessageInterface(data)) {
+            socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid WEBRTC_SCREEN_SHARING message.'});
+            console.warn('Invalid WEBRTC_SCREEN_SHARING message received: ', data);
+            return;
+        }
+        //send only at user
+        const client = this.sockets.get(data.receiverId);
+        if (client === undefined) {
+            console.warn("While exchanging a WEBRTC_SCREEN_SHARING signal: client with id ", data.receiverId, " does not exist. This might be a race condition.");
+            return;
+        }
+        return client.emit(SockerIoEvent.WEBRTC_SCREEN_SHARING_SIGNAL, {
+            userId: socket.userId,
+            signal: data.signal
         });
     }
 
@@ -398,13 +427,15 @@ export class IoSocketController {
         if (this.Io.sockets.adapter.rooms[roomId].length < 2 /*|| this.Io.sockets.adapter.rooms[roomId].length >= 4*/) {
             return;
         }
+
+        // TODO: scanning all sockets is maybe not the most efficient
         const clients: Array<ExSocketInterface> = (Object.values(this.Io.sockets.sockets) as Array<ExSocketInterface>)
             .filter((client: ExSocketInterface) => client.webRtcRoomId && client.webRtcRoomId === roomId);
         //send start at one client to initialise offer webrtc
         //send all users in room to create PeerConnection in front
         clients.forEach((client: ExSocketInterface, index: number) => {
 
-            const clientsId = clients.reduce((tabs: Array<UserInGroupInterface>, clientId: ExSocketInterface, indexClientId: number) => {
+            const peerClients = clients.reduce((tabs: Array<UserInGroupInterface>, clientId: ExSocketInterface, indexClientId: number) => {
                 if (!clientId.userId || clientId.userId === client.userId) {
                     return tabs;
                 }
@@ -416,7 +447,7 @@ export class IoSocketController {
                 return tabs;
             }, []);
 
-            client.emit(SockerIoEvent.WEBRTC_START, {clients: clientsId, roomId: roomId});
+            client.emit(SockerIoEvent.WEBRTC_START, {clients: peerClients, roomId: roomId});
         });
     }
 
