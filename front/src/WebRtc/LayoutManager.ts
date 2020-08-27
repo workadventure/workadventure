@@ -42,6 +42,14 @@ class LayoutManager {
         div.innerHTML = html;
         div.id = "user-"+userId;
         div.className = "media-container"
+        div.onclick = () => {
+            const parentId = div.parentElement?.id;
+            if (parentId === 'sidebar' || parentId === 'chat-mode') {
+                this.focusOn(userId);
+            } else {
+                this.removeFocusOn(userId);
+            }
+        }
 
         if (importance === DivImportance.Important) {
             this.importantDivs.set(userId, div);
@@ -74,6 +82,48 @@ class LayoutManager {
                 sideBarDiv.appendChild(elem);
             }
         }
+    }
+
+    /**
+     * Put the screen in presentation mode and move elem in presentation mode (and all other videos in normal mode)
+     */
+    private focusOn(userId: string): void {
+        const focusedDiv = this.getDivByUserId(userId);
+        for (const [importantUserId, importantDiv] of this.importantDivs.entries()) {
+            //this.positionDiv(importantDiv, DivImportance.Normal);
+            this.importantDivs.delete(importantUserId);
+            this.normalDivs.set(importantUserId, importantDiv);
+        }
+        this.normalDivs.delete(userId);
+        this.importantDivs.set(userId, focusedDiv);
+        //this.positionDiv(focusedDiv, DivImportance.Important);
+        this.switchLayoutMode(LayoutMode.Presentation);
+    }
+
+    /**
+     * Removes userId from presentation mode
+     */
+    private removeFocusOn(userId: string): void {
+        const importantDiv = this.importantDivs.get(userId);
+        if (importantDiv === undefined) {
+            throw new Error('Div with user id "'+userId+'" is not in important mode');
+        }
+        this.normalDivs.set(userId, importantDiv);
+        this.importantDivs.delete(userId);
+
+        this.positionDiv(importantDiv, DivImportance.Normal);
+    }
+
+    private getDivByUserId(userId: string): HTMLDivElement {
+        let div = this.importantDivs.get(userId);
+        if (div !== undefined) {
+            return div;
+        }
+        div = this.normalDivs.get(userId);
+        if (div !== undefined) {
+            return div;
+        }
+        throw new Error('Could not find media with user id '+userId);
     }
 
     /**
