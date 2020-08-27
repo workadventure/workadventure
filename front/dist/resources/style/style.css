@@ -256,6 +256,10 @@ body {
     .sidebar > div {
         max-height: 21%;
     }
+
+    .sidebar > div:hover {
+        max-height: 25%;
+    }
 }
 @media (max-aspect-ratio: 1/1) {
     .main-container {
@@ -273,6 +277,10 @@ body {
 
     .sidebar > div {
         max-width: 21%;
+    }
+
+    .sidebar > div:hover {
+        max-width: 25%;
     }
 }
 
@@ -324,7 +332,14 @@ body {
 .main-section > div {
     margin: 2%;
     flex-basis: 96%;
+    transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s, flex-basis 0.2s;
+    cursor: pointer;
     /*flex-shrink: 2;*/
+}
+
+.main-section > div:hover {
+    margin: 0%;
+    flex-basis: 100%;
 }
 
 .sidebar {
@@ -334,6 +349,12 @@ body {
 
 .sidebar > div {
     margin: 2%;
+    transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s, max-height 0.2s, max-width 0.2s;
+    cursor: pointer;
+}
+
+.sidebar > div:hover {
+    margin: 0%;
 }
 
 /* Let's make sure videos are vertically centered if they need to be cropped */
@@ -354,11 +375,16 @@ body {
     padding: 1%;
 }
 
-.chat-mode div {
+.chat-mode > div {
     margin: 1%;
     max-height: 96%;
+    transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s;
+    cursor: pointer;
 }
 
+.chat-mode > div:hover {
+    margin: 0%;
+}
 .chat-mode.one-col > div {
     flex-basis: 98%;
 }
