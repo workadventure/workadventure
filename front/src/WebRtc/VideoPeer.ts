@@ -19,13 +19,30 @@ export class VideoPeer extends Peer {
                         urls: 'stun:stun.l.google.com:19302'
                     },
                     {
-                        urls: TURN_SERVER,
+                        urls: TURN_SERVER.split(','),
                         username: TURN_USER,
                         credential: TURN_PASSWORD
                     },
                 ]
             }
         });
+
+        console.log('PEER SETUP ', {
+            initiator: initiator ? initiator : false,
+            reconnectTimer: 10000,
+            config: {
+                iceServers: [
+                    {
+                        urls: 'stun:stun.l.google.com:19302'
+                    },
+                    {
+                        urls: TURN_SERVER,
+                        username: TURN_USER,
+                        credential: TURN_PASSWORD
+                    },
+                ]
+            }
+        })
 
         //start listen signal for the peer connection
         this.on('signal', (data: unknown) => {
