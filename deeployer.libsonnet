@@ -27,7 +27,7 @@
       "env": {
         "API_URL": "api."+url,
         "JITSI_URL": "meet.jit.si",
-        "TURN_SERVER": "coturn.workadventu.re:443",
+        "TURN_SERVER": "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443",
         "TURN_USER": "workadventure",
         "TURN_PASSWORD": "WorkAdventure123"
       }
