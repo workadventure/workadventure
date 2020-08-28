@@ -1,6 +1,7 @@
 import * as SimplePeerNamespace from "simple-peer";
 import {mediaManager} from "./MediaManager";
 import {Connection} from "../Connection";
+import {TURN_SERVER, TURN_USER, TURN_PASSWORD} from "../Enum/EnvironmentVariable";
 
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
@@ -23,9 +24,9 @@ export class ScreenSharingPeer extends Peer {
                         urls: 'stun:stun.l.google.com:19302'
                     },
                     {
-                        urls: 'turn:numb.viagenie.ca',
-                        username: 'g.parant@thecodingmachine.com',
-                        credential: 'itcugcOHxle9Acqi$'
+                        urls: TURN_SERVER,
+                        username: TURN_USER,
+                        credential: TURN_PASSWORD
                     },
                 ]
             }
