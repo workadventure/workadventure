@@ -29,6 +29,7 @@ import CanvasTexture = Phaser.Textures.CanvasTexture;
 import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import {GameMap} from "./GameMap";
+import {CoWebsiteManager} from "../../WebRtc/CoWebsiteManager";
 
 
 export enum Textures {
@@ -415,8 +416,12 @@ export class GameScene extends Phaser.Scene implements CenterListener {
         // From now, this game scene will be notified of reposition events
         layoutManager.setListener(this);
 
-        this.gameMap.onPropertyChange('startLayer', (oldValue, newValue) => {
-            console.log('startLayer', oldValue, newValue);
+        this.gameMap.onPropertyChange('openWebsite', (newValue, oldValue) => {
+            if (newValue === undefined) {
+                CoWebsiteManager.closeCoWebsite();
+            } else {
+                CoWebsiteManager.loadCoWebsite(newValue as string);
+            }
         });
     }
 

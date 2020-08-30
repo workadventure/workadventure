@@ -150,10 +150,14 @@
                     <li>You can of course use the &quot;#&quot; notation in an exit scene URL (so an exit scene URL will point to a given entry scene URL)</li>
                 </ul>
 
-
-
-
-
+                <h3 id="opening-a-website-when-walking-on-the-map" class="pixel-title">Opening a website when walking on the map</h3>
+                <p>On your map, you can define special zones. When a player will pass over these zones, a website will open
+                (as an iframe on the right side of the screen)</p>
+                <p>In order to create a zone that opens websites:</p>
+                <ul>
+                    <li>You must create a specific layer.</li>
+                    <li>In layer properties, you MUST add a boolean &quot;openWebsite&quot; property. The value of the property is the URL of the website to open (the URL must start with "https://")</li>
+                </ul>
 
                 <h3 id="pushing-the-map" class="pixel-title">Pushing the map</h3>
                 <p>When your changes are ready, you need to &quot;commit&quot; and &quot;push&quot; (i.e. "upload") the changes back to GitHub.

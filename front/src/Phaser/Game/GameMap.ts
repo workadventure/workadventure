@@ -1,6 +1,6 @@
 import {ITiledMap} from "../Map/ITiledMap";
 
-export type PropertyChangeCallback = (oldValue: string | number | boolean | undefined, newValue: string | number | boolean | undefined) => void;
+export type PropertyChangeCallback = (newValue: string | number | boolean | undefined, oldValue: string | number | boolean | undefined) => void;
 
 /**
  * A wrapper around a ITiledMap interface to provide additional capabilities.
@@ -78,7 +78,7 @@ export class GameMap {
         let callbacksArray = this.callbacks.get(propName);
         if (callbacksArray !== undefined) {
             for (const callback of callbacksArray) {
-                callback(oldValue, newValue);
+                callback(newValue, oldValue);
             }
         }
     }
