@@ -28,6 +28,7 @@ import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
 import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
+import {GameMap} from "./GameMap";
 
 
 export enum Textures {
@@ -109,6 +110,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
     private presentationModeSprite!: Sprite;
     private chatModeSprite!: Sprite;
     private repositionCallback!: (this: Window, ev: UIEvent) => void;
+    private gameMap!: GameMap;
 
     static createFromUrl(mapUrlFile: string, instance: string, key: string|null = null): GameScene {
         const mapKey = GameScene.getMapKeyByUrl(mapUrlFile);
@@ -278,6 +280,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
     create(): void {
         //initalise map
         this.Map = this.add.tilemap(this.MapKey);
+        this.gameMap = new GameMap(this.mapFile);
         const mapDirUrl = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf('/'));
         this.mapFile.tilesets.forEach((tileset: ITiledTileSet) => {
             this.Terrains.push(this.Map.addTilesetImage(tileset.name, `${mapDirUrl}/${tileset.image}`, tileset.tilewidth, tileset.tileheight, tileset.margin, tileset.spacing/*, tileset.firstgid*/));
@@ -411,6 +414,10 @@ export class GameScene extends Phaser.Scene implements CenterListener {
 
         // From now, this game scene will be notified of reposition events
         layoutManager.setListener(this);
+
+        this.gameMap.onPropertyChange('startLayer', (oldValue, newValue) => {
+            console.log('startLayer', oldValue, newValue);
+        });
     }
 
     private switchLayoutMode(): void {
@@ -589,6 +596,9 @@ export class GameScene extends Phaser.Scene implements CenterListener {
 
             //listen event to share position of user
             this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this))
+            this.CurrentPlayer.on(hasMovedEventName, (event: HasMovedEvent) => {
+                this.gameMap.setPosition(event.x, event.y);
+            })
         });
     }
 
