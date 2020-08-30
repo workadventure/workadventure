@@ -75,7 +75,7 @@ export class GameMap {
     }
 
     private trigger(propName: string, oldValue: string | number | boolean | undefined, newValue: string | number | boolean | undefined) {
-        let callbacksArray = this.callbacks.get(propName);
+        const callbacksArray = this.callbacks.get(propName);
         if (callbacksArray !== undefined) {
             for (const callback of callbacksArray) {
                 callback(newValue, oldValue);
