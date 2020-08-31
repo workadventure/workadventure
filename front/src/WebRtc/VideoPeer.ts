@@ -85,7 +85,7 @@ export class VideoPeer extends Peer {
      * Sends received stream to screen.
      */
     private stream(stream?: MediaStream) {
-        console.log(`VideoPeer::stream => ${this.userId}`, stream);
+        //console.log(`VideoPeer::stream => ${this.userId}`, stream);
         if(!stream){
             mediaManager.disabledVideoByUserId(this.userId);
             mediaManager.disabledMicrophoneByUserId(this.userId);

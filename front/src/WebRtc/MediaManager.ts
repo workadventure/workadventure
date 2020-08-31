@@ -7,9 +7,9 @@ const videoConstraint: boolean|MediaTrackConstraints = {
     facingMode: "user"
 };
 
-type UpdatedLocalStreamCallback = (media: MediaStream) => void;
-type StartScreenSharingCallback = (media: MediaStream) => void;
-type StopScreenSharingCallback = (media: MediaStream) => void;
+export type UpdatedLocalStreamCallback = (media: MediaStream|null) => void;
+export type StartScreenSharingCallback = (media: MediaStream) => void;
+export type StopScreenSharingCallback = (media: MediaStream) => void;
 
 // TODO: Split MediaManager in 2 classes: MediaManagerUI (in charge of HTML) and MediaManager (singleton in charge of the camera only)
 // TODO: verify that microphone event listeners are not triggered plenty of time NOW (since MediaManager is created many times!!!!)
@@ -109,7 +109,7 @@ export class MediaManager {
         this.updatedLocalStreamCallBacks.delete(callback);
     }
 
-    private triggerUpdatedLocalStreamCallbacks(stream: MediaStream): void {
+    private triggerUpdatedLocalStreamCallbacks(stream: MediaStream|null): void {
         for (const callback of this.updatedLocalStreamCallBacks) {
             callback(stream);
         }
@@ -127,7 +127,7 @@ export class MediaManager {
         }
     }
 
-    showGameOverlay(){
+    public showGameOverlay(){
         const gameOverlay = this.getElementByIdOrFail('game-overlay');
         gameOverlay.classList.add('active');
     }
@@ -142,20 +142,20 @@ export class MediaManager {
         });
     }
 
-    private disableCamera() {
+    private async disableCamera() {
         this.cinemaClose.style.display = "block";
         this.cinema.style.display = "none";
         this.cinemaBtn.classList.add("disabled");
         this.constraintsMedia.video = false;
         this.myCamVideo.srcObject = null;
-        if (this.localStream) {
-            this.localStream.getVideoTracks().forEach((MediaStreamTrack: MediaStreamTrack) => {
-                MediaStreamTrack.stop();
-            });
-        }
-        this.getCamera().then((stream) => {
+        this.stopCamera();
+
+        if (this.constraintsMedia.audio !== false) {
+            const stream = await this.getCamera();
             this.triggerUpdatedLocalStreamCallbacks(stream);
-        });
+        } else {
+            this.triggerUpdatedLocalStreamCallbacks(null);
+        }
     }
 
     private enableMicrophone() {
@@ -163,24 +163,25 @@ export class MediaManager {
         this.microphone.style.display = "block";
         this.microphoneBtn.classList.remove("disabled");
         this.constraintsMedia.audio = true;
+
         this.getCamera().then((stream) => {
             this.triggerUpdatedLocalStreamCallbacks(stream);
         });
     }
 
-    private disableMicrophone() {
+    private async disableMicrophone() {
         this.microphoneClose.style.display = "block";
         this.microphone.style.display = "none";
         this.microphoneBtn.classList.add("disabled");
         this.constraintsMedia.audio = false;
-        if(this.localStream) {
-            this.localStream.getAudioTracks().forEach((MediaStreamTrack: MediaStreamTrack) => {
-                MediaStreamTrack.stop();
-            });
-        }
-        this.getCamera().then((stream) => {
+        this.stopMicrophone();
+
+        if (this.constraintsMedia.video !== false) {
+            const stream = await this.getCamera();
             this.triggerUpdatedLocalStreamCallbacks(stream);
-        });
+        } else {
+            this.triggerUpdatedLocalStreamCallbacks(null);
+        }
     }
 
     private enableScreenSharing() {
@@ -284,6 +285,28 @@ export class MediaManager {
             console.info("error get media ", this.constraintsMedia.video, this.constraintsMedia.audio, err);
             this.localStream = null;
             throw err;
+        }
+    }
+
+    /**
+     * Stops the camera from filming
+     */
+    public stopCamera(): void {
+        if (this.localStream) {
+            for (const track of this.localStream.getVideoTracks()) {
+                track.stop();
+            }
+        }
+    }
+
+    /**
+     * Stops the microphone from listening
+     */
+    public stopMicrophone(): void {
+        if (this.localStream) {
+            for (const track of this.localStream.getAudioTracks()) {
+                track.stop();
+            }
         }
     }
 

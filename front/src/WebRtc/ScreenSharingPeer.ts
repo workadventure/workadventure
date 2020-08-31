@@ -70,7 +70,7 @@ export class ScreenSharingPeer extends Peer {
     }
 
     private sendWebrtcScreenSharingSignal(data: unknown) {
-        console.log("sendWebrtcScreenSharingSignal", data);
+        //console.log("sendWebrtcScreenSharingSignal", data);
         try {
             this.connection.sendWebrtcScreenSharingSignal(data, this.userId);
         }catch (e) {
@@ -82,8 +82,8 @@ export class ScreenSharingPeer extends Peer {
      * Sends received stream to screen.
      */
     private stream(stream?: MediaStream) {
-        console.log(`ScreenSharingPeer::stream => ${this.userId}`, stream);
-        console.log(`stream => ${this.userId} => `, stream);
+        //console.log(`ScreenSharingPeer::stream => ${this.userId}`, stream);
+        //console.log(`stream => ${this.userId} => `, stream);
         if(!stream){
             mediaManager.removeActiveScreenSharingVideo(this.userId);
             this.isReceivingStream = false;
