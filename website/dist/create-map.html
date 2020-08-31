@@ -156,7 +156,7 @@
                 <p>In order to create a zone that opens websites:</p>
                 <ul>
                     <li>You must create a specific layer.</li>
-                    <li>In layer properties, you MUST add a boolean &quot;openWebsite&quot; property. The value of the property is the URL of the website to open (the URL must start with "https://")</li>
+                    <li>In layer properties, you MUST add a &quot;openWebsite&quot; property (of type "string"). The value of the property is the URL of the website to open (the URL must start with "https://")</li>
                 </ul>
 
                 <h3 id="opening-a-jitsi-meet-when-walking-on-the-map" class="pixel-title">Opening a Jitsi meet when walking on the map</h3>
@@ -165,7 +165,16 @@
                 <p>In order to create Jitsi meet zones:</p>
                 <ul>
                     <li>You must create a specific layer.</li>
-                    <li>In layer properties, you MUST add a boolean &quot;jitsiRoom&quot; property. The value of the property is the name of the room in Jitsi. Note: the name of the room will be prepended with the name of the instance of the map (so that different instances of the map have different rooms)</li>
+                    <li>In layer properties, you MUST add a boolean &quot;jitsiRoom&quot; property (of type "string"). The value of the property is the name of the room in Jitsi. Note: the name of the room will be prepended with the name of the instance of the map (so that different instances of the map have different rooms)</li>
+                </ul>
+
+                <h3 id="making-a-silent-zone" class="pixel-title">Making a "silent" zone</h3>
+                <p>On your map, you can define special silent zones where nobody is allowed to talk.
+                In these zones, users will not speak to each others, even if they are next to each others.</p>
+                <p>In order to create a silent zone:</p>
+                <ul>
+                    <li>You must create a specific layer.</li>
+                    <li>In layer properties, you MUST add a boolean &quot;silent&quot; property. If the silent property is checked, the users are entering the silent zone when they walk on any tile of the layer.</li>
                 </ul>
 
                 <h3 id="pushing-the-map" class="pixel-title">Pushing the map</h3>

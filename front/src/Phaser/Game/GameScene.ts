@@ -450,6 +450,14 @@ export class GameScene extends Phaser.Scene implements CenterListener {
                 }));
                 this.connection.setSilent(true);
             }
+        })
+
+        this.gameMap.onPropertyChange('silent', (newValue, oldValue) => {
+            if (newValue === undefined || newValue === false || newValue === '') {
+                this.connection.setSilent(false);
+            } else {
+                this.connection.setSilent(true);
+            }
         });
     }
 
