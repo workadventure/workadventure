@@ -55,7 +55,8 @@ export class World {
     public join(socket : Identificable, userPosition: PointInterface): void {
         this.users.set(socket.userId, {
             id: socket.userId,
-            position: userPosition
+            position: userPosition,
+            silent: false // FIXME: silent should be set at the correct value when joining a room.
         });
         // Let's call update position to trigger the join / leave room
         this.updatePosition(socket, userPosition);
@@ -83,6 +84,10 @@ export class World {
         }
 
         user.position = userPosition;
+
+        if (user.silent) {
+            return;
+        }
 
         if (typeof user.group === 'undefined') {
             // If the user is not part of a group:
@@ -118,6 +123,26 @@ export class World {
         }
     }
 
+    setSilent(socket: Identificable, silent: boolean) {
+        const user = this.users.get(socket.userId);
+        if(typeof user === 'undefined') {
+            console.warn('In setSilent, could not find user with ID "'+socket.userId+'" in world.');
+            return;
+        }
+        if (user.silent === silent) {
+            return;
+        }
+
+        user.silent = silent;
+        if (silent && user.group !== undefined) {
+            this.leaveGroup(user);
+        }
+        if (!silent) {
+            // If we are back to life, let's trigger a position update to see if we can join some group.
+            this.updatePosition(socket, user.position);
+        }
+    }
+
     /**
      * Makes a user leave a group and closes and destroy the group if the group contains only one remaining person.
      *
@@ -145,6 +170,7 @@ export class World {
      * Looks for the closest user that is:
      * - close enough (distance <= minDistance)
      * - not in a group
+     * - not silent
      * OR
      * - close enough to a group (distance <= groupRadius)
      */
@@ -158,6 +184,9 @@ export class World {
                 return;
             }
             if(currentUser === user) {
+                return;
+            }
+            if (currentUser.silent) {
                 return;
             }
 

@@ -24,6 +24,7 @@ enum EventMessage{
     SET_PLAYER_DETAILS = "set-player-details", // Send the name and character to the server (on connect), receive back the id.
 
     CONNECT_ERROR = "connect_error",
+    SET_SILENT = "set_silent", // Set or unset the silent mode for this user.
 }
 
 export interface PointInterface {
@@ -165,6 +166,10 @@ export class Connection implements Connection {
         }
         const point = new Point(x, y, direction, moving);
         this.socket.emit(EventMessage.USER_POSITION, point);
+    }
+
+    public setSilent(silent: boolean): void {
+        this.socket.emit(EventMessage.SET_SILENT, silent);
     }
 
     public onUserJoins(callback: (message: MessageUserJoined) => void): void {

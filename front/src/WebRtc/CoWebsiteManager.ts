@@ -14,7 +14,24 @@ export class CoWebsiteManager {
         iframe.id = 'cowebsite-iframe';
         iframe.src = url;
         cowebsiteDiv.appendChild(iframe);
+        //iframe.onload = () => {
+            // onload can be long to trigger. Maybe we should display the website, whatever happens, after 1 second?
+            CoWebsiteManager.fire();
+        //}
+    }
+
+    /**
+     * Just like loadCoWebsite but the div can be filled by the user.
+     */
+    public static insertCoWebsite(callback: (cowebsite: HTMLDivElement) => void): void {
+        const cowebsiteDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>("cowebsite");
+        cowebsiteDiv.innerHTML = '';
+
+        callback(cowebsiteDiv);
+        //iframe.onload = () => {
+        // onload can be long to trigger. Maybe we should display the website, whatever happens, after 1 second?
         CoWebsiteManager.fire();
+        //}
     }
 
     public static closeCoWebsite(): void {
@@ -24,8 +41,8 @@ export class CoWebsiteManager {
     }
 
     public static getGameSize(): {width: number, height: number} {
-        const iframe = document.getElementById('cowebsite-iframe');
-        if (iframe === null) {
+        const hasChildren = HtmlUtils.getElementByIdOrFail<HTMLDivElement>("cowebsite").children.length > 0;
+        if (hasChildren === false) {
             return {
                 width: window.innerWidth,
                 height: window.innerHeight

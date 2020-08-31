@@ -9,7 +9,7 @@ import {
     PositionInterface
 } from "../../Connection";
 import {CurrentGamerInterface, hasMovedEventName, Player} from "../Player/Player";
-import {DEBUG_MODE, POSITION_DELAY, RESOLUTION, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
+import {DEBUG_MODE, JITSI_URL, POSITION_DELAY, RESOLUTION, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import {ITiledMap, ITiledMapLayer, ITiledMapLayerProperty, ITiledTileSet} from "../Map/ITiledMap";
 import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Character";
 import {AddPlayerInterface} from "./AddPlayerInterface";
@@ -28,6 +28,8 @@ import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
 import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
+import {GameMap} from "./GameMap";
+import {CoWebsiteManager} from "../../WebRtc/CoWebsiteManager";
 
 
 export enum Textures {
@@ -109,6 +111,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
     private presentationModeSprite!: Sprite;
     private chatModeSprite!: Sprite;
     private repositionCallback!: (this: Window, ev: UIEvent) => void;
+    private gameMap!: GameMap;
 
     static createFromUrl(mapUrlFile: string, instance: string, key: string|null = null): GameScene {
         const mapKey = GameScene.getMapKeyByUrl(mapUrlFile);
@@ -278,6 +281,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
     create(): void {
         //initalise map
         this.Map = this.add.tilemap(this.MapKey);
+        this.gameMap = new GameMap(this.mapFile);
         const mapDirUrl = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf('/'));
         this.mapFile.tilesets.forEach((tileset: ITiledTileSet) => {
             this.Terrains.push(this.Map.addTilesetImage(tileset.name, `${mapDirUrl}/${tileset.image}`, tileset.tilewidth, tileset.tileheight, tileset.margin, tileset.spacing/*, tileset.firstgid*/));
@@ -411,6 +415,50 @@ export class GameScene extends Phaser.Scene implements CenterListener {
 
         // From now, this game scene will be notified of reposition events
         layoutManager.setListener(this);
+
+        this.gameMap.onPropertyChange('openWebsite', (newValue, oldValue) => {
+            if (newValue === undefined) {
+                CoWebsiteManager.closeCoWebsite();
+            } else {
+                CoWebsiteManager.loadCoWebsite(newValue as string);
+            }
+        });
+        let jitsiApi: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+        this.gameMap.onPropertyChange('jitsiRoom', (newValue, oldValue) => {
+            if (newValue === undefined) {
+                this.connection.setSilent(false);
+                jitsiApi?.dispose();
+                CoWebsiteManager.closeCoWebsite();
+            } else {
+                CoWebsiteManager.insertCoWebsite((cowebsiteDiv => {
+                    const domain = JITSI_URL;
+                    const options = {
+                        roomName: this.instance + "-" + newValue,
+                        width: "100%",
+                        height: "100%",
+                        parentNode: cowebsiteDiv,
+                        configOverwrite: {
+                            prejoinPageEnabled: false
+                        },
+                        interfaceConfigOverwrite: {
+                            SHOW_CHROME_EXTENSION_BANNER: false,
+                            MOBILE_APP_PROMO: false
+                        }
+                    };
+                    jitsiApi = new (window as any).JitsiMeetExternalAPI(domain, options); // eslint-disable-line @typescript-eslint/no-explicit-any
+                    jitsiApi.executeCommand('displayName', gameManager.getPlayerName());
+                }));
+                this.connection.setSilent(true);
+            }
+        })
+
+        this.gameMap.onPropertyChange('silent', (newValue, oldValue) => {
+            if (newValue === undefined || newValue === false || newValue === '') {
+                this.connection.setSilent(false);
+            } else {
+                this.connection.setSilent(true);
+            }
+        });
     }
 
     private switchLayoutMode(): void {
@@ -589,6 +637,9 @@ export class GameScene extends Phaser.Scene implements CenterListener {
 
             //listen event to share position of user
             this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this))
+            this.CurrentPlayer.on(hasMovedEventName, (event: HasMovedEvent) => {
+                this.gameMap.setPosition(event.x, event.y);
+            })
         });
     }
 
