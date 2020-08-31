@@ -423,9 +423,10 @@ export class GameScene extends Phaser.Scene implements CenterListener {
                 CoWebsiteManager.loadCoWebsite(newValue as string);
             }
         });
-        let jitsiApi: any;
+        let jitsiApi: any; // eslint-disable-line @typescript-eslint/no-explicit-any
         this.gameMap.onPropertyChange('jitsiRoom', (newValue, oldValue) => {
             if (newValue === undefined) {
+                this.connection.setSilent(false);
                 jitsiApi?.dispose();
                 CoWebsiteManager.closeCoWebsite();
             } else {
@@ -444,9 +445,10 @@ export class GameScene extends Phaser.Scene implements CenterListener {
                             MOBILE_APP_PROMO: false
                         }
                     };
-                    jitsiApi = new (window as any).JitsiMeetExternalAPI(domain, options);
+                    jitsiApi = new (window as any).JitsiMeetExternalAPI(domain, options); // eslint-disable-line @typescript-eslint/no-explicit-any
                     jitsiApi.executeCommand('displayName', gameManager.getPlayerName());
-                }))
+                }));
+                this.connection.setSilent(true);
             }
         });
     }

@@ -33,7 +33,8 @@ enum SockerIoEvent {
     MESSAGE_ERROR = "message-error",
     GROUP_CREATE_UPDATE = "group-create-update",
     GROUP_DELETE = "group-delete",
-    SET_PLAYER_DETAILS = "set-player-details"
+    SET_PLAYER_DETAILS = "set-player-details",
+    SET_SILENT = "set_silent", // Set or unset the silent mode for this user.
 }
 
 export class IoSocketController {
@@ -273,6 +274,29 @@ export class IoSocketController {
                 Client.name = playerDetails.name;
                 Client.characterLayers = playerDetails.characterLayers;
                 answerFn(Client.userId);
+            });
+
+            socket.on(SockerIoEvent.SET_SILENT, (silent: unknown) => {
+                if (typeof silent !== "boolean") {
+                    socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid SET_SILENT message.'});
+                    console.warn('Invalid SET_SILENT message received: ', silent);
+                    return;
+                }
+
+                try {
+                    const Client = (socket as ExSocketInterface);
+
+                    // update position in the world
+                    const world = this.Worlds.get(Client.roomId);
+                    if (!world) {
+                        console.error("Could not find world with id '", Client.roomId, "'");
+                        return;
+                    }
+                    world.setSilent(Client, silent);
+                } catch (e) {
+                    console.error('An error occurred on "SET_SILENT"');
+                    console.error(e);
+                }
             });
         });
     }

@@ -4,5 +4,6 @@ import { PointInterface } from "./Websocket/PointInterface";
 export interface UserInterface {
     id: string,
     group?: Group,
-    position: PointInterface
+    position: PointInterface,
+    silent: boolean
 }
