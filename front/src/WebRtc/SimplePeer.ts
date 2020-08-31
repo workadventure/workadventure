@@ -4,7 +4,12 @@ import {
     WebRtcSignalReceivedMessageInterface,
     WebRtcStartMessageInterface
 } from "../Connection";
-import { mediaManager } from "./MediaManager";
+import {
+    mediaManager,
+    StartScreenSharingCallback,
+    StopScreenSharingCallback,
+    UpdatedLocalStreamCallback
+} from "./MediaManager";
 import * as SimplePeerNamespace from "simple-peer";
 import {ScreenSharingPeer} from "./ScreenSharingPeer";
 import {VideoPeer} from "./VideoPeer";
@@ -32,9 +37,9 @@ export class SimplePeer {
 
     private PeerScreenSharingConnectionArray: Map<string, ScreenSharingPeer> = new Map<string, ScreenSharingPeer>();
     private PeerConnectionArray: Map<string, VideoPeer> = new Map<string, VideoPeer>();
-    private readonly sendLocalVideoStreamCallback: (media: MediaStream) => void;
-    private readonly sendLocalScreenSharingStreamCallback: (media: MediaStream) => void;
-    private readonly stopLocalScreenSharingStreamCallback: (media: MediaStream) => void;
+    private readonly sendLocalVideoStreamCallback: UpdatedLocalStreamCallback;
+    private readonly sendLocalScreenSharingStreamCallback: StartScreenSharingCallback;
+    private readonly stopLocalScreenSharingStreamCallback: StopScreenSharingCallback;
     private readonly peerConnectionListeners: Array<PeerConnectionListener> = new Array<PeerConnectionListener>();
 
     constructor(Connection: Connection, WebRtcRoomId: string = "test-webrtc") {
@@ -326,9 +331,9 @@ export class SimplePeer {
     }
 
     public sendLocalVideoStream(){
-        this.Users.forEach((user: UserSimplePeerInterface) => {
+        for (const user of this.Users) {
             this.pushVideoToRemoteUser(user.userId);
-        })
+        }
     }
 
     /**
