@@ -127,7 +127,7 @@ export class MediaManager {
         }
     }
 
-    showGameOverlay(){
+    public showGameOverlay(){
         const gameOverlay = this.getElementByIdOrFail('game-overlay');
         gameOverlay.classList.add('active');
     }
@@ -148,11 +148,7 @@ export class MediaManager {
         this.cinemaBtn.classList.add("disabled");
         this.constraintsMedia.video = false;
         this.myCamVideo.srcObject = null;
-        if (this.localStream) {
-            this.localStream.getVideoTracks().forEach((MediaStreamTrack: MediaStreamTrack) => {
-                MediaStreamTrack.stop();
-            });
-        }
+        this.stopCamera();
         this.getCamera().then((stream) => {
             this.triggerUpdatedLocalStreamCallbacks(stream);
         });
@@ -173,11 +169,7 @@ export class MediaManager {
         this.microphone.style.display = "none";
         this.microphoneBtn.classList.add("disabled");
         this.constraintsMedia.audio = false;
-        if(this.localStream) {
-            this.localStream.getAudioTracks().forEach((MediaStreamTrack: MediaStreamTrack) => {
-                MediaStreamTrack.stop();
-            });
-        }
+        this.stopMicrophone();
         this.getCamera().then((stream) => {
             this.triggerUpdatedLocalStreamCallbacks(stream);
         });
@@ -284,6 +276,28 @@ export class MediaManager {
             console.info("error get media ", this.constraintsMedia.video, this.constraintsMedia.audio, err);
             this.localStream = null;
             throw err;
+        }
+    }
+
+    /**
+     * Stops the camera from filming
+     */
+    public stopCamera(): void {
+        if (this.localStream) {
+            for (const track of this.localStream.getVideoTracks()) {
+                track.stop();
+            }
+        }
+    }
+
+    /**
+     * Stops the microphone from listening
+     */
+    public stopMicrophone(): void {
+        if (this.localStream) {
+            for (const track of this.localStream.getAudioTracks()) {
+                track.stop();
+            }
         }
     }
 
