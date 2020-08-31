@@ -9,7 +9,7 @@ import {
     PositionInterface
 } from "../../Connection";
 import {CurrentGamerInterface, hasMovedEventName, Player} from "../Player/Player";
-import {DEBUG_MODE, POSITION_DELAY, RESOLUTION, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
+import {DEBUG_MODE, JITSI_URL, POSITION_DELAY, RESOLUTION, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import {ITiledMap, ITiledMapLayer, ITiledMapLayerProperty, ITiledTileSet} from "../Map/ITiledMap";
 import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Character";
 import {AddPlayerInterface} from "./AddPlayerInterface";
@@ -421,6 +421,32 @@ export class GameScene extends Phaser.Scene implements CenterListener {
                 CoWebsiteManager.closeCoWebsite();
             } else {
                 CoWebsiteManager.loadCoWebsite(newValue as string);
+            }
+        });
+        let jitsiApi: any;
+        this.gameMap.onPropertyChange('jitsiRoom', (newValue, oldValue) => {
+            if (newValue === undefined) {
+                jitsiApi?.dispose();
+                CoWebsiteManager.closeCoWebsite();
+            } else {
+                CoWebsiteManager.insertCoWebsite((cowebsiteDiv => {
+                    const domain = JITSI_URL;
+                    const options = {
+                        roomName: this.instance + "-" + newValue,
+                        width: "100%",
+                        height: "100%",
+                        parentNode: cowebsiteDiv,
+                        configOverwrite: {
+                            prejoinPageEnabled: false
+                        },
+                        interfaceConfigOverwrite: {
+                            SHOW_CHROME_EXTENSION_BANNER: false,
+                            MOBILE_APP_PROMO: false
+                        }
+                    };
+                    jitsiApi = new (window as any).JitsiMeetExternalAPI(domain, options);
+                    jitsiApi.executeCommand('displayName', gameManager.getPlayerName());
+                }))
             }
         });
     }

@@ -25,7 +25,8 @@
       },
       "ports": [80],
       "env": {
-        "API_URL": "api."+url
+        "API_URL": "api."+url,
+        "JITSI_URL": "meet.jit.si"
       }
     },
     "website": {
