@@ -10,12 +10,12 @@ enum Textures {
 }
 
 export class FourOFourScene extends Phaser.Scene {
-    private mapNotFoundField: TextField;
-    private couldNotFindField: TextField;
-    private fileNameField: Text;
-    private logo: Image;
-    private cat: Sprite;
-    private file: string;
+    private mapNotFoundField!: TextField;
+    private couldNotFindField!: TextField;
+    private fileNameField!: Text;
+    private logo!: Image;
+    private cat!: Sprite;
+    private file!: string;
 
     constructor() {
         super({

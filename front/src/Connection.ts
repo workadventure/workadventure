@@ -6,12 +6,12 @@ import {SetPlayerDetailsMessage} from "./Messages/SetPlayerDetailsMessage";
 const SocketIo = require('socket.io-client');
 import Socket = SocketIOClient.Socket;
 import {PlayerAnimationNames} from "./Phaser/Player/Animation";
-import {UserSimplePeer} from "./WebRtc/SimplePeer";
+import {UserSimplePeerInterface} from "./WebRtc/SimplePeer";
 import {SignalData} from "simple-peer";
-
 
 enum EventMessage{
     WEBRTC_SIGNAL = "webrtc-signal",
+    WEBRTC_SCREEN_SHARING_SIGNAL = "webrtc-screen-sharing-signal",
     WEBRTC_START = "webrtc-start",
     JOIN_ROOM = "join-room", // bi-directional
     USER_POSITION = "user-position", // bi-directional
@@ -24,6 +24,7 @@ enum EventMessage{
     SET_PLAYER_DETAILS = "set-player-details", // Send the name and character to the server (on connect), receive back the id.
 
     CONNECT_ERROR = "connect_error",
+    SET_SILENT = "set_silent", // Set or unset the silent mode for this user.
 }
 
 export interface PointInterface {
@@ -72,17 +73,20 @@ export interface GroupCreatedUpdatedMessageInterface {
 
 export interface WebRtcStartMessageInterface {
     roomId: string,
-    clients: UserSimplePeer[]
+    clients: UserSimplePeerInterface[]
 }
 
 export interface WebRtcDisconnectMessageInterface {
     userId: string
 }
 
-export interface WebRtcSignalMessageInterface {
-    userId: string,
+export interface WebRtcSignalSentMessageInterface {
     receiverId: string,
-    roomId: string,
+    signal: SignalData
+}
+
+export interface WebRtcSignalReceivedMessageInterface {
+    userId: string,
     signal: SignalData
 }
 
@@ -164,6 +168,10 @@ export class Connection implements Connection {
         this.socket.emit(EventMessage.USER_POSITION, point);
     }
 
+    public setSilent(silent: boolean): void {
+        this.socket.emit(EventMessage.SET_SILENT, silent);
+    }
+
     public onUserJoins(callback: (message: MessageUserJoined) => void): void {
         this.socket.on(EventMessage.JOIN_ROOM, callback);
     }
@@ -188,21 +196,30 @@ export class Connection implements Connection {
         this.socket.on(EventMessage.CONNECT_ERROR, callback)
     }
 
-    public sendWebrtcSignal(signal: unknown, roomId: string, userId? : string|null, receiverId? : string) {
+    public sendWebrtcSignal(signal: unknown, receiverId : string) {
         return this.socket.emit(EventMessage.WEBRTC_SIGNAL, {
-            userId: userId ? userId : this.userId,
-            receiverId: receiverId ? receiverId : this.userId,
-            roomId: roomId,
+            receiverId: receiverId,
             signal: signal
-        });
+        } as WebRtcSignalSentMessageInterface);
+    }
+
+    public sendWebrtcScreenSharingSignal(signal: unknown, receiverId : string) {
+        return this.socket.emit(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, {
+            receiverId: receiverId,
+            signal: signal
+        } as WebRtcSignalSentMessageInterface);
     }
 
     public receiveWebrtcStart(callback: (message: WebRtcStartMessageInterface) => void) {
         this.socket.on(EventMessage.WEBRTC_START, callback);
     }
 
-    public receiveWebrtcSignal(callback: (message: WebRtcSignalMessageInterface) => void) {
+    public receiveWebrtcSignal(callback: (message: WebRtcSignalReceivedMessageInterface) => void) {
         return this.socket.on(EventMessage.WEBRTC_SIGNAL, callback);
+    }
+
+    public receiveWebrtcScreenSharingSignal(callback: (message: WebRtcSignalReceivedMessageInterface) => void) {
+        return this.socket.on(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, callback);
     }
 
     public onServerDisconnected(callback: (reason: string) => void): void {
