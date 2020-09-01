@@ -30,6 +30,7 @@ import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import {GameMap} from "./GameMap";
 import {CoWebsiteManager} from "../../WebRtc/CoWebsiteManager";
+import {mediaManager} from "../../WebRtc/MediaManager";
 
 
 export enum Textures {
@@ -429,6 +430,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
                 this.connection.setSilent(false);
                 jitsiApi?.dispose();
                 CoWebsiteManager.closeCoWebsite();
+                mediaManager.showGameOverlay();
             } else {
                 CoWebsiteManager.insertCoWebsite((cowebsiteDiv => {
                     const domain = JITSI_URL;
@@ -449,6 +451,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
                     jitsiApi.executeCommand('displayName', gameManager.getPlayerName());
                 }));
                 this.connection.setSilent(true);
+                mediaManager.hideGameOverlay();
             }
         })
 
