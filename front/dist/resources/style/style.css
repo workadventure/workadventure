@@ -299,11 +299,10 @@ body {
     flex-basis: 100%;
 }*/
 
-.cowebsite iframe {
+.cowebsite > iframe {
     width: 100%;
     height: 100%;
 }
-
 
 .game-overlay {
     display: none;
