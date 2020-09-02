@@ -132,6 +132,11 @@ export class MediaManager {
         gameOverlay.classList.add('active');
     }
 
+    public hideGameOverlay(){
+        const gameOverlay = this.getElementByIdOrFail('game-overlay');
+        gameOverlay.classList.remove('active');
+    }
+
     private enableCamera() {
         this.cinemaClose.style.display = "none";
         this.cinemaBtn.classList.remove("disabled");
