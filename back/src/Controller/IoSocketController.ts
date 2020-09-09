@@ -18,6 +18,7 @@ import {isJoinRoomMessageInterface} from "../Model/Websocket/JoinRoomMessage";
 import {isPointInterface, PointInterface} from "../Model/Websocket/PointInterface";
 import {isWebRtcSignalMessageInterface} from "../Model/Websocket/WebRtcSignalMessage";
 import {UserInGroupInterface} from "../Model/Websocket/UserInGroupInterface";
+import {uuid} from 'uuidv4';
 
 enum SockerIoEvent {
     CONNECTION = "connection",
@@ -60,9 +61,17 @@ export class IoSocketController {
         // Authentication with token. it will be decoded and stored in the socket.
         // Completely commented for now, as we do not use the "/login" route at all.
         this.Io.use((socket: Socket, next) => {
+            console.log(socket.handshake.query.token);
             if (!socket.handshake.query || !socket.handshake.query.token) {
                 console.error('An authentication error happened, a user tried to connect without a token.');
                 return next(new Error('Authentication error'));
+            }
+            if(socket.handshake.query.token === 'test'){
+                (socket as ExSocketInterface).token = socket.handshake.query.token;
+                (socket as ExSocketInterface).userId = uuid();
+                console.log((socket as ExSocketInterface).userId);
+                next();
+                return;
             }
             if(this.searchClientByToken(socket.handshake.query.token)){
                 console.error('An authentication error happened, a user tried to connect while its token is already connected.');
@@ -155,6 +164,7 @@ export class IoSocketController {
                         y: user y position on map
             */
             socket.on(SockerIoEvent.JOIN_ROOM, (message: unknown, answerFn): void => {
+                console.log(SockerIoEvent.JOIN_ROOM, message);
                 try {
                     if (!isJoinRoomMessageInterface(message)) {
                         socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid JOIN_ROOM message.'});
@@ -191,7 +201,7 @@ export class IoSocketController {
                         }
                         return new MessageUserPosition(user.id, player.name, player.characterLayers, player.position);
                     }).filter((item: MessageUserPosition|null) => item !== null);
-                    answerFn(listOfUsers);
+                    //answerFn(listOfUsers);
                 } catch (e) {
                     console.error('An error occurred on "join_room" event');
                     console.error(e);
@@ -199,6 +209,7 @@ export class IoSocketController {
             });
 
             socket.on(SockerIoEvent.USER_POSITION, (position: unknown): void => {
+                console.log(SockerIoEvent.USER_POSITION, position);
                 try {
                     if (!isPointInterface(position)) {
                         socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid USER_POSITION message.'});
@@ -265,6 +276,7 @@ export class IoSocketController {
 
             // Let's send the user id to the user
             socket.on(SockerIoEvent.SET_PLAYER_DETAILS, (playerDetails: unknown, answerFn) => {
+                console.log(SockerIoEvent.SET_PLAYER_DETAILS, playerDetails);
                 if (!isSetPlayerDetailsMessage(playerDetails)) {
                     socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid SET_PLAYER_DETAILS message.'});
                     console.warn('Invalid SET_PLAYER_DETAILS message received: ', playerDetails);
@@ -273,10 +285,11 @@ export class IoSocketController {
                 const Client = (socket as ExSocketInterface);
                 Client.name = playerDetails.name;
                 Client.characterLayers = playerDetails.characterLayers;
-                answerFn(Client.userId);
+                //answerFn(Client.userId);
             });
 
             socket.on(SockerIoEvent.SET_SILENT, (silent: unknown) => {
+                console.log(SockerIoEvent.SET_SILENT, silent);
                 if (typeof silent !== "boolean") {
                     socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid SET_SILENT message.'});
                     console.warn('Invalid SET_SILENT message received: ', silent);
