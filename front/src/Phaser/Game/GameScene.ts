@@ -397,12 +397,14 @@ export class GameScene extends Phaser.Scene implements CenterListener {
         this.presentationModeSprite.setOrigin(0, 1);
         this.presentationModeSprite.setInteractive();
         this.presentationModeSprite.setVisible(false);
+        this.presentationModeSprite.setDepth(99999);
         this.presentationModeSprite.on('pointerup', this.switchLayoutMode.bind(this));
         this.chatModeSprite = this.add.sprite(36, this.game.renderer.height - 2, 'layout_modes', 3);
         this.chatModeSprite.setScrollFactor(0, 0);
         this.chatModeSprite.setOrigin(0, 1);
         this.chatModeSprite.setInteractive();
         this.chatModeSprite.setVisible(false);
+        this.chatModeSprite.setDepth(99999);
         this.chatModeSprite.on('pointerup', this.switchLayoutMode.bind(this));
 
         // FIXME: change this to use the UserInputManager class for input
