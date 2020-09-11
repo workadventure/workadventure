@@ -1,0 +1,27 @@
+{
+  "name": "workadventure-artillery",
+  "version": "1.0.0",
+  "description": "Load testing for WorkAdventure",
+  "scripts": {
+    "start": "artillery run socketio-load-test.yaml -o artillery_output.json && artillery report --output artillery_output.html artillery_output.json",
+    "start:nooutput": "artillery run socketio-load-test.yaml"
+  },
+  "contributors": [
+    {
+      "name": "Grégoire Parant",
+      "email": "g.parant@thecodingmachine.com"
+    },
+    {
+      "name": "David Négrier",
+      "email": "d.negrier@thecodingmachine.com"
+    },
+    {
+      "name": "Arthmaël Poly",
+      "email": "a.poly@thecodingmachine.com"
+    }
+  ],
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "dependencies": {
+    "artillery": "^1.6.1"
+  }
+}

@@ -4,7 +4,7 @@ import * as http from "http";
 import {MessageUserPosition, Point} from "../Model/Websocket/MessageUserPosition"; //TODO fix import by "_Model/.."
 import {ExSocketInterface} from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
 import Jwt, {JsonWebTokenError} from "jsonwebtoken";
-import {SECRET_KEY, MINIMUM_DISTANCE, GROUP_RADIUS} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
+import {SECRET_KEY, MINIMUM_DISTANCE, GROUP_RADIUS, ALLOW_ARTILLERY} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 import {World} from "../Model/World";
 import {Group} from "_Model/Group";
 import {UserInterface} from "_Model/UserInterface";
@@ -67,12 +67,19 @@ export class IoSocketController {
                 return next(new Error('Authentication error'));
             }
             if(socket.handshake.query.token === 'test'){
-                (socket as ExSocketInterface).token = socket.handshake.query.token;
-                (socket as ExSocketInterface).userId = uuid();
-                console.log((socket as ExSocketInterface).userId);
-                next();
-                return;
+                if (ALLOW_ARTILLERY) {
+                    (socket as ExSocketInterface).token = socket.handshake.query.token;
+                    (socket as ExSocketInterface).userId = uuid();
+                    (socket as ExSocketInterface).isArtillery = true;
+                    console.log((socket as ExSocketInterface).userId);
+                    next();
+                    return;
+                } else {
+                    console.warn("In order to perform a load-testing test on this environment, you must set the ALLOW_ARTILLERY environment variable to 'true'");
+                    next();
+                }
             }
+            (socket as ExSocketInterface).isArtillery = false;
             if(this.searchClientByToken(socket.handshake.query.token)){
                 console.error('An authentication error happened, a user tried to connect while its token is already connected.');
                 return next(new Error('Authentication error'));
@@ -201,7 +208,7 @@ export class IoSocketController {
                         }
                         return new MessageUserPosition(user.id, player.name, player.characterLayers, player.position);
                     }).filter((item: MessageUserPosition|null) => item !== null);
-                    //answerFn(listOfUsers);
+                    answerFn(listOfUsers);
                 } catch (e) {
                     console.error('An error occurred on "join_room" event');
                     console.error(e);
@@ -285,7 +292,10 @@ export class IoSocketController {
                 const Client = (socket as ExSocketInterface);
                 Client.name = playerDetails.name;
                 Client.characterLayers = playerDetails.characterLayers;
-                //answerFn(Client.userId);
+                // Artillery fails when receiving an acknowledgement that is not a JSON object
+                if (!Client.isArtillery) {
+                    answerFn(Client.userId);
+                }
             });
 
             socket.on(SockerIoEvent.SET_SILENT, (silent: unknown) => {

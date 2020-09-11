@@ -5,21 +5,14 @@ config:
     query:
       token: "test"
   phases:
-    - duration: 10
-      arrivalRate: 10
-    - duration: 10
-      arrivalRate: 10
+    - duration: 20
+      arrivalRate: 2
   processor: "./socketioLoadTest.js"
 scenarios:
-  - name: "Connect and send a bunch of messages"
+  - name: "Connects and moves player for 20 seconds"
     weight: 90
     engine: "socketio"
     flow:
-      #- loop:
-      #- emit:
-      #    channel: "connection"
-      #    data: "hello world!"
-      #- think: 5
       - emit:
           channel: "set-player-details"
           data:
@@ -45,6 +38,6 @@ scenarios:
               y: "{{ y }}"
               direction: 'down'
               moving: false
-        - think: 1
-        count: 10
+        - think: 0.2
+        count: 100
       - think: 10
