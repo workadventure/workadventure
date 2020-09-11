@@ -4,7 +4,7 @@ import * as http from "http";
 import {MessageUserPosition, Point} from "../Model/Websocket/MessageUserPosition"; //TODO fix import by "_Model/.."
 import {ExSocketInterface} from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
 import Jwt, {JsonWebTokenError} from "jsonwebtoken";
-import {SECRET_KEY, MINIMUM_DISTANCE, GROUP_RADIUS} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
+import {SECRET_KEY, MINIMUM_DISTANCE, GROUP_RADIUS, ALLOW_ARTILLERY} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 import {World} from "../Model/World";
 import {Group} from "_Model/Group";
 import {UserInterface} from "_Model/UserInterface";
@@ -18,6 +18,7 @@ import {isJoinRoomMessageInterface} from "../Model/Websocket/JoinRoomMessage";
 import {isPointInterface, PointInterface} from "../Model/Websocket/PointInterface";
 import {isWebRtcSignalMessageInterface} from "../Model/Websocket/WebRtcSignalMessage";
 import {UserInGroupInterface} from "../Model/Websocket/UserInGroupInterface";
+import {uuid} from 'uuidv4';
 
 enum SockerIoEvent {
     CONNECTION = "connection",
@@ -60,10 +61,25 @@ export class IoSocketController {
         // Authentication with token. it will be decoded and stored in the socket.
         // Completely commented for now, as we do not use the "/login" route at all.
         this.Io.use((socket: Socket, next) => {
+            console.log(socket.handshake.query.token);
             if (!socket.handshake.query || !socket.handshake.query.token) {
                 console.error('An authentication error happened, a user tried to connect without a token.');
                 return next(new Error('Authentication error'));
             }
+            if(socket.handshake.query.token === 'test'){
+                if (ALLOW_ARTILLERY) {
+                    (socket as ExSocketInterface).token = socket.handshake.query.token;
+                    (socket as ExSocketInterface).userId = uuid();
+                    (socket as ExSocketInterface).isArtillery = true;
+                    console.log((socket as ExSocketInterface).userId);
+                    next();
+                    return;
+                } else {
+                    console.warn("In order to perform a load-testing test on this environment, you must set the ALLOW_ARTILLERY environment variable to 'true'");
+                    next();
+                }
+            }
+            (socket as ExSocketInterface).isArtillery = false;
             if(this.searchClientByToken(socket.handshake.query.token)){
                 console.error('An authentication error happened, a user tried to connect while its token is already connected.');
                 return next(new Error('Authentication error'));
@@ -155,6 +171,7 @@ export class IoSocketController {
                         y: user y position on map
             */
             socket.on(SockerIoEvent.JOIN_ROOM, (message: unknown, answerFn): void => {
+                console.log(SockerIoEvent.JOIN_ROOM, message);
                 try {
                     if (!isJoinRoomMessageInterface(message)) {
                         socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid JOIN_ROOM message.'});
@@ -199,6 +216,7 @@ export class IoSocketController {
             });
 
             socket.on(SockerIoEvent.USER_POSITION, (position: unknown): void => {
+                console.log(SockerIoEvent.USER_POSITION, position);
                 try {
                     if (!isPointInterface(position)) {
                         socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid USER_POSITION message.'});
@@ -265,6 +283,7 @@ export class IoSocketController {
 
             // Let's send the user id to the user
             socket.on(SockerIoEvent.SET_PLAYER_DETAILS, (playerDetails: unknown, answerFn) => {
+                console.log(SockerIoEvent.SET_PLAYER_DETAILS, playerDetails);
                 if (!isSetPlayerDetailsMessage(playerDetails)) {
                     socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid SET_PLAYER_DETAILS message.'});
                     console.warn('Invalid SET_PLAYER_DETAILS message received: ', playerDetails);
@@ -273,10 +292,14 @@ export class IoSocketController {
                 const Client = (socket as ExSocketInterface);
                 Client.name = playerDetails.name;
                 Client.characterLayers = playerDetails.characterLayers;
-                answerFn(Client.userId);
+                // Artillery fails when receiving an acknowledgement that is not a JSON object
+                if (!Client.isArtillery) {
+                    answerFn(Client.userId);
+                }
             });
 
             socket.on(SockerIoEvent.SET_SILENT, (silent: unknown) => {
+                console.log(SockerIoEvent.SET_SILENT, silent);
                 if (typeof silent !== "boolean") {
                     socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid SET_SILENT message.'});
                     console.warn('Invalid SET_SILENT message received: ', silent);

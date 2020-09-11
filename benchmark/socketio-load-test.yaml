@@ -1,0 +1,43 @@
+config:
+  target: "http://api.workadventure.localhost/"
+  socketio:
+    transports: ["websocket"]
+    query:
+      token: "test"
+  phases:
+    - duration: 20
+      arrivalRate: 2
+  processor: "./socketioLoadTest.js"
+scenarios:
+  - name: "Connects and moves player for 20 seconds"
+    weight: 90
+    engine: "socketio"
+    flow:
+      - emit:
+          channel: "set-player-details"
+          data:
+            name: 'TEST'
+            characterLayers: ['male3']
+      - think: 1
+      - emit:
+          channel: "join-room"
+          data:
+            roomId: 'global__api.workadventure.localhost/map/files/Floor0/floor0'
+            position:
+              x: 783
+              y: 170
+              direction: 'down'
+              moving: false
+      - think: 1
+      - loop:
+        - function: "setYRandom"
+        - emit:
+            channel: "user-position"
+            data:
+              x: "{{ x }}"
+              y: "{{ y }}"
+              direction: 'down'
+              moving: false
+        - think: 0.2
+        count: 100
+      - think: 10
