@@ -50,6 +50,7 @@ services:
     environment:
       STARTUP_COMMAND_1: yarn install
       SECRET_KEY: yourSecretKey
+      ALLOW_ARTILLERY: "true"
     volumes:
       - ./back:/usr/src/app
     labels:
