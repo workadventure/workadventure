@@ -182,11 +182,15 @@ export class Connection implements Connection {
     }
 
 
-    public joinARoom(roomId: string, startX: number, startY: number, direction: string, moving: boolean): Promise<MessageUserPositionInterface[]> {
+    public joinARoom(roomId: string, startX: number, startY: number, direction: string, moving: boolean, viewport: ViewportInterface): Promise<MessageUserPositionInterface[]> {
         const promise = new Promise<MessageUserPositionInterface[]>((resolve, reject) => {
-            this.socket.emit(EventMessage.JOIN_ROOM, { roomId, position: {x: startX, y: startY, direction, moving }}, (userPositions: MessageUserPositionInterface[]) => {
-                resolve(userPositions);
-            });
+            this.socket.emit(EventMessage.JOIN_ROOM, {
+                    roomId,
+                    position: {x: startX, y: startY, direction, moving },
+                    viewport,
+                }, (userPositions: MessageUserPositionInterface[]) => {
+                    resolve(userPositions);
+                });
         })
         return promise;
     }
@@ -201,6 +205,10 @@ export class Connection implements Connection {
 
     public setSilent(silent: boolean): void {
         this.socket.emit(EventMessage.SET_SILENT, silent);
+    }
+
+    public setViewport(viewport: ViewportInterface): void {
+        this.socket.emit(EventMessage.SET_VIEWPORT, viewport);
     }
 
     public onUserJoins(callback: (message: MessageUserJoined) => void): void {

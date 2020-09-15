@@ -20,6 +20,7 @@ import {isWebRtcSignalMessageInterface} from "../Model/Websocket/WebRtcSignalMes
 import {UserInGroupInterface} from "../Model/Websocket/UserInGroupInterface";
 import {uuid} from 'uuidv4';
 import {isUserMovesInterface} from "../Model/Websocket/UserMovesMessage";
+import {isViewport} from "../Model/Websocket/ViewportMessage";
 
 enum SockerIoEvent {
     CONNECTION = "connection",
@@ -212,25 +213,43 @@ export class IoSocketController {
                     //join new previous room
                     const world = this.joinRoom(Client, roomId, message.position);
 
-                    //add function to refresh position user in real time.
-                    //this.refreshUserPosition(Client);
-
-                    const messageUserJoined = new MessageUserJoined(Client.userId, Client.name, Client.characterLayers, Client.position);
-
-                    socket.to(roomId).emit(SockerIoEvent.JOIN_ROOM, messageUserJoined);
-
-                    // The answer shall contain the list of all users of the room with their positions:
-                    const listOfUsers = Array.from(world.getUsers(), ([key, user]) => {
+                    const users = world.setViewport(Client, message.viewport);
+                    const listOfUsers = users.map((user: UserInterface) => {
                         const player: ExSocketInterface|undefined = this.sockets.get(user.id);
                         if (player === undefined) {
                             console.warn('Something went wrong. The World contains a user "'+user.id+"' but this user does not exist in the sockets list!");
                             return null;
                         }
                         return new MessageUserPosition(user.id, player.name, player.characterLayers, player.position);
-                    }).filter((item: MessageUserPosition|null) => item !== null);
+                    }, users);
+
                     answerFn(listOfUsers);
                 } catch (e) {
                     console.error('An error occurred on "join_room" event');
+                    console.error(e);
+                }
+            });
+
+            socket.on(SockerIoEvent.SET_VIEWPORT, (message: unknown): void => {
+                try {
+                    //console.log('SET_VIEWPORT')
+                    if (!isViewport(message)) {
+                        socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid SET_VIEWPORT message.'});
+                        console.warn('Invalid SET_VIEWPORT message received: ', message);
+                        return;
+                    }
+
+                    const Client = (socket as ExSocketInterface);
+                    Client.viewport = message;
+
+                    const world = this.Worlds.get(Client.roomId);
+                    if (!world) {
+                        console.error("Could not find world with id '", Client.roomId, "'");
+                        return;
+                    }
+                    world.setViewport(Client, Client.viewport);
+                } catch (e) {
+                    console.error('An error occurred on "SET_VIEWPORT" event');
                     console.error(e);
                 }
             });
@@ -257,19 +276,7 @@ export class IoSocketController {
                         return;
                     }
                     world.updatePosition(Client, Client.position);
-
-                    const clientsInRoom = this.Io.sockets.adapter.rooms[Client.roomId];
-                    console.log('clientsInRoom', clientsInRoom);
-                    for (const clientId in clientsInRoom.sockets) {
-                        console.log('client: %s', clientId);
-                        const targetSocket = this.Io.sockets.connected[clientId] as ExSocketInterface;
-                        if (socket === targetSocket) {
-                            continue;
-                        }
-                        //targetSocket.emit(SockerIoEvent.USER_MOVED, new MessageUserMoved(Client.userId, Client.position));
-                        targetSocket.emitInBatch(SockerIoEvent.USER_MOVED, new MessageUserMoved(Client.userId, Client.position));
-                    }
-                    //socket.to(Client.roomId).emit(SockerIoEvent.USER_MOVED, new MessageUserMoved(Client.userId, Client.position));
+                    world.setViewport(Client, Client.viewport);
                 } catch (e) {
                     console.error('An error occurred on "user_position" event');
                     console.error(e);
@@ -404,8 +411,6 @@ export class IoSocketController {
         // leave previous room and world
         if(Client.roomId){
             try {
-                Client.to(Client.roomId).emit(SockerIoEvent.USER_LEFT, Client.userId);
-
                 //user leave previous world
                 const world: World | undefined = this.Worlds.get(Client.roomId);
                 if (world) {
@@ -441,6 +446,25 @@ export class IoSocketController {
                 this.sendUpdateGroupEvent(group);
             }, (groupUuid: string, lastUser: UserInterface) => {
                 this.sendDeleteGroupEvent(groupUuid, lastUser);
+            }, (user, listener) => {
+                const clientUser = this.searchClientByIdOrFail(user.id);
+                const clientListener = this.searchClientByIdOrFail(listener.id);
+                const messageUserJoined = new MessageUserJoined(clientUser.userId, clientUser.name, clientUser.characterLayers, clientUser.position);
+
+                clientListener.emit(SockerIoEvent.JOIN_ROOM, messageUserJoined);
+                //console.log("Sending JOIN_ROOM event");
+            }, (user, position, listener) => {
+                const clientUser = this.searchClientByIdOrFail(user.id);
+                const clientListener = this.searchClientByIdOrFail(listener.id);
+
+                clientListener.emitInBatch(SockerIoEvent.USER_MOVED, new MessageUserMoved(clientUser.userId, clientUser.position));
+                //console.log("Sending USER_MOVED event");
+            }, (user, listener) => {
+                const clientUser = this.searchClientByIdOrFail(user.id);
+                const clientListener = this.searchClientByIdOrFail(listener.id);
+
+                clientListener.emit(SockerIoEvent.USER_LEFT, clientUser.userId);
+                //console.log("Sending USER_LEFT event");
             });
             this.Worlds.set(roomId, world);
         }

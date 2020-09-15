@@ -139,12 +139,14 @@ describe("PositionNotifier", () => {
             listenedZones: new Set<Zone>(),
         } as UserInterface;
 
-        positionNotifier.setViewport(user1, {
+        let newUsers = positionNotifier.setViewport(user1, {
             left: 200,
             right: 600,
             top: 100,
             bottom: 500
         });
+
+        expect(newUsers.length).toBe(0);
 
         move(user2, 500, 500, positionNotifier);
 
@@ -178,7 +180,7 @@ describe("PositionNotifier", () => {
         leaveTriggered = false;
 
         // Move the viewport back on the user.
-        positionNotifier.setViewport(user1, {
+        newUsers = positionNotifier.setViewport(user1, {
             left: 200,
             right: 600,
             top: 100,
@@ -189,5 +191,6 @@ describe("PositionNotifier", () => {
         expect(moveTriggered).toBe(false);
         expect(leaveTriggered).toBe(false);
         enterTriggered = false;
+        expect(newUsers.length).toBe(1);
     });
 })

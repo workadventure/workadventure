@@ -34,10 +34,14 @@ export class PositionNotifier {
         }
     }
 
-    public setViewport(user: UserInterface, viewport: ViewportInterface): void {
+    /**
+     * Sets the viewport coordinates.
+     * Returns the list of new users to add
+     */
+    public setViewport(user: UserInterface, viewport: ViewportInterface): UserInterface[] {
         if (viewport.left > viewport.right || viewport.top > viewport.bottom) {
             console.warn('Invalid viewport received: ', viewport);
-            return;
+            return [];
         }
 
         const oldZones = user.listenedZones;
@@ -55,12 +59,17 @@ export class PositionNotifier {
         const addedZones = [...newZones].filter(x => !oldZones.has(x));
         const removedZones = [...oldZones].filter(x => !newZones.has(x));
 
+
+        let users: UserInterface[] = [];
         for (const zone of addedZones) {
             zone.startListening(user);
+            users = users.concat(Array.from(zone.getPlayers()))
         }
         for (const zone of removedZones) {
             zone.stopListening(user);
         }
+
+        return users;
     }
 
     public updatePosition(user: UserInterface, userPosition: PointInterface): void {
@@ -87,6 +96,11 @@ export class PositionNotifier {
         const oldZoneDesc = this.getZoneDescriptorFromCoordinates(user.position.x, user.position.y);
         const oldZone = this.getZone(oldZoneDesc.i, oldZoneDesc.j);
         oldZone.leave(user, null);
+
+        // Also, let's stop listening on viewports
+        for (const zone of user.listenedZones) {
+            zone.stopListening(user);
+        }
     }
 
     private getZone(i: number, j: number): Zone {

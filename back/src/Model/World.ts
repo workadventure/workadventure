@@ -6,7 +6,9 @@ import {UserInterface} from "./UserInterface";
 import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
 import {PositionInterface} from "_Model/PositionInterface";
 import {Identificable} from "_Model/Websocket/Identificable";
-import {Zone} from "_Model/Zone";
+import {UserEntersCallback, UserLeavesCallback, UserMovesCallback, Zone} from "_Model/Zone";
+import {PositionNotifier} from "./PositionNotifier";
+import {ViewportInterface} from "_Model/Websocket/ViewportMessage";
 
 export type ConnectCallback = (user: string, group: Group) => void;
 export type DisconnectCallback = (user: string, group: Group) => void;
@@ -28,12 +30,17 @@ export class World {
     private readonly groupUpdatedCallback: GroupUpdatedCallback;
     private readonly groupDeletedCallback: GroupDeletedCallback;
 
+    private readonly positionNotifier: PositionNotifier;
+
     constructor(connectCallback: ConnectCallback,
                 disconnectCallback: DisconnectCallback,
                 minDistance: number,
                 groupRadius: number,
                 groupUpdatedCallback: GroupUpdatedCallback,
-                groupDeletedCallback: GroupDeletedCallback)
+                groupDeletedCallback: GroupDeletedCallback,
+                onUserEnters: UserEntersCallback,
+                onUserMoves: UserMovesCallback,
+                onUserLeaves: UserLeavesCallback)
     {
         this.users = new Map<string, UserInterface>();
         this.groups = new Set<Group>();
@@ -43,6 +50,8 @@ export class World {
         this.groupRadius = groupRadius;
         this.groupUpdatedCallback = groupUpdatedCallback;
         this.groupDeletedCallback = groupDeletedCallback;
+        // A zone is 10 sprites wide.
+        this.positionNotifier = new PositionNotifier(320, 320, onUserEnters, onUserMoves, onUserLeaves);
     }
 
     public getGroups(): Group[] {
@@ -73,6 +82,10 @@ export class World {
             this.leaveGroup(userObj);
         }
         this.users.delete(user.userId);
+
+        if (userObj !== undefined) {
+            this.positionNotifier.leave(userObj);
+        }
     }
 
     public isEmpty(): boolean {
@@ -84,6 +97,8 @@ export class World {
         if(typeof user === 'undefined') {
             return;
         }
+
+        this.positionNotifier.updatePosition(user, userPosition);
 
         user.position = userPosition;
 
@@ -318,4 +333,12 @@ export class World {
         }
         return 0;
     }*/
+    setViewport(socket : Identificable, viewport: ViewportInterface): UserInterface[] {
+        const user = this.users.get(socket.userId);
+        if(typeof user === 'undefined') {
+            console.warn('In setViewport, could not find user with ID "'+socket.userId+'" in world.');
+            return [];
+        }
+        return this.positionNotifier.setViewport(user, viewport);
+    }
 }

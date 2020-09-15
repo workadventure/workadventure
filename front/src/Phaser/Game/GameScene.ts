@@ -111,7 +111,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
     private startLayerName: string|undefined;
     private presentationModeSprite!: Sprite;
     private chatModeSprite!: Sprite;
-    private repositionCallback!: (this: Window, ev: UIEvent) => void;
+    private onResizeCallback!: (this: Window, ev: UIEvent) => void;
     private gameMap!: GameMap;
 
     static createFromUrl(mapUrlFile: string, instance: string, key: string|null = null): GameScene {
@@ -226,7 +226,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
 
                 this.scene.stop(this.scene.key);
                 this.scene.remove(this.scene.key);
-                window.removeEventListener('resize', this.repositionCallback);
+                window.removeEventListener('resize', this.onResizeCallback);
             })
 
             // When connection is performed, let's connect SimplePeer
@@ -412,8 +412,8 @@ export class GameScene extends Phaser.Scene implements CenterListener {
             this.switchLayoutMode();
         });
 
-        this.repositionCallback = this.reposition.bind(this);
-        window.addEventListener('resize', this.repositionCallback);
+        this.onResizeCallback = this.onResize.bind(this);
+        window.addEventListener('resize', this.onResizeCallback);
         this.reposition();
 
         // From now, this game scene will be notified of reposition events
@@ -636,7 +636,17 @@ export class GameScene extends Phaser.Scene implements CenterListener {
 
         //join room
         this.connectionPromise.then((connection: Connection) => {
-            connection.joinARoom(this.RoomId, this.startX, this.startY, PlayerAnimationNames.WalkDown, false).then((userPositions: MessageUserPositionInterface[]) => {
+            const camera = this.cameras.main;
+            connection.joinARoom(this.RoomId,
+                this.startX,
+                this.startY,
+                PlayerAnimationNames.WalkDown,
+                false, {
+                    left: camera.scrollX,
+                    top: camera.scrollY,
+                    right: camera.scrollX + camera.width,
+                    bottom: camera.scrollY + camera.height,
+                }).then((userPositions: MessageUserPositionInterface[]) => {
                 this.initUsersPosition(userPositions);
             });
 
@@ -747,7 +757,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
             this.simplePeer.unregister();
             this.scene.stop();
             this.scene.remove(this.scene.key);
-            window.removeEventListener('resize', this.repositionCallback);
+            window.removeEventListener('resize', this.onResizeCallback);
             this.scene.start(nextSceneKey.key, {
                 startLayerName: nextSceneKey.hash
             });
@@ -934,6 +944,19 @@ export class GameScene extends Phaser.Scene implements CenterListener {
         const startPos = mapUrlStart.indexOf('://')+3;
         const endPos = mapUrlStart.indexOf(".json");
         return mapUrlStart.substring(startPos, endPos);
+    }
+
+    private onResize(): void {
+        this.reposition();
+
+        // Send new viewport to server
+        const camera = this.cameras.main;
+        this.connection.setViewport({
+            left: camera.scrollX,
+            top: camera.scrollY,
+            right: camera.scrollX + camera.width,
+            bottom: camera.scrollY + camera.height,
+        });
     }
 
     private reposition(): void {

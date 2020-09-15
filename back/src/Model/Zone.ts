@@ -2,9 +2,9 @@ import {UserInterface} from "./UserInterface";
 import {PointInterface} from "_Model/Websocket/PointInterface";
 import {PositionInterface} from "_Model/PositionInterface";
 
-export type UserEntersCallback = (user: UserInterface) => void;
-export type UserMovesCallback = (user: UserInterface, position: PointInterface) => void;
-export type UserLeavesCallback = (user: UserInterface) => void;
+export type UserEntersCallback = (user: UserInterface, listener: UserInterface) => void;
+export type UserMovesCallback = (user: UserInterface, position: PointInterface, listener: UserInterface) => void;
+export type UserLeavesCallback = (user: UserInterface, listener: UserInterface) => void;
 
 export class Zone {
     private players: Set<UserInterface> = new Set<UserInterface>();
@@ -27,7 +27,7 @@ export class Zone {
     private notifyUserLeft(user: UserInterface, newZone: Zone|null) {
         for (const listener of this.listeners) {
             if (listener !== user && (newZone === null || !listener.listenedZones.has(newZone))) {
-                this.onUserLeaves(user);
+                this.onUserLeaves(user, listener);
             }
         }
     }
@@ -46,40 +46,51 @@ export class Zone {
                 continue;
             }
             if (oldZone === null || !listener.listenedZones.has(oldZone)) {
-                this.onUserEnters(user);
+                this.onUserEnters(user, listener);
             } else {
-                this.onUserMoves(user, position);
+                this.onUserMoves(user, position, listener);
             }
         }
     }
 
     public move(user: UserInterface, position: PointInterface) {
+        if (!this.players.has(user)) {
+            this.players.add(user);
+            const foo = this.players;
+            this.notifyUserEnter(user, null, position);
+            return;
+        }
+
         for (const listener of this.listeners) {
             if (listener !== user) {
-                this.onUserMoves(user,position);
+                this.onUserMoves(user,position, listener);
             }
         }
     }
 
-    public startListening(user: UserInterface): void {
+    public startListening(listener: UserInterface): void {
         for (const player of this.players) {
-            if (player !== user) {
-                this.onUserEnters(user);
+            if (player !== listener) {
+                this.onUserEnters(player, listener);
             }
         }
 
-        this.listeners.add(user);
-        user.listenedZones.add(this);
+        this.listeners.add(listener);
+        listener.listenedZones.add(this);
     }
 
-    public stopListening(user: UserInterface): void {
+    public stopListening(listener: UserInterface): void {
         for (const player of this.players) {
-            if (player !== user) {
-                this.onUserLeaves(user);
+            if (player !== listener) {
+                this.onUserLeaves(player, listener);
             }
         }
 
-        this.listeners.delete(user);
-        user.listenedZones.delete(this);
+        this.listeners.delete(listener);
+        listener.listenedZones.delete(this);
+    }
+
+    public getPlayers(): Set<UserInterface> {
+        return this.players;
     }
 }
