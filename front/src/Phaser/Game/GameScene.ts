@@ -677,7 +677,13 @@ export class GameScene extends Phaser.Scene implements CenterListener {
     private doPushPlayerPosition(event: HasMovedEvent): void {
         this.lastMoveEventSent = event;
         this.lastSentTick = this.currentTick;
-        this.connection.sharePosition(event.x, event.y, event.direction, event.moving);
+        const camera = this.cameras.main;
+        this.connection.sharePosition(event.x, event.y, event.direction, event.moving, {
+            left: camera.scrollX,
+            top: camera.scrollY,
+            right: camera.scrollX + camera.width,
+            bottom: camera.scrollY + camera.height,
+        });
     }
 
     EventToClickOnTile(){

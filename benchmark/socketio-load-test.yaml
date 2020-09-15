@@ -34,10 +34,16 @@ scenarios:
         - emit:
             channel: "user-position"
             data:
-              x: "{{ x }}"
-              y: "{{ y }}"
-              direction: 'down'
-              moving: false
+              position:
+                x: "{{ x }}"
+                y: "{{ y }}"
+                direction: 'down'
+                moving: false
+              viewport:
+                left: "{{ left }}"
+                top: "{{ top }}"
+                right: "{{ right }}"
+                bottom: "{{ bottom }}"
         - think: 0.2
         count: 100
       - think: 10

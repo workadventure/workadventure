@@ -6,8 +6,8 @@ import {ExSocketInterface} from "../Model/Websocket/ExSocketInterface"; //TODO f
 import Jwt, {JsonWebTokenError} from "jsonwebtoken";
 import {SECRET_KEY, MINIMUM_DISTANCE, GROUP_RADIUS, ALLOW_ARTILLERY} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 import {World} from "../Model/World";
-import {Group} from "_Model/Group";
-import {UserInterface} from "_Model/UserInterface";
+import {Group} from "../Model/Group";
+import {UserInterface} from "../Model/UserInterface";
 import {isSetPlayerDetailsMessage,} from "../Model/Websocket/SetPlayerDetailsMessage";
 import {MessageUserJoined} from "../Model/Websocket/MessageUserJoined";
 import {MessageUserMoved} from "../Model/Websocket/MessageUserMoved";
@@ -19,12 +19,13 @@ import {isPointInterface, PointInterface} from "../Model/Websocket/PointInterfac
 import {isWebRtcSignalMessageInterface} from "../Model/Websocket/WebRtcSignalMessage";
 import {UserInGroupInterface} from "../Model/Websocket/UserInGroupInterface";
 import {uuid} from 'uuidv4';
+import {isUserMovesInterface} from "../Model/Websocket/UserMovesMessage";
 
 enum SockerIoEvent {
     CONNECTION = "connection",
     DISCONNECT = "disconnect",
     JOIN_ROOM = "join-room", // bi-directional
-    USER_POSITION = "user-position", // bi-directional
+    USER_POSITION = "user-position", // From client to server
     USER_MOVED = "user-moved", // From server to client
     USER_LEFT = "user-left", // From server to client
     WEBRTC_SIGNAL = "webrtc-signal",
@@ -36,6 +37,20 @@ enum SockerIoEvent {
     GROUP_DELETE = "group-delete",
     SET_PLAYER_DETAILS = "set-player-details",
     SET_SILENT = "set_silent", // Set or unset the silent mode for this user.
+    SET_VIEWPORT = "set-viewport",
+    BATCH = "batch",
+}
+
+function emitInBatch(socket: ExSocketInterface, event: string | symbol, payload: any): void {
+    socket.batchedMessages.push({ event, payload});
+
+    if (socket.batchTimeout === null) {
+        socket.batchTimeout = setTimeout(() => {
+            socket.emit(SockerIoEvent.BATCH, socket.batchedMessages);
+            socket.batchedMessages = [];
+            socket.batchTimeout = null;
+        }, 100);
+    }
 }
 
 export class IoSocketController {
@@ -152,6 +167,11 @@ export class IoSocketController {
     ioConnection() {
         this.Io.on(SockerIoEvent.CONNECTION, (socket: Socket) => {
             const client : ExSocketInterface = socket as ExSocketInterface;
+            client.batchedMessages = [];
+            client.batchTimeout = null;
+            client.emitInBatch = (event: string | symbol, payload: any): void => {
+                emitInBatch(client, event, payload);
+            }
             this.sockets.set(client.userId, client);
 
             // Let's log server load when a user joins
@@ -215,19 +235,20 @@ export class IoSocketController {
                 }
             });
 
-            socket.on(SockerIoEvent.USER_POSITION, (position: unknown): void => {
-                console.log(SockerIoEvent.USER_POSITION, position);
+            socket.on(SockerIoEvent.USER_POSITION, (userMovesMessage: unknown): void => {
+                console.log(SockerIoEvent.USER_POSITION, userMovesMessage);
                 try {
-                    if (!isPointInterface(position)) {
+                    if (!isUserMovesInterface(userMovesMessage)) {
                         socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid USER_POSITION message.'});
-                        console.warn('Invalid USER_POSITION message received: ', position);
+                        console.warn('Invalid USER_POSITION message received: ', userMovesMessage);
                         return;
                     }
 
                     const Client = (socket as ExSocketInterface);
 
                     // sending to all clients in room except sender
-                    Client.position = position;
+                    Client.position = userMovesMessage.position;
+                    Client.viewport = userMovesMessage.viewport;
 
                     // update position in the world
                     const world = this.Worlds.get(Client.roomId);
@@ -235,9 +256,20 @@ export class IoSocketController {
                         console.error("Could not find world with id '", Client.roomId, "'");
                         return;
                     }
-                    world.updatePosition(Client, position);
+                    world.updatePosition(Client, Client.position);
 
-                    socket.to(Client.roomId).emit(SockerIoEvent.USER_MOVED, new MessageUserMoved(Client.userId, Client.position));
+                    const clientsInRoom = this.Io.sockets.adapter.rooms[Client.roomId];
+                    console.log('clientsInRoom', clientsInRoom);
+                    for (const clientId in clientsInRoom.sockets) {
+                        console.log('client: %s', clientId);
+                        const targetSocket = this.Io.sockets.connected[clientId] as ExSocketInterface;
+                        if (socket === targetSocket) {
+                            continue;
+                        }
+                        //targetSocket.emit(SockerIoEvent.USER_MOVED, new MessageUserMoved(Client.userId, Client.position));
+                        targetSocket.emitInBatch(SockerIoEvent.USER_MOVED, new MessageUserMoved(Client.userId, Client.position));
+                    }
+                    //socket.to(Client.roomId).emit(SockerIoEvent.USER_MOVED, new MessageUserMoved(Client.userId, Client.position));
                 } catch (e) {
                     console.error('An error occurred on "user_position" event');
                     console.error(e);

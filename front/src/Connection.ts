@@ -14,7 +14,7 @@ enum EventMessage{
     WEBRTC_SCREEN_SHARING_SIGNAL = "webrtc-screen-sharing-signal",
     WEBRTC_START = "webrtc-start",
     JOIN_ROOM = "join-room", // bi-directional
-    USER_POSITION = "user-position", // bi-directional
+    USER_POSITION = "user-position", // From client to server
     USER_MOVED = "user-moved", // From server to client
     USER_LEFT = "user-left", // From server to client
     MESSAGE_ERROR = "message-error",
@@ -25,6 +25,8 @@ enum EventMessage{
 
     CONNECT_ERROR = "connect_error",
     SET_SILENT = "set_silent", // Set or unset the silent mode for this user.
+    SET_VIEWPORT = "set-viewport",
+    BATCH = "batch",
 }
 
 export interface PointInterface {
@@ -95,6 +97,23 @@ export interface StartMapInterface {
     startInstance: string
 }
 
+export interface ViewportInterface {
+    left: number,
+    top: number,
+    right: number,
+    bottom: number,
+}
+
+export interface UserMovesInterface {
+    position: PositionInterface,
+    viewport: ViewportInterface,
+}
+
+export interface BatchedMessageInterface {
+    event: string,
+    payload: any
+}
+
 export class Connection implements Connection {
     private readonly socket: Socket;
     private userId: string|null = null;
@@ -110,6 +129,18 @@ export class Connection implements Connection {
 
         this.socket.on(EventMessage.MESSAGE_ERROR, (message: string) => {
             console.error(EventMessage.MESSAGE_ERROR, message);
+        })
+
+        /**
+         * Messages inside batched messages are extracted and sent to listeners directly.
+         */
+        this.socket.on(EventMessage.BATCH, (batchedMessages: BatchedMessageInterface[]) => {
+            for (const message of batchedMessages) {
+                const listeners = this.socket.listeners(message.event);
+                for (const listener of listeners) {
+                    listener(message.payload);
+                }
+            }
         })
     }
 
@@ -160,12 +191,12 @@ export class Connection implements Connection {
         return promise;
     }
 
-    public sharePosition(x : number, y : number, direction : string, moving: boolean) : void{
+    public sharePosition(x : number, y : number, direction : string, moving: boolean, viewport: ViewportInterface) : void{
         if(!this.socket){
             return;
         }
         const point = new Point(x, y, direction, moving);
-        this.socket.emit(EventMessage.USER_POSITION, point);
+        this.socket.emit(EventMessage.USER_POSITION, { position: point, viewport } as UserMovesInterface);
     }
 
     public setSilent(silent: boolean): void {

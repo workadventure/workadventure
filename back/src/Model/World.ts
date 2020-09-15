@@ -6,6 +6,7 @@ import {UserInterface} from "./UserInterface";
 import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
 import {PositionInterface} from "_Model/PositionInterface";
 import {Identificable} from "_Model/Websocket/Identificable";
+import {Zone} from "_Model/Zone";
 
 export type ConnectCallback = (user: string, group: Group) => void;
 export type DisconnectCallback = (user: string, group: Group) => void;
@@ -56,7 +57,8 @@ export class World {
         this.users.set(socket.userId, {
             id: socket.userId,
             position: userPosition,
-            silent: false // FIXME: silent should be set at the correct value when joining a room.
+            silent: false, // FIXME: silent should be set at the correct value when joining a room.
+            listenedZones: new Set<Zone>()
         });
         // Let's call update position to trigger the join / leave room
         this.updatePosition(socket, userPosition);
