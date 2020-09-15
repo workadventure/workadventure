@@ -41,7 +41,7 @@ enum SockerIoEvent {
     BATCH = "batch",
 }
 
-function emitInBatch(socket: ExSocketInterface, event: string | symbol, payload: any): void {
+function emitInBatch(socket: ExSocketInterface, event: string | symbol, payload: unknown): void {
     socket.batchedMessages.push({ event, payload});
 
     if (socket.batchTimeout === null) {
@@ -169,7 +169,7 @@ export class IoSocketController {
             const client : ExSocketInterface = socket as ExSocketInterface;
             client.batchedMessages = [];
             client.batchTimeout = null;
-            client.emitInBatch = (event: string | symbol, payload: any): void => {
+            client.emitInBatch = (event: string | symbol, payload: unknown): void => {
                 emitInBatch(client, event, payload);
             }
             this.sockets.set(client.userId, client);

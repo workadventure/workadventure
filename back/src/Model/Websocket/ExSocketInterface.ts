@@ -17,7 +17,7 @@ export interface ExSocketInterface extends Socket, Identificable {
     /**
      * Pushes an event that will be sent in the next batch of events
      */
-    emitInBatch: (event: string | symbol, payload: any) => void;
-    batchedMessages: Array<{ event: string | symbol, payload: any }>;
+    emitInBatch: (event: string | symbol, payload: unknown) => void;
+    batchedMessages: Array<{ event: string | symbol, payload: unknown }>;
     batchTimeout: NodeJS.Timeout|null;
 }

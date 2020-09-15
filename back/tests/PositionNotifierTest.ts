@@ -32,7 +32,7 @@ describe("PositionNotifier", () => {
             leaveTriggered = true;
         });
 
-        let user1 = {
+        const user1 = {
             id: "1",
             position: {
                 x: 500,
@@ -43,7 +43,7 @@ describe("PositionNotifier", () => {
             listenedZones: new Set<Zone>(),
         } as UserInterface;
 
-        let user2 = {
+        const user2 = {
             id: "2",
             position: {
                 x: -9999,
@@ -117,7 +117,7 @@ describe("PositionNotifier", () => {
             leaveTriggered = true;
         });
 
-        let user1 = {
+        const user1 = {
             id: "1",
             position: {
                 x: 500,
@@ -128,7 +128,7 @@ describe("PositionNotifier", () => {
             listenedZones: new Set<Zone>(),
         } as UserInterface;
 
-        let user2 = {
+        const user2 = {
             id: "2",
             position: {
                 x: -9999,

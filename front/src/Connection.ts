@@ -111,7 +111,7 @@ export interface UserMovesInterface {
 
 export interface BatchedMessageInterface {
     event: string,
-    payload: any
+    payload: unknown
 }
 
 export class Connection implements Connection {
