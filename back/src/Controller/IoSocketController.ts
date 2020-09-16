@@ -149,26 +149,6 @@ export class IoSocketController {
         return null;
     }
 
-    private sendUpdateGroupEvent(group: Group): void {
-        // Let's get the room of the group. To do this, let's get anyone in the group and find its room.
-        // Note: this is suboptimal
-        const userId = group.getUsers()[0].id;
-        const client: ExSocketInterface = this.searchClientByIdOrFail(userId);
-        const roomId = client.roomId;
-        this.Io.in(roomId).emit(SockerIoEvent.GROUP_CREATE_UPDATE, {
-            position: group.getPosition(),
-            groupId: group.getId()
-        });
-    }
-
-    private sendDeleteGroupEvent(uuid: string, lastUser: User): void {
-        // Let's get the room of the group. To do this, let's get anyone in the group and find its room.
-        const userId = lastUser.id;
-        const client: ExSocketInterface = this.searchClientByIdOrFail(userId);
-        const roomId = client.roomId;
-        this.Io.in(roomId).emit(SockerIoEvent.GROUP_DELETE, uuid);
-    }
-
     ioConnection() {
         this.Io.on(SockerIoEvent.CONNECTION, (socket: Socket) => {
             const client : ExSocketInterface = socket as ExSocketInterface;
@@ -498,11 +478,7 @@ export class IoSocketController {
                 this.connectedUser(user1, group);
             }, (user1: string, group: Group) => {
                 this.disConnectedUser(user1, group);
-            }, MINIMUM_DISTANCE, GROUP_RADIUS, (group: Group) => {
-                //this.sendUpdateGroupEvent(group);
-            }, (groupUuid: string, lastUser: User) => {
-                //this.sendDeleteGroupEvent(groupUuid, lastUser);
-            }, (thing: Movable, listener: User) => {
+            }, MINIMUM_DISTANCE, GROUP_RADIUS, (thing: Movable, listener: User) => {
                 const clientListener = this.searchClientByIdOrFail(listener.id);
                 if (thing instanceof User) {
                     const clientUser = this.searchClientByIdOrFail(thing.id);

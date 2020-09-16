@@ -14,10 +14,6 @@ import {Movable} from "_Model/Movable";
 export type ConnectCallback = (user: string, group: Group) => void;
 export type DisconnectCallback = (user: string, group: Group) => void;
 
-// callback called when a group is created or moved or changes users
-export type GroupUpdatedCallback = (group: Group) => void;
-export type GroupDeletedCallback = (uuid: string, lastUser: User) => void;
-
 export class World {
     private readonly minDistance: number;
     private readonly groupRadius: number;
@@ -28,8 +24,6 @@ export class World {
 
     private readonly connectCallback: ConnectCallback;
     private readonly disconnectCallback: DisconnectCallback;
-    private readonly groupUpdatedCallback: GroupUpdatedCallback;
-    private readonly groupDeletedCallback: GroupDeletedCallback;
 
     private itemsState: Map<number, unknown> = new Map<number, unknown>();
 
@@ -39,8 +33,6 @@ export class World {
                 disconnectCallback: DisconnectCallback,
                 minDistance: number,
                 groupRadius: number,
-                groupUpdatedCallback: GroupUpdatedCallback,
-                groupDeletedCallback: GroupDeletedCallback,
                 onEnters: EntersCallback,
                 onMoves: MovesCallback,
                 onLeaves: LeavesCallback)
@@ -51,8 +43,6 @@ export class World {
         this.disconnectCallback = disconnectCallback;
         this.minDistance = minDistance;
         this.groupRadius = groupRadius;
-        this.groupUpdatedCallback = groupUpdatedCallback;
-        this.groupDeletedCallback = groupDeletedCallback;
         // A zone is 10 sprites wide.
         this.positionNotifier = new PositionNotifier(320, 320, onEnters, onMoves, onLeaves);
     }
@@ -138,7 +128,6 @@ export class World {
         // At the very end, if the user is part of a group, let's call the callback to update group position
         if (typeof user.group !== 'undefined') {
             this.positionNotifier.updatePosition(user.group, user.group.getPosition(), oldGroupPosition ? oldGroupPosition : user.group.getPosition());
-            //this.groupUpdatedCallback(user.group);
         }
     }
 
@@ -174,7 +163,6 @@ export class World {
         }
         group.leave(user);
         if (group.isEmpty()) {
-            //this.groupDeletedCallback(group.getId(), user);
             this.positionNotifier.leave(group);
             group.destroy();
             if (!this.groups.has(group)) {
@@ -183,7 +171,6 @@ export class World {
             this.groups.delete(group);
         } else {
             this.positionNotifier.updatePosition(group, group.getPosition(), group.getPosition());
-            //this.groupUpdatedCallback(group);
         }
     }
 
