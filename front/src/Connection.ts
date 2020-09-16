@@ -283,14 +283,6 @@ export class Connection implements Connection {
         return this.socket.on(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, callback);
     }
 
-    public receivePlayGlobalMessage(callback: (message: GlobalMessageInterface) => void) {
-        return this.socket.on(EventMessage.PLAY_GLOBAL_MESSAGE, callback);
-    }
-
-    public receiveStopGlobalMessage(callback: (message: GlobalMessageInterface) => void) {
-        return this.socket.on(EventMessage.STOP_GLOBAL_MESSAGE, callback);
-    }
-
     public onServerDisconnected(callback: (reason: string) => void): void {
         this.socket.on('disconnect', (reason: string) => {
             if (reason === 'io client disconnect') {
@@ -321,5 +313,17 @@ export class Connection implements Connection {
 
     onActionableEvent(callback: (message: ItemEventMessageInterface) => void): void {
         this.socket.on(EventMessage.ITEM_EVENT, callback);
+    }
+
+    public receivePlayGlobalMessage(callback: (message: GlobalMessageInterface) => void) {
+        return this.socket.on(EventMessage.PLAY_GLOBAL_MESSAGE, callback);
+    }
+
+    public receiveStopGlobalMessage(callback: (message: GlobalMessageInterface) => void) {
+        return this.socket.on(EventMessage.STOP_GLOBAL_MESSAGE, callback);
+    }
+
+    public emitGlobalMessage(message: GlobalMessageInterface){
+        return this.socket.emit(EventMessage.PLAY_GLOBAL_MESSAGE, message);
     }
 }

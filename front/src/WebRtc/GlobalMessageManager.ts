@@ -22,7 +22,7 @@ export class GlobalMessageManager {
         });
     }
 
-    playMessage(messageId : number, htmlMessage: string){
+    private playMessage(messageId : number, htmlMessage: string){
         const div = document.createElement('div');
         div.innerHTML = htmlMessage;
         div.id = this.getHtmlMessageId(messageId);
@@ -32,11 +32,11 @@ export class GlobalMessageManager {
         mainSectionDiv.appendChild(div);
     }
 
-    stopMessage(messageId: number){
+    private stopMessage(messageId: number){
         HtmlUtils.removeElementByIdOrFail<HTMLDivElement>(this.getHtmlMessageId(messageId));
     }
 
-    private getHtmlMessageId(messageId: number){
+    private getHtmlMessageId(messageId: number) : string{
         return `message-${messageId}`;
     }
 

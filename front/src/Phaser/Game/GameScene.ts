@@ -41,6 +41,7 @@ import {ItemFactoryInterface} from "../Items/ItemFactoryInterface";
 import {ActionableItem} from "../Items/ActionableItem";
 import {UserInputManager} from "../UserInput/UserInputManager";
 import {GlobalMessageManager} from "../../WebRtc/GlobalMessageManager";
+import {ConsoleGlobalMessageManager} from "../../WebRtc/ConsoleGlobalMessageManager";
 
 
 export enum Textures {
@@ -102,6 +103,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
     private connection!: Connection;
     private simplePeer!: SimplePeer;
     private GlobalMessageManager!: GlobalMessageManager;
+    private ConsoleGlobalMessageManager!: ConsoleGlobalMessageManager;
     private connectionPromise!: Promise<Connection>
     private connectionAnswerPromise: Promise<RoomJoinedMessageInterface>;
     private connectionAnswerPromiseResolve!: (value?: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>) => void;
@@ -268,6 +270,8 @@ export class GameScene extends Phaser.Scene implements CenterListener {
             // When connection is performed, let's connect SimplePeer
             this.simplePeer = new SimplePeer(this.connection);
             this.GlobalMessageManager = new GlobalMessageManager(this.connection);
+            //TODO check right of user
+            this.ConsoleGlobalMessageManager = new ConsoleGlobalMessageManager(this.connection);
 
             const self = this;
             this.simplePeer.registerPeerConnectionListener({
