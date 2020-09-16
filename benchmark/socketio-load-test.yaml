@@ -28,16 +28,27 @@ scenarios:
               y: 170
               direction: 'down'
               moving: false
+            viewport:
+              left: 500
+              top: 0
+              right: 800
+              bottom: 200
       - think: 1
       - loop:
         - function: "setYRandom"
         - emit:
             channel: "user-position"
             data:
-              x: "{{ x }}"
-              y: "{{ y }}"
-              direction: 'down'
-              moving: false
+              position:
+                x: "{{ x }}"
+                y: "{{ y }}"
+                direction: 'down'
+                moving: false
+              viewport:
+                left: "{{ left }}"
+                top: "{{ top }}"
+                right: "{{ right }}"
+                bottom: "{{ bottom }}"
         - think: 0.2
         count: 100
       - think: 10
