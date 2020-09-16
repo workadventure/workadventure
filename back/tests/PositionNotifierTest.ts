@@ -7,6 +7,7 @@ import {User} from "../src/Model/User";
 import {PointInterface} from "../src/Model/Websocket/PointInterface";
 import {Zone} from "_Model/Zone";
 import {Movable} from "_Model/Movable";
+import {PositionInterface} from "_Model/PositionInterface";
 
 function move(user: User, x: number, y: number, positionNotifier: PositionNotifier): void {
     positionNotifier.updatePosition(user, {
@@ -25,7 +26,7 @@ describe("PositionNotifier", () => {
 
         const positionNotifier = new PositionNotifier(300, 300, (thing: Movable) => {
             enterTriggered = true;
-        }, (thing: Movable, position: PointInterface) => {
+        }, (thing: Movable, position: PositionInterface) => {
             moveTriggered = true;
         }, (thing: Movable) => {
             leaveTriggered = true;
@@ -103,7 +104,7 @@ describe("PositionNotifier", () => {
 
         const positionNotifier = new PositionNotifier(300, 300, (thing: Movable) => {
             enterTriggered = true;
-        }, (thing: Movable, position: PointInterface) => {
+        }, (thing: Movable, position: PositionInterface) => {
             moveTriggered = true;
         }, (thing: Movable) => {
             leaveTriggered = true;
