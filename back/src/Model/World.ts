@@ -2,33 +2,28 @@ import {MessageUserPosition, Point} from "./Websocket/MessageUserPosition";
 import {PointInterface} from "./Websocket/PointInterface";
 import {Group} from "./Group";
 import {Distance} from "./Distance";
-import {UserInterface} from "./UserInterface";
+import {User} from "./User";
 import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
 import {PositionInterface} from "_Model/PositionInterface";
 import {Identificable} from "_Model/Websocket/Identificable";
-import {UserEntersCallback, UserLeavesCallback, UserMovesCallback, Zone} from "_Model/Zone";
+import {EntersCallback, LeavesCallback, MovesCallback, Zone} from "_Model/Zone";
 import {PositionNotifier} from "./PositionNotifier";
 import {ViewportInterface} from "_Model/Websocket/ViewportMessage";
+import {Movable} from "_Model/Movable";
 
 export type ConnectCallback = (user: string, group: Group) => void;
 export type DisconnectCallback = (user: string, group: Group) => void;
-
-// callback called when a group is created or moved or changes users
-export type GroupUpdatedCallback = (group: Group) => void;
-export type GroupDeletedCallback = (uuid: string, lastUser: UserInterface) => void;
 
 export class World {
     private readonly minDistance: number;
     private readonly groupRadius: number;
 
     // Users, sorted by ID
-    private readonly users: Map<string, UserInterface>;
+    private readonly users: Map<string, User>;
     private readonly groups: Set<Group>;
 
     private readonly connectCallback: ConnectCallback;
     private readonly disconnectCallback: DisconnectCallback;
-    private readonly groupUpdatedCallback: GroupUpdatedCallback;
-    private readonly groupDeletedCallback: GroupDeletedCallback;
 
     private itemsState: Map<number, unknown> = new Map<number, unknown>();
 
@@ -38,39 +33,30 @@ export class World {
                 disconnectCallback: DisconnectCallback,
                 minDistance: number,
                 groupRadius: number,
-                groupUpdatedCallback: GroupUpdatedCallback,
-                groupDeletedCallback: GroupDeletedCallback,
-                onUserEnters: UserEntersCallback,
-                onUserMoves: UserMovesCallback,
-                onUserLeaves: UserLeavesCallback)
+                onEnters: EntersCallback,
+                onMoves: MovesCallback,
+                onLeaves: LeavesCallback)
     {
-        this.users = new Map<string, UserInterface>();
+        this.users = new Map<string, User>();
         this.groups = new Set<Group>();
         this.connectCallback = connectCallback;
         this.disconnectCallback = disconnectCallback;
         this.minDistance = minDistance;
         this.groupRadius = groupRadius;
-        this.groupUpdatedCallback = groupUpdatedCallback;
-        this.groupDeletedCallback = groupDeletedCallback;
         // A zone is 10 sprites wide.
-        this.positionNotifier = new PositionNotifier(320, 320, onUserEnters, onUserMoves, onUserLeaves);
+        this.positionNotifier = new PositionNotifier(320, 320, onEnters, onMoves, onLeaves);
     }
 
     public getGroups(): Group[] {
         return Array.from(this.groups.values());
     }
 
-    public getUsers(): Map<string, UserInterface> {
+    public getUsers(): Map<string, User> {
         return this.users;
     }
 
     public join(socket : Identificable, userPosition: PointInterface): void {
-        this.users.set(socket.userId, {
-            id: socket.userId,
-            position: userPosition,
-            silent: false, // FIXME: silent should be set at the correct value when joining a room.
-            listenedZones: new Set<Zone>()
-        });
+        this.users.set(socket.userId, new User(socket.userId, userPosition, false));
         // Let's call update position to trigger the join / leave room
         this.updatePosition(socket, userPosition);
     }
@@ -87,6 +73,7 @@ export class World {
 
         if (userObj !== undefined) {
             this.positionNotifier.leave(userObj);
+            this.positionNotifier.removeViewport(userObj);
         }
     }
 
@@ -100,7 +87,9 @@ export class World {
             return;
         }
 
-        this.positionNotifier.updatePosition(user, userPosition);
+        this.positionNotifier.updatePosition(user, userPosition, user.position);
+
+        const oldGroupPosition = user.group?.getPosition();
 
         user.position = userPosition;
 
@@ -108,17 +97,17 @@ export class World {
             return;
         }
 
-        if (typeof user.group === 'undefined') {
+        if (user.group === undefined) {
             // If the user is not part of a group:
             //  should he join a group?
-            const closestItem: UserInterface|Group|null = this.searchClosestAvailableUserOrGroup(user);
+            const closestItem: User|Group|null = this.searchClosestAvailableUserOrGroup(user);
 
             if (closestItem !== null) {
                 if (closestItem instanceof Group) {
                     // Let's join the group!
                     closestItem.join(user);
                 } else {
-                    const closestUser : UserInterface = closestItem;
+                    const closestUser : User = closestItem;
                     const group: Group = new Group([
                         user,
                         closestUser
@@ -138,7 +127,7 @@ export class World {
 
         // At the very end, if the user is part of a group, let's call the callback to update group position
         if (typeof user.group !== 'undefined') {
-            this.groupUpdatedCallback(user.group);
+            this.positionNotifier.updatePosition(user.group, user.group.getPosition(), oldGroupPosition ? oldGroupPosition : user.group.getPosition());
         }
     }
 
@@ -167,21 +156,21 @@ export class World {
      *
      * @param user
      */
-    private leaveGroup(user: UserInterface): void {
+    private leaveGroup(user: User): void {
         const group = user.group;
         if (typeof group === 'undefined') {
             throw new Error("The user is part of no group");
         }
         group.leave(user);
         if (group.isEmpty()) {
-            this.groupDeletedCallback(group.getId(), user);
+            this.positionNotifier.leave(group);
             group.destroy();
             if (!this.groups.has(group)) {
                 throw new Error("Could not find group "+group.getId()+" referenced by user "+user.id+" in World.");
             }
             this.groups.delete(group);
         } else {
-            this.groupUpdatedCallback(group);
+            this.positionNotifier.updatePosition(group, group.getPosition(), group.getPosition());
         }
     }
 
@@ -193,10 +182,10 @@ export class World {
      * OR
      * - close enough to a group (distance <= groupRadius)
      */
-    private searchClosestAvailableUserOrGroup(user: UserInterface): UserInterface|Group|null
+    private searchClosestAvailableUserOrGroup(user: User): User|Group|null
     {
         let minimumDistanceFound: number = Math.max(this.minDistance, this.groupRadius);
-        let matchingItem: UserInterface | Group | null = null;
+        let matchingItem: User | Group | null = null;
         this.users.forEach((currentUser, userId) => {
             // Let's only check users that are not part of a group
             if (typeof currentUser.group !== 'undefined') {
@@ -265,7 +254,7 @@ export class World {
         return matchingItem;
     }
 
-    public static computeDistance(user1: UserInterface, user2: UserInterface): number
+    public static computeDistance(user1: User, user2: User): number
     {
         return Math.sqrt(Math.pow(user2.position.x - user1.position.x, 2) + Math.pow(user2.position.y - user1.position.y, 2));
     }
@@ -343,7 +332,7 @@ export class World {
         }
         return 0;
     }*/
-    setViewport(socket : Identificable, viewport: ViewportInterface): UserInterface[] {
+    setViewport(socket : Identificable, viewport: ViewportInterface): Movable[] {
         const user = this.users.get(socket.userId);
         if(typeof user === 'undefined') {
             console.warn('In setViewport, could not find user with ID "'+socket.userId+'" in world.');

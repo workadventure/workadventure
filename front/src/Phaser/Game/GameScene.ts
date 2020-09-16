@@ -780,6 +780,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
                 this.initUsersPosition(roomJoinedMessage.users);
                 this.connectionAnswerPromiseResolve(roomJoinedMessage);
             });
+            // FIXME: weirdly enough we don't use the result of joinARoom !!!!!!
 
             //listen event to share position of user
             this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this))

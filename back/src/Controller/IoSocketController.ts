@@ -7,7 +7,7 @@ import Jwt, {JsonWebTokenError} from "jsonwebtoken";
 import {SECRET_KEY, MINIMUM_DISTANCE, GROUP_RADIUS, ALLOW_ARTILLERY} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 import {World} from "../Model/World";
 import {Group} from "../Model/Group";
-import {UserInterface} from "../Model/UserInterface";
+import {User} from "../Model/User";
 import {isSetPlayerDetailsMessage,} from "../Model/Websocket/SetPlayerDetailsMessage";
 import {MessageUserJoined} from "../Model/Websocket/MessageUserJoined";
 import {MessageUserMoved} from "../Model/Websocket/MessageUserMoved";
@@ -22,6 +22,8 @@ import {isItemEventMessageInterface} from "../Model/Websocket/ItemEventMessage";
 import {uuid} from 'uuidv4';
 import {isUserMovesInterface} from "../Model/Websocket/UserMovesMessage";
 import {isViewport} from "../Model/Websocket/ViewportMessage";
+import {GroupUpdateInterface} from "_Model/Websocket/GroupUpdateInterface";
+import {Movable} from "../Model/Movable";
 
 enum SockerIoEvent {
     CONNECTION = "connection",
@@ -147,26 +149,6 @@ export class IoSocketController {
         return null;
     }
 
-    private sendUpdateGroupEvent(group: Group): void {
-        // Let's get the room of the group. To do this, let's get anyone in the group and find its room.
-        // Note: this is suboptimal
-        const userId = group.getUsers()[0].id;
-        const client: ExSocketInterface = this.searchClientByIdOrFail(userId);
-        const roomId = client.roomId;
-        this.Io.in(roomId).emit(SockerIoEvent.GROUP_CREATE_UPDATE, {
-            position: group.getPosition(),
-            groupId: group.getId()
-        });
-    }
-
-    private sendDeleteGroupEvent(uuid: string, lastUser: UserInterface): void {
-        // Let's get the room of the group. To do this, let's get anyone in the group and find its room.
-        const userId = lastUser.id;
-        const client: ExSocketInterface = this.searchClientByIdOrFail(userId);
-        const roomId = client.roomId;
-        this.Io.in(roomId).emit(SockerIoEvent.GROUP_DELETE, uuid);
-    }
-
     ioConnection() {
         this.Io.on(SockerIoEvent.CONNECTION, (socket: Socket) => {
             const client : ExSocketInterface = socket as ExSocketInterface;
@@ -215,15 +197,29 @@ export class IoSocketController {
                     //join new previous room
                     const world = this.joinRoom(Client, roomId, message.position);
 
-                    const users = world.setViewport(Client, message.viewport);
-                    const listOfUsers = users.map((user: UserInterface) => {
-                        const player: ExSocketInterface|undefined = this.sockets.get(user.id);
-                        if (player === undefined) {
-                            console.warn('Something went wrong. The World contains a user "'+user.id+"' but this user does not exist in the sockets list!");
-                            return null;
+                    const things = world.setViewport(Client, message.viewport);
+
+                    const listOfUsers: Array<MessageUserPosition> = [];
+                    const listOfGroups: Array<GroupUpdateInterface> = [];
+
+                    for (const thing of things) {
+                        if (thing instanceof User) {
+                            const player: ExSocketInterface|undefined = this.sockets.get(thing.id);
+                            if (player === undefined) {
+                                console.warn('Something went wrong. The World contains a user "'+thing.id+"' but this user does not exist in the sockets list!");
+                                continue;
+                            }
+
+                            listOfUsers.push(new MessageUserPosition(thing.id, player.name, player.characterLayers, player.position));
+                        } else if (thing instanceof Group) {
+                            listOfGroups.push({
+                                groupId: thing.getId(),
+                                position: thing.getPosition(),
+                            });
+                        } else {
+                            console.error("Unexpected type for Movable returned by setViewport");
                         }
-                        return new MessageUserPosition(user.id, player.name, player.characterLayers, player.position);
-                    }, users);
+                    }
 
                     const listOfItems: {[itemId: string]: unknown} = {};
                     for (const [itemId, item] of world.getItemsState().entries()) {
@@ -232,15 +228,13 @@ export class IoSocketController {
 
                     //console.warn('ANSWER PLAYER POSITIONS', listOfUsers);
                     if (answerFn === undefined && ALLOW_ARTILLERY === true) {
-                        /*console.error("TYPEOF answerFn", typeof(answerFn));
-                        console.error("answerFn", answerFn);
-                        process.exit(1)*/
                         // For some reason, answerFn can be undefined if we use Artillery (?)
                         return;
                     }
 
                     answerFn({
                         users: listOfUsers,
+                        groups: listOfGroups,
                         items: listOfItems
                     });
                 } catch (e) {
@@ -484,29 +478,48 @@ export class IoSocketController {
                 this.connectedUser(user1, group);
             }, (user1: string, group: Group) => {
                 this.disConnectedUser(user1, group);
-            }, MINIMUM_DISTANCE, GROUP_RADIUS, (group: Group) => {
-                this.sendUpdateGroupEvent(group);
-            }, (groupUuid: string, lastUser: UserInterface) => {
-                this.sendDeleteGroupEvent(groupUuid, lastUser);
-            }, (user, listener) => {
-                const clientUser = this.searchClientByIdOrFail(user.id);
+            }, MINIMUM_DISTANCE, GROUP_RADIUS, (thing: Movable, listener: User) => {
                 const clientListener = this.searchClientByIdOrFail(listener.id);
-                const messageUserJoined = new MessageUserJoined(clientUser.userId, clientUser.name, clientUser.characterLayers, clientUser.position);
+                if (thing instanceof User) {
+                    const clientUser = this.searchClientByIdOrFail(thing.id);
+                    const messageUserJoined = new MessageUserJoined(clientUser.userId, clientUser.name, clientUser.characterLayers, clientUser.position);
 
-                clientListener.emit(SockerIoEvent.JOIN_ROOM, messageUserJoined);
-                //console.log("Sending JOIN_ROOM event");
-            }, (user, position, listener) => {
-                const clientUser = this.searchClientByIdOrFail(user.id);
+                    clientListener.emit(SockerIoEvent.JOIN_ROOM, messageUserJoined);
+                } else if (thing instanceof Group) {
+                    clientListener.emit(SockerIoEvent.GROUP_CREATE_UPDATE, {
+                        position: thing.getPosition(),
+                        groupId: thing.getId()
+                    } as GroupUpdateInterface);
+                } else {
+                    console.error('Unexpected type for Movable.');
+                }
+            }, (thing: Movable, position, listener) => {
                 const clientListener = this.searchClientByIdOrFail(listener.id);
+                if (thing instanceof User) {
+                    const clientUser = this.searchClientByIdOrFail(thing.id);
 
-                clientListener.emitInBatch(SockerIoEvent.USER_MOVED, new MessageUserMoved(clientUser.userId, clientUser.position));
-                //console.log("Sending USER_MOVED event");
-            }, (user, listener) => {
-                const clientUser = this.searchClientByIdOrFail(user.id);
+                    clientListener.emitInBatch(SockerIoEvent.USER_MOVED, new MessageUserMoved(clientUser.userId, clientUser.position));
+                    //console.log("Sending USER_MOVED event");
+                } else if (thing instanceof Group) {
+                    clientListener.emit(SockerIoEvent.GROUP_CREATE_UPDATE, {
+                        position: thing.getPosition(),
+                        groupId: thing.getId()
+                    } as GroupUpdateInterface);
+                } else {
+                    console.error('Unexpected type for Movable.');
+                }
+            }, (thing: Movable, listener) => {
                 const clientListener = this.searchClientByIdOrFail(listener.id);
+                if (thing instanceof User) {
+                    const clientUser = this.searchClientByIdOrFail(thing.id);
+                    clientListener.emit(SockerIoEvent.USER_LEFT, clientUser.userId);
+                    //console.log("Sending USER_LEFT event");
+                } else if (thing instanceof Group) {
+                    clientListener.emit(SockerIoEvent.GROUP_DELETE, thing.getId());
+                } else {
+                    console.error('Unexpected type for Movable.');
+                }
 
-                clientListener.emit(SockerIoEvent.USER_LEFT, clientUser.userId);
-                //console.log("Sending USER_LEFT event");
             });
             this.Worlds.set(roomId, world);
         }
@@ -516,7 +529,7 @@ export class IoSocketController {
             Client.emit(SockerIoEvent.GROUP_CREATE_UPDATE, {
                 position: group.getPosition(),
                 groupId: group.getId()
-            });
+            } as GroupUpdateInterface);
         });
         //join world
         world.join(Client, Client.position);

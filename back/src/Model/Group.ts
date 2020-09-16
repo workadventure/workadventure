@@ -1,29 +1,30 @@
 import { World, ConnectCallback, DisconnectCallback } from "./World";
-import { UserInterface } from "./UserInterface";
+import { User } from "./User";
 import {PositionInterface} from "_Model/PositionInterface";
 import {uuid} from "uuidv4";
+import {Movable} from "_Model/Movable";
 
-export class Group {
+export class Group implements Movable {
     static readonly MAX_PER_GROUP = 4;
 
     private id: string;
-    private users: Set<UserInterface>;
+    private users: Set<User>;
     private connectCallback: ConnectCallback;
     private disconnectCallback: DisconnectCallback;
 
 
-    constructor(users: UserInterface[], connectCallback: ConnectCallback, disconnectCallback: DisconnectCallback) {
-        this.users = new Set<UserInterface>();
+    constructor(users: User[], connectCallback: ConnectCallback, disconnectCallback: DisconnectCallback) {
+        this.users = new Set<User>();
         this.connectCallback = connectCallback;
         this.disconnectCallback = disconnectCallback;
         this.id = uuid();
 
-        users.forEach((user: UserInterface) => {
+        users.forEach((user: User) => {
             this.join(user);
         });
     }
 
-    getUsers(): UserInterface[] {
+    getUsers(): User[] {
         return Array.from(this.users.values());
     }
 
@@ -38,7 +39,7 @@ export class Group {
         let x = 0;
         let y = 0;
         // Let's compute the barycenter of all users.
-        this.users.forEach((user: UserInterface) => {
+        this.users.forEach((user: User) => {
             x += user.position.x;
             y += user.position.y;
         });
@@ -58,7 +59,7 @@ export class Group {
         return this.users.size <= 1;
     }
 
-    join(user: UserInterface): void
+    join(user: User): void
     {
         // Broadcast on the right event
         this.connectCallback(user.id, this);
@@ -66,7 +67,7 @@ export class Group {
         user.group = this;
     }
 
-    leave(user: UserInterface): void
+    leave(user: User): void
     {
         const success = this.users.delete(user);
         if (success === false) {
