@@ -1,6 +1,5 @@
 import Axios from "axios";
 import {API_URL} from "./Enum/EnvironmentVariable";
-import {MessageUI} from "./Logger/MessageUI";
 import {SetPlayerDetailsMessage} from "./Messages/SetPlayerDetailsMessage";
 
 const SocketIo = require('socket.io-client');
@@ -28,6 +27,9 @@ enum EventMessage{
     SET_SILENT = "set_silent", // Set or unset the silent mode for this user.
     SET_VIEWPORT = "set-viewport",
     BATCH = "batch",
+
+    PLAY_GLOBAL_MESSAGE = "play-global-message",
+    STOP_GLOBAL_MESSAGE = "stop-global-message",
 }
 
 export interface PointInterface {
@@ -126,6 +128,12 @@ export interface RoomJoinedMessageInterface {
     users: MessageUserPositionInterface[],
     groups: GroupCreatedUpdatedMessageInterface[],
     items: { [itemId: number] : unknown }
+}
+
+export interface GlobalMessageInterface {
+    id: number
+    type: string
+    message: string
 }
 
 export class Connection implements Connection {
@@ -273,6 +281,14 @@ export class Connection implements Connection {
 
     public receiveWebrtcScreenSharingSignal(callback: (message: WebRtcSignalReceivedMessageInterface) => void) {
         return this.socket.on(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, callback);
+    }
+
+    public receivePlayGlobalMessage(callback: (message: GlobalMessageInterface) => void) {
+        return this.socket.on(EventMessage.PLAY_GLOBAL_MESSAGE, callback);
+    }
+
+    public receiveStopGlobalMessage(callback: (message: GlobalMessageInterface) => void) {
+        return this.socket.on(EventMessage.STOP_GLOBAL_MESSAGE, callback);
     }
 
     public onServerDisconnected(callback: (reason: string) => void): void {

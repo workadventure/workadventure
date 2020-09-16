@@ -40,6 +40,7 @@ import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
 import {ItemFactoryInterface} from "../Items/ItemFactoryInterface";
 import {ActionableItem} from "../Items/ActionableItem";
 import {UserInputManager} from "../UserInput/UserInputManager";
+import {GlobalMessageManager} from "../../WebRtc/GlobalMessageManager";
 
 
 export enum Textures {
@@ -100,6 +101,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
     private playersPositionInterpolator = new PlayersPositionInterpolator();
     private connection!: Connection;
     private simplePeer!: SimplePeer;
+    private GlobalMessageManager!: GlobalMessageManager;
     private connectionPromise!: Promise<Connection>
     private connectionAnswerPromise: Promise<RoomJoinedMessageInterface>;
     private connectionAnswerPromiseResolve!: (value?: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>) => void;
@@ -265,6 +267,8 @@ export class GameScene extends Phaser.Scene implements CenterListener {
 
             // When connection is performed, let's connect SimplePeer
             this.simplePeer = new SimplePeer(this.connection);
+            this.GlobalMessageManager = new GlobalMessageManager(this.connection);
+
             const self = this;
             this.simplePeer.registerPeerConnectionListener({
                 onConnect(user: UserSimplePeerInterface) {

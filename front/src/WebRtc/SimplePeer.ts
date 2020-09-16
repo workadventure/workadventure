@@ -10,10 +10,8 @@ import {
     StopScreenSharingCallback,
     UpdatedLocalStreamCallback
 } from "./MediaManager";
-import * as SimplePeerNamespace from "simple-peer";
 import {ScreenSharingPeer} from "./ScreenSharingPeer";
 import {VideoPeer} from "./VideoPeer";
-const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
 export interface UserSimplePeerInterface{
     userId: string;

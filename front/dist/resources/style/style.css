@@ -403,3 +403,14 @@ body {
 .chat-mode > div:last-child {
     flex-grow: 5;
 }
+
+.message-container{
+    top: 0;
+    left: 20%;
+    position: absolute;
+    width: 60%;
+    height: auto;
+    z-index: 200;
+    background-color: #00000096;
+    border-radius: 0 0 10px 10px;
+}
