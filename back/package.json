@@ -5,13 +5,14 @@
   "main": "index.js",
   "scripts": {
     "tsc": "tsc",
-    "dev": "ts-node-dev --respawn --transpileOnly ./server.ts",
+    "dev": "concurrently \"yarn run proto:watch\" \"ts-node-dev --respawn --transpileOnly ./server.ts\"",
     "prod": "tsc && node ./dist/server.js",
     "profile": "tsc && node --prof ./dist/server.js",
     "test": "ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
     "lint": "node_modules/.bin/eslint src/ . --ext .ts",
     "fix": "node_modules/.bin/eslint --fix src/ . --ext .ts",
-    "proto": "protoc --plugin=\"protoc-gen-ts=./node_modules/.bin/protoc-gen-ts\" --js_out=\"import_style=commonjs,binary:src/proto/generated\" --ts_out=\"src/proto/generated\" src/proto/messages.proto"
+    "proto": "protoc --plugin=\"protoc-gen-ts=./node_modules/.bin/protoc-gen-ts\" --js_out=\"import_style=commonjs,binary:src/proto/generated\" --ts_out=\"src/proto/generated\" src/proto/messages.proto",
+    "proto:watch": "inotifywait -q -m -e close_write src/proto/messages.proto | while read -r filename event; do yarn run proto; done"
   },
   "repository": {
     "type": "git",
@@ -59,6 +60,7 @@
     "@types/jasmine": "^3.5.10",
     "@typescript-eslint/eslint-plugin": "^2.26.0",
     "@typescript-eslint/parser": "^2.26.0",
+    "concurrently": "^5.3.0",
     "eslint": "^6.8.0",
     "jasmine": "^3.5.0",
     "ts-protoc-gen": "^0.13.0"
