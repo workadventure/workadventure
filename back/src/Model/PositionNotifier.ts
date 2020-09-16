@@ -8,10 +8,12 @@
  * The PositionNotifier is important for performance. It allows us to send the position of players only to a restricted
  * number of players around the current player.
  */
-import {UserEntersCallback, UserLeavesCallback, UserMovesCallback, Zone} from "./Zone";
+import {EntersCallback, LeavesCallback, MovesCallback, Zone} from "./Zone";
 import {PointInterface} from "_Model/Websocket/PointInterface";
-import {UserInterface} from "_Model/UserInterface";
+import {User} from "_Model/User";
 import {ViewportInterface} from "_Model/Websocket/ViewportMessage";
+import {Movable} from "_Model/Movable";
+import {PositionInterface} from "_Model/PositionInterface";
 
 interface ZoneDescriptor {
     i: number;
@@ -24,7 +26,7 @@ export class PositionNotifier {
 
     private zones: Zone[][] = [];
 
-    constructor(private zoneWidth: number, private zoneHeight: number, private onUserEnters: UserEntersCallback, private onUserMoves: UserMovesCallback, private onUserLeaves: UserLeavesCallback) {
+    constructor(private zoneWidth: number, private zoneHeight: number, private onUserEnters: EntersCallback, private onUserMoves: MovesCallback, private onUserLeaves: LeavesCallback) {
     }
 
     private getZoneDescriptorFromCoordinates(x: number, y: number): ZoneDescriptor {
@@ -38,7 +40,7 @@ export class PositionNotifier {
      * Sets the viewport coordinates.
      * Returns the list of new users to add
      */
-    public setViewport(user: UserInterface, viewport: ViewportInterface): UserInterface[] {
+    public setViewport(user: User, viewport: ViewportInterface): Movable[] {
         if (viewport.left > viewport.right || viewport.top > viewport.bottom) {
             console.warn('Invalid viewport received: ', viewport);
             return [];
@@ -60,43 +62,46 @@ export class PositionNotifier {
         const removedZones = [...oldZones].filter(x => !newZones.has(x));
 
 
-        let users: UserInterface[] = [];
+        let things: Movable[] = [];
         for (const zone of addedZones) {
             zone.startListening(user);
-            users = users.concat(Array.from(zone.getPlayers()))
+            things = things.concat(Array.from(zone.getThings()))
         }
         for (const zone of removedZones) {
             zone.stopListening(user);
         }
 
-        return users;
+        return things;
     }
 
-    public updatePosition(user: UserInterface, userPosition: PointInterface): void {
+    public updatePosition(thing: Movable, newPosition: PositionInterface, oldPosition: PositionInterface): void {
         // Did we change zone?
-        const oldZoneDesc = this.getZoneDescriptorFromCoordinates(user.position.x, user.position.y);
-        const newZoneDesc = this.getZoneDescriptorFromCoordinates(userPosition.x, userPosition.y);
+        const oldZoneDesc = this.getZoneDescriptorFromCoordinates(oldPosition.x, oldPosition.y);
+        const newZoneDesc = this.getZoneDescriptorFromCoordinates(newPosition.x, newPosition.y);
 
         if (oldZoneDesc.i != newZoneDesc.i || oldZoneDesc.j != newZoneDesc.j) {
             const oldZone = this.getZone(oldZoneDesc.i, oldZoneDesc.j);
             const newZone = this.getZone(newZoneDesc.i, newZoneDesc.j);
 
             // Leave old zone
-            oldZone.leave(user, newZone);
+            oldZone.leave(thing, newZone);
 
             // Enter new zone
-            newZone.enter(user, oldZone, userPosition);
+            newZone.enter(thing, oldZone, newPosition);
         } else {
             const zone = this.getZone(oldZoneDesc.i, oldZoneDesc.j);
-            zone.move(user, userPosition);
+            zone.move(thing, newPosition);
         }
     }
 
-    public leave(user: UserInterface): void {
-        const oldZoneDesc = this.getZoneDescriptorFromCoordinates(user.position.x, user.position.y);
+    public leave(thing: Movable): void {
+        const oldPosition = thing.getPosition();
+        const oldZoneDesc = this.getZoneDescriptorFromCoordinates(oldPosition.x, oldPosition.y);
         const oldZone = this.getZone(oldZoneDesc.i, oldZoneDesc.j);
-        oldZone.leave(user, null);
+        oldZone.leave(thing, null);
+    }
 
+    public removeViewport(user: User): void {
         // Also, let's stop listening on viewports
         for (const zone of user.listenedZones) {
             zone.stopListening(user);

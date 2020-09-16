@@ -1,77 +1,77 @@
-import {UserInterface} from "./UserInterface";
-import {PointInterface} from "_Model/Websocket/PointInterface";
+import {User} from "./User";
 import {PositionInterface} from "_Model/PositionInterface";
+import {Movable} from "_Model/Movable";
 
-export type UserEntersCallback = (user: UserInterface, listener: UserInterface) => void;
-export type UserMovesCallback = (user: UserInterface, position: PointInterface, listener: UserInterface) => void;
-export type UserLeavesCallback = (user: UserInterface, listener: UserInterface) => void;
+export type EntersCallback = (thing: Movable, listener: User) => void;
+export type MovesCallback = (thing: Movable, position: PositionInterface, listener: User) => void;
+export type LeavesCallback = (thing: Movable, listener: User) => void;
 
 export class Zone {
-    private players: Set<UserInterface> = new Set<UserInterface>();
-    private listeners: Set<UserInterface> = new Set<UserInterface>();
+    private things: Set<Movable> = new Set<Movable>();
+    private listeners: Set<User> = new Set<User>();
 
-    constructor(private onUserEnters: UserEntersCallback, private onUserMoves: UserMovesCallback, private onUserLeaves: UserLeavesCallback) {
+    constructor(private onEnters: EntersCallback, private onMoves: MovesCallback, private onLeaves: LeavesCallback) {
     }
 
     /**
-     * A user leaves the zone
+     * A user/thing leaves the zone
      */
-    public leave(user: UserInterface, newZone: Zone|null) {
-        this.players.delete(user);
-        this.notifyUserLeft(user, newZone);
+    public leave(thing: Movable, newZone: Zone|null) {
+        this.things.delete(thing);
+        this.notifyLeft(thing, newZone);
     }
 
     /**
-     * Notify listeners of this zone that this user left
+     * Notify listeners of this zone that this user/thing left
      */
-    private notifyUserLeft(user: UserInterface, newZone: Zone|null) {
+    private notifyLeft(thing: Movable, newZone: Zone|null) {
         for (const listener of this.listeners) {
-            if (listener !== user && (newZone === null || !listener.listenedZones.has(newZone))) {
-                this.onUserLeaves(user, listener);
+            if (listener !== thing && (newZone === null || !listener.listenedZones.has(newZone))) {
+                this.onLeaves(thing, listener);
             }
         }
     }
 
-    public enter(user: UserInterface, oldZone: Zone|null, position: PointInterface) {
-        this.players.add(user);
-        this.notifyUserEnter(user, oldZone, position);
+    public enter(thing: Movable, oldZone: Zone|null, position: PositionInterface) {
+        this.things.add(thing);
+        this.notifyUserEnter(thing, oldZone, position);
     }
 
     /**
      * Notify listeners of this zone that this user entered
      */
-    private notifyUserEnter(user: UserInterface, oldZone: Zone|null, position: PointInterface) {
+    private notifyUserEnter(thing: Movable, oldZone: Zone|null, position: PositionInterface) {
         for (const listener of this.listeners) {
-            if (listener === user) {
+            if (listener === thing) {
                 continue;
             }
             if (oldZone === null || !listener.listenedZones.has(oldZone)) {
-                this.onUserEnters(user, listener);
+                this.onEnters(thing, listener);
             } else {
-                this.onUserMoves(user, position, listener);
+                this.onMoves(thing, position, listener);
             }
         }
     }
 
-    public move(user: UserInterface, position: PointInterface) {
-        if (!this.players.has(user)) {
-            this.players.add(user);
-            const foo = this.players;
-            this.notifyUserEnter(user, null, position);
+    public move(thing: Movable, position: PositionInterface) {
+        if (!this.things.has(thing)) {
+            this.things.add(thing);
+            const foo = this.things;
+            this.notifyUserEnter(thing, null, position);
             return;
         }
 
         for (const listener of this.listeners) {
-            if (listener !== user) {
-                this.onUserMoves(user,position, listener);
+            if (listener !== thing) {
+                this.onMoves(thing,position, listener);
             }
         }
     }
 
-    public startListening(listener: UserInterface): void {
-        for (const player of this.players) {
-            if (player !== listener) {
-                this.onUserEnters(player, listener);
+    public startListening(listener: User): void {
+        for (const thing of this.things) {
+            if (thing !== listener) {
+                this.onEnters(thing, listener);
             }
         }
 
@@ -79,10 +79,10 @@ export class Zone {
         listener.listenedZones.add(this);
     }
 
-    public stopListening(listener: UserInterface): void {
-        for (const player of this.players) {
-            if (player !== listener) {
-                this.onUserLeaves(player, listener);
+    public stopListening(listener: User): void {
+        for (const thing of this.things) {
+            if (thing !== listener) {
+                this.onLeaves(thing, listener);
             }
         }
 
@@ -90,7 +90,7 @@ export class Zone {
         listener.listenedZones.delete(this);
     }
 
-    public getPlayers(): Set<UserInterface> {
-        return this.players;
+    public getThings(): Set<Movable> {
+        return this.things;
     }
 }

@@ -3,17 +3,16 @@ import {World, ConnectCallback, DisconnectCallback } from "../src/Model/World";
 import {Point} from "../src/Model/Websocket/MessageUserPosition";
 import { Group } from "../src/Model/Group";
 import {PositionNotifier} from "../src/Model/PositionNotifier";
-import {UserInterface} from "../src/Model/UserInterface";
+import {User} from "../src/Model/User";
 import {PointInterface} from "../src/Model/Websocket/PointInterface";
 import {Zone} from "_Model/Zone";
+import {Movable} from "_Model/Movable";
 
-function move(user: UserInterface, x: number, y: number, positionNotifier: PositionNotifier): void {
+function move(user: User, x: number, y: number, positionNotifier: PositionNotifier): void {
     positionNotifier.updatePosition(user, {
         x,
-        y,
-        moving: false,
-        direction: 'down'
-    });
+        y
+    }, user.position);
     user.position.x = x;
     user.position.y = y;
 }
@@ -24,35 +23,27 @@ describe("PositionNotifier", () => {
         let moveTriggered = false;
         let leaveTriggered = false;
 
-        const positionNotifier = new PositionNotifier(300, 300, (user: UserInterface) => {
+        const positionNotifier = new PositionNotifier(300, 300, (thing: Movable) => {
             enterTriggered = true;
-        }, (user: UserInterface, position: PointInterface) => {
+        }, (thing: Movable, position: PointInterface) => {
             moveTriggered = true;
-        }, (user: UserInterface) => {
+        }, (thing: Movable) => {
             leaveTriggered = true;
         });
 
-        const user1 = {
-            id: "1",
-            position: {
-                x: 500,
-                y: 500,
-                moving: false,
-                direction: 'down'
-            },
-            listenedZones: new Set<Zone>(),
-        } as UserInterface;
+        const user1 = new User("1", {
+            x: 500,
+            y: 500,
+            moving: false,
+            direction: 'down'
+        }, false);
 
-        const user2 = {
-            id: "2",
-            position: {
-                x: -9999,
-                y: -9999,
-                moving: false,
-                direction: 'down'
-            },
-            listenedZones: new Set<Zone>(),
-        } as UserInterface;
+        const user2 = new User("2", {
+            x: -9999,
+            y: -9999,
+            moving: false,
+            direction: 'down'
+        }, false);
 
         positionNotifier.setViewport(user1, {
             left: 200,
@@ -98,6 +89,7 @@ describe("PositionNotifier", () => {
 
         // Leave the room
         positionNotifier.leave(user2);
+        positionNotifier.removeViewport(user2);
         expect(enterTriggered).toBe(false);
         expect(moveTriggered).toBe(false);
         expect(leaveTriggered).toBe(true);
@@ -109,35 +101,27 @@ describe("PositionNotifier", () => {
         let moveTriggered = false;
         let leaveTriggered = false;
 
-        const positionNotifier = new PositionNotifier(300, 300, (user: UserInterface) => {
+        const positionNotifier = new PositionNotifier(300, 300, (thing: Movable) => {
             enterTriggered = true;
-        }, (user: UserInterface, position: PointInterface) => {
+        }, (thing: Movable, position: PointInterface) => {
             moveTriggered = true;
-        }, (user: UserInterface) => {
+        }, (thing: Movable) => {
             leaveTriggered = true;
         });
 
-        const user1 = {
-            id: "1",
-            position: {
-                x: 500,
-                y: 500,
-                moving: false,
-                direction: 'down'
-            },
-            listenedZones: new Set<Zone>(),
-        } as UserInterface;
+        const user1 = new User("1", {
+            x: 500,
+            y: 500,
+            moving: false,
+            direction: 'down'
+        }, false);
 
-        const user2 = {
-            id: "2",
-            position: {
-                x: -9999,
-                y: -9999,
-                moving: false,
-                direction: 'down'
-            },
-            listenedZones: new Set<Zone>(),
-        } as UserInterface;
+        const user2 = new User("2", {
+            x: -9999,
+            y: -9999,
+            moving: false,
+            direction: 'down'
+        }, false);
 
         let newUsers = positionNotifier.setViewport(user1, {
             left: 200,

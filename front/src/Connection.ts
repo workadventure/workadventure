@@ -123,7 +123,8 @@ export interface ItemEventMessageInterface {
 }
 
 export interface RoomJoinedMessageInterface {
-    users: MessageUserPositionInterface[]
+    users: MessageUserPositionInterface[],
+    groups: GroupCreatedUpdatedMessageInterface[],
     items: { [itemId: number] : unknown }
 }
 
