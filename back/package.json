@@ -10,7 +10,8 @@
     "profile": "tsc && node --prof ./dist/server.js",
     "test": "ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
     "lint": "node_modules/.bin/eslint src/ . --ext .ts",
-    "fix": "node_modules/.bin/eslint --fix src/ . --ext .ts"
+    "fix": "node_modules/.bin/eslint --fix src/ . --ext .ts",
+    "proto": "protoc --plugin=\"protoc-gen-ts=./node_modules/.bin/protoc-gen-ts\" --js_out=\"import_style=commonjs,binary:src/proto/generated\" --ts_out=\"src/proto/generated\" src/proto/messages.proto"
   },
   "repository": {
     "type": "git",
@@ -44,6 +45,7 @@
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
     "generic-type-guard": "^3.2.0",
+    "google-protobuf": "^3.13.0",
     "http-status-codes": "^1.4.0",
     "jsonwebtoken": "^8.5.1",
     "prom-client": "^12.0.0",
@@ -58,6 +60,7 @@
     "@typescript-eslint/eslint-plugin": "^2.26.0",
     "@typescript-eslint/parser": "^2.26.0",
     "eslint": "^6.8.0",
-    "jasmine": "^3.5.0"
+    "jasmine": "^3.5.0",
+    "ts-protoc-gen": "^0.13.0"
   }
 }

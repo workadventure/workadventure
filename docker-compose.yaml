@@ -66,7 +66,7 @@ services:
       - "traefik.http.routers.maps-ssl.service=maps"
 
   back:
-    image: thecodingmachine/nodejs:12
+    image: thecodingmachine/workadventure-back-base:latest
     command: yarn dev
     #command: yarn run profile
     environment:

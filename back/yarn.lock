@@ -822,6 +822,11 @@ globals@^12.1.0:
   dependencies:
     type-fest "^0.8.1"
 
+google-protobuf@^3.13.0, google-protobuf@^3.6.1:
+  version "3.13.0"
+  resolved "https://registry.yarnpkg.com/google-protobuf/-/google-protobuf-3.13.0.tgz#909c5983d75dd6101ed57c79e0528d000cdc3251"
+  integrity sha512-ZIf3qfLFayVrPvAjeKKxO5FRF1/NwRxt6Dko+fWEMuHwHbZx8/fcaAao9b0wCM6kr8qeg2te8XTpyuvKuD9aKw==
+
 graceful-fs@^4.1.2:
   version "4.2.3"
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.2.3.tgz#4a12ff1b60376ef09862c2093edd908328be8423"
@@ -1763,6 +1768,13 @@ ts-node@*:
     make-error "^1.1.1"
     source-map-support "^0.5.6"
     yn "3.1.1"
+
+ts-protoc-gen@^0.13.0:
+  version "0.13.0"
+  resolved "https://registry.yarnpkg.com/ts-protoc-gen/-/ts-protoc-gen-0.13.0.tgz#2763ae4e4a1a7d7001d53d2f3043357c691701ea"
+  integrity sha512-j18X4rkDBbG/ZHUJy88WFeZP6mStGow5uREaohowlHXTu3/N7WcpyPhb7Vh6wN38ERmc/AkT9gqT98+vtlRhJA==
+  dependencies:
+    google-protobuf "^3.6.1"
 
 tsconfig@^7.0.0:
   version "7.0.0"

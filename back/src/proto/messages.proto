@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+message SetPlayerDetailsMessage {
+  string name = 1;
+  repeated string characterLayers = 2;
+}
