@@ -6,6 +6,9 @@ import {UserInterface} from "./UserInterface";
 import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
 import {PositionInterface} from "_Model/PositionInterface";
 import {Identificable} from "_Model/Websocket/Identificable";
+import {UserEntersCallback, UserLeavesCallback, UserMovesCallback, Zone} from "_Model/Zone";
+import {PositionNotifier} from "./PositionNotifier";
+import {ViewportInterface} from "_Model/Websocket/ViewportMessage";
 
 export type ConnectCallback = (user: string, group: Group) => void;
 export type DisconnectCallback = (user: string, group: Group) => void;
@@ -29,12 +32,17 @@ export class World {
 
     private itemsState: Map<number, unknown> = new Map<number, unknown>();
 
+    private readonly positionNotifier: PositionNotifier;
+
     constructor(connectCallback: ConnectCallback,
                 disconnectCallback: DisconnectCallback,
                 minDistance: number,
                 groupRadius: number,
                 groupUpdatedCallback: GroupUpdatedCallback,
-                groupDeletedCallback: GroupDeletedCallback)
+                groupDeletedCallback: GroupDeletedCallback,
+                onUserEnters: UserEntersCallback,
+                onUserMoves: UserMovesCallback,
+                onUserLeaves: UserLeavesCallback)
     {
         this.users = new Map<string, UserInterface>();
         this.groups = new Set<Group>();
@@ -44,6 +52,8 @@ export class World {
         this.groupRadius = groupRadius;
         this.groupUpdatedCallback = groupUpdatedCallback;
         this.groupDeletedCallback = groupDeletedCallback;
+        // A zone is 10 sprites wide.
+        this.positionNotifier = new PositionNotifier(320, 320, onUserEnters, onUserMoves, onUserLeaves);
     }
 
     public getGroups(): Group[] {
@@ -57,7 +67,9 @@ export class World {
     public join(socket : Identificable, userPosition: PointInterface): void {
         this.users.set(socket.userId, {
             id: socket.userId,
-            position: userPosition
+            position: userPosition,
+            silent: false, // FIXME: silent should be set at the correct value when joining a room.
+            listenedZones: new Set<Zone>()
         });
         // Let's call update position to trigger the join / leave room
         this.updatePosition(socket, userPosition);
@@ -72,6 +84,10 @@ export class World {
             this.leaveGroup(userObj);
         }
         this.users.delete(user.userId);
+
+        if (userObj !== undefined) {
+            this.positionNotifier.leave(userObj);
+        }
     }
 
     public isEmpty(): boolean {
@@ -84,7 +100,13 @@ export class World {
             return;
         }
 
+        this.positionNotifier.updatePosition(user, userPosition);
+
         user.position = userPosition;
+
+        if (user.silent) {
+            return;
+        }
 
         if (typeof user.group === 'undefined') {
             // If the user is not part of a group:
@@ -120,6 +142,26 @@ export class World {
         }
     }
 
+    setSilent(socket: Identificable, silent: boolean) {
+        const user = this.users.get(socket.userId);
+        if(typeof user === 'undefined') {
+            console.warn('In setSilent, could not find user with ID "'+socket.userId+'" in world.');
+            return;
+        }
+        if (user.silent === silent) {
+            return;
+        }
+
+        user.silent = silent;
+        if (silent && user.group !== undefined) {
+            this.leaveGroup(user);
+        }
+        if (!silent) {
+            // If we are back to life, let's trigger a position update to see if we can join some group.
+            this.updatePosition(socket, user.position);
+        }
+    }
+
     /**
      * Makes a user leave a group and closes and destroy the group if the group contains only one remaining person.
      *
@@ -147,6 +189,7 @@ export class World {
      * Looks for the closest user that is:
      * - close enough (distance <= minDistance)
      * - not in a group
+     * - not silent
      * OR
      * - close enough to a group (distance <= groupRadius)
      */
@@ -160,6 +203,9 @@ export class World {
                 return;
             }
             if(currentUser === user) {
+                return;
+            }
+            if (currentUser.silent) {
                 return;
             }
 
@@ -297,4 +343,12 @@ export class World {
         }
         return 0;
     }*/
+    setViewport(socket : Identificable, viewport: ViewportInterface): UserInterface[] {
+        const user = this.users.get(socket.userId);
+        if(typeof user === 'undefined') {
+            console.warn('In setViewport, could not find user with ID "'+socket.userId+'" in world.');
+            return [];
+        }
+        return this.positionNotifier.setViewport(user, viewport);
+    }
 }

@@ -1,6 +1,6 @@
 import 'phaser';
 import GameConfig = Phaser.Types.Core.GameConfig;
-import {DEBUG_MODE, RESOLUTION} from "./Enum/EnvironmentVariable";
+import {DEBUG_MODE, JITSI_URL, RESOLUTION} from "./Enum/EnvironmentVariable";
 import {cypressAsserter} from "./Cypress/CypressAsserter";
 import {LoginScene} from "./Phaser/Login/LoginScene";
 import {ReconnectingScene} from "./Phaser/Reconnecting/ReconnectingScene";
@@ -14,6 +14,13 @@ import {HtmlUtils} from "./WebRtc/HtmlUtils";
 import {CoWebsiteManager} from "./WebRtc/CoWebsiteManager";
 
 //CoWebsiteManager.loadCoWebsite('https://thecodingmachine.com');
+
+// Load Jitsi if the environment variable is set.
+if (JITSI_URL) {
+    const jitsiScript = document.createElement('script');
+    jitsiScript.src = 'https://' + JITSI_URL + '/external_api.js';
+    document.head.appendChild(jitsiScript);
+}
 
 const {width, height} = CoWebsiteManager.getGameSize();
 

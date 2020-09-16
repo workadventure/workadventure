@@ -266,6 +266,9 @@ export class EnableCameraScene extends Phaser.Scene {
         this.soundMeter.stop();
         window.removeEventListener('resize', this.repositionCallback);
 
+        mediaManager.stopCamera();
+        mediaManager.stopMicrophone();
+
         // Do we have a start URL in the address bar? If so, let's redirect to this address
         const instanceAndMapUrl = this.findMapUrl();
         if (instanceAndMapUrl !== null) {

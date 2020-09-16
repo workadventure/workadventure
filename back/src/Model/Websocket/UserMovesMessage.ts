@@ -2,10 +2,10 @@ import * as tg from "generic-type-guard";
 import {isPointInterface} from "./PointInterface";
 import {isViewport} from "./ViewportMessage";
 
-export const isJoinRoomMessageInterface =
+
+export const isUserMovesInterface =
     new tg.IsInterface().withProperties({
-        roomId: tg.isString,
         position: isPointInterface,
-        viewport: isViewport
+        viewport: isViewport,
     }).get();
-export type JoinRoomMessageInterface = tg.GuardedType<typeof isJoinRoomMessageInterface>;
+export type UserMovesInterface = tg.GuardedType<typeof isUserMovesInterface>;

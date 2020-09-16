@@ -10,7 +10,7 @@ import {
     RoomJoinedMessageInterface
 } from "../../Connection";
 import {CurrentGamerInterface, hasMovedEventName, Player} from "../Player/Player";
-import {DEBUG_MODE, POSITION_DELAY, RESOLUTION, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
+import {DEBUG_MODE, JITSI_URL, POSITION_DELAY, RESOLUTION, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import {
     ITiledMap,
     ITiledMapLayer,
@@ -33,6 +33,9 @@ import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
 import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
+import {GameMap} from "./GameMap";
+import {CoWebsiteManager} from "../../WebRtc/CoWebsiteManager";
+import {mediaManager} from "../../WebRtc/MediaManager";
 import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
 import {ItemFactoryInterface} from "../Items/ItemFactoryInterface";
 import {ActionableItem} from "../Items/ActionableItem";
@@ -122,7 +125,8 @@ export class GameScene extends Phaser.Scene implements CenterListener {
     private startLayerName: string|undefined;
     private presentationModeSprite!: Sprite;
     private chatModeSprite!: Sprite;
-    private repositionCallback!: (this: Window, ev: UIEvent) => void;
+    private onResizeCallback!: (this: Window, ev: UIEvent) => void;
+    private gameMap!: GameMap;
     private actionableItems: Map<number, ActionableItem> = new Map<number, ActionableItem>();
     // The item that can be selected by pressing the space key.
     private outlinedItem: ActionableItem|null = null;
@@ -247,7 +251,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
 
                 this.scene.stop(this.scene.key);
                 this.scene.remove(this.scene.key);
-                window.removeEventListener('resize', this.repositionCallback);
+                window.removeEventListener('resize', this.onResizeCallback);
             })
 
             connection.onActionableEvent((message => {
@@ -398,6 +402,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
     create(): void {
         //initalise map
         this.Map = this.add.tilemap(this.MapKey);
+        this.gameMap = new GameMap(this.mapFile);
         const mapDirUrl = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf('/'));
         this.mapFile.tilesets.forEach((tileset: ITiledTileSet) => {
             this.Terrains.push(this.Map.addTilesetImage(tileset.name, `${mapDirUrl}/${tileset.image}`, tileset.tilewidth, tileset.tileheight, tileset.margin, tileset.spacing/*, tileset.firstgid*/));
@@ -521,12 +526,14 @@ export class GameScene extends Phaser.Scene implements CenterListener {
         this.presentationModeSprite.setOrigin(0, 1);
         this.presentationModeSprite.setInteractive();
         this.presentationModeSprite.setVisible(false);
+        this.presentationModeSprite.setDepth(99999);
         this.presentationModeSprite.on('pointerup', this.switchLayoutMode.bind(this));
         this.chatModeSprite = this.add.sprite(36, this.game.renderer.height - 2, 'layout_modes', 3);
         this.chatModeSprite.setScrollFactor(0, 0);
         this.chatModeSprite.setOrigin(0, 1);
         this.chatModeSprite.setInteractive();
         this.chatModeSprite.setVisible(false);
+        this.chatModeSprite.setDepth(99999);
         this.chatModeSprite.on('pointerup', this.switchLayoutMode.bind(this));
 
         // FIXME: change this to use the UserInputManager class for input
@@ -534,12 +541,58 @@ export class GameScene extends Phaser.Scene implements CenterListener {
             this.switchLayoutMode();
         });
 
-        this.repositionCallback = this.reposition.bind(this);
-        window.addEventListener('resize', this.repositionCallback);
+        this.onResizeCallback = this.onResize.bind(this);
+        window.addEventListener('resize', this.onResizeCallback);
         this.reposition();
 
         // From now, this game scene will be notified of reposition events
         layoutManager.setListener(this);
+
+        this.gameMap.onPropertyChange('openWebsite', (newValue, oldValue) => {
+            if (newValue === undefined) {
+                CoWebsiteManager.closeCoWebsite();
+            } else {
+                CoWebsiteManager.loadCoWebsite(newValue as string);
+            }
+        });
+        let jitsiApi: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+        this.gameMap.onPropertyChange('jitsiRoom', (newValue, oldValue) => {
+            if (newValue === undefined) {
+                this.connection.setSilent(false);
+                jitsiApi?.dispose();
+                CoWebsiteManager.closeCoWebsite();
+                mediaManager.showGameOverlay();
+            } else {
+                CoWebsiteManager.insertCoWebsite((cowebsiteDiv => {
+                    const domain = JITSI_URL;
+                    const options = {
+                        roomName: this.instance + "-" + newValue,
+                        width: "100%",
+                        height: "100%",
+                        parentNode: cowebsiteDiv,
+                        configOverwrite: {
+                            prejoinPageEnabled: false
+                        },
+                        interfaceConfigOverwrite: {
+                            SHOW_CHROME_EXTENSION_BANNER: false,
+                            MOBILE_APP_PROMO: false
+                        }
+                    };
+                    jitsiApi = new (window as any).JitsiMeetExternalAPI(domain, options); // eslint-disable-line @typescript-eslint/no-explicit-any
+                    jitsiApi.executeCommand('displayName', gameManager.getPlayerName());
+                }));
+                this.connection.setSilent(true);
+                mediaManager.hideGameOverlay();
+            }
+        })
+
+        this.gameMap.onPropertyChange('silent', (newValue, oldValue) => {
+            if (newValue === undefined || newValue === false || newValue === '') {
+                this.connection.setSilent(false);
+            } else {
+                this.connection.setSilent(true);
+            }
+        });
     }
 
     private switchLayoutMode(): void {
@@ -713,7 +766,17 @@ export class GameScene extends Phaser.Scene implements CenterListener {
 
         //join room
         this.connectionPromise.then((connection: Connection) => {
-            connection.joinARoom(this.RoomId, this.startX, this.startY, PlayerAnimationNames.WalkDown, false).then((roomJoinedMessage: RoomJoinedMessageInterface) => {
+            const camera = this.cameras.main;
+            connection.joinARoom(this.RoomId,
+                this.startX,
+                this.startY,
+                PlayerAnimationNames.WalkDown,
+                false, {
+                    left: camera.scrollX,
+                    top: camera.scrollY,
+                    right: camera.scrollX + camera.width,
+                    bottom: camera.scrollY + camera.height,
+                }).then((roomJoinedMessage: RoomJoinedMessageInterface) => {
                 this.initUsersPosition(roomJoinedMessage.users);
                 this.connectionAnswerPromiseResolve(roomJoinedMessage);
             });
@@ -721,6 +784,9 @@ export class GameScene extends Phaser.Scene implements CenterListener {
             //listen event to share position of user
             this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this))
             this.CurrentPlayer.on(hasMovedEventName, this.outlineItem.bind(this))
+            this.CurrentPlayer.on(hasMovedEventName, (event: HasMovedEvent) => {
+                this.gameMap.setPosition(event.x, event.y);
+            })
         });
     }
 
@@ -796,7 +862,13 @@ export class GameScene extends Phaser.Scene implements CenterListener {
     private doPushPlayerPosition(event: HasMovedEvent): void {
         this.lastMoveEventSent = event;
         this.lastSentTick = this.currentTick;
-        this.connection.sharePosition(event.x, event.y, event.direction, event.moving);
+        const camera = this.cameras.main;
+        this.connection.sharePosition(event.x, event.y, event.direction, event.moving, {
+            left: camera.scrollX,
+            top: camera.scrollY,
+            right: camera.scrollX + camera.width,
+            bottom: camera.scrollY + camera.height,
+        });
     }
 
     EventToClickOnTile(){
@@ -860,7 +932,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
             this.simplePeer.unregister();
             this.scene.stop();
             this.scene.remove(this.scene.key);
-            window.removeEventListener('resize', this.repositionCallback);
+            window.removeEventListener('resize', this.onResizeCallback);
             this.scene.start(nextSceneKey.key, {
                 startLayerName: nextSceneKey.hash
             });
@@ -1056,6 +1128,19 @@ export class GameScene extends Phaser.Scene implements CenterListener {
      */
     emitActionableEvent(itemId: number, eventName: string, state: unknown, parameters: unknown) {
         this.connection.emitActionableEvent(itemId, eventName, state, parameters);
+    }
+
+    private onResize(): void {
+        this.reposition();
+
+        // Send new viewport to server
+        const camera = this.cameras.main;
+        this.connection.setViewport({
+            left: camera.scrollX,
+            top: camera.scrollY,
+            right: camera.scrollX + camera.width,
+            bottom: camera.scrollY + camera.height,
+        });
     }
 
     private reposition(): void {

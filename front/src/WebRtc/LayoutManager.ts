@@ -42,6 +42,14 @@ class LayoutManager {
         div.innerHTML = html;
         div.id = "user-"+userId;
         div.className = "media-container"
+        div.onclick = () => {
+            const parentId = div.parentElement?.id;
+            if (parentId === 'sidebar' || parentId === 'chat-mode') {
+                this.focusOn(userId);
+            } else {
+                this.removeFocusOn(userId);
+            }
+        }
 
         if (importance === DivImportance.Important) {
             this.importantDivs.set(userId, div);
@@ -74,6 +82,48 @@ class LayoutManager {
                 sideBarDiv.appendChild(elem);
             }
         }
+    }
+
+    /**
+     * Put the screen in presentation mode and move elem in presentation mode (and all other videos in normal mode)
+     */
+    private focusOn(userId: string): void {
+        const focusedDiv = this.getDivByUserId(userId);
+        for (const [importantUserId, importantDiv] of this.importantDivs.entries()) {
+            //this.positionDiv(importantDiv, DivImportance.Normal);
+            this.importantDivs.delete(importantUserId);
+            this.normalDivs.set(importantUserId, importantDiv);
+        }
+        this.normalDivs.delete(userId);
+        this.importantDivs.set(userId, focusedDiv);
+        //this.positionDiv(focusedDiv, DivImportance.Important);
+        this.switchLayoutMode(LayoutMode.Presentation);
+    }
+
+    /**
+     * Removes userId from presentation mode
+     */
+    private removeFocusOn(userId: string): void {
+        const importantDiv = this.importantDivs.get(userId);
+        if (importantDiv === undefined) {
+            throw new Error('Div with user id "'+userId+'" is not in important mode');
+        }
+        this.normalDivs.set(userId, importantDiv);
+        this.importantDivs.delete(userId);
+
+        this.positionDiv(importantDiv, DivImportance.Normal);
+    }
+
+    private getDivByUserId(userId: string): HTMLDivElement {
+        let div = this.importantDivs.get(userId);
+        if (div !== undefined) {
+            return div;
+        }
+        div = this.normalDivs.get(userId);
+        if (div !== undefined) {
+            return div;
+        }
+        throw new Error('Could not find media with user id '+userId);
     }
 
     /**
@@ -154,6 +204,7 @@ class LayoutManager {
      * Tries to find the biggest available box of remaining space (this is a space where we can center the character)
      */
     public findBiggestAvailableArray(): {xStart: number, yStart: number, xEnd: number, yEnd: number} {
+        const game = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('game');
         if (this.mode === LayoutMode.VideoChat) {
             const children = document.querySelectorAll<HTMLDivElement>('div.chat-mode > div');
             const htmlChildren = Array.from(children.values());
@@ -163,27 +214,27 @@ class LayoutManager {
                 return {
                     xStart: 0,
                     yStart: 0,
-                    xEnd: window.innerWidth,
-                    yEnd: window.innerHeight
+                    xEnd: game.offsetWidth,
+                    yEnd: game.offsetHeight
                 }
             }
 
             const lastDiv = htmlChildren[htmlChildren.length - 1];
             // Compute area between top right of the last div and bottom right of window
-            const area1 = (window.innerWidth - (lastDiv.offsetLeft + lastDiv.offsetWidth))
-                          * (window.innerHeight - lastDiv.offsetTop);
+            const area1 = (game.offsetWidth - (lastDiv.offsetLeft + lastDiv.offsetWidth))
+                          * (game.offsetHeight - lastDiv.offsetTop);
 
             // Compute area between bottom of last div and bottom of the screen on whole width
-            const area2 = window.innerWidth
-                * (window.innerHeight - (lastDiv.offsetTop + lastDiv.offsetHeight));
+            const area2 = game.offsetWidth
+                * (game.offsetHeight - (lastDiv.offsetTop + lastDiv.offsetHeight));
 
             if (area1 < 0 && area2 < 0) {
                 // If screen is full, let's not attempt something foolish and simply center character in the middle.
                 return {
                     xStart: 0,
                     yStart: 0,
-                    xEnd: window.innerWidth,
-                    yEnd: window.innerHeight
+                    xEnd: game.offsetWidth,
+                    yEnd: game.offsetHeight
                 }
             }
             if (area1 <= area2) {
@@ -191,16 +242,16 @@ class LayoutManager {
                 return {
                     xStart: 0,
                     yStart: lastDiv.offsetTop + lastDiv.offsetHeight,
-                    xEnd: window.innerWidth,
-                    yEnd: window.innerHeight
+                    xEnd: game.offsetWidth,
+                    yEnd: game.offsetHeight
                 }
             } else {
                 console.log('lastDiv', lastDiv.offsetTop);
                 return {
                     xStart: lastDiv.offsetLeft + lastDiv.offsetWidth,
                     yStart: lastDiv.offsetTop,
-                    xEnd: window.innerWidth,
-                    yEnd: window.innerHeight
+                    xEnd: game.offsetWidth,
+                    yEnd: game.offsetHeight
                 }
             }
         } else {
@@ -213,15 +264,15 @@ class LayoutManager {
                 return {
                     xStart: 0,
                     yStart: 0,
-                    xEnd: window.innerWidth,
-                    yEnd: window.innerHeight
+                    xEnd: game.offsetWidth,
+                    yEnd: game.offsetHeight
                 }
             }
 
             // At this point, we know we have at least one element in the main section.
             const lastPresentationDiv = mainSectionChildren[mainSectionChildren.length-1];
 
-            const presentationArea = (window.innerHeight - (lastPresentationDiv.offsetTop + lastPresentationDiv.offsetHeight))
+            const presentationArea = (game.offsetHeight - (lastPresentationDiv.offsetTop + lastPresentationDiv.offsetHeight))
                                      * (lastPresentationDiv.offsetLeft + lastPresentationDiv.offsetWidth);
 
             let leftSideBar: number;
@@ -234,22 +285,22 @@ class LayoutManager {
                 leftSideBar = lastSideBarChildren.offsetLeft;
                 bottomSideBar = lastSideBarChildren.offsetTop + lastSideBarChildren.offsetHeight;
             }
-            const sideBarArea = (window.innerWidth - leftSideBar)
-                * (window.innerHeight - bottomSideBar);
+            const sideBarArea = (game.offsetWidth - leftSideBar)
+                * (game.offsetHeight - bottomSideBar);
 
             if (presentationArea <= sideBarArea) {
                 return {
                     xStart: leftSideBar,
                     yStart: bottomSideBar,
-                    xEnd: window.innerWidth,
-                    yEnd: window.innerHeight
+                    xEnd: game.offsetWidth,
+                    yEnd: game.offsetHeight
                 }
             } else {
                 return {
                     xStart: 0,
                     yStart: lastPresentationDiv.offsetTop + lastPresentationDiv.offsetHeight,
-                    xEnd: /*lastPresentationDiv.offsetLeft + lastPresentationDiv.offsetWidth*/ window.innerWidth , // To avoid flickering when a chat start, we center on the center of the screen, not the center of the main content area
-                    yEnd: window.innerHeight
+                    xEnd: /*lastPresentationDiv.offsetLeft + lastPresentationDiv.offsetWidth*/ game.offsetWidth , // To avoid flickering when a chat start, we center on the center of the screen, not the center of the main content area
+                    yEnd: game.offsetHeight
                 }
             }
         }

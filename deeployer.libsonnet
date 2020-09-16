@@ -25,7 +25,11 @@
       },
       "ports": [80],
       "env": {
-        "API_URL": "api."+url
+        "API_URL": "api."+url,
+        "JITSI_URL": "meet.jit.si",
+        "TURN_SERVER": "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443",
+        "TURN_USER": "workadventure",
+        "TURN_PASSWORD": "WorkAdventure123"
       }
     },
     "maps": {

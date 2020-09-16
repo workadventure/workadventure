@@ -1,6 +1,7 @@
 import * as SimplePeerNamespace from "simple-peer";
 import {mediaManager} from "./MediaManager";
 import {Connection} from "../Connection";
+import {TURN_PASSWORD, TURN_SERVER, TURN_USER} from "../Enum/EnvironmentVariable";
 
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
@@ -18,13 +19,30 @@ export class VideoPeer extends Peer {
                         urls: 'stun:stun.l.google.com:19302'
                     },
                     {
-                        urls: 'turn:numb.viagenie.ca',
-                        username: 'g.parant@thecodingmachine.com',
-                        credential: 'itcugcOHxle9Acqi$'
+                        urls: TURN_SERVER.split(','),
+                        username: TURN_USER,
+                        credential: TURN_PASSWORD
                     },
                 ]
             }
         });
+
+        console.log('PEER SETUP ', {
+            initiator: initiator ? initiator : false,
+            reconnectTimer: 10000,
+            config: {
+                iceServers: [
+                    {
+                        urls: 'stun:stun.l.google.com:19302'
+                    },
+                    {
+                        urls: TURN_SERVER,
+                        username: TURN_USER,
+                        credential: TURN_PASSWORD
+                    },
+                ]
+            }
+        })
 
         //start listen signal for the peer connection
         this.on('signal', (data: unknown) => {
@@ -85,7 +103,7 @@ export class VideoPeer extends Peer {
      * Sends received stream to screen.
      */
     private stream(stream?: MediaStream) {
-        console.log(`VideoPeer::stream => ${this.userId}`, stream);
+        //console.log(`VideoPeer::stream => ${this.userId}`, stream);
         if(!stream){
             mediaManager.disabledVideoByUserId(this.userId);
             mediaManager.disabledMicrophoneByUserId(this.userId);

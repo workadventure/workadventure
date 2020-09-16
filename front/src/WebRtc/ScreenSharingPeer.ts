@@ -1,6 +1,7 @@
 import * as SimplePeerNamespace from "simple-peer";
 import {mediaManager} from "./MediaManager";
 import {Connection} from "../Connection";
+import {TURN_SERVER, TURN_USER, TURN_PASSWORD} from "../Enum/EnvironmentVariable";
 
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
@@ -23,9 +24,9 @@ export class ScreenSharingPeer extends Peer {
                         urls: 'stun:stun.l.google.com:19302'
                     },
                     {
-                        urls: 'turn:numb.viagenie.ca',
-                        username: 'g.parant@thecodingmachine.com',
-                        credential: 'itcugcOHxle9Acqi$'
+                        urls: TURN_SERVER.split(','),
+                        username: TURN_USER,
+                        credential: TURN_PASSWORD
                     },
                 ]
             }
@@ -70,7 +71,7 @@ export class ScreenSharingPeer extends Peer {
     }
 
     private sendWebrtcScreenSharingSignal(data: unknown) {
-        console.log("sendWebrtcScreenSharingSignal", data);
+        //console.log("sendWebrtcScreenSharingSignal", data);
         try {
             this.connection.sendWebrtcScreenSharingSignal(data, this.userId);
         }catch (e) {
@@ -82,8 +83,8 @@ export class ScreenSharingPeer extends Peer {
      * Sends received stream to screen.
      */
     private stream(stream?: MediaStream) {
-        console.log(`ScreenSharingPeer::stream => ${this.userId}`, stream);
-        console.log(`stream => ${this.userId} => `, stream);
+        //console.log(`ScreenSharingPeer::stream => ${this.userId}`, stream);
+        //console.log(`stream => ${this.userId} => `, stream);
         if(!stream){
             mediaManager.removeActiveScreenSharingVideo(this.userId);
             this.isReceivingStream = false;

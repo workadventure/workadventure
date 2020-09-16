@@ -13,7 +13,7 @@ describe("World", () => {
 
         }
 
-        const world = new World(connect, disconnect, 160, 160, () => {}, () => {});
+        const world = new World(connect, disconnect, 160, 160, () => {}, () => {}, () => {}, () => {}, () => {});
 
         world.join({ userId: "foo" }, new Point(100, 100));
 
@@ -40,7 +40,7 @@ describe("World", () => {
 
         }
 
-        const world = new World(connect, disconnect, 160, 160, () => {}, () => {});
+        const world = new World(connect, disconnect, 160, 160, () => {}, () => {}, () => {}, () => {}, () => {});
 
         world.join({ userId: "foo" }, new Point(100, 100));
 
@@ -69,7 +69,7 @@ describe("World", () => {
             disconnectCallNumber++;
         }
 
-        const world = new World(connect, disconnect, 160, 160, () => {}, () => {});
+        const world = new World(connect, disconnect, 160, 160, () => {}, () => {}, () => {}, () => {}, () => {});
 
         world.join({ userId: "foo" }, new Point(100, 100));
 
