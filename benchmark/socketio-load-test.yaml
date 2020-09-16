@@ -28,6 +28,11 @@ scenarios:
               y: 170
               direction: 'down'
               moving: false
+            viewport:
+              left: 500
+              top: 0
+              right: 800
+              bottom: 200
       - think: 1
       - loop:
         - function: "setYRandom"

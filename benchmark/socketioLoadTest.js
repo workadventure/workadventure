@@ -5,8 +5,13 @@ module.exports = {
 };
 
 function setYRandom(context, events, done) {
-    context.vars.x = (0 +  Math.round(Math.random() * 1472));
-    context.vars.y = (0 +  Math.round(Math.random() * 1090));
+    if (context.angle === undefined) {
+        context.angle = Math.random() * Math.PI * 2;
+    }
+    context.angle += 0.05;
+
+    context.vars.x = 320 + 1472/2 * (1 + Math.sin(context.angle));
+    context.vars.y = 200 + 1090/2 * (1 + Math.cos(context.angle));
     context.vars.left = context.vars.x - 320;
     context.vars.top = context.vars.y - 200;
     context.vars.right = context.vars.x + 320;

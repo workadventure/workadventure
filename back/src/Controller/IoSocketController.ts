@@ -223,6 +223,14 @@ export class IoSocketController {
                         return new MessageUserPosition(user.id, player.name, player.characterLayers, player.position);
                     }, users);
 
+                    //console.warn('ANSWER PLAYER POSITIONS', listOfUsers);
+                    if (answerFn === undefined && ALLOW_ARTILLERY === true) {
+                        /*console.error("TYPEOF answerFn", typeof(answerFn));
+                        console.error("answerFn", answerFn);
+                        process.exit(1)*/
+                        // For some reason, answerFn can be undefined if we use Artillery (?)
+                        return;
+                    }
                     answerFn(listOfUsers);
                 } catch (e) {
                     console.error('An error occurred on "join_room" event');
@@ -244,7 +252,7 @@ export class IoSocketController {
 
                     const world = this.Worlds.get(Client.roomId);
                     if (!world) {
-                        console.error("Could not find world with id '", Client.roomId, "'");
+                        console.error("In SET_VIEWPORT, could not find world with id '", Client.roomId, "'");
                         return;
                     }
                     world.setViewport(Client, Client.viewport);
@@ -255,7 +263,7 @@ export class IoSocketController {
             });
 
             socket.on(SockerIoEvent.USER_POSITION, (userMovesMessage: unknown): void => {
-                console.log(SockerIoEvent.USER_POSITION, userMovesMessage);
+                //console.log(SockerIoEvent.USER_POSITION, userMovesMessage);
                 try {
                     if (!isUserMovesInterface(userMovesMessage)) {
                         socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid USER_POSITION message.'});
@@ -272,7 +280,7 @@ export class IoSocketController {
                     // update position in the world
                     const world = this.Worlds.get(Client.roomId);
                     if (!world) {
-                        console.error("Could not find world with id '", Client.roomId, "'");
+                        console.error("In USER_POSITION, could not find world with id '", Client.roomId, "'");
                         return;
                     }
                     world.updatePosition(Client, Client.position);
@@ -351,7 +359,7 @@ export class IoSocketController {
                     // update position in the world
                     const world = this.Worlds.get(Client.roomId);
                     if (!world) {
-                        console.error("Could not find world with id '", Client.roomId, "'");
+                        console.error("In SET_SILENT, could not find world with id '", Client.roomId, "'");
                         return;
                     }
                     world.setSilent(Client, silent);
