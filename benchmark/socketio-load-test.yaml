@@ -22,7 +22,7 @@ scenarios:
       - emit:
           channel: "join-room"
           data:
-            roomId: 'global__api.workadventure.localhost/map/files/Floor0/floor0'
+            roomId: 'global__maps.workadventure.localhost/Floor0/floor0'
             position:
               x: 783
               y: 170
