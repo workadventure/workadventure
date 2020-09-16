@@ -18,6 +18,7 @@ import {isJoinRoomMessageInterface} from "../Model/Websocket/JoinRoomMessage";
 import {isPointInterface, PointInterface} from "../Model/Websocket/PointInterface";
 import {isWebRtcSignalMessageInterface} from "../Model/Websocket/WebRtcSignalMessage";
 import {UserInGroupInterface} from "../Model/Websocket/UserInGroupInterface";
+import {isItemEventMessageInterface} from "../Model/Websocket/ItemEventMessage";
 import {uuid} from 'uuidv4';
 import {isUserMovesInterface} from "../Model/Websocket/UserMovesMessage";
 import {isViewport} from "../Model/Websocket/ViewportMessage";
@@ -37,6 +38,7 @@ enum SockerIoEvent {
     GROUP_CREATE_UPDATE = "group-create-update",
     GROUP_DELETE = "group-delete",
     SET_PLAYER_DETAILS = "set-player-details",
+    ITEM_EVENT = 'item-event',
     SET_SILENT = "set_silent", // Set or unset the silent mode for this user.
     SET_VIEWPORT = "set-viewport",
     BATCH = "batch",
@@ -223,6 +225,11 @@ export class IoSocketController {
                         return new MessageUserPosition(user.id, player.name, player.characterLayers, player.position);
                     }, users);
 
+                    const listOfItems: {[itemId: string]: unknown} = {};
+                    for (const [itemId, item] of world.getItemsState().entries()) {
+                        listOfItems[itemId] = item;
+                    }
+
                     //console.warn('ANSWER PLAYER POSITIONS', listOfUsers);
                     if (answerFn === undefined && ALLOW_ARTILLERY === true) {
                         /*console.error("TYPEOF answerFn", typeof(answerFn));
@@ -231,7 +238,11 @@ export class IoSocketController {
                         // For some reason, answerFn can be undefined if we use Artillery (?)
                         return;
                     }
-                    answerFn(listOfUsers);
+
+                    answerFn({
+                        users: listOfUsers,
+                        items: listOfItems
+                    });
                 } catch (e) {
                     console.error('An error occurred on "join_room" event');
                     console.error(e);
@@ -365,6 +376,29 @@ export class IoSocketController {
                     world.setSilent(Client, silent);
                 } catch (e) {
                     console.error('An error occurred on "SET_SILENT"');
+                    console.error(e);
+                }
+            });
+
+            socket.on(SockerIoEvent.ITEM_EVENT, (itemEvent: unknown) => {
+                if (!isItemEventMessageInterface(itemEvent)) {
+                    socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid ITEM_EVENT message.'});
+                    console.warn('Invalid ITEM_EVENT message received: ', itemEvent);
+                    return;
+                }
+                try {
+                    const Client = (socket as ExSocketInterface);
+
+                    socket.to(Client.roomId).emit(SockerIoEvent.ITEM_EVENT, itemEvent);
+
+                    const world = this.Worlds.get(Client.roomId);
+                    if (!world) {
+                        console.error("Could not find world with id '", Client.roomId, "'");
+                        return;
+                    }
+                    world.setItemState(itemEvent.itemId, itemEvent.state);
+                } catch (e) {
+                    console.error('An error occurred on "item_event"');
                     console.error(e);
                 }
             });

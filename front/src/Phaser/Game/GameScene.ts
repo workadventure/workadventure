@@ -6,11 +6,17 @@ import {
     MessageUserMovedInterface,
     MessageUserPositionInterface,
     PointInterface,
-    PositionInterface
+    PositionInterface,
+    RoomJoinedMessageInterface
 } from "../../Connection";
 import {CurrentGamerInterface, hasMovedEventName, Player} from "../Player/Player";
 import {DEBUG_MODE, JITSI_URL, POSITION_DELAY, RESOLUTION, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
-import {ITiledMap, ITiledMapLayer, ITiledMapLayerProperty, ITiledTileSet} from "../Map/ITiledMap";
+import {
+    ITiledMap,
+    ITiledMapLayer,
+    ITiledMapLayerProperty, ITiledMapObject,
+    ITiledTileSet
+} from "../Map/ITiledMap";
 import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Character";
 import {AddPlayerInterface} from "./AddPlayerInterface";
 import {PlayerAnimationNames} from "../Player/Animation";
@@ -20,7 +26,6 @@ import {RemotePlayer} from "../Entity/RemotePlayer";
 import {Queue} from 'queue-typescript';
 import {SimplePeer, UserSimplePeerInterface} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
-import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
 import {loadAllLayers} from "../Entity/body_character";
 import {CenterListener, layoutManager, LayoutMode} from "../../WebRtc/LayoutManager";
 import Texture = Phaser.Textures.Texture;
@@ -31,6 +36,10 @@ import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import {GameMap} from "./GameMap";
 import {CoWebsiteManager} from "../../WebRtc/CoWebsiteManager";
 import {mediaManager} from "../../WebRtc/MediaManager";
+import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
+import {ItemFactoryInterface} from "../Items/ItemFactoryInterface";
+import {ActionableItem} from "../Items/ActionableItem";
+import {UserInputManager} from "../UserInput/UserInputManager";
 
 
 export enum Textures {
@@ -92,6 +101,11 @@ export class GameScene extends Phaser.Scene implements CenterListener {
     private connection!: Connection;
     private simplePeer!: SimplePeer;
     private connectionPromise!: Promise<Connection>
+    private connectionAnswerPromise: Promise<RoomJoinedMessageInterface>;
+    private connectionAnswerPromiseResolve!: (value?: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>) => void;
+    // A promise that will resolve when the "create" method is called (signaling loading is ended)
+    private createPromise: Promise<void>;
+    private createPromiseResolve!: (value?: void | PromiseLike<void>) => void;
 
     MapKey: string;
     MapUrlFile: string;
@@ -113,6 +127,10 @@ export class GameScene extends Phaser.Scene implements CenterListener {
     private chatModeSprite!: Sprite;
     private onResizeCallback!: (this: Window, ev: UIEvent) => void;
     private gameMap!: GameMap;
+    private actionableItems: Map<number, ActionableItem> = new Map<number, ActionableItem>();
+    // The item that can be selected by pressing the space key.
+    private outlinedItem: ActionableItem|null = null;
+    private userInputManager!: UserInputManager;
 
     static createFromUrl(mapUrlFile: string, instance: string, key: string|null = null): GameScene {
         const mapKey = GameScene.getMapKeyByUrl(mapUrlFile);
@@ -135,6 +153,13 @@ export class GameScene extends Phaser.Scene implements CenterListener {
         this.MapKey = MapKey;
         this.MapUrlFile = MapUrlFile;
         this.RoomId = this.instance + '__' + MapKey;
+
+        this.createPromise = new Promise<void>((resolve, reject): void => {
+            this.createPromiseResolve = resolve;
+        })
+        this.connectionAnswerPromise = new Promise<RoomJoinedMessageInterface>((resolve, reject): void => {
+            this.connectionAnswerPromiseResolve = resolve;
+        })
     }
 
     //hook preload scene
@@ -229,6 +254,15 @@ export class GameScene extends Phaser.Scene implements CenterListener {
                 window.removeEventListener('resize', this.onResizeCallback);
             })
 
+            connection.onActionableEvent((message => {
+                const item = this.actionableItems.get(message.itemId);
+                if (item === undefined) {
+                    console.warn('Received an event about object "'+message.itemId+'" but cannot find this item on the map.');
+                    return;
+                }
+                item.fire(message.event, message.state, message.parameters);
+            }));
+
             // When connection is performed, let's connect SimplePeer
             this.simplePeer = new SimplePeer(this.connection);
             const self = this;
@@ -254,7 +288,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private onMapLoad(data: any): void {
+    private async onMapLoad(data: any): Promise<void> {
         // Triggered when the map is loaded
         // Load tiles attached to the map recursively
         this.mapFile = data.data;
@@ -267,6 +301,92 @@ export class GameScene extends Phaser.Scene implements CenterListener {
             //TODO strategy to add access token
             this.load.image(`${url}/${tileset.image}`, `${url}/${tileset.image}`);
         })
+
+        // Scan the object layers for objects to load and load them.
+        const objects = new Map<string, ITiledMapObject[]>();
+
+        for (const layer of this.mapFile.layers) {
+            if (layer.type === 'objectgroup') {
+                for (const object of layer.objects) {
+                    let objectsOfType: ITiledMapObject[]|undefined;
+                    if (!objects.has(object.type)) {
+                        objectsOfType = new Array<ITiledMapObject>();
+                    } else {
+                        objectsOfType = objects.get(object.type);
+                        if (objectsOfType === undefined) {
+                            throw new Error('Unexpected object type not found');
+                        }
+                    }
+                    objectsOfType.push(object);
+                    objects.set(object.type, objectsOfType);
+                }
+            }
+        }
+
+        for (const [itemType, objectsOfType] of objects) {
+            // FIXME: we would ideally need for the loader to WAIT for the import to be performed, which means writing our own loader plugin.
+
+            let itemFactory: ItemFactoryInterface;
+
+            switch (itemType) {
+                case 'computer': {
+                    const module = await import('../Items/Computer/computer');
+                    itemFactory = module.default;
+                    break;
+                }
+                default:
+                    throw new Error('Unsupported object type: "'+ itemType +'"');
+            }
+
+            itemFactory.preload(this.load);
+            this.load.start(); // Let's manually start the loader because the import might be over AFTER the loading ends.
+
+            this.load.on('complete', () => {
+                // FIXME: the factory might fail because the resources might not be loaded yet...
+                // We would need to add a loader ended event in addition to the createPromise
+                this.createPromise.then(async () => {
+                    itemFactory.create(this);
+
+                    const roomJoinedAnswer = await this.connectionAnswerPromise;
+
+                    for (const object of objectsOfType) {
+                        // TODO: we should pass here a factory to create sprites (maybe?)
+
+                        // Do we have a state for this object?
+                        const state = roomJoinedAnswer.items[object.id];
+
+                        const actionableItem = itemFactory.factory(this, object, state);
+                        this.actionableItems.set(actionableItem.getId(), actionableItem);
+                    }
+                });
+            });
+
+            // import(/* webpackIgnore: true */ scriptUrl).then(result => {
+            //
+            //     result.default.preload(this.load);
+            //
+            //     this.load.start(); // Let's manually start the loader because the import might be over AFTER the loading ends.
+            //     this.load.on('complete', () => {
+            //         // FIXME: the factory might fail because the resources might not be loaded yet...
+            //         // We would need to add a loader ended event in addition to the createPromise
+            //         this.createPromise.then(() => {
+            //             result.default.create(this);
+            //
+            //             for (let object of objectsOfType) {
+            //                 // TODO: we should pass here a factory to create sprites (maybe?)
+            //                 let objectSprite = result.default.factory(this, object);
+            //             }
+            //         });
+            //     });
+            // });
+        }
+
+        // TEST: let's load a module dynamically!
+        /*let foo = "http://maps.workadventure.localhost/computer.js";
+        import(/* webpackIgnore: true * / foo).then(result => {
+            console.log(result);
+
+        });*/
     }
 
     //hook initialisation
@@ -352,12 +472,14 @@ export class GameScene extends Phaser.Scene implements CenterListener {
         //initialise list of other player
         this.MapPlayers = this.physics.add.group({ immovable: true });
 
+        //create input to move
+        this.userInputManager = new UserInputManager(this);
+
         //notify game manager can to create currentUser in map
         this.createCurrentPlayer();
 
         //initialise camera
         this.initCamera();
-
 
         // Let's generate the circle for the group delimiter
         const circleElement = Object.values(this.textures.list).find((object: Texture) => object.key === 'circleSprite');
@@ -391,6 +513,13 @@ export class GameScene extends Phaser.Scene implements CenterListener {
                 }
             }, 500);
         }
+
+        this.createPromiseResolve();
+
+        // TODO: use inputmanager instead
+        this.input.keyboard.on('keyup-SPACE', () => {
+            this.outlinedItem?.activate();
+        });
 
         this.presentationModeSprite = this.add.sprite(2, this.game.renderer.height - 2, 'layout_modes', 0);
         this.presentationModeSprite.setScrollFactor(0, 0);
@@ -627,7 +756,8 @@ export class GameScene extends Phaser.Scene implements CenterListener {
             this.GameManager.getPlayerName(),
             this.GameManager.getCharacterSelected(),
             PlayerAnimationNames.WalkDown,
-            false
+            false,
+            this.userInputManager
         );
 
         //create collision
@@ -646,12 +776,14 @@ export class GameScene extends Phaser.Scene implements CenterListener {
                     top: camera.scrollY,
                     right: camera.scrollX + camera.width,
                     bottom: camera.scrollY + camera.height,
-                }).then((userPositions: MessageUserPositionInterface[]) => {
-                this.initUsersPosition(userPositions);
+                }).then((roomJoinedMessage: RoomJoinedMessageInterface) => {
+                this.initUsersPosition(roomJoinedMessage.users);
+                this.connectionAnswerPromiseResolve(roomJoinedMessage);
             });
 
             //listen event to share position of user
             this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this))
+            this.CurrentPlayer.on(hasMovedEventName, this.outlineItem.bind(this))
             this.CurrentPlayer.on(hasMovedEventName, (event: HasMovedEvent) => {
                 this.gameMap.setPosition(event.x, event.y);
             })
@@ -682,6 +814,49 @@ export class GameScene extends Phaser.Scene implements CenterListener {
         }
 
         // Otherwise, do nothing.
+    }
+
+    /**
+     * Finds the correct item to outline and outline it (if there is an item to be outlined)
+     * @param event
+     */
+    private outlineItem(event: HasMovedEvent): void {
+        let x = event.x;
+        let y = event.y;
+        switch (event.direction) {
+            case PlayerAnimationNames.WalkUp:
+                y -= 32;
+                break;
+            case PlayerAnimationNames.WalkDown:
+                y += 32;
+                break;
+            case PlayerAnimationNames.WalkLeft:
+                x -= 32;
+                break;
+            case PlayerAnimationNames.WalkRight:
+                x += 32;
+                break;
+            default:
+                throw new Error('Unexpected direction "' + event.direction + '"');
+        }
+
+        let shortestDistance: number = Infinity;
+        let selectedItem: ActionableItem|null = null;
+        for (const item of this.actionableItems.values()) {
+            const distance = item.actionableDistance(x, y);
+            if (distance !== null && distance < shortestDistance) {
+                shortestDistance = distance;
+                selectedItem = item;
+            }
+        }
+
+        if (this.outlinedItem === selectedItem) {
+            return;
+        }
+
+        this.outlinedItem?.notSelectable();
+        this.outlinedItem = selectedItem;
+        this.outlinedItem?.selectable();
     }
 
     private doPushPlayerPosition(event: HasMovedEvent): void {
@@ -764,10 +939,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
         }
     }
 
-    /**
-     *
-     */
-    checkToExit(): {key: string, hash: string} | null  {
+    private checkToExit(): {key: string, hash: string} | null  {
         const x = Math.floor(this.CurrentPlayer.x / 32);
         const y = Math.floor(this.CurrentPlayer.y / 32);
 
@@ -944,6 +1116,18 @@ export class GameScene extends Phaser.Scene implements CenterListener {
         const startPos = mapUrlStart.indexOf('://')+3;
         const endPos = mapUrlStart.indexOf(".json");
         return mapUrlStart.substring(startPos, endPos);
+    }
+
+    /**
+     * Sends to the server an event emitted by one of the ActionableItems.
+     *
+     * @param itemId
+     * @param eventName
+     * @param state
+     * @param parameters
+     */
+    emitActionableEvent(itemId: number, eventName: string, state: unknown, parameters: unknown) {
+        this.connection.emitActionableEvent(itemId, eventName, state, parameters);
     }
 
     private onResize(): void {

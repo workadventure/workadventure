@@ -32,6 +32,14 @@
         "TURN_PASSWORD": "WorkAdventure123"
       }
     },
+    "maps": {
+      "image": "thecodingmachine/workadventure-maps:"+tag,
+      "host": {
+        "url": "maps."+url,
+        "https": "enable"
+      },
+      "ports": [80]
+    },
     "website": {
       "image": "thecodingmachine/workadventure-website:"+tag,
       "host": {

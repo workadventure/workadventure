@@ -22,6 +22,7 @@ enum EventMessage{
     GROUP_CREATE_UPDATE = "group-create-update",
     GROUP_DELETE = "group-delete",
     SET_PLAYER_DETAILS = "set-player-details", // Send the name and character to the server (on connect), receive back the id.
+    ITEM_EVENT = 'item-event',
 
     CONNECT_ERROR = "connect_error",
     SET_SILENT = "set_silent", // Set or unset the silent mode for this user.
@@ -114,6 +115,18 @@ export interface BatchedMessageInterface {
     payload: unknown
 }
 
+export interface ItemEventMessageInterface {
+    itemId: number,
+    event: string,
+    state: unknown,
+    parameters: unknown
+}
+
+export interface RoomJoinedMessageInterface {
+    users: MessageUserPositionInterface[]
+    items: { [itemId: number] : unknown }
+}
+
 export class Connection implements Connection {
     private readonly socket: Socket;
     private userId: string|null = null;
@@ -182,14 +195,14 @@ export class Connection implements Connection {
     }
 
 
-    public joinARoom(roomId: string, startX: number, startY: number, direction: string, moving: boolean, viewport: ViewportInterface): Promise<MessageUserPositionInterface[]> {
-        const promise = new Promise<MessageUserPositionInterface[]>((resolve, reject) => {
+    public joinARoom(roomId: string, startX: number, startY: number, direction: string, moving: boolean, viewport: ViewportInterface): Promise<RoomJoinedMessageInterface> {
+        const promise = new Promise<RoomJoinedMessageInterface>((resolve, reject) => {
             this.socket.emit(EventMessage.JOIN_ROOM, {
                     roomId,
                     position: {x: startX, y: startY, direction, moving },
                     viewport,
-                }, (userPositions: MessageUserPositionInterface[]) => {
-                    resolve(userPositions);
+                }, (roomJoinedMessage: RoomJoinedMessageInterface) => {
+                    resolve(roomJoinedMessage);
                 });
         })
         return promise;
@@ -278,5 +291,18 @@ export class Connection implements Connection {
 
     disconnectMessage(callback: (message: WebRtcDisconnectMessageInterface) => void): void {
         this.socket.on(EventMessage.WEBRTC_DISCONNECT, callback);
+    }
+
+    emitActionableEvent(itemId: number, event: string, state: unknown, parameters: unknown) {
+        return this.socket.emit(EventMessage.ITEM_EVENT, {
+            itemId,
+            event,
+            state,
+            parameters
+        });
+    }
+
+    onActionableEvent(callback: (message: ItemEventMessageInterface) => void): void {
+        this.socket.on(EventMessage.ITEM_EVENT, callback);
     }
 }

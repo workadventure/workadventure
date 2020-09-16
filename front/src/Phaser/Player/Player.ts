@@ -3,6 +3,7 @@ import {GameScene, Textures} from "../Game/GameScene";
 import {MessageUserPositionInterface, PointInterface} from "../../Connection";
 import {ActiveEventList, UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
 import {Character} from "../Entity/Character";
+import {OutlinePipeline} from "../Shaders/OutlinePipeline";
 
 
 export const hasMovedEventName = "hasMoved";
@@ -12,9 +13,8 @@ export interface CurrentGamerInterface extends Character{
 }
 
 export class Player extends Character implements CurrentGamerInterface {
-    userInputManager: UserInputManager;
-    previousDirection: string = PlayerAnimationNames.WalkDown;
-    wasMoving: boolean = false;
+    private previousDirection: string = PlayerAnimationNames.WalkDown;
+    private wasMoving: boolean = false;
 
     constructor(
         Scene: GameScene,
@@ -23,12 +23,10 @@ export class Player extends Character implements CurrentGamerInterface {
         name: string,
         PlayerTextures: string[],
         direction: string,
-        moving: boolean
+        moving: boolean,
+        private userInputManager: UserInputManager
     ) {
         super(Scene, x, y, PlayerTextures, name, direction, moving, 1);
-
-        //create input to move
-        this.userInputManager = new UserInputManager(Scene);
 
         //the current player model should be push away by other players to prevent conflict
         this.getBody().setImmovable(false);

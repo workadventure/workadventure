@@ -7,6 +7,8 @@ import {ReconnectingScene} from "./Phaser/Reconnecting/ReconnectingScene";
 import {SelectCharacterScene} from "./Phaser/Login/SelectCharacterScene";
 import {EnableCameraScene} from "./Phaser/Login/EnableCameraScene";
 import {FourOFourScene} from "./Phaser/Reconnecting/FourOFourScene";
+import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
+import {OutlinePipeline} from "./Phaser/Shaders/OutlinePipeline";
 import {CustomizeScene} from "./Phaser/Login/CustomizeScene";
 import {HtmlUtils} from "./WebRtc/HtmlUtils";
 import {CoWebsiteManager} from "./WebRtc/CoWebsiteManager";
@@ -33,6 +35,13 @@ const config: GameConfig = {
         default: "arcade",
         arcade: {
             debug: DEBUG_MODE
+        }
+    },
+    callbacks: {
+        postBoot: game => {
+            // FIXME: we should fore WebGL in the config.
+            const renderer = game.renderer as WebGLRenderer;
+            renderer.addPipeline(OutlinePipeline.KEY, new OutlinePipeline(game));
         }
     }
 };
