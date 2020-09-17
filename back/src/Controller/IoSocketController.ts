@@ -24,6 +24,7 @@ import {isUserMovesInterface} from "../Model/Websocket/UserMovesMessage";
 import {isViewport} from "../Model/Websocket/ViewportMessage";
 import {GroupUpdateInterface} from "_Model/Websocket/GroupUpdateInterface";
 import {Movable} from "../Model/Movable";
+import {SetPlayerDetailsMessage} from "../../../messages/generated/src/proto/messages_pb";
 
 enum SockerIoEvent {
     CONNECTION = "connection",
@@ -334,7 +335,13 @@ export class IoSocketController {
             });
 
             // Let's send the user id to the user
-            socket.on(SockerIoEvent.SET_PLAYER_DETAILS, (playerDetails: unknown, answerFn) => {
+            socket.on(SockerIoEvent.SET_PLAYER_DETAILS, (message: any, answerFn) => {
+                console.log(SockerIoEvent.SET_PLAYER_DETAILS, message);
+                const playerDetailsMessage = SetPlayerDetailsMessage.deserializeBinary(new Uint8Array(message));
+                const playerDetails = {
+                    name: playerDetailsMessage.getName(),
+                    characterLayers: playerDetailsMessage.getCharacterlayersList()
+                };
                 console.log(SockerIoEvent.SET_PLAYER_DETAILS, playerDetails);
                 if (!isSetPlayerDetailsMessage(playerDetails)) {
                     socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid SET_PLAYER_DETAILS message.'});

@@ -1,7 +1,7 @@
 import Axios from "axios";
 import {API_URL} from "./Enum/EnvironmentVariable";
 import {MessageUI} from "./Logger/MessageUI";
-import {SetPlayerDetailsMessage} from "./Messages/SetPlayerDetailsMessage";
+import {SetPlayerDetailsMessage} from "../../messages/generated/src/proto/messages_pb"
 
 const SocketIo = require('socket.io-client');
 import Socket = SocketIOClient.Socket;
@@ -170,10 +170,10 @@ export class Connection implements Connection {
                         reject(error);
                     });
 
-                    connection.socket.emit(EventMessage.SET_PLAYER_DETAILS, {
-                        name: name,
-                        characterLayers: characterLayersSelected
-                    } as SetPlayerDetailsMessage, (id: string) => {
+                    const message = new SetPlayerDetailsMessage();
+                    message.setName(name);
+                    message.setCharacterlayersList(characterLayersSelected);
+                    connection.socket.emit(EventMessage.SET_PLAYER_DETAILS, message.serializeBinary().buffer, (id: string) => {
                         connection.userId = id;
                     });
 
