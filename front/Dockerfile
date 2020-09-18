@@ -4,7 +4,7 @@ FROM thecodingmachine/nodejs:14-apache
 COPY --chown=docker:docker front .
 COPY --chown=docker:docker messages /var/www/messages
 RUN yarn install
-RUN cd /usr/src/messages && yarn install
+RUN cd /var/www/messages && yarn install
 
 ENV NODE_ENV=production
 ENV STARTUP_COMMAND_1="yarn run build"
