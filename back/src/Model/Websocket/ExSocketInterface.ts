@@ -8,7 +8,7 @@ import {BatchMessage, SubMessage} from "../../../../messages/generated/messages_
 export interface ExSocketInterface extends Socket, Identificable {
     token: string;
     roomId: string;
-    webRtcRoomId: string;
+    webRtcRoomId: string|undefined;
     userId: number;   // A temporary (autoincremented) identifier for this user
     userUuid: string; // A unique identifier for this user
     name: string;
