@@ -11,15 +11,15 @@ import {PositionNotifier} from "./PositionNotifier";
 import {ViewportInterface} from "_Model/Websocket/ViewportMessage";
 import {Movable} from "_Model/Movable";
 
-export type ConnectCallback = (user: string, group: Group) => void;
-export type DisconnectCallback = (user: string, group: Group) => void;
+export type ConnectCallback = (user: number, group: Group) => void;
+export type DisconnectCallback = (user: number, group: Group) => void;
 
 export class World {
     private readonly minDistance: number;
     private readonly groupRadius: number;
 
     // Users, sorted by ID
-    private readonly users: Map<string, User>;
+    private readonly users: Map<number, User>;
     private readonly groups: Set<Group>;
 
     private readonly connectCallback: ConnectCallback;
@@ -37,7 +37,7 @@ export class World {
                 onMoves: MovesCallback,
                 onLeaves: LeavesCallback)
     {
-        this.users = new Map<string, User>();
+        this.users = new Map<number, User>();
         this.groups = new Set<Group>();
         this.connectCallback = connectCallback;
         this.disconnectCallback = disconnectCallback;
@@ -51,7 +51,7 @@ export class World {
         return Array.from(this.groups.values());
     }
 
-    public getUsers(): Map<string, User> {
+    public getUsers(): Map<number, User> {
         return this.users;
     }
 

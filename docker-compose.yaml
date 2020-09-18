@@ -67,7 +67,7 @@ services:
       - "traefik.http.routers.maps-ssl.service=maps"
 
   back:
-    image: thecodingmachine/workadventure-back-base:latest
+    image: thecodingmachine/nodejs:12
     command: yarn dev
     #command: yarn run profile
     environment:
@@ -103,3 +103,11 @@ services:
       - "traefik.http.routers.website-ssl.entryPoints=websecure"
       - "traefik.http.routers.website-ssl.tls=true"
       - "traefik.http.routers.website-ssl.service=website"
+
+  messages:
+    image: thecodingmachine/workadventure-back-base:latest
+    environment:
+      STARTUP_COMMAND_1: yarn install
+      STARTUP_COMMAND_2: yarn run proto:watch
+    volumes:
+      - ./messages:/usr/src/app

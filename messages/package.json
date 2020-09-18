@@ -4,8 +4,8 @@
   "description": "",
   "main": "generated/src/proto/messages_pb.js",
   "scripts": {
-    "proto": "protoc --plugin=\"protoc-gen-ts=./node_modules/.bin/protoc-gen-ts\" --js_out=\"import_style=commonjs,binary:src/messages/generated\" --ts_out=\"src/messages/generated\" src/messages/messages.proto",
-    "proto:watch": "inotifywait -q -m -e close_write src/messages/messages.proto | while read -r filename event; do yarn run proto; done"
+    "proto": "protoc --plugin=\"protoc-gen-ts=./node_modules/.bin/protoc-gen-ts\" --js_out=\"import_style=commonjs,binary:generated\" --ts_out=\"generated\" messages.proto",
+    "proto:watch": "inotifywait -q -m -e close_write messages.proto | while read -r filename event; do yarn run proto; done"
   },
   "repository": {
     "type": "git",

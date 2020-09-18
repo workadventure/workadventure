@@ -7,7 +7,9 @@ import {Movable} from "_Model/Movable";
 export class Group implements Movable {
     static readonly MAX_PER_GROUP = 4;
 
-    private id: string;
+    private static nextId: number = 1;
+
+    private id: number;
     private users: Set<User>;
     private connectCallback: ConnectCallback;
     private disconnectCallback: DisconnectCallback;
@@ -17,7 +19,8 @@ export class Group implements Movable {
         this.users = new Set<User>();
         this.connectCallback = connectCallback;
         this.disconnectCallback = disconnectCallback;
-        this.id = uuid();
+        this.id = Group.nextId;
+        Group.nextId++;
 
         users.forEach((user: User) => {
             this.join(user);
@@ -28,7 +31,7 @@ export class Group implements Movable {
         return Array.from(this.users.values());
     }
 
-    getId() : string{
+    getId() : number {
         return this.id;
     }
 

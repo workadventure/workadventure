@@ -1,6 +1,41 @@
 syntax = "proto3";
 
+/*********** CLIENT TO SERVER MESSAGES *************/
+
 message SetPlayerDetailsMessage {
   string name = 1;
   repeated string characterLayers = 2;
+}
+
+message PositionMessage {
+  int32 x = 1;
+  int32 y = 2;
+  enum Direction {
+    UP = 0;
+    RIGHT = 1;
+    DOWN = 2;
+    LEFT = 3;
+  }
+  Direction direction = 3;
+  bool moving = 4;
+}
+
+message ViewportMessage {
+  int32 left = 1;
+  int32 top = 2;
+  int32 right = 3;
+  int32 bottom = 4;
+}
+
+message UserMovesMessage {
+  PositionMessage position = 1;
+  ViewportMessage viewport = 2;
+}
+
+
+/*********** SERVER TO CLIENT MESSAGES *************/
+
+message UserMovedMessage {
+  int32 userId = 1;
+  PositionMessage position = 2;
 }

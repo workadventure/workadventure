@@ -343,7 +343,7 @@ export class MediaManager {
      *
      * @param userId
      */
-    addActiveVideo(userId : string, userName: string = ""){
+    addActiveVideo(userId: string, userName: string = ""){
         this.webrtcInAudio.play();
 
         userName = userName.toUpperCase();
@@ -368,7 +368,7 @@ export class MediaManager {
      *
      * @param userId
      */
-    addScreenSharingActiveVideo(userId : string, divImportance: DivImportance = DivImportance.Important){
+    addScreenSharingActiveVideo(userId: string, divImportance: DivImportance = DivImportance.Important){
         //this.webrtcInAudio.play();
 
         userId = `screen-sharing-${userId}`;
@@ -387,7 +387,7 @@ export class MediaManager {
      *
      * @param userId
      */
-    disabledMicrophoneByUserId(userId: string){
+    disabledMicrophoneByUserId(userId: number){
         const element = document.getElementById(`microphone-${userId}`);
         if(!element){
             return;
@@ -399,7 +399,7 @@ export class MediaManager {
      *
      * @param userId
      */
-    enabledMicrophoneByUserId(userId: string){
+    enabledMicrophoneByUserId(userId: number){
         const element = document.getElementById(`microphone-${userId}`);
         if(!element){
             return;
@@ -411,7 +411,7 @@ export class MediaManager {
      *
      * @param userId
      */
-    disabledVideoByUserId(userId: string) {
+    disabledVideoByUserId(userId: number) {
         let element = document.getElementById(`${userId}`);
         if (element) {
             element.style.opacity = "0";
@@ -426,7 +426,7 @@ export class MediaManager {
      *
      * @param userId
      */
-    enabledVideoByUserId(userId: string){
+    enabledVideoByUserId(userId: number){
         let element = document.getElementById(`${userId}`);
         if(element){
             element.style.opacity = "1";
@@ -442,7 +442,7 @@ export class MediaManager {
      * @param userId
      * @param stream
      */
-    addStreamRemoteVideo(userId : string, stream : MediaStream){
+    addStreamRemoteVideo(userId: string, stream : MediaStream){
         const remoteVideo = this.remoteVideo.get(userId);
         if (remoteVideo === undefined) {
             console.error('Unable to find video for ', userId);
@@ -450,7 +450,7 @@ export class MediaManager {
         }
         remoteVideo.srcObject = stream;
     }
-    addStreamRemoteScreenSharing(userId : string, stream : MediaStream){
+    addStreamRemoteScreenSharing(userId: string, stream : MediaStream){
         // In the case of screen sharing (going both ways), we may need to create the HTML element if it does not exist yet
         const remoteVideo = this.remoteVideo.get(`screen-sharing-${userId}`);
         if (remoteVideo === undefined) {
@@ -464,15 +464,15 @@ export class MediaManager {
      *
      * @param userId
      */
-    removeActiveVideo(userId : string){
+    removeActiveVideo(userId: string){
         layoutManager.remove(userId);
         this.remoteVideo.delete(userId);
     }
-    removeActiveScreenSharingVideo(userId : string) {
+    removeActiveScreenSharingVideo(userId: string) {
         this.removeActiveVideo(`screen-sharing-${userId}`)
     }
 
-    isConnecting(userId : string): void {
+    isConnecting(userId: string): void {
         const connectingSpinnerDiv = this.getSpinner(userId);
         if (connectingSpinnerDiv === null) {
             return;
@@ -480,7 +480,7 @@ export class MediaManager {
         connectingSpinnerDiv.style.display = 'block';
     }
 
-    isConnected(userId : string): void {
+    isConnected(userId: string): void {
         const connectingSpinnerDiv = this.getSpinner(userId);
         if (connectingSpinnerDiv === null) {
             return;
@@ -488,7 +488,7 @@ export class MediaManager {
         connectingSpinnerDiv.style.display = 'none';
     }
 
-    isError(userId : string): void {
+    isError(userId: string): void {
         console.log("isError", `div-${userId}`);
         const element = document.getElementById(`div-${userId}`);
         if(!element){
@@ -500,12 +500,12 @@ export class MediaManager {
         }
         errorDiv.style.display = 'block';
     }
-    isErrorScreenSharing(userId : string): void {
+    isErrorScreenSharing(userId: string): void {
         this.isError(`screen-sharing-${userId}`);
     }
 
 
-    private getSpinner(userId : string): HTMLDivElement|null {
+    private getSpinner(userId: string): HTMLDivElement|null {
         const element = document.getElementById(`div-${userId}`);
         if(!element){
             return null;

@@ -1,6 +1,6 @@
 import {PointInterface} from "./PointInterface";
 
 export class MessageUserMoved {
-    constructor(public userId: string, public position: PointInterface) {
+    constructor(public userId: number, public position: PointInterface) {
     }
 }

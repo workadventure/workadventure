@@ -8,7 +8,8 @@ export interface ExSocketInterface extends Socket, Identificable {
     token: string;
     roomId: string;
     webRtcRoomId: string;
-    userId: string;
+    userId: number;   // A temporary (autoincremented) identifier for this user
+    userUuid: string; // A unique identifier for this user
     name: string;
     characterLayers: string[];
     position: PointInterface;

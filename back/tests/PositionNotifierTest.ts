@@ -32,14 +32,14 @@ describe("PositionNotifier", () => {
             leaveTriggered = true;
         });
 
-        const user1 = new User("1", {
+        const user1 = new User(1, {
             x: 500,
             y: 500,
             moving: false,
             direction: 'down'
         }, false);
 
-        const user2 = new User("2", {
+        const user2 = new User(2, {
             x: -9999,
             y: -9999,
             moving: false,
@@ -110,14 +110,14 @@ describe("PositionNotifier", () => {
             leaveTriggered = true;
         });
 
-        const user1 = new User("1", {
+        const user1 = new User(1, {
             x: 500,
             y: 500,
             moving: false,
             direction: 'down'
         }, false);
 
-        const user2 = new User("2", {
+        const user2 = new User(2, {
             x: -9999,
             y: -9999,
             moving: false,

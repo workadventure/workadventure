@@ -63,7 +63,7 @@ interface AddPlayerEventInterface {
 
 interface RemovePlayerEventInterface {
     type: 'RemovePlayerEvent'
-    userId: string
+    userId: number
 }
 
 interface UserMovedEventInterface {
@@ -86,7 +86,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
     Terrains : Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer!: CurrentGamerInterface;
     MapPlayers!: Phaser.Physics.Arcade.Group;
-    MapPlayersByKey : Map<string, RemotePlayer> = new Map<string, RemotePlayer>();
+    MapPlayersByKey : Map<number, RemotePlayer> = new Map<number, RemotePlayer>();
     Map!: Phaser.Tilemaps.Tilemap;
     Layers!: Array<Phaser.Tilemaps.StaticTilemapLayer>;
     Objects!: Array<Phaser.Physics.Arcade.Sprite>;
@@ -217,7 +217,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
                 this.updatePlayerPosition(message);
             });
 
-            connection.onUserLeft((userId: string) => {
+            connection.onUserLeft((userId: number) => {
                 this.removePlayer(userId);
             });
 
@@ -271,7 +271,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
                     self.presentationModeSprite.setVisible(true);
                     self.chatModeSprite.setVisible(true);
                 },
-                onDisconnect(userId: string) {
+                onDisconnect(userId: number) {
                     if (self.simplePeer.getNbConnections() === 0) {
                         self.presentationModeSprite.setVisible(false);
                         self.chatModeSprite.setVisible(false);
@@ -918,7 +918,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
 
         // Let's move all users
         const updatedPlayersPositions = this.playersPositionInterpolator.getUpdatedPositions(time);
-        updatedPlayersPositions.forEach((moveEvent: HasMovedEvent, userId: string) => {
+        updatedPlayersPositions.forEach((moveEvent: HasMovedEvent, userId: number) => {
             const player : RemotePlayer | undefined = this.MapPlayersByKey.get(userId);
             if (player === undefined) {
                 throw new Error('Cannot find player with ID "' + userId +'"');
@@ -973,7 +973,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
             player.destroy();
             this.MapPlayers.remove(player);
         });
-        this.MapPlayersByKey = new Map<string, RemotePlayer>();
+        this.MapPlayersByKey = new Map<number, RemotePlayer>();
 
         // load map
         usersPosition.forEach((userPosition : MessageUserPositionInterface) => {
@@ -1030,14 +1030,14 @@ export class GameScene extends Phaser.Scene implements CenterListener {
     /**
      * Called by the connexion when a player is removed from the map
      */
-    public removePlayer(userId: string) {
+    public removePlayer(userId: number) {
         this.pendingEvents.enqueue({
             type: "RemovePlayerEvent",
             userId
         });
     }
 
-    private doRemovePlayer(userId: string) {
+    private doRemovePlayer(userId: number) {
         const player = this.MapPlayersByKey.get(userId);
         if (player === undefined) {
             console.error('Cannot find user with id ', userId);

@@ -1,13 +1,19 @@
 import Axios from "axios";
 import {API_URL} from "./Enum/EnvironmentVariable";
 import {MessageUI} from "./Logger/MessageUI";
-import {SetPlayerDetailsMessage} from "../../messages/generated/src/proto/messages_pb"
+import {
+    PositionMessage,
+    SetPlayerDetailsMessage,
+    UserMovesMessage,
+    ViewportMessage
+} from "../../messages/generated/messages_pb"
 
 const SocketIo = require('socket.io-client');
 import Socket = SocketIOClient.Socket;
 import {PlayerAnimationNames} from "./Phaser/Player/Animation";
 import {UserSimplePeerInterface} from "./WebRtc/SimplePeer";
 import {SignalData} from "simple-peer";
+import Direction = PositionMessage.Direction;
 
 enum EventMessage{
     WEBRTC_SIGNAL = "webrtc-signal",
@@ -46,19 +52,19 @@ export class Point implements PointInterface{
 }
 
 export interface MessageUserPositionInterface {
-    userId: string;
+    userId: number;
     name: string;
     characterLayers: string[];
     position: PointInterface;
 }
 
 export interface MessageUserMovedInterface {
-    userId: string;
+    userId: number;
     position: PointInterface;
 }
 
 export interface MessageUserJoined {
-    userId: string;
+    userId: number;
     name: string;
     characterLayers: string[];
     position: PointInterface
@@ -80,16 +86,16 @@ export interface WebRtcStartMessageInterface {
 }
 
 export interface WebRtcDisconnectMessageInterface {
-    userId: string
+    userId: number
 }
 
 export interface WebRtcSignalSentMessageInterface {
-    receiverId: string,
+    receiverId: number,
     signal: SignalData
 }
 
 export interface WebRtcSignalReceivedMessageInterface {
-    userId: string,
+    userId: number,
     signal: SignalData
 }
 
@@ -103,11 +109,6 @@ export interface ViewportInterface {
     top: number,
     right: number,
     bottom: number,
-}
-
-export interface UserMovesInterface {
-    position: PositionInterface,
-    viewport: ViewportInterface,
 }
 
 export interface BatchedMessageInterface {
@@ -130,7 +131,7 @@ export interface RoomJoinedMessageInterface {
 
 export class Connection implements Connection {
     private readonly socket: Socket;
-    private userId: string|null = null;
+    private userId: number|null = null;
 
     private constructor(token: string) {
 
@@ -173,7 +174,7 @@ export class Connection implements Connection {
                     const message = new SetPlayerDetailsMessage();
                     message.setName(name);
                     message.setCharacterlayersList(characterLayersSelected);
-                    connection.socket.emit(EventMessage.SET_PLAYER_DETAILS, message.serializeBinary().buffer, (id: string) => {
+                    connection.socket.emit(EventMessage.SET_PLAYER_DETAILS, message.serializeBinary().buffer, (id: number) => {
                         connection.userId = id;
                     });
 
@@ -214,7 +215,40 @@ export class Connection implements Connection {
             return;
         }
         const point = new Point(x, y, direction, moving);
-        this.socket.emit(EventMessage.USER_POSITION, { position: point, viewport } as UserMovesInterface);
+        const positionMessage = new PositionMessage();
+        positionMessage.setX(Math.floor(x));
+        positionMessage.setY(Math.floor(y));
+        let directionEnum: PositionMessage.DirectionMap[keyof PositionMessage.DirectionMap];
+        switch (direction) {
+            case 'up':
+                directionEnum = Direction.UP;
+                break;
+            case 'down':
+                directionEnum = Direction.DOWN;
+                break;
+            case 'left':
+                directionEnum = Direction.LEFT;
+                break;
+            case 'right':
+                directionEnum = Direction.RIGHT;
+                break;
+            default:
+                throw new Error("Unexpected direction");
+        }
+        positionMessage.setDirection(directionEnum);
+        positionMessage.setMoving(moving);
+
+        const viewportMessage = new ViewportMessage();
+        viewportMessage.setLeft(Math.floor(viewport.left));
+        viewportMessage.setRight(Math.floor(viewport.right));
+        viewportMessage.setTop(Math.floor(viewport.top));
+        viewportMessage.setBottom(Math.floor(viewport.bottom));
+
+        const userMovesMessage = new UserMovesMessage();
+        userMovesMessage.setPosition(positionMessage);
+        userMovesMessage.setViewport(viewportMessage);
+
+        this.socket.emit(EventMessage.USER_POSITION, userMovesMessage.serializeBinary().buffer);
     }
 
     public setSilent(silent: boolean): void {
@@ -233,7 +267,7 @@ export class Connection implements Connection {
         this.socket.on(EventMessage.USER_MOVED, callback);
     }
 
-    public onUserLeft(callback: (userId: string) => void): void {
+    public onUserLeft(callback: (userId: number) => void): void {
         this.socket.on(EventMessage.USER_LEFT, callback);
     }
 
@@ -249,14 +283,14 @@ export class Connection implements Connection {
         this.socket.on(EventMessage.CONNECT_ERROR, callback)
     }
 
-    public sendWebrtcSignal(signal: unknown, receiverId : string) {
+    public sendWebrtcSignal(signal: unknown, receiverId: number) {
         return this.socket.emit(EventMessage.WEBRTC_SIGNAL, {
             receiverId: receiverId,
             signal: signal
         } as WebRtcSignalSentMessageInterface);
     }
 
-    public sendWebrtcScreenSharingSignal(signal: unknown, receiverId : string) {
+    public sendWebrtcScreenSharingSignal(signal: unknown, receiverId: number) {
         return this.socket.emit(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, {
             receiverId: receiverId,
             signal: signal
@@ -286,7 +320,7 @@ export class Connection implements Connection {
 
     }
 
-    public getUserId(): string|null {
+    public getUserId(): number|null {
         return this.userId;
     }
 

@@ -9,7 +9,7 @@ const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
  * A peer connection used to transmit video / audio signals between 2 peers.
  */
 export class VideoPeer extends Peer {
-    constructor(private userId: string, initiator: boolean, private connection: Connection) {
+    constructor(private userId: number, initiator: boolean, private connection: Connection) {
         super({
             initiator: initiator ? initiator : false,
             reconnectTimer: 10000,
@@ -63,11 +63,11 @@ export class VideoPeer extends Peer {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         this.on('error', (err: any) => {
             console.error(`error => ${this.userId} => ${err.code}`, err);
-            mediaManager.isError(userId);
+            mediaManager.isError("" + userId);
         });
 
         this.on('connect', () => {
-            mediaManager.isConnected(this.userId);
+            mediaManager.isConnected("" + this.userId);
             console.info(`connect => ${this.userId}`);
         });
 
@@ -108,7 +108,7 @@ export class VideoPeer extends Peer {
             mediaManager.disabledVideoByUserId(this.userId);
             mediaManager.disabledMicrophoneByUserId(this.userId);
         } else {
-            mediaManager.addStreamRemoteVideo(this.userId, stream);
+            mediaManager.addStreamRemoteVideo("" + this.userId, stream);
         }
     }
 
@@ -117,7 +117,7 @@ export class VideoPeer extends Peer {
      */
     public destroy(error?: Error): void {
         try {
-            mediaManager.removeActiveVideo(this.userId);
+            mediaManager.removeActiveVideo("" + this.userId);
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
             //console.log('Closing connection with '+userId);

@@ -9,7 +9,7 @@ export class User implements Movable {
     public group?: Group;
 
     public constructor(
-        public id: string,
+        public id: number,
         public position: PointInterface,
         public silent: boolean,
 
