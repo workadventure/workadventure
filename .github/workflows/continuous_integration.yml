@@ -26,6 +26,10 @@ jobs:
         run: yarn install
         working-directory: "front"
 
+      - name: "Install messages dependencies"
+        run: yarn install
+        working-directory: "messages"
+
       - name: "Build"
         run: yarn run build
         env:
@@ -57,6 +61,10 @@ jobs:
       - name: "Install dependencies"
         run: yarn install
         working-directory: "back"
+
+      - name: "Install messages dependencies"
+        run: yarn install
+        working-directory: "messages"
 
       - name: "Build"
         run: yarn run tsc

@@ -15,6 +15,11 @@ message PositionMessage {
   bool moving = 4;
 }
 
+message PointMessage {
+  int32 x = 1;
+  int32 y = 2;
+}
+
 message ViewportMessage {
   int32 left = 1;
   int32 top = 2;
@@ -51,4 +56,13 @@ message SubMessage {
 message BatchMessage {
   string event = 1;
   repeated SubMessage payload = 2;
+}
+
+message GroupUpdateMessage {
+  int32 groupId = 1;
+  PointMessage position = 2;
+}
+
+message GroupDeleteMessage {
+  int32 groupId = 1;
 }
