@@ -10,7 +10,6 @@ import {Group} from "../Model/Group";
 import {User} from "../Model/User";
 import {isSetPlayerDetailsMessage,} from "../Model/Websocket/SetPlayerDetailsMessage";
 import {MessageUserJoined} from "../Model/Websocket/MessageUserJoined";
-import {MessageUserMoved} from "../Model/Websocket/MessageUserMoved";
 import si from "systeminformation";
 import {Gauge} from "prom-client";
 import {TokenInterface} from "../Controller/AuthenticateController";
@@ -23,9 +22,17 @@ import {uuid} from 'uuidv4';
 import {isViewport} from "../Model/Websocket/ViewportMessage";
 import {GroupUpdateInterface} from "_Model/Websocket/GroupUpdateInterface";
 import {Movable} from "../Model/Movable";
-import {PositionMessage, SetPlayerDetailsMessage} from "../../../messages/generated/messages_pb";
+import {
+    PositionMessage,
+    SetPlayerDetailsMessage,
+    SubMessage,
+    UserMovedMessage,
+    BatchMessage
+} from "../../../messages/generated/messages_pb";
 import {UserMovesMessage} from "../../../messages/generated/messages_pb";
 import Direction = PositionMessage.Direction;
+import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
+import toPositionMessage = ProtobufUtils.toPositionMessage;
 
 enum SocketIoEvent {
     CONNECTION = "connection",
@@ -48,13 +55,13 @@ enum SocketIoEvent {
     BATCH = "batch",
 }
 
-function emitInBatch(socket: ExSocketInterface, event: string | symbol, payload: unknown): void {
-    socket.batchedMessages.push({ event, payload});
+function emitInBatch(socket: ExSocketInterface, event: string, payload: SubMessage): void {
+    socket.batchedMessages.addPayload(payload);
 
     if (socket.batchTimeout === null) {
         socket.batchTimeout = setTimeout(() => {
-            socket.emit(SocketIoEvent.BATCH, socket.batchedMessages);
-            socket.batchedMessages = [];
+            socket.binary(true).emit(SocketIoEvent.BATCH, socket.batchedMessages.serializeBinary().buffer);
+            socket.batchedMessages = new BatchMessage();
             socket.batchTimeout = null;
         }, 100);
     }
@@ -159,9 +166,9 @@ export class IoSocketController {
     ioConnection() {
         this.Io.on(SocketIoEvent.CONNECTION, (socket: Socket) => {
             const client : ExSocketInterface = socket as ExSocketInterface;
-            client.batchedMessages = [];
+            client.batchedMessages = new BatchMessage();
             client.batchTimeout = null;
-            client.emitInBatch = (event: string | symbol, payload: unknown): void => {
+            client.emitInBatch = (event: string, payload: SubMessage): void => {
                 emitInBatch(client, event, payload);
             }
             this.sockets.set(client.userId, client);
@@ -538,7 +545,14 @@ export class IoSocketController {
                 if (thing instanceof User) {
                     const clientUser = this.searchClientByIdOrFail(thing.id);
 
-                    clientListener.emitInBatch(SocketIoEvent.USER_MOVED, new MessageUserMoved(clientUser.userId, clientUser.position));
+                    const userMovedMessage = new UserMovedMessage();
+                    userMovedMessage.setUserid(clientUser.userId);
+                    userMovedMessage.setPosition(toPositionMessage(clientUser.position));
+
+                    const subMessage = new SubMessage();
+                    subMessage.setUsermovedmessage(userMovedMessage);
+
+                    clientListener.emitInBatch(SocketIoEvent.USER_MOVED, subMessage);
                     //console.log("Sending USER_MOVED event");
                 } else if (thing instanceof Group) {
                     clientListener.emit(SocketIoEvent.GROUP_CREATE_UPDATE, {

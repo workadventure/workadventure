@@ -3,6 +3,7 @@ import {PointInterface} from "./PointInterface";
 import {Identificable} from "./Identificable";
 import {TokenInterface} from "../../Controller/AuthenticateController";
 import {ViewportInterface} from "_Model/Websocket/ViewportMessage";
+import {BatchMessage, SubMessage} from "../../../../messages/generated/messages_pb";
 
 export interface ExSocketInterface extends Socket, Identificable {
     token: string;
@@ -18,7 +19,7 @@ export interface ExSocketInterface extends Socket, Identificable {
     /**
      * Pushes an event that will be sent in the next batch of events
      */
-    emitInBatch: (event: string | symbol, payload: unknown) => void;
-    batchedMessages: Array<{ event: string | symbol, payload: unknown }>;
+    emitInBatch: (event: string, payload: SubMessage) => void;
+    batchedMessages: BatchMessage;
     batchTimeout: NodeJS.Timeout|null;
 }

@@ -6,7 +6,7 @@ config:
       token: "test"
   phases:
     - duration: 20
-      arrivalRate: 2
+      arrivalRate: 3
   processor: "./socketioLoadTest.js"
 scenarios:
   - name: "Connects and moves player for 20 seconds"
@@ -22,7 +22,7 @@ scenarios:
       - emit:
           channel: "join-room"
           data:
-            roomId: 'global__api.workadventure.localhost/map/files/Floor0/floor0'
+            roomId: 'global__maps.workadventure.localhost/Floor0/floor0'
             position:
               x: 783
               y: 170
@@ -35,20 +35,10 @@ scenarios:
               bottom: 200
       - think: 1
       - loop:
-        - function: "setYRandom"
+        - function: "setUserMovesMessage"
         - emit:
             channel: "user-position"
-            data:
-              position:
-                x: "{{ x }}"
-                y: "{{ y }}"
-                direction: 'down'
-                moving: false
-              viewport:
-                left: "{{ left }}"
-                top: "{{ top }}"
-                right: "{{ right }}"
-                bottom: "{{ bottom }}"
+            data: "{{ message }}"
         - think: 0.2
         count: 100
       - think: 10

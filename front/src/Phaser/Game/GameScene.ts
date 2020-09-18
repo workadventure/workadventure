@@ -40,6 +40,9 @@ import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
 import {ItemFactoryInterface} from "../Items/ItemFactoryInterface";
 import {ActionableItem} from "../Items/ActionableItem";
 import {UserInputManager} from "../UserInput/UserInputManager";
+import {UserMovedMessage} from "../../../../messages/generated/messages_pb";
+import {ProtobufClientUtils} from "../../Network/ProtobufClientUtils";
+import toPointInterface = ProtobufClientUtils.toPointInterface;
 
 
 export enum Textures {
@@ -213,8 +216,18 @@ export class GameScene extends Phaser.Scene implements CenterListener {
                 this.addPlayer(userMessage);
             });
 
-            connection.onUserMoved((message: MessageUserMovedInterface) => {
-                this.updatePlayerPosition(message);
+            connection.onUserMoved((message: UserMovedMessage) => {
+                const position = message.getPosition();
+                if (position === undefined) {
+                    throw new Error('Position missing from UserMovedMessage');
+                }
+
+                const messageUserMoved: MessageUserMovedInterface = {
+                    userId: message.getUserid(),
+                    position: toPointInterface(position)
+                }
+
+                this.updatePlayerPosition(messageUserMoved);
             });
 
             connection.onUserLeft((userId: number) => {

@@ -2,8 +2,9 @@ import Axios from "axios";
 import {API_URL} from "./Enum/EnvironmentVariable";
 import {MessageUI} from "./Logger/MessageUI";
 import {
+    BatchMessage,
     PositionMessage,
-    SetPlayerDetailsMessage,
+    SetPlayerDetailsMessage, UserMovedMessage,
     UserMovesMessage,
     ViewportMessage
 } from "../../messages/generated/messages_pb"
@@ -132,6 +133,7 @@ export interface RoomJoinedMessageInterface {
 export class Connection implements Connection {
     private readonly socket: Socket;
     private userId: number|null = null;
+    private batchCallbacks: Map<string, Function[]> = new Map<string, Function[]>();
 
     private constructor(token: string) {
 
@@ -149,11 +151,25 @@ export class Connection implements Connection {
         /**
          * Messages inside batched messages are extracted and sent to listeners directly.
          */
-        this.socket.on(EventMessage.BATCH, (batchedMessages: BatchedMessageInterface[]) => {
-            for (const message of batchedMessages) {
-                const listeners = this.socket.listeners(message.event);
+        this.socket.on(EventMessage.BATCH, (batchedMessagesBinary: ArrayBuffer) => {
+            const batchMessage = BatchMessage.deserializeBinary(new Uint8Array(batchedMessagesBinary as ArrayBuffer));
+
+            for (const message of batchMessage.getPayloadList()) {
+                let event: string;
+                let payload;
+                if (message.hasUsermovedmessage()) {
+                    event = EventMessage.USER_MOVED;
+                    payload = message.getUsermovedmessage();
+                } else {
+                    throw new Error('Unexpected batch message type');
+                }
+
+                const listeners = this.batchCallbacks.get(event);
+                if (listeners === undefined) {
+                    continue;
+                }
                 for (const listener of listeners) {
-                    listener(message.payload);
+                    listener(payload);
                 }
             }
         })
@@ -263,8 +279,21 @@ export class Connection implements Connection {
         this.socket.on(EventMessage.JOIN_ROOM, callback);
     }
 
-    public onUserMoved(callback: (message: MessageUserMovedInterface) => void): void {
-        this.socket.on(EventMessage.USER_MOVED, callback);
+    public onUserMoved(callback: (message: UserMovedMessage) => void): void {
+        this.onBatchMessage(EventMessage.USER_MOVED, callback);
+        //this.socket.on(EventMessage.USER_MOVED, callback);
+    }
+
+    /**
+     * Registers a listener on a message that is part of a batch
+     */
+    private onBatchMessage(eventName: string, callback: Function): void {
+        let callbacks = this.batchCallbacks.get(eventName);
+        if (callbacks === undefined) {
+            callbacks = new Array<Function>();
+            this.batchCallbacks.set(eventName, callbacks);
+        }
+        callbacks.push(callback);
     }
 
     public onUserLeft(callback: (userId: number) => void): void {
