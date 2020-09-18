@@ -38,10 +38,8 @@ async function startOneUser(): Promise<void> {
 }
 
 (async () => {
-    let promises: Promise<void>[] = new Array<Promise<void>>();
-
     for (let userNo = 0; userNo < 40; userNo++) {
-        promises.push(startOneUser());
+        startOneUser();
         // Wait 0.5s between adding users
         await sleep(500);
     }
