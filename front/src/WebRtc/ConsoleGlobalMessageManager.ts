@@ -13,39 +13,81 @@ export const MESSAGE_TYPE = 'message';
 export class ConsoleGlobalMessageManager {
 
     private Connection: Connection;
+    private divMainConsole: HTMLDivElement;
+    private buttonMainConsole: HTMLDivElement;
+    private activeConsole: boolean = false;
 
     constructor(Connection: Connection) {
         this.Connection = Connection;
+        this.buttonMainConsole = document.createElement('div');
+        this.divMainConsole = document.createElement('div');
         this.initialise();
     }
 
-    initialise(){
+    initialise() {
         const buttonText = document.createElement('span');
         buttonText.innerText = 'Console';
 
-        const buttonMainConsole = document.createElement('div');
-        buttonMainConsole.classList.add('active');
-        buttonMainConsole.appendChild(buttonText)
+        this.buttonMainConsole.appendChild(buttonText);
+        this.buttonMainConsole.addEventListener('click', () => {
+            if(this.activeConsole){
+                this.disabled();
+            }else{
+                this.active();
+            }
+        });
 
-        const divMainConsole = document.createElement('div');
-        divMainConsole.className = CLASS_CONSOLE_MESSAGE;
-        divMainConsole.appendChild(buttonMainConsole)
+        this.divMainConsole.className = CLASS_CONSOLE_MESSAGE;
+        this.divMainConsole.appendChild(this.buttonMainConsole);
+
+        this.createTextMessagePart();
 
         const mainSectionDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-container');
-        mainSectionDiv.appendChild(divMainConsole);
+        mainSectionDiv.appendChild(this.divMainConsole);
     }
 
-    sendMessage(html: string){
-        const inputText = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(INPUT_CONSOLE_MESSAGE);
-        const inputType = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(INPUT_TYPE_CONSOLE);
-        if(AUDIO_TYPE !== inputType.innerText && MESSAGE_TYPE !== inputType.innerText){
+    createTextMessagePart(){
+        const input = document.createElement('textarea');
+        this.divMainConsole.appendChild(input);
+        input.id = INPUT_CONSOLE_MESSAGE;
+        const buttonSend = document.createElement('button');
+
+        buttonSend.innerText = 'Envoyer';
+        buttonSend.addEventListener('click', (event: MouseEvent) => {
+            this.sendMessage();
+            this.disabled();
+        });
+        this.divMainConsole.appendChild(buttonSend);
+
+        const typeConsole = document.createElement('input');
+        typeConsole.id = INPUT_TYPE_CONSOLE;
+        typeConsole.value = MESSAGE_TYPE;
+        typeConsole.type = 'hidden';
+        this.divMainConsole.appendChild(typeConsole);
+    }
+
+    sendMessage(){
+        const inputText = HtmlUtils.getElementByIdOrFail<HTMLTextAreaElement>(INPUT_CONSOLE_MESSAGE);
+        const inputType = HtmlUtils.getElementByIdOrFail<HTMLInputElement>(INPUT_TYPE_CONSOLE);
+        if(AUDIO_TYPE !== inputType.value && MESSAGE_TYPE !== inputType.value){
             throw "Error event type";
         }
         let GlobalMessage : GlobalMessageInterface = {
             id: 1,
-            message: inputText.innerText,
-            type: inputType.innerText
+            message: inputText.value,
+            type: inputType.value
         };
+        inputText.value = '';
         this.Connection.emitGlobalMessage(GlobalMessage);
+    }
+
+    active(){
+        this.activeConsole = true;
+        this.divMainConsole.style.top = '0';
+    }
+
+    disabled(){
+        this.activeConsole = false;
+        this.divMainConsole.style.top = '-80%';
     }
 }

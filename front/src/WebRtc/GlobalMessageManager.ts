@@ -23,13 +23,35 @@ export class GlobalMessageManager {
     }
 
     private playMessage(messageId : number, htmlMessage: string){
-        const div = document.createElement('div');
-        div.innerHTML = htmlMessage;
-        div.id = this.getHtmlMessageId(messageId);
-        div.className = "message-container";
+        let previousMessage = document.getElementById(this.getHtmlMessageId(messageId));
+        if(previousMessage){
+            previousMessage.remove();
+        }
+
+        //add button to clear message
+        const buttonText = document.createElement('span');
+        buttonText.id = 'button-clear-message'
+        buttonText.innerText = 'Clear';
+
+        const buttonMainConsole = document.createElement('div');
+        buttonMainConsole.appendChild(buttonText);
+        buttonMainConsole.addEventListener('click', () => {
+            messageContainer.style.top = '-80%';
+            setTimeout(() => {
+                messageContainer.remove();
+                buttonMainConsole.remove();
+            });
+        });
+
+        //add message container
+        const messageContainer = document.createElement('div');
+        messageContainer.innerHTML = htmlMessage;
+        messageContainer.id = this.getHtmlMessageId(messageId);
+        messageContainer.className = "message-container";
+        messageContainer.appendChild(buttonMainConsole);
 
         const mainSectionDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-container');
-        mainSectionDiv.appendChild(div);
+        mainSectionDiv.appendChild(messageContainer);
     }
 
     private stopMessage(messageId: number){

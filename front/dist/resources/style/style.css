@@ -404,31 +404,31 @@ body {
     flex-grow: 5;
 }
 
-.message-container{
-    top: 0;
-    left: 20%;
-    position: absolute;
-    width: 60%;
-    height: auto;
-    z-index: 200;
-    background-color: #00000096;
-    border-radius: 0 0 10px 10px;
-}
-
+.message-container,
 .main-console{
     position: absolute;
     width: 80%;
-    top: 0;
+    height: 80%;
+    top: -80%;
     left: 10%;
     background: #000000a6;
     z-index: 200;
-    height: auto;
     transition: all 0.1s ease-out;
 }
+
+.message-container{
+    height: auto;
+    border-radius: 0 0 10px 10px;
+    color: white;
+    padding: 10px;
+    top: 0;
+}
+
+.message-container div,
 .main-console div{
     position: absolute;
     background: none repeat scroll 0% 0% #ccc0;
-    border-color: #000000 #ffffff00 #ffffff00 #ffffff00;
+    border-color: #000000cf #ffffff00 #ffffff00 #ffffff00;
     border-style: solid;
     border-width: 20px 7px;
     height: auto;
@@ -437,16 +437,17 @@ body {
     z-index: 200;
     left: 45%;
     transition: all 0.1s ease-out;
-    display: none;
+    top: 100%;
 }
-.main-console div.active{
-    display: block;
-}
+
+.message-container div span,
 .main-console div span{
     position: absolute;
     top: -20px;
     left: 30%;
 }
+
+.message-container div:hover,
 .main-console div:hover{
     cursor: pointer;
     transform: scale(1.2) translateY(3px);

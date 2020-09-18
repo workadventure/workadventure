@@ -24,6 +24,7 @@ import {isUserMovesInterface} from "../Model/Websocket/UserMovesMessage";
 import {isViewport} from "../Model/Websocket/ViewportMessage";
 import {GroupUpdateInterface} from "_Model/Websocket/GroupUpdateInterface";
 import {Movable} from "../Model/Movable";
+import {isUnknown} from "generic-type-guard";
 
 enum SockerIoEvent {
     CONNECTION = "connection",
@@ -44,6 +45,9 @@ enum SockerIoEvent {
     SET_SILENT = "set_silent", // Set or unset the silent mode for this user.
     SET_VIEWPORT = "set-viewport",
     BATCH = "batch",
+
+    PLAY_GLOBAL_MESSAGE = "play-global-message",
+    STOP_GLOBAL_MESSAGE = "stop-global-message",
 }
 
 function emitInBatch(socket: ExSocketInterface, event: string | symbol, payload: unknown): void {
@@ -395,6 +399,10 @@ export class IoSocketController {
                     console.error('An error occurred on "item_event"');
                     console.error(e);
                 }
+            });
+
+            socket.on(SockerIoEvent.PLAY_GLOBAL_MESSAGE, (itemEvent: unknown) => {
+                socket.broadcast.emit(SockerIoEvent.PLAY_GLOBAL_MESSAGE, itemEvent);
             });
         });
     }
