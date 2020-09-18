@@ -59,7 +59,7 @@ function emitInBatch(socket: ExSocketInterface, event: string, payload: SubMessa
 
     if (socket.batchTimeout === null) {
         socket.batchTimeout = setTimeout(() => {
-            socket.binary(true).emit(SocketIoEvent.BATCH, socket.batchedMessages.serializeBinary().buffer);
+            socket./*binary(true).*/emit(SocketIoEvent.BATCH, socket.batchedMessages.serializeBinary().buffer);
             socket.batchedMessages = new BatchMessage();
             socket.batchTimeout = null;
         }, 100);
