@@ -32,7 +32,6 @@ import {
 import {UserMovesMessage} from "../../../messages/generated/messages_pb";
 import Direction = PositionMessage.Direction;
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
-import toPositionMessage = ProtobufUtils.toPositionMessage;
 
 enum SocketIoEvent {
     CONNECTION = "connection",
@@ -284,6 +283,12 @@ export class IoSocketController {
             socket.on(SocketIoEvent.USER_POSITION, (message: unknown): void => {
                 //console.log(SockerIoEvent.USER_POSITION, userMovesMessage);
                 try {
+                    if (!(message instanceof Buffer)) {
+                        socket.emit(SocketIoEvent.MESSAGE_ERROR, {message: 'Invalid USER_POSITION message. Expecting binary buffer.'});
+                        console.warn('Invalid USER_POSITION message received (expecting binary buffer): ', message);
+                        return;
+                    }
+
                     const userMovesMessage = UserMovesMessage.deserializeBinary(new Uint8Array(message as ArrayBuffer));
                     const userMoves = userMovesMessage.toObject();
 
@@ -375,14 +380,19 @@ export class IoSocketController {
             });
 
             // Let's send the user id to the user
-            socket.on(SocketIoEvent.SET_PLAYER_DETAILS, (message: any, answerFn) => {
-                console.log(SocketIoEvent.SET_PLAYER_DETAILS, message);
+            socket.on(SocketIoEvent.SET_PLAYER_DETAILS, (message: unknown, answerFn) => {
+                //console.log(SocketIoEvent.SET_PLAYER_DETAILS, message);
+                if (!(message instanceof Buffer)) {
+                    socket.emit(SocketIoEvent.MESSAGE_ERROR, {message: 'Invalid SET_PLAYER_DETAILS message. Expecting binary buffer.'});
+                    console.warn('Invalid SET_PLAYER_DETAILS message received (expecting binary buffer): ', message);
+                    return;
+                }
                 const playerDetailsMessage = SetPlayerDetailsMessage.deserializeBinary(new Uint8Array(message));
                 const playerDetails = {
                     name: playerDetailsMessage.getName(),
                     characterLayers: playerDetailsMessage.getCharacterlayersList()
                 };
-                console.log(SocketIoEvent.SET_PLAYER_DETAILS, playerDetails);
+                //console.log(SocketIoEvent.SET_PLAYER_DETAILS, playerDetails);
                 if (!isSetPlayerDetailsMessage(playerDetails)) {
                     socket.emit(SocketIoEvent.MESSAGE_ERROR, {message: 'Invalid SET_PLAYER_DETAILS message.'});
                     console.warn('Invalid SET_PLAYER_DETAILS message received: ', playerDetails);
@@ -547,7 +557,7 @@ export class IoSocketController {
 
                     const userMovedMessage = new UserMovedMessage();
                     userMovedMessage.setUserid(clientUser.userId);
-                    userMovedMessage.setPosition(toPositionMessage(clientUser.position));
+                    userMovedMessage.setPosition(ProtobufUtils.toPositionMessage(clientUser.position));
 
                     const subMessage = new SubMessage();
                     subMessage.setUsermovedmessage(userMovedMessage);

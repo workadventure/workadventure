@@ -1,11 +1,11 @@
 import {PointInterface} from "./PointInterface";
 import {PositionMessage} from "../../../../messages/generated/messages_pb";
 import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
+import Direction = PositionMessage.Direction;
 
-export namespace ProtobufUtils {
-    import Direction = PositionMessage.Direction;
+export class ProtobufUtils {
 
-    export function toPositionMessage(point: PointInterface): PositionMessage {
+    public static toPositionMessage(point: PointInterface): PositionMessage {
         let direction: PositionMessage.DirectionMap[keyof PositionMessage.DirectionMap];
         switch (point.direction) {
             case 'up':

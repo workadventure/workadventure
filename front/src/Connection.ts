@@ -152,7 +152,7 @@ export class Connection implements Connection {
          * Messages inside batched messages are extracted and sent to listeners directly.
          */
         this.socket.on(EventMessage.BATCH, (batchedMessagesBinary: ArrayBuffer) => {
-            const batchMessage = BatchMessage.deserializeBinary(new Uint8Array(batchedMessagesBinary as ArrayBuffer));
+            const batchMessage = BatchMessage.deserializeBinary(new Uint8Array(batchedMessagesBinary));
 
             for (const message of batchMessage.getPayloadList()) {
                 let event: string;

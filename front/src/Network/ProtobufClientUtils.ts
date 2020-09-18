@@ -1,10 +1,10 @@
 import {PositionMessage} from "../../../messages/generated/messages_pb";
 import {PointInterface} from "../Connection";
+import Direction = PositionMessage.Direction;
 
-export namespace ProtobufClientUtils {
-    import Direction = PositionMessage.Direction;
+export class ProtobufClientUtils {
 
-    export function toPointInterface(position: PositionMessage): PointInterface {
+    public static toPointInterface(position: PositionMessage): PointInterface {
         let direction: string;
         switch (position.getDirection()) {
             case Direction.UP:
