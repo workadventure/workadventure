@@ -1,6 +1,6 @@
 import {Application, Request, Response} from "express";
 import {OK} from "http-status-codes";
-import {ADMIN_API_URL} from "../Enum/EnvironmentVariable";
+import {ADMIN_API_TOKEN, ADMIN_API_URL} from "../Enum/EnvironmentVariable";
 import Axios, {AxiosError} from "axios";
 
 export class AdminController {
@@ -19,14 +19,12 @@ export class AdminController {
             }
             const token:string = req.params.token;
             
-            //todo add ADMIN_API_TOKEN authorization
             let response = null
             try {
-                console.log(ADMIN_API_URL+'/api/login-url/'+token);
-                response = await Axios.get(ADMIN_API_URL+'/api/login-url/'+token)
+                response = await Axios.get(ADMIN_API_URL+'/api/login-url/'+token, { headers: {"Authorization" : `${ADMIN_API_TOKEN}`} })
             } catch (e) {
                 console.log(e.message)
-                return res.status(500).send('An error happened');
+                return res.status(e.status || 500).send('An error happened');
             }
 
             const teamSlug = response.data.teamSlug;
