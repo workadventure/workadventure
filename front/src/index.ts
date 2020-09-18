@@ -14,7 +14,8 @@ import {CoWebsiteManager} from "./WebRtc/CoWebsiteManager";
 import {redirectIfToken} from "./register";
 
 //CoWebsiteManager.loadCoWebsite('https://thecodingmachine.com');
-redirectIfToken();
+let connectionData //todo: do something with this data
+redirectIfToken().then(res => connectionData = res);
 
 // Load Jitsi if the environment variable is set.
 if (JITSI_URL) {

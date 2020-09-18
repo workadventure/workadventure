@@ -1,7 +1,7 @@
 import {Application, Request, Response} from "express";
 import {OK} from "http-status-codes";
 import {ADMIN_API_TOKEN, ADMIN_API_URL} from "../Enum/EnvironmentVariable";
-import Axios, {AxiosError} from "axios";
+import Axios from "axios";
 
 export class AdminController {
     App : Application;
@@ -27,12 +27,10 @@ export class AdminController {
                 return res.status(e.status || 500).send('An error happened');
             }
 
-            const teamSlug = response.data.teamSlug;
+            const organizationSlug = response.data.organizationSlug;
             const worldSlug = response.data.worldSlug;
             const roomSlug = response.data.roomSlug;
-            return res.status(OK).send({
-                loginUrl: '/@/'+teamSlug+'/'+worldSlug+'/'+roomSlug,
-            });
+            return res.status(OK).send({organizationSlug, worldSlug, roomSlug});
         });
     }
 }
