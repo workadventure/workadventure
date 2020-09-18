@@ -20,7 +20,12 @@ jobs:
       - name: "Setup NodeJS"
         uses: actions/setup-node@v1
         with:
-          node-version: '12.x'
+          node-version: '14.x'
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          version: '3.x'
 
       - name: "Install dependencies"
         run: yarn install
@@ -61,6 +66,11 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: '12.x'
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          version: '3.x'
 
       - name: "Install dependencies"
         run: yarn install
