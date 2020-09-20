@@ -10,7 +10,6 @@ import {FourOFourScene} from "./Phaser/Reconnecting/FourOFourScene";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
 import {OutlinePipeline} from "./Phaser/Shaders/OutlinePipeline";
 import {CustomizeScene} from "./Phaser/Login/CustomizeScene";
-import {HtmlUtils} from "./WebRtc/HtmlUtils";
 import {CoWebsiteManager} from "./WebRtc/CoWebsiteManager";
 
 //CoWebsiteManager.loadCoWebsite('https://thecodingmachine.com');

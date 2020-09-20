@@ -427,24 +427,21 @@ body {
 .message-container div,
 .main-console div{
     position: absolute;
-    background: none repeat scroll 0% 0% #ccc0;
-    border-color: #000000cf #ffffff00 #ffffff00 #ffffff00;
-    border-style: solid;
-    border-width: 20px 7px;
-    height: auto;
-    width: 10%;
     color: white;
     z-index: 200;
-    left: 45%;
     transition: all 0.1s ease-out;
     top: 100%;
+    width: 100px;
+    height: 40px;
+    background-color: black;
+    left: calc(50% - 50px);
+    border-radius: 0 0 10px 10px;
+    text-align: center;
 }
 
-.message-container div span,
-.main-console div span{
-    position: absolute;
-    top: -20px;
-    left: 30%;
+.message-container div p,
+.main-console div p{
+    margin-top: 6px;
 }
 
 .message-container div:hover,

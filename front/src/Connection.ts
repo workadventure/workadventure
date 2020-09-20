@@ -199,6 +199,15 @@ export class Connection implements Connection {
             });
     }
 
+    public uploadAudio(file : any){
+        return Axios.post(`${API_URL}/upload-audio-message`, {file}).then((res: any) => {
+            return res.data;
+        }).catch((err) => {
+            console.error(err);
+            throw err;
+        });
+    }
+
     public closeConnection(): void {
         this.socket?.close();
     }

@@ -1,4 +1,4 @@
-import {HtmlUtils} from "./HtmlUtils";
+import {HtmlUtils} from "../WebRtc/HtmlUtils";
 import {Connection, GlobalMessageInterface} from "../Connection";
 
 export const CLASS_CONSOLE_MESSAGE = 'main-console';
@@ -25,7 +25,7 @@ export class ConsoleGlobalMessageManager {
     }
 
     initialise() {
-        const buttonText = document.createElement('span');
+        const buttonText = document.createElement('p');
         buttonText.innerText = 'Console';
 
         this.buttonMainConsole.appendChild(buttonText);
@@ -67,19 +67,40 @@ export class ConsoleGlobalMessageManager {
     }
 
     sendMessage(){
-        const inputText = HtmlUtils.getElementByIdOrFail<HTMLTextAreaElement>(INPUT_CONSOLE_MESSAGE);
         const inputType = HtmlUtils.getElementByIdOrFail<HTMLInputElement>(INPUT_TYPE_CONSOLE);
         if(AUDIO_TYPE !== inputType.value && MESSAGE_TYPE !== inputType.value){
             throw "Error event type";
         }
+        if(AUDIO_TYPE !== inputType.value){
+            return this.sendAudioMessage();
+        }
+        return this.sendTextMessage();
+    }
+
+    private sendTextMessage(){
+        const inputText = HtmlUtils.getElementByIdOrFail<HTMLTextAreaElement>(INPUT_CONSOLE_MESSAGE);
         let GlobalMessage : GlobalMessageInterface = {
             id: 1,
             message: inputText.value,
-            type: inputType.value
+            type: MESSAGE_TYPE
         };
         inputText.value = '';
         this.Connection.emitGlobalMessage(GlobalMessage);
     }
+
+    private async sendAudioMessage(){
+        const inputAudio = HtmlUtils.getElementByIdOrFail<HTMLTextAreaElement>(UPLOAD_CONSOLE_MESSAGE);
+        let res = await this.Connection.uploadAudio(inputAudio.value);
+
+        let GlobalMessage : GlobalMessageInterface = {
+            id: res.id,
+            message: res.audioMessageUrl,
+            type: MESSAGE_TYPE
+        };
+        inputAudio.value = '';
+        this.Connection.emitGlobalMessage(GlobalMessage);
+    }
+
 
     active(){
         this.activeConsole = true;

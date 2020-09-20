@@ -40,8 +40,8 @@ import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
 import {ItemFactoryInterface} from "../Items/ItemFactoryInterface";
 import {ActionableItem} from "../Items/ActionableItem";
 import {UserInputManager} from "../UserInput/UserInputManager";
-import {GlobalMessageManager} from "../../WebRtc/GlobalMessageManager";
-import {ConsoleGlobalMessageManager} from "../../WebRtc/ConsoleGlobalMessageManager";
+import {GlobalMessageManager} from "../../Administration/GlobalMessageManager";
+import {ConsoleGlobalMessageManager} from "../../Administration/ConsoleGlobalMessageManager";
 
 
 export enum Textures {
