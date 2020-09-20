@@ -409,6 +409,7 @@ body {
     position: absolute;
     width: 80%;
     height: 80%;
+    min-height: 200px;
     top: -80%;
     left: 10%;
     background: #000000a6;
@@ -424,8 +425,8 @@ body {
     top: 0;
 }
 
-.message-container div,
-.main-console div{
+.main-console div.console,
+.message-container div {
     position: absolute;
     color: white;
     z-index: 200;
@@ -439,13 +440,26 @@ body {
     text-align: center;
 }
 
-.message-container div p,
-.main-console div p{
+.main-console div.console p,
+.message-container div p{
     margin-top: 6px;
 }
 
-.message-container div:hover,
-.main-console div:hover{
+.main-console div.console:hover,
+.message-container div:hover {
     cursor: pointer;
     transform: scale(1.2) translateY(3px);
+}
+
+.main-console #input-send-text{
+    min-height: 200px;
+}
+
+.main-console #input-send-text .ql-editor{
+    color: white;
+    min-height: 200px;
+}
+
+.main-console .ql-toolbar{
+    background: white;
 }

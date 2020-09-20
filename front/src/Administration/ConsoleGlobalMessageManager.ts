@@ -1,3 +1,5 @@
+const Quill = require("quill");
+
 import {HtmlUtils} from "../WebRtc/HtmlUtils";
 import {Connection, GlobalMessageInterface} from "../Connection";
 
@@ -20,6 +22,7 @@ export class ConsoleGlobalMessageManager {
     constructor(Connection: Connection) {
         this.Connection = Connection;
         this.buttonMainConsole = document.createElement('div');
+        this.buttonMainConsole.classList.add('console');
         this.divMainConsole = document.createElement('div');
         this.initialise();
     }
@@ -47,23 +50,59 @@ export class ConsoleGlobalMessageManager {
     }
 
     createTextMessagePart(){
-        const input = document.createElement('textarea');
-        this.divMainConsole.appendChild(input);
-        input.id = INPUT_CONSOLE_MESSAGE;
-        const buttonSend = document.createElement('button');
+        const div = document.createElement('div');
+        div.id = INPUT_CONSOLE_MESSAGE;
 
+        const buttonSend = document.createElement('button');
         buttonSend.innerText = 'Envoyer';
         buttonSend.addEventListener('click', (event: MouseEvent) => {
             this.sendMessage();
             this.disabled();
         });
-        this.divMainConsole.appendChild(buttonSend);
 
         const typeConsole = document.createElement('input');
         typeConsole.id = INPUT_TYPE_CONSOLE;
         typeConsole.value = MESSAGE_TYPE;
         typeConsole.type = 'hidden';
-        this.divMainConsole.appendChild(typeConsole);
+
+        const section = document.createElement('section');
+        section.appendChild(buttonSend);
+        section.appendChild(typeConsole);
+        section.appendChild(div);
+        this.divMainConsole.appendChild(section);
+
+        //TODO refactor
+        setTimeout(() => {
+            const toolbarOptions = [
+                ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+                ['blockquote', 'code-block'],
+
+                [{ 'header': 1 }, { 'header': 2 }],               // custom button values
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                [{ 'script': 'sub'}, { 'script': 'super' }],      // superscript/subscript
+                [{ 'indent': '-1'}, { 'indent': '+1' }],          // outdent/indent
+                [{ 'direction': 'rtl' }],                         // text direction
+
+                [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+                [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+                [{ 'font': [] }],
+                [{ 'align': [] }],
+
+                ['clean'],
+
+                ['link', 'image', 'video']
+                // remove formatting button
+            ];
+
+            let quill = new Quill(`#${INPUT_CONSOLE_MESSAGE}`, {
+                theme: 'snow',
+                modules: {
+                    toolbar: toolbarOptions
+                },
+            });
+        }, 1000);
     }
 
     sendMessage(){
