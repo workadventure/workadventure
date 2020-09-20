@@ -33,10 +33,30 @@ export class ConsoleGlobalMessageManager {
     }
 
     initialise() {
-        const mainSectionDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-container');
-        mainSectionDiv.childNodes.forEach((c : ChildNode) => {
-            c.remove();
+        try {
+            let mainConsole = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(CLASS_CONSOLE_MESSAGE);
+            mainConsole.remove();
+        }catch (err){}
+
+        const menu = document.createElement('div');
+        menu.classList.add('menu')
+        const textMessage = document.createElement('span');
+        textMessage.innerText = "Message";
+        textMessage.classList.add('active');
+        textMessage.addEventListener('click', () => {
+            textMessage.classList.add('active');
+            textAudio.classList.remove('active');
         });
+        menu.appendChild(textMessage);
+        const textAudio = document.createElement('span');
+        textAudio.innerText = "Audio";
+        textAudio.addEventListener('click', () => {
+            textAudio.classList.add('active');
+            textMessage.classList.remove('active');
+        });
+        menu.appendChild(textMessage);
+        menu.appendChild(textAudio);
+        this.divMainConsole.appendChild(menu);
 
         const buttonText = document.createElement('p');
         buttonText.innerText = 'Console';
@@ -55,6 +75,7 @@ export class ConsoleGlobalMessageManager {
 
         this.createTextMessagePart();
 
+        const mainSectionDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-container');
         mainSectionDiv.appendChild(this.divMainConsole);
     }
 

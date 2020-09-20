@@ -484,3 +484,19 @@ body {
     border: 1px solid black;
     transform: scale(1.1);
 }
+
+.main-console .menu {
+    padding: 20px;
+    color: #ffffffa6;
+    text-align: center;
+}
+
+.main-console .menu span {
+    margin: 20px;
+    cursor: pointer;
+}
+
+.main-console .menu span.active {
+    color: white;
+    border-bottom: solid 1px white;
+}
