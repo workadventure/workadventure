@@ -33,6 +33,11 @@ export class ConsoleGlobalMessageManager {
     }
 
     initialise() {
+        const mainSectionDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-container');
+        mainSectionDiv.childNodes.forEach((c : ChildNode) => {
+            c.remove();
+        });
+
         const buttonText = document.createElement('p');
         buttonText.innerText = 'Console';
 
@@ -50,7 +55,6 @@ export class ConsoleGlobalMessageManager {
 
         this.createTextMessagePart();
 
-        const mainSectionDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-container');
         mainSectionDiv.appendChild(this.divMainConsole);
     }
 
