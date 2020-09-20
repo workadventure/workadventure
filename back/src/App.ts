@@ -7,12 +7,14 @@ import bodyParser = require('body-parser');
 import * as http from "http";
 import {MapController} from "./Controller/MapController";
 import {PrometheusController} from "./Controller/PrometheusController";
+import {FileController} from "./Controller/FileController";
 
 class App {
     public app: Application;
     public server: http.Server;
     public ioSocketController: IoSocketController;
     public authenticateController: AuthenticateController;
+    public fileController: FileController;
     public mapController: MapController;
     public prometheusController: PrometheusController;
 
@@ -30,6 +32,7 @@ class App {
         //create socket controllers
         this.ioSocketController = new IoSocketController(this.server);
         this.authenticateController = new AuthenticateController(this.app);
+        this.fileController = new FileController(this.app);
         this.mapController = new MapController(this.app);
         this.prometheusController = new PrometheusController(this.app, this.ioSocketController);
     }

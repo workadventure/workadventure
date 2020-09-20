@@ -199,8 +199,8 @@ export class Connection implements Connection {
             });
     }
 
-    public uploadAudio(file : any){
-        return Axios.post(`${API_URL}/upload-audio-message`, {file}).then((res: any) => {
+    public uploadAudio(file : FormData){
+        return Axios.post(`${API_URL}/upload-audio-message`, file).then((res: any) => {
             return res.data;
         }).catch((err) => {
             console.error(err);

@@ -71,7 +71,7 @@ export class ConsoleGlobalMessageManager {
         if(AUDIO_TYPE !== inputType.value && MESSAGE_TYPE !== inputType.value){
             throw "Error event type";
         }
-        if(AUDIO_TYPE !== inputType.value){
+        if(AUDIO_TYPE === inputType.value){
             return this.sendAudioMessage();
         }
         return this.sendTextMessage();
@@ -89,12 +89,19 @@ export class ConsoleGlobalMessageManager {
     }
 
     private async sendAudioMessage(){
-        const inputAudio = HtmlUtils.getElementByIdOrFail<HTMLTextAreaElement>(UPLOAD_CONSOLE_MESSAGE);
-        let res = await this.Connection.uploadAudio(inputAudio.value);
+        const inputAudio = HtmlUtils.getElementByIdOrFail<HTMLInputElement>(UPLOAD_CONSOLE_MESSAGE);
+        const selectedFile = inputAudio.files ? inputAudio.files[0] : null;
+        if(!selectedFile){
+            throw 'no file selected';
+        }
+
+        const fd = new FormData();
+        fd.append('file', selectedFile);
+        let res = await this.Connection.uploadAudio(fd);
 
         let GlobalMessage : GlobalMessageInterface = {
             id: res.id,
-            message: res.audioMessageUrl,
+            message: res.path,
             type: MESSAGE_TYPE
         };
         inputAudio.value = '';
