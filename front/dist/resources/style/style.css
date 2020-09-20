@@ -463,3 +463,24 @@ body {
 .main-console .ql-toolbar{
     background: white;
 }
+
+.main-console .btn-action{
+    margin: 10px;
+    text-align: center;
+}
+
+.main-console .btn-action .btn{
+    border: 1px solid black;
+    background-color: #00000000;
+    color: #ffda01;
+    border-radius: 10px;
+    padding: 10px 30px;
+    transition: all .2s ease;
+}
+.main-console .btn-action .btn:hover{
+    cursor: pointer;
+    background-color: #ffda01;
+    color: black;
+    border: 1px solid black;
+    transform: scale(1.1);
+}

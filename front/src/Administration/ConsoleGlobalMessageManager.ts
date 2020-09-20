@@ -1,7 +1,10 @@
+import {GameScene} from "../Phaser/Game/GameScene";
+
 const Quill = require("quill");
 
 import {HtmlUtils} from "../WebRtc/HtmlUtils";
 import {Connection, GlobalMessageInterface} from "../Connection";
+import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
 
 export const CLASS_CONSOLE_MESSAGE = 'main-console';
 export const INPUT_CONSOLE_MESSAGE = 'input-send-text';
@@ -18,12 +21,14 @@ export class ConsoleGlobalMessageManager {
     private divMainConsole: HTMLDivElement;
     private buttonMainConsole: HTMLDivElement;
     private activeConsole: boolean = false;
+    private userInputManager!: UserInputManager;
 
-    constructor(Connection: Connection) {
+    constructor(Connection: Connection, userInputManager : UserInputManager) {
         this.Connection = Connection;
         this.buttonMainConsole = document.createElement('div');
         this.buttonMainConsole.classList.add('console');
         this.divMainConsole = document.createElement('div');
+        this.userInputManager = userInputManager;
         this.initialise();
     }
 
@@ -55,10 +60,14 @@ export class ConsoleGlobalMessageManager {
 
         const buttonSend = document.createElement('button');
         buttonSend.innerText = 'Envoyer';
+        buttonSend.classList.add('btn');
         buttonSend.addEventListener('click', (event: MouseEvent) => {
             this.sendMessage();
             this.disabled();
         });
+        const buttonDiv = document.createElement('div');
+        buttonDiv.classList.add('btn-action');
+        buttonDiv.appendChild(buttonSend)
 
         const typeConsole = document.createElement('input');
         typeConsole.id = INPUT_TYPE_CONSOLE;
@@ -66,9 +75,9 @@ export class ConsoleGlobalMessageManager {
         typeConsole.type = 'hidden';
 
         const section = document.createElement('section');
-        section.appendChild(buttonSend);
-        section.appendChild(typeConsole);
         section.appendChild(div);
+        section.appendChild(buttonDiv);
+        section.appendChild(typeConsole);
         this.divMainConsole.appendChild(section);
 
         //TODO refactor
@@ -102,6 +111,7 @@ export class ConsoleGlobalMessageManager {
                     toolbar: toolbarOptions
                 },
             });
+
         }, 1000);
     }
 
@@ -149,11 +159,13 @@ export class ConsoleGlobalMessageManager {
 
 
     active(){
+        this.userInputManager.clearAllInputKeyboard();
         this.activeConsole = true;
         this.divMainConsole.style.top = '0';
     }
 
     disabled(){
+        this.userInputManager.initKeyBoardEvent();
         this.activeConsole = false;
         this.divMainConsole.style.top = '-80%';
     }

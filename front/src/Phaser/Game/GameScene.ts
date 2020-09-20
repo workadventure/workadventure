@@ -270,8 +270,6 @@ export class GameScene extends Phaser.Scene implements CenterListener {
             // When connection is performed, let's connect SimplePeer
             this.simplePeer = new SimplePeer(this.connection);
             this.GlobalMessageManager = new GlobalMessageManager(this.connection);
-            //TODO check right of user
-            this.ConsoleGlobalMessageManager = new ConsoleGlobalMessageManager(this.connection);
 
             const self = this;
             this.simplePeer.registerPeerConnectionListener({
@@ -482,6 +480,9 @@ export class GameScene extends Phaser.Scene implements CenterListener {
 
         //create input to move
         this.userInputManager = new UserInputManager(this);
+
+        //TODO check right of user
+        this.ConsoleGlobalMessageManager = new ConsoleGlobalMessageManager(this.connection, this.userInputManager);
 
         //notify game manager can to create currentUser in map
         this.createCurrentPlayer();
