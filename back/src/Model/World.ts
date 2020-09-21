@@ -90,6 +90,7 @@ export class World {
         this.positionNotifier.updatePosition(user, userPosition, user.position);
 
         const oldGroupPosition = user.group?.getPosition();
+        user.group?.updatePosition();
 
         user.position = userPosition;
 
@@ -126,7 +127,7 @@ export class World {
         }
 
         // At the very end, if the user is part of a group, let's call the callback to update group position
-        if (typeof user.group !== 'undefined') {
+        if (user.group !== undefined) {
             this.positionNotifier.updatePosition(user.group, user.group.getPosition(), oldGroupPosition ? oldGroupPosition : user.group.getPosition());
         }
     }
@@ -158,7 +159,7 @@ export class World {
      */
     private leaveGroup(user: User): void {
         const group = user.group;
-        if (typeof group === 'undefined') {
+        if (group === undefined) {
             throw new Error("The user is part of no group");
         }
         group.leave(user);

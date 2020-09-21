@@ -14,7 +14,7 @@ import si from "systeminformation";
 import {Gauge} from "prom-client";
 import {TokenInterface} from "../Controller/AuthenticateController";
 import {isJoinRoomMessageInterface} from "../Model/Websocket/JoinRoomMessage";
-import {isPointInterface, PointInterface} from "../Model/Websocket/PointInterface";
+import {PointInterface} from "../Model/Websocket/PointInterface";
 import {isWebRtcSignalMessageInterface} from "../Model/Websocket/WebRtcSignalMessage";
 import {UserInGroupInterface} from "../Model/Websocket/UserInGroupInterface";
 import {isItemEventMessageInterface} from "../Model/Websocket/ItemEventMessage";
@@ -27,7 +27,7 @@ import {
     SetPlayerDetailsMessage,
     SubMessage,
     UserMovedMessage,
-    BatchMessage
+    BatchMessage, GroupUpdateMessage, PointMessage
 } from "../../../messages/generated/messages_pb";
 import {UserMovesMessage} from "../../../messages/generated/messages_pb";
 import Direction = PositionMessage.Direction;
@@ -90,7 +90,7 @@ export class IoSocketController {
         // Authentication with token. it will be decoded and stored in the socket.
         // Completely commented for now, as we do not use the "/login" route at all.
         this.Io.use((socket: Socket, next) => {
-            console.log(socket.handshake.query.token);
+            //console.log(socket.handshake.query.token);
             if (!socket.handshake.query || !socket.handshake.query.token) {
                 console.error('An authentication error happened, a user tried to connect without a token.');
                 return next(new Error('Authentication error'));
@@ -176,8 +176,8 @@ export class IoSocketController {
             const srvSockets = this.Io.sockets.sockets;
             this.nbClientsGauge.inc();
             console.log(new Date().toISOString() + ' A user joined (', Object.keys(srvSockets).length, ' connected users)');
-            si.currentLoad().then(data => console.log('  Current load: ', data.avgload));
-            si.currentLoad().then(data => console.log('  CPU: ', data.currentload, '%'));
+            //si.currentLoad().then(data => console.log('  Current load: ', data.avgload));
+            //si.currentLoad().then(data => console.log('  CPU: ', data.currentload, '%'));
             // End log server load
 
             /*join-rom event permit to join one room.
@@ -189,7 +189,7 @@ export class IoSocketController {
                         y: user y position on map
             */
             socket.on(SocketIoEvent.JOIN_ROOM, (message: unknown, answerFn): void => {
-                console.log(SocketIoEvent.JOIN_ROOM, message);
+                //console.log(SocketIoEvent.JOIN_ROOM, message);
                 try {
                     if (!isJoinRoomMessageInterface(message)) {
                         socket.emit(SocketIoEvent.MESSAGE_ERROR, {message: 'Invalid JOIN_ROOM message.'});
@@ -374,8 +374,8 @@ export class IoSocketController {
                 const srvSockets = this.Io.sockets.sockets;
                 this.nbClientsGauge.dec();
                 console.log('A user left (', Object.keys(srvSockets).length, ' connected users)');
-                si.currentLoad().then(data => console.log('Current load: ', data.avgload));
-                si.currentLoad().then(data => console.log('CPU: ', data.currentload, '%'));
+                //si.currentLoad().then(data => console.log('Current load: ', data.avgload));
+                //si.currentLoad().then(data => console.log('CPU: ', data.currentload, '%'));
                 // End log server load
             });
 
@@ -408,7 +408,7 @@ export class IoSocketController {
             });
 
             socket.on(SocketIoEvent.SET_SILENT, (silent: unknown) => {
-                console.log(SocketIoEvent.SET_SILENT, silent);
+                //console.log(SocketIoEvent.SET_SILENT, silent);
                 if (typeof silent !== "boolean") {
                     socket.emit(SocketIoEvent.MESSAGE_ERROR, {message: 'Invalid SET_SILENT message.'});
                     console.warn('Invalid SET_SILENT message received: ', silent);
@@ -543,10 +543,7 @@ export class IoSocketController {
 
                     clientListener.emit(SocketIoEvent.JOIN_ROOM, messageUserJoined);
                 } else if (thing instanceof Group) {
-                    clientListener.emit(SocketIoEvent.GROUP_CREATE_UPDATE, {
-                        position: thing.getPosition(),
-                        groupId: thing.getId()
-                    } as GroupUpdateInterface);
+                    this.emitCreateUpdateGroupEvent(clientListener, thing);
                 } else {
                     console.error('Unexpected type for Movable.');
                 }
@@ -565,10 +562,7 @@ export class IoSocketController {
                     clientListener.emitInBatch(SocketIoEvent.USER_MOVED, subMessage);
                     //console.log("Sending USER_MOVED event");
                 } else if (thing instanceof Group) {
-                    clientListener.emit(SocketIoEvent.GROUP_CREATE_UPDATE, {
-                        position: thing.getPosition(),
-                        groupId: thing.getId()
-                    } as GroupUpdateInterface);
+                    this.emitCreateUpdateGroupEvent(clientListener, thing);
                 } else {
                     console.error('Unexpected type for Movable.');
                 }
@@ -598,6 +592,18 @@ export class IoSocketController {
         //join world
         world.join(Client, Client.position);
         return world;
+    }
+
+    private emitCreateUpdateGroupEvent(socket: Socket, group: Group): void {
+        const position = group.getPosition();
+        const pointMessage = new PointMessage();
+        pointMessage.setX(Math.floor(position.x));
+        pointMessage.setY(Math.floor(position.y));
+        const groupUpdateMessage = new GroupUpdateMessage();
+        groupUpdateMessage.setGroupid(group.getId());
+        groupUpdateMessage.setPosition(pointMessage);
+
+        socket.emit(SocketIoEvent.GROUP_CREATE_UPDATE, groupUpdateMessage.serializeBinary().buffer);
     }
 
     /**

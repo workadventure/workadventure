@@ -80,7 +80,7 @@ interface GroupCreatedUpdatedEventInterface {
 
 interface DeleteGroupEventInterface {
     type: 'DeleteGroupEvent'
-    groupId: string
+    groupId: number
 }
 
 export class GameScene extends Phaser.Scene implements CenterListener {
@@ -93,7 +93,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
     Layers!: Array<Phaser.Tilemaps.StaticTilemapLayer>;
     Objects!: Array<Phaser.Physics.Arcade.Sprite>;
     mapFile!: ITiledMap;
-    groups: Map<string, Sprite>;
+    groups: Map<number, Sprite>;
     startX!: number;
     startY!: number;
     circleTexture!: CanvasTexture;
@@ -149,7 +149,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
 
         this.GameManager = gameManager;
         this.Terrains = [];
-        this.groups = new Map<string, Sprite>();
+        this.groups = new Map<number, Sprite>();
         this.instance = instance;
 
         this.MapKey = MapKey;
@@ -237,7 +237,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
                 this.shareGroupPosition(groupPositionMessage);
             })
 
-            connection.onGroupDeleted((groupId: string) => {
+            connection.onGroupDeleted((groupId: number) => {
                 try {
                     this.deleteGroup(groupId);
                 } catch (e) {
@@ -1108,14 +1108,14 @@ export class GameScene extends Phaser.Scene implements CenterListener {
         }
     }
 
-    deleteGroup(groupId: string): void {
+    deleteGroup(groupId: number): void {
         this.pendingEvents.enqueue({
             type: "DeleteGroupEvent",
             groupId
         });
     }
 
-    doDeleteGroup(groupId: string): void {
+    doDeleteGroup(groupId: number): void {
         const group = this.groups.get(groupId);
         if(!group){
             return;

@@ -13,6 +13,8 @@ export class Group implements Movable {
     private users: Set<User>;
     private connectCallback: ConnectCallback;
     private disconnectCallback: DisconnectCallback;
+    private x!: number;
+    private y!: number;
 
 
     constructor(users: User[], connectCallback: ConnectCallback, disconnectCallback: DisconnectCallback) {
@@ -25,6 +27,8 @@ export class Group implements Movable {
         users.forEach((user: User) => {
             this.join(user);
         });
+
+        this.updatePosition();
     }
 
     getUsers(): User[] {
@@ -39,6 +43,16 @@ export class Group implements Movable {
      * Returns the barycenter of all users (i.e. the center of the group)
      */
     getPosition(): PositionInterface {
+        return {
+            x: this.x,
+            y: this.y
+        };
+    }
+
+    /**
+     * Computes the barycenter of all users (i.e. the center of the group)
+     */
+    updatePosition(): void {
         let x = 0;
         let y = 0;
         // Let's compute the barycenter of all users.
@@ -48,10 +62,11 @@ export class Group implements Movable {
         });
         x /= this.users.size;
         y /= this.users.size;
-        return {
-            x,
-            y
-        };
+        if (this.users.size === 0) {
+            throw new Error("EMPTY GROUP FOUND!!!");
+        }
+        this.x = x;
+        this.y = y;
     }
 
     isFull(): boolean {

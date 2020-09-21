@@ -2,7 +2,7 @@ import Axios from "axios";
 import {API_URL} from "./Enum/EnvironmentVariable";
 import {MessageUI} from "./Logger/MessageUI";
 import {
-    BatchMessage,
+    BatchMessage, GroupUpdateMessage,
     PositionMessage,
     SetPlayerDetailsMessage, UserMovedMessage,
     UserMovesMessage,
@@ -78,7 +78,7 @@ export interface PositionInterface {
 
 export interface GroupCreatedUpdatedMessageInterface {
     position: PositionInterface,
-    groupId: string
+    groupId: number
 }
 
 export interface WebRtcStartMessageInterface {
@@ -301,10 +301,31 @@ export class Connection implements Connection {
     }
 
     public onGroupUpdatedOrCreated(callback: (groupCreateUpdateMessage: GroupCreatedUpdatedMessageInterface) => void): void {
-        this.socket.on(EventMessage.GROUP_CREATE_UPDATE, callback);
+        // TODO: READ THIS FROM BINARY FORMAT
+        // TODO: READ THIS FROM BINARY FORMAT
+        // TODO: READ THIS FROM BINARY FORMAT
+        // TODO: CHANGE THIS EVENT TO BE PART OF THE BATCHES
+        // TODO: CHANGE THIS EVENT TO BE PART OF THE BATCHES
+        // TODO: CHANGE THIS EVENT TO BE PART OF THE BATCHES
+        // TODO: CHANGE THIS EVENT TO BE PART OF THE BATCHES
+        // TODO: CHANGE THIS EVENT TO BE PART OF THE BATCHES
+        this.socket.on(EventMessage.GROUP_CREATE_UPDATE, (buffer: ArrayBuffer) => {
+            const message = GroupUpdateMessage.deserializeBinary(new Uint8Array(buffer));
+            const position = message.getPosition();
+            if (position === undefined) {
+                throw new Error('Missing position in GROUP_CREATE_UPDATE');
+            }
+
+            const groupCreateUpdateMessage: GroupCreatedUpdatedMessageInterface = {
+                groupId: message.getGroupid(),
+                position: position.toObject()
+            }
+
+            callback(groupCreateUpdateMessage);
+        });
     }
 
-    public onGroupDeleted(callback: (groupId: string) => void): void {
+    public onGroupDeleted(callback: (groupId: number) => void): void {
         this.socket.on(EventMessage.GROUP_DELETE, callback)
     }
 
