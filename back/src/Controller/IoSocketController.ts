@@ -402,7 +402,8 @@ export class IoSocketController {
             });
 
             socket.on(SockerIoEvent.PLAY_GLOBAL_MESSAGE, (itemEvent: unknown) => {
-                socket.broadcast.emit(SockerIoEvent.PLAY_GLOBAL_MESSAGE, itemEvent);
+                //permit to send message at every member connected
+                this.Io.emit(SockerIoEvent.PLAY_GLOBAL_MESSAGE, itemEvent);
             });
         });
     }
