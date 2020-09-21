@@ -34,9 +34,13 @@ export class ConsoleGlobalMessageManager {
 
     initialise() {
         try {
-            let mainConsole = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(CLASS_CONSOLE_MESSAGE);
-            mainConsole.remove();
+            HtmlUtils.removeElementByIdOrFail(CLASS_CONSOLE_MESSAGE);
         }catch (err){}
+
+        const typeConsole = document.createElement('input');
+        typeConsole.id = INPUT_TYPE_CONSOLE;
+        typeConsole.value = MESSAGE_TYPE;
+        typeConsole.type = 'hidden';
 
         const menu = document.createElement('div');
         menu.classList.add('menu')
@@ -45,14 +49,28 @@ export class ConsoleGlobalMessageManager {
         textMessage.classList.add('active');
         textMessage.addEventListener('click', () => {
             textMessage.classList.add('active');
+            const messageSection = HtmlUtils.getElementByIdOrFail<HTMLInputElement>(this.getSectionId(INPUT_CONSOLE_MESSAGE));
+            messageSection.classList.add('active');
+
             textAudio.classList.remove('active');
+            const audioSection = HtmlUtils.getElementByIdOrFail<HTMLInputElement>(this.getSectionId(UPLOAD_CONSOLE_MESSAGE));
+            audioSection.classList.remove('active');
+
+            typeConsole.value = MESSAGE_TYPE;
         });
         menu.appendChild(textMessage);
         const textAudio = document.createElement('span');
         textAudio.innerText = "Audio";
         textAudio.addEventListener('click', () => {
             textAudio.classList.add('active');
+            const audioSection = HtmlUtils.getElementByIdOrFail<HTMLInputElement>(this.getSectionId(UPLOAD_CONSOLE_MESSAGE));
+            audioSection.classList.add('active');
+
             textMessage.classList.remove('active');
+            const messageSection = HtmlUtils.getElementByIdOrFail<HTMLInputElement>(this.getSectionId(INPUT_CONSOLE_MESSAGE));
+            messageSection.classList.remove('active');
+
+            typeConsole.value = AUDIO_TYPE;
         });
         menu.appendChild(textMessage);
         menu.appendChild(textAudio);
@@ -72,8 +90,10 @@ export class ConsoleGlobalMessageManager {
 
         this.divMainConsole.className = CLASS_CONSOLE_MESSAGE;
         this.divMainConsole.appendChild(this.buttonMainConsole);
+        this.divMainConsole.appendChild(typeConsole);
 
         this.createTextMessagePart();
+        this.createUploadAudioPart();
 
         const mainSectionDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-container');
         mainSectionDiv.appendChild(this.divMainConsole);
@@ -81,8 +101,7 @@ export class ConsoleGlobalMessageManager {
 
     createTextMessagePart(){
         const div = document.createElement('div');
-        div.id = INPUT_CONSOLE_MESSAGE;
-
+        div.id = INPUT_CONSOLE_MESSAGE
         const buttonSend = document.createElement('button');
         buttonSend.innerText = 'Envoyer';
         buttonSend.classList.add('btn');
@@ -94,15 +113,11 @@ export class ConsoleGlobalMessageManager {
         buttonDiv.classList.add('btn-action');
         buttonDiv.appendChild(buttonSend)
 
-        const typeConsole = document.createElement('input');
-        typeConsole.id = INPUT_TYPE_CONSOLE;
-        typeConsole.value = MESSAGE_TYPE;
-        typeConsole.type = 'hidden';
-
         const section = document.createElement('section');
+        section.id = this.getSectionId(INPUT_CONSOLE_MESSAGE);
+        section.classList.add('active');
         section.appendChild(div);
         section.appendChild(buttonDiv);
-        section.appendChild(typeConsole);
         this.divMainConsole.appendChild(section);
 
         //TODO refactor
@@ -138,6 +153,62 @@ export class ConsoleGlobalMessageManager {
             });
 
         }, 1000);
+    }
+
+    createUploadAudioPart(){
+        const div = document.createElement('div');
+        div.classList.add('upload');
+
+        const label = document.createElement('label');
+        label.setAttribute('for', UPLOAD_CONSOLE_MESSAGE);
+
+        const img = document.createElement('img');
+        img.setAttribute('for', UPLOAD_CONSOLE_MESSAGE);
+        img.src = 'resources/logos/music-file.svg';
+
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.id = UPLOAD_CONSOLE_MESSAGE
+        input.addEventListener('input', (e: any) => {
+            if(!e.target || !e.target.files || e.target.files.length === 0){
+                return;
+            }
+            let file : File = e.target.files[0];
+
+            if(!file){
+                return;
+            }
+
+            try {
+                HtmlUtils.removeElementByIdOrFail('audi-message-filename');
+            }catch (e) {}
+
+            const p = document.createElement('p');
+            p.id = 'audi-message-filename';
+            p.innerText = `${file.name} : ${this.getFileSize(file.size)}`;
+            label.appendChild(p);
+        });
+
+        label.appendChild(img);
+        div.appendChild(label);
+        div.appendChild(input);
+
+        const buttonSend = document.createElement('button');
+        buttonSend.innerText = 'Envoyer';
+        buttonSend.classList.add('btn');
+        buttonSend.addEventListener('click', (event: MouseEvent) => {
+            this.sendMessage();
+            this.disabled();
+        });
+        const buttonDiv = document.createElement('div');
+        buttonDiv.classList.add('btn-action');
+        buttonDiv.appendChild(buttonSend)
+
+        const section = document.createElement('section');
+        section.id = this.getSectionId(UPLOAD_CONSOLE_MESSAGE);
+        section.appendChild(div);
+        section.appendChild(buttonDiv);
+        this.divMainConsole.appendChild(section);
     }
 
     sendMessage(){
@@ -176,9 +247,12 @@ export class ConsoleGlobalMessageManager {
         let GlobalMessage : GlobalMessageInterface = {
             id: res.id,
             message: res.path,
-            type: MESSAGE_TYPE
+            type: AUDIO_TYPE
         };
         inputAudio.value = '';
+        try {
+            HtmlUtils.removeElementByIdOrFail('audi-message-filename');
+        }catch (e) {}
         this.Connection.emitGlobalMessage(GlobalMessage);
     }
 
@@ -193,5 +267,21 @@ export class ConsoleGlobalMessageManager {
         this.userInputManager.initKeyBoardEvent();
         this.activeConsole = false;
         this.divMainConsole.style.top = '-80%';
+    }
+
+    private getSectionId(id: string) : string {
+        return `section-${id}`;
+    }
+
+    private getFileSize(number: number) :string {
+        if (number < 1024) {
+            return number + 'bytes';
+        } else if (number >= 1024 && number < 1048576) {
+            return (number / 1024).toFixed(1) + 'KB';
+        } else if (number >= 1048576) {
+            return (number / 1048576).toFixed(1) + 'MB';
+        }else{
+            return '';
+        }
     }
 }

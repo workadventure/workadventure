@@ -500,3 +500,62 @@ body {
     color: white;
     border-bottom: solid 1px white;
 }
+
+.main-console section{
+    text-align: center;
+    display: none;
+}
+
+.main-console section.active{
+    display: block;
+}
+
+.main-console section div.upload{
+    text-align: center;
+    border: solid 1px #ffda01;
+    height: 150px;
+    margin: 10px 200px;
+    padding: 20px;
+    min-height: 200px;
+}
+
+.main-console section div.upload label{
+    color: #ffda01;
+}
+.main-console section div.upload input{
+    display: none;
+}
+.main-console section div.upload label img{
+    height: 150px;
+    cursor: pointer;
+}
+.main-console section div.upload label img{
+    cursor: pointer;
+}
+
+/*audio html when audio message playing*/
+.main-container .audio-playing {
+    position: absolute;
+    width: 200px;
+    height: 54px;
+    right: -210px;
+    top: 40px;
+    transition: all 0.1s ease-out;
+    background-color: black;
+    border-radius: 30px 0 0 30px;
+    display: inline-flex;
+}
+
+.main-container .audio-playing.active{
+    right: 0;
+}
+.main-container .audio-playing img{
+    width: 30px;
+    border-radius: 50%;
+    background-color: #ffda01;
+    padding: 10px;
+}
+.main-container .audio-playing p{
+    color: white;
+    margin-left: 10px;
+}
