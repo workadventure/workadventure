@@ -410,6 +410,7 @@ body {
     width: 80%;
     height: 80%;
     min-height: 200px;
+    max-height: 80%;
     top: -80%;
     left: 10%;
     background: #000000a6;
@@ -421,12 +422,19 @@ body {
     height: auto;
     border-radius: 0 0 10px 10px;
     color: white;
-    padding: 10px;
     top: 0;
 }
 
+.message-container .content-message{
+    position: relative;
+    padding: 20px;
+    margin: 20px;
+    overflow: scroll;
+    max-height: 400px;
+}
+
 .main-console div.console,
-.message-container div {
+.message-container div.clear {
     position: absolute;
     color: white;
     z-index: 200;
@@ -441,12 +449,12 @@ body {
 }
 
 .main-console div.console p,
-.message-container div p{
+.message-container div.clear p{
     margin-top: 6px;
 }
 
 .main-console div.console:hover,
-.message-container div:hover {
+.message-container div.clear:hover {
     cursor: pointer;
     transform: scale(1.2) translateY(3px);
 }
@@ -458,6 +466,7 @@ body {
 .main-console #input-send-text .ql-editor{
     color: white;
     min-height: 200px;
+    max-height: 300px;
 }
 
 .main-console .ql-toolbar{

@@ -72,7 +72,6 @@ export class GlobalMessageManager {
             }, 1000);
         }
         messageAudio.onplay = () => {
-            console.log('play');
             divAudio.classList.add('active');
         }
         const messageAudioSource : HTMLSourceElement = document.createElement('source');
@@ -84,10 +83,11 @@ export class GlobalMessageManager {
     private playTextMessage(messageId : number, htmlMessage: string){
         //add button to clear message
         const buttonText = document.createElement('p');
-        buttonText.id = 'button-clear-message'
+        buttonText.id = 'button-clear-message';
         buttonText.innerText = 'Clear';
 
         const buttonMainConsole = document.createElement('div');
+        buttonMainConsole.classList.add('clear');
         buttonMainConsole.appendChild(buttonText);
         buttonMainConsole.addEventListener('click', () => {
             messageContainer.style.top = '-80%';
@@ -97,11 +97,16 @@ export class GlobalMessageManager {
             });
         });
 
+        //create content message
+        const messageCotent = document.createElement('div');
+        messageCotent.innerHTML = htmlMessage;
+        messageCotent.className = "content-message";
+
         //add message container
         const messageContainer = document.createElement('div');
-        messageContainer.innerHTML = htmlMessage;
         messageContainer.id = this.getHtmlMessageId(messageId);
         messageContainer.className = "message-container";
+        messageContainer.appendChild(messageCotent);
         messageContainer.appendChild(buttonMainConsole);
 
         const mainSectionDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-container');

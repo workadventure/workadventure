@@ -223,13 +223,17 @@ export class ConsoleGlobalMessageManager {
     }
 
     private sendTextMessage(){
-        const inputText = HtmlUtils.getElementByIdOrFail<HTMLTextAreaElement>(INPUT_CONSOLE_MESSAGE);
+        let elements = document.getElementsByClassName('ql-editor');
+        let quillEditor = elements.item(0);
+        if(!quillEditor){
+            throw "Error get quill node";
+        }
         let GlobalMessage : GlobalMessageInterface = {
             id: 1,
-            message: inputText.value,
+            message: quillEditor.innerHTML,
             type: MESSAGE_TYPE
         };
-        inputText.value = '';
+        quillEditor.innerHTML = '';
         this.Connection.emitGlobalMessage(GlobalMessage);
     }
 
