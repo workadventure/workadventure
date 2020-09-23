@@ -25,7 +25,7 @@ export class GlobalMessageManager {
     }
 
     private playMessage(message : GlobalMessageInterface){
-        let previousMessage = document.getElementById(this.getHtmlMessageId(message.id));
+        const previousMessage = document.getElementById(this.getHtmlMessageId(message.id));
         if(previousMessage){
             previousMessage.remove();
         }

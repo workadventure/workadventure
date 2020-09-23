@@ -35,7 +35,9 @@ export class ConsoleGlobalMessageManager {
     initialise() {
         try {
             HtmlUtils.removeElementByIdOrFail(CLASS_CONSOLE_MESSAGE);
-        }catch (err){}
+        }catch (err){
+            console.error(err);
+        }
 
         const typeConsole = document.createElement('input');
         typeConsole.id = INPUT_TYPE_CONSOLE;
@@ -169,11 +171,11 @@ export class ConsoleGlobalMessageManager {
         const input = document.createElement('input');
         input.type = 'file';
         input.id = UPLOAD_CONSOLE_MESSAGE
-        input.addEventListener('input', (e: any) => {
+        input.addEventListener('input', (e: Event) => {
             if(!e.target || !e.target.files || e.target.files.length === 0){
                 return;
             }
-            let file : File = e.target.files[0];
+            const file : File = e.target.files[0];
 
             if(!file){
                 return;
@@ -181,7 +183,9 @@ export class ConsoleGlobalMessageManager {
 
             try {
                 HtmlUtils.removeElementByIdOrFail('audi-message-filename');
-            }catch (e) {}
+            }catch (err) {
+                console.error(err)
+            }
 
             const p = document.createElement('p');
             p.id = 'audi-message-filename';
@@ -223,12 +227,12 @@ export class ConsoleGlobalMessageManager {
     }
 
     private sendTextMessage(){
-        let elements = document.getElementsByClassName('ql-editor');
-        let quillEditor = elements.item(0);
+        const elements = document.getElementsByClassName('ql-editor');
+        const quillEditor = elements.item(0);
         if(!quillEditor){
             throw "Error get quill node";
         }
-        let GlobalMessage : GlobalMessageInterface = {
+        const GlobalMessage : GlobalMessageInterface = {
             id: 1,
             message: quillEditor.innerHTML,
             type: MESSAGE_TYPE
@@ -246,9 +250,9 @@ export class ConsoleGlobalMessageManager {
 
         const fd = new FormData();
         fd.append('file', selectedFile);
-        let res = await this.Connection.uploadAudio(fd);
+        const res = await this.Connection.uploadAudio(fd);
 
-        let GlobalMessage : GlobalMessageInterface = {
+        const GlobalMessage : GlobalMessageInterface = {
             id: res.id,
             message: res.path,
             type: AUDIO_TYPE
@@ -256,7 +260,9 @@ export class ConsoleGlobalMessageManager {
         inputAudio.value = '';
         try {
             HtmlUtils.removeElementByIdOrFail('audi-message-filename');
-        }catch (e) {}
+        }catch (err) {
+            console.error(err);
+        }
         this.Connection.emitGlobalMessage(GlobalMessage);
     }
 
