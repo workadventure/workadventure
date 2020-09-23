@@ -525,8 +525,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
 
         this.createPromiseResolve();
 
-        // TODO: use inputmanager instead
-        this.input.keyboard.on('keyup-SPACE', () => {
+        this.userInputManager.spaceEvent( () => {
             this.outlinedItem?.activate();
         });
 
