@@ -145,7 +145,7 @@ export class ConsoleGlobalMessageManager {
                 // remove formatting button
             ];
 
-            let quill = new Quill(`#${INPUT_CONSOLE_MESSAGE}`, {
+            new Quill(`#${INPUT_CONSOLE_MESSAGE}`, {
                 theme: 'snow',
                 modules: {
                     toolbar: toolbarOptions
