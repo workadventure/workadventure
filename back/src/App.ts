@@ -8,6 +8,7 @@ import * as http from "http";
 import {MapController} from "./Controller/MapController";
 import {PrometheusController} from "./Controller/PrometheusController";
 import {FileController} from "./Controller/FileController";
+import {AdminController} from "./Controller/AdminController";
 
 class App {
     public app: Application;
@@ -17,6 +18,7 @@ class App {
     public fileController: FileController;
     public mapController: MapController;
     public prometheusController: PrometheusController;
+    private adminController: AdminController;
 
     constructor() {
         this.app = express();
@@ -35,6 +37,7 @@ class App {
         this.fileController = new FileController(this.app);
         this.mapController = new MapController(this.app);
         this.prometheusController = new PrometheusController(this.app, this.ioSocketController);
+        this.adminController = new AdminController(this.app);
     }
 
     // TODO add session user
