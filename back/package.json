@@ -39,7 +39,6 @@
     "@types/express": "^4.17.4",
     "@types/http-status-codes": "^1.2.0",
     "@types/jsonwebtoken": "^8.3.8",
-    "@types/multer": "^1.4.4",
     "@types/socket.io": "^2.1.4",
     "@types/uuidv4": "^5.0.0",
     "axios": "^0.20.0",
