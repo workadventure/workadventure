@@ -15,6 +15,10 @@ export const INPUT_TYPE_CONSOLE = 'input-type';
 export const AUDIO_TYPE = 'audio';
 export const MESSAGE_TYPE = 'message';
 
+interface EventTargetFiles extends EventTarget {
+    files: Array<File>;
+}
+
 export class ConsoleGlobalMessageManager {
 
     private Connection: Connection;
@@ -172,10 +176,14 @@ export class ConsoleGlobalMessageManager {
         input.type = 'file';
         input.id = UPLOAD_CONSOLE_MESSAGE
         input.addEventListener('input', (e: Event) => {
-            if(!e.target || !e.target.files || e.target.files.length === 0){
+            if(!e.target){
                 return;
             }
-            const file : File = e.target.files[0];
+            const eventTarget : EventTargetFiles = (e.target as EventTargetFiles);
+            if(!eventTarget || !eventTarget.files || eventTarget.files.length === 0){
+                return;
+            }
+            const file : File = eventTarget.files[0];
 
             if(!file){
                 return;
@@ -253,8 +261,8 @@ export class ConsoleGlobalMessageManager {
         const res = await this.Connection.uploadAudio(fd);
 
         const GlobalMessage : GlobalMessageInterface = {
-            id: res.id,
-            message: res.path,
+            id: (res as {id: number}).id,
+            message: (res as {path: string}).path,
             type: AUDIO_TYPE
         };
         inputAudio.value = '';
