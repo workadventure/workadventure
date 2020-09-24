@@ -2,7 +2,7 @@ import Axios from "axios";
 import {API_URL} from "./Enum/EnvironmentVariable";
 import {MessageUI} from "./Logger/MessageUI";
 import {
-    BatchMessage, GroupDeleteMessage, GroupUpdateMessage,
+    BatchMessage, GroupDeleteMessage, GroupUpdateMessage, ItemEventMessage,
     PositionMessage,
     SetPlayerDetailsMessage, UserJoinedMessage, UserLeftMessage, UserMovedMessage,
     UserMovesMessage,
@@ -173,6 +173,9 @@ export class Connection implements Connection {
                 } else if (message.hasUserleftmessage()) {
                     event = EventMessage.USER_LEFT;
                     payload = message.getUserleftmessage();
+                } else if (message.hasItemeventmessage()) {
+                    event = EventMessage.ITEM_EVENT;
+                    payload = message.getItemeventmessage();
                 } else {
                     throw new Error('Unexpected batch message type');
                 }
@@ -400,16 +403,24 @@ export class Connection implements Connection {
         this.socket.on(EventMessage.WEBRTC_DISCONNECT, callback);
     }
 
-    emitActionableEvent(itemId: number, event: string, state: unknown, parameters: unknown) {
-        return this.socket.emit(EventMessage.ITEM_EVENT, {
-            itemId,
-            event,
-            state,
-            parameters
-        });
+    emitActionableEvent(itemId: number, event: string, state: unknown, parameters: unknown): void {
+        const itemEventMessage = new ItemEventMessage();
+        itemEventMessage.setItemid(itemId);
+        itemEventMessage.setEvent(event);
+        itemEventMessage.setStatejson(JSON.stringify(state));
+        itemEventMessage.setParametersjson(JSON.stringify(parameters));
+
+        this.socket.emit(EventMessage.ITEM_EVENT, itemEventMessage.serializeBinary().buffer);
     }
 
     onActionableEvent(callback: (message: ItemEventMessageInterface) => void): void {
-        this.socket.on(EventMessage.ITEM_EVENT, callback);
+        this.onBatchMessage(EventMessage.ITEM_EVENT, (message: ItemEventMessage) => {
+            callback({
+                itemId: message.getItemid(),
+                event: message.getEvent(),
+                parameters: JSON.parse(message.getParametersjson()),
+                state: JSON.parse(message.getStatejson())
+            });
+        });
     }
 }

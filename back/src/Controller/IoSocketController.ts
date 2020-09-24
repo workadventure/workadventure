@@ -27,7 +27,13 @@ import {
     SetPlayerDetailsMessage,
     SubMessage,
     UserMovedMessage,
-    BatchMessage, GroupUpdateMessage, PointMessage, GroupDeleteMessage, UserJoinedMessage, UserLeftMessage
+    BatchMessage,
+    GroupUpdateMessage,
+    PointMessage,
+    GroupDeleteMessage,
+    UserJoinedMessage,
+    UserLeftMessage,
+    ItemEventMessage
 } from "../Messages/generated/messages_pb";
 import {UserMovesMessage} from "../Messages/generated/messages_pb";
 import Direction = PositionMessage.Direction;
@@ -433,22 +439,42 @@ export class IoSocketController {
                 }
             });
 
-            socket.on(SocketIoEvent.ITEM_EVENT, (itemEvent: unknown) => {
-                if (!isItemEventMessageInterface(itemEvent)) {
+            socket.on(SocketIoEvent.ITEM_EVENT, (message: unknown) => {
+                if (!(message instanceof Buffer)) {
+                    socket.emit(SocketIoEvent.MESSAGE_ERROR, {message: 'Invalid ITEM_EVENT message. Expecting binary buffer.'});
+                    console.warn('Invalid ITEM_EVENT message received (expecting binary buffer): ', message);
+                    return;
+                }
+                const itemEventMessage = ItemEventMessage.deserializeBinary(new Uint8Array(message));
+
+                const itemEvent = ProtobufUtils.toItemEvent(itemEventMessage);
+
+                /*if (!isItemEventMessageInterface(itemEvent)) {
                     socket.emit(SocketIoEvent.MESSAGE_ERROR, {message: 'Invalid ITEM_EVENT message.'});
                     console.warn('Invalid ITEM_EVENT message received: ', itemEvent);
                     return;
-                }
+                }*/
                 try {
                     const Client = (socket as ExSocketInterface);
 
-                    socket.to(Client.roomId).emit(SocketIoEvent.ITEM_EVENT, itemEvent);
+                    //socket.to(Client.roomId).emit(SocketIoEvent.ITEM_EVENT, itemEvent);
 
                     const world = this.Worlds.get(Client.roomId);
                     if (!world) {
                         console.error("Could not find world with id '", Client.roomId, "'");
                         return;
                     }
+
+                    const subMessage = new SubMessage();
+                    subMessage.setItemeventmessage(itemEventMessage);
+
+                    // Let's send the event without using the SocketIO room.
+                    for (let user of world.getUsers().values()) {
+                        const client = this.searchClientByIdOrFail(user.id);
+                        //client.emit(SocketIoEvent.ITEM_EVENT, itemEvent);
+                        emitInBatch(client, SocketIoEvent.ITEM_EVENT, subMessage);
+                    }
+
                     world.setItemState(itemEvent.itemId, itemEvent.state);
                 } catch (e) {
                     console.error('An error occurred on "item_event"');

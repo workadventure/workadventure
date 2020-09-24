@@ -39,6 +39,14 @@ message UserMovesMessage {
   ViewportMessage viewport = 2;
 }
 
+/************ BI-DIRECTIONAL MESSAGES **************/
+
+message ItemEventMessage {
+  int32 itemId = 1;
+  string event = 2;
+  string stateJson = 3;
+  string parametersJson = 4;
+}
 
 /*********** SERVER TO CLIENT MESSAGES *************/
 
@@ -54,6 +62,7 @@ message SubMessage {
     GroupDeleteMessage groupDeleteMessage = 3;
     UserJoinedMessage userJoinedMessage = 4;
     UserLeftMessage userLeftMessage = 5;
+    ItemEventMessage itemEventMessage = 6;
   }
 }
 
