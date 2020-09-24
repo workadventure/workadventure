@@ -315,6 +315,8 @@ export class IoSocketController {
                         case Direction.RIGHT:
                             direction = 'right';
                             break;
+                        default:
+                            throw new Error("Unexpected direction");
                     }
 
                     const Client = (socket as ExSocketInterface);
