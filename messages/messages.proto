@@ -50,6 +50,8 @@ message UserMovedMessage {
 message SubMessage {
   oneof message {
     UserMovedMessage userMovedMessage = 1;
+    GroupUpdateMessage groupUpdateMessage = 2;
+    GroupDeleteMessage groupDeleteMessage = 3;
   }
 }
 

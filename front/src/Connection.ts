@@ -2,7 +2,7 @@ import Axios from "axios";
 import {API_URL} from "./Enum/EnvironmentVariable";
 import {MessageUI} from "./Logger/MessageUI";
 import {
-    BatchMessage, GroupUpdateMessage,
+    BatchMessage, GroupDeleteMessage, GroupUpdateMessage,
     PositionMessage,
     SetPlayerDetailsMessage, UserMovedMessage,
     UserMovesMessage,
@@ -160,6 +160,12 @@ export class Connection implements Connection {
                 if (message.hasUsermovedmessage()) {
                     event = EventMessage.USER_MOVED;
                     payload = message.getUsermovedmessage();
+                } else if (message.hasGroupupdatemessage()) {
+                    event = EventMessage.GROUP_CREATE_UPDATE;
+                    payload = message.getGroupupdatemessage();
+                } else if (message.hasGroupdeletemessage()) {
+                    event = EventMessage.GROUP_DELETE;
+                    payload = message.getGroupdeletemessage();
                 } else {
                     throw new Error('Unexpected batch message type');
                 }
@@ -230,7 +236,6 @@ export class Connection implements Connection {
         if(!this.socket){
             return;
         }
-        const point = new Point(x, y, direction, moving);
         const positionMessage = new PositionMessage();
         positionMessage.setX(Math.floor(x));
         positionMessage.setY(Math.floor(y));
@@ -263,6 +268,8 @@ export class Connection implements Connection {
         const userMovesMessage = new UserMovesMessage();
         userMovesMessage.setPosition(positionMessage);
         userMovesMessage.setViewport(viewportMessage);
+
+        //console.log('Sending position ', positionMessage.getX(), positionMessage.getY());
 
         this.socket.emit(EventMessage.USER_POSITION, userMovesMessage.serializeBinary().buffer);
     }
@@ -301,16 +308,7 @@ export class Connection implements Connection {
     }
 
     public onGroupUpdatedOrCreated(callback: (groupCreateUpdateMessage: GroupCreatedUpdatedMessageInterface) => void): void {
-        // TODO: READ THIS FROM BINARY FORMAT
-        // TODO: READ THIS FROM BINARY FORMAT
-        // TODO: READ THIS FROM BINARY FORMAT
-        // TODO: CHANGE THIS EVENT TO BE PART OF THE BATCHES
-        // TODO: CHANGE THIS EVENT TO BE PART OF THE BATCHES
-        // TODO: CHANGE THIS EVENT TO BE PART OF THE BATCHES
-        // TODO: CHANGE THIS EVENT TO BE PART OF THE BATCHES
-        // TODO: CHANGE THIS EVENT TO BE PART OF THE BATCHES
-        this.socket.on(EventMessage.GROUP_CREATE_UPDATE, (buffer: ArrayBuffer) => {
-            const message = GroupUpdateMessage.deserializeBinary(new Uint8Array(buffer));
+        this.onBatchMessage(EventMessage.GROUP_CREATE_UPDATE, (message: GroupUpdateMessage) => {
             const position = message.getPosition();
             if (position === undefined) {
                 throw new Error('Missing position in GROUP_CREATE_UPDATE');
@@ -321,12 +319,15 @@ export class Connection implements Connection {
                 position: position.toObject()
             }
 
+            //console.log('Group position: ', position.toObject());
             callback(groupCreateUpdateMessage);
         });
     }
 
     public onGroupDeleted(callback: (groupId: number) => void): void {
-        this.socket.on(EventMessage.GROUP_DELETE, callback)
+        this.onBatchMessage(EventMessage.GROUP_DELETE, (message: GroupDeleteMessage) => {
+            callback(message.getGroupid());
+        });
     }
 
     public onConnectError(callback: (error: object) => void): void {

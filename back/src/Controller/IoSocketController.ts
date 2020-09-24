@@ -27,7 +27,7 @@ import {
     SetPlayerDetailsMessage,
     SubMessage,
     UserMovedMessage,
-    BatchMessage, GroupUpdateMessage, PointMessage
+    BatchMessage, GroupUpdateMessage, PointMessage, GroupDeleteMessage
 } from "../../../messages/generated/messages_pb";
 import {UserMovesMessage} from "../../../messages/generated/messages_pb";
 import Direction = PositionMessage.Direction;
@@ -573,7 +573,7 @@ export class IoSocketController {
                     clientListener.emit(SocketIoEvent.USER_LEFT, clientUser.userId);
                     //console.log("Sending USER_LEFT event");
                 } else if (thing instanceof Group) {
-                    clientListener.emit(SocketIoEvent.GROUP_DELETE, thing.getId());
+                    this.emitDeleteGroupEvent(clientListener, thing.getId());
                 } else {
                     console.error('Unexpected type for Movable.');
                 }
@@ -584,10 +584,7 @@ export class IoSocketController {
 
         // Dispatch groups position to newly connected user
         world.getGroups().forEach((group: Group) => {
-            Client.emit(SocketIoEvent.GROUP_CREATE_UPDATE, {
-                position: group.getPosition(),
-                groupId: group.getId()
-            } as GroupUpdateInterface);
+            this.emitCreateUpdateGroupEvent(Client, group);
         });
         //join world
         world.join(Client, Client.position);
@@ -603,7 +600,23 @@ export class IoSocketController {
         groupUpdateMessage.setGroupid(group.getId());
         groupUpdateMessage.setPosition(pointMessage);
 
-        socket.emit(SocketIoEvent.GROUP_CREATE_UPDATE, groupUpdateMessage.serializeBinary().buffer);
+        const subMessage = new SubMessage();
+        subMessage.setGroupupdatemessage(groupUpdateMessage);
+
+        const client : ExSocketInterface = socket as ExSocketInterface;
+        emitInBatch(client, SocketIoEvent.GROUP_CREATE_UPDATE, subMessage);
+        //socket.emit(SocketIoEvent.GROUP_CREATE_UPDATE, groupUpdateMessage.serializeBinary().buffer);
+    }
+
+    private emitDeleteGroupEvent(socket: Socket, groupId: number): void {
+        const groupDeleteMessage = new GroupDeleteMessage();
+        groupDeleteMessage.setGroupid(groupId);
+
+        const subMessage = new SubMessage();
+        subMessage.setGroupdeletemessage(groupDeleteMessage);
+
+        const client : ExSocketInterface = socket as ExSocketInterface;
+        emitInBatch(client, SocketIoEvent.GROUP_DELETE, subMessage);
     }
 
     /**

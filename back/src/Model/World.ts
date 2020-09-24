@@ -90,9 +90,9 @@ export class World {
         this.positionNotifier.updatePosition(user, userPosition, user.position);
 
         const oldGroupPosition = user.group?.getPosition();
-        user.group?.updatePosition();
 
         user.position = userPosition;
+        user.group?.updatePosition();
 
         if (user.silent) {
             return;
