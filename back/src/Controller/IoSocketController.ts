@@ -27,7 +27,7 @@ import {
     SetPlayerDetailsMessage,
     SubMessage,
     UserMovedMessage,
-    BatchMessage, GroupUpdateMessage, PointMessage, GroupDeleteMessage, UserJoinedMessage
+    BatchMessage, GroupUpdateMessage, PointMessage, GroupDeleteMessage, UserJoinedMessage, UserLeftMessage
 } from "../Messages/generated/messages_pb";
 import {UserMovesMessage} from "../Messages/generated/messages_pb";
 import Direction = PositionMessage.Direction;
@@ -580,8 +580,7 @@ export class IoSocketController {
                 const clientListener = this.searchClientByIdOrFail(listener.id);
                 if (thing instanceof User) {
                     const clientUser = this.searchClientByIdOrFail(thing.id);
-                    clientListener.emit(SocketIoEvent.USER_LEFT, clientUser.userId);
-                    //console.log("Sending USER_LEFT event");
+                    this.emitUserLeftEvent(clientListener, clientUser.userId);
                 } else if (thing instanceof Group) {
                     this.emitDeleteGroupEvent(clientListener, thing.getId());
                 } else {
@@ -627,6 +626,17 @@ export class IoSocketController {
 
         const client : ExSocketInterface = socket as ExSocketInterface;
         emitInBatch(client, SocketIoEvent.GROUP_DELETE, subMessage);
+    }
+
+    private emitUserLeftEvent(socket: Socket, userId: number): void {
+        const userLeftMessage = new UserLeftMessage();
+        userLeftMessage.setUserid(userId);
+
+        const subMessage = new SubMessage();
+        subMessage.setUserleftmessage(userLeftMessage);
+
+        const client : ExSocketInterface = socket as ExSocketInterface;
+        emitInBatch(client, SocketIoEvent.USER_LEFT, subMessage);
     }
 
     /**

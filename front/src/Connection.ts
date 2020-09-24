@@ -4,7 +4,7 @@ import {MessageUI} from "./Logger/MessageUI";
 import {
     BatchMessage, GroupDeleteMessage, GroupUpdateMessage,
     PositionMessage,
-    SetPlayerDetailsMessage, UserJoinedMessage, UserMovedMessage,
+    SetPlayerDetailsMessage, UserJoinedMessage, UserLeftMessage, UserMovedMessage,
     UserMovesMessage,
     ViewportMessage
 } from "./Messages/generated/messages_pb"
@@ -170,6 +170,9 @@ export class Connection implements Connection {
                 } else if (message.hasUserjoinedmessage()) {
                     event = EventMessage.JOIN_ROOM;
                     payload = message.getUserjoinedmessage();
+                } else if (message.hasUserleftmessage()) {
+                    event = EventMessage.USER_LEFT;
+                    payload = message.getUserleftmessage();
                 } else {
                     throw new Error('Unexpected batch message type');
                 }
@@ -320,7 +323,9 @@ export class Connection implements Connection {
     }
 
     public onUserLeft(callback: (userId: number) => void): void {
-        this.socket.on(EventMessage.USER_LEFT, callback);
+        this.onBatchMessage(EventMessage.USER_LEFT, (message: UserLeftMessage) => {
+            callback(message.getUserid());
+        });
     }
 
     public onGroupUpdatedOrCreated(callback: (groupCreateUpdateMessage: GroupCreatedUpdatedMessageInterface) => void): void {

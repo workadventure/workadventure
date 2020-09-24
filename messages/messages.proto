@@ -53,6 +53,7 @@ message SubMessage {
     GroupUpdateMessage groupUpdateMessage = 2;
     GroupDeleteMessage groupDeleteMessage = 3;
     UserJoinedMessage userJoinedMessage = 4;
+    UserLeftMessage userLeftMessage = 5;
   }
 }
 
@@ -75,4 +76,8 @@ message UserJoinedMessage {
   string name = 2;
   repeated string characterLayers = 3;
   PositionMessage position = 4;
+}
+
+message UserLeftMessage {
+  int32 userId = 1;
 }
