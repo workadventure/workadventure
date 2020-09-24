@@ -1,4 +1,4 @@
-import {PositionMessage} from "../../../messages/generated/messages_pb";
+import {PositionMessage} from "../Messages/generated/messages_pb";
 import {PointInterface} from "../Connection";
 import Direction = PositionMessage.Direction;
 

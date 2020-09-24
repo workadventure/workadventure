@@ -1,5 +1,5 @@
 import {PointInterface} from "./PointInterface";
-import {PositionMessage} from "../../../../messages/generated/messages_pb";
+import {PositionMessage} from "../../Messages/generated/messages_pb";
 import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
 import Direction = PositionMessage.Direction;
 

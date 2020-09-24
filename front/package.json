@@ -4,6 +4,7 @@
   "main": "index.js",
   "license": "SEE LICENSE IN LICENSE.txt",
   "devDependencies": {
+    "@types/google-protobuf": "^3.7.3",
     "@types/jasmine": "^3.5.10",
     "@typescript-eslint/eslint-plugin": "^2.26.0",
     "@typescript-eslint/parser": "^2.26.0",
@@ -23,6 +24,7 @@
     "@types/simple-peer": "^9.6.0",
     "@types/socket.io-client": "^1.4.32",
     "generic-type-guard": "^3.2.0",
+    "google-protobuf": "^3.13.0",
     "phaser": "^3.22.0",
     "queue-typescript": "^1.0.1",
     "simple-peer": "^9.6.2",

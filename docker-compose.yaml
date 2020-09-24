@@ -33,7 +33,6 @@ services:
     command: yarn run start
     volumes:
       - ./front:/usr/src/app
-      - ./messages:/usr/src/messages/
     labels:
       - "traefik.http.routers.front.rule=Host(`play.workadventure.localhost`)"
       - "traefik.http.routers.front.entryPoints=web,traefik"
@@ -76,7 +75,6 @@ services:
       ALLOW_ARTILLERY: "true"
     volumes:
       - ./back:/usr/src/app
-      - ./messages:/usr/src/messages/
     labels:
       - "traefik.http.routers.back.rule=Host(`api.workadventure.localhost`)"
       - "traefik.http.routers.back.entryPoints=web"
@@ -111,3 +109,5 @@ services:
       STARTUP_COMMAND_2: yarn run proto:watch
     volumes:
       - ./messages:/usr/src/app
+      - ./back:/usr/src/back
+      - ./front:/usr/src/front

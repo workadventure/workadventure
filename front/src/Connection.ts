@@ -7,7 +7,7 @@ import {
     SetPlayerDetailsMessage, UserMovedMessage,
     UserMovesMessage,
     ViewportMessage
-} from "../../messages/generated/messages_pb"
+} from "./Messages/generated/messages_pb"
 
 const SocketIo = require('socket.io-client');
 import Socket = SocketIOClient.Socket;

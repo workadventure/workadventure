@@ -28,8 +28,8 @@ import {
     SubMessage,
     UserMovedMessage,
     BatchMessage, GroupUpdateMessage, PointMessage, GroupDeleteMessage
-} from "../../../messages/generated/messages_pb";
-import {UserMovesMessage} from "../../../messages/generated/messages_pb";
+} from "../Messages/generated/messages_pb";
+import {UserMovesMessage} from "../Messages/generated/messages_pb";
 import Direction = PositionMessage.Direction;
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
 

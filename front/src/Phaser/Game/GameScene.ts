@@ -40,7 +40,7 @@ import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
 import {ItemFactoryInterface} from "../Items/ItemFactoryInterface";
 import {ActionableItem} from "../Items/ActionableItem";
 import {UserInputManager} from "../UserInput/UserInputManager";
-import {UserMovedMessage} from "../../../../messages/generated/messages_pb";
+import {UserMovedMessage} from "../../Messages/generated/messages_pb";
 import {ProtobufClientUtils} from "../../Network/ProtobufClientUtils";
 
 
@@ -220,6 +220,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
                 if (position === undefined) {
                     throw new Error('Position missing from UserMovedMessage');
                 }
+                //console.log('Received position ', position.getX(), position.getY(), "from user", message.getUserid());
 
                 const messageUserMoved: MessageUserMovedInterface = {
                     userId: message.getUserid(),
@@ -1079,6 +1080,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
         // We do not update the player position directly (because it is sent only every 200ms).
         // Instead we use the PlayersPositionInterpolator that will do a smooth animation over the next 200ms.
         const playerMovement = new PlayerMovement({ x: player.x, y: player.y }, this.currentTick, message.position, this.currentTick + POSITION_DELAY);
+        //console.log('Target position: ', player.x, player.y);
         this.playersPositionInterpolator.updatePlayerPosition(player.userId, playerMovement);
     }
 

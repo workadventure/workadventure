@@ -7,7 +7,7 @@ RUN yarn install && yarn proto
 FROM thecodingmachine/nodejs:14-apache
 
 COPY --chown=docker:docker front .
-COPY --from=builder --chown=docker:docker /var/www/messages /var/www/messages
+COPY --from=builder --chown=docker:docker /var/www/messages/generated /var/www/html/src/Messages/generated
 RUN yarn install
 
 ENV NODE_ENV=production
