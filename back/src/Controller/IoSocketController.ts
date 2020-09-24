@@ -19,7 +19,6 @@ import {isWebRtcSignalMessageInterface} from "../Model/Websocket/WebRtcSignalMes
 import {UserInGroupInterface} from "../Model/Websocket/UserInGroupInterface";
 import {isItemEventMessageInterface} from "../Model/Websocket/ItemEventMessage";
 import {uuid} from 'uuidv4';
-import {isViewport} from "../Model/Websocket/ViewportMessage";
 import {GroupUpdateInterface} from "_Model/Websocket/GroupUpdateInterface";
 import {Movable} from "../Model/Movable";
 import {
@@ -33,7 +32,7 @@ import {
     GroupDeleteMessage,
     UserJoinedMessage,
     UserLeftMessage,
-    ItemEventMessage
+    ItemEventMessage, ViewportMessage
 } from "../Messages/generated/messages_pb";
 import {UserMovesMessage} from "../Messages/generated/messages_pb";
 import Direction = PositionMessage.Direction;
@@ -264,15 +263,17 @@ export class IoSocketController {
 
             socket.on(SocketIoEvent.SET_VIEWPORT, (message: unknown): void => {
                 try {
-                    //console.log('SET_VIEWPORT')
-                    if (!isViewport(message)) {
-                        socket.emit(SocketIoEvent.MESSAGE_ERROR, {message: 'Invalid SET_VIEWPORT message.'});
-                        console.warn('Invalid SET_VIEWPORT message received: ', message);
+                    if (!(message instanceof Buffer)) {
+                        socket.emit(SocketIoEvent.MESSAGE_ERROR, {message: 'Invalid SET_VIEWPORT message. Expecting binary buffer.'});
+                        console.warn('Invalid SET_VIEWPORT message received (expecting binary buffer): ', message);
                         return;
                     }
 
+                    const viewportMessage = ViewportMessage.deserializeBinary(new Uint8Array(message as ArrayBuffer));
+                    const viewport = viewportMessage.toObject();
+
                     const Client = (socket as ExSocketInterface);
-                    Client.viewport = message;
+                    Client.viewport = viewport;
 
                     const world = this.Worlds.get(Client.roomId);
                     if (!world) {

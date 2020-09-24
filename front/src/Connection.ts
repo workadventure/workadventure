@@ -289,7 +289,13 @@ export class Connection implements Connection {
     }
 
     public setViewport(viewport: ViewportInterface): void {
-        this.socket.emit(EventMessage.SET_VIEWPORT, viewport);
+        const viewportMessage = new ViewportMessage();
+        viewportMessage.setTop(Math.round(viewport.top));
+        viewportMessage.setBottom(Math.round(viewport.bottom));
+        viewportMessage.setLeft(Math.round(viewport.left));
+        viewportMessage.setRight(Math.round(viewport.right));
+
+        this.socket.emit(EventMessage.SET_VIEWPORT, viewportMessage.serializeBinary().buffer);
     }
 
     public onUserJoins(callback: (message: MessageUserJoined) => void): void {
