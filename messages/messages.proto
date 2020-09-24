@@ -52,6 +52,7 @@ message SubMessage {
     UserMovedMessage userMovedMessage = 1;
     GroupUpdateMessage groupUpdateMessage = 2;
     GroupDeleteMessage groupDeleteMessage = 3;
+    UserJoinedMessage userJoinedMessage = 4;
   }
 }
 
@@ -67,4 +68,11 @@ message GroupUpdateMessage {
 
 message GroupDeleteMessage {
   int32 groupId = 1;
+}
+
+message UserJoinedMessage {
+  int32 userId = 1;
+  string name = 2;
+  repeated string characterLayers = 3;
+  PositionMessage position = 4;
 }

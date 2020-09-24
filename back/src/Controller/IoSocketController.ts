@@ -27,7 +27,7 @@ import {
     SetPlayerDetailsMessage,
     SubMessage,
     UserMovedMessage,
-    BatchMessage, GroupUpdateMessage, PointMessage, GroupDeleteMessage
+    BatchMessage, GroupUpdateMessage, PointMessage, GroupDeleteMessage, UserJoinedMessage
 } from "../Messages/generated/messages_pb";
 import {UserMovesMessage} from "../Messages/generated/messages_pb";
 import Direction = PositionMessage.Direction;
@@ -541,9 +541,17 @@ export class IoSocketController {
                 const clientListener = this.searchClientByIdOrFail(listener.id);
                 if (thing instanceof User) {
                     const clientUser = this.searchClientByIdOrFail(thing.id);
-                    const messageUserJoined = new MessageUserJoined(clientUser.userId, clientUser.name, clientUser.characterLayers, clientUser.position);
 
-                    clientListener.emit(SocketIoEvent.JOIN_ROOM, messageUserJoined);
+                    const userJoinedMessage = new UserJoinedMessage();
+                    userJoinedMessage.setUserid(clientUser.userId);
+                    userJoinedMessage.setName(clientUser.name);
+                    userJoinedMessage.setCharacterlayersList(clientUser.characterLayers);
+                    userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(clientUser.position));
+
+                    const subMessage = new SubMessage();
+                    subMessage.setUserjoinedmessage(userJoinedMessage);
+
+                    emitInBatch(clientListener, SocketIoEvent.JOIN_ROOM, subMessage);
                 } else if (thing instanceof Group) {
                     this.emitCreateUpdateGroupEvent(clientListener, thing);
                 } else {

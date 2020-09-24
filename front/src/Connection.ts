@@ -4,7 +4,7 @@ import {MessageUI} from "./Logger/MessageUI";
 import {
     BatchMessage, GroupDeleteMessage, GroupUpdateMessage,
     PositionMessage,
-    SetPlayerDetailsMessage, UserMovedMessage,
+    SetPlayerDetailsMessage, UserJoinedMessage, UserMovedMessage,
     UserMovesMessage,
     ViewportMessage
 } from "./Messages/generated/messages_pb"
@@ -15,6 +15,7 @@ import {PlayerAnimationNames} from "./Phaser/Player/Animation";
 import {UserSimplePeerInterface} from "./WebRtc/SimplePeer";
 import {SignalData} from "simple-peer";
 import Direction = PositionMessage.Direction;
+import {ProtobufClientUtils} from "./Network/ProtobufClientUtils";
 
 enum EventMessage{
     WEBRTC_SIGNAL = "webrtc-signal",
@@ -166,6 +167,9 @@ export class Connection implements Connection {
                 } else if (message.hasGroupdeletemessage()) {
                     event = EventMessage.GROUP_DELETE;
                     payload = message.getGroupdeletemessage();
+                } else if (message.hasUserjoinedmessage()) {
+                    event = EventMessage.JOIN_ROOM;
+                    payload = message.getUserjoinedmessage();
                 } else {
                     throw new Error('Unexpected batch message type');
                 }
@@ -283,7 +287,19 @@ export class Connection implements Connection {
     }
 
     public onUserJoins(callback: (message: MessageUserJoined) => void): void {
-        this.socket.on(EventMessage.JOIN_ROOM, callback);
+        this.onBatchMessage(EventMessage.JOIN_ROOM, (message: UserJoinedMessage) => {
+            const position = message.getPosition();
+            if (position === undefined) {
+                throw new Error('Invalid JOIN_ROOM message');
+            }
+            const messageUserJoined: MessageUserJoined = {
+                userId: message.getUserid(),
+                name: message.getName(),
+                characterLayers: message.getCharacterlayersList(),
+                position: ProtobufClientUtils.toPointInterface(position)
+            }
+            callback(messageUserJoined);
+        });
     }
 
     public onUserMoved(callback: (message: UserMovedMessage) => void): void {
