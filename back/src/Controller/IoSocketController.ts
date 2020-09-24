@@ -470,7 +470,7 @@ export class IoSocketController {
                     subMessage.setItemeventmessage(itemEventMessage);
 
                     // Let's send the event without using the SocketIO room.
-                    for (let user of world.getUsers().values()) {
+                    for (const user of world.getUsers().values()) {
                         const client = this.searchClientByIdOrFail(user.id);
                         //client.emit(SocketIoEvent.ITEM_EVENT, itemEvent);
                         emitInBatch(client, SocketIoEvent.ITEM_EVENT, subMessage);
