@@ -18,6 +18,7 @@ class App {
     public mapController: MapController;
     public prometheusController: PrometheusController;
     private adminController: AdminController;
+    private debugController: DebugController;
 
     constructor() {
         this.app = express();

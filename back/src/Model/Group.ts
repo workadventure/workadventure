@@ -57,8 +57,9 @@ export class Group implements Movable {
         let y = 0;
         // Let's compute the barycenter of all users.
         this.users.forEach((user: User) => {
-            x += user.position.x;
-            y += user.position.y;
+            const position = user.getPosition();
+            x += position.x;
+            y += position.y;
         });
         x /= this.users.size;
         y /= this.users.size;
@@ -69,8 +70,7 @@ export class Group implements Movable {
         this.y = y;
 
         if (oldX === undefined) {
-            // TODO: do we need a "create"
-            this.positionNotifier.updatePosition(this, {x, y}, {x, y});
+            this.positionNotifier.enter(this);
         } else {
             this.positionNotifier.updatePosition(this, {x, y}, {x: oldX, y: oldY});
         }

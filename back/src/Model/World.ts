@@ -56,9 +56,11 @@ export class World {
     }
 
     public join(socket : Identificable, userPosition: PointInterface): void {
-        this.users.set(socket.userId, new User(socket.userId, userPosition, false));
+        const user = new User(socket.userId, userPosition, false, this.positionNotifier);
+        this.users.set(socket.userId, user);
         // Let's call update position to trigger the join / leave room
-        this.updatePosition(socket, userPosition);
+        //this.updatePosition(socket, userPosition);
+        this.updateUserGroup(user);
     }
 
     public leave(user : Identificable){
@@ -87,16 +89,13 @@ export class World {
             return;
         }
 
-        this.positionNotifier.updatePosition(user, userPosition, user.position);
+        user.setPosition(userPosition);
 
-        const oldGroupPosition = user.group?.getPosition();
+        this.updateUserGroup(user);
+    }
 
-        user.position = userPosition;
+    private updateUserGroup(user: User): void {
         user.group?.updatePosition();
-        /*if (user.group !== undefined) {
-            // TODO: positionNotifier should be notified by the group itself when it moves!!!
-            this.positionNotifier.updatePosition(user.group, user.group.getPosition(), oldGroupPosition ? oldGroupPosition : user.group.getPosition());
-        }*/
 
         if (user.silent) {
             return;
@@ -124,16 +123,11 @@ export class World {
         } else {
             // If the user is part of a group:
             //  should he leave the group?
-            const distance = World.computeDistanceBetweenPositions(user.position, user.group.getPosition());
+            const distance = World.computeDistanceBetweenPositions(user.getPosition(), user.group.getPosition());
             if (distance > this.groupRadius) {
                 this.leaveGroup(user);
             }
         }
-
-        // At the very end, if the user is part of a group, let's call the callback to update group position
-        /*if (user.group !== undefined) {
-            this.positionNotifier.updatePosition(user.group, user.group.getPosition(), oldGroupPosition ? oldGroupPosition : user.group.getPosition());
-        }*/
     }
 
     setSilent(socket: Identificable, silent: boolean) {
@@ -152,7 +146,7 @@ export class World {
         }
         if (!silent) {
             // If we are back to life, let's trigger a position update to see if we can join some group.
-            this.updatePosition(socket, user.position);
+            this.updatePosition(socket, user.getPosition());
         }
     }
 
@@ -251,7 +245,7 @@ export class World {
             if (group.isFull()) {
                 return;
             }
-            const distance = World.computeDistanceBetweenPositions(user.position, group.getPosition());
+            const distance = World.computeDistanceBetweenPositions(user.getPosition(), group.getPosition());
             if(distance <= minimumDistanceFound && distance <= this.groupRadius) {
                 minimumDistanceFound = distance;
                 matchingItem = group;
@@ -263,7 +257,9 @@ export class World {
 
     public static computeDistance(user1: User, user2: User): number
     {
-        return Math.sqrt(Math.pow(user2.position.x - user1.position.x, 2) + Math.pow(user2.position.y - user1.position.y, 2));
+        const user1Position = user1.getPosition();
+        const user2Position = user2.getPosition();
+        return Math.sqrt(Math.pow(user2Position.x - user1Position.x, 2) + Math.pow(user2Position.y - user1Position.y, 2));
     }
 
     public static computeDistanceBetweenPositions(position1: PositionInterface, position2: PositionInterface): number

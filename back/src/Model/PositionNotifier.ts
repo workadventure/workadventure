@@ -74,6 +74,13 @@ export class PositionNotifier {
         return things;
     }
 
+    public enter(thing: Movable): void {
+        const position = thing.getPosition();
+        const zoneDesc = this.getZoneDescriptorFromCoordinates(position.x, position.y);
+        const zone = this.getZone(zoneDesc.i, zoneDesc.j);
+        zone.enter(thing, null, position);
+    }
+
     public updatePosition(thing: Movable, newPosition: PositionInterface, oldPosition: PositionInterface): void {
         // Did we change zone?
         const oldZoneDesc = this.getZoneDescriptorFromCoordinates(oldPosition.x, oldPosition.y);
