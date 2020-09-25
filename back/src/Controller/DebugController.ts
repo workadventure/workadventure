@@ -14,36 +14,22 @@ export class DebugController {
 
 
     getDump(){
-        this.App.get("/dump", async (req: Request, res: Response) => {
+        this.App.get("/dump", (req: Request, res: Response) => {
             if (req.query.token !== ADMIN_API_TOKEN) {
                 return res.status(401).send('Invalid token sent!');
             }
 
-/*            const obj: any = {};
-
-            for (const [worldName, world] of this.ioSocketController.getWorlds().entries()) {
-                let users = new Array();
-                for (const [worldName, world] of this.ioSocketController.getWorlds().entries()) {
-
-                }
-
-
-                obj[worldName] = {
-                    users: world.getUsers()
-                };
-            }*/
-
             return res.status(OK).contentType('application/json').send(stringify(
                 this.ioSocketController.getWorlds(),
-                (key: any, value: any) => {
+                (key: unknown, value: unknown) => {
                     if(value instanceof Map) {
-                        const obj: any = {};
+                        const obj: any = {}; // eslint-disable-line @typescript-eslint/no-explicit-any
                         for (const [mapKey, mapValue] of value.entries()) {
                             obj[mapKey] = mapValue;
                         }
                         return obj;
                     } else if(value instanceof Set) {
-                            const obj: Array<any> = [];
+                            const obj: Array<unknown> = [];
                             for (const [setKey, setValue] of value.entries()) {
                                 obj.push(setValue);
                             }
