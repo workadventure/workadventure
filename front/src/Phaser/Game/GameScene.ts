@@ -40,6 +40,8 @@ import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
 import {ItemFactoryInterface} from "../Items/ItemFactoryInterface";
 import {ActionableItem} from "../Items/ActionableItem";
 import {UserInputManager} from "../UserInput/UserInputManager";
+import {UserMovedMessage} from "../../Messages/generated/messages_pb";
+import {ProtobufClientUtils} from "../../Network/ProtobufClientUtils";
 
 
 export enum Textures {
@@ -63,7 +65,7 @@ interface AddPlayerEventInterface {
 
 interface RemovePlayerEventInterface {
     type: 'RemovePlayerEvent'
-    userId: string
+    userId: number
 }
 
 interface UserMovedEventInterface {
@@ -78,7 +80,7 @@ interface GroupCreatedUpdatedEventInterface {
 
 interface DeleteGroupEventInterface {
     type: 'DeleteGroupEvent'
-    groupId: string
+    groupId: number
 }
 
 export class GameScene extends Phaser.Scene implements CenterListener {
@@ -86,12 +88,12 @@ export class GameScene extends Phaser.Scene implements CenterListener {
     Terrains : Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer!: CurrentGamerInterface;
     MapPlayers!: Phaser.Physics.Arcade.Group;
-    MapPlayersByKey : Map<string, RemotePlayer> = new Map<string, RemotePlayer>();
+    MapPlayersByKey : Map<number, RemotePlayer> = new Map<number, RemotePlayer>();
     Map!: Phaser.Tilemaps.Tilemap;
     Layers!: Array<Phaser.Tilemaps.StaticTilemapLayer>;
     Objects!: Array<Phaser.Physics.Arcade.Sprite>;
     mapFile!: ITiledMap;
-    groups: Map<string, Sprite>;
+    groups: Map<number, Sprite>;
     startX!: number;
     startY!: number;
     circleTexture!: CanvasTexture;
@@ -147,7 +149,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
 
         this.GameManager = gameManager;
         this.Terrains = [];
-        this.groups = new Map<string, Sprite>();
+        this.groups = new Map<number, Sprite>();
         this.instance = instance;
 
         this.MapKey = MapKey;
@@ -213,11 +215,22 @@ export class GameScene extends Phaser.Scene implements CenterListener {
                 this.addPlayer(userMessage);
             });
 
-            connection.onUserMoved((message: MessageUserMovedInterface) => {
-                this.updatePlayerPosition(message);
+            connection.onUserMoved((message: UserMovedMessage) => {
+                const position = message.getPosition();
+                if (position === undefined) {
+                    throw new Error('Position missing from UserMovedMessage');
+                }
+                //console.log('Received position ', position.getX(), position.getY(), "from user", message.getUserid());
+
+                const messageUserMoved: MessageUserMovedInterface = {
+                    userId: message.getUserid(),
+                    position: ProtobufClientUtils.toPointInterface(position)
+                }
+
+                this.updatePlayerPosition(messageUserMoved);
             });
 
-            connection.onUserLeft((userId: string) => {
+            connection.onUserLeft((userId: number) => {
                 this.removePlayer(userId);
             });
 
@@ -225,7 +238,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
                 this.shareGroupPosition(groupPositionMessage);
             })
 
-            connection.onGroupDeleted((groupId: string) => {
+            connection.onGroupDeleted((groupId: number) => {
                 try {
                     this.deleteGroup(groupId);
                 } catch (e) {
@@ -271,7 +284,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
                     self.presentationModeSprite.setVisible(true);
                     self.chatModeSprite.setVisible(true);
                 },
-                onDisconnect(userId: string) {
+                onDisconnect(userId: number) {
                     if (self.simplePeer.getNbConnections() === 0) {
                         self.presentationModeSprite.setVisible(false);
                         self.chatModeSprite.setVisible(false);
@@ -918,7 +931,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
 
         // Let's move all users
         const updatedPlayersPositions = this.playersPositionInterpolator.getUpdatedPositions(time);
-        updatedPlayersPositions.forEach((moveEvent: HasMovedEvent, userId: string) => {
+        updatedPlayersPositions.forEach((moveEvent: HasMovedEvent, userId: number) => {
             const player : RemotePlayer | undefined = this.MapPlayersByKey.get(userId);
             if (player === undefined) {
                 throw new Error('Cannot find player with ID "' + userId +'"');
@@ -973,7 +986,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
             player.destroy();
             this.MapPlayers.remove(player);
         });
-        this.MapPlayersByKey = new Map<string, RemotePlayer>();
+        this.MapPlayersByKey = new Map<number, RemotePlayer>();
 
         // load map
         usersPosition.forEach((userPosition : MessageUserPositionInterface) => {
@@ -1030,14 +1043,14 @@ export class GameScene extends Phaser.Scene implements CenterListener {
     /**
      * Called by the connexion when a player is removed from the map
      */
-    public removePlayer(userId: string) {
+    public removePlayer(userId: number) {
         this.pendingEvents.enqueue({
             type: "RemovePlayerEvent",
             userId
         });
     }
 
-    private doRemovePlayer(userId: string) {
+    private doRemovePlayer(userId: number) {
         const player = this.MapPlayersByKey.get(userId);
         if (player === undefined) {
             console.error('Cannot find user with id ', userId);
@@ -1067,6 +1080,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
         // We do not update the player position directly (because it is sent only every 200ms).
         // Instead we use the PlayersPositionInterpolator that will do a smooth animation over the next 200ms.
         const playerMovement = new PlayerMovement({ x: player.x, y: player.y }, this.currentTick, message.position, this.currentTick + POSITION_DELAY);
+        //console.log('Target position: ', player.x, player.y);
         this.playersPositionInterpolator.updatePlayerPosition(player.userId, playerMovement);
     }
 
@@ -1096,14 +1110,14 @@ export class GameScene extends Phaser.Scene implements CenterListener {
         }
     }
 
-    deleteGroup(groupId: string): void {
+    deleteGroup(groupId: number): void {
         this.pendingEvents.enqueue({
             type: "DeleteGroupEvent",
             groupId
         });
     }
 
-    doDeleteGroup(groupId: string): void {
+    doDeleteGroup(groupId: number): void {
         const group = this.groups.get(groupId);
         if(!group){
             return;

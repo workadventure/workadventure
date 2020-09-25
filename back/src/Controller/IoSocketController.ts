@@ -10,22 +10,35 @@ import {Group} from "../Model/Group";
 import {User} from "../Model/User";
 import {isSetPlayerDetailsMessage,} from "../Model/Websocket/SetPlayerDetailsMessage";
 import {MessageUserJoined} from "../Model/Websocket/MessageUserJoined";
-import {MessageUserMoved} from "../Model/Websocket/MessageUserMoved";
 import si from "systeminformation";
 import {Gauge} from "prom-client";
 import {TokenInterface} from "../Controller/AuthenticateController";
 import {isJoinRoomMessageInterface} from "../Model/Websocket/JoinRoomMessage";
-import {isPointInterface, PointInterface} from "../Model/Websocket/PointInterface";
+import {PointInterface} from "../Model/Websocket/PointInterface";
 import {isWebRtcSignalMessageInterface} from "../Model/Websocket/WebRtcSignalMessage";
 import {UserInGroupInterface} from "../Model/Websocket/UserInGroupInterface";
 import {isItemEventMessageInterface} from "../Model/Websocket/ItemEventMessage";
 import {uuid} from 'uuidv4';
-import {isUserMovesInterface} from "../Model/Websocket/UserMovesMessage";
-import {isViewport} from "../Model/Websocket/ViewportMessage";
 import {GroupUpdateInterface} from "_Model/Websocket/GroupUpdateInterface";
 import {Movable} from "../Model/Movable";
+import {
+    PositionMessage,
+    SetPlayerDetailsMessage,
+    SubMessage,
+    UserMovedMessage,
+    BatchMessage,
+    GroupUpdateMessage,
+    PointMessage,
+    GroupDeleteMessage,
+    UserJoinedMessage,
+    UserLeftMessage,
+    ItemEventMessage, ViewportMessage
+} from "../Messages/generated/messages_pb";
+import {UserMovesMessage} from "../Messages/generated/messages_pb";
+import Direction = PositionMessage.Direction;
+import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
 
-enum SockerIoEvent {
+enum SocketIoEvent {
     CONNECTION = "connection",
     DISCONNECT = "disconnect",
     JOIN_ROOM = "join-room", // bi-directional
@@ -46,13 +59,13 @@ enum SockerIoEvent {
     BATCH = "batch",
 }
 
-function emitInBatch(socket: ExSocketInterface, event: string | symbol, payload: unknown): void {
-    socket.batchedMessages.push({ event, payload});
+function emitInBatch(socket: ExSocketInterface, event: string, payload: SubMessage): void {
+    socket.batchedMessages.addPayload(payload);
 
     if (socket.batchTimeout === null) {
         socket.batchTimeout = setTimeout(() => {
-            socket.emit(SockerIoEvent.BATCH, socket.batchedMessages);
-            socket.batchedMessages = [];
+            socket./*binary(true).*/emit(SocketIoEvent.BATCH, socket.batchedMessages.serializeBinary().buffer);
+            socket.batchedMessages = new BatchMessage();
             socket.batchTimeout = null;
         }, 100);
     }
@@ -61,9 +74,10 @@ function emitInBatch(socket: ExSocketInterface, event: string | symbol, payload:
 export class IoSocketController {
     public readonly Io: socketIO.Server;
     private Worlds: Map<string, World> = new Map<string, World>();
-    private sockets: Map<string, ExSocketInterface> = new Map<string, ExSocketInterface>();
+    private sockets: Map<number, ExSocketInterface> = new Map<number, ExSocketInterface>();
     private nbClientsGauge: Gauge<string>;
     private nbClientsPerRoomGauge: Gauge<string>;
+    private nextUserId: number = 1;
 
     constructor(server: http.Server) {
         this.Io = socketIO(server);
@@ -81,7 +95,7 @@ export class IoSocketController {
         // Authentication with token. it will be decoded and stored in the socket.
         // Completely commented for now, as we do not use the "/login" route at all.
         this.Io.use((socket: Socket, next) => {
-            console.log(socket.handshake.query.token);
+            //console.log(socket.handshake.query.token);
             if (!socket.handshake.query || !socket.handshake.query.token) {
                 console.error('An authentication error happened, a user tried to connect without a token.');
                 return next(new Error('Authentication error'));
@@ -89,7 +103,9 @@ export class IoSocketController {
             if(socket.handshake.query.token === 'test'){
                 if (ALLOW_ARTILLERY) {
                     (socket as ExSocketInterface).token = socket.handshake.query.token;
-                    (socket as ExSocketInterface).userId = uuid();
+                    (socket as ExSocketInterface).userId = this.nextUserId;
+                    (socket as ExSocketInterface).userUuid = uuid();
+                    this.nextUserId++;
                     (socket as ExSocketInterface).isArtillery = true;
                     console.log((socket as ExSocketInterface).userId);
                     next();
@@ -115,7 +131,9 @@ export class IoSocketController {
                 }
 
                 (socket as ExSocketInterface).token = socket.handshake.query.token;
-                (socket as ExSocketInterface).userId = tokenDecoded.userId;
+                (socket as ExSocketInterface).userId = this.nextUserId;
+                (socket as ExSocketInterface).userUuid = tokenDecoded.userUuid;
+                this.nextUserId++;
                 next();
             });
         });
@@ -124,7 +142,7 @@ export class IoSocketController {
     }
 
     private isValidToken(token: object): token is TokenInterface {
-        if (typeof((token as TokenInterface).userId) !== 'string') {
+        if (typeof((token as TokenInterface).userUuid) !== 'string') {
             return false;
         }
         if (typeof((token as TokenInterface).name) !== 'string') {
@@ -150,11 +168,11 @@ export class IoSocketController {
     }
 
     ioConnection() {
-        this.Io.on(SockerIoEvent.CONNECTION, (socket: Socket) => {
+        this.Io.on(SocketIoEvent.CONNECTION, (socket: Socket) => {
             const client : ExSocketInterface = socket as ExSocketInterface;
-            client.batchedMessages = [];
+            client.batchedMessages = new BatchMessage();
             client.batchTimeout = null;
-            client.emitInBatch = (event: string | symbol, payload: unknown): void => {
+            client.emitInBatch = (event: string, payload: SubMessage): void => {
                 emitInBatch(client, event, payload);
             }
             this.sockets.set(client.userId, client);
@@ -163,8 +181,8 @@ export class IoSocketController {
             const srvSockets = this.Io.sockets.sockets;
             this.nbClientsGauge.inc();
             console.log(new Date().toISOString() + ' A user joined (', Object.keys(srvSockets).length, ' connected users)');
-            si.currentLoad().then(data => console.log('  Current load: ', data.avgload));
-            si.currentLoad().then(data => console.log('  CPU: ', data.currentload, '%'));
+            //si.currentLoad().then(data => console.log('  Current load: ', data.avgload));
+            //si.currentLoad().then(data => console.log('  CPU: ', data.currentload, '%'));
             // End log server load
 
             /*join-rom event permit to join one room.
@@ -175,11 +193,11 @@ export class IoSocketController {
                         x: user x position on map
                         y: user y position on map
             */
-            socket.on(SockerIoEvent.JOIN_ROOM, (message: unknown, answerFn): void => {
-                console.log(SockerIoEvent.JOIN_ROOM, message);
+            socket.on(SocketIoEvent.JOIN_ROOM, (message: unknown, answerFn): void => {
+                //console.log(SocketIoEvent.JOIN_ROOM, message);
                 try {
                     if (!isJoinRoomMessageInterface(message)) {
-                        socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid JOIN_ROOM message.'});
+                        socket.emit(SocketIoEvent.MESSAGE_ERROR, {message: 'Invalid JOIN_ROOM message.'});
                         console.warn('Invalid JOIN_ROOM message received: ', message);
                         return;
                     }
@@ -243,17 +261,19 @@ export class IoSocketController {
                 }
             });
 
-            socket.on(SockerIoEvent.SET_VIEWPORT, (message: unknown): void => {
+            socket.on(SocketIoEvent.SET_VIEWPORT, (message: unknown): void => {
                 try {
-                    //console.log('SET_VIEWPORT')
-                    if (!isViewport(message)) {
-                        socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid SET_VIEWPORT message.'});
-                        console.warn('Invalid SET_VIEWPORT message received: ', message);
+                    if (!(message instanceof Buffer)) {
+                        socket.emit(SocketIoEvent.MESSAGE_ERROR, {message: 'Invalid SET_VIEWPORT message. Expecting binary buffer.'});
+                        console.warn('Invalid SET_VIEWPORT message received (expecting binary buffer): ', message);
                         return;
                     }
 
+                    const viewportMessage = ViewportMessage.deserializeBinary(new Uint8Array(message as ArrayBuffer));
+                    const viewport = viewportMessage.toObject();
+
                     const Client = (socket as ExSocketInterface);
-                    Client.viewport = message;
+                    Client.viewport = viewport;
 
                     const world = this.Worlds.get(Client.roomId);
                     if (!world) {
@@ -267,20 +287,55 @@ export class IoSocketController {
                 }
             });
 
-            socket.on(SockerIoEvent.USER_POSITION, (userMovesMessage: unknown): void => {
+            socket.on(SocketIoEvent.USER_POSITION, (message: unknown): void => {
                 //console.log(SockerIoEvent.USER_POSITION, userMovesMessage);
                 try {
-                    if (!isUserMovesInterface(userMovesMessage)) {
-                        socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid USER_POSITION message.'});
-                        console.warn('Invalid USER_POSITION message received: ', userMovesMessage);
+                    if (!(message instanceof Buffer)) {
+                        socket.emit(SocketIoEvent.MESSAGE_ERROR, {message: 'Invalid USER_POSITION message. Expecting binary buffer.'});
+                        console.warn('Invalid USER_POSITION message received (expecting binary buffer): ', message);
                         return;
+                    }
+
+                    const userMovesMessage = UserMovesMessage.deserializeBinary(new Uint8Array(message as ArrayBuffer));
+                    const userMoves = userMovesMessage.toObject();
+
+                    const position = userMoves.position;
+                    if (position === undefined) {
+                        throw new Error('Position not found in message');
+                    }
+                    const viewport = userMoves.viewport;
+                    if (viewport === undefined) {
+                        throw new Error('Viewport not found in message');
+                    }
+
+                    let direction: string;
+                    switch (position.direction) {
+                        case Direction.UP:
+                            direction = 'up';
+                            break;
+                        case Direction.DOWN:
+                            direction = 'down';
+                            break;
+                        case Direction.LEFT:
+                            direction = 'left';
+                            break;
+                        case Direction.RIGHT:
+                            direction = 'right';
+                            break;
+                        default:
+                            throw new Error("Unexpected direction");
                     }
 
                     const Client = (socket as ExSocketInterface);
 
                     // sending to all clients in room except sender
-                    Client.position = userMovesMessage.position;
-                    Client.viewport = userMovesMessage.viewport;
+                    Client.position = {
+                        x: position.x,
+                        y: position.y,
+                        direction,
+                        moving: position.moving,
+                    };
+                    Client.viewport = viewport;
 
                     // update position in the world
                     const world = this.Worlds.get(Client.roomId);
@@ -296,15 +351,15 @@ export class IoSocketController {
                 }
             });
 
-            socket.on(SockerIoEvent.WEBRTC_SIGNAL, (data: unknown) => {
+            socket.on(SocketIoEvent.WEBRTC_SIGNAL, (data: unknown) => {
                 this.emitVideo((socket as ExSocketInterface), data);
             });
 
-            socket.on(SockerIoEvent.WEBRTC_SCREEN_SHARING_SIGNAL, (data: unknown) => {
+            socket.on(SocketIoEvent.WEBRTC_SCREEN_SHARING_SIGNAL, (data: unknown) => {
                 this.emitScreenSharing((socket as ExSocketInterface), data);
             });
 
-            socket.on(SockerIoEvent.DISCONNECT, () => {
+            socket.on(SocketIoEvent.DISCONNECT, () => {
                 const Client = (socket as ExSocketInterface);
                 try {
                     //leave room
@@ -328,16 +383,27 @@ export class IoSocketController {
                 const srvSockets = this.Io.sockets.sockets;
                 this.nbClientsGauge.dec();
                 console.log('A user left (', Object.keys(srvSockets).length, ' connected users)');
-                si.currentLoad().then(data => console.log('Current load: ', data.avgload));
-                si.currentLoad().then(data => console.log('CPU: ', data.currentload, '%'));
+                //si.currentLoad().then(data => console.log('Current load: ', data.avgload));
+                //si.currentLoad().then(data => console.log('CPU: ', data.currentload, '%'));
                 // End log server load
             });
 
             // Let's send the user id to the user
-            socket.on(SockerIoEvent.SET_PLAYER_DETAILS, (playerDetails: unknown, answerFn) => {
-                console.log(SockerIoEvent.SET_PLAYER_DETAILS, playerDetails);
+            socket.on(SocketIoEvent.SET_PLAYER_DETAILS, (message: unknown, answerFn) => {
+                //console.log(SocketIoEvent.SET_PLAYER_DETAILS, message);
+                if (!(message instanceof Buffer)) {
+                    socket.emit(SocketIoEvent.MESSAGE_ERROR, {message: 'Invalid SET_PLAYER_DETAILS message. Expecting binary buffer.'});
+                    console.warn('Invalid SET_PLAYER_DETAILS message received (expecting binary buffer): ', message);
+                    return;
+                }
+                const playerDetailsMessage = SetPlayerDetailsMessage.deserializeBinary(new Uint8Array(message));
+                const playerDetails = {
+                    name: playerDetailsMessage.getName(),
+                    characterLayers: playerDetailsMessage.getCharacterlayersList()
+                };
+                //console.log(SocketIoEvent.SET_PLAYER_DETAILS, playerDetails);
                 if (!isSetPlayerDetailsMessage(playerDetails)) {
-                    socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid SET_PLAYER_DETAILS message.'});
+                    socket.emit(SocketIoEvent.MESSAGE_ERROR, {message: 'Invalid SET_PLAYER_DETAILS message.'});
                     console.warn('Invalid SET_PLAYER_DETAILS message received: ', playerDetails);
                     return;
                 }
@@ -350,10 +416,10 @@ export class IoSocketController {
                 }
             });
 
-            socket.on(SockerIoEvent.SET_SILENT, (silent: unknown) => {
-                console.log(SockerIoEvent.SET_SILENT, silent);
+            socket.on(SocketIoEvent.SET_SILENT, (silent: unknown) => {
+                //console.log(SocketIoEvent.SET_SILENT, silent);
                 if (typeof silent !== "boolean") {
-                    socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid SET_SILENT message.'});
+                    socket.emit(SocketIoEvent.MESSAGE_ERROR, {message: 'Invalid SET_SILENT message.'});
                     console.warn('Invalid SET_SILENT message received: ', silent);
                     return;
                 }
@@ -374,22 +440,42 @@ export class IoSocketController {
                 }
             });
 
-            socket.on(SockerIoEvent.ITEM_EVENT, (itemEvent: unknown) => {
-                if (!isItemEventMessageInterface(itemEvent)) {
-                    socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid ITEM_EVENT message.'});
-                    console.warn('Invalid ITEM_EVENT message received: ', itemEvent);
+            socket.on(SocketIoEvent.ITEM_EVENT, (message: unknown) => {
+                if (!(message instanceof Buffer)) {
+                    socket.emit(SocketIoEvent.MESSAGE_ERROR, {message: 'Invalid ITEM_EVENT message. Expecting binary buffer.'});
+                    console.warn('Invalid ITEM_EVENT message received (expecting binary buffer): ', message);
                     return;
                 }
+                const itemEventMessage = ItemEventMessage.deserializeBinary(new Uint8Array(message));
+
+                const itemEvent = ProtobufUtils.toItemEvent(itemEventMessage);
+
+                /*if (!isItemEventMessageInterface(itemEvent)) {
+                    socket.emit(SocketIoEvent.MESSAGE_ERROR, {message: 'Invalid ITEM_EVENT message.'});
+                    console.warn('Invalid ITEM_EVENT message received: ', itemEvent);
+                    return;
+                }*/
                 try {
                     const Client = (socket as ExSocketInterface);
 
-                    socket.to(Client.roomId).emit(SockerIoEvent.ITEM_EVENT, itemEvent);
+                    //socket.to(Client.roomId).emit(SocketIoEvent.ITEM_EVENT, itemEvent);
 
                     const world = this.Worlds.get(Client.roomId);
                     if (!world) {
                         console.error("Could not find world with id '", Client.roomId, "'");
                         return;
                     }
+
+                    const subMessage = new SubMessage();
+                    subMessage.setItemeventmessage(itemEventMessage);
+
+                    // Let's send the event without using the SocketIO room.
+                    for (const user of world.getUsers().values()) {
+                        const client = this.searchClientByIdOrFail(user.id);
+                        //client.emit(SocketIoEvent.ITEM_EVENT, itemEvent);
+                        emitInBatch(client, SocketIoEvent.ITEM_EVENT, subMessage);
+                    }
+
                     world.setItemState(itemEvent.itemId, itemEvent.state);
                 } catch (e) {
                     console.error('An error occurred on "item_event"');
@@ -401,7 +487,7 @@ export class IoSocketController {
 
     emitVideo(socket: ExSocketInterface, data: unknown){
         if (!isWebRtcSignalMessageInterface(data)) {
-            socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid WEBRTC_SIGNAL message.'});
+            socket.emit(SocketIoEvent.MESSAGE_ERROR, {message: 'Invalid WEBRTC_SIGNAL message.'});
             console.warn('Invalid WEBRTC_SIGNAL message received: ', data);
             return;
         }
@@ -411,7 +497,7 @@ export class IoSocketController {
             console.warn("While exchanging a WebRTC signal: client with id ", data.receiverId, " does not exist. This might be a race condition.");
             return;
         }
-        return client.emit(SockerIoEvent.WEBRTC_SIGNAL, {
+        return client.emit(SocketIoEvent.WEBRTC_SIGNAL, {
             userId: socket.userId,
             signal: data.signal
         });
@@ -419,7 +505,7 @@ export class IoSocketController {
 
     emitScreenSharing(socket: ExSocketInterface, data: unknown){
         if (!isWebRtcSignalMessageInterface(data)) {
-            socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid WEBRTC_SCREEN_SHARING message.'});
+            socket.emit(SocketIoEvent.MESSAGE_ERROR, {message: 'Invalid WEBRTC_SCREEN_SHARING message.'});
             console.warn('Invalid WEBRTC_SCREEN_SHARING message received: ', data);
             return;
         }
@@ -429,13 +515,13 @@ export class IoSocketController {
             console.warn("While exchanging a WEBRTC_SCREEN_SHARING signal: client with id ", data.receiverId, " does not exist. This might be a race condition.");
             return;
         }
-        return client.emit(SockerIoEvent.WEBRTC_SCREEN_SHARING_SIGNAL, {
+        return client.emit(SocketIoEvent.WEBRTC_SCREEN_SHARING_SIGNAL, {
             userId: socket.userId,
             signal: data.signal
         });
     }
 
-    searchClientByIdOrFail(userId: string): ExSocketInterface {
+    searchClientByIdOrFail(userId: number): ExSocketInterface {
         const client: ExSocketInterface|undefined = this.sockets.get(userId);
         if (client === undefined) {
             throw new Error("Could not find user with id " + userId);
@@ -474,22 +560,27 @@ export class IoSocketController {
         //check and create new world for a room
         let world = this.Worlds.get(roomId)
         if(world === undefined){
-            world = new World((user1: string, group: Group) => {
+            world = new World((user1: number, group: Group) => {
                 this.connectedUser(user1, group);
-            }, (user1: string, group: Group) => {
+            }, (user1: number, group: Group) => {
                 this.disConnectedUser(user1, group);
             }, MINIMUM_DISTANCE, GROUP_RADIUS, (thing: Movable, listener: User) => {
                 const clientListener = this.searchClientByIdOrFail(listener.id);
                 if (thing instanceof User) {
                     const clientUser = this.searchClientByIdOrFail(thing.id);
-                    const messageUserJoined = new MessageUserJoined(clientUser.userId, clientUser.name, clientUser.characterLayers, clientUser.position);
 
-                    clientListener.emit(SockerIoEvent.JOIN_ROOM, messageUserJoined);
+                    const userJoinedMessage = new UserJoinedMessage();
+                    userJoinedMessage.setUserid(clientUser.userId);
+                    userJoinedMessage.setName(clientUser.name);
+                    userJoinedMessage.setCharacterlayersList(clientUser.characterLayers);
+                    userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(clientUser.position));
+
+                    const subMessage = new SubMessage();
+                    subMessage.setUserjoinedmessage(userJoinedMessage);
+
+                    emitInBatch(clientListener, SocketIoEvent.JOIN_ROOM, subMessage);
                 } else if (thing instanceof Group) {
-                    clientListener.emit(SockerIoEvent.GROUP_CREATE_UPDATE, {
-                        position: thing.getPosition(),
-                        groupId: thing.getId()
-                    } as GroupUpdateInterface);
+                    this.emitCreateUpdateGroupEvent(clientListener, thing);
                 } else {
                     console.error('Unexpected type for Movable.');
                 }
@@ -498,13 +589,17 @@ export class IoSocketController {
                 if (thing instanceof User) {
                     const clientUser = this.searchClientByIdOrFail(thing.id);
 
-                    clientListener.emitInBatch(SockerIoEvent.USER_MOVED, new MessageUserMoved(clientUser.userId, clientUser.position));
+                    const userMovedMessage = new UserMovedMessage();
+                    userMovedMessage.setUserid(clientUser.userId);
+                    userMovedMessage.setPosition(ProtobufUtils.toPositionMessage(clientUser.position));
+
+                    const subMessage = new SubMessage();
+                    subMessage.setUsermovedmessage(userMovedMessage);
+
+                    clientListener.emitInBatch(SocketIoEvent.USER_MOVED, subMessage);
                     //console.log("Sending USER_MOVED event");
                 } else if (thing instanceof Group) {
-                    clientListener.emit(SockerIoEvent.GROUP_CREATE_UPDATE, {
-                        position: thing.getPosition(),
-                        groupId: thing.getId()
-                    } as GroupUpdateInterface);
+                    this.emitCreateUpdateGroupEvent(clientListener, thing);
                 } else {
                     console.error('Unexpected type for Movable.');
                 }
@@ -512,10 +607,9 @@ export class IoSocketController {
                 const clientListener = this.searchClientByIdOrFail(listener.id);
                 if (thing instanceof User) {
                     const clientUser = this.searchClientByIdOrFail(thing.id);
-                    clientListener.emit(SockerIoEvent.USER_LEFT, clientUser.userId);
-                    //console.log("Sending USER_LEFT event");
+                    this.emitUserLeftEvent(clientListener, clientUser.userId);
                 } else if (thing instanceof Group) {
-                    clientListener.emit(SockerIoEvent.GROUP_DELETE, thing.getId());
+                    this.emitDeleteGroupEvent(clientListener, thing.getId());
                 } else {
                     console.error('Unexpected type for Movable.');
                 }
@@ -526,14 +620,50 @@ export class IoSocketController {
 
         // Dispatch groups position to newly connected user
         world.getGroups().forEach((group: Group) => {
-            Client.emit(SockerIoEvent.GROUP_CREATE_UPDATE, {
-                position: group.getPosition(),
-                groupId: group.getId()
-            } as GroupUpdateInterface);
+            this.emitCreateUpdateGroupEvent(Client, group);
         });
         //join world
         world.join(Client, Client.position);
         return world;
+    }
+
+    private emitCreateUpdateGroupEvent(socket: Socket, group: Group): void {
+        const position = group.getPosition();
+        const pointMessage = new PointMessage();
+        pointMessage.setX(Math.floor(position.x));
+        pointMessage.setY(Math.floor(position.y));
+        const groupUpdateMessage = new GroupUpdateMessage();
+        groupUpdateMessage.setGroupid(group.getId());
+        groupUpdateMessage.setPosition(pointMessage);
+
+        const subMessage = new SubMessage();
+        subMessage.setGroupupdatemessage(groupUpdateMessage);
+
+        const client : ExSocketInterface = socket as ExSocketInterface;
+        emitInBatch(client, SocketIoEvent.GROUP_CREATE_UPDATE, subMessage);
+        //socket.emit(SocketIoEvent.GROUP_CREATE_UPDATE, groupUpdateMessage.serializeBinary().buffer);
+    }
+
+    private emitDeleteGroupEvent(socket: Socket, groupId: number): void {
+        const groupDeleteMessage = new GroupDeleteMessage();
+        groupDeleteMessage.setGroupid(groupId);
+
+        const subMessage = new SubMessage();
+        subMessage.setGroupdeletemessage(groupDeleteMessage);
+
+        const client : ExSocketInterface = socket as ExSocketInterface;
+        emitInBatch(client, SocketIoEvent.GROUP_DELETE, subMessage);
+    }
+
+    private emitUserLeftEvent(socket: Socket, userId: number): void {
+        const userLeftMessage = new UserLeftMessage();
+        userLeftMessage.setUserid(userId);
+
+        const subMessage = new SubMessage();
+        subMessage.setUserleftmessage(userLeftMessage);
+
+        const client : ExSocketInterface = socket as ExSocketInterface;
+        emitInBatch(client, SocketIoEvent.USER_LEFT, subMessage);
     }
 
     /**
@@ -571,7 +701,7 @@ export class IoSocketController {
                 return tabs;
             }, []);
 
-            client.emit(SockerIoEvent.WEBRTC_START, {clients: peerClients, roomId: roomId});
+            client.emit(SocketIoEvent.WEBRTC_START, {clients: peerClients, roomId: roomId});
         });
     }
 
@@ -593,19 +723,19 @@ export class IoSocketController {
      **/
 
     //connected user
-    connectedUser(userId: string, group: Group) {
+    connectedUser(userId: number, group: Group) {
         /*let Client = this.sockets.get(userId);
         if (Client === undefined) {
             return;
         }*/
         const Client = this.searchClientByIdOrFail(userId);
-        this.joinWebRtcRoom(Client, group.getId());
+        this.joinWebRtcRoom(Client, "webrtcroom"+group.getId());
     }
 
     //disconnect user
-    disConnectedUser(userId: string, group: Group) {
+    disConnectedUser(userId: number, group: Group) {
         const Client = this.searchClientByIdOrFail(userId);
-        Client.to(group.getId()).emit(SockerIoEvent.WEBRTC_DISCONNECT, {
+        Client.to("webrtcroom"+group.getId()).emit(SocketIoEvent.WEBRTC_DISCONNECT, {
             userId: userId
         });
 
@@ -615,7 +745,7 @@ export class IoSocketController {
         // the other player will try connecting until a timeout happens (during this time, the connection icon will be displayed for nothing).
         // So we also send the disconnect event to the other player.
         for (const user of group.getUsers()) {
-            Client.emit(SockerIoEvent.WEBRTC_DISCONNECT, {
+            Client.emit(SocketIoEvent.WEBRTC_DISCONNECT, {
                 userId: user.id
             });
         }
@@ -626,5 +756,9 @@ export class IoSocketController {
         }
         Client.leave(Client.webRtcRoomId);
         delete Client.webRtcRoomId;
+    }
+
+    public getWorlds(): Map<string, World> {
+        return this.Worlds;
     }
 }

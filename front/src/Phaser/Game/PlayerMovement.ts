@@ -20,12 +20,13 @@ export class PlayerMovement {
     public getPosition(tick: number): HasMovedEvent {
         // Special case: end position reached and end position is not moving
         if (tick >= this.endTick && this.endPosition.moving === false) {
+            //console.log('Movement finished ', this.endPosition)
             return this.endPosition;
         }
 
         const x = (this.endPosition.x - this.startPosition.x) * ((tick - this.startTick) / (this.endTick - this.startTick)) + this.startPosition.x;
         const y = (this.endPosition.y - this.startPosition.y) * ((tick - this.startTick) / (this.endTick - this.startTick)) + this.startPosition.y;
-
+        //console.log('Computed position ', x, y)
         return {
             x,
             y,

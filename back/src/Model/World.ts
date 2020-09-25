@@ -11,15 +11,15 @@ import {PositionNotifier} from "./PositionNotifier";
 import {ViewportInterface} from "_Model/Websocket/ViewportMessage";
 import {Movable} from "_Model/Movable";
 
-export type ConnectCallback = (user: string, group: Group) => void;
-export type DisconnectCallback = (user: string, group: Group) => void;
+export type ConnectCallback = (user: number, group: Group) => void;
+export type DisconnectCallback = (user: number, group: Group) => void;
 
 export class World {
     private readonly minDistance: number;
     private readonly groupRadius: number;
 
     // Users, sorted by ID
-    private readonly users: Map<string, User>;
+    private readonly users: Map<number, User>;
     private readonly groups: Set<Group>;
 
     private readonly connectCallback: ConnectCallback;
@@ -37,7 +37,7 @@ export class World {
                 onMoves: MovesCallback,
                 onLeaves: LeavesCallback)
     {
-        this.users = new Map<string, User>();
+        this.users = new Map<number, User>();
         this.groups = new Set<Group>();
         this.connectCallback = connectCallback;
         this.disconnectCallback = disconnectCallback;
@@ -51,14 +51,16 @@ export class World {
         return Array.from(this.groups.values());
     }
 
-    public getUsers(): Map<string, User> {
+    public getUsers(): Map<number, User> {
         return this.users;
     }
 
     public join(socket : Identificable, userPosition: PointInterface): void {
-        this.users.set(socket.userId, new User(socket.userId, userPosition, false));
+        const user = new User(socket.userId, userPosition, false, this.positionNotifier);
+        this.users.set(socket.userId, user);
         // Let's call update position to trigger the join / leave room
-        this.updatePosition(socket, userPosition);
+        //this.updatePosition(socket, userPosition);
+        this.updateUserGroup(user);
     }
 
     public leave(user : Identificable){
@@ -87,11 +89,13 @@ export class World {
             return;
         }
 
-        this.positionNotifier.updatePosition(user, userPosition, user.position);
+        user.setPosition(userPosition);
 
-        const oldGroupPosition = user.group?.getPosition();
+        this.updateUserGroup(user);
+    }
 
-        user.position = userPosition;
+    private updateUserGroup(user: User): void {
+        user.group?.updatePosition();
 
         if (user.silent) {
             return;
@@ -111,7 +115,7 @@ export class World {
                     const group: Group = new Group([
                         user,
                         closestUser
-                    ], this.connectCallback, this.disconnectCallback);
+                    ], this.connectCallback, this.disconnectCallback, this.positionNotifier);
                     this.groups.add(group);
                 }
             }
@@ -119,15 +123,10 @@ export class World {
         } else {
             // If the user is part of a group:
             //  should he leave the group?
-            const distance = World.computeDistanceBetweenPositions(user.position, user.group.getPosition());
+            const distance = World.computeDistanceBetweenPositions(user.getPosition(), user.group.getPosition());
             if (distance > this.groupRadius) {
                 this.leaveGroup(user);
             }
-        }
-
-        // At the very end, if the user is part of a group, let's call the callback to update group position
-        if (typeof user.group !== 'undefined') {
-            this.positionNotifier.updatePosition(user.group, user.group.getPosition(), oldGroupPosition ? oldGroupPosition : user.group.getPosition());
         }
     }
 
@@ -147,7 +146,7 @@ export class World {
         }
         if (!silent) {
             // If we are back to life, let's trigger a position update to see if we can join some group.
-            this.updatePosition(socket, user.position);
+            this.updatePosition(socket, user.getPosition());
         }
     }
 
@@ -158,9 +157,10 @@ export class World {
      */
     private leaveGroup(user: User): void {
         const group = user.group;
-        if (typeof group === 'undefined') {
+        if (group === undefined) {
             throw new Error("The user is part of no group");
         }
+        const oldPosition = group.getPosition();
         group.leave(user);
         if (group.isEmpty()) {
             this.positionNotifier.leave(group);
@@ -170,7 +170,8 @@ export class World {
             }
             this.groups.delete(group);
         } else {
-            this.positionNotifier.updatePosition(group, group.getPosition(), group.getPosition());
+            group.updatePosition();
+            //this.positionNotifier.updatePosition(group, group.getPosition(), oldPosition);
         }
     }
 
@@ -244,7 +245,7 @@ export class World {
             if (group.isFull()) {
                 return;
             }
-            const distance = World.computeDistanceBetweenPositions(user.position, group.getPosition());
+            const distance = World.computeDistanceBetweenPositions(user.getPosition(), group.getPosition());
             if(distance <= minimumDistanceFound && distance <= this.groupRadius) {
                 minimumDistanceFound = distance;
                 matchingItem = group;
@@ -256,7 +257,9 @@ export class World {
 
     public static computeDistance(user1: User, user2: User): number
     {
-        return Math.sqrt(Math.pow(user2.position.x - user1.position.x, 2) + Math.pow(user2.position.y - user1.position.y, 2));
+        const user1Position = user1.getPosition();
+        const user2Position = user2.getPosition();
+        return Math.sqrt(Math.pow(user2Position.x - user1Position.x, 2) + Math.pow(user2Position.y - user1Position.y, 2));
     }
 
     public static computeDistanceBetweenPositions(position1: PositionInterface, position2: PositionInterface): number

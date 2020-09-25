@@ -1,3 +1,3 @@
 export interface Identificable {
-    userId: string;
+    userId: number;
 }

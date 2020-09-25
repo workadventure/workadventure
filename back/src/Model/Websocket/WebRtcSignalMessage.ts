@@ -7,12 +7,12 @@ export const isSignalData =
 
 export const isWebRtcSignalMessageInterface =
     new tg.IsInterface().withProperties({
-        receiverId: tg.isString,
+        receiverId: tg.isNumber,
         signal: isSignalData
     }).get();
 export const isWebRtcScreenSharingStartMessageInterface =
     new tg.IsInterface().withProperties({
-        userId: tg.isString,
+        userId: tg.isNumber,
         roomId: tg.isString
     }).get();
 export type WebRtcSignalMessageInterface = tg.GuardedType<typeof isWebRtcSignalMessageInterface>;

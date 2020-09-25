@@ -6,7 +6,7 @@ import { uuid } from 'uuidv4';
 
 export interface TokenInterface {
     name: string,
-    userId: string
+    userUuid: string
 }
 
 export class AuthenticateController {
@@ -28,12 +28,12 @@ export class AuthenticateController {
                 });
             }*/
             //TODO check user email for The Coding Machine game
-            const userId = uuid();
-            const token = Jwt.sign({name: param.name, userId: userId} as TokenInterface, SECRET_KEY, {expiresIn: '24h'});
+            const userUuid = uuid();
+            const token = Jwt.sign({name: param.name, userUuid: userUuid} as TokenInterface, SECRET_KEY, {expiresIn: '24h'});
             return res.status(OK).send({
                 token: token,
                 mapUrlStart: URL_ROOM_STARTED,
-                userId: userId,
+                userId: userUuid,
             });
         });
     }

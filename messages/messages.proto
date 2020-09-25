@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+/*********** PARTIAL MESSAGES **************/
+
+message PositionMessage {
+  int32 x = 1;
+  int32 y = 2;
+  enum Direction {
+    UP = 0;
+    RIGHT = 1;
+    DOWN = 2;
+    LEFT = 3;
+  }
+  Direction direction = 3;
+  bool moving = 4;
+}
+
+message PointMessage {
+  int32 x = 1;
+  int32 y = 2;
+}
+
+message ViewportMessage {
+  int32 left = 1;
+  int32 top = 2;
+  int32 right = 3;
+  int32 bottom = 4;
+}
+
+/*********** CLIENT TO SERVER MESSAGES *************/
+
+message SetPlayerDetailsMessage {
+  string name = 1;
+  repeated string characterLayers = 2;
+}
+
+message UserMovesMessage {
+  PositionMessage position = 1;
+  ViewportMessage viewport = 2;
+}
+
+/************ BI-DIRECTIONAL MESSAGES **************/
+
+message ItemEventMessage {
+  int32 itemId = 1;
+  string event = 2;
+  string stateJson = 3;
+  string parametersJson = 4;
+}
+
+/*********** SERVER TO CLIENT MESSAGES *************/
+
+message UserMovedMessage {
+  int32 userId = 1;
+  PositionMessage position = 2;
+}
+
+message SubMessage {
+  oneof message {
+    UserMovedMessage userMovedMessage = 1;
+    GroupUpdateMessage groupUpdateMessage = 2;
+    GroupDeleteMessage groupDeleteMessage = 3;
+    UserJoinedMessage userJoinedMessage = 4;
+    UserLeftMessage userLeftMessage = 5;
+    ItemEventMessage itemEventMessage = 6;
+  }
+}
+
+message BatchMessage {
+  string event = 1;
+  repeated SubMessage payload = 2;
+}
+
+message GroupUpdateMessage {
+  int32 groupId = 1;
+  PointMessage position = 2;
+}
+
+message GroupDeleteMessage {
+  int32 groupId = 1;
+}
+
+message UserJoinedMessage {
+  int32 userId = 1;
+  string name = 2;
+  repeated string characterLayers = 3;
+  PositionMessage position = 4;
+}
+
+message UserLeftMessage {
+  int32 userId = 1;
+}

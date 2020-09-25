@@ -14,7 +14,7 @@ export class ScreenSharingPeer extends Peer {
      */
     private isReceivingStream:boolean = false;
 
-    constructor(private userId: string, initiator: boolean, private connection: Connection) {
+    constructor(private userId: number, initiator: boolean, private connection: Connection) {
         super({
             initiator: initiator ? initiator : false,
             reconnectTimer: 10000,
@@ -52,7 +52,7 @@ export class ScreenSharingPeer extends Peer {
             if (message.streamEnded !== true) {
                 console.error('Unexpected message on screen sharing peer connection');
             }
-            mediaManager.removeActiveScreenSharingVideo(this.userId);
+            mediaManager.removeActiveScreenSharingVideo("" + this.userId);
         });
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -63,7 +63,7 @@ export class ScreenSharingPeer extends Peer {
 
         this.on('connect', () => {
             // FIXME: we need to put the loader on the screen sharing connection
-            mediaManager.isConnected(this.userId);
+            mediaManager.isConnected("" + this.userId);
             console.info(`connect => ${this.userId}`);
         });
 
@@ -86,10 +86,10 @@ export class ScreenSharingPeer extends Peer {
         //console.log(`ScreenSharingPeer::stream => ${this.userId}`, stream);
         //console.log(`stream => ${this.userId} => `, stream);
         if(!stream){
-            mediaManager.removeActiveScreenSharingVideo(this.userId);
+            mediaManager.removeActiveScreenSharingVideo("" + this.userId);
             this.isReceivingStream = false;
         } else {
-            mediaManager.addStreamRemoteScreenSharing(this.userId, stream);
+            mediaManager.addStreamRemoteScreenSharing("" + this.userId, stream);
             this.isReceivingStream = true;
         }
     }
@@ -100,7 +100,7 @@ export class ScreenSharingPeer extends Peer {
 
     public destroy(error?: Error): void {
         try {
-            mediaManager.removeActiveScreenSharingVideo(this.userId);
+            mediaManager.removeActiveScreenSharingVideo("" + this.userId);
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
             //console.log('Closing connection with '+userId);

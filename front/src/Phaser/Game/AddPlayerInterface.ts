@@ -1,7 +1,7 @@
 import {PointInterface} from "../../Connection";
 
 export interface AddPlayerInterface {
-    userId: string;
+    userId: number;
     name: string;
     characterLayers: string[];
     position: PointInterface;
