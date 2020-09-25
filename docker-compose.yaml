@@ -73,6 +73,7 @@ services:
       STARTUP_COMMAND_1: yarn install
       SECRET_KEY: yourSecretKey
       ALLOW_ARTILLERY: "true"
+      ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
     volumes:
       - ./back:/usr/src/app
     labels:

@@ -1,6 +1,7 @@
 import {User} from "./User";
 import {PositionInterface} from "_Model/PositionInterface";
-import {Movable} from "_Model/Movable";
+import {Movable} from "./Movable";
+import {Group} from "./Group";
 
 export type EntersCallback = (thing: Movable, listener: User) => void;
 export type MovesCallback = (thing: Movable, position: PositionInterface, listener: User) => void;
@@ -10,14 +11,27 @@ export class Zone {
     private things: Set<Movable> = new Set<Movable>();
     private listeners: Set<User> = new Set<User>();
 
-    constructor(private onEnters: EntersCallback, private onMoves: MovesCallback, private onLeaves: LeavesCallback) {
+    /**
+     * @param x For debugging purpose only
+     * @param y For debugging purpose only
+     */
+    constructor(private onEnters: EntersCallback, private onMoves: MovesCallback, private onLeaves: LeavesCallback, private x: number, private y: number) {
     }
 
     /**
      * A user/thing leaves the zone
      */
     public leave(thing: Movable, newZone: Zone|null) {
-        this.things.delete(thing);
+        const result = this.things.delete(thing);
+        if (!result) {
+            if (thing instanceof User) {
+                console.error('Could not find user in zone '+thing.id);
+            }
+            if (thing instanceof Group) {
+                console.error('Could not find group '+thing.getId()+' in zone ('+this.x+','+this.y+'). Position of group: ('+thing.getPosition().x+','+thing.getPosition().y+')');
+            }
+
+        }
         this.notifyLeft(thing, newZone);
     }
 
@@ -34,13 +48,13 @@ export class Zone {
 
     public enter(thing: Movable, oldZone: Zone|null, position: PositionInterface) {
         this.things.add(thing);
-        this.notifyUserEnter(thing, oldZone, position);
+        this.notifyEnter(thing, oldZone, position);
     }
 
     /**
      * Notify listeners of this zone that this user entered
      */
-    private notifyUserEnter(thing: Movable, oldZone: Zone|null, position: PositionInterface) {
+    private notifyEnter(thing: Movable, oldZone: Zone|null, position: PositionInterface) {
         for (const listener of this.listeners) {
             if (listener === thing) {
                 continue;
@@ -56,8 +70,7 @@ export class Zone {
     public move(thing: Movable, position: PositionInterface) {
         if (!this.things.has(thing)) {
             this.things.add(thing);
-            const foo = this.things;
-            this.notifyUserEnter(thing, null, position);
+            this.notifyEnter(thing, null, position);
             return;
         }
 

@@ -757,4 +757,8 @@ export class IoSocketController {
         Client.leave(Client.webRtcRoomId);
         delete Client.webRtcRoomId;
     }
+
+    public getWorlds(): Map<string, World> {
+        return this.Worlds;
+    }
 }

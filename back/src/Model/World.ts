@@ -93,6 +93,10 @@ export class World {
 
         user.position = userPosition;
         user.group?.updatePosition();
+        /*if (user.group !== undefined) {
+            // TODO: positionNotifier should be notified by the group itself when it moves!!!
+            this.positionNotifier.updatePosition(user.group, user.group.getPosition(), oldGroupPosition ? oldGroupPosition : user.group.getPosition());
+        }*/
 
         if (user.silent) {
             return;
@@ -112,7 +116,7 @@ export class World {
                     const group: Group = new Group([
                         user,
                         closestUser
-                    ], this.connectCallback, this.disconnectCallback);
+                    ], this.connectCallback, this.disconnectCallback, this.positionNotifier);
                     this.groups.add(group);
                 }
             }
@@ -127,9 +131,9 @@ export class World {
         }
 
         // At the very end, if the user is part of a group, let's call the callback to update group position
-        if (user.group !== undefined) {
+        /*if (user.group !== undefined) {
             this.positionNotifier.updatePosition(user.group, user.group.getPosition(), oldGroupPosition ? oldGroupPosition : user.group.getPosition());
-        }
+        }*/
     }
 
     setSilent(socket: Identificable, silent: boolean) {
@@ -162,6 +166,7 @@ export class World {
         if (group === undefined) {
             throw new Error("The user is part of no group");
         }
+        const oldPosition = group.getPosition();
         group.leave(user);
         if (group.isEmpty()) {
             this.positionNotifier.leave(group);
@@ -171,7 +176,8 @@ export class World {
             }
             this.groups.delete(group);
         } else {
-            this.positionNotifier.updatePosition(group, group.getPosition(), group.getPosition());
+            group.updatePosition();
+            //this.positionNotifier.updatePosition(group, group.getPosition(), oldPosition);
         }
     }
 

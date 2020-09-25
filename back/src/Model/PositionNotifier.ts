@@ -117,7 +117,7 @@ export class PositionNotifier {
 
         let zone = this.zones[j][i];
         if (zone === undefined) {
-            zone = new Zone(this.onUserEnters, this.onUserMoves, this.onUserLeaves);
+            zone = new Zone(this.onUserEnters, this.onUserMoves, this.onUserLeaves, i, j);
             this.zones[j][i] = zone;
         }
         return zone;

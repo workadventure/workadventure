@@ -3,6 +3,7 @@ import { User } from "./User";
 import {PositionInterface} from "_Model/PositionInterface";
 import {uuid} from "uuidv4";
 import {Movable} from "_Model/Movable";
+import {PositionNotifier} from "_Model/PositionNotifier";
 
 export class Group implements Movable {
     static readonly MAX_PER_GROUP = 4;
@@ -11,16 +12,12 @@ export class Group implements Movable {
 
     private id: number;
     private users: Set<User>;
-    private connectCallback: ConnectCallback;
-    private disconnectCallback: DisconnectCallback;
     private x!: number;
     private y!: number;
 
 
-    constructor(users: User[], connectCallback: ConnectCallback, disconnectCallback: DisconnectCallback) {
+    constructor(users: User[], private connectCallback: ConnectCallback, private disconnectCallback: DisconnectCallback, private positionNotifier: PositionNotifier) {
         this.users = new Set<User>();
-        this.connectCallback = connectCallback;
-        this.disconnectCallback = disconnectCallback;
         this.id = Group.nextId;
         Group.nextId++;
 
@@ -53,6 +50,9 @@ export class Group implements Movable {
      * Computes the barycenter of all users (i.e. the center of the group)
      */
     updatePosition(): void {
+        const oldX = this.x;
+        const oldY = this.y;
+
         let x = 0;
         let y = 0;
         // Let's compute the barycenter of all users.
@@ -67,6 +67,13 @@ export class Group implements Movable {
         }
         this.x = x;
         this.y = y;
+
+        if (oldX === undefined) {
+            // TODO: do we need a "create"
+            this.positionNotifier.updatePosition(this, {x, y}, {x, y});
+        } else {
+            this.positionNotifier.updatePosition(this, {x, y}, {x: oldX, y: oldY});
+        }
     }
 
     isFull(): boolean {
@@ -92,6 +99,10 @@ export class Group implements Movable {
             throw new Error("Could not find user "+user.id+" in the group "+this.id);
         }
         user.group = undefined;
+
+        if (this.users.size !== 0) {
+            this.updatePosition();
+        }
 
         // Broadcast on the right event
         this.disconnectCallback(user.id, this);
