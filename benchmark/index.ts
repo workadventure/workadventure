@@ -1,11 +1,11 @@
-import {Connection} from "../front/src/Connection";
+import {RoomConnection} from "../front/src/Connexion/Connection";
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function startOneUser(): Promise<void> {
-    const connection = await Connection.createConnection('foo', ['male3']);
+    const connection = await RoomConnection.createConnection('foo', ['male3']);
 
     await connection.joinARoom('global__maps.workadventure.localhost/Floor0/floor0', 783, 170, 'down', false, {
         top: 0,

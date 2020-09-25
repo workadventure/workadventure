@@ -1,7 +1,7 @@
 import * as SimplePeerNamespace from "simple-peer";
 import {mediaManager} from "./MediaManager";
-import {Connection} from "../Connection";
 import {TURN_PASSWORD, TURN_SERVER, TURN_USER} from "../Enum/EnvironmentVariable";
+import {RoomConnection} from "../Connexion/RoomConnection";
 
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
@@ -9,7 +9,7 @@ const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
  * A peer connection used to transmit video / audio signals between 2 peers.
  */
 export class VideoPeer extends Peer {
-    constructor(private userId: number, initiator: boolean, private connection: Connection) {
+    constructor(private userId: number, initiator: boolean, private connection: RoomConnection) {
         super({
             initiator: initiator ? initiator : false,
             reconnectTimer: 10000,

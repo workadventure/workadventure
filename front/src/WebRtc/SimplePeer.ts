@@ -1,9 +1,8 @@
 import {
-    Connection,
     WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
     WebRtcStartMessageInterface
-} from "../Connection";
+} from "../Connexion/ConnexionModels";
 import {
     mediaManager,
     StartScreenSharingCallback,
@@ -13,6 +12,7 @@ import {
 import * as SimplePeerNamespace from "simple-peer";
 import {ScreenSharingPeer} from "./ScreenSharingPeer";
 import {VideoPeer} from "./VideoPeer";
+import {RoomConnection} from "../Connexion/RoomConnection";
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
 export interface UserSimplePeerInterface{
@@ -31,7 +31,7 @@ export interface PeerConnectionListener {
  * This class manages connections to all the peers in the same group as me.
  */
 export class SimplePeer {
-    private Connection: Connection;
+    private Connection: RoomConnection;
     private WebRtcRoomId: string;
     private Users: Array<UserSimplePeerInterface> = new Array<UserSimplePeerInterface>();
 
@@ -42,7 +42,7 @@ export class SimplePeer {
     private readonly stopLocalScreenSharingStreamCallback: StopScreenSharingCallback;
     private readonly peerConnectionListeners: Array<PeerConnectionListener> = new Array<PeerConnectionListener>();
 
-    constructor(Connection: Connection, WebRtcRoomId: string = "test-webrtc") {
+    constructor(Connection: RoomConnection, WebRtcRoomId: string = "test-webrtc") {
         this.Connection = Connection;
         this.WebRtcRoomId = WebRtcRoomId;
         // We need to go through this weird bound function pointer in order to be able to "free" this reference later.

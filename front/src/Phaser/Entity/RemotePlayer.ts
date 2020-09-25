@@ -1,5 +1,5 @@
 import {GameScene} from "../Game/GameScene";
-import {PointInterface} from "../../Connection";
+import {PointInterface} from "../../Connexion/ConnexionModels";
 import {Character} from "../Entity/Character";
 
 /**
