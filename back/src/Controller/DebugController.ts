@@ -1,10 +1,7 @@
 import {Application, Request, Response} from "express";
 import {OK} from "http-status-codes";
-import {ADMIN_API_TOKEN, ADMIN_API_URL} from "../Enum/EnvironmentVariable";
-import Axios from "axios";
-import {DEBUG_MODE} from "../../../front/src/Enum/EnvironmentVariable";
+import {ADMIN_API_TOKEN} from "../Enum/EnvironmentVariable";
 import {IoSocketController} from "_Controller/IoSocketController";
-import Flatted from "flatted";
 import {stringify} from "circular-json";
 
 export class DebugController {
