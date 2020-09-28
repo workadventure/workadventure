@@ -2,15 +2,13 @@ import Axios from "axios";
 import {API_URL} from "./Enum/EnvironmentVariable";
 import {MessageUI} from "./Logger/MessageUI";
 import {
-    BatchMessage, GroupDeleteMessage, GroupUpdateMessage, ItemEventMessage,
-    PositionMessage,
-    SetPlayerDetailsMessage, UserJoinedMessage, UserLeftMessage, UserMovedMessage,
+    BatchMessage, ClientToServerMessage, GroupDeleteMessage, GroupUpdateMessage, ItemEventMessage, JoinRoomMessage,
+    PositionMessage, RoomJoinedMessage, ServerToClientMessage,
+    SetPlayerDetailsMessage, SetUserIdMessage, SilentMessage, UserJoinedMessage, UserLeftMessage, UserMovedMessage,
     UserMovesMessage,
     ViewportMessage
 } from "./Messages/generated/messages_pb"
 
-const SocketIo = require('socket.io-client');
-import Socket = SocketIOClient.Socket;
 import {PlayerAnimationNames} from "./Phaser/Player/Animation";
 import {UserSimplePeerInterface} from "./WebRtc/SimplePeer";
 import {SignalData} from "simple-peer";
@@ -132,63 +130,91 @@ export interface RoomJoinedMessageInterface {
 }
 
 export class Connection implements Connection {
-    private readonly socket: Socket;
+    private readonly socket: WebSocket;
     private userId: number|null = null;
     private batchCallbacks: Map<string, Function[]> = new Map<string, Function[]>();
+    private static websocketFactory: null|((url: string)=>any) = null;
+
+    public static setWebsocketFactory(websocketFactory: (url: string)=>any): void {
+        Connection.websocketFactory = websocketFactory;
+    }
 
     private constructor(token: string) {
+        let url = API_URL.replace('http://', 'ws://').replace('https://', 'wss://');
+        url += '?token='+token;
 
-        this.socket = SocketIo(`${API_URL}`, {
-            query: {
-                token: token
-            },
-            reconnection: false // Reconnection is handled by the application itself
-        });
+        if (Connection.websocketFactory) {
+            this.socket = Connection.websocketFactory(url);
+        } else {
+            this.socket = new WebSocket(url);
+        }
 
-        this.socket.on(EventMessage.MESSAGE_ERROR, (message: string) => {
-            console.error(EventMessage.MESSAGE_ERROR, message);
-        })
+        this.socket.binaryType = 'arraybuffer';
 
-        /**
-         * Messages inside batched messages are extracted and sent to listeners directly.
-         */
-        this.socket.on(EventMessage.BATCH, (batchedMessagesBinary: ArrayBuffer) => {
-            const batchMessage = BatchMessage.deserializeBinary(new Uint8Array(batchedMessagesBinary));
+        this.socket.onopen = (ev) => {
+            console.log('WS connected');
+        };
 
-            for (const message of batchMessage.getPayloadList()) {
-                let event: string;
-                let payload;
-                if (message.hasUsermovedmessage()) {
-                    event = EventMessage.USER_MOVED;
-                    payload = message.getUsermovedmessage();
-                } else if (message.hasGroupupdatemessage()) {
-                    event = EventMessage.GROUP_CREATE_UPDATE;
-                    payload = message.getGroupupdatemessage();
-                } else if (message.hasGroupdeletemessage()) {
-                    event = EventMessage.GROUP_DELETE;
-                    payload = message.getGroupdeletemessage();
-                } else if (message.hasUserjoinedmessage()) {
-                    event = EventMessage.JOIN_ROOM;
-                    payload = message.getUserjoinedmessage();
-                } else if (message.hasUserleftmessage()) {
-                    event = EventMessage.USER_LEFT;
-                    payload = message.getUserleftmessage();
-                } else if (message.hasItemeventmessage()) {
-                    event = EventMessage.ITEM_EVENT;
-                    payload = message.getItemeventmessage();
-                } else {
-                    throw new Error('Unexpected batch message type');
+        this.socket.onmessage = (messageEvent) => {
+            const arrayBuffer: ArrayBuffer = messageEvent.data;
+            const message = ServerToClientMessage.deserializeBinary(new Uint8Array(arrayBuffer));
+
+            if (message.hasBatchmessage()) {
+                for (const subMessage of (message.getBatchmessage() as BatchMessage).getPayloadList()) {
+                    let event: string;
+                    let payload;
+                    if (subMessage.hasUsermovedmessage()) {
+                        event = EventMessage.USER_MOVED;
+                        payload = subMessage.getUsermovedmessage();
+                    } else if (subMessage.hasGroupupdatemessage()) {
+                        event = EventMessage.GROUP_CREATE_UPDATE;
+                        payload = subMessage.getGroupupdatemessage();
+                    } else if (subMessage.hasGroupdeletemessage()) {
+                        event = EventMessage.GROUP_DELETE;
+                        payload = subMessage.getGroupdeletemessage();
+                    } else if (subMessage.hasUserjoinedmessage()) {
+                        event = EventMessage.JOIN_ROOM;
+                        payload = subMessage.getUserjoinedmessage();
+                    } else if (subMessage.hasUserleftmessage()) {
+                        event = EventMessage.USER_LEFT;
+                        payload = subMessage.getUserleftmessage();
+                    } else if (subMessage.hasItemeventmessage()) {
+                        event = EventMessage.ITEM_EVENT;
+                        payload = subMessage.getItemeventmessage();
+                    } else {
+                        throw new Error('Unexpected batch message type');
+                    }
+
+                    const listeners = this.batchCallbacks.get(event);
+                    if (listeners === undefined) {
+                        continue;
+                    }
+                    for (const listener of listeners) {
+                        listener(payload);
+                    }
+                }
+            } else if (message.hasRoomjoinedmessage()) {
+                const roomJoinedMessage = message.getRoomjoinedmessage() as RoomJoinedMessage;
+
+                const users: Array<MessageUserJoined> = roomJoinedMessage.getUserList().map(this.toMessageUserJoined);
+                const groups: Array<GroupCreatedUpdatedMessageInterface> = roomJoinedMessage.getGroupList().map(this.toGroupCreatedUpdatedMessage);
+                let items: { [itemId: number] : unknown } = {};
+                for (const item of roomJoinedMessage.getItemList()) {
+                    items[item.getItemid()] = JSON.parse(item.getStatejson());
                 }
 
-                const listeners = this.batchCallbacks.get(event);
-                if (listeners === undefined) {
-                    continue;
-                }
-                for (const listener of listeners) {
-                    listener(payload);
-                }
+                this.resolveJoinRoom({
+                    users,
+                    groups,
+                    items
+                })
+            } else if (message.hasSetuseridmessage()) {
+                this.userId = (message.getSetuseridmessage() as SetUserIdMessage).getUserid();
+            } else if (message.hasErrormessage()) {
+                console.error(EventMessage.MESSAGE_ERROR, message.getErrormessage()?.getMessage);
             }
-        })
+
+        }
     }
 
     public static createConnection(name: string, characterLayersSelected: string[]): Promise<Connection> {
@@ -203,18 +229,23 @@ export class Connection implements Connection {
                         reject(error);
                     });
 
-                    const message = new SetPlayerDetailsMessage();
-                    message.setName(name);
-                    message.setCharacterlayersList(characterLayersSelected);
-                    connection.socket.emit(EventMessage.SET_PLAYER_DETAILS, message.serializeBinary().buffer, (id: number) => {
-                        connection.userId = id;
-                    });
+                    connection.onConnect(() => {
+                        const message = new SetPlayerDetailsMessage();
+                        message.setName(name);
+                        message.setCharacterlayersList(characterLayersSelected);
 
-                    resolve(connection);
+                        const clientToServerMessage = new ClientToServerMessage();
+                        clientToServerMessage.setSetplayerdetailsmessage(message);
+
+                        connection.socket.send(clientToServerMessage.serializeBinary().buffer);
+
+                        resolve(connection);
+                    });
                 });
             })
             .catch((err) => {
                 // Let's retry in 4-6 seconds
+                console.error('Connection failed. Retrying', err);
                 return new Promise<Connection>((resolve, reject) => {
                     setTimeout(() => {
                         Connection.createConnection(name, characterLayersSelected).then((connection) => resolve(connection))
@@ -228,24 +259,30 @@ export class Connection implements Connection {
         this.socket?.close();
     }
 
+    private resolveJoinRoom!: (value?: (RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface> | undefined)) => void;
 
     public joinARoom(roomId: string, startX: number, startY: number, direction: string, moving: boolean, viewport: ViewportInterface): Promise<RoomJoinedMessageInterface> {
         const promise = new Promise<RoomJoinedMessageInterface>((resolve, reject) => {
-            this.socket.emit(EventMessage.JOIN_ROOM, {
-                    roomId,
-                    position: {x: startX, y: startY, direction, moving },
-                    viewport,
-                }, (roomJoinedMessage: RoomJoinedMessageInterface) => {
-                    resolve(roomJoinedMessage);
-                });
+            this.resolveJoinRoom = resolve;
+
+            const positionMessage = this.toPositionMessage(startX, startY, direction, moving);
+            const viewportMessage = this.toViewportMessage(viewport);
+
+            const joinRoomMessage = new JoinRoomMessage();
+            joinRoomMessage.setRoomid(roomId);
+            joinRoomMessage.setPosition(positionMessage);
+            joinRoomMessage.setViewport(viewportMessage);
+
+            //console.log('Sending position ', positionMessage.getX(), positionMessage.getY());
+            const clientToServerMessage = new ClientToServerMessage();
+            clientToServerMessage.setJoinroommessage(joinRoomMessage);
+
+            this.socket.send(clientToServerMessage.serializeBinary().buffer);
         })
         return promise;
     }
 
-    public sharePosition(x : number, y : number, direction : string, moving: boolean, viewport: ViewportInterface) : void{
-        if(!this.socket){
-            return;
-        }
+    private toPositionMessage(x : number, y : number, direction : string, moving: boolean): PositionMessage {
         const positionMessage = new PositionMessage();
         positionMessage.setX(Math.floor(x));
         positionMessage.setY(Math.floor(y));
@@ -269,23 +306,47 @@ export class Connection implements Connection {
         positionMessage.setDirection(directionEnum);
         positionMessage.setMoving(moving);
 
+        return positionMessage;
+    }
+
+    private toViewportMessage(viewport: ViewportInterface): ViewportMessage {
         const viewportMessage = new ViewportMessage();
         viewportMessage.setLeft(Math.floor(viewport.left));
         viewportMessage.setRight(Math.floor(viewport.right));
         viewportMessage.setTop(Math.floor(viewport.top));
         viewportMessage.setBottom(Math.floor(viewport.bottom));
 
+        return viewportMessage;
+    }
+
+    public sharePosition(x : number, y : number, direction : string, moving: boolean, viewport: ViewportInterface) : void{
+        if(!this.socket){
+            return;
+        }
+
+        const positionMessage = this.toPositionMessage(x, y, direction, moving);
+
+        const viewportMessage = this.toViewportMessage(viewport);
+
         const userMovesMessage = new UserMovesMessage();
         userMovesMessage.setPosition(positionMessage);
         userMovesMessage.setViewport(viewportMessage);
 
         //console.log('Sending position ', positionMessage.getX(), positionMessage.getY());
+        const clientToServerMessage = new ClientToServerMessage();
+        clientToServerMessage.setUsermovesmessage(userMovesMessage);
 
-        this.socket.emit(EventMessage.USER_POSITION, userMovesMessage.serializeBinary().buffer);
+        this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 
     public setSilent(silent: boolean): void {
-        this.socket.emit(EventMessage.SET_SILENT, silent);
+        const silentMessage = new SilentMessage();
+        silentMessage.setSilent(silent);
+
+        const clientToServerMessage = new ClientToServerMessage();
+        clientToServerMessage.setSilentmessage(silentMessage);
+
+        this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 
     public setViewport(viewport: ViewportInterface): void {
@@ -295,23 +356,30 @@ export class Connection implements Connection {
         viewportMessage.setLeft(Math.round(viewport.left));
         viewportMessage.setRight(Math.round(viewport.right));
 
-        this.socket.emit(EventMessage.SET_VIEWPORT, viewportMessage.serializeBinary().buffer);
+        const clientToServerMessage = new ClientToServerMessage();
+        clientToServerMessage.setViewportmessage(viewportMessage);
+
+        this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 
     public onUserJoins(callback: (message: MessageUserJoined) => void): void {
         this.onBatchMessage(EventMessage.JOIN_ROOM, (message: UserJoinedMessage) => {
-            const position = message.getPosition();
-            if (position === undefined) {
-                throw new Error('Invalid JOIN_ROOM message');
-            }
-            const messageUserJoined: MessageUserJoined = {
-                userId: message.getUserid(),
-                name: message.getName(),
-                characterLayers: message.getCharacterlayersList(),
-                position: ProtobufClientUtils.toPointInterface(position)
-            }
-            callback(messageUserJoined);
+            callback(this.toMessageUserJoined(message));
         });
+    }
+
+    // TODO: move this to protobuf utils
+    private toMessageUserJoined(message: UserJoinedMessage): MessageUserJoined {
+        const position = message.getPosition();
+        if (position === undefined) {
+            throw new Error('Invalid JOIN_ROOM message');
+        }
+        return {
+            userId: message.getUserid(),
+            name: message.getName(),
+            characterLayers: message.getCharacterlayersList(),
+            position: ProtobufClientUtils.toPointInterface(position)
+        }
     }
 
     public onUserMoved(callback: (message: UserMovedMessage) => void): void {
@@ -339,19 +407,20 @@ export class Connection implements Connection {
 
     public onGroupUpdatedOrCreated(callback: (groupCreateUpdateMessage: GroupCreatedUpdatedMessageInterface) => void): void {
         this.onBatchMessage(EventMessage.GROUP_CREATE_UPDATE, (message: GroupUpdateMessage) => {
-            const position = message.getPosition();
-            if (position === undefined) {
-                throw new Error('Missing position in GROUP_CREATE_UPDATE');
-            }
-
-            const groupCreateUpdateMessage: GroupCreatedUpdatedMessageInterface = {
-                groupId: message.getGroupid(),
-                position: position.toObject()
-            }
-
-            //console.log('Group position: ', position.toObject());
-            callback(groupCreateUpdateMessage);
+            callback(this.toGroupCreatedUpdatedMessage(message));
         });
+    }
+
+    private toGroupCreatedUpdatedMessage(message: GroupUpdateMessage): GroupCreatedUpdatedMessageInterface {
+        const position = message.getPosition();
+        if (position === undefined) {
+            throw new Error('Missing position in GROUP_CREATE_UPDATE');
+        }
+
+        return {
+            groupId: message.getGroupid(),
+            position: position.toObject()
+        }
     }
 
     public onGroupDeleted(callback: (groupId: number) => void): void {
@@ -360,43 +429,51 @@ export class Connection implements Connection {
         });
     }
 
-    public onConnectError(callback: (error: object) => void): void {
-        this.socket.on(EventMessage.CONNECT_ERROR, callback)
+    public onConnectError(callback: (error: Event) => void): void {
+        this.socket.addEventListener('error', callback)
+    }
+
+    public onConnect(callback: (event: Event) => void): void {
+        this.socket.addEventListener('open', callback)
     }
 
     public sendWebrtcSignal(signal: unknown, receiverId: number) {
-        return this.socket.emit(EventMessage.WEBRTC_SIGNAL, {
+/*        return this.socket.emit(EventMessage.WEBRTC_SIGNAL, {
             receiverId: receiverId,
             signal: signal
-        } as WebRtcSignalSentMessageInterface);
+        } as WebRtcSignalSentMessageInterface);*/
     }
 
     public sendWebrtcScreenSharingSignal(signal: unknown, receiverId: number) {
-        return this.socket.emit(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, {
+/*        return this.socket.emit(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, {
             receiverId: receiverId,
             signal: signal
-        } as WebRtcSignalSentMessageInterface);
+        } as WebRtcSignalSentMessageInterface);*/
     }
 
     public receiveWebrtcStart(callback: (message: WebRtcStartMessageInterface) => void) {
-        this.socket.on(EventMessage.WEBRTC_START, callback);
+// TODO
+        //        this.socket.on(EventMessage.WEBRTC_START, callback);
     }
 
     public receiveWebrtcSignal(callback: (message: WebRtcSignalReceivedMessageInterface) => void) {
-        return this.socket.on(EventMessage.WEBRTC_SIGNAL, callback);
+// TODO
+        //        return this.socket.on(EventMessage.WEBRTC_SIGNAL, callback);
     }
 
     public receiveWebrtcScreenSharingSignal(callback: (message: WebRtcSignalReceivedMessageInterface) => void) {
-        return this.socket.on(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, callback);
+// TODO
+        //        return this.socket.on(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, callback);
     }
 
-    public onServerDisconnected(callback: (reason: string) => void): void {
-        this.socket.on('disconnect', (reason: string) => {
-            if (reason === 'io client disconnect') {
-                // The client asks for disconnect, let's not trigger any event.
+    public onServerDisconnected(callback: (event: CloseEvent) => void): void {
+        this.socket.addEventListener('close', (event) => {
+
+            if (event.code === 1000) {
+                // Normal closure case
                 return;
             }
-            callback(reason);
+            callback(event);
         });
 
     }
@@ -406,7 +483,8 @@ export class Connection implements Connection {
     }
 
     disconnectMessage(callback: (message: WebRtcDisconnectMessageInterface) => void): void {
-        this.socket.on(EventMessage.WEBRTC_DISCONNECT, callback);
+// TODO
+        //        this.socket.on(EventMessage.WEBRTC_DISCONNECT, callback);
     }
 
     emitActionableEvent(itemId: number, event: string, state: unknown, parameters: unknown): void {
@@ -416,7 +494,10 @@ export class Connection implements Connection {
         itemEventMessage.setStatejson(JSON.stringify(state));
         itemEventMessage.setParametersjson(JSON.stringify(parameters));
 
-        this.socket.emit(EventMessage.ITEM_EVENT, itemEventMessage.serializeBinary().buffer);
+        const clientToServerMessage = new ClientToServerMessage();
+        clientToServerMessage.setItemeventmessage(itemEventMessage);
+
+        this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 
     onActionableEvent(callback: (message: ItemEventMessageInterface) => void): void {

@@ -1,8 +1,9 @@
 import {PointInterface} from "./PointInterface";
-import {ItemEventMessage, PositionMessage} from "../../Messages/generated/messages_pb";
+import {ItemEventMessage, PointMessage, PositionMessage} from "../../Messages/generated/messages_pb";
 import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
 import Direction = PositionMessage.Direction;
 import {ItemEventMessageInterface} from "_Model/Websocket/ItemEventMessage";
+import {PositionInterface} from "_Model/PositionInterface";
 
 export class ProtobufUtils {
 
@@ -30,6 +31,42 @@ export class ProtobufUtils {
         position.setY(point.y);
         position.setMoving(point.moving);
         position.setDirection(direction);
+
+        return position;
+    }
+
+    public static toPointInterface(position: PositionMessage): PointInterface {
+        let direction: string;
+        switch (position.getDirection()) {
+            case Direction.UP:
+                direction = 'up';
+                break;
+            case Direction.DOWN:
+                direction = 'down';
+                break;
+            case Direction.LEFT:
+                direction = 'left';
+                break;
+            case Direction.RIGHT:
+                direction = 'right';
+                break;
+            default:
+                throw new Error("Unexpected direction");
+        }
+
+        // sending to all clients in room except sender
+        return {
+            x: position.getX(),
+            y: position.getY(),
+            direction,
+            moving: position.getMoving(),
+        };
+    }
+
+    public static toPointMessage(point: PositionInterface): PointMessage {
+        const position = new PointMessage();
+        position.setX(Math.floor(point.x));
+        position.setY(Math.floor(point.y));
 
         return position;
     }

@@ -74,8 +74,8 @@ export class World {
         this.users.delete(user.userId);
 
         if (userObj !== undefined) {
-            this.positionNotifier.leave(userObj);
             this.positionNotifier.removeViewport(userObj);
+            this.positionNotifier.leave(userObj);
         }
     }
 

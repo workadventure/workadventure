@@ -27,6 +27,10 @@ message ViewportMessage {
   int32 bottom = 4;
 }
 
+message SilentMessage {
+  bool silent = 1;
+}
+
 /*********** CLIENT TO SERVER MESSAGES *************/
 
 message SetPlayerDetailsMessage {
@@ -34,10 +38,28 @@ message SetPlayerDetailsMessage {
   repeated string characterLayers = 2;
 }
 
+message JoinRoomMessage {
+  string roomId = 1;
+  PositionMessage position = 2;
+  ViewportMessage viewport = 3;
+}
+
 message UserMovesMessage {
   PositionMessage position = 1;
   ViewportMessage viewport = 2;
 }
+
+message ClientToServerMessage {
+  oneof message {
+    JoinRoomMessage joinRoomMessage = 1;
+    UserMovesMessage userMovesMessage = 2;
+    SilentMessage silentMessage = 3;
+    ViewportMessage viewportMessage = 4;
+    ItemEventMessage itemEventMessage = 5;
+    SetPlayerDetailsMessage setPlayerDetailsMessage = 6;
+  }
+}
+
 
 /************ BI-DIRECTIONAL MESSAGES **************/
 
@@ -89,4 +111,45 @@ message UserJoinedMessage {
 
 message UserLeftMessage {
   int32 userId = 1;
+}
+
+message ErrorMessage {
+  string message = 1;
+}
+
+message SetUserIdMessage {
+  int32 userId = 1;
+}
+
+message ItemStateMessage {
+  int32 itemId = 1;
+  string stateJson = 2;
+}
+
+message RoomJoinedMessage {
+  repeated UserJoinedMessage user = 1;
+  repeated GroupUpdateMessage group = 2;
+  repeated ItemStateMessage item = 3;
+}
+
+
+/*message WebRtcStartMessage {
+  int32 itemId = 1;
+  string event = 2;
+  string stateJson = 3;
+  string parametersJson = 4;
+}*/
+
+
+message ServerToClientMessage {
+  oneof message {
+    BatchMessage batchMessage = 1;
+    ErrorMessage errorMessage = 2;
+    RoomJoinedMessage roomJoinedMessage = 3;
+    SetUserIdMessage setUserIdMessage = 4; // TODO: merge this with RoomJoinedMessage ?
+//    WebRtcStartMessage webRtcStartMessage = 3;
+//    WebRtcSignalMessage webRtcSignalMessage = 4;
+//    WebRtcScreenSharingSignalMessage webRtcScreenSharingSignalMessage = 5;
+//    WebRtcDisconnectMessage webRtcDisconnectMessage = 6;
+  }
 }

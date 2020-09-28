@@ -1,8 +1,13 @@
 import {Connection} from "../front/src/Connection";
+import * as WebSocket from "ws"
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+Connection.setWebsocketFactory((url: string) => {
+    return new WebSocket(url);
+});
 
 async function startOneUser(): Promise<void> {
     const connection = await Connection.createConnection('foo', ['male3']);
