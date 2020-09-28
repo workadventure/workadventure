@@ -4,7 +4,7 @@ import {
 } from "../../Connexion/ConnexionModels";
 import Axios from "axios";
 import {API_URL} from "../../Enum/EnvironmentVariable";
-import {adminDataFetchPromise} from "../../register";
+import {connectionManager} from "../../Connexion/ConnectionManager";
 
 export interface HasMovedEvent {
     direction: string;
@@ -30,23 +30,12 @@ export class GameManager {
     }
 
     loadStartMap() : Promise<StartMapInterface> {
-        if (adminDataFetchPromise) {
-            return adminDataFetchPromise.then(data => {
-                return {
-                    mapUrlStart: data.mapUrlStart,
-                    startInstance: data.startInstance,
-                }
-            })
-        } else {
-            //todo: remove this call, merge with the admin workflow?
-            return Axios.get(`${API_URL}/start-map`)
-                .then((res) => {
-                    return res.data;
-                }).catch((err) => {
-                    console.error(err);
-                    throw err;
-                });
-        }
+        return connectionManager.getMapUrlStart().then(mapUrlStart => {
+            return {
+                mapUrlStart: mapUrlStart,
+                startInstance: "global", //todo: is this property still usefull?
+            }
+        });
     }
 
     getPlayerName(): string {

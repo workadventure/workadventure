@@ -83,9 +83,9 @@ export class RoomConnection implements RoomConnection {
         })
     }
     
-    public emitPlayerDetailsMessage(characterLayersSelected: string[]) {
+    public emitPlayerDetailsMessage(userName: string, characterLayersSelected: string[]) {
         const message = new SetPlayerDetailsMessage();
-        message.setName(name);
+        message.setName(userName);
         message.setCharacterlayersList(characterLayersSelected);
         this.socket.emit(EventMessage.SET_PLAYER_DETAILS, message.serializeBinary().buffer, (id: number) => {
             this.userId = id;

@@ -7,7 +7,6 @@ import bodyParser = require('body-parser');
 import * as http from "http";
 import {MapController} from "./Controller/MapController";
 import {PrometheusController} from "./Controller/PrometheusController";
-import {AdminController} from "./Controller/AdminController";
 import {DebugController} from "./Controller/DebugController";
 
 class App {
@@ -17,7 +16,6 @@ class App {
     public authenticateController: AuthenticateController;
     public mapController: MapController;
     public prometheusController: PrometheusController;
-    private adminController: AdminController;
     private debugController: DebugController;
 
     constructor() {
@@ -36,7 +34,6 @@ class App {
         this.authenticateController = new AuthenticateController(this.app);
         this.mapController = new MapController(this.app);
         this.prometheusController = new PrometheusController(this.app, this.ioSocketController);
-        this.adminController = new AdminController(this.app);
         this.debugController = new DebugController(this.app, this.ioSocketController);
     }
 

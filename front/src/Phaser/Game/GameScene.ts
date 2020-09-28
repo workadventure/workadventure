@@ -205,8 +205,8 @@ export class GameScene extends Phaser.Scene implements CenterListener {
 
         this.connectionPromise = connectionManager.connectToRoomSocket().then((connection : RoomConnection) => {
             this.connection = connection;
-            
-            this.connection.emitPlayerDetailsMessage(gameManager.getCharacterSelected())
+
+            this.connection.emitPlayerDetailsMessage(gameManager.getPlayerName(), gameManager.getCharacterSelected())
 
             connection.onUserJoins((message: MessageUserJoined) => {
                 const userMessage: AddPlayerInterface = {

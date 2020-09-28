@@ -1,7 +1,6 @@
 import {Socket} from "socket.io";
 import {PointInterface} from "./PointInterface";
 import {Identificable} from "./Identificable";
-import {TokenInterface} from "../../Controller/AuthenticateController";
 import {ViewportInterface} from "_Model/Websocket/ViewportMessage";
 import {BatchMessage, SubMessage} from "../../Messages/generated/messages_pb";
 

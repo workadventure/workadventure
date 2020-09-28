@@ -121,18 +121,19 @@ export class IoSocketController {
                 return next(new Error('Authentication error'));
             }
             Jwt.verify(socket.handshake.query.token, SECRET_KEY, (err: JsonWebTokenError, tokenDecoded: object) => {
+                const tokenInterface = tokenDecoded as TokenInterface;
                 if (err) {
                     console.error('An authentication error happened, invalid JsonWebToken.', err);
                     return next(new Error('Authentication error'));
                 }
 
-                if (!this.isValidToken(tokenDecoded)) {
+                if (!this.isValidToken(tokenInterface)) {
                     return next(new Error('Authentication error, invalid token structure'));
                 }
 
                 (socket as ExSocketInterface).token = socket.handshake.query.token;
                 (socket as ExSocketInterface).userId = this.nextUserId;
-                (socket as ExSocketInterface).userUuid = tokenDecoded.userUuid;
+                (socket as ExSocketInterface).userUuid = tokenInterface.userUuid;
                 this.nextUserId++;
                 next();
             });
@@ -141,11 +142,8 @@ export class IoSocketController {
         this.ioConnection();
     }
 
-    private isValidToken(token: object): token is TokenInterface {
-        if (typeof((token as TokenInterface).userUuid) !== 'string') {
-            return false;
-        }
-        if (typeof((token as TokenInterface).name) !== 'string') {
+    private isValidToken(token: TokenInterface): boolean {
+        if (typeof(token.userUuid) !== 'string') {
             return false;
         }
         return true;

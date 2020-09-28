@@ -6,7 +6,14 @@ import { uuid } from 'uuidv4';
 import Axios from "axios";
 
 export interface TokenInterface {
-    name: string,
+    userUuid: string
+}
+
+interface AdminApiData {
+    organizationSlug: string
+    worldSlug: string
+    roomSlug: string
+    mapUrlStart: string
     userUuid: string
 }
 
@@ -35,20 +42,20 @@ export class AuthenticateController {
                         return res.status(401).send('No admin backoffice set!');
                     }
                     //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
-                    const response = await Axios.get(ADMIN_API_URL+'/api/login-url/'+organizationMemberToken,
+                    const data = await Axios.get(ADMIN_API_URL+'/api/login-url/'+organizationMemberToken,
                         { headers: {"Authorization" : `${ADMIN_API_TOKEN}`} }
-                    );
+                    ).then((res): AdminApiData => res.data);
                     
-                    userUuid = response.data.userUuid;
-                    mapUrlStart = response.data.mapUrlStart;
-                    newUrl = this.getNewUrlOnAdminAuth(response.data)
+                    userUuid = data.userUuid;
+                    mapUrlStart = data.mapUrlStart;
+                    newUrl = this.getNewUrlOnAdminAuth(data)
                 } else {
                     userUuid = uuid();
-                    mapUrlStart= URL_ROOM_STARTED;
+                    mapUrlStart = req.headers.host?.replace('api.', 'maps.') + URL_ROOM_STARTED;
                     newUrl = null;
                 }
 
-                const authToken = Jwt.sign({userUuid: userUuid} as TokenInterface, SECRET_KEY, {expiresIn: '24h'});
+                const authToken = Jwt.sign({userUuid: userUuid}, SECRET_KEY, {expiresIn: '24h'});
                 return res.status(OK).send({
                     authToken,
                     userUuid,
@@ -64,7 +71,7 @@ export class AuthenticateController {
         });
     }
     
-    getNewUrlOnAdminAuth(data:any): string {
+    private getNewUrlOnAdminAuth(data:AdminApiData): string {
         const organizationSlug = data.organizationSlug;
         const worldSlug = data.worldSlug;
         const roomSlug = data.roomSlug;
