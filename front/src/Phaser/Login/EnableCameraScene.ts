@@ -1,12 +1,9 @@
 import {gameManager} from "../Game/GameManager";
 import {TextField} from "../Components/TextField";
-import {ClickButton} from "../Components/ClickButton";
 import Image = Phaser.GameObjects.Image;
-import Rectangle = Phaser.GameObjects.Rectangle;
-import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Character";
 import {GameSceneInitInterface} from "../Game/GameScene";
-import {StartMapInterface} from "../../Connection";
-import {mediaManager, MediaManager} from "../../WebRtc/MediaManager";
+import {StartMapInterface} from "../../Connexion/ConnexionModels";
+import {mediaManager} from "../../WebRtc/MediaManager";
 import {RESOLUTION} from "../../Enum/EnvironmentVariable";
 import {SoundMeter} from "../Components/SoundMeter";
 import {SoundMeterSprite} from "../Components/SoundMeterSprite";

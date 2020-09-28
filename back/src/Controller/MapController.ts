@@ -3,6 +3,7 @@ import {Application, Request, Response} from "express";
 import {OK} from "http-status-codes";
 import {URL_ROOM_STARTED} from "../Enum/EnvironmentVariable";
 
+//todo: delete this
 export class MapController {
     App: Application;
 

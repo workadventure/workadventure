@@ -1,9 +1,7 @@
 import {PlayerAnimationNames} from "./Animation";
-import {GameScene, Textures} from "../Game/GameScene";
-import {MessageUserPositionInterface, PointInterface} from "../../Connection";
-import {ActiveEventList, UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
+import {GameScene} from "../Game/GameScene";
+import {UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
 import {Character} from "../Entity/Character";
-import {OutlinePipeline} from "../Shaders/OutlinePipeline";
 
 
 export const hasMovedEventName = "hasMoved";

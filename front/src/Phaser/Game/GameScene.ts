@@ -1,6 +1,5 @@
 import {GameManager, gameManager, HasMovedEvent} from "./GameManager";
 import {
-    Connection,
     GroupCreatedUpdatedMessageInterface,
     MessageUserJoined,
     MessageUserMovedInterface,
@@ -8,7 +7,7 @@ import {
     PointInterface,
     PositionInterface,
     RoomJoinedMessageInterface
-} from "../../Connection";
+} from "../../Connexion/ConnexionModels";
 import {CurrentGamerInterface, hasMovedEventName, Player} from "../Player/Player";
 import {DEBUG_MODE, JITSI_URL, POSITION_DELAY, RESOLUTION, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import {
@@ -42,6 +41,8 @@ import {ActionableItem} from "../Items/ActionableItem";
 import {UserInputManager} from "../UserInput/UserInputManager";
 import {UserMovedMessage} from "../../Messages/generated/messages_pb";
 import {ProtobufClientUtils} from "../../Network/ProtobufClientUtils";
+import {connectionManager} from "../../Connexion/ConnectionManager";
+import {RoomConnection} from "../../Connexion/RoomConnection";
 
 
 export enum Textures {
@@ -100,9 +101,9 @@ export class GameScene extends Phaser.Scene implements CenterListener {
     pendingEvents: Queue<InitUserPositionEventInterface|AddPlayerEventInterface|RemovePlayerEventInterface|UserMovedEventInterface|GroupCreatedUpdatedEventInterface|DeleteGroupEventInterface> = new Queue<InitUserPositionEventInterface|AddPlayerEventInterface|RemovePlayerEventInterface|UserMovedEventInterface|GroupCreatedUpdatedEventInterface|DeleteGroupEventInterface>();
     private initPosition: PositionInterface|null = null;
     private playersPositionInterpolator = new PlayersPositionInterpolator();
-    private connection!: Connection;
+    private connection!: RoomConnection;
     private simplePeer!: SimplePeer;
-    private connectionPromise!: Promise<Connection>
+    private connectionPromise!: Promise<RoomConnection>
     private connectionAnswerPromise: Promise<RoomJoinedMessageInterface>;
     private connectionAnswerPromiseResolve!: (value?: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>) => void;
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
@@ -202,8 +203,10 @@ export class GameScene extends Phaser.Scene implements CenterListener {
 
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
 
-        this.connectionPromise = Connection.createConnection(gameManager.getPlayerName(), gameManager.getCharacterSelected()).then((connection : Connection) => {
+        this.connectionPromise = connectionManager.connectToRoomSocket().then((connection : RoomConnection) => {
             this.connection = connection;
+
+            this.connection.emitPlayerDetailsMessage(gameManager.getPlayerName(), gameManager.getCharacterSelected())
 
             connection.onUserJoins((message: MessageUserJoined) => {
                 const userMessage: AddPlayerInterface = {
@@ -778,7 +781,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
         this.createCollisionObject();
 
         //join room
-        this.connectionPromise.then((connection: Connection) => {
+        this.connectionPromise.then((connection: RoomConnection) => {
             const camera = this.cameras.main;
             connection.joinARoom(this.RoomId,
                 this.startX,
