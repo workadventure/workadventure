@@ -2,11 +2,27 @@ import Axios from "axios";
 import {API_URL} from "./Enum/EnvironmentVariable";
 import {MessageUI} from "./Logger/MessageUI";
 import {
-    BatchMessage, ClientToServerMessage, GroupDeleteMessage, GroupUpdateMessage, ItemEventMessage, JoinRoomMessage,
-    PositionMessage, RoomJoinedMessage, ServerToClientMessage,
-    SetPlayerDetailsMessage, SetUserIdMessage, SilentMessage, UserJoinedMessage, UserLeftMessage, UserMovedMessage,
+    BatchMessage,
+    ClientToServerMessage,
+    GroupDeleteMessage,
+    GroupUpdateMessage,
+    ItemEventMessage,
+    JoinRoomMessage,
+    PositionMessage,
+    RoomJoinedMessage,
+    ServerToClientMessage,
+    SetPlayerDetailsMessage,
+    SetUserIdMessage,
+    SilentMessage,
+    UserJoinedMessage,
+    UserLeftMessage,
+    UserMovedMessage,
     UserMovesMessage,
-    ViewportMessage
+    ViewportMessage,
+    WebRtcDisconnectMessage,
+    WebRtcSignalToClientMessage,
+    WebRtcSignalToServerMessage,
+    WebRtcStartMessage
 } from "./Messages/generated/messages_pb"
 
 import {PlayerAnimationNames} from "./Phaser/Player/Animation";
@@ -132,7 +148,7 @@ export interface RoomJoinedMessageInterface {
 export class Connection implements Connection {
     private readonly socket: WebSocket;
     private userId: number|null = null;
-    private batchCallbacks: Map<string, Function[]> = new Map<string, Function[]>();
+    private listeners: Map<string, Function[]> = new Map<string, Function[]>();
     private static websocketFactory: null|((url: string)=>any) = null;
 
     public static setWebsocketFactory(websocketFactory: (url: string)=>any): void {
@@ -185,13 +201,7 @@ export class Connection implements Connection {
                         throw new Error('Unexpected batch message type');
                     }
 
-                    const listeners = this.batchCallbacks.get(event);
-                    if (listeners === undefined) {
-                        continue;
-                    }
-                    for (const listener of listeners) {
-                        listener(payload);
-                    }
+                    this.dispatch(event, payload);
                 }
             } else if (message.hasRoomjoinedmessage()) {
                 const roomJoinedMessage = message.getRoomjoinedmessage() as RoomJoinedMessage;
@@ -212,8 +222,29 @@ export class Connection implements Connection {
                 this.userId = (message.getSetuseridmessage() as SetUserIdMessage).getUserid();
             } else if (message.hasErrormessage()) {
                 console.error(EventMessage.MESSAGE_ERROR, message.getErrormessage()?.getMessage);
+            } else if (message.hasWebrtcsignaltoclientmessage()) {
+                this.dispatch(EventMessage.WEBRTC_SIGNAL, message.getWebrtcsignaltoclientmessage());
+            } else if (message.hasWebrtcscreensharingsignaltoclientmessage()) {
+                this.dispatch(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, message.getWebrtcscreensharingsignaltoclientmessage());
+            } else if (message.hasWebrtcstartmessage()) {
+                console.log('Received WebRtcStartMessage');
+                this.dispatch(EventMessage.WEBRTC_START, message.getWebrtcstartmessage());
+            } else if (message.hasWebrtcdisconnectmessage()) {
+                this.dispatch(EventMessage.WEBRTC_DISCONNECT, message.getWebrtcdisconnectmessage());
+            } else {
+                throw new Error('Unknown message received');
             }
 
+        }
+    }
+
+    private dispatch(event: string, payload: unknown): void {
+        const listeners = this.listeners.get(event);
+        if (listeners === undefined) {
+            return;
+        }
+        for (const listener of listeners) {
+            listener(payload);
         }
     }
 
@@ -363,7 +394,7 @@ export class Connection implements Connection {
     }
 
     public onUserJoins(callback: (message: MessageUserJoined) => void): void {
-        this.onBatchMessage(EventMessage.JOIN_ROOM, (message: UserJoinedMessage) => {
+        this.onMessage(EventMessage.JOIN_ROOM, (message: UserJoinedMessage) => {
             callback(this.toMessageUserJoined(message));
         });
     }
@@ -383,30 +414,30 @@ export class Connection implements Connection {
     }
 
     public onUserMoved(callback: (message: UserMovedMessage) => void): void {
-        this.onBatchMessage(EventMessage.USER_MOVED, callback);
+        this.onMessage(EventMessage.USER_MOVED, callback);
         //this.socket.on(EventMessage.USER_MOVED, callback);
     }
 
     /**
      * Registers a listener on a message that is part of a batch
      */
-    private onBatchMessage(eventName: string, callback: Function): void {
-        let callbacks = this.batchCallbacks.get(eventName);
+    private onMessage(eventName: string, callback: Function): void {
+        let callbacks = this.listeners.get(eventName);
         if (callbacks === undefined) {
             callbacks = new Array<Function>();
-            this.batchCallbacks.set(eventName, callbacks);
+            this.listeners.set(eventName, callbacks);
         }
         callbacks.push(callback);
     }
 
     public onUserLeft(callback: (userId: number) => void): void {
-        this.onBatchMessage(EventMessage.USER_LEFT, (message: UserLeftMessage) => {
+        this.onMessage(EventMessage.USER_LEFT, (message: UserLeftMessage) => {
             callback(message.getUserid());
         });
     }
 
     public onGroupUpdatedOrCreated(callback: (groupCreateUpdateMessage: GroupCreatedUpdatedMessageInterface) => void): void {
-        this.onBatchMessage(EventMessage.GROUP_CREATE_UPDATE, (message: GroupUpdateMessage) => {
+        this.onMessage(EventMessage.GROUP_CREATE_UPDATE, (message: GroupUpdateMessage) => {
             callback(this.toGroupCreatedUpdatedMessage(message));
         });
     }
@@ -424,7 +455,7 @@ export class Connection implements Connection {
     }
 
     public onGroupDeleted(callback: (groupId: number) => void): void {
-        this.onBatchMessage(EventMessage.GROUP_DELETE, (message: GroupDeleteMessage) => {
+        this.onMessage(EventMessage.GROUP_DELETE, (message: GroupDeleteMessage) => {
             callback(message.getGroupid());
         });
     }
@@ -438,37 +469,58 @@ export class Connection implements Connection {
     }
 
     public sendWebrtcSignal(signal: unknown, receiverId: number) {
-/*        return this.socket.emit(EventMessage.WEBRTC_SIGNAL, {
-            receiverId: receiverId,
-            signal: signal
-        } as WebRtcSignalSentMessageInterface);*/
+        const webRtcSignal = new WebRtcSignalToServerMessage();
+        webRtcSignal.setReceiverid(receiverId);
+        webRtcSignal.setSignal(JSON.stringify(signal));
+
+        const clientToServerMessage = new ClientToServerMessage();
+        clientToServerMessage.setWebrtcsignaltoservermessage(webRtcSignal);
+
+        this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 
     public sendWebrtcScreenSharingSignal(signal: unknown, receiverId: number) {
-/*        return this.socket.emit(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, {
-            receiverId: receiverId,
-            signal: signal
-        } as WebRtcSignalSentMessageInterface);*/
+        const webRtcSignal = new WebRtcSignalToServerMessage();
+        webRtcSignal.setReceiverid(receiverId);
+        webRtcSignal.setSignal(JSON.stringify(signal));
+
+        const clientToServerMessage = new ClientToServerMessage();
+        clientToServerMessage.setWebrtcscreensharingsignaltoservermessage(webRtcSignal);
+
+        this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 
-    public receiveWebrtcStart(callback: (message: WebRtcStartMessageInterface) => void) {
-// TODO
-        //        this.socket.on(EventMessage.WEBRTC_START, callback);
+    public receiveWebrtcStart(callback: (message: UserSimplePeerInterface) => void) {
+        this.onMessage(EventMessage.WEBRTC_START, (message: WebRtcStartMessage) => {
+            callback({
+                userId: message.getUserid(),
+                name: message.getName(),
+                initiator: message.getInitiator()
+            });
+        });
     }
 
     public receiveWebrtcSignal(callback: (message: WebRtcSignalReceivedMessageInterface) => void) {
-// TODO
-        //        return this.socket.on(EventMessage.WEBRTC_SIGNAL, callback);
+        this.onMessage(EventMessage.WEBRTC_SIGNAL, (message: WebRtcSignalToClientMessage) => {
+            callback({
+                userId: message.getUserid(),
+                signal: JSON.parse(message.getSignal())
+            });
+        });
     }
 
     public receiveWebrtcScreenSharingSignal(callback: (message: WebRtcSignalReceivedMessageInterface) => void) {
-// TODO
-        //        return this.socket.on(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, callback);
+        this.onMessage(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, (message: WebRtcSignalToClientMessage) => {
+            callback({
+                userId: message.getUserid(),
+                signal: JSON.parse(message.getSignal())
+            });
+        });
     }
 
     public onServerDisconnected(callback: (event: CloseEvent) => void): void {
         this.socket.addEventListener('close', (event) => {
-
+            console.log('Socket closed with code '+event.code+". Reason: "+event.reason);
             if (event.code === 1000) {
                 // Normal closure case
                 return;
@@ -483,8 +535,11 @@ export class Connection implements Connection {
     }
 
     disconnectMessage(callback: (message: WebRtcDisconnectMessageInterface) => void): void {
-// TODO
-        //        this.socket.on(EventMessage.WEBRTC_DISCONNECT, callback);
+        this.onMessage(EventMessage.WEBRTC_DISCONNECT, (message: WebRtcDisconnectMessage) => {
+            callback({
+                userId: message.getUserid()
+            });
+        });
     }
 
     emitActionableEvent(itemId: number, event: string, state: unknown, parameters: unknown): void {
@@ -501,7 +556,7 @@ export class Connection implements Connection {
     }
 
     onActionableEvent(callback: (message: ItemEventMessageInterface) => void): void {
-        this.onBatchMessage(EventMessage.ITEM_EVENT, (message: ItemEventMessage) => {
+        this.onMessage(EventMessage.ITEM_EVENT, (message: ItemEventMessage) => {
             callback({
                 itemId: message.getItemid(),
                 event: message.getEvent(),

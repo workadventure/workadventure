@@ -49,6 +49,11 @@ message UserMovesMessage {
   ViewportMessage viewport = 2;
 }
 
+message WebRtcSignalToServerMessage {
+  int32 receiverId = 1;
+  string signal = 2;
+}
+
 message ClientToServerMessage {
   oneof message {
     JoinRoomMessage joinRoomMessage = 1;
@@ -57,6 +62,8 @@ message ClientToServerMessage {
     ViewportMessage viewportMessage = 4;
     ItemEventMessage itemEventMessage = 5;
     SetPlayerDetailsMessage setPlayerDetailsMessage = 6;
+    WebRtcSignalToServerMessage webRtcSignalToServerMessage = 7;
+    WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 8;
   }
 }
 
@@ -132,14 +139,20 @@ message RoomJoinedMessage {
   repeated ItemStateMessage item = 3;
 }
 
+message WebRtcStartMessage {
+  int32 userId = 1;
+  string name = 2;
+  bool initiator = 3;
+}
 
-/*message WebRtcStartMessage {
-  int32 itemId = 1;
-  string event = 2;
-  string stateJson = 3;
-  string parametersJson = 4;
-}*/
+message WebRtcDisconnectMessage {
+  int32 userId = 1;
+}
 
+message WebRtcSignalToClientMessage {
+  int32 userId = 1;
+  string signal = 2;
+}
 
 message ServerToClientMessage {
   oneof message {
@@ -147,9 +160,9 @@ message ServerToClientMessage {
     ErrorMessage errorMessage = 2;
     RoomJoinedMessage roomJoinedMessage = 3;
     SetUserIdMessage setUserIdMessage = 4; // TODO: merge this with RoomJoinedMessage ?
-//    WebRtcStartMessage webRtcStartMessage = 3;
-//    WebRtcSignalMessage webRtcSignalMessage = 4;
-//    WebRtcScreenSharingSignalMessage webRtcScreenSharingSignalMessage = 5;
-//    WebRtcDisconnectMessage webRtcDisconnectMessage = 6;
+    WebRtcStartMessage webRtcStartMessage = 5;
+    WebRtcSignalToClientMessage webRtcSignalToClientMessage = 6;
+    WebRtcSignalToClientMessage webRtcScreenSharingSignalToClientMessage = 7;
+    WebRtcDisconnectMessage webRtcDisconnectMessage = 8;
   }
 }
