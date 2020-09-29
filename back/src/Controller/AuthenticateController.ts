@@ -39,20 +39,22 @@ export class AuthenticateController extends BaseController {
             res.end();
         });
 
-        this.App.post("/login", async (res: HttpResponse, req: HttpRequest) => {
-            this.addCorsHeaders(res);
+        this.App.post("/login", (res: HttpResponse, req: HttpRequest) => {
+            (async () => {
+                this.addCorsHeaders(res);
 
-            res.onAborted(() => {
-                console.warn('Login request was aborted');
-            })
-            const param = await res.json();
-            const userUuid = uuid();
-            const token = Jwt.sign({name: param.name, userUuid: userUuid} as TokenInterface, SECRET_KEY, {expiresIn: '24h'});
-            res.writeStatus("200 OK").end(JSON.stringify({
-                token: token,
-                mapUrlStart: URL_ROOM_STARTED,
-                userId: userUuid,
-            }));
+                res.onAborted(() => {
+                    console.warn('Login request was aborted');
+                })
+                const param = await res.json();
+                const userUuid = uuid();
+                const token = Jwt.sign({name: param.name, userUuid: userUuid} as TokenInterface, SECRET_KEY, {expiresIn: '24h'});
+                res.writeStatus("200 OK").end(JSON.stringify({
+                    token: token,
+                    mapUrlStart: URL_ROOM_STARTED,
+                    userId: userUuid,
+                }));
+            })();
         });
     }
 }

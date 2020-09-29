@@ -1,6 +1,6 @@
 import { ReadStream } from 'fs';
 
-function extend(who: any, from: any, overwrite = true) {
+function extend(who: any, from: any, overwrite = true) { // eslint-disable-line @typescript-eslint/no-explicit-any
   const ownProps = Object.getOwnPropertyNames(Object.getPrototypeOf(from)).concat(
     Object.keys(from)
   );

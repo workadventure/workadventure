@@ -149,9 +149,9 @@ export class Connection implements Connection {
     private readonly socket: WebSocket;
     private userId: number|null = null;
     private listeners: Map<string, Function[]> = new Map<string, Function[]>();
-    private static websocketFactory: null|((url: string)=>any) = null;
+    private static websocketFactory: null|((url: string)=>any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-    public static setWebsocketFactory(websocketFactory: (url: string)=>any): void {
+    public static setWebsocketFactory(websocketFactory: (url: string)=>any): void { // eslint-disable-line @typescript-eslint/no-explicit-any
         Connection.websocketFactory = websocketFactory;
     }
 
@@ -206,9 +206,9 @@ export class Connection implements Connection {
             } else if (message.hasRoomjoinedmessage()) {
                 const roomJoinedMessage = message.getRoomjoinedmessage() as RoomJoinedMessage;
 
-                const users: Array<MessageUserJoined> = roomJoinedMessage.getUserList().map(this.toMessageUserJoined);
-                const groups: Array<GroupCreatedUpdatedMessageInterface> = roomJoinedMessage.getGroupList().map(this.toGroupCreatedUpdatedMessage);
-                let items: { [itemId: number] : unknown } = {};
+                const users: Array<MessageUserJoined> = roomJoinedMessage.getUserList().map(this.toMessageUserJoined.bind(this));
+                const groups: Array<GroupCreatedUpdatedMessageInterface> = roomJoinedMessage.getGroupList().map(this.toGroupCreatedUpdatedMessage.bind(this));
+                const items: { [itemId: number] : unknown } = {};
                 for (const item of roomJoinedMessage.getItemList()) {
                     items[item.getItemid()] = JSON.parse(item.getStatejson());
                 }
@@ -221,7 +221,7 @@ export class Connection implements Connection {
             } else if (message.hasSetuseridmessage()) {
                 this.userId = (message.getSetuseridmessage() as SetUserIdMessage).getUserid();
             } else if (message.hasErrormessage()) {
-                console.error(EventMessage.MESSAGE_ERROR, message.getErrormessage()?.getMessage);
+                console.error(EventMessage.MESSAGE_ERROR, message.getErrormessage()?.getMessage());
             } else if (message.hasWebrtcsignaltoclientmessage()) {
                 this.dispatch(EventMessage.WEBRTC_SIGNAL, message.getWebrtcsignaltoclientmessage());
             } else if (message.hasWebrtcscreensharingsignaltoclientmessage()) {

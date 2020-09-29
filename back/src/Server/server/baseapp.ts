@@ -11,11 +11,11 @@ const handleBody = (res: HttpResponse, req: HttpRequest) => {
 
   res.bodyStream = function() {
     const stream = new Readable();
-    stream._read = noOp;
+    stream._read = noOp; // eslint-disable-line @typescript-eslint/unbound-method
 
     this.onData((ab, isLast) => {
       // uint and then slicing is bit faster than slice and then uint
-      stream.push(new Uint8Array(ab.slice((ab as any).byteOffset, ab.byteLength)));
+      stream.push(new Uint8Array(ab.slice((ab as any).byteOffset, ab.byteLength))); // eslint-disable-line @typescript-eslint/no-explicit-any
       if (isLast) {
         stream.push(null);
       }
@@ -26,7 +26,7 @@ const handleBody = (res: HttpResponse, req: HttpRequest) => {
 
   res.body = () => stob(res.bodyStream());
 
-  if (contType.indexOf('application/json') > -1)
+  if (contType.includes('application/json'))
     res.json = async () => JSON.parse(await res.body());
 };
 
