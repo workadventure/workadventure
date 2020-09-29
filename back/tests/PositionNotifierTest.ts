@@ -8,6 +8,7 @@ import {PointInterface} from "../src/Model/Websocket/PointInterface";
 import {Zone} from "_Model/Zone";
 import {Movable} from "_Model/Movable";
 import {PositionInterface} from "_Model/PositionInterface";
+import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
 
 
 describe("PositionNotifier", () => {
@@ -29,14 +30,14 @@ describe("PositionNotifier", () => {
             y: 500,
             moving: false,
             direction: 'down'
-        }, false, positionNotifier);
+        }, false, positionNotifier, {} as ExSocketInterface);
 
         const user2 = new User(2, {
             x: -9999,
             y: -9999,
             moving: false,
             direction: 'down'
-        }, false, positionNotifier);
+        }, false, positionNotifier, {} as ExSocketInterface);
 
         positionNotifier.setViewport(user1, {
             left: 200,
@@ -107,14 +108,14 @@ describe("PositionNotifier", () => {
             y: 500,
             moving: false,
             direction: 'down'
-        }, false, positionNotifier);
+        }, false, positionNotifier, {} as ExSocketInterface);
 
         const user2 = new User(2, {
             x: 0,
             y: 0,
             moving: false,
             direction: 'down'
-        }, false, positionNotifier);
+        }, false, positionNotifier, {} as ExSocketInterface);
 
         let newUsers = positionNotifier.setViewport(user1, {
             left: 200,
