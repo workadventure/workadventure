@@ -3,7 +3,6 @@ import {IoSocketController} from "./Controller/IoSocketController"; //TODO fix i
 import {AuthenticateController} from "./Controller/AuthenticateController"; //TODO fix import by "_Controller/..."
 import {MapController} from "./Controller/MapController";
 import {PrometheusController} from "./Controller/PrometheusController";
-import {AdminController} from "./Controller/AdminController";
 import {DebugController} from "./Controller/DebugController";
 import {App as uwsApp} from "./Server/sifrr.server";
 
@@ -13,7 +12,6 @@ class App {
     public authenticateController: AuthenticateController;
     public mapController: MapController;
     public prometheusController: PrometheusController;
-    private adminController: AdminController;
     private debugController: DebugController;
 
     constructor() {
@@ -39,7 +37,6 @@ class App {
         this.authenticateController = new AuthenticateController(this.app);
         this.mapController = new MapController(this.app);
         this.prometheusController = new PrometheusController(this.app, this.ioSocketController);
-        this.adminController = new AdminController(this.app);
         this.debugController = new DebugController(this.app, this.ioSocketController);
     }
 

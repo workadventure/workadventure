@@ -116,9 +116,6 @@ export class IoSocketController {
         if (typeof((token as TokenInterface).userUuid) !== 'string') {
             return false;
         }
-        if (typeof((token as TokenInterface).name) !== 'string') {
-            return false;
-        }
         return true;
     }
 
@@ -142,45 +139,46 @@ export class IoSocketController {
         //console.log(socket.handshake.query.token);
 
         /*if (!socket.handshake.query || !socket.handshake.query.token) {
-            console.error('An authentication error happened, a user tried to connect without a token.');
-            return next(new Error('Authentication error'));
-        }
-        if(socket.handshake.query.token === 'test'){
-            if (ALLOW_ARTILLERY) {
-                (socket as ExSocketInterface).token = socket.handshake.query.token;
-                (socket as ExSocketInterface).userId = this.nextUserId;
-                (socket as ExSocketInterface).userUuid = uuid();
-                this.nextUserId++;
-                (socket as ExSocketInterface).isArtillery = true;
-                console.log((socket as ExSocketInterface).userId);
-                next();
-                return;
-            } else {
-                console.warn("In order to perform a load-testing test on this environment, you must set the ALLOW_ARTILLERY environment variable to 'true'");
-                next();
-            }
-        }
-        (socket as ExSocketInterface).isArtillery = false;
-        if(this.searchClientByToken(socket.handshake.query.token)){
-            console.error('An authentication error happened, a user tried to connect while its token is already connected.');
-            return next(new Error('Authentication error'));
-        }
-        Jwt.verify(socket.handshake.query.token, SECRET_KEY, (err: JsonWebTokenError, tokenDecoded: object) => {
-            if (err) {
-                console.error('An authentication error happened, invalid JsonWebToken.', err);
+                console.error('An authentication error happened, a user tried to connect without a token.');
                 return next(new Error('Authentication error'));
             }
-
-            if (!this.isValidToken(tokenDecoded)) {
-                return next(new Error('Authentication error, invalid token structure'));
+            if(socket.handshake.query.token === 'test'){
+                if (ALLOW_ARTILLERY) {
+                    (socket as ExSocketInterface).token = socket.handshake.query.token;
+                    (socket as ExSocketInterface).userId = this.nextUserId;
+                    (socket as ExSocketInterface).userUuid = uuid();
+                    this.nextUserId++;
+                    (socket as ExSocketInterface).isArtillery = true;
+                    console.log((socket as ExSocketInterface).userId);
+                    next();
+                    return;
+                } else {
+                    console.warn("In order to perform a load-testing test on this environment, you must set the ALLOW_ARTILLERY environment variable to 'true'");
+                    next();
+                }
             }
+            (socket as ExSocketInterface).isArtillery = false;
+            if(this.searchClientByToken(socket.handshake.query.token)){
+                console.error('An authentication error happened, a user tried to connect while its token is already connected.');
+                return next(new Error('Authentication error'));
+            }
+            Jwt.verify(socket.handshake.query.token, SECRET_KEY, (err: JsonWebTokenError, tokenDecoded: object) => {
+                const tokenInterface = tokenDecoded as TokenInterface;
+                if (err) {
+                    console.error('An authentication error happened, invalid JsonWebToken.', err);
+                    return next(new Error('Authentication error'));
+                }
 
-            (socket as ExSocketInterface).token = socket.handshake.query.token;
-            (socket as ExSocketInterface).userId = this.nextUserId;
-            (socket as ExSocketInterface).userUuid = tokenDecoded.userUuid;
-            this.nextUserId++;
-            next();
-        });*/
+                if (!this.isValidToken(tokenInterface)) {
+                    return next(new Error('Authentication error, invalid token structure'));
+                }
+
+                (socket as ExSocketInterface).token = socket.handshake.query.token;
+                (socket as ExSocketInterface).userId = this.nextUserId;
+                (socket as ExSocketInterface).userUuid = tokenInterface.userUuid;
+                this.nextUserId++;
+                next();
+            });*/
         const socket = ws as ExSocketInterface;
         socket.userId = this.nextUserId;
         this.nextUserId++;

@@ -3,6 +3,7 @@ import {URL_ROOM_STARTED} from "../Enum/EnvironmentVariable";
 import {HttpRequest, HttpResponse, TemplatedApp} from "uWebSockets.js";
 import {BaseController} from "./BaseController";
 
+//todo: delete this
 export class MapController extends BaseController{
 
     constructor(private App : TemplatedApp) {

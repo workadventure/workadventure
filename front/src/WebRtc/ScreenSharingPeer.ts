@@ -1,7 +1,7 @@
 import * as SimplePeerNamespace from "simple-peer";
 import {mediaManager} from "./MediaManager";
-import {Connection} from "../Connection";
 import {TURN_SERVER, TURN_USER, TURN_PASSWORD} from "../Enum/EnvironmentVariable";
+import {RoomConnection} from "../Connexion/RoomConnection";
 
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
@@ -14,7 +14,7 @@ export class ScreenSharingPeer extends Peer {
      */
     private isReceivingStream:boolean = false;
 
-    constructor(private userId: number, initiator: boolean, private connection: Connection) {
+    constructor(private userId: number, initiator: boolean, private connection: RoomConnection) {
         super({
             initiator: initiator ? initiator : false,
             reconnectTimer: 10000,

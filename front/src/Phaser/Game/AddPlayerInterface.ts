@@ -1,4 +1,4 @@
-import {PointInterface} from "../../Connection";
+import {PointInterface} from "../../Connexion/ConnexionModels";
 
 export interface AddPlayerInterface {
     userId: number;
