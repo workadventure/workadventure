@@ -61,7 +61,7 @@ export class RoomConnection implements RoomConnection {
         this.socket.binaryType = 'arraybuffer';
 
         this.socket.onopen = (ev) => {
-            console.log('WS connected');
+            //console.log('WS connected');
         };
 
         this.socket.onmessage = (messageEvent) => {
@@ -143,7 +143,7 @@ export class RoomConnection implements RoomConnection {
 
     public emitPlayerDetailsMessage(userName: string, characterLayersSelected: string[]) {
         const message = new SetPlayerDetailsMessage();
-        message.setName(name);
+        message.setName(userName);
         message.setCharacterlayersList(characterLayersSelected);
 
         const clientToServerMessage = new ClientToServerMessage();

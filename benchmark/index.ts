@@ -1,4 +1,5 @@
-import {RoomConnection} from "../front/src/Connexion/Connection";
+import {RoomConnection} from "../front/src/Connexion/RoomConnection";
+import {connectionManager} from "../front/src/Connexion/ConnectionManager";
 import * as WebSocket from "ws"
 
 function sleep(ms) {
@@ -10,7 +11,8 @@ RoomConnection.setWebsocketFactory((url: string) => {
 });
 
 async function startOneUser(): Promise<void> {
-    const connection = await RoomConnection.createConnection('foo', ['male3']);
+    const connection = await connectionManager.connectToRoomSocket();
+    connection.emitPlayerDetailsMessage('foo', ['male3']);
 
     await connection.joinARoom('global__maps.workadventure.localhost/Floor0/floor0', 783, 170, 'down', false, {
         top: 0,
@@ -43,6 +45,9 @@ async function startOneUser(): Promise<void> {
 }
 
 (async () => {
+
+    //await connectionManager.init();
+
     for (let userNo = 0; userNo < 40; userNo++) {
         startOneUser();
         // Wait 0.5s between adding users

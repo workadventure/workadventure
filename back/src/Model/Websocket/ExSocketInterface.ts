@@ -7,7 +7,6 @@ import {WebSocket} from "uWebSockets.js"
 export interface ExSocketInterface extends WebSocket, Identificable {
     token: string;
     roomId: string;
-    webRtcRoomId: string|undefined;
     userId: number;   // A temporary (autoincremented) identifier for this user
     userUuid: string; // A unique identifier for this user
     name: string;

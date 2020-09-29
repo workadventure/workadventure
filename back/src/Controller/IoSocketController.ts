@@ -244,14 +244,10 @@ export class IoSocketController {
                     //leave room
                     this.leaveRoom(Client);
 
-                    //leave webrtc room
-                    //socket.leave(Client.webRtcRoomId);
-
                     //delete all socket information
-                    delete Client.webRtcRoomId;
-                    delete Client.roomId;
+                    /*delete Client.roomId;
                     delete Client.token;
-                    delete Client.position;
+                    delete Client.position;*/
                 } catch (e) {
                     console.error('An error occurred on "disconnect"');
                     console.error(e);
@@ -308,7 +304,7 @@ export class IoSocketController {
             }
 
             //leave previous room
-            this.leaveRoom(Client);
+            //this.leaveRoom(Client); // Useless now, there is only one room per connection
 
             //join new previous room
             const world = this.joinRoom(Client, roomId, ProtobufUtils.toPointInterface(message.getPosition() as PositionMessage));
@@ -567,7 +563,7 @@ export class IoSocketController {
                 //Client.leave(Client.roomId);
             } finally {
                 this.nbClientsPerRoomGauge.dec({ room: Client.roomId });
-                delete Client.roomId;
+                //delete Client.roomId;
             }
         }
     }
@@ -694,8 +690,6 @@ export class IoSocketController {
             return;
         }*/
 
-        // TODO: joinWebRtcRoom will be trigerred twice when joining the first time! Maybe we should fix the GROUP constructor to trigger only one event
-console.log('joinWebRtcRoom FOR '+user.socket.name+" "+user.socket.userId);
         for (const otherUser of group.getUsers()) {
             if (user === otherUser) {
                 continue;
@@ -712,7 +706,7 @@ console.log('joinWebRtcRoom FOR '+user.socket.name+" "+user.socket.userId);
 
             if (!user.socket.disconnecting) {
                 user.socket.send(serverToClientMessage1.serializeBinary().buffer, true);
-                console.log('Sending webrtcstart initiator to '+user.socket.userId)
+                //console.log('Sending webrtcstart initiator to '+user.socket.userId)
             }
 
             const webrtcStartMessage2 = new WebRtcStartMessage();
@@ -725,7 +719,7 @@ console.log('joinWebRtcRoom FOR '+user.socket.name+" "+user.socket.userId);
 
             if (!otherUser.socket.disconnecting) {
                 otherUser.socket.send(serverToClientMessage2.serializeBinary().buffer, true);
-                console.log('Sending webrtcstart to '+otherUser.socket.userId)
+                //console.log('Sending webrtcstart to '+otherUser.socket.userId)
             }
 
         }
