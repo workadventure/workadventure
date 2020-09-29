@@ -121,7 +121,7 @@ export class IoSocketController {
      *
      * @param token
      */
-    searchClientByToken(token: string): ExSocketInterface | null {
+/*    searchClientByToken(token: string): ExSocketInterface | null {
         const clients: ExSocketInterface[] = Object.values(this.Io.sockets.sockets) as ExSocketInterface[];
         for (let i = 0; i < clients.length; i++) {
             const client = clients[i];
@@ -131,7 +131,7 @@ export class IoSocketController {
             return client;
         }
         return null;
-    }
+    }*/
 
     private authenticate(ws: WebSocket) {
         //console.log(socket.handshake.query.token);
@@ -657,25 +657,23 @@ export class IoSocketController {
         //socket.emit(SocketIoEvent.GROUP_CREATE_UPDATE, groupUpdateMessage.serializeBinary().buffer);
     }
 
-    private emitDeleteGroupEvent(socket: Socket, groupId: number): void {
+    private emitDeleteGroupEvent(client: ExSocketInterface, groupId: number): void {
         const groupDeleteMessage = new GroupDeleteMessage();
         groupDeleteMessage.setGroupid(groupId);
 
         const subMessage = new SubMessage();
         subMessage.setGroupdeletemessage(groupDeleteMessage);
 
-        const client : ExSocketInterface = socket as ExSocketInterface;
         emitInBatch(client, subMessage);
     }
 
-    private emitUserLeftEvent(socket: Socket, userId: number): void {
+    private emitUserLeftEvent(client: ExSocketInterface, userId: number): void {
         const userLeftMessage = new UserLeftMessage();
         userLeftMessage.setUserid(userId);
 
         const subMessage = new SubMessage();
         subMessage.setUserleftmessage(userLeftMessage);
 
-        const client : ExSocketInterface = socket as ExSocketInterface;
         emitInBatch(client, subMessage);
     }
 

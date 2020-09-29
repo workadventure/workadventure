@@ -1,10 +1,6 @@
 // lib/app.ts
 import {IoSocketController} from "./Controller/IoSocketController"; //TODO fix import by "_Controller/..."
 import {AuthenticateController} from "./Controller/AuthenticateController"; //TODO fix import by "_Controller/..."
-import express from "express";
-import {Application, Request, Response} from 'express';
-import bodyParser = require('body-parser');
-import * as http from "http";
 import {MapController} from "./Controller/MapController";
 import {PrometheusController} from "./Controller/PrometheusController";
 import {AdminController} from "./Controller/AdminController";

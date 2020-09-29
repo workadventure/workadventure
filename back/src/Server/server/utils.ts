@@ -1,21 +1,6 @@
-import { HttpResponse } from 'uWebSockets.js';
 import { ReadStream } from 'fs';
 
-function writeHeaders(
-  res: HttpResponse,
-  headers: { [name: string]: string } | string,
-  other?: string
-) {
-  if (typeof headers === 'string') {
-    res.writeHeader(headers, other.toString());
-  } else {
-    for (const n in headers) {
-      res.writeHeader(n, headers[n].toString());
-    }
-  }
-}
-
-function extend(who: object, from: object, overwrite = true) {
+function extend(who: any, from: any, overwrite = true) {
   const ownProps = Object.getOwnPropertyNames(Object.getPrototypeOf(from)).concat(
     Object.keys(from)
   );
@@ -31,7 +16,7 @@ function extend(who: object, from: object, overwrite = true) {
 
 function stob(stream: ReadStream): Promise<Buffer> {
   return new Promise(resolve => {
-    const buffers = [];
+    const buffers: Buffer[] = [];
     stream.on('data', buffers.push.bind(buffers));
 
     stream.on('end', () => {
@@ -49,4 +34,4 @@ function stob(stream: ReadStream): Promise<Buffer> {
   });
 }
 
-export { writeHeaders, extend, stob };
+export { extend, stob };

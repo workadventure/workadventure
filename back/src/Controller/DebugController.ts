@@ -1,22 +1,25 @@
-import {Application, Request, Response} from "express";
-import {OK} from "http-status-codes";
 import {ADMIN_API_TOKEN} from "../Enum/EnvironmentVariable";
 import {IoSocketController} from "_Controller/IoSocketController";
 import {stringify} from "circular-json";
+import {HttpRequest, HttpResponse} from "uWebSockets.js";
+import { parse } from 'query-string';
+import {App} from "../Server/sifrr.server";
 
 export class DebugController {
-    constructor(private App : Application, private ioSocketController: IoSocketController) {
+    constructor(private App : App, private ioSocketController: IoSocketController) {
         this.getDump();
     }
 
 
     getDump(){
-        this.App.get("/dump", (req: Request, res: Response) => {
-            if (req.query.token !== ADMIN_API_TOKEN) {
+        this.App.get("/dump", (res: HttpResponse, req: HttpRequest) => {
+            const query = parse(req.getQuery());
+
+            if (query.token !== ADMIN_API_TOKEN) {
                 return res.status(401).send('Invalid token sent!');
             }
 
-            return res.status(OK).contentType('application/json').send(stringify(
+            return res.writeStatus('200 OK').writeHeader('Content-Type', 'application/json').end(stringify(
                 this.ioSocketController.getWorlds(),
                 (key: unknown, value: unknown) => {
                     if(value instanceof Map) {
