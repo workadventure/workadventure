@@ -66,13 +66,14 @@ enum SocketIoEvent {
 }
 
 function emitInBatch(socket: ExSocketInterface, payload: SubMessage): void {
-    if (socket.disconnecting) {
-        return;
-    }
     socket.batchedMessages.addPayload(payload);
 
     if (socket.batchTimeout === null) {
         socket.batchTimeout = setTimeout(() => {
+            if (socket.disconnecting) {
+                return;
+            }
+
             const serverToClientMessage = new ServerToClientMessage();
             serverToClientMessage.setBatchmessage(socket.batchedMessages);
 
@@ -688,13 +689,13 @@ export class IoSocketController {
         // TODO: REBUILD THIS
         return;
 
-        if (socket.webRtcRoomId === roomId) {
+/*        if (socket.webRtcRoomId === roomId) {
             return;
         }
         socket.join(roomId);
         socket.webRtcRoomId = roomId;
         //if two persons in room share
-        if (this.Io.sockets.adapter.rooms[roomId].length < 2 /*|| this.Io.sockets.adapter.rooms[roomId].length >= 4*/) {
+        if (this.Io.sockets.adapter.rooms[roomId].length < 2) {
             return;
         }
 
@@ -718,7 +719,7 @@ export class IoSocketController {
             }, []);
 
             client.emit(SocketIoEvent.WEBRTC_START, {clients: peerClients, roomId: roomId});
-        });
+        });*/
     }
 
     /** permit to share user position
