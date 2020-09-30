@@ -13,13 +13,13 @@ class CpuTracker {
         let time  = process.hrtime.bigint()
         let usage = process.cpuUsage()
         setInterval(() => {
-            let elapTime = process.hrtime.bigint();
-            let elapUsage = process.cpuUsage(usage)
+            const elapTime = process.hrtime.bigint();
+            const elapUsage = process.cpuUsage(usage)
             usage = process.cpuUsage()
 
-            let elapTimeMS = elapTime - time;
-            let elapUserMS = secNSec2ms(elapUsage.user)
-            let elapSystMS = secNSec2ms(elapUsage.system)
+            const elapTimeMS = elapTime - time;
+            const elapUserMS = secNSec2ms(elapUsage.user)
+            const elapSystMS = secNSec2ms(elapUsage.system)
             this.cpuPercent = Math.round(100 * (elapUserMS + elapSystMS) / Number(elapTimeMS) * 1000000)
 
             time = elapTime;
@@ -27,7 +27,7 @@ class CpuTracker {
             console.log('elapsed user ms:  ', elapUserMS)
             console.log('elapsed system ms:', elapSystMS)
             console.log('cpu percent:      ', this.cpuPercent)*/
-        }, 500);
+        }, 100);
     }
 
     public getCpuPercent(): number {
