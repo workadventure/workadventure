@@ -20,18 +20,6 @@ class App {
         this.config();
         this.crossOrigin();
 
-        //TODO add middleware with access token to secure api
-
-        // STUPID CORS IMPLEMENTATION.
-        // TODO: SECURE THIS
-        this.app.any('/*', (res, req) => {
-            res.writeHeader('access-control-allow-headers', 'Origin, X-Requested-With, Content-Type, Accept');
-            res.writeHeader('access-control-allow-methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-            res.writeHeader('access-control-allow-origin', '*');
-
-            req.setYield(true);
-        });
-
         //create socket controllers
         this.ioSocketController = new IoSocketController(this.app);
         this.authenticateController = new AuthenticateController(this.app);

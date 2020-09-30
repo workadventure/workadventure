@@ -50,27 +50,6 @@ import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
 import {App, HttpRequest, TemplatedApp, WebSocket} from "uWebSockets.js"
 import {parse} from "query-string";
 
-enum SocketIoEvent {
-    CONNECTION = "connection",
-    DISCONNECT = "disconnect",
-    JOIN_ROOM = "join-room", // bi-directional
-    USER_POSITION = "user-position", // From client to server
-    USER_MOVED = "user-moved", // From server to client
-    USER_LEFT = "user-left", // From server to client
-    WEBRTC_SIGNAL = "webrtc-signal",
-    WEBRTC_SCREEN_SHARING_SIGNAL = "webrtc-screen-sharing-signal",
-    WEBRTC_START = "webrtc-start",
-    WEBRTC_DISCONNECT = "webrtc-disconect",
-    MESSAGE_ERROR = "message-error",
-    GROUP_CREATE_UPDATE = "group-create-update",
-    GROUP_DELETE = "group-delete",
-    SET_PLAYER_DETAILS = "set-player-details",
-    ITEM_EVENT = 'item-event',
-    SET_SILENT = "set_silent", // Set or unset the silent mode for this user.
-    SET_VIEWPORT = "set-viewport",
-    BATCH = "batch",
-}
-
 function emitInBatch(socket: ExSocketInterface, payload: SubMessage): void {
     socket.batchedMessages.addPayload(payload);
 
@@ -111,6 +90,41 @@ export class IoSocketController {
         });
 
         this.ioConnection();
+
+
+
+
+        let time  = process.hrtime.bigint()
+        let usage = process.cpuUsage()
+
+
+        function secNSec2ms(secNSec) {
+            if (Array.isArray(secNSec)) {
+                return secNSec[0] * 1000 + secNSec[1] / 1000000;
+            }
+            return secNSec / 1000;
+        }
+
+        let oldCpuUsage = process.cpuUsage();
+        setInterval(() => {
+            let elapTime = process.hrtime.bigint();
+            let elapUsage = process.cpuUsage(usage)
+            usage = process.cpuUsage()
+
+            let elapTimeMS = elapTime - time;
+            let elapUserMS = secNSec2ms(elapUsage.user)
+            let elapSystMS = secNSec2ms(elapUsage.system)
+            let cpuPercent = Math.round(100 * (elapUserMS + elapSystMS) / Number(elapTimeMS) * 1000000)
+
+            time = elapTime;
+            //usage = elapUsage;
+            console.log('elapsed time ms:  ', elapTimeMS)
+            console.log('elapsed user ms:  ', elapUserMS)
+            console.log('elapsed system ms:', elapSystMS)
+            console.log('cpu percent:      ', cpuPercent)
+
+
+        }, 500);
     }
 
     private isValidToken(token: object): token is TokenInterface {
@@ -142,7 +156,6 @@ export class IoSocketController {
         const query = parse(req.getQuery());
 
         if (!query.token) {
-            console.error('An authentication error happened, a user tried to connect without a token.');
             throw new Error('An authentication error happened, a user tried to connect without a token.');
         }
 
@@ -152,7 +165,7 @@ export class IoSocketController {
         }
 
 
-        if(token === 'test'){
+        if(token === 'test') {
             if (ALLOW_ARTILLERY) {
                 return {
                     token,
@@ -198,9 +211,10 @@ export class IoSocketController {
             /* Options */
             //compression: uWS.SHARED_COMPRESSOR,
             maxPayloadLength: 16 * 1024 * 1024,
+            maxBackpressure: 65536, // Maximum 64kB of data in the buffer.
             //idleTimeout: 10,
             upgrade: (res, req, context) => {
-                console.log('An Http connection wants to become WebSocket, URL: ' + req.getUrl() + '!');
+                //console.log('An Http connection wants to become WebSocket, URL: ' + req.getUrl() + '!');
                 (async () => {
 
                     /* Keep track of abortions */
