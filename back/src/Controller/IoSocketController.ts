@@ -419,7 +419,7 @@ export class IoSocketController {
             const userMoves = userMovesMessage.toObject();
 
             // If CPU is high, let's drop messages of users moving (we will only dispatch the final position)
-            if (cpuTracker.getCpuPercent() > 80 && userMoves.position?.moving === true) {
+            if (cpuTracker.isOverHeating() && userMoves.position?.moving === true) {
                 return;
             }
 

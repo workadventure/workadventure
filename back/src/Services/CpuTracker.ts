@@ -1,3 +1,4 @@
+import {CPU_OVERHEAT_THRESHOLD} from "../Enum/EnvironmentVariable";
 
 function secNSec2ms(secNSec: Array<number>|number) {
     if (Array.isArray(secNSec)) {
@@ -8,6 +9,7 @@ function secNSec2ms(secNSec: Array<number>|number) {
 
 class CpuTracker {
     private cpuPercent: number = 0;
+    private overHeating: boolean = false;
 
     constructor() {
         let time  = process.hrtime.bigint()
@@ -23,6 +25,15 @@ class CpuTracker {
             this.cpuPercent = Math.round(100 * (elapUserMS + elapSystMS) / Number(elapTimeMS) * 1000000)
 
             time = elapTime;
+
+            if (!this.overHeating && this.cpuPercent > CPU_OVERHEAT_THRESHOLD) {
+                this.overHeating = true;
+                console.warn('CPU high threshold alert. Going in "overheat" mode');
+            } else if (this.overHeating && this.cpuPercent <= CPU_OVERHEAT_THRESHOLD) {
+                this.overHeating = false;
+                console.log('CPU is back to normal. Canceling "overheat" mode');
+            }
+
             /*console.log('elapsed time ms:  ', elapTimeMS)
             console.log('elapsed user ms:  ', elapUserMS)
             console.log('elapsed system ms:', elapSystMS)
@@ -32,6 +43,10 @@ class CpuTracker {
 
     public getCpuPercent(): number {
         return this.cpuPercent;
+    }
+
+    public isOverHeating(): boolean {
+        return this.overHeating;
     }
 }
 
