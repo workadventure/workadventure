@@ -14,7 +14,7 @@ async function startOneUser(): Promise<void> {
     const connection = await connectionManager.connectToRoomSocket();
     connection.emitPlayerDetailsMessage('foo', ['male3']);
 
-    await connection.joinARoom('global__maps.workadventure.localhost/Floor0/floor0', 783, 170, 'down', false, {
+    await connection.joinARoom('global__maps.workadventure.localhost/Floor0/floor0', 783, 170, 'down', true, {
         top: 0,
         bottom: 200,
         left: 500,

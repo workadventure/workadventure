@@ -49,6 +49,7 @@ import Direction = PositionMessage.Direction;
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
 import {App, HttpRequest, TemplatedApp, WebSocket} from "uWebSockets.js"
 import {parse} from "query-string";
+import {cpuTracker} from "../Services/CpuTracker";
 
 function emitInBatch(socket: ExSocketInterface, payload: SubMessage): void {
     socket.batchedMessages.addPayload(payload);
@@ -90,41 +91,6 @@ export class IoSocketController {
         });
 
         this.ioConnection();
-
-
-
-
-        let time  = process.hrtime.bigint()
-        let usage = process.cpuUsage()
-
-
-        function secNSec2ms(secNSec) {
-            if (Array.isArray(secNSec)) {
-                return secNSec[0] * 1000 + secNSec[1] / 1000000;
-            }
-            return secNSec / 1000;
-        }
-
-        let oldCpuUsage = process.cpuUsage();
-        setInterval(() => {
-            let elapTime = process.hrtime.bigint();
-            let elapUsage = process.cpuUsage(usage)
-            usage = process.cpuUsage()
-
-            let elapTimeMS = elapTime - time;
-            let elapUserMS = secNSec2ms(elapUsage.user)
-            let elapSystMS = secNSec2ms(elapUsage.system)
-            let cpuPercent = Math.round(100 * (elapUserMS + elapSystMS) / Number(elapTimeMS) * 1000000)
-
-            time = elapTime;
-            //usage = elapUsage;
-            console.log('elapsed time ms:  ', elapTimeMS)
-            console.log('elapsed user ms:  ', elapUserMS)
-            console.log('elapsed system ms:', elapSystMS)
-            console.log('cpu percent:      ', cpuPercent)
-
-
-        }, 500);
     }
 
     private isValidToken(token: object): token is TokenInterface {
@@ -451,6 +417,11 @@ export class IoSocketController {
         //console.log(SockerIoEvent.USER_POSITION, userMovesMessage);
         try {
             const userMoves = userMovesMessage.toObject();
+
+            // If CPU is high, let's drop messages of users moving (we will only dispatch the final position)
+            if (cpuTracker.getCpuPercent() > 80 && userMoves.position?.moving === true) {
+                return;
+            }
 
             const position = userMoves.position;
             if (position === undefined) {
