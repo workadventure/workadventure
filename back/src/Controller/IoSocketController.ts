@@ -233,7 +233,7 @@ export class IoSocketController {
                             req.getHeader('sec-websocket-extensions'),
                             context);
 
-                    } catch (e: unknown) {
+                    } catch (e) {
                         if (e instanceof Error) {
                             console.warn(e.message);
                             res.writeStatus("401 Unauthorized").end(e.message);
