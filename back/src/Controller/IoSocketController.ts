@@ -47,7 +47,8 @@ import {
 import {UserMovesMessage} from "../Messages/generated/messages_pb";
 import Direction = PositionMessage.Direction;
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
-import {App, TemplatedApp, WebSocket} from "uWebSockets.js"
+import {App, HttpRequest, TemplatedApp, WebSocket} from "uWebSockets.js"
+import {parse} from "query-string";
 
 enum SocketIoEvent {
     CONNECTION = "connection",
@@ -135,67 +136,122 @@ export class IoSocketController {
         return null;
     }*/
 
-    private authenticate(ws: WebSocket) {
+    private async authenticate(req: HttpRequest): Promise<{ token: string, userUuid: string }> {
         //console.log(socket.handshake.query.token);
 
-        /*if (!socket.handshake.query || !socket.handshake.query.token) {
-                console.error('An authentication error happened, a user tried to connect without a token.');
-                return next(new Error('Authentication error'));
-            }
-            if(socket.handshake.query.token === 'test'){
-                if (ALLOW_ARTILLERY) {
-                    (socket as ExSocketInterface).token = socket.handshake.query.token;
-                    (socket as ExSocketInterface).userId = this.nextUserId;
-                    (socket as ExSocketInterface).userUuid = uuid();
-                    this.nextUserId++;
-                    (socket as ExSocketInterface).isArtillery = true;
-                    console.log((socket as ExSocketInterface).userId);
-                    next();
-                    return;
-                } else {
-                    console.warn("In order to perform a load-testing test on this environment, you must set the ALLOW_ARTILLERY environment variable to 'true'");
-                    next();
+        const query = parse(req.getQuery());
+
+        if (!query.token) {
+            console.error('An authentication error happened, a user tried to connect without a token.');
+            throw new Error('An authentication error happened, a user tried to connect without a token.');
+        }
+
+        const token = query.token;
+        if (typeof(token) !== "string") {
+            throw new Error('Token is expected to be a string');
+        }
+
+
+        if(token === 'test'){
+            if (ALLOW_ARTILLERY) {
+                return {
+                    token,
+                    userUuid: uuid()
                 }
+            } else {
+                throw new Error("In order to perform a load-testing test on this environment, you must set the ALLOW_ARTILLERY environment variable to 'true'");
             }
-            (socket as ExSocketInterface).isArtillery = false;
-            if(this.searchClientByToken(socket.handshake.query.token)){
-                console.error('An authentication error happened, a user tried to connect while its token is already connected.');
-                return next(new Error('Authentication error'));
-            }
-            Jwt.verify(socket.handshake.query.token, SECRET_KEY, (err: JsonWebTokenError, tokenDecoded: object) => {
+        }
+
+        /*if(this.searchClientByToken(socket.handshake.query.token)){
+            console.error('An authentication error happened, a user tried to connect while its token is already connected.');
+            return next(new Error('Authentication error'));
+        }*/
+
+        const promise = new Promise<{ token: string, userUuid: string }>((resolve, reject) => {
+            Jwt.verify(token, SECRET_KEY, (err: JsonWebTokenError, tokenDecoded: object) => {
                 const tokenInterface = tokenDecoded as TokenInterface;
                 if (err) {
                     console.error('An authentication error happened, invalid JsonWebToken.', err);
-                    return next(new Error('Authentication error'));
+                    reject(new Error('An authentication error happened, invalid JsonWebToken. '+err.message));
+                    return;
                 }
 
                 if (!this.isValidToken(tokenInterface)) {
-                    return next(new Error('Authentication error, invalid token structure'));
+                    reject(new Error('Authentication error, invalid token structure.'));
+                    return;
                 }
 
-                (socket as ExSocketInterface).token = socket.handshake.query.token;
-                (socket as ExSocketInterface).userId = this.nextUserId;
-                (socket as ExSocketInterface).userUuid = tokenInterface.userUuid;
-                this.nextUserId++;
-                next();
-            });*/
-        const socket = ws as ExSocketInterface;
-        socket.userId = this.nextUserId;
-        this.nextUserId++;
+                resolve({
+                    token,
+                    userUuid: tokenInterface.userUuid
+                });
+            });
+        });
+
+        return promise;
     }
 
     ioConnection() {
         this.app.ws('/*', {
+
             /* Options */
             //compression: uWS.SHARED_COMPRESSOR,
             maxPayloadLength: 16 * 1024 * 1024,
             //idleTimeout: 10,
+            upgrade: (res, req, context) => {
+                console.log('An Http connection wants to become WebSocket, URL: ' + req.getUrl() + '!');
+                (async () => {
+
+                    /* Keep track of abortions */
+                    const upgradeAborted = {aborted: false};
+
+                    res.onAborted(() => {
+                        /* We can simply signal that we were aborted */
+                        upgradeAborted.aborted = true;
+                    });
+
+                    try {
+                        const result = await this.authenticate(req);
+
+                        if (upgradeAborted.aborted) {
+                            console.log("Ouch! Client disconnected before we could upgrade it!");
+                            /* You must not upgrade now */
+                            return;
+                        }
+
+                        /* This immediately calls open handler, you must not use res after this call */
+                        res.upgrade({
+                                // Data passed here is accessible on the "websocket" socket object.
+                                url: req.getUrl(),
+                                token: result.token,
+                                userUuid: result.userUuid
+                            },
+                            /* Spell these correctly */
+                            req.getHeader('sec-websocket-key'),
+                            req.getHeader('sec-websocket-protocol'),
+                            req.getHeader('sec-websocket-extensions'),
+                            context);
+
+                    } catch (e: unknown) {
+                        if (e instanceof Error) {
+                            console.warn(e.message);
+                            res.writeStatus("401 Unauthorized").end(e.message);
+                        } else {
+                            console.warn(e);
+                            res.writeStatus("500 Internal Server Error").end('An error occurred');
+                        }
+                        return;
+                    }
+                })();
+            },
             /* Handlers */
             open: (ws) => {
-                this.authenticate(ws);
-                // TODO: close if authenticate is ko
-
                 const client : ExSocketInterface = ws as ExSocketInterface;
+                client.userId = this.nextUserId;
+                this.nextUserId++;
+                client.userUuid = ws.userUuid;
+                client.token = ws.token;
                 client.batchedMessages = new BatchMessage();
                 client.batchTimeout = null;
                 client.emitInBatch = (payload: SubMessage): void => {

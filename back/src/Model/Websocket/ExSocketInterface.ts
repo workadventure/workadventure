@@ -13,7 +13,6 @@ export interface ExSocketInterface extends WebSocket, Identificable {
     characterLayers: string[];
     position: PointInterface;
     viewport: ViewportInterface;
-    isArtillery: boolean; // Whether this socket is opened by Artillery for load testing (hack)
     /**
      * Pushes an event that will be sent in the next batch of events
      */

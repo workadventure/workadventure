@@ -39,6 +39,7 @@ export class AuthenticateController extends BaseController {
                 res.onAborted(() => {
                     console.warn('Login request was aborted');
                 })
+                const host = req.getHeader('host');
                 const param = await res.json();
 
                 //todo: what to do if the organizationMemberToken is already used?
@@ -63,7 +64,7 @@ export class AuthenticateController extends BaseController {
                         newUrl = this.getNewUrlOnAdminAuth(data)
                     } else {
                         userUuid = uuid();
-                        mapUrlStart = req.getHeader('host').replace('api.', 'maps.') + URL_ROOM_STARTED;
+                        mapUrlStart = host.replace('api.', 'maps.') + URL_ROOM_STARTED;
                         newUrl = null;
                     }
 
@@ -76,7 +77,7 @@ export class AuthenticateController extends BaseController {
                     }));
 
                 } catch (e) {
-                    console.log(e.message)
+                    console.log("An error happened", e)
                     res.writeStatus(e.status || "500 Internal Server Error").end('An error happened');
                 }
 
