@@ -17,32 +17,12 @@ class App {
     constructor() {
         this.app = new uwsApp();
 
-        this.config();
-        this.crossOrigin();
-
         //create socket controllers
         this.ioSocketController = new IoSocketController(this.app);
         this.authenticateController = new AuthenticateController(this.app);
         this.mapController = new MapController(this.app);
         this.prometheusController = new PrometheusController(this.app, this.ioSocketController);
         this.debugController = new DebugController(this.app, this.ioSocketController);
-    }
-
-    // TODO add session user
-    private config(): void {
-        /*this.app.use(bodyParser.json());
-        this.app.use(bodyParser.urlencoded({extended: false}));*/
-    }
-
-    private crossOrigin(){
-        /*this.app.use((req: Request, res: Response, next) => {
-            res.setHeader("Access-Control-Allow-Origin", "*"); // update to match the domain you will make the request from
-            // Request methods you wish to allow
-            res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-            // Request headers you wish to allow
-            res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-            next();
-        });*/
     }
 }
 
