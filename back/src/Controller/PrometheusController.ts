@@ -1,10 +1,11 @@
-import {Application, Request, Response} from "express";
+import {App} from "../Server/sifrr.server";
 import {IoSocketController} from "_Controller/IoSocketController";
+import {HttpRequest, HttpResponse} from "uWebSockets.js";
 const register = require('prom-client').register;
 const collectDefaultMetrics = require('prom-client').collectDefaultMetrics;
 
 export class PrometheusController {
-    constructor(private App: Application, private ioSocketController: IoSocketController) {
+    constructor(private App: App, private ioSocketController: IoSocketController) {
         collectDefaultMetrics({
             timeout: 10000,
             gcDurationBuckets: [0.001, 0.01, 0.1, 1, 2, 5], // These are the default buckets.
@@ -13,8 +14,8 @@ export class PrometheusController {
         this.App.get("/metrics", this.metrics.bind(this));
     }
 
-    private metrics(req: Request, res: Response): void {
-        res.set('Content-Type', register.contentType);
+    private metrics(res: HttpResponse, req: HttpRequest): void {
+        res.writeHeader('Content-Type', register.contentType);
         res.end(register.metrics());
     }
 }

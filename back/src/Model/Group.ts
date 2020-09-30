@@ -87,7 +87,7 @@ export class Group implements Movable {
     join(user: User): void
     {
         // Broadcast on the right event
-        this.connectCallback(user.id, this);
+        this.connectCallback(user, this);
         this.users.add(user);
         user.group = this;
     }
@@ -105,7 +105,7 @@ export class Group implements Movable {
         }
 
         // Broadcast on the right event
-        this.disconnectCallback(user.id, this);
+        this.disconnectCallback(user, this);
     }
 
     /**

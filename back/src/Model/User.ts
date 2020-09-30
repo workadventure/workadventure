@@ -4,6 +4,7 @@ import {Zone} from "_Model/Zone";
 import {Movable} from "_Model/Movable";
 import {PositionInterface} from "_Model/PositionInterface";
 import {PositionNotifier} from "_Model/PositionNotifier";
+import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
 
 export class User implements Movable {
     public listenedZones: Set<Zone>;
@@ -13,7 +14,8 @@ export class User implements Movable {
         public id: number,
         private position: PointInterface,
         public silent: boolean,
-        private positionNotifier: PositionNotifier
+        private positionNotifier: PositionNotifier,
+        public readonly socket: ExSocketInterface
     ) {
         this.listenedZones = new Set<Zone>();
 

@@ -5,6 +5,7 @@ const GROUP_RADIUS = process.env.GROUP_RADIUS ? Number(process.env.GROUP_RADIUS)
 const ALLOW_ARTILLERY = process.env.ALLOW_ARTILLERY ? process.env.ALLOW_ARTILLERY == 'true' : false;
 const ADMIN_API_URL = process.env.ADMIN_API_URL || null;
 const ADMIN_API_TOKEN = process.env.ADMIN_API_TOKEN || null;
+const CPU_OVERHEAT_THRESHOLD = Number(process.env.CPU_OVERHEAT_THRESHOLD) || 80;
 
 export {
     SECRET_KEY,
@@ -14,4 +15,5 @@ export {
     ADMIN_API_TOKEN,
     GROUP_RADIUS,
     ALLOW_ARTILLERY,
+    CPU_OVERHEAT_THRESHOLD,
 }

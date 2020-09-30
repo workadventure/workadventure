@@ -12,10 +12,10 @@ interface LoginApiData {
 class ConnectionManager {
     private initPromise: Promise<LoginApiData> = Promise.reject();
     private mapUrlStart: string|null = null;
-    
+
     private authToken:string|null = null;
     private userUuid: string|null = null;
-    
+
     public async init(): Promise<void> {
         const match = /\/register\/(.+)/.exec(window.location.toString());
         const organizationMemberToken = match ? match[1] : null;
@@ -30,7 +30,11 @@ class ConnectionManager {
             history.pushState({}, '', newUrl);
         }
     }
-    
+
+    public initBenchmark(): void {
+        this.authToken = 'test';
+    }
+
     public connectToRoomSocket(): Promise<RoomConnection> {
         return new Promise<RoomConnection>((resolve, reject) => {
             const connection = new RoomConnection(this.authToken as string);
@@ -38,7 +42,9 @@ class ConnectionManager {
                 console.log('An error occurred while connecting to socket server. Retrying');
                 reject(error);
             });
-            resolve(connection);
+            connection.onConnect(() => {
+                resolve(connection);
+            })
         }).catch((err) => {
             // Let's retry in 4-6 seconds
             return new Promise<RoomConnection>((resolve, reject) => {
@@ -49,7 +55,7 @@ class ConnectionManager {
             });
         });
     }
-    
+
     public getMapUrlStart(): Promise<string> {
         return this.initPromise.then(() => {
             if (!this.mapUrlStart) {

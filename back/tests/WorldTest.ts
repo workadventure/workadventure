@@ -2,22 +2,30 @@ import "jasmine";
 import {World, ConnectCallback, DisconnectCallback } from "../src/Model/World";
 import {Point} from "../src/Model/Websocket/MessageUserPosition";
 import { Group } from "../src/Model/Group";
+import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
+import {User} from "_Model/User";
+
+function createMockUser(userId: number): ExSocketInterface {
+    return {
+        userId
+    } as ExSocketInterface;
+}
 
 describe("World", () => {
     it("should connect user1 and user2", () => {
         let connectCalledNumber: number = 0;
-        const connect: ConnectCallback = (user: number, group: Group): void => {
+        const connect: ConnectCallback = (user: User, group: Group): void => {
             connectCalledNumber++;
         }
-        const disconnect: DisconnectCallback = (user: number, group: Group): void => {
+        const disconnect: DisconnectCallback = (user: User, group: Group): void => {
 
         }
 
         const world = new World(connect, disconnect, 160, 160, () => {}, () => {}, () => {});
 
-        world.join({ userId: 1 }, new Point(100, 100));
+        world.join(createMockUser(1), new Point(100, 100));
 
-        world.join({ userId: 2 }, new Point(500, 100));
+        world.join(createMockUser(2), new Point(500, 100));
 
         world.updatePosition({ userId: 2 }, new Point(261, 100));
 
@@ -33,24 +41,24 @@ describe("World", () => {
 
     it("should connect 3 users", () => {
         let connectCalled: boolean = false;
-        const connect: ConnectCallback = (user: number, group: Group): void => {
+        const connect: ConnectCallback = (user: User, group: Group): void => {
             connectCalled = true;
         }
-        const disconnect: DisconnectCallback = (user: number, group: Group): void => {
+        const disconnect: DisconnectCallback = (user: User, group: Group): void => {
 
         }
 
         const world = new World(connect, disconnect, 160, 160, () => {}, () => {}, () => {});
 
-        world.join({ userId: 1 }, new Point(100, 100));
+        world.join(createMockUser(1), new Point(100, 100));
 
-        world.join({ userId: 2 }, new Point(200, 100));
+        world.join(createMockUser(2), new Point(200, 100));
 
         expect(connectCalled).toBe(true);
         connectCalled = false;
 
         // baz joins at the outer limit of the group
-        world.join({ userId: 3 }, new Point(311, 100));
+        world.join(createMockUser(3), new Point(311, 100));
 
         expect(connectCalled).toBe(false);
 
@@ -62,18 +70,18 @@ describe("World", () => {
     it("should disconnect user1 and user2", () => {
         let connectCalled: boolean = false;
         let disconnectCallNumber: number = 0;
-        const connect: ConnectCallback = (user: number, group: Group): void => {
+        const connect: ConnectCallback = (user: User, group: Group): void => {
             connectCalled = true;
         }
-        const disconnect: DisconnectCallback = (user: number, group: Group): void => {
+        const disconnect: DisconnectCallback = (user: User, group: Group): void => {
             disconnectCallNumber++;
         }
 
         const world = new World(connect, disconnect, 160, 160, () => {}, () => {}, () => {});
 
-        world.join({ userId: 1 }, new Point(100, 100));
+        world.join(createMockUser(1), new Point(100, 100));
 
-        world.join({ userId: 2 }, new Point(259, 100));
+        world.join(createMockUser(2), new Point(259, 100));
 
         expect(connectCalled).toBe(true);
         expect(disconnectCallNumber).toBe(0);

@@ -82,7 +82,7 @@ export class SimplePeer {
         mediaManager.getCamera().then(() => {
 
             //receive message start
-            this.Connection.receiveWebrtcStart((message: WebRtcStartMessageInterface) => {
+            this.Connection.receiveWebrtcStart((message: UserSimplePeerInterface) => {
                 this.receiveWebrtcStart(message);
             });
 
@@ -95,17 +95,22 @@ export class SimplePeer {
         });
     }
 
-    private receiveWebrtcStart(data: WebRtcStartMessageInterface) {
-        this.WebRtcRoomId = data.roomId;
-        this.Users = data.clients;
+    private receiveWebrtcStart(user: UserSimplePeerInterface) {
+        //this.WebRtcRoomId = data.roomId;
+        this.Users.push(user);
         // Note: the clients array contain the list of all clients (even the ones we are already connected to in case a user joints a group)
         // So we can receive a request we already had before. (which will abort at the first line of createPeerConnection)
-        // TODO: refactor this to only send a message to connect to one user (rather than several users).
+        // TODO: refactor this to only send a message to connect to one user (rather than several users). => DONE
         // This would be symmetrical to the way we handle disconnection.
         //console.log('Start message', data);
 
         //start connection
-        this.startWebRtc();
+        //this.startWebRtc();
+        console.log('receiveWebrtcStart. Initiator: ', user.initiator)
+        if(!user.initiator){
+            return;
+        }
+        this.createPeerConnection(user);
     }
 
     /**
@@ -129,6 +134,7 @@ export class SimplePeer {
         if(
             this.PeerConnectionArray.has(user.userId)
         ){
+            console.log('Peer connection already exists to user '+user.userId)
             return null;
         }
 

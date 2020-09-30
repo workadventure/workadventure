@@ -11,8 +11,8 @@ import {PositionNotifier} from "./PositionNotifier";
 import {ViewportInterface} from "_Model/Websocket/ViewportMessage";
 import {Movable} from "_Model/Movable";
 
-export type ConnectCallback = (user: number, group: Group) => void;
-export type DisconnectCallback = (user: number, group: Group) => void;
+export type ConnectCallback = (user: User, group: Group) => void;
+export type DisconnectCallback = (user: User, group: Group) => void;
 
 export class World {
     private readonly minDistance: number;
@@ -55,8 +55,8 @@ export class World {
         return this.users;
     }
 
-    public join(socket : Identificable, userPosition: PointInterface): void {
-        const user = new User(socket.userId, userPosition, false, this.positionNotifier);
+    public join(socket : ExSocketInterface, userPosition: PointInterface): void {
+        const user = new User(socket.userId, userPosition, false, this.positionNotifier, socket);
         this.users.set(socket.userId, user);
         // Let's call update position to trigger the join / leave room
         //this.updatePosition(socket, userPosition);
@@ -74,8 +74,8 @@ export class World {
         this.users.delete(user.userId);
 
         if (userObj !== undefined) {
-            this.positionNotifier.leave(userObj);
             this.positionNotifier.removeViewport(userObj);
+            this.positionNotifier.leave(userObj);
         }
     }
 
