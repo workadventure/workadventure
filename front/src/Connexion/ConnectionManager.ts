@@ -31,6 +31,10 @@ class ConnectionManager {
         }
     }
 
+    public initBenchmark(): void {
+        this.authToken = 'test';
+    }
+
     public connectToRoomSocket(): Promise<RoomConnection> {
         return new Promise<RoomConnection>((resolve, reject) => {
             const connection = new RoomConnection(this.authToken as string);

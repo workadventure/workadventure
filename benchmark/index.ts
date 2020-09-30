@@ -45,8 +45,8 @@ async function startOneUser(): Promise<void> {
 }
 
 (async () => {
+    connectionManager.initBenchmark();
 
-    //await connectionManager.init();
 
     for (let userNo = 0; userNo < 40; userNo++) {
         startOneUser();

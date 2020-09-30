@@ -120,7 +120,6 @@ export class RoomConnection implements RoomConnection {
             } else if (message.hasWebrtcscreensharingsignaltoclientmessage()) {
                 this.dispatch(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, message.getWebrtcscreensharingsignaltoclientmessage());
             } else if (message.hasWebrtcstartmessage()) {
-                console.log('Received WebRtcStartMessage');
                 this.dispatch(EventMessage.WEBRTC_START, message.getWebrtcstartmessage());
             } else if (message.hasWebrtcdisconnectmessage()) {
                 this.dispatch(EventMessage.WEBRTC_DISCONNECT, message.getWebrtcdisconnectmessage());
