@@ -1,9 +1,12 @@
 import { Readable } from 'stream';
 import { us_listen_socket_close, TemplatedApp, HttpResponse, HttpRequest } from 'uWebSockets.js';
 
+import formData from './formdata';
 import { stob } from './utils';
 import { Handler } from './types';
+import {join} from "path";
 
+const contTypes = ['application/x-www-form-urlencoded', 'multipart/form-data'];
 const noOp = () => true;
 
 const handleBody = (res: HttpResponse, req: HttpRequest) => {
@@ -13,7 +16,7 @@ const handleBody = (res: HttpResponse, req: HttpRequest) => {
     const stream = new Readable();
     stream._read = noOp; // eslint-disable-line @typescript-eslint/unbound-method
 
-    this.onData((ab, isLast) => {
+    this.onData((ab: ArrayBuffer, isLast: boolean) => {
       // uint and then slicing is bit faster than slice and then uint
       stream.push(new Uint8Array(ab.slice((ab as any).byteOffset, ab.byteLength))); // eslint-disable-line @typescript-eslint/no-explicit-any
       if (isLast) {
@@ -28,6 +31,8 @@ const handleBody = (res: HttpResponse, req: HttpRequest) => {
 
   if (contType.includes('application/json'))
     res.json = async () => JSON.parse(await res.body());
+  if (contTypes.map(t => contType.includes(t)).includes(true))
+    res.formData = formData.bind(res, contType);
 };
 
 class BaseApp {

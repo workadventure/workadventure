@@ -6,6 +6,12 @@
               content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
+        <!-- Include stylesheet -->
+        <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+
+        <!-- Include the Quill library -->
+        <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+
         <!-- Global site tag (gtag.js) - Google Analytics -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=UA-10196481-11"></script>
         <script>
@@ -15,6 +21,7 @@
 
             gtag('config', 'UA-10196481-11');
         </script>
+
         <link rel="apple-touch-icon" sizes="57x57" href="static/images/favicons/apple-icon-57x57.png">
         <link rel="apple-touch-icon" sizes="60x60" href="static/images/favicons/apple-icon-60x60.png">
         <link rel="apple-touch-icon" sizes="72x72" href="static/images/favicons/apple-icon-72x72.png">
@@ -39,7 +46,8 @@
         <title>WorkAdventure</title>
     </head>
     <body id="body" style="margin: 0">
-        <div class="main-container">
+        <div class="main-container" id="main-container">
+            <!-- Create the editor container -->
             <div id="game" class="game" style="/*background: red;*/">
                 <div id="game-overlay" class="game-overlay" style="/*background: violet*/;">
                     <div id="main-section" class="main-section">
@@ -87,6 +95,9 @@
                 </div>
             </div>
             <div id="cowebsite" class="cowebsite"></div>
+            <div class="audio-playing">
+                <img src="/resources/logos/megaphone.svg"/>
+            </div>
         </div>
 <!--
     <div id="webRtc" class="webrtc">
@@ -120,5 +131,6 @@
         <audio id="audio-webrtc-in">
             <source src="/resources/objects/webrtc-in.mp3" type="audio/mp3">
         </audio>
+
     </body>
 </html>

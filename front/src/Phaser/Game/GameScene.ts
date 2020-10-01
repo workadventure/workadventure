@@ -43,6 +43,8 @@ import {UserMovedMessage} from "../../Messages/generated/messages_pb";
 import {ProtobufClientUtils} from "../../Network/ProtobufClientUtils";
 import {connectionManager} from "../../Connexion/ConnectionManager";
 import {RoomConnection} from "../../Connexion/RoomConnection";
+import {GlobalMessageManager} from "../../Administration/GlobalMessageManager";
+import {ConsoleGlobalMessageManager} from "../../Administration/ConsoleGlobalMessageManager";
 
 
 export enum Textures {
@@ -103,6 +105,8 @@ export class GameScene extends Phaser.Scene implements CenterListener {
     private playersPositionInterpolator = new PlayersPositionInterpolator();
     private connection!: RoomConnection;
     private simplePeer!: SimplePeer;
+    private GlobalMessageManager!: GlobalMessageManager;
+    private ConsoleGlobalMessageManager!: ConsoleGlobalMessageManager;
     private connectionPromise!: Promise<RoomConnection>
     private connectionAnswerPromise: Promise<RoomJoinedMessageInterface>;
     private connectionAnswerPromiseResolve!: (value?: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>) => void;
@@ -281,6 +285,8 @@ export class GameScene extends Phaser.Scene implements CenterListener {
 
             // When connection is performed, let's connect SimplePeer
             this.simplePeer = new SimplePeer(this.connection);
+            this.GlobalMessageManager = new GlobalMessageManager(this.connection);
+
             const self = this;
             this.simplePeer.registerPeerConnectionListener({
                 onConnect(user: UserSimplePeerInterface) {
@@ -491,6 +497,9 @@ export class GameScene extends Phaser.Scene implements CenterListener {
         //create input to move
         this.userInputManager = new UserInputManager(this);
 
+        //TODO check right of user
+        this.ConsoleGlobalMessageManager = new ConsoleGlobalMessageManager(this.connection, this.userInputManager);
+
         //notify game manager can to create currentUser in map
         this.createCurrentPlayer();
 
@@ -532,8 +541,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
 
         this.createPromiseResolve();
 
-        // TODO: use inputmanager instead
-        this.input.keyboard.on('keyup-SPACE', () => {
+        this.userInputManager.spaceEvent( () => {
             this.outlinedItem?.activate();
         });
 

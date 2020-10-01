@@ -64,6 +64,8 @@ message ClientToServerMessage {
     SetPlayerDetailsMessage setPlayerDetailsMessage = 6;
     WebRtcSignalToServerMessage webRtcSignalToServerMessage = 7;
     WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 8;
+    PlayGlobalMessage playGlobalMessage = 9;
+    StopGlobalMessage stopGlobalMessage = 10;
   }
 }
 
@@ -75,6 +77,16 @@ message ItemEventMessage {
   string event = 2;
   string stateJson = 3;
   string parametersJson = 4;
+}
+
+message PlayGlobalMessage {
+  string id = 1;
+  string type = 2;
+  string message = 3;
+}
+
+message StopGlobalMessage {
+  string id = 1;
 }
 
 /*********** SERVER TO CLIENT MESSAGES *************/
@@ -164,5 +176,7 @@ message ServerToClientMessage {
     WebRtcSignalToClientMessage webRtcSignalToClientMessage = 6;
     WebRtcSignalToClientMessage webRtcScreenSharingSignalToClientMessage = 7;
     WebRtcDisconnectMessage webRtcDisconnectMessage = 8;
+    PlayGlobalMessage playGlobalMessage = 9;
+    StopGlobalMessage stopGlobalMessage = 10;
   }
 }

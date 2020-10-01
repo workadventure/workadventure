@@ -21,6 +21,9 @@ export enum EventMessage{
     SET_SILENT = "set_silent", // Set or unset the silent mode for this user.
     SET_VIEWPORT = "set-viewport",
     BATCH = "batch",
+
+    PLAY_GLOBAL_MESSAGE = "play-global-message",
+    STOP_GLOBAL_MESSAGE = "stop-global-message",
 }
 
 export interface PointInterface {
@@ -114,4 +117,10 @@ export interface RoomJoinedMessageInterface {
     users: MessageUserPositionInterface[],
     groups: GroupCreatedUpdatedMessageInterface[],
     items: { [itemId: number] : unknown }
+}
+
+export interface PlayGlobalMessageInterface {
+    id: string
+    type: string
+    message: string
 }

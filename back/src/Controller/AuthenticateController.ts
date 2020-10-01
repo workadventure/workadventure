@@ -48,7 +48,7 @@ export class AuthenticateController extends BaseController {
                 try {
                     let userUuid;
                     let mapUrlStart;
-                    let newUrl = null;
+                    let newUrl: string|null = null;
 
                     if (organizationMemberToken) {
                         if (!ADMIN_API_URL) {

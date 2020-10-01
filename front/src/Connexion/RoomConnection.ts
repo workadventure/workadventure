@@ -1,17 +1,18 @@
 import {API_URL} from "../Enum/EnvironmentVariable";
+import Axios from "axios";
 import {
     BatchMessage,
     ClientToServerMessage,
     GroupDeleteMessage,
     GroupUpdateMessage,
     ItemEventMessage,
-    JoinRoomMessage,
+    JoinRoomMessage, PlayGlobalMessage,
     PositionMessage,
     RoomJoinedMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
     SetUserIdMessage,
-    SilentMessage,
+    SilentMessage, StopGlobalMessage,
     UserJoinedMessage,
     UserLeftMessage,
     UserMovedMessage,
@@ -29,14 +30,13 @@ import {ProtobufClientUtils} from "../Network/ProtobufClientUtils";
 import {
     EventMessage,
     GroupCreatedUpdatedMessageInterface, ItemEventMessageInterface,
-    MessageUserJoined,
+    MessageUserJoined, PlayGlobalMessageInterface,
     RoomJoinedMessageInterface,
     ViewportInterface, WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
     WebRtcSignalSentMessageInterface,
     WebRtcStartMessageInterface
 } from "./ConnexionModels";
-
 
 export class RoomConnection implements RoomConnection {
     private readonly socket: WebSocket;
@@ -123,6 +123,10 @@ export class RoomConnection implements RoomConnection {
                 this.dispatch(EventMessage.WEBRTC_START, message.getWebrtcstartmessage());
             } else if (message.hasWebrtcdisconnectmessage()) {
                 this.dispatch(EventMessage.WEBRTC_DISCONNECT, message.getWebrtcdisconnectmessage());
+            } else if (message.hasPlayglobalmessage()) {
+                this.dispatch(EventMessage.PLAY_GLOBAL_MESSAGE, message.getPlayglobalmessage());
+            } else if (message.hasStopglobalmessage()) {
+                this.dispatch(EventMessage.STOP_GLOBAL_MESSAGE, message.getStopglobalmessage());
             } else {
                 throw new Error('Unknown message received');
             }
@@ -429,5 +433,44 @@ export class RoomConnection implements RoomConnection {
                 state: JSON.parse(message.getStatejson())
             });
         });
+    }
+
+    public uploadAudio(file : FormData){
+        return Axios.post(`${API_URL}/upload-audio-message`, file).then((res: {data:{}}) => {
+            return res.data;
+        }).catch((err) => {
+            console.error(err);
+            throw err;
+        });
+    }
+
+
+    public receivePlayGlobalMessage(callback: (message: PlayGlobalMessageInterface) => void) {
+        return this.onMessage(EventMessage.PLAY_GLOBAL_MESSAGE, (message: PlayGlobalMessage) => {
+            callback({
+                id: message.getId(),
+                type: message.getType(),
+                message: message.getMessage(),
+            });
+        });
+    }
+
+    public receiveStopGlobalMessage(callback: (messageId: string) => void) {
+        return this.onMessage(EventMessage.STOP_GLOBAL_MESSAGE, (message: StopGlobalMessage) => {
+            callback(message.getId());
+        });
+    }
+
+    public emitGlobalMessage(message: PlayGlobalMessageInterface){
+        console.log('emitGlobalMessage', message);
+        const playGlobalMessage = new PlayGlobalMessage();
+        playGlobalMessage.setId(message.id);
+        playGlobalMessage.setType(message.type);
+        playGlobalMessage.setMessage(message.message);
+
+        const clientToServerMessage = new ClientToServerMessage();
+        clientToServerMessage.setPlayglobalmessage(playGlobalMessage);
+
+        this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 }

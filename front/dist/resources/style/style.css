@@ -403,3 +403,168 @@ body {
 .chat-mode > div:last-child {
     flex-grow: 5;
 }
+
+.message-container,
+.main-console{
+    position: absolute;
+    width: 80%;
+    height: 80%;
+    min-height: 200px;
+    max-height: 80%;
+    top: -80%;
+    left: 10%;
+    background: #000000a6;
+    z-index: 200;
+    transition: all 0.1s ease-out;
+}
+
+.message-container{
+    height: auto;
+    border-radius: 0 0 10px 10px;
+    color: white;
+    top: 0;
+}
+
+.message-container .content-message{
+    position: relative;
+    padding: 20px;
+    margin: 20px;
+    overflow: scroll;
+    max-height: 400px;
+}
+
+.main-console div.console,
+.message-container div.clear {
+    position: absolute;
+    color: white;
+    z-index: 200;
+    transition: all 0.1s ease-out;
+    top: 100%;
+    width: 100px;
+    height: 40px;
+    background-color: black;
+    left: calc(50% - 50px);
+    border-radius: 0 0 10px 10px;
+    text-align: center;
+}
+
+.main-console div.console p,
+.message-container div.clear p{
+    margin-top: 6px;
+}
+
+.main-console div.console:hover,
+.message-container div.clear:hover {
+    cursor: pointer;
+    transform: scale(1.2) translateY(3px);
+}
+
+.main-console #input-send-text{
+    min-height: 200px;
+}
+
+.main-console #input-send-text .ql-editor{
+    color: white;
+    min-height: 200px;
+    max-height: 300px;
+}
+
+.main-console .ql-toolbar{
+    background: white;
+}
+
+.main-console .btn-action{
+    margin: 10px;
+    text-align: center;
+}
+
+.main-console .btn-action .btn{
+    border: 1px solid black;
+    background-color: #00000000;
+    color: #ffda01;
+    border-radius: 10px;
+    padding: 10px 30px;
+    transition: all .2s ease;
+}
+.main-console .btn-action .btn:hover{
+    cursor: pointer;
+    background-color: #ffda01;
+    color: black;
+    border: 1px solid black;
+    transform: scale(1.1);
+}
+
+.main-console .menu {
+    padding: 20px;
+    color: #ffffffa6;
+    text-align: center;
+}
+
+.main-console .menu span {
+    margin: 20px;
+    cursor: pointer;
+}
+
+.main-console .menu span.active {
+    color: white;
+    border-bottom: solid 1px white;
+}
+
+.main-console section{
+    text-align: center;
+    display: none;
+}
+
+.main-console section.active{
+    display: block;
+}
+
+.main-console section div.upload{
+    text-align: center;
+    border: solid 1px #ffda01;
+    height: 150px;
+    margin: 10px 200px;
+    padding: 20px;
+    min-height: 200px;
+}
+
+.main-console section div.upload label{
+    color: #ffda01;
+}
+.main-console section div.upload input{
+    display: none;
+}
+.main-console section div.upload label img{
+    height: 150px;
+    cursor: pointer;
+}
+.main-console section div.upload label img{
+    cursor: pointer;
+}
+
+/*audio html when audio message playing*/
+.main-container .audio-playing {
+    position: absolute;
+    width: 200px;
+    height: 54px;
+    right: -210px;
+    top: 40px;
+    transition: all 0.1s ease-out;
+    background-color: black;
+    border-radius: 30px 0 0 30px;
+    display: inline-flex;
+}
+
+.main-container .audio-playing.active{
+    right: 0;
+}
+.main-container .audio-playing img{
+    width: 30px;
+    border-radius: 50%;
+    background-color: #ffda01;
+    padding: 10px;
+}
+.main-container .audio-playing p{
+    color: white;
+    margin-left: 10px;
+}

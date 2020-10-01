@@ -42,7 +42,7 @@ import {
     SilentMessage,
     WebRtcSignalToClientMessage,
     WebRtcSignalToServerMessage,
-    WebRtcStartMessage, WebRtcDisconnectMessage
+    WebRtcStartMessage, WebRtcDisconnectMessage, PlayGlobalMessage
 } from "../Messages/generated/messages_pb";
 import {UserMovesMessage} from "../Messages/generated/messages_pb";
 import Direction = PositionMessage.Direction;
@@ -148,13 +148,18 @@ export class IoSocketController {
         }*/
 
         const promise = new Promise<{ token: string, userUuid: string }>((resolve, reject) => {
-            Jwt.verify(token, SECRET_KEY, (err: JsonWebTokenError, tokenDecoded: object) => {
-                const tokenInterface = tokenDecoded as TokenInterface;
+            Jwt.verify(token, SECRET_KEY,  {},(err, tokenDecoded) => {
                 if (err) {
                     console.error('An authentication error happened, invalid JsonWebToken.', err);
                     reject(new Error('An authentication error happened, invalid JsonWebToken. '+err.message));
                     return;
                 }
+                if (tokenDecoded === undefined) {
+                    console.error('Empty token found.');
+                    reject(new Error('Empty token found.'));
+                    return;
+                }
+                const tokenInterface = tokenDecoded as TokenInterface;
 
                 if (!this.isValidToken(tokenInterface)) {
                     reject(new Error('Authentication error, invalid token structure.'));
@@ -265,6 +270,8 @@ export class IoSocketController {
                     this.emitVideo(client, message.getWebrtcsignaltoservermessage() as WebRtcSignalToServerMessage)
                 } else if (message.hasWebrtcscreensharingsignaltoservermessage()) {
                     this.emitScreenSharing(client, message.getWebrtcscreensharingsignaltoservermessage() as WebRtcSignalToServerMessage)
+                } else if (message.hasPlayglobalmessage()) {
+                    this.emitPlayGlobalMessage(client, message.getPlayglobalmessage() as PlayGlobalMessage)
                 }
 
                     /* Ok is false if backpressure was built up, wait for drain */
@@ -814,9 +821,6 @@ export class IoSocketController {
 
     //disconnect user
     disConnectedUser(user: User, group: Group) {
-
-        const Client = user.socket;
-
         // Most of the time, sending a disconnect event to one of the players is enough (the player will close the connection
         // which will be shut for the other player).
         // However! In the rare case where the WebRTC connection is not yet established, if we close the connection on one of the player,
@@ -857,8 +861,28 @@ export class IoSocketController {
         //delete Client.webRtcRoomId;
     }
 
+    private emitPlayGlobalMessage(client: ExSocketInterface, playglobalmessage: PlayGlobalMessage) {
+        try {
+            const world = this.Worlds.get(client.roomId);
+            if (!world) {
+                console.error("In emitPlayGlobalMessage, could not find world with id '", client.roomId, "'");
+                return;
+            }
+
+            const serverToClientMessage = new ServerToClientMessage();
+            serverToClientMessage.setPlayglobalmessage(playglobalmessage);
+
+            for (const [id, user] of world.getUsers().entries()) {
+                user.socket.send(serverToClientMessage.serializeBinary().buffer, true);
+            }
+        } catch (e) {
+            console.error('An error occurred on "emitPlayGlobalMessage" event');
+            console.error(e);
+        }
+
+    }
+
     public getWorlds(): Map<string, World> {
         return this.Worlds;
     }
-
 }
