@@ -1,6 +1,6 @@
 import {App} from "../Server/sifrr.server";
 
-import {uuid} from "uuidv4";
+import {v4} from "uuid";
 import {HttpRequest, HttpResponse} from "uWebSockets.js";
 import {BaseController} from "./BaseController";
 import { Readable } from 'stream'
@@ -51,7 +51,7 @@ export class FileController extends BaseController {
                 })
 
                 try {
-                    const audioMessageId = uuid();
+                    const audioMessageId = v4();
 
                     const params = await res.formData({
                         onFile: (fieldname: string,
