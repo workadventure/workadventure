@@ -3,8 +3,9 @@ import {GameScene} from "../Phaser/Game/GameScene";
 const Quill = require("quill");
 
 import {HtmlUtils} from "../WebRtc/HtmlUtils";
-import {Connection, GlobalMessageInterface} from "../Connection";
 import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
+import {RoomConnection} from "../Connexion/RoomConnection";
+import {PlayGlobalMessageInterface} from "../Connexion/ConnexionModels";
 
 export const CLASS_CONSOLE_MESSAGE = 'main-console';
 export const INPUT_CONSOLE_MESSAGE = 'input-send-text';
@@ -21,14 +22,12 @@ interface EventTargetFiles extends EventTarget {
 
 export class ConsoleGlobalMessageManager {
 
-    private Connection: Connection;
     private divMainConsole: HTMLDivElement;
     private buttonMainConsole: HTMLDivElement;
     private activeConsole: boolean = false;
     private userInputManager!: UserInputManager;
 
-    constructor(Connection: Connection, userInputManager : UserInputManager) {
-        this.Connection = Connection;
+    constructor(private Connection: RoomConnection, userInputManager : UserInputManager) {
         this.buttonMainConsole = document.createElement('div');
         this.buttonMainConsole.classList.add('console');
         this.divMainConsole = document.createElement('div');
@@ -240,8 +239,8 @@ export class ConsoleGlobalMessageManager {
         if(!quillEditor){
             throw "Error get quill node";
         }
-        const GlobalMessage : GlobalMessageInterface = {
-            id: 1,
+        const GlobalMessage : PlayGlobalMessageInterface = {
+            id: "1", // FIXME: use another ID?
             message: quillEditor.innerHTML,
             type: MESSAGE_TYPE
         };
@@ -260,8 +259,8 @@ export class ConsoleGlobalMessageManager {
         fd.append('file', selectedFile);
         const res = await this.Connection.uploadAudio(fd);
 
-        const GlobalMessage : GlobalMessageInterface = {
-            id: (res as {id: number}).id,
+        const GlobalMessage : PlayGlobalMessageInterface = {
+            id: (res as {id: string}).id,
             message: (res as {path: string}).path,
             type: AUDIO_TYPE
         };

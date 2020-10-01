@@ -1,29 +1,34 @@
-import express from "express";
-import {Application, Request, Response} from "express";
 import {OK} from "http-status-codes";
 import {URL_ROOM_STARTED} from "../Enum/EnvironmentVariable";
+import {HttpRequest, HttpResponse, TemplatedApp} from "uWebSockets.js";
+import {BaseController} from "./BaseController";
 
-export class MapController {
-    App: Application;
+//todo: delete this
+export class MapController extends BaseController{
 
-    constructor(App: Application) {
+    constructor(private App : TemplatedApp) {
+        super();
         this.App = App;
         this.getStartMap();
-        this.assetMaps();
     }
 
-    assetMaps() {
-        this.App.use('/map/files', express.static('src/Assets/Maps'));
-    }
 
     // Returns a map mapping map name to file name of the map
     getStartMap() {
-        this.App.get("/start-map", (req: Request, res: Response) => {
-            const url = req.headers.host?.replace('api.', 'maps.') + URL_ROOM_STARTED;
-            res.status(OK).send({
+        this.App.options("/start-map", (res: HttpResponse, req: HttpRequest) => {
+            this.addCorsHeaders(res);
+
+            res.end();
+        });
+
+        this.App.get("/start-map", (res: HttpResponse, req: HttpRequest) => {
+            this.addCorsHeaders(res);
+
+            const url = req.getHeader('host').replace('api.', 'maps.') + URL_ROOM_STARTED;
+            res.writeStatus("200 OK").end(JSON.stringify({
                 mapUrlStart: url,
                 startInstance: "global"
-            });
+            }));
         });
     }
 }

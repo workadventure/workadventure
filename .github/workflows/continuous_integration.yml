@@ -20,11 +20,24 @@ jobs:
       - name: "Setup NodeJS"
         uses: actions/setup-node@v1
         with:
-          node-version: '12.x'
+          node-version: '14.x'
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          version: '3.x'
 
       - name: "Install dependencies"
         run: yarn install
         working-directory: "front"
+
+      - name: "Install messages dependencies"
+        run: yarn install
+        working-directory: "messages"
+
+      - name: "Build proto messages"
+        run: yarn run proto && yarn run copy-to-front
+        working-directory: "messages"
 
       - name: "Build"
         run: yarn run build
@@ -54,9 +67,22 @@ jobs:
         with:
           node-version: '12.x'
 
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          version: '3.x'
+
       - name: "Install dependencies"
         run: yarn install
         working-directory: "back"
+
+      - name: "Install messages dependencies"
+        run: yarn install
+        working-directory: "messages"
+
+      - name: "Build proto messages"
+        run: yarn run proto && yarn run copy-to-back
+        working-directory: "messages"
 
       - name: "Build"
         run: yarn run tsc

@@ -1,6 +1,6 @@
 import {HasMovedEvent} from "./GameManager";
 import {MAX_EXTRAPOLATION_TIME} from "../../Enum/EnvironmentVariable";
-import {PositionInterface} from "../../Connection";
+import {PositionInterface} from "../../Connexion/ConnexionModels";
 
 export class PlayerMovement {
     public constructor(private startPosition: PositionInterface, private startTick: number, private endPosition: HasMovedEvent, private endTick: number) {
@@ -20,12 +20,13 @@ export class PlayerMovement {
     public getPosition(tick: number): HasMovedEvent {
         // Special case: end position reached and end position is not moving
         if (tick >= this.endTick && this.endPosition.moving === false) {
+            //console.log('Movement finished ', this.endPosition)
             return this.endPosition;
         }
 
         const x = (this.endPosition.x - this.startPosition.x) * ((tick - this.startTick) / (this.endTick - this.startTick)) + this.startPosition.x;
         const y = (this.endPosition.y - this.startPosition.y) * ((tick - this.startTick) / (this.endTick - this.startTick)) + this.startPosition.y;
-
+        //console.log('Computed position ', x, y)
         return {
             x,
             y,

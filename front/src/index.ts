@@ -11,11 +11,10 @@ import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
 import {OutlinePipeline} from "./Phaser/Shaders/OutlinePipeline";
 import {CustomizeScene} from "./Phaser/Login/CustomizeScene";
 import {CoWebsiteManager} from "./WebRtc/CoWebsiteManager";
-import {redirectIfToken} from "./register";
+import {connectionManager} from "./Connexion/ConnectionManager";
 
 //CoWebsiteManager.loadCoWebsite('https://thecodingmachine.com');
-let connectionData //todo: do something with this data
-redirectIfToken().then(res => connectionData = res);
+connectionManager.init();
 
 // Load Jitsi if the environment variable is set.
 if (JITSI_URL) {

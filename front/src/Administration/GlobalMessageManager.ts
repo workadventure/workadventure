@@ -1,30 +1,28 @@
 import {HtmlUtils} from "./../WebRtc/HtmlUtils";
-import {Connection, GlobalMessageInterface} from "../Connection";
 import {AUDIO_TYPE, MESSAGE_TYPE} from "./ConsoleGlobalMessageManager";
 import {API_URL} from "../Enum/EnvironmentVariable";
+import {RoomConnection} from "../Connexion/RoomConnection";
+import {PlayGlobalMessageInterface} from "../Connexion/ConnexionModels";
 
 export class GlobalMessageManager {
 
-    private Connection: Connection;
-
-    constructor(Connection: Connection) {
-        this.Connection = Connection;
+    constructor(private Connection: RoomConnection) {
         this.initialise();
     }
 
     initialise(){
         //receive signal to show message
-        this.Connection.receivePlayGlobalMessage((message: GlobalMessageInterface) => {
+        this.Connection.receivePlayGlobalMessage((message: PlayGlobalMessageInterface) => {
             this.playMessage(message);
         });
 
         //receive signal to close message
-        this.Connection.receiveStopGlobalMessage((message: GlobalMessageInterface) => {
-            this.stopMessage(message.id);
+        this.Connection.receiveStopGlobalMessage((messageId: string) => {
+            this.stopMessage(messageId);
         });
     }
 
-    private playMessage(message : GlobalMessageInterface){
+    private playMessage(message : PlayGlobalMessageInterface){
         const previousMessage = document.getElementById(this.getHtmlMessageId(message.id));
         if(previousMessage){
             previousMessage.remove();
@@ -39,7 +37,7 @@ export class GlobalMessageManager {
         }
     }
 
-    private playAudioMessage(messageId : number, urlMessage: string){
+    private playAudioMessage(messageId : string, urlMessage: string){
         //delete previous elements
         const previousDivAudio = document.getElementsByClassName('audio-playing');
         for(let i = 0; i < previousDivAudio.length; i++){
@@ -80,7 +78,7 @@ export class GlobalMessageManager {
         mainSectionDiv.appendChild(messageAudio);
     }
 
-    private playTextMessage(messageId : number, htmlMessage: string){
+    private playTextMessage(messageId : string, htmlMessage: string){
         //add button to clear message
         const buttonText = document.createElement('p');
         buttonText.id = 'button-clear-message';
@@ -113,12 +111,11 @@ export class GlobalMessageManager {
         mainSectionDiv.appendChild(messageContainer);
     }
 
-    private stopMessage(messageId: number){
+    private stopMessage(messageId: string){
         HtmlUtils.removeElementByIdOrFail<HTMLDivElement>(this.getHtmlMessageId(messageId));
     }
 
-    private getHtmlMessageId(messageId: number) : string{
+    private getHtmlMessageId(messageId: string) : string{
         return `message-${messageId}`;
     }
-
 }

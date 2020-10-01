@@ -6,19 +6,19 @@ import {PlayerMovement} from "./PlayerMovement";
 import {HasMovedEvent} from "./GameManager";
 
 export class PlayersPositionInterpolator {
-    playerMovements: Map<string, PlayerMovement> = new Map<string, PlayerMovement>();
+    playerMovements: Map<number, PlayerMovement> = new Map<number, PlayerMovement>();
 
-    updatePlayerPosition(userId: string, playerMovement: PlayerMovement) : void {
+    updatePlayerPosition(userId: number, playerMovement: PlayerMovement) : void {
         this.playerMovements.set(userId, playerMovement);
     }
 
-    removePlayer(userId: string): void {
+    removePlayer(userId: number): void {
         this.playerMovements.delete(userId);
     }
 
-    getUpdatedPositions(tick: number) : Map<string, HasMovedEvent> {
-        const positions = new Map<string, HasMovedEvent>();
-        this.playerMovements.forEach((playerMovement: PlayerMovement, userId: string) => {
+    getUpdatedPositions(tick: number) : Map<number, HasMovedEvent> {
+        const positions = new Map<number, HasMovedEvent>();
+        this.playerMovements.forEach((playerMovement: PlayerMovement, userId: number) => {
             if (playerMovement.isOutdated(tick)) {
                 //console.log("outdated")
                 this.playerMovements.delete(userId);

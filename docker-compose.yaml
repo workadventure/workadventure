@@ -73,6 +73,7 @@ services:
       STARTUP_COMMAND_1: yarn install
       SECRET_KEY: yourSecretKey
       ALLOW_ARTILLERY: "true"
+      ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
     volumes:
       - ./back:/usr/src/app
     labels:
@@ -101,3 +102,13 @@ services:
       - "traefik.http.routers.website-ssl.entryPoints=websecure"
       - "traefik.http.routers.website-ssl.tls=true"
       - "traefik.http.routers.website-ssl.service=website"
+
+  messages:
+    image: thecodingmachine/workadventure-back-base:latest
+    environment:
+      STARTUP_COMMAND_1: yarn install
+      STARTUP_COMMAND_2: yarn run proto:watch
+    volumes:
+      - ./messages:/usr/src/app
+      - ./back:/usr/src/back
+      - ./front:/usr/src/front

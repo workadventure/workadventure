@@ -1,59 +1,161 @@
-const multer =  require('multer');
-import {Application, Request, RequestHandler, Response} from "express";
-import {OK} from "http-status-codes";
-import {URL_ROOM_STARTED} from "_Enum/EnvironmentVariable";
+import {App} from "../Server/sifrr.server";
+
 import {uuid} from "uuidv4";
-import fs from "fs";
+import {HttpRequest, HttpResponse} from "uWebSockets.js";
+import {BaseController} from "./BaseController";
+import { Readable } from 'stream'
 
-const upload = multer({ dest: 'dist/files/' });
-
-class FileUpload{
-    path: string
-    constructor(path : string) {
-        this.path = path;
-    }
+interface UploadedFileBuffer {
+    buffer: Buffer,
+    expireDate: Date
 }
 
-interface RequestFileHandlerInterface extends Request{
-    file: FileUpload
-}
+export class FileController extends BaseController {
+    private uploadedFileBuffers: Map<string, UploadedFileBuffer> = new Map<string, UploadedFileBuffer>();
 
-export class FileController {
-    App : Application;
-
-    constructor(App : Application) {
+    constructor(private App : App) {
+        super();
         this.App = App;
         this.uploadAudioMessage();
         this.downloadAudioMessage();
+
+        // Cleanup every 1 minute
+        setInterval(this.cleanup.bind(this), 60000);
+    }
+
+    /**
+     * Clean memory from old files
+     */
+    cleanup(): void {
+        const now = new Date();
+        for (const [id, file] of this.uploadedFileBuffers) {
+            if (file.expireDate < now) {
+                this.uploadedFileBuffers.delete(id);
+            }
+        }
     }
 
     uploadAudioMessage(){
-        this.App.post("/upload-audio-message", (upload.single('file') as RequestHandler), (req: Request, res: Response) => {
-            //TODO check user connected and admin role
-            //TODO upload audio message
-            const audioMessageId = uuid();
+        this.App.options("/upload-audio-message", (res: HttpResponse, req: HttpRequest) => {
+            this.addCorsHeaders(res);
 
-            fs.copyFileSync((req as RequestFileHandlerInterface).file.path, `dist/files/${audioMessageId}`);
-            fs.unlinkSync((req as RequestFileHandlerInterface).file.path);
+            res.end();
+        });
 
-            return res.status(OK).send({
-                id: audioMessageId,
-                path: `/download-audio-message/${audioMessageId}`
-            });
+        this.App.post("/upload-audio-message", (res: HttpResponse, req: HttpRequest) => {
+            (async () => {
+                this.addCorsHeaders(res);
+
+                res.onAborted(() => {
+                    console.warn('upload-audio-message request was aborted');
+                })
+
+                try {
+                    const audioMessageId = uuid();
+
+                    const params = await res.formData({
+                        onFile: (fieldname: string,
+                                 file: NodeJS.ReadableStream,
+                                 filename: string,
+                                 encoding: string,
+                                 mimetype: string) => {
+                            (async () => {
+                                console.log('READING FILE', fieldname)
+
+                                const chunks: Buffer[] = []
+                                for await (let chunk of file) {
+                                    if (!(chunk instanceof Buffer)) {
+                                        throw new Error('Unexpected chunk');
+                                    }
+                                    chunks.push(chunk)
+                                }
+                                // Let's expire in 1 minute.
+                                const expireDate = new Date();
+                                expireDate.setMinutes(expireDate.getMinutes() + 1);
+                                this.uploadedFileBuffers.set(audioMessageId, {
+                                    buffer: Buffer.concat(chunks),
+                                    expireDate
+                                });
+                            })();
+                        }
+                    });
+
+                    res.writeStatus("200 OK").end(JSON.stringify({
+                        id: audioMessageId,
+                        path: `/download-audio-message/${audioMessageId}`
+                    }));
+
+                } catch (e) {
+                    console.log("An error happened", e)
+                    res.writeStatus(e.status || "500 Internal Server Error").end('An error happened');
+                }
+            })();
         });
     }
 
     downloadAudioMessage(){
-        this.App.get("/download-audio-message/:id", (req: Request, res: Response) => {
-            //TODO check user connected and admin role
-            //TODO upload audio message
-            const audiMessageId = req.params.id;
+        this.App.options("/download-audio-message/*", (res: HttpResponse, req: HttpRequest) => {
+            this.addCorsHeaders(res);
 
-            const fs = require('fs');
-            const path = `dist/files/${audiMessageId}`;
-            const file = fs.createReadStream(path);
-            res.writeHead(200);
-            file.pipe(res);
+            res.end();
+        });
+
+        this.App.get("/download-audio-message/:id", (res: HttpResponse, req: HttpRequest) => {
+            (async () => {
+                this.addCorsHeaders(res);
+
+                res.onAborted(() => {
+                    console.warn('upload-audio-message request was aborted');
+                })
+
+                const id = req.getParameter(0);
+
+                const file = this.uploadedFileBuffers.get(id);
+                if (file === undefined) {
+                    res.writeStatus("404 Not found").end("Cannot find file");
+                    return;
+                }
+
+                const readable = new Readable()
+                readable._read = () => {} // _read is required but you can noop it
+                readable.push(file.buffer);
+                readable.push(null);
+
+                const size = file.buffer.byteLength;
+
+                res.writeStatus("200 OK");
+
+                readable.on('data', buffer => {
+                    const chunk = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength),
+                        lastOffset = res.getWriteOffset();
+
+                    // First try
+                    const [ok, done] = res.tryEnd(chunk, size);
+
+                    if (done) {
+                        readable.destroy();
+                    } else if (!ok) {
+                        // pause because backpressure
+                        readable.pause();
+
+                        // Save unsent chunk for later
+                        res.ab = chunk;
+                        res.abOffset = lastOffset;
+
+                        // Register async handlers for drainage
+                        res.onWritable(offset => {
+                            const [ok, done] = res.tryEnd(res.ab.slice(offset - res.abOffset), size);
+                            if (done) {
+                                readable.destroy();
+                            } else if (ok) {
+                                readable.resume();
+                            }
+                            return ok;
+                        });
+                    }
+                });
+
+            })();
         });
     }
 }

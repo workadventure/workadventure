@@ -1,9 +1,10 @@
 import {GameScene} from "./GameScene";
 import {
     StartMapInterface
-} from "../../Connection";
+} from "../../Connexion/ConnexionModels";
 import Axios from "axios";
 import {API_URL} from "../../Enum/EnvironmentVariable";
+import {connectionManager} from "../../Connexion/ConnectionManager";
 
 export interface HasMovedEvent {
     direction: string;
@@ -29,13 +30,12 @@ export class GameManager {
     }
 
     loadStartMap() : Promise<StartMapInterface> {
-        return Axios.get(`${API_URL}/start-map`)
-            .then((res) => {
-                return res.data;
-            }).catch((err) => {
-                console.error(err);
-                throw err;
-            });
+        return connectionManager.getMapUrlStart().then(mapUrlStart => {
+            return {
+                mapUrlStart: mapUrlStart,
+                startInstance: "global", //todo: is this property still usefull?
+            }
+        });
     }
 
     getPlayerName(): string {

@@ -8,15 +8,8 @@ import {PointInterface} from "../src/Model/Websocket/PointInterface";
 import {Zone} from "_Model/Zone";
 import {Movable} from "_Model/Movable";
 import {PositionInterface} from "_Model/PositionInterface";
+import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
 
-function move(user: User, x: number, y: number, positionNotifier: PositionNotifier): void {
-    positionNotifier.updatePosition(user, {
-        x,
-        y
-    }, user.position);
-    user.position.x = x;
-    user.position.y = y;
-}
 
 describe("PositionNotifier", () => {
     it("should receive notifications when player moves", () => {
@@ -32,19 +25,19 @@ describe("PositionNotifier", () => {
             leaveTriggered = true;
         });
 
-        const user1 = new User("1", {
+        const user1 = new User(1, {
             x: 500,
             y: 500,
             moving: false,
             direction: 'down'
-        }, false);
+        }, false, positionNotifier, {} as ExSocketInterface);
 
-        const user2 = new User("2", {
+        const user2 = new User(2, {
             x: -9999,
             y: -9999,
             moving: false,
             direction: 'down'
-        }, false);
+        }, false, positionNotifier, {} as ExSocketInterface);
 
         positionNotifier.setViewport(user1, {
             left: 200,
@@ -53,21 +46,21 @@ describe("PositionNotifier", () => {
             bottom: 500
         });
 
-        move(user2, 500, 500, positionNotifier);
+        user2.setPosition({x: 500, y: 500, direction: 'down', moving: false});
 
         expect(enterTriggered).toBe(true);
         expect(moveTriggered).toBe(false);
         enterTriggered = false;
 
         // Move inside the zone
-        move(user2, 501, 500, positionNotifier);
+        user2.setPosition({x:501, y:500, direction: 'down', moving: false});
 
         expect(enterTriggered).toBe(false);
         expect(moveTriggered).toBe(true);
         moveTriggered = false;
 
         // Move out of the zone in a zone that we don't track
-        move(user2, 901, 500, positionNotifier);
+        user2.setPosition({x: 901, y: 500, direction: 'down', moving: false});
 
         expect(enterTriggered).toBe(false);
         expect(moveTriggered).toBe(false);
@@ -75,14 +68,14 @@ describe("PositionNotifier", () => {
         leaveTriggered = false;
 
         // Move back in
-        move(user2, 500, 500, positionNotifier);
+        user2.setPosition({x: 500, y: 500, direction: 'down', moving: false});
         expect(enterTriggered).toBe(true);
         expect(moveTriggered).toBe(false);
         expect(leaveTriggered).toBe(false);
         enterTriggered = false;
 
         // Move out of the zone in a zone that we do track
-        move(user2, 200, 500, positionNotifier);
+        user2.setPosition({x: 200, y: 500, direction: 'down', moving: false});
         expect(enterTriggered).toBe(false);
         expect(moveTriggered).toBe(true);
         expect(leaveTriggered).toBe(false);
@@ -110,19 +103,19 @@ describe("PositionNotifier", () => {
             leaveTriggered = true;
         });
 
-        const user1 = new User("1", {
+        const user1 = new User(1, {
             x: 500,
             y: 500,
             moving: false,
             direction: 'down'
-        }, false);
+        }, false, positionNotifier, {} as ExSocketInterface);
 
-        const user2 = new User("2", {
-            x: -9999,
-            y: -9999,
+        const user2 = new User(2, {
+            x: 0,
+            y: 0,
             moving: false,
             direction: 'down'
-        }, false);
+        }, false, positionNotifier, {} as ExSocketInterface);
 
         let newUsers = positionNotifier.setViewport(user1, {
             left: 200,
@@ -131,13 +124,15 @@ describe("PositionNotifier", () => {
             bottom: 500
         });
 
-        expect(newUsers.length).toBe(0);
-
-        move(user2, 500, 500, positionNotifier);
-
+        expect(newUsers.length).toBe(2);
         expect(enterTriggered).toBe(true);
-        expect(moveTriggered).toBe(false);
         enterTriggered = false;
+
+        user2.setPosition({x: 500, y: 500, direction: 'down', moving: false});
+
+        expect(enterTriggered).toBe(false);
+        expect(moveTriggered).toBe(true);
+        moveTriggered = false;
 
         // Move the viewport but the user stays inside.
         positionNotifier.setViewport(user1, {
@@ -176,6 +171,6 @@ describe("PositionNotifier", () => {
         expect(moveTriggered).toBe(false);
         expect(leaveTriggered).toBe(false);
         enterTriggered = false;
-        expect(newUsers.length).toBe(1);
+        expect(newUsers.length).toBe(2);
     });
 })
