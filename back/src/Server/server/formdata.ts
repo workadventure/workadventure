@@ -15,7 +15,7 @@ function formData(
       encoding: string,
       mimetype: string
     ) => string;
-    onField?: (fieldname: string, value: any) => void;
+    onField?: (fieldname: string, value: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
     filename?: (oldName: string) => string;
   } = {}
 ) {
@@ -75,11 +75,11 @@ function formData(
 }
 
 function setRetValue(
-  ret: { [x: string]: any },
+  ret: { [x: string]: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
   fieldname: string,
-  value: { filename: string; encoding: string; mimetype: string; filePath?: string } | any
+  value: { filename: string; encoding: string; mimetype: string; filePath?: string } | any // eslint-disable-line @typescript-eslint/no-explicit-any
 ) {
-  if (fieldname.slice(-2) === '[]') {
+  if (fieldname.endsWith('[]')) {
     fieldname = fieldname.slice(0, fieldname.length - 2);
     if (Array.isArray(ret[fieldname])) {
       ret[fieldname].push(value);

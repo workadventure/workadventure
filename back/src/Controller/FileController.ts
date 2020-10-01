@@ -63,7 +63,7 @@ export class FileController extends BaseController {
                                 console.log('READING FILE', fieldname)
 
                                 const chunks: Buffer[] = []
-                                for await (let chunk of file) {
+                                for await (const chunk of file) {
                                     if (!(chunk instanceof Buffer)) {
                                         throw new Error('Unexpected chunk');
                                     }
@@ -101,61 +101,58 @@ export class FileController extends BaseController {
         });
 
         this.App.get("/download-audio-message/:id", (res: HttpResponse, req: HttpRequest) => {
-            (async () => {
-                this.addCorsHeaders(res);
+            this.addCorsHeaders(res);
 
-                res.onAborted(() => {
-                    console.warn('upload-audio-message request was aborted');
-                })
+            res.onAborted(() => {
+                console.warn('upload-audio-message request was aborted');
+            })
 
-                const id = req.getParameter(0);
+            const id = req.getParameter(0);
 
-                const file = this.uploadedFileBuffers.get(id);
-                if (file === undefined) {
-                    res.writeStatus("404 Not found").end("Cannot find file");
-                    return;
+            const file = this.uploadedFileBuffers.get(id);
+            if (file === undefined) {
+                res.writeStatus("404 Not found").end("Cannot find file");
+                return;
+            }
+
+            const readable = new Readable()
+            readable._read = () => {} // _read is required but you can noop it
+            readable.push(file.buffer);
+            readable.push(null);
+
+            const size = file.buffer.byteLength;
+
+            res.writeStatus("200 OK");
+
+            readable.on('data', buffer => {
+                const chunk = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength),
+                    lastOffset = res.getWriteOffset();
+
+                // First try
+                const [ok, done] = res.tryEnd(chunk, size);
+
+                if (done) {
+                    readable.destroy();
+                } else if (!ok) {
+                    // pause because backpressure
+                    readable.pause();
+
+                    // Save unsent chunk for later
+                    res.ab = chunk;
+                    res.abOffset = lastOffset;
+
+                    // Register async handlers for drainage
+                    res.onWritable(offset => {
+                        const [ok, done] = res.tryEnd(res.ab.slice(offset - res.abOffset), size);
+                        if (done) {
+                            readable.destroy();
+                        } else if (ok) {
+                            readable.resume();
+                        }
+                        return ok;
+                    });
                 }
-
-                const readable = new Readable()
-                readable._read = () => {} // _read is required but you can noop it
-                readable.push(file.buffer);
-                readable.push(null);
-
-                const size = file.buffer.byteLength;
-
-                res.writeStatus("200 OK");
-
-                readable.on('data', buffer => {
-                    const chunk = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength),
-                        lastOffset = res.getWriteOffset();
-
-                    // First try
-                    const [ok, done] = res.tryEnd(chunk, size);
-
-                    if (done) {
-                        readable.destroy();
-                    } else if (!ok) {
-                        // pause because backpressure
-                        readable.pause();
-
-                        // Save unsent chunk for later
-                        res.ab = chunk;
-                        res.abOffset = lastOffset;
-
-                        // Register async handlers for drainage
-                        res.onWritable(offset => {
-                            const [ok, done] = res.tryEnd(res.ab.slice(offset - res.abOffset), size);
-                            if (done) {
-                                readable.destroy();
-                            } else if (ok) {
-                                readable.resume();
-                            }
-                            return ok;
-                        });
-                    }
-                });
-
-            })();
+            });
         });
     }
 }

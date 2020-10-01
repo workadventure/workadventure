@@ -31,7 +31,7 @@ const handleBody = (res: HttpResponse, req: HttpRequest) => {
 
   if (contType.includes('application/json'))
     res.json = async () => JSON.parse(await res.body());
-  if (contTypes.map(t => contType.indexOf(t) > -1).indexOf(true) > -1)
+  if (contTypes.map(t => contType.includes(t)).includes(true))
     res.formData = formData.bind(res, contType);
 };
 
