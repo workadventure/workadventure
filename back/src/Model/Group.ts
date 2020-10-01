@@ -1,7 +1,6 @@
-import { World, ConnectCallback, DisconnectCallback } from "./World";
+import { ConnectCallback, DisconnectCallback } from "./World";
 import { User } from "./User";
 import {PositionInterface} from "_Model/PositionInterface";
-import {uuid} from "uuidv4";
 import {Movable} from "_Model/Movable";
 import {PositionNotifier} from "_Model/PositionNotifier";
 
