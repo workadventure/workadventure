@@ -16,7 +16,7 @@ import {PointInterface} from "../Model/Websocket/PointInterface";
 import {isWebRtcSignalMessageInterface} from "../Model/Websocket/WebRtcSignalMessage";
 import {UserInGroupInterface} from "../Model/Websocket/UserInGroupInterface";
 import {isItemEventMessageInterface} from "../Model/Websocket/ItemEventMessage";
-import {uuid} from 'uuidv4';
+import { v4 as uuidv4 } from 'uuid';
 import {GroupUpdateInterface} from "_Model/Websocket/GroupUpdateInterface";
 import {Movable} from "../Model/Movable";
 import {
@@ -135,7 +135,7 @@ export class IoSocketController {
             if (ALLOW_ARTILLERY) {
                 return {
                     token,
-                    userUuid: uuid()
+                    userUuid: uuidv4()
                 }
             } else {
                 throw new Error("In order to perform a load-testing test on this environment, you must set the ALLOW_ARTILLERY environment variable to 'true'");

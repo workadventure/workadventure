@@ -951,7 +951,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
         });
 
         const nextSceneKey = this.checkToExit();
-        if(nextSceneKey){
+        if (nextSceneKey) {
             // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
             this.connection.closeConnection();
             this.simplePeer.unregister();

@@ -1,6 +1,6 @@
 import Jwt from "jsonwebtoken";
 import {ADMIN_API_TOKEN, ADMIN_API_URL, SECRET_KEY, URL_ROOM_STARTED} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
-import { uuid } from 'uuidv4';
+import { v4 } from 'uuid';
 import {HttpRequest, HttpResponse, TemplatedApp} from "uWebSockets.js";
 import {BaseController} from "./BaseController";
 import Axios from "axios";
@@ -63,7 +63,7 @@ export class AuthenticateController extends BaseController {
                         mapUrlStart = data.mapUrlStart;
                         newUrl = this.getNewUrlOnAdminAuth(data)
                     } else {
-                        userUuid = uuid();
+                        userUuid = v4();
                         mapUrlStart = host.replace('api.', 'maps.') + URL_ROOM_STARTED;
                         newUrl = null;
                     }

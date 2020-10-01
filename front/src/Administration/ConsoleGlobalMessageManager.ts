@@ -36,10 +36,8 @@ export class ConsoleGlobalMessageManager {
     }
 
     initialise() {
-        try {
-            HtmlUtils.removeElementByIdOrFail(CLASS_CONSOLE_MESSAGE);
-        }catch (err){
-            console.error(err);
+        for (const elem of document.getElementsByClassName(CLASS_CONSOLE_MESSAGE)) {
+            elem.remove();
         }
 
         const typeConsole = document.createElement('input');
