@@ -43,6 +43,7 @@ export class RoomConnection implements RoomConnection {
     private userId: number|null = null;
     private listeners: Map<string, Function[]> = new Map<string, Function[]>();
     private static websocketFactory: null|((url: string)=>any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
+    private closed: boolean = false;
 
     public static setWebsocketFactory(websocketFactory: (url: string)=>any): void { // eslint-disable-line @typescript-eslint/no-explicit-any
         RoomConnection.websocketFactory = websocketFactory;
@@ -157,6 +158,7 @@ export class RoomConnection implements RoomConnection {
 
     public closeConnection(): void {
         this.socket?.close();
+        this.closed = true;
     }
 
     private resolveJoinRoom!: (value?: (RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface> | undefined)) => void;
@@ -389,6 +391,9 @@ export class RoomConnection implements RoomConnection {
 
     public onServerDisconnected(callback: (event: CloseEvent) => void): void {
         this.socket.addEventListener('close', (event) => {
+            if (this.closed === true) {
+                return;
+            }
             console.log('Socket closed with code '+event.code+". Reason: "+event.reason);
             if (event.code === 1000) {
                 // Normal closure case
