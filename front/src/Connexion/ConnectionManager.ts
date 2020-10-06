@@ -1,6 +1,7 @@
 import Axios from "axios";
 import {API_URL} from "../Enum/EnvironmentVariable";
 import {RoomConnection} from "./RoomConnection";
+import {PositionInterface, ViewportInterface} from "./ConnexionModels";
 
 interface LoginApiData {
     authToken: string
@@ -35,9 +36,9 @@ class ConnectionManager {
         this.authToken = 'test';
     }
 
-    public connectToRoomSocket(): Promise<RoomConnection> {
+    public connectToRoomSocket(roomId: string, name: string, characterLayers: string[], position: PositionInterface, viewport: ViewportInterface): Promise<RoomConnection> {
         return new Promise<RoomConnection>((resolve, reject) => {
-            const connection = new RoomConnection(this.authToken as string);
+            const connection = new RoomConnection(this.authToken as string, roomId, name, characterLayers, position, viewport);
             connection.onConnectError((error: object) => {
                 console.log('An error occurred while connecting to socket server. Retrying');
                 reject(error);
@@ -50,7 +51,7 @@ class ConnectionManager {
             return new Promise<RoomConnection>((resolve, reject) => {
                 setTimeout(() => {
                     //todo: allow a way to break recurrsion?
-                    this.connectToRoomSocket().then((connection) => resolve(connection));
+                    this.connectToRoomSocket(roomId, name, characterLayers, position, viewport).then((connection) => resolve(connection));
                 }, 4000 + Math.floor(Math.random() * 2000) );
             });
         });

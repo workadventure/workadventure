@@ -24,7 +24,6 @@ import {
     ItemEventMessage,
     ViewportMessage,
     ClientToServerMessage,
-    JoinRoomMessage,
     ErrorMessage,
     RoomJoinedMessage,
     ItemStateMessage,
@@ -33,17 +32,17 @@ import {
     SilentMessage,
     WebRtcSignalToClientMessage,
     WebRtcSignalToServerMessage,
-    WebRtcStartMessage, 
-    WebRtcDisconnectMessage, 
+    WebRtcStartMessage,
+    WebRtcDisconnectMessage,
     PlayGlobalMessage,
 } from "../Messages/generated/messages_pb";
 import {UserMovesMessage} from "../Messages/generated/messages_pb";
 import Direction = PositionMessage.Direction;
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
-import {HttpRequest, TemplatedApp} from "uWebSockets.js"
+import {TemplatedApp} from "uWebSockets.js"
 import {parse} from "query-string";
 import {cpuTracker} from "../Services/CpuTracker";
-import {adminApi} from "../Services/AdminApi";
+import {ViewportInterface} from "../Model/Websocket/ViewportMessage";
 
 function emitInBatch(socket: ExSocketInterface, payload: SubMessage): void {
     socket.batchedMessages.addPayload(payload);
@@ -95,7 +94,7 @@ export class IoSocketController {
     }
 
     private async getUserUuidFromToken(token: unknown): Promise<string> {
-        
+
         if (!token) {
             throw new Error('An authentication error happened, a user tried to connect without a token.');
         }
@@ -137,8 +136,7 @@ export class IoSocketController {
     }
 
     ioConnection() {
-        this.app.ws('/room', {
-
+        this.app.ws('/room/*', {
             /* Options */
             //compression: uWS.SHARED_COMPRESSOR,
             maxPayloadLength: 16 * 1024 * 1024,
@@ -147,7 +145,6 @@ export class IoSocketController {
             upgrade: (res, req, context) => {
                 //console.log('An Http connection wants to become WebSocket, URL: ' + req.getUrl() + '!');
                 (async () => {
-
                     /* Keep track of abortions */
                     const upgradeAborted = {aborted: false};
 
@@ -159,19 +156,32 @@ export class IoSocketController {
                     try {
                         const query = parse(req.getQuery());
 
-                        const moderated = query.moderated || false;
-                        const roomId = query.roomId || null;
+                        const roomId = req.getUrl().substr(6);
+
                         const token = query.token;
+                        const x = Number(query.x);
+                        const y = Number(query.y);
+                        const top = Number(query.top);
+                        const bottom = Number(query.bottom);
+                        const left = Number(query.left);
+                        const right = Number(query.right);
+                        const name = query.name;
+                        if (typeof name !== 'string') {
+                            throw new Error('Expecting name');
+                        }
+                        if (name === '') {
+                            throw new Error('No empty name');
+                        }
+                        let characterLayers = query.characterLayers;
+                        if (characterLayers === null) {
+                            throw new Error('Expecting skin');
+                        }
+                        if (typeof characterLayers === 'string') {
+                            characterLayers = [ characterLayers ];
+                        }
 
 
                         const userUuid = await this.getUserUuidFromToken(token);
-                        
-                        this.handleJoinRoom(client, message.getJoinroommessage() as JoinRoomMessage);
-                        
-                        const isGranted = await adminApi.memberIsGrantedAccessToRoom(client.userUuid, roomId);
-                        if (!isGranted) {
-                            throw Error('Client cannot acces this ressource.');
-                        }
 
                         if (upgradeAborted.aborted) {
                             console.log("Ouch! Client disconnected before we could upgrade it!");
@@ -184,7 +194,22 @@ export class IoSocketController {
                                 // Data passed here is accessible on the "websocket" socket object.
                                 url: req.getUrl(),
                                 token,
-                                userUuid
+                                userUuid,
+                                roomId,
+                                name,
+                                characterLayers,
+                                position: {
+                                    x: x,
+                                    y: y,
+                                    direction: 'down',
+                                    moving: false
+                                } as PointInterface,
+                                viewport: {
+                                    top,
+                                    right,
+                                    bottom,
+                                    left
+                                }
                             },
                             /* Spell these correctly */
                             req.getHeader('sec-websocket-key'),
@@ -217,12 +242,34 @@ export class IoSocketController {
                     emitInBatch(client, payload);
                 }
                 client.disconnecting = false;
+
+                client.name = ws.name;
+                client.characterLayers = ws.characterLayers;
+                client.roomId = ws.roomId;
+
                 this.sockets.set(client.userId, client);
 
                 // Let's log server load when a user joins
                 this.nbClientsGauge.inc();
                 console.log(new Date().toISOString() + ' A user joined (', this.sockets.size, ' connected users)');
 
+                // Let's join the room
+                this.handleJoinRoom(client, client.roomId, client.position, client.viewport, client.name, client.characterLayers);
+
+                /*const isGranted = await adminApi.memberIsGrantedAccessToRoom(client.userUuid, roomId);
+                if (!isGranted) {
+                    throw Error('Client cannot acces this ressource.');
+                }*/
+
+                const setUserIdMessage = new SetUserIdMessage();
+                setUserIdMessage.setUserid(client.userId);
+
+                const serverToClientMessage = new ServerToClientMessage();
+                serverToClientMessage.setSetuseridmessage(setUserIdMessage);
+
+                if (!client.disconnecting) {
+                    client.send(serverToClientMessage.serializeBinary().buffer, true);
+                }
             },
             message: (ws, arrayBuffer, isBinary): void => {
                 const client = ws as ExSocketInterface;
@@ -305,22 +352,12 @@ export class IoSocketController {
         console.warn(message);
     }
 
-    private async handleJoinRoom(client: ExSocketInterface, message: JoinRoomMessage): Promise<void> {
+    private async handleJoinRoom(client: ExSocketInterface, roomId: string, position: PointInterface, viewport: ViewportInterface, name: string, characterLayers: string[]): Promise<void> {
         try {
-            const roomId = message.getRoomid();
-
-            if (client.roomId === roomId) {
-                return;
-            }
-
-
-            //leave previous room
-            //this.leaveRoom(Client); // Useless now, there is only one room per connection
-
             //join new previous room
-            const gameRoom = await this.joinRoom(client, roomId, ProtobufUtils.toPointInterface(message.getPosition() as PositionMessage));
+            const gameRoom = await this.joinRoom(client, roomId, position);
 
-            const things = gameRoom.setViewport(client, (message.getViewport() as ViewportMessage).toObject());
+            const things = gameRoom.setViewport(client, viewport);
 
             const roomJoinedMessage = new RoomJoinedMessage();
 
@@ -448,6 +485,7 @@ export class IoSocketController {
         }
     }
 
+    // Useless now, will be useful again if we allow editing details in game
     private handleSetPlayerDetails(client: ExSocketInterface, playerDetailsMessage: SetPlayerDetailsMessage) {
         const playerDetails = {
             name: playerDetailsMessage.getName(),
@@ -461,16 +499,6 @@ export class IoSocketController {
         client.name = playerDetails.name;
         client.characterLayers = playerDetails.characterLayers;
 
-
-        const setUserIdMessage = new SetUserIdMessage();
-        setUserIdMessage.setUserid(client.userId);
-
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setSetuseridmessage(setUserIdMessage);
-
-        if (!client.disconnecting) {
-            client.send(serverToClientMessage.serializeBinary().buffer, true);
-        }
     }
 
     private handleSilentMessage(client: ExSocketInterface, silentMessage: SilentMessage) {
@@ -585,7 +613,7 @@ export class IoSocketController {
     }
 
     private joinRoom(client : ExSocketInterface, roomId: string, position: PointInterface): GameRoom {
-        
+
         //join user in room
         this.nbClientsPerRoomGauge.inc({ room: roomId });
         client.roomId = roomId;
