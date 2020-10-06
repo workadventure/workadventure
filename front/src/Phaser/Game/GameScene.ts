@@ -16,7 +16,6 @@ import {
     ITiledMapLayerProperty, ITiledMapObject,
     ITiledTileSet
 } from "../Map/ITiledMap";
-import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Character";
 import {AddPlayerInterface} from "./AddPlayerInterface";
 import {PlayerAnimationNames} from "../Player/Animation";
 import {PlayerMovement} from "./PlayerMovement";
@@ -25,7 +24,7 @@ import {RemotePlayer} from "../Entity/RemotePlayer";
 import {Queue} from 'queue-typescript';
 import {SimplePeer, UserSimplePeerInterface} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
-import {loadAllLayers} from "../Entity/body_character";
+import {loadAllLayers, loadObject, loadPlayerCharacters} from "../Entity/body_character";
 import {CenterListener, layoutManager, LayoutMode} from "../../WebRtc/LayoutManager";
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
@@ -189,21 +188,9 @@ export class GameScene extends Phaser.Scene implements CenterListener {
         }
 
         //add player png
-        PLAYER_RESOURCES.forEach((playerResource: PlayerResourceDescriptionInterface) => {
-            this.load.spritesheet(
-                playerResource.name,
-                playerResource.img,
-                {frameWidth: 32, frameHeight: 32}
-            );
-        });
-
-        this.load.spritesheet(
-            'layout_modes',
-            'resources/objects/layout_modes.png',
-            {frameWidth: 32, frameHeight: 32}
-        );
-
+        loadPlayerCharacters(this.load);
         loadAllLayers(this.load);
+        loadObject(this.load);
 
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
 
