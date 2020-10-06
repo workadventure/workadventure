@@ -3,17 +3,9 @@ import {ADMIN_API_TOKEN, ADMIN_API_URL, SECRET_KEY, URL_ROOM_STARTED} from "../E
 import { uuid } from 'uuidv4';
 import {HttpRequest, HttpResponse, TemplatedApp} from "uWebSockets.js";
 import {BaseController} from "./BaseController";
-import Axios from "axios";
+import {adminApi, AdminApiData} from "../Services/AdminApi";
 
 export interface TokenInterface {
-    userUuid: string
-}
-
-interface AdminApiData {
-    organizationSlug: string
-    worldSlug: string
-    roomSlug: string
-    mapUrlStart: string
     userUuid: string
 }
 
@@ -51,13 +43,7 @@ export class AuthenticateController extends BaseController {
                     let newUrl: string|null = null;
 
                     if (organizationMemberToken) {
-                        if (!ADMIN_API_URL) {
-                            return res.status(401).send('No admin backoffice set!');
-                        }
-                        //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
-                        const data = await Axios.get(ADMIN_API_URL+'/api/login-url/'+organizationMemberToken,
-                            { headers: {"Authorization" : `${ADMIN_API_TOKEN}`} }
-                        ).then((res): AdminApiData => res.data);
+                        const data = await adminApi.fetchMemberDataByToken(organizationMemberToken);
 
                         userUuid = data.userUuid;
                         mapUrlStart = data.mapUrlStart;

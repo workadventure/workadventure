@@ -1,5 +1,5 @@
 import "jasmine";
-import {World, ConnectCallback, DisconnectCallback } from "../src/Model/World";
+import {GameRoom, ConnectCallback, DisconnectCallback } from "_Model/GameRoom";
 import {Point} from "../src/Model/Websocket/MessageUserPosition";
 import { Group } from "../src/Model/Group";
 import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
@@ -21,7 +21,7 @@ describe("World", () => {
 
         }
 
-        const world = new World(connect, disconnect, 160, 160, () => {}, () => {}, () => {});
+        const world = new GameRoom(connect, disconnect, 160, 160, () => {}, () => {}, () => {});
 
         world.join(createMockUser(1), new Point(100, 100));
 
@@ -48,7 +48,7 @@ describe("World", () => {
 
         }
 
-        const world = new World(connect, disconnect, 160, 160, () => {}, () => {}, () => {});
+        const world = new GameRoom(connect, disconnect, 160, 160, () => {}, () => {}, () => {});
 
         world.join(createMockUser(1), new Point(100, 100));
 
@@ -77,7 +77,7 @@ describe("World", () => {
             disconnectCallNumber++;
         }
 
-        const world = new World(connect, disconnect, 160, 160, () => {}, () => {}, () => {});
+        const world = new GameRoom(connect, disconnect, 160, 160, () => {}, () => {}, () => {});
 
         world.join(createMockUser(1), new Point(100, 100));
 
