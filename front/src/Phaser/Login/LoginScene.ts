@@ -7,6 +7,7 @@ import Rectangle = Phaser.GameObjects.Rectangle;
 import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Character";
 import {cypressAsserter} from "../../Cypress/CypressAsserter";
 import {SelectCharacterSceneName} from "./SelectCharacterScene";
+import {ResizableScene} from "./ResizableScene";
 
 //todo: put this constants in a dedicated file
 export const LoginSceneName = "LoginScene";
@@ -15,12 +16,12 @@ enum LoginTextures {
     mainFont = "main_font"
 }
 
-export class LoginScene extends Phaser.Scene {
-    private nameInput: TextInput|null = null;
-    private textField: TextField|null = null;
-    private infoTextField: TextField|null = null;
-    private pressReturnField: TextField|null = null;
-    private logo: Image|null = null;
+export class LoginScene extends ResizableScene {
+    private nameInput!: TextInput;
+    private textField!: TextField;
+    private infoTextField!: TextField;
+    private pressReturnField!: TextField;
+    private logo!: Image;
     private name: string = '';
 
     constructor() {
@@ -93,4 +94,14 @@ export class LoginScene extends Phaser.Scene {
 
         this.scene.start(SelectCharacterSceneName);
     }
+
+    public onResize(ev: UIEvent): void {
+        this.textField.x = this.game.renderer.width / 2;
+        this.nameInput.setX(this.game.renderer.width / 2 - 64);
+        this.pressReturnField.x = this.game.renderer.width / 2;
+        this.logo.x = this.game.renderer.width - 30;
+        this.logo.y = this.game.renderer.height - 20;
+        this.infoTextField.y = this.game.renderer.height - 35;
+    }
+
 }

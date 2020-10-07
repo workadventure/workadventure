@@ -12,6 +12,7 @@ import {OutlinePipeline} from "./Phaser/Shaders/OutlinePipeline";
 import {CustomizeScene} from "./Phaser/Login/CustomizeScene";
 import {CoWebsiteManager} from "./WebRtc/CoWebsiteManager";
 import {connectionManager} from "./Connexion/ConnectionManager";
+import {ResizableScene} from "./Phaser/Login/ResizableScene";
 
 //CoWebsiteManager.loadCoWebsite('https://thecodingmachine.com');
 connectionManager.init();
@@ -55,6 +56,13 @@ window.addEventListener('resize', function (event) {
     const {width, height} = CoWebsiteManager.getGameSize();
 
     game.scale.resize(width / RESOLUTION, height / RESOLUTION);
+
+    // Let's trigger the onResize method of any active scene that is a ResizableScene
+    for (const scene of game.scene.getScenes(true)) {
+        if (scene instanceof ResizableScene) {
+            scene.onResize(event);
+        }
+    }
 });
 CoWebsiteManager.onStateChange(() => {
     const {width, height} = CoWebsiteManager.getGameSize();
