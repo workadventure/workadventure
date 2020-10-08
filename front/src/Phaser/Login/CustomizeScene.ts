@@ -6,6 +6,7 @@ import {LAYERS, loadAllLayers} from "../Entity/body_character";
 import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
 import {gameManager} from "../Game/GameManager";
+import {ResizableScene} from "./ResizableScene";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -16,7 +17,7 @@ enum CustomizeTextures{
     arrowUp = "arrow_up",
 }
 
-export class CustomizeScene extends Phaser.Scene {
+export class CustomizeScene extends ResizableScene {
 
     private textField!: TextField;
     private enterField!: TextField;
@@ -34,8 +35,6 @@ export class CustomizeScene extends Phaser.Scene {
     private selectedLayers: Array<number> = [0];
     private containersRow: Array<Array<Container>> = new Array<Array<Container>>();
     private activeRow = 0;
-
-    private repositionCallback!: (this: Window, ev: UIEvent) => void;
 
     constructor() {
         super({
@@ -144,10 +143,6 @@ export class CustomizeScene extends Phaser.Scene {
                 this.moveLayers();
             }
         });
-
-        this.repositionCallback = this.reposition.bind(this);
-        window.addEventListener('resize', this.repositionCallback);
-
     }
     update(time: number, delta: number): void {
         super.update(time, delta);
@@ -249,7 +244,7 @@ export class CustomizeScene extends Phaser.Scene {
         }
      }
 
-     private reposition() {
+     public onResize(): void {
         this.moveLayers();
 
         this.Rectangle.x = this.cameras.main.worldView.x + this.cameras.main.width / 2;

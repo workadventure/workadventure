@@ -250,6 +250,7 @@ export class SelectCharacterScene extends ResizableScene {
         this.logo.x = this.game.renderer.width - 30;
         this.logo.y = this.game.renderer.height - 20;
         this.customizeButton.x = this.game.renderer.width / 2;
+        this.customizeButtonSelected.x = this.game.renderer.width / 2;
 
         for (let i = 0; i <PLAYER_RESOURCES.length; i++) {
             const player = this.players[i];
