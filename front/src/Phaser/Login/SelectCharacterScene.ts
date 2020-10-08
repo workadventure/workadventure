@@ -5,6 +5,7 @@ import Rectangle = Phaser.GameObjects.Rectangle;
 import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Character";
 import {EnableCameraSceneName} from "./EnableCameraScene";
 import {CustomizeSceneName} from "./CustomizeScene";
+import {ResizableScene} from "./ResizableScene";
 
 
 //todo: put this constants in a dedicated file
@@ -17,7 +18,7 @@ enum LoginTextures {
     customizeButtonSelected = "customize_button_selected"
 }
 
-export class SelectCharacterScene extends Phaser.Scene {
+export class SelectCharacterScene extends ResizableScene {
     private readonly nbCharactersPerRow = 4;
     private textField!: TextField;
     private pressReturnField!: TextField;
@@ -242,4 +243,25 @@ export class SelectCharacterScene extends Phaser.Scene {
             window.localStorage.setItem('selectedPlayer', String(playerNumber));
         }
     }
+
+    public onResize(ev: UIEvent): void {
+        this.textField.x = this.game.renderer.width / 2;
+        this.pressReturnField.x = this.game.renderer.width / 2;
+        this.logo.x = this.game.renderer.width - 30;
+        this.logo.y = this.game.renderer.height - 20;
+        this.customizeButton.x = this.game.renderer.width / 2;
+
+        for (let i = 0; i <PLAYER_RESOURCES.length; i++) {
+            const player = this.players[i];
+
+            const col = i % this.nbCharactersPerRow;
+            const row = Math.floor(i / this.nbCharactersPerRow);
+
+            const [x, y] = this.getCharacterPosition(col, row);
+            player.x = x;
+            player.y = y;
+        }
+        this.updateSelectedPlayer();
+    }
+
 }
