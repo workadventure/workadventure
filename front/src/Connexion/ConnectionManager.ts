@@ -17,10 +17,20 @@ class ConnectionManager {
     private authToken:string|null = null;
     private userUuid: string|null = null;
 
+    //todo: get map infos from url in anonym case
     public async init(): Promise<void> {
+        let organizationMemberToken =  null;
+        let teamSlug =  null;
+        let mapSlug =  null;
         const match = /\/register\/(.+)/.exec(window.location.toString());
-        const organizationMemberToken = match ? match[1] : null;
-        this.initPromise = Axios.post(`${API_URL}/login`, {organizationMemberToken}).then(res => res.data);
+        if (match) {
+            organizationMemberToken = match[1];
+        } else {
+            const match = /\/_\/(.+)\/(.+)/.exec(window.location.toString());
+            teamSlug = match ? match[1] : null;
+            mapSlug = match ? match[2] : null;
+        }
+        this.initPromise = Axios.post(`${API_URL}/login`, {organizationMemberToken, teamSlug, mapSlug}).then(res => res.data);
         const data = await this.initPromise
         this.authToken = data.authToken;
         this.userUuid = data.userUuid;

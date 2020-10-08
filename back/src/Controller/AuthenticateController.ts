@@ -36,6 +36,7 @@ export class AuthenticateController extends BaseController {
 
                 //todo: what to do if the organizationMemberToken is already used?
                 const organizationMemberToken:string|null = param.organizationMemberToken;
+                const mapSlug:string|null = param.mapSlug;
 
                 try {
                     let userUuid;
@@ -48,10 +49,14 @@ export class AuthenticateController extends BaseController {
                         userUuid = data.userUuid;
                         mapUrlStart = data.mapUrlStart;
                         newUrl = this.getNewUrlOnAdminAuth(data)
+                    } else if (mapSlug !== null) {
+                        userUuid = uuid();
+                        mapUrlStart = mapSlug;
+                        newUrl = null;
                     } else {
                         userUuid = uuid();
                         mapUrlStart = host.replace('api.', 'maps.') + URL_ROOM_STARTED;
-                        newUrl = null;
+                        newUrl = '_/global/'+mapUrlStart;
                     }
 
                     const authToken = Jwt.sign({userUuid: userUuid}, SECRET_KEY, {expiresIn: '24h'});

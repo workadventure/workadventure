@@ -94,7 +94,7 @@ export class EnableCameraScene extends Phaser.Scene {
         this.add.existing(this.logo);
 
         this.input.keyboard.on('keyup-ENTER', () => {
-            return this.login();
+            this.login();
         });
 
         this.getElementByIdOrFail<HTMLDivElement>('webRtcSetup').classList.add('active');
@@ -258,7 +258,7 @@ export class EnableCameraScene extends Phaser.Scene {
         this.soundMeterSprite.setVolume(this.soundMeter.getVolume());
     }
 
-    private async login(): Promise<StartMapInterface> {
+    private async login(): Promise<void> {
         this.getElementByIdOrFail<HTMLDivElement>('webRtcSetup').style.display = 'none';
         this.soundMeter.stop();
         window.removeEventListener('resize', this.repositionCallback);
@@ -266,46 +266,8 @@ export class EnableCameraScene extends Phaser.Scene {
         mediaManager.stopCamera();
         mediaManager.stopMicrophone();
 
-        // Do we have a start URL in the address bar? If so, let's redirect to this address
-        const instanceAndMapUrl = this.findMapUrl();
-        if (instanceAndMapUrl !== null) {
-            const [mapUrl, instance] = instanceAndMapUrl;
-            const key = gameManager.loadMap(mapUrl, this.scene, instance);
-            this.scene.start(key, {
-                startLayerName: window.location.hash ? window.location.hash.substr(1) : undefined
-            } as GameSceneInitInterface);
-            return {
-                mapUrlStart: mapUrl,
-                startInstance: instance
-            };
-        } else {
-            // If we do not have a map address in the URL, let's ask the server for a start map.
-            return gameManager.loadStartMap().then((startMap: StartMapInterface) => {
-                const key = gameManager.loadMap(window.location.protocol + "//" + startMap.mapUrlStart, this.scene, startMap.startInstance);
-                this.scene.start(key);
-                return startMap;
-            }).catch((err) => {
-                console.error(err);
-                throw err;
-            });
-        }
-    }
-
-    /**
-     * Returns the map URL and the instance from the current URL
-     */
-    private findMapUrl(): [string, string]|null {
-        const path = window.location.pathname;
-        if (!path.startsWith('/_/')) {
-            return null;
-        }
-        const instanceAndMap = path.substr(3);
-        const firstSlash = instanceAndMap.indexOf('/');
-        if (firstSlash === -1) {
-            return null;
-        }
-        const instance = instanceAndMap.substr(0, firstSlash);
-        return [window.location.protocol+'//'+instanceAndMap.substr(firstSlash+1), instance];
+        let {key, startLayerName} = await gameManager.loadStartingMap(this.scene);
+        this.scene.start(key, {startLayerName});
     }
 
     private async getDevices() {

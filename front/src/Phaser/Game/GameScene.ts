@@ -138,17 +138,17 @@ export class GameScene extends Phaser.Scene implements CenterListener {
     private outlinedItem: ActionableItem|null = null;
     private userInputManager!: UserInputManager;
 
-    static createFromUrl(mapUrlFile: string, instance: string, key: string|null = null): GameScene {
-        const mapKey = GameScene.getMapKeyByUrl(mapUrlFile);
-        if (key === null) {
-            key = mapKey;
+    static createFromUrl(mapUrlFile: string, instance: string, gameSceneKey: string|null = null): GameScene {
+        const mapKey = gameManager.getMapKeyByUrl(mapUrlFile);
+        if (gameSceneKey === null) {
+            gameSceneKey = mapKey;
         }
-        return new GameScene(mapKey, mapUrlFile, instance, key);
+        return new GameScene(mapKey, mapUrlFile, instance, gameSceneKey);
     }
 
-    constructor(MapKey : string, MapUrlFile: string, instance: string, key: string) {
+    constructor(MapKey : string, MapUrlFile: string, instance: string, gameSceneKey: string) {
         super({
-            key: key
+            key: gameSceneKey
         });
 
         this.GameManager = gameManager;
@@ -588,9 +588,9 @@ export class GameScene extends Phaser.Scene implements CenterListener {
                 this.simplePeer.closeAllConnections();
                 this.simplePeer.unregister();
 
-                const key = 'somekey'+Math.round(Math.random()*10000);
-                const game : Phaser.Scene = GameScene.createFromUrl(this.MapUrlFile, this.instance, key);
-                this.scene.add(key, game, true,
+                const gameSceneKey = 'somekey'+Math.round(Math.random()*10000);
+                const game : Phaser.Scene = GameScene.createFromUrl(this.MapUrlFile, this.instance, gameSceneKey);
+                this.scene.add(gameSceneKey, game, true,
                     {
                         initPosition: {
                             x: this.CurrentPlayer.x,
@@ -1136,12 +1136,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
         this.groups.delete(groupId);
     }
 
-    public static getMapKeyByUrl(mapUrlStart: string) : string {
-        // FIXME: the key should be computed from the full URL of the map.
-        const startPos = mapUrlStart.indexOf('://')+3;
-        const endPos = mapUrlStart.indexOf(".json");
-        return mapUrlStart.substring(startPos, endPos);
-    }
+
 
     /**
      * Sends to the server an event emitted by one of the ActionableItems.
