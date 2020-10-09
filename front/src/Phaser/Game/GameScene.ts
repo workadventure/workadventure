@@ -45,6 +45,7 @@ import {connectionManager} from "../../Connexion/ConnectionManager";
 import {RoomConnection} from "../../Connexion/RoomConnection";
 import {GlobalMessageManager} from "../../Administration/GlobalMessageManager";
 import {ConsoleGlobalMessageManager} from "../../Administration/ConsoleGlobalMessageManager";
+import {ResizableScene} from "../Login/ResizableScene";
 
 
 export enum Textures {
@@ -86,7 +87,7 @@ interface DeleteGroupEventInterface {
     groupId: number
 }
 
-export class GameScene extends Phaser.Scene implements CenterListener {
+export class GameScene extends ResizableScene implements CenterListener {
     GameManager : GameManager;
     Terrains : Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer!: CurrentGamerInterface;
@@ -131,7 +132,6 @@ export class GameScene extends Phaser.Scene implements CenterListener {
     private startLayerName: string|undefined;
     private presentationModeSprite!: Sprite;
     private chatModeSprite!: Sprite;
-    private onResizeCallback!: (this: Window, ev: UIEvent) => void;
     private gameMap!: GameMap;
     private actionableItems: Map<number, ActionableItem> = new Map<number, ActionableItem>();
     // The item that can be selected by pressing the space key.
@@ -464,8 +464,6 @@ export class GameScene extends Phaser.Scene implements CenterListener {
             this.switchLayoutMode();
         });
 
-        this.onResizeCallback = this.onResize.bind(this);
-        window.addEventListener('resize', this.onResizeCallback);
         this.reposition();
 
         // From now, this game scene will be notified of reposition events
@@ -951,13 +949,12 @@ export class GameScene extends Phaser.Scene implements CenterListener {
         });
 
         const nextSceneKey = this.checkToExit();
-        if(nextSceneKey){
+        if (nextSceneKey) {
             // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
             this.connection.closeConnection();
             this.simplePeer.unregister();
             this.scene.stop();
             this.scene.remove(this.scene.key);
-            window.removeEventListener('resize', this.onResizeCallback);
             this.scene.start(nextSceneKey.key, {
                 startLayerName: nextSceneKey.hash
             });
@@ -1150,7 +1147,7 @@ export class GameScene extends Phaser.Scene implements CenterListener {
         this.connection.emitActionableEvent(itemId, eventName, state, parameters);
     }
 
-    private onResize(): void {
+    public onResize(): void {
         this.reposition();
 
         // Send new viewport to server

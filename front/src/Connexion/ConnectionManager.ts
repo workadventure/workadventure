@@ -11,7 +11,7 @@ interface LoginApiData {
 }
 
 class ConnectionManager {
-    private initPromise: Promise<LoginApiData> = Promise.reject();
+    private initPromise!: Promise<LoginApiData>;
     private mapUrlStart: string|null = null;
 
     private authToken:string|null = null;

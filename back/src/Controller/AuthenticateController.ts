@@ -1,5 +1,5 @@
 import {URL_ROOM_STARTED} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
-import { uuid } from 'uuidv4';
+import { v4 } from 'uuid';
 import {HttpRequest, HttpResponse, TemplatedApp} from "uWebSockets.js";
 import {BaseController} from "./BaseController";
 import {adminApi, AdminApiData} from "../Services/AdminApi";
@@ -50,11 +50,11 @@ export class AuthenticateController extends BaseController {
                         mapUrlStart = data.mapUrlStart;
                         newUrl = this.getNewUrlOnAdminAuth(data)
                     } else if (mapSlug !== null) {
-                        userUuid = uuid();
+                        userUuid = v4();
                         mapUrlStart = mapSlug;
                         newUrl = null;
                     } else {
-                        userUuid = uuid();
+                        userUuid = v4();
                         mapUrlStart = host.replace('api.', 'maps.') + URL_ROOM_STARTED;
                         newUrl = '_/global/'+mapUrlStart;
                     }
