@@ -13,6 +13,7 @@ import {CustomizeScene} from "./Phaser/Login/CustomizeScene";
 import {CoWebsiteManager} from "./WebRtc/CoWebsiteManager";
 import {connectionManager} from "./Connexion/ConnectionManager";
 import {ResizableScene} from "./Phaser/Login/ResizableScene";
+import {MenuScene} from "./Phaser/Login/MenuScene";
 
 //CoWebsiteManager.loadCoWebsite('https://thecodingmachine.com');
 connectionManager.init();
@@ -31,7 +32,7 @@ const config: GameConfig = {
     width: width / RESOLUTION,
     height: height / RESOLUTION,
     parent: "game",
-    scene: [LoginScene, SelectCharacterScene, EnableCameraScene, ReconnectingScene, FourOFourScene, CustomizeScene],
+    scene: [LoginScene, SelectCharacterScene, EnableCameraScene, ReconnectingScene, FourOFourScene, CustomizeScene, MenuScene],
     zoom: RESOLUTION,
     physics: {
         default: "arcade",

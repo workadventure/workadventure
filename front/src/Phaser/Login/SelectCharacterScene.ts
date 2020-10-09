@@ -6,6 +6,7 @@ import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Ch
 import {EnableCameraSceneName} from "./EnableCameraScene";
 import {CustomizeSceneName} from "./CustomizeScene";
 import {ResizableScene} from "./ResizableScene";
+import {ClickButton} from "../Components/ClickButton";
 
 
 //todo: put this constants in a dedicated file
@@ -23,8 +24,7 @@ export class SelectCharacterScene extends ResizableScene {
     private textField!: TextField;
     private pressReturnField!: TextField;
     private logo!: Image;
-    private customizeButton!: Image;
-    private customizeButtonSelected!: Image;
+    private customizeButton!: ClickButton;
 
     private selectedRectangle!: Rectangle;
     private selectedRectangleXPos = 0; // Number of the character selected in the rows
@@ -53,6 +53,9 @@ export class SelectCharacterScene extends ResizableScene {
         });
         this.load.image(LoginTextures.customizeButton, 'resources/objects/customize.png');
         this.load.image(LoginTextures.customizeButtonSelected, 'resources/objects/customize_selected.png');
+
+        this.load.image('notSelectedButton', "resources/objects/button.png");
+        this.load.image('selectedButton', "resources/objects/button_selected.png");
     }
 
     create() {
@@ -191,13 +194,8 @@ export class SelectCharacterScene extends ResizableScene {
             this.players.push(player);
         }
 
-        this.customizeButton = new Image(this, this.game.renderer.width / 2, 90 + 32 * 4 + 6, LoginTextures.customizeButton);
-        this.customizeButton.setOrigin(0.5, 0.5);
+        this.customizeButton = new ClickButton(this, this.game.renderer.width / 2, 90 + 32 * 4 + 6, 'Design your own', 'notSelectedButton', 'selectedButton');
         this.add.existing(this.customizeButton);
-        this.customizeButtonSelected = new Image(this, this.game.renderer.width / 2, 90 + 32 * 4 + 6, LoginTextures.customizeButtonSelected);
-        this.customizeButtonSelected.setOrigin(0.5, 0.5);
-        this.customizeButtonSelected.setVisible(false);
-        this.add.existing(this.customizeButtonSelected);
 
         this.customizeButton.setInteractive().on("pointerdown", () => {
             this.selectedRectangleYPos = Math.ceil(PLAYER_RESOURCES.length / this.nbCharactersPerRow);
@@ -224,12 +222,10 @@ export class SelectCharacterScene extends ResizableScene {
         if (this.selectedRectangleYPos === Math.ceil(PLAYER_RESOURCES.length / this.nbCharactersPerRow)) {
             this.selectedPlayer = null;
             this.selectedRectangle.setVisible(false);
-            this.customizeButtonSelected.setVisible(true);
-            this.customizeButton.setVisible(false);
+            this.customizeButton.select();
             return;
         }
-        this.customizeButtonSelected.setVisible(false);
-        this.customizeButton.setVisible(true);
+        this.customizeButton.unselect();
         const [x, y] = this.getCharacterPosition(this.selectedRectangleXPos, this.selectedRectangleYPos);
         this.selectedRectangle.setVisible(true);
         this.selectedRectangle.setX(x);
@@ -249,8 +245,7 @@ export class SelectCharacterScene extends ResizableScene {
         this.pressReturnField.x = this.game.renderer.width / 2;
         this.logo.x = this.game.renderer.width - 30;
         this.logo.y = this.game.renderer.height - 20;
-        this.customizeButton.x = this.game.renderer.width / 2;
-        this.customizeButtonSelected.x = this.game.renderer.width / 2;
+        this.customizeButton.setX(this.game.renderer.width / 2);
 
         for (let i = 0; i <PLAYER_RESOURCES.length; i++) {
             const player = this.players[i];
