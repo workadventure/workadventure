@@ -1,5 +1,5 @@
 import {ADMIN_API_TOKEN, ADMIN_API_URL} from "../Enum/EnvironmentVariable";
-import Axios from "axios";
+import Axios, {AxiosError} from "axios";
 
 export interface AdminApiData {
     organizationSlug: string
@@ -26,10 +26,15 @@ class AdminApi {
         if (!ADMIN_API_URL) {
             return Promise.reject('No admin backoffice set!');
         }
-        const res = await Axios.get(ADMIN_API_URL+'/api/member/'+memberId+'/is-granted-access/'+roomId,
-            { headers: {"Authorization" : `${ADMIN_API_TOKEN}`} }
-        )
-        return res.data === true;
+        try {
+            const res = await Axios.get(ADMIN_API_URL+'/api/member/is-granted-access',
+                { headers: {"Authorization" : `${ADMIN_API_TOKEN}`}, params: {memberId, roomIdentifier: roomId} }
+            )
+            return !!res.data;
+        } catch (e) {
+            console.log(e.message)
+            return false;
+        }
     }
 }
 

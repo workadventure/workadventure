@@ -36,6 +36,7 @@ class ConnectionManager {
         this.userUuid = data.userUuid;
         this.mapUrlStart = data.mapUrlStart;
         const newUrl = data.newUrl;
+        console.log('u', this.userUuid)
 
         if (newUrl) {
             history.pushState({}, '', newUrl);

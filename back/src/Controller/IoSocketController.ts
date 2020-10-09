@@ -106,7 +106,11 @@ export class IoSocketController {
                     });
 
                     try {
+                        const url = req.getUrl();
                         const query = parse(req.getQuery());
+                        const websocketKey = req.getHeader('sec-websocket-key');
+                        const websocketProtocol = req.getHeader('sec-websocket-protocol');
+                        const websocketExtensions = req.getHeader('sec-websocket-extensions');
 
                         const roomId = req.getUrl().substr(6);
 
@@ -134,10 +138,14 @@ export class IoSocketController {
 
 
                         const userUuid = await jwtTokenManager.getUserUuidFromToken(token);
+                        console.log('uuid', userUuid);
 
                         const isGranted = await adminApi.memberIsGrantedAccessToRoom(userUuid, roomId);
                         if (!isGranted) {
-                            throw Error('Client cannot acces this ressource.');
+                            console.log('access not granted for user '+userUuid+' and room '+roomId);
+                            throw new Error('Client cannot acces this ressource.')
+                        } else {
+                            console.log('access granted for user '+userUuid+' and room '+roomId);
                         }
 
                         if (upgradeAborted.aborted) {
@@ -149,7 +157,7 @@ export class IoSocketController {
                         /* This immediately calls open handler, you must not use res after this call */
                         res.upgrade({
                                 // Data passed here is accessible on the "websocket" socket object.
-                                url: req.getUrl(),
+                                url,
                                 token,
                                 userUuid,
                                 roomId,
@@ -169,17 +177,17 @@ export class IoSocketController {
                                 }
                             },
                             /* Spell these correctly */
-                            req.getHeader('sec-websocket-key'),
-                            req.getHeader('sec-websocket-protocol'),
-                            req.getHeader('sec-websocket-extensions'),
+                            websocketKey,
+                            websocketProtocol,
+                            websocketExtensions,
                             context);
 
                     } catch (e) {
                         if (e instanceof Error) {
-                            console.warn(e.message);
+                            console.log(e.message);
                             res.writeStatus("401 Unauthorized").end(e.message);
                         } else {
-                            console.warn(e);
+                            console.log(e);
                             res.writeStatus("500 Internal Server Error").end('An error occurred');
                         }
                         return;
