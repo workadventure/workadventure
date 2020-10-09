@@ -53,10 +53,10 @@ export class RoomConnection implements RoomConnection {
      * @param token A JWT token containing the UUID of the user
      * @param roomId The ID of the room in the form "_/[instance]/[map_url]" or "@/[org]/[event]/[map]"
      */
-    public constructor(token: string, roomId: string, name: string, characterLayers: string[], position: PositionInterface, viewport: ViewportInterface) {
+    public constructor(token: string|null, roomId: string, name: string, characterLayers: string[], position: PositionInterface, viewport: ViewportInterface) {
         let url = API_URL.replace('http://', 'ws://').replace('https://', 'wss://');
         url += '/room/'+roomId
-        url += '?token='+encodeURIComponent(token);
+        url += '?token='+(token ?encodeURIComponent(token):'');
         url += '&name='+encodeURIComponent(name);
         for (let layer of characterLayers) {
             url += '&characterLayers='+encodeURIComponent(layer);

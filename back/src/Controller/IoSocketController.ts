@@ -1,14 +1,11 @@
 import {ExSocketInterface} from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
-import Jwt from "jsonwebtoken";
-import {SECRET_KEY, MINIMUM_DISTANCE, GROUP_RADIUS, ALLOW_ARTILLERY} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
+import {MINIMUM_DISTANCE, GROUP_RADIUS} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 import {GameRoom} from "../Model/GameRoom";
 import {Group} from "../Model/Group";
 import {User} from "../Model/User";
 import {isSetPlayerDetailsMessage,} from "../Model/Websocket/SetPlayerDetailsMessage";
 import {Gauge} from "prom-client";
-import {TokenInterface} from "../Controller/AuthenticateController";
 import {PointInterface} from "../Model/Websocket/PointInterface";
-import {uuid} from 'uuidv4';
 import {Movable} from "../Model/Movable";
 import {
     PositionMessage,
@@ -43,6 +40,8 @@ import {TemplatedApp} from "uWebSockets.js"
 import {parse} from "query-string";
 import {cpuTracker} from "../Services/CpuTracker";
 import {ViewportInterface} from "../Model/Websocket/ViewportMessage";
+import {jwtTokenManager} from "../Services/JWTTokenManager";
+import {adminApi} from "../Services/AdminApi";
 
 function emitInBatch(socket: ExSocketInterface, payload: SubMessage): void {
     socket.batchedMessages.addPayload(payload);
@@ -86,54 +85,7 @@ export class IoSocketController {
         this.ioConnection();
     }
 
-    private isValidToken(token: object): token is TokenInterface {
-        if (typeof((token as TokenInterface).userUuid) !== 'string') {
-            return false;
-        }
-        return true;
-    }
-
-    private async getUserUuidFromToken(token: unknown): Promise<string> {
-
-        if (!token) {
-            throw new Error('An authentication error happened, a user tried to connect without a token.');
-        }
-        if (typeof(token) !== "string") {
-            throw new Error('Token is expected to be a string');
-        }
-
-
-        if(token === 'test') {
-            if (ALLOW_ARTILLERY) {
-                return uuid();
-            } else {
-                throw new Error("In order to perform a load-testing test on this environment, you must set the ALLOW_ARTILLERY environment variable to 'true'");
-            }
-        }
-
-        return new Promise<string>((resolve, reject) => {
-            Jwt.verify(token, SECRET_KEY,  {},(err, tokenDecoded) => {
-                const tokenInterface = tokenDecoded as TokenInterface;
-                if (err) {
-                    console.error('An authentication error happened, invalid JsonWebToken.', err);
-                    reject(new Error('An authentication error happened, invalid JsonWebToken. '+err.message));
-                    return;
-                }
-                if (tokenDecoded === undefined) {
-                    console.error('Empty token found.');
-                    reject(new Error('Empty token found.'));
-                    return;
-                }
-
-                if (!this.isValidToken(tokenInterface)) {
-                    reject(new Error('Authentication error, invalid token structure.'));
-                    return;
-                }
-
-                resolve(tokenInterface.userUuid);
-            });
-        });
-    }
+    
 
     ioConnection() {
         this.app.ws('/room/*', {
@@ -181,7 +133,12 @@ export class IoSocketController {
                         }
 
 
-                        const userUuid = await this.getUserUuidFromToken(token);
+                        const userUuid = await jwtTokenManager.getUserUuidFromToken(token);
+
+                        const isGranted = await adminApi.memberIsGrantedAccessToRoom(userUuid, roomId);
+                        if (!isGranted) {
+                            throw Error('Client cannot acces this ressource.');
+                        }
 
                         if (upgradeAborted.aborted) {
                             console.log("Ouch! Client disconnected before we could upgrade it!");
@@ -255,11 +212,6 @@ export class IoSocketController {
 
                 // Let's join the room
                 this.handleJoinRoom(client, client.roomId, client.position, client.viewport, client.name, client.characterLayers);
-
-                /*const isGranted = await adminApi.memberIsGrantedAccessToRoom(client.userUuid, roomId);
-                if (!isGranted) {
-                    throw Error('Client cannot acces this ressource.');
-                }*/
 
                 const setUserIdMessage = new SetUserIdMessage();
                 setUserIdMessage.setUserid(client.userId);

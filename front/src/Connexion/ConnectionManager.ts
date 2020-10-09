@@ -48,7 +48,7 @@ class ConnectionManager {
 
     public connectToRoomSocket(roomId: string, name: string, characterLayers: string[], position: PositionInterface, viewport: ViewportInterface): Promise<RoomConnection> {
         return new Promise<RoomConnection>((resolve, reject) => {
-            const connection = new RoomConnection(this.authToken as string, roomId, name, characterLayers, position, viewport);
+            const connection = new RoomConnection(this.authToken, roomId, name, characterLayers, position, viewport);
             connection.onConnectError((error: object) => {
                 console.log('An error occurred while connecting to socket server. Retrying');
                 reject(error);

@@ -1,9 +1,9 @@
-import Jwt from "jsonwebtoken";
-import {ADMIN_API_TOKEN, ADMIN_API_URL, SECRET_KEY, URL_ROOM_STARTED} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
+import {URL_ROOM_STARTED} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 import { uuid } from 'uuidv4';
 import {HttpRequest, HttpResponse, TemplatedApp} from "uWebSockets.js";
 import {BaseController} from "./BaseController";
 import {adminApi, AdminApiData} from "../Services/AdminApi";
+import {jwtTokenManager} from "../Services/JWTTokenManager";
 
 export interface TokenInterface {
     userUuid: string
@@ -59,7 +59,7 @@ export class AuthenticateController extends BaseController {
                         newUrl = '_/global/'+mapUrlStart;
                     }
 
-                    const authToken = Jwt.sign({userUuid: userUuid}, SECRET_KEY, {expiresIn: '24h'});
+                    const authToken = jwtTokenManager.createJWTToken(userUuid);
                     res.writeStatus("200 OK").end(JSON.stringify({
                         authToken,
                         userUuid,
