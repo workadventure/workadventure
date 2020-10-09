@@ -38,4 +38,16 @@ export class TextInput extends Phaser.GameObjects.BitmapText {
     getText(): string {
         return this.text;
     }
+
+    setX(x: number): this {
+        super.setX(x);
+        this.underLine.x = x;
+        return this;
+    }
+
+    setY(y: number): this {
+        super.setY(y);
+        this.underLine.y = y+1;
+        return this;
+    }
 }
