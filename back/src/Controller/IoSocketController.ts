@@ -312,10 +312,10 @@ export class IoSocketController {
         console.warn(message);
     }
 
-    private async handleJoinRoom(client: ExSocketInterface, roomId: string, position: PointInterface, viewport: ViewportInterface, name: string, characterLayers: string[]): Promise<void> {
+    private handleJoinRoom(client: ExSocketInterface, roomId: string, position: PointInterface, viewport: ViewportInterface, name: string, characterLayers: string[]): void {
         try {
             //join new previous room
-            const gameRoom = await this.joinRoom(client, roomId, position);
+            const gameRoom = this.joinRoom(client, roomId, position);
 
             const things = gameRoom.setViewport(client, viewport);
 

@@ -1,5 +1,5 @@
 import "jasmine";
-import {GameRoom, ConnectCallback, DisconnectCallback } from "_Model/GameRoom";
+import {GameRoom, ConnectCallback, DisconnectCallback } from "../src/Model/GameRoom";
 import {Point} from "../src/Model/Websocket/MessageUserPosition";
 import { Group } from "../src/Model/Group";
 import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";

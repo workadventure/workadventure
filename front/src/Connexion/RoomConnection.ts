@@ -59,7 +59,7 @@ export class RoomConnection implements RoomConnection {
         url += '/room/'+roomId
         url += '?token='+(token ?encodeURIComponent(token):'');
         url += '&name='+encodeURIComponent(name);
-        for (let layer of characterLayers) {
+        for (const layer of characterLayers) {
             url += '&characterLayers='+encodeURIComponent(layer);
         }
         url += '&x='+Math.floor(position.x);

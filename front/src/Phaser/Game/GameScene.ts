@@ -598,7 +598,6 @@ export class GameScene extends ResizableScene implements CenterListener {
 
                 this.scene.stop(this.scene.key);
                 this.scene.remove(this.scene.key);
-                window.removeEventListener('resize', this.onResizeCallback);
             })
 
             connection.onActionableEvent((message => {
