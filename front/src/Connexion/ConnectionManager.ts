@@ -1,6 +1,7 @@
 import Axios from "axios";
 import {API_URL} from "../Enum/EnvironmentVariable";
 import {RoomConnection} from "./RoomConnection";
+import {PositionInterface, ViewportInterface} from "./ConnexionModels";
 
 interface LoginApiData {
     authToken: string
@@ -16,15 +17,26 @@ class ConnectionManager {
     private authToken:string|null = null;
     private userUuid: string|null = null;
 
+    //todo: get map infos from url in anonym case
     public async init(): Promise<void> {
+        let organizationMemberToken =  null;
+        let teamSlug =  null;
+        let mapSlug =  null;
         const match = /\/register\/(.+)/.exec(window.location.toString());
-        const organizationMemberToken = match ? match[1] : null;
-        this.initPromise = Axios.post(`${API_URL}/login`, {organizationMemberToken}).then(res => res.data);
+        if (match) {
+            organizationMemberToken = match[1];
+        } else {
+            const match = /\/_\/(.+)\/(.+)/.exec(window.location.toString());
+            teamSlug = match ? match[1] : null;
+            mapSlug = match ? match[2] : null;
+        }
+        this.initPromise = Axios.post(`${API_URL}/login`, {organizationMemberToken, teamSlug, mapSlug}).then(res => res.data);
         const data = await this.initPromise
         this.authToken = data.authToken;
         this.userUuid = data.userUuid;
         this.mapUrlStart = data.mapUrlStart;
         const newUrl = data.newUrl;
+        console.log('u', this.userUuid)
 
         if (newUrl) {
             history.pushState({}, '', newUrl);
@@ -35,9 +47,9 @@ class ConnectionManager {
         this.authToken = 'test';
     }
 
-    public connectToRoomSocket(): Promise<RoomConnection> {
+    public connectToRoomSocket(roomId: string, name: string, characterLayers: string[], position: PositionInterface, viewport: ViewportInterface): Promise<RoomConnection> {
         return new Promise<RoomConnection>((resolve, reject) => {
-            const connection = new RoomConnection(this.authToken as string);
+            const connection = new RoomConnection(this.authToken, roomId, name, characterLayers, position, viewport);
             connection.onConnectError((error: object) => {
                 console.log('An error occurred while connecting to socket server. Retrying');
                 reject(error);
@@ -50,7 +62,7 @@ class ConnectionManager {
             return new Promise<RoomConnection>((resolve, reject) => {
                 setTimeout(() => {
                     //todo: allow a way to break recurrsion?
-                    this.connectToRoomSocket().then((connection) => resolve(connection));
+                    this.connectToRoomSocket(roomId, name, characterLayers, position, viewport).then((connection) => resolve(connection));
                 }, 4000 + Math.floor(Math.random() * 2000) );
             });
         });

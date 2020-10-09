@@ -1,23 +1,11 @@
-import * as http from "http";
-import {MessageUserPosition, Point} from "../Model/Websocket/MessageUserPosition"; //TODO fix import by "_Model/.."
 import {ExSocketInterface} from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
-import Jwt, {JsonWebTokenError} from "jsonwebtoken";
-import {SECRET_KEY, MINIMUM_DISTANCE, GROUP_RADIUS, ALLOW_ARTILLERY} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
-import {World} from "../Model/World";
+import {MINIMUM_DISTANCE, GROUP_RADIUS} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
+import {GameRoom} from "../Model/GameRoom";
 import {Group} from "../Model/Group";
 import {User} from "../Model/User";
 import {isSetPlayerDetailsMessage,} from "../Model/Websocket/SetPlayerDetailsMessage";
-import {MessageUserJoined} from "../Model/Websocket/MessageUserJoined";
-import si from "systeminformation";
 import {Gauge} from "prom-client";
-import {TokenInterface} from "../Controller/AuthenticateController";
-import {isJoinRoomMessageInterface} from "../Model/Websocket/JoinRoomMessage";
 import {PointInterface} from "../Model/Websocket/PointInterface";
-import {isWebRtcSignalMessageInterface} from "../Model/Websocket/WebRtcSignalMessage";
-import {UserInGroupInterface} from "../Model/Websocket/UserInGroupInterface";
-import {isItemEventMessageInterface} from "../Model/Websocket/ItemEventMessage";
-import { v4 as uuidv4 } from 'uuid';
-import {GroupUpdateInterface} from "_Model/Websocket/GroupUpdateInterface";
 import {Movable} from "../Model/Movable";
 import {
     PositionMessage,
@@ -33,7 +21,6 @@ import {
     ItemEventMessage,
     ViewportMessage,
     ClientToServerMessage,
-    JoinRoomMessage,
     ErrorMessage,
     RoomJoinedMessage,
     ItemStateMessage,
@@ -42,14 +29,19 @@ import {
     SilentMessage,
     WebRtcSignalToClientMessage,
     WebRtcSignalToServerMessage,
-    WebRtcStartMessage, WebRtcDisconnectMessage, PlayGlobalMessage
+    WebRtcStartMessage,
+    WebRtcDisconnectMessage,
+    PlayGlobalMessage,
 } from "../Messages/generated/messages_pb";
 import {UserMovesMessage} from "../Messages/generated/messages_pb";
 import Direction = PositionMessage.Direction;
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
-import {App, HttpRequest, TemplatedApp, WebSocket} from "uWebSockets.js"
+import {TemplatedApp} from "uWebSockets.js"
 import {parse} from "query-string";
 import {cpuTracker} from "../Services/CpuTracker";
+import {ViewportInterface} from "../Model/Websocket/ViewportMessage";
+import {jwtTokenManager} from "../Services/JWTTokenManager";
+import {adminApi} from "../Services/AdminApi";
 
 function emitInBatch(socket: ExSocketInterface, payload: SubMessage): void {
     socket.batchedMessages.addPayload(payload);
@@ -71,7 +63,7 @@ function emitInBatch(socket: ExSocketInterface, payload: SubMessage): void {
 }
 
 export class IoSocketController {
-    private Worlds: Map<string, World> = new Map<string, World>();
+    private Worlds: Map<string, GameRoom> = new Map<string, GameRoom>();
     private sockets: Map<number, ExSocketInterface> = new Map<number, ExSocketInterface>();
     private nbClientsGauge: Gauge<string>;
     private nbClientsPerRoomGauge: Gauge<string>;
@@ -93,92 +85,10 @@ export class IoSocketController {
         this.ioConnection();
     }
 
-    private isValidToken(token: object): token is TokenInterface {
-        if (typeof((token as TokenInterface).userUuid) !== 'string') {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     *
-     * @param token
-     */
-/*    searchClientByToken(token: string): ExSocketInterface | null {
-        const clients: ExSocketInterface[] = Object.values(this.Io.sockets.sockets) as ExSocketInterface[];
-        for (let i = 0; i < clients.length; i++) {
-            const client = clients[i];
-            if (client.token !== token) {
-                continue
-            }
-            return client;
-        }
-        return null;
-    }*/
-
-    private async authenticate(req: HttpRequest): Promise<{ token: string, userUuid: string }> {
-        //console.log(socket.handshake.query.token);
-
-        const query = parse(req.getQuery());
-
-        if (!query.token) {
-            throw new Error('An authentication error happened, a user tried to connect without a token.');
-        }
-
-        const token = query.token;
-        if (typeof(token) !== "string") {
-            throw new Error('Token is expected to be a string');
-        }
-
-
-        if(token === 'test') {
-            if (ALLOW_ARTILLERY) {
-                return {
-                    token,
-                    userUuid: uuidv4()
-                }
-            } else {
-                throw new Error("In order to perform a load-testing test on this environment, you must set the ALLOW_ARTILLERY environment variable to 'true'");
-            }
-        }
-
-        /*if(this.searchClientByToken(socket.handshake.query.token)){
-            console.error('An authentication error happened, a user tried to connect while its token is already connected.');
-            return next(new Error('Authentication error'));
-        }*/
-
-        const promise = new Promise<{ token: string, userUuid: string }>((resolve, reject) => {
-            Jwt.verify(token, SECRET_KEY,  {},(err, tokenDecoded) => {
-                if (err) {
-                    console.error('An authentication error happened, invalid JsonWebToken.', err);
-                    reject(new Error('An authentication error happened, invalid JsonWebToken. '+err.message));
-                    return;
-                }
-                if (tokenDecoded === undefined) {
-                    console.error('Empty token found.');
-                    reject(new Error('Empty token found.'));
-                    return;
-                }
-                const tokenInterface = tokenDecoded as TokenInterface;
-
-                if (!this.isValidToken(tokenInterface)) {
-                    reject(new Error('Authentication error, invalid token structure.'));
-                    return;
-                }
-
-                resolve({
-                    token,
-                    userUuid: tokenInterface.userUuid
-                });
-            });
-        });
-
-        return promise;
-    }
+    
 
     ioConnection() {
-        this.app.ws('/*', {
-
+        this.app.ws('/room/*', {
             /* Options */
             //compression: uWS.SHARED_COMPRESSOR,
             maxPayloadLength: 16 * 1024 * 1024,
@@ -187,7 +97,6 @@ export class IoSocketController {
             upgrade: (res, req, context) => {
                 //console.log('An Http connection wants to become WebSocket, URL: ' + req.getUrl() + '!');
                 (async () => {
-
                     /* Keep track of abortions */
                     const upgradeAborted = {aborted: false};
 
@@ -197,7 +106,47 @@ export class IoSocketController {
                     });
 
                     try {
-                        const result = await this.authenticate(req);
+                        const url = req.getUrl();
+                        const query = parse(req.getQuery());
+                        const websocketKey = req.getHeader('sec-websocket-key');
+                        const websocketProtocol = req.getHeader('sec-websocket-protocol');
+                        const websocketExtensions = req.getHeader('sec-websocket-extensions');
+
+                        const roomId = req.getUrl().substr(6);
+
+                        const token = query.token;
+                        const x = Number(query.x);
+                        const y = Number(query.y);
+                        const top = Number(query.top);
+                        const bottom = Number(query.bottom);
+                        const left = Number(query.left);
+                        const right = Number(query.right);
+                        const name = query.name;
+                        if (typeof name !== 'string') {
+                            throw new Error('Expecting name');
+                        }
+                        if (name === '') {
+                            throw new Error('No empty name');
+                        }
+                        let characterLayers = query.characterLayers;
+                        if (characterLayers === null) {
+                            throw new Error('Expecting skin');
+                        }
+                        if (typeof characterLayers === 'string') {
+                            characterLayers = [ characterLayers ];
+                        }
+
+
+                        const userUuid = await jwtTokenManager.getUserUuidFromToken(token);
+                        console.log('uuid', userUuid);
+
+                        const isGranted = await adminApi.memberIsGrantedAccessToRoom(userUuid, roomId);
+                        if (!isGranted) {
+                            console.log('access not granted for user '+userUuid+' and room '+roomId);
+                            throw new Error('Client cannot acces this ressource.')
+                        } else {
+                            console.log('access granted for user '+userUuid+' and room '+roomId);
+                        }
 
                         if (upgradeAborted.aborted) {
                             console.log("Ouch! Client disconnected before we could upgrade it!");
@@ -208,22 +157,37 @@ export class IoSocketController {
                         /* This immediately calls open handler, you must not use res after this call */
                         res.upgrade({
                                 // Data passed here is accessible on the "websocket" socket object.
-                                url: req.getUrl(),
-                                token: result.token,
-                                userUuid: result.userUuid
+                                url,
+                                token,
+                                userUuid,
+                                roomId,
+                                name,
+                                characterLayers,
+                                position: {
+                                    x: x,
+                                    y: y,
+                                    direction: 'down',
+                                    moving: false
+                                } as PointInterface,
+                                viewport: {
+                                    top,
+                                    right,
+                                    bottom,
+                                    left
+                                }
                             },
                             /* Spell these correctly */
-                            req.getHeader('sec-websocket-key'),
-                            req.getHeader('sec-websocket-protocol'),
-                            req.getHeader('sec-websocket-extensions'),
+                            websocketKey,
+                            websocketProtocol,
+                            websocketExtensions,
                             context);
 
                     } catch (e) {
                         if (e instanceof Error) {
-                            console.warn(e.message);
+                            console.log(e.message);
                             res.writeStatus("401 Unauthorized").end(e.message);
                         } else {
-                            console.warn(e);
+                            console.log(e);
                             res.writeStatus("500 Internal Server Error").end('An error occurred');
                         }
                         return;
@@ -243,20 +207,35 @@ export class IoSocketController {
                     emitInBatch(client, payload);
                 }
                 client.disconnecting = false;
+
+                client.name = ws.name;
+                client.characterLayers = ws.characterLayers;
+                client.roomId = ws.roomId;
+
                 this.sockets.set(client.userId, client);
 
                 // Let's log server load when a user joins
                 this.nbClientsGauge.inc();
                 console.log(new Date().toISOString() + ' A user joined (', this.sockets.size, ' connected users)');
 
+                // Let's join the room
+                this.handleJoinRoom(client, client.roomId, client.position, client.viewport, client.name, client.characterLayers);
+
+                const setUserIdMessage = new SetUserIdMessage();
+                setUserIdMessage.setUserid(client.userId);
+
+                const serverToClientMessage = new ServerToClientMessage();
+                serverToClientMessage.setSetuseridmessage(setUserIdMessage);
+
+                if (!client.disconnecting) {
+                    client.send(serverToClientMessage.serializeBinary().buffer, true);
+                }
             },
-            message: (ws, arrayBuffer, isBinary) => {
+            message: (ws, arrayBuffer, isBinary): void => {
                 const client = ws as ExSocketInterface;
                 const message = ClientToServerMessage.deserializeBinary(new Uint8Array(arrayBuffer));
 
-                if (message.hasJoinroommessage()) {
-                    this.handleJoinRoom(client, message.getJoinroommessage() as JoinRoomMessage);
-                } else if (message.hasViewportmessage()) {
+                if (message.hasViewportmessage()) {
                     this.handleViewport(client, message.getViewportmessage() as ViewportMessage);
                 } else if (message.hasUsermovesmessage()) {
                     this.handleUserMovesMessage(client, message.getUsermovesmessage() as UserMovesMessage);
@@ -333,26 +312,12 @@ export class IoSocketController {
         console.warn(message);
     }
 
-    private handleJoinRoom(Client: ExSocketInterface, message: JoinRoomMessage): void {
+    private handleJoinRoom(client: ExSocketInterface, roomId: string, position: PointInterface, viewport: ViewportInterface, name: string, characterLayers: string[]): void {
         try {
-            /*if (!isJoinRoomMessageInterface(message.toObject())) {
-                console.log(message.toObject())
-                this.emitError(Client, 'Invalid JOIN_ROOM message received: ' + message.toObject().toString());
-                return;
-            }*/
-            const roomId = message.getRoomid();
-
-            if (Client.roomId === roomId) {
-                return;
-            }
-
-            //leave previous room
-            //this.leaveRoom(Client); // Useless now, there is only one room per connection
-
             //join new previous room
-            const world = this.joinRoom(Client, roomId, ProtobufUtils.toPointInterface(message.getPosition() as PositionMessage));
+            const gameRoom = this.joinRoom(client, roomId, position);
 
-            const things = world.setViewport(Client, (message.getViewport() as ViewportMessage).toObject());
+            const things = gameRoom.setViewport(client, viewport);
 
             const roomJoinedMessage = new RoomJoinedMessage();
 
@@ -382,7 +347,7 @@ export class IoSocketController {
                 }
             }
 
-            for (const [itemId, item] of world.getItemsState().entries()) {
+            for (const [itemId, item] of gameRoom.getItemsState().entries()) {
                 const itemStateMessage = new ItemStateMessage();
                 itemStateMessage.setItemid(itemId);
                 itemStateMessage.setStatejson(JSON.stringify(item));
@@ -393,8 +358,8 @@ export class IoSocketController {
             const serverToClientMessage = new ServerToClientMessage();
             serverToClientMessage.setRoomjoinedmessage(roomJoinedMessage);
 
-            if (!Client.disconnecting) {
-                Client.send(serverToClientMessage.serializeBinary().buffer, true);
+            if (!client.disconnecting) {
+                client.send(serverToClientMessage.serializeBinary().buffer, true);
             }
         } catch (e) {
             console.error('An error occurred on "join_room" event');
@@ -480,6 +445,7 @@ export class IoSocketController {
         }
     }
 
+    // Useless now, will be useful again if we allow editing details in game
     private handleSetPlayerDetails(client: ExSocketInterface, playerDetailsMessage: SetPlayerDetailsMessage) {
         const playerDetails = {
             name: playerDetailsMessage.getName(),
@@ -493,16 +459,6 @@ export class IoSocketController {
         client.name = playerDetails.name;
         client.characterLayers = playerDetails.characterLayers;
 
-
-        const setUserIdMessage = new SetUserIdMessage();
-        setUserIdMessage.setUserid(client.userId);
-
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setSetuseridmessage(setUserIdMessage);
-
-        if (!client.disconnecting) {
-            client.send(serverToClientMessage.serializeBinary().buffer, true);
-        }
     }
 
     private handleSilentMessage(client: ExSocketInterface, silentMessage: SilentMessage) {
@@ -600,7 +556,7 @@ export class IoSocketController {
         if(Client.roomId){
             try {
                 //user leave previous world
-                const world: World | undefined = this.Worlds.get(Client.roomId);
+                const world: GameRoom | undefined = this.Worlds.get(Client.roomId);
                 if (world) {
                     world.leave(Client);
                     if (world.isEmpty()) {
@@ -616,17 +572,17 @@ export class IoSocketController {
         }
     }
 
-    private joinRoom(Client : ExSocketInterface, roomId: string, position: PointInterface): World {
+    private joinRoom(client : ExSocketInterface, roomId: string, position: PointInterface): GameRoom {
+
         //join user in room
-        //Client.join(roomId);
         this.nbClientsPerRoomGauge.inc({ room: roomId });
-        Client.roomId = roomId;
-        Client.position = position;
+        client.roomId = roomId;
+        client.position = position;
 
         //check and create new world for a room
         let world = this.Worlds.get(roomId)
         if(world === undefined){
-            world = new World((user1: User, group: Group) => {
+            world = new GameRoom((user1: User, group: Group) => {
                 this.joinWebRtcRoom(user1, group);
             }, (user1: User, group: Group) => {
                 this.disConnectedUser(user1, group);
@@ -689,10 +645,10 @@ export class IoSocketController {
 
         // Dispatch groups position to newly connected user
         world.getGroups().forEach((group: Group) => {
-            this.emitCreateUpdateGroupEvent(Client, group);
+            this.emitCreateUpdateGroupEvent(client, group);
         });
         //join world
-        world.join(Client, Client.position);
+        world.join(client, client.position);
         return world;
     }
 
@@ -882,7 +838,7 @@ export class IoSocketController {
 
     }
 
-    public getWorlds(): Map<string, World> {
+    public getWorlds(): Map<string, GameRoom> {
         return this.Worlds;
     }
 }

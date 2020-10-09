@@ -38,12 +38,6 @@ message SetPlayerDetailsMessage {
   repeated string characterLayers = 2;
 }
 
-message JoinRoomMessage {
-  string roomId = 1;
-  PositionMessage position = 2;
-  ViewportMessage viewport = 3;
-}
-
 message UserMovesMessage {
   PositionMessage position = 1;
   ViewportMessage viewport = 2;
@@ -56,7 +50,6 @@ message WebRtcSignalToServerMessage {
 
 message ClientToServerMessage {
   oneof message {
-    JoinRoomMessage joinRoomMessage = 1;
     UserMovesMessage userMovesMessage = 2;
     SilentMessage silentMessage = 3;
     ViewportMessage viewportMessage = 4;

@@ -1,4 +1,4 @@
-import { ConnectCallback, DisconnectCallback } from "./World";
+import { ConnectCallback, DisconnectCallback } from "./GameRoom";
 import { User } from "./User";
 import {PositionInterface} from "_Model/PositionInterface";
 import {Movable} from "_Model/Movable";

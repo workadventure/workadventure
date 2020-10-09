@@ -1,19 +1,11 @@
-import Jwt from "jsonwebtoken";
-import {ADMIN_API_TOKEN, ADMIN_API_URL, SECRET_KEY, URL_ROOM_STARTED} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
+import {URL_ROOM_STARTED} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 import { v4 } from 'uuid';
 import {HttpRequest, HttpResponse, TemplatedApp} from "uWebSockets.js";
 import {BaseController} from "./BaseController";
-import Axios from "axios";
+import {adminApi, AdminApiData} from "../Services/AdminApi";
+import {jwtTokenManager} from "../Services/JWTTokenManager";
 
 export interface TokenInterface {
-    userUuid: string
-}
-
-interface AdminApiData {
-    organizationSlug: string
-    worldSlug: string
-    roomSlug: string
-    mapUrlStart: string
     userUuid: string
 }
 
@@ -44,6 +36,7 @@ export class AuthenticateController extends BaseController {
 
                 //todo: what to do if the organizationMemberToken is already used?
                 const organizationMemberToken:string|null = param.organizationMemberToken;
+                const mapSlug:string|null = param.mapSlug;
 
                 try {
                     let userUuid;
@@ -51,24 +44,22 @@ export class AuthenticateController extends BaseController {
                     let newUrl: string|null = null;
 
                     if (organizationMemberToken) {
-                        if (!ADMIN_API_URL) {
-                            return res.status(401).send('No admin backoffice set!');
-                        }
-                        //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
-                        const data = await Axios.get(ADMIN_API_URL+'/api/login-url/'+organizationMemberToken,
-                            { headers: {"Authorization" : `${ADMIN_API_TOKEN}`} }
-                        ).then((res): AdminApiData => res.data);
+                        const data = await adminApi.fetchMemberDataByToken(organizationMemberToken);
 
                         userUuid = data.userUuid;
                         mapUrlStart = data.mapUrlStart;
                         newUrl = this.getNewUrlOnAdminAuth(data)
+                    } else if (mapSlug !== null) {
+                        userUuid = v4();
+                        mapUrlStart = mapSlug;
+                        newUrl = null;
                     } else {
                         userUuid = v4();
                         mapUrlStart = host.replace('api.', 'maps.') + URL_ROOM_STARTED;
-                        newUrl = null;
+                        newUrl = '_/global/'+mapUrlStart;
                     }
 
-                    const authToken = Jwt.sign({userUuid: userUuid}, SECRET_KEY, {expiresIn: '24h'});
+                    const authToken = jwtTokenManager.createJWTToken(userUuid);
                     res.writeStatus("200 OK").end(JSON.stringify({
                         authToken,
                         userUuid,
