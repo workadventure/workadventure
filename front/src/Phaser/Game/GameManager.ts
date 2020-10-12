@@ -1,6 +1,7 @@
 import {GameScene} from "./GameScene";
 import {connectionManager} from "../../Connexion/ConnectionManager";
 import {Room} from "../../Connexion/Room";
+import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
 
 export interface HasMovedEvent {
     direction: string;
@@ -14,10 +15,16 @@ export class GameManager {
     private characterLayers!: string[];
     private startRoom!:Room;
     private sceneManager!: Phaser.Scenes.SceneManager;
-    
+
     public async init(sceneManager: Phaser.Scenes.SceneManager) {
         this.sceneManager = sceneManager;
-        this.startRoom = await connectionManager.initGameConnexion();
+        try {
+            this.startRoom = await connectionManager.initGameConnexion();
+        } catch (e) {
+            this.sceneManager.start(FourOFourSceneName, {
+                url: window.location.pathname.toString()
+            });
+        }
         this.loadMap(this.startRoom.url, this.startRoom.ID);
     }
 
@@ -40,8 +47,8 @@ export class GameManager {
     getCharacterSelected(): string[] {
         return this.characterLayers;
     }
-    
-     
+
+
     public loadMap(mapUrl: string, roomID: string): void {
         console.log('Loading map '+roomID+' at url '+mapUrl);
         const gameIndex = this.sceneManager.getIndex(roomID);
@@ -57,7 +64,7 @@ export class GameManager {
         const endPos = mapUrlStart.indexOf(".json");
         return mapUrlStart.substring(startPos, endPos);
     }
-    
+
     public async goToStartingMap() {
         this.sceneManager.start(this.startRoom.ID, {startLayerName: 'global'});
     }

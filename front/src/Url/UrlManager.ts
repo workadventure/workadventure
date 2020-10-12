@@ -16,7 +16,7 @@ class UrlManager {
             return GameConnexionTypes.anonymous;
         } else if (url.indexOf('@/') > -1) {
             return GameConnexionTypes.organization;
-        } else if(url.indexOf('register/')) {
+        } else if(url.indexOf('register/') > -1) {
             return GameConnexionTypes.register
         } else {
             return GameConnexionTypes.unknown

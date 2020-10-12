@@ -53,7 +53,7 @@ class ConnectionManager {
                 return Promise.reject('Could not find a user in localstorage');
             }
         }
-        return Promise.reject('ConnexionManager initialization failed');
+        return Promise.reject('ConnexionManager initialization failed: invalid URL');
     }
 
     public initBenchmark(): void {
