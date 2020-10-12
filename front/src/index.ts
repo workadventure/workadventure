@@ -13,6 +13,7 @@ import {CustomizeScene} from "./Phaser/Login/CustomizeScene";
 import {CoWebsiteManager} from "./WebRtc/CoWebsiteManager";
 import {gameManager} from "./Phaser/Game/GameManager";
 import {ResizableScene} from "./Phaser/Login/ResizableScene";
+import {EntryScene} from "./Phaser/Login/EntryScene";
 
 //CoWebsiteManager.loadCoWebsite('https://thecodingmachine.com');
 
@@ -30,7 +31,7 @@ const config: GameConfig = {
     width: width / RESOLUTION,
     height: height / RESOLUTION,
     parent: "game",
-    scene: [LoginScene, SelectCharacterScene, EnableCameraScene, ReconnectingScene, FourOFourScene, CustomizeScene],
+    scene: [EntryScene, LoginScene, SelectCharacterScene, EnableCameraScene, ReconnectingScene, FourOFourScene, CustomizeScene],
     zoom: RESOLUTION,
     physics: {
         default: "arcade",
@@ -50,8 +51,6 @@ const config: GameConfig = {
 cypressAsserter.gameStarted();
 
 const game = new Phaser.Game(config);
-
-gameManager.init(game.scene);
 
 window.addEventListener('resize', function (event) {
     const {width, height} = CoWebsiteManager.getGameSize();

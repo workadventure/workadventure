@@ -14,18 +14,10 @@ export class GameManager {
     private playerName!: string;
     private characterLayers!: string[];
     private startRoom!:Room;
-    private sceneManager!: Phaser.Scenes.SceneManager;
 
-    public async init(sceneManager: Phaser.Scenes.SceneManager) {
-        this.sceneManager = sceneManager;
-        try {
-            this.startRoom = await connectionManager.initGameConnexion();
-        } catch (e) {
-            this.sceneManager.start(FourOFourSceneName, {
-                url: window.location.pathname.toString()
-            });
-        }
-        this.loadMap(this.startRoom.url, this.startRoom.ID);
+    public async init(scenePlugin: Phaser.Scenes.ScenePlugin) {
+        this.startRoom = await connectionManager.initGameConnexion();
+        this.loadMap(this.startRoom.url, this.startRoom.ID, scenePlugin);
     }
 
     public setPlayerName(name: string): void {
@@ -49,12 +41,13 @@ export class GameManager {
     }
 
 
-    public loadMap(mapUrl: string, roomID: string): void {
+    public loadMap(mapUrl: string, roomID: string, scenePlugin: Phaser.Scenes.ScenePlugin): void {
         console.log('Loading map '+roomID+' at url '+mapUrl);
-        const gameIndex = this.sceneManager.getIndex(roomID);
+        const gameIndex = scenePlugin.getIndex(mapUrl);
         if(gameIndex === -1){
             const game : Phaser.Scene = GameScene.createFromUrl(mapUrl, roomID);
-            this.sceneManager.add(roomID, game, false);
+            console.log('Adding scene '+mapUrl);
+            scenePlugin.add(mapUrl, game, false);
         }
     }
 
@@ -65,8 +58,9 @@ export class GameManager {
         return mapUrlStart.substring(startPos, endPos);
     }
 
-    public async goToStartingMap() {
-        this.sceneManager.start(this.startRoom.ID, {startLayerName: 'global'});
+    public async goToStartingMap(scenePlugin: Phaser.Scenes.ScenePlugin) {
+        console.log('Starting scene '+this.startRoom.url);
+        scenePlugin.start(this.startRoom.url, {startLayerName: 'global'});
     }
 }
 

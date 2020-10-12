@@ -266,7 +266,7 @@ export class EnableCameraScene extends Phaser.Scene {
         mediaManager.stopCamera();
         mediaManager.stopMicrophone();
 
-        gameManager.goToStartingMap();
+        gameManager.goToStartingMap(this.scene);
     }
 
     private async getDevices() {

@@ -8,7 +8,7 @@ export enum GameConnexionTypes {
 
 //this class is responsible with analysing and editing the game's url
 class UrlManager {
-    
+
     //todo: use that to detect if we can find a token in localstorage
     public getGameConnexionType(): GameConnexionTypes {
         const url = window.location.pathname.toString();
@@ -22,14 +22,14 @@ class UrlManager {
             return GameConnexionTypes.unknown
         }
     }
-    
+
     public getAnonymousMapUrlStart():string {
         const match = /\/_\/global\/(.+)/.exec(window.location.pathname.toString())
         if (!match) throw new Error('Could not extract startmap url from'+window.location.pathname);
-        return match[1];
-        
+        return window.location.protocol+'//'+match[1];
+
     }
-    
+
     public getOrganizationToken(): string|null {
         const match = /\/register\/(.+)/.exec(window.location.pathname.toString());
         return match ? match [1] : null;
@@ -46,7 +46,7 @@ class UrlManager {
         history.pushState({}, 'WorkAdventure', newUrl);
         return newUrl;
     }
-    
+
 }
 
 export const urlManager = new UrlManager();

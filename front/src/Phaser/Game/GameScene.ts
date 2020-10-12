@@ -139,11 +139,11 @@ export class GameScene extends ResizableScene implements CenterListener {
     private userInputManager!: UserInputManager;
 
     static createFromUrl(mapUrlFile: string, instance: string, gameSceneKey: string|null = null): GameScene {
-        const mapKey = gameManager.getMapKeyByUrl(mapUrlFile);
+        // We use the map URL as a key
         if (gameSceneKey === null) {
-            gameSceneKey = mapKey;
+            gameSceneKey = mapUrlFile;
         }
-        return new GameScene(mapKey, mapUrlFile, instance, gameSceneKey);
+        return new GameScene(mapUrlFile, mapUrlFile, instance, gameSceneKey);
     }
 
     constructor(MapKey : string, MapUrlFile: string, instance: string, gameSceneKey: string) {
@@ -418,7 +418,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         context.strokeStyle = '#ffffff';
         context.stroke();
         this.circleTexture.refresh();
-        
+
         // Let's pause the scene if the connection is not established yet
         if (this.connection === undefined) {
             // Let's wait 0.5 seconds before printing the "connecting" screen to avoid blinking
@@ -691,7 +691,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         // TODO: eventually compute a relative URL
         const absoluteExitSceneUrl = new URL(exitSceneUrl, this.MapUrlFile).href;
-        gameManager.loadMap(absoluteExitSceneUrl, instance);
+        gameManager.loadMap(absoluteExitSceneUrl, instance, this.scene);
         const exitSceneKey = instance;
 
         const tiles : number[] = layer.data as number[];
