@@ -11,11 +11,10 @@ import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
 import {OutlinePipeline} from "./Phaser/Shaders/OutlinePipeline";
 import {CustomizeScene} from "./Phaser/Login/CustomizeScene";
 import {CoWebsiteManager} from "./WebRtc/CoWebsiteManager";
-import {connectionManager} from "./Connexion/ConnectionManager";
+import {gameManager} from "./Phaser/Game/GameManager";
 import {ResizableScene} from "./Phaser/Login/ResizableScene";
 
 //CoWebsiteManager.loadCoWebsite('https://thecodingmachine.com');
-connectionManager.init();
 
 // Load Jitsi if the environment variable is set.
 if (JITSI_URL) {
@@ -51,6 +50,8 @@ const config: GameConfig = {
 cypressAsserter.gameStarted();
 
 const game = new Phaser.Game(config);
+
+gameManager.init(game.scene);
 
 window.addEventListener('resize', function (event) {
     const {width, height} = CoWebsiteManager.getGameSize();

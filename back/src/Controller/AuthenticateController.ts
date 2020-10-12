@@ -1,8 +1,7 @@
-import {URL_ROOM_STARTED} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 import { v4 } from 'uuid';
 import {HttpRequest, HttpResponse, TemplatedApp} from "uWebSockets.js";
 import {BaseController} from "./BaseController";
-import {adminApi, AdminApiData} from "../Services/AdminApi";
+import {adminApi} from "../Services/AdminApi";
 import {jwtTokenManager} from "../Services/JWTTokenManager";
 
 export interface TokenInterface {
@@ -13,18 +12,19 @@ export class AuthenticateController extends BaseController {
 
     constructor(private App : TemplatedApp) {
         super();
-        this.login();
+        this.register();
+        this.anonymLogin();
     }
 
-    //permit to login on application. Return token to connect on Websocket IO.
-    login(){
-        this.App.options("/login", (res: HttpResponse, req: HttpRequest) => {
+    //Try to login with an admin token
+    register(){
+        this.App.options("/register", (res: HttpResponse, req: HttpRequest) => {
             this.addCorsHeaders(res);
 
             res.end();
         });
 
-        this.App.post("/login", (res: HttpResponse, req: HttpRequest) => {
+        this.App.post("/register", (res: HttpResponse, req: HttpRequest) => {
             (async () => {
                 this.addCorsHeaders(res);
 
@@ -36,35 +36,25 @@ export class AuthenticateController extends BaseController {
 
                 //todo: what to do if the organizationMemberToken is already used?
                 const organizationMemberToken:string|null = param.organizationMemberToken;
-                const mapSlug:string|null = param.mapSlug;
-
+                
                 try {
-                    let userUuid;
-                    let mapUrlStart;
-                    let newUrl: string|null = null;
+                    if (typeof organizationMemberToken != 'string') throw new Error('No organization token');
+                    const data = await adminApi.fetchMemberDataByToken(organizationMemberToken);
 
-                    if (organizationMemberToken) {
-                        const data = await adminApi.fetchMemberDataByToken(organizationMemberToken);
-
-                        userUuid = data.userUuid;
-                        mapUrlStart = data.mapUrlStart;
-                        newUrl = this.getNewUrlOnAdminAuth(data)
-                    } else if (mapSlug !== null) {
-                        userUuid = v4();
-                        mapUrlStart = mapSlug;
-                        newUrl = null;
-                    } else {
-                        userUuid = v4();
-                        mapUrlStart = host.replace('api.', 'maps.') + URL_ROOM_STARTED;
-                        newUrl = '_/global/'+mapUrlStart;
-                    }
+                    const userUuid = data.userUuid;
+                    const organizationSlug = data.organizationSlug;
+                    const worldSlug = data.worldSlug;
+                    const roomSlug = data.roomSlug;
+                    const mapUrlStart = data.mapUrlStart;
 
                     const authToken = jwtTokenManager.createJWTToken(userUuid);
                     res.writeStatus("200 OK").end(JSON.stringify({
                         authToken,
                         userUuid,
+                        organizationSlug,
+                        worldSlug,
+                        roomSlug,
                         mapUrlStart,
-                        newUrl,
                     }));
 
                 } catch (e) {
@@ -75,12 +65,32 @@ export class AuthenticateController extends BaseController {
 
             })();
         });
+
     }
 
-    private getNewUrlOnAdminAuth(data:AdminApiData): string {
-        const organizationSlug = data.organizationSlug;
-        const worldSlug = data.worldSlug;
-        const roomSlug = data.roomSlug;
-        return '/@/'+organizationSlug+'/'+worldSlug+'/'+roomSlug;
+    //permit to login on application. Return token to connect on Websocket IO.
+    anonymLogin(){
+        this.App.options("/anonymLogin", (res: HttpResponse, req: HttpRequest) => {
+            this.addCorsHeaders(res);
+
+            res.end();
+        });
+
+        this.App.post("/anonymLogin", (res: HttpResponse, req: HttpRequest) => {
+            (async () => {
+                this.addCorsHeaders(res);
+
+                res.onAborted(() => {
+                    console.warn('Login request was aborted');
+                })
+
+                const userUuid = v4();
+                const authToken = jwtTokenManager.createJWTToken(userUuid);
+                res.writeStatus("200 OK").end(JSON.stringify({
+                    authToken,
+                    userUuid,
+                }));
+            })();
+        });
     }
 }

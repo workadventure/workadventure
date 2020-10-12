@@ -56,7 +56,8 @@ export class RoomConnection implements RoomConnection {
      */
     public constructor(token: string|null, roomId: string, name: string, characterLayers: string[], position: PositionInterface, viewport: ViewportInterface) {
         let url = API_URL.replace('http://', 'ws://').replace('https://', 'wss://');
-        url += '/room/'+roomId
+        url += '/room';
+        url += '?roomId='+(roomId ?encodeURIComponent(roomId):'');
         url += '?token='+(token ?encodeURIComponent(token):'');
         url += '&name='+encodeURIComponent(name);
         for (const layer of characterLayers) {

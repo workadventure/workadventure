@@ -1,5 +1,6 @@
 import {ADMIN_API_TOKEN, ADMIN_API_URL} from "../Enum/EnvironmentVariable";
-import Axios, {AxiosError} from "axios";
+import Axios from "axios";
+import {RoomIdentifier} from "../Model/RoomIdentifier";
 
 export interface AdminApiData {
     organizationSlug: string
@@ -22,13 +23,14 @@ class AdminApi {
         return res.data;
     }
 
-    async memberIsGrantedAccessToRoom(memberId: string, roomId: string): Promise<boolean> {
+    async memberIsGrantedAccessToRoom(memberId: string, roomIdentifier: RoomIdentifier): Promise<boolean> {
         if (!ADMIN_API_URL) {
             return Promise.reject('No admin backoffice set!');
         }
         try {
+            //todo: send more specialized data instead of the whole id
             const res = await Axios.get(ADMIN_API_URL+'/api/member/is-granted-access',
-                { headers: {"Authorization" : `${ADMIN_API_TOKEN}`}, params: {memberId, roomIdentifier: roomId} }
+                { headers: {"Authorization" : `${ADMIN_API_TOKEN}`}, params: {memberId, roomIdentifier: roomIdentifier.id} }
             )
             return !!res.data;
         } catch (e) {

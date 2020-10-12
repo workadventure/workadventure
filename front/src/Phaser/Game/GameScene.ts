@@ -418,15 +418,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         context.strokeStyle = '#ffffff';
         context.stroke();
         this.circleTexture.refresh();
-
-        // Let's alter browser history
-        const url = new URL(this.MapUrlFile);
-        let path = '/_/'+this.instance+'/'+url.host+url.pathname;
-        if (this.startLayerName) {
-            path += '#'+this.startLayerName;
-        }
-        window.history.pushState({}, 'WorkAdventure', path);
-
+        
         // Let's pause the scene if the connection is not established yet
         if (this.connection === undefined) {
             // Let's wait 0.5 seconds before printing the "connecting" screen to avoid blinking
@@ -686,6 +678,7 @@ export class GameScene extends ResizableScene implements CenterListener {
      * @param tileWidth
      * @param tileHeight
      */
+    //todo: push that into the gameManager
     private loadNextGame(layer: ITiledMapLayer, mapWidth: number, tileWidth: number, tileHeight: number){
         const exitSceneUrl = this.getExitSceneUrl(layer);
         if (exitSceneUrl === undefined) {
@@ -698,7 +691,8 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         // TODO: eventually compute a relative URL
         const absoluteExitSceneUrl = new URL(exitSceneUrl, this.MapUrlFile).href;
-        const exitSceneKey = gameManager.loadMap(absoluteExitSceneUrl, this.scene, instance);
+        gameManager.loadMap(absoluteExitSceneUrl, instance);
+        const exitSceneKey = instance;
 
         const tiles : number[] = layer.data as number[];
         for (let key=0; key < tiles.length; key++) {
@@ -785,14 +779,6 @@ export class GameScene extends ResizableScene implements CenterListener {
         });
     }
 
-    createCollisionObject(){
-        /*this.Objects.forEach((Object : Phaser.Physics.Arcade.Sprite) => {
-            this.physics.add.collider(this.CurrentPlayer, Object, (object1, object2) => {
-                this.CurrentPlayer.say("Collision with object : " + (object2 as Phaser.Physics.Arcade.Sprite).texture.key)
-            });
-        })*/
-    }
-
     createCurrentPlayer(){
         //initialise player
         //TODO create animation moving between exit and start
@@ -809,7 +795,6 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         //create collision
         this.createCollisionWithPlayer();
-        this.createCollisionObject();
     }
 
     pushPlayerPosition(event: HasMovedEvent) {

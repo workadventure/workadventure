@@ -266,8 +266,7 @@ export class EnableCameraScene extends Phaser.Scene {
         mediaManager.stopCamera();
         mediaManager.stopMicrophone();
 
-        const {key, startLayerName} = await gameManager.loadStartingMap(this.scene);
-        this.scene.start(key, {startLayerName});
+        gameManager.goToStartingMap();
     }
 
     private async getDevices() {
