@@ -21,7 +21,8 @@ import {
     WebRtcDisconnectMessage,
     WebRtcSignalToClientMessage,
     WebRtcSignalToServerMessage,
-    WebRtcStartMessage
+    WebRtcStartMessage,
+    ReportPlayerMessage
 } from "../Messages/generated/messages_pb"
 
 import {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
@@ -401,7 +402,6 @@ export class RoomConnection implements RoomConnection {
             }
             callback(event);
         });
-
     }
 
     public getUserId(): number|null {
@@ -475,6 +475,17 @@ export class RoomConnection implements RoomConnection {
 
         const clientToServerMessage = new ClientToServerMessage();
         clientToServerMessage.setPlayglobalmessage(playGlobalMessage);
+
+        this.socket.send(clientToServerMessage.serializeBinary().buffer);
+    }
+
+    public emitReportPlayerMessage(reportedUserId: number, reportComment: string ): void {
+        const reportPlayerMessage = new ReportPlayerMessage();
+        reportPlayerMessage.setReporteduserid(reportedUserId);
+        reportPlayerMessage.setReportcomment(reportComment);
+
+        const clientToServerMessage = new ClientToServerMessage();
+        clientToServerMessage.setReportplayermessage(reportPlayerMessage);
 
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }

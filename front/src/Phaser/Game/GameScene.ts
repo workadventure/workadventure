@@ -601,6 +601,9 @@ export class GameScene extends ResizableScene implements CenterListener {
                 this.connection.setSilent(true);
             }
         });
+
+        //lisen event to report user
+        this.onReportUser();
     }
 
     private switchLayoutMode(): void {
@@ -1180,5 +1183,11 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     public onCenterChange(): void {
         this.updateCameraOffset();
+    }
+
+    public onReportUser(){
+        this.events.on('reportUser', (message: {reportedUserId: number, reportComment: string}) => {
+            this.connection.emitReportPlayerMessage(message.reportedUserId, message.reportComment);
+        });
     }
 }

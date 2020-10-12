@@ -46,8 +46,7 @@ export abstract class Character extends Container {
     public PlayerValue: string;
     public sprites: Map<string, Sprite>;
     private lastDirection: string = PlayerAnimationNames.WalkDown;
-    private report: Sprite;
-    private teleportation: Sprite;
+    //private teleportation: Sprite;
 
     constructor(scene: Phaser.Scene,
                 x: number,
@@ -65,14 +64,6 @@ export abstract class Character extends Container {
         for (const texture of textures) {
             const sprite = new Sprite(scene, 0, 0, texture, frame);
             sprite.setInteractive({useHandCursor: true});
-            sprite.on('pointerover', () => {
-                this.report.visible = true;
-                this.teleportation.visible = true;
-            });
-            sprite.on('pointerup', () => {
-                this.report.visible = true;
-                this.teleportation.visible = true;
-            });
             this.add(sprite);
             this.getPlayerAnimations(texture).forEach(d => {
                 this.scene.anims.create({
@@ -87,23 +78,14 @@ export abstract class Character extends Container {
             this.sprites.set(texture, sprite);
         }
 
-        this.report = new Sprite(scene, 20, -10, 'report_flag', 3);
-        this.report.setInteractive();
-        this.report.visible = false;
-        this.report.on('pointerup', () => {
-            this.report.visible = false;
-            this.teleportation.visible = false;
-        });
-        this.add(this.report);
-
-        this.teleportation = new Sprite(scene, -20, -10, 'teleportation', 3);
+        /*this.teleportation = new Sprite(scene, -20, -10, 'teleportation', 3);
         this.teleportation.setInteractive();
         this.teleportation.visible = false;
         this.teleportation.on('pointerup', () => {
             this.report.visible = false;
             this.teleportation.visible = false;
         });
-        this.add(this.teleportation);
+        this.add(this.teleportation);*/
 
         this.PlayerValue = name;
         this.playerName = new BitmapText(scene, x, y - 25, 'main_font', name, 8);

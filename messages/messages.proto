@@ -54,6 +54,11 @@ message WebRtcSignalToServerMessage {
   string signal = 2;
 }
 
+message ReportPlayerMessage {
+  int32 reportedUserId = 1;
+  string reportComment = 2;
+}
+
 message ClientToServerMessage {
   oneof message {
     JoinRoomMessage joinRoomMessage = 1;
@@ -66,6 +71,7 @@ message ClientToServerMessage {
     WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 8;
     PlayGlobalMessage playGlobalMessage = 9;
     StopGlobalMessage stopGlobalMessage = 10;
+    ReportPlayerMessage reportPlayerMessage = 11;
   }
 }
 

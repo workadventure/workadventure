@@ -42,7 +42,7 @@ import {
     SilentMessage,
     WebRtcSignalToClientMessage,
     WebRtcSignalToServerMessage,
-    WebRtcStartMessage, WebRtcDisconnectMessage, PlayGlobalMessage
+    WebRtcStartMessage, WebRtcDisconnectMessage, PlayGlobalMessage, ReportPlayerMessage
 } from "../Messages/generated/messages_pb";
 import {UserMovesMessage} from "../Messages/generated/messages_pb";
 import Direction = PositionMessage.Direction;
@@ -50,6 +50,7 @@ import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
 import {App, HttpRequest, TemplatedApp, WebSocket} from "uWebSockets.js"
 import {parse} from "query-string";
 import {cpuTracker} from "../Services/CpuTracker";
+import axios from "axios";
 
 function emitInBatch(socket: ExSocketInterface, payload: SubMessage): void {
     socket.batchedMessages.addPayload(payload);
@@ -267,11 +268,13 @@ export class IoSocketController {
                 } else if (message.hasItemeventmessage()) {
                     this.handleItemEvent(client, message.getItemeventmessage() as ItemEventMessage);
                 } else if (message.hasWebrtcsignaltoservermessage()) {
-                    this.emitVideo(client, message.getWebrtcsignaltoservermessage() as WebRtcSignalToServerMessage)
+                    this.emitVideo(client, message.getWebrtcsignaltoservermessage() as WebRtcSignalToServerMessage);
                 } else if (message.hasWebrtcscreensharingsignaltoservermessage()) {
-                    this.emitScreenSharing(client, message.getWebrtcscreensharingsignaltoservermessage() as WebRtcSignalToServerMessage)
+                    this.emitScreenSharing(client, message.getWebrtcscreensharingsignaltoservermessage() as WebRtcSignalToServerMessage);
                 } else if (message.hasPlayglobalmessage()) {
-                    this.emitPlayGlobalMessage(client, message.getPlayglobalmessage() as PlayGlobalMessage)
+                    this.emitPlayGlobalMessage(client, message.getPlayglobalmessage() as PlayGlobalMessage);
+                } else if (message.hasReportplayermessage()){
+                    this.handleReportMessage(client, message.getReportplayermessage() as ReportPlayerMessage);
                 }
 
                     /* Ok is false if backpressure was built up, wait for drain */
@@ -543,6 +546,24 @@ export class IoSocketController {
             world.setItemState(itemEvent.itemId, itemEvent.state);
         } catch (e) {
             console.error('An error occurred on "item_event"');
+            console.error(e);
+        }
+    }
+
+    private handleReportMessage(client: ExSocketInterface, reportPlayerMessage: ReportPlayerMessage) {
+        try {
+            let reportedSocket = this.sockets.get(reportPlayerMessage.getReporteduserid());
+            if(!reportedSocket){
+                throw 'reported socket user not found';
+            }
+            //TODO report user on admin application
+            axios.post('/report', {
+                reportedUserId: reportPlayerMessage.getReporteduserid(),
+                reportedUserComment: reportPlayerMessage.getReportcomment(),
+                reporterUserId: client.userUuid,
+            });
+        } catch (e) {
+            console.error('An error occurred on "handleReportMessage"');
             console.error(e);
         }
     }
