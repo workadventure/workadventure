@@ -16,6 +16,7 @@ import {
     ITiledMapLayerProperty, ITiledMapObject,
     ITiledTileSet
 } from "../Map/ITiledMap";
+import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Character";
 import {AddPlayerInterface} from "./AddPlayerInterface";
 import {PlayerAnimationNames} from "../Player/Animation";
 import {PlayerMovement} from "./PlayerMovement";

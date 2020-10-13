@@ -31,6 +31,7 @@ import {
     WebRtcStartMessage,
     WebRtcDisconnectMessage,
     PlayGlobalMessage,
+    ReportPlayerMessage,
     TeleportMessageMessage
 } from "../Messages/generated/messages_pb";
 import {UserMovesMessage} from "../Messages/generated/messages_pb";
@@ -86,6 +87,8 @@ export class IoSocketController {
 
         this.ioConnection();
     }
+
+
 
     ioConnection() {
         this.app.ws('/room', {
