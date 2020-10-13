@@ -269,6 +269,11 @@ export class GameScene extends ResizableScene implements CenterListener {
                 item.fire(message.event, message.state, message.parameters);
             }));
 
+            connection.receiveTeleportMessage((map: string) => {
+                //TODO
+                console.log('receiveTeleportMessage', map);
+            })
+
             // When connection is performed, let's connect SimplePeer
             this.simplePeer = new SimplePeer(this.connection);
             this.GlobalMessageManager = new GlobalMessageManager(this.connection);

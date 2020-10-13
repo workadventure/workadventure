@@ -172,6 +172,10 @@ message WebRtcSignalToClientMessage {
   string signal = 2;
 }
 
+message TeleportMessageMessage{
+  string map = 1;
+}
+
 message ServerToClientMessage {
   oneof message {
     BatchMessage batchMessage = 1;
@@ -184,5 +188,6 @@ message ServerToClientMessage {
     WebRtcDisconnectMessage webRtcDisconnectMessage = 8;
     PlayGlobalMessage playGlobalMessage = 9;
     StopGlobalMessage stopGlobalMessage = 10;
+    TeleportMessageMessage teleportMessageMessage = 11;
   }
 }

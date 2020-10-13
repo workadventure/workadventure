@@ -49,7 +49,7 @@ import {
     SilentMessage,
     WebRtcSignalToClientMessage,
     WebRtcSignalToServerMessage,
-    WebRtcStartMessage, WebRtcDisconnectMessage, PlayGlobalMessage, ReportPlayerMessage
+    WebRtcStartMessage, WebRtcDisconnectMessage, PlayGlobalMessage, ReportPlayerMessage, TeleportMessageMessage
 } from "../Messages/generated/messages_pb";
 import {UserMovesMessage} from "../Messages/generated/messages_pb";
 import Direction = PositionMessage.Direction;
@@ -107,22 +107,6 @@ export class IoSocketController {
         }
         return true;
     }
-
-    /**
-     *
-     * @param token
-     */
-/*    searchClientByToken(token: string): ExSocketInterface | null {
-        const clients: ExSocketInterface[] = Object.values(this.Io.sockets.sockets) as ExSocketInterface[];
-        for (let i = 0; i < clients.length; i++) {
-            const client = clients[i];
-            if (client.token !== token) {
-                continue
-            }
-            return client;
-        }
-        return null;
-    }*/
 
     private async authenticate(req: HttpRequest): Promise<{ token: string, userUuid: string }> {
         //console.log(socket.handshake.query.token);
@@ -920,5 +904,28 @@ export class IoSocketController {
 
     public getWorlds(): Map<string, World> {
         return this.Worlds;
+    }
+
+    /**
+     *
+     * @param token
+     */
+    searchClientByUuid(uuid: string): ExSocketInterface | null {
+        for(let socket of this.sockets.values()){
+            if(socket.userUuid === uuid){
+                return socket;
+            }
+        }
+        return null;
+    }
+
+    public teleport(userUuid: string) {
+        let user = this.searchClientByUuid(userUuid);
+        if(!user){
+            throw 'User not found';
+        }
+        const teleportMessageMessage = new TeleportMessageMessage();
+        teleportMessageMessage.setMap(`/teleport/${user.userUuid}`);
+        user.send(teleportMessageMessage.serializeBinary().buffer, true);
     }
 }

@@ -24,6 +24,8 @@ export enum EventMessage{
 
     PLAY_GLOBAL_MESSAGE = "play-global-message",
     STOP_GLOBAL_MESSAGE = "stop-global-message",
+
+    TELEPORT = "teleport",
 }
 
 export interface PointInterface {
