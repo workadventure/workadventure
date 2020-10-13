@@ -1,10 +1,7 @@
 import {GameScene} from "./GameScene";
-import {
-    StartMapInterface
-} from "../../Connexion/ConnexionModels";
-import Axios from "axios";
-import {API_URL} from "../../Enum/EnvironmentVariable";
 import {connectionManager} from "../../Connexion/ConnectionManager";
+import {Room} from "../../Connexion/Room";
+import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
 
 export interface HasMovedEvent {
     direction: string;
@@ -16,6 +13,12 @@ export interface HasMovedEvent {
 export class GameManager {
     private playerName!: string;
     private characterLayers!: string[];
+    private startRoom!:Room;
+
+    public async init(scenePlugin: Phaser.Scenes.ScenePlugin) {
+        this.startRoom = await connectionManager.initGameConnexion();
+        await this.loadMap(this.startRoom, scenePlugin);
+    }
 
     public setPlayerName(name: string): void {
         this.playerName = name;
@@ -29,15 +32,6 @@ export class GameManager {
         this.characterLayers = layers;
     }
 
-    loadStartMap() : Promise<StartMapInterface> {
-        return connectionManager.getMapUrlStart().then(mapUrlStart => {
-            return {
-                mapUrlStart: mapUrlStart,
-                startInstance: "global", //todo: is this property still usefull?
-            }
-        });
-    }
-
     getPlayerName(): string {
         return this.playerName;
     }
@@ -46,15 +40,31 @@ export class GameManager {
         return this.characterLayers;
     }
 
-    loadMap(mapUrl: string, scene: Phaser.Scenes.ScenePlugin, instance: string): string {
-        const sceneKey = GameScene.getMapKeyByUrl(mapUrl);
 
-        const gameIndex = scene.getIndex(sceneKey);
+    public async loadMap(room: Room, scenePlugin: Phaser.Scenes.ScenePlugin): Promise<void> {
+        const roomID = room.id;
+        const mapUrl = await room.getMapUrl();
+        console.log('Loading map '+roomID+' at url '+mapUrl);
+
+        const gameIndex = scenePlugin.getIndex(mapUrl);
         if(gameIndex === -1){
-            const game : Phaser.Scene = GameScene.createFromUrl(mapUrl, instance);
-            scene.add(sceneKey, game, false);
+            const game : Phaser.Scene = GameScene.createFromUrl(room, mapUrl);
+            console.log('Adding scene '+mapUrl);
+            scenePlugin.add(mapUrl, game, false);
         }
-        return sceneKey;
+    }
+
+    public getMapKeyByUrl(mapUrlStart: string) : string {
+        // FIXME: the key should be computed from the full URL of the map.
+        const startPos = mapUrlStart.indexOf('://')+3;
+        const endPos = mapUrlStart.indexOf(".json");
+        return mapUrlStart.substring(startPos, endPos);
+    }
+
+    public async goToStartingMap(scenePlugin: Phaser.Scenes.ScenePlugin) {
+        const url = await this.startRoom.getMapUrl();
+        console.log('Starting scene '+url);
+        scenePlugin.start(url, {startLayerName: 'global'});
     }
 }
 

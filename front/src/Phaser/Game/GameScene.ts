@@ -45,6 +45,7 @@ import {RoomConnection} from "../../Connexion/RoomConnection";
 import {GlobalMessageManager} from "../../Administration/GlobalMessageManager";
 import {ConsoleGlobalMessageManager} from "../../Administration/ConsoleGlobalMessageManager";
 import {ResizableScene} from "../Login/ResizableScene";
+import {Room} from "../../Connexion/Room";
 
 
 export enum Textures {
@@ -107,7 +108,6 @@ export class GameScene extends ResizableScene implements CenterListener {
     private simplePeer!: SimplePeer;
     private GlobalMessageManager!: GlobalMessageManager;
     private ConsoleGlobalMessageManager!: ConsoleGlobalMessageManager;
-    private connectionPromise!: Promise<RoomConnection>
     private connectionAnswerPromise: Promise<RoomJoinedMessageInterface>;
     private connectionAnswerPromiseResolve!: (value?: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>) => void;
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
@@ -138,27 +138,27 @@ export class GameScene extends ResizableScene implements CenterListener {
     private outlinedItem: ActionableItem|null = null;
     private userInputManager!: UserInputManager;
 
-    static createFromUrl(mapUrlFile: string, instance: string, key: string|null = null): GameScene {
-        const mapKey = GameScene.getMapKeyByUrl(mapUrlFile);
-        if (key === null) {
-            key = mapKey;
+    static createFromUrl(room: Room, mapUrlFile: string, gameSceneKey: string|null = null): GameScene {
+        // We use the map URL as a key
+        if (gameSceneKey === null) {
+            gameSceneKey = mapUrlFile;
         }
-        return new GameScene(mapKey, mapUrlFile, instance, key);
+        return new GameScene(room, mapUrlFile, gameSceneKey);
     }
 
-    constructor(MapKey : string, MapUrlFile: string, instance: string, key: string) {
+    constructor(private room: Room, MapUrlFile: string, gameSceneKey: string) {
         super({
-            key: key
+            key: gameSceneKey
         });
 
         this.GameManager = gameManager;
         this.Terrains = [];
         this.groups = new Map<number, Sprite>();
-        this.instance = instance;
+        this.instance = room.getInstance();
 
-        this.MapKey = MapKey;
+        this.MapKey = MapUrlFile;
         this.MapUrlFile = MapUrlFile;
-        this.RoomId = this.instance + '__' + MapKey;
+        this.RoomId = room.id;
 
         this.createPromise = new Promise<void>((resolve, reject): void => {
             this.createPromiseResolve = resolve;
@@ -193,110 +193,6 @@ export class GameScene extends ResizableScene implements CenterListener {
         loadObject(this.load);
 
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
-
-        this.connectionPromise = connectionManager.connectToRoomSocket().then((connection : RoomConnection) => {
-            this.connection = connection;
-
-            this.connection.emitPlayerDetailsMessage(gameManager.getPlayerName(), gameManager.getCharacterSelected())
-
-            connection.onUserJoins((message: MessageUserJoined) => {
-                const userMessage: AddPlayerInterface = {
-                    userId: message.userId,
-                    characterLayers: message.characterLayers,
-                    name: message.name,
-                    position: message.position
-                }
-                this.addPlayer(userMessage);
-            });
-
-            connection.onUserMoved((message: UserMovedMessage) => {
-                const position = message.getPosition();
-                if (position === undefined) {
-                    throw new Error('Position missing from UserMovedMessage');
-                }
-                //console.log('Received position ', position.getX(), position.getY(), "from user", message.getUserid());
-
-                const messageUserMoved: MessageUserMovedInterface = {
-                    userId: message.getUserid(),
-                    position: ProtobufClientUtils.toPointInterface(position)
-                }
-
-                this.updatePlayerPosition(messageUserMoved);
-            });
-
-            connection.onUserLeft((userId: number) => {
-                this.removePlayer(userId);
-            });
-
-            connection.onGroupUpdatedOrCreated((groupPositionMessage: GroupCreatedUpdatedMessageInterface) => {
-                this.shareGroupPosition(groupPositionMessage);
-            })
-
-            connection.onGroupDeleted((groupId: number) => {
-                try {
-                    this.deleteGroup(groupId);
-                } catch (e) {
-                    console.error(e);
-                }
-            })
-
-            connection.onServerDisconnected(() => {
-                console.log('Player disconnected from server. Reloading scene.');
-
-                this.simplePeer.closeAllConnections();
-                this.simplePeer.unregister();
-
-                const key = 'somekey'+Math.round(Math.random()*10000);
-                const game : Phaser.Scene = GameScene.createFromUrl(this.MapUrlFile, this.instance, key);
-                this.scene.add(key, game, true,
-                    {
-                        initPosition: {
-                            x: this.CurrentPlayer.x,
-                            y: this.CurrentPlayer.y
-                        }
-                    });
-
-                this.scene.stop(this.scene.key);
-                this.scene.remove(this.scene.key);
-            })
-
-            connection.onActionableEvent((message => {
-                const item = this.actionableItems.get(message.itemId);
-                if (item === undefined) {
-                    console.warn('Received an event about object "'+message.itemId+'" but cannot find this item on the map.');
-                    return;
-                }
-                item.fire(message.event, message.state, message.parameters);
-            }));
-
-            connection.receiveTeleportMessage((map: string) => {
-                //TODO
-                console.log('receiveTeleportMessage', map);
-            })
-
-            // When connection is performed, let's connect SimplePeer
-            this.simplePeer = new SimplePeer(this.connection);
-            this.GlobalMessageManager = new GlobalMessageManager(this.connection);
-
-            const self = this;
-            this.simplePeer.registerPeerConnectionListener({
-                onConnect(user: UserSimplePeerInterface) {
-                    self.presentationModeSprite.setVisible(true);
-                    self.chatModeSprite.setVisible(true);
-                },
-                onDisconnect(userId: number) {
-                    if (self.simplePeer.getNbConnections() === 0) {
-                        self.presentationModeSprite.setVisible(false);
-                        self.chatModeSprite.setVisible(false);
-                    }
-                }
-            })
-
-            this.scene.wake();
-            this.scene.sleep(ReconnectingSceneName);
-
-            return connection;
-        });
     }
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
@@ -422,7 +318,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         });
 
         //permit to set bound collision
-        this.physics.world.setBounds(0,0, this.Map.widthInPixels, this.Map.heightInPixels);
+        this.physics.world.setBounds(0, 0, this.Map.widthInPixels, this.Map.heightInPixels);
 
         //add layer on map
         this.Layers = new Array<Phaser.Tilemaps.StaticTilemapLayer>();
@@ -483,7 +379,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.EventToClickOnTile();
 
         //initialise list of other player
-        this.MapPlayers = this.physics.add.group({ immovable: true });
+        this.MapPlayers = this.physics.add.group({immovable: true});
 
         //create input to move
         this.userInputManager = new UserInputManager(this);
@@ -499,7 +395,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         // Let's generate the circle for the group delimiter
         const circleElement = Object.values(this.textures.list).find((object: Texture) => object.key === 'circleSprite');
-        if(circleElement) {
+        if (circleElement) {
             this.textures.remove('circleSprite');
         }
         this.circleTexture = this.textures.createCanvas('circleSprite', 96, 96);
@@ -510,14 +406,6 @@ export class GameScene extends ResizableScene implements CenterListener {
         context.strokeStyle = '#ffffff';
         context.stroke();
         this.circleTexture.refresh();
-
-        // Let's alter browser history
-        const url = new URL(this.MapUrlFile);
-        let path = '/_/'+this.instance+'/'+url.host+url.pathname;
-        if (this.startLayerName) {
-            path += '#'+this.startLayerName;
-        }
-        window.history.pushState({}, 'WorkAdventure', path);
 
         // Let's pause the scene if the connection is not established yet
         if (this.connection === undefined) {
@@ -532,7 +420,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         this.createPromiseResolve();
 
-        this.userInputManager.spaceEvent( () => {
+        this.userInputManager.spaceEvent(() => {
             this.outlinedItem?.activate();
         });
 
@@ -607,8 +495,131 @@ export class GameScene extends ResizableScene implements CenterListener {
             }
         });
 
-        //lisen event to report user
-        this.onReportUser();
+        const camera = this.cameras.main;
+
+        connectionManager.connectToRoomSocket(
+            this.RoomId,
+            gameManager.getPlayerName(),
+            gameManager.getCharacterSelected(),
+            {
+                x: this.startX,
+                y: this.startY
+            },
+            {
+                left: camera.scrollX,
+                top: camera.scrollY,
+                right: camera.scrollX + camera.width,
+                bottom: camera.scrollY + camera.height,
+            }).then((connection: RoomConnection) => {
+            this.connection = connection;
+
+            //this.connection.emitPlayerDetailsMessage(gameManager.getPlayerName(), gameManager.getCharacterSelected())
+            connection.onStartRoom((roomJoinedMessage: RoomJoinedMessageInterface) => {
+                this.initUsersPosition(roomJoinedMessage.users);
+                this.connectionAnswerPromiseResolve(roomJoinedMessage);
+            });
+
+            connection.onUserJoins((message: MessageUserJoined) => {
+                const userMessage: AddPlayerInterface = {
+                    userId: message.userId,
+                    characterLayers: message.characterLayers,
+                    name: message.name,
+                    position: message.position
+                }
+                this.addPlayer(userMessage);
+            });
+
+            connection.onUserMoved((message: UserMovedMessage) => {
+                const position = message.getPosition();
+                if (position === undefined) {
+                    throw new Error('Position missing from UserMovedMessage');
+                }
+                //console.log('Received position ', position.getX(), position.getY(), "from user", message.getUserid());
+
+                const messageUserMoved: MessageUserMovedInterface = {
+                    userId: message.getUserid(),
+                    position: ProtobufClientUtils.toPointInterface(position)
+                }
+
+                this.updatePlayerPosition(messageUserMoved);
+            });
+
+            connection.onUserLeft((userId: number) => {
+                this.removePlayer(userId);
+            });
+
+            connection.onGroupUpdatedOrCreated((groupPositionMessage: GroupCreatedUpdatedMessageInterface) => {
+                this.shareGroupPosition(groupPositionMessage);
+            })
+
+            connection.onGroupDeleted((groupId: number) => {
+                try {
+                    this.deleteGroup(groupId);
+                } catch (e) {
+                    console.error(e);
+                }
+            })
+
+            connection.onServerDisconnected(() => {
+                console.log('Player disconnected from server. Reloading scene.');
+
+                this.simplePeer.closeAllConnections();
+                this.simplePeer.unregister();
+
+                const gameSceneKey = 'somekey' + Math.round(Math.random() * 10000);
+                const game: Phaser.Scene = GameScene.createFromUrl(this.room, this.MapUrlFile, gameSceneKey);
+                this.scene.add(gameSceneKey, game, true,
+                    {
+                        initPosition: {
+                            x: this.CurrentPlayer.x,
+                            y: this.CurrentPlayer.y
+                        }
+                    });
+
+                this.scene.stop(this.scene.key);
+                this.scene.remove(this.scene.key);
+            })
+
+            connection.onActionableEvent((message => {
+                const item = this.actionableItems.get(message.itemId);
+                if (item === undefined) {
+                    console.warn('Received an event about object "' + message.itemId + '" but cannot find this item on the map.');
+                    return;
+                }
+                item.fire(message.event, message.state, message.parameters);
+            }));
+
+            // When connection is performed, let's connect SimplePeer
+            this.simplePeer = new SimplePeer(this.connection);
+            this.GlobalMessageManager = new GlobalMessageManager(this.connection);
+
+            const self = this;
+            this.simplePeer.registerPeerConnectionListener({
+                onConnect(user: UserSimplePeerInterface) {
+                    self.presentationModeSprite.setVisible(true);
+                    self.chatModeSprite.setVisible(true);
+                },
+                onDisconnect(userId: number) {
+                    if (self.simplePeer.getNbConnections() === 0) {
+                        self.presentationModeSprite.setVisible(false);
+                        self.chatModeSprite.setVisible(false);
+                    }
+                }
+            })
+
+            //listen event to share position of user
+            this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this))
+            this.CurrentPlayer.on(hasMovedEventName, this.outlineItem.bind(this))
+            this.CurrentPlayer.on(hasMovedEventName, (event: HasMovedEvent) => {
+                this.gameMap.setPosition(event.x, event.y);
+            })
+
+
+            this.scene.wake();
+            this.scene.sleep(ReconnectingSceneName);
+
+            return connection;
+        });
     }
 
     private switchLayoutMode(): void {
@@ -655,6 +666,7 @@ export class GameScene extends ResizableScene implements CenterListener {
      * @param tileWidth
      * @param tileHeight
      */
+    //todo: push that into the gameManager
     private loadNextGame(layer: ITiledMapLayer, mapWidth: number, tileWidth: number, tileHeight: number){
         const exitSceneUrl = this.getExitSceneUrl(layer);
         if (exitSceneUrl === undefined) {
@@ -665,9 +677,20 @@ export class GameScene extends ResizableScene implements CenterListener {
             instance = this.instance;
         }
 
+        console.log('existSceneUrl', exitSceneUrl);
+        console.log('existSceneInstance', instance);
+
         // TODO: eventually compute a relative URL
+
+        // TODO: handle /@/ URL CASES!
+
         const absoluteExitSceneUrl = new URL(exitSceneUrl, this.MapUrlFile).href;
-        const exitSceneKey = gameManager.loadMap(absoluteExitSceneUrl, this.scene, instance);
+        const absoluteExitSceneUrlWithoutProtocol = absoluteExitSceneUrl.toString().substr(absoluteExitSceneUrl.toString().indexOf('://')+3);
+        const roomId = '_/'+instance+'/'+absoluteExitSceneUrlWithoutProtocol;
+        console.log("Foo", instance, absoluteExitSceneUrlWithoutProtocol);
+        const room = new Room(roomId);
+        gameManager.loadMap(room, this.scene);
+        const exitSceneKey = roomId;
 
         const tiles : number[] = layer.data as number[];
         for (let key=0; key < tiles.length; key++) {
@@ -688,10 +711,12 @@ export class GameScene extends ResizableScene implements CenterListener {
             if (this.PositionNextScene[y] === undefined) {
                 this.PositionNextScene[y] = new Array<{key: string, hash: string}>();
             }
-            this.PositionNextScene[y][x] = {
-                key: exitSceneKey,
-                hash
-            }
+            room.getMapUrl().then((url: string) => {
+                this.PositionNextScene[y][x] = {
+                    key: url,
+                    hash
+                }
+            })
         }
     }
 
@@ -754,14 +779,6 @@ export class GameScene extends ResizableScene implements CenterListener {
         });
     }
 
-    createCollisionObject(){
-        /*this.Objects.forEach((Object : Phaser.Physics.Arcade.Sprite) => {
-            this.physics.add.collider(this.CurrentPlayer, Object, (object1, object2) => {
-                this.CurrentPlayer.say("Collision with object : " + (object2 as Phaser.Physics.Arcade.Sprite).texture.key)
-            });
-        })*/
-    }
-
     createCurrentPlayer(){
         //initialise player
         //TODO create animation moving between exit and start
@@ -778,33 +795,6 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         //create collision
         this.createCollisionWithPlayer();
-        this.createCollisionObject();
-
-        //join room
-        this.connectionPromise.then((connection: RoomConnection) => {
-            const camera = this.cameras.main;
-            connection.joinARoom(this.RoomId,
-                this.startX,
-                this.startY,
-                PlayerAnimationNames.WalkDown,
-                false, {
-                    left: camera.scrollX,
-                    top: camera.scrollY,
-                    right: camera.scrollX + camera.width,
-                    bottom: camera.scrollY + camera.height,
-                }).then((roomJoinedMessage: RoomJoinedMessageInterface) => {
-                this.initUsersPosition(roomJoinedMessage.users);
-                this.connectionAnswerPromiseResolve(roomJoinedMessage);
-            });
-            // FIXME: weirdly enough we don't use the result of joinARoom !!!!!!
-
-            //listen event to share position of user
-            this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this))
-            this.CurrentPlayer.on(hasMovedEventName, this.outlineItem.bind(this))
-            this.CurrentPlayer.on(hasMovedEventName, (event: HasMovedEvent) => {
-                this.gameMap.setPosition(event.x, event.y);
-            })
-        });
     }
 
     pushPlayerPosition(event: HasMovedEvent) {
@@ -974,7 +964,6 @@ export class GameScene extends ResizableScene implements CenterListener {
             type: "InitUserPositionEvent",
             event: usersPosition
         });
-
     }
 
     /**
@@ -1128,12 +1117,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.groups.delete(groupId);
     }
 
-    public static getMapKeyByUrl(mapUrlStart: string) : string {
-        // FIXME: the key should be computed from the full URL of the map.
-        const startPos = mapUrlStart.indexOf('://')+3;
-        const endPos = mapUrlStart.indexOf(".json");
-        return mapUrlStart.substring(startPos, endPos);
-    }
+
 
     /**
      * Sends to the server an event emitted by one of the ActionableItems.
@@ -1188,11 +1172,5 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     public onCenterChange(): void {
         this.updateCameraOffset();
-    }
-
-    public onReportUser(){
-        this.events.on('reportUser', (message: {reportedUserId: number, reportComment: string}) => {
-            this.connection.emitReportPlayerMessage(message.reportedUserId, message.reportComment);
-        });
     }
 }

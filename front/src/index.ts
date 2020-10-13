@@ -11,11 +11,11 @@ import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
 import {OutlinePipeline} from "./Phaser/Shaders/OutlinePipeline";
 import {CustomizeScene} from "./Phaser/Login/CustomizeScene";
 import {CoWebsiteManager} from "./WebRtc/CoWebsiteManager";
-import {connectionManager} from "./Connexion/ConnectionManager";
+import {gameManager} from "./Phaser/Game/GameManager";
 import {ResizableScene} from "./Phaser/Login/ResizableScene";
+import {EntryScene} from "./Phaser/Login/EntryScene";
 
 //CoWebsiteManager.loadCoWebsite('https://thecodingmachine.com');
-connectionManager.init();
 
 // Load Jitsi if the environment variable is set.
 if (JITSI_URL) {
@@ -31,14 +31,7 @@ const config: GameConfig = {
     width: width / RESOLUTION,
     height: height / RESOLUTION,
     parent: "game",
-    scene: [
-        LoginScene,
-        SelectCharacterScene,
-        EnableCameraScene,
-        ReconnectingScene,
-        FourOFourScene,
-        CustomizeScene
-    ],
+    scene: [EntryScene, LoginScene, SelectCharacterScene, EnableCameraScene, ReconnectingScene, FourOFourScene, CustomizeScene],
     zoom: RESOLUTION,
     physics: {
         default: "arcade",

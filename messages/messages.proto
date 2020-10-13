@@ -38,12 +38,6 @@ message SetPlayerDetailsMessage {
   repeated string characterLayers = 2;
 }
 
-message JoinRoomMessage {
-  string roomId = 1;
-  PositionMessage position = 2;
-  ViewportMessage viewport = 3;
-}
-
 message UserMovesMessage {
   PositionMessage position = 1;
   ViewportMessage viewport = 2;
@@ -61,7 +55,6 @@ message ReportPlayerMessage {
 
 message ClientToServerMessage {
   oneof message {
-    JoinRoomMessage joinRoomMessage = 1;
     UserMovesMessage userMovesMessage = 2;
     SilentMessage silentMessage = 3;
     ViewportMessage viewportMessage = 4;
@@ -142,10 +135,6 @@ message ErrorMessage {
   string message = 1;
 }
 
-message SetUserIdMessage {
-  int32 userId = 1;
-}
-
 message ItemStateMessage {
   int32 itemId = 1;
   string stateJson = 2;
@@ -155,6 +144,7 @@ message RoomJoinedMessage {
   repeated UserJoinedMessage user = 1;
   repeated GroupUpdateMessage group = 2;
   repeated ItemStateMessage item = 3;
+  int32 currentUserId = 4;
 }
 
 message WebRtcStartMessage {
@@ -181,13 +171,12 @@ message ServerToClientMessage {
     BatchMessage batchMessage = 1;
     ErrorMessage errorMessage = 2;
     RoomJoinedMessage roomJoinedMessage = 3;
-    SetUserIdMessage setUserIdMessage = 4; // TODO: merge this with RoomJoinedMessage ?
-    WebRtcStartMessage webRtcStartMessage = 5;
-    WebRtcSignalToClientMessage webRtcSignalToClientMessage = 6;
-    WebRtcSignalToClientMessage webRtcScreenSharingSignalToClientMessage = 7;
-    WebRtcDisconnectMessage webRtcDisconnectMessage = 8;
-    PlayGlobalMessage playGlobalMessage = 9;
-    StopGlobalMessage stopGlobalMessage = 10;
-    TeleportMessageMessage teleportMessageMessage = 11;
+    WebRtcStartMessage webRtcStartMessage = 4;
+    WebRtcSignalToClientMessage webRtcSignalToClientMessage = 5;
+    WebRtcSignalToClientMessage webRtcScreenSharingSignalToClientMessage = 6;
+    WebRtcDisconnectMessage webRtcDisconnectMessage = 7;
+    PlayGlobalMessage playGlobalMessage = 8;
+    StopGlobalMessage stopGlobalMessage = 9;
+    TeleportMessageMessage teleportMessageMessage = 10;
   }
 }
