@@ -25,7 +25,6 @@ import {
     RoomJoinedMessage,
     ItemStateMessage,
     ServerToClientMessage,
-    SetUserIdMessage,
     SilentMessage,
     WebRtcSignalToClientMessage,
     WebRtcSignalToServerMessage,
@@ -86,7 +85,7 @@ export class IoSocketController {
         this.ioConnection();
     }
 
-    
+
 
     ioConnection() {
         this.app.ws('/room', {
@@ -114,7 +113,7 @@ export class IoSocketController {
                         const websocketExtensions = req.getHeader('sec-websocket-extensions');
 
                         const roomId = query.roomId;
-                        //todo: better validation: /\/_\/.*\/.*/ or /\/@\/.*\/.*\/.*/ 
+                        //todo: better validation: /\/_\/.*\/.*/ or /\/@\/.*\/.*\/.*/
                         if (typeof roomId !== 'string') {
                             throw new Error('Undefined room ID: ');
                         }
@@ -153,7 +152,7 @@ export class IoSocketController {
                                 throw new Error('Client cannot acces this ressource.')
                             } else {
                                 console.log('access granted for user '+userUuid+' and room '+roomId);
-                            }   
+                            }
                         }
 
                         if (upgradeAborted.aborted) {
@@ -228,16 +227,6 @@ export class IoSocketController {
 
                 // Let's join the room
                 this.handleJoinRoom(client, client.roomId, client.position, client.viewport, client.name, client.characterLayers);
-
-                const setUserIdMessage = new SetUserIdMessage();
-                setUserIdMessage.setUserid(client.userId);
-
-                const serverToClientMessage = new ServerToClientMessage();
-                serverToClientMessage.setSetuseridmessage(setUserIdMessage);
-
-                if (!client.disconnecting) {
-                    client.send(serverToClientMessage.serializeBinary().buffer, true);
-                }
             },
             message: (ws, arrayBuffer, isBinary): void => {
                 const client = ws as ExSocketInterface;
@@ -362,6 +351,8 @@ export class IoSocketController {
 
                 roomJoinedMessage.addItem(itemStateMessage);
             }
+
+            roomJoinedMessage.setCurrentuserid(client.userId);
 
             const serverToClientMessage = new ServerToClientMessage();
             serverToClientMessage.setRoomjoinedmessage(roomJoinedMessage);

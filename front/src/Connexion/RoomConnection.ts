@@ -11,7 +11,6 @@ import {
     RoomJoinedMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
-    SetUserIdMessage,
     SilentMessage, StopGlobalMessage,
     UserJoinedMessage,
     UserLeftMessage,
@@ -58,7 +57,7 @@ export class RoomConnection implements RoomConnection {
         let url = API_URL.replace('http://', 'ws://').replace('https://', 'wss://');
         url += '/room';
         url += '?roomId='+(roomId ?encodeURIComponent(roomId):'');
-        url += '?token='+(token ?encodeURIComponent(token):'');
+        url += '&token='+(token ?encodeURIComponent(token):'');
         url += '&name='+encodeURIComponent(name);
         for (const layer of characterLayers) {
             url += '&characterLayers='+encodeURIComponent(layer);
@@ -124,13 +123,13 @@ export class RoomConnection implements RoomConnection {
                     items[item.getItemid()] = JSON.parse(item.getStatejson());
                 }
 
+                this.userId = roomJoinedMessage.getCurrentuserid();
+
                 this.dispatch(EventMessage.START_ROOM, {
                     users,
                     groups,
                     items
                 });
-            } else if (message.hasSetuseridmessage()) {
-                this.userId = (message.getSetuseridmessage() as SetUserIdMessage).getUserid();
             } else if (message.hasErrormessage()) {
                 console.error(EventMessage.MESSAGE_ERROR, message.getErrormessage()?.getMessage());
             } else if (message.hasWebrtcsignaltoclientmessage()) {

@@ -23,33 +23,33 @@ class ConnectionManager {
             const data = await Axios.post(`${API_URL}/register`, {organizationMemberToken}).then(res => res.data);
             this.localUser = new LocalUser(data.userUuid, data.authToken);
             localUserStore.saveUser(this.localUser);
-           
+
             const organizationSlug = data.organizationSlug;
             const worldSlug = data.worldSlug;
             const roomSlug = data.roomSlug;
             urlManager.editUrlForRoom(roomSlug, organizationSlug, worldSlug);
-            
-            const room = new Room(window.location.pathname, data.mapUrlStart)
+
+            const room = new Room(window.location.pathname);
             return Promise.resolve(room);
         } else if (connexionType === GameConnexionTypes.anonymous) {
             const localUser = localUserStore.getLocalUser();
-            
-            if (localUser) {
+
+            if (localUser && localUser.jwtToken && localUser.uuid) {
                 this.localUser = localUser
             } else {
                 const data = await Axios.post(`${API_URL}/anonymLogin`).then(res => res.data);
                 this.localUser = new LocalUser(data.userUuid, data.authToken);
                 localUserStore.saveUser(this.localUser);
             }
-            const room = new Room(window.location.pathname, urlManager.getAnonymousMapUrlStart())
+            const room = new Room(window.location.pathname);
             return Promise.resolve(room);
         } else if (connexionType == GameConnexionTypes.organization) {
             const localUser = localUserStore.getLocalUser();
 
             if (localUser) {
                 this.localUser = localUser
-                //todo: ask the node api for the correct starting map Url from its slug
-                return Promise.reject('Case not handled: need to get the map\'s url from its slug');
+                const room = new Room(window.location.pathname);
+                return Promise.resolve(room);
             } else {
                 //todo: find some kind of fallback?
                 return Promise.reject('Could not find a user in localstorage');

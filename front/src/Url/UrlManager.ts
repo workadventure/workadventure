@@ -23,13 +23,6 @@ class UrlManager {
         }
     }
 
-    public getAnonymousMapUrlStart():string {
-        const match = /\/_\/global\/(.+)/.exec(window.location.pathname.toString())
-        if (!match) throw new Error('Could not extract startmap url from'+window.location.pathname);
-        return window.location.protocol+'//'+match[1];
-
-    }
-
     public getOrganizationToken(): string|null {
         const match = /\/register\/(.+)/.exec(window.location.pathname.toString());
         return match ? match [1] : null;
