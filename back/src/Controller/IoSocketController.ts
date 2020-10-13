@@ -514,7 +514,7 @@ export class IoSocketController {
                 throw 'reported socket user not found';
             }
             //TODO report user on admin application
-            Axios.post(`${ADMIN_API_URL}/aoi/report`, {
+            Axios.post(`${ADMIN_API_URL}/api/report`, {
                     reportedUserUuid: client.userUuid,
                     reportedUserComment: reportPlayerMessage.getReportcomment(),
                     reporterUserUuid: client.userUuid,
