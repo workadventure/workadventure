@@ -581,7 +581,7 @@ div.modal-report-user{
     width: 800px;
     height: 600px;
     left: calc(50% - 400px);
-    top: calc(50% - 100px);
+    top: 100px;
     background-color: #000000ad;
 }
 
@@ -591,8 +591,8 @@ div.modal-report-user{
     height: 200px;
     z-index: 999;
     left: calc(50% - 200px);
-    top: calc(50% - 100px);
-    background-color: #00000052;
+    top: 200px;
+    background-color: #000000;
     color: white;
 }
 
@@ -602,7 +602,7 @@ div.modal-report-user{
     width: 50px;
     z-index: 999;
     left: calc(50% - 25px);
-    top: calc(50% - 250px);
+    top: 10px;
 }
 
 .modal-report-user img#cancel-report-user{
@@ -618,7 +618,7 @@ div.modal-report-user{
 
 .modal-report-user button{
     position: absolute;
-    top: calc(50% + 200px);
+    top: 450px;
     left: calc(50% - 50px);
     width: 100px;
     border: 1px solid black;
@@ -636,11 +636,20 @@ div.modal-report-user{
     transform: scale(1.1);
 }
 
-.modal-report-user p{
+.modal-report-user p#title-report-user{
     font-size: 30px;
+    color: white;
+    position: absolute;
+    top: 30px;
+    width: 100%;
+    text-align: center;
+}
+
+.modal-report-user p#body-report-user{
+    font-size: 24px;
     color: white;
     position: absolute;
     top: 90px;
     width: 100%;
-    text-align: center;
+    text-align: left;
 }

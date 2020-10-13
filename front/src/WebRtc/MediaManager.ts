@@ -562,8 +562,14 @@ export class MediaManager {
         divReport.appendChild(inputHidden);
 
         const titleMessage = document.createElement('p');
-        titleMessage.innerText = 'Vous souhaitez report : ' + userName;
+        titleMessage.id = 'title-report-user';
+        titleMessage.innerText = 'Open a report';
         divReport.appendChild(titleMessage);
+
+        const bodyMessage = document.createElement('p');
+        bodyMessage.id = 'body-report-user';
+        bodyMessage.innerText = `You are about to open a report regarding an offensive conduct from user ${userName.toUpperCase()}. Please explain to us how you think ${userName.toUpperCase()} breached the code of conduct.`;
+        divReport.appendChild(bodyMessage);
 
         const imgReportUser = document.createElement('img');
         imgReportUser.id = 'img-report-user';
@@ -572,7 +578,7 @@ export class MediaManager {
 
         const textareaUser = document.createElement('textarea');
         textareaUser.id = 'textarea-report-user';
-        textareaUser.placeholder = 'Laissez un commentaire pour confirmer le report de la personne';
+        textareaUser.placeholder = 'Write ...';
         divReport.appendChild(textareaUser);
 
         const buttonReport = document.createElement('button');
