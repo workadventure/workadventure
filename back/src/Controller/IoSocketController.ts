@@ -42,6 +42,7 @@ import {cpuTracker} from "../Services/CpuTracker";
 import {ViewportInterface} from "../Model/Websocket/ViewportMessage";
 import {jwtTokenManager} from "../Services/JWTTokenManager";
 import {adminApi} from "../Services/AdminApi";
+import {RoomIdentifier} from "../Model/RoomIdentifier";
 
 function emitInBatch(socket: ExSocketInterface, payload: SubMessage): void {
     socket.batchedMessages.addPayload(payload);
@@ -88,7 +89,7 @@ export class IoSocketController {
     
 
     ioConnection() {
-        this.app.ws('/room/*', {
+        this.app.ws('/room', {
             /* Options */
             //compression: uWS.SHARED_COMPRESSOR,
             maxPayloadLength: 16 * 1024 * 1024,
@@ -112,7 +113,12 @@ export class IoSocketController {
                         const websocketProtocol = req.getHeader('sec-websocket-protocol');
                         const websocketExtensions = req.getHeader('sec-websocket-extensions');
 
-                        const roomId = req.getUrl().substr(6);
+                        const roomId = query.roomId;
+                        //todo: better validation: /\/_\/.*\/.*/ or /\/@\/.*\/.*\/.*/ 
+                        if (typeof roomId !== 'string') {
+                            throw new Error('Undefined room ID: ');
+                        }
+                        const roomIdentifier = new RoomIdentifier(roomId);
 
                         const token = query.token;
                         const x = Number(query.x);
@@ -140,12 +146,14 @@ export class IoSocketController {
                         const userUuid = await jwtTokenManager.getUserUuidFromToken(token);
                         console.log('uuid', userUuid);
 
-                        const isGranted = await adminApi.memberIsGrantedAccessToRoom(userUuid, roomId);
-                        if (!isGranted) {
-                            console.log('access not granted for user '+userUuid+' and room '+roomId);
-                            throw new Error('Client cannot acces this ressource.')
-                        } else {
-                            console.log('access granted for user '+userUuid+' and room '+roomId);
+                        if (roomIdentifier.anonymous === false) {
+                            const isGranted = await adminApi.memberIsGrantedAccessToRoom(userUuid, roomIdentifier);
+                            if (!isGranted) {
+                                console.log('access not granted for user '+userUuid+' and room '+roomId);
+                                throw new Error('Client cannot acces this ressource.')
+                            } else {
+                                console.log('access granted for user '+userUuid+' and room '+roomId);
+                            }   
                         }
 
                         if (upgradeAborted.aborted) {

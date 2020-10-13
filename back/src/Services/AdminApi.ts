@@ -1,5 +1,6 @@
 import {ADMIN_API_TOKEN, ADMIN_API_URL} from "../Enum/EnvironmentVariable";
-import Axios, {AxiosError} from "axios";
+import Axios from "axios";
+import {RoomIdentifier} from "../Model/RoomIdentifier";
 
 export interface AdminApiData {
     organizationSlug: string
@@ -10,7 +11,30 @@ export interface AdminApiData {
 }
 
 class AdminApi {
-    
+
+    async fetchMapDetails(organizationSlug: string, worldSlug: string, roomSlug: string|undefined): Promise<AdminApiData> {
+        if (!ADMIN_API_URL) {
+            return Promise.reject('No admin backoffice set!');
+        }
+
+        const params: { organizationSlug: string, worldSlug: string, roomSlug?: string } = {
+            organizationSlug,
+            worldSlug
+        };
+
+        if (roomSlug) {
+            params.roomSlug = roomSlug;
+        }
+
+        const res = await Axios.get(ADMIN_API_URL+'/api/map',
+            {
+                headers: {"Authorization" : `${ADMIN_API_TOKEN}`},
+                params
+            }
+        )
+        return res.data;
+    }
+
     async fetchMemberDataByToken(organizationMemberToken: string): Promise<AdminApiData> {
         if (!ADMIN_API_URL) {
             return Promise.reject('No admin backoffice set!');
@@ -22,13 +46,14 @@ class AdminApi {
         return res.data;
     }
 
-    async memberIsGrantedAccessToRoom(memberId: string, roomId: string): Promise<boolean> {
+    async memberIsGrantedAccessToRoom(memberId: string, roomIdentifier: RoomIdentifier): Promise<boolean> {
         if (!ADMIN_API_URL) {
             return Promise.reject('No admin backoffice set!');
         }
         try {
+            //todo: send more specialized data instead of the whole id
             const res = await Axios.get(ADMIN_API_URL+'/api/member/is-granted-access',
-                { headers: {"Authorization" : `${ADMIN_API_TOKEN}`}, params: {memberId, roomIdentifier: roomId} }
+                { headers: {"Authorization" : `${ADMIN_API_TOKEN}`}, params: {memberId, roomIdentifier: roomIdentifier.id} }
             )
             return !!res.data;
         } catch (e) {
