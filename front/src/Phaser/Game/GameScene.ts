@@ -46,6 +46,7 @@ import {RoomConnection} from "../../Connexion/RoomConnection";
 import {GlobalMessageManager} from "../../Administration/GlobalMessageManager";
 import {ConsoleGlobalMessageManager} from "../../Administration/ConsoleGlobalMessageManager";
 import {ResizableScene} from "../Login/ResizableScene";
+import {Room} from "../../Connexion/Room";
 
 
 export enum Textures {
@@ -690,8 +691,13 @@ export class GameScene extends ResizableScene implements CenterListener {
         }
 
         // TODO: eventually compute a relative URL
+
+        // TODO: handle /@/ URL CASES!
+
         const absoluteExitSceneUrl = new URL(exitSceneUrl, this.MapUrlFile).href;
-        gameManager.loadMap(absoluteExitSceneUrl, instance, this.scene);
+        const absoluteExitSceneUrlWithoutProtocol = absoluteExitSceneUrl.toString().substr(absoluteExitSceneUrl.toString().indexOf('://')+3);
+        const roomId = '_/'+instance+'/'+absoluteExitSceneUrlWithoutProtocol;
+        gameManager.loadMap(new Room(roomId), this.scene);
         const exitSceneKey = instance;
 
         const tiles : number[] = layer.data as number[];

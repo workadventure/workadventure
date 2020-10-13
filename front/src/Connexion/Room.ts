@@ -5,9 +5,8 @@ export class Room {
     public readonly id: string;
     public readonly isPublic: boolean;
     private mapUrl: string|undefined;
-    //public url: string
 
-    constructor(id: string/*, url: string*/) {
+    constructor(id: string) {
         if (id.startsWith('/')) {
             id = id.substr(1);
         }
