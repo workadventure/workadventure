@@ -31,7 +31,7 @@ class ConnectionManager {
 
             const room = new Room(window.location.pathname);
             return Promise.resolve(room);
-        } else if (connexionType === GameConnexionTypes.anonymous) {
+        } else if (connexionType === GameConnexionTypes.anonymous || connexionType === GameConnexionTypes.empty) {
             const localUser = localUserStore.getLocalUser();
 
             if (localUser && localUser.jwtToken && localUser.uuid) {
@@ -41,7 +41,14 @@ class ConnectionManager {
                 this.localUser = new LocalUser(data.userUuid, data.authToken);
                 localUserStore.saveUser(this.localUser);
             }
-            const room = new Room(window.location.pathname);
+            let roomId: string
+            if (connexionType === GameConnexionTypes.empty) {
+                const defaultMapUrl = window.location.host.replace('play.', 'maps.') + URL_ROOM_STARTED;
+                roomId = urlManager.editUrlForRoom(defaultMapUrl, null, null);
+            } else {
+                roomId = window.location.pathname;
+            }
+            const room = new Room(roomId);
             return Promise.resolve(room);
         } else if (connexionType == GameConnexionTypes.organization) {
             const localUser = localUserStore.getLocalUser();
@@ -55,11 +62,8 @@ class ConnectionManager {
                 return Promise.reject('Could not find a user in localstorage');
             }
         }
-        
-        //todo: cleaner way to handle the default case
-        const defaultMapUrl = window.location.host.replace('api.', 'maps.') + URL_ROOM_STARTED;
-        const defaultRoomId = urlManager.editUrlForRoom(URL_ROOM_STARTED, null, null);
-        return Promise.resolve(new Room(defaultRoomId, defaultMapUrl));
+
+        return Promise.reject('Invalid URL');
     }
 
     public initBenchmark(): void {

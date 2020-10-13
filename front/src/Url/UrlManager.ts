@@ -3,6 +3,7 @@ export enum GameConnexionTypes {
     anonymous=1,
     organization,
     register,
+    empty,
     unknown,
 }
 
@@ -17,9 +18,11 @@ class UrlManager {
         } else if (url.includes('@/')) {
             return GameConnexionTypes.organization;
         } else if(url.includes('register/')) {
-            return GameConnexionTypes.register
+            return GameConnexionTypes.register;
+        } else if(url === '/') {
+            return GameConnexionTypes.empty;
         } else {
-            return GameConnexionTypes.unknown
+            return GameConnexionTypes.unknown;
         }
     }
 
