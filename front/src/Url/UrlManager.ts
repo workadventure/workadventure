@@ -36,6 +36,8 @@ class UrlManager {
     }
 
 
+    //todo: simply use the roomId
+    //todo: test this with cypress
     public editUrlForRoom(roomSlug: string, organizationSlug: string|null, worldSlug: string |null): string {
         let  newUrl:string;
         if (organizationSlug) {

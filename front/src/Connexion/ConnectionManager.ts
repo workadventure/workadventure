@@ -7,6 +7,8 @@ import {localUserStore} from "./LocalUserStore";
 import {LocalUser} from "./LocalUser";
 import {Room} from "./Room";
 
+const URL_ROOM_STARTED = '/Floor0/floor0.json';
+
 class ConnectionManager {
     private localUser!:LocalUser;
 
@@ -53,7 +55,11 @@ class ConnectionManager {
                 return Promise.reject('Could not find a user in localstorage');
             }
         }
-        return Promise.reject('ConnexionManager initialization failed: invalid URL');
+        
+        //todo: cleaner way to handle the default case
+        const defaultMapUrl = window.location.host.replace('api.', 'maps.') + URL_ROOM_STARTED;
+        const defaultRoomId = urlManager.editUrlForRoom(URL_ROOM_STARTED, null, null);
+        return Promise.resolve(new Room(defaultRoomId, defaultMapUrl));
     }
 
     public initBenchmark(): void {
