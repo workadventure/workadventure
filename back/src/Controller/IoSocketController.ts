@@ -1,5 +1,5 @@
 import {ExSocketInterface} from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
-import {MINIMUM_DISTANCE, GROUP_RADIUS} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
+import {MINIMUM_DISTANCE, GROUP_RADIUS, ADMIN_API_URL, ADMIN_API_TOKEN} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 import {GameRoom} from "../Model/GameRoom";
 import {Group} from "../Model/Group";
 import {User} from "../Model/User";
