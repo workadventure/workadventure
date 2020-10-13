@@ -17,7 +17,7 @@ export class GameManager {
 
     public async init(scenePlugin: Phaser.Scenes.ScenePlugin) {
         this.startRoom = await connectionManager.initGameConnexion();
-        this.loadMap(this.startRoom.url, this.startRoom.ID, scenePlugin);
+        await this.loadMap(this.startRoom, scenePlugin);
     }
 
     public setPlayerName(name: string): void {
@@ -41,8 +41,11 @@ export class GameManager {
     }
 
 
-    public loadMap(mapUrl: string, roomID: string, scenePlugin: Phaser.Scenes.ScenePlugin): void {
+    public async loadMap(room: Room, scenePlugin: Phaser.Scenes.ScenePlugin): Promise<void> {
+        const roomID = room.id;
+        const mapUrl = await room.getMapUrl();
         console.log('Loading map '+roomID+' at url '+mapUrl);
+
         const gameIndex = scenePlugin.getIndex(mapUrl);
         if(gameIndex === -1){
             const game : Phaser.Scene = GameScene.createFromUrl(mapUrl, roomID);
@@ -58,9 +61,10 @@ export class GameManager {
         return mapUrlStart.substring(startPos, endPos);
     }
 
-    public goToStartingMap(scenePlugin: Phaser.Scenes.ScenePlugin) {
-        console.log('Starting scene '+this.startRoom.url);
-        scenePlugin.start(this.startRoom.url, {startLayerName: 'global'});
+    public async goToStartingMap(scenePlugin: Phaser.Scenes.ScenePlugin) {
+        const url = await this.startRoom.getMapUrl();
+        console.log('Starting scene '+url);
+        scenePlugin.start(url, {startLayerName: 'global'});
     }
 }
 
