@@ -11,7 +11,30 @@ export interface AdminApiData {
 }
 
 class AdminApi {
-    
+
+    async fetchMapDetails(organizationSlug: string, worldSlug: string, roomSlug: string|undefined): Promise<AdminApiData> {
+        if (!ADMIN_API_URL) {
+            return Promise.reject('No admin backoffice set!');
+        }
+
+        const params: { organizationSlug: string, worldSlug: string, mapSlug?: string } = {
+            organizationSlug,
+            worldSlug
+        };
+
+        if (roomSlug) {
+            params.mapSlug = roomSlug;
+        }
+
+        const res = await Axios.get(ADMIN_API_URL+'/api/map',
+            {
+                headers: {"Authorization" : `${ADMIN_API_TOKEN}`},
+                params
+            }
+        )
+        return res.data;
+    }
+
     async fetchMemberDataByToken(organizationMemberToken: string): Promise<AdminApiData> {
         if (!ADMIN_API_URL) {
             return Promise.reject('No admin backoffice set!');
