@@ -48,7 +48,7 @@ export class GameManager {
 
         const gameIndex = scenePlugin.getIndex(mapUrl);
         if(gameIndex === -1){
-            const game : Phaser.Scene = GameScene.createFromUrl(mapUrl, roomID);
+            const game : Phaser.Scene = GameScene.createFromUrl(room, mapUrl);
             console.log('Adding scene '+mapUrl);
             scenePlugin.add(mapUrl, game, false);
         }
