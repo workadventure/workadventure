@@ -47,6 +47,7 @@ export class SimplePeer {
         this.sendLocalVideoStreamCallback = this.sendLocalVideoStream.bind(this);
         this.sendLocalScreenSharingStreamCallback = this.sendLocalScreenSharingStream.bind(this);
         this.stopLocalScreenSharingStreamCallback = this.stopLocalScreenSharingStream.bind(this);
+
         mediaManager.onUpdateLocalStream(this.sendLocalVideoStreamCallback);
         mediaManager.onStartScreenSharing(this.sendLocalScreenSharingStreamCallback);
         mediaManager.onStopScreenSharing(this.stopLocalScreenSharingStreamCallback);
@@ -145,7 +146,9 @@ export class SimplePeer {
         }
 
         mediaManager.removeActiveVideo("" + user.userId);
-        mediaManager.addActiveVideo("" + user.userId, name);
+        mediaManager.addActiveVideo("" + user.userId, (comment: string) => {
+            this.reportUser(user.userId, comment);
+        }, name);
 
         const peer = new VideoPeer(user.userId, user.initiator ? user.initiator : false, this.Connection);
         // When a connection is established to a video stream, and if a screen sharing is taking place,
@@ -361,6 +364,13 @@ export class SimplePeer {
         for (const user of this.Users) {
             this.stopLocalScreenSharingStreamToUser(user.userId, stream);
         }
+    }
+
+    /**
+     * Triggered locally when clicking on the report button
+     */
+    public reportUser(userId: number, message: string) {
+        this.Connection.emitReportPlayerMessage(userId, message)
     }
 
     private sendLocalScreenSharingStreamToUser(userId: number): void {

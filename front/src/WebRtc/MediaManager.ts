@@ -10,6 +10,7 @@ const videoConstraint: boolean|MediaTrackConstraints = {
 export type UpdatedLocalStreamCallback = (media: MediaStream|null) => void;
 export type StartScreenSharingCallback = (media: MediaStream) => void;
 export type StopScreenSharingCallback = (media: MediaStream) => void;
+export type ReportCallback = (message: string) => void;
 
 // TODO: Split MediaManager in 2 classes: MediaManagerUI (in charge of HTML) and MediaManager (singleton in charge of the camera only)
 // TODO: verify that microphone event listeners are not triggered plenty of time NOW (since MediaManager is created many times!!!!)
@@ -35,7 +36,6 @@ export class MediaManager {
     private microphoneBtn: HTMLDivElement;
     private cinemaBtn: HTMLDivElement;
     private monitorBtn: HTMLDivElement;
-
 
     constructor() {
 
@@ -91,17 +91,14 @@ export class MediaManager {
     }
 
     public onUpdateLocalStream(callback: UpdatedLocalStreamCallback): void {
-
         this.updatedLocalStreamCallBacks.add(callback);
     }
 
     public onStartScreenSharing(callback: StartScreenSharingCallback): void {
-
         this.startScreenSharingCallBacks.add(callback);
     }
 
     public onStopScreenSharing(callback: StopScreenSharingCallback): void {
-
         this.stopScreenSharingCallBacks.add(callback);
     }
 
@@ -342,8 +339,10 @@ export class MediaManager {
     /**
      *
      * @param userId
+     * @param reportCallBack
+     * @param userName
      */
-    addActiveVideo(userId: string, userName: string = ""){
+    addActiveVideo(userId: string, reportCallBack: ReportCallback, userName: string = ""){
         this.webrtcInAudio.play();
 
         userName = userName.toUpperCase();
@@ -355,11 +354,18 @@ export class MediaManager {
                 <div class="rtc-error" style="display: none"></div>
                 <i id="name-${userId}" style="background-color: ${color};">${userName}</i>
                 <img id="microphone-${userId}" src="resources/logos/microphone-close.svg">
+                <img id="report-${userId}" class="report active" src="resources/logos/report.svg">
                 <video id="${userId}" autoplay></video>
             </div>
         `;
 
         layoutManager.add(DivImportance.Normal, userId, html);
+
+        const reportBtn = this.getElementByIdOrFail<HTMLDivElement>(`report-${userId}`);
+        reportBtn.addEventListener('click', (e: MouseEvent) => {
+            e.preventDefault();
+            this.showReportModal(userId, userName, reportCallBack);
+        });
 
         this.remoteVideo.set(userId, this.getElementByIdOrFail<HTMLVideoElement>(userId));
     }
@@ -541,6 +547,58 @@ export class MediaManager {
         // FIXME: does not check the type of the returned type
         return elem as T;
     }
+
+    private showReportModal(userId: string, userName: string, reportCallBack: ReportCallback){
+        //create report text area
+        const mainContainer = this.getElementByIdOrFail<HTMLDivElement>('main-container');
+
+        const divReport = document.createElement('div');
+        divReport.classList.add('modal-report-user');
+
+        const inputHidden = document.createElement('input');
+        inputHidden.id = 'input-report-user';
+        inputHidden.type = 'hidden';
+        inputHidden.value = userId;
+        divReport.appendChild(inputHidden);
+
+        const titleMessage = document.createElement('p');
+        titleMessage.innerText = 'Vous souhaitez report : ' + userName;
+        divReport.appendChild(titleMessage);
+
+        const imgReportUser = document.createElement('img');
+        imgReportUser.id = 'img-report-user';
+        imgReportUser.src = 'resources/logos/report.svg';
+        divReport.appendChild(imgReportUser);
+
+        const textareaUser = document.createElement('textarea');
+        textareaUser.id = 'textarea-report-user';
+        textareaUser.placeholder = 'Laissez un commentaire pour confirmer le report de la personne';
+        divReport.appendChild(textareaUser);
+
+        const buttonReport = document.createElement('button');
+        buttonReport.id = 'button-save-report-user';
+        buttonReport.innerText = 'Report';
+        buttonReport.addEventListener('click', () => {
+            if(!textareaUser.value){
+                textareaUser.style.border = '1px solid red'
+                return;
+            }
+            reportCallBack(textareaUser.value);
+            divReport.remove();
+        });
+        divReport.appendChild(buttonReport);
+
+        const buttonCancel = document.createElement('img');
+        buttonCancel.id = 'cancel-report-user';
+        buttonCancel.src = 'resources/logos/close.svg';
+        buttonCancel.addEventListener('click', () => {
+            divReport.remove();
+        });
+        divReport.appendChild(buttonCancel);
+
+        mainContainer.appendChild(divReport);
+    }
+
 
 }
 

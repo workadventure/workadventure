@@ -543,13 +543,11 @@ export class IoSocketController {
 
     private handleReportMessage(client: ExSocketInterface, reportPlayerMessage: ReportPlayerMessage) {
         try {
-            let reportedSocket = this.sockets.get(reportPlayerMessage.getReporteduserid());
+            const reportedSocket = this.sockets.get(reportPlayerMessage.getReporteduserid());
             if (!reportedSocket) {
                 throw 'reported socket user not found';
             }
             //TODO report user on admin application
-            console.log('ADMIN_API_URL', ADMIN_API_URL);
-            console.log('ADMIN_API_TOKEN', ADMIN_API_TOKEN);
             Axios.post(`${ADMIN_API_URL}/aoi/report`, {
                     reportedUserUuid: client.userUuid,
                     reportedUserComment: reportPlayerMessage.getReportcomment(),
@@ -558,7 +556,6 @@ export class IoSocketController {
                 {
                     headers: {"Authorization": `${ADMIN_API_TOKEN}`}
                 }).catch((err) => {
-                console.error(err);
                 throw err;
             });
         } catch (e) {
@@ -911,7 +908,7 @@ export class IoSocketController {
      * @param token
      */
     searchClientByUuid(uuid: string): ExSocketInterface | null {
-        for(let socket of this.sockets.values()){
+        for(const socket of this.sockets.values()){
             if(socket.userUuid === uuid){
                 return socket;
             }
@@ -920,7 +917,7 @@ export class IoSocketController {
     }
 
     public teleport(userUuid: string) {
-        let user = this.searchClientByUuid(userUuid);
+        const user = this.searchClientByUuid(userUuid);
         if(!user){
             throw 'User not found';
         }

@@ -56,6 +56,12 @@ body .message-info.warning{
     padding: 10px;
     z-index: 2;
 }
+
+.video-container img.report{
+    right: 5px;
+    left: auto;
+}
+
 .video-container video{
     height: 100%;
 }
@@ -567,4 +573,74 @@ body {
 .main-container .audio-playing p{
     color: white;
     margin-left: 10px;
+}
+
+/*REPORT input*/
+div.modal-report-user{
+    position: absolute;
+    width: 800px;
+    height: 600px;
+    left: calc(50% - 400px);
+    top: calc(50% - 100px);
+    background-color: #000000ad;
+}
+
+.modal-report-user textarea{
+    position: absolute;
+    width: 400px;
+    height: 200px;
+    z-index: 999;
+    left: calc(50% - 200px);
+    top: calc(50% - 100px);
+    background-color: #00000052;
+    color: white;
+}
+
+.modal-report-user img{
+    position: absolute;
+    height: 50px;
+    width: 50px;
+    z-index: 999;
+    left: calc(50% - 25px);
+    top: calc(50% - 250px);
+}
+
+.modal-report-user img#cancel-report-user{
+    position: absolute;
+    z-index: 999;
+    right: 0;
+    left: auto;
+    top: 0;
+    cursor: pointer;
+    width: 15px;
+    height: 15px;
+}
+
+.modal-report-user button{
+    position: absolute;
+    top: calc(50% + 200px);
+    left: calc(50% - 50px);
+    width: 100px;
+    border: 1px solid black;
+    background-color: #00000000;
+    color: #ffda01;
+    border-radius: 10px;
+    padding: 10px 30px;
+    transition: all .2s ease;
+}
+.modal-report-user button:hover{
+    cursor: pointer;
+    background-color: #ffda01;
+    color: black;
+    border: 1px solid black;
+    transform: scale(1.1);
+}
+
+.modal-report-user p{
+    font-size: 30px;
+    color: white;
+    position: absolute;
+    top: 90px;
+    width: 100%;
+    text-align: center;
 }
