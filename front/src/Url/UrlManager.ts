@@ -12,11 +12,11 @@ class UrlManager {
     //todo: use that to detect if we can find a token in localstorage
     public getGameConnexionType(): GameConnexionTypes {
         const url = window.location.pathname.toString();
-        if (url.indexOf('_/') > -1) {
+        if (url.includes('_/')) {
             return GameConnexionTypes.anonymous;
-        } else if (url.indexOf('@/') > -1) {
+        } else if (url.includes('@/')) {
             return GameConnexionTypes.organization;
-        } else if(url.indexOf('register/') > -1) {
+        } else if(url.includes('register/')) {
             return GameConnexionTypes.register
         } else {
             return GameConnexionTypes.unknown

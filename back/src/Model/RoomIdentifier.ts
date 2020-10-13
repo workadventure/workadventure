@@ -2,9 +2,9 @@ export class RoomIdentifier {
     public anonymous: boolean;
     public id:string
     constructor(roomID: string) {
-        if (roomID.indexOf('_/') === 0) {
+        if (roomID.startsWith('_/')) {
             this.anonymous = true;
-        } else if(roomID.indexOf('@/') === 0) {
+        } else if(roomID.startsWith('@/')) {
             this.anonymous = false;
         } else {
             throw new Error('Incorrect room ID: '+roomID);

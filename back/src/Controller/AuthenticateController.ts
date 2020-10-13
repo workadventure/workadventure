@@ -77,20 +77,18 @@ export class AuthenticateController extends BaseController {
         });
 
         this.App.post("/anonymLogin", (res: HttpResponse, req: HttpRequest) => {
-            (async () => {
-                this.addCorsHeaders(res);
+            this.addCorsHeaders(res);
 
-                res.onAborted(() => {
-                    console.warn('Login request was aborted');
-                })
+            res.onAborted(() => {
+                console.warn('Login request was aborted');
+            })
 
-                const userUuid = v4();
-                const authToken = jwtTokenManager.createJWTToken(userUuid);
-                res.writeStatus("200 OK").end(JSON.stringify({
-                    authToken,
-                    userUuid,
-                }));
-            })();
+            const userUuid = v4();
+            const authToken = jwtTokenManager.createJWTToken(userUuid);
+            res.writeStatus("200 OK").end(JSON.stringify({
+                authToken,
+                userUuid,
+            }));
         });
     }
 }

@@ -6,7 +6,6 @@ import {PlayGlobalMessageInterface} from "../Connexion/ConnexionModels";
 export const CLASS_CONSOLE_MESSAGE = 'main-console';
 export const INPUT_CONSOLE_MESSAGE = 'input-send-text';
 export const UPLOAD_CONSOLE_MESSAGE = 'input-upload-music';
-export const BUTTON_CONSOLE_SEND = 'button-send';
 export const INPUT_TYPE_CONSOLE = 'input-type';
 
 export const AUDIO_TYPE = 'audio';
@@ -124,7 +123,7 @@ export class ConsoleGlobalMessageManager {
             // Start loading CSS
             const cssPromise = ConsoleGlobalMessageManager.loadCss();
             // Import quill
-            const Quill = await import("quill") as any;
+            const Quill:any = await import("quill"); // eslint-disable-line @typescript-eslint/no-explicit-any
             // Wait for CSS to be loaded
             await cssPromise;
 

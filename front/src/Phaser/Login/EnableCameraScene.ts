@@ -258,7 +258,7 @@ export class EnableCameraScene extends Phaser.Scene {
         this.soundMeterSprite.setVolume(this.soundMeter.getVolume());
     }
 
-    private async login(): Promise<void> {
+    private login(): void {
         this.getElementByIdOrFail<HTMLDivElement>('webRtcSetup').style.display = 'none';
         this.soundMeter.stop();
         window.removeEventListener('resize', this.repositionCallback);

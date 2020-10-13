@@ -18,7 +18,7 @@ class ConnectionManager {
         const connexionType = urlManager.getGameConnexionType();
         if(connexionType === GameConnexionTypes.register) {
            const organizationMemberToken = urlManager.getOrganizationToken();
-            const data:any = await Axios.post(`${API_URL}/register`, {organizationMemberToken}).then(res => res.data);
+            const data = await Axios.post(`${API_URL}/register`, {organizationMemberToken}).then(res => res.data);
             this.localUser = new LocalUser(data.userUuid, data.authToken);
             localUserStore.saveUser(this.localUser);
            
@@ -35,7 +35,7 @@ class ConnectionManager {
             if (localUser) {
                 this.localUser = localUser
             } else {
-                const data:any = await Axios.post(`${API_URL}/anonymLogin`).then(res => res.data);
+                const data = await Axios.post(`${API_URL}/anonymLogin`).then(res => res.data);
                 this.localUser = new LocalUser(data.userUuid, data.authToken);
                 localUserStore.saveUser(this.localUser);
             }

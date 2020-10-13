@@ -58,7 +58,7 @@ export class GameManager {
         return mapUrlStart.substring(startPos, endPos);
     }
 
-    public async goToStartingMap(scenePlugin: Phaser.Scenes.ScenePlugin) {
+    public goToStartingMap(scenePlugin: Phaser.Scenes.ScenePlugin) {
         console.log('Starting scene '+this.startRoom.url);
         scenePlugin.start(this.startRoom.url, {startLayerName: 'global'});
     }
