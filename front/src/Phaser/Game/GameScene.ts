@@ -139,15 +139,15 @@ export class GameScene extends ResizableScene implements CenterListener {
     private outlinedItem: ActionableItem|null = null;
     private userInputManager!: UserInputManager;
 
-    static createFromUrl(mapUrlFile: string, instance: string, gameSceneKey: string|null = null): GameScene {
+    static createFromUrl(room: Room, mapUrlFile: string, gameSceneKey: string|null = null): GameScene {
         // We use the map URL as a key
         if (gameSceneKey === null) {
             gameSceneKey = mapUrlFile;
         }
-        return new GameScene(mapUrlFile, mapUrlFile, instance, gameSceneKey);
+        return new GameScene(room, mapUrlFile, gameSceneKey);
     }
 
-    constructor(MapKey : string, MapUrlFile: string, instance: string, gameSceneKey: string) {
+    constructor(private room: Room, MapUrlFile: string, gameSceneKey: string) {
         super({
             key: gameSceneKey
         });
@@ -155,11 +155,11 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.GameManager = gameManager;
         this.Terrains = [];
         this.groups = new Map<number, Sprite>();
-        this.instance = instance;
+        this.instance = room.getInstance();
 
-        this.MapKey = MapKey;
+        this.MapKey = MapUrlFile;
         this.MapUrlFile = MapUrlFile;
-        this.RoomId = this.instance + '__' + MapKey;
+        this.RoomId = room.id;
 
         this.createPromise = new Promise<void>((resolve, reject): void => {
             this.createPromiseResolve = resolve;
@@ -580,7 +580,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                 this.simplePeer.unregister();
 
                 const gameSceneKey = 'somekey'+Math.round(Math.random()*10000);
-                const game : Phaser.Scene = GameScene.createFromUrl(this.MapUrlFile, this.instance, gameSceneKey);
+                const game : Phaser.Scene = GameScene.createFromUrl(this.room, this.MapUrlFile, gameSceneKey);
                 this.scene.add(gameSceneKey, game, true,
                     {
                         initPosition: {
@@ -690,6 +690,9 @@ export class GameScene extends ResizableScene implements CenterListener {
             instance = this.instance;
         }
 
+        console.log('existSceneUrl', exitSceneUrl);
+        console.log('existSceneInstance', instance);
+
         // TODO: eventually compute a relative URL
 
         // TODO: handle /@/ URL CASES!
@@ -697,8 +700,10 @@ export class GameScene extends ResizableScene implements CenterListener {
         const absoluteExitSceneUrl = new URL(exitSceneUrl, this.MapUrlFile).href;
         const absoluteExitSceneUrlWithoutProtocol = absoluteExitSceneUrl.toString().substr(absoluteExitSceneUrl.toString().indexOf('://')+3);
         const roomId = '_/'+instance+'/'+absoluteExitSceneUrlWithoutProtocol;
-        gameManager.loadMap(new Room(roomId), this.scene);
-        const exitSceneKey = instance;
+        console.log("Foo", instance, absoluteExitSceneUrlWithoutProtocol);
+        const room = new Room(roomId);
+        gameManager.loadMap(room, this.scene);
+        const exitSceneKey = roomId;
 
         const tiles : number[] = layer.data as number[];
         for (let key=0; key < tiles.length; key++) {
@@ -719,10 +724,12 @@ export class GameScene extends ResizableScene implements CenterListener {
             if (this.PositionNextScene[y] === undefined) {
                 this.PositionNextScene[y] = new Array<{key: string, hash: string}>();
             }
-            this.PositionNextScene[y][x] = {
-                key: exitSceneKey,
-                hash
-            }
+            room.getMapUrl().then((url: string) => {
+                this.PositionNextScene[y][x] = {
+                    key: url,
+                    hash
+                }
+            })
         }
     }
 

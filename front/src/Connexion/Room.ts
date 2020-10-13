@@ -5,6 +5,7 @@ export class Room {
     public readonly id: string;
     public readonly isPublic: boolean;
     private mapUrl: string|undefined;
+    private instance: string|undefined;
 
     constructor(id: string) {
         if (id.startsWith('/')) {
@@ -47,6 +48,29 @@ export class Room {
 
             }
         });
+    }
+
+    /**
+     * Instance name is:
+     * - In a public URL: the second part of the URL ( _/[instance]/map.json)
+     * - In a private URL: [organizationId/worldId]
+     */
+    public getInstance(): string {
+        if (this.instance !== undefined) {
+            return this.instance;
+        }
+
+        if (this.isPublic) {
+            const match = /_\/([^/]+)\/.+/.exec(this.id);
+            if (!match) throw new Error('Could not extract instance from "'+this.id+'"');
+            this.instance = match[1];
+            return this.instance;
+        } else {
+            const match = /_\/([^/]+)\/([^/]+)\/.+/.exec(this.id);
+            if (!match) throw new Error('Could not extract instance from "'+this.id+'"');
+            this.instance = match[1]+'/'+match[2];
+            return this.instance;
+        }
     }
 
     private parsePrivateUrl(url: string): { organizationSlug: string, worldSlug: string, roomSlug?: string } {
