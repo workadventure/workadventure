@@ -26,6 +26,10 @@ export class MapController extends BaseController{
         this.App.get("/map", (res: HttpResponse, req: HttpRequest) => {
             this.addCorsHeaders(res);
 
+            res.onAborted(() => {
+                console.warn('/map request was aborted');
+            })
+
             const query = parse(req.getQuery());
 
             if (typeof query.organizationSlug !== 'string') {
@@ -42,9 +46,14 @@ export class MapController extends BaseController{
             }
 
             (async () => {
-                const mapDetails = await adminApi.fetchMapDetails(query.organizationSlug as string, query.worldSlug as string, query.roomSlug as string|undefined);
+                try {
+                    const mapDetails = await adminApi.fetchMapDetails(query.organizationSlug as string, query.worldSlug as string, query.roomSlug as string|undefined);
 
-                res.writeStatus("200 OK").end(JSON.stringify(mapDetails));
+                    res.writeStatus("200 OK").end(JSON.stringify(mapDetails));
+                } catch (e) {
+                    console.error(e);
+                    res.writeStatus("500 Internal Server Error").end("An error occurred");
+                }
             })();
 
         });

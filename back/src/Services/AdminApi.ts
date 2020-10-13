@@ -17,13 +17,13 @@ class AdminApi {
             return Promise.reject('No admin backoffice set!');
         }
 
-        const params: { organizationSlug: string, worldSlug: string, mapSlug?: string } = {
+        const params: { organizationSlug: string, worldSlug: string, roomSlug?: string } = {
             organizationSlug,
             worldSlug
         };
 
         if (roomSlug) {
-            params.mapSlug = roomSlug;
+            params.roomSlug = roomSlug;
         }
 
         const res = await Axios.get(ADMIN_API_URL+'/api/map',
