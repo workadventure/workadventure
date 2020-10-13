@@ -21,14 +21,14 @@ export class Room {
     }
 
     public async getMapUrl(): Promise<string> {
-        return new Promise<string>(async (resolve, reject) => {
+        return new Promise<string>((resolve, reject) => {
             if (this.mapUrl !== undefined) {
                 resolve(this.mapUrl);
                 return;
             }
 
             if (this.isPublic) {
-                const match = /_\/[^\/]+\/(.+)/.exec(this.id)
+                const match = /_\/[^/]+\/(.+)/.exec(this.id);
                 if (!match) throw new Error('Could not extract url from "'+this.id+'"');
                 this.mapUrl = window.location.protocol+'//'+match[1];
                 resolve(this.mapUrl);
@@ -37,24 +37,25 @@ export class Room {
                 // We have a private ID, we need to query the map URL from the server.
                 const urlParts = this.parsePrivateUrl(this.id);
 
-                const data:any = await Axios.get(`${API_URL}/map`, {
+                Axios.get(`${API_URL}/map`, {
                     params: urlParts
+                }).then(({data}) => {
+                    console.log('Map ', this.id, ' resolves to URL ', data.mapUrl);
+                    resolve(data.mapUrl);
+                    return;
                 });
 
-                console.log('Map ', this.id, ' resolves to URL ', data.data.mapUrl);
-                resolve(data.data.mapUrl);
-                return;
             }
         });
     }
 
     private parsePrivateUrl(url: string): { organizationSlug: string, worldSlug: string, roomSlug?: string } {
-        const regex = /@\/([^\/]+)\/([^\/]+)(?:\/([^\/]*))?/gm;
+        const regex = /@\/([^/]+)\/([^/]+)(?:\/([^/]*))?/gm;
         const match = regex.exec(url);
         if (!match) {
             throw new Error('Invalid URL '+url);
         }
-        let results: { organizationSlug: string, worldSlug: string, roomSlug?: string } = {
+        const results: { organizationSlug: string, worldSlug: string, roomSlug?: string } = {
             organizationSlug: match[1],
             worldSlug: match[2],
         }
