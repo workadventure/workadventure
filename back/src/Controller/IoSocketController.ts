@@ -2,7 +2,14 @@ import * as http from "http";
 import {MessageUserPosition, Point} from "../Model/Websocket/MessageUserPosition"; //TODO fix import by "_Model/.."
 import {ExSocketInterface} from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
 import Jwt, {JsonWebTokenError} from "jsonwebtoken";
-import {SECRET_KEY, MINIMUM_DISTANCE, GROUP_RADIUS, ALLOW_ARTILLERY} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
+import {
+    SECRET_KEY,
+    MINIMUM_DISTANCE,
+    GROUP_RADIUS,
+    ALLOW_ARTILLERY,
+    ADMIN_API_URL,
+    ADMIN_API_TOKEN
+} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 import {World} from "../Model/World";
 import {Group} from "../Model/Group";
 import {User} from "../Model/User";
@@ -50,7 +57,7 @@ import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
 import {App, HttpRequest, TemplatedApp, WebSocket} from "uWebSockets.js"
 import {parse} from "query-string";
 import {cpuTracker} from "../Services/CpuTracker";
-import axios from "axios";
+import Axios from "axios";
 
 function emitInBatch(socket: ExSocketInterface, payload: SubMessage): void {
     socket.batchedMessages.addPayload(payload);
@@ -553,14 +560,22 @@ export class IoSocketController {
     private handleReportMessage(client: ExSocketInterface, reportPlayerMessage: ReportPlayerMessage) {
         try {
             let reportedSocket = this.sockets.get(reportPlayerMessage.getReporteduserid());
-            if(!reportedSocket){
+            if (!reportedSocket) {
                 throw 'reported socket user not found';
             }
             //TODO report user on admin application
-            axios.post('/report', {
-                reportedUserId: reportPlayerMessage.getReporteduserid(),
-                reportedUserComment: reportPlayerMessage.getReportcomment(),
-                reporterUserId: client.userUuid,
+            console.log('ADMIN_API_URL', ADMIN_API_URL);
+            console.log('ADMIN_API_TOKEN', ADMIN_API_TOKEN);
+            Axios.post(`${ADMIN_API_URL}/aoi/report`, {
+                    reportedUserUuid: client.userUuid,
+                    reportedUserComment: reportPlayerMessage.getReportcomment(),
+                    reporterUserUuid: client.userUuid,
+                },
+                {
+                    headers: {"Authorization": `${ADMIN_API_TOKEN}`}
+                }).catch((err) => {
+                console.error(err);
+                throw err;
             });
         } catch (e) {
             console.error('An error occurred on "handleReportMessage"');
