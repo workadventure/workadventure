@@ -6,6 +6,7 @@ export enum EventMessage{
     WEBRTC_SIGNAL = "webrtc-signal",
     WEBRTC_SCREEN_SHARING_SIGNAL = "webrtc-screen-sharing-signal",
     WEBRTC_START = "webrtc-start",
+    START_ROOM = "start-room", // From server to client: list of all room users/groups/items
     JOIN_ROOM = "join-room", // bi-directional
     USER_POSITION = "user-position", // From client to server
     USER_MOVED = "user-moved", // From server to client

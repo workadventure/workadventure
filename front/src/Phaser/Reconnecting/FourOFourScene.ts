@@ -15,7 +15,8 @@ export class FourOFourScene extends Phaser.Scene {
     private fileNameField!: Text;
     private logo!: Image;
     private cat!: Sprite;
-    private file!: string;
+    private file: string|undefined;
+    private url: string|undefined;
 
     constructor() {
         super({
@@ -23,8 +24,9 @@ export class FourOFourScene extends Phaser.Scene {
         });
     }
 
-    init({ file }: { file: string }) {
+    init({ file, url }: { file?: string, url?: string }) {
         this.file = file;
+        this.url = url;
     }
 
     preload() {
@@ -45,11 +47,22 @@ export class FourOFourScene extends Phaser.Scene {
         this.mapNotFoundField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height / 2, "404 - File not found");
         this.mapNotFoundField.setOrigin(0.5, 0.5).setCenterAlign();
 
-        this.couldNotFindField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height / 2 + 24, "Could not load file");
+        let text: string = '';
+        if (this.file !== undefined) {
+            text = "Could not load map"
+        }
+        if (this.url !== undefined) {
+            text = "Invalid URL"
+        }
+
+        this.couldNotFindField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height / 2 + 24, text);
         this.couldNotFindField.setOrigin(0.5, 0.5).setCenterAlign();
 
-        this.fileNameField = this.add.text(this.game.renderer.width / 2, this.game.renderer.height / 2 + 38, this.file, { fontFamily: 'Georgia, "Goudy Bookletter 1911", Times, serif', fontSize: '10px' });
-        this.fileNameField.setOrigin(0.5, 0.5);
+        const url = this.file ? this.file : this.url;
+        if (url !== undefined) {
+            this.fileNameField = this.add.text(this.game.renderer.width / 2, this.game.renderer.height / 2 + 38, url, { fontFamily: 'Georgia, "Goudy Bookletter 1911", Times, serif', fontSize: '10px' });
+            this.fileNameField.setOrigin(0.5, 0.5);
+        }
 
         this.cat = this.physics.add.sprite(this.game.renderer.width / 2, this.game.renderer.height / 2 - 32, 'cat', 6);
         this.cat.flipY=true;

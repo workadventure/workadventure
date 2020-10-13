@@ -6,12 +6,11 @@ import {
     GroupDeleteMessage,
     GroupUpdateMessage,
     ItemEventMessage,
-    JoinRoomMessage, PlayGlobalMessage,
+    PlayGlobalMessage,
     PositionMessage,
     RoomJoinedMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
-    SetUserIdMessage,
     SilentMessage, StopGlobalMessage,
     UserJoinedMessage,
     UserLeftMessage,
@@ -32,7 +31,7 @@ import {ProtobufClientUtils} from "../Network/ProtobufClientUtils";
 import {
     EventMessage,
     GroupCreatedUpdatedMessageInterface, ItemEventMessageInterface,
-    MessageUserJoined, PlayGlobalMessageInterface,
+    MessageUserJoined, PlayGlobalMessageInterface, PositionInterface,
     RoomJoinedMessageInterface,
     ViewportInterface, WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
@@ -51,9 +50,26 @@ export class RoomConnection implements RoomConnection {
         RoomConnection.websocketFactory = websocketFactory;
     }
 
-    public constructor(token: string) {
+    /**
+     *
+     * @param token A JWT token containing the UUID of the user
+     * @param roomId The ID of the room in the form "_/[instance]/[map_url]" or "@/[org]/[event]/[map]"
+     */
+    public constructor(token: string|null, roomId: string, name: string, characterLayers: string[], position: PositionInterface, viewport: ViewportInterface) {
         let url = API_URL.replace('http://', 'ws://').replace('https://', 'wss://');
-        url += '?token='+token;
+        url += '/room';
+        url += '?roomId='+(roomId ?encodeURIComponent(roomId):'');
+        url += '&token='+(token ?encodeURIComponent(token):'');
+        url += '&name='+encodeURIComponent(name);
+        for (const layer of characterLayers) {
+            url += '&characterLayers='+encodeURIComponent(layer);
+        }
+        url += '&x='+Math.floor(position.x);
+        url += '&y='+Math.floor(position.y);
+        url += '&top='+Math.floor(viewport.top);
+        url += '&bottom='+Math.floor(viewport.bottom);
+        url += '&left='+Math.floor(viewport.left);
+        url += '&right='+Math.floor(viewport.right);
 
         if (RoomConnection.websocketFactory) {
             this.socket = RoomConnection.websocketFactory(url);
@@ -109,13 +125,13 @@ export class RoomConnection implements RoomConnection {
                     items[item.getItemid()] = JSON.parse(item.getStatejson());
                 }
 
-                this.resolveJoinRoom({
+                this.userId = roomJoinedMessage.getCurrentuserid();
+
+                this.dispatch(EventMessage.START_ROOM, {
                     users,
                     groups,
                     items
-                })
-            } else if (message.hasSetuseridmessage()) {
-                this.userId = (message.getSetuseridmessage() as SetUserIdMessage).getUserid();
+                });
             } else if (message.hasErrormessage()) {
                 console.error(EventMessage.MESSAGE_ERROR, message.getErrormessage()?.getMessage());
             } else if (message.hasWebrtcsignaltoclientmessage()) {
@@ -163,29 +179,6 @@ export class RoomConnection implements RoomConnection {
     public closeConnection(): void {
         this.socket?.close();
         this.closed = true;
-    }
-
-    private resolveJoinRoom!: (value?: (RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface> | undefined)) => void;
-
-    public joinARoom(roomId: string, startX: number, startY: number, direction: string, moving: boolean, viewport: ViewportInterface): Promise<RoomJoinedMessageInterface> {
-        const promise = new Promise<RoomJoinedMessageInterface>((resolve, reject) => {
-            this.resolveJoinRoom = resolve;
-
-            const positionMessage = this.toPositionMessage(startX, startY, direction, moving);
-            const viewportMessage = this.toViewportMessage(viewport);
-
-            const joinRoomMessage = new JoinRoomMessage();
-            joinRoomMessage.setRoomid(roomId);
-            joinRoomMessage.setPosition(positionMessage);
-            joinRoomMessage.setViewport(viewportMessage);
-
-            //console.log('Sending position ', positionMessage.getX(), positionMessage.getY());
-            const clientToServerMessage = new ClientToServerMessage();
-            clientToServerMessage.setJoinroommessage(joinRoomMessage);
-
-            this.socket.send(clientToServerMessage.serializeBinary().buffer);
-        })
-        return promise;
     }
 
     private toPositionMessage(x : number, y : number, direction : string, moving: boolean): PositionMessage {
@@ -341,6 +334,13 @@ export class RoomConnection implements RoomConnection {
 
     public onConnect(callback: (event: Event) => void): void {
         this.socket.addEventListener('open', callback)
+    }
+
+    /**
+     * Triggered when we receive all the details of a room (users, groups, ...)
+     */
+    public onStartRoom(callback: (event: RoomJoinedMessageInterface) => void): void {
+        this.onMessage(EventMessage.START_ROOM, callback);
     }
 
     public sendWebrtcSignal(signal: unknown, receiverId: number) {
