@@ -1,7 +1,3 @@
-import {GameScene} from "../Phaser/Game/GameScene";
-
-const Quill = require("quill");
-
 import {HtmlUtils} from "../WebRtc/HtmlUtils";
 import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
 import {RoomConnection} from "../Connexion/RoomConnection";
@@ -26,6 +22,7 @@ export class ConsoleGlobalMessageManager {
     private buttonMainConsole: HTMLDivElement;
     private activeConsole: boolean = false;
     private userInputManager!: UserInputManager;
+    private static cssLoaded: boolean = false;
 
     constructor(private Connection: RoomConnection, userInputManager : UserInputManager) {
         this.buttonMainConsole = document.createElement('div');
@@ -123,24 +120,30 @@ export class ConsoleGlobalMessageManager {
         section.appendChild(buttonDiv);
         this.divMainConsole.appendChild(section);
 
-        //TODO refactor
-        setTimeout(() => {
+        (async () => {
+            // Start loading CSS
+            const cssPromise = ConsoleGlobalMessageManager.loadCss();
+            // Import quill
+            const Quill = await import("quill") as any;
+            // Wait for CSS to be loaded
+            await cssPromise;
+
             const toolbarOptions = [
                 ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
                 ['blockquote', 'code-block'],
 
-                [{ 'header': 1 }, { 'header': 2 }],               // custom button values
-                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                [{ 'script': 'sub'}, { 'script': 'super' }],      // superscript/subscript
-                [{ 'indent': '-1'}, { 'indent': '+1' }],          // outdent/indent
-                [{ 'direction': 'rtl' }],                         // text direction
+                [{'header': 1}, {'header': 2}],               // custom button values
+                [{'list': 'ordered'}, {'list': 'bullet'}],
+                [{'script': 'sub'}, {'script': 'super'}],      // superscript/subscript
+                [{'indent': '-1'}, {'indent': '+1'}],          // outdent/indent
+                [{'direction': 'rtl'}],                         // text direction
 
-                [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
-                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                [{'size': ['small', false, 'large', 'huge']}],  // custom dropdown
+                [{'header': [1, 2, 3, 4, 5, 6, false]}],
 
-                [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
-                [{ 'font': [] }],
-                [{ 'align': [] }],
+                [{'color': []}, {'background': []}],          // dropdown with defaults from theme
+                [{'font': []}],
+                [{'align': []}],
 
                 ['clean'],
 
@@ -154,8 +157,28 @@ export class ConsoleGlobalMessageManager {
                     toolbar: toolbarOptions
                 },
             });
+        })();
+    }
 
-        }, 1000);
+    private static loadCss(): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if (ConsoleGlobalMessageManager.cssLoaded) {
+                resolve();
+                return;
+            }
+            const fileref = document.createElement("link")
+            fileref.setAttribute("rel", "stylesheet")
+            fileref.setAttribute("type", "text/css")
+            fileref.setAttribute("href", "https://cdn.quilljs.com/1.3.7/quill.snow.css");
+            document.getElementsByTagName("head")[0].appendChild(fileref);
+            ConsoleGlobalMessageManager.cssLoaded = true;
+            fileref.onload = () => {
+                resolve();
+            }
+            fileref.onerror = () => {
+                reject();
+            }
+        });
     }
 
     createUploadAudioPart(){
