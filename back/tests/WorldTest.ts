@@ -21,7 +21,7 @@ describe("World", () => {
 
         }
 
-        const world = new GameRoom(connect, disconnect, 160, 160, () => {}, () => {}, () => {});
+        const world = new GameRoom('_/global/test.json', connect, disconnect, 160, 160, () => {}, () => {}, () => {});
 
         world.join(createMockUser(1), new Point(100, 100));
 
@@ -48,7 +48,7 @@ describe("World", () => {
 
         }
 
-        const world = new GameRoom(connect, disconnect, 160, 160, () => {}, () => {}, () => {});
+        const world = new GameRoom('_/global/test.json', connect, disconnect, 160, 160, () => {}, () => {}, () => {});
 
         world.join(createMockUser(1), new Point(100, 100));
 
@@ -77,7 +77,7 @@ describe("World", () => {
             disconnectCallNumber++;
         }
 
-        const world = new GameRoom(connect, disconnect, 160, 160, () => {}, () => {}, () => {});
+        const world = new GameRoom('_/global/test.json', connect, disconnect, 160, 160, () => {}, () => {}, () => {});
 
         world.join(createMockUser(1), new Point(100, 100));
 

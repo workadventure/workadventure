@@ -8,9 +8,17 @@ import {EntersCallback, LeavesCallback, MovesCallback} from "_Model/Zone";
 import {PositionNotifier} from "./PositionNotifier";
 import {ViewportInterface} from "_Model/Websocket/ViewportMessage";
 import {Movable} from "_Model/Movable";
+import {extractDataFromPrivateRoomId, extractRoomSlugPublicRoomId, isRoomAnonymous} from "./RoomIdentifier";
+import {arrayIntersect} from "../Services/ArrayHelper";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
+
+export enum GameRoomPolicyTypes {
+    ANONYMUS_POLICY = 1,
+    MEMBERS_ONLY_POLICY,
+    USE_TAGS_POLICY,
+}
 
 export class GameRoom {
     private readonly minDistance: number;
@@ -26,8 +34,16 @@ export class GameRoom {
     private itemsState: Map<number, unknown> = new Map<number, unknown>();
 
     private readonly positionNotifier: PositionNotifier;
+    public readonly roomId: string;
+    public readonly anonymous: boolean;
+    public tags: string[];
+    public policyType: GameRoomPolicyTypes;
+    public readonly roomSlug: string;
+    public readonly worldSlug: string = '';
+    public readonly organizationSlug: string = '';
 
-    constructor(connectCallback: ConnectCallback,
+    constructor(roomId: string,
+                connectCallback: ConnectCallback,
                 disconnectCallback: DisconnectCallback,
                 minDistance: number,
                 groupRadius: number,
@@ -35,6 +51,21 @@ export class GameRoom {
                 onMoves: MovesCallback,
                 onLeaves: LeavesCallback)
     {
+        this.roomId = roomId;
+        this.anonymous = isRoomAnonymous(roomId);
+        this.tags = [];
+        this.policyType = GameRoomPolicyTypes.ANONYMUS_POLICY;
+        
+        if (this.anonymous) {
+            this.roomSlug = extractRoomSlugPublicRoomId(this.roomId);
+        } else {
+            const {organizationSlug, worldSlug, roomSlug} = extractDataFromPrivateRoomId(this.roomId);
+            this.roomSlug = roomSlug;
+            this.organizationSlug = organizationSlug;
+            this.worldSlug = worldSlug;
+        }
+        
+        
         this.users = new Map<number, User>();
         this.groups = new Set<Group>();
         this.connectCallback = connectCallback;
@@ -247,5 +278,9 @@ export class GameRoom {
             return [];
         }
         return this.positionNotifier.setViewport(user, viewport);
+    }
+
+    canAccess(userTags: string[]): boolean {
+        return arrayIntersect(userTags, this.tags);
     }
 }
