@@ -14,7 +14,9 @@
        },
        "ports": [8080],
        "env": {
-         "SECRET_KEY": "tempSecretKeyNeedsToChange"
+         "SECRET_KEY": "tempSecretKeyNeedsToChange",
+         "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
+         "ADMIN_API_URL": "https://admin."+url
        }
      },
     "front": {

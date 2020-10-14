@@ -7,7 +7,7 @@ import {WebSocket} from "uWebSockets.js"
 export interface ExSocketInterface extends WebSocket, Identificable {
     token: string;
     roomId: string;
-    userId: number;   // A temporary (autoincremented) identifier for this user
+    //userId: number;   // A temporary (autoincremented) identifier for this user
     userUuid: string; // A unique identifier for this user
     name: string;
     characterLayers: string[];
@@ -19,5 +19,6 @@ export interface ExSocketInterface extends WebSocket, Identificable {
     emitInBatch: (payload: SubMessage) => void;
     batchedMessages: BatchMessage;
     batchTimeout: NodeJS.Timeout|null;
-    disconnecting: boolean
+    disconnecting: boolean,
+    tags: string[]
 }

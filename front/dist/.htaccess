@@ -20,4 +20,5 @@ RewriteBase /
 # We only want to let Apache serve files and not directories.
 # Rewrite all other queries starting with _ to index.ts.
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule "^_/" "/index.html" [L]
+RewriteRule "^[_@]/" "/index.html" [L]
+RewriteRule "^register/" "/index.html" [L]
