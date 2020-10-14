@@ -4,7 +4,7 @@
     "sourceMap": true,
     "moduleResolution": "node",
     "module": "CommonJS",
-    "target": "es6",
+    "target": "ES2015",
     "downlevelIteration": true,
     "jsx": "react",
     "allowJs": true,

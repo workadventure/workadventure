@@ -7,9 +7,13 @@ import {ReconnectingScene} from "./Phaser/Reconnecting/ReconnectingScene";
 import {SelectCharacterScene} from "./Phaser/Login/SelectCharacterScene";
 import {EnableCameraScene} from "./Phaser/Login/EnableCameraScene";
 import {FourOFourScene} from "./Phaser/Reconnecting/FourOFourScene";
+import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
+import {OutlinePipeline} from "./Phaser/Shaders/OutlinePipeline";
 import {CustomizeScene} from "./Phaser/Login/CustomizeScene";
-import {HtmlUtils} from "./WebRtc/HtmlUtils";
 import {CoWebsiteManager} from "./WebRtc/CoWebsiteManager";
+import {gameManager} from "./Phaser/Game/GameManager";
+import {ResizableScene} from "./Phaser/Login/ResizableScene";
+import {EntryScene} from "./Phaser/Login/EntryScene";
 
 //CoWebsiteManager.loadCoWebsite('https://thecodingmachine.com');
 
@@ -27,12 +31,19 @@ const config: GameConfig = {
     width: width / RESOLUTION,
     height: height / RESOLUTION,
     parent: "game",
-    scene: [LoginScene, SelectCharacterScene, EnableCameraScene, ReconnectingScene, FourOFourScene, CustomizeScene],
+    scene: [EntryScene, LoginScene, SelectCharacterScene, EnableCameraScene, ReconnectingScene, FourOFourScene, CustomizeScene],
     zoom: RESOLUTION,
     physics: {
         default: "arcade",
         arcade: {
             debug: DEBUG_MODE
+        }
+    },
+    callbacks: {
+        postBoot: game => {
+            // FIXME: we should fore WebGL in the config.
+            const renderer = game.renderer as WebGLRenderer;
+            renderer.addPipeline(OutlinePipeline.KEY, new OutlinePipeline(game));
         }
     }
 };
@@ -45,6 +56,13 @@ window.addEventListener('resize', function (event) {
     const {width, height} = CoWebsiteManager.getGameSize();
 
     game.scale.resize(width / RESOLUTION, height / RESOLUTION);
+
+    // Let's trigger the onResize method of any active scene that is a ResizableScene
+    for (const scene of game.scene.getScenes(true)) {
+        if (scene instanceof ResizableScene) {
+            scene.onResize(event);
+        }
+    }
 });
 CoWebsiteManager.onStateChange(() => {
     const {width, height} = CoWebsiteManager.getGameSize();

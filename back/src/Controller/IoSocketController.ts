@@ -1,52 +1,76 @@
-import socketIO = require('socket.io');
-import {Socket} from "socket.io";
-import * as http from "http";
-import {MessageUserPosition, Point} from "../Model/Websocket/MessageUserPosition"; //TODO fix import by "_Model/.."
 import {ExSocketInterface} from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
-import Jwt, {JsonWebTokenError} from "jsonwebtoken";
-import {SECRET_KEY, MINIMUM_DISTANCE, GROUP_RADIUS, ALLOW_ARTILLERY} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
-import {World} from "../Model/World";
-import {Group} from "_Model/Group";
-import {UserInterface} from "_Model/UserInterface";
+import {MINIMUM_DISTANCE, GROUP_RADIUS} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
+import {GameRoom} from "../Model/GameRoom";
+import {Group} from "../Model/Group";
+import {User} from "../Model/User";
 import {isSetPlayerDetailsMessage,} from "../Model/Websocket/SetPlayerDetailsMessage";
-import {MessageUserJoined} from "../Model/Websocket/MessageUserJoined";
-import {MessageUserMoved} from "../Model/Websocket/MessageUserMoved";
-import si from "systeminformation";
 import {Gauge} from "prom-client";
-import {TokenInterface} from "../Controller/AuthenticateController";
-import {isJoinRoomMessageInterface} from "../Model/Websocket/JoinRoomMessage";
-import {isPointInterface, PointInterface} from "../Model/Websocket/PointInterface";
-import {isWebRtcSignalMessageInterface} from "../Model/Websocket/WebRtcSignalMessage";
-import {UserInGroupInterface} from "../Model/Websocket/UserInGroupInterface";
-import {uuid} from 'uuidv4';
+import {PointInterface} from "../Model/Websocket/PointInterface";
+import {Movable} from "../Model/Movable";
+import {
+    PositionMessage,
+    SetPlayerDetailsMessage,
+    SubMessage,
+    UserMovedMessage,
+    BatchMessage,
+    GroupUpdateMessage,
+    PointMessage,
+    GroupDeleteMessage,
+    UserJoinedMessage,
+    UserLeftMessage,
+    ItemEventMessage,
+    ViewportMessage,
+    ClientToServerMessage,
+    ErrorMessage,
+    RoomJoinedMessage,
+    ItemStateMessage,
+    ServerToClientMessage,
+    SilentMessage,
+    WebRtcSignalToClientMessage,
+    WebRtcSignalToServerMessage,
+    WebRtcStartMessage,
+    WebRtcDisconnectMessage,
+    PlayGlobalMessage,
+} from "../Messages/generated/messages_pb";
+import {UserMovesMessage} from "../Messages/generated/messages_pb";
+import Direction = PositionMessage.Direction;
+import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
+import {TemplatedApp} from "uWebSockets.js"
+import {parse} from "query-string";
+import {cpuTracker} from "../Services/CpuTracker";
+import {ViewportInterface} from "../Model/Websocket/ViewportMessage";
+import {jwtTokenManager} from "../Services/JWTTokenManager";
+import {adminApi} from "../Services/AdminApi";
+import {RoomIdentifier} from "../Model/RoomIdentifier";
 
-enum SockerIoEvent {
-    CONNECTION = "connection",
-    DISCONNECT = "disconnect",
-    JOIN_ROOM = "join-room", // bi-directional
-    USER_POSITION = "user-position", // bi-directional
-    USER_MOVED = "user-moved", // From server to client
-    USER_LEFT = "user-left", // From server to client
-    WEBRTC_SIGNAL = "webrtc-signal",
-    WEBRTC_SCREEN_SHARING_SIGNAL = "webrtc-screen-sharing-signal",
-    WEBRTC_START = "webrtc-start",
-    WEBRTC_DISCONNECT = "webrtc-disconect",
-    MESSAGE_ERROR = "message-error",
-    GROUP_CREATE_UPDATE = "group-create-update",
-    GROUP_DELETE = "group-delete",
-    SET_PLAYER_DETAILS = "set-player-details",
-    SET_SILENT = "set_silent", // Set or unset the silent mode for this user.
+function emitInBatch(socket: ExSocketInterface, payload: SubMessage): void {
+    socket.batchedMessages.addPayload(payload);
+
+    if (socket.batchTimeout === null) {
+        socket.batchTimeout = setTimeout(() => {
+            if (socket.disconnecting) {
+                return;
+            }
+
+            const serverToClientMessage = new ServerToClientMessage();
+            serverToClientMessage.setBatchmessage(socket.batchedMessages);
+
+            socket.send(serverToClientMessage.serializeBinary().buffer, true);
+            socket.batchedMessages = new BatchMessage();
+            socket.batchTimeout = null;
+        }, 100);
+    }
 }
 
 export class IoSocketController {
-    public readonly Io: socketIO.Server;
-    private Worlds: Map<string, World> = new Map<string, World>();
-    private sockets: Map<string, ExSocketInterface> = new Map<string, ExSocketInterface>();
+    private Worlds: Map<string, GameRoom> = new Map<string, GameRoom>();
+    private sockets: Map<number, ExSocketInterface> = new Map<number, ExSocketInterface>();
     private nbClientsGauge: Gauge<string>;
     private nbClientsPerRoomGauge: Gauge<string>;
+    private nextUserId: number = 1;
 
-    constructor(server: http.Server) {
-        this.Io = socketIO(server);
+    constructor(private readonly app: TemplatedApp) {
+
         this.nbClientsGauge = new Gauge({
             name: 'workadventure_nb_sockets',
             help: 'Number of connected sockets',
@@ -58,309 +82,472 @@ export class IoSocketController {
             labelNames: [ 'room' ]
         });
 
-        // Authentication with token. it will be decoded and stored in the socket.
-        // Completely commented for now, as we do not use the "/login" route at all.
-        this.Io.use((socket: Socket, next) => {
-            console.log(socket.handshake.query.token);
-            if (!socket.handshake.query || !socket.handshake.query.token) {
-                console.error('An authentication error happened, a user tried to connect without a token.');
-                return next(new Error('Authentication error'));
-            }
-            if(socket.handshake.query.token === 'test'){
-                if (ALLOW_ARTILLERY) {
-                    (socket as ExSocketInterface).token = socket.handshake.query.token;
-                    (socket as ExSocketInterface).userId = uuid();
-                    (socket as ExSocketInterface).isArtillery = true;
-                    console.log((socket as ExSocketInterface).userId);
-                    next();
-                    return;
-                } else {
-                    console.warn("In order to perform a load-testing test on this environment, you must set the ALLOW_ARTILLERY environment variable to 'true'");
-                    next();
-                }
-            }
-            (socket as ExSocketInterface).isArtillery = false;
-            if(this.searchClientByToken(socket.handshake.query.token)){
-                console.error('An authentication error happened, a user tried to connect while its token is already connected.');
-                return next(new Error('Authentication error'));
-            }
-            Jwt.verify(socket.handshake.query.token, SECRET_KEY, (err: JsonWebTokenError, tokenDecoded: object) => {
-                if (err) {
-                    console.error('An authentication error happened, invalid JsonWebToken.', err);
-                    return next(new Error('Authentication error'));
-                }
-
-                if (!this.isValidToken(tokenDecoded)) {
-                    return next(new Error('Authentication error, invalid token structure'));
-                }
-
-                (socket as ExSocketInterface).token = socket.handshake.query.token;
-                (socket as ExSocketInterface).userId = tokenDecoded.userId;
-                next();
-            });
-        });
-
         this.ioConnection();
     }
 
-    private isValidToken(token: object): token is TokenInterface {
-        if (typeof((token as TokenInterface).userId) !== 'string') {
-            return false;
-        }
-        if (typeof((token as TokenInterface).name) !== 'string') {
-            return false;
-        }
-        return true;
-    }
 
-    /**
-     *
-     * @param token
-     */
-    searchClientByToken(token: string): ExSocketInterface | null {
-        const clients: ExSocketInterface[] = Object.values(this.Io.sockets.sockets) as ExSocketInterface[];
-        for (let i = 0; i < clients.length; i++) {
-            const client = clients[i];
-            if (client.token !== token) {
-                continue
-            }
-            return client;
-        }
-        return null;
-    }
-
-    private sendUpdateGroupEvent(group: Group): void {
-        // Let's get the room of the group. To do this, let's get anyone in the group and find its room.
-        // Note: this is suboptimal
-        const userId = group.getUsers()[0].id;
-        const client: ExSocketInterface = this.searchClientByIdOrFail(userId);
-        const roomId = client.roomId;
-        this.Io.in(roomId).emit(SockerIoEvent.GROUP_CREATE_UPDATE, {
-            position: group.getPosition(),
-            groupId: group.getId()
-        });
-    }
-
-    private sendDeleteGroupEvent(uuid: string, lastUser: UserInterface): void {
-        // Let's get the room of the group. To do this, let's get anyone in the group and find its room.
-        const userId = lastUser.id;
-        const client: ExSocketInterface = this.searchClientByIdOrFail(userId);
-        const roomId = client.roomId;
-        this.Io.in(roomId).emit(SockerIoEvent.GROUP_DELETE, uuid);
-    }
 
     ioConnection() {
-        this.Io.on(SockerIoEvent.CONNECTION, (socket: Socket) => {
-            const client : ExSocketInterface = socket as ExSocketInterface;
-            this.sockets.set(client.userId, client);
+        this.app.ws('/room', {
+            /* Options */
+            //compression: uWS.SHARED_COMPRESSOR,
+            maxPayloadLength: 16 * 1024 * 1024,
+            maxBackpressure: 65536, // Maximum 64kB of data in the buffer.
+            //idleTimeout: 10,
+            upgrade: (res, req, context) => {
+                //console.log('An Http connection wants to become WebSocket, URL: ' + req.getUrl() + '!');
+                (async () => {
+                    /* Keep track of abortions */
+                    const upgradeAborted = {aborted: false};
 
-            // Let's log server load when a user joins
-            const srvSockets = this.Io.sockets.sockets;
-            this.nbClientsGauge.inc();
-            console.log(new Date().toISOString() + ' A user joined (', Object.keys(srvSockets).length, ' connected users)');
-            si.currentLoad().then(data => console.log('  Current load: ', data.avgload));
-            si.currentLoad().then(data => console.log('  CPU: ', data.currentload, '%'));
-            // End log server load
+                    res.onAborted(() => {
+                        /* We can simply signal that we were aborted */
+                        upgradeAborted.aborted = true;
+                    });
 
-            /*join-rom event permit to join one room.
-                message :
-                    userId : user identification
-                    roomId: room identification
-                    position: position of user in map
-                        x: user x position on map
-                        y: user y position on map
-            */
-            socket.on(SockerIoEvent.JOIN_ROOM, (message: unknown, answerFn): void => {
-                console.log(SockerIoEvent.JOIN_ROOM, message);
-                try {
-                    if (!isJoinRoomMessageInterface(message)) {
-                        socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid JOIN_ROOM message.'});
-                        console.warn('Invalid JOIN_ROOM message received: ', message);
-                        return;
-                    }
-                    const roomId = message.roomId;
+                    try {
+                        const url = req.getUrl();
+                        const query = parse(req.getQuery());
+                        const websocketKey = req.getHeader('sec-websocket-key');
+                        const websocketProtocol = req.getHeader('sec-websocket-protocol');
+                        const websocketExtensions = req.getHeader('sec-websocket-extensions');
 
-                    const Client = (socket as ExSocketInterface);
-
-                    if (Client.roomId === roomId) {
-                        return;
-                    }
-
-                    //leave previous room
-                    this.leaveRoom(Client);
-
-                    //join new previous room
-                    const world = this.joinRoom(Client, roomId, message.position);
-
-                    //add function to refresh position user in real time.
-                    //this.refreshUserPosition(Client);
-
-                    const messageUserJoined = new MessageUserJoined(Client.userId, Client.name, Client.characterLayers, Client.position);
-
-                    socket.to(roomId).emit(SockerIoEvent.JOIN_ROOM, messageUserJoined);
-
-                    // The answer shall contain the list of all users of the room with their positions:
-                    const listOfUsers = Array.from(world.getUsers(), ([key, user]) => {
-                        const player: ExSocketInterface|undefined = this.sockets.get(user.id);
-                        if (player === undefined) {
-                            console.warn('Something went wrong. The World contains a user "'+user.id+"' but this user does not exist in the sockets list!");
-                            return null;
+                        const roomId = query.roomId;
+                        //todo: better validation: /\/_\/.*\/.*/ or /\/@\/.*\/.*\/.*/
+                        if (typeof roomId !== 'string') {
+                            throw new Error('Undefined room ID: ');
                         }
-                        return new MessageUserPosition(user.id, player.name, player.characterLayers, player.position);
-                    }).filter((item: MessageUserPosition|null) => item !== null);
-                    answerFn(listOfUsers);
-                } catch (e) {
-                    console.error('An error occurred on "join_room" event');
-                    console.error(e);
-                }
-            });
+                        const roomIdentifier = new RoomIdentifier(roomId);
 
-            socket.on(SockerIoEvent.USER_POSITION, (position: unknown): void => {
-                console.log(SockerIoEvent.USER_POSITION, position);
-                try {
-                    if (!isPointInterface(position)) {
-                        socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid USER_POSITION message.'});
-                        console.warn('Invalid USER_POSITION message received: ', position);
+                        const token = query.token;
+                        const x = Number(query.x);
+                        const y = Number(query.y);
+                        const top = Number(query.top);
+                        const bottom = Number(query.bottom);
+                        const left = Number(query.left);
+                        const right = Number(query.right);
+                        const name = query.name;
+                        if (typeof name !== 'string') {
+                            throw new Error('Expecting name');
+                        }
+                        if (name === '') {
+                            throw new Error('No empty name');
+                        }
+                        let characterLayers = query.characterLayers;
+                        if (characterLayers === null) {
+                            throw new Error('Expecting skin');
+                        }
+                        if (typeof characterLayers === 'string') {
+                            characterLayers = [ characterLayers ];
+                        }
+
+
+                        const userUuid = await jwtTokenManager.getUserUuidFromToken(token);
+                        console.log('uuid', userUuid);
+
+                        let memberTags: string[] = [];
+                        if (roomIdentifier.anonymous === false) {
+                            const grants = await adminApi.memberIsGrantedAccessToRoom(userUuid, roomIdentifier);
+                            if (!grants.granted) {
+                                console.log('access not granted for user '+userUuid+' and room '+roomId);
+                                throw new Error('Client cannot acces this ressource.')
+                            } else {
+                                memberTags = grants.memberTags;
+                                console.log('access granted for user '+userUuid+' and room '+roomId);
+                            }
+                        }
+
+                        if (upgradeAborted.aborted) {
+                            console.log("Ouch! Client disconnected before we could upgrade it!");
+                            /* You must not upgrade now */
+                            return;
+                        }
+
+                        /* This immediately calls open handler, you must not use res after this call */
+                        res.upgrade({
+                                // Data passed here is accessible on the "websocket" socket object.
+                                url,
+                                token,
+                                userUuid,
+                                roomId,
+                                name,
+                                characterLayers,
+                                position: {
+                                    x: x,
+                                    y: y,
+                                    direction: 'down',
+                                    moving: false
+                                } as PointInterface,
+                                viewport: {
+                                    top,
+                                    right,
+                                    bottom,
+                                    left
+                                },
+                                tags: memberTags
+                            },
+                            /* Spell these correctly */
+                            websocketKey,
+                            websocketProtocol,
+                            websocketExtensions,
+                            context);
+
+                    } catch (e) {
+                        if (e instanceof Error) {
+                            console.log(e.message);
+                            res.writeStatus("401 Unauthorized").end(e.message);
+                        } else {
+                            console.log(e);
+                            res.writeStatus("500 Internal Server Error").end('An error occurred');
+                        }
                         return;
                     }
-
-                    const Client = (socket as ExSocketInterface);
-
-                    // sending to all clients in room except sender
-                    Client.position = position;
-
-                    // update position in the world
-                    const world = this.Worlds.get(Client.roomId);
-                    if (!world) {
-                        console.error("Could not find world with id '", Client.roomId, "'");
-                        return;
-                    }
-                    world.updatePosition(Client, position);
-
-                    socket.to(Client.roomId).emit(SockerIoEvent.USER_MOVED, new MessageUserMoved(Client.userId, Client.position));
-                } catch (e) {
-                    console.error('An error occurred on "user_position" event');
-                    console.error(e);
+                })();
+            },
+            /* Handlers */
+            open: (ws) => {
+                const client : ExSocketInterface = ws as ExSocketInterface;
+                client.userId = this.nextUserId;
+                this.nextUserId++;
+                client.userUuid = ws.userUuid;
+                client.token = ws.token;
+                client.batchedMessages = new BatchMessage();
+                client.batchTimeout = null;
+                client.emitInBatch = (payload: SubMessage): void => {
+                    emitInBatch(client, payload);
                 }
-            });
+                client.disconnecting = false;
 
-            socket.on(SockerIoEvent.WEBRTC_SIGNAL, (data: unknown) => {
-                this.emitVideo((socket as ExSocketInterface), data);
-            });
+                client.name = ws.name;
+                client.characterLayers = ws.characterLayers;
+                client.roomId = ws.roomId;
+                client.tags = ws.tags;
 
-            socket.on(SockerIoEvent.WEBRTC_SCREEN_SHARING_SIGNAL, (data: unknown) => {
-                this.emitScreenSharing((socket as ExSocketInterface), data);
-            });
+                this.sockets.set(client.userId, client);
 
-            socket.on(SockerIoEvent.DISCONNECT, () => {
-                const Client = (socket as ExSocketInterface);
+                // Let's log server load when a user joins
+                this.nbClientsGauge.inc();
+                console.log(new Date().toISOString() + ' A user joined (', this.sockets.size, ' connected users)');
+
+                // Let's join the room
+                this.handleJoinRoom(client, client.roomId, client.position, client.viewport, client.name, client.characterLayers);
+            },
+            message: (ws, arrayBuffer, isBinary): void => {
+                const client = ws as ExSocketInterface;
+                const message = ClientToServerMessage.deserializeBinary(new Uint8Array(arrayBuffer));
+
+                if (message.hasViewportmessage()) {
+                    this.handleViewport(client, message.getViewportmessage() as ViewportMessage);
+                } else if (message.hasUsermovesmessage()) {
+                    this.handleUserMovesMessage(client, message.getUsermovesmessage() as UserMovesMessage);
+                } else if (message.hasSetplayerdetailsmessage()) {
+                    this.handleSetPlayerDetails(client, message.getSetplayerdetailsmessage() as SetPlayerDetailsMessage);
+                } else if (message.hasSilentmessage()) {
+                    this.handleSilentMessage(client, message.getSilentmessage() as SilentMessage);
+                } else if (message.hasItemeventmessage()) {
+                    this.handleItemEvent(client, message.getItemeventmessage() as ItemEventMessage);
+                } else if (message.hasWebrtcsignaltoservermessage()) {
+                    this.emitVideo(client, message.getWebrtcsignaltoservermessage() as WebRtcSignalToServerMessage)
+                } else if (message.hasWebrtcscreensharingsignaltoservermessage()) {
+                    this.emitScreenSharing(client, message.getWebrtcscreensharingsignaltoservermessage() as WebRtcSignalToServerMessage)
+                } else if (message.hasPlayglobalmessage()) {
+                    this.emitPlayGlobalMessage(client, message.getPlayglobalmessage() as PlayGlobalMessage)
+                }
+
+                    /* Ok is false if backpressure was built up, wait for drain */
+                //let ok = ws.send(message, isBinary);
+            },
+            drain: (ws) => {
+                console.log('WebSocket backpressure: ' + ws.getBufferedAmount());
+            },
+            close: (ws, code, message) => {
+                const Client = (ws as ExSocketInterface);
                 try {
+                    Client.disconnecting = true;
                     //leave room
                     this.leaveRoom(Client);
 
-                    //leave webrtc room
-                    //socket.leave(Client.webRtcRoomId);
-
                     //delete all socket information
-                    delete Client.webRtcRoomId;
-                    delete Client.roomId;
+                    /*delete Client.roomId;
                     delete Client.token;
-                    delete Client.position;
+                    delete Client.position;*/
                 } catch (e) {
                     console.error('An error occurred on "disconnect"');
                     console.error(e);
                 }
+
                 this.sockets.delete(Client.userId);
 
                 // Let's log server load when a user leaves
-                const srvSockets = this.Io.sockets.sockets;
                 this.nbClientsGauge.dec();
-                console.log('A user left (', Object.keys(srvSockets).length, ' connected users)');
-                si.currentLoad().then(data => console.log('Current load: ', data.avgload));
-                si.currentLoad().then(data => console.log('CPU: ', data.currentload, '%'));
-                // End log server load
+                console.log('A user left (', this.sockets.size, ' connected users)');
+            }
+        })
+
+        // TODO: finish this!
+        /*this.Io.on(SocketIoEvent.CONNECTION, (socket: Socket) => {
+
+
+
+            socket.on(SocketIoEvent.WEBRTC_SIGNAL, (data: unknown) => {
+                this.emitVideo((socket as ExSocketInterface), data);
             });
 
-            // Let's send the user id to the user
-            socket.on(SockerIoEvent.SET_PLAYER_DETAILS, (playerDetails: unknown, answerFn) => {
-                console.log(SockerIoEvent.SET_PLAYER_DETAILS, playerDetails);
-                if (!isSetPlayerDetailsMessage(playerDetails)) {
-                    socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid SET_PLAYER_DETAILS message.'});
-                    console.warn('Invalid SET_PLAYER_DETAILS message received: ', playerDetails);
-                    return;
-                }
-                const Client = (socket as ExSocketInterface);
-                Client.name = playerDetails.name;
-                Client.characterLayers = playerDetails.characterLayers;
-                // Artillery fails when receiving an acknowledgement that is not a JSON object
-                if (!Client.isArtillery) {
-                    answerFn(Client.userId);
-                }
+            socket.on(SocketIoEvent.WEBRTC_SCREEN_SHARING_SIGNAL, (data: unknown) => {
+                this.emitScreenSharing((socket as ExSocketInterface), data);
             });
 
-            socket.on(SockerIoEvent.SET_SILENT, (silent: unknown) => {
-                console.log(SockerIoEvent.SET_SILENT, silent);
-                if (typeof silent !== "boolean") {
-                    socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid SET_SILENT message.'});
-                    console.warn('Invalid SET_SILENT message received: ', silent);
-                    return;
-                }
+        });*/
+    }
 
-                try {
-                    const Client = (socket as ExSocketInterface);
+    private emitError(Client: ExSocketInterface, message: string): void {
+        const errorMessage = new ErrorMessage();
+        errorMessage.setMessage(message);
 
-                    // update position in the world
-                    const world = this.Worlds.get(Client.roomId);
-                    if (!world) {
-                        console.error("Could not find world with id '", Client.roomId, "'");
-                        return;
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setErrormessage(errorMessage);
+
+        if (!Client.disconnecting) {
+            Client.send(serverToClientMessage.serializeBinary().buffer, true);
+        }
+        console.warn(message);
+    }
+
+    private handleJoinRoom(client: ExSocketInterface, roomId: string, position: PointInterface, viewport: ViewportInterface, name: string, characterLayers: string[]): void {
+        try {
+            //join new previous room
+            const gameRoom = this.joinRoom(client, roomId, position);
+
+            const things = gameRoom.setViewport(client, viewport);
+
+            const roomJoinedMessage = new RoomJoinedMessage();
+
+            for (const thing of things) {
+                if (thing instanceof User) {
+                    const player: ExSocketInterface|undefined = this.sockets.get(thing.id);
+                    if (player === undefined) {
+                        console.warn('Something went wrong. The World contains a user "'+thing.id+"' but this user does not exist in the sockets list!");
+                        continue;
                     }
-                    world.setSilent(Client, silent);
-                } catch (e) {
-                    console.error('An error occurred on "SET_SILENT"');
-                    console.error(e);
+
+                    const userJoinedMessage = new UserJoinedMessage();
+                    userJoinedMessage.setUserid(thing.id);
+                    userJoinedMessage.setName(player.name);
+                    userJoinedMessage.setCharacterlayersList(player.characterLayers);
+                    userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(player.position));
+
+                    roomJoinedMessage.addUser(userJoinedMessage);
+                } else if (thing instanceof Group) {
+                    const groupUpdateMessage = new GroupUpdateMessage();
+                    groupUpdateMessage.setGroupid(thing.getId());
+                    groupUpdateMessage.setPosition(ProtobufUtils.toPointMessage(thing.getPosition()));
+
+                    roomJoinedMessage.addGroup(groupUpdateMessage);
+                } else {
+                    console.error("Unexpected type for Movable returned by setViewport");
                 }
-            });
-        });
+            }
+
+            for (const [itemId, item] of gameRoom.getItemsState().entries()) {
+                const itemStateMessage = new ItemStateMessage();
+                itemStateMessage.setItemid(itemId);
+                itemStateMessage.setStatejson(JSON.stringify(item));
+
+                roomJoinedMessage.addItem(itemStateMessage);
+            }
+
+            roomJoinedMessage.setCurrentuserid(client.userId);
+            roomJoinedMessage.setTagList(client.tags);
+
+            const serverToClientMessage = new ServerToClientMessage();
+            serverToClientMessage.setRoomjoinedmessage(roomJoinedMessage);
+
+            if (!client.disconnecting) {
+                client.send(serverToClientMessage.serializeBinary().buffer, true);
+            }
+        } catch (e) {
+            console.error('An error occurred on "join_room" event');
+            console.error(e);
+        }
     }
 
-    emitVideo(socket: ExSocketInterface, data: unknown){
-        if (!isWebRtcSignalMessageInterface(data)) {
-            socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid WEBRTC_SIGNAL message.'});
-            console.warn('Invalid WEBRTC_SIGNAL message received: ', data);
+    private handleViewport(client: ExSocketInterface, viewportMessage: ViewportMessage) {
+        try {
+            const viewport = viewportMessage.toObject();
+
+            client.viewport = viewport;
+
+            const world = this.Worlds.get(client.roomId);
+            if (!world) {
+                console.error("In SET_VIEWPORT, could not find world with id '", client.roomId, "'");
+                return;
+            }
+            world.setViewport(client, client.viewport);
+        } catch (e) {
+            console.error('An error occurred on "SET_VIEWPORT" event');
+            console.error(e);
+        }
+    }
+
+    private handleUserMovesMessage(client: ExSocketInterface, userMovesMessage: UserMovesMessage) {
+        //console.log(SockerIoEvent.USER_POSITION, userMovesMessage);
+        try {
+            const userMoves = userMovesMessage.toObject();
+
+            // If CPU is high, let's drop messages of users moving (we will only dispatch the final position)
+            if (cpuTracker.isOverHeating() && userMoves.position?.moving === true) {
+                return;
+            }
+
+            const position = userMoves.position;
+            if (position === undefined) {
+                throw new Error('Position not found in message');
+            }
+            const viewport = userMoves.viewport;
+            if (viewport === undefined) {
+                throw new Error('Viewport not found in message');
+            }
+
+            let direction: string;
+            switch (position.direction) {
+                case Direction.UP:
+                    direction = 'up';
+                    break;
+                case Direction.DOWN:
+                    direction = 'down';
+                    break;
+                case Direction.LEFT:
+                    direction = 'left';
+                    break;
+                case Direction.RIGHT:
+                    direction = 'right';
+                    break;
+                default:
+                    throw new Error("Unexpected direction");
+            }
+
+            // sending to all clients in room except sender
+            client.position = {
+                x: position.x,
+                y: position.y,
+                direction,
+                moving: position.moving,
+            };
+            client.viewport = viewport;
+
+            // update position in the world
+            const world = this.Worlds.get(client.roomId);
+            if (!world) {
+                console.error("In USER_POSITION, could not find world with id '", client.roomId, "'");
+                return;
+            }
+            world.updatePosition(client, client.position);
+            world.setViewport(client, client.viewport);
+        } catch (e) {
+            console.error('An error occurred on "user_position" event');
+            console.error(e);
+        }
+    }
+
+    // Useless now, will be useful again if we allow editing details in game
+    private handleSetPlayerDetails(client: ExSocketInterface, playerDetailsMessage: SetPlayerDetailsMessage) {
+        const playerDetails = {
+            name: playerDetailsMessage.getName(),
+            characterLayers: playerDetailsMessage.getCharacterlayersList()
+        };
+        //console.log(SocketIoEvent.SET_PLAYER_DETAILS, playerDetails);
+        if (!isSetPlayerDetailsMessage(playerDetails)) {
+            this.emitError(client, 'Invalid SET_PLAYER_DETAILS message received: ');
             return;
         }
+        client.name = playerDetails.name;
+        client.characterLayers = playerDetails.characterLayers;
+
+    }
+
+    private handleSilentMessage(client: ExSocketInterface, silentMessage: SilentMessage) {
+        try {
+            // update position in the world
+            const world = this.Worlds.get(client.roomId);
+            if (!world) {
+                console.error("In handleSilentMessage, could not find world with id '", client.roomId, "'");
+                return;
+            }
+            world.setSilent(client, silentMessage.getSilent());
+        } catch (e) {
+            console.error('An error occurred on "handleSilentMessage"');
+            console.error(e);
+        }
+    }
+
+    private handleItemEvent(ws: ExSocketInterface, itemEventMessage: ItemEventMessage) {
+        const itemEvent = ProtobufUtils.toItemEvent(itemEventMessage);
+
+        try {
+            const world = this.Worlds.get(ws.roomId);
+            if (!world) {
+                console.error("Could not find world with id '", ws.roomId, "'");
+                return;
+            }
+
+            const subMessage = new SubMessage();
+            subMessage.setItemeventmessage(itemEventMessage);
+
+            // Let's send the event without using the SocketIO room.
+            for (const user of world.getUsers().values()) {
+                const client = this.searchClientByIdOrFail(user.id);
+                //client.emit(SocketIoEvent.ITEM_EVENT, itemEvent);
+                emitInBatch(client, subMessage);
+            }
+
+            world.setItemState(itemEvent.itemId, itemEvent.state);
+        } catch (e) {
+            console.error('An error occurred on "item_event"');
+            console.error(e);
+        }
+    }
+
+    emitVideo(socket: ExSocketInterface, data: WebRtcSignalToServerMessage): void {
         //send only at user
-        const client = this.sockets.get(data.receiverId);
+        const client = this.sockets.get(data.getReceiverid());
         if (client === undefined) {
-            console.warn("While exchanging a WebRTC signal: client with id ", data.receiverId, " does not exist. This might be a race condition.");
+            console.warn("While exchanging a WebRTC signal: client with id ", data.getReceiverid(), " does not exist. This might be a race condition.");
             return;
         }
-        return client.emit(SockerIoEvent.WEBRTC_SIGNAL, {
-            userId: socket.userId,
-            signal: data.signal
-        });
+
+        const webrtcSignalToClient = new WebRtcSignalToClientMessage();
+        webrtcSignalToClient.setUserid(socket.userId);
+        webrtcSignalToClient.setSignal(data.getSignal());
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setWebrtcsignaltoclientmessage(webrtcSignalToClient);
+
+        if (!client.disconnecting) {
+            client.send(serverToClientMessage.serializeBinary().buffer, true);
+        }
     }
 
-    emitScreenSharing(socket: ExSocketInterface, data: unknown){
-        if (!isWebRtcSignalMessageInterface(data)) {
-            socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid WEBRTC_SCREEN_SHARING message.'});
-            console.warn('Invalid WEBRTC_SCREEN_SHARING message received: ', data);
-            return;
-        }
+    emitScreenSharing(socket: ExSocketInterface, data: WebRtcSignalToServerMessage): void {
         //send only at user
-        const client = this.sockets.get(data.receiverId);
+        const client = this.sockets.get(data.getReceiverid());
         if (client === undefined) {
-            console.warn("While exchanging a WEBRTC_SCREEN_SHARING signal: client with id ", data.receiverId, " does not exist. This might be a race condition.");
+            console.warn("While exchanging a WEBRTC_SCREEN_SHARING signal: client with id ", data.getReceiverid(), " does not exist. This might be a race condition.");
             return;
         }
-        return client.emit(SockerIoEvent.WEBRTC_SCREEN_SHARING_SIGNAL, {
-            userId: socket.userId,
-            signal: data.signal
-        });
+
+        const webrtcSignalToClient = new WebRtcSignalToClientMessage();
+        webrtcSignalToClient.setUserid(socket.userId);
+        webrtcSignalToClient.setSignal(data.getSignal());
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setWebrtcscreensharingsignaltoclientmessage(webrtcSignalToClient);
+
+        if (!client.disconnecting) {
+            client.send(serverToClientMessage.serializeBinary().buffer, true);
+        }
     }
 
-    searchClientByIdOrFail(userId: string): ExSocketInterface {
+    searchClientByIdOrFail(userId: number): ExSocketInterface {
         const client: ExSocketInterface|undefined = this.sockets.get(userId);
         if (client === undefined) {
             throw new Error("Could not find user with id " + userId);
@@ -372,10 +559,8 @@ export class IoSocketController {
         // leave previous room and world
         if(Client.roomId){
             try {
-                Client.to(Client.roomId).emit(SockerIoEvent.USER_LEFT, Client.userId);
-
                 //user leave previous world
-                const world: World | undefined = this.Worlds.get(Client.roomId);
+                const world: GameRoom | undefined = this.Worlds.get(Client.roomId);
                 if (world) {
                     world.leave(Client);
                     if (world.isEmpty()) {
@@ -383,61 +568,174 @@ export class IoSocketController {
                     }
                 }
                 //user leave previous room
-                Client.leave(Client.roomId);
+                //Client.leave(Client.roomId);
             } finally {
                 this.nbClientsPerRoomGauge.dec({ room: Client.roomId });
-                delete Client.roomId;
+                //delete Client.roomId;
             }
         }
     }
 
-    private joinRoom(Client : ExSocketInterface, roomId: string, position: PointInterface): World {
+    private joinRoom(client : ExSocketInterface, roomId: string, position: PointInterface): GameRoom {
+
         //join user in room
-        Client.join(roomId);
         this.nbClientsPerRoomGauge.inc({ room: roomId });
-        Client.roomId = roomId;
-        Client.position = position;
+        client.roomId = roomId;
+        client.position = position;
 
         //check and create new world for a room
         let world = this.Worlds.get(roomId)
         if(world === undefined){
-            world = new World((user1: string, group: Group) => {
-                this.connectedUser(user1, group);
-            }, (user1: string, group: Group) => {
+            world = new GameRoom((user1: User, group: Group) => {
+                this.joinWebRtcRoom(user1, group);
+            }, (user1: User, group: Group) => {
                 this.disConnectedUser(user1, group);
-            }, MINIMUM_DISTANCE, GROUP_RADIUS, (group: Group) => {
-                this.sendUpdateGroupEvent(group);
-            }, (groupUuid: string, lastUser: UserInterface) => {
-                this.sendDeleteGroupEvent(groupUuid, lastUser);
+            }, MINIMUM_DISTANCE, GROUP_RADIUS, (thing: Movable, listener: User) => {
+                const clientListener = this.searchClientByIdOrFail(listener.id);
+                if (thing instanceof User) {
+                    const clientUser = this.searchClientByIdOrFail(thing.id);
+
+                    const userJoinedMessage = new UserJoinedMessage();
+                    if (!Number.isInteger(clientUser.userId)) {
+                        throw new Error('clientUser.userId is not an integer '+clientUser.userId);
+                    }
+                    userJoinedMessage.setUserid(clientUser.userId);
+                    userJoinedMessage.setName(clientUser.name);
+                    userJoinedMessage.setCharacterlayersList(clientUser.characterLayers);
+                    userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(clientUser.position));
+
+                    const subMessage = new SubMessage();
+                    subMessage.setUserjoinedmessage(userJoinedMessage);
+
+                    emitInBatch(clientListener, subMessage);
+                } else if (thing instanceof Group) {
+                    this.emitCreateUpdateGroupEvent(clientListener, thing);
+                } else {
+                    console.error('Unexpected type for Movable.');
+                }
+            }, (thing: Movable, position, listener) => {
+                const clientListener = this.searchClientByIdOrFail(listener.id);
+                if (thing instanceof User) {
+                    const clientUser = this.searchClientByIdOrFail(thing.id);
+
+                    const userMovedMessage = new UserMovedMessage();
+                    userMovedMessage.setUserid(clientUser.userId);
+                    userMovedMessage.setPosition(ProtobufUtils.toPositionMessage(clientUser.position));
+
+                    const subMessage = new SubMessage();
+                    subMessage.setUsermovedmessage(userMovedMessage);
+
+                    clientListener.emitInBatch(subMessage);
+                    //console.log("Sending USER_MOVED event");
+                } else if (thing instanceof Group) {
+                    this.emitCreateUpdateGroupEvent(clientListener, thing);
+                } else {
+                    console.error('Unexpected type for Movable.');
+                }
+            }, (thing: Movable, listener) => {
+                const clientListener = this.searchClientByIdOrFail(listener.id);
+                if (thing instanceof User) {
+                    const clientUser = this.searchClientByIdOrFail(thing.id);
+                    this.emitUserLeftEvent(clientListener, clientUser.userId);
+                } else if (thing instanceof Group) {
+                    this.emitDeleteGroupEvent(clientListener, thing.getId());
+                } else {
+                    console.error('Unexpected type for Movable.');
+                }
+
             });
             this.Worlds.set(roomId, world);
         }
 
         // Dispatch groups position to newly connected user
         world.getGroups().forEach((group: Group) => {
-            Client.emit(SockerIoEvent.GROUP_CREATE_UPDATE, {
-                position: group.getPosition(),
-                groupId: group.getId()
-            });
+            this.emitCreateUpdateGroupEvent(client, group);
         });
         //join world
-        world.join(Client, Client.position);
+        world.join(client, client.position);
         return world;
     }
 
-    /**
-     *
-     * @param socket
-     * @param roomId
-     */
-    joinWebRtcRoom(socket: ExSocketInterface, roomId: string) {
-        if (socket.webRtcRoomId === roomId) {
+    private emitCreateUpdateGroupEvent(client: ExSocketInterface, group: Group): void {
+        const position = group.getPosition();
+        const pointMessage = new PointMessage();
+        pointMessage.setX(Math.floor(position.x));
+        pointMessage.setY(Math.floor(position.y));
+        const groupUpdateMessage = new GroupUpdateMessage();
+        groupUpdateMessage.setGroupid(group.getId());
+        groupUpdateMessage.setPosition(pointMessage);
+
+        const subMessage = new SubMessage();
+        subMessage.setGroupupdatemessage(groupUpdateMessage);
+
+        emitInBatch(client, subMessage);
+        //socket.emit(SocketIoEvent.GROUP_CREATE_UPDATE, groupUpdateMessage.serializeBinary().buffer);
+    }
+
+    private emitDeleteGroupEvent(client: ExSocketInterface, groupId: number): void {
+        const groupDeleteMessage = new GroupDeleteMessage();
+        groupDeleteMessage.setGroupid(groupId);
+
+        const subMessage = new SubMessage();
+        subMessage.setGroupdeletemessage(groupDeleteMessage);
+
+        emitInBatch(client, subMessage);
+    }
+
+    private emitUserLeftEvent(client: ExSocketInterface, userId: number): void {
+        const userLeftMessage = new UserLeftMessage();
+        userLeftMessage.setUserid(userId);
+
+        const subMessage = new SubMessage();
+        subMessage.setUserleftmessage(userLeftMessage);
+
+        emitInBatch(client, subMessage);
+    }
+
+    joinWebRtcRoom(user: User, group: Group) {
+        /*const roomId: string = "webrtcroom"+group.getId();
+        if (user.socket.webRtcRoomId === roomId) {
             return;
+        }*/
+
+        for (const otherUser of group.getUsers()) {
+            if (user === otherUser) {
+                continue;
+            }
+
+            // Let's send 2 messages: one to the user joining the group and one to the other user
+            const webrtcStartMessage1 = new WebRtcStartMessage();
+            webrtcStartMessage1.setUserid(otherUser.id);
+            webrtcStartMessage1.setName(otherUser.socket.name);
+            webrtcStartMessage1.setInitiator(true);
+
+            const serverToClientMessage1 = new ServerToClientMessage();
+            serverToClientMessage1.setWebrtcstartmessage(webrtcStartMessage1);
+
+            if (!user.socket.disconnecting) {
+                user.socket.send(serverToClientMessage1.serializeBinary().buffer, true);
+                //console.log('Sending webrtcstart initiator to '+user.socket.userId)
+            }
+
+            const webrtcStartMessage2 = new WebRtcStartMessage();
+            webrtcStartMessage2.setUserid(user.id);
+            webrtcStartMessage2.setName(user.socket.name);
+            webrtcStartMessage2.setInitiator(false);
+
+            const serverToClientMessage2 = new ServerToClientMessage();
+            serverToClientMessage2.setWebrtcstartmessage(webrtcStartMessage2);
+
+            if (!otherUser.socket.disconnecting) {
+                otherUser.socket.send(serverToClientMessage2.serializeBinary().buffer, true);
+                //console.log('Sending webrtcstart to '+otherUser.socket.userId)
+            }
+
         }
-        socket.join(roomId);
+
+/*        socket.join(roomId);
         socket.webRtcRoomId = roomId;
         //if two persons in room share
-        if (this.Io.sockets.adapter.rooms[roomId].length < 2 /*|| this.Io.sockets.adapter.rooms[roomId].length >= 4*/) {
+        if (this.Io.sockets.adapter.rooms[roomId].length < 2) {
             return;
         }
 
@@ -460,8 +758,8 @@ export class IoSocketController {
                 return tabs;
             }, []);
 
-            client.emit(SockerIoEvent.WEBRTC_START, {clients: peerClients, roomId: roomId});
-        });
+            client.emit(SocketIoEvent.WEBRTC_START, {clients: peerClients, roomId: roomId});
+        });*/
     }
 
     /** permit to share user position
@@ -481,39 +779,70 @@ export class IoSocketController {
      ]
      **/
 
-    //connected user
-    connectedUser(userId: string, group: Group) {
-        /*let Client = this.sockets.get(userId);
-        if (Client === undefined) {
-            return;
-        }*/
-        const Client = this.searchClientByIdOrFail(userId);
-        this.joinWebRtcRoom(Client, group.getId());
-    }
-
     //disconnect user
-    disConnectedUser(userId: string, group: Group) {
-        const Client = this.searchClientByIdOrFail(userId);
-        Client.to(group.getId()).emit(SockerIoEvent.WEBRTC_DISCONNECT, {
-            userId: userId
-        });
-
+    disConnectedUser(user: User, group: Group) {
         // Most of the time, sending a disconnect event to one of the players is enough (the player will close the connection
         // which will be shut for the other player).
         // However! In the rare case where the WebRTC connection is not yet established, if we close the connection on one of the player,
         // the other player will try connecting until a timeout happens (during this time, the connection icon will be displayed for nothing).
         // So we also send the disconnect event to the other player.
-        for (const user of group.getUsers()) {
-            Client.emit(SockerIoEvent.WEBRTC_DISCONNECT, {
-                userId: user.id
-            });
+        for (const otherUser of group.getUsers()) {
+            if (user === otherUser) {
+                continue;
+            }
+
+            const webrtcDisconnectMessage1 = new WebRtcDisconnectMessage();
+            webrtcDisconnectMessage1.setUserid(user.id);
+
+            const serverToClientMessage1 = new ServerToClientMessage();
+            serverToClientMessage1.setWebrtcdisconnectmessage(webrtcDisconnectMessage1);
+
+            if (!otherUser.socket.disconnecting) {
+                otherUser.socket.send(serverToClientMessage1.serializeBinary().buffer, true);
+            }
+
+
+            const webrtcDisconnectMessage2 = new WebRtcDisconnectMessage();
+            webrtcDisconnectMessage2.setUserid(otherUser.id);
+
+            const serverToClientMessage2 = new ServerToClientMessage();
+            serverToClientMessage2.setWebrtcdisconnectmessage(webrtcDisconnectMessage2);
+
+            if (!user.socket.disconnecting) {
+                user.socket.send(serverToClientMessage2.serializeBinary().buffer, true);
+            }
         }
 
         //disconnect webrtc room
-        if(!Client.webRtcRoomId){
+        /*if(!Client.webRtcRoomId){
             return;
+        }*/
+        //Client.leave(Client.webRtcRoomId);
+        //delete Client.webRtcRoomId;
+    }
+
+    private emitPlayGlobalMessage(client: ExSocketInterface, playglobalmessage: PlayGlobalMessage) {
+        try {
+            const world = this.Worlds.get(client.roomId);
+            if (!world) {
+                console.error("In emitPlayGlobalMessage, could not find world with id '", client.roomId, "'");
+                return;
+            }
+
+            const serverToClientMessage = new ServerToClientMessage();
+            serverToClientMessage.setPlayglobalmessage(playglobalmessage);
+
+            for (const [id, user] of world.getUsers().entries()) {
+                user.socket.send(serverToClientMessage.serializeBinary().buffer, true);
+            }
+        } catch (e) {
+            console.error('An error occurred on "emitPlayGlobalMessage" event');
+            console.error(e);
         }
-        Client.leave(Client.webRtcRoomId);
-        delete Client.webRtcRoomId;
+
+    }
+
+    public getWorlds(): Map<string, GameRoom> {
+        return this.Worlds;
     }
 }

@@ -1,33 +1,37 @@
-import { World, ConnectCallback, DisconnectCallback } from "./World";
-import { UserInterface } from "./UserInterface";
+import { ConnectCallback, DisconnectCallback } from "./GameRoom";
+import { User } from "./User";
 import {PositionInterface} from "_Model/PositionInterface";
-import {uuid} from "uuidv4";
+import {Movable} from "_Model/Movable";
+import {PositionNotifier} from "_Model/PositionNotifier";
 
-export class Group {
+export class Group implements Movable {
     static readonly MAX_PER_GROUP = 4;
 
-    private id: string;
-    private users: Set<UserInterface>;
-    private connectCallback: ConnectCallback;
-    private disconnectCallback: DisconnectCallback;
+    private static nextId: number = 1;
+
+    private id: number;
+    private users: Set<User>;
+    private x!: number;
+    private y!: number;
 
 
-    constructor(users: UserInterface[], connectCallback: ConnectCallback, disconnectCallback: DisconnectCallback) {
-        this.users = new Set<UserInterface>();
-        this.connectCallback = connectCallback;
-        this.disconnectCallback = disconnectCallback;
-        this.id = uuid();
+    constructor(users: User[], private connectCallback: ConnectCallback, private disconnectCallback: DisconnectCallback, private positionNotifier: PositionNotifier) {
+        this.users = new Set<User>();
+        this.id = Group.nextId;
+        Group.nextId++;
 
-        users.forEach((user: UserInterface) => {
+        users.forEach((user: User) => {
             this.join(user);
         });
+
+        this.updatePosition();
     }
 
-    getUsers(): UserInterface[] {
+    getUsers(): User[] {
         return Array.from(this.users.values());
     }
 
-    getId() : string{
+    getId() : number {
         return this.id;
     }
 
@@ -35,19 +39,40 @@ export class Group {
      * Returns the barycenter of all users (i.e. the center of the group)
      */
     getPosition(): PositionInterface {
+        return {
+            x: this.x,
+            y: this.y
+        };
+    }
+
+    /**
+     * Computes the barycenter of all users (i.e. the center of the group)
+     */
+    updatePosition(): void {
+        const oldX = this.x;
+        const oldY = this.y;
+
         let x = 0;
         let y = 0;
         // Let's compute the barycenter of all users.
-        this.users.forEach((user: UserInterface) => {
-            x += user.position.x;
-            y += user.position.y;
+        this.users.forEach((user: User) => {
+            const position = user.getPosition();
+            x += position.x;
+            y += position.y;
         });
         x /= this.users.size;
         y /= this.users.size;
-        return {
-            x,
-            y
-        };
+        if (this.users.size === 0) {
+            throw new Error("EMPTY GROUP FOUND!!!");
+        }
+        this.x = x;
+        this.y = y;
+
+        if (oldX === undefined) {
+            this.positionNotifier.enter(this);
+        } else {
+            this.positionNotifier.updatePosition(this, {x, y}, {x: oldX, y: oldY});
+        }
     }
 
     isFull(): boolean {
@@ -58,15 +83,15 @@ export class Group {
         return this.users.size <= 1;
     }
 
-    join(user: UserInterface): void
+    join(user: User): void
     {
         // Broadcast on the right event
-        this.connectCallback(user.id, this);
+        this.connectCallback(user, this);
         this.users.add(user);
         user.group = this;
     }
 
-    leave(user: UserInterface): void
+    leave(user: User): void
     {
         const success = this.users.delete(user);
         if (success === false) {
@@ -74,8 +99,12 @@ export class Group {
         }
         user.group = undefined;
 
+        if (this.users.size !== 0) {
+            this.updatePosition();
+        }
+
         // Broadcast on the right event
-        this.disconnectCallback(user.id, this);
+        this.disconnectCallback(user, this);
     }
 
     /**

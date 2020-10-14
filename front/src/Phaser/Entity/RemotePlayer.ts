@@ -1,15 +1,15 @@
 import {GameScene} from "../Game/GameScene";
-import {PointInterface} from "../../Connection";
+import {PointInterface} from "../../Connexion/ConnexionModels";
 import {Character} from "../Entity/Character";
 
 /**
  * Class representing the sprite of a remote player (a player that plays on another computer)
  */
 export class RemotePlayer extends Character {
-    userId: string;
+    userId: number;
 
     constructor(
-        userId: string,
+        userId: number,
         Scene: GameScene,
         x: number,
         y: number,

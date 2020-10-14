@@ -14,7 +14,9 @@
        },
        "ports": [8080],
        "env": {
-         "SECRET_KEY": "tempSecretKeyNeedsToChange"
+         "SECRET_KEY": "tempSecretKeyNeedsToChange",
+         "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
+         "ADMIN_API_URL": "https://admin."+url
        }
      },
     "front": {
@@ -31,6 +33,14 @@
         "TURN_USER": "workadventure",
         "TURN_PASSWORD": "WorkAdventure123"
       }
+    },
+    "maps": {
+      "image": "thecodingmachine/workadventure-maps:"+tag,
+      "host": {
+        "url": "maps."+url,
+        "https": "enable"
+      },
+      "ports": [80]
     },
     "website": {
       "image": "thecodingmachine/workadventure-website:"+tag,

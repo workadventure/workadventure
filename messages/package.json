@@ -1,0 +1,46 @@
+{
+  "name": "workadventure-messages",
+  "version": "1.0.0",
+  "description": "",
+  "main": "generated/src/proto/messages_pb.js",
+  "scripts": {
+    "proto": "protoc --plugin=\"protoc-gen-ts=./node_modules/.bin/protoc-gen-ts\" --js_out=\"import_style=commonjs,binary:generated\" --ts_out=\"generated\" messages.proto",
+    "copy-to-back": "rm -rf ../back/src/Messages/generated && cp -rf generated/ ../back/src/Messages/generated",
+    "copy-to-front": "rm -rf ../front/src/Messages/generated && cp -rf generated/ ../front/src/Messages/generated",
+    "proto-all": "yarn run proto && yarn run copy-to-back && yarn run copy-to-front",
+    "proto:watch": "yarn run proto-all; inotifywait -q -m -e close_write messages.proto | while read -r filename event; do yarn run proto-all; done"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thecodingmachine/workadventure.git"
+  },
+  "contributors": [
+    {
+      "name": "Grégoire Parant",
+      "email": "g.parant@thecodingmachine.com"
+    },
+    {
+      "name": "David Négrier",
+      "email": "d.negrier@thecodingmachine.com"
+    },
+    {
+      "name": "Arthmaël Poly",
+      "email": "a.poly@thecodingmachine.com"
+    }
+  ],
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "bugs": {
+    "url": "https://github.com/thecodingmachine/workadventure/issues"
+  },
+  "homepage": "https://github.com/thecodingmachine/workadventure#readme",
+  "dependencies": {
+    "google-protobuf": "^3.13.0",
+    "typescript": "^3.8.3"
+  },
+  "devDependencies": {
+    "ts-node-dev": "^1.0.0-pre.44",
+    "@types/google-protobuf": "^3.7.3",
+    "concurrently": "^5.3.0",
+    "ts-protoc-gen": "^0.13.0"
+  }
+}
