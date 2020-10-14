@@ -21,3 +21,4 @@ RewriteBase /
 # Rewrite all other queries starting with _ to index.ts.
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule "^[_@]/" "/index.html" [L]
+RewriteRule "^register/" "/index.html" [L]
