@@ -145,12 +145,14 @@ export class IoSocketController {
                         const userUuid = await jwtTokenManager.getUserUuidFromToken(token);
                         console.log('uuid', userUuid);
 
+                        let memberTags: string[] = [];
                         if (roomIdentifier.anonymous === false) {
-                            const isGranted = await adminApi.memberIsGrantedAccessToRoom(userUuid, roomIdentifier);
-                            if (!isGranted) {
+                            const grants = await adminApi.memberIsGrantedAccessToRoom(userUuid, roomIdentifier);
+                            if (!grants.granted) {
                                 console.log('access not granted for user '+userUuid+' and room '+roomId);
                                 throw new Error('Client cannot acces this ressource.')
                             } else {
+                                memberTags = grants.memberTags;
                                 console.log('access granted for user '+userUuid+' and room '+roomId);
                             }
                         }
@@ -181,7 +183,8 @@ export class IoSocketController {
                                     right,
                                     bottom,
                                     left
-                                }
+                                },
+                                tags: memberTags
                             },
                             /* Spell these correctly */
                             websocketKey,
@@ -218,6 +221,7 @@ export class IoSocketController {
                 client.name = ws.name;
                 client.characterLayers = ws.characterLayers;
                 client.roomId = ws.roomId;
+                client.tags = ws.tags;
 
                 this.sockets.set(client.userId, client);
 
@@ -353,6 +357,7 @@ export class IoSocketController {
             }
 
             roomJoinedMessage.setCurrentuserid(client.userId);
+            roomJoinedMessage.setTagList(client.tags);
 
             const serverToClientMessage = new ServerToClientMessage();
             serverToClientMessage.setRoomjoinedmessage(roomJoinedMessage);

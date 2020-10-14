@@ -43,6 +43,7 @@ export class RoomConnection implements RoomConnection {
     private listeners: Map<string, Function[]> = new Map<string, Function[]>();
     private static websocketFactory: null|((url: string)=>any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
     private closed: boolean = false;
+    private tags: string[] = [];
 
     public static setWebsocketFactory(websocketFactory: (url: string)=>any): void { // eslint-disable-line @typescript-eslint/no-explicit-any
         RoomConnection.websocketFactory = websocketFactory;
@@ -124,6 +125,7 @@ export class RoomConnection implements RoomConnection {
                 }
 
                 this.userId = roomJoinedMessage.getCurrentuserid();
+                this.tags = roomJoinedMessage.getTagList();
 
                 this.dispatch(EventMessage.START_ROOM, {
                     users,
@@ -477,5 +479,9 @@ export class RoomConnection implements RoomConnection {
         clientToServerMessage.setPlayglobalmessage(playGlobalMessage);
 
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
+    }
+
+    public hasTag(tag: string): boolean {
+        return this.tags.includes(tag);
     }
 }

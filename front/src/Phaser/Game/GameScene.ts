@@ -397,9 +397,6 @@ export class GameScene extends ResizableScene implements CenterListener {
         //create input to move
         this.userInputManager = new UserInputManager(this);
 
-        //TODO check right of user
-        this.ConsoleGlobalMessageManager = new ConsoleGlobalMessageManager(this.connection, this.userInputManager);
-
         //notify game manager can to create currentUser in map
         this.createCurrentPlayer();
 
@@ -530,6 +527,10 @@ export class GameScene extends ResizableScene implements CenterListener {
             connection.onStartRoom((roomJoinedMessage: RoomJoinedMessageInterface) => {
                 this.initUsersPosition(roomJoinedMessage.users);
                 this.connectionAnswerPromiseResolve(roomJoinedMessage);
+                // Analyze tags to find if we are admin. If yes, show console.
+                if (this.connection.hasTag('admin')) {
+                    this.ConsoleGlobalMessageManager = new ConsoleGlobalMessageManager(this.connection, this.userInputManager);
+                }
             });
 
             connection.onUserJoins((message: MessageUserJoined) => {
