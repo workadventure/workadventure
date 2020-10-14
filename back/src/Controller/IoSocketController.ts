@@ -1,6 +1,6 @@
 import {ExSocketInterface} from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
 import {MINIMUM_DISTANCE, GROUP_RADIUS} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
-import {GameRoom} from "../Model/GameRoom";
+import {GameRoom, GameRoomPolicyTypes} from "../Model/GameRoom";
 import {Group} from "../Model/Group";
 import {User} from "../Model/User";
 import {isSetPlayerDetailsMessage,} from "../Model/Websocket/SetPlayerDetailsMessage";
@@ -41,7 +41,7 @@ import {cpuTracker} from "../Services/CpuTracker";
 import {ViewportInterface} from "../Model/Websocket/ViewportMessage";
 import {jwtTokenManager} from "../Services/JWTTokenManager";
 import {adminApi} from "../Services/AdminApi";
-import {RoomIdentifier} from "../Model/RoomIdentifier";
+import {PositionInterface} from "../Model/PositionInterface";
 
 function emitInBatch(socket: ExSocketInterface, payload: SubMessage): void {
     socket.batchedMessages.addPayload(payload);
@@ -113,11 +113,9 @@ export class IoSocketController {
                         const websocketExtensions = req.getHeader('sec-websocket-extensions');
 
                         const roomId = query.roomId;
-                        //todo: better validation: /\/_\/.*\/.*/ or /\/@\/.*\/.*\/.*/
                         if (typeof roomId !== 'string') {
                             throw new Error('Undefined room ID: ');
                         }
-                        const roomIdentifier = new RoomIdentifier(roomId);
 
                         const token = query.token;
                         const x = Number(query.x);
@@ -143,17 +141,20 @@ export class IoSocketController {
 
 
                         const userUuid = await jwtTokenManager.getUserUuidFromToken(token);
-                        console.log('uuid', userUuid);
 
                         let memberTags: string[] = [];
-                        if (roomIdentifier.anonymous === false) {
-                            const grants = await adminApi.memberIsGrantedAccessToRoom(userUuid, roomIdentifier);
-                            if (!grants.granted) {
+                        const room = await this.getOrCreateRoom(roomId);
+                        if (!room.anonymous && room.policyType !== GameRoomPolicyTypes.ANONYMUS_POLICY) {
+                            try {
+                                const userData = await adminApi.fetchMemberDataByUuid(userUuid);
+                                memberTags = userData.tags;
+                                if (room.policyType === GameRoomPolicyTypes.USE_TAGS_POLICY && !room.canAccess(memberTags)) {
+                                    throw new Error('No correct tags')
+                                }
+                                console.log('access granted for user '+userUuid+' and room '+roomId);
+                            } catch (e) {
                                 console.log('access not granted for user '+userUuid+' and room '+roomId);
                                 throw new Error('Client cannot acces this ressource.')
-                            } else {
-                                memberTags = grants.memberTags;
-                                console.log('access granted for user '+userUuid+' and room '+roomId);
                             }
                         }
 
@@ -172,6 +173,7 @@ export class IoSocketController {
                                 roomId,
                                 name,
                                 characterLayers,
+                                tags: memberTags,
                                 position: {
                                     x: x,
                                     y: y,
@@ -183,8 +185,7 @@ export class IoSocketController {
                                     right,
                                     bottom,
                                     left
-                                },
-                                tags: memberTags
+                                }
                             },
                             /* Spell these correctly */
                             websocketKey,
@@ -219,9 +220,9 @@ export class IoSocketController {
                 client.disconnecting = false;
 
                 client.name = ws.name;
+                client.tags = ws.tags;
                 client.characterLayers = ws.characterLayers;
                 client.roomId = ws.roomId;
-                client.tags = ws.tags;
 
                 this.sockets.set(client.userId, client);
 
@@ -230,7 +231,7 @@ export class IoSocketController {
                 console.log(new Date().toISOString() + ' A user joined (', this.sockets.size, ' connected users)');
 
                 // Let's join the room
-                this.handleJoinRoom(client, client.roomId, client.position, client.viewport, client.name, client.characterLayers);
+                this.handleJoinRoom(client, client.position, client.viewport);
             },
             message: (ws, arrayBuffer, isBinary): void => {
                 const client = ws as ExSocketInterface;
@@ -266,11 +267,6 @@ export class IoSocketController {
                     Client.disconnecting = true;
                     //leave room
                     this.leaveRoom(Client);
-
-                    //delete all socket information
-                    /*delete Client.roomId;
-                    delete Client.token;
-                    delete Client.position;*/
                 } catch (e) {
                     console.error('An error occurred on "disconnect"');
                     console.error(e);
@@ -283,21 +279,6 @@ export class IoSocketController {
                 console.log('A user left (', this.sockets.size, ' connected users)');
             }
         })
-
-        // TODO: finish this!
-        /*this.Io.on(SocketIoEvent.CONNECTION, (socket: Socket) => {
-
-
-
-            socket.on(SocketIoEvent.WEBRTC_SIGNAL, (data: unknown) => {
-                this.emitVideo((socket as ExSocketInterface), data);
-            });
-
-            socket.on(SocketIoEvent.WEBRTC_SCREEN_SHARING_SIGNAL, (data: unknown) => {
-                this.emitScreenSharing((socket as ExSocketInterface), data);
-            });
-
-        });*/
     }
 
     private emitError(Client: ExSocketInterface, message: string): void {
@@ -313,10 +294,10 @@ export class IoSocketController {
         console.warn(message);
     }
 
-    private handleJoinRoom(client: ExSocketInterface, roomId: string, position: PointInterface, viewport: ViewportInterface, name: string, characterLayers: string[]): void {
+    private handleJoinRoom(client: ExSocketInterface, position: PointInterface, viewport: ViewportInterface): void {
         try {
             //join new previous room
-            const gameRoom = this.joinRoom(client, roomId, position);
+            const gameRoom = this.joinRoom(client, position);
 
             const things = gameRoom.setViewport(client, viewport);
 
@@ -357,7 +338,6 @@ export class IoSocketController {
             }
 
             roomJoinedMessage.setCurrentuserid(client.userId);
-            roomJoinedMessage.setTagList(client.tags);
 
             const serverToClientMessage = new ServerToClientMessage();
             serverToClientMessage.setRoomjoinedmessage(roomJoinedMessage);
@@ -575,76 +555,41 @@ export class IoSocketController {
             }
         }
     }
-
-    private joinRoom(client : ExSocketInterface, roomId: string, position: PointInterface): GameRoom {
-
-        //join user in room
-        this.nbClientsPerRoomGauge.inc({ room: roomId });
-        client.roomId = roomId;
-        client.position = position;
-
+    
+    private async getOrCreateRoom(roomId: string): Promise<GameRoom> {
         //check and create new world for a room
         let world = this.Worlds.get(roomId)
         if(world === undefined){
-            world = new GameRoom((user1: User, group: Group) => {
-                this.joinWebRtcRoom(user1, group);
-            }, (user1: User, group: Group) => {
-                this.disConnectedUser(user1, group);
-            }, MINIMUM_DISTANCE, GROUP_RADIUS, (thing: Movable, listener: User) => {
-                const clientListener = this.searchClientByIdOrFail(listener.id);
-                if (thing instanceof User) {
-                    const clientUser = this.searchClientByIdOrFail(thing.id);
-
-                    const userJoinedMessage = new UserJoinedMessage();
-                    if (!Number.isInteger(clientUser.userId)) {
-                        throw new Error('clientUser.userId is not an integer '+clientUser.userId);
-                    }
-                    userJoinedMessage.setUserid(clientUser.userId);
-                    userJoinedMessage.setName(clientUser.name);
-                    userJoinedMessage.setCharacterlayersList(clientUser.characterLayers);
-                    userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(clientUser.position));
-
-                    const subMessage = new SubMessage();
-                    subMessage.setUserjoinedmessage(userJoinedMessage);
-
-                    emitInBatch(clientListener, subMessage);
-                } else if (thing instanceof Group) {
-                    this.emitCreateUpdateGroupEvent(clientListener, thing);
-                } else {
-                    console.error('Unexpected type for Movable.');
-                }
-            }, (thing: Movable, position, listener) => {
-                const clientListener = this.searchClientByIdOrFail(listener.id);
-                if (thing instanceof User) {
-                    const clientUser = this.searchClientByIdOrFail(thing.id);
-
-                    const userMovedMessage = new UserMovedMessage();
-                    userMovedMessage.setUserid(clientUser.userId);
-                    userMovedMessage.setPosition(ProtobufUtils.toPositionMessage(clientUser.position));
-
-                    const subMessage = new SubMessage();
-                    subMessage.setUsermovedmessage(userMovedMessage);
-
-                    clientListener.emitInBatch(subMessage);
-                    //console.log("Sending USER_MOVED event");
-                } else if (thing instanceof Group) {
-                    this.emitCreateUpdateGroupEvent(clientListener, thing);
-                } else {
-                    console.error('Unexpected type for Movable.');
-                }
-            }, (thing: Movable, listener) => {
-                const clientListener = this.searchClientByIdOrFail(listener.id);
-                if (thing instanceof User) {
-                    const clientUser = this.searchClientByIdOrFail(thing.id);
-                    this.emitUserLeftEvent(clientListener, clientUser.userId);
-                } else if (thing instanceof Group) {
-                    this.emitDeleteGroupEvent(clientListener, thing.getId());
-                } else {
-                    console.error('Unexpected type for Movable.');
-                }
-
-            });
+            world = new GameRoom(
+                roomId, 
+                (user: User, group: Group) => this.joinWebRtcRoom(user, group), 
+                (user: User, group: Group) => this.disConnectedUser(user, group), 
+                MINIMUM_DISTANCE, 
+                GROUP_RADIUS, 
+                (thing: Movable, listener: User) => this.onRoomEnter(thing, listener), 
+                (thing: Movable, position:PositionInterface, listener:User) => this.onClientMove(thing, position, listener), 
+                (thing: Movable, listener:User) => this.onClientLeave(thing, listener)
+            );
+            if (!world.anonymous) {
+                const data = await adminApi.fetchMapDetails(world.organizationSlug, world.worldSlug, world.roomSlug)
+                world.tags = data.tags
+                world.policyType = Number(data.policy_type)
+            }
             this.Worlds.set(roomId, world);
+        }
+        return Promise.resolve(world)
+    }
+
+    private joinRoom(client : ExSocketInterface, position: PointInterface): GameRoom {
+
+        const roomId = client.roomId;
+        //join user in room
+        this.nbClientsPerRoomGauge.inc({ room: roomId });
+        client.position = position;
+        
+        const world = this.Worlds.get(roomId)
+        if(world === undefined){
+            throw new Error('Could not find room for ID: '+client.roomId)
         }
 
         // Dispatch groups position to newly connected user
@@ -654,6 +599,64 @@ export class IoSocketController {
         //join world
         world.join(client, client.position);
         return world;
+    }
+    
+    private onRoomEnter(thing: Movable, listener: User) {
+        const clientListener = this.searchClientByIdOrFail(listener.id);
+        if (thing instanceof User) {
+            const clientUser = this.searchClientByIdOrFail(thing.id);
+
+            const userJoinedMessage = new UserJoinedMessage();
+            if (!Number.isInteger(clientUser.userId)) {
+                throw new Error('clientUser.userId is not an integer '+clientUser.userId);
+            }
+            userJoinedMessage.setUserid(clientUser.userId);
+            userJoinedMessage.setName(clientUser.name);
+            userJoinedMessage.setCharacterlayersList(clientUser.characterLayers);
+            userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(clientUser.position));
+
+            const subMessage = new SubMessage();
+            subMessage.setUserjoinedmessage(userJoinedMessage);
+
+            emitInBatch(clientListener, subMessage);
+        } else if (thing instanceof Group) {
+            this.emitCreateUpdateGroupEvent(clientListener, thing);
+        } else {
+            console.error('Unexpected type for Movable.');
+        }
+    }
+    
+    private onClientMove(thing: Movable, position:PositionInterface, listener:User): void {
+        const clientListener = this.searchClientByIdOrFail(listener.id);
+        if (thing instanceof User) {
+            const clientUser = this.searchClientByIdOrFail(thing.id);
+
+            const userMovedMessage = new UserMovedMessage();
+            userMovedMessage.setUserid(clientUser.userId);
+            userMovedMessage.setPosition(ProtobufUtils.toPositionMessage(clientUser.position));
+
+            const subMessage = new SubMessage();
+            subMessage.setUsermovedmessage(userMovedMessage);
+
+            clientListener.emitInBatch(subMessage);
+            //console.log("Sending USER_MOVED event");
+        } else if (thing instanceof Group) {
+            this.emitCreateUpdateGroupEvent(clientListener, thing);
+        } else {
+            console.error('Unexpected type for Movable.');
+        }
+    }
+    
+    private onClientLeave(thing: Movable, listener:User) {
+        const clientListener = this.searchClientByIdOrFail(listener.id);
+        if (thing instanceof User) {
+            const clientUser = this.searchClientByIdOrFail(thing.id);
+            this.emitUserLeftEvent(clientListener, clientUser.userId);
+        } else if (thing instanceof Group) {
+            this.emitDeleteGroupEvent(clientListener, thing.getId());
+        } else {
+            console.error('Unexpected type for Movable.');
+        }
     }
 
     private emitCreateUpdateGroupEvent(client: ExSocketInterface, group: Group): void {
