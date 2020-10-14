@@ -10,6 +10,11 @@ export interface AdminApiData {
     userUuid: string
 }
 
+export interface GrantedApiData {
+    granted: boolean,
+    memberTags: string[]
+}
+
 class AdminApi {
 
     async fetchMapDetails(organizationSlug: string, worldSlug: string, roomSlug: string|undefined): Promise<AdminApiData> {
@@ -46,7 +51,7 @@ class AdminApi {
         return res.data;
     }
 
-    async memberIsGrantedAccessToRoom(memberId: string, roomIdentifier: RoomIdentifier): Promise<boolean> {
+    async memberIsGrantedAccessToRoom(memberId: string, roomIdentifier: RoomIdentifier): Promise<GrantedApiData> {
         if (!ADMIN_API_URL) {
             return Promise.reject('No admin backoffice set!');
         }
@@ -54,10 +59,13 @@ class AdminApi {
             const res = await Axios.get(ADMIN_API_URL+'/api/member/is-granted-access',
                 { headers: {"Authorization" : `${ADMIN_API_TOKEN}`}, params: {memberId, organizationSlug: roomIdentifier.organizationSlug, worldSlug: roomIdentifier.worldSlug, roomSlug: roomIdentifier.roomSlug} }
             )
-            return !!res.data;
+            return res.data;
         } catch (e) {
             console.log(e.message)
-            return false;
+            return {
+                granted: false,
+                memberTags: []
+            };
         }
     }
 }
