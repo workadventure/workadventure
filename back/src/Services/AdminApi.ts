@@ -51,9 +51,8 @@ class AdminApi {
             return Promise.reject('No admin backoffice set!');
         }
         try {
-            //todo: send more specialized data instead of the whole id
             const res = await Axios.get(ADMIN_API_URL+'/api/member/is-granted-access',
-                { headers: {"Authorization" : `${ADMIN_API_TOKEN}`}, params: {memberId, roomIdentifier: roomIdentifier.id} }
+                { headers: {"Authorization" : `${ADMIN_API_TOKEN}`}, params: {memberId, organizationSlug: roomIdentifier.organizationSlug, worldSlug: roomIdentifier.worldSlug, roomSlug: roomIdentifier.roomSlug} }
             )
             return !!res.data;
         } catch (e) {

@@ -66,7 +66,7 @@ export class Room {
             this.instance = match[1];
             return this.instance;
         } else {
-            const match = /_\/([^/]+)\/([^/]+)\/.+/.exec(this.id);
+            const match = /@\/([^/]+)\/([^/]+)\/.+/.exec(this.id);
             if (!match) throw new Error('Could not extract instance from "'+this.id+'"');
             this.instance = match[1]+'/'+match[2];
             return this.instance;
