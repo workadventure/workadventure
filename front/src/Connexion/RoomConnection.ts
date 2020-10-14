@@ -482,6 +482,6 @@ export class RoomConnection implements RoomConnection {
     }
 
     public hasTag(tag: string): boolean {
-        return this.tags.indexOf(tag) !== -1;
+        return this.tags.includes(tag);
     }
 }
