@@ -313,7 +313,6 @@ export const loadAllLayers = (load: LoaderPlugin) => {
 }
 
 export const OBJECTS: Array<PlayerResourceDescriptionInterface> = [
-    {name:'report_flag', img:'resources/objects/report_flag.png'},
     {name:'layout_modes', img:'resources/objects/layout_modes.png'},
     {name:'teleportation', img:'resources/objects/teleportation.png'},
 ];
