@@ -587,13 +587,13 @@ div.modal-report-user{
 
 .modal-report-user textarea{
     position: absolute;
-    width: 400px;
     height: 200px;
     z-index: 999;
-    left: calc(50% - 200px);
     top: 200px;
     background-color: #000000;
     color: white;
+    width: calc(100% - 60px);
+    margin: 30px;
 }
 
 .modal-report-user img{
@@ -614,6 +614,7 @@ div.modal-report-user{
     cursor: pointer;
     width: 15px;
     height: 15px;
+    margin: 10px;
 }
 
 .modal-report-user button{
@@ -649,7 +650,8 @@ div.modal-report-user{
     font-size: 24px;
     color: white;
     position: absolute;
-    top: 90px;
+    top: 70px;
     width: 100%;
     text-align: left;
+    padding: 30px;
 }
