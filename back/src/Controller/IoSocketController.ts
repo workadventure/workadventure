@@ -60,6 +60,26 @@ function emitInBatch(socket: ExSocketInterface, payload: SubMessage): void {
             socket.batchTimeout = null;
         }, 100);
     }
+
+    // If we send a message, we don't need to keep the connection alive
+    resetPing(socket);
+}
+
+/**
+ * Schedule a ping to keep the connection open.
+ * If a ping is already set, the timeout of the ping is reset.
+ */
+function resetPing(ws: ExSocketInterface): void {
+    if (ws.pingTimeout) {
+        clearTimeout(ws.pingTimeout);
+    }
+    ws.pingTimeout = setTimeout(() => {
+        if (ws.disconnecting) {
+            return;
+        }
+        ws.ping();
+        resetPing(ws);
+    }, 29000);
 }
 
 export class IoSocketController {
@@ -232,6 +252,8 @@ export class IoSocketController {
 
                 // Let's join the room
                 this.handleJoinRoom(client, client.position, client.viewport);
+
+                resetPing(client);
             },
             message: (ws, arrayBuffer, isBinary): void => {
                 const client = ws as ExSocketInterface;
@@ -555,19 +577,19 @@ export class IoSocketController {
             }
         }
     }
-    
+
     private async getOrCreateRoom(roomId: string): Promise<GameRoom> {
         //check and create new world for a room
         let world = this.Worlds.get(roomId)
         if(world === undefined){
             world = new GameRoom(
-                roomId, 
-                (user: User, group: Group) => this.joinWebRtcRoom(user, group), 
-                (user: User, group: Group) => this.disConnectedUser(user, group), 
-                MINIMUM_DISTANCE, 
-                GROUP_RADIUS, 
-                (thing: Movable, listener: User) => this.onRoomEnter(thing, listener), 
-                (thing: Movable, position:PositionInterface, listener:User) => this.onClientMove(thing, position, listener), 
+                roomId,
+                (user: User, group: Group) => this.joinWebRtcRoom(user, group),
+                (user: User, group: Group) => this.disConnectedUser(user, group),
+                MINIMUM_DISTANCE,
+                GROUP_RADIUS,
+                (thing: Movable, listener: User) => this.onRoomEnter(thing, listener),
+                (thing: Movable, position:PositionInterface, listener:User) => this.onClientMove(thing, position, listener),
                 (thing: Movable, listener:User) => this.onClientLeave(thing, listener)
             );
             if (!world.anonymous) {
@@ -586,7 +608,7 @@ export class IoSocketController {
         //join user in room
         this.nbClientsPerRoomGauge.inc({ room: roomId });
         client.position = position;
-        
+
         const world = this.Worlds.get(roomId)
         if(world === undefined){
             throw new Error('Could not find room for ID: '+client.roomId)
@@ -600,7 +622,7 @@ export class IoSocketController {
         world.join(client, client.position);
         return world;
     }
-    
+
     private onRoomEnter(thing: Movable, listener: User) {
         const clientListener = this.searchClientByIdOrFail(listener.id);
         if (thing instanceof User) {
@@ -625,7 +647,7 @@ export class IoSocketController {
             console.error('Unexpected type for Movable.');
         }
     }
-    
+
     private onClientMove(thing: Movable, position:PositionInterface, listener:User): void {
         const clientListener = this.searchClientByIdOrFail(listener.id);
         if (thing instanceof User) {
@@ -646,7 +668,7 @@ export class IoSocketController {
             console.error('Unexpected type for Movable.');
         }
     }
-    
+
     private onClientLeave(thing: Movable, listener:User) {
         const clientListener = this.searchClientByIdOrFail(listener.id);
         if (thing instanceof User) {
