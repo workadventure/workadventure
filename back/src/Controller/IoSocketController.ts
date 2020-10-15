@@ -31,8 +31,7 @@ import {
     WebRtcStartMessage,
     WebRtcDisconnectMessage,
     PlayGlobalMessage,
-    ReportPlayerMessage,
-    TeleportMessageMessage
+    ReportPlayerMessage
 } from "../Messages/generated/messages_pb";
 import {UserMovesMessage} from "../Messages/generated/messages_pb";
 import Direction = PositionMessage.Direction;
@@ -888,19 +887,5 @@ export class IoSocketController {
             }
         }
         return null;
-    }
-
-    public teleport(userUuid: string) {
-        const userSocket = this.searchClientByUuid(userUuid);
-        if (!userSocket) {
-            throw 'User not found';
-        }
-        const teleportMessageMessage = new TeleportMessageMessage();
-        teleportMessageMessage.setMap(`wait/${userSocket.userUuid}`);
-
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setTeleportmessagemessage(teleportMessageMessage);
-
-        userSocket.send(serverToClientMessage.serializeBinary().buffer, true);
     }
 }

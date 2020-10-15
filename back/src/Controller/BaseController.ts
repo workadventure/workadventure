@@ -8,11 +8,4 @@ export class BaseController {
         res.writeHeader('access-control-allow-methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
         res.writeHeader('access-control-allow-origin', '*');
     }
-
-    protected checkAdminToken(req: HttpRequest): void {
-        //TODO
-        /*if(req.getHeader('Authorization') !== ADMIN_API_TOKEN){
-            throw 'Error token api';
-        }*/
-    }
 }

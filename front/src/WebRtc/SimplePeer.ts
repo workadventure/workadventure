@@ -146,6 +146,8 @@ export class SimplePeer {
         }
 
         mediaManager.removeActiveVideo("" + user.userId);
+
+        //TODO ad condition isPublic or annonyme
         mediaManager.addActiveVideo("" + user.userId, (comment: string) => {
             this.reportUser(user.userId, comment);
         }, name);
