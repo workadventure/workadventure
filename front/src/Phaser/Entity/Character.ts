@@ -88,7 +88,7 @@ export abstract class Character extends Container {
         this.add(this.teleportation);*/
 
         this.PlayerValue = name;
-        this.playerName = new BitmapText(scene, x, y - 25, 'main_font', name, 8);
+        this.playerName = new BitmapText(scene, x, y - 25, 'main_font', name, 7);
         this.playerName.setOrigin(0.5).setCenterAlign().setDepth(99999);
         scene.add.existing(this.playerName);
 
@@ -189,6 +189,7 @@ export abstract class Character extends Container {
             //this.anims.playReverse(`${this.PlayerTexture}-${PlayerAnimationNames.WalkLeft}`, true);
         }
 
+        //todo:remove this, use a container tech to move the bubble instead
         if (this.bubble) {
             this.bubble.moveBubble(this.x, this.y);
         }

@@ -62,6 +62,26 @@ function emitInBatch(socket: ExSocketInterface, payload: SubMessage): void {
             socket.batchTimeout = null;
         }, 100);
     }
+
+    // If we send a message, we don't need to keep the connection alive
+    resetPing(socket);
+}
+
+/**
+ * Schedule a ping to keep the connection open.
+ * If a ping is already set, the timeout of the ping is reset.
+ */
+function resetPing(ws: ExSocketInterface): void {
+    if (ws.pingTimeout) {
+        clearTimeout(ws.pingTimeout);
+    }
+    ws.pingTimeout = setTimeout(() => {
+        if (ws.disconnecting) {
+            return;
+        }
+        ws.ping();
+        resetPing(ws);
+    }, 29000);
 }
 
 export class IoSocketController {
@@ -234,6 +254,8 @@ export class IoSocketController {
 
                 // Let's join the room
                 this.handleJoinRoom(client, client.position, client.viewport);
+
+                resetPing(client);
             },
             message: (ws, arrayBuffer, isBinary): void => {
                 const client = ws as ExSocketInterface;

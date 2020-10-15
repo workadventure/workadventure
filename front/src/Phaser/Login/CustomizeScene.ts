@@ -54,12 +54,8 @@ export class CustomizeScene extends ResizableScene {
 
     create() {
         this.textField = new TextField(this, this.game.renderer.width / 2, 30, 'Customize your own Avatar!');
-        this.textField.setOrigin(0.5).setCenterAlign();
-        this.textField.setVisible(true);
 
-        this.enterField = new TextField(this, this.game.renderer.width / 2, 500, 'you can start the game by pressing SPACE..');
-        this.enterField.setOrigin(0.5).setCenterAlign();
-        this.enterField.setVisible(true);
+        this.enterField = new TextField(this, this.game.renderer.width / 2, 40, 'you can start the game by pressing SPACE..');
 
         this.logo = new Image(this, this.game.renderer.width - 30, this.game.renderer.height - 20, CustomizeTextures.icon);
         this.add.existing(this.logo);

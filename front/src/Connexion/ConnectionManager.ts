@@ -29,24 +29,29 @@ class ConnectionManager {
             const roomSlug = data.roomSlug;
             urlManager.editUrlForRoom(roomSlug, organizationSlug, worldSlug);
 
-            const room = new Room(window.location.pathname);
+            const room = new Room(window.location.pathname + window.location.hash);
             return Promise.resolve(room);
         } else if (connexionType === GameConnexionTypes.anonymous || connexionType === GameConnexionTypes.empty) {
             const localUser = localUserStore.getLocalUser();
 
             if (localUser && localUser.jwtToken && localUser.uuid) {
-                this.localUser = localUser
+                this.localUser = localUser;
+                try {
+                    await this.verifyToken(localUser.jwtToken);
+                } catch(e) {
+                    // If the token is invalid, let's generate an anonymous one.
+                    console.error('JWT token invalid. Did it expire? Login anonymously instead.');
+                    await this.anonymousLogin();
+                }
             } else {
-                const data = await Axios.post(`${API_URL}/anonymLogin`).then(res => res.data);
-                this.localUser = new LocalUser(data.userUuid, data.authToken);
-                localUserStore.saveUser(this.localUser);
+                await this.anonymousLogin();
             }
             let roomId: string
             if (connexionType === GameConnexionTypes.empty) {
                 const defaultMapUrl = window.location.host.replace('play.', 'maps.') + URL_ROOM_STARTED;
                 roomId = urlManager.editUrlForRoom(defaultMapUrl, null, null);
             } else {
-                roomId = window.location.pathname;
+                roomId = window.location.pathname + window.location.hash;
             }
             const room = new Room(roomId);
             return Promise.resolve(room);
@@ -54,8 +59,9 @@ class ConnectionManager {
             const localUser = localUserStore.getLocalUser();
 
             if (localUser) {
-                this.localUser = localUser
-                const room = new Room(window.location.pathname);
+                this.localUser = localUser;
+                await this.verifyToken(localUser.jwtToken);
+                const room = new Room(window.location.pathname + window.location.hash);
                 return Promise.resolve(room);
             } else {
                 //todo: find some kind of fallback?
@@ -64,6 +70,16 @@ class ConnectionManager {
         }
 
         return Promise.reject('Invalid URL');
+    }
+
+    private async verifyToken(token: string): Promise<void> {
+        await Axios.get(`${API_URL}/verify`, {params: {token}});
+    }
+
+    private async anonymousLogin(): Promise<void> {
+        const data = await Axios.post(`${API_URL}/anonymLogin`).then(res => res.data);
+        this.localUser = new LocalUser(data.userUuid, data.authToken);
+        localUserStore.saveUser(this.localUser);
     }
 
     public initBenchmark(): void {
