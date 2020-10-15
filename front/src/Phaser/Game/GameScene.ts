@@ -54,8 +54,7 @@ export enum Textures {
 }
 
 export interface GameSceneInitInterface {
-    initPosition: PointInterface|null,
-    startLayerName: string|undefined
+    initPosition: PointInterface|null
 }
 
 interface InitUserPositionEventInterface {
@@ -130,7 +129,6 @@ export class GameScene extends ResizableScene implements CenterListener {
     }
 
     private PositionNextScene: Array<Array<{ key: string, hash: string }>> = new Array<Array<{ key: string, hash: string }>>();
-    private startLayerName: string|undefined;
     private presentationModeSprite!: Sprite;
     private chatModeSprite!: Sprite;
     private gameMap!: GameMap;
@@ -315,8 +313,6 @@ export class GameScene extends ResizableScene implements CenterListener {
     init(initData : GameSceneInitInterface) {
         if (initData.initPosition !== undefined) {
             this.initPosition = initData.initPosition;
-        } else if (initData.startLayerName !== undefined) {
-            this.startLayerName = initData.startLayerName;
         }
     }
 
@@ -341,7 +337,10 @@ export class GameScene extends ResizableScene implements CenterListener {
                 this.addLayer(this.Map.createStaticLayer(layer.name, this.Terrains, 0, 0).setDepth(depth));
             }
             if (layer.type === 'tilelayer' && this.getExitSceneUrl(layer) !== undefined) {
-                this.loadNextGame(layer, this.mapFile.width, this.mapFile.tilewidth, this.mapFile.tileheight);
+                this.loadNextGameFromExitSceneUrl(layer, this.mapFile.width);
+            } else if (layer.type === 'tilelayer' && this.getExitUrl(layer) !== undefined) {
+                console.log('Loading exitUrl ', this.getExitUrl(layer))
+                this.loadNextGameFromExitUrl(layer, this.mapFile.width);
             }
             if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
                 depth = 10000;
@@ -357,9 +356,9 @@ export class GameScene extends ResizableScene implements CenterListener {
             this.startY = this.initPosition.y;
         } else {
             // Now, let's find the start layer
-            if (this.startLayerName) {
+            if (this.room.hash) {
                 for (const layer of this.mapFile.layers) {
-                    if (this.startLayerName === layer.name && layer.type === 'tilelayer' && this.isStartLayer(layer)) {
+                    if (this.room.hash === layer.name && layer.type === 'tilelayer' && this.isStartLayer(layer)) {
                         const startPosition = this.startUser(layer);
                         this.startX = startPosition.x;
                         this.startY = startPosition.y;
@@ -419,8 +418,8 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         // Let's alter browser history
         let path = this.room.id;
-        if (this.startLayerName) {
-            path += '#'+this.startLayerName;
+        if (this.room.hash) {
+            path += '#'+this.room.hash;
         }
         window.history.pushState({}, 'WorkAdventure', path);
 
@@ -656,6 +655,10 @@ export class GameScene extends ResizableScene implements CenterListener {
         }
     }
 
+    private getExitUrl(layer: ITiledMapLayer): string|undefined {
+        return this.getProperty(layer, "exitUrl") as string|undefined;
+    }
+
     private getExitSceneUrl(layer: ITiledMapLayer): string|undefined {
         return this.getProperty(layer, "exitSceneUrl") as string|undefined;
     }
@@ -680,15 +683,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         return obj.value;
     }
 
-    /**
-     *
-     * @param layer
-     * @param mapWidth
-     * @param tileWidth
-     * @param tileHeight
-     */
-    //todo: push that into the gameManager
-    private loadNextGame(layer: ITiledMapLayer, mapWidth: number, tileWidth: number, tileHeight: number){
+    private loadNextGameFromExitSceneUrl(layer: ITiledMapLayer, mapWidth: number) {
         const exitSceneUrl = this.getExitSceneUrl(layer);
         if (exitSceneUrl === undefined) {
             throw new Error('Layer is not an exit scene layer.');
@@ -698,17 +693,33 @@ export class GameScene extends ResizableScene implements CenterListener {
             instance = this.instance;
         }
 
-        console.log('existSceneUrl', exitSceneUrl);
-        console.log('existSceneInstance', instance);
-
-        // TODO: eventually compute a relative URL
-
-        // TODO: handle /@/ URL CASES!
+        //console.log('existSceneUrl', exitSceneUrl);
+        //console.log('existSceneInstance', instance);
 
         const absoluteExitSceneUrl = new URL(exitSceneUrl, this.MapUrlFile).href;
         const absoluteExitSceneUrlWithoutProtocol = absoluteExitSceneUrl.toString().substr(absoluteExitSceneUrl.toString().indexOf('://')+3);
         const roomId = '_/'+instance+'/'+absoluteExitSceneUrlWithoutProtocol;
-        console.log("Foo", instance, absoluteExitSceneUrlWithoutProtocol);
+
+        this.loadNextGame(layer, mapWidth, roomId);
+    }
+
+    private loadNextGameFromExitUrl(layer: ITiledMapLayer, mapWidth: number) {
+        const exitUrl = this.getExitUrl(layer);
+        if (exitUrl === undefined) {
+            throw new Error('Layer is not an exit layer.');
+        }
+        const fullPath = new URL(exitUrl, window.location.toString()).pathname;
+
+        this.loadNextGame(layer, mapWidth, fullPath);
+    }
+
+    /**
+     *
+     * @param layer
+     * @param mapWidth
+     */
+    //todo: push that into the gameManager
+    private loadNextGame(layer: ITiledMapLayer, mapWidth: number, roomId: string){
         const room = new Room(roomId);
         gameManager.loadMap(room, this.scene);
         const exitSceneKey = roomId;
@@ -723,7 +734,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             const y : number = parseInt(((key + 1) / mapWidth).toString());
             const x : number = key - (y * mapWidth);
 
-            let hash = new URL(exitSceneUrl, this.MapUrlFile).hash;
+            let hash = new URL(roomId, this.MapUrlFile).hash;
             if (hash) {
                 hash = hash.substr(1);
             }
@@ -960,9 +971,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             this.simplePeer.unregister();
             this.scene.stop();
             this.scene.remove(this.scene.key);
-            this.scene.start(nextSceneKey.key, {
-                startLayerName: nextSceneKey.hash
-            });
+            this.scene.start(nextSceneKey.key);
         }
     }
 

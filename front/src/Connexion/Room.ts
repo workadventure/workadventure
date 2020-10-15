@@ -6,8 +6,10 @@ export class Room {
     public readonly isPublic: boolean;
     private mapUrl: string|undefined;
     private instance: string|undefined;
+    public readonly hash: string;
 
     constructor(id: string) {
+        this.hash = '';
         if (id.startsWith('/')) {
             id = id.substr(1);
         }
@@ -18,6 +20,13 @@ export class Room {
             this.isPublic = false;
         } else {
             throw new Error('Invalid room ID');
+        }
+
+        const indexOfHash = this.id.indexOf('#');
+        if (indexOfHash !== -1) {
+            const idWithHash = this.id;
+            this.id = this.id.substr(0, indexOfHash);
+            this.hash = idWithHash.substr(indexOfHash + 1);
         }
     }
 
