@@ -1,6 +1,7 @@
 import {GameScene} from "../Game/GameScene";
 import {PointInterface} from "../../Connexion/ConnexionModels";
 import {Character} from "../Entity/Character";
+import {Sprite} from "./Sprite";
 
 /**
  * Class representing the sprite of a remote player (a player that plays on another computer)
@@ -22,9 +23,6 @@ export class RemotePlayer extends Character {
 
         //set data
         this.userId = userId;
-
-        //the current player model should be push away by other players to prevent conflict
-        //this.setImmovable(false);
     }
 
     updatePosition(position: PointInterface): void {

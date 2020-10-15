@@ -25,7 +25,7 @@ import {RemotePlayer} from "../Entity/RemotePlayer";
 import {Queue} from 'queue-typescript';
 import {SimplePeer, UserSimplePeerInterface} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
-import {loadAllLayers} from "../Entity/body_character";
+import {loadAllLayers, loadObject, loadPlayerCharacters} from "../Entity/body_character";
 import {CenterListener, layoutManager, LayoutMode} from "../../WebRtc/LayoutManager";
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
@@ -187,21 +187,9 @@ export class GameScene extends ResizableScene implements CenterListener {
         }
 
         //add player png
-        PLAYER_RESOURCES.forEach((playerResource: PlayerResourceDescriptionInterface) => {
-            this.load.spritesheet(
-                playerResource.name,
-                playerResource.img,
-                {frameWidth: 32, frameHeight: 32}
-            );
-        });
-
-        this.load.spritesheet(
-            'layout_modes',
-            'resources/objects/layout_modes.png',
-            {frameWidth: 32, frameHeight: 32}
-        );
-
+        loadPlayerCharacters(this.load);
         loadAllLayers(this.load);
+        loadObject(this.load);
 
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
     }
@@ -327,7 +315,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         });
 
         //permit to set bound collision
-        this.physics.world.setBounds(0,0, this.Map.widthInPixels, this.Map.heightInPixels);
+        this.physics.world.setBounds(0, 0, this.Map.widthInPixels, this.Map.heightInPixels);
 
         //add layer on map
         this.Layers = new Array<Phaser.Tilemaps.StaticTilemapLayer>();
@@ -391,7 +379,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.EventToClickOnTile();
 
         //initialise list of other player
-        this.MapPlayers = this.physics.add.group({ immovable: true });
+        this.MapPlayers = this.physics.add.group({immovable: true});
 
         //create input to move
         this.userInputManager = new UserInputManager(this);
@@ -404,7 +392,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         // Let's generate the circle for the group delimiter
         const circleElement = Object.values(this.textures.list).find((object: Texture) => object.key === 'circleSprite');
-        if(circleElement) {
+        if (circleElement) {
             this.textures.remove('circleSprite');
         }
         this.circleTexture = this.textures.createCanvas('circleSprite', 96, 96);
@@ -436,7 +424,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         this.createPromiseResolve();
 
-        this.userInputManager.spaceEvent( () => {
+        this.userInputManager.spaceEvent(() => {
             this.outlinedItem?.activate();
         });
 
@@ -526,7 +514,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                 top: camera.scrollY,
                 right: camera.scrollX + camera.width,
                 bottom: camera.scrollY + camera.height,
-            }).then((connection : RoomConnection) => {
+            }).then((connection: RoomConnection) => {
             this.connection = connection;
 
             //this.connection.emitPlayerDetailsMessage(gameManager.getPlayerName(), gameManager.getCharacterSelected())
@@ -586,8 +574,8 @@ export class GameScene extends ResizableScene implements CenterListener {
                 this.simplePeer.closeAllConnections();
                 this.simplePeer.unregister();
 
-                const gameSceneKey = 'somekey'+Math.round(Math.random()*10000);
-                const game : Phaser.Scene = GameScene.createFromUrl(this.room, this.MapUrlFile, gameSceneKey);
+                const gameSceneKey = 'somekey' + Math.round(Math.random() * 10000);
+                const game: Phaser.Scene = GameScene.createFromUrl(this.room, this.MapUrlFile, gameSceneKey);
                 this.scene.add(gameSceneKey, game, true,
                     {
                         initPosition: {
@@ -603,14 +591,14 @@ export class GameScene extends ResizableScene implements CenterListener {
             connection.onActionableEvent((message => {
                 const item = this.actionableItems.get(message.itemId);
                 if (item === undefined) {
-                    console.warn('Received an event about object "'+message.itemId+'" but cannot find this item on the map.');
+                    console.warn('Received an event about object "' + message.itemId + '" but cannot find this item on the map.');
                     return;
                 }
                 item.fire(message.event, message.state, message.parameters);
             }));
 
             // When connection is performed, let's connect SimplePeer
-            this.simplePeer = new SimplePeer(this.connection);
+            this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic);
             this.GlobalMessageManager = new GlobalMessageManager(this.connection);
 
             const self = this;

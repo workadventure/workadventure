@@ -40,7 +40,6 @@ export class AuthenticateController extends BaseController {
                 try {
                     if (typeof organizationMemberToken != 'string') throw new Error('No organization token');
                     const data = await adminApi.fetchMemberDataByToken(organizationMemberToken);
-
                     const userUuid = data.userUuid;
                     const organizationSlug = data.organizationSlug;
                     const worldSlug = data.worldSlug;
@@ -60,7 +59,7 @@ export class AuthenticateController extends BaseController {
                     }));
 
                 } catch (e) {
-                    console.log("An error happened", e)
+                    console.error("An error happened", e)
                     res.writeStatus(e.status || "500 Internal Server Error");
                     this.addCorsHeaders(res);
                     res.end('An error happened');

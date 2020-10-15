@@ -20,6 +20,12 @@ export class GlobalMessageManager {
         this.Connection.receiveStopGlobalMessage((messageId: string) => {
             this.stopMessage(messageId);
         });
+
+        //receive signal to close message
+        this.Connection.receiveTeleportMessage((map: string) => {
+            console.log('map to teleport user', map);
+            //TODO teleport user on map
+        });
     }
 
     private playMessage(message : PlayGlobalMessageInterface){

@@ -46,6 +46,7 @@ export abstract class Character extends Container {
     public PlayerValue: string;
     public sprites: Map<string, Sprite>;
     private lastDirection: string = PlayerAnimationNames.WalkDown;
+    //private teleportation: Sprite;
 
     constructor(scene: Phaser.Scene,
                 x: number,
@@ -62,6 +63,7 @@ export abstract class Character extends Container {
 
         for (const texture of textures) {
             const sprite = new Sprite(scene, 0, 0, texture, frame);
+            sprite.setInteractive({useHandCursor: true});
             this.add(sprite);
             this.getPlayerAnimations(texture).forEach(d => {
                 this.scene.anims.create({
@@ -75,6 +77,15 @@ export abstract class Character extends Container {
             this.scene.sys.updateList.add(sprite);
             this.sprites.set(texture, sprite);
         }
+
+        /*this.teleportation = new Sprite(scene, -20, -10, 'teleportation', 3);
+        this.teleportation.setInteractive();
+        this.teleportation.visible = false;
+        this.teleportation.on('pointerup', () => {
+            this.report.visible = false;
+            this.teleportation.visible = false;
+        });
+        this.add(this.teleportation);*/
 
         this.PlayerValue = name;
         this.playerName = new BitmapText(scene, x, y - 25, 'main_font', name, 7);

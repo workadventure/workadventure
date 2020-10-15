@@ -20,7 +20,9 @@ import {
     WebRtcDisconnectMessage,
     WebRtcSignalToClientMessage,
     WebRtcSignalToServerMessage,
-    WebRtcStartMessage
+    WebRtcStartMessage,
+    ReportPlayerMessage,
+    TeleportMessageMessage
 } from "../Messages/generated/messages_pb"
 
 import {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
@@ -146,6 +148,8 @@ export class RoomConnection implements RoomConnection {
                 this.dispatch(EventMessage.PLAY_GLOBAL_MESSAGE, message.getPlayglobalmessage());
             } else if (message.hasStopglobalmessage()) {
                 this.dispatch(EventMessage.STOP_GLOBAL_MESSAGE, message.getStopglobalmessage());
+            } else if (message.hasTeleportmessagemessage()) {
+                this.dispatch(EventMessage.TELEPORT, message.getTeleportmessagemessage());
             } else {
                 throw new Error('Unknown message received');
             }
@@ -403,7 +407,6 @@ export class RoomConnection implements RoomConnection {
             }
             callback(event);
         });
-
     }
 
     public getUserId(): number|null {
@@ -468,6 +471,12 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public receiveTeleportMessage(callback: (messageId: string) => void) {
+        return this.onMessage(EventMessage.TELEPORT, (message: TeleportMessageMessage) => {
+            callback(message.getMap());
+        });
+    }
+
     public emitGlobalMessage(message: PlayGlobalMessageInterface){
         console.log('emitGlobalMessage', message);
         const playGlobalMessage = new PlayGlobalMessage();
@@ -477,6 +486,17 @@ export class RoomConnection implements RoomConnection {
 
         const clientToServerMessage = new ClientToServerMessage();
         clientToServerMessage.setPlayglobalmessage(playGlobalMessage);
+
+        this.socket.send(clientToServerMessage.serializeBinary().buffer);
+    }
+
+    public emitReportPlayerMessage(reportedUserId: number, reportComment: string ): void {
+        const reportPlayerMessage = new ReportPlayerMessage();
+        reportPlayerMessage.setReporteduserid(reportedUserId);
+        reportPlayerMessage.setReportcomment(reportComment);
+
+        const clientToServerMessage = new ClientToServerMessage();
+        clientToServerMessage.setReportplayermessage(reportPlayerMessage);
 
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }

@@ -48,6 +48,11 @@ message WebRtcSignalToServerMessage {
   string signal = 2;
 }
 
+message ReportPlayerMessage {
+  int32 reportedUserId = 1;
+  string reportComment = 2;
+}
+
 message ClientToServerMessage {
   oneof message {
     UserMovesMessage userMovesMessage = 2;
@@ -59,6 +64,7 @@ message ClientToServerMessage {
     WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 8;
     PlayGlobalMessage playGlobalMessage = 9;
     StopGlobalMessage stopGlobalMessage = 10;
+    ReportPlayerMessage reportPlayerMessage = 11;
   }
 }
 
@@ -157,6 +163,10 @@ message WebRtcSignalToClientMessage {
   string signal = 2;
 }
 
+message TeleportMessageMessage{
+  string map = 1;
+}
+
 message ServerToClientMessage {
   oneof message {
     BatchMessage batchMessage = 1;
@@ -168,5 +178,6 @@ message ServerToClientMessage {
     WebRtcDisconnectMessage webRtcDisconnectMessage = 7;
     PlayGlobalMessage playGlobalMessage = 8;
     StopGlobalMessage stopGlobalMessage = 9;
+    TeleportMessageMessage teleportMessageMessage = 10;
   }
 }

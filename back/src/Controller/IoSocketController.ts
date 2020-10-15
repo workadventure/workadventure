@@ -1,5 +1,5 @@
 import {ExSocketInterface} from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
-import {MINIMUM_DISTANCE, GROUP_RADIUS} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
+import {MINIMUM_DISTANCE, GROUP_RADIUS, ADMIN_API_URL, ADMIN_API_TOKEN} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
 import {GameRoom, GameRoomPolicyTypes} from "../Model/GameRoom";
 import {Group} from "../Model/Group";
 import {User} from "../Model/User";
@@ -31,6 +31,7 @@ import {
     WebRtcStartMessage,
     WebRtcDisconnectMessage,
     PlayGlobalMessage,
+    ReportPlayerMessage
 } from "../Messages/generated/messages_pb";
 import {UserMovesMessage} from "../Messages/generated/messages_pb";
 import Direction = PositionMessage.Direction;
@@ -41,6 +42,7 @@ import {cpuTracker} from "../Services/CpuTracker";
 import {ViewportInterface} from "../Model/Websocket/ViewportMessage";
 import {jwtTokenManager} from "../Services/JWTTokenManager";
 import {adminApi} from "../Services/AdminApi";
+import Axios from "axios";
 import {PositionInterface} from "../Model/PositionInterface";
 
 function emitInBatch(socket: ExSocketInterface, payload: SubMessage): void {
@@ -270,11 +272,13 @@ export class IoSocketController {
                 } else if (message.hasItemeventmessage()) {
                     this.handleItemEvent(client, message.getItemeventmessage() as ItemEventMessage);
                 } else if (message.hasWebrtcsignaltoservermessage()) {
-                    this.emitVideo(client, message.getWebrtcsignaltoservermessage() as WebRtcSignalToServerMessage)
+                    this.emitVideo(client, message.getWebrtcsignaltoservermessage() as WebRtcSignalToServerMessage);
                 } else if (message.hasWebrtcscreensharingsignaltoservermessage()) {
-                    this.emitScreenSharing(client, message.getWebrtcscreensharingsignaltoservermessage() as WebRtcSignalToServerMessage)
+                    this.emitScreenSharing(client, message.getWebrtcscreensharingsignaltoservermessage() as WebRtcSignalToServerMessage);
                 } else if (message.hasPlayglobalmessage()) {
-                    this.emitPlayGlobalMessage(client, message.getPlayglobalmessage() as PlayGlobalMessage)
+                    this.emitPlayGlobalMessage(client, message.getPlayglobalmessage() as PlayGlobalMessage);
+                } else if (message.hasReportplayermessage()){
+                    this.handleReportMessage(client, message.getReportplayermessage() as ReportPlayerMessage);
                 }
 
                     /* Ok is false if backpressure was built up, wait for drain */
@@ -505,6 +509,29 @@ export class IoSocketController {
             world.setItemState(itemEvent.itemId, itemEvent.state);
         } catch (e) {
             console.error('An error occurred on "item_event"');
+            console.error(e);
+        }
+    }
+
+    private handleReportMessage(client: ExSocketInterface, reportPlayerMessage: ReportPlayerMessage) {
+        try {
+            const reportedSocket = this.sockets.get(reportPlayerMessage.getReporteduserid());
+            if (!reportedSocket) {
+                throw 'reported socket user not found';
+            }
+            //TODO report user on admin application
+            Axios.post(`${ADMIN_API_URL}/api/report`, {
+                    reportedUserUuid: reportedSocket.userUuid,
+                    reportedUserComment: reportPlayerMessage.getReportcomment(),
+                    reporterUserUuid: client.userUuid
+                },
+                {
+                    headers: {"Authorization": `${ADMIN_API_TOKEN}`}
+                }).catch((err) => {
+                throw err;
+            });
+        } catch (e) {
+            console.error('An error occurred on "handleReportMessage"');
             console.error(e);
         }
     }
@@ -869,5 +896,18 @@ export class IoSocketController {
 
     public getWorlds(): Map<string, GameRoom> {
         return this.Worlds;
+    }
+
+    /**
+     *
+     * @param token
+     */
+    searchClientByUuid(uuid: string): ExSocketInterface | null {
+        for(const socket of this.sockets.values()){
+            if(socket.userUuid === uuid){
+                return socket;
+            }
+        }
+        return null;
     }
 }
