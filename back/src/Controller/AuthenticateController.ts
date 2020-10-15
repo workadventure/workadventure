@@ -88,7 +88,7 @@ export class AuthenticateController extends BaseController {
                 })
 
                 try {
-                    await jwtTokenManager.createJWTToken(query.token as string);
+                    await jwtTokenManager.getUserUuidFromToken(query.token as string);
                 } catch (e) {
                     res.writeStatus("400 Bad Request").end(JSON.stringify({
                         "success": false,
