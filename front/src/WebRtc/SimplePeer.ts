@@ -29,8 +29,6 @@ export interface PeerConnectionListener {
  * This class manages connections to all the peers in the same group as me.
  */
 export class SimplePeer {
-    private Connection: RoomConnection;
-    private WebRtcRoomId: string;
     private Users: Array<UserSimplePeerInterface> = new Array<UserSimplePeerInterface>();
 
     private PeerScreenSharingConnectionArray: Map<number, ScreenSharingPeer> = new Map<number, ScreenSharingPeer>();
@@ -40,9 +38,7 @@ export class SimplePeer {
     private readonly stopLocalScreenSharingStreamCallback: StopScreenSharingCallback;
     private readonly peerConnectionListeners: Array<PeerConnectionListener> = new Array<PeerConnectionListener>();
 
-    constructor(Connection: RoomConnection, WebRtcRoomId: string = "test-webrtc") {
-        this.Connection = Connection;
-        this.WebRtcRoomId = WebRtcRoomId;
+    constructor(private Connection: RoomConnection, private enableReporting: boolean) {
         // We need to go through this weird bound function pointer in order to be able to "free" this reference later.
         this.sendLocalVideoStreamCallback = this.sendLocalVideoStream.bind(this);
         this.sendLocalScreenSharingStreamCallback = this.sendLocalScreenSharingStream.bind(this);
@@ -148,9 +144,11 @@ export class SimplePeer {
         mediaManager.removeActiveVideo("" + user.userId);
 
         //TODO ad condition isPublic or annonyme
-        mediaManager.addActiveVideo("" + user.userId, (comment: string) => {
-            this.reportUser(user.userId, comment);
-        }, name);
+        const reportCallback = this.enableReporting ? (comment: string) => {
+                this.reportUser(user.userId, comment);
+            }: undefined;
+
+        mediaManager.addActiveVideo("" + user.userId, reportCallback, name);
 
         const peer = new VideoPeer(user.userId, user.initiator ? user.initiator : false, this.Connection);
         // When a connection is established to a video stream, and if a screen sharing is taking place,

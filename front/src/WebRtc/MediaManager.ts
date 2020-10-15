@@ -342,7 +342,7 @@ export class MediaManager {
      * @param reportCallBack
      * @param userName
      */
-    addActiveVideo(userId: string, reportCallBack: ReportCallback, userName: string = ""){
+    addActiveVideo(userId: string, reportCallBack: ReportCallback|undefined, userName: string = ""){
         this.webrtcInAudio.play();
 
         userName = userName.toUpperCase();
@@ -354,18 +354,22 @@ export class MediaManager {
                 <div class="rtc-error" style="display: none"></div>
                 <i id="name-${userId}" style="background-color: ${color};">${userName}</i>
                 <img id="microphone-${userId}" src="resources/logos/microphone-close.svg">
-                <img id="report-${userId}" class="report active" src="resources/logos/report.svg">
-                <video id="${userId}" autoplay></video>
+                ` +
+                ((reportCallBack!==undefined)?`<img id="report-${userId}" class="report active" src="resources/logos/report.svg">`:'')
+                +
+                `<video id="${userId}" autoplay></video>
             </div>
         `;
 
         layoutManager.add(DivImportance.Normal, userId, html);
 
-        const reportBtn = this.getElementByIdOrFail<HTMLDivElement>(`report-${userId}`);
-        reportBtn.addEventListener('click', (e: MouseEvent) => {
-            e.preventDefault();
-            this.showReportModal(userId, userName, reportCallBack);
-        });
+        if (reportCallBack) {
+            const reportBtn = this.getElementByIdOrFail<HTMLDivElement>(`report-${userId}`);
+            reportBtn.addEventListener('click', (e: MouseEvent) => {
+                e.preventDefault();
+                this.showReportModal(userId, userName, reportCallBack);
+            });
+        }
 
         this.remoteVideo.set(userId, this.getElementByIdOrFail<HTMLVideoElement>(userId));
     }
