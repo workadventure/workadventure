@@ -36,7 +36,7 @@ export class AuthenticateController extends BaseController {
 
                 //todo: what to do if the organizationMemberToken is already used?
                 const organizationMemberToken:string|null = param.organizationMemberToken;
-                
+
                 try {
                     if (typeof organizationMemberToken != 'string') throw new Error('No organization token');
                     const data = await adminApi.fetchMemberDataByToken(organizationMemberToken);

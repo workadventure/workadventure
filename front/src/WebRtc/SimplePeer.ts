@@ -143,7 +143,6 @@ export class SimplePeer {
 
         mediaManager.removeActiveVideo("" + user.userId);
 
-        //TODO ad condition isPublic or annonyme
         const reportCallback = this.enableReporting ? (comment: string) => {
                 this.reportUser(user.userId, comment);
             }: undefined;
