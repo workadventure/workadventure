@@ -1,25 +1,30 @@
-export class RoomIdentifier {
-    public readonly anonymous: boolean;
-    public readonly id:string
-    public readonly organizationSlug: string|undefined;
-    public readonly worldSlug: string|undefined;
-    public readonly roomSlug: string|undefined;
-    constructor(roomID: string) {
-        if (roomID.startsWith('_/')) {
-            this.anonymous = true;
-        } else if(roomID.startsWith('@/')) {
-            this.anonymous = false;
+//helper functions to parse room IDs
 
-            const match = /@\/([^/]+)\/([^/]+)\/(.+)/.exec(roomID);
-            if (!match) {
-                throw new Error('Could not extract info from "'+roomID+'"');
-            }
-            this.organizationSlug = match[1];
-            this.worldSlug = match[2];
-            this.roomSlug = match[3];
-        } else {
-            throw new Error('Incorrect room ID: '+roomID);
-        }
-        this.id = roomID;
+export const isRoomAnonymous = (roomID: string): boolean => {
+    if (roomID.startsWith('_/')) {
+        return true;
+    } else if(roomID.startsWith('@/')) {
+        return false;
+    } else {
+        throw new Error('Incorrect room ID: '+roomID);
     }
+}
+
+export const extractRoomSlugPublicRoomId = (roomId: string): string => {
+    const idParts = roomId.split('/');
+    if (idParts.length < 3) throw new Error('Incorrect roomId: '+roomId);
+    return idParts.slice(2).join('/');
+}
+export interface extractDataFromPrivateRoomIdResponse {
+    organizationSlug: string;
+    worldSlug: string;
+    roomSlug: string;
+}
+export const extractDataFromPrivateRoomId = (roomId: string): extractDataFromPrivateRoomIdResponse => {
+    const idParts = roomId.split('/');
+    if (idParts.length < 4) throw new Error('Incorrect roomId: '+roomId);
+    const organizationSlug = idParts[1];
+    const worldSlug = idParts[2];
+    const roomSlug = idParts[3];
+    return {organizationSlug, worldSlug, roomSlug}
 }
