@@ -1,5 +1,6 @@
 import {LocalUser} from "./LocalUser";
 
+//todo: add localstorage fallback
 class LocalUserStore {
     
     saveUser(localUser: LocalUser) {
@@ -9,6 +10,14 @@ class LocalUserStore {
     getLocalUser(): LocalUser|null {
         const data = localStorage.getItem('localUser');
         return data ? JSON.parse(data) : null;
+    }
+    
+    setName(name:string): void {
+        window.localStorage.setItem('playerName', name);
+    }
+    
+    getName(): string {
+        return window.localStorage.getItem('playerName') ?? '';
     }
      
 }

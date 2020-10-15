@@ -53,16 +53,12 @@ export class EnableCameraScene extends Phaser.Scene {
 
     create() {
         this.textField = new TextField(this, this.game.renderer.width / 2, 20, 'Turn on your camera and microphone');
-        this.textField.setOrigin(0.5).setCenterAlign();
 
         this.pressReturnField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height - 30, 'Press enter to start');
-        this.pressReturnField.setOrigin(0.5).setCenterAlign();
 
         this.cameraNameField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height - 60, '');
-        this.cameraNameField.setOrigin(0.5).setCenterAlign();
 
         this.microphoneNameField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height - 40, '');
-        this.microphoneNameField.setOrigin(0.5).setCenterAlign();
 
         this.arrowRight = new Image(this, 0, 0, LoginTextures.arrowRight);
         this.arrowRight.setOrigin(0.5, 0.5);

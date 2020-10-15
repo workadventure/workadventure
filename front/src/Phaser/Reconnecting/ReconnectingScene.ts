@@ -34,7 +34,6 @@ export class ReconnectingScene extends Phaser.Scene {
         this.add.existing(this.logo);
 
         this.reconnectingField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height / 2, "Connection lost. Reconnecting...");
-        this.reconnectingField.setOrigin(0.5, 0.5).setCenterAlign();
 
         const cat = this.physics.add.sprite(this.game.renderer.width / 2, this.game.renderer.height / 2 - 32, 'cat');
         this.anims.create({

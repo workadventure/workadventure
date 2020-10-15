@@ -46,6 +46,7 @@ export abstract class Character extends Container {
     public PlayerValue: string;
     public sprites: Map<string, Sprite>;
     private lastDirection: string = PlayerAnimationNames.WalkDown;
+    //private teleportation: Sprite;
 
     constructor(scene: Phaser.Scene,
                 x: number,
@@ -62,6 +63,7 @@ export abstract class Character extends Container {
 
         for (const texture of textures) {
             const sprite = new Sprite(scene, 0, 0, texture, frame);
+            sprite.setInteractive({useHandCursor: true});
             this.add(sprite);
             this.getPlayerAnimations(texture).forEach(d => {
                 this.scene.anims.create({
@@ -76,8 +78,17 @@ export abstract class Character extends Container {
             this.sprites.set(texture, sprite);
         }
 
+        /*this.teleportation = new Sprite(scene, -20, -10, 'teleportation', 3);
+        this.teleportation.setInteractive();
+        this.teleportation.visible = false;
+        this.teleportation.on('pointerup', () => {
+            this.report.visible = false;
+            this.teleportation.visible = false;
+        });
+        this.add(this.teleportation);*/
+
         this.PlayerValue = name;
-        this.playerName = new BitmapText(scene, x, y - 25, 'main_font', name, 8);
+        this.playerName = new BitmapText(scene, x, y - 25, 'main_font', name, 7);
         this.playerName.setOrigin(0.5).setCenterAlign().setDepth(99999);
         scene.add.existing(this.playerName);
 
@@ -178,6 +189,7 @@ export abstract class Character extends Container {
             //this.anims.playReverse(`${this.PlayerTexture}-${PlayerAnimationNames.WalkLeft}`, true);
         }
 
+        //todo:remove this, use a container tech to move the bubble instead
         if (this.bubble) {
             this.bubble.moveBubble(this.x, this.y);
         }

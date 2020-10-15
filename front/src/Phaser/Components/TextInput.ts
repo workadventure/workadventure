@@ -1,13 +1,15 @@
 
 export class TextInput extends Phaser.GameObjects.BitmapText {
-    private underLineLength = 10;
+    private minUnderLineLength = 4;
     private underLine: Phaser.GameObjects.Text;
 
     constructor(scene: Phaser.Scene, x: number, y: number, maxLength: number, text: string, onChange: (text: string) => void) {
         super(scene, x, y, 'main_font', text, 32);
+        this.setOrigin(0.5).setCenterAlign()
         this.scene.add.existing(this);
 
-        this.underLine = this.scene.add.text(x, y+1, '_______', { fontFamily: 'Arial', fontSize: "32px", color: '#ffffff'})
+        this.underLine = this.scene.add.text(x, y+1, this.getUnderLineBody(text.length), { fontFamily: 'Arial', fontSize: "32px", color: '#ffffff'})
+        this.underLine.setOrigin(0.5)
 
 
         this.scene.input.keyboard.on('keydown', (event: KeyboardEvent) => {
@@ -16,23 +18,27 @@ export class TextInput extends Phaser.GameObjects.BitmapText {
             } else if ((event.keyCode === 32 || (event.keyCode >= 48 && event.keyCode <= 90)) && this.text.length < maxLength) {
                 this.addLetter(event.key);
             }
+            this.underLine.text = this.getUnderLineBody(this.text.length);
             onChange(this.text);
         });
+    }
+    
+    private getUnderLineBody(textLength:number): string {
+        if (textLength < this.minUnderLineLength) textLength = this.minUnderLineLength;
+        let text = '_______';
+        for (let i = this.minUnderLineLength; i < textLength; i++) {
+            text += '__'
+        }
+        return text;
     }
 
     private deleteLetter() {
         this.text = this.text.substr(0, this.text.length - 1);
-        if (this.underLine.text.length > this.underLineLength) {
-            this.underLine.text = this.underLine.text.substr(0, this.underLine.text.length - 1);
-        }
     }
 
 
     private addLetter(letter: string) {
         this.text += letter;
-        if (this.text.length > this.underLineLength) {
-            this.underLine.text +=  '_';
-        }
     }
 
     getText(): string {

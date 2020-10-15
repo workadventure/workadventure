@@ -1,4 +1,5 @@
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
+import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "./Character";
 
 export interface BodyResourceDescriptionInterface {
     name: string,
@@ -309,4 +310,29 @@ export const loadAllLayers = (load: LoaderPlugin) => {
             )
         }
     }
+}
+
+export const OBJECTS: Array<PlayerResourceDescriptionInterface> = [
+    {name:'layout_modes', img:'resources/objects/layout_modes.png'},
+    {name:'teleportation', img:'resources/objects/teleportation.png'},
+];
+
+export const loadObject = (load: LoaderPlugin) => {
+    for (let j = 0; j < OBJECTS.length; j++) {
+        load.spritesheet(
+            OBJECTS[j].name,
+            OBJECTS[j].img,
+            {frameWidth: 32, frameHeight: 32}
+        )
+    }
+}
+
+export const loadPlayerCharacters = (load: LoaderPlugin) => {
+    PLAYER_RESOURCES.forEach((playerResource: PlayerResourceDescriptionInterface) => {
+        load.spritesheet(
+            playerResource.name,
+            playerResource.img,
+            {frameWidth: 32, frameHeight: 32}
+        );
+    });
 }

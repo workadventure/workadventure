@@ -24,7 +24,6 @@ export class MapController extends BaseController{
         });
 
         this.App.get("/map", (res: HttpResponse, req: HttpRequest) => {
-            this.addCorsHeaders(res);
 
             res.onAborted(() => {
                 console.warn('/map request was aborted');
@@ -34,25 +33,35 @@ export class MapController extends BaseController{
 
             if (typeof query.organizationSlug !== 'string') {
                 console.error('Expected organizationSlug parameter');
-                res.writeStatus("400 Bad request").end("Expected organizationSlug parameter");
+                res.writeStatus("400 Bad request");
+                this.addCorsHeaders(res);
+                res.end("Expected organizationSlug parameter");
             }
             if (typeof query.worldSlug !== 'string') {
                 console.error('Expected worldSlug parameter');
-                res.writeStatus("400 Bad request").end("Expected worldSlug parameter");
+                res.writeStatus("400 Bad request");
+                this.addCorsHeaders(res);
+                res.end("Expected worldSlug parameter");
             }
             if (typeof query.roomSlug !== 'string' && query.roomSlug !== undefined) {
                 console.error('Expected only one roomSlug parameter');
-                res.writeStatus("400 Bad request").end("Expected only one roomSlug parameter");
+                res.writeStatus("400 Bad request");
+                this.addCorsHeaders(res);
+                res.end("Expected only one roomSlug parameter");
             }
 
             (async () => {
                 try {
                     const mapDetails = await adminApi.fetchMapDetails(query.organizationSlug as string, query.worldSlug as string, query.roomSlug as string|undefined);
 
-                    res.writeStatus("200 OK").end(JSON.stringify(mapDetails));
+                    res.writeStatus("200 OK");
+                    this.addCorsHeaders(res);
+                    res.end(JSON.stringify(mapDetails));
                 } catch (e) {
                     console.error(e);
-                    res.writeStatus("500 Internal Server Error").end("An error occurred");
+                    res.writeStatus("500 Internal Server Error")
+                    this.addCorsHeaders(res);
+                    res.end("An error occurred");
                 }
             })();
 

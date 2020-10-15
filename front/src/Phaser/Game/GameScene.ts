@@ -25,7 +25,7 @@ import {RemotePlayer} from "../Entity/RemotePlayer";
 import {Queue} from 'queue-typescript';
 import {SimplePeer, UserSimplePeerInterface} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
-import {loadAllLayers} from "../Entity/body_character";
+import {loadAllLayers, loadObject, loadPlayerCharacters} from "../Entity/body_character";
 import {CenterListener, layoutManager, LayoutMode} from "../../WebRtc/LayoutManager";
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
@@ -54,8 +54,7 @@ export enum Textures {
 }
 
 export interface GameSceneInitInterface {
-    initPosition: PointInterface|null,
-    startLayerName: string|undefined
+    initPosition: PointInterface|null
 }
 
 interface InitUserPositionEventInterface {
@@ -130,7 +129,6 @@ export class GameScene extends ResizableScene implements CenterListener {
     }
 
     private PositionNextScene: Array<Array<{ key: string, hash: string }>> = new Array<Array<{ key: string, hash: string }>>();
-    private startLayerName: string|undefined;
     private presentationModeSprite!: Sprite;
     private chatModeSprite!: Sprite;
     private gameMap!: GameMap;
@@ -189,21 +187,9 @@ export class GameScene extends ResizableScene implements CenterListener {
         }
 
         //add player png
-        PLAYER_RESOURCES.forEach((playerResource: PlayerResourceDescriptionInterface) => {
-            this.load.spritesheet(
-                playerResource.name,
-                playerResource.img,
-                {frameWidth: 32, frameHeight: 32}
-            );
-        });
-
-        this.load.spritesheet(
-            'layout_modes',
-            'resources/objects/layout_modes.png',
-            {frameWidth: 32, frameHeight: 32}
-        );
-
+        loadPlayerCharacters(this.load);
         loadAllLayers(this.load);
+        loadObject(this.load);
 
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
     }
@@ -315,8 +301,6 @@ export class GameScene extends ResizableScene implements CenterListener {
     init(initData : GameSceneInitInterface) {
         if (initData.initPosition !== undefined) {
             this.initPosition = initData.initPosition;
-        } else if (initData.startLayerName !== undefined) {
-            this.startLayerName = initData.startLayerName;
         }
     }
 
@@ -331,7 +315,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         });
 
         //permit to set bound collision
-        this.physics.world.setBounds(0,0, this.Map.widthInPixels, this.Map.heightInPixels);
+        this.physics.world.setBounds(0, 0, this.Map.widthInPixels, this.Map.heightInPixels);
 
         //add layer on map
         this.Layers = new Array<Phaser.Tilemaps.StaticTilemapLayer>();
@@ -341,7 +325,10 @@ export class GameScene extends ResizableScene implements CenterListener {
                 this.addLayer(this.Map.createStaticLayer(layer.name, this.Terrains, 0, 0).setDepth(depth));
             }
             if (layer.type === 'tilelayer' && this.getExitSceneUrl(layer) !== undefined) {
-                this.loadNextGame(layer, this.mapFile.width, this.mapFile.tilewidth, this.mapFile.tileheight);
+                this.loadNextGameFromExitSceneUrl(layer, this.mapFile.width);
+            } else if (layer.type === 'tilelayer' && this.getExitUrl(layer) !== undefined) {
+                console.log('Loading exitUrl ', this.getExitUrl(layer))
+                this.loadNextGameFromExitUrl(layer, this.mapFile.width);
             }
             if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
                 depth = 10000;
@@ -357,9 +344,9 @@ export class GameScene extends ResizableScene implements CenterListener {
             this.startY = this.initPosition.y;
         } else {
             // Now, let's find the start layer
-            if (this.startLayerName) {
+            if (this.room.hash) {
                 for (const layer of this.mapFile.layers) {
-                    if (this.startLayerName === layer.name && layer.type === 'tilelayer' && this.isStartLayer(layer)) {
+                    if (this.room.hash === layer.name && layer.type === 'tilelayer' && this.isStartLayer(layer)) {
                         const startPosition = this.startUser(layer);
                         this.startX = startPosition.x;
                         this.startY = startPosition.y;
@@ -392,7 +379,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.EventToClickOnTile();
 
         //initialise list of other player
-        this.MapPlayers = this.physics.add.group({ immovable: true });
+        this.MapPlayers = this.physics.add.group({immovable: true});
 
         //create input to move
         this.userInputManager = new UserInputManager(this);
@@ -405,7 +392,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         // Let's generate the circle for the group delimiter
         const circleElement = Object.values(this.textures.list).find((object: Texture) => object.key === 'circleSprite');
-        if(circleElement) {
+        if (circleElement) {
             this.textures.remove('circleSprite');
         }
         this.circleTexture = this.textures.createCanvas('circleSprite', 96, 96);
@@ -416,6 +403,13 @@ export class GameScene extends ResizableScene implements CenterListener {
         context.strokeStyle = '#ffffff';
         context.stroke();
         this.circleTexture.refresh();
+
+        // Let's alter browser history
+        let path = this.room.id;
+        if (this.room.hash) {
+            path += '#'+this.room.hash;
+        }
+        window.history.pushState({}, 'WorkAdventure', path);
 
         // Let's pause the scene if the connection is not established yet
         if (this.connection === undefined) {
@@ -430,7 +424,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         this.createPromiseResolve();
 
-        this.userInputManager.spaceEvent( () => {
+        this.userInputManager.spaceEvent(() => {
             this.outlinedItem?.activate();
         });
 
@@ -520,7 +514,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                 top: camera.scrollY,
                 right: camera.scrollX + camera.width,
                 bottom: camera.scrollY + camera.height,
-            }).then((connection : RoomConnection) => {
+            }).then((connection: RoomConnection) => {
             this.connection = connection;
 
             //this.connection.emitPlayerDetailsMessage(gameManager.getPlayerName(), gameManager.getCharacterSelected())
@@ -580,8 +574,8 @@ export class GameScene extends ResizableScene implements CenterListener {
                 this.simplePeer.closeAllConnections();
                 this.simplePeer.unregister();
 
-                const gameSceneKey = 'somekey'+Math.round(Math.random()*10000);
-                const game : Phaser.Scene = GameScene.createFromUrl(this.room, this.MapUrlFile, gameSceneKey);
+                const gameSceneKey = 'somekey' + Math.round(Math.random() * 10000);
+                const game: Phaser.Scene = GameScene.createFromUrl(this.room, this.MapUrlFile, gameSceneKey);
                 this.scene.add(gameSceneKey, game, true,
                     {
                         initPosition: {
@@ -597,14 +591,14 @@ export class GameScene extends ResizableScene implements CenterListener {
             connection.onActionableEvent((message => {
                 const item = this.actionableItems.get(message.itemId);
                 if (item === undefined) {
-                    console.warn('Received an event about object "'+message.itemId+'" but cannot find this item on the map.');
+                    console.warn('Received an event about object "' + message.itemId + '" but cannot find this item on the map.');
                     return;
                 }
                 item.fire(message.event, message.state, message.parameters);
             }));
 
             // When connection is performed, let's connect SimplePeer
-            this.simplePeer = new SimplePeer(this.connection);
+            this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic);
             this.GlobalMessageManager = new GlobalMessageManager(this.connection);
 
             const self = this;
@@ -649,6 +643,10 @@ export class GameScene extends ResizableScene implements CenterListener {
         }
     }
 
+    private getExitUrl(layer: ITiledMapLayer): string|undefined {
+        return this.getProperty(layer, "exitUrl") as string|undefined;
+    }
+
     private getExitSceneUrl(layer: ITiledMapLayer): string|undefined {
         return this.getProperty(layer, "exitSceneUrl") as string|undefined;
     }
@@ -673,15 +671,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         return obj.value;
     }
 
-    /**
-     *
-     * @param layer
-     * @param mapWidth
-     * @param tileWidth
-     * @param tileHeight
-     */
-    //todo: push that into the gameManager
-    private loadNextGame(layer: ITiledMapLayer, mapWidth: number, tileWidth: number, tileHeight: number){
+    private loadNextGameFromExitSceneUrl(layer: ITiledMapLayer, mapWidth: number) {
         const exitSceneUrl = this.getExitSceneUrl(layer);
         if (exitSceneUrl === undefined) {
             throw new Error('Layer is not an exit scene layer.');
@@ -691,17 +681,33 @@ export class GameScene extends ResizableScene implements CenterListener {
             instance = this.instance;
         }
 
-        console.log('existSceneUrl', exitSceneUrl);
-        console.log('existSceneInstance', instance);
-
-        // TODO: eventually compute a relative URL
-
-        // TODO: handle /@/ URL CASES!
+        //console.log('existSceneUrl', exitSceneUrl);
+        //console.log('existSceneInstance', instance);
 
         const absoluteExitSceneUrl = new URL(exitSceneUrl, this.MapUrlFile).href;
         const absoluteExitSceneUrlWithoutProtocol = absoluteExitSceneUrl.toString().substr(absoluteExitSceneUrl.toString().indexOf('://')+3);
         const roomId = '_/'+instance+'/'+absoluteExitSceneUrlWithoutProtocol;
-        console.log("Foo", instance, absoluteExitSceneUrlWithoutProtocol);
+
+        this.loadNextGame(layer, mapWidth, roomId);
+    }
+
+    private loadNextGameFromExitUrl(layer: ITiledMapLayer, mapWidth: number) {
+        const exitUrl = this.getExitUrl(layer);
+        if (exitUrl === undefined) {
+            throw new Error('Layer is not an exit layer.');
+        }
+        const fullPath = new URL(exitUrl, window.location.toString()).pathname;
+
+        this.loadNextGame(layer, mapWidth, fullPath);
+    }
+
+    /**
+     *
+     * @param layer
+     * @param mapWidth
+     */
+    //todo: push that into the gameManager
+    private loadNextGame(layer: ITiledMapLayer, mapWidth: number, roomId: string){
         const room = new Room(roomId);
         gameManager.loadMap(room, this.scene);
         const exitSceneKey = roomId;
@@ -716,7 +722,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             const y : number = parseInt(((key + 1) / mapWidth).toString());
             const x : number = key - (y * mapWidth);
 
-            let hash = new URL(exitSceneUrl, this.MapUrlFile).hash;
+            let hash = new URL(roomId, this.MapUrlFile).hash;
             if (hash) {
                 hash = hash.substr(1);
             }
@@ -953,9 +959,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             this.simplePeer.unregister();
             this.scene.stop();
             this.scene.remove(this.scene.key);
-            this.scene.start(nextSceneKey.key, {
-                startLayerName: nextSceneKey.hash
-            });
+            this.scene.start(nextSceneKey.key);
         }
     }
 

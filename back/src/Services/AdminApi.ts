@@ -1,18 +1,24 @@
 import {ADMIN_API_TOKEN, ADMIN_API_URL} from "../Enum/EnvironmentVariable";
 import Axios from "axios";
-import {RoomIdentifier} from "../Model/RoomIdentifier";
 
 export interface AdminApiData {
     organizationSlug: string
     worldSlug: string
     roomSlug: string
     mapUrlStart: string
+    tags: string[]
+    policy_type: number
     userUuid: string
 }
 
 export interface GrantedApiData {
     granted: boolean,
     memberTags: string[]
+}
+
+export interface fetchMemberDataByUuidResponse {
+    uuid: string;
+    tags: string[];
 }
 
 class AdminApi {
@@ -40,6 +46,16 @@ class AdminApi {
         return res.data;
     }
 
+    async fetchMemberDataByUuid(uuid: string): Promise<fetchMemberDataByUuidResponse> {
+        if (!ADMIN_API_URL) {
+            return Promise.reject('No admin backoffice set!');
+        }
+        const res = await Axios.get(ADMIN_API_URL+'/membership/'+uuid,
+            { headers: {"Authorization" : `${ADMIN_API_TOKEN}`} }
+        )
+        return res.data;
+    }
+    
     async fetchMemberDataByToken(organizationMemberToken: string): Promise<AdminApiData> {
         if (!ADMIN_API_URL) {
             return Promise.reject('No admin backoffice set!');
@@ -49,24 +65,6 @@ class AdminApi {
             { headers: {"Authorization" : `${ADMIN_API_TOKEN}`} }
         )
         return res.data;
-    }
-
-    async memberIsGrantedAccessToRoom(memberId: string, roomIdentifier: RoomIdentifier): Promise<GrantedApiData> {
-        if (!ADMIN_API_URL) {
-            return Promise.reject('No admin backoffice set!');
-        }
-        try {
-            const res = await Axios.get(ADMIN_API_URL+'/api/member/is-granted-access',
-                { headers: {"Authorization" : `${ADMIN_API_TOKEN}`}, params: {memberId, organizationSlug: roomIdentifier.organizationSlug, worldSlug: roomIdentifier.worldSlug, roomSlug: roomIdentifier.roomSlug} }
-            )
-            return res.data;
-        } catch (e) {
-            console.log(e.message)
-            return {
-                granted: false,
-                memberTags: []
-            };
-        }
     }
 }
 

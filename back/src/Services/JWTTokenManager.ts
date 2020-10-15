@@ -6,7 +6,7 @@ import {TokenInterface} from "../Controller/AuthenticateController";
 class JWTTokenManager {
     
     public createJWTToken(userUuid: string) {
-        return Jwt.sign({userUuid: userUuid}, SECRET_KEY, {expiresIn: '24h'});
+        return Jwt.sign({userUuid: userUuid}, SECRET_KEY, {expiresIn: '200d'}); //todo: add a mechanic to refresh or recreate token
     }
 
     public async getUserUuidFromToken(token: unknown): Promise<string> {

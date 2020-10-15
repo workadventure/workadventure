@@ -44,7 +44,7 @@
             </div>
         </div>
         <div class="row">
-            <div class="col">
+            < class="col">
                 <h2 id="tools-you-will-need" class="pixel-title">Tools you will need</h2>
                 <p>In order to build your own map for WorkAdventure, you need:</p>
                 <ul>
@@ -131,11 +131,22 @@
                 <p>In order to place an exit on your scene that leads to another scene:</p>
                 <ul>
                     <li>You must create a specific layer. When a character reaches ANY tile of that layer, it will exit the scene.</li>
-                    <li>In layer properties, you MUST add &quot;exitSceneUrl&quot; property. It represents the map URL of the next scene. For example : <code>/&lt;map folder&gt;/&lt;map&gt;.json</code>. Be careful, if you want the next map to be correctly loaded, you must check that the map files are in folder <code>back/src/Assets/Maps/&lt;your map folder&gt;</code>. The files will be accessible by url <code>&lt;HOST&gt;/map/files/&lt;your map folder&gt;/...</code>.</li>
-                    <li>In layer properties, you CAN add an &quot;exitInstance&quot; property. If set, you will join the map of the specified instance. Otherwise, you will stay on the same instance.</li>
+                    <li>In layer properties, you MUST add "exitUrl&quot; property. It represents the URL of the next scene. You can put relative or absolute URLs.</li>
                     <li>If you want to have multiple exits, you can create many layers with name &quot;exit&quot;. Each layer has a different key <code>exitSceneUrl</code> and have tiles that represent exits to another scene.</li>
                 </ul>
+                <p>
+                    <strong>Understanding map URLs in WorkAdventure:</strong><br/>
+                    There are 2 kinds of URLs in WorkAdventure:
+                    <ul>
+                        <li>Public URLs are in the form https://play.workadventu.re/_/[instance]/[server]/[path to map]</li>
+                        <li>Private URLs (used in paid accounts) are in the form https://play.workadventu.re/@/[organization]/[world]/[map]</li>
+                    </ul>
+                    Assuming your JSON map is hosted at "https://example.com/my/map.json", then you can browse your map at "https://play.workadventu.re/_/global/example.com/my/map.json".
+                    Here, "global" is a name of an "instance" of your map. You can put anything instead of "global" here. People on the same instance of the map can see each others.
+                    If 2 users use 2 different instances, they are on the same map, but in 2 parallel universes. They cannot see each other.
+                </p>
                 <p class="text-center"><img src="docs/exit_layer_map.png" alt="" style="width: 90%"></p>
+                <p>Note: in older releases of WorkAdventure, you could link to a map file directly using properties "exitSceneUrl&quot; and &quot;exitInstance&quot;. Those properties are now deprecated. Use "exitUrl" instead.</p>
                 <h3 id="defining-several-entry-points" class="pixel-title">Defining several entry points</h3>
                 <p>Often your map will have several exits, and therefore, several entry points. For instance, if there
                     is an exit by a door that leads to the garden map, when you come back from the garden you expect to
@@ -146,7 +157,7 @@
                     <li>You must create a specific layer. When a character enters the map by this entry point, it will enter the map randomly on ANY tile of that layer.</li>
                     <li>In layer properties, you MUST add a boolean &quot;startLayer&quot; property. It should be set to true.</li>
                     <li>The name of the entry point is the name of the layer</li>
-                    <li>To enter via this entry point, simply add a hash with the entry point name to the URL (&quot;#[<em>startLayerName</em>]&quot;). For instance: &quot;<a href="https://workadventu.re/_/global/mymap.com/path/map.json#my-entry-point">https://workadventu.re/_/global/mymap.com/path/map.json#my-entry-point</a>&quot;.</li>
+                    <li>To enter via this entry point, simply add a hash with the entry point name to the URL (&quot;#[<em>startLayerName</em>]&quot;). For instance: &quot;https://workadventu.re/_/global/mymap.com/path/map.json#my-entry-point&quot;.</li>
                     <li>You can of course use the &quot;#&quot; notation in an exit scene URL (so an exit scene URL will point to a given entry scene URL)</li>
                 </ul>
 
