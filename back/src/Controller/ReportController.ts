@@ -27,7 +27,10 @@ export class ReportController extends BaseController {
                     })
                     const param = await res.json();
                     this.ioSocketController.teleport(param.userUuid);
-                    res.writeStatus("200 OK").end();
+                    res.writeHeader('Content-Type', 'application/json');
+                    res.writeStatus("200 OK").end(JSON.stringify({
+                        mapUrl: `wait/${param.userUuid}`
+                    }));
                 } catch (e) {
                     console.log("An error happened", e)
                     res.writeStatus(e.status || "500 Internal Server Error").end('An error happened');

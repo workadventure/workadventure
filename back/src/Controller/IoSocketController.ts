@@ -891,12 +891,16 @@ export class IoSocketController {
     }
 
     public teleport(userUuid: string) {
-        const user = this.searchClientByUuid(userUuid);
-        if(!user){
+        const userSocket = this.searchClientByUuid(userUuid);
+        if (!userSocket) {
             throw 'User not found';
         }
         const teleportMessageMessage = new TeleportMessageMessage();
-        teleportMessageMessage.setMap(`/teleport/${user.userUuid}`);
-        user.send(teleportMessageMessage.serializeBinary().buffer, true);
+        teleportMessageMessage.setMap(`wait/${userSocket.userUuid}`);
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setTeleportmessagemessage(teleportMessageMessage);
+
+        userSocket.send(serverToClientMessage.serializeBinary().buffer, true);
     }
 }
