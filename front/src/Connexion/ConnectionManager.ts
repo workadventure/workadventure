@@ -35,11 +35,16 @@ class ConnectionManager {
             const localUser = localUserStore.getLocalUser();
 
             if (localUser && localUser.jwtToken && localUser.uuid) {
-                this.localUser = localUser
+                this.localUser = localUser;
+                try {
+                    await this.verifyToken(localUser.jwtToken);
+                } catch(e) {
+                    // If the token is invalid, let's generate an anonymous one.
+                    console.error('JWT token invalid. Did it expire? Login anonymously instead.');
+                    await this.anonymousLogin();
+                }
             } else {
-                const data = await Axios.post(`${API_URL}/anonymLogin`).then(res => res.data);
-                this.localUser = new LocalUser(data.userUuid, data.authToken);
-                localUserStore.saveUser(this.localUser);
+                await this.anonymousLogin();
             }
             let roomId: string
             if (connexionType === GameConnexionTypes.empty) {
@@ -54,7 +59,8 @@ class ConnectionManager {
             const localUser = localUserStore.getLocalUser();
 
             if (localUser) {
-                this.localUser = localUser
+                this.localUser = localUser;
+                await this.verifyToken(localUser.jwtToken);
                 const room = new Room(window.location.pathname + window.location.hash);
                 return Promise.resolve(room);
             } else {
@@ -64,6 +70,16 @@ class ConnectionManager {
         }
 
         return Promise.reject('Invalid URL');
+    }
+
+    private async verifyToken(token: string): Promise<void> {
+        await Axios.get(`${API_URL}/verify`, {params: {token}});
+    }
+
+    private async anonymousLogin(): Promise<void> {
+        const data = await Axios.post(`${API_URL}/anonymLogin`).then(res => res.data);
+        this.localUser = new LocalUser(data.userUuid, data.authToken);
+        localUserStore.saveUser(this.localUser);
     }
 
     public initBenchmark(): void {
