@@ -500,9 +500,9 @@ export class IoSocketController {
             }
             //TODO report user on admin application
             Axios.post(`${ADMIN_API_URL}/api/report`, {
-                    reportedUserUuid: client.userUuid,
+                    reportedUserUuid: reportedSocket.userUuid,
                     reportedUserComment: reportPlayerMessage.getReportcomment(),
-                    reporterUserUuid: client.userUuid,
+                    reporterUserUuid: client.userUuid
                 },
                 {
                     headers: {"Authorization": `${ADMIN_API_TOKEN}`}
