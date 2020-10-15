@@ -57,10 +57,8 @@ export class SelectCharacterScene extends ResizableScene {
 
     create() {
         this.textField = new TextField(this, this.game.renderer.width / 2, 50, 'Select your character');
-        this.textField.setOrigin(0.5).setCenterAlign()
 
         this.pressReturnField = new TextField(this, this.game.renderer.width / 2, 256, 'Press enter to start');
-        this.pressReturnField.setOrigin(0.5).setCenterAlign()
 
         const rectangleXStart = this.game.renderer.width / 2 - (this.nbCharactersPerRow / 2) * 32 + 16;
 

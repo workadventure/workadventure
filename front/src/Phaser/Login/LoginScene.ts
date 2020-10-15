@@ -8,6 +8,7 @@ import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Ch
 import {cypressAsserter} from "../../Cypress/CypressAsserter";
 import {SelectCharacterSceneName} from "./SelectCharacterScene";
 import {ResizableScene} from "./ResizableScene";
+import {localUserStore} from "../../Connexion/LocalUserStore";
 
 //todo: put this constants in a dedicated file
 export const LoginSceneName = "LoginScene";
@@ -28,9 +29,7 @@ export class LoginScene extends ResizableScene {
         super({
             key: LoginSceneName
         });
-        if (window.localStorage) {
-            this.name = window.localStorage.getItem('playerName') ?? '';
-        }
+        this.name = localUserStore.getName();
     }
 
     preload() {
@@ -54,22 +53,18 @@ export class LoginScene extends ResizableScene {
         cypressAsserter.initStarted();
 
         this.textField = new TextField(this, this.game.renderer.width / 2, 50, 'Enter your name:');
-        this.textField.setOrigin(0.5).setCenterAlign()
-        this.nameInput = new TextInput(this, this.game.renderer.width / 2 - 64, 70, 4, this.name,(text: string) => {
+        this.nameInput = new TextInput(this, this.game.renderer.width / 2, 70, 8, this.name,(text: string) => {
             this.name = text;
-            if (window.localStorage) {
-                window.localStorage.setItem('playerName', text);
-            }
+            localUserStore.setName(text);
         });
 
         this.pressReturnField = new TextField(this, this.game.renderer.width / 2, 130, 'Press enter to start');
-        this.pressReturnField.setOrigin(0.5).setCenterAlign()
 
         this.logo = new Image(this, this.game.renderer.width - 30, this.game.renderer.height - 20, LoginTextures.icon);
         this.add.existing(this.logo);
 
         const infoText = "Commands: \n - Arrows or Z,Q,S,D to move\n - SHIFT to run";
-        this.infoTextField = new TextField(this, 10, this.game.renderer.height - 35, infoText);
+        this.infoTextField = new TextField(this, 10, this.game.renderer.height - 35, infoText, false);
 
         this.input.keyboard.on('keyup-ENTER', () => {
             if (this.name === '') {

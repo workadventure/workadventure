@@ -45,7 +45,6 @@ export class FourOFourScene extends Phaser.Scene {
         this.add.existing(this.logo);
 
         this.mapNotFoundField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height / 2, "404 - File not found");
-        this.mapNotFoundField.setOrigin(0.5, 0.5).setCenterAlign();
 
         let text: string = '';
         if (this.file !== undefined) {
@@ -56,7 +55,6 @@ export class FourOFourScene extends Phaser.Scene {
         }
 
         this.couldNotFindField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height / 2 + 24, text);
-        this.couldNotFindField.setOrigin(0.5, 0.5).setCenterAlign();
 
         const url = this.file ? this.file : this.url;
         if (url !== undefined) {
