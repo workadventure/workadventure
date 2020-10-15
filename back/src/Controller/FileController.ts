@@ -44,8 +44,6 @@ export class FileController extends BaseController {
 
         this.App.post("/upload-audio-message", (res: HttpResponse, req: HttpRequest) => {
             (async () => {
-                this.addCorsHeaders(res);
-
                 res.onAborted(() => {
                     console.warn('upload-audio-message request was aborted');
                 })
@@ -80,14 +78,18 @@ export class FileController extends BaseController {
                         }
                     });
 
-                    res.writeStatus("200 OK").end(JSON.stringify({
+                    res.writeStatus("200 OK");
+                    this.addCorsHeaders(res);
+                    res.end(JSON.stringify({
                         id: audioMessageId,
                         path: `/download-audio-message/${audioMessageId}`
                     }));
 
                 } catch (e) {
                     console.log("An error happened", e)
-                    res.writeStatus(e.status || "500 Internal Server Error").end('An error happened');
+                    res.writeStatus(e.status || "500 Internal Server Error");
+                    this.addCorsHeaders(res);
+                    res.end('An error happened');
                 }
             })();
         });
@@ -101,7 +103,6 @@ export class FileController extends BaseController {
         });
 
         this.App.get("/download-audio-message/:id", (res: HttpResponse, req: HttpRequest) => {
-            this.addCorsHeaders(res);
 
             res.onAborted(() => {
                 console.warn('upload-audio-message request was aborted');
@@ -111,7 +112,9 @@ export class FileController extends BaseController {
 
             const file = this.uploadedFileBuffers.get(id);
             if (file === undefined) {
-                res.writeStatus("404 Not found").end("Cannot find file");
+                res.writeStatus("404 Not found");
+                this.addCorsHeaders(res);
+                res.end("Cannot find file");
                 return;
             }
 
