@@ -417,6 +417,13 @@ export class GameScene extends ResizableScene implements CenterListener {
         context.stroke();
         this.circleTexture.refresh();
 
+        // Let's alter browser history
+        let path = this.room.id;
+        if (this.startLayerName) {
+            path += '#'+this.startLayerName;
+        }
+        window.history.pushState({}, 'WorkAdventure', path);
+
         // Let's pause the scene if the connection is not established yet
         if (this.connection === undefined) {
             // Let's wait 0.5 seconds before printing the "connecting" screen to avoid blinking
