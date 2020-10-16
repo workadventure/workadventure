@@ -11,11 +11,6 @@ export interface AdminApiData {
     userUuid: string
 }
 
-export interface GrantedApiData {
-    granted: boolean,
-    memberTags: string[]
-}
-
 export interface fetchMemberDataByUuidResponse {
     uuid: string;
     tags: string[];
@@ -65,6 +60,17 @@ class AdminApi {
             { headers: {"Authorization" : `${ADMIN_API_TOKEN}`} }
         )
         return res.data;
+    }
+    
+    reportPlayer(reportedUserUuid: string, reportedUserComment: string, reporterUserUuid: string) {
+       return Axios.post(`${ADMIN_API_URL}/api/report`, {
+                reportedUserUuid,
+                reportedUserComment,
+                reporterUserUuid,
+            },
+            {
+                headers: {"Authorization": `${ADMIN_API_TOKEN}`}
+            });
     }
 }
 

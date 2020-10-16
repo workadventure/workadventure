@@ -4,9 +4,10 @@ import {stringify} from "circular-json";
 import {HttpRequest, HttpResponse} from "uWebSockets.js";
 import { parse } from 'query-string';
 import {App} from "../Server/sifrr.server";
+import {socketManager} from "../Services/SocketManager";
 
 export class DebugController {
-    constructor(private App : App, private ioSocketController: IoSocketController) {
+    constructor(private App : App) {
         this.getDump();
     }
 
@@ -20,7 +21,7 @@ export class DebugController {
             }
 
             return res.writeStatus('200 OK').writeHeader('Content-Type', 'application/json').end(stringify(
-                this.ioSocketController.getWorlds(),
+                socketManager.getWorlds(),
                 (key: unknown, value: unknown) => {
                     if(value instanceof Map) {
                         const obj: any = {}; // eslint-disable-line @typescript-eslint/no-explicit-any
