@@ -85,7 +85,7 @@ export class GameRoom {
     }
 
     public join(socket : ExSocketInterface, userPosition: PointInterface): void {
-        const user = new User(socket.userId, userPosition, false, this.positionNotifier, socket);
+        const user = new User(socket.userId, socket.userUuid, userPosition, false, this.positionNotifier, socket);
         this.users.set(socket.userId, user);
         // Let's call update position to trigger the join / leave room
         //this.updatePosition(socket, userPosition);

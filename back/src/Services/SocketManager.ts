@@ -36,6 +36,19 @@ import {Gauge} from "prom-client";
 import {emitError, emitInBatch} from "./IoSocketHelpers";
 import Jwt from "jsonwebtoken";
 import {JITSI_URL} from "../Enum/EnvironmentVariable";
+import {clientEventsEmitter} from "./ClientEventsEmitter";
+
+interface AdminSocketRoomsList {
+    [index: string]: number;
+}
+interface AdminSocketUsersList {
+    [index: string]: boolean;
+}
+
+export interface AdminSocketData {
+    rooms: AdminSocketRoomsList,
+    users: AdminSocketUsersList,
+}
 
 class SocketManager {
     private Worlds: Map<string, GameRoom> = new Map<string, GameRoom>();
@@ -54,6 +67,34 @@ class SocketManager {
             help: 'Number of clients per room',
             labelNames: [ 'room' ]
         });
+        
+        clientEventsEmitter.registerToClientJoin((clientUUid, roomId) => {
+            this.nbClientsGauge.inc();
+            // Let's log server load when a user joins
+            console.log(new Date().toISOString() + ' A user joined (', this.sockets.size, ' connected users)');
+        });
+        clientEventsEmitter.registerToClientLeave((clientUUid, roomId) => {
+            this.nbClientsGauge.dec();
+            // Let's log server load when a user leaves
+            console.log('A user left (', this.sockets.size, ' connected users)');
+        });
+    }
+    
+    getAdminSocketDataFor(roomId:string): AdminSocketData {
+        const data:AdminSocketData = {
+            rooms: {},
+            users: {},
+        }
+        const room = this.Worlds.get(roomId);
+        if (room === undefined) {
+            return data;
+        }
+        const users = room.getUsers();
+        data.rooms[roomId] = users.size;
+        users.forEach(user => {
+            data.users[user.uuid] = true
+        })
+        return data;
     }
 
     handleJoinRoom(client: ExSocketInterface): void {
@@ -61,10 +102,7 @@ class SocketManager {
         const viewport = client.viewport;
         try {
             this.sockets.set(client.userId, client); //todo: should this be at the end of the function?
-            this.nbClientsGauge.inc();
-            // Let's log server load when a user joins
-            console.log(new Date().toISOString() + ' A user joined (', socketManager.sockets.size, ' connected users)');
-
+            clientEventsEmitter.emitClientJoin(client.userUuid, client.roomId);
             //join new previous room
             const gameRoom = this.joinRoom(client, position);
 
@@ -332,12 +370,10 @@ class SocketManager {
                 //user leave previous room
                 //Client.leave(Client.roomId);
             } finally {
-                this.nbClientsPerRoomGauge.dec({ room: Client.roomId });
                 //delete Client.roomId;
                 this.sockets.delete(Client.userId);
-                // Let's log server load when a user leaves
-                this.nbClientsGauge.dec();
-                console.log('A user left (', this.sockets.size, ' connected users)');
+                this.nbClientsPerRoomGauge.dec({ room: Client.roomId });
+                clientEventsEmitter.emitClientLeave(Client.userUuid, Client.roomId);
             }
         }
     }

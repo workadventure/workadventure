@@ -64,13 +64,5 @@ export class FourOFourScene extends Phaser.Scene {
 
         this.cat = this.physics.add.sprite(this.game.renderer.width / 2, this.game.renderer.height / 2 - 32, 'cat', 6);
         this.cat.flipY=true;
-        /*this.anims.create({
-            key: 'right',
-            frames: this.anims.generateFrameNumbers('cat', { start: 6, end: 8 }),
-            frameRate: 10,
-            repeat: -1
-        });
-        cat.play('right');*/
-
     }
 }
