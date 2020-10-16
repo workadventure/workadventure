@@ -317,6 +317,13 @@ export class GameScene extends ResizableScene implements CenterListener {
         //permit to set bound collision
         this.physics.world.setBounds(0, 0, this.Map.widthInPixels, this.Map.heightInPixels);
 
+        // Let's alter browser history
+        let path = this.room.id;
+        if (this.room.hash) {
+            path += '#'+this.room.hash;
+        }
+        window.history.pushState({}, 'WorkAdventure', path);
+
         //add layer on map
         this.Layers = new Array<Phaser.Tilemaps.StaticTilemapLayer>();
         let depth = -2;
@@ -403,13 +410,6 @@ export class GameScene extends ResizableScene implements CenterListener {
         context.strokeStyle = '#ffffff';
         context.stroke();
         this.circleTexture.refresh();
-
-        // Let's alter browser history
-        let path = this.room.id;
-        if (this.room.hash) {
-            path += '#'+this.room.hash;
-        }
-        window.history.pushState({}, 'WorkAdventure', path);
 
         // Let's pause the scene if the connection is not established yet
         if (this.connection === undefined) {
