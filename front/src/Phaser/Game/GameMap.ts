@@ -1,6 +1,6 @@
 import {ITiledMap} from "../Map/ITiledMap";
 
-export type PropertyChangeCallback = (newValue: string | number | boolean | undefined, oldValue: string | number | boolean | undefined) => void;
+export type PropertyChangeCallback = (newValue: string | number | boolean | undefined, oldValue: string | number | boolean | undefined, allProps: Map<string, string | boolean | number>) => void;
 
 /**
  * A wrapper around a ITiledMap interface to provide additional capabilities.
@@ -35,14 +35,14 @@ export class GameMap {
         for (const [newPropName, newPropValue] of newProps.entries()) {
             const oldPropValue = oldProps.get(newPropName);
             if (oldPropValue !== newPropValue) {
-                this.trigger(newPropName, oldPropValue, newPropValue);
+                this.trigger(newPropName, oldPropValue, newPropValue, newProps);
             }
         }
 
         for (const [oldPropName, oldPropValue] of oldProps.entries()) {
             if (!newProps.has(oldPropName)) {
                 // We found a property that disappeared
-                this.trigger(oldPropName, oldPropValue, undefined);
+                this.trigger(oldPropName, oldPropValue, undefined, newProps);
             }
         }
 
@@ -74,11 +74,11 @@ export class GameMap {
         return properties;
     }
 
-    private trigger(propName: string, oldValue: string | number | boolean | undefined, newValue: string | number | boolean | undefined) {
+    private trigger(propName: string, oldValue: string | number | boolean | undefined, newValue: string | number | boolean | undefined, allProps: Map<string, string | boolean | number>) {
         const callbacksArray = this.callbacks.get(propName);
         if (callbacksArray !== undefined) {
             for (const callback of callbacksArray) {
-                callback(newValue, oldValue);
+                callback(newValue, oldValue, allProps);
             }
         }
     }

@@ -12,6 +12,8 @@ import {
     WebRtcSignalToServerMessage,
     PlayGlobalMessage,
     ReportPlayerMessage,
+    QueryJitsiJwtMessage,
+    SendJitsiJwtMessage,
 } from "../Messages/generated/messages_pb";
 import {UserMovesMessage} from "../Messages/generated/messages_pb";
 import {TemplatedApp} from "uWebSockets.js"
@@ -20,6 +22,7 @@ import {jwtTokenManager} from "../Services/JWTTokenManager";
 import {adminApi} from "../Services/AdminApi";
 import {socketManager} from "../Services/SocketManager";
 import {emitInBatch, resetPing} from "../Services/IoSocketHelpers";
+import Jwt from "jsonwebtoken";
 
 export class IoSocketController {
     private nextUserId: number = 1;
@@ -191,6 +194,8 @@ export class IoSocketController {
                     socketManager.emitPlayGlobalMessage(client, message.getPlayglobalmessage() as PlayGlobalMessage);
                 } else if (message.hasReportplayermessage()){
                     socketManager.handleReportMessage(client, message.getReportplayermessage() as ReportPlayerMessage);
+                } else if (message.hasQueryjitsijwtmessage()){
+                    socketManager.handleQueryJitsiJwtMessage(client, message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage);
                 }
 
                     /* Ok is false if backpressure was built up, wait for drain */

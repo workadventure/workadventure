@@ -4,8 +4,8 @@ import {
     GroupDeleteMessage,
     GroupUpdateMessage,
     ItemEventMessage,
-    ItemStateMessage, 
-    PlayGlobalMessage, 
+    ItemStateMessage,
+    PlayGlobalMessage,
     PointMessage,
     PositionMessage,
     RoomJoinedMessage,
@@ -19,7 +19,7 @@ import {
     UserMovesMessage,
     ViewportMessage, WebRtcDisconnectMessage,
     WebRtcSignalToClientMessage,
-    WebRtcSignalToServerMessage, WebRtcStartMessage
+    WebRtcSignalToServerMessage, WebRtcStartMessage, QueryJitsiJwtMessage, SendJitsiJwtMessage
 } from "../Messages/generated/messages_pb";
 import {PointInterface} from "../Model/Websocket/PointInterface";
 import {User} from "../Model/User";
@@ -27,20 +27,21 @@ import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
 import {Group} from "../Model/Group";
 import {cpuTracker} from "./CpuTracker";
 import {isSetPlayerDetailsMessage} from "../Model/Websocket/SetPlayerDetailsMessage";
-import {GROUP_RADIUS, MINIMUM_DISTANCE} from "../Enum/EnvironmentVariable";
+import {GROUP_RADIUS, MINIMUM_DISTANCE, SECRET_JITSI_KEY} from "../Enum/EnvironmentVariable";
 import {Movable} from "../Model/Movable";
 import {PositionInterface} from "../Model/PositionInterface";
 import {adminApi} from "./AdminApi";
 import Direction = PositionMessage.Direction;
 import {Gauge} from "prom-client";
 import {emitError, emitInBatch} from "./IoSocketHelpers";
+import Jwt from "jsonwebtoken";
 
 class SocketManager {
     private Worlds: Map<string, GameRoom> = new Map<string, GameRoom>();
     private sockets: Map<number, ExSocketInterface> = new Map<number, ExSocketInterface>();
     private nbClientsGauge: Gauge<string>;
     private nbClientsPerRoomGauge: Gauge<string>;
-    
+
     constructor() {
         this.nbClientsGauge = new Gauge({
             name: 'workadventure_nb_sockets',
@@ -55,14 +56,14 @@ class SocketManager {
     }
 
     handleJoinRoom(client: ExSocketInterface): void {
-        const position = client.position; 
-        const viewport = client.viewport; 
+        const position = client.position;
+        const viewport = client.viewport;
         try {
             this.sockets.set(client.userId, client); //todo: should this be at the end of the function?
             this.nbClientsGauge.inc();
             // Let's log server load when a user joins
             console.log(new Date().toISOString() + ' A user joined (', socketManager.sockets.size, ' connected users)');
-            
+
             //join new previous room
             const gameRoom = this.joinRoom(client, position);
 
@@ -592,7 +593,45 @@ class SocketManager {
         }
         return null;
     }
-    
+
+
+    public handleQueryJitsiJwtMessage(client: ExSocketInterface, queryJitsiJwtMessage: QueryJitsiJwtMessage) {
+        const room = queryJitsiJwtMessage.getJitsiroom();
+        const tag = queryJitsiJwtMessage.getTag(); // FIXME: this is not secure. We should load the JSON for the current room and check rights associated to room instead.
+
+        if (SECRET_JITSI_KEY === '') {
+            throw new Error('You must set the SECRET_JITSI_KEY key to the secret to generate JWT tokens for Jitsi.');
+        }
+
+        // Let's see if the current client has
+        const isAdmin = client.tags.indexOf(tag) !== -1;
+
+        // TODO: fix this when "moderator" property is available
+
+        const jwt = Jwt.sign({
+            "aud": "jitsi",
+            "iss": "meetworkadventure",
+            "sub": "coremeet.workadventu.re",
+            "room": "*"
+        }, SECRET_JITSI_KEY, {
+            expiresIn: '1d',
+            algorithm: "HS256",
+            header:
+                {
+                    "alg": "HS256",
+                    "typ": "JWT"
+                }
+        });
+
+        const sendJitsiJwtMessage = new SendJitsiJwtMessage();
+        sendJitsiJwtMessage.setJitsiroom(room);
+        sendJitsiJwtMessage.setJwt(jwt);
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setSendjitsijwtmessage(sendJitsiJwtMessage);
+
+        client.send(serverToClientMessage.serializeBinary().buffer, true);
+    }
 }
 
 export const socketManager = new SocketManager();

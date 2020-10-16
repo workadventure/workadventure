@@ -6,6 +6,7 @@ const ALLOW_ARTILLERY = process.env.ALLOW_ARTILLERY ? process.env.ALLOW_ARTILLER
 const ADMIN_API_URL = process.env.ADMIN_API_URL || 'http://admin';
 const ADMIN_API_TOKEN = process.env.ADMIN_API_TOKEN || 'myapitoken';
 const CPU_OVERHEAT_THRESHOLD = Number(process.env.CPU_OVERHEAT_THRESHOLD) || 80;
+const SECRET_JITSI_KEY = process.env.SECRET_JITSI_KEY || '';
 
 export {
     SECRET_KEY,
@@ -16,4 +17,5 @@ export {
     GROUP_RADIUS,
     ALLOW_ARTILLERY,
     CPU_OVERHEAT_THRESHOLD,
+    SECRET_JITSI_KEY
 }

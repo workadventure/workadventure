@@ -72,6 +72,7 @@ services:
     environment:
       STARTUP_COMMAND_1: yarn install
       SECRET_KEY: yourSecretKey
+      SECRET_JITSI_KEY: "$SECRET_JITSI_KEY"
       ALLOW_ARTILLERY: "true"
       ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
     volumes:

@@ -27,6 +27,7 @@ export enum EventMessage{
     STOP_GLOBAL_MESSAGE = "stop-global-message",
 
     TELEPORT = "teleport",
+    START_JITSI_ROOM = "start-jitsi-room",
 }
 
 export interface PointInterface {

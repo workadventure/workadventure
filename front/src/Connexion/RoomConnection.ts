@@ -22,7 +22,7 @@ import {
     WebRtcSignalToServerMessage,
     WebRtcStartMessage,
     ReportPlayerMessage,
-    TeleportMessageMessage
+    TeleportMessageMessage, QueryJitsiJwtMessage, SendJitsiJwtMessage
 } from "../Messages/generated/messages_pb"
 
 import {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
@@ -150,6 +150,8 @@ export class RoomConnection implements RoomConnection {
                 this.dispatch(EventMessage.STOP_GLOBAL_MESSAGE, message.getStopglobalmessage());
             } else if (message.hasTeleportmessagemessage()) {
                 this.dispatch(EventMessage.TELEPORT, message.getTeleportmessagemessage());
+            } else if (message.hasSendjitsijwtmessage()) {
+                this.dispatch(EventMessage.START_JITSI_ROOM, message.getSendjitsijwtmessage());
             } else {
                 throw new Error('Unknown message received');
             }
@@ -499,6 +501,25 @@ export class RoomConnection implements RoomConnection {
         clientToServerMessage.setReportplayermessage(reportPlayerMessage);
 
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
+    }
+
+    public emitQueryJitsiJwtMessage(jitsiRoom: string, tag: string|undefined ): void {
+        const queryJitsiJwtMessage = new QueryJitsiJwtMessage();
+        queryJitsiJwtMessage.setJitsiroom(jitsiRoom);
+        if (tag !== undefined) {
+            queryJitsiJwtMessage.setTag(tag);
+        }
+
+        const clientToServerMessage = new ClientToServerMessage();
+        clientToServerMessage.setQueryjitsijwtmessage(queryJitsiJwtMessage);
+
+        this.socket.send(clientToServerMessage.serializeBinary().buffer);
+    }
+
+    public onStartJitsiRoom(callback: (jwt: string, room: string) => void): void {
+        this.onMessage(EventMessage.START_JITSI_ROOM, (message: SendJitsiJwtMessage) => {
+            callback(message.getJwt(), message.getJitsiroom());
+        });
     }
 
     public hasTag(tag: string): boolean {

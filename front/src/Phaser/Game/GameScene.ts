@@ -137,6 +137,8 @@ export class GameScene extends ResizableScene implements CenterListener {
     private outlinedItem: ActionableItem|null = null;
     private userInputManager!: UserInputManager;
 
+    private jitsiApi: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
     static createFromUrl(room: Room, mapUrlFile: string, gameSceneKey: string|null = null): GameScene {
         // We use the map URL as a key
         if (gameSceneKey === null) {
@@ -460,34 +462,14 @@ export class GameScene extends ResizableScene implements CenterListener {
                 CoWebsiteManager.loadCoWebsite(newValue as string);
             }
         });
-        let jitsiApi: any; // eslint-disable-line @typescript-eslint/no-explicit-any
-        this.gameMap.onPropertyChange('jitsiRoom', (newValue, oldValue) => {
+        this.gameMap.onPropertyChange('jitsiRoom', (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
-                this.connection.setSilent(false);
-                jitsiApi?.dispose();
-                CoWebsiteManager.closeCoWebsite();
-                mediaManager.showGameOverlay();
+                this.stopJitsi();
             } else {
-                CoWebsiteManager.insertCoWebsite((cowebsiteDiv => {
-                    const domain = JITSI_URL;
-                    const options = {
-                        roomName: this.instance + "-" + newValue,
-                        width: "100%",
-                        height: "100%",
-                        parentNode: cowebsiteDiv,
-                        configOverwrite: {
-                            prejoinPageEnabled: false
-                        },
-                        interfaceConfigOverwrite: {
-                            SHOW_CHROME_EXTENSION_BANNER: false,
-                            MOBILE_APP_PROMO: false
-                        }
-                    };
-                    jitsiApi = new (window as any).JitsiMeetExternalAPI(domain, options); // eslint-disable-line @typescript-eslint/no-explicit-any
-                    jitsiApi.executeCommand('displayName', gameManager.getPlayerName());
-                }));
-                this.connection.setSilent(true);
-                mediaManager.hideGameOverlay();
+                // TODO: get jitsiRoomAdminTag
+                const adminTag = allProps.get("jitsiRoomAdminTag") as string|undefined;
+
+                this.connection.emitQueryJitsiJwtMessage(this.instance + "-" + newValue, adminTag);
             }
         })
 
@@ -596,6 +578,10 @@ export class GameScene extends ResizableScene implements CenterListener {
                 }
                 item.fire(message.event, message.state, message.parameters);
             }));
+
+            connection.onStartJitsiRoom((jwt, room) => {
+                this.startJitsi(room, jwt);
+            });
 
             // When connection is performed, let's connect SimplePeer
             this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic);
@@ -1190,5 +1176,36 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     public onCenterChange(): void {
         this.updateCameraOffset();
+    }
+
+    public startJitsi(roomName: string, jwt: string): void {
+        CoWebsiteManager.insertCoWebsite((cowebsiteDiv => {
+            const domain = JITSI_URL;
+            const options = {
+                roomName: roomName,
+                jwt: jwt,
+                width: "100%",
+                height: "100%",
+                parentNode: cowebsiteDiv,
+                configOverwrite: {
+                    prejoinPageEnabled: false
+                },
+                interfaceConfigOverwrite: {
+                    SHOW_CHROME_EXTENSION_BANNER: false,
+                    MOBILE_APP_PROMO: false
+                }
+            };
+            this.jitsiApi = new (window as any).JitsiMeetExternalAPI(domain, options); // eslint-disable-line @typescript-eslint/no-explicit-any
+            this.jitsiApi.executeCommand('displayName', gameManager.getPlayerName());
+        }));
+        this.connection.setSilent(true);
+        mediaManager.hideGameOverlay();
+    }
+
+    public stopJitsi(): void {
+        this.connection.setSilent(false);
+        this.jitsiApi?.dispose();
+        CoWebsiteManager.closeCoWebsite();
+        mediaManager.showGameOverlay();
     }
 }
