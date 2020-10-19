@@ -76,6 +76,8 @@ services:
       SECRET_JITSI_KEY: "$SECRET_JITSI_KEY"
       ALLOW_ARTILLERY: "true"
       ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
+      JITSI_URL: $JITSI_URL
+      JITSI_ISS: $JITSI_ISS
     volumes:
       - ./back:/usr/src/app
     labels:

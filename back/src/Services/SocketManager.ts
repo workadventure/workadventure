@@ -27,7 +27,7 @@ import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
 import {Group} from "../Model/Group";
 import {cpuTracker} from "./CpuTracker";
 import {isSetPlayerDetailsMessage} from "../Model/Websocket/SetPlayerDetailsMessage";
-import {GROUP_RADIUS, MINIMUM_DISTANCE, SECRET_JITSI_KEY} from "../Enum/EnvironmentVariable";
+import {GROUP_RADIUS, JITSI_ISS, MINIMUM_DISTANCE, SECRET_JITSI_KEY} from "../Enum/EnvironmentVariable";
 import {Movable} from "../Model/Movable";
 import {PositionInterface} from "../Model/PositionInterface";
 import {adminApi} from "./AdminApi";
@@ -35,6 +35,7 @@ import Direction = PositionMessage.Direction;
 import {Gauge} from "prom-client";
 import {emitError, emitInBatch} from "./IoSocketHelpers";
 import Jwt from "jsonwebtoken";
+import {JITSI_URL} from "../Enum/EnvironmentVariable";
 
 class SocketManager {
     private Worlds: Map<string, GameRoom> = new Map<string, GameRoom>();
@@ -606,13 +607,12 @@ class SocketManager {
         // Let's see if the current client has
         const isAdmin = client.tags.includes(tag);
 
-        // TODO: fix this when "moderator" property is available
-
         const jwt = Jwt.sign({
             "aud": "jitsi",
-            "iss": "meetworkadventure",
-            "sub": "coremeet.workadventu.re",
-            "room": room
+            "iss": JITSI_ISS,
+            "sub": JITSI_URL,
+            "room": room,
+            "moderator": isAdmin
         }, SECRET_JITSI_KEY, {
             expiresIn: '1d',
             algorithm: "HS256",
