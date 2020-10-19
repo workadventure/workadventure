@@ -9,7 +9,14 @@ import {
     RoomJoinedMessageInterface
 } from "../../Connexion/ConnexionModels";
 import {CurrentGamerInterface, hasMovedEventName, Player} from "../Player/Player";
-import {DEBUG_MODE, JITSI_URL, POSITION_DELAY, RESOLUTION, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
+import {
+    DEBUG_MODE,
+    JITSI_PRIVATE_MODE,
+    JITSI_URL,
+    POSITION_DELAY,
+    RESOLUTION,
+    ZOOM_LEVEL
+} from "../../Enum/EnvironmentVariable";
 import {
     ITiledMap,
     ITiledMapLayer,
@@ -466,10 +473,14 @@ export class GameScene extends ResizableScene implements CenterListener {
             if (newValue === undefined) {
                 this.stopJitsi();
             } else {
-                // TODO: get jitsiRoomAdminTag
-                const adminTag = allProps.get("jitsiRoomAdminTag") as string|undefined;
+                console.log("JITSI_PRIVATE_MODE", JITSI_PRIVATE_MODE);
+                if (JITSI_PRIVATE_MODE) {
+                    const adminTag = allProps.get("jitsiRoomAdminTag") as string|undefined;
 
-                this.connection.emitQueryJitsiJwtMessage(this.instance + "-" + newValue, adminTag);
+                    this.connection.emitQueryJitsiJwtMessage(this.instance + "-" + newValue, adminTag);
+                } else {
+                    this.startJitsi(newValue as string);
+                }
             }
         })
 
@@ -579,6 +590,9 @@ export class GameScene extends ResizableScene implements CenterListener {
                 item.fire(message.event, message.state, message.parameters);
             }));
 
+            /**
+             * Triggered when we receive the JWT token to connect to Jitsi
+             */
             connection.onStartJitsiRoom((jwt, room) => {
                 this.startJitsi(room, jwt);
             });
@@ -1178,7 +1192,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.updateCameraOffset();
     }
 
-    public startJitsi(roomName: string, jwt: string): void {
+    public startJitsi(roomName: string, jwt?: string): void {
         CoWebsiteManager.insertCoWebsite((cowebsiteDiv => {
             const domain = JITSI_URL;
             const options = {
@@ -1195,6 +1209,9 @@ export class GameScene extends ResizableScene implements CenterListener {
                     MOBILE_APP_PROMO: false
                 }
             };
+            if (!options.jwt) {
+                delete options.jwt;
+            }
             this.jitsiApi = new (window as any).JitsiMeetExternalAPI(domain, options); // eslint-disable-line @typescript-eslint/no-explicit-any
             this.jitsiApi.executeCommand('displayName', gameManager.getPlayerName());
         }));

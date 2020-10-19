@@ -612,7 +612,7 @@ class SocketManager {
             "aud": "jitsi",
             "iss": "meetworkadventure",
             "sub": "coremeet.workadventu.re",
-            "room": "*"
+            "room": room
         }, SECRET_JITSI_KEY, {
             expiresIn: '1d',
             algorithm: "HS256",
