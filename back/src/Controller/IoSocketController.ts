@@ -23,6 +23,8 @@ import {adminApi} from "../Services/AdminApi";
 import {socketManager} from "../Services/SocketManager";
 import {emitInBatch, resetPing} from "../Services/IoSocketHelpers";
 import Jwt from "jsonwebtoken";
+import {clientEventsEmitter} from "../Services/ClientEventsEmitter";
+import {ADMIN_API_TOKEN} from "../Enum/EnvironmentVariable";
 
 export class IoSocketController {
     private nextUserId: number = 1;
@@ -33,18 +35,51 @@ export class IoSocketController {
     }
 
     adminRoomSocket() {
-        /*this.app.ws('/admin/rooms', {
+        this.app.ws('/admin/rooms', {
+            upgrade: (res, req, context) => {
+                const query = parse(req.getQuery());
+                const websocketKey = req.getHeader('sec-websocket-key');
+                const websocketProtocol = req.getHeader('sec-websocket-protocol');
+                const websocketExtensions = req.getHeader('sec-websocket-extensions');
+                const token = query.token;
+                if (token !== ADMIN_API_TOKEN) {
+                    console.log('Admin access refused for token: '+token)
+                    res.writeStatus("401 Unauthorized").end('Incorrect token');
+                }
+                const roomId = query.roomId as string;
+
+                res.upgrade(
+                    {roomId},
+                    websocketKey, websocketProtocol, websocketExtensions, context,
+                    );
+            },
             open: (ws) => {
-                console.log('o', ws)
-                ws.send('Hello');
+                console.log('Admin socket connect for room: '+ws.roomId);
+                ws.send('Data:'+JSON.stringify(socketManager.getAdminSocketDataFor(ws.roomId as string)));
+                ws.clientJoinCallback = (clientUUid: string, roomId: string) => {
+                    const wsroomId = ws.roomId as string;
+                    if(wsroomId === roomId) {
+                        ws.send('MemberJoin:'+clientUUid+';'+roomId);
+                    }
+                };
+                ws.clientLeaveCallback = (clientUUid: string, roomId: string) => {
+                    const wsroomId = ws.roomId as string;
+                    if(wsroomId === roomId) {
+                        ws.send('MemberLeave:'+clientUUid+';'+roomId);
+                    }
+                };
+                clientEventsEmitter.registerToClientJoin(ws.clientJoinCallback);
+                clientEventsEmitter.registerToClientLeave(ws.clientLeaveCallback);
             },
             message: (ws, arrayBuffer, isBinary): void => {
-                console.log('m', ws)
+                console.log('m', ws); //todo: add admin actions such as ban here
             },
             close: (ws, code, message) => {
-                console.log('close');
+                //todo make sure this code unregister the right listeners
+                clientEventsEmitter.unregisterFromClientJoin(ws.clientJoinCallback);
+                clientEventsEmitter.unregisterFromClientLeave(ws.clientLeaveCallback);
             }
-        })*/
+        })
     }
 
     ioConnection() {
