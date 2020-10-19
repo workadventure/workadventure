@@ -73,12 +73,12 @@ export class IoSocketController {
             message: (ws, arrayBuffer, isBinary): void => {
                 try {
                     //TODO refactor message type and data
-                    let message: {event: string, message: {type: string, message: unknown, userUuid: string}} =
+                    const message: {event: string, message: {type: string, message: unknown, userUuid: string}} =
                         JSON.parse(new TextDecoder("utf-8").decode(new Uint8Array(arrayBuffer)));
 
                     if(message.event === 'user-message') {
                         if (message.message.type === 'ban') {
-                            let messageToEmit = (message.message as {message: string, type: string, userUuid: string});
+                            const messageToEmit = (message.message as {message: string, type: string, userUuid: string});
                             socketManager.emitSendUserMessage(messageToEmit);
                         }
                     }

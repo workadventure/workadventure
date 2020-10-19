@@ -49,12 +49,13 @@ class JWTTokenManager {
                 }
 
                 //verify user in admin
-                return adminApi.fetchCheckUserByToken(tokenInterface.userUuid).then(() => {
+                adminApi.fetchCheckUserByToken(tokenInterface.userUuid).then(() => {
                     resolve(tokenInterface.userUuid);
                 }).catch((err) => {
                     //anonymous user
                     if(err.response && err.response.status && err.response.status === 404){
-                        return resolve(tokenInterface.userUuid);
+                        resolve(tokenInterface.userUuid);
+                        return;
                     }
                     reject(new Error('Authentication error, invalid token structure. ' + err));
                 });

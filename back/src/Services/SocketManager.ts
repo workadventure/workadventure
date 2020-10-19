@@ -674,7 +674,7 @@ class SocketManager {
     }
 
     public emitSendUserMessage(messageToSend: {userUuid: string, message: string, type: string}): void {
-        let socket = this.searchClientByUuid(messageToSend.userUuid);
+        const socket = this.searchClientByUuid(messageToSend.userUuid);
         if(!socket){
             throw 'socket was not found';
         }

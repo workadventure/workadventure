@@ -7,21 +7,21 @@ export class Ban implements TypeMessageInterface {
     private titleMessage = 'IMPORTANT !';
 
     showMessage(message: string): void {
-        let div : HTMLDivElement = document.createElement('div');
+        const div : HTMLDivElement = document.createElement('div');
         div.classList.add('modal-report-user');
         div.id = 'report-message-user';
         div.style.backgroundColor = '#000000e0';
 
-        let img : HTMLImageElement = document.createElement('img');
+        const img : HTMLImageElement = document.createElement('img');
         img.src = 'resources/logos/report.svg';
         div.appendChild(img);
 
-        let title : HTMLParagraphElement = document.createElement('p');
+        const title : HTMLParagraphElement = document.createElement('p');
         title.id = 'title-report-user';
         title.innerText = `${this.titleMessage} (${this.maxNbSecond})`;
         div.appendChild(title);
 
-        let p : HTMLParagraphElement = document.createElement('p');
+        const p : HTMLParagraphElement = document.createElement('p');
         p.id = 'body-report-user'
         p.innerText = message;
         div.appendChild(p);
@@ -48,7 +48,7 @@ export class Ban implements TypeMessageInterface {
         }else{
             title.innerText = this.titleMessage;
 
-            let imgCancel : HTMLImageElement = document.createElement('img');
+            const imgCancel : HTMLImageElement = document.createElement('img');
             imgCancel.id = 'cancel-report-user';
             imgCancel.src = 'resources/logos/close.svg';
 
