@@ -604,7 +604,7 @@ class SocketManager {
         }
 
         // Let's see if the current client has
-        const isAdmin = client.tags.indexOf(tag) !== -1;
+        const isAdmin = client.tags.includes(tag);
 
         // TODO: fix this when "moderator" property is available
 
