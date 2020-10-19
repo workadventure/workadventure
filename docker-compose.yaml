@@ -23,6 +23,7 @@ services:
     environment:
       DEBUG_MODE: "$DEBUG_MODE"
       JITSI_URL: $JITSI_URL
+      JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
       HOST: "0.0.0.0"
       NODE_ENV: development
       API_URL: api.workadventure.localhost
@@ -72,8 +73,11 @@ services:
     environment:
       STARTUP_COMMAND_1: yarn install
       SECRET_KEY: yourSecretKey
+      SECRET_JITSI_KEY: "$SECRET_JITSI_KEY"
       ALLOW_ARTILLERY: "true"
       ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
+      JITSI_URL: $JITSI_URL
+      JITSI_ISS: $JITSI_ISS
     volumes:
       - ./back:/usr/src/app
     labels:

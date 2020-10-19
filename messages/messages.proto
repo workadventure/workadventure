@@ -53,6 +53,11 @@ message ReportPlayerMessage {
   string reportComment = 2;
 }
 
+message QueryJitsiJwtMessage {
+  string jitsiRoom = 1;
+  string tag = 2; // FIXME: rather than reading the tag from the query, we should read it from the current map!
+}
+
 message ClientToServerMessage {
   oneof message {
     UserMovesMessage userMovesMessage = 2;
@@ -65,6 +70,7 @@ message ClientToServerMessage {
     PlayGlobalMessage playGlobalMessage = 9;
     StopGlobalMessage stopGlobalMessage = 10;
     ReportPlayerMessage reportPlayerMessage = 11;
+    QueryJitsiJwtMessage queryJitsiJwtMessage = 12;
   }
 }
 
@@ -167,6 +173,11 @@ message TeleportMessageMessage{
   string map = 1;
 }
 
+message SendJitsiJwtMessage {
+  string jitsiRoom = 1;
+  string jwt = 2;
+}
+
 message ServerToClientMessage {
   oneof message {
     BatchMessage batchMessage = 1;
@@ -179,5 +190,6 @@ message ServerToClientMessage {
     PlayGlobalMessage playGlobalMessage = 8;
     StopGlobalMessage stopGlobalMessage = 9;
     TeleportMessageMessage teleportMessageMessage = 10;
+    SendJitsiJwtMessage sendJitsiJwtMessage = 11;
   }
 }
