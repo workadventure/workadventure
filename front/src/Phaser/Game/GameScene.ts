@@ -51,6 +51,7 @@ import {ProtobufClientUtils} from "../../Network/ProtobufClientUtils";
 import {connectionManager} from "../../Connexion/ConnectionManager";
 import {RoomConnection} from "../../Connexion/RoomConnection";
 import {GlobalMessageManager} from "../../Administration/GlobalMessageManager";
+import {UserMessageManager} from "../../Administration/UserMessageManager";
 import {ConsoleGlobalMessageManager} from "../../Administration/ConsoleGlobalMessageManager";
 import {ResizableScene} from "../Login/ResizableScene";
 import {Room} from "../../Connexion/Room";
@@ -114,6 +115,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     private connection!: RoomConnection;
     private simplePeer!: SimplePeer;
     private GlobalMessageManager!: GlobalMessageManager;
+    private UserMessageManager!: UserMessageManager;
     private ConsoleGlobalMessageManager!: ConsoleGlobalMessageManager;
     private connectionAnswerPromise: Promise<RoomJoinedMessageInterface>;
     private connectionAnswerPromiseResolve!: (value?: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>) => void;
@@ -600,6 +602,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             // When connection is performed, let's connect SimplePeer
             this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic);
             this.GlobalMessageManager = new GlobalMessageManager(this.connection);
+            this.UserMessageManager = new UserMessageManager(this.connection);
 
             const self = this;
             this.simplePeer.registerPeerConnectionListener({

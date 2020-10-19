@@ -19,7 +19,11 @@ import {
     UserMovesMessage,
     ViewportMessage, WebRtcDisconnectMessage,
     WebRtcSignalToClientMessage,
-    WebRtcSignalToServerMessage, WebRtcStartMessage, QueryJitsiJwtMessage, SendJitsiJwtMessage
+    WebRtcSignalToServerMessage,
+    WebRtcStartMessage,
+    QueryJitsiJwtMessage,
+    SendJitsiJwtMessage,
+    SendUserMessage
 } from "../Messages/generated/messages_pb";
 import {PointInterface} from "../Model/Websocket/PointInterface";
 import {User} from "../Model/User";
@@ -667,6 +671,24 @@ class SocketManager {
         serverToClientMessage.setSendjitsijwtmessage(sendJitsiJwtMessage);
 
         client.send(serverToClientMessage.serializeBinary().buffer, true);
+    }
+
+    public emitSendUserMessage(messageToSend: {userUuid: string, message: string, type: string}): void {
+        let socket = this.searchClientByUuid(messageToSend.userUuid);
+        if(!socket){
+            throw 'socket was not found';
+        }
+
+        const sendUserMessage = new SendUserMessage();
+        sendUserMessage.setMessage(messageToSend.message);
+        sendUserMessage.setType(messageToSend.type);
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setSendusermessage(sendUserMessage);
+
+        if (!socket.disconnecting) {
+            socket.send(serverToClientMessage.serializeBinary().buffer, true);
+        }
     }
 }
 

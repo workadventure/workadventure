@@ -12,8 +12,7 @@ import {
     WebRtcSignalToServerMessage,
     PlayGlobalMessage,
     ReportPlayerMessage,
-    QueryJitsiJwtMessage,
-    SendJitsiJwtMessage,
+    QueryJitsiJwtMessage
 } from "../Messages/generated/messages_pb";
 import {UserMovesMessage} from "../Messages/generated/messages_pb";
 import {TemplatedApp} from "uWebSockets.js"
@@ -72,7 +71,20 @@ export class IoSocketController {
                 clientEventsEmitter.registerToClientLeave(ws.clientLeaveCallback);
             },
             message: (ws, arrayBuffer, isBinary): void => {
-                console.log('m', ws); //todo: add admin actions such as ban here
+                try {
+                    //TODO refactor message type and data
+                    let message: {event: string, message: {type: string, message: unknown, userUuid: string}} =
+                        JSON.parse(new TextDecoder("utf-8").decode(new Uint8Array(arrayBuffer)));
+
+                    if(message.event === 'user-message') {
+                        if (message.message.type === 'ban') {
+                            let messageToEmit = (message.message as {message: string, type: string, userUuid: string});
+                            socketManager.emitSendUserMessage(messageToEmit);
+                        }
+                    }
+                }catch (err) {
+                    console.error(err);
+                }
             },
             close: (ws, code, message) => {
                 //todo make sure this code unregister the right listeners
