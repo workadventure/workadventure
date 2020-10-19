@@ -2,6 +2,7 @@ import {ALLOW_ARTILLERY, SECRET_KEY} from "../Enum/EnvironmentVariable";
 import {uuid} from "uuidv4";
 import Jwt from "jsonwebtoken";
 import {TokenInterface} from "../Controller/AuthenticateController";
+import {adminApi, AdminApiData} from "../Services/AdminApi";
 
 class JWTTokenManager {
     
@@ -32,7 +33,7 @@ class JWTTokenManager {
                 const tokenInterface = tokenDecoded as TokenInterface;
                 if (err) {
                     console.error('An authentication error happened, invalid JsonWebToken.', err);
-                    reject(new Error('An authentication error happened, invalid JsonWebToken. '+err.message));
+                    reject(new Error('An authentication error happened, invalid JsonWebToken. ' + err.message));
                     return;
                 }
                 if (tokenDecoded === undefined) {
@@ -41,12 +42,22 @@ class JWTTokenManager {
                     return;
                 }
 
+                //verify token
                 if (!this.isValidToken(tokenInterface)) {
                     reject(new Error('Authentication error, invalid token structure.'));
                     return;
                 }
 
-                resolve(tokenInterface.userUuid);
+                //verify user in admin
+                return adminApi.fetchCheckUserByToken(tokenInterface.userUuid).then(() => {
+                    resolve(tokenInterface.userUuid);
+                }).catch((err) => {
+                    //anonymous user
+                    if(err.response && err.response.status && err.response.status === 404){
+                        return resolve(tokenInterface.userUuid);
+                    }
+                    reject(new Error('Authentication error, invalid token structure. ' + err));
+                });
             });
         });
     }
