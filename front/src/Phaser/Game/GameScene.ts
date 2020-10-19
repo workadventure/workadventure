@@ -1206,7 +1206,24 @@ export class GameScene extends ResizableScene implements CenterListener {
                 },
                 interfaceConfigOverwrite: {
                     SHOW_CHROME_EXTENSION_BANNER: false,
-                    MOBILE_APP_PROMO: false
+                    MOBILE_APP_PROMO: false,
+
+                    HIDE_INVITE_MORE_HEADER: true,
+
+                    // Note: hiding brand does not seem to work, we probably need to put this on the server side.
+                    SHOW_BRAND_WATERMARK: false,
+                    SHOW_JITSI_WATERMARK: false,
+                    SHOW_POWERED_BY: false,
+                    SHOW_PROMOTIONAL_CLOSE_PAGE: false,
+                    SHOW_WATERMARK_FOR_GUESTS: false,
+
+                    TOOLBAR_BUTTONS: [
+                        'microphone', 'camera', 'closedcaptions', 'desktop', /*'embedmeeting',*/ 'fullscreen',
+                        'fodeviceselection', 'hangup', 'profile', 'chat', 'recording',
+                        'livestreaming', 'etherpad', 'sharedvideo', 'settings', 'raisehand',
+                        'videoquality', 'filmstrip', /*'invite',*/ 'feedback', 'stats', 'shortcuts',
+                        'tileview', 'videobackgroundblur', 'download', 'help', 'mute-everyone', /*'security'*/
+                    ],
                 }
             };
             if (!options.jwt) {
