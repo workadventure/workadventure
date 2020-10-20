@@ -1,7 +1,6 @@
 import {GameScene} from "./GameScene";
 import {connectionManager} from "../../Connexion/ConnectionManager";
 import {Room} from "../../Connexion/Room";
-import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
 
 export interface HasMovedEvent {
     direction: string;
@@ -24,11 +23,7 @@ export class GameManager {
         this.playerName = name;
     }
 
-    public setCharacterUserSelected(characterUserSelected : string): void {
-        this.characterLayers = [characterUserSelected];
-    }
-
-    public setCharacterLayers(layers: string[]) {
+    public setCharacterLayers(layers: string[]): void {
         this.characterLayers = layers;
     }
 
@@ -52,13 +47,6 @@ export class GameManager {
             console.log('Adding scene '+mapUrl);
             scenePlugin.add(mapUrl, game, false);
         }
-    }
-
-    public getMapKeyByUrl(mapUrlStart: string) : string {
-        // FIXME: the key should be computed from the full URL of the map.
-        const startPos = mapUrlStart.indexOf('://')+3;
-        const endPos = mapUrlStart.indexOf(".json");
-        return mapUrlStart.substring(startPos, endPos);
     }
 
     public async goToStartingMap(scenePlugin: Phaser.Scenes.ScenePlugin) {

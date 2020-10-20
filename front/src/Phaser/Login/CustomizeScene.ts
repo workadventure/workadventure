@@ -7,6 +7,7 @@ import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
 import {gameManager} from "../Game/GameManager";
 import {ResizableScene} from "./ResizableScene";
+import {localUserStore} from "../../Connexion/LocalUserStore";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -32,9 +33,10 @@ export class CustomizeScene extends ResizableScene {
 
     private logo!: Image;
 
-    private selectedLayers: Array<number> = [0];
-    private containersRow: Array<Array<Container>> = new Array<Array<Container>>();
-    private activeRow = 0;
+    private selectedLayers: number[] = [0];
+    private containersRow: Container[][] = [];
+    private activeRow:number = 0;
+    //private x:number = 0;
 
     constructor() {
         super({
@@ -103,43 +105,51 @@ export class CustomizeScene extends ResizableScene {
             return this.scene.start(EnableCameraSceneName);
         });
 
-        this.input.keyboard.on('keydown-RIGHT', () => {
-            if (this.selectedLayers[this.activeRow] === undefined) {
-                this.selectedLayers[this.activeRow] = 0;
-            }
-            if (this.selectedLayers[this.activeRow] < LAYERS[this.activeRow].length - 1) {
-                this.selectedLayers[this.activeRow]++;
-                this.moveLayers();
-                this.updateSelectedLayer();
-            }
-        });
-
-        this.input.keyboard.on('keydown-LEFT', () => {
-            if (this.selectedLayers[this.activeRow] > 0) {
-                if (this.selectedLayers[this.activeRow] === 0) {
-                    delete this.selectedLayers[this.activeRow];
-                } else {
-                    this.selectedLayers[this.activeRow]--;
-                }
-                this.moveLayers();
-                this.updateSelectedLayer();
-            }
-        });
-
-        this.input.keyboard.on('keydown-DOWN', () => {
-            if (this.activeRow < LAYERS.length - 1) {
-                this.activeRow++;
-                this.moveLayers();
-            }
-        });
-
-        this.input.keyboard.on('keydown-UP', () => {
-            if (this.activeRow > 0) {
-                this.activeRow--;
-                this.moveLayers();
-            }
-        });
+        this.input.keyboard.on('keydown-RIGHT', () => this.moveCursorHorizontally(1));
+        this.input.keyboard.on('keydown-LEFT', () => this.moveCursorHorizontally(-1));
+        this.input.keyboard.on('keydown-DOWN', () => this.moveCursorVertically(1));
+        this.input.keyboard.on('keydown-UP', () => this.moveCursorVertically(-1));
+        
+        /*const customCursorPosition = localUserStore.getCustomCursorPosition();
+        if (customCursorPosition) {
+            this.selectedLayers = customCursorPosition.selectedLayers;
+            for (let i = 0; i < customCursorPosition.x; i++) this.moveCursorVertically(1);
+            for (let i = 0; i < customCursorPosition.y; i++) this.moveCursorHorizontally(1);
+        }*/
     }
+    
+    private moveCursorHorizontally(index: number): void {
+        if (this.selectedLayers[this.activeRow] === undefined) {
+            this.selectedLayers[this.activeRow] = index;
+            
+        } else {
+            this.selectedLayers[this.activeRow] += index;
+        }
+        if (this.selectedLayers[this.activeRow] < 0) {
+            this.selectedLayers[this.activeRow] = 0
+        } else if(this.selectedLayers[this.activeRow] > LAYERS[this.activeRow].length - 1) {
+            this.selectedLayers[this.activeRow] = LAYERS[this.activeRow].length - 1
+        }
+        this.moveLayers();
+        this.updateSelectedLayer();
+        //this.saveInLocalStorage();
+    }
+    
+    private moveCursorVertically(index:number): void {
+        this.activeRow += index;
+        if (this.activeRow < 0) {
+            this.activeRow = 0
+        } else if (this.activeRow > LAYERS.length - 1) {
+            this.activeRow = LAYERS.length - 1
+        }
+        this.moveLayers();
+        //this.saveInLocalStorage();
+    }
+    
+    /*private saveInLocalStorage() {
+        localUserStore.setCustomCursorPosition(this.x, this.activeRow, this.selectedLayers);
+    }*/
+    
     update(time: number, delta: number): void {
         super.update(time, delta);
         this.enterField.setVisible(!!(Math.floor(time / 500) % 2));
@@ -152,7 +162,7 @@ export class CustomizeScene extends ResizableScene {
      * create the layer and display it on the scene
      */
     private createCustomizeLayer(x: number, y: number, layerNumber: number): void {
-        this.containersRow[layerNumber] = new Array<Container>();
+        this.containersRow[layerNumber] = [];
         let alpha = 0;
         let layerPosX = 0;
         for (let i = 0; i < LAYERS[layerNumber].length; i++) {
