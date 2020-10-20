@@ -25,10 +25,10 @@ class LocalUserStore {
         return parseInt(window.localStorage.getItem('selectedPlayer') || '');
     }
 
-    setCustomCursorPosition(x:number, y:number, selectedLayers: number[]): void {
-        window.localStorage.setItem('customCursorPosition', JSON.stringify({x, y, selectedLayers}));
+    setCustomCursorPosition(activeRow:number, selectedLayers: number[]): void {
+        window.localStorage.setItem('customCursorPosition', JSON.stringify({activeRow, selectedLayers}));
     }
-    getCustomCursorPosition(): {x:number, y:number, selectedLayers:number[]}|null  {
+    getCustomCursorPosition(): {activeRow:number, selectedLayers:number[]}|null  {
         return JSON.parse(window.localStorage.getItem('customCursorPosition') || "null");
     }
 }

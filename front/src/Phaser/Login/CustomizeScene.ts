@@ -36,7 +36,6 @@ export class CustomizeScene extends ResizableScene {
     private selectedLayers: number[] = [0];
     private containersRow: Container[][] = [];
     private activeRow:number = 0;
-    //private x:number = 0;
 
     constructor() {
         super({
@@ -110,21 +109,17 @@ export class CustomizeScene extends ResizableScene {
         this.input.keyboard.on('keydown-DOWN', () => this.moveCursorVertically(1));
         this.input.keyboard.on('keydown-UP', () => this.moveCursorVertically(-1));
         
-        /*const customCursorPosition = localUserStore.getCustomCursorPosition();
+        const customCursorPosition = localUserStore.getCustomCursorPosition();
         if (customCursorPosition) {
+            this.activeRow = customCursorPosition.activeRow;
             this.selectedLayers = customCursorPosition.selectedLayers;
-            for (let i = 0; i < customCursorPosition.x; i++) this.moveCursorVertically(1);
-            for (let i = 0; i < customCursorPosition.y; i++) this.moveCursorHorizontally(1);
-        }*/
+            this.moveLayers();
+            this.updateSelectedLayer();
+        }
     }
     
     private moveCursorHorizontally(index: number): void {
-        if (this.selectedLayers[this.activeRow] === undefined) {
-            this.selectedLayers[this.activeRow] = index;
-            
-        } else {
-            this.selectedLayers[this.activeRow] += index;
-        }
+        this.selectedLayers[this.activeRow] += index;
         if (this.selectedLayers[this.activeRow] < 0) {
             this.selectedLayers[this.activeRow] = 0
         } else if(this.selectedLayers[this.activeRow] > LAYERS[this.activeRow].length - 1) {
@@ -132,7 +127,7 @@ export class CustomizeScene extends ResizableScene {
         }
         this.moveLayers();
         this.updateSelectedLayer();
-        //this.saveInLocalStorage();
+        this.saveInLocalStorage();
     }
     
     private moveCursorVertically(index:number): void {
@@ -143,12 +138,12 @@ export class CustomizeScene extends ResizableScene {
             this.activeRow = LAYERS.length - 1
         }
         this.moveLayers();
-        //this.saveInLocalStorage();
+        this.saveInLocalStorage();
     }
     
-    /*private saveInLocalStorage() {
-        localUserStore.setCustomCursorPosition(this.x, this.activeRow, this.selectedLayers);
-    }*/
+    private saveInLocalStorage() {
+        localUserStore.setCustomCursorPosition(this.activeRow, this.selectedLayers);
+    }
     
     update(time: number, delta: number): void {
         super.update(time, delta);
@@ -163,6 +158,7 @@ export class CustomizeScene extends ResizableScene {
      */
     private createCustomizeLayer(x: number, y: number, layerNumber: number): void {
         this.containersRow[layerNumber] = [];
+        this.selectedLayers[layerNumber] = 0;
         let alpha = 0;
         let layerPosX = 0;
         for (let i = 0; i < LAYERS[layerNumber].length; i++) {
