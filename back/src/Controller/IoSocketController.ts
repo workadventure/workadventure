@@ -79,15 +79,20 @@ export class IoSocketController {
                     if(message.event === 'user-message') {
                         const messageToEmit = (message.message as { message: string, type: string, userUuid: string });
                         switch (message.message.type) {
-                            case 'ban':
+                            case 'ban': {
                                 socketManager.emitSendUserMessage(messageToEmit);
                                 break;
-                            case 'banned':
+                            }
+                            case 'banned': {
                                 const socketUser = socketManager.emitSendUserMessage(messageToEmit);
                                 setTimeout(() => {
                                     socketUser.close();
                                 }, 10000);
                                 break;
+                            }
+                            default: {
+                                break;
+                            }
                         }
                     }
                 }catch (err) {
@@ -233,7 +238,7 @@ export class IoSocketController {
                         return;
                     }
                     res.messages.forEach((c: unknown) => {
-                        let messageToSend = c as { type: string, message: string };
+                        const messageToSend = c as { type: string, message: string };
                         socketManager.emitSendUserMessage({
                             userUuid: client.userUuid,
                             type: messageToSend.type,
