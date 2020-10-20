@@ -12,14 +12,13 @@ import {
     WebRtcSignalToServerMessage,
     PlayGlobalMessage,
     ReportPlayerMessage,
-    QueryJitsiJwtMessage,
-    SendJitsiJwtMessage,
+    QueryJitsiJwtMessage
 } from "../Messages/generated/messages_pb";
 import {UserMovesMessage} from "../Messages/generated/messages_pb";
 import {TemplatedApp} from "uWebSockets.js"
 import {parse} from "query-string";
 import {jwtTokenManager} from "../Services/JWTTokenManager";
-import {adminApi} from "../Services/AdminApi";
+import {adminApi, fetchMemberDataByUuidResponse} from "../Services/AdminApi";
 import {socketManager} from "../Services/SocketManager";
 import {emitInBatch, resetPing} from "../Services/IoSocketHelpers";
 import Jwt from "jsonwebtoken";
@@ -72,7 +71,33 @@ export class IoSocketController {
                 clientEventsEmitter.registerToClientLeave(ws.clientLeaveCallback);
             },
             message: (ws, arrayBuffer, isBinary): void => {
-                console.log('m', ws); //todo: add admin actions such as ban here
+                try {
+                    //TODO refactor message type and data
+                    const message: {event: string, message: {type: string, message: unknown, userUuid: string}} =
+                        JSON.parse(new TextDecoder("utf-8").decode(new Uint8Array(arrayBuffer)));
+
+                    if(message.event === 'user-message') {
+                        const messageToEmit = (message.message as { message: string, type: string, userUuid: string });
+                        switch (message.message.type) {
+                            case 'ban': {
+                                socketManager.emitSendUserMessage(messageToEmit);
+                                break;
+                            }
+                            case 'banned': {
+                                const socketUser = socketManager.emitSendUserMessage(messageToEmit);
+                                setTimeout(() => {
+                                    socketUser.close();
+                                }, 10000);
+                                break;
+                            }
+                            default: {
+                                break;
+                            }
+                        }
+                    }
+                }catch (err) {
+                    console.error(err);
+                }
             },
             close: (ws, code, message) => {
                 //todo make sure this code unregister the right listeners
@@ -206,6 +231,23 @@ export class IoSocketController {
                 const client = this.initClient(ws); //todo: into the upgrade instead?
                 socketManager.handleJoinRoom(client);
                 resetPing(client);
+
+                //get data information and shwo messages
+                adminApi.fetchMemberDataByUuid(client.userUuid).then((res: fetchMemberDataByUuidResponse) => {
+                    if (!res.messages) {
+                        return;
+                    }
+                    res.messages.forEach((c: unknown) => {
+                        const messageToSend = c as { type: string, message: string };
+                        socketManager.emitSendUserMessage({
+                            userUuid: client.userUuid,
+                            type: messageToSend.type,
+                            message: messageToSend.message
+                        })
+                    });
+                }).catch((err) => {
+                    console.error('fetchMemberDataByUuid => err', err);
+                });
             },
             message: (ws, arrayBuffer, isBinary): void => {
                 const client = ws as ExSocketInterface;

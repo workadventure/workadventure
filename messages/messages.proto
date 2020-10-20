@@ -178,6 +178,11 @@ message SendJitsiJwtMessage {
   string jwt = 2;
 }
 
+message SendUserMessage{
+  string type = 1;
+  string message = 2;
+}
+
 message ServerToClientMessage {
   oneof message {
     BatchMessage batchMessage = 1;
@@ -191,5 +196,6 @@ message ServerToClientMessage {
     StopGlobalMessage stopGlobalMessage = 9;
     TeleportMessageMessage teleportMessageMessage = 10;
     SendJitsiJwtMessage sendJitsiJwtMessage = 11;
+    SendUserMessage sendUserMessage = 12;
   }
 }

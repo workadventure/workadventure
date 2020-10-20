@@ -22,7 +22,7 @@ import {
     WebRtcSignalToServerMessage,
     WebRtcStartMessage,
     ReportPlayerMessage,
-    TeleportMessageMessage, QueryJitsiJwtMessage, SendJitsiJwtMessage
+    TeleportMessageMessage, QueryJitsiJwtMessage, SendJitsiJwtMessage, SendUserMessage
 } from "../Messages/generated/messages_pb"
 
 import {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
@@ -35,8 +35,6 @@ import {
     RoomJoinedMessageInterface,
     ViewportInterface, WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
-    WebRtcSignalSentMessageInterface,
-    WebRtcStartMessageInterface
 } from "./ConnexionModels";
 
 export class RoomConnection implements RoomConnection {
@@ -152,6 +150,8 @@ export class RoomConnection implements RoomConnection {
                 this.dispatch(EventMessage.TELEPORT, message.getTeleportmessagemessage());
             } else if (message.hasSendjitsijwtmessage()) {
                 this.dispatch(EventMessage.START_JITSI_ROOM, message.getSendjitsijwtmessage());
+            } else if (message.hasSendusermessage()) {
+                this.dispatch(EventMessage.USER_MESSAGE, message.getSendusermessage());
             } else {
                 throw new Error('Unknown message received');
             }
@@ -479,8 +479,13 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public receiveUserMessage(callback: (type: string, message: string) => void) {
+        return this.onMessage(EventMessage.USER_MESSAGE, (message: SendUserMessage) => {
+            callback(message.getType(), message.getMessage());
+        });
+    }
+
     public emitGlobalMessage(message: PlayGlobalMessageInterface){
-        console.log('emitGlobalMessage', message);
         const playGlobalMessage = new PlayGlobalMessage();
         playGlobalMessage.setId(message.id);
         playGlobalMessage.setType(message.type);
