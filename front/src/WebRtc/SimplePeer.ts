@@ -126,10 +126,19 @@ export class SimplePeer {
      * create peer connection to bind users
      */
     private createPeerConnection(user : UserSimplePeerInterface) : VideoPeer | null{
-        if(
-            this.PeerConnectionArray.has(user.userId)
-        ){
-            console.log('Peer connection already exists to user '+user.userId)
+        const peerConnection = this.PeerConnectionArray.get(user.userId)
+        if(peerConnection){
+            if(peerConnection.destroyed){
+                peerConnection.toClose = true;
+                peerConnection.destroy();
+                const peerConnexionDeleted = this.PeerConnectionArray.delete(user.userId);
+                if(!peerConnexionDeleted){
+                    throw 'Error to delete peer connection';
+                }
+                this.createPeerConnection(user);
+            }else {
+                peerConnection.toClose = false;
+            }
             return null;
         }
 
@@ -150,6 +159,7 @@ export class SimplePeer {
         mediaManager.addActiveVideo("" + user.userId, reportCallback, name);
 
         const peer = new VideoPeer(user.userId, user.initiator ? user.initiator : false, this.Connection);
+        peer.toClose = false;
         // When a connection is established to a video stream, and if a screen sharing is taking place,
         // the user sharing screen should also initiate a connection to the remote user!
         peer.on('connect', () => {
@@ -200,16 +210,17 @@ export class SimplePeer {
             //mediaManager.removeActiveVideo(userId);
             const peer = this.PeerConnectionArray.get(userId);
             if (peer === undefined) {
-                console.warn("Tried to close connection for user "+userId+" but could not find user")
+                console.warn("closeConnection => Tried to close connection for user "+userId+" but could not find user");
                 return;
             }
+            //create temp perr to close
+            peer.toClose = true;
             peer.destroy();
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
-            //console.log('Closing connection with '+userId);
-            this.PeerConnectionArray.delete(userId);
+
             this.closeScreenSharingConnection(userId);
-            //console.log('Nb users in peerConnectionArray '+this.PeerConnectionArray.size);
+
             for (const peerConnectionListener of this.peerConnectionListeners) {
                 peerConnectionListener.onDisconnect(userId);
             }
@@ -228,14 +239,16 @@ export class SimplePeer {
             mediaManager.removeActiveScreenSharingVideo("" + userId);
             const peer = this.PeerScreenSharingConnectionArray.get(userId);
             if (peer === undefined) {
-                console.warn("Tried to close connection for user "+userId+" but could not find user")
+                console.warn("closeScreenSharingConnection => Tried to close connection for user "+userId+" but could not find user")
                 return;
             }
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
             //console.log('Closing connection with '+userId);
             peer.destroy();
-            this.PeerScreenSharingConnectionArray.delete(userId)
+            if(!this.PeerScreenSharingConnectionArray.delete(userId)){
+                throw 'Couln\'t delete peer screen sharing connexion';
+            }
             //console.log('Nb users in peerConnectionArray '+this.PeerConnectionArray.size);
         } catch (err) {
             console.error("closeConnection", err)
@@ -292,6 +305,9 @@ export class SimplePeer {
             }
         } catch (e) {
             console.error(`receiveWebrtcSignal => ${data.userId}`, e);
+            //force delete and recreate peer connexion
+            this.PeerScreenSharingConnectionArray.delete(data.userId);
+            this.receiveWebrtcScreenSharingSignal(data);
         }
     }
 

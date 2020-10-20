@@ -21,7 +21,7 @@ class ConnectionManager {
         if(connexionType === GameConnexionTypes.register) {
            const organizationMemberToken = urlManager.getOrganizationToken();
             const data = await Axios.post(`${API_URL}/register`, {organizationMemberToken}).then(res => res.data);
-            this.localUser = new LocalUser(data.userUuid, data.authToken);
+            this.localUser = new LocalUser(data.userUuid, data.authToken, data.textures);
             localUserStore.saveUser(this.localUser);
 
             const organizationSlug = data.organizationSlug;
@@ -34,7 +34,7 @@ class ConnectionManager {
         } else if (connexionType === GameConnexionTypes.anonymous || connexionType === GameConnexionTypes.empty) {
             const localUser = localUserStore.getLocalUser();
 
-            if (localUser && localUser.jwtToken && localUser.uuid) {
+            if (localUser && localUser.jwtToken && localUser.uuid && localUser.textures) {
                 this.localUser = localUser;
                 try {
                     await this.verifyToken(localUser.jwtToken);
@@ -78,12 +78,12 @@ class ConnectionManager {
 
     private async anonymousLogin(): Promise<void> {
         const data = await Axios.post(`${API_URL}/anonymLogin`).then(res => res.data);
-        this.localUser = new LocalUser(data.userUuid, data.authToken);
+        this.localUser = new LocalUser(data.userUuid, data.authToken, []);
         localUserStore.saveUser(this.localUser);
     }
 
     public initBenchmark(): void {
-        this.localUser = new LocalUser('', 'test');
+        this.localUser = new LocalUser('', 'test', []);
     }
 
     public connectToRoomSocket(roomId: string, name: string, characterLayers: string[], position: PositionInterface, viewport: ViewportInterface): Promise<RoomConnection> {

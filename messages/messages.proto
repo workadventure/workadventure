@@ -31,6 +31,11 @@ message SilentMessage {
   bool silent = 1;
 }
 
+message CharacterLayerMessage {
+  string url = 1;
+  string name = 2;
+}
+
 /*********** CLIENT TO SERVER MESSAGES *************/
 
 message SetPlayerDetailsMessage {
@@ -129,7 +134,7 @@ message GroupDeleteMessage {
 message UserJoinedMessage {
   int32 userId = 1;
   string name = 2;
-  repeated string characterLayers = 3;
+  repeated CharacterLayerMessage characterLayers = 3;
   PositionMessage position = 4;
 }
 

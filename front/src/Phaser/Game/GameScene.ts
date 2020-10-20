@@ -32,7 +32,7 @@ import {RemotePlayer} from "../Entity/RemotePlayer";
 import {Queue} from 'queue-typescript';
 import {SimplePeer, UserSimplePeerInterface} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
-import {loadAllLayers, loadObject, loadPlayerCharacters} from "../Entity/body_character";
+import {loadAllLayers, loadCustomTexture, loadObject, loadPlayerCharacters} from "../Entity/body_character";
 import {CenterListener, layoutManager, LayoutMode} from "../../WebRtc/LayoutManager";
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
@@ -475,7 +475,6 @@ export class GameScene extends ResizableScene implements CenterListener {
             if (newValue === undefined) {
                 this.stopJitsi();
             } else {
-                console.log("JITSI_PRIVATE_MODE", JITSI_PRIVATE_MODE);
                 if (JITSI_PRIVATE_MODE) {
                     const adminTag = allProps.get("jitsiRoomAdminTag") as string|undefined;
 
@@ -1022,7 +1021,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     /**
      * Create new player
      */
-    private doAddPlayer(addPlayerData : AddPlayerInterface) : void {
+    private async doAddPlayer(addPlayerData : AddPlayerInterface) : Promise<void> {
         //check if exist player, if exist, move position
         if(this.MapPlayersByKey.has(addPlayerData.userId)){
             this.updatePlayerPosition({
@@ -1031,6 +1030,20 @@ export class GameScene extends ResizableScene implements CenterListener {
             });
             return;
         }
+        // Load textures (in case it is a custom texture)
+        const characterLayerList: string[] = [];
+        const loadPromises: Promise<void>[] = [];
+        for (const characterLayer of addPlayerData.characterLayers) {
+            characterLayerList.push(characterLayer.name);
+            if (characterLayer.img) {
+                console.log('LOADING ', characterLayer.name, characterLayer.img)
+                loadPromises.push(this.loadSpritesheet(characterLayer.name, characterLayer.img));
+            }
+        }
+        if (loadPromises.length > 0) {
+            this.load.start();
+        }
+
         //initialise player
         const player = new RemotePlayer(
             addPlayerData.userId,
@@ -1038,7 +1051,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             addPlayerData.position.x,
             addPlayerData.position.y,
             addPlayerData.name,
-            addPlayerData.characterLayers,
+            [], // Let's go with no textures and let's load textures when promises have returned.
             addPlayerData.position.direction,
             addPlayerData.position.moving
         );
@@ -1046,10 +1059,15 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.MapPlayersByKey.set(player.userId, player);
         player.updatePosition(addPlayerData.position);
 
+
+        await Promise.all(loadPromises);
+
+        player.addTextures(characterLayerList, 1);
         //init collision
         /*this.physics.add.collider(this.CurrentPlayer, player, (CurrentPlayer: CurrentGamerInterface, MapPlayer: GamerInterface) => {
             CurrentPlayer.say("Hello, how are you ? ");
         });*/
+
     }
 
     /**
@@ -1244,5 +1262,19 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.jitsiApi?.dispose();
         CoWebsiteManager.closeCoWebsite();
         mediaManager.showGameOverlay();
+    }
+
+    private loadSpritesheet(name: string, url: string): Promise<void> {
+        return new Promise<void>(((resolve, reject) => {
+            this.load.spritesheet(
+                name,
+                url,
+                {frameWidth: 32, frameHeight: 32}
+            );
+            this.load.on('filecomplete-spritesheet-'+name, () => {
+                console.log('RESOURCE LOADED!');
+                resolve();
+            });
+        }))
     }
 }

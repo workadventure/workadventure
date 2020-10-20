@@ -6,6 +6,7 @@ import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Ch
 import {EnableCameraSceneName} from "./EnableCameraScene";
 import {CustomizeSceneName} from "./CustomizeScene";
 import {ResizableScene} from "./ResizableScene";
+import {localUserStore} from "../../Connexion/LocalUserStore";
 
 
 //todo: put this constants in a dedicated file
@@ -98,12 +99,14 @@ export class SelectCharacterScene extends ResizableScene {
 
         /*create user*/
         this.createCurrentPlayer();
-
-        if (window.localStorage) {
-            const playerNumberStr: string = window.localStorage.getItem('selectedPlayer') ?? '0';
-            const playerNumber: number = Number(playerNumberStr);
+        
+        const playerNumber = localUserStore.getPlayerCharacterIndex();
+        if (playerNumber && playerNumber !== -1) {
             this.selectedRectangleXPos = playerNumber % this.nbCharactersPerRow;
             this.selectedRectangleYPos = Math.floor(playerNumber / this.nbCharactersPerRow);
+            this.updateSelectedPlayer();
+        } else if (playerNumber === -1) {
+            this.selectedRectangleYPos = Math.ceil(PLAYER_RESOURCES.length / this.nbCharactersPerRow);
             this.updateSelectedPlayer();
         }
     }
@@ -113,31 +116,12 @@ export class SelectCharacterScene extends ResizableScene {
     }
 
     private nextScene(): void {
-
         if (this.selectedPlayer !== null) {
-            gameManager.setCharacterUserSelected(this.selectedPlayer.texture.key);
-
+            gameManager.setCharacterLayers([this.selectedPlayer.texture.key]);
             this.scene.start(EnableCameraSceneName);
         } else {
             this.scene.start(CustomizeSceneName);
         }
-    }
-
-    /**
-     * Returns the map URL and the instance from the current URL
-     */
-    private findMapUrl(): [string, string]|null {
-        const path = window.location.pathname;
-        if (!path.startsWith('/_/')) {
-            return null;
-        }
-        const instanceAndMap = path.substr(3);
-        const firstSlash = instanceAndMap.indexOf('/');
-        if (firstSlash === -1) {
-            return null;
-        }
-        const instance = instanceAndMap.substr(0, firstSlash);
-        return [window.location.protocol+'//'+instanceAndMap.substr(firstSlash+1), instance];
     }
 
     createCurrentPlayer(): void {
@@ -200,6 +184,7 @@ export class SelectCharacterScene extends ResizableScene {
             this.selectedRectangle.setVisible(false);
             this.customizeButtonSelected.setVisible(true);
             this.customizeButton.setVisible(false);
+            localUserStore.setPlayerCharacterIndex(-1);
             return;
         }
         this.customizeButtonSelected.setVisible(false);
@@ -213,9 +198,7 @@ export class SelectCharacterScene extends ResizableScene {
         const player = this.players[playerNumber];
         player.play(PLAYER_RESOURCES[playerNumber].name);
         this.selectedPlayer = player;
-        if (window.localStorage) {
-            window.localStorage.setItem('selectedPlayer', String(playerNumber));
-        }
+        localUserStore.setPlayerCharacterIndex(playerNumber);
     }
 
     public onResize(ev: UIEvent): void {

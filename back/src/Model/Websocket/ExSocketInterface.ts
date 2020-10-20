@@ -3,6 +3,12 @@ import {Identificable} from "./Identificable";
 import {ViewportInterface} from "_Model/Websocket/ViewportMessage";
 import {BatchMessage, SubMessage} from "../../Messages/generated/messages_pb";
 import {WebSocket} from "uWebSockets.js"
+import {CharacterTexture} from "../../Services/AdminApi";
+
+export interface CharacterLayer {
+    name: string,
+    url: string|undefined
+}
 
 export interface ExSocketInterface extends WebSocket, Identificable {
     token: string;
@@ -10,7 +16,7 @@ export interface ExSocketInterface extends WebSocket, Identificable {
     //userId: number;   // A temporary (autoincremented) identifier for this user
     userUuid: string; // A unique identifier for this user
     name: string;
-    characterLayers: string[];
+    characterLayers: CharacterLayer[];
     position: PointInterface;
     viewport: ViewportInterface;
     /**
@@ -21,5 +27,6 @@ export interface ExSocketInterface extends WebSocket, Identificable {
     batchTimeout: NodeJS.Timeout|null;
     pingTimeout: NodeJS.Timeout|null;
     disconnecting: boolean,
-    tags: string[]
+    tags: string[],
+    textures: CharacterTexture[],
 }

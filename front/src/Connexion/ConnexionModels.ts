@@ -1,6 +1,7 @@
 import {PlayerAnimationNames} from "../Phaser/Player/Animation";
 import {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
 import {SignalData} from "simple-peer";
+import {BodyResourceDescriptionInterface} from "../Phaser/Entity/body_character";
 
 export enum EventMessage{
     WEBRTC_SIGNAL = "webrtc-signal",
@@ -49,7 +50,7 @@ export class Point implements PointInterface{
 export interface MessageUserPositionInterface {
     userId: number;
     name: string;
-    characterLayers: string[];
+    characterLayers: BodyResourceDescriptionInterface[];
     position: PointInterface;
 }
 
@@ -61,7 +62,7 @@ export interface MessageUserMovedInterface {
 export interface MessageUserJoined {
     userId: number;
     name: string;
-    characterLayers: string[];
+    characterLayers: BodyResourceDescriptionInterface[];
     position: PointInterface
 }
 
