@@ -1,6 +1,11 @@
 import {PointInterface} from "./PointInterface";
-import {ItemEventMessage, PointMessage, PositionMessage} from "../../Messages/generated/messages_pb";
-import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
+import {
+    CharacterLayerMessage,
+    ItemEventMessage,
+    PointMessage,
+    PositionMessage
+} from "../../Messages/generated/messages_pb";
+import {CharacterLayer, ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
 import Direction = PositionMessage.Direction;
 import {ItemEventMessageInterface} from "_Model/Websocket/ItemEventMessage";
 import {PositionInterface} from "_Model/PositionInterface";
@@ -88,5 +93,16 @@ export class ProtobufUtils {
         itemEventMessage.setStatejson(JSON.stringify(itemEvent.state));
 
         return itemEventMessage;
+    }
+
+    public static toCharacterLayerMessages(characterLayers: CharacterLayer[]): CharacterLayerMessage[] {
+        return characterLayers.map(function(characterLayer): CharacterLayerMessage {
+            const message = new CharacterLayerMessage();
+            message.setName(characterLayer.name);
+            if (characterLayer.url) {
+                message.setUrl(characterLayer.url);
+            }
+            return message;
+        });
     }
 }

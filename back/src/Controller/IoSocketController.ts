@@ -1,4 +1,4 @@
-import {ExSocketInterface} from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
+import {CharacterLayer, ExSocketInterface} from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
 import {GameRoomPolicyTypes} from "../Model/GameRoom";
 import {PointInterface} from "../Model/Websocket/PointInterface";
 import {
@@ -18,10 +18,9 @@ import {UserMovesMessage} from "../Messages/generated/messages_pb";
 import {TemplatedApp} from "uWebSockets.js"
 import {parse} from "query-string";
 import {jwtTokenManager} from "../Services/JWTTokenManager";
-import {adminApi, fetchMemberDataByUuidResponse} from "../Services/AdminApi";
-import {socketManager} from "../Services/SocketManager";
+import {adminApi, CharacterTexture, FetchMemberDataByUuidResponse} from "../Services/AdminApi";
+import {SocketManager, socketManager} from "../Services/SocketManager";
 import {emitInBatch, resetPing} from "../Services/IoSocketHelpers";
-import Jwt from "jsonwebtoken";
 import {clientEventsEmitter} from "../Services/ClientEventsEmitter";
 import {ADMIN_API_TOKEN} from "../Enum/EnvironmentVariable";
 
@@ -159,24 +158,27 @@ export class IoSocketController {
                             characterLayers = [ characterLayers ];
                         }
 
-
                         const userUuid = await jwtTokenManager.getUserUuidFromToken(token);
 
                         let memberTags: string[] = [];
+                        let memberTextures: CharacterTexture[] = [];
                         const room = await socketManager.getOrCreateRoom(roomId);
-                        if (!room.anonymous && room.policyType !== GameRoomPolicyTypes.ANONYMUS_POLICY) {
-                            try {
-                                const userData = await adminApi.fetchMemberDataByUuid(userUuid);
-                                memberTags = userData.tags;
-                                if (room.policyType === GameRoomPolicyTypes.USE_TAGS_POLICY && !room.canAccess(memberTags)) {
-                                    throw new Error('No correct tags')
-                                }
-                                console.log('access granted for user '+userUuid+' and room '+roomId);
-                            } catch (e) {
-                                console.log('access not granted for user '+userUuid+' and room '+roomId);
-                                throw new Error('Client cannot acces this ressource.')
+                        try {
+                            const userData = await adminApi.fetchMemberDataByUuid(userUuid);
+                            //console.log('USERDATA', userData)
+                            memberTags = userData.tags;
+                            memberTextures = userData.textures;
+                            if (!room.anonymous && room.policyType === GameRoomPolicyTypes.USE_TAGS_POLICY && !room.canAccess(memberTags)) {
+                                throw new Error('No correct tags')
                             }
+                            //console.log('access granted for user '+userUuid+' and room '+roomId);
+                        } catch (e) {
+                            console.log('access not granted for user '+userUuid+' and room '+roomId);
+                            throw new Error('Client cannot acces this ressource.')
                         }
+
+                        // Generate characterLayers objects from characterLayers string[]
+                        const characterLayerObjs: CharacterLayer[] = SocketManager.mergeCharacterLayersAndCustomTextures(characterLayers, memberTextures);
 
                         if (upgradeAborted.aborted) {
                             console.log("Ouch! Client disconnected before we could upgrade it!");
@@ -192,8 +194,9 @@ export class IoSocketController {
                                 userUuid,
                                 roomId,
                                 name,
-                                characterLayers,
+                                characterLayers: characterLayerObjs,
                                 tags: memberTags,
+                                textures: memberTextures,
                                 position: {
                                     x: x,
                                     y: y,
@@ -233,7 +236,7 @@ export class IoSocketController {
                 resetPing(client);
 
                 //get data information and shwo messages
-                adminApi.fetchMemberDataByUuid(client.userUuid).then((res: fetchMemberDataByUuidResponse) => {
+                adminApi.fetchMemberDataByUuid(client.userUuid).then((res: FetchMemberDataByUuidResponse) => {
                     if (!res.messages) {
                         return;
                     }
@@ -311,6 +314,7 @@ export class IoSocketController {
 
         client.name = ws.name;
         client.tags = ws.tags;
+        client.textures = ws.textures;
         client.characterLayers = ws.characterLayers;
         client.roomId = ws.roomId;
         return client;

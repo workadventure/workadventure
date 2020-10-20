@@ -31,7 +31,6 @@ export class AuthenticateController extends BaseController {
                 res.onAborted(() => {
                     console.warn('Login request was aborted');
                 })
-                const host = req.getHeader('host');
                 const param = await res.json();
 
                 //todo: what to do if the organizationMemberToken is already used?
@@ -45,6 +44,7 @@ export class AuthenticateController extends BaseController {
                     const worldSlug = data.worldSlug;
                     const roomSlug = data.roomSlug;
                     const mapUrlStart = data.mapUrlStart;
+                    const textures = data.textures;
 
                     const authToken = jwtTokenManager.createJWTToken(userUuid);
                     res.writeStatus("200 OK");
@@ -56,6 +56,7 @@ export class AuthenticateController extends BaseController {
                         worldSlug,
                         roomSlug,
                         mapUrlStart,
+                        textures
                     }));
 
                 } catch (e) {

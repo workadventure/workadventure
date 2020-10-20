@@ -1,5 +1,6 @@
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "./Character";
+import {CharacterTexture} from "../../Connexion/LocalUser";
 
 export interface BodyResourceDescriptionInterface {
     name: string,
@@ -310,6 +311,15 @@ export const loadAllLayers = (load: LoaderPlugin) => {
             )
         }
     }
+}
+
+export const loadCustomTexture = (load: LoaderPlugin, texture: CharacterTexture) => {
+    const name = 'customCharacterTexture'+texture.id;
+    load.spritesheet(
+        name,
+        texture.url,
+        {frameWidth: 32, frameHeight: 32}
+    );
 }
 
 export const OBJECTS: Array<PlayerResourceDescriptionInterface> = [

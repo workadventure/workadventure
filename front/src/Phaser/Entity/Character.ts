@@ -61,22 +61,7 @@ export abstract class Character extends Container {
 
         this.sprites = new Map<string, Sprite>();
 
-        for (const texture of textures) {
-            const sprite = new Sprite(scene, 0, 0, texture, frame);
-            sprite.setInteractive({useHandCursor: true});
-            this.add(sprite);
-            this.getPlayerAnimations(texture).forEach(d => {
-                this.scene.anims.create({
-                    key: d.key,
-                    frames: this.scene.anims.generateFrameNumbers(d.frameModel, {start: d.frameStart, end: d.frameEnd}),
-                    frameRate: d.frameRate,
-                    repeat: d.repeat
-                });
-            })
-            // Needed, otherwise, animations are not handled correctly.
-            this.scene.sys.updateList.add(sprite);
-            this.sprites.set(texture, sprite);
-        }
+        this.addTextures(textures, frame);
 
         /*this.teleportation = new Sprite(scene, -20, -10, 'teleportation', 3);
         this.teleportation.setInteractive();
@@ -105,6 +90,25 @@ export abstract class Character extends Container {
         this.scene.events.on('postupdate', this.postupdate.bind(this));
 
         this.playAnimation(direction, moving);
+    }
+
+    public addTextures(textures: string[], frame?: string | number): void {
+        for (const texture of textures) {
+            const sprite = new Sprite(this.scene, 0, 0, texture, frame);
+            sprite.setInteractive({useHandCursor: true});
+            this.add(sprite);
+            this.getPlayerAnimations(texture).forEach(d => {
+                this.scene.anims.create({
+                    key: d.key,
+                    frames: this.scene.anims.generateFrameNumbers(d.frameModel, {start: d.frameStart, end: d.frameEnd}),
+                    frameRate: d.frameRate,
+                    repeat: d.repeat
+                });
+            })
+            // Needed, otherwise, animations are not handled correctly.
+            this.scene.sys.updateList.add(sprite);
+            this.sprites.set(texture, sprite);
+        }
     }
 
     private getPlayerAnimations(name: string): AnimationData[] {
