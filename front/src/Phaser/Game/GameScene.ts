@@ -478,7 +478,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                 if (JITSI_PRIVATE_MODE) {
                     const adminTag = allProps.get("jitsiRoomAdminTag") as string|undefined;
 
-                    this.connection.emitQueryJitsiJwtMessage(this.instance + "-" + newValue, adminTag);
+                    this.connection.emitQueryJitsiJwtMessage(this.instance.replace('/', '-') + "-" + newValue, adminTag);
                 } else {
                     this.startJitsi(newValue as string);
                 }
