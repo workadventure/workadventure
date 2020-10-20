@@ -77,16 +77,17 @@ export class IoSocketController {
                         JSON.parse(new TextDecoder("utf-8").decode(new Uint8Array(arrayBuffer)));
 
                     if(message.event === 'user-message') {
-                        if (message.message.type === 'ban') {
-                            const messageToEmit = (message.message as {message: string, type: string, userUuid: string});
-                            socketManager.emitSendUserMessage(messageToEmit);
-                        }
-                        if (message.message.type === 'banned') {
-                            const messageToEmit = (message.message as {message: string, type: string, userUuid: string});
-                            const socketUser = socketManager.emitSendUserMessage(messageToEmit);
-                            setTimeout(() => {
-                                socketUser.close();
-                            }, 10000);
+                        const messageToEmit = (message.message as { message: string, type: string, userUuid: string });
+                        switch (message.message.type) {
+                            case 'ban':
+                                socketManager.emitSendUserMessage(messageToEmit);
+                                break;
+                            case 'banned':
+                                const socketUser = socketManager.emitSendUserMessage(messageToEmit);
+                                setTimeout(() => {
+                                    socketUser.close();
+                                }, 10000);
+                                break;
                         }
                     }
                 }catch (err) {
