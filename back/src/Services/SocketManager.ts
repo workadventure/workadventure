@@ -1,5 +1,5 @@
 import {GameRoom} from "../Model/GameRoom";
-import {ExSocketInterface} from "../Model/Websocket/ExSocketInterface";
+import {CharacterLayer, ExSocketInterface} from "../Model/Websocket/ExSocketInterface";
 import {
     GroupDeleteMessage,
     GroupUpdateMessage,
@@ -23,6 +23,7 @@ import {
     WebRtcStartMessage,
     QueryJitsiJwtMessage,
     SendJitsiJwtMessage,
+    CharacterLayerMessage,
     SendUserMessage
 } from "../Messages/generated/messages_pb";
 import {PointInterface} from "../Model/Websocket/PointInterface";
@@ -34,7 +35,7 @@ import {isSetPlayerDetailsMessage} from "../Model/Websocket/SetPlayerDetailsMess
 import {GROUP_RADIUS, JITSI_ISS, MINIMUM_DISTANCE, SECRET_JITSI_KEY} from "../Enum/EnvironmentVariable";
 import {Movable} from "../Model/Movable";
 import {PositionInterface} from "../Model/PositionInterface";
-import {adminApi} from "./AdminApi";
+import {adminApi, CharacterTexture} from "./AdminApi";
 import Direction = PositionMessage.Direction;
 import {Gauge} from "prom-client";
 import {emitError, emitInBatch} from "./IoSocketHelpers";
@@ -54,7 +55,7 @@ export interface AdminSocketData {
     users: AdminSocketUsersList,
 }
 
-class SocketManager {
+export class SocketManager {
     private Worlds: Map<string, GameRoom> = new Map<string, GameRoom>();
     private sockets: Map<number, ExSocketInterface> = new Map<number, ExSocketInterface>();
     private nbClientsGauge: Gauge<string>;
@@ -71,7 +72,7 @@ class SocketManager {
             help: 'Number of clients per room',
             labelNames: [ 'room' ]
         });
-        
+
         clientEventsEmitter.registerToClientJoin((clientUUid, roomId) => {
             this.nbClientsGauge.inc();
             // Let's log server load when a user joins
@@ -83,7 +84,7 @@ class SocketManager {
             console.log('A user left (', this.sockets.size, ' connected users)');
         });
     }
-    
+
     getAdminSocketDataFor(roomId:string): AdminSocketData {
         const data:AdminSocketData = {
             rooms: {},
@@ -125,7 +126,7 @@ class SocketManager {
                     const userJoinedMessage = new UserJoinedMessage();
                     userJoinedMessage.setUserid(thing.id);
                     userJoinedMessage.setName(player.name);
-                    userJoinedMessage.setCharacterlayersList(player.characterLayers);
+                    userJoinedMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(player.characterLayers));
                     userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(player.position));
 
                     roomJoinedMessage.addUser(userJoinedMessage);
@@ -251,8 +252,7 @@ class SocketManager {
             return;
         }
         client.name = playerDetails.name;
-        client.characterLayers = playerDetails.characterLayers;
-
+        client.characterLayers = SocketManager.mergeCharacterLayersAndCustomTextures(playerDetails.characterLayers, client.textures);
     }
 
     handleSilentMessage(client: ExSocketInterface, silentMessage: SilentMessage) {
@@ -438,7 +438,7 @@ class SocketManager {
             }
             userJoinedMessage.setUserid(clientUser.userId);
             userJoinedMessage.setName(clientUser.name);
-            userJoinedMessage.setCharacterlayersList(clientUser.characterLayers);
+            userJoinedMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(clientUser.characterLayers));
             userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(clientUser.position));
 
             const subMessage = new SubMessage();
@@ -690,6 +690,33 @@ class SocketManager {
             socket.send(serverToClientMessage.serializeBinary().buffer, true);
         }
         return socket;
+    }
+
+    /**
+     * Merges the characterLayers received from the front (as an array of string) with the custom textures from the back.
+     */
+    static mergeCharacterLayersAndCustomTextures(characterLayers: string[], memberTextures: CharacterTexture[]): CharacterLayer[] {
+        const characterLayerObjs: CharacterLayer[] = [];
+        for (const characterLayer of characterLayers) {
+            if (characterLayer.startsWith('customCharacterTexture')) {
+                const customCharacterLayerId: number = +characterLayer.substr(22);
+                for (const memberTexture of memberTextures) {
+                    if (memberTexture.id == customCharacterLayerId) {
+                        characterLayerObjs.push({
+                            name: characterLayer,
+                            url: memberTexture.url
+                        })
+                        break;
+                    }
+                }
+            } else {
+                characterLayerObjs.push({
+                    name: characterLayer,
+                    url: undefined
+                })
+            }
+        }
+        return characterLayerObjs;
     }
 }
 

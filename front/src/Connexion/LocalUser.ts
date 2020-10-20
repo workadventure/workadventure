@@ -1,9 +1,11 @@
+export interface CharacterTexture {
+    id: number,
+    level: number,
+    url: string,
+    rights: string
+}
+
 export class LocalUser {
-    public uuid: string;
-    public jwtToken: string;
-    
-    constructor(uuid:string, jwtToken: string) {
-        this.uuid = uuid;
-        this.jwtToken = jwtToken;
+    constructor(public readonly uuid:string, public readonly jwtToken: string, public readonly textures: CharacterTexture[]) {
     }
 }

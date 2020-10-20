@@ -2,12 +2,13 @@ import {EnableCameraSceneName} from "./EnableCameraScene";
 import {TextField} from "../Components/TextField";
 import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
-import {LAYERS, loadAllLayers} from "../Entity/body_character";
+import {BodyResourceDescriptionInterface, LAYERS, loadAllLayers, loadCustomTexture} from "../Entity/body_character";
 import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
 import {gameManager} from "../Game/GameManager";
 import {ResizableScene} from "./ResizableScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
+import {PlayerResourceDescriptionInterface} from "../Entity/Character";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -36,6 +37,7 @@ export class CustomizeScene extends ResizableScene {
     private selectedLayers: number[] = [0];
     private containersRow: Container[][] = [];
     private activeRow:number = 0;
+    private layers: BodyResourceDescriptionInterface[][] = [];
 
     constructor() {
         super({
@@ -51,6 +53,23 @@ export class CustomizeScene extends ResizableScene {
 
         //load all the png files
         loadAllLayers(this.load);
+
+        // load custom layers
+        this.layers = LAYERS;
+
+        const localUser = localUserStore.getLocalUser();
+
+        const textures = localUser?.textures;
+        if (textures) {
+            for (const texture of textures) {
+                loadCustomTexture(this.load, texture);
+                const name = 'customCharacterTexture'+texture.id;
+                this.layers[texture.level].unshift({
+                    name,
+                    img: texture.url
+                });
+            }
+        }
     }
 
     create() {
@@ -94,7 +113,7 @@ export class CustomizeScene extends ResizableScene {
             let i = 0;
             for (const layerItem of this.selectedLayers) {
                 if (layerItem !== undefined) {
-                    layers.push(LAYERS[i][layerItem].name);
+                    layers.push(this.layers[i][layerItem].name);
                 }
                 i++;
             }
@@ -108,7 +127,7 @@ export class CustomizeScene extends ResizableScene {
         this.input.keyboard.on('keydown-LEFT', () => this.moveCursorHorizontally(-1));
         this.input.keyboard.on('keydown-DOWN', () => this.moveCursorVertically(1));
         this.input.keyboard.on('keydown-UP', () => this.moveCursorVertically(-1));
-        
+
         const customCursorPosition = localUserStore.getCustomCursorPosition();
         if (customCursorPosition) {
             this.activeRow = customCursorPosition.activeRow;
@@ -117,34 +136,34 @@ export class CustomizeScene extends ResizableScene {
             this.updateSelectedLayer();
         }
     }
-    
+
     private moveCursorHorizontally(index: number): void {
         this.selectedLayers[this.activeRow] += index;
         if (this.selectedLayers[this.activeRow] < 0) {
             this.selectedLayers[this.activeRow] = 0
-        } else if(this.selectedLayers[this.activeRow] > LAYERS[this.activeRow].length - 1) {
-            this.selectedLayers[this.activeRow] = LAYERS[this.activeRow].length - 1
+        } else if(this.selectedLayers[this.activeRow] > this.layers[this.activeRow].length - 1) {
+            this.selectedLayers[this.activeRow] = this.layers[this.activeRow].length - 1
         }
         this.moveLayers();
         this.updateSelectedLayer();
         this.saveInLocalStorage();
     }
-    
+
     private moveCursorVertically(index:number): void {
         this.activeRow += index;
         if (this.activeRow < 0) {
             this.activeRow = 0
-        } else if (this.activeRow > LAYERS.length - 1) {
-            this.activeRow = LAYERS.length - 1
+        } else if (this.activeRow > this.layers.length - 1) {
+            this.activeRow = this.layers.length - 1
         }
         this.moveLayers();
         this.saveInLocalStorage();
     }
-    
+
     private saveInLocalStorage() {
         localUserStore.setCustomCursorPosition(this.activeRow, this.selectedLayers);
     }
-    
+
     update(time: number, delta: number): void {
         super.update(time, delta);
         this.enterField.setVisible(!!(Math.floor(time / 500) % 2));
@@ -153,7 +172,7 @@ export class CustomizeScene extends ResizableScene {
     /**
      * @param x, the layer's vertical position
      * @param y, the layer's horizontal position
-     * @param layerNumber, index of the LAYERS array
+     * @param layerNumber, index of the this.layers array
      * create the layer and display it on the scene
      */
     private createCustomizeLayer(x: number, y: number, layerNumber: number): void {
@@ -161,7 +180,7 @@ export class CustomizeScene extends ResizableScene {
         this.selectedLayers[layerNumber] = 0;
         let alpha = 0;
         let layerPosX = 0;
-        for (let i = 0; i < LAYERS[layerNumber].length; i++) {
+        for (let i = 0; i < this.layers[layerNumber].length; i++) {
             const container = this.generateCharacter(300 + x + layerPosX, y, layerNumber, i);
 
             this.containersRow[layerNumber][i] = container;
@@ -190,13 +209,13 @@ export class CustomizeScene extends ResizableScene {
         const children: Array<Sprite> = new Array<Sprite>();
         for (let j = 0; j <= layerNumber; j++) {
             if (j === layerNumber) {
-                children.push(this.generateLayers(0, 0, LAYERS[j][selectedItem].name));
+                children.push(this.generateLayers(0, 0, this.layers[j][selectedItem].name));
             } else {
                 const layer = this.selectedLayers[j];
                 if (layer === undefined) {
                     continue;
                 }
-                children.push(this.generateLayers(0, 0, LAYERS[j][layer].name));
+                children.push(this.generateLayers(0, 0, this.layers[j][layer].name));
             }
          }
         return children;

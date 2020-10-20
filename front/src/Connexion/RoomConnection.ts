@@ -22,7 +22,11 @@ import {
     WebRtcSignalToServerMessage,
     WebRtcStartMessage,
     ReportPlayerMessage,
-    TeleportMessageMessage, QueryJitsiJwtMessage, SendJitsiJwtMessage, SendUserMessage
+    TeleportMessageMessage,
+    QueryJitsiJwtMessage,
+    SendJitsiJwtMessage,
+    CharacterLayerMessage,
+    SendUserMessage
 } from "../Messages/generated/messages_pb"
 
 import {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
@@ -36,6 +40,7 @@ import {
     ViewportInterface, WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
+import {BodyResourceDescriptionInterface} from "../Phaser/Entity/body_character";
 
 export class RoomConnection implements RoomConnection {
     private readonly socket: WebSocket;
@@ -169,10 +174,10 @@ export class RoomConnection implements RoomConnection {
         }
     }
 
-    public emitPlayerDetailsMessage(userName: string, characterLayersSelected: string[]) {
+    public emitPlayerDetailsMessage(userName: string, characterLayersSelected: BodyResourceDescriptionInterface[]) {
         const message = new SetPlayerDetailsMessage();
         message.setName(userName);
-        message.setCharacterlayersList(characterLayersSelected);
+        message.setCharacterlayersList(characterLayersSelected.map((characterLayer) => characterLayer.name));
 
         const clientToServerMessage = new ClientToServerMessage();
         clientToServerMessage.setSetplayerdetailsmessage(message);
@@ -277,10 +282,18 @@ export class RoomConnection implements RoomConnection {
         if (position === undefined) {
             throw new Error('Invalid JOIN_ROOM message');
         }
+
+        const characterLayers = message.getCharacterlayersList().map((characterLayer: CharacterLayerMessage): BodyResourceDescriptionInterface => {
+            return {
+                name: characterLayer.getName(),
+                img: characterLayer.getUrl()
+            }
+        })
+
         return {
             userId: message.getUserid(),
             name: message.getName(),
-            characterLayers: message.getCharacterlayersList(),
+            characterLayers,
             position: ProtobufClientUtils.toPointInterface(position)
         }
     }
