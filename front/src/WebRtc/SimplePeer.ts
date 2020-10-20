@@ -131,7 +131,7 @@ export class SimplePeer {
             if(peerConnection.destroyed){
                 peerConnection.toClose = true;
                 peerConnection.destroy();
-                let peerConnexionDeleted = this.PeerConnectionArray.delete(user.userId);
+                const peerConnexionDeleted = this.PeerConnectionArray.delete(user.userId);
                 if(!peerConnexionDeleted){
                     throw 'Error to delete peer connection';
                 }
