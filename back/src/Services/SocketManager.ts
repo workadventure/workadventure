@@ -673,7 +673,7 @@ class SocketManager {
         client.send(serverToClientMessage.serializeBinary().buffer, true);
     }
 
-    public emitSendUserMessage(messageToSend: {userUuid: string, message: string, type: string}): void {
+    public emitSendUserMessage(messageToSend: {userUuid: string, message: string, type: string}): ExSocketInterface {
         const socket = this.searchClientByUuid(messageToSend.userUuid);
         if(!socket){
             throw 'socket was not found';
@@ -689,6 +689,7 @@ class SocketManager {
         if (!socket.disconnecting) {
             socket.send(serverToClientMessage.serializeBinary().buffer, true);
         }
+        return socket;
     }
 }
 

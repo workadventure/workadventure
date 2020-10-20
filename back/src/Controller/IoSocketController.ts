@@ -81,6 +81,13 @@ export class IoSocketController {
                             const messageToEmit = (message.message as {message: string, type: string, userUuid: string});
                             socketManager.emitSendUserMessage(messageToEmit);
                         }
+                        if (message.message.type === 'banned') {
+                            const messageToEmit = (message.message as {message: string, type: string, userUuid: string});
+                            const socketUser = socketManager.emitSendUserMessage(messageToEmit);
+                            setTimeout(() => {
+                                socketUser.close();
+                            }, 10000);
+                        }
                     }
                 }catch (err) {
                     console.error(err);

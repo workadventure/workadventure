@@ -1,7 +1,7 @@
 import {TypeMessageInterface} from "./UserMessageManager";
 import {HtmlUtils} from "../WebRtc/HtmlUtils";
 
-export class Ban implements TypeMessageInterface {
+export class TypeMessageExt implements TypeMessageInterface{
     private nbSecond = 0;
     private maxNbSecond = 10;
     private titleMessage = 'IMPORTANT !';
@@ -59,4 +59,9 @@ export class Ban implements TypeMessageInterface {
             });
         }
     }
+}
+export class Ban extends TypeMessageExt {
+}
+
+export class Banned extends TypeMessageExt {
 }
