@@ -29,7 +29,7 @@ export class TypeMessageExt implements TypeMessageInterface{
         const mainSectionDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-container');
         mainSectionDiv.appendChild(div);
 
-        const reportMessageAudio = HtmlUtils.getElementByIdOrFail<HTMLAudioElement>('audio-webrtc-in');
+        const reportMessageAudio = HtmlUtils.getElementByIdOrFail<HTMLAudioElement>('report-message');
         reportMessageAudio.play();
 
         this.nbSecond = this.maxNbSecond;

@@ -18,7 +18,7 @@ import {UserMovesMessage} from "../Messages/generated/messages_pb";
 import {TemplatedApp} from "uWebSockets.js"
 import {parse} from "query-string";
 import {jwtTokenManager} from "../Services/JWTTokenManager";
-import {adminApi} from "../Services/AdminApi";
+import {adminApi, fetchMemberDataByUuidResponse} from "../Services/AdminApi";
 import {socketManager} from "../Services/SocketManager";
 import {emitInBatch, resetPing} from "../Services/IoSocketHelpers";
 import Jwt from "jsonwebtoken";
@@ -226,6 +226,23 @@ export class IoSocketController {
                 const client = this.initClient(ws); //todo: into the upgrade instead?
                 socketManager.handleJoinRoom(client);
                 resetPing(client);
+
+                //get data information and shwo messages
+                adminApi.fetchMemberDataByUuid(client.userUuid).then((res: fetchMemberDataByUuidResponse) => {
+                    if (!res.messages) {
+                        return;
+                    }
+                    res.messages.forEach((c: unknown) => {
+                        let messageToSend = c as { type: string, message: string };
+                        socketManager.emitSendUserMessage({
+                            userUuid: client.userUuid,
+                            type: messageToSend.type,
+                            message: messageToSend.message
+                        })
+                    });
+                }).catch((err) => {
+                    console.error('fetchMemberDataByUuid => err', err);
+                });
             },
             message: (ws, arrayBuffer, isBinary): void => {
                 const client = ws as ExSocketInterface;
