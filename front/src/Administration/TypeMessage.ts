@@ -16,7 +16,9 @@ export class TypeMessageExt implements TypeMessageInterface{
             }
             const modal = HtmlUtils.getElementByIdOrFail('report-message-user');
             modal.remove();
-        }catch (err){}
+        }catch (err){
+            console.error(err);
+        }
 
         //create new modal
         const div : HTMLDivElement = document.createElement('div');
