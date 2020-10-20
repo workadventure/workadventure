@@ -235,7 +235,9 @@ export class SimplePeer {
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
             //console.log('Closing connection with '+userId);
             peer.destroy();
-            this.PeerScreenSharingConnectionArray.delete(userId)
+            if(!this.PeerScreenSharingConnectionArray.delete(userId)){
+                throw 'Couln\'t delete peer screen sharing connexion';
+            }
             //console.log('Nb users in peerConnectionArray '+this.PeerConnectionArray.size);
         } catch (err) {
             console.error("closeConnection", err)
@@ -292,6 +294,9 @@ export class SimplePeer {
             }
         } catch (e) {
             console.error(`receiveWebrtcSignal => ${data.userId}`, e);
+            //force delete and reconnect peer connexion
+            this.PeerScreenSharingConnectionArray.delete(data.userId);
+            this.receiveWebrtcScreenSharingSignal(data);
         }
     }
 
