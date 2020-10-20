@@ -455,8 +455,7 @@ export class MediaManager {
     addStreamRemoteVideo(userId: string, stream : MediaStream){
         const remoteVideo = this.remoteVideo.get(userId);
         if (remoteVideo === undefined) {
-            console.error('Unable to find video for ', userId);
-            return;
+            throw `Unable to find video for ${userId}`;
         }
         remoteVideo.srcObject = stream;
     }

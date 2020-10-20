@@ -9,7 +9,10 @@ const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
  * A peer connection used to transmit video / audio signals between 2 peers.
  */
 export class VideoPeer extends Peer {
-    constructor(private userId: number, initiator: boolean, private connection: RoomConnection) {
+    public toClose: boolean = false;
+    public _connected: boolean = false;
+
+    constructor(public userId: number, initiator: boolean, private connection: RoomConnection) {
         super({
             initiator: initiator ? initiator : false,
             reconnectTimer: 10000,
@@ -57,6 +60,8 @@ export class VideoPeer extends Peer {
         });*/
 
         this.on('close', () => {
+            this._connected = false;
+            this.toClose = true;
             this.destroy();
         });
 
@@ -67,6 +72,7 @@ export class VideoPeer extends Peer {
         });
 
         this.on('connect', () => {
+            this._connected = true;
             mediaManager.isConnected("" + this.userId);
             console.info(`connect => ${this.userId}`);
         });
@@ -86,6 +92,10 @@ export class VideoPeer extends Peer {
                 this.stream(undefined);
                 mediaManager.disabledVideoByUserId(this.userId);
             }
+        });
+
+        this.once('finish', () => {
+            this._onFinish();
         });
 
         this.pushVideoToRemoteUser();
@@ -108,7 +118,15 @@ export class VideoPeer extends Peer {
             mediaManager.disabledVideoByUserId(this.userId);
             mediaManager.disabledMicrophoneByUserId(this.userId);
         } else {
-            mediaManager.addStreamRemoteVideo("" + this.userId, stream);
+            try {
+                mediaManager.addStreamRemoteVideo("" + this.userId, stream);
+            }catch (err){
+                console.error(err);
+                //Force add streem video
+                setTimeout(() => {
+                    this.stream(stream);
+                }, 500);
+            }
         }
     }
 
@@ -117,13 +135,28 @@ export class VideoPeer extends Peer {
      */
     public destroy(error?: Error): void {
         try {
+            this._connected = false
+            if(!this.toClose){
+                return;
+            }
             mediaManager.removeActiveVideo("" + this.userId);
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
-            //console.log('Closing connection with '+userId);
             super.destroy(error);
         } catch (err) {
             console.error("VideoPeer::destroy", err)
+        }
+    }
+
+    _onFinish () {
+        if (this.destroyed) return
+        const destroySoon = () => {
+            this.destroy();
+        }
+        if (this._connected) {
+            destroySoon();
+        } else {
+            this.once('connect', destroySoon);
         }
     }
 
