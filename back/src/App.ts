@@ -24,8 +24,8 @@ class App {
         this.authenticateController = new AuthenticateController(this.app);
         this.fileController = new FileController(this.app);
         this.mapController = new MapController(this.app);
-        this.prometheusController = new PrometheusController(this.app, this.ioSocketController);
-        this.debugController = new DebugController(this.app, this.ioSocketController);
+        this.prometheusController = new PrometheusController(this.app);
+        this.debugController = new DebugController(this.app);
     }
 }
 

@@ -16,7 +16,10 @@
        "env": {
          "SECRET_KEY": "tempSecretKeyNeedsToChange",
          "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
-         "ADMIN_API_URL": "https://admin."+url
+         "ADMIN_API_URL": "https://admin."+url,
+         "JITSI_ISS": env.JITSI_ISS,
+         "JITSI_URL": env.JITSI_URL,
+         "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
        }
      },
     "front": {
@@ -28,10 +31,12 @@
       "ports": [80],
       "env": {
         "API_URL": "api."+url,
-        "JITSI_URL": "meet.jit.si",
+        "JITSI_URL": env.JITSI_URL,
+        "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
         "TURN_SERVER": "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443",
         "TURN_USER": "workadventure",
-        "TURN_PASSWORD": "WorkAdventure123"
+        "TURN_PASSWORD": "WorkAdventure123",
+        "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false"
       }
     },
     "maps": {

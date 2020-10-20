@@ -9,16 +9,13 @@ export interface AdminApiData {
     tags: string[]
     policy_type: number
     userUuid: string
-}
-
-export interface GrantedApiData {
-    granted: boolean,
-    memberTags: string[]
+    messages?: unknown[]
 }
 
 export interface fetchMemberDataByUuidResponse {
     uuid: string;
     tags: string[];
+    messages: unknown[];
 }
 
 class AdminApi {
@@ -37,9 +34,9 @@ class AdminApi {
             params.roomSlug = roomSlug;
         }
 
-        const res = await Axios.get(ADMIN_API_URL+'/api/map',
+        const res = await Axios.get(ADMIN_API_URL + '/api/map',
             {
-                headers: {"Authorization" : `${ADMIN_API_TOKEN}`},
+                headers: {"Authorization": `${ADMIN_API_TOKEN}`},
                 params
             }
         )
@@ -50,7 +47,7 @@ class AdminApi {
         if (!ADMIN_API_URL) {
             return Promise.reject('No admin backoffice set!');
         }
-        const res = await Axios.get(ADMIN_API_URL+'/membership/'+uuid,
+        const res = await Axios.get(ADMIN_API_URL+'/api/membership/'+uuid,
             { headers: {"Authorization" : `${ADMIN_API_TOKEN}`} }
         )
         return res.data;
@@ -65,6 +62,28 @@ class AdminApi {
             { headers: {"Authorization" : `${ADMIN_API_TOKEN}`} }
         )
         return res.data;
+    }
+
+    async fetchCheckUserByToken(organizationMemberToken: string): Promise<AdminApiData> {
+        if (!ADMIN_API_URL) {
+            return Promise.reject('No admin backoffice set!');
+        }
+        //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
+        const res = await Axios.get(ADMIN_API_URL+'/api/check-user/'+organizationMemberToken,
+            { headers: {"Authorization" : `${ADMIN_API_TOKEN}`} }
+        )
+        return res.data;
+    }
+    
+    reportPlayer(reportedUserUuid: string, reportedUserComment: string, reporterUserUuid: string) {
+       return Axios.post(`${ADMIN_API_URL}/api/report`, {
+                reportedUserUuid,
+                reportedUserComment,
+                reporterUserUuid,
+            },
+            {
+                headers: {"Authorization": `${ADMIN_API_TOKEN}`}
+            });
     }
 }
 

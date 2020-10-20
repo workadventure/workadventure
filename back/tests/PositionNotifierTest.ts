@@ -25,14 +25,14 @@ describe("PositionNotifier", () => {
             leaveTriggered = true;
         });
 
-        const user1 = new User(1, {
+        const user1 = new User(1, 'test', {
             x: 500,
             y: 500,
             moving: false,
             direction: 'down'
         }, false, positionNotifier, {} as ExSocketInterface);
 
-        const user2 = new User(2, {
+        const user2 = new User(2, 'test', {
             x: -9999,
             y: -9999,
             moving: false,
@@ -103,14 +103,14 @@ describe("PositionNotifier", () => {
             leaveTriggered = true;
         });
 
-        const user1 = new User(1, {
+        const user1 = new User(1, 'test', {
             x: 500,
             y: 500,
             moving: false,
             direction: 'down'
         }, false, positionNotifier, {} as ExSocketInterface);
 
-        const user2 = new User(2, {
+        const user2 = new User(2, 'test', {
             x: 0,
             y: 0,
             moving: false,

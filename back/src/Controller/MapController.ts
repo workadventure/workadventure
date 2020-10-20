@@ -58,7 +58,7 @@ export class MapController extends BaseController{
                     this.addCorsHeaders(res);
                     res.end(JSON.stringify(mapDetails));
                 } catch (e) {
-                    console.error(e);
+                    console.error(e.message || e);
                     res.writeStatus("500 Internal Server Error")
                     this.addCorsHeaders(res);
                     res.end("An error occurred");

@@ -654,4 +654,6 @@ div.modal-report-user{
     width: 100%;
     text-align: left;
     padding: 30px;
+    max-width: calc(800px - 60px); /* size of modal - padding*/
 }
+

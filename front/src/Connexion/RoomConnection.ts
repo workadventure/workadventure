@@ -22,7 +22,7 @@ import {
     WebRtcSignalToServerMessage,
     WebRtcStartMessage,
     ReportPlayerMessage,
-    TeleportMessageMessage
+    TeleportMessageMessage, QueryJitsiJwtMessage, SendJitsiJwtMessage, SendUserMessage
 } from "../Messages/generated/messages_pb"
 
 import {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
@@ -35,8 +35,6 @@ import {
     RoomJoinedMessageInterface,
     ViewportInterface, WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
-    WebRtcSignalSentMessageInterface,
-    WebRtcStartMessageInterface
 } from "./ConnexionModels";
 
 export class RoomConnection implements RoomConnection {
@@ -150,6 +148,10 @@ export class RoomConnection implements RoomConnection {
                 this.dispatch(EventMessage.STOP_GLOBAL_MESSAGE, message.getStopglobalmessage());
             } else if (message.hasTeleportmessagemessage()) {
                 this.dispatch(EventMessage.TELEPORT, message.getTeleportmessagemessage());
+            } else if (message.hasSendjitsijwtmessage()) {
+                this.dispatch(EventMessage.START_JITSI_ROOM, message.getSendjitsijwtmessage());
+            } else if (message.hasSendusermessage()) {
+                this.dispatch(EventMessage.USER_MESSAGE, message.getSendusermessage());
             } else {
                 throw new Error('Unknown message received');
             }
@@ -477,8 +479,13 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public receiveUserMessage(callback: (type: string, message: string) => void) {
+        return this.onMessage(EventMessage.USER_MESSAGE, (message: SendUserMessage) => {
+            callback(message.getType(), message.getMessage());
+        });
+    }
+
     public emitGlobalMessage(message: PlayGlobalMessageInterface){
-        console.log('emitGlobalMessage', message);
         const playGlobalMessage = new PlayGlobalMessage();
         playGlobalMessage.setId(message.id);
         playGlobalMessage.setType(message.type);
@@ -499,6 +506,25 @@ export class RoomConnection implements RoomConnection {
         clientToServerMessage.setReportplayermessage(reportPlayerMessage);
 
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
+    }
+
+    public emitQueryJitsiJwtMessage(jitsiRoom: string, tag: string|undefined ): void {
+        const queryJitsiJwtMessage = new QueryJitsiJwtMessage();
+        queryJitsiJwtMessage.setJitsiroom(jitsiRoom);
+        if (tag !== undefined) {
+            queryJitsiJwtMessage.setTag(tag);
+        }
+
+        const clientToServerMessage = new ClientToServerMessage();
+        clientToServerMessage.setQueryjitsijwtmessage(queryJitsiJwtMessage);
+
+        this.socket.send(clientToServerMessage.serializeBinary().buffer);
+    }
+
+    public onStartJitsiRoom(callback: (jwt: string, room: string) => void): void {
+        this.onMessage(EventMessage.START_JITSI_ROOM, (message: SendJitsiJwtMessage) => {
+            callback(message.getJwt(), message.getJitsiroom());
+        });
     }
 
     public hasTag(tag: string): boolean {
