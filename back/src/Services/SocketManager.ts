@@ -130,6 +130,7 @@ export class SocketManager {
                     userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(player.position));
 
                     roomJoinedMessage.addUser(userJoinedMessage);
+                    roomJoinedMessage.setTagList(client.tags);
                 } else if (thing instanceof Group) {
                     const groupUpdateMessage = new GroupUpdateMessage();
                     groupUpdateMessage.setGroupid(thing.getId());
@@ -493,6 +494,7 @@ export class SocketManager {
         const groupUpdateMessage = new GroupUpdateMessage();
         groupUpdateMessage.setGroupid(group.getId());
         groupUpdateMessage.setPosition(pointMessage);
+        groupUpdateMessage.setGroupsize(group.getSize);
 
         const subMessage = new SubMessage();
         subMessage.setGroupupdatemessage(groupUpdateMessage);

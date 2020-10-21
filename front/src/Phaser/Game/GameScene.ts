@@ -410,9 +410,14 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.initCamera();
 
         // Let's generate the circle for the group delimiter
-        const circleElement = Object.values(this.textures.list).find((object: Texture) => object.key === 'circleSprite');
+        let circleElement = Object.values(this.textures.list).find((object: Texture) => object.key === 'circleSprite-white');
         if (circleElement) {
-            this.textures.remove('circleSprite');
+            this.textures.remove('circleSprite-white');
+        }
+
+        circleElement = Object.values(this.textures.list).find((object: Texture) => object.key === 'circleSprite-red');
+        if (circleElement) {
+            this.textures.remove('circleSprite-red');
         }
 
         //create white circle canvas use to create sprite
