@@ -1266,6 +1266,10 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     private loadSpritesheet(name: string, url: string): Promise<void> {
         return new Promise<void>(((resolve, reject) => {
+            if (this.textures.exists(name)) {
+                resolve();
+                return;
+            }
             this.load.spritesheet(
                 name,
                 url,
