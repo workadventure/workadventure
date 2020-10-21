@@ -76,10 +76,12 @@ class ConnectionManager {
         await Axios.get(`${API_URL}/verify`, {params: {token}});
     }
 
-    private async anonymousLogin(): Promise<void> {
+    public async anonymousLogin(isBenchmark: boolean = false): Promise<void> {
         const data = await Axios.post(`${API_URL}/anonymLogin`).then(res => res.data);
         this.localUser = new LocalUser(data.userUuid, data.authToken, []);
-        localUserStore.saveUser(this.localUser);
+        if (!isBenchmark) { // In benchmark, we don't have a local storage.
+            localUserStore.saveUser(this.localUser);
+        }
     }
 
     public initBenchmark(): void {

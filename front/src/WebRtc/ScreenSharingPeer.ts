@@ -13,6 +13,8 @@ export class ScreenSharingPeer extends Peer {
      * Whether this connection is currently receiving a video stream from a remote user.
      */
     private isReceivingStream:boolean = false;
+    public toClose: boolean = false;
+    public _connected: boolean = false;
 
     constructor(private userId: number, initiator: boolean, private connection: RoomConnection) {
         super({
@@ -42,6 +44,8 @@ export class ScreenSharingPeer extends Peer {
         });
 
         this.on('close', () => {
+            this._connected = false;
+            this.toClose = true;
             this.destroy();
         });
 
@@ -62,9 +66,14 @@ export class ScreenSharingPeer extends Peer {
         });
 
         this.on('connect', () => {
+            this._connected = true;
             // FIXME: we need to put the loader on the screen sharing connection
             mediaManager.isConnected("" + this.userId);
             console.info(`connect => ${this.userId}`);
+        });
+
+        this.once('finish', () => {
+            this._onFinish();
         });
 
         this.pushScreenSharingToRemoteUser();
@@ -100,6 +109,10 @@ export class ScreenSharingPeer extends Peer {
 
     public destroy(error?: Error): void {
         try {
+            this._connected = false
+            if(!this.toClose){
+                return;
+            }
             mediaManager.removeActiveScreenSharingVideo("" + this.userId);
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
@@ -108,6 +121,18 @@ export class ScreenSharingPeer extends Peer {
             //console.log('Nb users in peerConnectionArray '+this.PeerConnectionArray.size);
         } catch (err) {
             console.error("ScreenSharingPeer::destroy", err)
+        }
+    }
+
+    _onFinish () {
+        if (this.destroyed) return
+        const destroySoon = () => {
+            this.destroy();
+        }
+        if (this._connected) {
+            destroySoon();
+        } else {
+            this.once('connect', destroySoon);
         }
     }
 

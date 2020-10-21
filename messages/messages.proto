@@ -125,6 +125,7 @@ message BatchMessage {
 message GroupUpdateMessage {
   int32 groupId = 1;
   PointMessage position = 2;
+  int32 groupSize = 3;
 }
 
 message GroupDeleteMessage {
