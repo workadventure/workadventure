@@ -109,6 +109,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     startX!: number;
     startY!: number;
     circleTexture!: CanvasTexture;
+    circleRedTexture!: CanvasTexture;
     pendingEvents: Queue<InitUserPositionEventInterface|AddPlayerEventInterface|RemovePlayerEventInterface|UserMovedEventInterface|GroupCreatedUpdatedEventInterface|DeleteGroupEventInterface> = new Queue<InitUserPositionEventInterface|AddPlayerEventInterface|RemovePlayerEventInterface|UserMovedEventInterface|GroupCreatedUpdatedEventInterface|DeleteGroupEventInterface>();
     private initPosition: PositionInterface|null = null;
     private playersPositionInterpolator = new PlayersPositionInterpolator();
@@ -413,7 +414,9 @@ export class GameScene extends ResizableScene implements CenterListener {
         if (circleElement) {
             this.textures.remove('circleSprite');
         }
-        this.circleTexture = this.textures.createCanvas('circleSprite', 96, 96);
+
+        //create white circle canvas use to create sprite
+        this.circleTexture = this.textures.createCanvas('circleSprite-white', 96, 96);
         const context = this.circleTexture.context;
         context.beginPath();
         context.arc(48, 48, 48, 0, 2 * Math.PI, false);
@@ -421,6 +424,16 @@ export class GameScene extends ResizableScene implements CenterListener {
         context.strokeStyle = '#ffffff';
         context.stroke();
         this.circleTexture.refresh();
+
+        //create red circle canvas use to create sprite
+        this.circleRedTexture = this.textures.createCanvas('circleSprite-red', 96, 96);
+        const contextRed = this.circleRedTexture.context;
+        contextRed.beginPath();
+        contextRed.arc(48, 48, 48, 0, 2 * Math.PI, false);
+        // context.lineWidth = 5;
+        contextRed.strokeStyle = '#ff0000';
+        contextRed.stroke();
+        this.circleRedTexture.refresh();
 
         // Let's pause the scene if the connection is not established yet
         if (this.connection === undefined) {
@@ -1123,18 +1136,27 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     private doShareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface) {
         const groupId = groupPositionMessage.groupId;
+        const groupSize = groupPositionMessage.groupSize;
 
         const group = this.groups.get(groupId);
         if (group !== undefined) {
             group.setPosition(Math.round(groupPositionMessage.position.x), Math.round(groupPositionMessage.position.y));
         } else {
             // TODO: circle radius should not be hard stored
+            const positionX = 48;
+            const positionY = 48;
+
+            let texture = 'circleSprite-red';
+            if(groupSize < 4){
+                texture = 'circleSprite-white';
+            }
             const sprite = new Sprite(
                 this,
                 Math.round(groupPositionMessage.position.x),
                 Math.round(groupPositionMessage.position.y),
-                'circleSprite');
-            sprite.setDisplayOrigin(48, 48);
+                texture
+            );
+            sprite.setDisplayOrigin(positionX, positionY);
             this.add.existing(sprite);
             this.groups.set(groupId, sprite);
         }
