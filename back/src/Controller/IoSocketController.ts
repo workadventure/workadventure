@@ -163,6 +163,9 @@ export class IoSocketController {
                         let memberTags: string[] = [];
                         let memberTextures: CharacterTexture[] = [];
                         const room = await socketManager.getOrCreateRoom(roomId);
+                        if(room.isFull){
+                            throw new Error('Room is full');
+                        }
                         try {
                             const userData = await adminApi.fetchMemberDataByUuid(userUuid);
                             //console.log('USERDATA', userData)
