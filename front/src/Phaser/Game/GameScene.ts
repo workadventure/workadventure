@@ -1140,31 +1140,21 @@ export class GameScene extends ResizableScene implements CenterListener {
     }
 
     private doShareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface) {
-        const groupId = groupPositionMessage.groupId;
-        const groupSize = groupPositionMessage.groupSize;
+        //delete previous group
+        this.doDeleteGroup(groupPositionMessage.groupId);
 
-        const group = this.groups.get(groupId);
-        if (group !== undefined) {
-            group.setPosition(Math.round(groupPositionMessage.position.x), Math.round(groupPositionMessage.position.y));
-        } else {
-            // TODO: circle radius should not be hard stored
-            const positionX = 48;
-            const positionY = 48;
-
-            let texture = 'circleSprite-red';
-            if(groupSize < 4){
-                texture = 'circleSprite-white';
-            }
-            const sprite = new Sprite(
-                this,
-                Math.round(groupPositionMessage.position.x),
-                Math.round(groupPositionMessage.position.y),
-                texture
-            );
-            sprite.setDisplayOrigin(positionX, positionY);
-            this.add.existing(sprite);
-            this.groups.set(groupId, sprite);
-        }
+        // TODO: circle radius should not be hard stored
+        //create new group
+        const sprite = new Sprite(
+            this,
+            Math.round(groupPositionMessage.position.x),
+            Math.round(groupPositionMessage.position.y),
+            groupPositionMessage.groupSize === 4 ? 'circleSprite-red' : 'circleSprite-white'
+        );
+        sprite.setDisplayOrigin(48, 48);
+        this.add.existing(sprite);
+        this.groups.set(groupPositionMessage.groupId, sprite);
+        return sprite;
     }
 
     deleteGroup(groupId: number): void {
