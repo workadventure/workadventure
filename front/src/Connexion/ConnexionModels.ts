@@ -30,6 +30,8 @@ export enum EventMessage{
     TELEPORT = "teleport",
     USER_MESSAGE = "user-message",
     START_JITSI_ROOM = "start-jitsi-room",
+
+    CLOSE_MESSAGE = "close-message",
 }
 
 export interface PointInterface {
@@ -73,7 +75,8 @@ export interface PositionInterface {
 
 export interface GroupCreatedUpdatedMessageInterface {
     position: PositionInterface,
-    groupId: number
+    groupId: number,
+    groupSize: number
 }
 
 export interface WebRtcStartMessageInterface {

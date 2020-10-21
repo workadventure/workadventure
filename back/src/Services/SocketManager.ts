@@ -24,7 +24,8 @@ import {
     QueryJitsiJwtMessage,
     SendJitsiJwtMessage,
     CharacterLayerMessage,
-    SendUserMessage
+    SendUserMessage,
+    CloseMessage
 } from "../Messages/generated/messages_pb";
 import {PointInterface} from "../Model/Websocket/PointInterface";
 import {User} from "../Model/User";
@@ -130,6 +131,7 @@ export class SocketManager {
                     userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(player.position));
 
                     roomJoinedMessage.addUser(userJoinedMessage);
+                    roomJoinedMessage.setTagList(client.tags);
                 } else if (thing instanceof Group) {
                     const groupUpdateMessage = new GroupUpdateMessage();
                     groupUpdateMessage.setGroupid(thing.getId());
@@ -493,6 +495,7 @@ export class SocketManager {
         const groupUpdateMessage = new GroupUpdateMessage();
         groupUpdateMessage.setGroupid(group.getId());
         groupUpdateMessage.setPosition(pointMessage);
+        groupUpdateMessage.setGroupsize(group.getSize);
 
         const subMessage = new SubMessage();
         subMessage.setGroupupdatemessage(groupUpdateMessage);
@@ -685,6 +688,24 @@ export class SocketManager {
 
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setSendusermessage(sendUserMessage);
+
+        if (!socket.disconnecting) {
+            socket.send(serverToClientMessage.serializeBinary().buffer, true);
+        }
+        return socket;
+    }
+
+    public emitCloseMessage(userUuid: string, status: number): ExSocketInterface {
+        const socket = this.searchClientByUuid(userUuid);
+        if(!socket){
+            throw 'socket was not found';
+        }
+
+        const closeMessage = new CloseMessage();
+        closeMessage.setStatus(status);
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setClosemessage(closeMessage);
 
         if (!socket.disconnecting) {
             socket.send(serverToClientMessage.serializeBinary().buffer, true);

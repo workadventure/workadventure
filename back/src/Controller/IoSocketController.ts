@@ -162,11 +162,13 @@ export class IoSocketController {
 
                         let memberTags: string[] = [];
                         let memberTextures: CharacterTexture[] = [];
+
                         const room = await socketManager.getOrCreateRoom(roomId);
-                        if (room.isFull()) {
+                        //TODO http return status
+                        /*if (room.isFull()) {
                             res.writeStatus("503").end('Too many users');
                             return;
-                        }
+                        }*/
                         try {
                             const userData = await adminApi.fetchMemberDataByUuid(userUuid);
                             //console.log('USERDATA', userData)
@@ -234,27 +236,37 @@ export class IoSocketController {
             },
             /* Handlers */
             open: (ws) => {
-                // Let's join the room
-                const client = this.initClient(ws); //todo: into the upgrade instead?
-                socketManager.handleJoinRoom(client);
-                resetPing(client);
+                (async () => {
+                    // Let's join the room
+                    const client = this.initClient(ws); //todo: into the upgrade instead?
+                    socketManager.handleJoinRoom(client);
+                    resetPing(client);
 
-                //get data information and shwo messages
-                adminApi.fetchMemberDataByUuid(client.userUuid).then((res: FetchMemberDataByUuidResponse) => {
-                    if (!res.messages) {
+                    //if room is full, emit redirect room message
+                    const room = await socketManager.getOrCreateRoom(client.roomId);
+                    if (room.isFull) {
+                        socketManager.emitCloseMessage(client.userUuid, 302);
                         return;
                     }
-                    res.messages.forEach((c: unknown) => {
-                        const messageToSend = c as { type: string, message: string };
-                        socketManager.emitSendUserMessage({
-                            userUuid: client.userUuid,
-                            type: messageToSend.type,
-                            message: messageToSend.message
-                        })
-                    });
-                }).catch((err) => {
-                    console.error('fetchMemberDataByUuid => err', err);
-                });
+
+                    //get data information and shwo messages
+                    try {
+                        const res: FetchMemberDataByUuidResponse = await adminApi.fetchMemberDataByUuid(client.userUuid);
+                        if (!res.messages) {
+                            return;
+                        }
+                        res.messages.forEach((c: unknown) => {
+                            const messageToSend = c as { type: string, message: string };
+                            socketManager.emitSendUserMessage({
+                                userUuid: client.userUuid,
+                                type: messageToSend.type,
+                                message: messageToSend.message
+                            })
+                        });
+                    }catch(err) {
+                        console.error('fetchMemberDataByUuid => err', err);
+                    };
+                })();
             },
             message: (ws, arrayBuffer, isBinary): void => {
                 const client = ws as ExSocketInterface;
