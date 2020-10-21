@@ -335,7 +335,8 @@ export class RoomConnection implements RoomConnection {
 
         return {
             groupId: message.getGroupid(),
-            position: position.toObject()
+            position: position.toObject(),
+            groupSize: message.getGroupsize()
         }
     }
 

@@ -73,7 +73,8 @@ export interface PositionInterface {
 
 export interface GroupCreatedUpdatedMessageInterface {
     position: PositionInterface,
-    groupId: number
+    groupId: number,
+    groupSize: number
 }
 
 export interface WebRtcStartMessageInterface {
