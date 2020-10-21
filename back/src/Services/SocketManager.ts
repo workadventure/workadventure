@@ -408,6 +408,10 @@ export class SocketManager {
         return Promise.resolve(world)
     }
 
+    getRoomById(roomId: string) {
+        return this.Worlds.get(roomId);
+    }
+
     private joinRoom(client : ExSocketInterface, position: PointInterface): GameRoom {
 
         const roomId = client.roomId;
@@ -695,12 +699,7 @@ export class SocketManager {
         return socket;
     }
 
-    public emitCloseMessage(userUuid: string, status: number): ExSocketInterface {
-        const socket = this.searchClientByUuid(userUuid);
-        if(!socket){
-            throw 'socket was not found';
-        }
-
+    public emitCloseMessage(socket: ExSocketInterface, status: number): ExSocketInterface {
         const closeMessage = new CloseMessage();
         closeMessage.setStatus(status);
 

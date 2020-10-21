@@ -97,8 +97,7 @@ class ConnectionManager {
         return new Promise<RoomConnection>((resolve, reject) => {
             const connection = new RoomConnection(this.localUser.jwtToken, roomId, name, characterLayers, position, viewport);
             connection.onConnectError((error: object) => {
-                console.log(error);
-                if (false) { //todo: how to check error type?
+                if (error) { //todo: how to check error type?
                     reject(connexionErrorTypes.tooManyUsers);
                 } else {
                     reject(connexionErrorTypes.serverError);

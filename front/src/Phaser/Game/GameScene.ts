@@ -56,6 +56,7 @@ import {ConsoleGlobalMessageManager} from "../../Administration/ConsoleGlobalMes
 import {ResizableScene} from "../Login/ResizableScene";
 import {Room} from "../../Connexion/Room";
 import {MessageUI} from "../../Logger/MessageUI";
+import {WaitScene} from "../Reconnecting/WaitScene";
 
 
 export enum Textures {
@@ -620,7 +621,32 @@ export class GameScene extends ResizableScene implements CenterListener {
 
             connection.onCloseMessage((status: number) => {
                 console.log(`close message status : ${status}`);
+
                 //TODO show wait room
+                this.connection.closeConnection();
+                this.simplePeer.unregister();
+                connection.closeConnection();
+
+                const waitGameSceneKey = 'somekey' + Math.round(Math.random() * 10000);
+                //show wait scene
+                setTimeout(() => {
+                    const game: Phaser.Scene = new WaitScene(waitGameSceneKey, status);
+                    this.scene.add(waitGameSceneKey, game, true, {
+                        initPosition: {
+                            x: this.CurrentPlayer.x,
+                            y: this.CurrentPlayer.y
+                        }
+                    });
+                    this.scene.stop(this.scene.key);
+                    this.scene.start(waitGameSceneKey);
+                }, 500);
+
+                //trying to reload map
+                setTimeout(() => {
+                    this.scene.stop(waitGameSceneKey);
+                    this.scene.remove(waitGameSceneKey);
+                    this.scene.start(this.scene.key);
+                }, 30000);
             });
 
             // When connection is performed, let's connect SimplePeer
@@ -1168,6 +1194,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             const positionX = 48;
             const positionY = 48;
 
+            console.log('doShareGroupPosition', groupSize);
             let texture = 'circleSprite-red';
             if(groupSize < 4){
                 texture = 'circleSprite-white';

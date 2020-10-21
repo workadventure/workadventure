@@ -165,10 +165,10 @@ export class IoSocketController {
 
                         const room = await socketManager.getOrCreateRoom(roomId);
                         //TODO http return status
-                        /*if (room.isFull()) {
-                            res.writeStatus("503").end('Too many users');
-                            return;
+                        /*if (room.isFull) {
+                            throw new Error('Room is full');
                         }*/
+
                         try {
                             const userData = await adminApi.fetchMemberDataByUuid(userUuid);
                             //console.log('USERDATA', userData)
@@ -239,14 +239,13 @@ export class IoSocketController {
                 (async () => {
                     // Let's join the room
                     const client = this.initClient(ws); //todo: into the upgrade instead?
-                    socketManager.handleJoinRoom(client);
-                    resetPing(client);
 
-                    //if room is full, emit redirect room message
-                    const room = await socketManager.getOrCreateRoom(client.roomId);
-                    if (room.isFull) {
-                        socketManager.emitCloseMessage(client.userUuid, 302);
-                        return;
+                    const room = socketManager.getRoomById(client.roomId);
+                    if (room && room.isFull) {
+                        socketManager.emitCloseMessage(client, 302);
+                    }else {
+                        socketManager.handleJoinRoom(client);
+                        resetPing(client);
                     }
 
                     //get data information and shwo messages
@@ -263,13 +262,20 @@ export class IoSocketController {
                                 message: messageToSend.message
                             })
                         });
-                    }catch(err) {
+                    } catch (err) {
                         console.error('fetchMemberDataByUuid => err', err);
-                    };
+                    }
                 })();
             },
             message: (ws, arrayBuffer, isBinary): void => {
+
                 const client = ws as ExSocketInterface;
+
+                const room = socketManager.getRoomById(client.roomId);
+                if (room && room.isFull) {
+                    return;
+                }
+
                 const message = ClientToServerMessage.deserializeBinary(new Uint8Array(arrayBuffer));
 
                 if (message.hasViewportmessage()) {
@@ -293,7 +299,6 @@ export class IoSocketController {
                 } else if (message.hasQueryjitsijwtmessage()){
                     socketManager.handleQueryJitsiJwtMessage(client, message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage);
                 }
-
                     /* Ok is false if backpressure was built up, wait for drain */
                 //let ok = ws.send(message, isBinary);
             },
