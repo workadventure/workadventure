@@ -22,7 +22,7 @@ import {adminApi, CharacterTexture, FetchMemberDataByUuidResponse} from "../Serv
 import {SocketManager, socketManager} from "../Services/SocketManager";
 import {emitInBatch, resetPing} from "../Services/IoSocketHelpers";
 import {clientEventsEmitter} from "../Services/ClientEventsEmitter";
-import {ADMIN_API_TOKEN} from "../Enum/EnvironmentVariable";
+import {ADMIN_API_TOKEN, MAX_USERS_PER_ROOM} from "../Enum/EnvironmentVariable";
 
 export class IoSocketController {
     private nextUserId: number = 1;
@@ -163,6 +163,10 @@ export class IoSocketController {
                         let memberTags: string[] = [];
                         let memberTextures: CharacterTexture[] = [];
                         const room = await socketManager.getOrCreateRoom(roomId);
+                        if (room.getUsers().size > MAX_USERS_PER_ROOM) {
+                            res.writeStatus("302").end('Too many users');
+                            return;
+                        }
                         try {
                             const userData = await adminApi.fetchMemberDataByUuid(userUuid);
                             //console.log('USERDATA', userData)
