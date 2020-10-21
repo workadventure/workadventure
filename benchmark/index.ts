@@ -2,6 +2,7 @@ import {RoomConnection} from "../front/src/Connexion/RoomConnection";
 import {connectionManager} from "../front/src/Connexion/ConnectionManager";
 import * as WebSocket from "ws"
 
+
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -11,15 +12,18 @@ RoomConnection.setWebsocketFactory((url: string) => {
 });
 
 async function startOneUser(): Promise<void> {
-    const connection = await connectionManager.connectToRoomSocket();
-    connection.emitPlayerDetailsMessage('foo', ['male3']);
+    await connectionManager.anonymousLogin(true);
+    const connection = await connectionManager.connectToRoomSocket('_/global/maps.workadventure.localhost/Floor0/floor0.json', 'TEST', ['male3'],
+        {
+            x: 783,
+            y: 170
+        }, {
+            top: 0,
+            bottom: 200,
+            left: 500,
+            right: 800
+        });
 
-    await connection.joinARoom('global__maps.workadventure.localhost/Floor0/floor0', 783, 170, 'down', true, {
-        top: 0,
-        bottom: 200,
-        left: 500,
-        right: 800
-    });
     console.log(connection.getUserId());
 
     let angle = Math.random() * Math.PI * 2;
