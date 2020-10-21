@@ -117,4 +117,8 @@ export class Group implements Movable {
             this.leave(user);
         }
     }
+
+    get getSize(){
+        return this.users.size;
+    }
 }

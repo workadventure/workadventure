@@ -81,10 +81,12 @@ class ConnectionManager {
         await Axios.get(`${API_URL}/verify`, {params: {token}});
     }
 
-    private async anonymousLogin(): Promise<void> {
+    public async anonymousLogin(isBenchmark: boolean = false): Promise<void> {
         const data = await Axios.post(`${API_URL}/anonymLogin`).then(res => res.data);
         this.localUser = new LocalUser(data.userUuid, data.authToken, []);
-        localUserStore.saveUser(this.localUser);
+        if (!isBenchmark) { // In benchmark, we don't have a local storage.
+            localUserStore.saveUser(this.localUser);
+        }
     }
 
     public initBenchmark(): void {
@@ -95,8 +97,7 @@ class ConnectionManager {
         return new Promise<RoomConnection>((resolve, reject) => {
             const connection = new RoomConnection(this.localUser.jwtToken, roomId, name, characterLayers, position, viewport);
             connection.onConnectError((error: object) => {
-                console.log(error);
-                if (false) { //todo: how to check error type?
+                if (error) { //todo: how to check error type?
                     reject(connexionErrorTypes.tooManyUsers);
                 } else {
                     reject(connexionErrorTypes.serverError);

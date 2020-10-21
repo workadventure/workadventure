@@ -26,7 +26,8 @@ import {
     QueryJitsiJwtMessage,
     SendJitsiJwtMessage,
     CharacterLayerMessage,
-    SendUserMessage
+    SendUserMessage,
+    CloseMessage
 } from "../Messages/generated/messages_pb"
 
 import {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
@@ -157,10 +158,11 @@ export class RoomConnection implements RoomConnection {
                 this.dispatch(EventMessage.START_JITSI_ROOM, message.getSendjitsijwtmessage());
             } else if (message.hasSendusermessage()) {
                 this.dispatch(EventMessage.USER_MESSAGE, message.getSendusermessage());
+            } else if (message.hasClosemessage()) {
+                this.dispatch(EventMessage.CLOSE_MESSAGE, message.getClosemessage());
             } else {
                 throw new Error('Unknown message received');
             }
-
         }
     }
 
@@ -335,7 +337,8 @@ export class RoomConnection implements RoomConnection {
 
         return {
             groupId: message.getGroupid(),
-            position: position.toObject()
+            position: position.toObject(),
+            groupSize: message.getGroupsize()
         }
     }
 
@@ -537,6 +540,12 @@ export class RoomConnection implements RoomConnection {
     public onStartJitsiRoom(callback: (jwt: string, room: string) => void): void {
         this.onMessage(EventMessage.START_JITSI_ROOM, (message: SendJitsiJwtMessage) => {
             callback(message.getJwt(), message.getJitsiroom());
+        });
+    }
+
+    public onCloseMessage(callback: (status: number) => void): void {
+        return this.onMessage(EventMessage.CLOSE_MESSAGE, (message: CloseMessage) => {
+            callback(message.getStatus());
         });
     }
 

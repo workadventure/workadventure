@@ -85,7 +85,7 @@ export class MapController extends BaseController{
                 res.writeStatus('404').end('No room found');
                 return;
             }
-            res.writeStatus("200").end(world.isFull() ? '1':'0');
+            res.writeStatus("200").end(world.isFull ? '1':'0');
         });
     }
 }

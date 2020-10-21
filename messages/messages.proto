@@ -125,6 +125,7 @@ message BatchMessage {
 message GroupUpdateMessage {
   int32 groupId = 1;
   PointMessage position = 2;
+  int32 groupSize = 3;
 }
 
 message GroupDeleteMessage {
@@ -188,6 +189,10 @@ message SendUserMessage{
   string message = 2;
 }
 
+message CloseMessage{
+  int32 status = 1;
+}
+
 message ServerToClientMessage {
   oneof message {
     BatchMessage batchMessage = 1;
@@ -202,5 +207,6 @@ message ServerToClientMessage {
     TeleportMessageMessage teleportMessageMessage = 10;
     SendJitsiJwtMessage sendJitsiJwtMessage = 11;
     SendUserMessage sendUserMessage = 12;
+    CloseMessage closeMessage = 13;
   }
 }

@@ -162,11 +162,13 @@ export class IoSocketController {
 
                         let memberTags: string[] = [];
                         let memberTextures: CharacterTexture[] = [];
+
                         const room = await socketManager.getOrCreateRoom(roomId);
-                        if (room.isFull()) {
-                            res.writeStatus("503").end('Too many users');
-                            return;
-                        }
+                        //TODO http return status
+                        /*if (room.isFull) {
+                            throw new Error('Room is full');
+                        }*/
+
                         try {
                             const userData = await adminApi.fetchMemberDataByUuid(userUuid);
                             //console.log('USERDATA', userData)
@@ -234,30 +236,46 @@ export class IoSocketController {
             },
             /* Handlers */
             open: (ws) => {
-                // Let's join the room
-                const client = this.initClient(ws); //todo: into the upgrade instead?
-                socketManager.handleJoinRoom(client);
-                resetPing(client);
+                (async () => {
+                    // Let's join the room
+                    const client = this.initClient(ws); //todo: into the upgrade instead?
 
-                //get data information and shwo messages
-                adminApi.fetchMemberDataByUuid(client.userUuid).then((res: FetchMemberDataByUuidResponse) => {
-                    if (!res.messages) {
-                        return;
+                    const room = socketManager.getRoomById(client.roomId);
+                    if (room && room.isFull) {
+                        socketManager.emitCloseMessage(client, 302);
+                    }else {
+                        socketManager.handleJoinRoom(client);
+                        resetPing(client);
                     }
-                    res.messages.forEach((c: unknown) => {
-                        const messageToSend = c as { type: string, message: string };
-                        socketManager.emitSendUserMessage({
-                            userUuid: client.userUuid,
-                            type: messageToSend.type,
-                            message: messageToSend.message
-                        })
-                    });
-                }).catch((err) => {
-                    console.error('fetchMemberDataByUuid => err', err);
-                });
+
+                    //get data information and shwo messages
+                    try {
+                        const res: FetchMemberDataByUuidResponse = await adminApi.fetchMemberDataByUuid(client.userUuid);
+                        if (!res.messages) {
+                            return;
+                        }
+                        res.messages.forEach((c: unknown) => {
+                            const messageToSend = c as { type: string, message: string };
+                            socketManager.emitSendUserMessage({
+                                userUuid: client.userUuid,
+                                type: messageToSend.type,
+                                message: messageToSend.message
+                            })
+                        });
+                    } catch (err) {
+                        console.error('fetchMemberDataByUuid => err', err);
+                    }
+                })();
             },
             message: (ws, arrayBuffer, isBinary): void => {
+
                 const client = ws as ExSocketInterface;
+
+                const room = socketManager.getRoomById(client.roomId);
+                if (room && room.isFull) {
+                    return;
+                }
+
                 const message = ClientToServerMessage.deserializeBinary(new Uint8Array(arrayBuffer));
 
                 if (message.hasViewportmessage()) {
@@ -281,7 +299,6 @@ export class IoSocketController {
                 } else if (message.hasQueryjitsijwtmessage()){
                     socketManager.handleQueryJitsiJwtMessage(client, message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage);
                 }
-
                     /* Ok is false if backpressure was built up, wait for drain */
                 //let ok = ws.send(message, isBinary);
             },
