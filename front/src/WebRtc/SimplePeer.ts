@@ -109,43 +109,29 @@ export class SimplePeer {
     }
 
     /**
-     * server has two people connected, start the meet
-     */
-    private startWebRtc() {
-        console.warn('startWebRtc startWebRtc');
-        this.Users.forEach((user: UserSimplePeerInterface) => {
-            //if it's not an initiator, peer connection will be created when gamer will receive offer signal
-            if(!user.initiator){
-                return;
-            }
-            this.createPeerConnection(user);
-        });
-    }
-
-    /**
      * create peer connection to bind users
      */
-    private createPeerConnection(user : UserSimplePeerInterface) : VideoPeer | null{
+    private createPeerConnection(user : UserSimplePeerInterface) : VideoPeer | null {
         const peerConnection = this.PeerConnectionArray.get(user.userId)
-        if(peerConnection){
-            if(peerConnection.destroyed){
+        if (peerConnection) {
+            if (peerConnection.destroyed) {
                 peerConnection.toClose = true;
                 peerConnection.destroy();
                 const peerConnexionDeleted = this.PeerConnectionArray.delete(user.userId);
-                if(!peerConnexionDeleted){
+                if (!peerConnexionDeleted) {
                     throw 'Error to delete peer connection';
                 }
                 this.createPeerConnection(user);
-            }else {
+            } else {
                 peerConnection.toClose = false;
             }
             return null;
         }
 
         let name = user.name;
-        if(!name){
+        if (!name) {
             const userSearch = this.Users.find((userSearch: UserSimplePeerInterface) => userSearch.userId === user.userId);
-            if(userSearch) {
+            if (userSearch) {
                 name = userSearch.name;
             }
         }
@@ -153,8 +139,8 @@ export class SimplePeer {
         mediaManager.removeActiveVideo("" + user.userId);
 
         const reportCallback = this.enableReporting ? (comment: string) => {
-                this.reportUser(user.userId, comment);
-            }: undefined;
+            this.reportUser(user.userId, comment);
+        } : undefined;
 
         mediaManager.addActiveVideo("" + user.userId, reportCallback, name);
 
@@ -179,9 +165,19 @@ export class SimplePeer {
      * create peer connection to bind users
      */
     private createPeerScreenSharingConnection(user : UserSimplePeerInterface) : ScreenSharingPeer | null{
-        if(
-            this.PeerScreenSharingConnectionArray.has(user.userId)
-        ){
+        const peerConnection = this.PeerScreenSharingConnectionArray.get(user.userId);
+        if(peerConnection){
+            if(peerConnection.destroyed){
+                peerConnection.toClose = true;
+                peerConnection.destroy();
+                const peerConnexionDeleted = this.PeerScreenSharingConnectionArray.delete(user.userId);
+                if(!peerConnexionDeleted){
+                    throw 'Error to delete peer connection';
+                }
+                this.createPeerConnection(user);
+            }else {
+                peerConnection.toClose = false;
+            }
             return null;
         }
 
