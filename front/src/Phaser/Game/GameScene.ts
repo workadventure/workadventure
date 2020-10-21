@@ -48,13 +48,14 @@ import {ActionableItem} from "../Items/ActionableItem";
 import {UserInputManager} from "../UserInput/UserInputManager";
 import {UserMovedMessage} from "../../Messages/generated/messages_pb";
 import {ProtobufClientUtils} from "../../Network/ProtobufClientUtils";
-import {connectionManager} from "../../Connexion/ConnectionManager";
+import {connectionManager, connexionErrorTypes} from "../../Connexion/ConnectionManager";
 import {RoomConnection} from "../../Connexion/RoomConnection";
 import {GlobalMessageManager} from "../../Administration/GlobalMessageManager";
 import {UserMessageManager} from "../../Administration/UserMessageManager";
 import {ConsoleGlobalMessageManager} from "../../Administration/ConsoleGlobalMessageManager";
 import {ResizableScene} from "../Login/ResizableScene";
 import {Room} from "../../Connexion/Room";
+import {MessageUI} from "../../Logger/MessageUI";
 
 
 export enum Textures {
@@ -122,6 +123,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
     private createPromise: Promise<void>;
     private createPromiseResolve!: (value?: void | PromiseLike<void>) => void;
+    private offlineMode: boolean = false;
 
     MapKey: string;
     MapUrlFile: string;
@@ -426,7 +428,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         if (this.connection === undefined) {
             // Let's wait 0.5 seconds before printing the "connecting" screen to avoid blinking
             setTimeout(() => {
-                if (this.connection === undefined) {
+                if (this.connection === undefined && !this.offlineMode) {
                     this.scene.sleep();
                     this.scene.launch(ReconnectingSceneName);
                 }
@@ -629,6 +631,11 @@ export class GameScene extends ResizableScene implements CenterListener {
             this.scene.sleep(ReconnectingSceneName);
 
             return connection;
+        }).catch(error => {
+            if (error === connexionErrorTypes.tooManyUsers) {
+                this.offlineMode = true;
+                MessageUI.warningMessage('Too many users. You switched to offline mode. Please try to connect again later.');
+            }
         });
     }
 
@@ -956,13 +963,18 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         const nextSceneKey = this.checkToExit();
         if (nextSceneKey) {
-            // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
-            this.connection.closeConnection();
-            this.simplePeer.unregister();
-            this.scene.stop();
-            this.scene.remove(this.scene.key);
-            this.scene.start(nextSceneKey.key);
+            this.goToNextScene(nextSceneKey.key);
         }
+    }
+    
+    private goToNextScene(nextSceneKey: string): void {
+        
+        // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
+        this.connection.closeConnection();
+        this.simplePeer.unregister();
+        this.scene.stop();
+        this.scene.remove(this.scene.key);
+        this.scene.start(nextSceneKey);
     }
 
     private checkToExit(): {key: string, hash: string} | null  {

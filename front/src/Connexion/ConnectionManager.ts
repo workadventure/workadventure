@@ -9,6 +9,11 @@ import {Room} from "./Room";
 
 const URL_ROOM_STARTED = '/Floor0/floor0.json';
 
+export enum connexionErrorTypes {
+    serverError = 1,
+    tooManyUsers,
+}
+
 class ConnectionManager {
     private localUser!:LocalUser;
 
@@ -90,8 +95,12 @@ class ConnectionManager {
         return new Promise<RoomConnection>((resolve, reject) => {
             const connection = new RoomConnection(this.localUser.jwtToken, roomId, name, characterLayers, position, viewport);
             connection.onConnectError((error: object) => {
-                console.log('An error occurred while connecting to socket server. Retrying');
-                reject(error);
+                console.log(error);
+                if (false) { //todo: how to check error type?
+                    reject(connexionErrorTypes.tooManyUsers);
+                } else {
+                    reject(connexionErrorTypes.serverError);
+                }
             });
             connection.onConnect(() => {
                 resolve(connection);
@@ -99,6 +108,8 @@ class ConnectionManager {
         }).catch((err) => {
             // Let's retry in 4-6 seconds
             return new Promise<RoomConnection>((resolve, reject) => {
+                if (err === connexionErrorTypes.tooManyUsers) return reject(err);
+                console.log('An error occurred while connecting to socket server. Retrying');
                 setTimeout(() => {
                     //todo: allow a way to break recurrsion?
                     this.connectToRoomSocket(roomId, name, characterLayers, position, viewport).then((connection) => resolve(connection));

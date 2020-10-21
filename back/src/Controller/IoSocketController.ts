@@ -163,8 +163,8 @@ export class IoSocketController {
                         let memberTags: string[] = [];
                         let memberTextures: CharacterTexture[] = [];
                         const room = await socketManager.getOrCreateRoom(roomId);
-                        if (room.getUsers().size > MAX_USERS_PER_ROOM) {
-                            res.writeStatus("302").end('Too many users');
+                        if (room.isFull()) {
+                            res.writeStatus("503").end('Too many users');
                             return;
                         }
                         try {

@@ -10,6 +10,7 @@ import {ViewportInterface} from "_Model/Websocket/ViewportMessage";
 import {Movable} from "_Model/Movable";
 import {extractDataFromPrivateRoomId, extractRoomSlugPublicRoomId, isRoomAnonymous} from "./RoomIdentifier";
 import {arrayIntersect} from "../Services/ArrayHelper";
+import {MAX_USERS_PER_ROOM} from "_Enum/EnvironmentVariable";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -177,6 +178,10 @@ export class GameRoom {
             // If we are back to life, let's trigger a position update to see if we can join some group.
             this.updatePosition(socket, user.getPosition());
         }
+    }
+
+    isFull() : boolean {
+        return this.getUsers().size > MAX_USERS_PER_ROOM;
     }
 
     /**

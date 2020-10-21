@@ -4,6 +4,7 @@ import {HttpRequest, HttpResponse, TemplatedApp} from "uWebSockets.js";
 import {BaseController} from "./BaseController";
 import {parse} from "query-string";
 import {adminApi} from "../Services/AdminApi";
+import {socketManager} from "../Services/SocketManager";
 
 //todo: delete this
 export class MapController extends BaseController{
@@ -12,6 +13,7 @@ export class MapController extends BaseController{
         super();
         this.App = App;
         this.getMapUrl();
+        this.canConnectToMap();
     }
 
 
@@ -65,6 +67,25 @@ export class MapController extends BaseController{
                 }
             })();
 
+        });
+    }
+    
+    canConnectToMap() {
+        this.App.options("/canjoin", (res: HttpResponse, req: HttpRequest) => {
+            this.addCorsHeaders(res);
+
+            res.end();
+        });
+
+        this.App.get("/canjoin", (res: HttpResponse, req: HttpRequest) => {
+            const query = parse(req.getQuery());
+            const roomId = query.roomId as string;
+            const world = socketManager.getWorlds().get(roomId);
+            if (!world) {
+                res.writeStatus('404').end('No room found');
+                return;
+            }
+            res.writeStatus("200").end(world.isFull() ? '1':'0');
         });
     }
 }
