@@ -10,6 +10,7 @@ import {ViewportInterface} from "_Model/Websocket/ViewportMessage";
 import {Movable} from "_Model/Movable";
 import {extractDataFromPrivateRoomId, extractRoomSlugPublicRoomId, isRoomAnonymous} from "./RoomIdentifier";
 import {arrayIntersect} from "../Services/ArrayHelper";
+import {MAX_USERS_PER_ROOM} from "../Enum/EnvironmentVariable";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -106,6 +107,10 @@ export class GameRoom {
             this.positionNotifier.removeViewport(userObj);
             this.positionNotifier.leave(userObj);
         }
+    }
+
+    get isFull(): boolean {
+        return this.users.size >= MAX_USERS_PER_ROOM;
     }
 
     public isEmpty(): boolean {
