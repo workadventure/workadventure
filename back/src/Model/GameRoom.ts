@@ -109,6 +109,10 @@ export class GameRoom {
         }
     }
 
+    get isFull(): boolean {
+        return this.users.size >= MAX_USERS_PER_ROOM;
+    }
+
     public isEmpty(): boolean {
         return this.users.size === 0;
     }
