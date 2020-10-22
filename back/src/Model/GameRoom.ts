@@ -184,10 +184,6 @@ export class GameRoom {
         }
     }
 
-    get isFull() : boolean {
-        return this.getUsers().size > MAX_USERS_PER_ROOM;
-    }
-
     /**
      * Makes a user leave a group and closes and destroy the group if the group contains only one remaining person.
      *
