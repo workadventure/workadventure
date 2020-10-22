@@ -11,7 +11,7 @@ function createMockUser(userId: number): ExSocketInterface {
     } as ExSocketInterface;
 }
 
-describe("World", () => {
+describe("GameRoom", () => {
     it("should connect user1 and user2", () => {
         let connectCalledNumber: number = 0;
         const connect: ConnectCallback = (user: User, group: Group): void => {
