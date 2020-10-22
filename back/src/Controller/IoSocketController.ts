@@ -159,11 +159,10 @@ export class IoSocketController {
                         }
 
                         const userUuid = await jwtTokenManager.getUserUuidFromToken(token);
-                        let client = socketManager.searchClientByUuid(userUuid);
+                        const client = socketManager.searchClientByUuid(userUuid);
                         //if client socket exist, close connexion
                         if(client){
                             console.info(`Close connexion, client with uuid : ${userUuid} already exist !`);
-                            socketManager.emitCloseMessage(client, 500);
                             socketManager.leaveRoom(client);
                         }
 
