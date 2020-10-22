@@ -56,7 +56,7 @@ export class GameRoom {
         this.anonymous = isRoomAnonymous(roomId);
         this.tags = [];
         this.policyType = GameRoomPolicyTypes.ANONYMUS_POLICY;
-        
+
         if (this.anonymous) {
             this.roomSlug = extractRoomSlugPublicRoomId(this.roomId);
         } else {
@@ -65,8 +65,8 @@ export class GameRoom {
             this.organizationSlug = organizationSlug;
             this.worldSlug = worldSlug;
         }
-        
-        
+
+
         this.users = new Map<number, User>();
         this.groups = new Set<Group>();
         this.connectCallback = connectCallback;
@@ -138,6 +138,12 @@ export class GameRoom {
         if (user.group === undefined) {
             // If the user is not part of a group:
             //  should he join a group?
+
+            // If the user is moving, don't try to join
+            if (user.getPosition().moving) {
+                return;
+            }
+
             const closestItem: User|Group|null = this.searchClosestAvailableUserOrGroup(user);
 
             if (closestItem !== null) {
@@ -275,7 +281,7 @@ export class GameRoom {
         return this.itemsState;
     }
 
-   
+
     setViewport(socket : Identificable, viewport: ViewportInterface): Movable[] {
         const user = this.users.get(socket.userId);
         if(typeof user === 'undefined') {
