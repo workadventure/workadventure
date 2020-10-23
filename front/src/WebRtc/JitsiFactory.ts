@@ -1,5 +1,6 @@
 import {CoWebsiteManager} from "./CoWebsiteManager";
 import {JITSI_URL} from "../Enum/EnvironmentVariable";
+import {mediaManager} from "./MediaManager";
 declare const window:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 const interfaceConfig = {
@@ -36,6 +37,8 @@ class JitsiFactory {
                 height: "100%",
                 parentNode: cowebsiteDiv,
                 configOverwrite: {
+                    startWithAudioMuted: !mediaManager.constraintsMedia.audio,
+                    startWithVideoMuted: mediaManager.constraintsMedia.video === false,
                     prejoinPageEnabled: false
                 },
                 interfaceConfigOverwrite: interfaceConfig,
