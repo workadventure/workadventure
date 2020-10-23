@@ -12,7 +12,6 @@ import {CurrentGamerInterface, hasMovedEventName, Player} from "../Player/Player
 import {
     DEBUG_MODE,
     JITSI_PRIVATE_MODE,
-    JITSI_URL,
     POSITION_DELAY,
     RESOLUTION,
     ZOOM_LEVEL
@@ -23,7 +22,6 @@ import {
     ITiledMapLayerProperty, ITiledMapObject,
     ITiledTileSet
 } from "../Map/ITiledMap";
-import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Character";
 import {AddPlayerInterface} from "./AddPlayerInterface";
 import {PlayerAnimationNames} from "../Player/Animation";
 import {PlayerMovement} from "./PlayerMovement";
@@ -32,7 +30,7 @@ import {RemotePlayer} from "../Entity/RemotePlayer";
 import {Queue} from 'queue-typescript';
 import {SimplePeer, UserSimplePeerInterface} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
-import {loadAllLayers, loadCustomTexture, loadObject, loadPlayerCharacters} from "../Entity/body_character";
+import {loadAllLayers, loadObject, loadPlayerCharacters} from "../Entity/body_character";
 import {CenterListener, layoutManager, LayoutMode} from "../../WebRtc/LayoutManager";
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
@@ -55,11 +53,7 @@ import {UserMessageManager} from "../../Administration/UserMessageManager";
 import {ConsoleGlobalMessageManager} from "../../Administration/ConsoleGlobalMessageManager";
 import {ResizableScene} from "../Login/ResizableScene";
 import {Room} from "../../Connexion/Room";
-
-
-export enum Textures {
-    Player = "male1"
-}
+import {jitsiFactory} from "../../WebRtc/JitsiFactory";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null
@@ -146,8 +140,6 @@ export class GameScene extends ResizableScene implements CenterListener {
     // The item that can be selected by pressing the space key.
     private outlinedItem: ActionableItem|null = null;
     private userInputManager!: UserInputManager;
-
-    private jitsiApi: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
     static createFromUrl(room: Room, mapUrlFile: string, gameSceneKey: string|null = null): GameScene {
         // We use the map URL as a key
@@ -1231,53 +1223,14 @@ export class GameScene extends ResizableScene implements CenterListener {
     }
 
     public startJitsi(roomName: string, jwt?: string): void {
-        CoWebsiteManager.insertCoWebsite((cowebsiteDiv => {
-            const domain = JITSI_URL;
-            const options = {
-                roomName: roomName,
-                jwt: jwt,
-                width: "100%",
-                height: "100%",
-                parentNode: cowebsiteDiv,
-                configOverwrite: {
-                    prejoinPageEnabled: false
-                },
-                interfaceConfigOverwrite: {
-                    SHOW_CHROME_EXTENSION_BANNER: false,
-                    MOBILE_APP_PROMO: false,
-
-                    HIDE_INVITE_MORE_HEADER: true,
-
-                    // Note: hiding brand does not seem to work, we probably need to put this on the server side.
-                    SHOW_BRAND_WATERMARK: false,
-                    SHOW_JITSI_WATERMARK: false,
-                    SHOW_POWERED_BY: false,
-                    SHOW_PROMOTIONAL_CLOSE_PAGE: false,
-                    SHOW_WATERMARK_FOR_GUESTS: false,
-
-                    TOOLBAR_BUTTONS: [
-                        'microphone', 'camera', 'closedcaptions', 'desktop', /*'embedmeeting',*/ 'fullscreen',
-                        'fodeviceselection', 'hangup', 'profile', 'chat', 'recording',
-                        'livestreaming', 'etherpad', 'sharedvideo', 'settings', 'raisehand',
-                        'videoquality', 'filmstrip', /*'invite',*/ 'feedback', 'stats', 'shortcuts',
-                        'tileview', 'videobackgroundblur', 'download', 'help', 'mute-everyone', /*'security'*/
-                    ],
-                }
-            };
-            if (!options.jwt) {
-                delete options.jwt;
-            }
-            this.jitsiApi = new (window as any).JitsiMeetExternalAPI(domain, options); // eslint-disable-line @typescript-eslint/no-explicit-any
-            this.jitsiApi.executeCommand('displayName', gameManager.getPlayerName());
-        }));
+        jitsiFactory.start(roomName, gameManager.getPlayerName(), jwt);
         this.connection.setSilent(true);
         mediaManager.hideGameOverlay();
     }
 
     public stopJitsi(): void {
         this.connection.setSilent(false);
-        this.jitsiApi?.dispose();
-        CoWebsiteManager.closeCoWebsite();
+        jitsiFactory.stop();
         mediaManager.showGameOverlay();
     }
 

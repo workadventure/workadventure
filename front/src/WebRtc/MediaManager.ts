@@ -1,5 +1,6 @@
 import {DivImportance, layoutManager} from "./LayoutManager";
 import {HtmlUtils} from "./HtmlUtils";
+declare const navigator:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 const videoConstraint: boolean|MediaTrackConstraints = {
     width: { ideal: 1280 },
@@ -245,15 +246,11 @@ export class MediaManager {
     }
 
     private _startScreenCapture() {
-        // getDisplayMedia was moved to mediaDevices in 2018. Typescript definitions are not up to date yet.
-        // See: https://github.com/w3c/mediacapture-screen-share/pull/86
-        //      https://github.com/microsoft/TypeScript/issues/31821
-        if ((navigator as any).getDisplayMedia) { // eslint-disable-line @typescript-eslint/no-explicit-any
-            return (navigator as any).getDisplayMedia({video: true}); // eslint-disable-line @typescript-eslint/no-explicit-any
-        } else if ((navigator.mediaDevices as any).getDisplayMedia) { // eslint-disable-line @typescript-eslint/no-explicit-any
-            return (navigator.mediaDevices as any).getDisplayMedia({video: true}); // eslint-disable-line @typescript-eslint/no-explicit-any
+        if (navigator.getDisplayMedia) { 
+            return navigator.getDisplayMedia({video: true});
+        } else if (navigator.mediaDevices.getDisplayMedia) {
+            return navigator.mediaDevices.getDisplayMedia({video: true});
         } else {
-            //return navigator.mediaDevices.getUserMedia(({video: {mediaSource: 'screen'}} as any));
             return new Promise((resolve, reject) => { // eslint-disable-line no-unused-vars
                 reject("error sharing screen");
             });
@@ -336,12 +333,6 @@ export class MediaManager {
         return this.getCamera();
     }
 
-    /**
-     *
-     * @param userId
-     * @param reportCallBack
-     * @param userName
-     */
     addActiveVideo(userId: string, reportCallBack: ReportCallback|undefined, userName: string = ""){
         this.webrtcInAudio.play();
 
@@ -373,13 +364,8 @@ export class MediaManager {
 
         this.remoteVideo.set(userId, this.getElementByIdOrFail<HTMLVideoElement>(userId));
     }
-
-    /**
-     *
-     * @param userId
-     */
+    
     addScreenSharingActiveVideo(userId: string, divImportance: DivImportance = DivImportance.Important){
-        //this.webrtcInAudio.play();
 
         userId = `screen-sharing-${userId}`;
         const html = `
@@ -392,11 +378,7 @@ export class MediaManager {
 
         this.remoteVideo.set(userId, this.getElementByIdOrFail<HTMLVideoElement>(userId));
     }
-
-    /**
-     *
-     * @param userId
-     */
+    
     disabledMicrophoneByUserId(userId: number){
         const element = document.getElementById(`microphone-${userId}`);
         if(!element){
@@ -404,11 +386,7 @@ export class MediaManager {
         }
         element.classList.add('active')
     }
-
-    /**
-     *
-     * @param userId
-     */
+    
     enabledMicrophoneByUserId(userId: number){
         const element = document.getElementById(`microphone-${userId}`);
         if(!element){
@@ -416,11 +394,7 @@ export class MediaManager {
         }
         element.classList.remove('active')
     }
-
-    /**
-     *
-     * @param userId
-     */
+    
     disabledVideoByUserId(userId: number) {
         let element = document.getElementById(`${userId}`);
         if (element) {
@@ -431,11 +405,7 @@ export class MediaManager {
             element.style.display = "block";
         }
     }
-
-    /**
-     *
-     * @param userId
-     */
+    
     enabledVideoByUserId(userId: number){
         let element = document.getElementById(`${userId}`);
         if(element){
@@ -447,11 +417,6 @@ export class MediaManager {
         }
     }
 
-    /**
-     *
-     * @param userId
-     * @param stream
-     */
     addStreamRemoteVideo(userId: string, stream : MediaStream){
         const remoteVideo = this.remoteVideo.get(userId);
         if (remoteVideo === undefined) {
@@ -468,11 +433,7 @@ export class MediaManager {
 
         this.addStreamRemoteVideo(`screen-sharing-${userId}`, stream);
     }
-
-    /**
-     *
-     * @param userId
-     */
+    
     removeActiveVideo(userId: string){
         layoutManager.remove(userId);
         this.remoteVideo.delete(userId);
@@ -522,11 +483,7 @@ export class MediaManager {
         const connnectingSpinnerDiv = element.getElementsByClassName('connecting-spinner').item(0) as HTMLDivElement|null;
         return connnectingSpinnerDiv;
     }
-
-    /**
-     *
-     * @param str
-     */
+    
     private getColorByString(str: String) : String|null {
         let hash = 0;
         if (str.length === 0) return null;
