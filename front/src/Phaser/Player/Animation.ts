@@ -1,4 +1,3 @@
-import {Textures} from "../Game/GameScene";
 
 export enum PlayerAnimationNames {
     WalkDown = 'down',
