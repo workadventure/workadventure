@@ -38,6 +38,9 @@ export class MediaManager {
     private cinemaBtn: HTMLDivElement;
     private monitorBtn: HTMLDivElement;
 
+    private previousConstraint : MediaStreamConstraints;
+    private timeoutBlurWindows?: NodeJS.Timeout;
+
     constructor() {
 
         this.myCamVideo = this.getElementByIdOrFail<HTMLVideoElement>('myCamVideo');
@@ -89,6 +92,23 @@ export class MediaManager {
             this.disableScreenSharing();
             //update tracking
         });
+
+        this.previousConstraint = JSON.parse(JSON.stringify(this.constraintsMedia));
+        window.addEventListener('blur', () => {
+            if(this.timeoutBlurWindows){
+                clearTimeout(this.timeoutBlurWindows);
+            }
+            this.timeoutBlurWindows = setTimeout(() => {
+                this.previousConstraint = JSON.parse(JSON.stringify(this.constraintsMedia));
+                this.disableCamera();
+            }, 10000);
+        });
+        window.addEventListener('focus', () => {
+            if(this.timeoutBlurWindows){
+                clearTimeout(this.timeoutBlurWindows);
+            }
+            this.applyPreviousConfig();
+        });
     }
 
     public onUpdateLocalStream(callback: UpdatedLocalStreamCallback): void {
@@ -136,9 +156,7 @@ export class MediaManager {
     }
 
     private enableCamera() {
-        this.cinemaClose.style.display = "none";
-        this.cinemaBtn.classList.remove("disabled");
-        this.cinema.style.display = "block";
+        this.enableCameraStyle();
         this.constraintsMedia.video = videoConstraint;
         this.getCamera().then((stream: MediaStream) => {
             this.triggerUpdatedLocalStreamCallbacks(stream);
@@ -146,11 +164,7 @@ export class MediaManager {
     }
 
     private async disableCamera() {
-        this.cinemaClose.style.display = "block";
-        this.cinema.style.display = "none";
-        this.cinemaBtn.classList.add("disabled");
-        this.constraintsMedia.video = false;
-        this.myCamVideo.srcObject = null;
+        this.disableCameraStyle();
         this.stopCamera();
 
         if (this.constraintsMedia.audio !== false) {
@@ -162,9 +176,7 @@ export class MediaManager {
     }
 
     private enableMicrophone() {
-        this.microphoneClose.style.display = "none";
-        this.microphone.style.display = "block";
-        this.microphoneBtn.classList.remove("disabled");
+        this.enableMicrophoneStyle();
         this.constraintsMedia.audio = true;
 
         this.getCamera().then((stream) => {
@@ -173,10 +185,7 @@ export class MediaManager {
     }
 
     private async disableMicrophone() {
-        this.microphoneClose.style.display = "block";
-        this.microphone.style.display = "none";
-        this.microphoneBtn.classList.add("disabled");
-        this.constraintsMedia.audio = false;
+        this.disableMicrophoneStyle();
         this.stopMicrophone();
 
         if (this.constraintsMedia.video !== false) {
@@ -185,6 +194,51 @@ export class MediaManager {
         } else {
             this.triggerUpdatedLocalStreamCallbacks(null);
         }
+    }
+
+    private applyPreviousConfig() {
+        this.constraintsMedia = this.previousConstraint;
+        if(!this.constraintsMedia.video){
+            this.disableCameraStyle();
+        }else{
+            this.enableCameraStyle();
+        }
+        if(!this.constraintsMedia.audio){
+            this.disableMicrophoneStyle()
+        }else{
+            this.enableMicrophoneStyle()
+        }
+
+        this.getCamera().then((stream: MediaStream) => {
+            this.triggerUpdatedLocalStreamCallbacks(stream);
+        });
+    }
+
+    private enableCameraStyle(){
+        this.cinemaClose.style.display = "none";
+        this.cinemaBtn.classList.remove("disabled");
+        this.cinema.style.display = "block";
+    }
+
+    private disableCameraStyle(){
+        this.cinemaClose.style.display = "block";
+        this.cinema.style.display = "none";
+        this.cinemaBtn.classList.add("disabled");
+        this.constraintsMedia.video = false;
+        this.myCamVideo.srcObject = null;
+    }
+
+    private enableMicrophoneStyle(){
+        this.microphoneClose.style.display = "none";
+        this.microphone.style.display = "block";
+        this.microphoneBtn.classList.remove("disabled");
+    }
+
+    private disableMicrophoneStyle(){
+        this.microphoneClose.style.display = "block";
+        this.microphone.style.display = "none";
+        this.microphoneBtn.classList.add("disabled");
+        this.constraintsMedia.audio = false;
     }
 
     private enableScreenSharing() {
