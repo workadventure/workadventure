@@ -1132,7 +1132,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         }
         arcGroup = this.add.ellipse(
             Math.round(groupPositionMessage.position.x),
-            Math.round(groupPositionMessage.position.y),
+            Math.round(groupPositionMessage.position.y) + ((widthEllipse - heightEllipse) / 2),
             widthEllipse,
             heightEllipse,
             0xFFFFFF,
