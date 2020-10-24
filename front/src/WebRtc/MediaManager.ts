@@ -109,6 +109,7 @@ export class MediaManager {
             }
             this.applyPreviousConfig();
         });
+        this.pingCameraStatus();
     }
 
     public onUpdateLocalStream(callback: UpdatedLocalStreamCallback): void {
@@ -617,6 +618,17 @@ export class MediaManager {
         divReport.appendChild(buttonCancel);
 
         mainContainer.appendChild(divReport);
+    }
+
+    //ping always 30 seconds data on stream
+    private pingCameraStatus(){
+        setTimeout(() => {
+            console.log('ping camera status');
+            this.getCamera().then((stream: MediaStream) => {
+                this.triggerUpdatedLocalStreamCallbacks(stream);
+                this.pingCameraStatus();
+            });
+        }, 30000);
     }
 
 
