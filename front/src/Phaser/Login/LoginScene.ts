@@ -9,7 +9,6 @@ import {cypressAsserter} from "../../Cypress/CypressAsserter";
 import {SelectCharacterSceneName} from "./SelectCharacterScene";
 import {ResizableScene} from "./ResizableScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
-import {Discussion} from "../../WebRtc/Discussion";
 
 //todo: put this constants in a dedicated file
 export const LoginSceneName = "LoginScene";
@@ -75,13 +74,6 @@ export class LoginScene extends ResizableScene {
         });
 
         cypressAsserter.initFinished();
-
-        const discussion = new Discussion('test');
-        discussion.addParticipant('GRP');
-        discussion.addParticipant('LOL');
-
-        discussion.addMessage('GRP', 'ceci est un test d\'envoi de message', true);
-        discussion.addMessage('LOL', 'ceci est un test d\'envoi de message');
     }
 
     update(time: number, delta: number): void {

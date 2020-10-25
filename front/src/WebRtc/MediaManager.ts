@@ -1,5 +1,6 @@
 import {DivImportance, layoutManager} from "./LayoutManager";
 import {HtmlUtils} from "./HtmlUtils";
+import {DiscussionManager, SendMessageCallback} from "./DiscussionManager";
 declare const navigator:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 const videoConstraint: boolean|MediaTrackConstraints = {
@@ -37,6 +38,8 @@ export class MediaManager {
     private microphoneBtn: HTMLDivElement;
     private cinemaBtn: HTMLDivElement;
     private monitorBtn: HTMLDivElement;
+
+    private discussionManager: DiscussionManager;
 
     constructor() {
 
@@ -89,6 +92,8 @@ export class MediaManager {
             this.disableScreenSharing();
             //update tracking
         });
+
+        this.discussionManager = new DiscussionManager('test');
     }
 
     public onUpdateLocalStream(callback: UpdatedLocalStreamCallback): void {
@@ -363,6 +368,9 @@ export class MediaManager {
         }
 
         this.remoteVideo.set(userId, HtmlUtils.getElementByIdOrFail<HTMLVideoElement>(userId));
+
+        //permit to create participant in discussion part
+        this.addNewParticipant(userId, userName);
     }
     
     addScreenSharingActiveVideo(userId: string, divImportance: DivImportance = DivImportance.Important){
@@ -437,6 +445,9 @@ export class MediaManager {
     removeActiveVideo(userId: string){
         layoutManager.remove(userId);
         this.remoteVideo.delete(userId);
+
+        //permit to remove user in discussion part
+        this.removeParticipant(userId);
     }
     removeActiveScreenSharingVideo(userId: string) {
         this.removeActiveVideo(`screen-sharing-${userId}`)
@@ -556,7 +567,21 @@ export class MediaManager {
         mainContainer.appendChild(divReport);
     }
 
+    public addNewParticipant(userId: number|string, name: string|undefined, img?: string){
+        this.discussionManager.addParticipant(userId, name, img);
+    }
 
+    public removeParticipant(userId: number|string){
+        this.discussionManager.removeParticipant(userId)
+    }
+
+    public addNewMessage(name: string, message: string, isMe: boolean = false){
+        this.discussionManager.addMessage(name, message, isMe)
+    }
+
+    public addSendMessageCallback(callback: SendMessageCallback){
+        this.discussionManager.onSendMessageCallback(callback)
+    }
 }
 
 export const mediaManager = new MediaManager();

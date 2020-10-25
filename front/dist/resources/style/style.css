@@ -689,16 +689,17 @@ div.modal-report-user{
 /*MESSAGE*/
 .discussion{
     position: fixed;
-    right: -300px;
+    left: -300px;
     width: 220px;
     height: 100%;
-    background-color: #000000;
+    background-color: #333333;
     padding: 20px;
+    transition: all 0.5s ease;
 }
 .discussion.active{
-    right: 0;
+    left: 0;
 }
-.discussion .toggle-btn{
+.discussion .active-btn{
     display: none;
     cursor: pointer;
     height: 50px;
@@ -706,22 +707,36 @@ div.modal-report-user{
     background-color: #2d2d2dba;
     position: absolute;
     top: calc(50% - 25px);
-    margin-left: -125px;
+    margin-left: 315px;
     border-radius: 50%;
     border: none;
     transition: all 0.5s ease;
 }
-.discussion .toggle-btn.active{
+.discussion .active-btn.active{
     display: block;
 }
-.discussion .toggle-btn:hover {
+.discussion .active-btn:hover {
     transform: scale(1.1) rotateY(3.142rad);
 }
-.discussion .toggle-btn img{
+.discussion .active-btn img{
     width: 26px;
     height: 26px;
     margin: 13px 5px;
 }
+
+.discussion .close-btn{
+    position: absolute;
+    top: 0;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+.discussion .close-btn img{
+    height: 15px;
+    right: 15px;
+}
+
 .discussion p{
     color: white;
     font-size: 22px;
@@ -793,13 +808,22 @@ div.modal-report-user{
 
 .discussion .messages{
     position: absolute;
-    height: calc(100% - 300px);
+    height: calc(100% - 360px);
+    overflow-x: hidden;
+    overflow-y: scroll;
+    max-width: calc(100% - 40px);
+    width: calc(100% - 40px);
+}
+
+.discussion .messages h2{
+    color: white;
 }
 
 .discussion .messages .message{
     margin: 5px;
     float: right;
     text-align: right;
+    width: 100%;
 }
 
 .discussion .messages .message.me{
@@ -809,5 +833,40 @@ div.modal-report-user{
 
 .discussion .messages .message p{
     font-size: 12px;
+}
+
+.discussion .messages .message p.body{
+    font-size: 16px;
+    overflow: hidden;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.discussion .send-message{
+    position: absolute;
+    bottom: 45px;
+    width: 220px;
+    height: 26px;
+}
+
+.discussion .send-message input{
+    position: absolute;
+    width: calc(100% - 10px);
+    height: 20px;
+    background-color: #171717;
+    color: white;
+    border-radius: 15px;
+    border: none;
+}
+
+.discussion .send-message img{
+    position: absolute;
+    margin-right: 10px;
+    width: 20px;
+    height: 20px;
+    background-color: #ffffff69;
+}
+.discussion .send-message img:hover{
+    background-color: #ffffff;
 }
 

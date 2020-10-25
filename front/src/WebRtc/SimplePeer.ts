@@ -10,7 +10,7 @@ import {
     UpdatedLocalStreamCallback
 } from "./MediaManager";
 import {ScreenSharingPeer} from "./ScreenSharingPeer";
-import {VideoPeer} from "./VideoPeer";
+import {MESSAGE_TYPE_CONSTRAINT, MESSAGE_TYPE_MESSAGE, VideoPeer} from "./VideoPeer";
 import {RoomConnection} from "../Connexion/RoomConnection";
 
 export interface UserSimplePeerInterface{
@@ -145,6 +145,12 @@ export class SimplePeer {
         mediaManager.addActiveVideo("" + user.userId, reportCallback, name);
 
         const peer = new VideoPeer(user.userId, user.initiator ? user.initiator : false, this.Connection);
+
+        //permit to send message
+        mediaManager.addSendMessageCallback((message: string) => {
+            peer.write(new Buffer(JSON.stringify({type: MESSAGE_TYPE_MESSAGE, name: name?.toUpperCase(), message: message})));
+        });
+
         peer.toClose = false;
         // When a connection is established to a video stream, and if a screen sharing is taking place,
         // the user sharing screen should also initiate a connection to the remote user!
@@ -318,7 +324,7 @@ export class SimplePeer {
                 throw new Error('While adding media, cannot find user with ID ' + userId);
             }
             const localStream: MediaStream | null = mediaManager.localStream;
-            PeerConnection.write(new Buffer(JSON.stringify(mediaManager.constraintsMedia)));
+            PeerConnection.write(new Buffer(JSON.stringify({type: MESSAGE_TYPE_CONSTRAINT, ...mediaManager.constraintsMedia})));
 
             if(!localStream){
                 return;
