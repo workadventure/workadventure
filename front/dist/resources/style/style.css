@@ -1,6 +1,11 @@
 body{
     overflow: hidden;
 }
+body button:focus,
+body img:focus,
+body input:focus {
+    outline: -webkit-focus-ring-color auto 0;
+}
 body .message-info{
     width: 20%;
     height: auto;
