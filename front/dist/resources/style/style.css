@@ -72,8 +72,9 @@ body .message-info.warning{
 
 #div-myCamVideo {
     position: absolute;
-    right: 0;
-    bottom: 0;
+    right: 15px;
+    bottom: 15px;
+    border-radius: 15px;
 }
 
 video#myCamVideo{
@@ -419,7 +420,7 @@ body {
     max-height: 80%;
     top: -80%;
     left: 10%;
-    background: #000000a6;
+    background: #333333;
     z-index: 200;
     transition: all 0.1s ease-out;
 }
