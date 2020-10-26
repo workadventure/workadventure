@@ -20,7 +20,7 @@ jobs:
 
 
       # Create a slugified value of the branch
-      - uses: rlespinasse/github-slug-action@master
+      - uses: rlespinasse/github-slug-action@1.1.1
 
       - name: "Build and push front image"
         uses: docker/build-push-action@v1
