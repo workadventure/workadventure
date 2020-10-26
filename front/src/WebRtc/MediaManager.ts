@@ -39,7 +39,10 @@ export class MediaManager {
     private monitorBtn: HTMLDivElement;
 
     private previousConstraint : MediaStreamConstraints;
-    private timeoutBlurWindows?: NodeJS.Timeout;
+    private focused : boolean = true;
+
+    private lastUpdateScene : Date = new Date();
+    private setTimeOutlastUpdateScene? : NodeJS.Timeout;
 
     constructor() {
 
@@ -94,22 +97,30 @@ export class MediaManager {
         });
 
         this.previousConstraint = JSON.parse(JSON.stringify(this.constraintsMedia));
-        window.addEventListener('blur', () => {
-            if(this.timeoutBlurWindows){
-                clearTimeout(this.timeoutBlurWindows);
-            }
-            this.timeoutBlurWindows = setTimeout(() => {
-                this.previousConstraint = JSON.parse(JSON.stringify(this.constraintsMedia));
-                this.disableCamera();
-            }, 10000);
-        });
-        window.addEventListener('focus', () => {
-            if(this.timeoutBlurWindows){
-                clearTimeout(this.timeoutBlurWindows);
-            }
-            this.applyPreviousConfig();
-        });
         this.pingCameraStatus();
+
+        this.checkActiveUser();
+    }
+
+    public setLastUpdateScene(){
+        this.lastUpdateScene = new Date();
+    }
+
+    public blurCamera() {
+        if(!this.focused){
+            return;
+        }
+        this.focused = false;
+        this.previousConstraint = JSON.parse(JSON.stringify(this.constraintsMedia));
+        this.disableCamera();
+    }
+
+    public focusCamera() {
+        if(this.focused){
+            return;
+        }
+        this.focused = true;
+        this.applyPreviousConfig();
     }
 
     public onUpdateLocalStream(callback: UpdatedLocalStreamCallback): void {
@@ -631,7 +642,22 @@ export class MediaManager {
         }, 30000);
     }
 
-
+    //check if user is active
+    private checkActiveUser(){
+        if(this.setTimeOutlastUpdateScene){
+            clearTimeout(this.setTimeOutlastUpdateScene);
+        }
+        this.setTimeOutlastUpdateScene = setTimeout(() => {
+            const now = new Date();
+            //if last update is more of 10 sec
+            if( (now.getTime() - this.lastUpdateScene.getTime()) > 10000) {
+                this.blurCamera();
+            }else{
+                this.focusCamera();
+            }
+            this.checkActiveUser();
+        }, this.focused ? 10000 : 1000);
+    }
 }
 
 export const mediaManager = new MediaManager();

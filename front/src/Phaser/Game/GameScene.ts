@@ -324,7 +324,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         // Let's alter browser history
         let path = this.room.id;
         if (this.room.hash) {
-            path += '#'+this.room.hash;
+            path += '#' + this.room.hash;
         }
         window.history.pushState({}, 'WorkAdventure', path);
 
@@ -486,7 +486,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                 this.stopJitsi();
             } else {
                 if (JITSI_PRIVATE_MODE) {
-                    const adminTag = allProps.get("jitsiRoomAdminTag") as string|undefined;
+                    const adminTag = allProps.get("jitsiRoomAdminTag") as string | undefined;
 
                     this.connection.emitQueryJitsiJwtMessage(this.instance.replace('/', '-') + "-" + newValue, adminTag);
                 } else {
@@ -633,7 +633,6 @@ export class GameScene extends ResizableScene implements CenterListener {
             this.CurrentPlayer.on(hasMovedEventName, (event: HasMovedEvent) => {
                 this.gameMap.setPosition(event.x, event.y);
             })
-
 
             this.scene.wake();
             this.scene.sleep(ReconnectingSceneName);
@@ -973,6 +972,8 @@ export class GameScene extends ResizableScene implements CenterListener {
             this.scene.remove(this.scene.key);
             this.scene.start(nextSceneKey.key);
         }
+
+        mediaManager.setLastUpdateScene();
     }
 
     private checkToExit(): {key: string, hash: string} | null  {
