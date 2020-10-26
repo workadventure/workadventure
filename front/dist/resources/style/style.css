@@ -445,23 +445,51 @@ body {
     color: white;
     z-index: 200;
     transition: all 0.1s ease-out;
-    top: 100%;
-    width: 100px;
+    top: calc(100% + 2px);
+    width: 200px;
     height: 40px;
-    background-color: black;
-    left: calc(50% - 50px);
-    border-radius: 0 0 10px 10px;
+    background-color: #2d2d2dba;
+    left: calc(50% - 100px);
+    border-radius: 15px 15px 15px 15px;
     text-align: center;
+}
+
+.message-container div.clear{
+    width: 100px;
+    left: calc(50% - 50px);
+}
+
+.main-console div.console img,
+.message-container div.clear img{
+    margin-top: 6px;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    padding: 0 5px;
+    transition: all .5s ease;
+    transform: rotateY(0);
+    opacity: 0.5;
+}
+.main-console div.console img:hover,
+.message-container div.clear img:hover{
+    opacity: 1;
+}
+
+.main-console div.console img.active,
+.message-container div.clear img{
+    transform: rotateY(3.142rad);
+    opacity: 1;
 }
 
 .main-console div.console p,
 .message-container div.clear p{
-    margin-top: 6px;
+    margin-top: 12px;
 }
 
 .main-console div.console:hover,
 .message-container div.clear:hover {
     cursor: pointer;
+    top: calc(100% + 5px);
     transform: scale(1.2) translateY(3px);
 }
 
