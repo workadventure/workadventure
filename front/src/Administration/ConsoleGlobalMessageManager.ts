@@ -2,6 +2,7 @@ import {HtmlUtils} from "../WebRtc/HtmlUtils";
 import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
 import {RoomConnection} from "../Connexion/RoomConnection";
 import {PlayGlobalMessageInterface} from "../Connexion/ConnexionModels";
+import {ADMIN_URL} from "../Enum/EnvironmentVariable";
 
 export const CLASS_CONSOLE_MESSAGE = 'main-console';
 export const INPUT_CONSOLE_MESSAGE = 'input-send-text';
@@ -17,8 +18,10 @@ interface EventTargetFiles extends EventTarget {
 
 export class ConsoleGlobalMessageManager {
 
-    private divMainConsole: HTMLDivElement;
-    private buttonMainConsole: HTMLDivElement;
+    private readonly divMainConsole: HTMLDivElement;
+    private readonly buttonMainConsole: HTMLDivElement;
+    private readonly buttonSendMainConsole: HTMLImageElement;
+    private readonly buttonSettingsMainConsole: HTMLImageElement;
     private activeConsole: boolean = false;
     private userInputManager!: UserInputManager;
     private static cssLoaded: boolean = false;
@@ -27,6 +30,8 @@ export class ConsoleGlobalMessageManager {
         this.buttonMainConsole = document.createElement('div');
         this.buttonMainConsole.classList.add('console');
         this.divMainConsole = document.createElement('div');
+        this.buttonSendMainConsole = document.createElement('img');
+        this.buttonSettingsMainConsole = document.createElement('img');
         this.userInputManager = userInputManager;
         this.initialise();
     }
@@ -75,17 +80,26 @@ export class ConsoleGlobalMessageManager {
         menu.appendChild(textAudio);
         this.divMainConsole.appendChild(menu);
 
-        const buttonText = document.createElement('p');
-        buttonText.innerText = 'Console';
-
-        this.buttonMainConsole.appendChild(buttonText);
-        this.buttonMainConsole.addEventListener('click', () => {
+        this.buttonSendMainConsole.src = 'resources/logos/send-yellow.svg';
+        this.buttonSendMainConsole.addEventListener('click', () => {
             if(this.activeConsole){
                 this.disabled();
             }else{
+                this.buttonSendMainConsole.classList.add('active');
                 this.active();
             }
         });
+        this.buttonMainConsole.appendChild(this.buttonSendMainConsole);
+
+        this.buttonSettingsMainConsole.src = 'resources/logos/setting-yellow.svg';
+        this.buttonSettingsMainConsole.addEventListener('click', () => {
+            window.open(ADMIN_URL, '_blank');
+        });
+        this.buttonMainConsole.appendChild(this.buttonSettingsMainConsole);
+
+        /*const buttonText = document.createElement('p');
+        buttonText.innerText = 'Console';
+        this.buttonMainConsole.appendChild(buttonText);*/
 
         this.divMainConsole.className = CLASS_CONSOLE_MESSAGE;
         this.divMainConsole.appendChild(this.buttonMainConsole);
@@ -293,17 +307,18 @@ export class ConsoleGlobalMessageManager {
         this.Connection.emitGlobalMessage(GlobalMessage);
     }
 
-
     active(){
         this.userInputManager.clearAllInputKeyboard();
         this.activeConsole = true;
         this.divMainConsole.style.top = '0';
+        this.buttonSendMainConsole.classList.add('active');
     }
 
     disabled(){
         this.userInputManager.initKeyBoardEvent();
         this.activeConsole = false;
         this.divMainConsole.style.top = '-80%';
+        this.buttonSendMainConsole.classList.remove('active');
     }
 
     private getSectionId(id: string) : string {

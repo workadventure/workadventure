@@ -27,6 +27,9 @@ const interfaceConfig = {
 
 class JitsiFactory {
     private jitsiApi: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+    private audioCallback = this.onAudioChange.bind(this);
+    private videoCallback = this.onVideoChange.bind(this);
+    
     public start(roomName: string, playerName:string, jwt?: string): void {
         CoWebsiteManager.insertCoWebsite((cowebsiteDiv => {
             const domain = JITSI_URL;
@@ -48,13 +51,35 @@ class JitsiFactory {
             }
             this.jitsiApi = new window.JitsiMeetExternalAPI(domain, options);
             this.jitsiApi.executeCommand('displayName', playerName);
+
+            this.jitsiApi.addListener('audioMuteStatusChanged', this.audioCallback);
+            this.jitsiApi.addListener('videoMuteStatusChanged', this.videoCallback);
         }));
     }
 
     public stop(): void {
+        this.jitsiApi.removeListener('audioMuteStatusChanged', this.audioCallback);
+        this.jitsiApi.removeListener('videoMuteStatusChanged', this.videoCallback);
         this.jitsiApi?.dispose();
         CoWebsiteManager.closeCoWebsite();
     }
+
+    private onAudioChange({muted}: {muted: boolean}): void {
+        if (muted && mediaManager.constraintsMedia.audio === true) {
+            mediaManager.disableMicrophone();
+        } else if(!muted && mediaManager.constraintsMedia.audio === false) {
+            mediaManager.enableMicrophone();
+        }
+    }
+
+    private onVideoChange({muted}: {muted: boolean}): void {
+        if (muted && mediaManager.constraintsMedia.video !== false) {
+            mediaManager.disableCamera();
+        } else if(!muted && mediaManager.constraintsMedia.video === false) {
+            mediaManager.enableCamera();
+        }
+    }
+
 }
 
 export const jitsiFactory = new JitsiFactory();

@@ -1,5 +1,6 @@
 const DEBUG_MODE: boolean = process.env.DEBUG_MODE == "true";
 const API_URL = (process.env.API_PROTOCOL || (typeof(window) !== 'undefined' ? window.location.protocol : 'http:')) + '//' + (process.env.API_URL || "api.workadventure.localhost");
+const ADMIN_URL = API_URL.replace('api', 'admin');
 const TURN_SERVER: string = process.env.TURN_SERVER || "turn:numb.viagenie.ca";
 const TURN_USER: string = process.env.TURN_USER || 'g.parant@thecodingmachine.com';
 const TURN_PASSWORD: string = process.env.TURN_PASSWORD || 'itcugcOHxle9Acqi$';
@@ -13,6 +14,7 @@ const MAX_EXTRAPOLATION_TIME = 100; // Extrapolate a maximum of 250ms if no new 
 export {
     DEBUG_MODE,
     API_URL,
+    ADMIN_URL,
     RESOLUTION,
     ZOOM_LEVEL,
     POSITION_DELAY,
