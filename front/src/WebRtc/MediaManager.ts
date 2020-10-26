@@ -579,8 +579,8 @@ export class MediaManager {
         this.discussionManager.addMessage(name, message, isMe)
     }
 
-    public addSendMessageCallback(callback: SendMessageCallback){
-        this.discussionManager.onSendMessageCallback(callback)
+    public addSendMessageCallback(userId: string|number, callback: SendMessageCallback){
+        this.discussionManager.onSendMessageCallback(userId, callback)
     }
 }
 

@@ -15,7 +15,7 @@ export class DiscussionManager {
 
     private activeDiscussion: boolean = false;
 
-    private sendMessageCallBack : Set<SendMessageCallback> = new Set<SendMessageCallback>();
+    private sendMessageCallBack : Map<number|string, SendMessageCallback> = new Map<number|string, SendMessageCallback>();
 
     constructor(name: string) {
         this.mainContainer = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-container');
@@ -71,7 +71,7 @@ export class DiscussionManager {
             if (event.key === 'Enter') {
                 event.preventDefault();
                 this.addMessage(name, inputMessage.value, true);
-                for(const callback of this.sendMessageCallBack) {
+                for(const callback of this.sendMessageCallBack.values()) {
                     callback(inputMessage.value);
                 }
                 inputMessage.value = "";
@@ -160,10 +160,11 @@ export class DiscussionManager {
         if(element){
             element.remove();
         }
+        this.sendMessageCallBack.delete(userId);
     }
 
-    public onSendMessageCallback(callback: SendMessageCallback): void {
-        this.sendMessageCallBack.add(callback);
+    public onSendMessageCallback(userId: string|number, callback: SendMessageCallback): void {
+        this.sendMessageCallBack.set(userId, callback);
     }
 
 }

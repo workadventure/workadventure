@@ -147,7 +147,7 @@ export class SimplePeer {
         const peer = new VideoPeer(user.userId, user.initiator ? user.initiator : false, this.Connection);
 
         //permit to send message
-        mediaManager.addSendMessageCallback((message: string) => {
+        mediaManager.addSendMessageCallback(user.userId,(message: string) => {
             peer.write(new Buffer(JSON.stringify({type: MESSAGE_TYPE_MESSAGE, name: name?.toUpperCase(), message: message})));
         });
 
