@@ -10,12 +10,9 @@ import {FourOFourScene} from "./Phaser/Reconnecting/FourOFourScene";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
 import {OutlinePipeline} from "./Phaser/Shaders/OutlinePipeline";
 import {CustomizeScene} from "./Phaser/Login/CustomizeScene";
-import {CoWebsiteManager} from "./WebRtc/CoWebsiteManager";
-import {gameManager} from "./Phaser/Game/GameManager";
 import {ResizableScene} from "./Phaser/Login/ResizableScene";
 import {EntryScene} from "./Phaser/Login/EntryScene";
-
-//CoWebsiteManager.loadCoWebsite('https://thecodingmachine.com');
+import {coWebsiteManager} from "./WebRtc/CoWebsiteManager";
 
 // Load Jitsi if the environment variable is set.
 if (JITSI_URL) {
@@ -24,7 +21,7 @@ if (JITSI_URL) {
     document.head.appendChild(jitsiScript);
 }
 
-const {width, height} = CoWebsiteManager.getGameSize();
+const {width, height} = coWebsiteManager.getGameSize();
 
 const config: GameConfig = {
     title: "WorkAdventure",
@@ -53,8 +50,7 @@ cypressAsserter.gameStarted();
 const game = new Phaser.Game(config);
 
 window.addEventListener('resize', function (event) {
-    const {width, height} = CoWebsiteManager.getGameSize();
-
+    const {width, height} = coWebsiteManager.getGameSize();
     game.scale.resize(width / RESOLUTION, height / RESOLUTION);
 
     // Let's trigger the onResize method of any active scene that is a ResizableScene
@@ -64,8 +60,7 @@ window.addEventListener('resize', function (event) {
         }
     }
 });
-CoWebsiteManager.onStateChange(() => {
-    const {width, height} = CoWebsiteManager.getGameSize();
-
+coWebsiteManager.onStateChange(() => {
+    const {width, height} = coWebsiteManager.getGameSize();
     game.scale.resize(width / RESOLUTION, height / RESOLUTION);
 });
