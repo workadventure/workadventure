@@ -82,13 +82,14 @@ body .message-info.warning{
     position: absolute;
     right: 15px;
     bottom: 15px;
-    border-radius: 15px;
+    border-radius: 15px 15px 15px 15px;
 }
 
 video#myCamVideo{
     width: 15vw;
     -webkit-transform: scaleX(-1);
     transform: scaleX(-1);
+    border-radius: 15px 15px 15px 15px;
     /*width: 200px;*/
     /*height: 113px;*/
 }
@@ -365,6 +366,7 @@ body {
     margin: 2%;
     transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s, max-height 0.2s, max-width 0.2s;
     cursor: pointer;
+    border-radius: 15px 15px 15px 15px;
 }
 
 .sidebar > div:hover {
@@ -525,7 +527,7 @@ body {
     border: 1px solid black;
     background-color: #00000000;
     color: #ffda01;
-    border-radius: 10px;
+    border-radius: 15px;
     padding: 10px 30px;
     transition: all .2s ease;
 }
@@ -662,7 +664,7 @@ div.modal-report-user{
     border: 1px solid black;
     background-color: #00000000;
     color: #ffda01;
-    border-radius: 10px;
+    border-radius: 15px;
     padding: 10px 30px;
     transition: all .2s ease;
 }

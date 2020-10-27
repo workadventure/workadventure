@@ -93,7 +93,7 @@ export class MediaManager {
             //update tracking
         });
 
-        this.discussionManager = new DiscussionManager('test');
+        this.discussionManager = new DiscussionManager(this,'test');
     }
 
     public onUpdateLocalStream(callback: UpdatedLocalStreamCallback): void {
@@ -370,7 +370,7 @@ export class MediaManager {
         this.remoteVideo.set(userId, HtmlUtils.getElementByIdOrFail<HTMLVideoElement>(userId));
 
         //permit to create participant in discussion part
-        this.addNewParticipant(userId, userName);
+        this.addNewParticipant(userId, userName, undefined, reportCallBack);
     }
     
     addScreenSharingActiveVideo(userId: string, divImportance: DivImportance = DivImportance.Important){
@@ -510,7 +510,7 @@ export class MediaManager {
         return color;
     }
 
-    private showReportModal(userId: string, userName: string, reportCallBack: ReportCallback){
+    public showReportModal(userId: string, userName: string, reportCallBack: ReportCallback){
         //create report text area
         const mainContainer = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-container');
 
@@ -567,8 +567,8 @@ export class MediaManager {
         mainContainer.appendChild(divReport);
     }
 
-    public addNewParticipant(userId: number|string, name: string|undefined, img?: string){
-        this.discussionManager.addParticipant(userId, name, img);
+    public addNewParticipant(userId: number|string, name: string|undefined, img?: string, reportCallBack?: ReportCallback){
+        this.discussionManager.addParticipant(userId, name, img, false, reportCallBack);
     }
 
     public removeParticipant(userId: number|string){

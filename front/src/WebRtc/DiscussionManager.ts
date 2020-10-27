@@ -1,9 +1,8 @@
 import {HtmlUtils} from "./HtmlUtils";
-import {UpdatedLocalStreamCallback} from "./MediaManager";
+import {MediaManager, ReportCallback, UpdatedLocalStreamCallback} from "./MediaManager";
 export type SendMessageCallback = (message:string) => void;
 
 export class DiscussionManager {
-
     private mainContainer: HTMLDivElement;
 
     private divDiscuss?: HTMLDivElement;
@@ -17,7 +16,7 @@ export class DiscussionManager {
 
     private sendMessageCallBack : Map<number|string, SendMessageCallback> = new Map<number|string, SendMessageCallback>();
 
-    constructor(name: string) {
+    constructor(private mediaManager: MediaManager, name: string) {
         this.mainContainer = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-container');
         this.createDiscussPart(name);
     }
@@ -86,7 +85,13 @@ export class DiscussionManager {
         this.addParticipant('me', 'Moi', undefined, true);
     }
 
-    public addParticipant(userId: number|string, name: string|undefined, img?: string|undefined, isMe: boolean = false) {
+    public addParticipant(
+        userId: number|string,
+        name: string|undefined,
+        img?: string|undefined,
+        isMe: boolean = false,
+        reportCallback?: ReportCallback
+    ) {
         const divParticipant: HTMLDivElement = document.createElement('div');
         divParticipant.classList.add('participant');
         divParticipant.id = `participant-${userId}`;
@@ -110,8 +115,9 @@ export class DiscussionManager {
             reportBanUserAction.classList.add('report-btn')
             reportBanUserAction.innerText = 'Report';
             reportBanUserAction.addEventListener('click', () => {
-                //TODO report user
-                console.log('report');
+                if(reportCallback) {
+                    this.mediaManager.showReportModal(`${userId}`, name ?? '', reportCallback);
+                }
             });
             divParticipant.appendChild(reportBanUserAction);
         }
