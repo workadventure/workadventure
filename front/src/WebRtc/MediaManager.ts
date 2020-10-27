@@ -582,6 +582,10 @@ export class MediaManager {
     public addSendMessageCallback(userId: string|number, callback: SendMessageCallback){
         this.discussionManager.onSendMessageCallback(userId, callback)
     }
+
+    get activatedDiscussion(){
+        return this.discussionManager.activatedDiscussion;
+    }
 }
 
 export const mediaManager = new MediaManager();

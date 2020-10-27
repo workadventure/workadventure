@@ -173,4 +173,7 @@ export class DiscussionManager {
         this.sendMessageCallBack.set(userId, callback);
     }
 
+    get activatedDiscussion(){
+        return this.activeDiscussion;
+    }
 }

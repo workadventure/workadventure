@@ -643,6 +643,10 @@ export class GameScene extends ResizableScene implements CenterListener {
     }
 
     private switchLayoutMode(): void {
+        //if discussion is activated, this layout cannot be activated
+        if(mediaManager.activatedDiscussion){
+            return;
+        }
         const mode = layoutManager.getLayoutMode();
         if (mode === LayoutMode.Presentation) {
             layoutManager.switchLayoutMode(LayoutMode.VideoChat);

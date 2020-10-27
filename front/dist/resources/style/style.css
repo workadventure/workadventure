@@ -379,6 +379,7 @@ body {
     justify-content: center;
     flex-direction: column;
     overflow: hidden;
+    border-radius: 15px;
 }
 
 .chat-mode {
@@ -622,6 +623,7 @@ div.modal-report-user{
     left: calc(50% - 400px);
     top: 100px;
     background-color: #000000ad;
+    border-radius: 15px;
 }
 
 .modal-report-user textarea{
@@ -633,6 +635,7 @@ div.modal-report-user{
     color: white;
     width: calc(100% - 60px);
     margin: 30px;
+    border-radius: 15px;
 }
 
 .modal-report-user img{
