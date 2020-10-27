@@ -38,7 +38,7 @@ import CanvasTexture = Phaser.Textures.CanvasTexture;
 import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import {GameMap} from "./GameMap";
-import {CoWebsiteManager} from "../../WebRtc/CoWebsiteManager";
+import {coWebsiteManager} from "../../WebRtc/CoWebsiteManager";
 import {mediaManager} from "../../WebRtc/MediaManager";
 import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
 import {ItemFactoryInterface} from "../Items/ItemFactoryInterface";
@@ -292,13 +292,6 @@ export class GameScene extends ResizableScene implements CenterListener {
             //     });
             // });
         }
-
-        // TEST: let's load a module dynamically!
-        /*let foo = "http://maps.workadventure.localhost/computer.js";
-        import(/* webpackIgnore: true * / foo).then(result => {
-            console.log(result);
-
-        });*/
     }
 
     //hook initialisation
@@ -476,9 +469,9 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         this.gameMap.onPropertyChange('openWebsite', (newValue, oldValue) => {
             if (newValue === undefined) {
-                CoWebsiteManager.closeCoWebsite();
+                coWebsiteManager.closeCoWebsite();
             } else {
-                CoWebsiteManager.loadCoWebsite(newValue as string);
+                coWebsiteManager.loadCoWebsite(newValue as string);
             }
         });
         this.gameMap.onPropertyChange('jitsiRoom', (newValue, oldValue, allProps) => {
