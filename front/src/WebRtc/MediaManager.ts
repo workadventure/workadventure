@@ -167,7 +167,7 @@ export class MediaManager {
         gameOverlay.classList.remove('active');
     }
 
-    private enableCamera() {
+    public enableCamera() {
         this.enableCameraStyle();
         this.constraintsMedia.video = videoConstraint;
         this.getCamera().then((stream: MediaStream) => {
@@ -175,7 +175,7 @@ export class MediaManager {
         });
     }
 
-    private async disableCamera() {
+    public async disableCamera() {
         this.disableCameraStyle();
         this.stopCamera();
 
@@ -187,7 +187,7 @@ export class MediaManager {
         }
     }
 
-    private enableMicrophone() {
+    public enableMicrophone() {
         this.enableMicrophoneStyle();
         this.constraintsMedia.audio = true;
 
@@ -196,7 +196,7 @@ export class MediaManager {
         });
     }
 
-    private async disableMicrophone() {
+    public async disableMicrophone() {
         this.disableMicrophoneStyle();
         this.stopMicrophone();
 
@@ -574,7 +574,7 @@ export class MediaManager {
         return elem as T;
     }
 
-    private showReportModal(userId: string, userName: string, reportCallBack: ReportCallback){
+    public showReportModal(userId: string, userName: string, reportCallBack: ReportCallback){
         //create report text area
         const mainContainer = this.getElementByIdOrFail<HTMLDivElement>('main-container');
 
