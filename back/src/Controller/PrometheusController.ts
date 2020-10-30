@@ -1,5 +1,4 @@
 import {App} from "../Server/sifrr.server";
-import {IoSocketController} from "_Controller/IoSocketController";
 import {HttpRequest, HttpResponse} from "uWebSockets.js";
 const register = require('prom-client').register;
 const collectDefaultMetrics = require('prom-client').collectDefaultMetrics;
