@@ -3,6 +3,7 @@ import { User } from "./User";
 import {PositionInterface} from "_Model/PositionInterface";
 import {Movable} from "_Model/Movable";
 import {PositionNotifier} from "_Model/PositionNotifier";
+import {gaugeManager} from "../Services/GaugeManager";
 
 export class Group implements Movable {
     static readonly MAX_PER_GROUP = 4;
@@ -13,12 +14,23 @@ export class Group implements Movable {
     private users: Set<User>;
     private x!: number;
     private y!: number;
+    private hasEditedGauge: boolean = false;
+    private wasDestroyed: boolean = false;
+    private roomId: string;
 
 
-    constructor(users: User[], private connectCallback: ConnectCallback, private disconnectCallback: DisconnectCallback, private positionNotifier: PositionNotifier) {
+    constructor(roomId: string, users: User[], private connectCallback: ConnectCallback, private disconnectCallback: DisconnectCallback, private positionNotifier: PositionNotifier) {
+        this.roomId = roomId;
         this.users = new Set<User>();
         this.id = Group.nextId;
         Group.nextId++;
+        //we only send a event for prometheus metrics if the group lives more than 5 seconds
+        setTimeout(() => {
+            if (!this.wasDestroyed) {
+                this.hasEditedGauge = true;
+                gaugeManager.incNbGroupsPerRoomGauge(roomId);
+            }
+        }, 5000);
 
         users.forEach((user: User) => {
             this.join(user);
@@ -113,9 +125,11 @@ export class Group implements Movable {
      */
     destroy(): void
     {
+        if (this.hasEditedGauge) gaugeManager.decNbGroupsPerRoomGauge(this.roomId);
         for (const user of this.users) {
             this.leave(user);
         }
+        this.wasDestroyed = true;
     }
 
     get getSize(){

@@ -140,7 +140,7 @@ export class MediaManager {
         gameOverlay.classList.remove('active');
     }
 
-    private enableCamera() {
+    public enableCamera() {
         this.cinemaClose.style.display = "none";
         this.cinemaBtn.classList.remove("disabled");
         this.cinema.style.display = "block";
@@ -150,7 +150,7 @@ export class MediaManager {
         });
     }
 
-    private async disableCamera() {
+    public async disableCamera() {
         this.cinemaClose.style.display = "block";
         this.cinema.style.display = "none";
         this.cinemaBtn.classList.add("disabled");
@@ -166,7 +166,7 @@ export class MediaManager {
         }
     }
 
-    private enableMicrophone() {
+    public enableMicrophone() {
         this.microphoneClose.style.display = "none";
         this.microphone.style.display = "block";
         this.microphoneBtn.classList.remove("disabled");
@@ -177,7 +177,7 @@ export class MediaManager {
         });
     }
 
-    private async disableMicrophone() {
+    public async disableMicrophone() {
         this.microphoneClose.style.display = "block";
         this.microphone.style.display = "none";
         this.microphoneBtn.classList.add("disabled");

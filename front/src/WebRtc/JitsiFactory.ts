@@ -1,6 +1,6 @@
-import {CoWebsiteManager} from "./CoWebsiteManager";
 import {JITSI_URL} from "../Enum/EnvironmentVariable";
 import {mediaManager} from "./MediaManager";
+import {coWebsiteManager} from "./CoWebsiteManager";
 declare const window:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 const interfaceConfig = {
@@ -27,10 +27,13 @@ const interfaceConfig = {
 
 class JitsiFactory {
     private jitsiApi: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+    private audioCallback = this.onAudioChange.bind(this);
+    private videoCallback = this.onVideoChange.bind(this);
+    
     public start(roomName: string, playerName:string, jwt?: string): void {
-        CoWebsiteManager.insertCoWebsite((cowebsiteDiv => {
+        coWebsiteManager.insertCoWebsite((cowebsiteDiv => {
             const domain = JITSI_URL;
-            const options = {
+            const options: any = { // eslint-disable-line @typescript-eslint/no-explicit-any
                 roomName: roomName,
                 jwt: jwt,
                 width: "100%",
@@ -46,15 +49,41 @@ class JitsiFactory {
             if (!options.jwt) {
                 delete options.jwt;
             }
-            this.jitsiApi = new window.JitsiMeetExternalAPI(domain, options);
-            this.jitsiApi.executeCommand('displayName', playerName);
+            
+            return new Promise((resolve) => {
+                options.onload = () => resolve(); //we want for the iframe to be loaded before triggering animations.
+                this.jitsiApi = new window.JitsiMeetExternalAPI(domain, options);
+                this.jitsiApi.executeCommand('displayName', playerName);
+
+                this.jitsiApi.addListener('audioMuteStatusChanged', this.audioCallback);
+                this.jitsiApi.addListener('videoMuteStatusChanged', this.videoCallback);
+            });
         }));
     }
 
-    public stop(): void {
+    public async stop(): Promise<void> {
+        await coWebsiteManager.closeCoWebsite();
+        this.jitsiApi.removeListener('audioMuteStatusChanged', this.audioCallback);
+        this.jitsiApi.removeListener('videoMuteStatusChanged', this.videoCallback);
         this.jitsiApi?.dispose();
-        CoWebsiteManager.closeCoWebsite();
     }
+
+    private onAudioChange({muted}: {muted: boolean}): void {
+        if (muted && mediaManager.constraintsMedia.audio === true) {
+            mediaManager.disableMicrophone();
+        } else if(!muted && mediaManager.constraintsMedia.audio === false) {
+            mediaManager.enableMicrophone();
+        }
+    }
+
+    private onVideoChange({muted}: {muted: boolean}): void {
+        if (muted && mediaManager.constraintsMedia.video !== false) {
+            mediaManager.disableCamera();
+        } else if(!muted && mediaManager.constraintsMedia.video === false) {
+            mediaManager.enableCamera();
+        }
+    }
+
 }
 
 export const jitsiFactory = new JitsiFactory();
