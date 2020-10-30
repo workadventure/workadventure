@@ -719,6 +719,7 @@ div.modal-report-user{
 .discussion{
     position: fixed;
     left: -300px;
+    top: 0px;
     width: 220px;
     height: 100%;
     background-color: #333333;
