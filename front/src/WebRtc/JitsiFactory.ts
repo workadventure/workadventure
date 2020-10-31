@@ -62,6 +62,9 @@ class JitsiFactory {
     }
 
     public async stop(): Promise<void> {
+        if(!this.jitsiApi){
+            return;
+        }
         await coWebsiteManager.closeCoWebsite();
         this.jitsiApi.removeListener('audioMuteStatusChanged', this.audioCallback);
         this.jitsiApi.removeListener('videoMuteStatusChanged', this.videoCallback);

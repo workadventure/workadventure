@@ -469,24 +469,31 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         this.gameMap.onPropertyChange('openWebsite', (newValue, oldValue) => {
             if (newValue === undefined) {
+                layoutManager.removeActionButton('openWebsite', this.userInputManager);
                 coWebsiteManager.closeCoWebsite();
-            } else {
-                coWebsiteManager.loadCoWebsite(newValue as string);
+            }else{
+                layoutManager.addActionButton('openWebsite', 'Clik on SPACE to open web site', () => {
+                    coWebsiteManager.loadCoWebsite(newValue as string);
+                }, this.userInputManager);
             }
         });
+        
         this.gameMap.onPropertyChange('jitsiRoom', (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
+                layoutManager.removeActionButton('jitsiRoom', this.userInputManager);
                 this.stopJitsi();
-            } else {
-                if (JITSI_PRIVATE_MODE) {
-                    const adminTag = allProps.get("jitsiRoomAdminTag") as string|undefined;
+            }else{
+                layoutManager.addActionButton('jitsiRoom', 'Clik on SPACE to enter in jitsi meet room', () => {
+                    if (JITSI_PRIVATE_MODE) {
+                        const adminTag = allProps.get("jitsiRoomAdminTag") as string|undefined;
 
-                    this.connection.emitQueryJitsiJwtMessage(this.instance.replace('/', '-') + "-" + newValue, adminTag);
-                } else {
-                    this.startJitsi(newValue as string);
-                }
+                        this.connection.emitQueryJitsiJwtMessage(this.instance.replace('/', '-') + "-" + newValue, adminTag);
+                    } else {
+                        this.startJitsi(newValue as string);
+                    }
+                }, this.userInputManager);
             }
-        })
+        });
 
         this.gameMap.onPropertyChange('silent', (newValue, oldValue) => {
             if (newValue === undefined || newValue === false || newValue === '') {
