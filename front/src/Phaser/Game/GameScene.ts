@@ -474,6 +474,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             }else{
                 layoutManager.addActionButton('openWebsite', 'Clik on SPACE to open web site', () => {
                     coWebsiteManager.loadCoWebsite(newValue as string);
+                    layoutManager.removeActionButton('openWebsite', this.userInputManager);
                 }, this.userInputManager);
             }
         });
