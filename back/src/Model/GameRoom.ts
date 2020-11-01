@@ -152,7 +152,7 @@ export class GameRoom {
                     closestItem.join(user);
                 } else {
                     const closestUser : User = closestItem;
-                    const group: Group = new Group([
+                    const group: Group = new Group(this.roomId,[
                         user,
                         closestUser
                     ], this.connectCallback, this.disconnectCallback, this.positionNotifier);
@@ -200,7 +200,6 @@ export class GameRoom {
         if (group === undefined) {
             throw new Error("The user is part of no group");
         }
-        const oldPosition = group.getPosition();
         group.leave(user);
         if (group.isEmpty()) {
             this.positionNotifier.leave(group);
@@ -209,6 +208,7 @@ export class GameRoom {
                 throw new Error("Could not find group "+group.getId()+" referenced by user "+user.id+" in World.");
             }
             this.groups.delete(group);
+            //todo: is the group garbage collected?
         } else {
             group.updatePosition();
             //this.positionNotifier.updatePosition(group, group.getPosition(), oldPosition);
