@@ -4,3 +4,4 @@
 /dist/webpack.config.js
 /dist/webpack.config.js.map
 /dist/src
+*.sh

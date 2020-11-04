@@ -1,8 +1,9 @@
-import {PointInterface} from "../../Connection";
+import {PointInterface} from "../../Connexion/ConnexionModels";
+import {BodyResourceDescriptionInterface} from "../Entity/body_character";
 
 export interface AddPlayerInterface {
-    userId: string;
+    userId: number;
     name: string;
-    character: string;
+    characterLayers: BodyResourceDescriptionInterface[];
     position: PointInterface;
 }

@@ -1,4 +1,3 @@
-import Map = Phaser.Structs.Map;
 import {GameScene} from "../Game/GameScene";
 
 interface UserInputManagerDatum {
@@ -18,49 +17,64 @@ export enum UserInputEvent {
 
 //we cannot the map structure so we have to create a replacment
 export class ActiveEventList {
-    private KeysCode : any;
-    constructor() {
-        this.KeysCode = {};
-    }
+    private KeysCode : Map<UserInputEvent, boolean> = new Map<UserInputEvent, boolean>();
+
     get(event: UserInputEvent): boolean {
-        return this.KeysCode[event] || false;
+        return this.KeysCode.get(event) || false;
     }
-    set(event: UserInputEvent, value: boolean): boolean {
-        return this.KeysCode[event] = true;
+    set(event: UserInputEvent, value: boolean): void {
+        this.KeysCode.set(event, value);
     }
 }
 
 //this class is responsible for catching user inputs and listing all active user actions at every game tick events.
 export class UserInputManager {
-    private KeysCode: UserInputManagerDatum[];
+    private KeysCode!: UserInputManagerDatum[];
+    private Scene: GameScene;
 
     constructor(Scene : GameScene) {
+        this.Scene = Scene;
+        this.initKeyBoardEvent();
+    }
 
+    initKeyBoardEvent(){
         this.KeysCode = [
-            {event: UserInputEvent.MoveUp, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z) },
-            {event: UserInputEvent.MoveLeft, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q) },
-            {event: UserInputEvent.MoveDown, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S) },
-            {event: UserInputEvent.MoveRight, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D) },
+            {event: UserInputEvent.MoveUp, keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z, false) },
+            {event: UserInputEvent.MoveLeft, keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q, false) },
+            {event: UserInputEvent.MoveDown, keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S, false) },
+            {event: UserInputEvent.MoveRight, keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D, false) },
 
-            {event: UserInputEvent.MoveUp, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP) },
-            {event: UserInputEvent.MoveLeft, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT) },
-            {event: UserInputEvent.MoveDown, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN) },
-            {event: UserInputEvent.MoveRight, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT) },
+            {event: UserInputEvent.MoveUp, keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP, false) },
+            {event: UserInputEvent.MoveLeft, keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT, false) },
+            {event: UserInputEvent.MoveDown, keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN, false) },
+            {event: UserInputEvent.MoveRight, keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT, false) },
 
-            {event: UserInputEvent.SpeedUp, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT) },
+            {event: UserInputEvent.SpeedUp, keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT, false) },
 
-            {event: UserInputEvent.Interact, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E) },
-            {event: UserInputEvent.Shout, keyInstance: Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F) },
+            {event: UserInputEvent.Interact, keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E, false) },
+            {event: UserInputEvent.Interact, keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE, false) },
+            {event: UserInputEvent.Shout, keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F, false) },
         ];
     }
 
+    clearAllInputKeyboard(){
+        this.Scene.input.keyboard.removeAllKeys();
+    }
+
     getEventListForGameTick(): ActiveEventList {
-        let eventsMap = new ActiveEventList();
+        const eventsMap = new ActiveEventList();
         this.KeysCode.forEach(d => {
             if (d. keyInstance.isDown) {
                 eventsMap.set(d.event, true);
             }
         });
         return eventsMap;
+    }
+
+    spaceEvent(callback : Function){
+        this.Scene.input.keyboard.on('keyup-SPACE', (event: Event) => {
+            callback();
+            return event;
+        });
     }
 }

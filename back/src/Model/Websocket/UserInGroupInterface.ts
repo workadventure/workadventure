@@ -1,5 +1,5 @@
 export interface UserInGroupInterface {
-    userId: string,
+    userId: number,
     name: string,
     initiator: boolean
 }

@@ -1,34 +1,36 @@
 import {gameManager} from "../Game/GameManager";
 import {TextField} from "../Components/TextField";
-import {ClickButton} from "../Components/ClickButton";
 import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
-import {PLAYER_RESOURCES} from "../Entity/Character";
-import {GameSceneInitInterface} from "../Game/GameScene";
+import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Character";
+import {EnableCameraSceneName} from "./EnableCameraScene";
+import {CustomizeSceneName} from "./CustomizeScene";
+import {ResizableScene} from "./ResizableScene";
+import {localUserStore} from "../../Connexion/LocalUserStore";
+
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
 enum LoginTextures {
     playButton = "play_button",
     icon = "icon",
-    mainFont = "main_font"
+    mainFont = "main_font",
+    customizeButton = "customize_button",
+    customizeButtonSelected = "customize_button_selected"
 }
 
-export interface SelectCharacterSceneInitDataInterface {
-    name: string
-}
-
-export class SelectCharacterScene extends Phaser.Scene {
+export class SelectCharacterScene extends ResizableScene {
     private readonly nbCharactersPerRow = 4;
-    private textField: TextField;
-    private pressReturnField: TextField;
-    private logo: Image;
-    private loginName: string;
+    private textField!: TextField;
+    private pressReturnField!: TextField;
+    private logo!: Image;
+    private customizeButton!: Image;
+    private customizeButtonSelected!: Image;
 
-    private selectedRectangle: Rectangle;
+    private selectedRectangle!: Rectangle;
     private selectedRectangleXPos = 0; // Number of the character selected in the rows
     private selectedRectangleYPos = 0; // Number of the character selected in the columns
-    private selectedPlayer: Phaser.Physics.Arcade.Sprite;
+    private selectedPlayer!: Phaser.Physics.Arcade.Sprite|null; // null if we are selecting the "customize" option
     private players: Array<Phaser.Physics.Arcade.Sprite> = new Array<Phaser.Physics.Arcade.Sprite>();
 
     constructor() {
@@ -37,33 +39,29 @@ export class SelectCharacterScene extends Phaser.Scene {
         });
     }
 
-    init({ name }: SelectCharacterSceneInitDataInterface) {
-        this.loginName = name;
-    }
-
     preload() {
         this.load.image(LoginTextures.playButton, "resources/objects/play_button.png");
         this.load.image(LoginTextures.icon, "resources/logos/tcm_full.png");
         // Note: arcade.png from the Phaser 3 examples at: https://github.com/photonstorm/phaser3-examples/tree/master/public/assets/fonts/bitmap
         this.load.bitmapFont(LoginTextures.mainFont, 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
         //add player png
-        PLAYER_RESOURCES.forEach((playerResource: any) => {
+        PLAYER_RESOURCES.forEach((playerResource: PlayerResourceDescriptionInterface) => {
             this.load.spritesheet(
                 playerResource.name,
                 playerResource.img,
                 {frameWidth: 32, frameHeight: 32}
             );
         });
+        this.load.image(LoginTextures.customizeButton, 'resources/objects/customize.png');
+        this.load.image(LoginTextures.customizeButtonSelected, 'resources/objects/customize_selected.png');
     }
 
     create() {
         this.textField = new TextField(this, this.game.renderer.width / 2, 50, 'Select your character');
-        this.textField.setOrigin(0.5).setCenterAlign()
 
-        this.pressReturnField = new TextField(this, this.game.renderer.width / 2, 230, 'Press enter to start');
-        this.pressReturnField.setOrigin(0.5).setCenterAlign()
+        this.pressReturnField = new TextField(this, this.game.renderer.width / 2, 256, 'Press enter to start');
 
-        let rectangleXStart = this.game.renderer.width / 2 - (this.nbCharactersPerRow / 2) * 32 + 16;
+        const rectangleXStart = this.game.renderer.width / 2 - (this.nbCharactersPerRow / 2) * 32 + 16;
 
         this.selectedRectangle = this.add.rectangle(rectangleXStart, 90, 32, 32).setStrokeStyle(2, 0xFFFFFF);
 
@@ -71,7 +69,7 @@ export class SelectCharacterScene extends Phaser.Scene {
         this.add.existing(this.logo);
 
         this.input.keyboard.on('keyup-ENTER', () => {
-            return this.login(this.loginName);
+            return this.nextScene();
         });
 
         this.input.keyboard.on('keydown-RIGHT', () => {
@@ -87,7 +85,7 @@ export class SelectCharacterScene extends Phaser.Scene {
             this.updateSelectedPlayer();
         });
         this.input.keyboard.on('keydown-DOWN', () => {
-            if (this.selectedRectangleYPos < Math.ceil(PLAYER_RESOURCES.length / this.nbCharactersPerRow) - 1) {
+            if (this.selectedRectangleYPos < Math.ceil(PLAYER_RESOURCES.length / this.nbCharactersPerRow)) {
                 this.selectedRectangleYPos++;
             }
             this.updateSelectedPlayer();
@@ -101,12 +99,14 @@ export class SelectCharacterScene extends Phaser.Scene {
 
         /*create user*/
         this.createCurrentPlayer();
-
-        if (window.localStorage) {
-            let playerNumberStr: string = window.localStorage.getItem('selectedPlayer') ?? '0';
-            let playerNumber: number = Number(playerNumberStr);
+        
+        const playerNumber = localUserStore.getPlayerCharacterIndex();
+        if (playerNumber && playerNumber !== -1) {
             this.selectedRectangleXPos = playerNumber % this.nbCharactersPerRow;
             this.selectedRectangleYPos = Math.floor(playerNumber / this.nbCharactersPerRow);
+            this.updateSelectedPlayer();
+        } else if (playerNumber === -1) {
+            this.selectedRectangleYPos = Math.ceil(PLAYER_RESOURCES.length / this.nbCharactersPerRow);
             this.updateSelectedPlayer();
         }
     }
@@ -115,63 +115,24 @@ export class SelectCharacterScene extends Phaser.Scene {
         this.pressReturnField.setVisible(!!(Math.floor(time / 500) % 2));
     }
 
-    private async login(name: string) {
-        return gameManager.connect(name, this.selectedPlayer.texture.key).then(() => {
-            // Do we have a start URL in the address bar? If so, let's redirect to this address
-            let instanceAndMapUrl = this.findMapUrl();
-            if (instanceAndMapUrl !== null) {
-                let [mapUrl, instance] = instanceAndMapUrl;
-                let key = gameManager.loadMap(mapUrl, this.scene, instance);
-                this.scene.start(key, {
-                    startLayerName: window.location.hash ? window.location.hash.substr(1) : undefined
-                } as GameSceneInitInterface);
-                return mapUrl;
-            } else {
-                // If we do not have a map address in the URL, let's ask the server for a start map.
-                return gameManager.loadStartMap().then((scene : any) => {
-                    if (!scene) {
-                        return;
-                    }
-                    let key = gameManager.loadMap(window.location.protocol + "//" + scene.mapUrlStart, this.scene, scene.startInstance);
-                    this.scene.start(key);
-                    return scene;
-                }).catch((err) => {
-                    console.error(err);
-                    throw err;
-                });
-            }
-        }).catch((err) => {
-            console.error(err);
-            throw err;
-        });
-    }
-
-    /**
-     * Returns the map URL and the instance from the current URL
-     */
-    private findMapUrl(): [string, string]|null {
-        let path = window.location.pathname;
-        if (!path.startsWith('/_/')) {
-            return null;
+    private nextScene(): void {
+        if (this.selectedPlayer !== null) {
+            gameManager.setCharacterLayers([this.selectedPlayer.texture.key]);
+            this.scene.start(EnableCameraSceneName);
+        } else {
+            this.scene.start(CustomizeSceneName);
         }
-        let instanceAndMap = path.substr(3);
-        let firstSlash = instanceAndMap.indexOf('/');
-        if (firstSlash === -1) {
-            return null;
-        }
-        let instance = instanceAndMap.substr(0, firstSlash);
-        return [window.location.protocol+'//'+instanceAndMap.substr(firstSlash+1), instance];
     }
 
     createCurrentPlayer(): void {
         for (let i = 0; i <PLAYER_RESOURCES.length; i++) {
-            let playerResource = PLAYER_RESOURCES[i];
+            const playerResource = PLAYER_RESOURCES[i];
 
-            let col = i % this.nbCharactersPerRow;
-            let row = Math.floor(i / this.nbCharactersPerRow);
+            const col = i % this.nbCharactersPerRow;
+            const row = Math.floor(i / this.nbCharactersPerRow);
 
-            let [x, y] = this.getCharacterPosition(col, row);
-            let player = this.physics.add.sprite(x, y, playerResource.name, 0);
+            const [x, y] = this.getCharacterPosition(col, row);
+            const player = this.physics.add.sprite(x, y, playerResource.name, 0);
             player.setBounce(0.2);
             player.setCollideWorldBounds(true);
             this.anims.create({
@@ -187,6 +148,20 @@ export class SelectCharacterScene extends Phaser.Scene {
             });
             this.players.push(player);
         }
+
+        this.customizeButton = new Image(this, this.game.renderer.width / 2, 90 + 32 * 4 + 6, LoginTextures.customizeButton);
+        this.customizeButton.setOrigin(0.5, 0.5);
+        this.add.existing(this.customizeButton);
+        this.customizeButtonSelected = new Image(this, this.game.renderer.width / 2, 90 + 32 * 4 + 6, LoginTextures.customizeButtonSelected);
+        this.customizeButtonSelected.setOrigin(0.5, 0.5);
+        this.customizeButtonSelected.setVisible(false);
+        this.add.existing(this.customizeButtonSelected);
+
+        this.customizeButton.setInteractive().on("pointerdown", () => {
+            this.selectedRectangleYPos = Math.ceil(PLAYER_RESOURCES.length / this.nbCharactersPerRow);
+            this.updateSelectedPlayer();
+        });
+
         this.selectedPlayer = this.players[0];
         this.selectedPlayer.play(PLAYER_RESOURCES[0].name);
     }
@@ -202,16 +177,49 @@ export class SelectCharacterScene extends Phaser.Scene {
     }
 
     private updateSelectedPlayer(): void {
-        this.selectedPlayer.anims.pause();
-        let [x, y] = this.getCharacterPosition(this.selectedRectangleXPos, this.selectedRectangleYPos);
+        this.selectedPlayer?.anims.pause();
+        // If we selected the customize button
+        if (this.selectedRectangleYPos === Math.ceil(PLAYER_RESOURCES.length / this.nbCharactersPerRow)) {
+            this.selectedPlayer = null;
+            this.selectedRectangle.setVisible(false);
+            this.customizeButtonSelected.setVisible(true);
+            this.customizeButton.setVisible(false);
+            localUserStore.setPlayerCharacterIndex(-1);
+            return;
+        }
+        this.customizeButtonSelected.setVisible(false);
+        this.customizeButton.setVisible(true);
+        const [x, y] = this.getCharacterPosition(this.selectedRectangleXPos, this.selectedRectangleYPos);
+        this.selectedRectangle.setVisible(true);
         this.selectedRectangle.setX(x);
         this.selectedRectangle.setY(y);
-        let playerNumber = this.selectedRectangleXPos + this.selectedRectangleYPos * this.nbCharactersPerRow;
-        let player = this.players[playerNumber];
+        this.selectedRectangle.setSize(32, 32);
+        const playerNumber = this.selectedRectangleXPos + this.selectedRectangleYPos * this.nbCharactersPerRow;
+        const player = this.players[playerNumber];
         player.play(PLAYER_RESOURCES[playerNumber].name);
         this.selectedPlayer = player;
-        if (window.localStorage) {
-            window.localStorage.setItem('selectedPlayer', String(playerNumber));
-        }
+        localUserStore.setPlayerCharacterIndex(playerNumber);
     }
+
+    public onResize(ev: UIEvent): void {
+        this.textField.x = this.game.renderer.width / 2;
+        this.pressReturnField.x = this.game.renderer.width / 2;
+        this.logo.x = this.game.renderer.width - 30;
+        this.logo.y = this.game.renderer.height - 20;
+        this.customizeButton.x = this.game.renderer.width / 2;
+        this.customizeButtonSelected.x = this.game.renderer.width / 2;
+
+        for (let i = 0; i <PLAYER_RESOURCES.length; i++) {
+            const player = this.players[i];
+
+            const col = i % this.nbCharactersPerRow;
+            const row = Math.floor(i / this.nbCharactersPerRow);
+
+            const [x, y] = this.getCharacterPosition(col, row);
+            player.x = x;
+            player.y = y;
+        }
+        this.updateSelectedPlayer();
+    }
+
 }

@@ -1,33 +1,61 @@
-import {ConnectionInterface, WebRtcDisconnectMessageInterface, WebRtcStartMessageInterface} from "../Connection";
-import {MediaManager} from "./MediaManager";
-import * as SimplePeerNamespace from "simple-peer";
-let Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
+import {
+    WebRtcDisconnectMessageInterface,
+    WebRtcSignalReceivedMessageInterface,
+    WebRtcStartMessageInterface
+} from "../Connexion/ConnexionModels";
+import {
+    mediaManager,
+    StartScreenSharingCallback,
+    StopScreenSharingCallback,
+    UpdatedLocalStreamCallback
+} from "./MediaManager";
+import {ScreenSharingPeer} from "./ScreenSharingPeer";
+import {VideoPeer} from "./VideoPeer";
+import {RoomConnection} from "../Connexion/RoomConnection";
 
-export interface UserSimplePeer{
-    userId: string;
+export interface UserSimplePeerInterface{
+    userId: number;
     name?: string;
     initiator?: boolean;
+}
+
+export interface PeerConnectionListener {
+    onConnect(user: UserSimplePeerInterface): void;
+
+    onDisconnect(userId: number): void;
 }
 
 /**
  * This class manages connections to all the peers in the same group as me.
  */
 export class SimplePeer {
-    private Connection: ConnectionInterface;
-    private WebRtcRoomId: string;
-    private Users: Array<UserSimplePeer> = new Array<UserSimplePeer>();
+    private Users: Array<UserSimplePeerInterface> = new Array<UserSimplePeerInterface>();
 
-    private MediaManager: MediaManager;
+    private PeerScreenSharingConnectionArray: Map<number, ScreenSharingPeer> = new Map<number, ScreenSharingPeer>();
+    private PeerConnectionArray: Map<number, VideoPeer> = new Map<number, VideoPeer>();
+    private readonly sendLocalVideoStreamCallback: UpdatedLocalStreamCallback;
+    private readonly sendLocalScreenSharingStreamCallback: StartScreenSharingCallback;
+    private readonly stopLocalScreenSharingStreamCallback: StopScreenSharingCallback;
+    private readonly peerConnectionListeners: Array<PeerConnectionListener> = new Array<PeerConnectionListener>();
 
-    private PeerConnectionArray: Map<string, SimplePeerNamespace.Instance> = new Map<string, SimplePeerNamespace.Instance>();
+    constructor(private Connection: RoomConnection, private enableReporting: boolean) {
+        // We need to go through this weird bound function pointer in order to be able to "free" this reference later.
+        this.sendLocalVideoStreamCallback = this.sendLocalVideoStream.bind(this);
+        this.sendLocalScreenSharingStreamCallback = this.sendLocalScreenSharingStream.bind(this);
+        this.stopLocalScreenSharingStreamCallback = this.stopLocalScreenSharingStream.bind(this);
 
-    constructor(Connection: ConnectionInterface, WebRtcRoomId: string = "test-webrtc") {
-        this.Connection = Connection;
-        this.WebRtcRoomId = WebRtcRoomId;
-        this.MediaManager = new MediaManager((stream : MediaStream) => {
-            this.updatedLocalStream();
-        });
+        mediaManager.onUpdateLocalStream(this.sendLocalVideoStreamCallback);
+        mediaManager.onStartScreenSharing(this.sendLocalScreenSharingStreamCallback);
+        mediaManager.onStopScreenSharing(this.stopLocalScreenSharingStreamCallback);
         this.initialise();
+    }
+
+    public registerPeerConnectionListener(peerConnectionListener: PeerConnectionListener) {
+        this.peerConnectionListeners.push(peerConnectionListener);
+    }
+
+    public getNbConnections(): number {
+        return this.PeerConnectionArray.size;
     }
 
     /**
@@ -36,15 +64,20 @@ export class SimplePeer {
     private initialise() {
 
         //receive signal by gemer
-        this.Connection.receiveWebrtcSignal((message: any) => {
+        this.Connection.receiveWebrtcSignal((message: WebRtcSignalReceivedMessageInterface) => {
             this.receiveWebrtcSignal(message);
         });
 
-        this.MediaManager.activeVisio();
-        this.MediaManager.getCamera().then(() => {
+        //receive signal by gemer
+        this.Connection.receiveWebrtcScreenSharingSignal((message: WebRtcSignalReceivedMessageInterface) => {
+            this.receiveWebrtcScreenSharingSignal(message);
+        });
+
+        mediaManager.showGameOverlay();
+        mediaManager.getCamera().then(() => {
 
             //receive message start
-            this.Connection.receiveWebrtcStart((message: WebRtcStartMessageInterface) => {
+            this.Connection.receiveWebrtcStart((message: UserSimplePeerInterface) => {
                 this.receiveWebrtcStart(message);
             });
 
@@ -57,126 +90,110 @@ export class SimplePeer {
         });
     }
 
-    private receiveWebrtcStart(data: WebRtcStartMessageInterface) {
-        this.WebRtcRoomId = data.roomId;
-        this.Users = data.clients;
-        // Note: the clients array contain the list of all clients (event the ones we are already connected to in case a user joints a group)
+    private receiveWebrtcStart(user: UserSimplePeerInterface) {
+        //this.WebRtcRoomId = data.roomId;
+        this.Users.push(user);
+        // Note: the clients array contain the list of all clients (even the ones we are already connected to in case a user joints a group)
         // So we can receive a request we already had before. (which will abort at the first line of createPeerConnection)
-        // TODO: refactor this to only send a message to connect to one user (rather than several users).
+        // TODO: refactor this to only send a message to connect to one user (rather than several users). => DONE
         // This would be symmetrical to the way we handle disconnection.
         //console.log('Start message', data);
 
         //start connection
-        this.startWebRtc();
-    }
-
-    /**
-     * server has two people connected, start the meet
-     */
-    private startWebRtc() {
-        this.Users.forEach((user: UserSimplePeer) => {
-            //if it's not an initiator, peer connection will be created when gamer will receive offer signal
-            if(!user.initiator){
-                return;
-            }
-            this.createPeerConnection(user);
-        });
+        //this.startWebRtc();
+        console.log('receiveWebrtcStart. Initiator: ', user.initiator)
+        if(!user.initiator){
+            return;
+        }
+        this.createPeerConnection(user);
     }
 
     /**
      * create peer connection to bind users
      */
-    private createPeerConnection(user : UserSimplePeer) {
-        if(this.PeerConnectionArray.has(user.userId)) {
-            return;
+    private createPeerConnection(user : UserSimplePeerInterface) : VideoPeer | null {
+        const peerConnection = this.PeerConnectionArray.get(user.userId)
+        if (peerConnection) {
+            if (peerConnection.destroyed) {
+                peerConnection.toClose = true;
+                peerConnection.destroy();
+                const peerConnexionDeleted = this.PeerConnectionArray.delete(user.userId);
+                if (!peerConnexionDeleted) {
+                    throw 'Error to delete peer connection';
+                }
+                this.createPeerConnection(user);
+            } else {
+                peerConnection.toClose = false;
+            }
+            return null;
         }
 
-        //console.log("Creating connection with peer "+user.userId);
-
         let name = user.name;
-        if(!name){
-            let userSearch = this.Users.find((userSearch: UserSimplePeer) => userSearch.userId === user.userId);
-            if(userSearch) {
+        if (!name) {
+            const userSearch = this.Users.find((userSearch: UserSimplePeerInterface) => userSearch.userId === user.userId);
+            if (userSearch) {
                 name = userSearch.name;
             }
         }
-        this.MediaManager.removeActiveVideo(user.userId);
-        this.MediaManager.addActiveVideo(user.userId, name);
 
-        let peer : SimplePeerNamespace.Instance = new Peer({
-            initiator: user.initiator ? user.initiator : false,
-            reconnectTimer: 10000,
-            config: {
-                iceServers: [
-                    {
-                        urls: 'stun:stun.l.google.com:19302'
-                    },
-                    {
-                        urls: 'turn:numb.viagenie.ca',
-                        username: 'g.parant@thecodingmachine.com',
-                        credential: 'itcugcOHxle9Acqi$'
-                    },
-                ]
-            },
+        mediaManager.removeActiveVideo("" + user.userId);
+
+        const reportCallback = this.enableReporting ? (comment: string) => {
+            this.reportUser(user.userId, comment);
+        } : undefined;
+
+        mediaManager.addActiveVideo("" + user.userId, reportCallback, name);
+
+        const peer = new VideoPeer(user.userId, user.initiator ? user.initiator : false, this.Connection);
+        peer.toClose = false;
+        // When a connection is established to a video stream, and if a screen sharing is taking place,
+        // the user sharing screen should also initiate a connection to the remote user!
+        peer.on('connect', () => {
+            if (mediaManager.localScreenCapture) {
+                this.sendLocalScreenSharingStreamToUser(user.userId);
+            }
         });
         this.PeerConnectionArray.set(user.userId, peer);
 
-        //start listen signal for the peer connection
-        peer.on('signal', (data: any) => {
-            this.sendWebrtcSignal(data, user.userId);
-        });
+        for (const peerConnectionListener of this.peerConnectionListeners) {
+            peerConnectionListener.onConnect(user);
+        }
+        return peer;
+    }
 
-        peer.on('stream', (stream: MediaStream) => {
-            let videoActive = false;
-            let microphoneActive = false;
-            stream.getTracks().forEach((track :  MediaStreamTrack) => {
-                if(track.kind === "audio"){
-                    microphoneActive = true;
+    /**
+     * create peer connection to bind users
+     */
+    private createPeerScreenSharingConnection(user : UserSimplePeerInterface) : ScreenSharingPeer | null{
+        const peerConnection = this.PeerScreenSharingConnectionArray.get(user.userId);
+        if(peerConnection){
+            if(peerConnection.destroyed){
+                peerConnection.toClose = true;
+                peerConnection.destroy();
+                const peerConnexionDeleted = this.PeerScreenSharingConnectionArray.delete(user.userId);
+                if(!peerConnexionDeleted){
+                    throw 'Error to delete peer connection';
                 }
-                if(track.kind === "video"){
-                    videoActive = true;
-                }
-            });
-            if(microphoneActive){
-                this.MediaManager.enabledMicrophoneByUserId(user.userId);
-            }else{
-                this.MediaManager.disabledMicrophoneByUserId(user.userId);
+                this.createPeerConnection(user);
+            }else {
+                peerConnection.toClose = false;
             }
+            return null;
+        }
 
-            if(videoActive){
-                this.MediaManager.enabledVideoByUserId(user.userId);
-            }else{
-                this.MediaManager.disabledVideoByUserId(user.userId);
-            }
-            this.stream(user.userId, stream);
-        });
+        // We should display the screen sharing ONLY if we are not initiator
+        if (!user.initiator) {
+            mediaManager.removeActiveScreenSharingVideo("" + user.userId);
+            mediaManager.addScreenSharingActiveVideo("" + user.userId);
+        }
 
-        /*peer.on('track', (track: MediaStreamTrack, stream: MediaStream) => {
-            this.stream(user.userId, stream);
-        });*/
+        const peer = new ScreenSharingPeer(user.userId, user.initiator ? user.initiator : false, this.Connection);
+        this.PeerScreenSharingConnectionArray.set(user.userId, peer);
 
-        peer.on('close', () => {
-            this.closeConnection(user.userId);
-        });
-
-        peer.on('error', (err: any) => {
-            console.error(`error => ${user.userId} => ${err.code}`, err);
-            this.MediaManager.isError(user.userId);
-        });
-
-        peer.on('connect', () => {
-            this.MediaManager.isConnected(user.userId);
-            console.info(`connect => ${user.userId}`);
-        });
-
-        peer.on('data',  (chunk: Buffer) => {
-            let data = JSON.parse(chunk.toString('utf8'));
-            if(data.type === "stream"){
-                this.stream(user.userId, data.stream);
-            }
-        });
-
-        this.addMedia(user.userId);
+        for (const peerConnectionListener of this.peerConnectionListeners) {
+            peerConnectionListener.onConnect(user);
+        }
+        return peer;
     }
 
     /**
@@ -184,45 +201,81 @@ export class SimplePeer {
      *
      * @param userId
      */
-    private closeConnection(userId : string) {
+    private closeConnection(userId : number) {
         try {
-            this.MediaManager.removeActiveVideo(userId);
-            let peer = this.PeerConnectionArray.get(userId);
+            //mediaManager.removeActiveVideo(userId);
+            const peer = this.PeerConnectionArray.get(userId);
             if (peer === undefined) {
-                console.warn("Tried to close connection for user "+userId+" but could not find user")
+                console.warn("closeConnection => Tried to close connection for user "+userId+" but could not find user");
                 return;
             }
+            //create temp perr to close
+            peer.toClose = true;
+            peer.destroy();
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
-            //console.log('Closing connection with '+userId);
-            peer.destroy();
-            this.PeerConnectionArray.delete(userId)
-            //console.log('Nb users in peerConnectionArray '+this.PeerConnectionArray.size);
+
+            this.closeScreenSharingConnection(userId);
+
+            for (const peerConnectionListener of this.peerConnectionListeners) {
+                peerConnectionListener.onDisconnect(userId);
+            }
         } catch (err) {
             console.error("closeConnection", err)
         }
     }
 
     /**
+     * This is triggered twice. Once by the server, and once by a remote client disconnecting
      *
      * @param userId
-     * @param data
      */
-    private sendWebrtcSignal(data: any, userId : string) {
+    private closeScreenSharingConnection(userId : number) {
         try {
-            this.Connection.sendWebrtcSignal(data, this.WebRtcRoomId, null, userId);
-        }catch (e) {
-            console.error(`sendWebrtcSignal => ${userId}`, e);
+            mediaManager.removeActiveScreenSharingVideo("" + userId);
+            const peer = this.PeerScreenSharingConnectionArray.get(userId);
+            if (peer === undefined) {
+                console.warn("closeScreenSharingConnection => Tried to close connection for user "+userId+" but could not find user")
+                return;
+            }
+            // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
+            // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
+            //console.log('Closing connection with '+userId);
+            peer.destroy();
+            if(!this.PeerScreenSharingConnectionArray.delete(userId)){
+                throw 'Couln\'t delete peer screen sharing connexion';
+            }
+            //console.log('Nb users in peerConnectionArray '+this.PeerConnectionArray.size);
+        } catch (err) {
+            console.error("closeConnection", err)
         }
     }
 
-    private receiveWebrtcSignal(data: any) {
+    public closeAllConnections() {
+        for (const userId of this.PeerConnectionArray.keys()) {
+            this.closeConnection(userId);
+        }
+
+        for (const userId of this.PeerScreenSharingConnectionArray.keys()) {
+            this.closeScreenSharingConnection(userId);
+        }
+    }
+
+    /**
+     * Unregisters any held event handler.
+     */
+    public unregister() {
+        mediaManager.removeUpdateLocalStreamEventListener(this.sendLocalVideoStreamCallback);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private receiveWebrtcSignal(data: WebRtcSignalReceivedMessageInterface) {
         try {
             //if offer type, create peer connection
             if(data.signal.type === "offer"){
                 this.createPeerConnection(data);
             }
-            let peer = this.PeerConnectionArray.get(data.userId);
+            const peer = this.PeerConnectionArray.get(data.userId);
             if (peer !== undefined) {
                 peer.signal(data.signal);
             } else {
@@ -233,53 +286,136 @@ export class SimplePeer {
         }
     }
 
-    /**
-     *
-     * @param userId
-     * @param stream
-     */
-    private stream(userId : string, stream: MediaStream) {
-        if(!stream){
-            this.MediaManager.disabledVideoByUserId(userId);
-            this.MediaManager.disabledMicrophoneByUserId(userId);
-            return;
+    private receiveWebrtcScreenSharingSignal(data: WebRtcSignalReceivedMessageInterface) {
+        console.log("receiveWebrtcScreenSharingSignal", data);
+        try {
+            //if offer type, create peer connection
+            if(data.signal.type === "offer"){
+                this.createPeerScreenSharingConnection(data);
+            }
+            const peer = this.PeerScreenSharingConnectionArray.get(data.userId);
+            if (peer !== undefined) {
+                peer.signal(data.signal);
+            } else {
+                console.error('Could not find peer whose ID is "'+data.userId+'" in receiveWebrtcScreenSharingSignal');
+            }
+        } catch (e) {
+            console.error(`receiveWebrtcSignal => ${data.userId}`, e);
+            //force delete and recreate peer connexion
+            this.PeerScreenSharingConnectionArray.delete(data.userId);
+            this.receiveWebrtcScreenSharingSignal(data);
         }
-        this.MediaManager.addStreamRemoteVideo(userId, stream);
     }
 
     /**
      *
      * @param userId
      */
-    private addMedia (userId : any = null) {
+    private pushVideoToRemoteUser(userId : number) {
         try {
-            let localStream: MediaStream|null = this.MediaManager.localStream;
-            let peer = this.PeerConnectionArray.get(userId);
-            if(localStream === null) {
-                //send fake signal
-                if(peer === undefined){
-                    return;
-                }
-                peer.write(new Buffer(JSON.stringify({
-                    type: "stream",
-                    stream: null
-                })));
+            const PeerConnection = this.PeerConnectionArray.get(userId);
+            if (!PeerConnection) {
+                throw new Error('While adding media, cannot find user with ID ' + userId);
+            }
+            const localStream: MediaStream | null = mediaManager.localStream;
+            PeerConnection.write(new Buffer(JSON.stringify(mediaManager.constraintsMedia)));
+
+            if(!localStream){
                 return;
             }
-            if (peer === undefined) {
-                throw new Error('While adding media, cannot find user with ID '+userId);
-            }
+
             for (const track of localStream.getTracks()) {
-                peer.addTrack(track, localStream);
+                PeerConnection.addTrack(track, localStream);
             }
         }catch (e) {
-            console.error(`addMedia => addMedia => ${userId}`, e);
+            console.error(`pushVideoToRemoteUser => ${userId}`, e);
         }
     }
 
-    updatedLocalStream(){
-        this.Users.forEach((user: UserSimplePeer) => {
-            this.addMedia(user.userId);
-        })
+    private pushScreenSharingToRemoteUser(userId : number) {
+        const PeerConnection = this.PeerScreenSharingConnectionArray.get(userId);
+        if (!PeerConnection) {
+            throw new Error('While pushing screen sharing, cannot find user with ID ' + userId);
+        }
+        const localScreenCapture: MediaStream | null = mediaManager.localScreenCapture;
+        if(!localScreenCapture){
+            return;
+        }
+
+        for (const track of localScreenCapture.getTracks()) {
+            PeerConnection.addTrack(track, localScreenCapture);
+        }
+        return;
+    }
+
+    public sendLocalVideoStream(){
+        for (const user of this.Users) {
+            this.pushVideoToRemoteUser(user.userId);
+        }
+    }
+
+    /**
+     * Triggered locally when clicking on the screen sharing button
+     */
+    public sendLocalScreenSharingStream() {
+        if (!mediaManager.localScreenCapture) {
+            console.error('Could not find localScreenCapture to share')
+            return;
+        }
+
+        for (const user of this.Users) {
+            this.sendLocalScreenSharingStreamToUser(user.userId);
+        }
+    }
+
+    /**
+     * Triggered locally when clicking on the screen sharing button
+     */
+    public stopLocalScreenSharingStream(stream: MediaStream) {
+        for (const user of this.Users) {
+            this.stopLocalScreenSharingStreamToUser(user.userId, stream);
+        }
+    }
+
+    /**
+     * Triggered locally when clicking on the report button
+     */
+    public reportUser(userId: number, message: string) {
+        this.Connection.emitReportPlayerMessage(userId, message)
+    }
+
+    private sendLocalScreenSharingStreamToUser(userId: number): void {
+        // If a connection already exists with user (because it is already sharing a screen with us... let's use this connection)
+        if (this.PeerScreenSharingConnectionArray.has(userId)) {
+            this.pushScreenSharingToRemoteUser(userId);
+            return;
+        }
+
+        const screenSharingUser: UserSimplePeerInterface = {
+            userId,
+            initiator: true
+        };
+        const PeerConnectionScreenSharing = this.createPeerScreenSharingConnection(screenSharingUser);
+        if (!PeerConnectionScreenSharing) {
+            return;
+        }
+    }
+
+    private stopLocalScreenSharingStreamToUser(userId: number, stream: MediaStream): void {
+        const PeerConnectionScreenSharing = this.PeerScreenSharingConnectionArray.get(userId);
+        if (!PeerConnectionScreenSharing) {
+            throw new Error('Weird, screen sharing connection to user ' + userId + 'not found')
+        }
+
+        console.log("updatedScreenSharing => destroy", PeerConnectionScreenSharing);
+
+        // Stop sending stream and close peer connection if peer is not sending stream too
+        PeerConnectionScreenSharing.stopPushingScreenSharingToRemoteUser(stream);
+
+        if (!PeerConnectionScreenSharing.isReceivingScreenSharingStream()) {
+            PeerConnectionScreenSharing.destroy();
+
+            this.PeerScreenSharingConnectionArray.delete(userId);
+        }
     }
 }

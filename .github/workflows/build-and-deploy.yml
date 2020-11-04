@@ -20,13 +20,13 @@ jobs:
 
 
       # Create a slugified value of the branch
-      - uses: rlespinasse/github-slug-action@master
+      - uses: rlespinasse/github-slug-action@1.1.1
 
       - name: "Build and push front image"
         uses: docker/build-push-action@v1
         with:
           dockerfile: front/Dockerfile
-          path: front/
+          path: ./
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-front
@@ -43,13 +43,13 @@ jobs:
         uses: actions/checkout@v2
 
       # Create a slugified value of the branch
-      - uses: rlespinasse/github-slug-action@master
+      - uses: rlespinasse/github-slug-action@1.1.1
 
       - name: "Build and push back image"
         uses: docker/build-push-action@v1
         with:
           dockerfile: back/Dockerfile
-          path: back/
+          path: ./
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-back
@@ -66,7 +66,7 @@ jobs:
         uses: actions/checkout@v2
 
       # Create a slugified value of the branch
-      - uses: rlespinasse/github-slug-action@master
+      - uses: rlespinasse/github-slug-action@1.1.1
 
       - name: "Build and push back image"
         uses: docker/build-push-action@v1
@@ -76,6 +76,30 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-website
+          tags: ${{ env.GITHUB_REF_SLUG }}
+          add_git_labels: true
+
+  build-maps:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+
+      # Create a slugified value of the branch
+      - uses: rlespinasse/github-slug-action@1.1.1
+
+      - name: "Build and push front image"
+        uses: docker/build-push-action@v1
+        with:
+          dockerfile: maps/Dockerfile
+          path: maps/
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: thecodingmachine/workadventure-maps
           tags: ${{ env.GITHUB_REF_SLUG }}
           add_git_labels: true
 
@@ -96,6 +120,10 @@ jobs:
         uses: thecodingmachine/deeployer@master
         env:
           KUBE_CONFIG_FILE: ${{ secrets.KUBE_CONFIG_FILE }}
+          ADMIN_API_TOKEN: ${{ secrets.ADMIN_API_TOKEN }}
+          JITSI_ISS: ${{ secrets.JITSI_ISS }}
+          JITSI_URL: ${{ secrets.JITSI_URL }}
+          SECRET_JITSI_KEY: ${{ secrets.SECRET_JITSI_KEY }}
         with:
           namespace: workadventure-${{ env.GITHUB_REF_SLUG }}
 

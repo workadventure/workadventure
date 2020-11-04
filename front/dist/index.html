@@ -15,6 +15,7 @@
 
             gtag('config', 'UA-10196481-11');
         </script>
+
         <link rel="apple-touch-icon" sizes="57x57" href="static/images/favicons/apple-icon-57x57.png">
         <link rel="apple-touch-icon" sizes="60x60" href="static/images/favicons/apple-icon-60x60.png">
         <link rel="apple-touch-icon" sizes="72x72" href="static/images/favicons/apple-icon-72x72.png">
@@ -39,7 +40,45 @@
         <title>WorkAdventure</title>
     </head>
     <body id="body" style="margin: 0">
-        <div id="webRtc" class="webrtc">
+        <div class="main-container" id="main-container">
+            <!-- Create the editor container -->
+            <div id="game" class="game">
+                <div id="game-overlay" class="game-overlay">
+                    <div id="main-section" class="main-section">
+                    </div>
+                    <aside id="sidebar" class="sidebar">
+                    </aside>
+                    <div id="chat-mode" class="chat-mode three-col" style="display: none;">
+                    </div>
+                    <div id="activeCam" class="activeCam">
+                        <div id="div-myCamVideo" class="video-container">
+                            <video id="myCamVideo" autoplay muted></video>
+                        </div>
+                    </div>
+                    <div class="btn-cam-action">
+                        <div id="btn-micro" class="btn-micro">
+                            <img id="microphone" src="resources/logos/microphone.svg">
+                            <img id="microphone-close" src="resources/logos/microphone-close.svg">
+                        </div>
+                        <div id="btn-video" class="btn-video">
+                            <img id="cinema" src="resources/logos/cinema.svg">
+                            <img id="cinema-close" src="resources/logos/cinema-close.svg">
+                        </div>
+                        <div id="btn-monitor" class="btn-monitor">
+                            <img id="monitor" src="resources/logos/monitor.svg">
+                            <img id="monitor-close" src="resources/logos/monitor-close.svg">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div id="cowebsite" class="cowebsite hidden"></div>
+            <div class="audio-playing">
+                <img src="/resources/logos/megaphone.svg"/>
+            </div>
+        </div>
+<!--
+    <div id="webRtc" class="webrtc">
             <div id="activeCam" class="activeCam">
                 <div id="div-myCamVideo" class="video-container">
                     <video id="myCamVideo" autoplay muted></video>
@@ -54,13 +93,25 @@
                     <img id="cinema" src="resources/logos/CAM-ON.png">
                     <img id="cinema-close" src="resources/logos/CAM-OFF.png">
                 </div>
-                <!--<div class="btn-call">
-                    <img src="resources/logos/phone.svg">
-                </div>-->
+                <div class="btn-monitor">
+                    <img id="monitor" src="resources/logos/monitor.svg">
+                    <img id="monitor-close" src="resources/logos/monitor-close.svg">
+                </div>
             </div>
+        </div>
+        -->
+        <div id="activeScreenSharing" class="active-screen-sharing active">
+        </div>
+        <div id="webRtcSetup" class="webrtcsetup">
+                <img id="webRtcSetupNoVideo" class="background-img" src="resources/logos/cinema-close.svg">
+                <video id="myCamVideoSetup" autoplay muted></video>
         </div>
         <audio id="audio-webrtc-in">
             <source src="/resources/objects/webrtc-in.mp3" type="audio/mp3">
         </audio>
+        <audio id="report-message">
+            <source src="/resources/objects/report-message.mp3" type="audio/mp3">
+        </audio>
+
     </body>
 </html>

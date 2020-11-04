@@ -1,7 +1,6 @@
 import {PlayerAnimationNames} from "./Animation";
-import {GameScene, Textures} from "../Game/GameScene";
-import {MessageUserPositionInterface, PointInterface} from "../../Connection";
-import {ActiveEventList, UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
+import {GameScene} from "../Game/GameScene";
+import {UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
 import {Character} from "../Entity/Character";
 
 
@@ -12,26 +11,23 @@ export interface CurrentGamerInterface extends Character{
 }
 
 export class Player extends Character implements CurrentGamerInterface {
-    userInputManager: UserInputManager;
-    previousDirection: string;
-    wasMoving: boolean;
+    private previousDirection: string = PlayerAnimationNames.WalkDown;
+    private wasMoving: boolean = false;
 
     constructor(
         Scene: GameScene,
         x: number,
         y: number,
         name: string,
-        PlayerTexture: string,
+        PlayerTextures: string[],
         direction: string,
-        moving: boolean
+        moving: boolean,
+        private userInputManager: UserInputManager
     ) {
-        super(Scene, x, y, PlayerTexture, name, direction, moving, 1);
-
-        //create input to move
-        this.userInputManager = new UserInputManager(Scene);
+        super(Scene, x, y, PlayerTextures, name, direction, moving, 1);
 
         //the current player model should be push away by other players to prevent conflict
-        this.setImmovable(false);
+        this.getBody().setImmovable(false);
     }
 
     moveUser(delta: number): void {
@@ -39,9 +35,9 @@ export class Player extends Character implements CurrentGamerInterface {
         let direction = null;
         let moving = false;
 
-        let activeEvents = this.userInputManager.getEventListForGameTick();
-        let speedMultiplier = activeEvents.get(UserInputEvent.SpeedUp) ? 25 : 9;
-        let moveAmount = speedMultiplier * 20;
+        const activeEvents = this.userInputManager.getEventListForGameTick();
+        const speedMultiplier = activeEvents.get(UserInputEvent.SpeedUp) ? 25 : 9;
+        const moveAmount = speedMultiplier * 20;
 
         let x = 0;
         let y = 0;

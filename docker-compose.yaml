@@ -2,9 +2,14 @@ version: "3"
 services:
   reverse-proxy:
     image: traefik:v2.0
-    command: --api.insecure=true --providers.docker
+    command:
+      - --api.insecure=true
+      - --providers.docker
+      - --entryPoints.web.address=:80
+      - --entryPoints.websecure.address=:443
     ports:
       - "80:80"
+      - "443:443"
       # The Web UI (enabled by --api.insecure=true)
       - "8080:8080"
     depends_on:
@@ -14,19 +19,52 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 
   front:
-    image: thecodingmachine/nodejs:12
+    image: thecodingmachine/nodejs:14
     environment:
       DEBUG_MODE: "$DEBUG_MODE"
+      JITSI_URL: $JITSI_URL
+      JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
       HOST: "0.0.0.0"
       NODE_ENV: development
-      API_URL: http://api.workadventure.localhost
+      API_URL: api.workadventure.localhost
       STARTUP_COMMAND_1: yarn install
+      TURN_SERVER: "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443"
+      TURN_USER: workadventure
+      TURN_PASSWORD: WorkAdventure123
     command: yarn run start
     volumes:
       - ./front:/usr/src/app
     labels:
       - "traefik.http.routers.front.rule=Host(`play.workadventure.localhost`)"
+      - "traefik.http.routers.front.entryPoints=web,traefik"
       - "traefik.http.services.front.loadbalancer.server.port=8080"
+      - "traefik.http.routers.front-ssl.rule=Host(`play.workadventure.localhost`)"
+      - "traefik.http.routers.front-ssl.entryPoints=websecure"
+      - "traefik.http.routers.front-ssl.tls=true"
+      - "traefik.http.routers.front-ssl.service=front"
+
+  maps:
+    image: thecodingmachine/nodejs:12-apache
+    environment:
+      DEBUG_MODE: "$DEBUG_MODE"
+      HOST: "0.0.0.0"
+      NODE_ENV: development
+      #APACHE_DOCUMENT_ROOT: dist/
+      #APACHE_EXTENSIONS: headers
+      #APACHE_EXTENSION_HEADERS: 1
+      STARTUP_COMMAND_0: sudo a2enmod headers
+      STARTUP_COMMAND_1: yarn install
+      STARTUP_COMMAND_2: yarn run dev &
+    volumes:
+      - ./maps:/var/www/html
+    labels:
+      - "traefik.http.routers.maps.rule=Host(`maps.workadventure.localhost`)"
+      - "traefik.http.routers.maps.entryPoints=web,traefik"
+      - "traefik.http.services.maps.loadbalancer.server.port=80"
+      - "traefik.http.routers.maps-ssl.rule=Host(`maps.workadventure.localhost`)"
+      - "traefik.http.routers.maps-ssl.entryPoints=websecure"
+      - "traefik.http.routers.maps-ssl.tls=true"
+      - "traefik.http.routers.maps-ssl.service=maps"
 
   back:
     image: thecodingmachine/nodejs:12
@@ -35,11 +73,22 @@ services:
     environment:
       STARTUP_COMMAND_1: yarn install
       SECRET_KEY: yourSecretKey
+      SECRET_JITSI_KEY: "$SECRET_JITSI_KEY"
+      ALLOW_ARTILLERY: "true"
+      ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
+      JITSI_URL: $JITSI_URL
+      JITSI_ISS: $JITSI_ISS
     volumes:
       - ./back:/usr/src/app
     labels:
       - "traefik.http.routers.back.rule=Host(`api.workadventure.localhost`)"
+      - "traefik.http.routers.back.entryPoints=web"
       - "traefik.http.services.back.loadbalancer.server.port=8080"
+      - "traefik.http.routers.back-ssl.rule=Host(`api.workadventure.localhost`)"
+      - "traefik.http.routers.back-ssl.entryPoints=websecure"
+      - "traefik.http.routers.back-ssl.tls=true"
+      - "traefik.http.routers.back-ssl.service=back"
+
 
   website:
     image: thecodingmachine/nodejs:12-apache
@@ -51,4 +100,19 @@ services:
       - ./website:/var/www/html
     labels:
       - "traefik.http.routers.website.rule=Host(`workadventure.localhost`)"
+      - "traefik.http.routers.website.entryPoints=web"
       - "traefik.http.services.website.loadbalancer.server.port=80"
+      - "traefik.http.routers.website-ssl.rule=Host(`workadventure.localhost`)"
+      - "traefik.http.routers.website-ssl.entryPoints=websecure"
+      - "traefik.http.routers.website-ssl.tls=true"
+      - "traefik.http.routers.website-ssl.service=website"
+
+  messages:
+    image: thecodingmachine/workadventure-back-base:latest
+    environment:
+      STARTUP_COMMAND_1: yarn install
+      STARTUP_COMMAND_2: yarn run proto:watch
+    volumes:
+      - ./messages:/usr/src/app
+      - ./back:/usr/src/back
+      - ./front:/usr/src/front

@@ -1,33 +1,49 @@
-import { World, ConnectCallback, DisconnectCallback } from "./World";
-import { UserInterface } from "./UserInterface";
+import { ConnectCallback, DisconnectCallback } from "./GameRoom";
+import { User } from "./User";
 import {PositionInterface} from "_Model/PositionInterface";
-import {uuid} from "uuidv4";
+import {Movable} from "_Model/Movable";
+import {PositionNotifier} from "_Model/PositionNotifier";
+import {gaugeManager} from "../Services/GaugeManager";
 
-export class Group {
+export class Group implements Movable {
     static readonly MAX_PER_GROUP = 4;
 
-    private id: string;
-    private users: UserInterface[];
-    private connectCallback: ConnectCallback;
-    private disconnectCallback: DisconnectCallback;
+    private static nextId: number = 1;
+
+    private id: number;
+    private users: Set<User>;
+    private x!: number;
+    private y!: number;
+    private hasEditedGauge: boolean = false;
+    private wasDestroyed: boolean = false;
+    private roomId: string;
 
 
-    constructor(users: UserInterface[], connectCallback: ConnectCallback, disconnectCallback: DisconnectCallback) {
-        this.users = [];
-        this.connectCallback = connectCallback;
-        this.disconnectCallback = disconnectCallback;
-        this.id = uuid();
+    constructor(roomId: string, users: User[], private connectCallback: ConnectCallback, private disconnectCallback: DisconnectCallback, private positionNotifier: PositionNotifier) {
+        this.roomId = roomId;
+        this.users = new Set<User>();
+        this.id = Group.nextId;
+        Group.nextId++;
+        //we only send a event for prometheus metrics if the group lives more than 5 seconds
+        setTimeout(() => {
+            if (!this.wasDestroyed) {
+                this.hasEditedGauge = true;
+                gaugeManager.incNbGroupsPerRoomGauge(roomId);
+            }
+        }, 5000);
 
-        users.forEach((user: UserInterface) => {
+        users.forEach((user: User) => {
             this.join(user);
         });
+
+        this.updatePosition();
     }
 
-    getUsers(): UserInterface[] {
-        return this.users;
+    getUsers(): User[] {
+        return Array.from(this.users.values());
     }
 
-    getId() : string{
+    getId() : number {
         return this.id;
     }
 
@@ -35,65 +51,72 @@ export class Group {
      * Returns the barycenter of all users (i.e. the center of the group)
      */
     getPosition(): PositionInterface {
-        let x = 0;
-        let y = 0;
-        // Let's compute the barycenter of all users.
-        this.users.forEach((user: UserInterface) => {
-            x += user.position.x;
-            y += user.position.y;
-        });
-        x /= this.users.length;
-        y /= this.users.length;
         return {
-            x,
-            y
+            x: this.x,
+            y: this.y
         };
     }
 
+    /**
+     * Computes the barycenter of all users (i.e. the center of the group)
+     */
+    updatePosition(): void {
+        const oldX = this.x;
+        const oldY = this.y;
+
+        let x = 0;
+        let y = 0;
+        // Let's compute the barycenter of all users.
+        this.users.forEach((user: User) => {
+            const position = user.getPosition();
+            x += position.x;
+            y += position.y;
+        });
+        x /= this.users.size;
+        y /= this.users.size;
+        if (this.users.size === 0) {
+            throw new Error("EMPTY GROUP FOUND!!!");
+        }
+        this.x = x;
+        this.y = y;
+
+        if (oldX === undefined) {
+            this.positionNotifier.enter(this);
+        } else {
+            this.positionNotifier.updatePosition(this, {x, y}, {x: oldX, y: oldY});
+        }
+    }
+
     isFull(): boolean {
-        return this.users.length >= Group.MAX_PER_GROUP;
+        return this.users.size >= Group.MAX_PER_GROUP;
     }
 
     isEmpty(): boolean {
-        return this.users.length <= 1;
+        return this.users.size <= 1;
     }
 
-    join(user: UserInterface): void
+    join(user: User): void
     {
         // Broadcast on the right event
-        this.connectCallback(user.id, this);
-        this.users.push(user);
+        this.connectCallback(user, this);
+        this.users.add(user);
         user.group = this;
     }
 
-    isPartOfGroup(user: UserInterface): boolean
+    leave(user: User): void
     {
-        return this.users.includes(user);
-    }
-
-    /*removeFromGroup(users: UserInterface[]): void
-    {
-        for(let i = 0; i < users.length; i++){
-            let user = users[i];
-            const index = this.users.indexOf(user, 0);
-            if (index > -1) {
-                this.users.splice(index, 1);
-            }
+        const success = this.users.delete(user);
+        if (success === false) {
+            throw new Error("Could not find user "+user.id+" in the group "+this.id);
         }
-    }*/
-
-    leave(user: UserInterface): void
-    {
-        const index = this.users.indexOf(user, 0);
-        if (index === -1) {
-            throw new Error("Could not find user in the group");
-        }
-
-        this.users.splice(index, 1);
         user.group = undefined;
 
+        if (this.users.size !== 0) {
+            this.updatePosition();
+        }
+
         // Broadcast on the right event
-        this.disconnectCallback(user.id, this);
+        this.disconnectCallback(user, this);
     }
 
     /**
@@ -102,8 +125,14 @@ export class Group {
      */
     destroy(): void
     {
-        this.users.forEach((user: UserInterface) => {
+        if (this.hasEditedGauge) gaugeManager.decNbGroupsPerRoomGauge(this.roomId);
+        for (const user of this.users) {
             this.leave(user);
-        })
+        }
+        this.wasDestroyed = true;
+    }
+
+    get getSize(){
+        return this.users.size;
     }
 }

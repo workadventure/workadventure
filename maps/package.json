@@ -1,0 +1,49 @@
+{
+  "name": "workadventuremaps",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "tsc": "tsc",
+    "dev": "tsc -w",
+    "prod": "tsc",
+    "test": "ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
+    "lint": "node_modules/.bin/eslint src/ . --ext .ts",
+    "fix": "node_modules/.bin/eslint --fix src/ . --ext .ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thecodingmachine/workadventure.git"
+  },
+  "contributors": [
+    {
+      "name": "Grégoire Parant",
+      "email": "g.parant@thecodingmachine.com"
+    },
+    {
+      "name": "David Négrier",
+      "email": "d.negrier@thecodingmachine.com"
+    },
+    {
+      "name": "Arthmaël Poly",
+      "email": "a.poly@thecodingmachine.com"
+    }
+  ],
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "bugs": {
+    "url": "https://github.com/thecodingmachine/workadventure/issues"
+  },
+  "homepage": "https://github.com/thecodingmachine/workadventure#readme",
+  "dependencies": {
+    "phaser": "^3.24.1",
+    "ts-node-dev": "^1.0.0-pre.44",
+    "typescript": "^3.8.3"
+  },
+  "devDependencies": {
+    "@types/jasmine": "^3.5.10",
+    "@typescript-eslint/eslint-plugin": "^2.26.0",
+    "@typescript-eslint/parser": "^2.26.0",
+    "eslint": "^6.8.0",
+    "jasmine": "^3.5.0"
+  }
+}

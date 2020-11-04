@@ -1,32 +1,28 @@
 import {GameScene} from "../Game/GameScene";
-import {PointInterface} from "../../Connection";
+import {PointInterface} from "../../Connexion/ConnexionModels";
 import {Character} from "../Entity/Character";
+import {Sprite} from "./Sprite";
 
 /**
  * Class representing the sprite of a remote player (a player that plays on another computer)
  */
 export class RemotePlayer extends Character {
-    userId: string;
-    previousDirection: string;
-    wasMoving: boolean;
+    userId: number;
 
     constructor(
-        userId: string,
+        userId: number,
         Scene: GameScene,
         x: number,
         y: number,
         name: string,
-        PlayerTexture: string,
+        PlayerTextures: string[],
         direction: string,
         moving: boolean
     ) {
-        super(Scene, x, y, PlayerTexture, name, direction, moving, 1);
+        super(Scene, x, y, PlayerTextures, name, direction, moving, 1);
 
         //set data
         this.userId = userId;
-
-        //the current player model should be push away by other players to prevent conflict
-        //this.setImmovable(false);
     }
 
     updatePosition(position: PointInterface): void {

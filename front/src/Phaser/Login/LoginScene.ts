@@ -4,9 +4,11 @@ import {TextInput} from "../Components/TextInput";
 import {ClickButton} from "../Components/ClickButton";
 import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
-import {PLAYER_RESOURCES} from "../Entity/Character";
+import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Character";
 import {cypressAsserter} from "../../Cypress/CypressAsserter";
-import {SelectCharacterSceneInitDataInterface, SelectCharacterSceneName} from "./SelectCharacterScene";
+import {SelectCharacterSceneName} from "./SelectCharacterScene";
+import {ResizableScene} from "./ResizableScene";
+import {localUserStore} from "../../Connexion/LocalUserStore";
 
 //todo: put this constants in a dedicated file
 export const LoginSceneName = "LoginScene";
@@ -15,21 +17,19 @@ enum LoginTextures {
     mainFont = "main_font"
 }
 
-export class LoginScene extends Phaser.Scene {
-    private nameInput: TextInput|null = null;
-    private textField: TextField|null = null;
-    private infoTextField: TextField|null = null;
-    private pressReturnField: TextField|null = null;
-    private logo: Image|null = null;
+export class LoginScene extends ResizableScene {
+    private nameInput!: TextInput;
+    private textField!: TextField;
+    private infoTextField!: TextField;
+    private pressReturnField!: TextField;
+    private logo!: Image;
     private name: string = '';
 
     constructor() {
         super({
             key: LoginSceneName
         });
-        if (window.localStorage) {
-            this.name = window.localStorage.getItem('playerName') ?? '';
-        }
+        this.name = localUserStore.getName();
     }
 
     preload() {
@@ -40,7 +40,7 @@ export class LoginScene extends Phaser.Scene {
         this.load.bitmapFont(LoginTextures.mainFont, 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
         cypressAsserter.preloadFinished();
         //add player png
-        PLAYER_RESOURCES.forEach((playerResource: any) => {
+        PLAYER_RESOURCES.forEach((playerResource: PlayerResourceDescriptionInterface) => {
             this.load.spritesheet(
                 playerResource.name,
                 playerResource.img,
@@ -53,22 +53,18 @@ export class LoginScene extends Phaser.Scene {
         cypressAsserter.initStarted();
 
         this.textField = new TextField(this, this.game.renderer.width / 2, 50, 'Enter your name:');
-        this.textField.setOrigin(0.5).setCenterAlign()
-        this.nameInput = new TextInput(this, this.game.renderer.width / 2 - 64, 70, 4, this.name,(text: string) => {
+        this.nameInput = new TextInput(this, this.game.renderer.width / 2, 70, 8, this.name,(text: string) => {
             this.name = text;
-            if (window.localStorage) {
-                window.localStorage.setItem('playerName', text);
-            }
+            localUserStore.setName(text);
         });
 
         this.pressReturnField = new TextField(this, this.game.renderer.width / 2, 130, 'Press enter to start');
-        this.pressReturnField.setOrigin(0.5).setCenterAlign()
 
         this.logo = new Image(this, this.game.renderer.width - 30, this.game.renderer.height - 20, LoginTextures.icon);
         this.add.existing(this.logo);
 
-        let infoText = "Commands: \n - Arrows or Z,Q,S,D to move\n - SHIFT to run";
-        this.infoTextField = new TextField(this, 10, this.game.renderer.height - 35, infoText);
+        const infoText = "Commands: \n - Arrows or Z,Q,S,D to move\n - SHIFT to run";
+        this.infoTextField = new TextField(this, 10, this.game.renderer.height - 35, infoText, false);
 
         this.input.keyboard.on('keyup-ENTER', () => {
             if (this.name === '') {
@@ -89,6 +85,18 @@ export class LoginScene extends Phaser.Scene {
     }
 
     private login(name: string): void {
-        this.scene.start(SelectCharacterSceneName, { name } as SelectCharacterSceneInitDataInterface);
+        gameManager.setPlayerName(name);
+
+        this.scene.start(SelectCharacterSceneName);
     }
+
+    public onResize(ev: UIEvent): void {
+        this.textField.x = this.game.renderer.width / 2;
+        this.nameInput.setX(this.game.renderer.width / 2 - 64);
+        this.pressReturnField.x = this.game.renderer.width / 2;
+        this.logo.x = this.game.renderer.width - 30;
+        this.logo.y = this.game.renderer.height - 20;
+        this.infoTextField.y = this.game.renderer.height - 35;
+    }
+
 }

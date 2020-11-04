@@ -1,431 +1,325 @@
-import socketIO = require('socket.io');
-import {Socket} from "socket.io";
-import * as http from "http";
-import {MessageUserPosition, Point} from "../Model/Websocket/MessageUserPosition"; //TODO fix import by "_Model/.."
-import {ExSocketInterface} from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
-import Jwt, {JsonWebTokenError} from "jsonwebtoken";
-import {SECRET_KEY, MINIMUM_DISTANCE, GROUP_RADIUS} from "../Enum/EnvironmentVariable"; //TODO fix import by "_Enum/..."
-import {World} from "../Model/World";
-import {Group} from "_Model/Group";
-import {UserInterface} from "_Model/UserInterface";
-import {isSetPlayerDetailsMessage,} from "../Model/Websocket/SetPlayerDetailsMessage";
-import {MessageUserJoined} from "../Model/Websocket/MessageUserJoined";
-import {MessageUserMoved} from "../Model/Websocket/MessageUserMoved";
-import si from "systeminformation";
-import {Gauge} from "prom-client";
-import os from 'os';
-import {TokenInterface} from "../Controller/AuthenticateController";
-import {isJoinRoomMessageInterface} from "../Model/Websocket/JoinRoomMessage";
-import {isPointInterface, PointInterface} from "../Model/Websocket/PointInterface";
-import {isWebRtcSignalMessageInterface} from "../Model/Websocket/WebRtcSignalMessage";
-import {UserInGroupInterface} from "../Model/Websocket/UserInGroupInterface";
-
-enum SockerIoEvent {
-    CONNECTION = "connection",
-    DISCONNECT = "disconnect",
-    JOIN_ROOM = "join-room", // bi-directional
-    USER_POSITION = "user-position", // bi-directional
-    USER_MOVED = "user-moved", // From server to client
-    USER_LEFT = "user-left", // From server to client
-    WEBRTC_SIGNAL = "webrtc-signal",
-    WEBRTC_START = "webrtc-start",
-    WEBRTC_DISCONNECT = "webrtc-disconect",
-    MESSAGE_ERROR = "message-error",
-    GROUP_CREATE_UPDATE = "group-create-update",
-    GROUP_DELETE = "group-delete",
-    SET_PLAYER_DETAILS = "set-player-details"
-}
+import {CharacterLayer, ExSocketInterface} from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
+import {GameRoomPolicyTypes} from "../Model/GameRoom";
+import {PointInterface} from "../Model/Websocket/PointInterface";
+import {
+    SetPlayerDetailsMessage,
+    SubMessage,
+    BatchMessage,
+    ItemEventMessage,
+    ViewportMessage,
+    ClientToServerMessage,
+    SilentMessage,
+    WebRtcSignalToServerMessage,
+    PlayGlobalMessage,
+    ReportPlayerMessage,
+    QueryJitsiJwtMessage
+} from "../Messages/generated/messages_pb";
+import {UserMovesMessage} from "../Messages/generated/messages_pb";
+import {TemplatedApp} from "uWebSockets.js"
+import {parse} from "query-string";
+import {jwtTokenManager} from "../Services/JWTTokenManager";
+import {adminApi, CharacterTexture, FetchMemberDataByUuidResponse} from "../Services/AdminApi";
+import {SocketManager, socketManager} from "../Services/SocketManager";
+import {emitInBatch, resetPing} from "../Services/IoSocketHelpers";
+import {clientEventsEmitter} from "../Services/ClientEventsEmitter";
+import {ADMIN_API_TOKEN} from "../Enum/EnvironmentVariable";
 
 export class IoSocketController {
-    public readonly Io: socketIO.Server;
-    private Worlds: Map<string, World> = new Map<string, World>();
-    private sockets: Map<string, ExSocketInterface> = new Map<string, ExSocketInterface>();
-    private nbClientsGauge: Gauge<string>;
-    private nbClientsPerRoomGauge: Gauge<string>;
+    private nextUserId: number = 1;
 
-    constructor(server: http.Server) {
-        this.Io = socketIO(server);
-        this.nbClientsGauge = new Gauge({
-            name: 'workadventure_nb_sockets',
-            help: 'Number of connected sockets',
-            labelNames: [ 'host' ]
-        });
-        this.nbClientsPerRoomGauge = new Gauge({
-            name: 'workadventure_nb_clients_per_room',
-            help: 'Number of clients per room',
-            labelNames: [ 'host', 'room' ]
-        });
-
-        // Authentication with token. it will be decoded and stored in the socket.
-        // Completely commented for now, as we do not use the "/login" route at all.
-        this.Io.use((socket: Socket, next) => {
-            if (!socket.handshake.query || !socket.handshake.query.token) {
-                console.error('An authentication error happened, a user tried to connect without a token.');
-                return next(new Error('Authentication error'));
-            }
-            if(this.searchClientByToken(socket.handshake.query.token)){
-                console.error('An authentication error happened, a user tried to connect while its token is already connected.');
-                return next(new Error('Authentication error'));
-            }
-            Jwt.verify(socket.handshake.query.token, SECRET_KEY, (err: JsonWebTokenError, tokenDecoded: object) => {
-                if (err) {
-                    console.error('An authentication error happened, invalid JsonWebToken.', err);
-                    return next(new Error('Authentication error'));
-                }
-
-                if (!this.isValidToken(tokenDecoded)) {
-                    return next(new Error('Authentication error, invalid token structure'));
-                }
-
-                (socket as ExSocketInterface).token = socket.handshake.query.token;
-                (socket as ExSocketInterface).userId = tokenDecoded.userId;
-                next();
-            });
-        });
-
+    constructor(private readonly app: TemplatedApp) {
         this.ioConnection();
+        this.adminRoomSocket();
     }
 
-    private isValidToken(token: object): token is TokenInterface {
-        if (typeof((token as TokenInterface).userId) !== 'string') {
-            return false;
-        }
-        if (typeof((token as TokenInterface).name) !== 'string') {
-            return false;
-        }
-        return true;
-    }
+    adminRoomSocket() {
+        this.app.ws('/admin/rooms', {
+            upgrade: (res, req, context) => {
+                const query = parse(req.getQuery());
+                const websocketKey = req.getHeader('sec-websocket-key');
+                const websocketProtocol = req.getHeader('sec-websocket-protocol');
+                const websocketExtensions = req.getHeader('sec-websocket-extensions');
+                const token = query.token;
+                if (token !== ADMIN_API_TOKEN) {
+                    console.log('Admin access refused for token: '+token)
+                    res.writeStatus("401 Unauthorized").end('Incorrect token');
+                }
+                const roomId = query.roomId as string;
 
-    /**
-     *
-     * @param token
-     */
-    searchClientByToken(token: string): ExSocketInterface | null {
-        const clients: ExSocketInterface[] = Object.values(this.Io.sockets.sockets) as ExSocketInterface[];
-        for (let i = 0; i < clients.length; i++) {
-            const client = clients[i];
-            if (client.token !== token) {
-                continue
+                res.upgrade(
+                    {roomId},
+                    websocketKey, websocketProtocol, websocketExtensions, context,
+                    );
+            },
+            open: (ws) => {
+                console.log('Admin socket connect for room: '+ws.roomId);
+                ws.send('Data:'+JSON.stringify(socketManager.getAdminSocketDataFor(ws.roomId as string)));
+                ws.clientJoinCallback = (clientUUid: string, roomId: string) => {
+                    const wsroomId = ws.roomId as string;
+                    if(wsroomId === roomId) {
+                        ws.send('MemberJoin:'+clientUUid+';'+roomId);
+                    }
+                };
+                ws.clientLeaveCallback = (clientUUid: string, roomId: string) => {
+                    const wsroomId = ws.roomId as string;
+                    if(wsroomId === roomId) {
+                        ws.send('MemberLeave:'+clientUUid+';'+roomId);
+                    }
+                };
+                clientEventsEmitter.registerToClientJoin(ws.clientJoinCallback);
+                clientEventsEmitter.registerToClientLeave(ws.clientLeaveCallback);
+            },
+            message: (ws, arrayBuffer, isBinary): void => {
+                try {
+                    //TODO refactor message type and data
+                    const message: {event: string, message: {type: string, message: unknown, userUuid: string}} =
+                        JSON.parse(new TextDecoder("utf-8").decode(new Uint8Array(arrayBuffer)));
+
+                    if(message.event === 'user-message') {
+                        const messageToEmit = (message.message as { message: string, type: string, userUuid: string });
+                        switch (message.message.type) {
+                            case 'ban': {
+                                socketManager.emitSendUserMessage(messageToEmit);
+                                break;
+                            }
+                            case 'banned': {
+                                const socketUser = socketManager.emitSendUserMessage(messageToEmit);
+                                setTimeout(() => {
+                                    socketUser.close();
+                                }, 10000);
+                                break;
+                            }
+                            default: {
+                                break;
+                            }
+                        }
+                    }
+                }catch (err) {
+                    console.error(err);
+                }
+            },
+            close: (ws, code, message) => {
+                //todo make sure this code unregister the right listeners
+                clientEventsEmitter.unregisterFromClientJoin(ws.clientJoinCallback);
+                clientEventsEmitter.unregisterFromClientLeave(ws.clientLeaveCallback);
             }
-            return client;
-        }
-        return null;
-    }
-
-    private sendUpdateGroupEvent(group: Group): void {
-        // Let's get the room of the group. To do this, let's get anyone in the group and find its room.
-        // Note: this is suboptimal
-        const userId = group.getUsers()[0].id;
-        const client: ExSocketInterface = this.searchClientByIdOrFail(userId);
-        const roomId = client.roomId;
-        this.Io.in(roomId).emit(SockerIoEvent.GROUP_CREATE_UPDATE, {
-            position: group.getPosition(),
-            groupId: group.getId()
-        });
-    }
-
-    private sendDeleteGroupEvent(uuid: string, lastUser: UserInterface): void {
-        // Let's get the room of the group. To do this, let's get anyone in the group and find its room.
-        const userId = lastUser.id;
-        const client: ExSocketInterface = this.searchClientByIdOrFail(userId);
-        const roomId = client.roomId;
-        this.Io.in(roomId).emit(SockerIoEvent.GROUP_DELETE, uuid);
+        })
     }
 
     ioConnection() {
-        this.Io.on(SockerIoEvent.CONNECTION, (socket: Socket) => {
-            const client : ExSocketInterface = socket as ExSocketInterface;
-            this.sockets.set(client.userId, client);
+        this.app.ws('/room', {
+            /* Options */
+            //compression: uWS.SHARED_COMPRESSOR,
+            maxPayloadLength: 16 * 1024 * 1024,
+            maxBackpressure: 65536, // Maximum 64kB of data in the buffer.
+            //idleTimeout: 10,
+            upgrade: (res, req, context) => {
+                //console.log('An Http connection wants to become WebSocket, URL: ' + req.getUrl() + '!');
+                (async () => {
+                    /* Keep track of abortions */
+                    const upgradeAborted = {aborted: false};
 
-            // Let's log server load when a user joins
-            const srvSockets = this.Io.sockets.sockets;
-            this.nbClientsGauge.inc({ host: os.hostname() });
-            console.log(new Date().toISOString() + ' A user joined (', Object.keys(srvSockets).length, ' connected users)');
-            si.currentLoad().then(data => console.log('  Current load: ', data.avgload));
-            si.currentLoad().then(data => console.log('  CPU: ', data.currentload, '%'));
-            // End log server load
-
-            /*join-rom event permit to join one room.
-                message :
-                    userId : user identification
-                    roomId: room identification
-                    position: position of user in map
-                        x: user x position on map
-                        y: user y position on map
-            */
-            socket.on(SockerIoEvent.JOIN_ROOM, (message: unknown, answerFn): void => {
-                try {
-                    if (!isJoinRoomMessageInterface(message)) {
-                        socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid JOIN_ROOM message.'});
-                        console.warn('Invalid JOIN_ROOM message received: ', message);
-                        return;
-                    }
-                    const roomId = message.roomId;
-
-                    const Client = (socket as ExSocketInterface);
-
-                    if (Client.roomId === roomId) {
-                        return;
-                    }
-
-                    //leave previous room
-                    this.leaveRoom(Client);
-
-                    //join new previous room
-                    const world = this.joinRoom(Client, roomId, message.position);
-
-                    //add function to refresh position user in real time.
-                    //this.refreshUserPosition(Client);
-
-                    const messageUserJoined = new MessageUserJoined(Client.userId, Client.name, Client.character, Client.position);
-
-                    socket.to(roomId).emit(SockerIoEvent.JOIN_ROOM, messageUserJoined);
-
-                    // The answer shall contain the list of all users of the room with their positions:
-                    const listOfUsers = Array.from(world.getUsers(), ([key, user]) => {
-                        const player = this.searchClientByIdOrFail(user.id);
-                        return new MessageUserPosition(user.id, player.name, player.character, player.position);
+                    res.onAborted(() => {
+                        /* We can simply signal that we were aborted */
+                        upgradeAborted.aborted = true;
                     });
-                    answerFn(listOfUsers);
-                } catch (e) {
-                    console.error('An error occurred on "join_room" event');
-                    console.error(e);
-                }
-            });
 
-            socket.on(SockerIoEvent.USER_POSITION, (position: unknown): void => {
-                try {
-                    if (!isPointInterface(position)) {
-                        socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid USER_POSITION message.'});
-                        console.warn('Invalid USER_POSITION message received: ', position);
+                    try {
+                        const url = req.getUrl();
+                        const query = parse(req.getQuery());
+                        const websocketKey = req.getHeader('sec-websocket-key');
+                        const websocketProtocol = req.getHeader('sec-websocket-protocol');
+                        const websocketExtensions = req.getHeader('sec-websocket-extensions');
+
+                        const roomId = query.roomId;
+                        if (typeof roomId !== 'string') {
+                            throw new Error('Undefined room ID: ');
+                        }
+
+                        const token = query.token;
+                        const x = Number(query.x);
+                        const y = Number(query.y);
+                        const top = Number(query.top);
+                        const bottom = Number(query.bottom);
+                        const left = Number(query.left);
+                        const right = Number(query.right);
+                        const name = query.name;
+                        if (typeof name !== 'string') {
+                            throw new Error('Expecting name');
+                        }
+                        if (name === '') {
+                            throw new Error('No empty name');
+                        }
+                        let characterLayers = query.characterLayers;
+                        if (characterLayers === null) {
+                            throw new Error('Expecting skin');
+                        }
+                        if (typeof characterLayers === 'string') {
+                            characterLayers = [ characterLayers ];
+                        }
+
+                        const userUuid = await jwtTokenManager.getUserUuidFromToken(token);
+
+                        let memberTags: string[] = [];
+                        let memberTextures: CharacterTexture[] = [];
+                        const room = await socketManager.getOrCreateRoom(roomId);
+                        if(room.isFull){
+                            throw new Error('Room is full');
+                        }
+                        try {
+                            const userData = await adminApi.fetchMemberDataByUuid(userUuid);
+                            //console.log('USERDATA', userData)
+                            memberTags = userData.tags;
+                            memberTextures = userData.textures;
+                            if (!room.anonymous && room.policyType === GameRoomPolicyTypes.USE_TAGS_POLICY && !room.canAccess(memberTags)) {
+                                throw new Error('No correct tags')
+                            }
+                            //console.log('access granted for user '+userUuid+' and room '+roomId);
+                        } catch (e) {
+                            console.log('access not granted for user '+userUuid+' and room '+roomId);
+                            throw new Error('Client cannot acces this ressource.')
+                        }
+
+                        // Generate characterLayers objects from characterLayers string[]
+                        const characterLayerObjs: CharacterLayer[] = SocketManager.mergeCharacterLayersAndCustomTextures(characterLayers, memberTextures);
+
+                        if (upgradeAborted.aborted) {
+                            console.log("Ouch! Client disconnected before we could upgrade it!");
+                            /* You must not upgrade now */
+                            return;
+                        }
+
+                        /* This immediately calls open handler, you must not use res after this call */
+                        res.upgrade({
+                                // Data passed here is accessible on the "websocket" socket object.
+                                url,
+                                token,
+                                userUuid,
+                                roomId,
+                                name,
+                                characterLayers: characterLayerObjs,
+                                tags: memberTags,
+                                textures: memberTextures,
+                                position: {
+                                    x: x,
+                                    y: y,
+                                    direction: 'down',
+                                    moving: false
+                                } as PointInterface,
+                                viewport: {
+                                    top,
+                                    right,
+                                    bottom,
+                                    left
+                                }
+                            },
+                            /* Spell these correctly */
+                            websocketKey,
+                            websocketProtocol,
+                            websocketExtensions,
+                            context);
+
+                    } catch (e) {
+                        if (e instanceof Error) {
+                            console.log(e.message);
+                            res.writeStatus("401 Unauthorized").end(e.message);
+                        } else {
+                            console.log(e);
+                            res.writeStatus("500 Internal Server Error").end('An error occurred');
+                        }
                         return;
                     }
+                })();
+            },
+            /* Handlers */
+            open: (ws) => {
+                // Let's join the room
+                const client = this.initClient(ws); //todo: into the upgrade instead?
+                socketManager.handleJoinRoom(client);
+                resetPing(client);
 
-                    const Client = (socket as ExSocketInterface);
-
-                    // sending to all clients in room except sender
-                    Client.position = position;
-
-                    // update position in the world
-                    const world = this.Worlds.get(Client.roomId);
-                    if (!world) {
-                        console.error("Could not find world with id '", Client.roomId, "'");
+                //get data information and shwo messages
+                adminApi.fetchMemberDataByUuid(client.userUuid).then((res: FetchMemberDataByUuidResponse) => {
+                    if (!res.messages) {
                         return;
                     }
-                    world.updatePosition(Client, position);
+                    res.messages.forEach((c: unknown) => {
+                        const messageToSend = c as { type: string, message: string };
+                        socketManager.emitSendUserMessage({
+                            userUuid: client.userUuid,
+                            type: messageToSend.type,
+                            message: messageToSend.message
+                        })
+                    });
+                }).catch((err) => {
+                    console.error('fetchMemberDataByUuid => err', err);
+                });
+            },
+            message: (ws, arrayBuffer, isBinary): void => {
+                const client = ws as ExSocketInterface;
+                const message = ClientToServerMessage.deserializeBinary(new Uint8Array(arrayBuffer));
 
-                    socket.to(Client.roomId).emit(SockerIoEvent.USER_MOVED, new MessageUserMoved(Client.userId, Client.position));
-                } catch (e) {
-                    console.error('An error occurred on "user_position" event');
-                    console.error(e);
+                if (message.hasViewportmessage()) {
+                    socketManager.handleViewport(client, message.getViewportmessage() as ViewportMessage);
+                } else if (message.hasUsermovesmessage()) {
+                    socketManager.handleUserMovesMessage(client, message.getUsermovesmessage() as UserMovesMessage);
+                } else if (message.hasSetplayerdetailsmessage()) {
+                    socketManager.handleSetPlayerDetails(client, message.getSetplayerdetailsmessage() as SetPlayerDetailsMessage);
+                } else if (message.hasSilentmessage()) {
+                    socketManager.handleSilentMessage(client, message.getSilentmessage() as SilentMessage);
+                } else if (message.hasItemeventmessage()) {
+                    socketManager.handleItemEvent(client, message.getItemeventmessage() as ItemEventMessage);
+                } else if (message.hasWebrtcsignaltoservermessage()) {
+                    socketManager.emitVideo(client, message.getWebrtcsignaltoservermessage() as WebRtcSignalToServerMessage);
+                } else if (message.hasWebrtcscreensharingsignaltoservermessage()) {
+                    socketManager.emitScreenSharing(client, message.getWebrtcscreensharingsignaltoservermessage() as WebRtcSignalToServerMessage);
+                } else if (message.hasPlayglobalmessage()) {
+                    socketManager.emitPlayGlobalMessage(client, message.getPlayglobalmessage() as PlayGlobalMessage);
+                } else if (message.hasReportplayermessage()){
+                    socketManager.handleReportMessage(client, message.getReportplayermessage() as ReportPlayerMessage);
+                } else if (message.hasQueryjitsijwtmessage()){
+                    socketManager.handleQueryJitsiJwtMessage(client, message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage);
                 }
-            });
 
-            socket.on(SockerIoEvent.WEBRTC_SIGNAL, (data: unknown) => {
-                if (!isWebRtcSignalMessageInterface(data)) {
-                    socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid WEBRTC_SIGNAL message.'});
-                    console.warn('Invalid WEBRTC_SIGNAL message received: ', data);
-                    return;
-                }
-                //send only at user
-                const client = this.sockets.get(data.receiverId);
-                if (client === undefined) {
-                    console.warn("While exchanging a WebRTC signal: client with id ", data.receiverId, " does not exist. This might be a race condition.");
-                    return;
-                }
-                return client.emit(SockerIoEvent.WEBRTC_SIGNAL, data);
-            });
-
-            socket.on(SockerIoEvent.DISCONNECT, () => {
-                const Client = (socket as ExSocketInterface);
+                    /* Ok is false if backpressure was built up, wait for drain */
+                //let ok = ws.send(message, isBinary);
+            },
+            drain: (ws) => {
+                console.log('WebSocket backpressure: ' + ws.getBufferedAmount());
+            },
+            close: (ws, code, message) => {
+                const Client = (ws as ExSocketInterface);
                 try {
+                    Client.disconnecting = true;
                     //leave room
-                    this.leaveRoom(Client);
-
-                    //leave webrtc room
-                    //socket.leave(Client.webRtcRoomId);
-
-                    //delete all socket information
-                    delete Client.webRtcRoomId;
-                    delete Client.roomId;
-                    delete Client.token;
-                    delete Client.position;
+                    socketManager.leaveRoom(Client);
                 } catch (e) {
                     console.error('An error occurred on "disconnect"');
                     console.error(e);
                 }
-                this.sockets.delete(Client.userId);
-
-                // Let's log server load when a user leaves
-                const srvSockets = this.Io.sockets.sockets;
-                this.nbClientsGauge.dec({ host: os.hostname() });
-                console.log('A user left (', Object.keys(srvSockets).length, ' connected users)');
-                si.currentLoad().then(data => console.log('Current load: ', data.avgload));
-                si.currentLoad().then(data => console.log('CPU: ', data.currentload, '%'));
-                // End log server load
-            });
-
-            // Let's send the user id to the user
-            socket.on(SockerIoEvent.SET_PLAYER_DETAILS, (playerDetails: unknown, answerFn) => {
-                if (!isSetPlayerDetailsMessage(playerDetails)) {
-                    socket.emit(SockerIoEvent.MESSAGE_ERROR, {message: 'Invalid SET_PLAYER_DETAILS message.'});
-                    console.warn('Invalid SET_PLAYER_DETAILS message received: ', playerDetails);
-                    return;
-                }
-                const Client = (socket as ExSocketInterface);
-                Client.name = playerDetails.name;
-                Client.character = playerDetails.character;
-                answerFn(Client.userId);
-            });
-        });
+            }
+        })
     }
 
-    searchClientByIdOrFail(userId: string): ExSocketInterface {
-        const client: ExSocketInterface|undefined = this.sockets.get(userId);
-        if (client === undefined) {
-            throw new Error("Could not find user with id " + userId);
+    //eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private initClient(ws: any): ExSocketInterface {
+        const client : ExSocketInterface = ws;
+        client.userId = this.nextUserId;
+        this.nextUserId++;
+        client.userUuid = ws.userUuid;
+        client.token = ws.token;
+        client.batchedMessages = new BatchMessage();
+        client.batchTimeout = null;
+        client.emitInBatch = (payload: SubMessage): void => {
+            emitInBatch(client, payload);
         }
+        client.disconnecting = false;
+
+        client.name = ws.name;
+        client.tags = ws.tags;
+        client.textures = ws.textures;
+        client.characterLayers = ws.characterLayers;
+        client.roomId = ws.roomId;
         return client;
-    }
-
-    leaveRoom(Client : ExSocketInterface){
-        // leave previous room and world
-        if(Client.roomId){
-            Client.to(Client.roomId).emit(SockerIoEvent.USER_LEFT, Client.userId);
-
-            //user leave previous world
-            const world : World|undefined = this.Worlds.get(Client.roomId);
-            if(world){
-                world.leave(Client);
-            }
-            //user leave previous room
-            Client.leave(Client.roomId);
-            this.nbClientsPerRoomGauge.dec({ host: os.hostname(), room: Client.roomId });
-            delete Client.roomId;
-        }
-    }
-
-    private joinRoom(Client : ExSocketInterface, roomId: string, position: PointInterface): World {
-        //join user in room
-        Client.join(roomId);
-        this.nbClientsPerRoomGauge.inc({ host: os.hostname(), room: roomId });
-        Client.roomId = roomId;
-        Client.position = position;
-
-        //check and create new world for a room
-        let world = this.Worlds.get(roomId)
-        if(world === undefined){
-            world = new World((user1: string, group: Group) => {
-                this.connectedUser(user1, group);
-            }, (user1: string, group: Group) => {
-                this.disConnectedUser(user1, group);
-            }, MINIMUM_DISTANCE, GROUP_RADIUS, (group: Group) => {
-                this.sendUpdateGroupEvent(group);
-            }, (groupUuid: string, lastUser: UserInterface) => {
-                this.sendDeleteGroupEvent(groupUuid, lastUser);
-            });
-            this.Worlds.set(roomId, world);
-        }
-
-        // Dispatch groups position to newly connected user
-        world.getGroups().forEach((group: Group) => {
-            Client.emit(SockerIoEvent.GROUP_CREATE_UPDATE, {
-                position: group.getPosition(),
-                groupId: group.getId()
-            });
-        });
-        //join world
-        world.join(Client, Client.position);
-        return world;
-    }
-
-    /**
-     *
-     * @param socket
-     * @param roomId
-     */
-    joinWebRtcRoom(socket: ExSocketInterface, roomId: string) {
-        if (socket.webRtcRoomId === roomId) {
-            return;
-        }
-        socket.join(roomId);
-        socket.webRtcRoomId = roomId;
-        //if two persons in room share
-        if (this.Io.sockets.adapter.rooms[roomId].length < 2 /*|| this.Io.sockets.adapter.rooms[roomId].length >= 4*/) {
-            return;
-        }
-        const clients: Array<ExSocketInterface> = (Object.values(this.Io.sockets.sockets) as Array<ExSocketInterface>)
-            .filter((client: ExSocketInterface) => client.webRtcRoomId && client.webRtcRoomId === roomId);
-        //send start at one client to initialise offer webrtc
-        //send all users in room to create PeerConnection in front
-        clients.forEach((client: ExSocketInterface, index: number) => {
-
-            const clientsId = clients.reduce((tabs: Array<UserInGroupInterface>, clientId: ExSocketInterface, indexClientId: number) => {
-                if (!clientId.userId || clientId.userId === client.userId) {
-                    return tabs;
-                }
-                tabs.push({
-                    userId: clientId.userId,
-                    name: clientId.name,
-                    initiator: index <= indexClientId
-                });
-                return tabs;
-            }, []);
-
-            client.emit(SockerIoEvent.WEBRTC_START, {clients: clientsId, roomId: roomId});
-        });
-    }
-
-    /** permit to share user position
-     ** users position will send in event 'user-position'
-     ** The data sent is an array with information for each user :
-     [
-     {
-            userId: <string>,
-            roomId: <string>,
-            position: {
-                x : <number>,
-                y : <number>,
-               direction: <string>
-            }
-          },
-     ...
-     ]
-     **/
-
-    //connected user
-    connectedUser(userId: string, group: Group) {
-        /*let Client = this.sockets.get(userId);
-        if (Client === undefined) {
-            return;
-        }*/
-        const Client = this.searchClientByIdOrFail(userId);
-        this.joinWebRtcRoom(Client, group.getId());
-    }
-
-    //disconnect user
-    disConnectedUser(userId: string, group: Group) {
-        const Client = this.searchClientByIdOrFail(userId);
-        Client.to(group.getId()).emit(SockerIoEvent.WEBRTC_DISCONNECT, {
-            userId: userId
-        });
-
-        // Most of the time, sending a disconnect event to one of the players is enough (the player will close the connection
-        // which will be shut for the other player).
-        // However! In the rare case where the WebRTC connection is not yet established, if we close the connection on one of the player,
-        // the other player will try connecting until a timeout happens (during this time, the connection icon will be displayed for nothing).
-        // So we also send the disconnect event to the other player.
-        for (const user of group.getUsers()) {
-            Client.emit(SockerIoEvent.WEBRTC_DISCONNECT, {
-                userId: user.id
-            });
-        }
-
-        //disconnect webrtc room
-        if(!Client.webRtcRoomId){
-            return;
-        }
-        Client.leave(Client.webRtcRoomId);
-        delete Client.webRtcRoomId;
     }
 }

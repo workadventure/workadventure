@@ -33,6 +33,9 @@ module.exports = {
         path: path.resolve(__dirname, 'dist'),
         publicPath: '/'
     },
+    externals:[
+        require('webpack-require-http')
+    ],
     plugins: [
         new HtmlWebpackPlugin(
             {
@@ -42,6 +45,7 @@ module.exports = {
         new webpack.ProvidePlugin({
             Phaser: 'phaser'
         }),
-        new webpack.EnvironmentPlugin(['API_URL', 'DEBUG_MODE'])
-    ]
+        new webpack.EnvironmentPlugin(['API_URL', 'DEBUG_MODE', 'TURN_SERVER', 'TURN_USER', 'TURN_PASSWORD', 'JITSI_URL', 'JITSI_PRIVATE_MODE'])
+    ],
+
 };
