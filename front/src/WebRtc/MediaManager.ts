@@ -344,7 +344,7 @@ export class MediaManager {
                 <div class="connecting-spinner"></div>
                 <div class="rtc-error" style="display: none"></div>
                 <i id="name-${userId}" style="background-color: ${color};">${userName}</i>
-                <img id="microphone-${userId}" src="resources/logos/microphone-close.svg">
+                <img id="microphone-${userId}" src="resources/logos/MIC-OFF.svg">
                 ` +
                 ((reportCallBack!==undefined)?`<img id="report-${userId}" class="report active" src="resources/logos/report.svg">`:'')
                 +
