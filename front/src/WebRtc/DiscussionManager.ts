@@ -9,6 +9,7 @@ export class DiscussionManager {
     private divParticipants?: HTMLDivElement;
     private nbpParticipants?: HTMLParagraphElement;
     private divMessages?: HTMLParagraphElement;
+    private buttonActiveDiscussion?: HTMLButtonElement;
 
     private participants: Map<number|string, HTMLDivElement> = new Map<number|string, HTMLDivElement>();
 
@@ -26,24 +27,23 @@ export class DiscussionManager {
         this.divDiscuss.classList.add('discussion');
 
         const buttonCloseDiscussion: HTMLButtonElement = document.createElement('button');
-        const buttonActiveDiscussion: HTMLButtonElement = document.createElement('button');
+        this.buttonActiveDiscussion = document.createElement('button');
         buttonCloseDiscussion.classList.add('close-btn');
         buttonCloseDiscussion.innerHTML = `<img src="resources/logos/close.svg"/>`;
         buttonCloseDiscussion.addEventListener('click', () => {
             this.activeDiscussion = false;
             this.divDiscuss?.classList.remove('active');
-            buttonActiveDiscussion.classList.add('active');
+            this.showButtonDiscussionBtn();
         });
-        buttonActiveDiscussion.classList.add('active-btn');
-        buttonActiveDiscussion.classList.add('active');
-        buttonActiveDiscussion.innerHTML = `<img src="resources/logos/discussion.svg"/>`;
-        buttonActiveDiscussion.addEventListener('click', () => {
+        this.buttonActiveDiscussion.classList.add('active-btn');
+        this.buttonActiveDiscussion.innerHTML = `<img src="resources/logos/discussion.svg"/>`;
+        this.buttonActiveDiscussion.addEventListener('click', () => {
             this.activeDiscussion = true;
             this.divDiscuss?.classList.add('active');
-            buttonActiveDiscussion.classList.remove('active');
+            this.hideButtonDiscussionBtn();
         });
         this.divDiscuss.appendChild(buttonCloseDiscussion);
-        this.divDiscuss.appendChild(buttonActiveDiscussion);
+        this.divDiscuss.appendChild(this.buttonActiveDiscussion);
 
         const myName: HTMLParagraphElement = document.createElement('p');
         myName.innerText = name.toUpperCase();
@@ -123,7 +123,9 @@ export class DiscussionManager {
         }
 
         this.divParticipants?.appendChild(divParticipant);
+
         this.participants.set(userId, divParticipant);
+        this.showButtonDiscussionBtn();
 
         this.updateParticipant(this.participants.size);
     }
@@ -165,7 +167,13 @@ export class DiscussionManager {
         const element = this.participants.get(userId);
         if(element){
             element.remove();
+            this.participants.delete(userId);
         }
+        //if all participant leave, hide discussion button
+        if(this.participants.size === 1){
+            this.hideButtonDiscussionBtn();
+        }
+
         this.sendMessageCallBack.delete(userId);
     }
 
@@ -175,5 +183,17 @@ export class DiscussionManager {
 
     get activatedDiscussion(){
         return this.activeDiscussion;
+    }
+
+    private showButtonDiscussionBtn(){
+        //if it's first participant, show discussion button
+        if(this.activatedDiscussion || this.participants.size === 1) {
+            return;
+        }
+        this.buttonActiveDiscussion?.classList.add('active');
+    }
+
+    private hideButtonDiscussionBtn(){
+        this.buttonActiveDiscussion?.classList.remove('active');
     }
 }
