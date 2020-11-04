@@ -631,7 +631,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                     this.scene.stop(this.scene.key);
                     this.scene.start(waitGameSceneKey, {
                         status: status,
-                        text : 'Oups! Work Adventure is too popular, ' +
+                        text : 'Oops! WorkAdventure is too popular, ' +
                             '\n' +
                             '\n' +
                             'the maximum number of players has been reached!' +
