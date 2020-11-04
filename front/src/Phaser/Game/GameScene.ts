@@ -479,7 +479,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
                 const openWebsiteTriggerValue = allProps.get('openWebsiteTrigger');
                 if(openWebsiteTriggerValue && openWebsiteTriggerValue === 'onaction') {
-                    layoutManager.addActionButton('openWebsite', 'Clik on SPACE to open web site', () => {
+                    layoutManager.addActionButton('openWebsite', 'Click on SPACE to open web site', () => {
                         openWebsiteFunction();
                     }, this.userInputManager);
                 }else{
@@ -506,7 +506,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
                 const jitsiTriggerValue = allProps.get('jitsiTrigger');
                 if(jitsiTriggerValue && jitsiTriggerValue === 'onaction') {
-                    layoutManager.addActionButton('jitsiRoom', 'Clik on SPACE to enter in jitsi meet room', () => {
+                    layoutManager.addActionButton('jitsiRoom', 'Click on SPACE to enter in jitsi meet room', () => {
                         openJitsiRoomFunction();
                     }, this.userInputManager);
                 }else{
