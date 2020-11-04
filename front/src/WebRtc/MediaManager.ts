@@ -631,7 +631,10 @@ export class MediaManager {
         mainContainer.appendChild(divReport);
     }
 
-    //ping always 30 seconds data on stream
+    /**
+     * For some reasons, the microphone muted icon or the stream is not always up to date.
+     * Here, every 30 seconds, we are "reseting" the streams and sending again the constraints to the other peers via the data channel again (see SimplePeer::pushVideoToRemoteUser)
+    **/
     private pingCameraStatus(){
         setTimeout(() => {
             console.log('ping camera status');
