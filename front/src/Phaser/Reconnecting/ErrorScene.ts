@@ -1,36 +1,28 @@
 import {TextField} from "../Components/TextField";
 import Image = Phaser.GameObjects.Image;
+import {ResizableScene} from "../Login/ResizableScene";
 
 enum ReconnectingTextures {
     icon = "icon",
     mainFont = "main_font"
 }
 
-export class WaitScene extends Phaser.Scene {
+export class ErrorScene extends ResizableScene {
     private reconnectingField!: TextField;
+    private catImage!: Phaser.Physics.Arcade.Sprite;
     private logo!: Image;
     private text: string = '';
+    private status: number = 404;
 
-    constructor(key: string, private readonly status: number) {
+    constructor(key: string) {
         super({
             key: key
         });
-        this.initialiseText();
     }
 
-    initialiseText() {
-        this.text = `${this.status}` + '\n' + '\n';
-        switch (this.status) {
-            case 302:
-                this.text += 'Aie ! Work Adventure est victime de son succes, ' +
-                    '\n' +
-                    '\n' +
-                    'le nombre maximum de joueurs a ete atteint !' +
-                    '\n' +
-                    '\n' +
-                    `Reconnexion dans 30 secondes ...`;
-                break;
-        }
+    init(data: {status: number, text: string}){
+        this.text = data.text;
+        this .status = data.status;
     }
 
     preload() {
@@ -54,7 +46,7 @@ export class WaitScene extends Phaser.Scene {
             this.game.renderer.height / 2,
             this.text);
 
-        const cat = this.physics.add.sprite(
+        this.catImage = this.physics.add.sprite(
             this.game.renderer.width / 2,
             this.game.renderer.height / 2 - 70,
             'cat');
@@ -65,6 +57,15 @@ export class WaitScene extends Phaser.Scene {
             frameRate: 10,
             repeat: -1
         });
-        cat.play('right');
+        this.catImage.play('right');
+    }
+
+    onResize(){
+        this.reconnectingField.x = this.game.renderer.width / 2;
+        this.reconnectingField.y = this.game.renderer.height / 2;
+        this.catImage.x = this.game.renderer.width / 2;
+        this.catImage.y = this.game.renderer.height / 2 - 70;
+        this.logo.x = this.game.renderer.width - 30;
+        this.logo.y = this.game.renderer.height - 30;
     }
 }

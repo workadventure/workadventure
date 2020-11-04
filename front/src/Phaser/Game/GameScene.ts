@@ -55,7 +55,7 @@ import {ResizableScene} from "../Login/ResizableScene";
 import {Room} from "../../Connexion/Room";
 import {jitsiFactory} from "../../WebRtc/JitsiFactory";
 import {MessageUI} from "../../Logger/MessageUI";
-import {WaitScene} from "../Reconnecting/WaitScene";
+import {ErrorScene} from "../Reconnecting/ErrorScene";
 
 
 export enum Textures {
@@ -610,9 +610,6 @@ export class GameScene extends ResizableScene implements CenterListener {
             });
 
             connection.onCloseMessage((status: number) => {
-                console.log(`close message status : ${status}`);
-
-                //TODO show wait room
                 this.connection.closeConnection();
                 this.simplePeer.unregister();
                 connection.closeConnection();
@@ -620,7 +617,11 @@ export class GameScene extends ResizableScene implements CenterListener {
                 const waitGameSceneKey = 'somekey' + Math.round(Math.random() * 10000);
                 //show wait scene
                 setTimeout(() => {
-                    const game: Phaser.Scene = new WaitScene(waitGameSceneKey, status);
+                    /**
+                     * Note: the ErrorScene could then become a singleton. In the future,
+                     * an error message could originate from the server directly.
+                     * **/
+                    const game: Phaser.Scene = new ErrorScene(waitGameSceneKey);
                     this.scene.add(waitGameSceneKey, game, true, {
                         initPosition: {
                             x: this.CurrentPlayer.x,
@@ -628,7 +629,16 @@ export class GameScene extends ResizableScene implements CenterListener {
                         }
                     });
                     this.scene.stop(this.scene.key);
-                    this.scene.start(waitGameSceneKey);
+                    this.scene.start(waitGameSceneKey, {
+                        status: status,
+                        text : 'Oups! Work Adventure is too popular, ' +
+                            '\n' +
+                            '\n' +
+                            'the maximum number of players has been reached!' +
+                            '\n' +
+                            '\n' +
+                            `Reconnect in 30 secondes ...`
+                    });
                 }, 500);
 
                 //trying to reload map
