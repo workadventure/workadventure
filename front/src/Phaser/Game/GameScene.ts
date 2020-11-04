@@ -467,24 +467,33 @@ export class GameScene extends ResizableScene implements CenterListener {
         // From now, this game scene will be notified of reposition events
         layoutManager.setListener(this);
 
-        this.gameMap.onPropertyChange('openWebsite', (newValue, oldValue) => {
+        this.gameMap.onPropertyChange('openWebsite', (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
                 layoutManager.removeActionButton('openWebsite', this.userInputManager);
                 coWebsiteManager.closeCoWebsite();
             }else{
-                layoutManager.addActionButton('openWebsite', 'Clik on SPACE to open web site', () => {
+                const openWebsiteFunction = () => {
                     coWebsiteManager.loadCoWebsite(newValue as string);
                     layoutManager.removeActionButton('openWebsite', this.userInputManager);
-                }, this.userInputManager);
+                };
+
+                const openWebsiteTriggerValue = allProps.get('openWebsiteTrigger');
+                if(openWebsiteTriggerValue && openWebsiteTriggerValue === 'onaction') {
+                    layoutManager.addActionButton('openWebsite', 'Clik on SPACE to open web site', () => {
+                        openWebsiteFunction();
+                    }, this.userInputManager);
+                }else{
+                    openWebsiteFunction();
+                }
             }
         });
-        
+
         this.gameMap.onPropertyChange('jitsiRoom', (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
                 layoutManager.removeActionButton('jitsiRoom', this.userInputManager);
                 this.stopJitsi();
             }else{
-                layoutManager.addActionButton('jitsiRoom', 'Clik on SPACE to enter in jitsi meet room', () => {
+                const openJitsiRoomFunction = () => {
                     if (JITSI_PRIVATE_MODE) {
                         const adminTag = allProps.get("jitsiRoomAdminTag") as string|undefined;
 
@@ -493,7 +502,16 @@ export class GameScene extends ResizableScene implements CenterListener {
                         this.startJitsi(newValue as string);
                     }
                     layoutManager.removeActionButton('jitsiRoom', this.userInputManager);
-                }, this.userInputManager);
+                }
+
+                const jitsiTriggerValue = allProps.get('jitsiTrigger');
+                if(jitsiTriggerValue && jitsiTriggerValue === 'onaction') {
+                    layoutManager.addActionButton('jitsiRoom', 'Clik on SPACE to enter in jitsi meet room', () => {
+                        openJitsiRoomFunction();
+                    }, this.userInputManager);
+                }else{
+                    openJitsiRoomFunction();
+                }
             }
         });
 
@@ -678,7 +696,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         if (!properties) {
             return undefined;
         }
-        const obj = properties.find((property: ITiledMapLayerProperty) => property.name === name);
+        const obj = properties.find((property: ITiledMapLayerProperty) => property.name.toLowerCase() === name.toLowerCase());
         if (obj === undefined) {
             return undefined;
         }

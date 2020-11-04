@@ -44,6 +44,11 @@
                  "name":"jitsiRoom",
                  "type":"string",
                  "value":"tcm-chillzone-2"
+                }, 
+                {
+                 "name":"jitsiTrigger",
+                 "type":"string",
+                 "value":"auto"
                 }],
          "type":"tilelayer",
          "visible":true,
@@ -61,7 +66,12 @@
                 {
                  "name":"jitsiRoom",
                  "type":"string",
-                 "value":"tcm-chillzone-1"
+                 "value":"tcm-chillzone-11"
+                }, 
+                {
+                 "name":"jitsiTrigger",
+                 "type":"string",
+                 "value":"onaction"
                 }],
          "type":"tilelayer",
          "visible":true,
@@ -128,6 +138,11 @@
                  "name":"openWebsite",
                  "type":"string",
                  "value":"https:\/\/app.swile.co\/"
+                }, 
+                {
+                 "name":"openWebsiteTrigger",
+                 "type":"string",
+                 "value":"auto"
                 }],
          "type":"tilelayer",
          "visible":true,
