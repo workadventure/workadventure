@@ -17,7 +17,6 @@
        "env": {
          "SECRET_KEY": "tempSecretKeyNeedsToChange",
          "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
-         "ADMIN_API_URL": "https://admin."+url,
          "JITSI_ISS": env.JITSI_ISS,
          "JITSI_URL": env.JITSI_URL,
          "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
