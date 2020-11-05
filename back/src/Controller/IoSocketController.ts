@@ -22,7 +22,7 @@ import {adminApi, CharacterTexture, FetchMemberDataByUuidResponse} from "../Serv
 import {SocketManager, socketManager} from "../Services/SocketManager";
 import {emitInBatch, resetPing} from "../Services/IoSocketHelpers";
 import {clientEventsEmitter} from "../Services/ClientEventsEmitter";
-import {ADMIN_API_TOKEN} from "../Enum/EnvironmentVariable";
+import {ADMIN_API_TOKEN, ADMIN_API_URL} from "../Enum/EnvironmentVariable";
 
 export class IoSocketController {
     private nextUserId: number = 1;
@@ -166,18 +166,21 @@ export class IoSocketController {
                         if(room.isFull){
                             throw new Error('Room is full');
                         }
-                        try {
-                            const userData = await adminApi.fetchMemberDataByUuid(userUuid);
-                            //console.log('USERDATA', userData)
-                            memberTags = userData.tags;
-                            memberTextures = userData.textures;
-                            if (!room.anonymous && room.policyType === GameRoomPolicyTypes.USE_TAGS_POLICY && !room.canAccess(memberTags)) {
-                                throw new Error('No correct tags')
+                        if (ADMIN_API_URL) {
+                            try {
+                                const userData = await adminApi.fetchMemberDataByUuid(userUuid);
+                                //console.log('USERDATA', userData)
+                                memberTags = userData.tags;
+                                memberTextures = userData.textures;
+                                if (!room.anonymous && room.policyType === GameRoomPolicyTypes.USE_TAGS_POLICY && !room.canAccess(memberTags)) {
+                                    throw new Error('No correct tags')
+                                }
+                                //console.log('access granted for user '+userUuid+' and room '+roomId);
+                            } catch (e) {
+                                console.log('access not granted for user '+userUuid+' and room '+roomId);
+                                console.error(e);
+                                throw new Error('Client cannot acces this ressource.')
                             }
-                            //console.log('access granted for user '+userUuid+' and room '+roomId);
-                        } catch (e) {
-                            console.log('access not granted for user '+userUuid+' and room '+roomId);
-                            throw new Error('Client cannot acces this ressource.')
                         }
 
                         // Generate characterLayers objects from characterLayers string[]
@@ -238,22 +241,24 @@ export class IoSocketController {
                 socketManager.handleJoinRoom(client);
                 resetPing(client);
 
-                //get data information and shwo messages
-                adminApi.fetchMemberDataByUuid(client.userUuid).then((res: FetchMemberDataByUuidResponse) => {
-                    if (!res.messages) {
-                        return;
-                    }
-                    res.messages.forEach((c: unknown) => {
-                        const messageToSend = c as { type: string, message: string };
-                        socketManager.emitSendUserMessage({
-                            userUuid: client.userUuid,
-                            type: messageToSend.type,
-                            message: messageToSend.message
-                        })
+                //get data information and show messages
+                if (ADMIN_API_URL) {
+                    adminApi.fetchMemberDataByUuid(client.userUuid).then((res: FetchMemberDataByUuidResponse) => {
+                        if (!res.messages) {
+                            return;
+                        }
+                        res.messages.forEach((c: unknown) => {
+                            const messageToSend = c as { type: string, message: string };
+                            socketManager.emitSendUserMessage({
+                                userUuid: client.userUuid,
+                                type: messageToSend.type,
+                                message: messageToSend.message
+                            })
+                        });
+                    }).catch((err) => {
+                        console.error('fetchMemberDataByUuid => err', err);
                     });
-                }).catch((err) => {
-                    console.error('fetchMemberDataByUuid => err', err);
-                });
+                }
             },
             message: (ws, arrayBuffer, isBinary): void => {
                 const client = ws as ExSocketInterface;

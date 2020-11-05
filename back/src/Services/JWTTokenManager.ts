@@ -1,11 +1,11 @@
-import {ALLOW_ARTILLERY, SECRET_KEY} from "../Enum/EnvironmentVariable";
+import {ADMIN_API_URL, ALLOW_ARTILLERY, SECRET_KEY} from "../Enum/EnvironmentVariable";
 import {uuid} from "uuidv4";
 import Jwt from "jsonwebtoken";
 import {TokenInterface} from "../Controller/AuthenticateController";
 import {adminApi, AdminApiData} from "../Services/AdminApi";
 
 class JWTTokenManager {
-    
+
     public createJWTToken(userUuid: string) {
         return Jwt.sign({userUuid: userUuid}, SECRET_KEY, {expiresIn: '200d'}); //todo: add a mechanic to refresh or recreate token
     }
@@ -48,17 +48,21 @@ class JWTTokenManager {
                     return;
                 }
 
-                //verify user in admin
-                adminApi.fetchCheckUserByToken(tokenInterface.userUuid).then(() => {
-                    resolve(tokenInterface.userUuid);
-                }).catch((err) => {
-                    //anonymous user
-                    if(err.response && err.response.status && err.response.status === 404){
+                if (ADMIN_API_URL) {
+                    //verify user in admin
+                    adminApi.fetchCheckUserByToken(tokenInterface.userUuid).then(() => {
                         resolve(tokenInterface.userUuid);
-                        return;
-                    }
-                    reject(new Error('Authentication error, invalid token structure. ' + err));
-                });
+                    }).catch((err) => {
+                        //anonymous user
+                        if(err.response && err.response.status && err.response.status === 404){
+                            resolve(tokenInterface.userUuid);
+                            return;
+                        }
+                        reject(err);
+                    });
+                } else {
+                    resolve(tokenInterface.userUuid);
+                }
             });
         });
     }
@@ -66,7 +70,7 @@ class JWTTokenManager {
     private isValidToken(token: object): token is TokenInterface {
         return !(typeof((token as TokenInterface).userUuid) !== 'string');
     }
-    
+
 }
 
 export const jwtTokenManager = new JWTTokenManager();
