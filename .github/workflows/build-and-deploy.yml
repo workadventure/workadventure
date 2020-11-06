@@ -20,7 +20,7 @@ jobs:
 
 
       # Create a slugified value of the branch
-      - uses: rlespinasse/github-slug-action@master
+      - uses: rlespinasse/github-slug-action@1.1.1
 
       - name: "Build and push front image"
         uses: docker/build-push-action@v1
@@ -43,7 +43,7 @@ jobs:
         uses: actions/checkout@v2
 
       # Create a slugified value of the branch
-      - uses: rlespinasse/github-slug-action@master
+      - uses: rlespinasse/github-slug-action@1.1.1
 
       - name: "Build and push back image"
         uses: docker/build-push-action@v1
@@ -66,7 +66,7 @@ jobs:
         uses: actions/checkout@v2
 
       # Create a slugified value of the branch
-      - uses: rlespinasse/github-slug-action@master
+      - uses: rlespinasse/github-slug-action@1.1.1
 
       - name: "Build and push back image"
         uses: docker/build-push-action@v1
@@ -90,7 +90,7 @@ jobs:
 
 
       # Create a slugified value of the branch
-      - uses: rlespinasse/github-slug-action@master
+      - uses: rlespinasse/github-slug-action@1.1.1
 
       - name: "Build and push front image"
         uses: docker/build-push-action@v1
@@ -137,7 +137,7 @@ jobs:
           check_for_duplicate_msg: true
 
       - name: Run Cypress tests
-        uses: cypress-io/github-action@v1
+        uses: cypress-io/github-action@v2
         if: ${{ env.GITHUB_REF_SLUG != 'master' }}
         env:
           CYPRESS_BASE_URL: https://play.${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com
@@ -148,7 +148,7 @@ jobs:
           working-directory: e2e
 
       - name: Run Cypress tests in prod
-        uses: cypress-io/github-action@v1
+        uses: cypress-io/github-action@v2
         if: ${{ env.GITHUB_REF_SLUG == 'master' }}
         env:
           CYPRESS_BASE_URL: https://play.workadventu.re

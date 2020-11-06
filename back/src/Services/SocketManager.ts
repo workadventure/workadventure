@@ -23,7 +23,6 @@ import {
     WebRtcStartMessage,
     QueryJitsiJwtMessage,
     SendJitsiJwtMessage,
-    CharacterLayerMessage,
     SendUserMessage
 } from "../Messages/generated/messages_pb";
 import {PointInterface} from "../Model/Websocket/PointInterface";
@@ -37,11 +36,11 @@ import {Movable} from "../Model/Movable";
 import {PositionInterface} from "../Model/PositionInterface";
 import {adminApi, CharacterTexture} from "./AdminApi";
 import Direction = PositionMessage.Direction;
-import {Gauge} from "prom-client";
 import {emitError, emitInBatch} from "./IoSocketHelpers";
 import Jwt from "jsonwebtoken";
 import {JITSI_URL} from "../Enum/EnvironmentVariable";
 import {clientEventsEmitter} from "./ClientEventsEmitter";
+import {gaugeManager} from "./GaugeManager";
 
 interface AdminSocketRoomsList {
     [index: string]: number;
@@ -58,30 +57,13 @@ export interface AdminSocketData {
 export class SocketManager {
     private Worlds: Map<string, GameRoom> = new Map<string, GameRoom>();
     private sockets: Map<number, ExSocketInterface> = new Map<number, ExSocketInterface>();
-    private nbClientsGauge: Gauge<string>;
-    private nbClientsPerRoomGauge: Gauge<string>;
-
+    
     constructor() {
-        this.nbClientsGauge = new Gauge({
-            name: 'workadventure_nb_sockets',
-            help: 'Number of connected sockets',
-            labelNames: [ ]
+        clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
+            gaugeManager.incNbClientPerRoomGauge(roomId);
         });
-        this.nbClientsPerRoomGauge = new Gauge({
-            name: 'workadventure_nb_clients_per_room',
-            help: 'Number of clients per room',
-            labelNames: [ 'room' ]
-        });
-
-        clientEventsEmitter.registerToClientJoin((clientUUid, roomId) => {
-            this.nbClientsGauge.inc();
-            // Let's log server load when a user joins
-            console.log(new Date().toISOString() + ' A user joined (', this.sockets.size, ' connected users)');
-        });
-        clientEventsEmitter.registerToClientLeave((clientUUid, roomId) => {
-            this.nbClientsGauge.dec();
-            // Let's log server load when a user leaves
-            console.log('A user left (', this.sockets.size, ' connected users)');
+        clientEventsEmitter.registerToClientLeave((clientUUid: string, roomId: string) => {
+            gaugeManager.decNbClientPerRoomGauge(roomId);
         });
     }
 
@@ -107,7 +89,6 @@ export class SocketManager {
         const viewport = client.viewport;
         try {
             this.sockets.set(client.userId, client); //todo: should this be at the end of the function?
-            clientEventsEmitter.emitClientJoin(client.userUuid, client.roomId);
             //join new previous room
             const gameRoom = this.joinRoom(client, position);
 
@@ -377,8 +358,8 @@ export class SocketManager {
             } finally {
                 //delete Client.roomId;
                 this.sockets.delete(Client.userId);
-                this.nbClientsPerRoomGauge.dec({ room: Client.roomId });
                 clientEventsEmitter.emitClientLeave(Client.userUuid, Client.roomId);
+                console.log('A user left (', this.sockets.size, ' connected users)');
             }
         }
     }
@@ -410,8 +391,6 @@ export class SocketManager {
     private joinRoom(client : ExSocketInterface, position: PointInterface): GameRoom {
 
         const roomId = client.roomId;
-        //join user in room
-        this.nbClientsPerRoomGauge.inc({ room: roomId });
         client.position = position;
 
         const world = this.Worlds.get(roomId)
@@ -425,6 +404,8 @@ export class SocketManager {
         });
         //join world
         world.join(client, client.position);
+        clientEventsEmitter.emitClientJoin(client.userUuid, client.roomId);
+        console.log(new Date().toISOString() + ' A user joined (', this.sockets.size, ' connected users)');
         return world;
     }
 
