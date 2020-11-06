@@ -148,7 +148,7 @@ header {
     left: 0;
     right: 0;
     bottom: 7px;
-    padding: 1.125rem;
+    padding: 1.125rem 0.5rem;
     text-align: center;
     z-index: 2;
     transition: all .1s cubic-bezier(0.000, -0.600, 1.000, 1.650); /* custom */
@@ -431,7 +431,7 @@ img{
                 margin: 0;
                 min-height: 6rem;
                 font-family: 'Karmatic Arcade';
-                font-size: 22px;
+                font-size: 24px;
                 margin-bottom: 1.25rem;
             }
         }
@@ -502,6 +502,9 @@ img{
 
 .pixel-title{
     font-family: "Karmatic Arcade" !important;
+}
+.pixel-text{
+    font-family: "VCR OSD Mono" !important;
 }
 
 h3 {
