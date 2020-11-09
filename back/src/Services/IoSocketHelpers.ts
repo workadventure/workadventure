@@ -48,3 +48,12 @@ export function emitError(Client: ExSocketInterface, message: string): void {
     }
     console.warn(message);
 }
+
+export const pongMaxInterval = 30000; // the maximum duration (in ms) between pongs before we shutdown the connexion.
+
+export function refresLogoutTimerOnPong(ws: ExSocketInterface): void {
+    if(ws.pongTimeout) clearTimeout(ws.pongTimeout);
+    ws.pongTimeout = setTimeout(() => {
+        ws.close();
+    }, pongMaxInterval);
+}
