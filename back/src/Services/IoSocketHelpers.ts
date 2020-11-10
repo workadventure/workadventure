@@ -1,5 +1,6 @@
 import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
 import {BatchMessage, ErrorMessage, ServerToClientMessage, SubMessage} from "../Messages/generated/messages_pb";
+import {DEV_MODE} from "../Enum/EnvironmentVariable";
 
 export function emitInBatch(socket: ExSocketInterface, payload: SubMessage): void {
     socket.batchedMessages.addPayload(payload);
@@ -52,6 +53,7 @@ export function emitError(Client: ExSocketInterface, message: string): void {
 export const pongMaxInterval = 30000; // the maximum duration (in ms) between pongs before we shutdown the connexion.
 
 export function refresLogoutTimerOnPong(ws: ExSocketInterface): void {
+    if (DEV_MODE) return; //this feature is disabled in dev mode as it clashes with live reload.
     if(ws.pongTimeout) clearTimeout(ws.pongTimeout);
     ws.pongTimeout = setTimeout(() => {
         ws.close();

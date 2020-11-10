@@ -78,6 +78,7 @@ services:
       ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
       JITSI_URL: $JITSI_URL
       JITSI_ISS: $JITSI_ISS
+      DEV_MODE: "1"
     volumes:
       - ./back:/usr/src/app
     labels:

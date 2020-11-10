@@ -10,6 +10,7 @@ const CPU_OVERHEAT_THRESHOLD = Number(process.env.CPU_OVERHEAT_THRESHOLD) || 80;
 const JITSI_URL : string|undefined = (process.env.JITSI_URL === '') ? undefined : process.env.JITSI_URL;
 const JITSI_ISS = process.env.JITSI_ISS || '';
 const SECRET_JITSI_KEY = process.env.SECRET_JITSI_KEY || '';
+const DEV_MODE = process.env.DEV_MODE || false;
 
 export {
     SECRET_KEY,
@@ -21,6 +22,7 @@ export {
     GROUP_RADIUS,
     ALLOW_ARTILLERY,
     CPU_OVERHEAT_THRESHOLD,
+    DEV_MODE,
     JITSI_URL,
     JITSI_ISS,
     SECRET_JITSI_KEY
