@@ -57,7 +57,7 @@ class CoWebsiteManager {
             setTimeout(() => {
                 this.fire();
             }, animationTime)
-        });
+        }).catch(() => this.closeCoWebsite());
     }
 
     /**
@@ -70,7 +70,7 @@ class CoWebsiteManager {
             setTimeout(() => {
                 this.fire();
             }, animationTime)
-        });
+        }).catch(() => this.closeCoWebsite());
     }
 
     public closeCoWebsite(): Promise<void> {
