@@ -44,6 +44,8 @@ export class MediaManager {
 
     private userInputManager?: UserInputManager;
 
+    private hasCamera = true;
+
     constructor() {
 
         this.myCamVideo = HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('myCamVideo');
@@ -144,6 +146,9 @@ export class MediaManager {
     }
 
     public enableCamera() {
+        if(!this.hasCamera){
+            return;
+        }
         this.cinemaClose.style.display = "none";
         this.cinemaBtn.classList.remove("disabled");
         this.cinema.style.display = "block";
@@ -154,19 +159,22 @@ export class MediaManager {
     }
 
     public async disableCamera() {
-        this.cinemaClose.style.display = "block";
-        this.cinema.style.display = "none";
-        this.cinemaBtn.classList.add("disabled");
-        this.constraintsMedia.video = false;
-        this.myCamVideo.srcObject = null;
-        this.stopCamera();
-
+        this.disabledCameraView();
         if (this.constraintsMedia.audio !== false) {
             const stream = await this.getCamera();
             this.triggerUpdatedLocalStreamCallbacks(stream);
         } else {
             this.triggerUpdatedLocalStreamCallbacks(null);
         }
+    }
+
+    private disabledCameraView(){
+        this.cinemaClose.style.display = "block";
+        this.cinema.style.display = "none";
+        this.cinemaBtn.classList.add("disabled");
+        this.constraintsMedia.video = false;
+        this.myCamVideo.srcObject = null;
+        this.stopCamera();
     }
 
     public enableMicrophone() {
@@ -275,24 +283,33 @@ export class MediaManager {
             }
         }
 
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia(this.constraintsMedia);
+        return this.getLocalStream().catch(() => {
+            console.info('Error get camera, trying with video option at null');
+            this.disabledCameraView();
+            return this.getLocalStream().then((stream : MediaStream) => {
+                this.hasCamera = false;
+                return stream;
+            }).catch((err) => {
+                console.info("error get media ", this.constraintsMedia.video, this.constraintsMedia.audio, err);
+                throw err;
+            });
+        });
 
+        //TODO resize remote cam
+        /*console.log(this.localStream.getTracks());
+        let videoMediaStreamTrack =  this.localStream.getTracks().find((media : MediaStreamTrack) => media.kind === "video");
+        let {width, height} = videoMediaStreamTrack.getSettings();
+        console.info(`${width}x${height}`); // 6*/
+    }
+
+    private getLocalStream() : Promise<MediaStream> {
+        return navigator.mediaDevices.getUserMedia(this.constraintsMedia).then((stream : MediaStream) => {
             this.localStream = stream;
             this.myCamVideo.srcObject = this.localStream;
-
             return stream;
-
-            //TODO resize remote cam
-            /*console.log(this.localStream.getTracks());
-            let videoMediaStreamTrack =  this.localStream.getTracks().find((media : MediaStreamTrack) => media.kind === "video");
-            let {width, height} = videoMediaStreamTrack.getSettings();
-            console.info(`${width}x${height}`); // 6*/
-        } catch (err) {
-            console.info("error get media ", this.constraintsMedia.video, this.constraintsMedia.audio, err);
-            this.localStream = null;
+        }).catch((err: Error) => {
             throw err;
-        }
+        });
     }
 
     /**
