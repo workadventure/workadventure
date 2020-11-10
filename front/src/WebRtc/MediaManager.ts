@@ -44,6 +44,8 @@ export class MediaManager {
     private lastUpdateScene : Date = new Date();
     private setTimeOutlastUpdateScene? : NodeJS.Timeout;
 
+    private hasCamera = true;
+
     constructor() {
 
         this.myCamVideo = this.getElementByIdOrFail<HTMLVideoElement>('myCamVideo');
@@ -177,7 +179,6 @@ export class MediaManager {
 
     public async disableCamera() {
         this.disableCameraStyle();
-        this.stopCamera();
 
         if (this.constraintsMedia.audio !== false) {
             const stream = await this.getCamera();
@@ -238,6 +239,7 @@ export class MediaManager {
         this.cinemaBtn.classList.add("disabled");
         this.constraintsMedia.video = false;
         this.myCamVideo.srcObject = null;
+        this.stopCamera();
     }
 
     private enableMicrophoneStyle(){
@@ -333,24 +335,33 @@ export class MediaManager {
             }
         }
 
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia(this.constraintsMedia);
+        return this.getLocalStream().catch(() => {
+            console.info('Error get camera, trying with video option at null');
+            this.disableCameraStyle();
+            return this.getLocalStream().then((stream : MediaStream) => {
+                this.hasCamera = false;
+                return stream;
+            }).catch((err) => {
+                console.info("error get media ", this.constraintsMedia.video, this.constraintsMedia.audio, err);
+                throw err;
+            });
+        });
 
+        //TODO resize remote cam
+        /*console.log(this.localStream.getTracks());
+        let videoMediaStreamTrack =  this.localStream.getTracks().find((media : MediaStreamTrack) => media.kind === "video");
+        let {width, height} = videoMediaStreamTrack.getSettings();
+        console.info(`${width}x${height}`); // 6*/
+    }
+
+    private getLocalStream() : Promise<MediaStream> {
+        return navigator.mediaDevices.getUserMedia(this.constraintsMedia).then((stream : MediaStream) => {
             this.localStream = stream;
             this.myCamVideo.srcObject = this.localStream;
-
             return stream;
-
-            //TODO resize remote cam
-            /*console.log(this.localStream.getTracks());
-            let videoMediaStreamTrack =  this.localStream.getTracks().find((media : MediaStreamTrack) => media.kind === "video");
-            let {width, height} = videoMediaStreamTrack.getSettings();
-            console.info(`${width}x${height}`); // 6*/
-        } catch (err) {
-            console.info("error get media ", this.constraintsMedia.video, this.constraintsMedia.audio, err);
-            this.localStream = null;
+        }).catch((err: Error) => {
             throw err;
-        }
+        });
     }
 
     /**
