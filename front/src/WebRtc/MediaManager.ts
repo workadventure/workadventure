@@ -1,6 +1,7 @@
 import {DivImportance, layoutManager} from "./LayoutManager";
 import {HtmlUtils} from "./HtmlUtils";
 import {DiscussionManager, SendMessageCallback} from "./DiscussionManager";
+import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
 declare const navigator:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 const videoConstraint: boolean|MediaTrackConstraints = {
@@ -40,6 +41,8 @@ export class MediaManager {
     private monitorBtn: HTMLDivElement;
 
     private discussionManager: DiscussionManager;
+
+    private userInputManager?: UserInputManager;
 
     constructor() {
 
@@ -93,7 +96,7 @@ export class MediaManager {
             //update tracking
         });
 
-        this.discussionManager = new DiscussionManager(this,'test');
+        this.discussionManager = new DiscussionManager(this,'');
     }
 
     public onUpdateLocalStream(callback: UpdatedLocalStreamCallback): void {
@@ -572,19 +575,23 @@ export class MediaManager {
     }
 
     public removeParticipant(userId: number|string){
-        this.discussionManager.removeParticipant(userId)
+        this.discussionManager.removeParticipant(userId);
     }
 
     public addNewMessage(name: string, message: string, isMe: boolean = false){
-        this.discussionManager.addMessage(name, message, isMe)
+        this.discussionManager.addMessage(name, message, isMe);
     }
 
     public addSendMessageCallback(userId: string|number, callback: SendMessageCallback){
-        this.discussionManager.onSendMessageCallback(userId, callback)
+        this.discussionManager.onSendMessageCallback(userId, callback);
     }
 
     get activatedDiscussion(){
         return this.discussionManager.activatedDiscussion;
+    }
+
+    public setUserInputManager(userInputManager : UserInputManager){
+        this.discussionManager.setUserInputManager(userInputManager);
     }
 }
 

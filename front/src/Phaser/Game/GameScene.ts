@@ -387,6 +387,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         //create input to move
         this.userInputManager = new UserInputManager(this);
+        mediaManager.setUserInputManager(this.userInputManager);
 
         //notify game manager can to create currentUser in map
         this.createCurrentPlayer();

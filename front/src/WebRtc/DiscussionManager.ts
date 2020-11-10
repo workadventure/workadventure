@@ -1,5 +1,6 @@
 import {HtmlUtils} from "./HtmlUtils";
 import {MediaManager, ReportCallback, UpdatedLocalStreamCallback} from "./MediaManager";
+import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
 export type SendMessageCallback = (message:string) => void;
 
 export class DiscussionManager {
@@ -17,6 +18,8 @@ export class DiscussionManager {
 
     private sendMessageCallBack : Map<number|string, SendMessageCallback> = new Map<number|string, SendMessageCallback>();
 
+    private userInputManager?: UserInputManager;
+
     constructor(private mediaManager: MediaManager, name: string) {
         this.mainContainer = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-container');
         this.createDiscussPart(name);
@@ -31,15 +34,13 @@ export class DiscussionManager {
         buttonCloseDiscussion.classList.add('close-btn');
         buttonCloseDiscussion.innerHTML = `<img src="resources/logos/close.svg"/>`;
         buttonCloseDiscussion.addEventListener('click', () => {
-            this.activeDiscussion = false;
-            this.divDiscuss?.classList.remove('active');
+            this.hideDiscussion();
             this.showButtonDiscussionBtn();
         });
         this.buttonActiveDiscussion.classList.add('active-btn');
         this.buttonActiveDiscussion.innerHTML = `<img src="resources/logos/discussion.svg"/>`;
         this.buttonActiveDiscussion.addEventListener('click', () => {
-            this.activeDiscussion = true;
-            this.divDiscuss?.classList.add('active');
+            this.showDiscussion();
             this.hideButtonDiscussionBtn();
         });
         this.divDiscuss.appendChild(buttonCloseDiscussion);
@@ -69,6 +70,11 @@ export class DiscussionManager {
         inputMessage.addEventListener('keyup', (event: KeyboardEvent) => {
             if (event.key === 'Enter') {
                 event.preventDefault();
+                if(inputMessage.value === null
+                    || inputMessage.value === ''
+                    || inputMessage.value === undefined) {
+                    return;
+                }
                 this.addMessage(name, inputMessage.value, true);
                 for(const callback of this.sendMessageCallBack.values()) {
                     callback(inputMessage.value);
@@ -117,6 +123,8 @@ export class DiscussionManager {
             reportBanUserAction.addEventListener('click', () => {
                 if(reportCallback) {
                     this.mediaManager.showReportModal(`${userId}`, name ?? '', reportCallback);
+                }else{
+                    console.info('report feature is not activated!');
                 }
             });
             divParticipant.appendChild(reportBanUserAction);
@@ -193,7 +201,27 @@ export class DiscussionManager {
         this.buttonActiveDiscussion?.classList.add('active');
     }
 
+    private showDiscussion(){
+        this.activeDiscussion = true;
+        if(this.userInputManager) {
+            this.userInputManager.clearAllInputKeyboard();
+        }
+        this.divDiscuss?.classList.add('active');
+    }
+
+    private hideDiscussion(){
+        this.activeDiscussion = false;
+        if(this.userInputManager) {
+            this.userInputManager.initKeyBoardEvent();
+        }
+        this.divDiscuss?.classList.remove('active');
+    }
+
     private hideButtonDiscussionBtn(){
         this.buttonActiveDiscussion?.classList.remove('active');
+    }
+
+    public setUserInputManager(userInputManager : UserInputManager){
+        this.userInputManager = userInputManager;
     }
 }

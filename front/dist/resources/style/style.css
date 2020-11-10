@@ -840,7 +840,7 @@ div.modal-report-user{
     position: absolute;
     height: calc(100% - 360px);
     overflow-x: hidden;
-    overflow-y: scroll;
+    overflow-y: auto;
     max-width: calc(100% - 40px);
     width: calc(100% - 40px);
 }
@@ -887,6 +887,7 @@ div.modal-report-user{
     color: white;
     border-radius: 15px;
     border: none;
+    padding: 6px;
 }
 
 .discussion .send-message img{
