@@ -25,8 +25,6 @@ export interface ExSocketInterface extends WebSocket, Identificable {
     emitInBatch: (payload: SubMessage) => void;
     batchedMessages: BatchMessage;
     batchTimeout: NodeJS.Timeout|null;
-    pingTimeout: NodeJS.Timeout|null;
-    pongTimeout: NodeJS.Timeout|null;
     disconnecting: boolean,
     tags: string[],
     textures: CharacterTexture[],
