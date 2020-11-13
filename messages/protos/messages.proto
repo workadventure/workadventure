@@ -157,8 +157,8 @@ message ItemStateMessage {
 }
 
 message RoomJoinedMessage {
-  repeated UserJoinedMessage user = 1;
-  repeated GroupUpdateMessage group = 2;
+  //repeated UserJoinedMessage user = 1;
+  //repeated GroupUpdateMessage group = 2;
   repeated ItemStateMessage item = 3;
   int32 currentUserId = 4;
   repeated string tag = 5;
@@ -208,4 +208,90 @@ message ServerToClientMessage {
     SendJitsiJwtMessage sendJitsiJwtMessage = 11;
     SendUserMessage sendUserMessage = 12;
   }
+}
+
+
+/************************** SERVICES **************************/
+
+message JoinRoomMessage {
+  PositionMessage positionMessage = 1;
+  string name = 2;
+  repeated CharacterLayerMessage characterLayer = 3;
+  string userUuid = 4;
+  string roomId = 5;
+  repeated string tag = 6;
+}
+
+message UserJoinedZoneMessage {
+  int32 userId = 1;
+  string name = 2;
+  repeated CharacterLayerMessage characterLayers = 3;
+  PositionMessage position = 4;
+  Zone fromZone = 5;
+}
+
+message UserLeftZoneMessage {
+  int32 userId = 1;
+  Zone toZone = 2;
+}
+
+message GroupUpdateZoneMessage {
+  int32 groupId = 1;
+  PointMessage position = 2;
+  int32 groupSize = 3;
+  Zone fromZone = 4;
+}
+
+message GroupLeftZoneMessage {
+  int32 groupId = 1;
+  Zone toZone = 2;
+}
+
+
+message Zone {
+  int32 x = 1;
+  int32 y = 2;
+}
+
+message ZoneMessage {
+  string roomId = 1;
+  int32 x = 2;
+  int32 y = 3;
+}
+
+message PusherToBackMessage {
+  oneof message {
+    JoinRoomMessage joinRoomMessage = 1;
+    UserMovesMessage userMovesMessage = 2;
+    SilentMessage silentMessage = 3;
+    ViewportMessage viewportMessage = 4;
+    ItemEventMessage itemEventMessage = 5;
+    SetPlayerDetailsMessage setPlayerDetailsMessage = 6;
+    WebRtcSignalToServerMessage webRtcSignalToServerMessage = 7;
+    WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 8;
+    PlayGlobalMessage playGlobalMessage = 9;
+    StopGlobalMessage stopGlobalMessage = 10;
+    ReportPlayerMessage reportPlayerMessage = 11;
+    QueryJitsiJwtMessage queryJitsiJwtMessage = 12;
+  }
+}
+
+message BatchToPusherMessage {
+  repeated SubToPusherMessage payload = 2;
+}
+
+message SubToPusherMessage {
+  oneof message {
+    UserJoinedZoneMessage userJoinedZoneMessage = 1;
+    GroupUpdateZoneMessage groupUpdateZoneMessage = 2;
+    UserMovedMessage userMovedMessage = 3;
+    GroupLeftZoneMessage groupLeftZoneMessage = 4;
+    UserLeftZoneMessage userLeftZoneMessage = 5;
+    ItemEventMessage itemEventMessage = 6;
+  }
+}
+
+service RoomManager {
+  rpc joinRoom(stream PusherToBackMessage) returns (stream ServerToClientMessage);
+  rpc listenZone(ZoneMessage) returns (stream BatchToPusherMessage);
 }

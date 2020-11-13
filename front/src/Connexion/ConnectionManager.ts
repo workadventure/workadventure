@@ -95,7 +95,10 @@ class ConnectionManager {
                 console.log('An error occurred while connecting to socket server. Retrying');
                 reject(error);
             });
+
+            // FIXME: onConnect should be triggered by the first JoinRoomEvent (instead of the connection)
             connection.onConnect(() => {
+                console.warn('CONNECT RECEIVED');
                 resolve(connection);
             })
         }).catch((err) => {

@@ -4,6 +4,7 @@ import {SignalData} from "simple-peer";
 import {BodyResourceDescriptionInterface} from "../Phaser/Entity/body_character";
 
 export enum EventMessage{
+    CONNECT = "connect",
     WEBRTC_SIGNAL = "webrtc-signal",
     WEBRTC_SCREEN_SHARING_SIGNAL = "webrtc-screen-sharing-signal",
     WEBRTC_START = "webrtc-start",
@@ -121,8 +122,8 @@ export interface ItemEventMessageInterface {
 }
 
 export interface RoomJoinedMessageInterface {
-    users: MessageUserPositionInterface[],
-    groups: GroupCreatedUpdatedMessageInterface[],
+    //users: MessageUserPositionInterface[],
+    //groups: GroupCreatedUpdatedMessageInterface[],
     items: { [itemId: number] : unknown }
 }
 

@@ -13,7 +13,7 @@ import {PositionInterface} from "_Model/PositionInterface";
 export class ProtobufUtils {
 
     public static toPositionMessage(point: PointInterface): PositionMessage {
-        let direction: PositionMessage.DirectionMap[keyof PositionMessage.DirectionMap];
+        let direction: Direction;
         switch (point.direction) {
             case 'up':
                 direction = Direction.UP;
@@ -103,6 +103,16 @@ export class ProtobufUtils {
                 message.setUrl(characterLayer.url);
             }
             return message;
+        });
+    }
+
+    public static toCharacterLayerObjects(characterLayers: CharacterLayerMessage[]): CharacterLayer[] {
+        return characterLayers.map(function(characterLayer): CharacterLayer {
+            const url = characterLayer.getUrl();
+            return {
+                name: characterLayer.getName(),
+                url: url ? url : undefined,
+            };
         });
     }
 }

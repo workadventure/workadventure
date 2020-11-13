@@ -1,6 +1,10 @@
 import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
 import {BatchMessage, ErrorMessage, ServerToClientMessage, SubMessage} from "../Messages/generated/messages_pb";
+import {UserSocket} from "_Model/User";
 
+/**
+ * @deprecated use User.emitInBatch instead
+ */
 export function emitInBatch(socket: ExSocketInterface, payload: SubMessage): void {
     socket.batchedMessages.addPayload(payload);
 
@@ -20,16 +24,16 @@ export function emitInBatch(socket: ExSocketInterface, payload: SubMessage): voi
     }
 }
 
-export function emitError(Client: ExSocketInterface, message: string): void {
+export function emitError(Client: UserSocket, message: string): void {
     const errorMessage = new ErrorMessage();
     errorMessage.setMessage(message);
 
     const serverToClientMessage = new ServerToClientMessage();
     serverToClientMessage.setErrormessage(errorMessage);
 
-    if (!Client.disconnecting) {
-        Client.send(serverToClientMessage.serializeBinary().buffer, true);
-    }
+    //if (!Client.disconnecting) {
+        Client.write(serverToClientMessage);
+    //}
     console.warn(message);
 }
 

@@ -1,5 +1,5 @@
 import {CharacterLayer, ExSocketInterface} from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
-import {GameRoomPolicyTypes} from "../Model/GameRoom";
+import {GameRoomPolicyTypes} from "../Model/PusherRoom";
 import {PointInterface} from "../Model/Websocket/PointInterface";
 import {
     SetPlayerDetailsMessage,
@@ -23,6 +23,7 @@ import {SocketManager, socketManager} from "../Services/SocketManager";
 import {emitInBatch} from "../Services/IoSocketHelpers";
 import {clientEventsEmitter} from "../Services/ClientEventsEmitter";
 import {ADMIN_API_TOKEN, ADMIN_API_URL, SOCKET_IDLE_TIMER} from "../Enum/EnvironmentVariable";
+import {Zone} from "_Model/Zone";
 
 export class IoSocketController {
     private nextUserId: number = 1;
@@ -43,6 +44,7 @@ export class IoSocketController {
                 if (token !== ADMIN_API_TOKEN) {
                     console.log('Admin access refused for token: '+token)
                     res.writeStatus("401 Unauthorized").end('Incorrect token');
+                    return;
                 }
                 const roomId = query.roomId as string;
 
@@ -164,9 +166,10 @@ export class IoSocketController {
                         let memberTags: string[] = [];
                         let memberTextures: CharacterTexture[] = [];
                         const room = await socketManager.getOrCreateRoom(roomId);
-                        if(room.isFull){
+                        // TODO: make sure the room isFull is ported in the back part.
+                        /*if(room.isFull){
                             throw new Error('Room is full');
-                        }
+                        }*/
                         if (ADMIN_API_URL) {
                             try {
                                 const userData = await adminApi.fetchMemberDataByUuid(userUuid);
@@ -265,7 +268,7 @@ export class IoSocketController {
                 const message = ClientToServerMessage.deserializeBinary(new Uint8Array(arrayBuffer));
 
                 if (message.hasViewportmessage()) {
-                    socketManager.handleViewport(client, message.getViewportmessage() as ViewportMessage);
+                    socketManager.handleViewport(client, (message.getViewportmessage() as ViewportMessage).toObject());
                 } else if (message.hasUsermovesmessage()) {
                     socketManager.handleUserMovesMessage(client, message.getUsermovesmessage() as UserMovesMessage);
                 } else if (message.hasSetplayerdetailsmessage()) {
@@ -325,6 +328,7 @@ export class IoSocketController {
         client.textures = ws.textures;
         client.characterLayers = ws.characterLayers;
         client.roomId = ws.roomId;
+        client.listenedZones = new Set<Zone>();
         return client;
     }
 }
