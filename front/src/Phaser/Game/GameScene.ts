@@ -54,6 +54,7 @@ import {ConsoleGlobalMessageManager} from "../../Administration/ConsoleGlobalMes
 import {ResizableScene} from "../Login/ResizableScene";
 import {Room} from "../../Connexion/Room";
 import {jitsiFactory} from "../../WebRtc/JitsiFactory";
+import Camera = Phaser.Cameras.Scene2D.Camera;
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null
@@ -393,6 +394,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         //initialise camera
         this.initCamera();
+        this.initMinimap();
 
         // Let's generate the circle for the group delimiter
         let circleElement = Object.values(this.textures.list).find((object: Texture) => object.key === 'circleSprite-white');
@@ -1243,5 +1245,33 @@ export class GameScene extends ResizableScene implements CenterListener {
                 resolve();
             });
         }))
+    }
+
+    private initMinimap() {
+        const array = layoutManager.findBiggestAvailableArray();
+        let xCenter = (array.xEnd - array.xStart) / 2 + array.xStart;
+        let yCenter = (array.yEnd - array.yStart) / 2 + array.yStart;
+
+        // Let's put this in Game coordinates by applying the zoom level:
+        xCenter /= ZOOM_LEVEL * RESOLUTION;
+        yCenter /= ZOOM_LEVEL * RESOLUTION;
+
+        let miniMapWidth = (Math.round(this.Map.widthInPixels * 0.3));
+        miniMapWidth = miniMapWidth > window.innerWidth ? ( window.innerWidth ) : miniMapWidth;
+        let miniMapHeight = (Math.round(this.Map.heightInPixels * 0.3));
+        miniMapHeight = miniMapHeight > window.innerHeight ? ( window.innerHeight ) : miniMapHeight;
+
+        let xMiniMapCenter = xCenter - (miniMapWidth / 2);
+        xMiniMapCenter = xMiniMapCenter < 10 ? 10 : xMiniMapCenter;
+        let yMiniMapCenter = yCenter - (miniMapHeight / 2);
+        yMiniMapCenter = yMiniMapCenter < 10 ? 10 : yMiniMapCenter;
+
+        let miniMapCamera = this.cameras.add(xMiniMapCenter, yMiniMapCenter, 192, 192, false, 'miniMap');
+        //miniMapCamera.startFollow(this.CurrentPlayer, true, 1, 1,  xCenter - this.game.renderer.width / 2, yCenter - this.game.renderer.height / 2);
+        miniMapCamera.setZoom(0.3);
+        miniMapCamera.setSize((miniMapWidth + 10), miniMapHeight);
+        miniMapCamera.setBackgroundColor('black');
+        miniMapCamera.setBounds(0,0, miniMapWidth, miniMapHeight);
+        this.cameras.addExisting(miniMapCamera, true);
     }
 }
