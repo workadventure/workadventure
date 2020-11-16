@@ -351,6 +351,7 @@ export class SocketManager {
                     world.leave(Client);
                     if (world.isEmpty()) {
                         this.Worlds.delete(Client.roomId);
+                        gaugeManager.decNbRoomGauge();
                     }
                 }
                 //user leave previous room
@@ -383,6 +384,7 @@ export class SocketManager {
                 world.tags = data.tags
                 world.policyType = Number(data.policy_type)
             }
+            gaugeManager.incNbRoomGauge();
             this.Worlds.set(roomId, world);
         }
         return Promise.resolve(world)
