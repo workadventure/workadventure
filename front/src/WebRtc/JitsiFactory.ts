@@ -52,7 +52,7 @@ class JitsiFactory {
             
             return new Promise((resolve, reject) => {
                 options.onload = () => resolve(); //we want for the iframe to be loaded before triggering animations.
-                setTimeout(() => reject('Failed to load the iframe'), 10000); //failsafe in case the iframe is deleted before loading
+                setTimeout(() => resolve(), 2000); //failsafe in case the iframe is deleted before loading or too long to load
                 this.jitsiApi = new window.JitsiMeetExternalAPI(domain, options);
                 this.jitsiApi.executeCommand('displayName', playerName);
 
