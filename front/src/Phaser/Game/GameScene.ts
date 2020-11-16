@@ -467,35 +467,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         // From now, this game scene will be notified of reposition events
         layoutManager.setListener(this);
-
-        this.gameMap.onPropertyChange('openWebsite', (newValue, oldValue) => {
-            if (newValue === undefined) {
-                coWebsiteManager.closeCoWebsite();
-            } else {
-                coWebsiteManager.loadCoWebsite(newValue as string);
-            }
-        });
-        this.gameMap.onPropertyChange('jitsiRoom', (newValue, oldValue, allProps) => {
-            if (newValue === undefined) {
-                this.stopJitsi();
-            } else {
-                if (JITSI_PRIVATE_MODE) {
-                    const adminTag = allProps.get("jitsiRoomAdminTag") as string|undefined;
-
-                    this.connection.emitQueryJitsiJwtMessage(this.instance.replace('/', '-') + "-" + newValue, adminTag);
-                } else {
-                    this.startJitsi(newValue as string);
-                }
-            }
-        })
-
-        this.gameMap.onPropertyChange('silent', (newValue, oldValue) => {
-            if (newValue === undefined || newValue === false || newValue === '') {
-                this.connection.setSilent(false);
-            } else {
-                this.connection.setSilent(true);
-            }
-        });
+        this.triggerOnMapLayerPropertyChange();
 
         const camera = this.cameras.main;
 
@@ -628,11 +600,43 @@ export class GameScene extends ResizableScene implements CenterListener {
                 this.gameMap.setPosition(event.x, event.y);
             })
 
-
             this.scene.wake();
             this.scene.sleep(ReconnectingSceneName);
 
+            //init user position and play trigger to check layers properties
+            this.gameMap.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
+
             return connection;
+        });
+    }
+
+    private triggerOnMapLayerPropertyChange(){
+        this.gameMap.onPropertyChange('openWebsite', (newValue, oldValue) => {
+            if (newValue === undefined) {
+                coWebsiteManager.closeCoWebsite();
+            } else {
+                coWebsiteManager.loadCoWebsite(newValue as string);
+            }
+        });
+        this.gameMap.onPropertyChange('jitsiRoom', (newValue, oldValue, allProps) => {
+            if (newValue === undefined) {
+                this.stopJitsi();
+            } else {
+                if (JITSI_PRIVATE_MODE) {
+                    const adminTag = allProps.get("jitsiRoomAdminTag") as string|undefined;
+
+                    this.connection.emitQueryJitsiJwtMessage(this.instance.replace('/', '-') + "-" + newValue, adminTag);
+                } else {
+                    this.startJitsi(newValue as string);
+                }
+            }
+        })
+        this.gameMap.onPropertyChange('silent', (newValue, oldValue) => {
+            if (newValue === undefined || newValue === false || newValue === '') {
+                this.connection.setSilent(false);
+            } else {
+                this.connection.setSilent(true);
+            }
         });
     }
 
@@ -718,6 +722,7 @@ export class GameScene extends ResizableScene implements CenterListener {
      */
     //todo: push that into the gameManager
     private loadNextGame(layer: ITiledMapLayer, mapWidth: number, roomId: string){
+
         const room = new Room(roomId);
         gameManager.loadMap(room, this.scene);
         const exitSceneKey = roomId;
