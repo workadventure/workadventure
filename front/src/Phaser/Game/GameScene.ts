@@ -602,9 +602,6 @@ export class GameScene extends ResizableScene implements CenterListener {
             this.scene.wake();
             this.scene.sleep(ReconnectingSceneName);
 
-            //init connection in silent mode
-            this.connection.setSilent(true);
-
             //init user position and play trigger to check layers properties
             this.gameMap.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
 
