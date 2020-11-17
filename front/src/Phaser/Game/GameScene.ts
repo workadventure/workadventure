@@ -1196,12 +1196,19 @@ export class GameScene extends ResizableScene implements CenterListener {
         jitsiFactory.start(roomName, gameManager.getPlayerName(), jwt);
         this.connection.setSilent(true);
         mediaManager.hideGameOverlay();
+
+        //permit to stop jitsi when user close iframe
+        mediaManager.addTriggerCloseJitsiFrameButton('close-jisi',() => {
+            this.stopJitsi();
+        });
     }
 
     public stopJitsi(): void {
         this.connection.setSilent(false);
         jitsiFactory.stop();
         mediaManager.showGameOverlay();
+
+        mediaManager.removeTriggerCloseJitsiFrameButton('close-jisi');
     }
 
     private loadSpritesheet(name: string, url: string): Promise<void> {

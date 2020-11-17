@@ -40,6 +40,8 @@ export class MediaManager {
 
     private hasCamera = true;
 
+    private triggerCloseJistiFrame : Map<String, Function> = new Map<String, Function>();
+
     constructor() {
 
         this.myCamVideo = this.getElementByIdOrFail<HTMLVideoElement>('myCamVideo');
@@ -130,11 +132,23 @@ export class MediaManager {
     public showGameOverlay(){
         const gameOverlay = this.getElementByIdOrFail('game-overlay');
         gameOverlay.classList.add('active');
+
+        const buttonCloseFrame = HtmlUtils.getElementByIdOrFail('cowebsite-close');
+        const functionTrigger = () => {
+            this.triggerCloseJitsiFrameButton();
+        }
+        buttonCloseFrame.removeEventListener('click', functionTrigger);
     }
 
     public hideGameOverlay(){
         const gameOverlay = this.getElementByIdOrFail('game-overlay');
         gameOverlay.classList.remove('active');
+
+        const buttonCloseFrame = HtmlUtils.getElementByIdOrFail('cowebsite-close');
+        const functionTrigger = () => {
+            this.triggerCloseJitsiFrameButton();
+        }
+        buttonCloseFrame.addEventListener('click', functionTrigger);
     }
 
     public enableCamera() {
@@ -582,6 +596,19 @@ export class MediaManager {
         mainContainer.appendChild(divReport);
     }
 
+    public addTriggerCloseJitsiFrameButton(id: String, Function: Function){
+        this.triggerCloseJistiFrame.set(id, Function);
+    }
+
+    public removeTriggerCloseJitsiFrameButton(id: String){
+        this.triggerCloseJistiFrame.delete(id);
+    }
+
+    private triggerCloseJitsiFrameButton(): void {
+        for (const callback of this.triggerCloseJistiFrame.values()) {
+            callback();
+        }
+    }
 
 }
 

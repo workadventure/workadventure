@@ -274,6 +274,23 @@ body {
     #cowebsite.hidden {
         transform: translateX(100%);
     }
+
+    #cowebsite .close-btn{
+        position: absolute;
+        top: 10px;
+        right: -100px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        animation: right .2s ease;
+    }
+    #cowebsite .close-btn img{
+        height: 15px;
+        right: 15px;
+    }
+    #cowebsite:hover .close-btn{
+        right: 10px;
+    }
 }
 @media (max-aspect-ratio: 1/1) {
     .game-overlay {
