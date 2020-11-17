@@ -352,6 +352,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         //create input to move
         this.userInputManager = new UserInputManager(this);
+        mediaManager.setUserInputManager(this.userInputManager);
 
         //notify game manager can to create currentUser in map
         this.createCurrentPlayer();
@@ -539,7 +540,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             });
 
             // When connection is performed, let's connect SimplePeer
-            this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic);
+            this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic, this.GameManager.getPlayerName());
             this.GlobalMessageManager = new GlobalMessageManager(this.connection);
             this.UserMessageManager = new UserMessageManager(this.connection);
 
@@ -605,6 +606,10 @@ export class GameScene extends ResizableScene implements CenterListener {
     }
 
     private switchLayoutMode(): void {
+        //if discussion is activated, this layout cannot be activated
+        if(mediaManager.activatedDiscussion){
+            return;
+        }
         const mode = layoutManager.getLayoutMode();
         if (mode === LayoutMode.Presentation) {
             layoutManager.switchLayoutMode(LayoutMode.VideoChat);
