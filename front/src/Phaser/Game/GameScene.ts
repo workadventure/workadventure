@@ -342,45 +342,10 @@ export class GameScene extends ResizableScene implements CenterListener {
             throw new Error('Your map MUST contain a layer of type "objectgroup" whose name is "floorLayer" that represents the layer characters are drawn at.');
         }
 
-        // If there is an init position passed
-        if (this.initPosition !== null) {
-            this.startX = this.initPosition.x;
-            this.startY = this.initPosition.y;
-        } else {
-            // Now, let's find the start layer
-            if (this.room.hash) {
-                for (const layer of this.mapFile.layers) {
-                    if (this.room.hash === layer.name && layer.type === 'tilelayer' && this.isStartLayer(layer)) {
-                        const startPosition = this.startUser(layer);
-                        this.startX = startPosition.x;
-                        this.startY = startPosition.y;
-                    }
-                }
-            }
-            if (this.startX === undefined) {
-                // If we have no start layer specified or if the hash passed does not exist, let's go with the default start position.
-                for (const layer of this.mapFile.layers) {
-                    if (layer.type === 'tilelayer' && layer.name === "start") {
-                        const startPosition = this.startUser(layer);
-                        this.startX = startPosition.x;
-                        this.startY = startPosition.y;
-                    }
-                }
-            }
-        }
-        // Still no start position? Something is wrong with the map, we need a "start" layer.
-        if (this.startX === undefined) {
-            console.warn('This map is missing a layer named "start" that contains the available default start positions.');
-            // Let's start in the middle of the map
-            this.startX = this.mapFile.width * 16;
-            this.startY = this.mapFile.height * 16;
-        }
+        this.initStartXAndStartY();
 
         //add entities
         this.Objects = new Array<Phaser.Physics.Arcade.Sprite>();
-
-        //init event click
-        this.EventToClickOnTile();
 
         //initialise list of other player
         this.MapPlayers = this.physics.add.group({immovable: true});
@@ -656,6 +621,40 @@ export class GameScene extends ResizableScene implements CenterListener {
             this.chatModeSprite.setFrame(3);
         }
     }
+    
+    private initStartXAndStartY() {
+        // If there is an init position passed
+        if (this.initPosition !== null) {
+            this.startX = this.initPosition.x;
+            this.startY = this.initPosition.y;
+        } else {
+            // Now, let's find the start layer
+            if (this.room.hash) {
+                this.initPositionFromLayerName(this.room.hash);
+            }
+            if (this.startX === undefined) {
+                // If we have no start layer specified or if the hash passed does not exist, let's go with the default start position.
+                this.initPositionFromLayerName("start");
+            }
+        }
+        // Still no start position? Something is wrong with the map, we need a "start" layer.
+        if (this.startX === undefined) {
+            console.warn('This map is missing a layer named "start" that contains the available default start positions.');
+            // Let's start in the middle of the map
+            this.startX = this.mapFile.width * 16;
+            this.startY = this.mapFile.height * 16;
+        }
+    }
+
+    private initPositionFromLayerName(layerName: string) {
+        for (const layer of this.mapFile.layers) {
+            if (layerName === layer.name && layer.type === 'tilelayer' && (layerName === "start" || this.isStartLayer(layer))) {
+                const startPosition = this.startUser(layer);
+                this.startX = startPosition.x;
+                this.startY = startPosition.y;
+            }
+        }
+    }
 
     private getExitUrl(layer: ITiledMapLayer): string|undefined {
         return this.getProperty(layer, "exitUrl") as string|undefined;
@@ -695,9 +694,6 @@ export class GameScene extends ResizableScene implements CenterListener {
             instance = this.instance;
         }
 
-        //console.log('existSceneUrl', exitSceneUrl);
-        //console.log('existSceneInstance', instance);
-
         const absoluteExitSceneUrl = new URL(exitSceneUrl, this.MapUrlFile).href;
         const absoluteExitSceneUrlWithoutProtocol = absoluteExitSceneUrl.toString().substr(absoluteExitSceneUrl.toString().indexOf('://')+3);
         const roomId = '_/'+instance+'/'+absoluteExitSceneUrlWithoutProtocol;
@@ -715,11 +711,6 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.loadNextGame(layer, mapWidth, fullPath);
     }
 
-    /**
-     *
-     * @param layer
-     * @param mapWidth
-     */
     //todo: push that into the gameManager
     private loadNextGame(layer: ITiledMapLayer, mapWidth: number, roomId: string){
 
@@ -755,9 +746,6 @@ export class GameScene extends ResizableScene implements CenterListener {
         }
     }
 
-    /**
-     * @param layer
-     */
     private startUser(layer: ITiledMapLayer): PositionInterface {
         const tiles = layer.data;
         if (typeof(tiles) === 'string') {
@@ -913,17 +901,6 @@ export class GameScene extends ResizableScene implements CenterListener {
         });
     }
 
-    EventToClickOnTile(){
-        // debug code to get a tile properties by clicking on it
-        /*this.input.on("pointerdown", (pointer: Phaser.Input.Pointer)=>{
-            //pixel position toz tile position
-            const tile = this.Map.getTileAt(this.Map.worldToTileX(pointer.worldX), this.Map.worldToTileY(pointer.worldY));
-            if(tile){
-                this.CurrentPlayer.say("Your touch " + tile.layer.name);
-            }
-        });*/
-    }
-
     /**
      * @param time
      * @param delta The delta time in ms since the last frame. This is a smoothed and capped value based on the FPS rate.
@@ -968,13 +945,19 @@ export class GameScene extends ResizableScene implements CenterListener {
         });
 
         const nextSceneKey = this.checkToExit();
-        if (nextSceneKey) {
+        if (!nextSceneKey) return;
+        if (nextSceneKey.key !== this.scene.key) {
             // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
             this.connection.closeConnection();
             this.simplePeer.unregister();
             this.scene.stop();
             this.scene.remove(this.scene.key);
             this.scene.start(nextSceneKey.key);
+        } else {
+            //if the exit points to the current map, we simply teleport the user back to the startLayer
+            this.initPositionFromLayerName(this.room.hash || 'start');
+            this.CurrentPlayer.x = this.startX;
+            this.CurrentPlayer.y = this.startY;
         }
     }
 
@@ -1076,11 +1059,6 @@ export class GameScene extends ResizableScene implements CenterListener {
         await Promise.all(loadPromises);
 
         player.addTextures(characterLayerList, 1);
-        //init collision
-        /*this.physics.add.collider(this.CurrentPlayer, player, (CurrentPlayer: CurrentGamerInterface, MapPlayer: GamerInterface) => {
-            CurrentPlayer.say("Hello, how are you ? ");
-        });*/
-
     }
 
     /**
@@ -1123,7 +1101,6 @@ export class GameScene extends ResizableScene implements CenterListener {
         // We do not update the player position directly (because it is sent only every 200ms).
         // Instead we use the PlayersPositionInterpolator that will do a smooth animation over the next 200ms.
         const playerMovement = new PlayerMovement({ x: player.x, y: player.y }, this.currentTick, message.position, this.currentTick + POSITION_DELAY);
-        //console.log('Target position: ', player.x, player.y);
         this.playersPositionInterpolator.updatePlayerPosition(player.userId, playerMovement);
     }
 
@@ -1172,11 +1149,6 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     /**
      * Sends to the server an event emitted by one of the ActionableItems.
-     *
-     * @param itemId
-     * @param eventName
-     * @param state
-     * @param parameters
      */
     emitActionableEvent(itemId: number, eventName: string, state: unknown, parameters: unknown) {
         this.connection.emitActionableEvent(itemId, eventName, state, parameters);
