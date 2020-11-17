@@ -43,6 +43,7 @@ export class IoSocketController {
                 if (token !== ADMIN_API_TOKEN) {
                     console.log('Admin access refused for token: '+token)
                     res.writeStatus("401 Unauthorized").end('Incorrect token');
+                    return;
                 }
                 const roomId = query.roomId as string;
 

@@ -1,11 +1,9 @@
-import {OK} from "http-status-codes";
-import {URL_ROOM_STARTED} from "../Enum/EnvironmentVariable";
 import {HttpRequest, HttpResponse, TemplatedApp} from "uWebSockets.js";
 import {BaseController} from "./BaseController";
 import {parse} from "query-string";
 import {adminApi} from "../Services/AdminApi";
 
-//todo: delete this
+
 export class MapController extends BaseController{
 
     constructor(private App : TemplatedApp) {
@@ -36,18 +34,21 @@ export class MapController extends BaseController{
                 res.writeStatus("400 Bad request");
                 this.addCorsHeaders(res);
                 res.end("Expected organizationSlug parameter");
+                return;
             }
             if (typeof query.worldSlug !== 'string') {
                 console.error('Expected worldSlug parameter');
                 res.writeStatus("400 Bad request");
                 this.addCorsHeaders(res);
                 res.end("Expected worldSlug parameter");
+                return;
             }
             if (typeof query.roomSlug !== 'string' && query.roomSlug !== undefined) {
                 console.error('Expected only one roomSlug parameter');
                 res.writeStatus("400 Bad request");
                 this.addCorsHeaders(res);
                 res.end("Expected only one roomSlug parameter");
+                return;
             }
 
             (async () => {

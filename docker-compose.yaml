@@ -27,6 +27,7 @@ services:
       HOST: "0.0.0.0"
       NODE_ENV: development
       API_URL: api.workadventure.localhost
+      ADMIN_URL: admin.workadventure.localhost
       STARTUP_COMMAND_1: yarn install
       TURN_SERVER: "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443"
       TURN_USER: workadventure
