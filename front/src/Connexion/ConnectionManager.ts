@@ -31,41 +31,47 @@ class ConnectionManager {
 
             const room = new Room(window.location.pathname + window.location.hash);
             return Promise.resolve(room);
-        } else if (connexionType === GameConnexionTypes.anonymous || connexionType === GameConnexionTypes.empty) {
-            const localUser = localUserStore.getLocalUser();
+        } else {
+            //if connexion anonymous, remove local token
+            if(connexionType !== GameConnexionTypes.organization) {
+                localUserStore.removeUser();
+            }
+            if (connexionType === GameConnexionTypes.anonymous || connexionType === GameConnexionTypes.empty) {
+                const localUser = localUserStore.getLocalUser();
 
-            if (localUser && localUser.jwtToken && localUser.uuid && localUser.textures) {
-                this.localUser = localUser;
-                try {
-                    await this.verifyToken(localUser.jwtToken);
-                } catch(e) {
-                    // If the token is invalid, let's generate an anonymous one.
-                    console.error('JWT token invalid. Did it expire? Login anonymously instead.');
+                if (localUser && localUser.jwtToken && localUser.uuid && localUser.textures) {
+                    this.localUser = localUser;
+                    try {
+                        await this.verifyToken(localUser.jwtToken);
+                    } catch (e) {
+                        // If the token is invalid, let's generate an anonymous one.
+                        console.error('JWT token invalid. Did it expire? Login anonymously instead.');
+                        await this.anonymousLogin();
+                    }
+                } else {
                     await this.anonymousLogin();
                 }
-            } else {
-                await this.anonymousLogin();
-            }
-            let roomId: string
-            if (connexionType === GameConnexionTypes.empty) {
-                const defaultMapUrl = window.location.host.replace('play.', 'maps.') + URL_ROOM_STARTED;
-                roomId = urlManager.editUrlForRoom(defaultMapUrl, null, null);
-            } else {
-                roomId = window.location.pathname + window.location.hash;
-            }
-            const room = new Room(roomId);
-            return Promise.resolve(room);
-        } else if (connexionType == GameConnexionTypes.organization) {
-            const localUser = localUserStore.getLocalUser();
-
-            if (localUser) {
-                this.localUser = localUser;
-                await this.verifyToken(localUser.jwtToken);
-                const room = new Room(window.location.pathname + window.location.hash);
+                let roomId: string
+                if (connexionType === GameConnexionTypes.empty) {
+                    const defaultMapUrl = window.location.host.replace('play.', 'maps.') + URL_ROOM_STARTED;
+                    roomId = urlManager.editUrlForRoom(defaultMapUrl, null, null);
+                } else {
+                    roomId = window.location.pathname + window.location.hash;
+                }
+                const room = new Room(roomId);
                 return Promise.resolve(room);
-            } else {
-                //todo: find some kind of fallback?
-                return Promise.reject('Could not find a user in localstorage');
+            } else if (connexionType == GameConnexionTypes.organization) {
+                const localUser = localUserStore.getLocalUser();
+
+                if (localUser) {
+                    this.localUser = localUser;
+                    await this.verifyToken(localUser.jwtToken);
+                    const room = new Room(window.location.pathname + window.location.hash);
+                    return Promise.resolve(room);
+                } else {
+                    //todo: find some kind of fallback?
+                    return Promise.reject('Could not find a user in localstorage');
+                }
             }
         }
 

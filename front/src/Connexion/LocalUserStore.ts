@@ -6,6 +6,11 @@ class LocalUserStore {
     saveUser(localUser: LocalUser) {
         localStorage.setItem('localUser', JSON.stringify(localUser));
     }
+
+    removeUser() {
+        localStorage.removeItem('localUser');
+    }
+
     getLocalUser(): LocalUser|null {
         const data = localStorage.getItem('localUser');
         return data ? JSON.parse(data) : null;
