@@ -597,6 +597,11 @@ export class MediaManager {
 
     public addNewMessage(name: string, message: string, isMe: boolean = false){
         this.discussionManager.addMessage(name, message, isMe);
+
+        //when there are new message, show discussion
+        if(!this.discussionManager.activatedDiscussion) {
+            this.discussionManager.showDiscussionPart();
+        }
     }
 
     public addSendMessageCallback(userId: string|number, callback: SendMessageCallback){

@@ -40,8 +40,7 @@ export class DiscussionManager {
         this.buttonActiveDiscussion.classList.add('active-btn');
         this.buttonActiveDiscussion.innerHTML = `<img src="resources/logos/discussion.svg"/>`;
         this.buttonActiveDiscussion.addEventListener('click', () => {
-            this.showDiscussion();
-            this.hideButtonDiscussionBtn();
+            this.showDiscussionPart();
         });
         this.divDiscuss.appendChild(buttonCloseDiscussion);
         this.divDiscuss.appendChild(this.buttonActiveDiscussion);
@@ -223,5 +222,10 @@ export class DiscussionManager {
 
     public setUserInputManager(userInputManager : UserInputManager){
         this.userInputManager = userInputManager;
+    }
+
+    public showDiscussionPart(){
+        this.showDiscussion();
+        this.hideButtonDiscussionBtn();
     }
 }
