@@ -7,6 +7,7 @@ import {mediaManager} from "../../WebRtc/MediaManager";
 import {RESOLUTION} from "../../Enum/EnvironmentVariable";
 import {SoundMeter} from "../Components/SoundMeter";
 import {SoundMeterSprite} from "../Components/SoundMeterSprite";
+import {HtmlUtils} from "../../WebRtc/HtmlUtils";
 
 export const EnableCameraSceneName = "EnableCameraScene";
 enum LoginTextures {
@@ -93,7 +94,7 @@ export class EnableCameraScene extends Phaser.Scene {
             this.login();
         });
 
-        this.getElementByIdOrFail<HTMLDivElement>('webRtcSetup').classList.add('active');
+        HtmlUtils.getElementByIdOrFail<HTMLDivElement>('webRtcSetup').classList.add('active');
 
         const mediaPromise = mediaManager.getCamera();
         mediaPromise.then(this.getDevices.bind(this));
@@ -150,10 +151,10 @@ export class EnableCameraScene extends Phaser.Scene {
      * Function called each time a camera is changed
      */
     private setupStream(stream: MediaStream): void {
-        const img = this.getElementByIdOrFail<HTMLDivElement>('webRtcSetupNoVideo');
+        const img = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('webRtcSetupNoVideo');
         img.style.display = 'none';
 
-        const div = this.getElementByIdOrFail<HTMLVideoElement>('myCamVideoSetup');
+        const div = HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('myCamVideoSetup');
         div.srcObject = stream;
 
         this.soundMeter.connectToSource(stream, new window.AudioContext());
@@ -164,7 +165,7 @@ export class EnableCameraScene extends Phaser.Scene {
 
     private updateWebCamName(): void {
         if (this.camerasList.length > 1) {
-            const div = this.getElementByIdOrFail<HTMLVideoElement>('myCamVideoSetup');
+            const div = HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('myCamVideoSetup');
 
             let label = this.camerasList[this.cameraSelected].label;
             // remove text in parenthesis
@@ -211,10 +212,10 @@ export class EnableCameraScene extends Phaser.Scene {
     }
 
     private reposition(): void {
-        let div = this.getElementByIdOrFail<HTMLVideoElement>('myCamVideoSetup');
+        let div = HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('myCamVideoSetup');
         let bounds = div.getBoundingClientRect();
         if (!div.srcObject) {
-            div = this.getElementByIdOrFail<HTMLVideoElement>('webRtcSetup');
+            div = HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('webRtcSetup');
             bounds = div.getBoundingClientRect();
         }
 
@@ -255,7 +256,7 @@ export class EnableCameraScene extends Phaser.Scene {
     }
 
     private login(): void {
-        this.getElementByIdOrFail<HTMLDivElement>('webRtcSetup').style.display = 'none';
+        HtmlUtils.getElementByIdOrFail<HTMLDivElement>('webRtcSetup').style.display = 'none';
         this.soundMeter.stop();
         window.removeEventListener('resize', this.repositionCallback);
 
@@ -275,14 +276,5 @@ export class EnableCameraScene extends Phaser.Scene {
             }
         }
         this.updateWebCamName();
-    }
-
-    private getElementByIdOrFail<T extends HTMLElement>(id: string): T {
-        const elem = document.getElementById(id);
-        if (elem === null) {
-            throw new Error("Cannot find HTML element with id '"+id+"'");
-        }
-        // FIXME: does not check the type of the returned type
-        return elem as T;
     }
 }
