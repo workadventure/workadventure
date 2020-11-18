@@ -80,11 +80,17 @@ header {
             h1 {
                 font-family: 'Karmatic Arcade';
                 font-size: 2.75rem;
-                margin-bottom: 1.25rem;
+                margin-bottom: 2rem;
             }
             h3 {
-                min-height: 200px;
-                padding: 1rem;
+                text-align: left;
+                padding: 1rem 0 0 1rem;
+
+                &:before{
+                    content: ">";
+                    position: absolute;
+                    left: -10px;
+                }
             }
             @include media-breakpoint-down(xs) {
                 h3 {
@@ -152,7 +158,6 @@ header {
     text-align: center;
     z-index: 2;
     transition: all .1s cubic-bezier(0.000, -0.600, 1.000, 1.650); /* custom */
-    //transition-timing-function: cubic-bezier(0.000, -0.600, 1.000, 1.650); /* custom */
     @include media-breakpoint-down(sm) {
         display: none;
     }
@@ -171,33 +176,23 @@ header {
         background-image: url('../images/btn-bg-3.png');
 		cursor: pointer;
     }
-    &.start {
-        /*padding-left: 55px;*/
-        &:before {
-            /*content: "";
-            position: absolute;
-            background: url('../images/playicon.png') no-repeat;
-            height: 20px;
-            width: 21px;
-            left: 36px;
-            top: 23px;*/
-        }
-    }
     &.light{
         background-image: url('../images/btn-bg-light.png');
     }
-
-    /*&::after{
-        content: "";
-        position: absolute;
-        background-size: 60%;
-        width: 100%;
-        height: 100%;
-    }*/
+    &.relative{
+        position: relative;
+        left: auto;
+        right: auto;
+        bottom: auto;
+    }
 }
 
 .social-links a {
 	cursor: pointer;
+
+    &:hover{
+        text-decoration: none;
+    }
 }
 
 img{
@@ -388,7 +383,7 @@ img{
         }
     }
     &.how-to{
-        padding: 6.25rem 0;
+        padding: 6.25rem 0 0;
         background: url('../images/bg-briques.jpg') repeat-x bottom;
         .desktop-only {
             padding: 0 1.25rem 4rem;
