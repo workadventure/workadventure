@@ -1,3 +1,4 @@
+import {Room} from "../Connexion/Room";
 
 export enum GameConnexionTypes {
     anonymous=1,
@@ -43,6 +44,15 @@ class UrlManager {
         }
         history.pushState({}, 'WorkAdventure', newUrl);
         return newUrl;
+    }
+    
+    //todo: is it duplicated with editUrlForRoom() ?
+    public editUrlForCurrentRoom(room: Room): void {
+        let path = room.id;
+        if (room.hash) {
+            path += '#'+room.hash;
+        }
+        history.pushState({}, 'WorkAdventure', path);
     }
 
 }

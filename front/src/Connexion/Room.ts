@@ -29,6 +29,25 @@ export class Room {
             this.hash = idWithHash.substr(indexOfHash + 1);
         }
     }
+    
+    public static getIdFromIdentifier(identifier: string, baseUrl: string, currentInstance: string): {roomId: string, hash: string} {
+        let roomId = '';
+        let hash = '';
+        if (!identifier.startsWith('/_/') && !identifier.startsWith('/@/')) { //relative file link
+            const absoluteExitSceneUrl = new URL(identifier, baseUrl);
+            roomId = '_/'+currentInstance+'/'+absoluteExitSceneUrl.hostname + absoluteExitSceneUrl.pathname; //in case of a relative url, we need to create a public roomId
+            hash = absoluteExitSceneUrl.hash;
+            hash = hash.substring(1); //remove the leading diese
+        } else { //absolute room Id
+            const parts = identifier.split('#');
+            roomId = parts[0];
+            roomId = roomId.substring(1); //remove the leading slash
+            if (parts.length > 1) {
+                hash = parts[1]
+            }
+        }
+        return {roomId, hash}
+    }
 
     public async getMapUrl(): Promise<string> {
         return new Promise<string>((resolve, reject) => {
