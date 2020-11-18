@@ -10,6 +10,9 @@
 	  gtag('js', new Date());
 
 	  gtag('config', 'UA-10196481-11');
+	  if (window.location.host.endsWith("localhost")){
+          window['ga-disable-UA-10196481-11'] = true;
+      }
 	</script>
     <link rel="apple-touch-icon" sizes="57x57" href="static/images/favicons/apple-icon-57x57.png">
     <link rel="apple-touch-icon" sizes="60x60" href="static/images/favicons/apple-icon-60x60.png">
@@ -82,22 +85,32 @@
                     </div>
                     <div class="col-2 col-md-6">
                         <div class="social-links">
-                            <span class="share-title">Share your experience</span>
-                            <a onclick="shareFB()">
-                                <img class="social-image" src="static/images/facebook.png" />
+                            <a href="https://www.facebook.com/workadventurebytcm">
+                                <img class="social-image" src="static/images/facebook_bw.png" />
                             </a>
-                            <a onclick="shareLI()">
-                                <img class="social-image" src="static/images/linkedin.png" />
+                            <a href="https://www.linkedin.com/company/workadventure-by-tcm">
+                                <img class="social-image" src="static/images/linkedin_bw.png" />
                             </a>
-                            <a onclick="shareTW()">
-                                <img class="social-image" src="static/images/twitter.png" />
+                            <a href="https://twitter.com/Workadventure_">
+                                <img class="social-image" src="static/images/twitter_bw.png" />
                             </a>
                         </div>
                     </div>
                 </div>
                 <div class="title title-main text-center">
-                    <h1>Your workplace<br/>but better</h1>
-                    <h3>You are impatient to discover this new world? Click on "Work online" and meet new people or share this adventure with your colleagues and friends by clicking on "Work in private"</h3>
+                    <h1>Meet your teammates</h1>
+                    <h3>
+                        WorkAdventure preserves your social interaction while COVID is still out there.
+                    </h3>
+                    <h3>
+                        Stay connected with your teamworkers, by creating your own online workspace to work remotely.
+                    </h3>
+                    <h3>
+                        Stay connected with your clients by providing a dedicated digital place to organize meetings, workshops.
+                    </h3>
+                    <h3>
+                        Stay connected with your future collaborators by organizing online event.
+                    </h3>
                 </div>
                 <div class="row buttons-row justify-content-md-center pt-5">
                     <div class="col col-lg-3">
@@ -107,7 +120,7 @@
                     </div>
                     <div class="col col-lg-3">
                         <a class="custom-link play" target="_BLANK" onclick="startGame()" title="WORK ONLINE">
-                            WORK ONLINE
+                            TRY IT NOW!
                         </a>
                     </div>
                 </div>
@@ -158,7 +171,7 @@
                 <p>Click the button below to come and say hi!</p>
                 <p class="bubble-action"><span onclick="startGame()">
                     <img src="static/images/playicon.png" />
-                    START IN PUBLIC MODE
+                    TRY IT NOW !
                 </span></p>
             </div>
         </div>
@@ -166,10 +179,11 @@
             <div>
                 <p>You can also create a private room with your friends or your team ! </p>
                 <p class="bubble-legend">To try, press button work in private</p>
-                <p class="bubble-action"><a href="/choose-map.html">
-                    <img src="static/images/playicon.png" />
-                    START WORKING IN PRIVATE
-                </a></p>
+                <p class="bubble-action">
+                    <a href="/choose-map.html">
+                        <img src="static/images/playicon.png" />
+                        CHOOSE YOU OWN MAP
+                    </a>
                 <p>
                     Don’t forget to activate your mic and camera, let’s play
                 </p>
@@ -179,7 +193,6 @@
         <img src="static/images/story/character-walk-right.gif" style="display:none;" />
     </section>
     <script>
-
         gsap.to(".title-main", {
             //y:-1000,
             scale: 0,
@@ -307,6 +320,57 @@
                         <div class="step-image"><img src="static/images/interact.png"></div>
                     </div>
                 </div>
+            </div>
+            <div class="row mt-5">
+                <div class="col-lg-9 text-right">
+                    <p class="py-3 font-weight-bold" style="font-size: 1.25rem">
+                        Want to try Woradventure with your team mates or friends?
+                    </p>
+                </div>
+                <div class="col-lg-3">
+                    <a class="custom-link relative" href="/choose-map.html" title="WORK IN PRIVATE">
+                        GET STARTED!
+                    </a>
+                </div>
+            </div>
+            <div class="social-links text-center pt-2 pb-4">
+                <span class="share-title">... and if you liked woradventure, share your experience!</span>
+                <a onclick="shareFB()">
+                    <img class="social-image" src="static/images/facebook.png" />
+                </a>
+                <a onclick="shareLI()">
+                    <img class="social-image" src="static/images/linkedin.png" />
+                </a>
+                <a onclick="shareTW()">
+                    <img class="social-image" src="static/images/twitter.png" />
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="section bg-white text-center pt-5">
+        <div class="container-fluid container-lg">
+            <div class="row justify-content-md-center">
+                <div class="col-12 col-md-12 text-center">
+                    <h3>WORKADVENTURE'S USE CASES</h3>
+                </div>
+                <p>
+                    Workadventure is an intuitive and fun solution to professional issues:
+                </p>
+                <ul class="text-left">
+                    <li>
+                        Work in a remote way within a team,
+                    </li>
+                    <li>
+                        Create an event (even a big one),
+                    </li>
+                    <li>
+                        Stay connected and increase social interactions...
+                    </li>
+                </ul>
+                <p>
+                    Feel free to contact us if you need a specific map, need a dedicated admin console or any
+                    support (for instance a large number of connexions) : <a href="mailto:workaventure@thecodingmachine.com" target="_blank">workaventure@thecodingmachine.com</a>
+                </p>
             </div>
         </div>
     </div>
