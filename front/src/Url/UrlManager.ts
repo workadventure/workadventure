@@ -1,4 +1,3 @@
-import {Room} from "../Connexion/Room";
 
 export enum GameConnexionTypes {
     anonymous=1,
@@ -46,15 +45,14 @@ class UrlManager {
         return newUrl;
     }
     
-    //todo: is it duplicated with editUrlForRoom() ?
-    public editUrlForCurrentRoom(room: Room): void {
-        let path = room.id;
-        if (room.hash) {
-            path += '#'+room.hash;
-        }
-        history.pushState({}, 'WorkAdventure', path);
+    public getStartLayerNameFromUrl(): string|null {
+        let hash = window.location.hash;
+        return hash.length > 1 ? hash.substring(1) : null;
     }
 
+    pushStartLayerNameToUrl(startLayerName: string): void {
+        window.location.hash = startLayerName;
+    }
 }
 
 export const urlManager = new UrlManager();

@@ -42,7 +42,7 @@ export class GameManager {
 
         const gameIndex = scenePlugin.getIndex(roomID);
         if(gameIndex === -1){
-            const game : Phaser.Scene = GameScene.createFromUrl(room, mapUrl);
+            const game : Phaser.Scene = new GameScene(room, mapUrl);
             scenePlugin.add(roomID, game, false);
         }
     }

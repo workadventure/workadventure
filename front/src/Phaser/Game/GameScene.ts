@@ -95,6 +95,8 @@ interface DeleteGroupEventInterface {
     groupId: number
 }
 
+const defaultStartLayerName = 'start';
+
 export class GameScene extends ResizableScene implements CenterListener {
     GameManager : GameManager;
     Terrains : Array<Phaser.Tilemaps.Tileset>;
@@ -144,11 +146,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     // The item that can be selected by pressing the space key.
     private outlinedItem: ActionableItem|null = null;
     private userInputManager!: UserInputManager;
-
-    static createFromUrl(room: Room, mapUrlFile: string): GameScene {
-        // We use the map URL as a key
-        return new GameScene(room, mapUrlFile);
-    }
+    private startLayerName!: string | null;
 
     constructor(private room: Room, MapUrlFile: string) {
         super({
@@ -303,7 +301,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     //hook create scene
     create(): void {
-        urlManager.editUrlForCurrentRoom(this.room);
+        this.startLayerName = urlManager.getStartLayerNameFromUrl();
         
         //initalise map
         this.Map = this.add.tilemap(this.MapUrlFile);
@@ -507,7 +505,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                 this.simplePeer.unregister();
 
                 const gameSceneKey = 'somekey' + Math.round(Math.random() * 10000);
-                const game: Phaser.Scene = GameScene.createFromUrl(this.room, this.MapUrlFile);
+                const game: Phaser.Scene = new GameScene(this.room, this.MapUrlFile);
                 this.scene.add(gameSceneKey, game, true,
                     {
                         initPosition: {
@@ -636,18 +634,18 @@ export class GameScene extends ResizableScene implements CenterListener {
     
     private onMapExit(exitKey: string) {
         const {roomId, hash} = Room.getIdFromIdentifier(exitKey, this.MapUrlFile, this.instance);
-        //todo: push the hash into the url
         if (!roomId) throw new Error('Could not find the room from its exit key: '+exitKey);
+        urlManager.pushStartLayerNameToUrl(hash);
         if (roomId !== this.scene.key) {
             // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
             this.connection.closeConnection();
             this.simplePeer.unregister();
             this.scene.stop();
             this.scene.remove(this.scene.key);
-            this.scene.start(roomId, {hash});
+            this.scene.start(roomId);
         } else {
             //if the exit points to the current map, we simply teleport the user back to the startLayer
-            this.initPositionFromLayerName(this.room.hash || 'start');
+            this.initPositionFromLayerName(hash || defaultStartLayerName);
             this.CurrentPlayer.x = this.startX;
             this.CurrentPlayer.y = this.startY;
         }
@@ -677,12 +675,12 @@ export class GameScene extends ResizableScene implements CenterListener {
             this.startY = this.initPosition.y;
         } else {
             // Now, let's find the start layer
-            if (this.room.hash) {
-                this.initPositionFromLayerName(this.room.hash);
+            if (this.startLayerName) {
+                this.initPositionFromLayerName(this.startLayerName);
             }
             if (this.startX === undefined) {
                 // If we have no start layer specified or if the hash passed does not exist, let's go with the default start position.
-                this.initPositionFromLayerName("start");
+                this.initPositionFromLayerName(defaultStartLayerName);
             }
         }
         // Still no start position? Something is wrong with the map, we need a "start" layer.
@@ -696,7 +694,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     private initPositionFromLayerName(layerName: string) {
         for (const layer of this.mapFile.layers) {
-            if (layerName === layer.name && layer.type === 'tilelayer' && (layerName === "start" || this.isStartLayer(layer))) {
+            if (layerName === layer.name && layer.type === 'tilelayer' && (layerName === defaultStartLayerName || this.isStartLayer(layer))) {
                 const startPosition = this.startUser(layer);
                 this.startX = startPosition.x;
                 this.startY = startPosition.y;
