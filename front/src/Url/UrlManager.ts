@@ -46,7 +46,7 @@ class UrlManager {
     }
     
     public getStartLayerNameFromUrl(): string|null {
-        let hash = window.location.hash;
+        const hash = window.location.hash;
         return hash.length > 1 ? hash.substring(1) : null;
     }
 
