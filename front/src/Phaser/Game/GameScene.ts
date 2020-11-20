@@ -178,6 +178,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                 file: file.src
             });
         });
+        this.load.scenePlugin('AnimatedTiles', 'resources/plugins/AnimatedTiles.js', 'animatedTiles', 'animatedTiles');
         this.load.on('filecomplete-tilemapJSON-'+this.MapKey, (key: string, type: string, data: unknown) => {
             this.onMapLoad(data);
         });
@@ -359,6 +360,8 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         //initialise camera
         this.initCamera();
+
+        (this as any).animatedTiles.init(this.Map); // eslint-disable-line @typescript-eslint/no-explicit-any
 
         // Let's generate the circle for the group delimiter
         let circleElement = Object.values(this.textures.list).find((object: Texture) => object.key === 'circleSprite-white');
