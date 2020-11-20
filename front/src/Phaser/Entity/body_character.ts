@@ -226,6 +226,7 @@ export const CLOTHES_RESOURCES: Array<BodyResourceDescriptionInterface> = [
     {name:"clothes_68",img: "resources/customisation/character_clothes/character_clothes67.png"},
     {name:"clothes_69",img: "resources/customisation/character_clothes/character_clothes68.png"},
     {name:"clothes_70",img: "resources/customisation/character_clothes/character_clothes69.png"},
+    {name:"clothes_pride_shirt",img: "resources/customisation/character_clothes/pride_shirt.png"}
 ];
 
 export const HATS_RESOURCES: Array<BodyResourceDescriptionInterface> = [
