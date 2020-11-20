@@ -290,7 +290,8 @@ export const ACCESSORIES_RESOURCES: Array<BodyResourceDescriptionInterface> = [
     {name: "accessory_29", img: "resources/customisation/character_accessories/character_accessories29.png"},
     {name: "accessory_30", img: "resources/customisation/character_accessories/character_accessories30.png"},
     {name: "accessory_31", img: "resources/customisation/character_accessories/character_accessories31.png"},
-    {name: "accessory_32", img: "resources/customisation/character_accessories/character_accessories32.png"}
+    {name: "accessory_32", img: "resources/customisation/character_accessories/character_accessories32.png"},
+    {name: "accessory_mate_bottle", img: "resources/customisation/character_accessories/mate_bottle1.png"}
 ];
 
 export const LAYERS: Array<Array<BodyResourceDescriptionInterface>> = [
