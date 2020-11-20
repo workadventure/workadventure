@@ -254,7 +254,8 @@ export const HATS_RESOURCES: Array<BodyResourceDescriptionInterface> = [
     {name: "hats_23", img: "resources/customisation/character_hats/character_hats23.png"},
     {name: "hats_24", img: "resources/customisation/character_hats/character_hats24.png"},
     {name: "hats_25", img: "resources/customisation/character_hats/character_hats25.png"},
-    {name: "hats_26", img: "resources/customisation/character_hats/character_hats26.png"}
+    {name: "hats_26", img: "resources/customisation/character_hats/character_hats26.png"},
+    {name: "tinfoil_hat1", img: "resources/customisation/character_hats/tinfoil_hat1.png"}
 ];
 
 export const ACCESSORIES_RESOURCES: Array<BodyResourceDescriptionInterface> = [
