@@ -661,10 +661,8 @@ export class MediaManager {
     private pingCameraStatus(){
         setTimeout(() => {
             console.log('ping camera status');
-            this.getCamera().then((stream: MediaStream) => {
-                this.triggerUpdatedLocalStreamCallbacks(stream);
-                this.pingCameraStatus();
-            });
+            this.triggerUpdatedLocalStreamCallbacks(this.localStream);
+            this.pingCameraStatus();
         }, 30000);
     }
 

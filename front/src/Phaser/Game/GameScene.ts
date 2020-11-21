@@ -906,6 +906,7 @@ export class GameScene extends ResizableScene implements CenterListener {
      * @param delta The delta time in ms since the last frame. This is a smoothed and capped value based on the FPS rate.
      */
     update(time: number, delta: number) : void {
+        mediaManager.setLastUpdateScene();
         this.currentTick = time;
         this.CurrentPlayer.moveUser(delta);
 
@@ -959,8 +960,6 @@ export class GameScene extends ResizableScene implements CenterListener {
             this.CurrentPlayer.x = this.startX;
             this.CurrentPlayer.y = this.startY;
         }
-
-        mediaManager.setLastUpdateScene();
     }
 
     private checkToExit(): {key: string, hash: string} | null  {
