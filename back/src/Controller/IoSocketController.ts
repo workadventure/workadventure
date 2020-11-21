@@ -20,9 +20,9 @@ import {parse} from "query-string";
 import {jwtTokenManager} from "../Services/JWTTokenManager";
 import {adminApi, CharacterTexture, FetchMemberDataByUuidResponse} from "../Services/AdminApi";
 import {SocketManager, socketManager} from "../Services/SocketManager";
-import {emitInBatch, pongMaxInterval, refresLogoutTimerOnPong, resetPing} from "../Services/IoSocketHelpers";
+import {emitInBatch} from "../Services/IoSocketHelpers";
 import {clientEventsEmitter} from "../Services/ClientEventsEmitter";
-import {ADMIN_API_TOKEN, ADMIN_API_URL} from "../Enum/EnvironmentVariable";
+import {ADMIN_API_TOKEN, ADMIN_API_URL, SOCKET_IDLE_TIMER} from "../Enum/EnvironmentVariable";
 
 export class IoSocketController {
     private nextUserId: number = 1;
@@ -43,6 +43,7 @@ export class IoSocketController {
                 if (token !== ADMIN_API_TOKEN) {
                     console.log('Admin access refused for token: '+token)
                     res.writeStatus("401 Unauthorized").end('Incorrect token');
+                    return;
                 }
                 const roomId = query.roomId as string;
 
@@ -110,6 +111,7 @@ export class IoSocketController {
         this.app.ws('/room', {
             /* Options */
             //compression: uWS.SHARED_COMPRESSOR,
+            idleTimeout: SOCKET_IDLE_TIMER,
             maxPayloadLength: 16 * 1024 * 1024,
             maxBackpressure: 65536, // Maximum 64kB of data in the buffer.
             //idleTimeout: 10,
@@ -239,8 +241,6 @@ export class IoSocketController {
                 // Let's join the room
                 const client = this.initClient(ws); //todo: into the upgrade instead?
                 socketManager.handleJoinRoom(client);
-                resetPing(client);
-                refresLogoutTimerOnPong(ws as ExSocketInterface);
 
                 //get data information and show messages
                 if (ADMIN_API_URL) {
@@ -292,9 +292,6 @@ export class IoSocketController {
             },
             drain: (ws) => {
                 console.log('WebSocket backpressure: ' + ws.getBufferedAmount());
-            },
-            pong(ws) {
-                refresLogoutTimerOnPong(ws as ExSocketInterface);
             },
             close: (ws, code, message) => {
                 const Client = (ws as ExSocketInterface);

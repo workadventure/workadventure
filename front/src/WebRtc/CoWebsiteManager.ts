@@ -16,31 +16,35 @@ class CoWebsiteManager {
     private opened: iframeStates = iframeStates.closed; 
 
     private observers = new Array<CoWebsiteStateChangedCallback>();
+    /**
+     * Quickly going in and out of an iframe trigger can create conflicts between the iframe states.
+     * So we use this promise to queue up every cowebsite state transition
+     */
+    private currentOperationPromise: Promise<void> = Promise.resolve();
+    private cowebsiteDiv: HTMLDivElement; 
     
-    private close(): HTMLDivElement {
-        const cowebsiteDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteDivId);
-        cowebsiteDiv.classList.remove('loaded'); //edit the css class to trigger the transition
-        cowebsiteDiv.classList.add('hidden');
+    constructor() {
+        this.cowebsiteDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteDivId);
+    }
+    
+    private close(): void {
+        this.cowebsiteDiv.classList.remove('loaded'); //edit the css class to trigger the transition
+        this.cowebsiteDiv.classList.add('hidden');
         this.opened = iframeStates.closed;
-        return cowebsiteDiv;
     }
-    private load(): HTMLDivElement {
-        const cowebsiteDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteDivId);
-        cowebsiteDiv.classList.remove('hidden'); //edit the css class to trigger the transition
-        cowebsiteDiv.classList.add('loading');
+    private load(): void {
+        this.cowebsiteDiv.classList.remove('hidden'); //edit the css class to trigger the transition
+        this.cowebsiteDiv.classList.add('loading');
         this.opened = iframeStates.loading;
-        return cowebsiteDiv;
     }
-    private open(): HTMLDivElement {
-        const cowebsiteDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteDivId);
-        cowebsiteDiv.classList.remove('loading', 'hidden'); //edit the css class to trigger the transition
+    private open(): void {
+        this.cowebsiteDiv.classList.remove('loading', 'hidden'); //edit the css class to trigger the transition
         this.opened = iframeStates.opened;
-        return cowebsiteDiv;
     }
 
     public loadCoWebsite(url: string): void {
-        const cowebsiteDiv = this.load();
-        cowebsiteDiv.innerHTML = '';
+        this.load();
+        this.cowebsiteDiv.innerHTML = '';
 
         const iframe = document.createElement('iframe');
         iframe.id = 'cowebsite-iframe';
@@ -48,11 +52,11 @@ class CoWebsiteManager {
         const onloadPromise = new Promise((resolve) => {
             iframe.onload = () => resolve();
         });
-        cowebsiteDiv.appendChild(iframe);
+        this.cowebsiteDiv.appendChild(iframe);
         const onTimeoutPromise = new Promise((resolve) => {
             setTimeout(() => resolve(), 2000);
         });
-        Promise.race([onloadPromise, onTimeoutPromise]).then(() => {
+        this.currentOperationPromise = this.currentOperationPromise.then(() =>Promise.race([onloadPromise, onTimeoutPromise])).then(() => {
             this.open();
             setTimeout(() => {
                 this.fire();
@@ -64,24 +68,26 @@ class CoWebsiteManager {
      * Just like loadCoWebsite but the div can be filled by the user.
      */
     public insertCoWebsite(callback: (cowebsite: HTMLDivElement) => Promise<void>): void {
-        const cowebsiteDiv = this.load();
-        callback(cowebsiteDiv).then(() => {
+        this.load();
+        this.currentOperationPromise = this.currentOperationPromise.then(() => callback(this.cowebsiteDiv)).then(() => {
             this.open();
             setTimeout(() => {
                 this.fire();
-            }, animationTime)
+            }, animationTime);
         }).catch(() => this.closeCoWebsite());
     }
 
     public closeCoWebsite(): Promise<void> {
-        return new Promise((resolve, reject) => {
-            const cowebsiteDiv = this.close();
+        this.currentOperationPromise = this.currentOperationPromise.then(() => new Promise((resolve, reject) => {
+            if(this.opened === iframeStates.closed) resolve(); //this method may be called twice, in case of iframe error for example
+            this.close();
             this.fire();
             setTimeout(() => {
+                this.cowebsiteDiv.innerHTML = '';
                 resolve();
-                setTimeout(() => cowebsiteDiv.innerHTML = '', 500)
             }, animationTime)
-        });
+        }));
+        return this.currentOperationPromise;
     }
 
     public getGameSize(): {width: number, height: number} {
@@ -104,6 +110,7 @@ class CoWebsiteManager {
         }
     }
 
+    //todo: is it still useful to allow any kind of observers? 
     public onStateChange(observer: CoWebsiteStateChangedCallback) {
         this.observers.push(observer);
     }
