@@ -18,22 +18,6 @@ export function emitInBatch(socket: ExSocketInterface, payload: SubMessage): voi
             socket.batchTimeout = null;
         }, 100);
     }
-
-    // If we send a message, we don't need to keep the connection alive
-    resetPing(socket);
-}
-
-export function resetPing(ws: ExSocketInterface): void {
-    if (ws.pingTimeout) {
-        clearTimeout(ws.pingTimeout);
-    }
-    ws.pingTimeout = setTimeout(() => {
-        if (ws.disconnecting) {
-            return;
-        }
-        ws.ping();
-        resetPing(ws);
-    }, 29000);
 }
 
 export function emitError(Client: ExSocketInterface, message: string): void {
@@ -48,3 +32,4 @@ export function emitError(Client: ExSocketInterface, message: string): void {
     }
     console.warn(message);
 }
+

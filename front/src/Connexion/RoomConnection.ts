@@ -27,7 +27,9 @@ import {
     SendJitsiJwtMessage,
     CharacterLayerMessage,
     SendUserMessage,
-    CloseMessage
+    CloseMessage,
+    PingMessage,
+    SendUserMessage
 } from "../Messages/generated/messages_pb"
 
 import {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
@@ -42,6 +44,8 @@ import {
     WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
 import {BodyResourceDescriptionInterface} from "../Phaser/Entity/body_character";
+
+const manualPingDelay = 20000;
 
 export class RoomConnection implements RoomConnection {
     private readonly socket: WebSocket;
@@ -85,7 +89,9 @@ export class RoomConnection implements RoomConnection {
         this.socket.binaryType = 'arraybuffer';
 
         this.socket.onopen = (ev) => {
-            //console.log('WS connected');
+            //we manually ping every 20s to not be logged out by the server, even when the game is in background.
+            const pingMessage = new PingMessage();
+            setInterval(() => this.socket.send(pingMessage.serializeBinary().buffer), manualPingDelay);
         };
 
         this.socket.onmessage = (messageEvent) => {

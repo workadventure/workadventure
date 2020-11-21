@@ -38,6 +38,10 @@ message CharacterLayerMessage {
 
 /*********** CLIENT TO SERVER MESSAGES *************/
 
+message PingMessage {
+
+}
+
 message SetPlayerDetailsMessage {
   string name = 1;
   repeated string characterLayers = 2;

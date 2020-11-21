@@ -2,6 +2,7 @@ import * as SimplePeerNamespace from "simple-peer";
 import {mediaManager} from "./MediaManager";
 import {TURN_SERVER, TURN_USER, TURN_PASSWORD} from "../Enum/EnvironmentVariable";
 import {RoomConnection} from "../Connexion/RoomConnection";
+import {MESSAGE_TYPE_CONSTRAINT} from "./VideoPeer";
 
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
@@ -148,6 +149,6 @@ export class ScreenSharingPeer extends Peer {
 
     public stopPushingScreenSharingToRemoteUser(stream: MediaStream) {
         this.removeStream(stream);
-        this.write(new Buffer(JSON.stringify({streamEnded: true})));
+        this.write(new Buffer(JSON.stringify({type: MESSAGE_TYPE_CONSTRAINT, streamEnded: true})));
     }
 }

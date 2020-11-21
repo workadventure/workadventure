@@ -1,5 +1,7 @@
 import {DivImportance, layoutManager} from "./LayoutManager";
 import {HtmlUtils} from "./HtmlUtils";
+import {DiscussionManager, SendMessageCallback} from "./DiscussionManager";
+import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
 declare const navigator:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 const videoConstraint: boolean|MediaTrackConstraints = {
@@ -38,57 +40,65 @@ export class MediaManager {
     private cinemaBtn: HTMLDivElement;
     private monitorBtn: HTMLDivElement;
 
+    private discussionManager: DiscussionManager;
+
+    private userInputManager?: UserInputManager;
+
+    private hasCamera = true;
+
     constructor() {
 
-        this.myCamVideo = this.getElementByIdOrFail<HTMLVideoElement>('myCamVideo');
-        this.webrtcInAudio = this.getElementByIdOrFail<HTMLAudioElement>('audio-webrtc-in');
+        this.myCamVideo = HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('myCamVideo');
+        this.webrtcInAudio = HtmlUtils.getElementByIdOrFail<HTMLAudioElement>('audio-webrtc-in');
         this.webrtcInAudio.volume = 0.2;
 
-        this.microphoneBtn = this.getElementByIdOrFail<HTMLDivElement>('btn-micro');
-        this.microphoneClose = this.getElementByIdOrFail<HTMLImageElement>('microphone-close');
+        this.microphoneBtn = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('btn-micro');
+        this.microphoneClose = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('microphone-close');
         this.microphoneClose.style.display = "none";
         this.microphoneClose.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
             this.enableMicrophone();
             //update tracking
         });
-        this.microphone = this.getElementByIdOrFail<HTMLImageElement>('microphone');
+        this.microphone = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('microphone');
         this.microphone.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
             this.disableMicrophone();
             //update tracking
         });
 
-        this.cinemaBtn = this.getElementByIdOrFail<HTMLDivElement>('btn-video');
-        this.cinemaClose = this.getElementByIdOrFail<HTMLImageElement>('cinema-close');
+        this.cinemaBtn = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('btn-video');
+        this.cinemaClose = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('cinema-close');
         this.cinemaClose.style.display = "none";
         this.cinemaClose.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
             this.enableCamera();
             //update tracking
         });
-        this.cinema = this.getElementByIdOrFail<HTMLImageElement>('cinema');
+        this.cinema = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('cinema');
         this.cinema.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
             this.disableCamera();
             //update tracking
         });
 
-        this.monitorBtn = this.getElementByIdOrFail<HTMLDivElement>('btn-monitor');
-        this.monitorClose = this.getElementByIdOrFail<HTMLImageElement>('monitor-close');
+        this.monitorBtn = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('btn-monitor');
+        this.monitorClose = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('monitor-close');
         this.monitorClose.style.display = "block";
         this.monitorClose.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
             this.enableScreenSharing();
             //update tracking
         });
-        this.monitor = this.getElementByIdOrFail<HTMLImageElement>('monitor');
+        this.monitor = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('monitor');
         this.monitor.style.display = "none";
         this.monitor.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
             this.disableScreenSharing();
             //update tracking
         });
+
+        this.discussionManager = new DiscussionManager(this,'');
     }
 
     public onUpdateLocalStream(callback: UpdatedLocalStreamCallback): void {
@@ -126,16 +136,19 @@ export class MediaManager {
     }
 
     public showGameOverlay(){
-        const gameOverlay = this.getElementByIdOrFail('game-overlay');
+        const gameOverlay = HtmlUtils.getElementByIdOrFail('game-overlay');
         gameOverlay.classList.add('active');
     }
 
     public hideGameOverlay(){
-        const gameOverlay = this.getElementByIdOrFail('game-overlay');
+        const gameOverlay = HtmlUtils.getElementByIdOrFail('game-overlay');
         gameOverlay.classList.remove('active');
     }
 
     public enableCamera() {
+        if(!this.hasCamera){
+            return;
+        }
         this.cinemaClose.style.display = "none";
         this.cinemaBtn.classList.remove("disabled");
         this.cinema.style.display = "block";
@@ -146,19 +159,22 @@ export class MediaManager {
     }
 
     public async disableCamera() {
-        this.cinemaClose.style.display = "block";
-        this.cinema.style.display = "none";
-        this.cinemaBtn.classList.add("disabled");
-        this.constraintsMedia.video = false;
-        this.myCamVideo.srcObject = null;
-        this.stopCamera();
-
+        this.disabledCameraView();
         if (this.constraintsMedia.audio !== false) {
             const stream = await this.getCamera();
             this.triggerUpdatedLocalStreamCallbacks(stream);
         } else {
             this.triggerUpdatedLocalStreamCallbacks(null);
         }
+    }
+
+    private disabledCameraView(){
+        this.cinemaClose.style.display = "block";
+        this.cinema.style.display = "none";
+        this.cinemaBtn.classList.add("disabled");
+        this.constraintsMedia.video = false;
+        this.myCamVideo.srcObject = null;
+        this.stopCamera();
     }
 
     public enableMicrophone() {
@@ -267,24 +283,33 @@ export class MediaManager {
             }
         }
 
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia(this.constraintsMedia);
+        return this.getLocalStream().catch(() => {
+            console.info('Error get camera, trying with video option at null');
+            this.disabledCameraView();
+            return this.getLocalStream().then((stream : MediaStream) => {
+                this.hasCamera = false;
+                return stream;
+            }).catch((err) => {
+                console.info("error get media ", this.constraintsMedia.video, this.constraintsMedia.audio, err);
+                throw err;
+            });
+        });
 
+        //TODO resize remote cam
+        /*console.log(this.localStream.getTracks());
+        let videoMediaStreamTrack =  this.localStream.getTracks().find((media : MediaStreamTrack) => media.kind === "video");
+        let {width, height} = videoMediaStreamTrack.getSettings();
+        console.info(`${width}x${height}`); // 6*/
+    }
+
+    private getLocalStream() : Promise<MediaStream> {
+        return navigator.mediaDevices.getUserMedia(this.constraintsMedia).then((stream : MediaStream) => {
             this.localStream = stream;
             this.myCamVideo.srcObject = this.localStream;
-
             return stream;
-
-            //TODO resize remote cam
-            /*console.log(this.localStream.getTracks());
-            let videoMediaStreamTrack =  this.localStream.getTracks().find((media : MediaStreamTrack) => media.kind === "video");
-            let {width, height} = videoMediaStreamTrack.getSettings();
-            console.info(`${width}x${height}`); // 6*/
-        } catch (err) {
-            console.info("error get media ", this.constraintsMedia.video, this.constraintsMedia.audio, err);
-            this.localStream = null;
+        }).catch((err: Error) => {
             throw err;
-        }
+        });
     }
 
     /**
@@ -355,14 +380,17 @@ export class MediaManager {
         layoutManager.add(DivImportance.Normal, userId, html);
 
         if (reportCallBack) {
-            const reportBtn = this.getElementByIdOrFail<HTMLDivElement>(`report-${userId}`);
+            const reportBtn = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(`report-${userId}`);
             reportBtn.addEventListener('click', (e: MouseEvent) => {
                 e.preventDefault();
                 this.showReportModal(userId, userName, reportCallBack);
             });
         }
 
-        this.remoteVideo.set(userId, this.getElementByIdOrFail<HTMLVideoElement>(userId));
+        this.remoteVideo.set(userId, HtmlUtils.getElementByIdOrFail<HTMLVideoElement>(userId));
+
+        //permit to create participant in discussion part
+        this.addNewParticipant(userId, userName, undefined, reportCallBack);
     }
     
     addScreenSharingActiveVideo(userId: string, divImportance: DivImportance = DivImportance.Important){
@@ -376,7 +404,7 @@ export class MediaManager {
 
         layoutManager.add(divImportance, userId, html);
 
-        this.remoteVideo.set(userId, this.getElementByIdOrFail<HTMLVideoElement>(userId));
+        this.remoteVideo.set(userId, HtmlUtils.getElementByIdOrFail<HTMLVideoElement>(userId));
     }
     
     disabledMicrophoneByUserId(userId: number){
@@ -437,6 +465,9 @@ export class MediaManager {
     removeActiveVideo(userId: string){
         layoutManager.remove(userId);
         this.remoteVideo.delete(userId);
+
+        //permit to remove user in discussion part
+        this.removeParticipant(userId);
     }
     removeActiveScreenSharingVideo(userId: string) {
         this.removeActiveVideo(`screen-sharing-${userId}`)
@@ -499,18 +530,9 @@ export class MediaManager {
         return color;
     }
 
-    private getElementByIdOrFail<T extends HTMLElement>(id: string): T {
-        const elem = document.getElementById(id);
-        if (elem === null) {
-            throw new Error("Cannot find HTML element with id '"+id+"'");
-        }
-        // FIXME: does not check the type of the returned type
-        return elem as T;
-    }
-
-    private showReportModal(userId: string, userName: string, reportCallBack: ReportCallback){
+    public showReportModal(userId: string, userName: string, reportCallBack: ReportCallback){
         //create report text area
-        const mainContainer = this.getElementByIdOrFail<HTMLDivElement>('main-container');
+        const mainContainer = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-container');
 
         const divReport = document.createElement('div');
         divReport.classList.add('modal-report-user');
@@ -565,7 +587,34 @@ export class MediaManager {
         mainContainer.appendChild(divReport);
     }
 
+    public addNewParticipant(userId: number|string, name: string|undefined, img?: string, reportCallBack?: ReportCallback){
+        this.discussionManager.addParticipant(userId, name, img, false, reportCallBack);
+    }
 
+    public removeParticipant(userId: number|string){
+        this.discussionManager.removeParticipant(userId);
+    }
+
+    public addNewMessage(name: string, message: string, isMe: boolean = false){
+        this.discussionManager.addMessage(name, message, isMe);
+
+        //when there are new message, show discussion
+        if(!this.discussionManager.activatedDiscussion) {
+            this.discussionManager.showDiscussionPart();
+        }
+    }
+
+    public addSendMessageCallback(userId: string|number, callback: SendMessageCallback){
+        this.discussionManager.onSendMessageCallback(userId, callback);
+    }
+
+    get activatedDiscussion(){
+        return this.discussionManager.activatedDiscussion;
+    }
+
+    public setUserInputManager(userInputManager : UserInputManager){
+        this.discussionManager.setUserInputManager(userInputManager);
+    }
 }
 
 export const mediaManager = new MediaManager();

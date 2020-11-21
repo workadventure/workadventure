@@ -20,9 +20,9 @@ import {parse} from "query-string";
 import {jwtTokenManager} from "../Services/JWTTokenManager";
 import {adminApi, CharacterTexture, FetchMemberDataByUuidResponse} from "../Services/AdminApi";
 import {SocketManager, socketManager} from "../Services/SocketManager";
-import {emitInBatch, resetPing} from "../Services/IoSocketHelpers";
+import {emitInBatch} from "../Services/IoSocketHelpers";
 import {clientEventsEmitter} from "../Services/ClientEventsEmitter";
-import {ADMIN_API_TOKEN, MAX_USERS_PER_ROOM} from "../Enum/EnvironmentVariable";
+import {ADMIN_API_TOKEN, MAX_USERS_PER_ROOM, ADMIN_API_URL, SOCKET_IDLE_TIMER} from "../Enum/EnvironmentVariable";
 
 export class IoSocketController {
     private nextUserId: number = 1;
@@ -43,6 +43,7 @@ export class IoSocketController {
                 if (token !== ADMIN_API_TOKEN) {
                     console.log('Admin access refused for token: '+token)
                     res.writeStatus("401 Unauthorized").end('Incorrect token');
+                    return;
                 }
                 const roomId = query.roomId as string;
 
@@ -110,6 +111,7 @@ export class IoSocketController {
         this.app.ws('/room', {
             /* Options */
             //compression: uWS.SHARED_COMPRESSOR,
+            idleTimeout: SOCKET_IDLE_TIMER,
             maxPayloadLength: 16 * 1024 * 1024,
             maxBackpressure: 65536, // Maximum 64kB of data in the buffer.
             //idleTimeout: 10,
@@ -164,23 +166,24 @@ export class IoSocketController {
                         let memberTextures: CharacterTexture[] = [];
 
                         const room = await socketManager.getOrCreateRoom(roomId);
-                        //TODO http return status
-                        /*if (room.isFull) {
+                        if(room.isFull){
                             throw new Error('Room is full');
-                        }*/
-
-                        try {
-                            const userData = await adminApi.fetchMemberDataByUuid(userUuid);
-                            //console.log('USERDATA', userData)
-                            memberTags = userData.tags;
-                            memberTextures = userData.textures;
-                            if (!room.anonymous && room.policyType === GameRoomPolicyTypes.USE_TAGS_POLICY && !room.canAccess(memberTags)) {
-                                throw new Error('No correct tags')
+                        }
+                        if (ADMIN_API_URL) {
+                            try {
+                                const userData = await adminApi.fetchMemberDataByUuid(userUuid);
+                                //console.log('USERDATA', userData)
+                                memberTags = userData.tags;
+                                memberTextures = userData.textures;
+                                if (!room.anonymous && room.policyType === GameRoomPolicyTypes.USE_TAGS_POLICY && !room.canAccess(memberTags)) {
+                                    throw new Error('No correct tags')
+                                }
+                                //console.log('access granted for user '+userUuid+' and room '+roomId);
+                            } catch (e) {
+                                console.log('access not granted for user '+userUuid+' and room '+roomId);
+                                console.error(e);
+                                throw new Error('Client cannot acces this ressource.')
                             }
-                            //console.log('access granted for user '+userUuid+' and room '+roomId);
-                        } catch (e) {
-                            console.log('access not granted for user '+userUuid+' and room '+roomId);
-                            throw new Error('Client cannot acces this ressource.')
                         }
 
                         // Generate characterLayers objects from characterLayers string[]
@@ -236,21 +239,19 @@ export class IoSocketController {
             },
             /* Handlers */
             open: (ws) => {
-                (async () => {
-                    // Let's join the room
-                    const client = this.initClient(ws); //todo: into the upgrade instead?
+                // Let's join the room
+                const client = this.initClient(ws); //todo: into the upgrade instead?
+                const room = socketManager.getRoomById(client.roomId);
 
-                    const room = socketManager.getRoomById(client.roomId);
-                    if (room && room.isFull) {
-                        socketManager.emitCloseMessage(client, 302);
-                    }else {
-                        socketManager.handleJoinRoom(client);
-                        resetPing(client);
-                    }
+                if (room && room.isFull) {
+                    socketManager.emitCloseMessage(client, 302);
+                }else {
+                    socketManager.handleJoinRoom(client);
+                }
 
-                    //get data information and shwo messages
-                    try {
-                        const res: FetchMemberDataByUuidResponse = await adminApi.fetchMemberDataByUuid(client.userUuid);
+                //get data information and show messages
+                if (ADMIN_API_URL) {
+                    adminApi.fetchMemberDataByUuid(client.userUuid).then((res: FetchMemberDataByUuidResponse) => {
                         if (!res.messages) {
                             return;
                         }
@@ -262,10 +263,10 @@ export class IoSocketController {
                                 message: messageToSend.message
                             })
                         });
-                    } catch (err) {
+                    }).catch((err) => {
                         console.error('fetchMemberDataByUuid => err', err);
-                    }
-                })();
+                    });
+                }
             },
             message: (ws, arrayBuffer, isBinary): void => {
 
