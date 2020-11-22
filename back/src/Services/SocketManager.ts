@@ -365,6 +365,10 @@ export class SocketManager {
         }
     }
 
+    getRoomById(roomId: string) : GameRoom|undefined {
+        return this.Worlds.get(roomId)
+    }
+
     async getOrCreateRoom(roomId: string): Promise<GameRoom> {
         //check and create new world for a room
         let world = this.Worlds.get(roomId)
@@ -658,10 +662,15 @@ export class SocketManager {
         client.send(serverToClientMessage.serializeBinary().buffer, true);
     }
 
-    public emitSendUserMessage(messageToSend: {userUuid: string, message: string, type: string}): ExSocketInterface {
-        const socket = this.searchClientByUuid(messageToSend.userUuid);
+    public emitSendUserMessage(messageToSend: {userUuid: string, message: string, type: string},
+                               client?: ExSocketInterface): ExSocketInterface {
+        let socket = client;
         if(!socket){
-            throw 'socket was not found';
+            const socketFind = this.searchClientByUuid(messageToSend.userUuid);
+            if (!socketFind) {
+                throw 'socket was not found';
+            }
+            socket = socketFind;
         }
 
         const sendUserMessage = new SendUserMessage();

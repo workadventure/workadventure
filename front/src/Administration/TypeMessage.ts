@@ -4,9 +4,9 @@ import {HtmlUtils} from "../WebRtc/HtmlUtils";
 let modalTimeOut : NodeJS.Timeout;
 
 export class TypeMessageExt implements TypeMessageInterface{
-    private nbSecond = 0;
-    private maxNbSecond = 10;
-    private titleMessage = 'IMPORTANT !';
+    protected nbSecond = 0;
+    protected maxNbSecond = 10;
+    protected titleMessage = 'IMPORTANT !';
 
     showMessage(message: string, canDeleteMessage: boolean = true): void {
         //delete previous modal
@@ -37,7 +37,7 @@ export class TypeMessageExt implements TypeMessageInterface{
 
         const p : HTMLParagraphElement = document.createElement('p');
         p.id = 'body-report-user'
-        p.innerText = message;
+        p.innerHTML = message;
         div.appendChild(p);
 
         const mainSectionDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-container');
@@ -83,5 +83,12 @@ export class Ban extends TypeMessageExt {
 export class Banned extends TypeMessageExt {
     showMessage(message: string){
         super.showMessage(message, false);
+    }
+}
+
+export class RoomFull extends  TypeMessageExt {
+    showMessage(message: string){
+        this.maxNbSecond = 30;
+        super.showMessage(message);
     }
 }

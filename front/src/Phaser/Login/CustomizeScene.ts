@@ -8,7 +8,6 @@ import Container = Phaser.GameObjects.Container;
 import {gameManager} from "../Game/GameManager";
 import {ResizableScene} from "./ResizableScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
-import {PlayerResourceDescriptionInterface} from "../Entity/Character";
 
 export const CustomizeSceneName = "CustomizeScene";
 

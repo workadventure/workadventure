@@ -165,9 +165,6 @@ export class IoSocketController {
                         let memberTags: string[] = [];
                         let memberTextures: CharacterTexture[] = [];
                         const room = await socketManager.getOrCreateRoom(roomId);
-                        if(room.isFull){
-                            throw new Error('Room is full');
-                        }
                         if (ADMIN_API_URL) {
                             try {
                                 const userData = await adminApi.fetchMemberDataByUuid(userUuid);
@@ -240,9 +237,26 @@ export class IoSocketController {
             open: (ws) => {
                 // Let's join the room
                 const client = this.initClient(ws); //todo: into the upgrade instead?
-                socketManager.handleJoinRoom(client);
 
                 //get data information and show messages
+                const room = socketManager.getRoomById(client.roomId);
+                if(room && room.isFull){
+                    socketManager.emitSendUserMessage({
+                        userUuid: client.userUuid,
+                        message: `<p style="text-align: center; font-size: 40px;">
+                                    Oops, WorkAdventure is a victim of its own success.
+                                   </p>
+                                   <p style="text-align: center">
+                                    You can retry to connect on the platform in a moment.
+                                   </p>`,
+                        type: "RoomFull"
+                    }, client);
+                    console.info(`user ${client.userUuid} not connected, room is full`);
+                    return;
+                }
+
+                socketManager.handleJoinRoom(client);
+
                 if (ADMIN_API_URL) {
                     adminApi.fetchMemberDataByUuid(client.userUuid).then((res: FetchMemberDataByUuidResponse) => {
                         if (!res.messages) {
@@ -263,6 +277,13 @@ export class IoSocketController {
             },
             message: (ws, arrayBuffer, isBinary): void => {
                 const client = ws as ExSocketInterface;
+
+                //permit to stop treatment message when the room is full
+                const room = socketManager.getRoomById(client.roomId);
+                if(room && room.isFull){
+                    return;
+                }
+
                 const message = ClientToServerMessage.deserializeBinary(new Uint8Array(arrayBuffer));
 
                 if (message.hasViewportmessage()) {
