@@ -48,7 +48,7 @@
                 {
                  "name":"jitsiTrigger",
                  "type":"string",
-                 "value":"auto"
+                 "value":"onaction"
                 }],
          "type":"tilelayer",
          "visible":true,
@@ -142,7 +142,7 @@
                 {
                  "name":"openWebsiteTrigger",
                  "type":"string",
-                 "value":"auto"
+                 "value":"onaction"
                 }],
          "type":"tilelayer",
          "visible":true,
