@@ -23,6 +23,10 @@ export interface CenterListener {
     onCenterChange(): void;
 }
 
+export const ON_ACTION_TRIGGER_BUTTON = 'onaction';
+export const TRIGGER_WEBSITE_PROPERTIES = 'openWebsiteTrigger';
+export const TRIGGER_JITSI_PROPERTIES = 'jitsiTrigger';
+
 /**
  * This class is in charge of the video-conference layout.
  * It receives positioning requests for videos and does its best to place them on the screen depending on the active layout mode.

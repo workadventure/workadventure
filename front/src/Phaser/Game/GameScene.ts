@@ -31,7 +31,12 @@ import {Queue} from 'queue-typescript';
 import {SimplePeer, UserSimplePeerInterface} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
 import {loadAllLayers, loadObject, loadPlayerCharacters} from "../Entity/body_character";
-import {CenterListener, layoutManager, LayoutMode} from "../../WebRtc/LayoutManager";
+import {
+    CenterListener,
+    layoutManager,
+    LayoutMode,
+    ON_ACTION_TRIGGER_BUTTON, TRIGGER_JITSI_PROPERTIES, TRIGGER_WEBSITE_PROPERTIES
+} from "../../WebRtc/LayoutManager";
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
@@ -586,9 +591,9 @@ export class GameScene extends ResizableScene implements CenterListener {
                     layoutManager.removeActionButton('openWebsite', this.userInputManager);
                 };
 
-                const openWebsiteTriggerValue = allProps.get('openWebsiteTrigger');
-                if(openWebsiteTriggerValue && openWebsiteTriggerValue === 'onaction') {
-                    layoutManager.addActionButton('openWebsite', 'Click on SPACE to open web site', () => {
+                const openWebsiteTriggerValue = allProps.get(TRIGGER_WEBSITE_PROPERTIES);
+                if(openWebsiteTriggerValue && openWebsiteTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
+                    layoutManager.addActionButton('openWebsite', 'Click on SPACE to open the web site', () => {
                         openWebsiteFunction();
                     }, this.userInputManager);
                 }else{
@@ -612,8 +617,8 @@ export class GameScene extends ResizableScene implements CenterListener {
                     layoutManager.removeActionButton('jitsiRoom', this.userInputManager);
                 }
 
-                const jitsiTriggerValue = allProps.get('jitsiTrigger');
-                if(jitsiTriggerValue && jitsiTriggerValue === 'onaction') {
+                const jitsiTriggerValue = allProps.get(TRIGGER_JITSI_PROPERTIES);
+                if(jitsiTriggerValue && jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                     layoutManager.addActionButton('jitsiRoom', 'Click on SPACE to enter in jitsi meet room', () => {
                         openJitsiRoomFunction();
                     }, this.userInputManager);
