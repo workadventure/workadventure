@@ -317,7 +317,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         // Let's alter browser history
         let path = this.room.id;
         if (this.room.hash) {
-            path += '#'+this.room.hash;
+            path += '#' + this.room.hash;
         }
         window.history.pushState({}, 'WorkAdventure', path);
 
@@ -906,6 +906,7 @@ export class GameScene extends ResizableScene implements CenterListener {
      * @param delta The delta time in ms since the last frame. This is a smoothed and capped value based on the FPS rate.
      */
     update(time: number, delta: number) : void {
+        mediaManager.setLastUpdateScene();
         this.currentTick = time;
         this.CurrentPlayer.moveUser(delta);
 
