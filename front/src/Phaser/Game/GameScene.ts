@@ -317,7 +317,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         // Let's alter browser history
         let path = this.room.id;
         if (this.room.hash) {
-            path += '#'+this.room.hash;
+            path += '#' + this.room.hash;
         }
         window.history.pushState({}, 'WorkAdventure', path);
 
@@ -932,6 +932,7 @@ export class GameScene extends ResizableScene implements CenterListener {
      * @param delta The delta time in ms since the last frame. This is a smoothed and capped value based on the FPS rate.
      */
     update(time: number, delta: number) : void {
+        mediaManager.setLastUpdateScene();
         this.currentTick = time;
         this.CurrentPlayer.moveUser(delta);
 
@@ -1227,12 +1228,19 @@ export class GameScene extends ResizableScene implements CenterListener {
         jitsiFactory.start(roomName, gameManager.getPlayerName(), jwt);
         this.connection.setSilent(true);
         mediaManager.hideGameOverlay();
+
+        //permit to stop jitsi when user close iframe
+        mediaManager.addTriggerCloseJitsiFrameButton('close-jisi',() => {
+            this.stopJitsi();
+        });
     }
 
     public stopJitsi(): void {
         this.connection.setSilent(false);
         jitsiFactory.stop();
         mediaManager.showGameOverlay();
+
+        mediaManager.removeTriggerCloseJitsiFrameButton('close-jisi');
     }
 
     private loadSpritesheet(name: string, url: string): Promise<void> {

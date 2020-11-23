@@ -40,11 +40,19 @@ export class MediaManager {
     private cinemaBtn: HTMLDivElement;
     private monitorBtn: HTMLDivElement;
 
+    private previousConstraint : MediaStreamConstraints;
+    private focused : boolean = true;
+
+    private lastUpdateScene : Date = new Date();
+    private setTimeOutlastUpdateScene? : NodeJS.Timeout;
+
     private discussionManager: DiscussionManager;
 
     private userInputManager?: UserInputManager;
 
     private hasCamera = true;
+
+    private triggerCloseJistiFrame : Map<String, Function> = new Map<String, Function>();
 
     constructor() {
 
@@ -98,7 +106,33 @@ export class MediaManager {
             //update tracking
         });
 
+        this.previousConstraint = JSON.parse(JSON.stringify(this.constraintsMedia));
+        this.pingCameraStatus();
+
+        this.checkActiveUser();
+
         this.discussionManager = new DiscussionManager(this,'');
+    }
+
+    public setLastUpdateScene(){
+        this.lastUpdateScene = new Date();
+    }
+
+    public blurCamera() {
+        if(!this.focused){
+            return;
+        }
+        this.focused = false;
+        this.previousConstraint = JSON.parse(JSON.stringify(this.constraintsMedia));
+        this.disableCamera();
+    }
+
+    public focusCamera() {
+        if(this.focused){
+            return;
+        }
+        this.focused = true;
+        this.applyPreviousConfig();
     }
 
     public onUpdateLocalStream(callback: UpdatedLocalStreamCallback): void {
@@ -138,20 +172,27 @@ export class MediaManager {
     public showGameOverlay(){
         const gameOverlay = HtmlUtils.getElementByIdOrFail('game-overlay');
         gameOverlay.classList.add('active');
+
+        const buttonCloseFrame = HtmlUtils.getElementByIdOrFail('cowebsite-close');
+        const functionTrigger = () => {
+            this.triggerCloseJitsiFrameButton();
+        }
+        buttonCloseFrame.removeEventListener('click', functionTrigger);
     }
 
     public hideGameOverlay(){
         const gameOverlay = HtmlUtils.getElementByIdOrFail('game-overlay');
         gameOverlay.classList.remove('active');
+
+        const buttonCloseFrame = HtmlUtils.getElementByIdOrFail('cowebsite-close');
+        const functionTrigger = () => {
+            this.triggerCloseJitsiFrameButton();
+        }
+        buttonCloseFrame.addEventListener('click', functionTrigger);
     }
 
     public enableCamera() {
-        if(!this.hasCamera){
-            return;
-        }
-        this.cinemaClose.style.display = "none";
-        this.cinemaBtn.classList.remove("disabled");
-        this.cinema.style.display = "block";
+        this.enableCameraStyle();
         this.constraintsMedia.video = videoConstraint;
         this.getCamera().then((stream: MediaStream) => {
             this.triggerUpdatedLocalStreamCallbacks(stream);
@@ -159,7 +200,8 @@ export class MediaManager {
     }
 
     public async disableCamera() {
-        this.disabledCameraView();
+        this.disableCameraStyle();
+
         if (this.constraintsMedia.audio !== false) {
             const stream = await this.getCamera();
             this.triggerUpdatedLocalStreamCallbacks(stream);
@@ -168,19 +210,8 @@ export class MediaManager {
         }
     }
 
-    private disabledCameraView(){
-        this.cinemaClose.style.display = "block";
-        this.cinema.style.display = "none";
-        this.cinemaBtn.classList.add("disabled");
-        this.constraintsMedia.video = false;
-        this.myCamVideo.srcObject = null;
-        this.stopCamera();
-    }
-
     public enableMicrophone() {
-        this.microphoneClose.style.display = "none";
-        this.microphone.style.display = "block";
-        this.microphoneBtn.classList.remove("disabled");
+        this.enableMicrophoneStyle();
         this.constraintsMedia.audio = true;
 
         this.getCamera().then((stream) => {
@@ -189,10 +220,7 @@ export class MediaManager {
     }
 
     public async disableMicrophone() {
-        this.microphoneClose.style.display = "block";
-        this.microphone.style.display = "none";
-        this.microphoneBtn.classList.add("disabled");
-        this.constraintsMedia.audio = false;
+        this.disableMicrophoneStyle();
         this.stopMicrophone();
 
         if (this.constraintsMedia.video !== false) {
@@ -201,6 +229,52 @@ export class MediaManager {
         } else {
             this.triggerUpdatedLocalStreamCallbacks(null);
         }
+    }
+
+    private applyPreviousConfig() {
+        this.constraintsMedia = this.previousConstraint;
+        if(!this.constraintsMedia.video){
+            this.disableCameraStyle();
+        }else{
+            this.enableCameraStyle();
+        }
+        if(!this.constraintsMedia.audio){
+            this.disableMicrophoneStyle()
+        }else{
+            this.enableMicrophoneStyle()
+        }
+
+        this.getCamera().then((stream: MediaStream) => {
+            this.triggerUpdatedLocalStreamCallbacks(stream);
+        });
+    }
+
+    private enableCameraStyle(){
+        this.cinemaClose.style.display = "none";
+        this.cinemaBtn.classList.remove("disabled");
+        this.cinema.style.display = "block";
+    }
+
+    private disableCameraStyle(){
+        this.cinemaClose.style.display = "block";
+        this.cinema.style.display = "none";
+        this.cinemaBtn.classList.add("disabled");
+        this.constraintsMedia.video = false;
+        this.myCamVideo.srcObject = null;
+        this.stopCamera();
+    }
+
+    private enableMicrophoneStyle(){
+        this.microphoneClose.style.display = "none";
+        this.microphone.style.display = "block";
+        this.microphoneBtn.classList.remove("disabled");
+    }
+
+    private disableMicrophoneStyle(){
+        this.microphoneClose.style.display = "block";
+        this.microphone.style.display = "none";
+        this.microphoneBtn.classList.add("disabled");
+        this.constraintsMedia.audio = false;
     }
 
     private enableScreenSharing() {
@@ -285,7 +359,7 @@ export class MediaManager {
 
         return this.getLocalStream().catch(() => {
             console.info('Error get camera, trying with video option at null');
-            this.disabledCameraView();
+            this.disableCameraStyle();
             return this.getLocalStream().then((stream : MediaStream) => {
                 this.hasCamera = false;
                 return stream;
@@ -594,6 +668,30 @@ export class MediaManager {
     public removeParticipant(userId: number|string){
         this.discussionManager.removeParticipant(userId);
     }
+    public addTriggerCloseJitsiFrameButton(id: String, Function: Function){
+        this.triggerCloseJistiFrame.set(id, Function);
+    }
+
+    public removeTriggerCloseJitsiFrameButton(id: String){
+        this.triggerCloseJistiFrame.delete(id);
+    }
+
+    private triggerCloseJitsiFrameButton(): void {
+        for (const callback of this.triggerCloseJistiFrame.values()) {
+            callback();
+        }
+    }
+    /**
+     * For some reasons, the microphone muted icon or the stream is not always up to date.
+     * Here, every 30 seconds, we are "reseting" the streams and sending again the constraints to the other peers via the data channel again (see SimplePeer::pushVideoToRemoteUser)
+    **/
+    private pingCameraStatus(){
+        setTimeout(() => {
+            console.log('ping camera status');
+            this.triggerUpdatedLocalStreamCallbacks(this.localStream);
+            this.pingCameraStatus();
+        }, 30000);
+    }
 
     public addNewMessage(name: string, message: string, isMe: boolean = false){
         this.discussionManager.addMessage(name, message, isMe);
@@ -614,6 +712,22 @@ export class MediaManager {
 
     public setUserInputManager(userInputManager : UserInputManager){
         this.discussionManager.setUserInputManager(userInputManager);
+    }
+    //check if user is active
+    private checkActiveUser(){
+        if(this.setTimeOutlastUpdateScene){
+            clearTimeout(this.setTimeOutlastUpdateScene);
+        }
+        this.setTimeOutlastUpdateScene = setTimeout(() => {
+            const now = new Date();
+            //if last update is more of 10 sec
+            if( (now.getTime() - this.lastUpdateScene.getTime()) > 10000) {
+                this.blurCamera();
+            }else{
+                this.focusCamera();
+            }
+            this.checkActiveUser();
+        }, this.focused ? 10000 : 1000);
     }
 }
 
