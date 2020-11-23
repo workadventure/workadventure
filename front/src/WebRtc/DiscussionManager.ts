@@ -1,6 +1,9 @@
 import {HtmlUtils} from "./HtmlUtils";
 import {MediaManager, ReportCallback, UpdatedLocalStreamCallback} from "./MediaManager";
 import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
+import {connectionManager} from "../Connexion/ConnectionManager";
+import {GameConnexionTypes} from "../Url/UrlManager";
+
 export type SendMessageCallback = (message:string) => void;
 
 export class DiscussionManager {
@@ -115,7 +118,11 @@ export class DiscussionManager {
         divParticipant.appendChild(divImgParticipant);
         divParticipant.appendChild(divPParticipant);
 
-        if(!isMe) {
+        if(
+            !isMe
+            && connectionManager.getConnexionType
+            && connectionManager.getConnexionType !== GameConnexionTypes.anonymous
+        ) {
             const reportBanUserAction: HTMLButtonElement = document.createElement('button');
             reportBanUserAction.classList.add('report-btn')
             reportBanUserAction.innerText = 'Report';
