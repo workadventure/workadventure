@@ -31,7 +31,12 @@ import {Queue} from 'queue-typescript';
 import {SimplePeer, UserSimplePeerInterface} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
 import {loadAllLayers, loadObject, loadPlayerCharacters} from "../Entity/body_character";
-import {CenterListener, layoutManager, LayoutMode} from "../../WebRtc/LayoutManager";
+import {
+    CenterListener,
+    layoutManager,
+    LayoutMode,
+    ON_ACTION_TRIGGER_BUTTON, TRIGGER_JITSI_PROPERTIES, TRIGGER_WEBSITE_PROPERTIES
+} from "../../WebRtc/LayoutManager";
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
@@ -576,23 +581,49 @@ export class GameScene extends ResizableScene implements CenterListener {
     }
 
     private triggerOnMapLayerPropertyChange(){
-        this.gameMap.onPropertyChange('openWebsite', (newValue, oldValue) => {
+        this.gameMap.onPropertyChange('openWebsite', (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
+                layoutManager.removeActionButton('openWebsite', this.userInputManager);
                 coWebsiteManager.closeCoWebsite();
-            } else {
-                coWebsiteManager.loadCoWebsite(newValue as string);
+            }else{
+                const openWebsiteFunction = () => {
+                    coWebsiteManager.loadCoWebsite(newValue as string);
+                    layoutManager.removeActionButton('openWebsite', this.userInputManager);
+                };
+
+                const openWebsiteTriggerValue = allProps.get(TRIGGER_WEBSITE_PROPERTIES);
+                if(openWebsiteTriggerValue && openWebsiteTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
+                    layoutManager.addActionButton('openWebsite', 'Click on SPACE to open the web site', () => {
+                        openWebsiteFunction();
+                    }, this.userInputManager);
+                }else{
+                    openWebsiteFunction();
+                }
             }
         });
         this.gameMap.onPropertyChange('jitsiRoom', (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
+                layoutManager.removeActionButton('jitsiRoom', this.userInputManager);
                 this.stopJitsi();
-            } else {
-                if (JITSI_PRIVATE_MODE) {
-                    const adminTag = allProps.get("jitsiRoomAdminTag") as string|undefined;
+            }else{
+                const openJitsiRoomFunction = () => {
+                    if (JITSI_PRIVATE_MODE) {
+                        const adminTag = allProps.get("jitsiRoomAdminTag") as string|undefined;
 
-                    this.connection.emitQueryJitsiJwtMessage(this.instance.replace('/', '-') + "-" + newValue, adminTag);
-                } else {
-                    this.startJitsi(newValue as string);
+                        this.connection.emitQueryJitsiJwtMessage(this.instance.replace('/', '-') + "-" + newValue, adminTag);
+                    } else {
+                        this.startJitsi(newValue as string);
+                    }
+                    layoutManager.removeActionButton('jitsiRoom', this.userInputManager);
+                }
+
+                const jitsiTriggerValue = allProps.get(TRIGGER_JITSI_PROPERTIES);
+                if(jitsiTriggerValue && jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
+                    layoutManager.addActionButton('jitsiRoom', 'Click on SPACE to enter in jitsi meet room', () => {
+                        openJitsiRoomFunction();
+                    }, this.userInputManager);
+                }else{
+                    openJitsiRoomFunction();
                 }
             }
         })
@@ -621,7 +652,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             this.chatModeSprite.setFrame(3);
         }
     }
-    
+
     private initStartXAndStartY() {
         // If there is an init position passed
         if (this.initPosition !== null) {
@@ -677,7 +708,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         if (!properties) {
             return undefined;
         }
-        const obj = properties.find((property: ITiledMapLayerProperty) => property.name === name);
+        const obj = properties.find((property: ITiledMapLayerProperty) => property.name.toLowerCase() === name.toLowerCase());
         if (obj === undefined) {
             return undefined;
         }

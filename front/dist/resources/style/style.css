@@ -918,3 +918,31 @@ div.modal-report-user{
     background-color: #ffffff;
 }
 
+
+/** Action button **/
+div.action{
+    position: absolute;
+    width: 100%;
+    height: auto;
+    text-align: center;
+    bottom: 40px;
+    transition: all .5s ease;
+    animation: mymove .5s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+}
+div.action p.action-body{
+    padding: 10px;
+    background-color: #2d2d2dba;
+    color: #fff;
+    font-size: 12px;
+    text-align: center;
+    max-width: 150px;
+    margin-left: calc(50% - 75px);
+    border-radius: 15px;
+}
+@keyframes mymove {
+    0% {bottom: 40px;}
+    50% {bottom: 30px;}
+    100% {bottom: 40px;}
+}
