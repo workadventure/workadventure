@@ -33,7 +33,8 @@ const config: GameConfig = {
     physics: {
         default: "arcade",
         arcade: {
-            debug: DEBUG_MODE
+            debug: DEBUG_MODE,
+            fps: 120
         }
     },
     callbacks: {
