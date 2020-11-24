@@ -6,10 +6,8 @@ export class Room {
     public readonly isPublic: boolean;
     private mapUrl: string|undefined;
     private instance: string|undefined;
-    public readonly hash: string;
 
     constructor(id: string) {
-        this.hash = '';
         if (id.startsWith('/')) {
             id = id.substr(1);
         }
@@ -24,10 +22,27 @@ export class Room {
 
         const indexOfHash = this.id.indexOf('#');
         if (indexOfHash !== -1) {
-            const idWithHash = this.id;
             this.id = this.id.substr(0, indexOfHash);
-            this.hash = idWithHash.substr(indexOfHash + 1);
         }
+    }
+    
+    public static getIdFromIdentifier(identifier: string, baseUrl: string, currentInstance: string): {roomId: string, hash: string} {
+        let roomId = '';
+        let hash = '';
+        if (!identifier.startsWith('/_/') && !identifier.startsWith('/@/')) { //relative file link
+            const absoluteExitSceneUrl = new URL(identifier, baseUrl);
+            roomId = '_/'+currentInstance+'/'+absoluteExitSceneUrl.hostname + absoluteExitSceneUrl.pathname; //in case of a relative url, we need to create a public roomId
+            hash = absoluteExitSceneUrl.hash;
+            hash = hash.substring(1); //remove the leading diese
+        } else { //absolute room Id
+            const parts = identifier.split('#');
+            roomId = parts[0];
+            roomId = roomId.substring(1); //remove the leading slash
+            if (parts.length > 1) {
+                hash = parts[1]
+            }
+        }
+        return {roomId, hash}
     }
 
     public async getMapUrl(): Promise<string> {

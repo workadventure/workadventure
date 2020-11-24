@@ -79,4 +79,11 @@ export class UserInputManager {
             return event;
         });
     }
+
+    addSpaceEventListner(callback : Function){
+        this.Scene.input.keyboard.addListener('keyup-SPACE', callback);
+    }
+    removeSpaceEventListner(callback : Function){
+        this.Scene.input.keyboard.removeListener('keyup-SPACE', callback);
+    }
 }

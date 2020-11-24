@@ -1,3 +1,4 @@
+import { UserInputManager } from "../Phaser/UserInput/UserInputManager";
 import {HtmlUtils} from "./HtmlUtils";
 
 export enum LayoutMode {
@@ -22,6 +23,10 @@ export interface CenterListener {
     onCenterChange(): void;
 }
 
+export const ON_ACTION_TRIGGER_BUTTON = 'onaction';
+export const TRIGGER_WEBSITE_PROPERTIES = 'openWebsiteTrigger';
+export const TRIGGER_JITSI_PROPERTIES = 'jitsiTrigger';
+
 /**
  * This class is in charge of the video-conference layout.
  * It receives positioning requests for videos and does its best to place them on the screen depending on the active layout mode.
@@ -32,6 +37,9 @@ class LayoutManager {
     private importantDivs: Map<string, HTMLDivElement> = new Map<string, HTMLDivElement>();
     private normalDivs: Map<string, HTMLDivElement> = new Map<string, HTMLDivElement>();
     private listener: CenterListener|null = null;
+
+    private actionButtonTrigger: Map<string, Function> = new Map<string, Function>();
+    private actionButtonInformation: Map<string, HTMLDivElement> = new Map<string, HTMLDivElement>();
 
     public setListener(centerListener: CenterListener|null) {
         this.listener = centerListener;
@@ -303,6 +311,48 @@ class LayoutManager {
                     yEnd: game.offsetHeight
                 }
             }
+        }
+    }
+
+    public addActionButton(id: string, text: string, callBack: Function, userInputManager: UserInputManager){
+        //delete previous element
+        this.removeActionButton(id, userInputManager);
+    
+        //create div and text html component
+        const p = document.createElement('p');
+        p.classList.add('action-body');
+        p.innerText = text;
+
+        const div = document.createElement('div');
+        div.classList.add('action');
+        div.id = id;
+        div.appendChild(p);
+
+        this.actionButtonInformation.set(id, div);
+
+        const mainContainer = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-container');
+        mainContainer.appendChild(div);
+
+        const callBackFunctionTrigger = (() => {
+            console.log('user click on space => ', id);
+            callBack();
+        });
+
+        //add trigger action
+        this.actionButtonTrigger.set(id, callBackFunctionTrigger);
+        userInputManager.addSpaceEventListner(callBackFunctionTrigger);
+    }
+
+    public removeActionButton(id: string, userInputManager: UserInputManager){
+        //delete previous element
+        const previousDiv = this.actionButtonInformation.get(id);
+        if(previousDiv){
+            previousDiv.remove();
+            this.actionButtonInformation.delete(id);
+        }
+        const previousEventCallback = this.actionButtonTrigger.get(id);
+        if(previousEventCallback){
+            userInputManager.removeSpaceEventListner(previousEventCallback);
         }
     }
 }
