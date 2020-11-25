@@ -48,8 +48,6 @@ export class MediaManager {
 
     private discussionManager: DiscussionManager;
 
-    private userInputManager?: UserInputManager;
-
     private hasCamera = true;
 
     private triggerCloseJistiFrame : Map<String, Function> = new Map<String, Function>();
@@ -370,10 +368,6 @@ export class MediaManager {
         });
 
         //TODO resize remote cam
-        /*console.log(this.localStream.getTracks());
-        let videoMediaStreamTrack =  this.localStream.getTracks().find((media : MediaStreamTrack) => media.kind === "video");
-        let {width, height} = videoMediaStreamTrack.getSettings();
-        console.info(`${width}x${height}`); // 6*/
     }
 
     private getLocalStream() : Promise<MediaStream> {
@@ -686,10 +680,9 @@ export class MediaManager {
      * Here, every 30 seconds, we are "reseting" the streams and sending again the constraints to the other peers via the data channel again (see SimplePeer::pushVideoToRemoteUser)
     **/
     private pingCameraStatus(){
-        setTimeout(() => {
+        setInterval(() => {
             console.log('ping camera status');
             this.triggerUpdatedLocalStreamCallbacks(this.localStream);
-            this.pingCameraStatus();
         }, 30000);
     }
 
