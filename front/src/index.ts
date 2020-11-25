@@ -23,6 +23,32 @@ if (JITSI_URL) {
 
 const {width, height} = coWebsiteManager.getGameSize();
 
+const fps : Phaser.Types.Core.FPSConfig = {
+    /**
+     * The minimum acceptable rendering rate, in frames per second.
+     */
+    min: 120,
+    /**
+     * The optimum rendering rate, in frames per second.
+     */
+    target: 120,
+    /**
+     * Use setTimeout instead of requestAnimationFrame to run the game loop.
+     */
+    forceSetTimeOut: true,
+    /**
+     * Calculate the average frame delta from this many consecutive frame intervals.
+     */
+    deltaHistory: 120,
+    /**
+     * The amount of frames the time step counts before we trust the delta values again.
+     */
+    panicMax: 20,
+    /**
+     * Apply delta smoothing during the game update to help avoid spikes?
+     */
+    smoothStep: false
+}
 const config: GameConfig = {
     title: "WorkAdventure",
     width: width / RESOLUTION,
@@ -30,11 +56,11 @@ const config: GameConfig = {
     parent: "game",
     scene: [EntryScene, LoginScene, SelectCharacterScene, EnableCameraScene, ReconnectingScene, FourOFourScene, CustomizeScene],
     zoom: RESOLUTION,
+    fps: fps,
     physics: {
         default: "arcade",
         arcade: {
             debug: DEBUG_MODE,
-            fps: 120
         }
     },
     callbacks: {
