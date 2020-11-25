@@ -50,6 +50,7 @@ const fps : Phaser.Types.Core.FPSConfig = {
     smoothStep: false
 }
 const config: GameConfig = {
+    type: Phaser.AUTO,
     title: "WorkAdventure",
     width: width / RESOLUTION,
     height: height / RESOLUTION,
