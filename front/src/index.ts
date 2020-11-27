@@ -27,11 +27,11 @@ const fps : Phaser.Types.Core.FPSConfig = {
     /**
      * The minimum acceptable rendering rate, in frames per second.
      */
-    min: 20,
+    min: 40,
     /**
      * The optimum rendering rate, in frames per second.
      */
-    target: 20,
+    target: 40,
     /**
      * Use setTimeout instead of requestAnimationFrame to run the game loop.
      */
