@@ -13,6 +13,7 @@ import {CustomizeScene} from "./Phaser/Login/CustomizeScene";
 import {ResizableScene} from "./Phaser/Login/ResizableScene";
 import {EntryScene} from "./Phaser/Login/EntryScene";
 import {coWebsiteManager} from "./WebRtc/CoWebsiteManager";
+import {GAME_QUALITY_SELECT} from "./Administration/ConsoleGlobalMessageManager";
 
 // Load Jitsi if the environment variable is set.
 if (JITSI_URL) {
@@ -23,15 +24,24 @@ if (JITSI_URL) {
 
 const {width, height} = coWebsiteManager.getGameSize();
 
+let valueGameQuality : number = 60
+const localGameQuality = localStorage.getItem(GAME_QUALITY_SELECT);
+if(localGameQuality){
+    try {
+        valueGameQuality = parseInt(localGameQuality);
+    }catch (err){
+        console.error(err);
+    }
+}
 const fps : Phaser.Types.Core.FPSConfig = {
     /**
      * The minimum acceptable rendering rate, in frames per second.
      */
-    min: 40,
+    min: valueGameQuality,
     /**
      * The optimum rendering rate, in frames per second.
      */
-    target: 40,
+    target: valueGameQuality,
     /**
      * Use setTimeout instead of requestAnimationFrame to run the game loop.
      */
@@ -49,6 +59,7 @@ const fps : Phaser.Types.Core.FPSConfig = {
      */
     smoothStep: false
 }
+
 const config: GameConfig = {
     type: Phaser.AUTO,
     title: "WorkAdventure",
@@ -88,6 +99,7 @@ window.addEventListener('resize', function (event) {
         }
     }
 });
+
 coWebsiteManager.onStateChange(() => {
     const {width, height} = coWebsiteManager.getGameSize();
     game.scale.resize(width / RESOLUTION, height / RESOLUTION);

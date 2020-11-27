@@ -462,9 +462,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                 this.initUsersPosition(roomJoinedMessage.users);
                 this.connectionAnswerPromiseResolve(roomJoinedMessage);
                 // Analyze tags to find if we are admin. If yes, show console.
-                if (this.connection.hasTag('admin')) {
-                    this.ConsoleGlobalMessageManager = new ConsoleGlobalMessageManager(this.connection, this.userInputManager);
-                }
+                this.ConsoleGlobalMessageManager = new ConsoleGlobalMessageManager(this.connection, this.userInputManager, this.connection.hasTag('admin'));
             });
 
             connection.onUserJoins((message: MessageUserJoined) => {
