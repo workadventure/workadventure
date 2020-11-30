@@ -1,7 +1,6 @@
 import {
     WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
-    WebRtcStartMessageInterface
 } from "../Connexion/ConnexionModels";
 import {
     mediaManager,
@@ -29,7 +28,7 @@ export interface PeerConnectionListener {
  * This class manages connections to all the peers in the same group as me.
  */
 export class SimplePeer {
-    private Users: Array<UserSimplePeerInterface> = new Array<UserSimplePeerInterface>();
+    private Users: Array<UserSimplePeerInterface> = new Array<UserSimplePeerInterface>(); //todo: this array should be fusionned with PeerConnectionArray
 
     private PeerScreenSharingConnectionArray: Map<number, ScreenSharingPeer> = new Map<number, ScreenSharingPeer>();
     private PeerConnectionArray: Map<number, VideoPeer> = new Map<number, VideoPeer>();
@@ -95,12 +94,9 @@ export class SimplePeer {
         this.Users.push(user);
         // Note: the clients array contain the list of all clients (even the ones we are already connected to in case a user joints a group)
         // So we can receive a request we already had before. (which will abort at the first line of createPeerConnection)
-        // TODO: refactor this to only send a message to connect to one user (rather than several users). => DONE
         // This would be symmetrical to the way we handle disconnection.
-        //console.log('Start message', data);
-
+        
         //start connection
-        //this.startWebRtc();
         console.log('receiveWebrtcStart. Initiator: ', user.initiator)
         if(!user.initiator){
             return;
@@ -204,8 +200,6 @@ export class SimplePeer {
 
     /**
      * This is triggered twice. Once by the server, and once by a remote client disconnecting
-     *
-     * @param userId
      */
     private closeConnection(userId : number) {
         try {
@@ -226,6 +220,12 @@ export class SimplePeer {
             for (const peerConnectionListener of this.peerConnectionListeners) {
                 peerConnectionListener.onDisconnect(userId);
             }
+            const userIndex = this.Users.findIndex(user => user.userId === userId);
+            if(userIndex < 0){
+                throw 'Couln\'t delete user';
+            } else {
+                this.Users.splice(userIndex, 1);
+            }
         } catch (err) {
             console.error("closeConnection", err)
         }
@@ -233,8 +233,6 @@ export class SimplePeer {
 
     /**
      * This is triggered twice. Once by the server, and once by a remote client disconnecting
-     *
-     * @param userId
      */
     private closeScreenSharingConnection(userId : number) {
         try {
@@ -246,7 +244,6 @@ export class SimplePeer {
             }
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
-            //console.log('Closing connection with '+userId);
             peer.destroy();
             if(!this.PeerScreenSharingConnectionArray.delete(userId)){
                 throw 'Couln\'t delete peer screen sharing connexion';
@@ -313,10 +310,6 @@ export class SimplePeer {
         }
     }
 
-    /**
-     *
-     * @param userId
-     */
     private pushVideoToRemoteUser(userId : number) {
         try {
             const PeerConnection = this.PeerConnectionArray.get(userId);
@@ -331,6 +324,9 @@ export class SimplePeer {
             }
 
             for (const track of localStream.getTracks()) {
+                //todo: this is a ugly hack to reduce the amount of error in console. Find a better way.
+                if ((track as any).added !== undefined) continue; // eslint-disable-line @typescript-eslint/no-explicit-any
+                (track as any).added = true; // eslint-disable-line @typescript-eslint/no-explicit-any
                 PeerConnection.addTrack(track, localStream);
             }
         }catch (e) {
