@@ -52,6 +52,7 @@ export class RoomConnection implements RoomConnection {
     private static websocketFactory: null|((url: string)=>any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
     private closed: boolean = false;
     private tags: string[] = [];
+    private intervalId!: NodeJS.Timeout;
 
     public static setWebsocketFactory(websocketFactory: (url: string)=>any): void { // eslint-disable-line @typescript-eslint/no-explicit-any
         RoomConnection.websocketFactory = websocketFactory;
@@ -89,8 +90,12 @@ export class RoomConnection implements RoomConnection {
         this.socket.onopen = (ev) => {
             //we manually ping every 20s to not be logged out by the server, even when the game is in background.
             const pingMessage = new PingMessage();
-            setInterval(() => this.socket.send(pingMessage.serializeBinary().buffer), manualPingDelay);
+            this.intervalId = setInterval(() => this.socket.send(pingMessage.serializeBinary().buffer), manualPingDelay);
         };
+        
+        this.socket.onclose = () => {
+            clearTimeout(this.intervalId);
+        }
 
         this.socket.onmessage = (messageEvent) => {
             const arrayBuffer: ArrayBuffer = messageEvent.data;

@@ -44,7 +44,9 @@ class CoWebsiteManager {
 
     public loadCoWebsite(url: string): void {
         this.load();
-        this.cowebsiteDiv.innerHTML = '';
+        this.cowebsiteDiv.innerHTML = `<button class="close-btn" id="cowebsite-close">
+                    <img src="resources/logos/close.svg">
+                </button>`;
 
         const iframe = document.createElement('iframe');
         iframe.id = 'cowebsite-iframe';
@@ -83,7 +85,9 @@ class CoWebsiteManager {
             this.close();
             this.fire();
             setTimeout(() => {
-                this.cowebsiteDiv.innerHTML = '';
+                this.cowebsiteDiv.innerHTML = `<button class="close-btn" id="cowebsite-close">
+                    <img src="resources/logos/close.svg">
+                </button>`;
                 resolve();
             }, animationTime)
         }));

@@ -39,20 +39,16 @@ export class GameManager {
     public async loadMap(room: Room, scenePlugin: Phaser.Scenes.ScenePlugin): Promise<void> {
         const roomID = room.id;
         const mapUrl = await room.getMapUrl();
-        console.log('Loading map '+roomID+' at url '+mapUrl);
 
-        const gameIndex = scenePlugin.getIndex(mapUrl);
+        const gameIndex = scenePlugin.getIndex(roomID);
         if(gameIndex === -1){
-            const game : Phaser.Scene = GameScene.createFromUrl(room, mapUrl);
-            console.log('Adding scene '+mapUrl);
-            scenePlugin.add(mapUrl, game, false);
+            const game : Phaser.Scene = new GameScene(room, mapUrl);
+            scenePlugin.add(roomID, game, false);
         }
     }
 
-    public async goToStartingMap(scenePlugin: Phaser.Scenes.ScenePlugin) {
-        const url = await this.startRoom.getMapUrl();
-        console.log('Starting scene '+url);
-        scenePlugin.start(url);
+    public goToStartingMap(scenePlugin: Phaser.Scenes.ScenePlugin): void {
+        scenePlugin.start(this.startRoom.id);
     }
 }
 

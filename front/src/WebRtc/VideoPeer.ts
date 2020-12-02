@@ -84,22 +84,18 @@ export class VideoPeer extends Peer {
             console.log("data", message);
 
             if(message.type === MESSAGE_TYPE_CONSTRAINT) {
-                const constraint = message;
-                if (constraint.audio) {
+                if (message.audio) {
                     mediaManager.enabledMicrophoneByUserId(this.userId);
                 } else {
                     mediaManager.disabledMicrophoneByUserId(this.userId);
                 }
 
-                if (constraint.video || constraint.screen) {
+                if (message.video || message.screen) {
                     mediaManager.enabledVideoByUserId(this.userId);
                 } else {
-                    this.stream(undefined);
                     mediaManager.disabledVideoByUserId(this.userId);
                 }
-            }
-
-            if(message.type === 'message') {
+            } else if(message.type === 'message') {
                 mediaManager.addNewMessage(message.name, message.message);
             }
         });
@@ -122,21 +118,15 @@ export class VideoPeer extends Peer {
     /**
      * Sends received stream to screen.
      */
-    private stream(stream?: MediaStream) {
-        //console.log(`VideoPeer::stream => ${this.userId}`, stream);
-        if(!stream){
-            mediaManager.disabledVideoByUserId(this.userId);
-            mediaManager.disabledMicrophoneByUserId(this.userId);
-        } else {
-            try {
-                mediaManager.addStreamRemoteVideo("" + this.userId, stream);
-            }catch (err){
-                console.error(err);
-                //Force add streem video
-                setTimeout(() => {
-                    this.stream(stream);
-                }, 500);
-            }
+    private stream(stream: MediaStream) {
+        try {
+            mediaManager.addStreamRemoteVideo("" + this.userId, stream);
+        }catch (err){
+            console.error(err);
+            //Force add streem video
+            /*setTimeout(() => {
+                this.stream(stream);
+            }, 500);*/ //todo: find a way to prevent infinite regression.
         }
     }
 

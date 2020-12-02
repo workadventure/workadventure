@@ -12,12 +12,14 @@ const URL_ROOM_STARTED = '/Floor0/floor0.json';
 class ConnectionManager {
     private localUser!:LocalUser;
 
+    private connexionType?: GameConnexionTypes
     /**
      * Tries to login to the node server and return the starting map url to be loaded
      */
     public async initGameConnexion(): Promise<Room> {
 
         const connexionType = urlManager.getGameConnexionType();
+        this.connexionType = connexionType;
         if(connexionType === GameConnexionTypes.register) {
            const organizationMemberToken = urlManager.getOrganizationToken();
             const data = await Axios.post(`${API_URL}/register`, {organizationMemberToken}).then(res => res.data);
@@ -107,6 +109,10 @@ class ConnectionManager {
                 }, 4000 + Math.floor(Math.random() * 2000) );
             });
         });
+    }
+
+    get getConnexionType(){
+        return this.connexionType;
     }
 }
 
