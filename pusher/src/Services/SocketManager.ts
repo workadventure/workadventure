@@ -95,10 +95,9 @@ export class SocketManager implements ZoneEventListener {
         const position = client.position;
         const viewport = client.viewport;
         try {
-            // TODO: do we need this.sockets anymore?
-            this.sockets.set(client.userId, client); //todo: should this be at the end of the function?
 
             const joinRoomMessage = new JoinRoomMessage();
+            joinRoomMessage.setUseruuid(client.userUuid);
             joinRoomMessage.setRoomid(client.roomId);
             joinRoomMessage.setName(client.name);
             joinRoomMessage.setPositionmessage(ProtobufUtils.toPositionMessage(client.position));
@@ -121,6 +120,10 @@ export class SocketManager implements ZoneEventListener {
 
             streamToPusher.on('data', (message: ServerToClientMessage) => {
                 if (message.hasRoomjoinedmessage()) {
+                    client.userId = (message.getRoomjoinedmessage() as RoomJoinedMessage).getCurrentuserid();
+                    // TODO: do we need this.sockets anymore?
+                    this.sockets.set(client.userId, client);
+
                     // If this is the first message sent, send back the viewport.
                     this.handleViewport(client, viewport);
                 }
