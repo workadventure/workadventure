@@ -3,11 +3,15 @@ import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
 import {RoomConnection} from "../Connexion/RoomConnection";
 import {PlayGlobalMessageInterface} from "../Connexion/ConnexionModels";
 import {ADMIN_URL} from "../Enum/EnvironmentVariable";
+import {mediaManager} from "../WebRtc/MediaManager";
 
 export const CLASS_CONSOLE_MESSAGE = 'main-console';
 export const INPUT_CONSOLE_MESSAGE = 'input-send-text';
 export const UPLOAD_CONSOLE_MESSAGE = 'input-upload-music';
 export const INPUT_TYPE_CONSOLE = 'input-type';
+export const GAME_QUALITY_SELECT = 'select-game-quality';
+export const VIDEO_QUALITY_SELECT = 'select-video-quality';
+export const VIDEO_QUALITY_CONSOLE = 'video-quality';
 
 export const AUDIO_TYPE = 'audio';
 export const MESSAGE_TYPE = 'message';
@@ -19,19 +23,30 @@ interface EventTargetFiles extends EventTarget {
 export class ConsoleGlobalMessageManager {
 
     private readonly divMainConsole: HTMLDivElement;
+    private readonly divMessageConsole: HTMLDivElement;
+    private readonly divSettingConsole: HTMLDivElement;
     private readonly buttonMainConsole: HTMLDivElement;
     private readonly buttonSendMainConsole: HTMLImageElement;
+    private readonly buttonAdminMainConsole: HTMLImageElement;
     private readonly buttonSettingsMainConsole: HTMLImageElement;
     private activeConsole: boolean = false;
+    private activeMessage: boolean = false;
+    private activeSetting: boolean = false;
     private userInputManager!: UserInputManager;
     private static cssLoaded: boolean = false;
 
-    constructor(private Connection: RoomConnection, userInputManager : UserInputManager) {
+    constructor(private Connection: RoomConnection, userInputManager : UserInputManager, private isAdmin: Boolean) {
         this.buttonMainConsole = document.createElement('div');
         this.buttonMainConsole.classList.add('console');
         this.divMainConsole = document.createElement('div');
+        this.divMainConsole.className = CLASS_CONSOLE_MESSAGE;
+        this.divMessageConsole = document.createElement('div');
+        this.divMessageConsole.className = 'message';
+        this.divSettingConsole = document.createElement('div');
+        this.divSettingConsole.className = 'setting';
         this.buttonSendMainConsole = document.createElement('img');
         this.buttonSettingsMainConsole = document.createElement('img');
+        this.buttonAdminMainConsole = document.createElement('img');
         this.userInputManager = userInputManager;
         this.initialise();
     }
@@ -78,35 +93,48 @@ export class ConsoleGlobalMessageManager {
         });
         menu.appendChild(textMessage);
         menu.appendChild(textAudio);
-        this.divMainConsole.appendChild(menu);
+        this.divMessageConsole.appendChild(menu);
 
         this.buttonSendMainConsole.src = 'resources/logos/send-yellow.svg';
         this.buttonSendMainConsole.addEventListener('click', () => {
-            if(this.activeConsole){
-                this.disabled();
+            if(this.activeMessage){
+                this.disabledMessageConsole();
             }else{
-                this.buttonSendMainConsole.classList.add('active');
-                this.active();
+                this.activeMessageConsole();
             }
         });
-        this.buttonMainConsole.appendChild(this.buttonSendMainConsole);
 
-        this.buttonSettingsMainConsole.src = 'resources/logos/setting-yellow.svg';
-        this.buttonSettingsMainConsole.addEventListener('click', () => {
+        this.buttonAdminMainConsole.src = 'resources/logos/setting-yellow.svg';
+        this.buttonAdminMainConsole.addEventListener('click', () => {
             window.open(ADMIN_URL, '_blank');
         });
-        this.buttonMainConsole.appendChild(this.buttonSettingsMainConsole);
+
+        this.buttonSettingsMainConsole.src = 'resources/logos/monitor-yellow.svg';
+        this.buttonSettingsMainConsole.addEventListener('click', () => {
+            if(this.activeSetting){
+                this.disabledSettingConsole();
+            }else{
+                this.activeSettingConsole();
+            }
+        });
 
         /*const buttonText = document.createElement('p');
         buttonText.innerText = 'Console';
         this.buttonMainConsole.appendChild(buttonText);*/
+        this.divMessageConsole.appendChild(typeConsole);
 
-        this.divMainConsole.className = CLASS_CONSOLE_MESSAGE;
+        if(this.isAdmin) {
+            this.buttonMainConsole.appendChild(this.buttonSendMainConsole);
+            this.buttonMainConsole.appendChild(this.buttonAdminMainConsole);
+            this.createTextMessagePart();
+            this.createUploadAudioPart();
+        }
+        this.buttonMainConsole.appendChild(this.buttonSettingsMainConsole);
+        this.createSettings();
+
         this.divMainConsole.appendChild(this.buttonMainConsole);
-        this.divMainConsole.appendChild(typeConsole);
-
-        this.createTextMessagePart();
-        this.createUploadAudioPart();
+        this.divMainConsole.appendChild(this.divMessageConsole);
+        this.divMainConsole.appendChild(this.divSettingConsole);
 
         const mainSectionDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-container');
         mainSectionDiv.appendChild(this.divMainConsole);
@@ -120,7 +148,7 @@ export class ConsoleGlobalMessageManager {
         buttonSend.classList.add('btn');
         buttonSend.addEventListener('click', (event: MouseEvent) => {
             this.sendMessage();
-            this.disabled();
+            this.disabledMessageConsole();
         });
         const buttonDiv = document.createElement('div');
         buttonDiv.classList.add('btn-action');
@@ -131,7 +159,7 @@ export class ConsoleGlobalMessageManager {
         section.classList.add('active');
         section.appendChild(div);
         section.appendChild(buttonDiv);
-        this.divMainConsole.appendChild(section);
+        this.divMessageConsole.appendChild(section);
 
         (async () => {
             // Start loading CSS
@@ -171,27 +199,6 @@ export class ConsoleGlobalMessageManager {
                 },
             });
         })();
-    }
-
-    private static loadCss(): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            if (ConsoleGlobalMessageManager.cssLoaded) {
-                resolve();
-                return;
-            }
-            const fileref = document.createElement("link")
-            fileref.setAttribute("rel", "stylesheet")
-            fileref.setAttribute("type", "text/css")
-            fileref.setAttribute("href", "https://cdn.quilljs.com/1.3.7/quill.snow.css");
-            document.getElementsByTagName("head")[0].appendChild(fileref);
-            ConsoleGlobalMessageManager.cssLoaded = true;
-            fileref.onload = () => {
-                resolve();
-            }
-            fileref.onerror = () => {
-                reject();
-            }
-        });
     }
 
     createUploadAudioPart(){
@@ -243,7 +250,7 @@ export class ConsoleGlobalMessageManager {
         buttonSend.classList.add('btn');
         buttonSend.addEventListener('click', (event: MouseEvent) => {
             this.sendMessage();
-            this.disabled();
+            this.disabledMessageConsole();
         });
         const buttonDiv = document.createElement('div');
         buttonDiv.classList.add('btn-action');
@@ -253,7 +260,114 @@ export class ConsoleGlobalMessageManager {
         section.id = this.getSectionId(UPLOAD_CONSOLE_MESSAGE);
         section.appendChild(div);
         section.appendChild(buttonDiv);
-        this.divMainConsole.appendChild(section);
+        this.divMessageConsole.appendChild(section);
+    }
+
+    createSettings(){
+        const labelGame = document.createElement('h1');
+        labelGame.innerText = "Game quality";
+
+        const selectGame = document.createElement('select');
+        selectGame.id = VIDEO_QUALITY_SELECT;
+
+        const option1 : HTMLOptionElement = document.createElement('option');
+        option1.value = '120';
+        option1.innerText = 'High video quality (120 fps)';
+        selectGame.appendChild(option1);
+
+        const option2 : HTMLOptionElement = document.createElement('option');
+        option2.value = '60';
+        option2.innerText = 'Medium video quality (60 fps, recommended)';
+        selectGame.appendChild(option2);
+
+        const option3 : HTMLOptionElement = document.createElement('option');
+        option3.value = '40';
+        option3.innerText = 'Minimum video quality (40 fps)';
+        selectGame.appendChild(option3);
+
+        const option4 : HTMLOptionElement = document.createElement('option');
+        option4.value = '20';
+        option4.innerText = 'Small video quality (20 fps)';
+        selectGame.appendChild(option4);
+
+        const labelVideo = document.createElement('h1');
+        labelVideo.innerText = "Video quality";
+
+        const selectVideo = document.createElement('select');
+        selectVideo.id = GAME_QUALITY_SELECT;
+
+        const optionVideo1 : HTMLOptionElement = document.createElement('option');
+        optionVideo1.value = '30';
+        optionVideo1.innerText = 'High video quality (30 fps)';
+        selectVideo.appendChild(optionVideo1);
+
+        const optionVideo2 : HTMLOptionElement = document.createElement('option');
+        optionVideo2.value = '20';
+        optionVideo2.innerText = 'Medium video quality (20 fps, recommended)';
+        selectVideo.appendChild(optionVideo2);
+
+        const optionVideo3 : HTMLOptionElement = document.createElement('option');
+        optionVideo3.value = '10';
+        optionVideo3.innerText = 'Minimum video quality (10 fps)';
+        selectVideo.appendChild(optionVideo3);
+
+        const optionVideo4 : HTMLOptionElement = document.createElement('option');
+        optionVideo4.value = '5';
+        optionVideo4.innerText = 'Small video quality (5 fps)';
+        selectVideo.appendChild(optionVideo4);
+
+        selectGame.value = '60';
+        const localQualityGame = localStorage.getItem(GAME_QUALITY_SELECT);
+        if(localQualityGame){
+            selectGame.value = localQualityGame;
+        }
+
+        selectVideo.value = '30';
+        const localQualityCam = localStorage.getItem(VIDEO_QUALITY_SELECT);
+        if(localQualityCam){
+            selectVideo.value = localQualityCam;
+        }
+
+        const divButtonAction = document.createElement('div');
+        divButtonAction.className = 'btn-action';
+        const buttonSave = document.createElement('button');
+        buttonSave.innerText = 'Save';
+        buttonSave.classList.add('btn');
+        buttonSave.addEventListener('click', () => {
+            this.saveSetting(selectGame.value, selectVideo.value);
+            this.disabledSettingConsole();
+        });
+        divButtonAction.appendChild(buttonSave);
+
+        const section = document.createElement('section');
+        section.id = this.getSectionId(VIDEO_QUALITY_CONSOLE);
+        section.appendChild(labelGame);
+        section.appendChild(selectGame);
+        section.appendChild(labelVideo);
+        section.appendChild(selectVideo);
+        section.appendChild(divButtonAction);
+        this.divSettingConsole.appendChild(section);
+    }
+
+    private static loadCss(): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if (ConsoleGlobalMessageManager.cssLoaded) {
+                resolve();
+                return;
+            }
+            const fileref = document.createElement("link")
+            fileref.setAttribute("rel", "stylesheet")
+            fileref.setAttribute("type", "text/css")
+            fileref.setAttribute("href", "https://cdn.quilljs.com/1.3.7/quill.snow.css");
+            document.getElementsByTagName("head")[0].appendChild(fileref);
+            ConsoleGlobalMessageManager.cssLoaded = true;
+            fileref.onload = () => {
+                resolve();
+            }
+            fileref.onerror = () => {
+                reject();
+            }
+        });
     }
 
     sendMessage(){
@@ -307,18 +421,63 @@ export class ConsoleGlobalMessageManager {
         this.Connection.emitGlobalMessage(GlobalMessage);
     }
 
+    private saveSetting(valueGame: string, valueVideo: string){
+        const previousGameValue  = localStorage.getItem(GAME_QUALITY_SELECT);
+        if(!previousGameValue || previousGameValue !== valueGame) {
+            localStorage.setItem(GAME_QUALITY_SELECT, valueGame);
+            window.location.reload();
+        }
+        const previousVideoValue  = localStorage.getItem(VIDEO_QUALITY_SELECT);
+        if(!previousVideoValue || previousVideoValue !== valueVideo) {
+            localStorage.setItem(VIDEO_QUALITY_SELECT, valueVideo);
+            mediaManager.updateCameraQuality(parseInt(valueVideo));
+        }
+    }
+
     active(){
         this.userInputManager.clearAllInputKeyboard();
-        this.activeConsole = true;
         this.divMainConsole.style.top = '0';
-        this.buttonSendMainConsole.classList.add('active');
+        this.activeConsole = true;
     }
 
     disabled(){
         this.userInputManager.initKeyBoardEvent();
         this.activeConsole = false;
         this.divMainConsole.style.top = '-80%';
+    }
+
+    activeMessageConsole(){
+        this.activeMessage = true;
+        if(this.activeSetting){
+            this.disabledSettingConsole();
+        }
+        this.active();
+        this.divMessageConsole.classList.add('active');
+        this.buttonSendMainConsole.classList.add('active');
+    }
+
+    disabledMessageConsole(){
+        this.activeMessage = false;
+        this.disabled();
+        this.divMessageConsole.classList.remove('active');
         this.buttonSendMainConsole.classList.remove('active');
+    }
+
+    activeSettingConsole(){
+        this.activeSetting = true;
+        if(this.activeMessage){
+            this.disabledMessageConsole();
+        }
+        this.active();
+        this.divSettingConsole.classList.add('active');
+        this.buttonSettingsMainConsole.classList.add('active');
+    }
+
+    disabledSettingConsole(){
+        this.activeSetting = false;
+        this.disabled();
+        this.divSettingConsole.classList.remove('active');
+        this.buttonSettingsMainConsole.classList.remove('active');
     }
 
     private getSectionId(id: string) : string {
