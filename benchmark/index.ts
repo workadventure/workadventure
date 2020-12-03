@@ -2,6 +2,7 @@ import {RoomConnection} from "../front/src/Connexion/RoomConnection";
 import {connectionManager} from "../front/src/Connexion/ConnectionManager";
 import * as WebSocket from "ws"
 
+let userMovedCount = 0;
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -13,7 +14,7 @@ RoomConnection.setWebsocketFactory((url: string) => {
 
 async function startOneUser(): Promise<void> {
     await connectionManager.anonymousLogin(true);
-    const connection = await connectionManager.connectToRoomSocket(process.env.ROOM_ID ? process.env.ROOM_ID : '_/global/maps.workadventure.localhost/Floor0/floor0.json', 'TEST', ['male3'],
+    const onConnect = await connectionManager.connectToRoomSocket(process.env.ROOM_ID ? process.env.ROOM_ID : '_/global/maps.workadventure.localhost/Floor0/floor0.json', 'TEST', ['male3'],
         {
             x: 783,
             y: 170
@@ -23,6 +24,12 @@ async function startOneUser(): Promise<void> {
             left: 500,
             right: 800
         });
+
+    const connection = onConnect.connection;
+
+    connection.onUserMoved(() => {
+        userMovedCount++;
+    })
 
     console.log(connection.getUserId());
 
@@ -46,6 +53,7 @@ async function startOneUser(): Promise<void> {
 
     await sleep(10000);
     connection.closeConnection();
+    console.log('User moved count: '+userMovedCount);
 }
 
 (async () => {
@@ -57,4 +65,5 @@ async function startOneUser(): Promise<void> {
         // Wait 0.5s between adding users
         await sleep(125);
     }
+
 })();
