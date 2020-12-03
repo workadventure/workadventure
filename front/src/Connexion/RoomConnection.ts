@@ -36,7 +36,7 @@ import {ProtobufClientUtils} from "../Network/ProtobufClientUtils";
 import {
     EventMessage,
     GroupCreatedUpdatedMessageInterface, ItemEventMessageInterface,
-    MessageUserJoined, PlayGlobalMessageInterface, PositionInterface,
+    MessageUserJoined, OnConnectInterface, PlayGlobalMessageInterface, PositionInterface,
     RoomJoinedMessageInterface,
     ViewportInterface, WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
@@ -86,14 +86,26 @@ export class RoomConnection implements RoomConnection {
 
         this.socket.binaryType = 'arraybuffer';
 
+        let interval: ReturnType<typeof setInterval>|undefined = undefined;
+
         this.socket.onopen = (ev) => {
             //we manually ping every 20s to not be logged out by the server, even when the game is in background.
             const pingMessage = new PingMessage();
-            setInterval(() => this.socket.send(pingMessage.serializeBinary().buffer), manualPingDelay);
+            interval = setInterval(() => this.socket.send(pingMessage.serializeBinary().buffer), manualPingDelay);
         };
 
+        this.socket.addEventListener('close', (event) => {
+            if (interval) {
+                clearInterval(interval);
+            }
+
+            // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
+            if (this.userId === null) {
+                this.dispatch(EventMessage.CONNECTING_ERROR, event);
+            }
+        });
+
         this.socket.onmessage = (messageEvent) => {
-            console.warn('message received');
             const arrayBuffer: ArrayBuffer = messageEvent.data;
             const message = ServerToClientMessage.deserializeBinary(new Uint8Array(arrayBuffer));
 
@@ -138,13 +150,22 @@ export class RoomConnection implements RoomConnection {
                 this.userId = roomJoinedMessage.getCurrentuserid();
                 this.tags = roomJoinedMessage.getTagList();
 
-                this.dispatch(EventMessage.CONNECT, this);
+                //console.log('Dispatching CONNECT')
+                this.dispatch(EventMessage.CONNECT, {
+                    connection: this,
+                    room: {
+                        //users,
+                        //groups,
+                        items
+                    } as RoomJoinedMessageInterface
+                });
 
+                /*console.log('Dispatching START_ROOM')
                 this.dispatch(EventMessage.START_ROOM, {
                     //users,
                     //groups,
                     items
-                });
+                });*/
             } else if (message.hasErrormessage()) {
                 console.error(EventMessage.MESSAGE_ERROR, message.getErrormessage()?.getMessage());
             } else if (message.hasWebrtcsignaltoclientmessage()) {
@@ -354,6 +375,12 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public onConnectingError(callback: (event: CloseEvent) => void): void {
+        this.onMessage(EventMessage.CONNECTING_ERROR, (event: CloseEvent) => {
+            callback(event);
+        });
+    }
+
     public onConnectError(callback: (error: Event) => void): void {
         this.socket.addEventListener('error', callback)
     }
@@ -361,7 +388,7 @@ export class RoomConnection implements RoomConnection {
     /*public onConnect(callback: (e: Event) => void): void {
         this.socket.addEventListener('open', callback)
     }*/
-    public onConnect(callback: (roomConnection: RoomConnection) => void): void {
+    public onConnect(callback: (roomConnection: OnConnectInterface) => void): void {
         //this.socket.addEventListener('open', callback)
         this.onMessage(EventMessage.CONNECT, callback);
     }
@@ -369,9 +396,9 @@ export class RoomConnection implements RoomConnection {
     /**
      * Triggered when we receive all the details of a room (users, groups, ...)
      */
-    public onStartRoom(callback: (event: RoomJoinedMessageInterface) => void): void {
+    /*public onStartRoom(callback: (event: RoomJoinedMessageInterface) => void): void {
         this.onMessage(EventMessage.START_ROOM, callback);
-    }
+    }*/
 
     public sendWebrtcSignal(signal: unknown, receiverId: number) {
         const webRtcSignal = new WebRtcSignalToServerMessage();

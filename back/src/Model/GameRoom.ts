@@ -96,7 +96,6 @@ export class GameRoom {
         }
         const position = ProtobufUtils.toPointInterface(positionMessage);
 
-
         const user = new User(this.nextUserId, joinRoomMessage.getUseruuid(), position, false, this.positionNotifier, socket, joinRoomMessage.getTagList(), joinRoomMessage.getName(), ProtobufUtils.toCharacterLayerObjects(joinRoomMessage.getCharacterlayerList()));
         this.nextUserId++;
         this.users.set(user.id, user);

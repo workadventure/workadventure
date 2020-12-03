@@ -1,7 +1,7 @@
 import Axios from "axios";
 import {API_URL} from "../Enum/EnvironmentVariable";
 import {RoomConnection} from "./RoomConnection";
-import {PositionInterface, ViewportInterface} from "./ConnexionModels";
+import {OnConnectInterface, PositionInterface, ViewportInterface} from "./ConnexionModels";
 import {GameConnexionTypes, urlManager} from "../Url/UrlManager";
 import {localUserStore} from "./LocalUserStore";
 import {LocalUser} from "./LocalUser";
@@ -88,24 +88,29 @@ class ConnectionManager {
         this.localUser = new LocalUser('', 'test', []);
     }
 
-    public connectToRoomSocket(roomId: string, name: string, characterLayers: string[], position: PositionInterface, viewport: ViewportInterface): Promise<RoomConnection> {
-        return new Promise<RoomConnection>((resolve, reject) => {
+    public connectToRoomSocket(roomId: string, name: string, characterLayers: string[], position: PositionInterface, viewport: ViewportInterface): Promise<OnConnectInterface> {
+        return new Promise<OnConnectInterface>((resolve, reject) => {
             const connection = new RoomConnection(this.localUser.jwtToken, roomId, name, characterLayers, position, viewport);
             connection.onConnectError((error: object) => {
                 console.log('An error occurred while connecting to socket server. Retrying');
                 reject(error);
             });
 
-            // FIXME: onConnect should be triggered by the first JoinRoomEvent (instead of the connection)
-            connection.onConnect(() => {
-                console.warn('CONNECT RECEIVED');
-                resolve(connection);
-            })
+            connection.onConnectingError((event: CloseEvent) => {
+                console.log('An error occurred while connecting to socket server. Retrying');
+                reject(new Error('An error occurred while connecting to socket server. Retrying. Code: '+event.code+', Reason: '+event.reason));
+            });
+
+            connection.onConnect((connect: OnConnectInterface) => {
+                resolve(connect);
+            });
+
         }).catch((err) => {
             // Let's retry in 4-6 seconds
-            return new Promise<RoomConnection>((resolve, reject) => {
+            return new Promise<OnConnectInterface>((resolve, reject) => {
                 setTimeout(() => {
-                    //todo: allow a way to break recurrsion?
+                    //todo: allow a way to break recursion?
+                    //todo: find a way to avoid recursive function. Otherwise, the call stack will grow indefinitely.
                     this.connectToRoomSocket(roomId, name, characterLayers, position, viewport).then((connection) => resolve(connection));
                 }, 4000 + Math.floor(Math.random() * 2000) );
             });
