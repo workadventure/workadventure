@@ -24,6 +24,24 @@
          "ADMIN_API_URL": adminUrl,
        } else {}
      },
+     "pusher": {
+            "image": "thecodingmachine/workadventure-pusher:"+tag,
+            "host": {
+              "url": "pusher."+url,
+              "https": "enable"
+            },
+            "ports": [8080],
+            "env": {
+              "SECRET_KEY": "tempSecretKeyNeedsToChange",
+              "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
+              "JITSI_ISS": env.JITSI_ISS,
+              "JITSI_URL": env.JITSI_URL,
+              "API_URL": "api."+url,
+              "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
+            } + if adminUrl != null then {
+              "ADMIN_API_URL": adminUrl,
+            } else {}
+          },
     "front": {
       "image": "thecodingmachine/workadventure-front:"+tag,
       "host": {
