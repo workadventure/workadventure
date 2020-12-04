@@ -8,7 +8,7 @@ import {
 import grpc, {ServerWritableStream} from "grpc";
 import {Empty} from "google-protobuf/google/protobuf/empty_pb";
 import {socketManager} from "./Services/SocketManager";
-import {emitError} from "./Services/IoSocketHelpers";
+import {emitError} from "./Services/MessageHelpers";
 import {User, UserSocket} from "./Model/User";
 import {GameRoom} from "./Model/GameRoom";
 import Debug from "debug";

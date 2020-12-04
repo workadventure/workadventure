@@ -2,7 +2,7 @@ import "jasmine";
 import {GameRoom, ConnectCallback, DisconnectCallback } from "../src/Model/GameRoom";
 import {Point} from "../src/Model/Websocket/MessageUserPosition";
 import { Group } from "../src/Model/Group";
-import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
+import {ExSocketInterface} from "_Model/Websocket/CharacterLayer";
 import {User} from "_Model/User";
 
 function createMockUser(userId: number): ExSocketInterface {

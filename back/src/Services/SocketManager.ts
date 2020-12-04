@@ -1,5 +1,5 @@
 import {GameRoom} from "../Model/GameRoom";
-import {CharacterLayer, ExSocketInterface} from "../Model/Websocket/ExSocketInterface";
+import {CharacterLayer} from "_Model/Websocket/CharacterLayer";
 import {
     GroupDeleteMessage,
     GroupUpdateMessage,
@@ -33,23 +33,18 @@ import {
     SubToPusherMessage,
     UserJoinedZoneMessage, GroupUpdateZoneMessage, GroupLeftZoneMessage, UserLeftZoneMessage
 } from "../Messages/generated/messages_pb";
-import {PointInterface} from "../Model/Websocket/PointInterface";
 import {User, UserSocket} from "../Model/User";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
 import {Group} from "../Model/Group";
 import {cpuTracker} from "./CpuTracker";
-import {isSetPlayerDetailsMessage} from "../Model/Websocket/SetPlayerDetailsMessage";
 import {ADMIN_API_URL, GROUP_RADIUS, JITSI_ISS, MINIMUM_DISTANCE, SECRET_JITSI_KEY} from "../Enum/EnvironmentVariable";
 import {Movable} from "../Model/Movable";
 import {PositionInterface} from "../Model/PositionInterface";
 import {adminApi, CharacterTexture, FetchMemberDataByUuidResponse} from "./AdminApi";
-import Direction = PositionMessage.Direction;
-import {emitError, emitInBatch} from "./IoSocketHelpers";
 import Jwt from "jsonwebtoken";
 import {JITSI_URL} from "../Enum/EnvironmentVariable";
 import {clientEventsEmitter} from "./ClientEventsEmitter";
 import {gaugeManager} from "./GaugeManager";
-import {ServerWritableStream} from "grpc";
 import {ZoneSocket} from "../RoomManager";
 import {Zone} from "_Model/Zone";
 import Debug from "debug";
@@ -78,7 +73,6 @@ function emitZoneMessage(subMessage: SubToPusherMessage, socket: ZoneSocket): vo
 
 export class SocketManager {
     private rooms: Map<string, GameRoom> = new Map<string, GameRoom>();
-    //private sockets: Map<number, ExSocketInterface> = new Map<number, ExSocketInterface>();
 
     constructor() {
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
@@ -647,7 +641,7 @@ export class SocketManager {
         user.socket.write(serverToClientMessage);
     }
 
-    public emitSendUserMessage(messageToSend: {userUuid: string, message: string, type: string}): ExSocketInterface {
+    public emitSendUserMessage(messageToSend: {userUuid: string, message: string, type: string}): void {
         // TODO: move this to room (findByUuid)
         throw new Error("Not yet reimplemented");
         /*const socket = this.searchClientByUuid(messageToSend.userUuid);

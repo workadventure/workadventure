@@ -8,7 +8,7 @@ import {PointInterface} from "../src/Model/Websocket/PointInterface";
 import {Zone} from "_Model/Zone";
 import {Movable} from "_Model/Movable";
 import {PositionInterface} from "_Model/PositionInterface";
-import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
+import {ExSocketInterface} from "_Model/Websocket/CharacterLayer";
 
 
 describe("PositionNotifier", () => {

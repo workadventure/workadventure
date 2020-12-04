@@ -3,10 +3,9 @@ import { PointInterface } from "./Websocket/PointInterface";
 import {Zone} from "_Model/Zone";
 import {Movable} from "_Model/Movable";
 import {PositionNotifier} from "_Model/PositionNotifier";
-import {ServerDuplexStream, ServerWritableStream} from "grpc";
+import {ServerDuplexStream} from "grpc";
 import {BatchMessage, PusherToBackMessage, ServerToClientMessage, SubMessage} from "../Messages/generated/messages_pb";
-import {ProtobufUtils} from "_Model/Websocket/ProtobufUtils";
-import {CharacterLayer, ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
+import {CharacterLayer} from "_Model/Websocket/CharacterLayer";
 
 export type UserSocket = ServerDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 

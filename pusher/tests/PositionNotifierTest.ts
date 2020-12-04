@@ -1,6 +1,6 @@
 import "jasmine";
 import {PusherRoom, ConnectCallback, DisconnectCallback } from "_Model/PusherRoom";
-import {Point} from "../src/Model/Websocket/MessageUserPosition";
+import {Point} from "_Model/Websocket/Point";
 import { Group } from "../src/Model/Group";
 import {PositionDispatcher} from "_Model/PositionDispatcher";
 import {User} from "../src/Model/User";
