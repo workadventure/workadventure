@@ -9,6 +9,8 @@ import {gameManager} from "../Game/GameManager";
 import {ResizableScene} from "./ResizableScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {PlayerResourceDescriptionInterface} from "../Entity/Character";
+import {SelectCharacterSceneName} from "./SelectCharacterScene";
+import {LoginSceneName} from "./LoginScene";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -120,7 +122,8 @@ export class CustomizeScene extends ResizableScene {
 
             gameManager.setCharacterLayers(layers);
 
-            return this.scene.start(EnableCameraSceneName);
+            this.scene.sleep(CustomizeSceneName)
+            this.scene.run(EnableCameraSceneName);
         });
 
         this.input.keyboard.on('keydown-RIGHT', () => this.moveCursorHorizontally(1));

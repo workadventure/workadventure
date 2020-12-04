@@ -3,15 +3,12 @@ import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
 import {RoomConnection} from "../Connexion/RoomConnection";
 import {PlayGlobalMessageInterface} from "../Connexion/ConnexionModels";
 import {ADMIN_URL} from "../Enum/EnvironmentVariable";
-import {mediaManager} from "../WebRtc/MediaManager";
 
 export const CLASS_CONSOLE_MESSAGE = 'main-console';
 export const INPUT_CONSOLE_MESSAGE = 'input-send-text';
 export const UPLOAD_CONSOLE_MESSAGE = 'input-upload-music';
 export const INPUT_TYPE_CONSOLE = 'input-type';
-export const GAME_QUALITY_SELECT = 'select-game-quality';
 export const VIDEO_QUALITY_SELECT = 'select-video-quality';
-export const VIDEO_QUALITY_CONSOLE = 'video-quality';
 
 export const AUDIO_TYPE = 'audio';
 export const MESSAGE_TYPE = 'message';
@@ -38,6 +35,7 @@ export class ConsoleGlobalMessageManager {
     constructor(private Connection: RoomConnection, userInputManager : UserInputManager, private isAdmin: Boolean) {
         this.buttonMainConsole = document.createElement('div');
         this.buttonMainConsole.classList.add('console');
+        this.buttonMainConsole.hidden = true;
         this.divMainConsole = document.createElement('div');
         this.divMainConsole.className = CLASS_CONSOLE_MESSAGE;
         this.divMessageConsole = document.createElement('div');
@@ -49,6 +47,7 @@ export class ConsoleGlobalMessageManager {
         this.buttonAdminMainConsole = document.createElement('img');
         this.userInputManager = userInputManager;
         this.initialise();
+        
     }
 
     initialise() {
@@ -118,9 +117,6 @@ export class ConsoleGlobalMessageManager {
             }
         });
 
-        /*const buttonText = document.createElement('p');
-        buttonText.innerText = 'Console';
-        this.buttonMainConsole.appendChild(buttonText);*/
         this.divMessageConsole.appendChild(typeConsole);
 
         if(this.isAdmin) {
@@ -130,7 +126,6 @@ export class ConsoleGlobalMessageManager {
             this.createUploadAudioPart();
         }
         this.buttonMainConsole.appendChild(this.buttonSettingsMainConsole);
-        this.createSettings();
 
         this.divMainConsole.appendChild(this.buttonMainConsole);
         this.divMainConsole.appendChild(this.divMessageConsole);
@@ -263,92 +258,6 @@ export class ConsoleGlobalMessageManager {
         this.divMessageConsole.appendChild(section);
     }
 
-    createSettings(){
-        const labelGame = document.createElement('h1');
-        labelGame.innerText = "Game quality";
-
-        const selectGame = document.createElement('select');
-        selectGame.id = VIDEO_QUALITY_SELECT;
-
-        const option1 : HTMLOptionElement = document.createElement('option');
-        option1.value = '120';
-        option1.innerText = 'High video quality (120 fps)';
-        selectGame.appendChild(option1);
-
-        const option2 : HTMLOptionElement = document.createElement('option');
-        option2.value = '60';
-        option2.innerText = 'Medium video quality (60 fps, recommended)';
-        selectGame.appendChild(option2);
-
-        const option3 : HTMLOptionElement = document.createElement('option');
-        option3.value = '40';
-        option3.innerText = 'Minimum video quality (40 fps)';
-        selectGame.appendChild(option3);
-
-        const option4 : HTMLOptionElement = document.createElement('option');
-        option4.value = '20';
-        option4.innerText = 'Small video quality (20 fps)';
-        selectGame.appendChild(option4);
-
-        const labelVideo = document.createElement('h1');
-        labelVideo.innerText = "Video quality";
-
-        const selectVideo = document.createElement('select');
-        selectVideo.id = GAME_QUALITY_SELECT;
-
-        const optionVideo1 : HTMLOptionElement = document.createElement('option');
-        optionVideo1.value = '30';
-        optionVideo1.innerText = 'High video quality (30 fps)';
-        selectVideo.appendChild(optionVideo1);
-
-        const optionVideo2 : HTMLOptionElement = document.createElement('option');
-        optionVideo2.value = '20';
-        optionVideo2.innerText = 'Medium video quality (20 fps, recommended)';
-        selectVideo.appendChild(optionVideo2);
-
-        const optionVideo3 : HTMLOptionElement = document.createElement('option');
-        optionVideo3.value = '10';
-        optionVideo3.innerText = 'Minimum video quality (10 fps)';
-        selectVideo.appendChild(optionVideo3);
-
-        const optionVideo4 : HTMLOptionElement = document.createElement('option');
-        optionVideo4.value = '5';
-        optionVideo4.innerText = 'Small video quality (5 fps)';
-        selectVideo.appendChild(optionVideo4);
-
-        selectGame.value = '60';
-        const localQualityGame = localStorage.getItem(GAME_QUALITY_SELECT);
-        if(localQualityGame){
-            selectGame.value = localQualityGame;
-        }
-
-        selectVideo.value = '30';
-        const localQualityCam = localStorage.getItem(VIDEO_QUALITY_SELECT);
-        if(localQualityCam){
-            selectVideo.value = localQualityCam;
-        }
-
-        const divButtonAction = document.createElement('div');
-        divButtonAction.className = 'btn-action';
-        const buttonSave = document.createElement('button');
-        buttonSave.innerText = 'Save';
-        buttonSave.classList.add('btn');
-        buttonSave.addEventListener('click', () => {
-            this.saveSetting(selectGame.value, selectVideo.value);
-            this.disabledSettingConsole();
-        });
-        divButtonAction.appendChild(buttonSave);
-
-        const section = document.createElement('section');
-        section.id = this.getSectionId(VIDEO_QUALITY_CONSOLE);
-        section.appendChild(labelGame);
-        section.appendChild(selectGame);
-        section.appendChild(labelVideo);
-        section.appendChild(selectVideo);
-        section.appendChild(divButtonAction);
-        this.divSettingConsole.appendChild(section);
-    }
-
     private static loadCss(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             if (ConsoleGlobalMessageManager.cssLoaded) {
@@ -421,19 +330,6 @@ export class ConsoleGlobalMessageManager {
         this.Connection.emitGlobalMessage(GlobalMessage);
     }
 
-    private saveSetting(valueGame: string, valueVideo: string){
-        const previousGameValue  = localStorage.getItem(GAME_QUALITY_SELECT);
-        if(!previousGameValue || previousGameValue !== valueGame) {
-            localStorage.setItem(GAME_QUALITY_SELECT, valueGame);
-            window.location.reload();
-        }
-        const previousVideoValue  = localStorage.getItem(VIDEO_QUALITY_SELECT);
-        if(!previousVideoValue || previousVideoValue !== valueVideo) {
-            localStorage.setItem(VIDEO_QUALITY_SELECT, valueVideo);
-            mediaManager.updateCameraQuality(parseInt(valueVideo));
-        }
-    }
-
     active(){
         this.userInputManager.clearAllInputKeyboard();
         this.divMainConsole.style.top = '0';
@@ -453,12 +349,14 @@ export class ConsoleGlobalMessageManager {
         }
         this.active();
         this.divMessageConsole.classList.add('active');
+        this.buttonMainConsole.hidden = false;
         this.buttonSendMainConsole.classList.add('active');
     }
 
     disabledMessageConsole(){
         this.activeMessage = false;
         this.disabled();
+        this.buttonMainConsole.hidden = false;
         this.divMessageConsole.classList.remove('active');
         this.buttonSendMainConsole.classList.remove('active');
     }

@@ -583,4 +583,8 @@ export class RoomConnection implements RoomConnection {
     public hasTag(tag: string): boolean {
         return this.tags.includes(tag);
     }
+    
+    public isAdmin(): boolean {
+        return this.hasTag('admin');
+    }
 }

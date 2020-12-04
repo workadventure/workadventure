@@ -55,8 +55,7 @@ class ConnectionManager {
             } else {
                 roomId = window.location.pathname + window.location.hash;
             }
-            const room = new Room(roomId);
-            return Promise.resolve(room);
+            return Promise.resolve(new Room(roomId));
         }
 
         return Promise.reject('Invalid URL');
