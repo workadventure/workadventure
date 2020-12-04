@@ -53,17 +53,20 @@ async function startOneUser(): Promise<void> {
 
     await sleep(10000);
     connection.closeConnection();
-    console.log('User moved count: '+userMovedCount);
 }
 
 (async () => {
     connectionManager.initBenchmark();
 
+    const promises = [];
 
     for (let userNo = 0; userNo < 160; userNo++) {
-        startOneUser();
+        const promise = startOneUser();
+        promises.push(promise);
         // Wait 0.5s between adding users
         await sleep(125);
     }
 
+    await Promise.all(promises);
+    console.log('User moved count: '+userMovedCount);
 })();
