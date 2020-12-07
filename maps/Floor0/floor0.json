@@ -278,7 +278,7 @@
                 {
                  "name":"exitSceneUrl",
                  "type":"string",
-                 "value":"..\/..\/fjhzfiunzedoazmnj\/aurelgit.github.io\/wokalys\/map.json"
+                 "value":"..\/..\/..\/..\/fjhzfiunzedoazmnj\/aurelgit.github.io\/wokalys\/map.json"
                 }],
          "type":"tilelayer",
          "visible":true,
