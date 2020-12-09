@@ -36,7 +36,7 @@
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
               "JITSI_ISS": env.JITSI_ISS,
               "JITSI_URL": env.JITSI_URL,
-              "API_URL": "api."+url,
+              "API_URL": "back:50051",
               "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
             } + if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
