@@ -1,19 +1,9 @@
-import {PointInterface} from "./Websocket/PointInterface";
-import {Group} from "./Group";
-import {User} from "./User";
 import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
-import {PositionInterface} from "_Model/PositionInterface";
-import {Identificable} from "_Model/Websocket/Identificable";
 import {PositionDispatcher} from "./PositionDispatcher";
 import {ViewportInterface} from "_Model/Websocket/ViewportMessage";
-import {Movable} from "_Model/Movable";
 import {extractDataFromPrivateRoomId, extractRoomSlugPublicRoomId, isRoomAnonymous} from "./RoomIdentifier";
 import {arrayIntersect} from "../Services/ArrayHelper";
-import {MAX_USERS_PER_ROOM} from "../Enum/EnvironmentVariable";
 import {ZoneEventListener} from "_Model/Zone";
-
-export type ConnectCallback = (user: User, group: Group) => void;
-export type DisconnectCallback = (user: User, group: Group) => void;
 
 export enum GameRoomPolicyTypes {
     ANONYMUS_POLICY = 1,

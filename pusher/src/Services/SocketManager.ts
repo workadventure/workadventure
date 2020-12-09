@@ -26,9 +26,7 @@ import {
     SendUserMessage, JoinRoomMessage, CharacterLayerMessage, PusherToBackMessage
 } from "../Messages/generated/messages_pb";
 import {PointInterface} from "../Model/Websocket/PointInterface";
-import {User} from "../Model/User";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
-import {Group} from "../Model/Group";
 import {cpuTracker} from "./CpuTracker";
 import {GROUP_RADIUS, JITSI_ISS, MINIMUM_DISTANCE, SECRET_JITSI_KEY} from "../Enum/EnvironmentVariable";
 import {Movable} from "../Model/Movable";
@@ -476,119 +474,6 @@ export class SocketManager implements ZoneEventListener {
             console.error('Unexpected type for Movable.');
         }
     }*/
-
-    private emitCreateUpdateGroupEvent(client: ExSocketInterface, group: Group): void {
-        const position = group.getPosition();
-        const pointMessage = new PointMessage();
-        pointMessage.setX(Math.floor(position.x));
-        pointMessage.setY(Math.floor(position.y));
-        const groupUpdateMessage = new GroupUpdateMessage();
-        groupUpdateMessage.setGroupid(group.getId());
-        groupUpdateMessage.setPosition(pointMessage);
-        groupUpdateMessage.setGroupsize(group.getSize);
-
-        const subMessage = new SubMessage();
-        subMessage.setGroupupdatemessage(groupUpdateMessage);
-
-        emitInBatch(client, subMessage);
-        //socket.emit(SocketIoEvent.GROUP_CREATE_UPDATE, groupUpdateMessage.serializeBinary().buffer);
-    }
-
-    private emitDeleteGroupEvent(client: ExSocketInterface, groupId: number): void {
-        const groupDeleteMessage = new GroupDeleteMessage();
-        groupDeleteMessage.setGroupid(groupId);
-
-        const subMessage = new SubMessage();
-        subMessage.setGroupdeletemessage(groupDeleteMessage);
-
-        emitInBatch(client, subMessage);
-    }
-
-    private emitUserLeftEvent(client: ExSocketInterface, userId: number): void {
-        const userLeftMessage = new UserLeftMessage();
-        userLeftMessage.setUserid(userId);
-
-        const subMessage = new SubMessage();
-        subMessage.setUserleftmessage(userLeftMessage);
-
-        emitInBatch(client, subMessage);
-    }
-
-    private joinWebRtcRoom(user: User, group: Group) {
-        /*const roomId: string = "webrtcroom"+group.getId();
-        if (user.socket.webRtcRoomId === roomId) {
-            return;
-        }*/
-
-        for (const otherUser of group.getUsers()) {
-            if (user === otherUser) {
-                continue;
-            }
-
-            // Let's send 2 messages: one to the user joining the group and one to the other user
-            const webrtcStartMessage1 = new WebRtcStartMessage();
-            webrtcStartMessage1.setUserid(otherUser.id);
-            webrtcStartMessage1.setName(otherUser.socket.name);
-            webrtcStartMessage1.setInitiator(true);
-
-            const serverToClientMessage1 = new ServerToClientMessage();
-            serverToClientMessage1.setWebrtcstartmessage(webrtcStartMessage1);
-
-            if (!user.socket.disconnecting) {
-                user.socket.send(serverToClientMessage1.serializeBinary().buffer, true);
-                //console.log('Sending webrtcstart initiator to '+user.socket.userId)
-            }
-
-            const webrtcStartMessage2 = new WebRtcStartMessage();
-            webrtcStartMessage2.setUserid(user.id);
-            webrtcStartMessage2.setName(user.socket.name);
-            webrtcStartMessage2.setInitiator(false);
-
-            const serverToClientMessage2 = new ServerToClientMessage();
-            serverToClientMessage2.setWebrtcstartmessage(webrtcStartMessage2);
-
-            if (!otherUser.socket.disconnecting) {
-                otherUser.socket.send(serverToClientMessage2.serializeBinary().buffer, true);
-                //console.log('Sending webrtcstart to '+otherUser.socket.userId)
-            }
-
-        }
-    }
-
-    //disconnect user
-    private disConnectedUser(user: User, group: Group) {
-        // Most of the time, sending a disconnect event to one of the players is enough (the player will close the connection
-        // which will be shut for the other player).
-        // However! In the rare case where the WebRTC connection is not yet established, if we close the connection on one of the player,
-        // the other player will try connecting until a timeout happens (during this time, the connection icon will be displayed for nothing).
-        // So we also send the disconnect event to the other player.
-        for (const otherUser of group.getUsers()) {
-            if (user === otherUser) {
-                continue;
-            }
-
-            const webrtcDisconnectMessage1 = new WebRtcDisconnectMessage();
-            webrtcDisconnectMessage1.setUserid(user.id);
-
-            const serverToClientMessage1 = new ServerToClientMessage();
-            serverToClientMessage1.setWebrtcdisconnectmessage(webrtcDisconnectMessage1);
-
-            if (!otherUser.socket.disconnecting) {
-                otherUser.socket.send(serverToClientMessage1.serializeBinary().buffer, true);
-            }
-
-
-            const webrtcDisconnectMessage2 = new WebRtcDisconnectMessage();
-            webrtcDisconnectMessage2.setUserid(otherUser.id);
-
-            const serverToClientMessage2 = new ServerToClientMessage();
-            serverToClientMessage2.setWebrtcdisconnectmessage(webrtcDisconnectMessage2);
-
-            if (!user.socket.disconnecting) {
-                user.socket.send(serverToClientMessage2.serializeBinary().buffer, true);
-            }
-        }
-    }
 
     emitPlayGlobalMessage(client: ExSocketInterface, playglobalmessage: PlayGlobalMessage) {
         const pusherToBackMessage = new PusherToBackMessage();
