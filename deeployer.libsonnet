@@ -13,7 +13,7 @@
          "url": "api."+url,
          "https": "enable"
        },
-       "ports": [8080],
+       "ports": [8080, 50051],
        "env": {
          "SECRET_KEY": "tempSecretKeyNeedsToChange",
          "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
