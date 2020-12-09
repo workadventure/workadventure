@@ -26,6 +26,7 @@
        } else {}
      },
      "pusher": {
+            "replicas": 2,
             "image": "thecodingmachine/workadventure-pusher:"+tag,
             "host": {
               "url": "pusher."+url,
