@@ -105,7 +105,7 @@ export class FileController extends BaseController {
         this.App.get("/download-audio-message/:id", (res: HttpResponse, req: HttpRequest) => {
 
             res.onAborted(() => {
-                console.warn('upload-audio-message request was aborted');
+                console.warn('download-audio-message request was aborted');
             })
 
             const id = req.getParameter(0);

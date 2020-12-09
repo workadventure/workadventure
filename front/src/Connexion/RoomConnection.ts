@@ -1,4 +1,4 @@
-import {API_URL} from "../Enum/EnvironmentVariable";
+import {API_URL, UPLOADER_URL} from "../Enum/EnvironmentVariable";
 import Axios from "axios";
 import {
     BatchMessage,
@@ -501,7 +501,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     public uploadAudio(file : FormData){
-        return Axios.post(`${API_URL}/upload-audio-message`, file).then((res: {data:{}}) => {
+        return Axios.post(`${UPLOADER_URL}/upload-audio-message`, file).then((res: {data:{}}) => {
             return res.data;
         }).catch((err) => {
             console.error(err);

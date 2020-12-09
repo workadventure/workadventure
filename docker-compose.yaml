@@ -27,6 +27,7 @@ services:
       HOST: "0.0.0.0"
       NODE_ENV: development
       API_URL: pusher.workadventure.localhost
+      UPLOADER_URL: uploader.workadventure.localhost
       STARTUP_COMMAND_1: yarn install
       TURN_SERVER: "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443"
       TURN_USER: workadventure
@@ -46,6 +47,7 @@ services:
   pusher:
     image: thecodingmachine/nodejs:12
     command: yarn dev
+    #command: yarn run prod
     #command: yarn run profile
     environment:
       DEBUG: "*"
@@ -114,6 +116,23 @@ services:
       - "traefik.http.routers.back-ssl.tls=true"
       - "traefik.http.routers.back-ssl.service=back"
 
+  uploader:
+    image: thecodingmachine/nodejs:12
+    command: yarn dev
+    #command: yarn run profile
+    environment:
+      DEBUG: "*"
+      STARTUP_COMMAND_1: yarn install
+    volumes:
+      - ./uploader:/usr/src/app
+    labels:
+      - "traefik.http.routers.uploader.rule=Host(`uploader.workadventure.localhost`)"
+      - "traefik.http.routers.uploader.entryPoints=web"
+      - "traefik.http.services.uploader.loadbalancer.server.port=8080"
+      - "traefik.http.routers.uploader-ssl.rule=Host(`uploader.workadventure.localhost`)"
+      - "traefik.http.routers.uploader-ssl.entryPoints=websecure"
+      - "traefik.http.routers.uploader-ssl.tls=true"
+      - "traefik.http.routers.uploader-ssl.service=uploader"
 
   website:
     image: thecodingmachine/nodejs:12-apache

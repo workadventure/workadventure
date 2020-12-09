@@ -53,6 +53,7 @@
       "ports": [80],
       "env": {
         "API_URL": "pusher."+url,
+        "UPLOADER_URL": "uploader."+url,
         "JITSI_URL": env.JITSI_URL,
         "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
         "TURN_SERVER": "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443",
@@ -61,6 +62,17 @@
         "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false"
       }
     },
+    "uploader": {
+           "image": "thecodingmachine/workadventure-uploader:"+tag,
+           "host": {
+             "url": "uploader."+url,
+             "https": "enable",
+             "containerPort": 8080
+           },
+           "ports": [8080],
+           "env": {
+           }
+         },
     "maps": {
       "image": "thecodingmachine/workadventure-maps:"+tag,
       "host": {

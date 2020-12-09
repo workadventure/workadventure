@@ -1,6 +1,6 @@
 import {HtmlUtils} from "./../WebRtc/HtmlUtils";
 import {AUDIO_TYPE, MESSAGE_TYPE} from "./ConsoleGlobalMessageManager";
-import {API_URL} from "../Enum/EnvironmentVariable";
+import {API_URL, UPLOADER_URL} from "../Enum/EnvironmentVariable";
 import {RoomConnection} from "../Connexion/RoomConnection";
 import {PlayGlobalMessageInterface} from "../Connexion/ConnexionModels";
 
@@ -79,7 +79,7 @@ export class GlobalMessageManager {
             divAudio.classList.add('active');
         }
         const messageAudioSource : HTMLSourceElement = document.createElement('source');
-        messageAudioSource.src = `${API_URL}${urlMessage}`;
+        messageAudioSource.src = `${UPLOADER_URL}${urlMessage}`;
         messageAudio.appendChild(messageAudioSource);
         mainSectionDiv.appendChild(messageAudio);
     }

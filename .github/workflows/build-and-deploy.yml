@@ -79,6 +79,29 @@ jobs:
           tags: ${{ env.GITHUB_REF_SLUG }}
           add_git_labels: true
 
+  build-uploader:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # Create a slugified value of the branch
+      - uses: rlespinasse/github-slug-action@3.1.0
+
+      - name: "Build and push back image"
+        uses: docker/build-push-action@v1
+        with:
+          dockerfile: uploader/Dockerfile
+          path: ./
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: thecodingmachine/workadventure-uploader
+          tags: ${{ env.GITHUB_REF_SLUG }}
+          add_git_labels: true
+
   build-website:
 
     runs-on: ubuntu-latest
