@@ -11,7 +11,8 @@
        "image": "thecodingmachine/workadventure-back:"+tag,
        "host": {
          "url": "api."+url,
-         "https": "enable"
+         "https": "enable",
+         "port": 8080
        },
        "ports": [8080, 50051],
        "env": {
