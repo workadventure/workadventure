@@ -10,6 +10,7 @@ COPY --from=builder --chown=docker:docker /var/www/messages/generated /usr/src/a
 RUN yarn install
 
 ENV NODE_ENV=production
+RUN yarn run tsc
 
-CMD ["yarn", "run", "prod"]
+CMD ["yarn", "run", "runprod"]
 
