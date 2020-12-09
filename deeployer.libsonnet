@@ -12,7 +12,7 @@
        "host": {
          "url": "api."+url,
          "https": "enable",
-         "port": 8080
+         "containerPort": 8080
        },
        "ports": [8080, 50051],
        "env": {
