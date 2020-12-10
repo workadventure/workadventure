@@ -16,7 +16,7 @@
          "name":"start",
          "opacity":1,
          "type":"tilelayer",
-         "visible":true,
+         "visible":false,
          "width":46,
          "x":0,
          "y":0
@@ -34,7 +34,7 @@
                  "value":"tcm-radiant"
                 }],
          "type":"tilelayer",
-         "visible":true,
+         "visible":false,
          "width":46,
          "x":0,
          "y":0
@@ -52,7 +52,7 @@
                  "value":"tcm-white-room"
                 }],
          "type":"tilelayer",
-         "visible":true,
+         "visible":false,
          "width":46,
          "x":0,
          "y":0
@@ -70,7 +70,7 @@
                  "value":"tcm-dire"
                 }],
          "type":"tilelayer",
-         "visible":true,
+         "visible":false,
          "width":46,
          "x":0,
          "y":0
@@ -88,7 +88,7 @@
                  "value":"..\/Floor0\/floor0.json#down-the-stairs"
                 }],
          "type":"tilelayer",
-         "visible":true,
+         "visible":false,
          "width":46,
          "x":0,
          "y":0
@@ -103,7 +103,7 @@
                 {
                  "name":"exitSceneUrl",
                  "type":"string",
-                 "value":"..\/Floor0\/floor0.json#down-the-stairs"
+                 "value":"..\/Floor1\/floor1.json#down-the-stairs"
                 }],
          "type":"tilelayer",
          "visible":true,
@@ -121,10 +121,10 @@
                 {
                  "name":"exitSceneUrl",
                  "type":"string",
-                 "value":"..\/Floor0\/floor0.json#down-the-stairs-secours"
+                 "value":"..\/Floor2\/floor2.json#down-the-stairs-secours"
                 }],
          "type":"tilelayer",
-         "visible":true,
+         "visible":false,
          "width":46,
          "x":0,
          "y":0
@@ -142,7 +142,7 @@
                  "value":true
                 }],
          "type":"tilelayer",
-         "visible":true,
+         "visible":false,
          "width":46,
          "x":0,
          "y":0
@@ -160,7 +160,7 @@
                  "value":true
                 }],
          "type":"tilelayer",
-         "visible":true,
+         "visible":false,
          "width":46,
          "x":0,
          "y":0
@@ -172,7 +172,7 @@
          "name":"bottom",
          "opacity":1,
          "type":"tilelayer",
-         "visible":true,
+         "visible":false,
          "width":46,
          "x":0,
          "y":0
@@ -184,7 +184,7 @@
          "name":"wall",
          "opacity":1,
          "type":"tilelayer",
-         "visible":true,
+         "visible":false,
          "width":46,
          "x":0,
          "y":0
@@ -196,7 +196,7 @@
          "name":"things",
          "opacity":1,
          "type":"tilelayer",
-         "visible":true,
+         "visible":false,
          "width":46,
          "x":0,
          "y":0
@@ -208,7 +208,7 @@
          "name":"floor",
          "opacity":1,
          "type":"tilelayer",
-         "visible":true,
+         "visible":false,
          "width":46,
          "x":0,
          "y":0
@@ -220,7 +220,7 @@
          "name":"ecran",
          "opacity":1,
          "type":"tilelayer",
-         "visible":true,
+         "visible":false,
          "width":46,
          "x":0,
          "y":0
@@ -232,7 +232,7 @@
          "objects":[],
          "opacity":1,
          "type":"objectgroup",
-         "visible":true,
+         "visible":false,
          "x":0,
          "y":0
         }, 
@@ -243,7 +243,7 @@
          "name":"floor_depth1",
          "opacity":1,
          "type":"tilelayer",
-         "visible":true,
+         "visible":false,
          "width":46,
          "x":0,
          "y":0
@@ -255,7 +255,7 @@
          "name":"floor_depth2",
          "opacity":1,
          "type":"tilelayer",
-         "visible":true,
+         "visible":false,
          "width":46,
          "x":0,
          "y":0
