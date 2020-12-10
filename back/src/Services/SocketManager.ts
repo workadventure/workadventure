@@ -45,9 +45,10 @@ import Jwt from "jsonwebtoken";
 import {JITSI_URL} from "../Enum/EnvironmentVariable";
 import {clientEventsEmitter} from "./ClientEventsEmitter";
 import {gaugeManager} from "./GaugeManager";
-import {ZoneSocket} from "../RoomManager";
+import {AdminSocket, ZoneSocket} from "../RoomManager";
 import {Zone} from "_Model/Zone";
 import Debug from "debug";
+import {Admin} from "_Model/Admin";
 
 const debug = Debug('sockermanager');
 
@@ -83,7 +84,7 @@ export class SocketManager {
         });
     }
 
-    getAdminSocketDataFor(roomId:string): AdminSocketData {
+    /*getAdminSocketDataFor(roomId:string): AdminSocketData {
         const data:AdminSocketData = {
             rooms: {},
             users: {},
@@ -98,7 +99,7 @@ export class SocketManager {
             data.users[user.uuid] = true
         })
         return data;
-    }
+    }*/
 
     public async handleJoinRoom(socket: UserSocket, joinRoomMessage: JoinRoomMessage): Promise<{ room: GameRoom; user: User }> {
         /*const positionMessage = joinRoomMessage.getPositionmessage();
@@ -385,6 +386,7 @@ export class SocketManager {
 
         //join world
         const user = world.join(socket, joinRoomMessage);
+
         clientEventsEmitter.emitClientJoin(user.uuid, roomId);
         //console.log(new Date().toISOString() + ' A user joined (', this.sockets.size, ' connected users)');
         console.log(new Date().toISOString() + ' A user joined');
@@ -738,6 +740,28 @@ export class SocketManager {
 
         room.removeZoneListener(call, x, y);
     }
+
+    public async handleJoinAdminRoom(admin: Admin, roomId: string): Promise<GameRoom> {
+        const room = await socketManager.getOrCreateRoom(roomId);
+
+        // Dispatch groups position to newly connected user
+        /*world.getGroups().forEach((group: Group) => {
+            this.emitCreateUpdateGroupEvent(socket, group);
+        });*/
+
+        room.adminJoin(admin);
+
+        return room;
+    }
+
+    public leaveAdminRoom(room: GameRoom, admin: Admin){
+        room.adminLeave(admin);
+        if (room.isEmpty()) {
+            this.rooms.delete(room.roomId);
+            debug('Room is empty. Deleting room "%s"', room.roomId);
+        }
+    }
+
 }
 
 export const socketManager = new SocketManager();

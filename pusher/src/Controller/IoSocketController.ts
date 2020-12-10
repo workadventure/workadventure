@@ -24,6 +24,7 @@ import {emitInBatch} from "../Services/IoSocketHelpers";
 import {clientEventsEmitter} from "../Services/ClientEventsEmitter";
 import {ADMIN_API_TOKEN, ADMIN_API_URL, SOCKET_IDLE_TIMER} from "../Enum/EnvironmentVariable";
 import {Zone} from "_Model/Zone";
+import {ExAdminSocketInterface} from "_Model/Websocket/ExAdminSocketInterface";
 
 export class IoSocketController {
     private nextUserId: number = 1;
@@ -46,7 +47,12 @@ export class IoSocketController {
                     res.writeStatus("401 Unauthorized").end('Incorrect token');
                     return;
                 }
-                const roomId = query.roomId as string;
+                const roomId = query.roomId;
+                if (typeof roomId !== 'string') {
+                    console.error('Received')
+                    res.writeStatus("400 Bad Request").end('Missing room id');
+                    return;
+                }
 
                 res.upgrade(
                     {roomId},
@@ -55,7 +61,12 @@ export class IoSocketController {
             },
             open: (ws) => {
                 console.log('Admin socket connect for room: '+ws.roomId);
-                ws.send('Data:'+JSON.stringify(socketManager.getAdminSocketDataFor(ws.roomId as string)));
+                const roomId = ws.roomId;
+                ws.disconnecting = false;
+
+                socketManager.handleAdminRoom(ws as ExAdminSocketInterface, ws.roomId as string);
+
+                /*ws.send('Data:'+JSON.stringify(socketManager.getAdminSocketDataFor(ws.roomId as string)));
                 ws.clientJoinCallback = (clientUUid: string, roomId: string) => {
                     const wsroomId = ws.roomId as string;
                     if(wsroomId === roomId) {
@@ -69,7 +80,7 @@ export class IoSocketController {
                     }
                 };
                 clientEventsEmitter.registerToClientJoin(ws.clientJoinCallback);
-                clientEventsEmitter.registerToClientLeave(ws.clientLeaveCallback);
+                clientEventsEmitter.registerToClientLeave(ws.clientLeaveCallback);*/
             },
             message: (ws, arrayBuffer, isBinary): void => {
                 try {
@@ -101,9 +112,15 @@ export class IoSocketController {
                 }
             },
             close: (ws, code, message) => {
-                //todo make sure this code unregister the right listeners
-                clientEventsEmitter.unregisterFromClientJoin(ws.clientJoinCallback);
-                clientEventsEmitter.unregisterFromClientLeave(ws.clientLeaveCallback);
+                const Client = (ws as ExAdminSocketInterface);
+                try {
+                    Client.disconnecting = true;
+                    //leave room
+                    socketManager.leaveAdminRoom(Client);
+                } catch (e) {
+                    console.error('An error occurred on admin "disconnect"');
+                    console.error(e);
+                }
             }
         })
     }

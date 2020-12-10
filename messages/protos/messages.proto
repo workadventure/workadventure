@@ -291,7 +291,38 @@ message SubToPusherMessage {
   }
 }
 
+/*message BatchToAdminPusherMessage {
+  repeated SubToAdminPusherMessage payload = 2;
+}*/
+
+/*message SubToAdminPusherMessage {
+  oneof message {
+    string userUuidJoinedRoom = 1;
+    string userUuidLeftRoom = 2;
+  }
+}
+
+message ServerToAdminClientMessage {
+  repeated SubToAdminPusherMessage payload = 2;
+}*/
+
+message ServerToAdminClientMessage {
+  oneof message {
+    string userUuidJoinedRoom = 1;
+    string userUuidLeftRoom = 2;
+  }
+}
+
+message AdminPusherToBackMessage {
+  oneof message {
+    string subscribeToRoom = 1;
+    // TODO ban, unban
+  }
+}
+
+
 service RoomManager {
   rpc joinRoom(stream PusherToBackMessage) returns (stream ServerToClientMessage);
   rpc listenZone(ZoneMessage) returns (stream BatchToPusherMessage);
+  rpc adminRoom(stream AdminPusherToBackMessage) returns (stream ServerToAdminClientMessage);
 }

@@ -14,16 +14,23 @@ import {
     SilentMessage,
     SubMessage,
     ReportPlayerMessage,
-    UserJoinedMessage, UserLeftMessage,
+    UserJoinedMessage,
+    UserLeftMessage,
     UserMovedMessage,
     UserMovesMessage,
-    ViewportMessage, WebRtcDisconnectMessage,
+    ViewportMessage,
+    WebRtcDisconnectMessage,
     WebRtcSignalToClientMessage,
     WebRtcSignalToServerMessage,
     WebRtcStartMessage,
     QueryJitsiJwtMessage,
     SendJitsiJwtMessage,
-    SendUserMessage, JoinRoomMessage, CharacterLayerMessage, PusherToBackMessage
+    SendUserMessage,
+    JoinRoomMessage,
+    CharacterLayerMessage,
+    PusherToBackMessage,
+    AdminPusherToBackMessage,
+    ServerToAdminClientMessage
 } from "../Messages/generated/messages_pb";
 import {PointInterface} from "../Model/Websocket/PointInterface";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
@@ -42,6 +49,7 @@ import {apiClientRepository} from "./ApiClientRepository";
 import {ServiceError} from "grpc";
 import {GroupDescriptor, UserDescriptor, ZoneEventListener} from "_Model/Zone";
 import Debug from "debug";
+import {ExAdminSocketInterface} from "_Model/Websocket/ExAdminSocketInterface";
 
 const debug = Debug('socket');
 
@@ -68,6 +76,54 @@ export class SocketManager implements ZoneEventListener {
         clientEventsEmitter.registerToClientLeave((clientUUid: string, roomId: string) => {
             gaugeManager.decNbClientPerRoomGauge(roomId);
         });
+    }
+
+    async handleAdminRoom(client: ExAdminSocketInterface, roomId: string): Promise<void> {
+        console.log('Calling adminRoom')
+        const apiClient = await apiClientRepository.getClient(roomId);
+        const adminRoomStream = apiClient.adminRoom();
+        client.adminConnection = adminRoomStream;
+
+        adminRoomStream.on('data', (message: ServerToAdminClientMessage) => {
+            if (message.hasUseruuidjoinedroom()) {
+                const userUuid = message.getUseruuidjoinedroom();
+
+                if (!client.disconnecting) {
+                    client.send('MemberJoin:'+userUuid+';'+roomId);
+                }
+            } else if (message.hasUseruuidleftroom()) {
+                const userUuid = message.getUseruuidleftroom();
+
+                if (!client.disconnecting) {
+                    client.send('MemberLeave:'+userUuid+';'+roomId);
+                }
+            } else {
+                throw new Error('Unexpected admin message');
+            }
+        }).on('end', () => {
+            console.warn('Admin connection lost to back server');
+            // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
+            if (!client.disconnecting) {
+                this.closeWebsocketConnection(client, 1011, 'Connection lost to back server');
+            }
+            console.log('A user left');
+        }).on('error', (err: Error) => {
+            console.error('Error in connection to back server:', err);
+            if (!client.disconnecting) {
+                this.closeWebsocketConnection(client, 1011, 'Error while connecting to back server');
+            }
+        });
+
+        const message = new AdminPusherToBackMessage();
+        message.setSubscribetoroom(roomId);
+
+        adminRoomStream.write(message);
+    }
+
+    leaveAdminRoom(socket : ExAdminSocketInterface) {
+        if (socket.adminConnection) {
+            socket.adminConnection.end();
+        }
     }
 
     getAdminSocketDataFor(roomId:string): AdminSocketData {
@@ -205,7 +261,7 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    private closeWebsocketConnection(client: ExSocketInterface, code: number, reason: string) {
+    private closeWebsocketConnection(client: ExSocketInterface|ExAdminSocketInterface, code: number, reason: string) {
         client.disconnecting = true;
         //this.leaveRoom(client);
         //client.close();

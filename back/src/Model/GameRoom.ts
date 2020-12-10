@@ -10,7 +10,8 @@ import {arrayIntersect} from "../Services/ArrayHelper";
 import {MAX_USERS_PER_ROOM} from "../Enum/EnvironmentVariable";
 import {JoinRoomMessage} from "../Messages/generated/messages_pb";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
-import { ZoneSocket } from "src/RoomManager";
+import {ZoneSocket} from "src/RoomManager";
+import {Admin} from "../Model/Admin";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -28,6 +29,7 @@ export class GameRoom {
     // Users, sorted by ID
     private readonly users: Map<number, User>;
     private readonly groups: Set<Group>;
+    private readonly admins: Set<Admin>;
 
     private readonly connectCallback: ConnectCallback;
     private readonly disconnectCallback: DisconnectCallback;
@@ -69,6 +71,7 @@ export class GameRoom {
 
 
         this.users = new Map<number, User>();
+        this.admins = new Set<Admin>();
         this.groups = new Set<Group>();
         this.connectCallback = connectCallback;
         this.disconnectCallback = disconnectCallback;
@@ -99,6 +102,12 @@ export class GameRoom {
         // Let's call update position to trigger the join / leave room
         //this.updatePosition(socket, userPosition);
         this.updateUserGroup(user);
+
+        // Notify admins
+        for (const admin of this.admins) {
+            admin.sendUserJoin(user.uuid);
+        }
+
         return user;
     }
 
@@ -115,6 +124,11 @@ export class GameRoom {
         if (userObj !== undefined) {
             this.positionNotifier.leave(userObj);
         }
+
+        // Notify admins
+        for (const admin of this.admins) {
+            admin.sendUserLeft(user.uuid);
+        }
     }
 
     get isFull(): boolean {
@@ -122,7 +136,7 @@ export class GameRoom {
     }
 
     public isEmpty(): boolean {
-        return this.users.size === 0;
+        return this.users.size === 0 && this.admins.size === 0;
     }
 
     public updatePosition(user : User, userPosition: PointInterface): void {
@@ -289,5 +303,18 @@ export class GameRoom {
 
     public removeZoneListener(call: ZoneSocket, x: number, y: number): void {
         return this.positionNotifier.removeZoneListener(call, x, y);
+    }
+
+    public adminJoin(admin: Admin): void {
+        this.admins.add(admin);
+
+        // Let's send all connected users
+        for (const user of this.users.values()) {
+            admin.sendUserJoin(user.uuid);
+        }
+    }
+
+    public adminLeave(admin: Admin): void {
+        this.admins.delete(admin);
     }
 }
