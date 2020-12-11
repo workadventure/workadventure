@@ -708,8 +708,8 @@ export class GameScene extends ResizableScene implements CenterListener {
         for (const layer of this.mapFile.layers) {
             if (layerName === layer.name && layer.type === 'tilelayer' && (layerName === defaultStartLayerName || this.isStartLayer(layer))) {
                 const startPosition = this.startUser(layer);
-                this.startX = startPosition.x;
-                this.startY = startPosition.y;
+                this.startX = startPosition.x + this.mapFile.tilewidth/2;
+                this.startY = startPosition.y + this.mapFile.tileheight/2;
             }
         }
     }
