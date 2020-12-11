@@ -31,7 +31,7 @@ import {
     BatchMessage,
     BatchToPusherMessage,
     SubToPusherMessage,
-    UserJoinedZoneMessage, GroupUpdateZoneMessage, GroupLeftZoneMessage, UserLeftZoneMessage
+    UserJoinedZoneMessage, GroupUpdateZoneMessage, GroupLeftZoneMessage, UserLeftZoneMessage, AdminMessage, BanMessage
 } from "../Messages/generated/messages_pb";
 import {User, UserSocket} from "../Model/User";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
@@ -163,25 +163,6 @@ export class SocketManager {
         //user.socket.write(serverToClientMessage);
         console.log('SENDING MESSAGE roomJoinedMessage');
         socket.write(serverToClientMessage);
-
-        //get data information and show messages
-        if (ADMIN_API_URL) {
-            adminApi.fetchMemberDataByUuid(user.uuid).then((res: FetchMemberDataByUuidResponse) => {
-                if (!res.messages) {
-                    return;
-                }
-                res.messages.forEach((c: unknown) => {
-                    const messageToSend = c as { type: string, message: string };
-                    socketManager.emitSendUserMessage({
-                        userUuid: user.uuid,
-                        type: messageToSend.type,
-                        message: messageToSend.message
-                    })
-                });
-            }).catch((err) => {
-                console.error('fetchMemberDataByUuid => err', err);
-            });
-        }
 
         return {
             room,
@@ -643,27 +624,6 @@ export class SocketManager {
         user.socket.write(serverToClientMessage);
     }
 
-    public emitSendUserMessage(messageToSend: {userUuid: string, message: string, type: string}): void {
-        // TODO: move this to room (findByUuid)
-        throw new Error("Not yet reimplemented");
-        /*const socket = this.searchClientByUuid(messageToSend.userUuid);
-        if(!socket){
-            throw 'socket was not found';
-        }
-
-        const sendUserMessage = new SendUserMessage();
-        sendUserMessage.setMessage(messageToSend.message);
-        sendUserMessage.setType(messageToSend.type);
-
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setSendusermessage(sendUserMessage);
-
-        if (!socket.disconnecting) {
-            socket.send(serverToClientMessage.serializeBinary().buffer, true);
-        }
-        return socket;*/
-    }
-
     /**
      * Merges the characterLayers received from the front (as an array of string) with the custom textures from the back.
      */
@@ -762,6 +722,56 @@ export class SocketManager {
         }
     }
 
+    public sendAdminMessage(roomId: string, recipientUuid: string, message: string): void {
+        const room = this.rooms.get(roomId);
+        if (!room) {
+            console.error("In sendAdminMessage, could not find room with id '" +  roomId + "'. Maybe the room was closed a few milliseconds ago and there was a race condition?");
+            return;
+        }
+
+        const recipient = room.getUserByUuid(recipientUuid);
+        if (recipient === undefined) {
+            console.error("In sendAdminMessage, could not find user with id '" + recipientUuid + "'. Maybe the user left the room a few milliseconds ago and there was a race condition?");
+            return;
+        }
+
+        const sendUserMessage = new SendUserMessage();
+        sendUserMessage.setMessage(message);
+        sendUserMessage.setType('ban');
+
+        const subToPusherMessage = new SubToPusherMessage();
+        subToPusherMessage.setSendusermessage(sendUserMessage);
+
+        recipient.socket.write(subToPusherMessage);
+    }
+
+    public banUser(roomId: string, recipientUuid: string): void {
+        const room = this.rooms.get(roomId);
+        if (!room) {
+            console.error("In banUser, could not find room with id '" +  roomId + "'. Maybe the room was closed a few milliseconds ago and there was a race condition?");
+            return;
+        }
+
+        const recipient = room.getUserByUuid(recipientUuid);
+        if (recipient === undefined) {
+            console.error("In banUser, could not find user with id '" + recipientUuid + "'. Maybe the user left the room a few milliseconds ago and there was a race condition?");
+            return;
+        }
+
+        // Let's leave the room now.
+        room.leave(recipient);
+
+        const sendUserMessage = new SendUserMessage();
+        sendUserMessage.setType('banned');
+
+        const subToPusherMessage = new SubToPusherMessage();
+        subToPusherMessage.setSendusermessage(sendUserMessage);
+
+        recipient.socket.write(subToPusherMessage);
+
+        // Let's close the connection when the user is banned.
+        recipient.socket.end();
+    }
 }
 
 export const socketManager = new SocketManager();

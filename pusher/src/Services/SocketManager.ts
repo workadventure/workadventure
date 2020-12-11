@@ -30,7 +30,7 @@ import {
     CharacterLayerMessage,
     PusherToBackMessage,
     AdminPusherToBackMessage,
-    ServerToAdminClientMessage
+    ServerToAdminClientMessage, AdminMessage, BanMessage
 } from "../Messages/generated/messages_pb";
 import {PointInterface} from "../Model/Websocket/PointInterface";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
@@ -593,7 +593,21 @@ export class SocketManager implements ZoneEventListener {
         client.send(serverToClientMessage.serializeBinary().buffer, true);
     }
 
-    public emitSendUserMessage(messageToSend: {userUuid: string, message: string, type: string}): ExSocketInterface {
+    public async emitSendUserMessage(userUuid: string, message: string, roomId: string): Promise<void> {
+
+        const backConnection = await apiClientRepository.getClient(roomId);
+
+        const adminMessage = new AdminMessage();
+        adminMessage.setRecipientuuid(userUuid);
+        adminMessage.setMessage(message);
+        adminMessage.setRoomid(roomId);
+
+        backConnection.sendAdminMessage(adminMessage, (error) => {
+            if (error !== null) {
+                console.error('Error while sending admin message', error);
+            }
+        });
+/*
         const socket = this.searchClientByUuid(messageToSend.userUuid);
         if(!socket){
             throw 'socket was not found';
@@ -609,7 +623,21 @@ export class SocketManager implements ZoneEventListener {
         if (!socket.disconnecting) {
             socket.send(serverToClientMessage.serializeBinary().buffer, true);
         }
-        return socket;
+        return socket;*/
+    }
+
+    public async emitBan(userUuid: string, message: string, roomId: string): Promise<void> {
+        const backConnection = await apiClientRepository.getClient(roomId);
+
+        const banMessage = new BanMessage();
+        banMessage.setRecipientuuid(userUuid);
+        banMessage.setRoomid(roomId);
+
+        backConnection.ban(banMessage, (error) => {
+            if (error !== null) {
+                console.error('Error while sending ban message', error);
+            }
+        });
     }
 
     /**

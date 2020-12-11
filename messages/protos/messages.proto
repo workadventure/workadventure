@@ -288,6 +288,7 @@ message SubToPusherMessage {
     GroupLeftZoneMessage groupLeftZoneMessage = 4;
     UserLeftZoneMessage userLeftZoneMessage = 5;
     ItemEventMessage itemEventMessage = 6;
+    SendUserMessage sendUserMessage = 7;
   }
 }
 
@@ -320,9 +321,32 @@ message AdminPusherToBackMessage {
   }
 }
 
+// A message sent by an administrator to a recipient
+message AdminMessage {
+  string message = 1;
+  string recipientUuid = 2;
+  string roomId = 3;
+}
+
+// A message sent by an administrator to absolutely everybody
+message AdminGlobalMessage {
+  string message = 1;
+}
+
+message BanMessage {
+  string recipientUuid = 1;
+  string roomId = 2;
+}
+
+message EmptyMessage {
+
+}
 
 service RoomManager {
   rpc joinRoom(stream PusherToBackMessage) returns (stream ServerToClientMessage);
   rpc listenZone(ZoneMessage) returns (stream BatchToPusherMessage);
   rpc adminRoom(stream AdminPusherToBackMessage) returns (stream ServerToAdminClientMessage);
+  rpc sendAdminMessage(AdminMessage) returns (EmptyMessage);
+  rpc sendGlobalAdminMessage(AdminGlobalMessage) returns (EmptyMessage);
+  rpc ban(BanMessage) returns (EmptyMessage);
 }

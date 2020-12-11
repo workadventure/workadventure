@@ -1,12 +1,25 @@
 import {IRoomManagerServer} from "./Messages/generated/messages_grpc_pb";
 import {
-    AdminPusherToBackMessage,
-    ClientToServerMessage, ItemEventMessage,
-    JoinRoomMessage, PlayGlobalMessage, PusherToBackMessage, QueryJitsiJwtMessage, ReportPlayerMessage,
-    RoomJoinedMessage, ServerToAdminClientMessage,
-    ServerToClientMessage, SilentMessage, UserMovesMessage, ViewportMessage, WebRtcSignalToServerMessage, ZoneMessage
+    AdminGlobalMessage,
+    AdminMessage,
+    AdminPusherToBackMessage, BanMessage,
+    ClientToServerMessage, EmptyMessage,
+    ItemEventMessage,
+    JoinRoomMessage,
+    PlayGlobalMessage,
+    PusherToBackMessage,
+    QueryJitsiJwtMessage,
+    ReportPlayerMessage,
+    RoomJoinedMessage,
+    ServerToAdminClientMessage,
+    ServerToClientMessage,
+    SilentMessage,
+    UserMovesMessage,
+    ViewportMessage,
+    WebRtcSignalToServerMessage,
+    ZoneMessage
 } from "./Messages/generated/messages_pb";
-import grpc, {ServerDuplexStream, ServerWritableStream} from "grpc";
+import grpc, {sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream} from "grpc";
 import {Empty} from "google-protobuf/google/protobuf/empty_pb";
 import {socketManager} from "./Services/SocketManager";
 import {emitError} from "./Services/MessageHelpers";
@@ -170,6 +183,23 @@ const roomManager: IRoomManagerServer = {
         call.on('error', (err: Error) => {
             console.error('An error occurred in joinAdminRoom stream:', err);
         });
+    },
+    sendAdminMessage(call: ServerUnaryCall<AdminMessage>, callback: sendUnaryData<EmptyMessage>): void {
+
+        socketManager.sendAdminMessage(call.request.getRoomid(), call.request.getRecipientuuid(), call.request.getMessage());
+
+        callback(null, new EmptyMessage());
+    },
+    sendGlobalAdminMessage(call: ServerUnaryCall<AdminGlobalMessage>, callback: sendUnaryData<EmptyMessage>): void {
+        throw new Error('Not implemented yet');
+        // TODO
+        callback(null, new EmptyMessage());
+    },
+    ban(call: ServerUnaryCall<BanMessage>, callback: sendUnaryData<EmptyMessage>): void {
+
+        socketManager.banUser(call.request.getRoomid(), call.request.getRecipientuuid());
+
+        callback(null, new EmptyMessage());
     },
 };
 

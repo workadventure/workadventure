@@ -15,6 +15,10 @@ class ApiClientRepository {
         }
         return Promise.resolve(this.roomManagerClient);
     }
+
+    public async getAllClients(): Promise<RoomManagerClient[]> {
+        return [await this.getClient('')];
+    }
 }
 
 const apiClientRepository = new ApiClientRepository();

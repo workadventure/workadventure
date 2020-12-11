@@ -17,7 +17,7 @@ export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
 
 export enum GameRoomPolicyTypes {
-    ANONYMUS_POLICY = 1,
+    ANONYMOUS_POLICY = 1,
     MEMBERS_ONLY_POLICY,
     USE_TAGS_POLICY,
 }
@@ -28,6 +28,7 @@ export class GameRoom {
 
     // Users, sorted by ID
     private readonly users: Map<number, User>;
+    private readonly usersByUuid: Map<string, User>;
     private readonly groups: Set<Group>;
     private readonly admins: Set<Admin>;
 
@@ -58,7 +59,7 @@ export class GameRoom {
         this.roomId = roomId;
         this.anonymous = isRoomAnonymous(roomId);
         this.tags = [];
-        this.policyType = GameRoomPolicyTypes.ANONYMUS_POLICY;
+        this.policyType = GameRoomPolicyTypes.ANONYMOUS_POLICY;
 
         if (this.anonymous) {
             this.roomSlug = extractRoomSlugPublicRoomId(this.roomId);
@@ -71,6 +72,7 @@ export class GameRoom {
 
 
         this.users = new Map<number, User>();
+        this.usersByUuid = new Map<string, User>();
         this.admins = new Set<Admin>();
         this.groups = new Set<Group>();
         this.connectCallback = connectCallback;
@@ -89,6 +91,10 @@ export class GameRoom {
         return this.users;
     }
 
+    public getUserByUuid(uuid: string): User|undefined {
+        return this.usersByUuid.get(uuid);
+    }
+
     public join(socket : UserSocket, joinRoomMessage: JoinRoomMessage): User {
         const positionMessage = joinRoomMessage.getPositionmessage();
         if (positionMessage === undefined) {
@@ -99,6 +105,7 @@ export class GameRoom {
         const user = new User(this.nextUserId, joinRoomMessage.getUseruuid(), position, false, this.positionNotifier, socket, joinRoomMessage.getTagList(), joinRoomMessage.getName(), ProtobufUtils.toCharacterLayerObjects(joinRoomMessage.getCharacterlayerList()));
         this.nextUserId++;
         this.users.set(user.id, user);
+        this.usersByUuid.set(user.uuid, user);
         // Let's call update position to trigger the join / leave room
         //this.updatePosition(socket, userPosition);
         this.updateUserGroup(user);
@@ -120,6 +127,7 @@ export class GameRoom {
             this.leaveGroup(userObj);
         }
         this.users.delete(user.id);
+        this.usersByUuid.delete(user.uuid);
 
         if (userObj !== undefined) {
             this.positionNotifier.leave(userObj);

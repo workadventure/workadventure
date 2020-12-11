@@ -12,7 +12,7 @@ import {
     WebRtcSignalToServerMessage,
     PlayGlobalMessage,
     ReportPlayerMessage,
-    QueryJitsiJwtMessage
+    QueryJitsiJwtMessage, SendUserMessage, ServerToClientMessage
 } from "../Messages/generated/messages_pb";
 import {UserMovesMessage} from "../Messages/generated/messages_pb";
 import {TemplatedApp} from "uWebSockets.js"
@@ -61,7 +61,6 @@ export class IoSocketController {
             },
             open: (ws) => {
                 console.log('Admin socket connect for room: '+ws.roomId);
-                const roomId = ws.roomId;
                 ws.disconnecting = false;
 
                 socketManager.handleAdminRoom(ws as ExAdminSocketInterface, ws.roomId as string);
@@ -84,6 +83,8 @@ export class IoSocketController {
             },
             message: (ws, arrayBuffer, isBinary): void => {
                 try {
+                    const roomId = ws.roomId as string;
+
                     //TODO refactor message type and data
                     const message: {event: string, message: {type: string, message: unknown, userUuid: string}} =
                         JSON.parse(new TextDecoder("utf-8").decode(new Uint8Array(arrayBuffer)));
@@ -92,14 +93,11 @@ export class IoSocketController {
                         const messageToEmit = (message.message as { message: string, type: string, userUuid: string });
                         switch (message.message.type) {
                             case 'ban': {
-                                socketManager.emitSendUserMessage(messageToEmit);
+                                socketManager.emitSendUserMessage(messageToEmit.userUuid, messageToEmit.message, roomId);
                                 break;
                             }
                             case 'banned': {
-                                const socketUser = socketManager.emitSendUserMessage(messageToEmit);
-                                setTimeout(() => {
-                                    socketUser.close();
-                                }, 10000);
+                                socketManager.emitBan(messageToEmit.userUuid, messageToEmit.message, roomId);
                                 break;
                             }
                             default: {
@@ -269,11 +267,17 @@ export class IoSocketController {
                         }
                         res.messages.forEach((c: unknown) => {
                             const messageToSend = c as { type: string, message: string };
-                            socketManager.emitSendUserMessage({
-                                userUuid: client.userUuid,
-                                type: messageToSend.type,
-                                message: messageToSend.message
-                            })
+
+                            const sendUserMessage = new SendUserMessage();
+                            sendUserMessage.setType(messageToSend.type);
+                            sendUserMessage.setMessage(messageToSend.message);
+
+                            const serverToClientMessage = new ServerToClientMessage();
+                            serverToClientMessage.setSendusermessage(sendUserMessage);
+
+                            if (!client.disconnecting) {
+                                client.send(serverToClientMessage.serializeBinary().buffer, true);
+                            }
                         });
                     }).catch((err) => {
                         console.error('fetchMemberDataByUuid => err', err);
