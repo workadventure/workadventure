@@ -264,15 +264,14 @@ message PusherToBackMessage {
     JoinRoomMessage joinRoomMessage = 1;
     UserMovesMessage userMovesMessage = 2;
     SilentMessage silentMessage = 3;
-    ViewportMessage viewportMessage = 4;
-    ItemEventMessage itemEventMessage = 5;
-    SetPlayerDetailsMessage setPlayerDetailsMessage = 6;
-    WebRtcSignalToServerMessage webRtcSignalToServerMessage = 7;
-    WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 8;
-    PlayGlobalMessage playGlobalMessage = 9;
-    StopGlobalMessage stopGlobalMessage = 10;
-    ReportPlayerMessage reportPlayerMessage = 11;
-    QueryJitsiJwtMessage queryJitsiJwtMessage = 12;
+    ItemEventMessage itemEventMessage = 4;
+    SetPlayerDetailsMessage setPlayerDetailsMessage = 5;
+    WebRtcSignalToServerMessage webRtcSignalToServerMessage = 6;
+    WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 7;
+    PlayGlobalMessage playGlobalMessage = 8;
+    StopGlobalMessage stopGlobalMessage = 9;
+    ReportPlayerMessage reportPlayerMessage = 10;
+    QueryJitsiJwtMessage queryJitsiJwtMessage = 11;
   }
 }
 

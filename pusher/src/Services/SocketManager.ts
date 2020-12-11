@@ -202,59 +202,6 @@ export class SocketManager implements ZoneEventListener {
             const pusherToBackMessage = new PusherToBackMessage();
             pusherToBackMessage.setJoinroommessage(joinRoomMessage);
             streamToPusher.write(pusherToBackMessage);
-
-            // TODO: analyze viewport, subscribe to correct handler
-
-            //join new previous room
-            //const gameRoom = this.joinRoom(client, position);
-
-            //const things = gameRoom.setViewport(client, viewport);
-
-            /*const roomJoinedMessage = new RoomJoinedMessage();
-
-            for (const thing of things) {
-                if (thing instanceof User) {
-                    const player: ExSocketInterface|undefined = this.sockets.get(thing.id);
-                    if (player === undefined) {
-                        console.warn('Something went wrong. The World contains a user "'+thing.id+"' but this user does not exist in the sockets list!");
-                        continue;
-                    }
-
-                    const userJoinedMessage = new UserJoinedMessage();
-                    userJoinedMessage.setUserid(thing.id);
-                    userJoinedMessage.setName(player.name);
-                    userJoinedMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(player.characterLayers));
-                    userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(player.position));
-
-                    roomJoinedMessage.addUser(userJoinedMessage);
-                    roomJoinedMessage.setTagList(client.tags);
-                } else if (thing instanceof Group) {
-                    const groupUpdateMessage = new GroupUpdateMessage();
-                    groupUpdateMessage.setGroupid(thing.getId());
-                    groupUpdateMessage.setPosition(ProtobufUtils.toPointMessage(thing.getPosition()));
-
-                    roomJoinedMessage.addGroup(groupUpdateMessage);
-                } else {
-                    console.error("Unexpected type for Movable returned by setViewport");
-                }
-            }
-
-            for (const [itemId, item] of gameRoom.getItemsState().entries()) {
-                const itemStateMessage = new ItemStateMessage();
-                itemStateMessage.setItemid(itemId);
-                itemStateMessage.setStatejson(JSON.stringify(item));
-
-                roomJoinedMessage.addItem(itemStateMessage);
-            }
-
-            roomJoinedMessage.setCurrentuserid(client.userId);
-
-            const serverToClientMessage = new ServerToClientMessage();
-            serverToClientMessage.setRoomjoinedmessage(roomJoinedMessage);
-
-            if (!client.disconnecting) {
-                client.send(serverToClientMessage.serializeBinary().buffer, true);
-            }*/
         } catch (e) {
             console.error('An error occurred on "join_room" event');
             console.error(e);
