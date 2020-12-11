@@ -226,6 +226,10 @@ export const CLOTHES_RESOURCES: Array<BodyResourceDescriptionInterface> = [
     {name:"clothes_68",img: "resources/customisation/character_clothes/character_clothes67.png"},
     {name:"clothes_69",img: "resources/customisation/character_clothes/character_clothes68.png"},
     {name:"clothes_70",img: "resources/customisation/character_clothes/character_clothes69.png"},
+    {name:"clothes_pride_shirt",img: "resources/customisation/character_clothes/pride_shirt.png"},
+    {name:"clothes_black_hoodie",img: "resources/customisation/character_clothes/black_hoodie.png"},
+    {name:"clothes_white_hoodie",img: "resources/customisation/character_clothes/white_hoodie.png"},
+    {name:"clothes_engelbert",img: "resources/customisation/character_clothes/engelbert.png"}
 ];
 
 export const HATS_RESOURCES: Array<BodyResourceDescriptionInterface> = [
@@ -254,7 +258,8 @@ export const HATS_RESOURCES: Array<BodyResourceDescriptionInterface> = [
     {name: "hats_23", img: "resources/customisation/character_hats/character_hats23.png"},
     {name: "hats_24", img: "resources/customisation/character_hats/character_hats24.png"},
     {name: "hats_25", img: "resources/customisation/character_hats/character_hats25.png"},
-    {name: "hats_26", img: "resources/customisation/character_hats/character_hats26.png"}
+    {name: "hats_26", img: "resources/customisation/character_hats/character_hats26.png"},
+    {name: "tinfoil_hat1", img: "resources/customisation/character_hats/tinfoil_hat1.png"}
 ];
 
 export const ACCESSORIES_RESOURCES: Array<BodyResourceDescriptionInterface> = [
@@ -289,7 +294,9 @@ export const ACCESSORIES_RESOURCES: Array<BodyResourceDescriptionInterface> = [
     {name: "accessory_29", img: "resources/customisation/character_accessories/character_accessories29.png"},
     {name: "accessory_30", img: "resources/customisation/character_accessories/character_accessories30.png"},
     {name: "accessory_31", img: "resources/customisation/character_accessories/character_accessories31.png"},
-    {name: "accessory_32", img: "resources/customisation/character_accessories/character_accessories32.png"}
+    {name: "accessory_32", img: "resources/customisation/character_accessories/character_accessories32.png"},
+    {name: "accessory_mate_bottle", img: "resources/customisation/character_accessories/mate_bottle1.png"},
+    {name: "accessory_mask", img: "resources/customisation/character_accessories/mask.png"}
 ];
 
 export const LAYERS: Array<Array<BodyResourceDescriptionInterface>> = [

@@ -2,12 +2,21 @@ import {DivImportance, layoutManager} from "./LayoutManager";
 import {HtmlUtils} from "./HtmlUtils";
 import {DiscussionManager, SendMessageCallback} from "./DiscussionManager";
 import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
+import {VIDEO_QUALITY_SELECT} from "../Administration/ConsoleGlobalMessageManager";
 declare const navigator:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-const videoConstraint: boolean|MediaTrackConstraints = {
-    width: { ideal: 1280 },
-    height: { ideal: 720 },
-    facingMode: "user"
+const localValueVideo = localStorage.getItem(VIDEO_QUALITY_SELECT);
+let valueVideo = 20;
+if(localValueVideo){
+    valueVideo = parseInt(localValueVideo);
+}
+let videoConstraint: boolean|MediaTrackConstraints = {
+    width: { min: 640, ideal: 1280, max: 1920 },
+    height: { min: 400, ideal: 720 },
+    frameRate: {exact: valueVideo, ideal: valueVideo},
+    facingMode: "user",
+    resizeMode: 'crop-and-scale',
+    aspectRatio: 1.777777778
 };
 
 export type UpdatedLocalStreamCallback = (media: MediaStream|null) => void;
@@ -189,6 +198,17 @@ export class MediaManager {
             this.triggerCloseJitsiFrameButton();
         }
         buttonCloseFrame.addEventListener('click', functionTrigger);
+    }
+
+    public updateCameraQuality(value: number) {
+        this.enableCameraStyle();
+        const newVideoConstraint = JSON.parse(JSON.stringify(videoConstraint));
+        newVideoConstraint.frameRate = {exact: value, ideal: value};
+        videoConstraint = newVideoConstraint;
+        this.constraintsMedia.video = videoConstraint;
+        this.getCamera().then((stream: MediaStream) => {
+            this.triggerUpdatedLocalStreamCallbacks(stream);
+        });
     }
 
     public enableCamera() {
@@ -564,7 +584,7 @@ export class MediaManager {
     }
 
     isError(userId: string): void {
-        console.log("isError", `div-${userId}`);
+        console.info("isError", `div-${userId}`);
         const element = document.getElementById(`div-${userId}`);
         if(!element){
             return;
