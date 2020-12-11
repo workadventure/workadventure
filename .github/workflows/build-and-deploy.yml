@@ -153,6 +153,10 @@ jobs:
     needs:
       - build-front
       - build-back
+      - build-pusher
+      - build-maps
+      - build-uploader
+      - build-website
     runs-on: ubuntu-latest
 
     steps:
