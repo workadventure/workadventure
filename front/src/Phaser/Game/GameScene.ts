@@ -3,7 +3,7 @@ import {
     GroupCreatedUpdatedMessageInterface,
     MessageUserJoined,
     MessageUserMovedInterface,
-    MessageUserPositionInterface,
+    MessageUserPositionInterface, OnConnectInterface,
     PointInterface,
     PositionInterface,
     RoomJoinedMessageInterface
@@ -62,7 +62,8 @@ import {jitsiFactory} from "../../WebRtc/JitsiFactory";
 import {urlManager} from "../../Url/UrlManager";
 
 export interface GameSceneInitInterface {
-    initPosition: PointInterface|null
+    initPosition: PointInterface|null,
+    reconnecting: boolean
 }
 
 interface InitUserPositionEventInterface {
@@ -146,6 +147,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     // The item that can be selected by pressing the space key.
     private outlinedItem: ActionableItem|null = null;
     private userInputManager!: UserInputManager;
+    private isReconnecting: boolean = false;
     private startLayerName!: string | null;
 
     constructor(private room: Room, MapUrlFile: string) {
@@ -297,13 +299,16 @@ export class GameScene extends ResizableScene implements CenterListener {
         if (initData.initPosition !== undefined) {
             this.initPosition = initData.initPosition; //todo: still used?
         }
+        if (initData.initPosition !== undefined) {
+            this.isReconnecting = initData.reconnecting;
+        }
     }
 
     //hook create scene
     create(): void {
         urlManager.pushRoomIdToUrl(this.room);
         this.startLayerName = urlManager.getStartLayerNameFromUrl();
-        
+
         //initalise map
         this.Map = this.add.tilemap(this.MapUrlFile);
         this.gameMap = new GameMap(this.mapFile);
@@ -321,7 +326,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         for (const layer of this.mapFile.layers) {
             if (layer.type === 'tilelayer') {
                 this.addLayer(this.Map.createStaticLayer(layer.name, this.Terrains, 0, 0).setDepth(depth));
-                
+
                 const exitSceneUrl = this.getExitSceneUrl(layer);
                 if (exitSceneUrl !== undefined) {
                     this.loadNextGame(exitSceneUrl);
@@ -389,7 +394,12 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.circleRedTexture.refresh();
 
         // Let's pause the scene if the connection is not established yet
-        if (this.connection === undefined) {
+        if (this.isReconnecting) {
+            setTimeout(() => {
+            this.scene.sleep();
+            this.scene.launch(ReconnectingSceneName);
+            }, 0);
+        } else if (this.connection === undefined) {
             // Let's wait 0.5 seconds before printing the "connecting" screen to avoid blinking
             setTimeout(() => {
                 if (this.connection === undefined) {
@@ -446,18 +456,14 @@ export class GameScene extends ResizableScene implements CenterListener {
                 top: camera.scrollY,
                 right: camera.scrollX + camera.width,
                 bottom: camera.scrollY + camera.height,
-            }).then((connection: RoomConnection) => {
-            this.connection = connection;
+            }).then((onConnect: OnConnectInterface) => {
+            this.connection = onConnect.connection;
 
             //this.connection.emitPlayerDetailsMessage(gameManager.getPlayerName(), gameManager.getCharacterSelected())
-            connection.onStartRoom((roomJoinedMessage: RoomJoinedMessageInterface) => {
-                this.initUsersPosition(roomJoinedMessage.users);
-                this.connectionAnswerPromiseResolve(roomJoinedMessage);
-                // Analyze tags to find if we are admin. If yes, show console.
-                this.ConsoleGlobalMessageManager = new ConsoleGlobalMessageManager(this.connection, this.userInputManager, this.connection.hasTag('admin'));
-            });
+            /*this.connection.onStartRoom((roomJoinedMessage: RoomJoinedMessageInterface) => {
 
-            connection.onUserJoins((message: MessageUserJoined) => {
+            });*/
+            this.connection.onUserJoins((message: MessageUserJoined) => {
                 const userMessage: AddPlayerInterface = {
                     userId: message.userId,
                     characterLayers: message.characterLayers,
@@ -467,7 +473,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                 this.addPlayer(userMessage);
             });
 
-            connection.onUserMoved((message: UserMovedMessage) => {
+            this.connection.onUserMoved((message: UserMovedMessage) => {
                 const position = message.getPosition();
                 if (position === undefined) {
                     throw new Error('Position missing from UserMovedMessage');
@@ -481,15 +487,15 @@ export class GameScene extends ResizableScene implements CenterListener {
                 this.updatePlayerPosition(messageUserMoved);
             });
 
-            connection.onUserLeft((userId: number) => {
+            this.connection.onUserLeft((userId: number) => {
                 this.removePlayer(userId);
             });
 
-            connection.onGroupUpdatedOrCreated((groupPositionMessage: GroupCreatedUpdatedMessageInterface) => {
+            this.connection.onGroupUpdatedOrCreated((groupPositionMessage: GroupCreatedUpdatedMessageInterface) => {
                 this.shareGroupPosition(groupPositionMessage);
             })
 
-            connection.onGroupDeleted((groupId: number) => {
+            this.connection.onGroupDeleted((groupId: number) => {
                 try {
                     this.deleteGroup(groupId);
                 } catch (e) {
@@ -497,7 +503,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                 }
             })
 
-            connection.onServerDisconnected(() => {
+            this.connection.onServerDisconnected(() => {
                 console.log('Player disconnected from server. Reloading scene.');
 
                 this.simplePeer.closeAllConnections();
@@ -510,14 +516,15 @@ export class GameScene extends ResizableScene implements CenterListener {
                         initPosition: {
                             x: this.CurrentPlayer.x,
                             y: this.CurrentPlayer.y
-                        }
+                        },
+                        reconnecting: true
                     });
 
                 this.scene.stop(this.scene.key);
                 this.scene.remove(this.scene.key);
             })
 
-            connection.onActionableEvent((message => {
+            this.connection.onActionableEvent((message => {
                 const item = this.actionableItems.get(message.itemId);
                 if (item === undefined) {
                     console.warn('Received an event about object "' + message.itemId + '" but cannot find this item on the map.');
@@ -529,7 +536,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             /**
              * Triggered when we receive the JWT token to connect to Jitsi
              */
-            connection.onStartJitsiRoom((jwt, room) => {
+            this.connection.onStartJitsiRoom((jwt, room) => {
                 this.startJitsi(room, jwt);
             });
 
@@ -559,13 +566,19 @@ export class GameScene extends ResizableScene implements CenterListener {
                 this.gameMap.setPosition(event.x, event.y);
             })
 
-            this.scene.wake();
+            //this.initUsersPosition(roomJoinedMessage.users);
+            this.connectionAnswerPromiseResolve(onConnect.room);
+            // Analyze tags to find if we are admin. If yes, show console.
+            this.ConsoleGlobalMessageManager = new ConsoleGlobalMessageManager(this.connection, this.userInputManager, this.connection.hasTag('admin'));
+
+
+        this.scene.wake();
             this.scene.sleep(ReconnectingSceneName);
 
             //init user position and play trigger to check layers properties
             this.gameMap.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
 
-            return connection;
+            return this.connection;
         });
     }
 
@@ -630,7 +643,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             }
         });
     }
-    
+
     private onMapExit(exitKey: string) {
         const {roomId, hash} = Room.getIdFromIdentifier(exitKey, this.MapUrlFile, this.instance);
         if (!roomId) throw new Error('Could not find the room from its exit key: '+exitKey);

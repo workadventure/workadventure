@@ -1,14 +1,35 @@
 import "jasmine";
-import {GameRoom, ConnectCallback, DisconnectCallback } from "../src/Model/GameRoom";
+import {ConnectCallback, DisconnectCallback, GameRoom} from "../src/Model/GameRoom";
 import {Point} from "../src/Model/Websocket/MessageUserPosition";
-import { Group } from "../src/Model/Group";
-import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
-import {User} from "_Model/User";
+import {Group} from "../src/Model/Group";
+import {User, UserSocket} from "_Model/User";
+import {JoinRoomMessage, PositionMessage} from "../src/Messages/generated/messages_pb";
+import Direction = PositionMessage.Direction;
 
-function createMockUser(userId: number): ExSocketInterface {
+function createMockUser(userId: number): User {
     return {
         userId
-    } as ExSocketInterface;
+    } as unknown as User;
+}
+
+function createMockUserSocket(): UserSocket {
+    return {
+    } as unknown as UserSocket;
+}
+
+function createJoinRoomMessage(uuid: string, x: number, y: number): JoinRoomMessage
+{
+    const positionMessage = new PositionMessage();
+    positionMessage.setX(x);
+    positionMessage.setY(y);
+    positionMessage.setDirection(Direction.DOWN);
+    positionMessage.setMoving(false);
+    const joinRoomMessage = new JoinRoomMessage();
+    joinRoomMessage.setUseruuid('1');
+    joinRoomMessage.setName('foo');
+    joinRoomMessage.setRoomid('_/global/test.json');
+    joinRoomMessage.setPositionmessage(positionMessage);
+    return joinRoomMessage;
 }
 
 describe("GameRoom", () => {
@@ -23,19 +44,21 @@ describe("GameRoom", () => {
 
         const world = new GameRoom('_/global/test.json', connect, disconnect, 160, 160, () => {}, () => {}, () => {});
 
-        world.join(createMockUser(1), new Point(100, 100));
 
-        world.join(createMockUser(2), new Point(500, 100));
 
-        world.updatePosition({ userId: 2 }, new Point(261, 100));
+        const user1 = world.join(createMockUserSocket(), createJoinRoomMessage('1', 100, 100));
+
+        const user2 = world.join(createMockUserSocket(), createJoinRoomMessage('2', 500, 100));
+
+        world.updatePosition(user2, new Point(261, 100));
 
         expect(connectCalledNumber).toBe(0);
 
-        world.updatePosition({ userId: 2 }, new Point(101, 100));
+        world.updatePosition(user2, new Point(101, 100));
 
         expect(connectCalledNumber).toBe(2);
 
-        world.updatePosition({ userId: 2 }, new Point(102, 100));
+        world.updatePosition(user2, new Point(102, 100));
         expect(connectCalledNumber).toBe(2);
     });
 
@@ -50,19 +73,19 @@ describe("GameRoom", () => {
 
         const world = new GameRoom('_/global/test.json', connect, disconnect, 160, 160, () => {}, () => {}, () => {});
 
-        world.join(createMockUser(1), new Point(100, 100));
+        const user1 = world.join(createMockUserSocket(), createJoinRoomMessage('1', 100, 100));
 
-        world.join(createMockUser(2), new Point(200, 100));
+        const user2 = world.join(createMockUserSocket(), createJoinRoomMessage('2', 200, 100));
 
         expect(connectCalled).toBe(true);
         connectCalled = false;
 
         // baz joins at the outer limit of the group
-        world.join(createMockUser(3), new Point(311, 100));
+        const user3 = world.join(createMockUserSocket(), createJoinRoomMessage('2', 311, 100));
 
         expect(connectCalled).toBe(false);
 
-        world.updatePosition({ userId: 3 }, new Point(309, 100));
+        world.updatePosition(user3, new Point(309, 100));
 
         expect(connectCalled).toBe(true);
     });
@@ -79,18 +102,18 @@ describe("GameRoom", () => {
 
         const world = new GameRoom('_/global/test.json', connect, disconnect, 160, 160, () => {}, () => {}, () => {});
 
-        world.join(createMockUser(1), new Point(100, 100));
+        const user1 = world.join(createMockUserSocket(), createJoinRoomMessage('1', 100, 100));
 
-        world.join(createMockUser(2), new Point(259, 100));
+        const user2 = world.join(createMockUserSocket(), createJoinRoomMessage('2', 259, 100));
 
         expect(connectCalled).toBe(true);
         expect(disconnectCallNumber).toBe(0);
 
-        world.updatePosition({ userId: 2 }, new Point(100+160+160+1, 100));
+        world.updatePosition(user2, new Point(100+160+160+1, 100));
 
         expect(disconnectCallNumber).toBe(2);
 
-        world.updatePosition({ userId: 2 }, new Point(262, 100));
+        world.updatePosition(user2, new Point(262, 100));
         expect(disconnectCallNumber).toBe(2);
     });
 
