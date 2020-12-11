@@ -320,6 +320,7 @@ export class SocketManager {
             room.leave(user);
             if (room.isEmpty()) {
                 this.rooms.delete(room.roomId);
+                gaugeManager.decNbRoomGauge();
                 debug('Room is empty. Deleting room "%s"', room.roomId);
             }
         } finally {
@@ -349,6 +350,7 @@ export class SocketManager {
                 world.tags = data.tags
                 world.policyType = Number(data.policy_type)
             }
+            gaugeManager.incNbRoomGauge();
             this.rooms.set(roomId, world);
         }
         return Promise.resolve(world)
@@ -718,6 +720,7 @@ export class SocketManager {
         room.adminLeave(admin);
         if (room.isEmpty()) {
             this.rooms.delete(room.roomId);
+            gaugeManager.decNbRoomGauge();
             debug('Room is empty. Deleting room "%s"', room.roomId);
         }
     }

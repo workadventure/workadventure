@@ -6,8 +6,13 @@ class GaugeManager {
     private nbClientsPerRoomGauge: Gauge<string>;
     private nbGroupsPerRoomGauge: Gauge<string>;
     private nbGroupsPerRoomCounter: Counter<string>;
+    private nbRoomsGauge: Gauge<string>;
 
     constructor() {
+        this.nbRoomsGauge = new Gauge({
+            name: 'workadventure_nb_rooms',
+            help: 'Number of active rooms'
+        });
         this.nbClientsGauge = new Gauge({
             name: 'workadventure_nb_sockets',
             help: 'Number of connected sockets',
@@ -29,6 +34,13 @@ class GaugeManager {
             help: 'Number of groups per room',
             labelNames: [ 'room' ]
         });
+    }
+
+    incNbRoomGauge(): void {
+        this.nbRoomsGauge.inc();
+    }
+    decNbRoomGauge(): void {
+        this.nbRoomsGauge.dec();
     }
 
     incNbClientPerRoomGauge(roomId: string): void {

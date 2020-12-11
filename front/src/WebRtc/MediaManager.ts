@@ -1,5 +1,7 @@
 import {DivImportance, layoutManager} from "./LayoutManager";
 import {HtmlUtils} from "./HtmlUtils";
+import {DiscussionManager, SendMessageCallback} from "./DiscussionManager";
+import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
 declare const navigator:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 const videoConstraint: boolean|MediaTrackConstraints = {
@@ -38,59 +40,99 @@ export class MediaManager {
     private cinemaBtn: HTMLDivElement;
     private monitorBtn: HTMLDivElement;
 
+    private previousConstraint : MediaStreamConstraints;
+    private focused : boolean = true;
+
+    private lastUpdateScene : Date = new Date();
+    private setTimeOutlastUpdateScene? : NodeJS.Timeout;
+
+    private discussionManager: DiscussionManager;
+
+    private userInputManager?: UserInputManager;
+
     private hasCamera = true;
+
+    private triggerCloseJistiFrame : Map<String, Function> = new Map<String, Function>();
 
     constructor() {
 
-        this.myCamVideo = this.getElementByIdOrFail<HTMLVideoElement>('myCamVideo');
-        this.webrtcInAudio = this.getElementByIdOrFail<HTMLAudioElement>('audio-webrtc-in');
+        this.myCamVideo = HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('myCamVideo');
+        this.webrtcInAudio = HtmlUtils.getElementByIdOrFail<HTMLAudioElement>('audio-webrtc-in');
         this.webrtcInAudio.volume = 0.2;
 
-        this.microphoneBtn = this.getElementByIdOrFail<HTMLDivElement>('btn-micro');
-        this.microphoneClose = this.getElementByIdOrFail<HTMLImageElement>('microphone-close');
+        this.microphoneBtn = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('btn-micro');
+        this.microphoneClose = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('microphone-close');
         this.microphoneClose.style.display = "none";
         this.microphoneClose.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
             this.enableMicrophone();
             //update tracking
         });
-        this.microphone = this.getElementByIdOrFail<HTMLImageElement>('microphone');
+        this.microphone = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('microphone');
         this.microphone.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
             this.disableMicrophone();
             //update tracking
         });
 
-        this.cinemaBtn = this.getElementByIdOrFail<HTMLDivElement>('btn-video');
-        this.cinemaClose = this.getElementByIdOrFail<HTMLImageElement>('cinema-close');
+        this.cinemaBtn = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('btn-video');
+        this.cinemaClose = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('cinema-close');
         this.cinemaClose.style.display = "none";
         this.cinemaClose.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
             this.enableCamera();
             //update tracking
         });
-        this.cinema = this.getElementByIdOrFail<HTMLImageElement>('cinema');
+        this.cinema = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('cinema');
         this.cinema.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
             this.disableCamera();
             //update tracking
         });
 
-        this.monitorBtn = this.getElementByIdOrFail<HTMLDivElement>('btn-monitor');
-        this.monitorClose = this.getElementByIdOrFail<HTMLImageElement>('monitor-close');
+        this.monitorBtn = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('btn-monitor');
+        this.monitorClose = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('monitor-close');
         this.monitorClose.style.display = "block";
         this.monitorClose.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
             this.enableScreenSharing();
             //update tracking
         });
-        this.monitor = this.getElementByIdOrFail<HTMLImageElement>('monitor');
+        this.monitor = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('monitor');
         this.monitor.style.display = "none";
         this.monitor.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
             this.disableScreenSharing();
             //update tracking
         });
+
+        this.previousConstraint = JSON.parse(JSON.stringify(this.constraintsMedia));
+        this.pingCameraStatus();
+
+        this.checkActiveUser(); //todo: desactivated in case of bug
+
+        this.discussionManager = new DiscussionManager(this,'');
+    }
+
+    public setLastUpdateScene(){
+        this.lastUpdateScene = new Date();
+    }
+
+    public blurCamera() {
+        if(!this.focused){
+            return;
+        }
+        this.focused = false;
+        this.previousConstraint = JSON.parse(JSON.stringify(this.constraintsMedia));
+        this.disableCamera();
+    }
+
+    public focusCamera() {
+        if(this.focused){
+            return;
+        }
+        this.focused = true;
+        this.applyPreviousConfig();
     }
 
     public onUpdateLocalStream(callback: UpdatedLocalStreamCallback): void {
@@ -128,22 +170,29 @@ export class MediaManager {
     }
 
     public showGameOverlay(){
-        const gameOverlay = this.getElementByIdOrFail('game-overlay');
+        const gameOverlay = HtmlUtils.getElementByIdOrFail('game-overlay');
         gameOverlay.classList.add('active');
+
+        const buttonCloseFrame = HtmlUtils.getElementByIdOrFail('cowebsite-close');
+        const functionTrigger = () => {
+            this.triggerCloseJitsiFrameButton();
+        }
+        buttonCloseFrame.removeEventListener('click', functionTrigger);
     }
 
     public hideGameOverlay(){
-        const gameOverlay = this.getElementByIdOrFail('game-overlay');
+        const gameOverlay = HtmlUtils.getElementByIdOrFail('game-overlay');
         gameOverlay.classList.remove('active');
+
+        const buttonCloseFrame = HtmlUtils.getElementByIdOrFail('cowebsite-close');
+        const functionTrigger = () => {
+            this.triggerCloseJitsiFrameButton();
+        }
+        buttonCloseFrame.addEventListener('click', functionTrigger);
     }
 
     public enableCamera() {
-        if(!this.hasCamera){
-            return;
-        }
-        this.cinemaClose.style.display = "none";
-        this.cinemaBtn.classList.remove("disabled");
-        this.cinema.style.display = "block";
+        this.enableCameraStyle();
         this.constraintsMedia.video = videoConstraint;
         this.getCamera().then((stream: MediaStream) => {
             this.triggerUpdatedLocalStreamCallbacks(stream);
@@ -151,7 +200,8 @@ export class MediaManager {
     }
 
     public async disableCamera() {
-        this.disabledCameraView();
+        this.disableCameraStyle();
+
         if (this.constraintsMedia.audio !== false) {
             const stream = await this.getCamera();
             this.triggerUpdatedLocalStreamCallbacks(stream);
@@ -160,19 +210,8 @@ export class MediaManager {
         }
     }
 
-    private disabledCameraView(){
-        this.cinemaClose.style.display = "block";
-        this.cinema.style.display = "none";
-        this.cinemaBtn.classList.add("disabled");
-        this.constraintsMedia.video = false;
-        this.myCamVideo.srcObject = null;
-        this.stopCamera();
-    }
-
     public enableMicrophone() {
-        this.microphoneClose.style.display = "none";
-        this.microphone.style.display = "block";
-        this.microphoneBtn.classList.remove("disabled");
+        this.enableMicrophoneStyle();
         this.constraintsMedia.audio = true;
 
         this.getCamera().then((stream) => {
@@ -181,10 +220,7 @@ export class MediaManager {
     }
 
     public async disableMicrophone() {
-        this.microphoneClose.style.display = "block";
-        this.microphone.style.display = "none";
-        this.microphoneBtn.classList.add("disabled");
-        this.constraintsMedia.audio = false;
+        this.disableMicrophoneStyle();
         this.stopMicrophone();
 
         if (this.constraintsMedia.video !== false) {
@@ -193,6 +229,52 @@ export class MediaManager {
         } else {
             this.triggerUpdatedLocalStreamCallbacks(null);
         }
+    }
+
+    private applyPreviousConfig() {
+        this.constraintsMedia = this.previousConstraint;
+        if(!this.constraintsMedia.video){
+            this.disableCameraStyle();
+        }else{
+            this.enableCameraStyle();
+        }
+        if(!this.constraintsMedia.audio){
+            this.disableMicrophoneStyle()
+        }else{
+            this.enableMicrophoneStyle()
+        }
+
+        this.getCamera().then((stream: MediaStream) => {
+            this.triggerUpdatedLocalStreamCallbacks(stream);
+        });
+    }
+
+    private enableCameraStyle(){
+        this.cinemaClose.style.display = "none";
+        this.cinemaBtn.classList.remove("disabled");
+        this.cinema.style.display = "block";
+    }
+
+    private disableCameraStyle(){
+        this.cinemaClose.style.display = "block";
+        this.cinema.style.display = "none";
+        this.cinemaBtn.classList.add("disabled");
+        this.constraintsMedia.video = false;
+        this.myCamVideo.srcObject = null;
+        this.stopCamera();
+    }
+
+    private enableMicrophoneStyle(){
+        this.microphoneClose.style.display = "none";
+        this.microphone.style.display = "block";
+        this.microphoneBtn.classList.remove("disabled");
+    }
+
+    private disableMicrophoneStyle(){
+        this.microphoneClose.style.display = "block";
+        this.microphone.style.display = "none";
+        this.microphoneBtn.classList.add("disabled");
+        this.constraintsMedia.audio = false;
     }
 
     private enableScreenSharing() {
@@ -277,7 +359,7 @@ export class MediaManager {
 
         return this.getLocalStream().catch(() => {
             console.info('Error get camera, trying with video option at null');
-            this.disabledCameraView();
+            this.disableCameraStyle();
             return this.getLocalStream().then((stream : MediaStream) => {
                 this.hasCamera = false;
                 return stream;
@@ -372,14 +454,17 @@ export class MediaManager {
         layoutManager.add(DivImportance.Normal, userId, html);
 
         if (reportCallBack) {
-            const reportBtn = this.getElementByIdOrFail<HTMLDivElement>(`report-${userId}`);
+            const reportBtn = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(`report-${userId}`);
             reportBtn.addEventListener('click', (e: MouseEvent) => {
                 e.preventDefault();
                 this.showReportModal(userId, userName, reportCallBack);
             });
         }
 
-        this.remoteVideo.set(userId, this.getElementByIdOrFail<HTMLVideoElement>(userId));
+        this.remoteVideo.set(userId, HtmlUtils.getElementByIdOrFail<HTMLVideoElement>(userId));
+
+        //permit to create participant in discussion part
+        this.addNewParticipant(userId, userName, undefined, reportCallBack);
     }
     
     addScreenSharingActiveVideo(userId: string, divImportance: DivImportance = DivImportance.Important){
@@ -393,7 +478,7 @@ export class MediaManager {
 
         layoutManager.add(divImportance, userId, html);
 
-        this.remoteVideo.set(userId, this.getElementByIdOrFail<HTMLVideoElement>(userId));
+        this.remoteVideo.set(userId, HtmlUtils.getElementByIdOrFail<HTMLVideoElement>(userId));
     }
     
     disabledMicrophoneByUserId(userId: number){
@@ -401,7 +486,7 @@ export class MediaManager {
         if(!element){
             return;
         }
-        element.classList.add('active')
+        element.classList.add('active') //todo: why does a method 'disable' add a class 'active'?
     }
     
     enabledMicrophoneByUserId(userId: number){
@@ -409,7 +494,7 @@ export class MediaManager {
         if(!element){
             return;
         }
-        element.classList.remove('active')
+        element.classList.remove('active') //todo: why does a method 'enable' remove a class 'active'?
     }
     
     disabledVideoByUserId(userId: number) {
@@ -434,7 +519,7 @@ export class MediaManager {
         }
     }
 
-    addStreamRemoteVideo(userId: string, stream : MediaStream){
+    addStreamRemoteVideo(userId: string, stream : MediaStream): void {
         const remoteVideo = this.remoteVideo.get(userId);
         if (remoteVideo === undefined) {
             throw `Unable to find video for ${userId}`;
@@ -454,6 +539,9 @@ export class MediaManager {
     removeActiveVideo(userId: string){
         layoutManager.remove(userId);
         this.remoteVideo.delete(userId);
+
+        //permit to remove user in discussion part
+        this.removeParticipant(userId);
     }
     removeActiveScreenSharingVideo(userId: string) {
         this.removeActiveVideo(`screen-sharing-${userId}`)
@@ -516,18 +604,9 @@ export class MediaManager {
         return color;
     }
 
-    private getElementByIdOrFail<T extends HTMLElement>(id: string): T {
-        const elem = document.getElementById(id);
-        if (elem === null) {
-            throw new Error("Cannot find HTML element with id '"+id+"'");
-        }
-        // FIXME: does not check the type of the returned type
-        return elem as T;
-    }
-
-    private showReportModal(userId: string, userName: string, reportCallBack: ReportCallback){
+    public showReportModal(userId: string, userName: string, reportCallBack: ReportCallback){
         //create report text area
-        const mainContainer = this.getElementByIdOrFail<HTMLDivElement>('main-container');
+        const mainContainer = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-container');
 
         const divReport = document.createElement('div');
         divReport.classList.add('modal-report-user');
@@ -582,7 +661,73 @@ export class MediaManager {
         mainContainer.appendChild(divReport);
     }
 
+    public addNewParticipant(userId: number|string, name: string|undefined, img?: string, reportCallBack?: ReportCallback){
+        this.discussionManager.addParticipant(userId, name, img, false, reportCallBack);
+    }
 
+    public removeParticipant(userId: number|string){
+        this.discussionManager.removeParticipant(userId);
+    }
+    public addTriggerCloseJitsiFrameButton(id: String, Function: Function){
+        this.triggerCloseJistiFrame.set(id, Function);
+    }
+
+    public removeTriggerCloseJitsiFrameButton(id: String){
+        this.triggerCloseJistiFrame.delete(id);
+    }
+
+    private triggerCloseJitsiFrameButton(): void {
+        for (const callback of this.triggerCloseJistiFrame.values()) {
+            callback();
+        }
+    }
+    /**
+     * For some reasons, the microphone muted icon or the stream is not always up to date.
+     * Here, every 30 seconds, we are "reseting" the streams and sending again the constraints to the other peers via the data channel again (see SimplePeer::pushVideoToRemoteUser)
+    **/
+    private pingCameraStatus(){
+        /*setInterval(() => {
+            console.log('ping camera status');
+            this.triggerUpdatedLocalStreamCallbacks(this.localStream);
+        }, 30000);*/
+    }
+
+    public addNewMessage(name: string, message: string, isMe: boolean = false){
+        this.discussionManager.addMessage(name, message, isMe);
+
+        //when there are new message, show discussion
+        if(!this.discussionManager.activatedDiscussion) {
+            this.discussionManager.showDiscussionPart();
+        }
+    }
+
+    public addSendMessageCallback(userId: string|number, callback: SendMessageCallback){
+        this.discussionManager.onSendMessageCallback(userId, callback);
+    }
+
+    get activatedDiscussion(){
+        return this.discussionManager.activatedDiscussion;
+    }
+
+    public setUserInputManager(userInputManager : UserInputManager){
+        this.discussionManager.setUserInputManager(userInputManager);
+    }
+    //check if user is active
+    private checkActiveUser(){
+        if(this.setTimeOutlastUpdateScene){
+            clearTimeout(this.setTimeOutlastUpdateScene);
+        }
+        this.setTimeOutlastUpdateScene = setTimeout(() => {
+            const now = new Date();
+            //if last update is more of 10 sec
+            if( (now.getTime() - this.lastUpdateScene.getTime()) > 10000) {
+                this.blurCamera();
+            }else{
+                this.focusCamera();
+            }
+            this.checkActiveUser();
+        }, this.focused ? 10000 : 1000);
+    }
 }
 
 export const mediaManager = new MediaManager();

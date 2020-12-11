@@ -50,8 +50,9 @@ class JitsiFactory {
                 delete options.jwt;
             }
             
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 options.onload = () => resolve(); //we want for the iframe to be loaded before triggering animations.
+                setTimeout(() => resolve(), 2000); //failsafe in case the iframe is deleted before loading or too long to load
                 this.jitsiApi = new window.JitsiMeetExternalAPI(domain, options);
                 this.jitsiApi.executeCommand('displayName', playerName);
 
@@ -62,6 +63,9 @@ class JitsiFactory {
     }
 
     public async stop(): Promise<void> {
+        if(!this.jitsiApi){
+            return;
+        }
         await coWebsiteManager.closeCoWebsite();
         this.jitsiApi.removeListener('audioMuteStatusChanged', this.audioCallback);
         this.jitsiApi.removeListener('videoMuteStatusChanged', this.videoCallback);

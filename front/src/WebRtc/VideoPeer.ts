@@ -5,6 +5,8 @@ import {RoomConnection} from "../Connexion/RoomConnection";
 
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
+export const MESSAGE_TYPE_CONSTRAINT = 'constraint';
+export const MESSAGE_TYPE_MESSAGE = 'message';
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
  */
@@ -78,19 +80,23 @@ export class VideoPeer extends Peer {
         });
 
         this.on('data',  (chunk: Buffer) => {
-            const constraint = JSON.parse(chunk.toString('utf8'));
-            console.log("data", constraint);
-            if (constraint.audio) {
-                mediaManager.enabledMicrophoneByUserId(this.userId);
-            } else {
-                mediaManager.disabledMicrophoneByUserId(this.userId);
-            }
+            const message = JSON.parse(chunk.toString('utf8'));
+            console.log("data", message);
 
-            if (constraint.video || constraint.screen) {
-                mediaManager.enabledVideoByUserId(this.userId);
-            } else {
-                this.stream(undefined);
-                mediaManager.disabledVideoByUserId(this.userId);
+            if(message.type === MESSAGE_TYPE_CONSTRAINT) {
+                if (message.audio) {
+                    mediaManager.enabledMicrophoneByUserId(this.userId);
+                } else {
+                    mediaManager.disabledMicrophoneByUserId(this.userId);
+                }
+
+                if (message.video || message.screen) {
+                    mediaManager.enabledVideoByUserId(this.userId);
+                } else {
+                    mediaManager.disabledVideoByUserId(this.userId);
+                }
+            } else if(message.type === 'message') {
+                mediaManager.addNewMessage(message.name, message.message);
             }
         });
 
@@ -112,21 +118,15 @@ export class VideoPeer extends Peer {
     /**
      * Sends received stream to screen.
      */
-    private stream(stream?: MediaStream) {
-        //console.log(`VideoPeer::stream => ${this.userId}`, stream);
-        if(!stream){
-            mediaManager.disabledVideoByUserId(this.userId);
-            mediaManager.disabledMicrophoneByUserId(this.userId);
-        } else {
-            try {
-                mediaManager.addStreamRemoteVideo("" + this.userId, stream);
-            }catch (err){
-                console.error(err);
-                //Force add streem video
-                setTimeout(() => {
-                    this.stream(stream);
-                }, 500);
-            }
+    private stream(stream: MediaStream) {
+        try {
+            mediaManager.addStreamRemoteVideo("" + this.userId, stream);
+        }catch (err){
+            console.error(err);
+            //Force add streem video
+            /*setTimeout(() => {
+                this.stream(stream);
+            }, 500);*/ //todo: find a way to prevent infinite regression.
         }
     }
 
@@ -163,7 +163,7 @@ export class VideoPeer extends Peer {
     private pushVideoToRemoteUser() {
         try {
             const localStream: MediaStream | null = mediaManager.localStream;
-            this.write(new Buffer(JSON.stringify(mediaManager.constraintsMedia)));
+            this.write(new Buffer(JSON.stringify({type: MESSAGE_TYPE_CONSTRAINT, ...mediaManager.constraintsMedia})));
 
             if(!localStream){
                 return;

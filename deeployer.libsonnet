@@ -54,6 +54,7 @@
       "env": {
         "API_URL": "pusher."+url,
         "UPLOADER_URL": "uploader."+url,
+        "ADMIN_URL": "admin."+url,
         "JITSI_URL": env.JITSI_URL,
         "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
         "TURN_SERVER": "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443",

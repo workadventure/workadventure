@@ -12,12 +12,14 @@ const URL_ROOM_STARTED = '/Floor0/floor0.json';
 class ConnectionManager {
     private localUser!:LocalUser;
 
+    private connexionType?: GameConnexionTypes
     /**
      * Tries to login to the node server and return the starting map url to be loaded
      */
     public async initGameConnexion(): Promise<Room> {
 
         const connexionType = urlManager.getGameConnexionType();
+        this.connexionType = connexionType;
         if(connexionType === GameConnexionTypes.register) {
            const organizationMemberToken = urlManager.getOrganizationToken();
             const data = await Axios.post(`${API_URL}/register`, {organizationMemberToken}).then(res => res.data);
@@ -31,7 +33,7 @@ class ConnectionManager {
 
             const room = new Room(window.location.pathname + window.location.hash);
             return Promise.resolve(room);
-        } else if (connexionType === GameConnexionTypes.anonymous || connexionType === GameConnexionTypes.empty) {
+        } else if (connexionType === GameConnexionTypes.organization || connexionType === GameConnexionTypes.anonymous || connexionType === GameConnexionTypes.empty) {
             const localUser = localUserStore.getLocalUser();
 
             if (localUser && localUser.jwtToken && localUser.uuid && localUser.textures) {
@@ -55,18 +57,6 @@ class ConnectionManager {
             }
             const room = new Room(roomId);
             return Promise.resolve(room);
-        } else if (connexionType == GameConnexionTypes.organization) {
-            const localUser = localUserStore.getLocalUser();
-
-            if (localUser) {
-                this.localUser = localUser;
-                await this.verifyToken(localUser.jwtToken);
-                const room = new Room(window.location.pathname + window.location.hash);
-                return Promise.resolve(room);
-            } else {
-                //todo: find some kind of fallback?
-                return Promise.reject('Could not find a user in localstorage');
-            }
         }
 
         return Promise.reject('Invalid URL');
@@ -115,6 +105,10 @@ class ConnectionManager {
                 }, 4000 + Math.floor(Math.random() * 2000) );
             });
         });
+    }
+
+    get getConnexionType(){
+        return this.connexionType;
     }
 }
 

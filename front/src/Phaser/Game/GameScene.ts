@@ -31,7 +31,12 @@ import {Queue} from 'queue-typescript';
 import {SimplePeer, UserSimplePeerInterface} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
 import {loadAllLayers, loadObject, loadPlayerCharacters} from "../Entity/body_character";
-import {CenterListener, layoutManager, LayoutMode} from "../../WebRtc/LayoutManager";
+import {
+    CenterListener,
+    layoutManager,
+    LayoutMode,
+    ON_ACTION_TRIGGER_BUTTON, TRIGGER_JITSI_PROPERTIES, TRIGGER_WEBSITE_PROPERTIES
+} from "../../WebRtc/LayoutManager";
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
@@ -54,6 +59,7 @@ import {ConsoleGlobalMessageManager} from "../../Administration/ConsoleGlobalMes
 import {ResizableScene} from "../Login/ResizableScene";
 import {Room} from "../../Connexion/Room";
 import {jitsiFactory} from "../../WebRtc/JitsiFactory";
+import {urlManager} from "../../Url/UrlManager";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -90,6 +96,8 @@ interface DeleteGroupEventInterface {
     groupId: number
 }
 
+const defaultStartLayerName = 'start';
+
 export class GameScene extends ResizableScene implements CenterListener {
     GameManager : GameManager;
     Terrains : Array<Phaser.Tilemaps.Tileset>;
@@ -119,7 +127,6 @@ export class GameScene extends ResizableScene implements CenterListener {
     private createPromise: Promise<void>;
     private createPromiseResolve!: (value?: void | PromiseLike<void>) => void;
 
-    MapKey: string;
     MapUrlFile: string;
     RoomId: string;
     instance: string;
@@ -133,7 +140,6 @@ export class GameScene extends ResizableScene implements CenterListener {
         y: -1000
     }
 
-    private PositionNextScene: Array<Array<{ key: string, hash: string }>> = new Array<Array<{ key: string, hash: string }>>();
     private presentationModeSprite!: Sprite;
     private chatModeSprite!: Sprite;
     private gameMap!: GameMap;
@@ -142,18 +148,11 @@ export class GameScene extends ResizableScene implements CenterListener {
     private outlinedItem: ActionableItem|null = null;
     private userInputManager!: UserInputManager;
     private isReconnecting: boolean = false;
+    private startLayerName!: string | null;
 
-    static createFromUrl(room: Room, mapUrlFile: string, gameSceneKey: string|null = null): GameScene {
-        // We use the map URL as a key
-        if (gameSceneKey === null) {
-            gameSceneKey = mapUrlFile;
-        }
-        return new GameScene(room, mapUrlFile, gameSceneKey);
-    }
-
-    constructor(private room: Room, MapUrlFile: string, gameSceneKey: string) {
+    constructor(private room: Room, MapUrlFile: string) {
         super({
-            key: gameSceneKey
+            key: room.id
         });
 
         this.GameManager = gameManager;
@@ -161,7 +160,6 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.groups = new Map<number, Sprite>();
         this.instance = room.getInstance();
 
-        this.MapKey = MapUrlFile;
         this.MapUrlFile = MapUrlFile;
         this.RoomId = room.id;
 
@@ -180,15 +178,15 @@ export class GameScene extends ResizableScene implements CenterListener {
                 file: file.src
             });
         });
-        this.load.on('filecomplete-tilemapJSON-'+this.MapKey, (key: string, type: string, data: unknown) => {
+        this.load.on('filecomplete-tilemapJSON-'+this.MapUrlFile, (key: string, type: string, data: unknown) => {
             this.onMapLoad(data);
         });
         //TODO strategy to add access token
-        this.load.tilemapTiledJSON(this.MapKey, this.MapUrlFile);
+        this.load.tilemapTiledJSON(this.MapUrlFile, this.MapUrlFile);
         // If the map has already been loaded as part of another GameScene, the "on load" event will not be triggered.
         // In this case, we check in the cache to see if the map is here and trigger the event manually.
-        if (this.cache.tilemap.exists(this.MapKey)) {
-            const data = this.cache.tilemap.get(this.MapKey);
+        if (this.cache.tilemap.exists(this.MapUrlFile)) {
+            const data = this.cache.tilemap.get(this.MapUrlFile);
             this.onMapLoad(data);
         }
 
@@ -299,7 +297,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     //hook initialisation
     init(initData : GameSceneInitInterface) {
         if (initData.initPosition !== undefined) {
-            this.initPosition = initData.initPosition;
+            this.initPosition = initData.initPosition; //todo: still used?
         }
         if (initData.initPosition !== undefined) {
             this.isReconnecting = initData.reconnecting;
@@ -308,8 +306,11 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     //hook create scene
     create(): void {
+        urlManager.pushRoomIdToUrl(this.room);
+        this.startLayerName = urlManager.getStartLayerNameFromUrl();
+
         //initalise map
-        this.Map = this.add.tilemap(this.MapKey);
+        this.Map = this.add.tilemap(this.MapUrlFile);
         this.gameMap = new GameMap(this.mapFile);
         const mapDirUrl = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf('/'));
         this.mapFile.tilesets.forEach((tileset: ITiledTileSet) => {
@@ -319,25 +320,21 @@ export class GameScene extends ResizableScene implements CenterListener {
         //permit to set bound collision
         this.physics.world.setBounds(0, 0, this.Map.widthInPixels, this.Map.heightInPixels);
 
-        // Let's alter browser history
-        let path = this.room.id;
-        if (this.room.hash) {
-            path += '#'+this.room.hash;
-        }
-        window.history.pushState({}, 'WorkAdventure', path);
-
         //add layer on map
         this.Layers = new Array<Phaser.Tilemaps.StaticTilemapLayer>();
         let depth = -2;
         for (const layer of this.mapFile.layers) {
             if (layer.type === 'tilelayer') {
                 this.addLayer(this.Map.createStaticLayer(layer.name, this.Terrains, 0, 0).setDepth(depth));
-            }
-            if (layer.type === 'tilelayer' && this.getExitSceneUrl(layer) !== undefined) {
-                this.loadNextGameFromExitSceneUrl(layer, this.mapFile.width);
-            } else if (layer.type === 'tilelayer' && this.getExitUrl(layer) !== undefined) {
-                console.log('Loading exitUrl ', this.getExitUrl(layer))
-                this.loadNextGameFromExitUrl(layer, this.mapFile.width);
+
+                const exitSceneUrl = this.getExitSceneUrl(layer);
+                if (exitSceneUrl !== undefined) {
+                    this.loadNextGame(exitSceneUrl);
+                }
+                const exitUrl = this.getExitUrl(layer);
+                if (exitUrl !== undefined) {
+                    this.loadNextGame(exitUrl);
+                }
             }
             if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
                 depth = 10000;
@@ -347,51 +344,17 @@ export class GameScene extends ResizableScene implements CenterListener {
             throw new Error('Your map MUST contain a layer of type "objectgroup" whose name is "floorLayer" that represents the layer characters are drawn at.');
         }
 
-        // If there is an init position passed
-        if (this.initPosition !== null) {
-            this.startX = this.initPosition.x;
-            this.startY = this.initPosition.y;
-        } else {
-            // Now, let's find the start layer
-            if (this.room.hash) {
-                for (const layer of this.mapFile.layers) {
-                    if (this.room.hash === layer.name && layer.type === 'tilelayer' && this.isStartLayer(layer)) {
-                        const startPosition = this.startUser(layer);
-                        this.startX = startPosition.x;
-                        this.startY = startPosition.y;
-                    }
-                }
-            }
-            if (this.startX === undefined) {
-                // If we have no start layer specified or if the hash passed does not exist, let's go with the default start position.
-                for (const layer of this.mapFile.layers) {
-                    if (layer.type === 'tilelayer' && layer.name === "start") {
-                        const startPosition = this.startUser(layer);
-                        this.startX = startPosition.x;
-                        this.startY = startPosition.y;
-                    }
-                }
-            }
-        }
-        // Still no start position? Something is wrong with the map, we need a "start" layer.
-        if (this.startX === undefined) {
-            console.warn('This map is missing a layer named "start" that contains the available default start positions.');
-            // Let's start in the middle of the map
-            this.startX = this.mapFile.width * 16;
-            this.startY = this.mapFile.height * 16;
-        }
+        this.initStartXAndStartY();
 
         //add entities
         this.Objects = new Array<Phaser.Physics.Arcade.Sprite>();
-
-        //init event click
-        this.EventToClickOnTile();
 
         //initialise list of other player
         this.MapPlayers = this.physics.add.group({immovable: true});
 
         //create input to move
         this.userInputManager = new UserInputManager(this);
+        mediaManager.setUserInputManager(this.userInputManager);
 
         //notify game manager can to create currentUser in map
         this.createCurrentPlayer();
@@ -476,35 +439,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         // From now, this game scene will be notified of reposition events
         layoutManager.setListener(this);
-
-        this.gameMap.onPropertyChange('openWebsite', (newValue, oldValue) => {
-            if (newValue === undefined) {
-                coWebsiteManager.closeCoWebsite();
-            } else {
-                coWebsiteManager.loadCoWebsite(newValue as string);
-            }
-        });
-        this.gameMap.onPropertyChange('jitsiRoom', (newValue, oldValue, allProps) => {
-            if (newValue === undefined) {
-                this.stopJitsi();
-            } else {
-                if (JITSI_PRIVATE_MODE) {
-                    const adminTag = allProps.get("jitsiRoomAdminTag") as string|undefined;
-
-                    this.connection.emitQueryJitsiJwtMessage(this.instance.replace('/', '-') + "-" + newValue, adminTag);
-                } else {
-                    this.startJitsi(newValue as string);
-                }
-            }
-        })
-
-        this.gameMap.onPropertyChange('silent', (newValue, oldValue) => {
-            if (newValue === undefined || newValue === false || newValue === '') {
-                this.connection.setSilent(false);
-            } else {
-                this.connection.setSilent(true);
-            }
-        });
+        this.triggerOnMapLayerPropertyChange();
 
         const camera = this.cameras.main;
 
@@ -543,7 +478,6 @@ export class GameScene extends ResizableScene implements CenterListener {
                 if (position === undefined) {
                     throw new Error('Position missing from UserMovedMessage');
                 }
-                //console.log('Received position ', position.getX(), position.getY(), "from user", message.getUserid());
 
                 const messageUserMoved: MessageUserMovedInterface = {
                     userId: message.getUserid(),
@@ -576,7 +510,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                 this.simplePeer.unregister();
 
                 const gameSceneKey = 'somekey' + Math.round(Math.random() * 10000);
-                const game: Phaser.Scene = GameScene.createFromUrl(this.room, this.MapUrlFile, gameSceneKey);
+                const game: Phaser.Scene = new GameScene(this.room, this.MapUrlFile);
                 this.scene.add(gameSceneKey, game, true,
                     {
                         initPosition: {
@@ -607,7 +541,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             });
 
             // When connection is performed, let's connect SimplePeer
-            this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic);
+            this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic, this.GameManager.getPlayerName());
             this.GlobalMessageManager = new GlobalMessageManager(this.connection);
             this.UserMessageManager = new UserMessageManager(this.connection);
 
@@ -638,15 +572,103 @@ export class GameScene extends ResizableScene implements CenterListener {
             if (this.connection.hasTag('admin')) {
                 this.ConsoleGlobalMessageManager = new ConsoleGlobalMessageManager(this.connection, this.userInputManager);
             }
-            console.log('wakingup');
+
             this.scene.wake();
             this.scene.sleep(ReconnectingSceneName);
+
+            //init user position and play trigger to check layers properties
+            this.gameMap.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
 
             return this.connection;
         });
     }
 
+    private triggerOnMapLayerPropertyChange(){
+        this.gameMap.onPropertyChange('exitSceneUrl', (newValue, oldValue) => {
+            if (newValue) this.onMapExit(newValue as string);
+        });
+        this.gameMap.onPropertyChange('exitUrl', (newValue, oldValue) => {
+            if (newValue) this.onMapExit(newValue as string);
+        });
+        this.gameMap.onPropertyChange('openWebsite', (newValue, oldValue, allProps) => {
+            if (newValue === undefined) {
+                layoutManager.removeActionButton('openWebsite', this.userInputManager);
+                coWebsiteManager.closeCoWebsite();
+            }else{
+                const openWebsiteFunction = () => {
+                    coWebsiteManager.loadCoWebsite(newValue as string);
+                    layoutManager.removeActionButton('openWebsite', this.userInputManager);
+                };
+
+                const openWebsiteTriggerValue = allProps.get(TRIGGER_WEBSITE_PROPERTIES);
+                if(openWebsiteTriggerValue && openWebsiteTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
+                    layoutManager.addActionButton('openWebsite', 'Click on SPACE to open the web site', () => {
+                        openWebsiteFunction();
+                    }, this.userInputManager);
+                }else{
+                    openWebsiteFunction();
+                }
+            }
+        });
+        this.gameMap.onPropertyChange('jitsiRoom', (newValue, oldValue, allProps) => {
+            if (newValue === undefined) {
+                layoutManager.removeActionButton('jitsiRoom', this.userInputManager);
+                this.stopJitsi();
+            }else{
+                const openJitsiRoomFunction = () => {
+                    if (JITSI_PRIVATE_MODE) {
+                        const adminTag = allProps.get("jitsiRoomAdminTag") as string|undefined;
+
+                        this.connection.emitQueryJitsiJwtMessage(this.instance.replace('/', '-') + "-" + newValue, adminTag);
+                    } else {
+                        this.startJitsi(newValue as string);
+                    }
+                    layoutManager.removeActionButton('jitsiRoom', this.userInputManager);
+                }
+
+                const jitsiTriggerValue = allProps.get(TRIGGER_JITSI_PROPERTIES);
+                if(jitsiTriggerValue && jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
+                    layoutManager.addActionButton('jitsiRoom', 'Click on SPACE to enter in jitsi meet room', () => {
+                        openJitsiRoomFunction();
+                    }, this.userInputManager);
+                }else{
+                    openJitsiRoomFunction();
+                }
+            }
+        })
+        this.gameMap.onPropertyChange('silent', (newValue, oldValue) => {
+            if (newValue === undefined || newValue === false || newValue === '') {
+                this.connection.setSilent(false);
+            } else {
+                this.connection.setSilent(true);
+            }
+        });
+    }
+
+    private onMapExit(exitKey: string) {
+        const {roomId, hash} = Room.getIdFromIdentifier(exitKey, this.MapUrlFile, this.instance);
+        if (!roomId) throw new Error('Could not find the room from its exit key: '+exitKey);
+        urlManager.pushStartLayerNameToUrl(hash);
+        if (roomId !== this.scene.key) {
+            // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
+            this.connection.closeConnection();
+            this.simplePeer.unregister();
+            this.scene.stop();
+            this.scene.remove(this.scene.key);
+            this.scene.start(roomId);
+        } else {
+            //if the exit points to the current map, we simply teleport the user back to the startLayer
+            this.initPositionFromLayerName(hash || defaultStartLayerName);
+            this.CurrentPlayer.x = this.startX;
+            this.CurrentPlayer.y = this.startY;
+        }
+    }
+
     private switchLayoutMode(): void {
+        //if discussion is activated, this layout cannot be activated
+        if(mediaManager.activatedDiscussion){
+            return;
+        }
         const mode = layoutManager.getLayoutMode();
         if (mode === LayoutMode.Presentation) {
             layoutManager.switchLayoutMode(LayoutMode.VideoChat);
@@ -659,16 +681,49 @@ export class GameScene extends ResizableScene implements CenterListener {
         }
     }
 
+    private initStartXAndStartY() {
+        // If there is an init position passed
+        if (this.initPosition !== null) {
+            this.startX = this.initPosition.x;
+            this.startY = this.initPosition.y;
+        } else {
+            // Now, let's find the start layer
+            if (this.startLayerName) {
+                this.initPositionFromLayerName(this.startLayerName);
+            }
+            if (this.startX === undefined) {
+                // If we have no start layer specified or if the hash passed does not exist, let's go with the default start position.
+                this.initPositionFromLayerName(defaultStartLayerName);
+            }
+        }
+        // Still no start position? Something is wrong with the map, we need a "start" layer.
+        if (this.startX === undefined) {
+            console.warn('This map is missing a layer named "start" that contains the available default start positions.');
+            // Let's start in the middle of the map
+            this.startX = this.mapFile.width * 16;
+            this.startY = this.mapFile.height * 16;
+        }
+    }
+
+    private initPositionFromLayerName(layerName: string) {
+        for (const layer of this.mapFile.layers) {
+            if (layerName === layer.name && layer.type === 'tilelayer' && (layerName === defaultStartLayerName || this.isStartLayer(layer))) {
+                const startPosition = this.startUser(layer);
+                this.startX = startPosition.x;
+                this.startY = startPosition.y;
+            }
+        }
+    }
+
     private getExitUrl(layer: ITiledMapLayer): string|undefined {
         return this.getProperty(layer, "exitUrl") as string|undefined;
     }
 
+    /**
+     * @deprecated the map property exitSceneUrl is deprecated
+     */
     private getExitSceneUrl(layer: ITiledMapLayer): string|undefined {
         return this.getProperty(layer, "exitSceneUrl") as string|undefined;
-    }
-
-    private getExitSceneInstance(layer: ITiledMapLayer): string|undefined {
-        return this.getProperty(layer, "exitInstance") as string|undefined;
     }
 
     private isStartLayer(layer: ITiledMapLayer): boolean {
@@ -680,85 +735,20 @@ export class GameScene extends ResizableScene implements CenterListener {
         if (!properties) {
             return undefined;
         }
-        const obj = properties.find((property: ITiledMapLayerProperty) => property.name === name);
+        const obj = properties.find((property: ITiledMapLayerProperty) => property.name.toLowerCase() === name.toLowerCase());
         if (obj === undefined) {
             return undefined;
         }
         return obj.value;
     }
 
-    private loadNextGameFromExitSceneUrl(layer: ITiledMapLayer, mapWidth: number) {
-        const exitSceneUrl = this.getExitSceneUrl(layer);
-        if (exitSceneUrl === undefined) {
-            throw new Error('Layer is not an exit scene layer.');
-        }
-        let instance = this.getExitSceneInstance(layer);
-        if (instance === undefined) {
-            instance = this.instance;
-        }
-
-        //console.log('existSceneUrl', exitSceneUrl);
-        //console.log('existSceneInstance', instance);
-
-        const absoluteExitSceneUrl = new URL(exitSceneUrl, this.MapUrlFile).href;
-        const absoluteExitSceneUrlWithoutProtocol = absoluteExitSceneUrl.toString().substr(absoluteExitSceneUrl.toString().indexOf('://')+3);
-        const roomId = '_/'+instance+'/'+absoluteExitSceneUrlWithoutProtocol;
-
-        this.loadNextGame(layer, mapWidth, roomId);
-    }
-
-    private loadNextGameFromExitUrl(layer: ITiledMapLayer, mapWidth: number) {
-        const exitUrl = this.getExitUrl(layer);
-        if (exitUrl === undefined) {
-            throw new Error('Layer is not an exit layer.');
-        }
-        const fullPath = new URL(exitUrl, window.location.toString()).pathname;
-
-        this.loadNextGame(layer, mapWidth, fullPath);
-    }
-
-    /**
-     *
-     * @param layer
-     * @param mapWidth
-     */
     //todo: push that into the gameManager
-    private loadNextGame(layer: ITiledMapLayer, mapWidth: number, roomId: string){
+    private async loadNextGame(exitSceneIdentifier: string){
+        const {roomId, hash} = Room.getIdFromIdentifier(exitSceneIdentifier, this.MapUrlFile, this.instance);
         const room = new Room(roomId);
-        gameManager.loadMap(room, this.scene);
-        const exitSceneKey = roomId;
-
-        const tiles : number[] = layer.data as number[];
-        for (let key=0; key < tiles.length; key++) {
-            const objectKey = tiles[key];
-            if(objectKey === 0){
-                continue;
-            }
-            //key + 1 because the start x = 0;
-            const y : number = parseInt(((key + 1) / mapWidth).toString());
-            const x : number = key - (y * mapWidth);
-
-            let hash = new URL(roomId, this.MapUrlFile).hash;
-            if (hash) {
-                hash = hash.substr(1);
-            }
-
-            //push and save switching case
-            if (this.PositionNextScene[y] === undefined) {
-                this.PositionNextScene[y] = new Array<{key: string, hash: string}>();
-            }
-            room.getMapUrl().then((url: string) => {
-                this.PositionNextScene[y][x] = {
-                    key: url,
-                    hash
-                }
-            })
-        }
+        await gameManager.loadMap(room, this.scene);
     }
 
-    /**
-     * @param layer
-     */
     private startUser(layer: ITiledMapLayer): PositionInterface {
         const tiles = layer.data;
         if (typeof(tiles) === 'string') {
@@ -914,22 +904,12 @@ export class GameScene extends ResizableScene implements CenterListener {
         });
     }
 
-    EventToClickOnTile(){
-        // debug code to get a tile properties by clicking on it
-        /*this.input.on("pointerdown", (pointer: Phaser.Input.Pointer)=>{
-            //pixel position toz tile position
-            const tile = this.Map.getTileAt(this.Map.worldToTileX(pointer.worldX), this.Map.worldToTileY(pointer.worldY));
-            if(tile){
-                this.CurrentPlayer.say("Your touch " + tile.layer.name);
-            }
-        });*/
-    }
-
     /**
      * @param time
      * @param delta The delta time in ms since the last frame. This is a smoothed and capped value based on the FPS rate.
      */
     update(time: number, delta: number) : void {
+        mediaManager.setLastUpdateScene();
         this.currentTick = time;
         this.CurrentPlayer.moveUser(delta);
 
@@ -967,27 +947,6 @@ export class GameScene extends ResizableScene implements CenterListener {
             }
             player.updatePosition(moveEvent);
         });
-
-        const nextSceneKey = this.checkToExit();
-        if (nextSceneKey) {
-            // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
-            this.connection.closeConnection();
-            this.simplePeer.unregister();
-            this.scene.stop();
-            this.scene.remove(this.scene.key);
-            this.scene.start(nextSceneKey.key);
-        }
-    }
-
-    private checkToExit(): {key: string, hash: string} | null  {
-        const x = Math.floor(this.CurrentPlayer.x / 32);
-        const y = Math.floor(this.CurrentPlayer.y / 32);
-
-        if (this.PositionNextScene[y] !== undefined && this.PositionNextScene[y][x] !== undefined) {
-            return this.PositionNextScene[y][x];
-        } else {
-            return null;
-        }
     }
 
     /**
@@ -1077,11 +1036,6 @@ export class GameScene extends ResizableScene implements CenterListener {
         await Promise.all(loadPromises);
 
         player.addTextures(characterLayerList, 1);
-        //init collision
-        /*this.physics.add.collider(this.CurrentPlayer, player, (CurrentPlayer: CurrentGamerInterface, MapPlayer: GamerInterface) => {
-            CurrentPlayer.say("Hello, how are you ? ");
-        });*/
-
     }
 
     /**
@@ -1124,7 +1078,6 @@ export class GameScene extends ResizableScene implements CenterListener {
         // We do not update the player position directly (because it is sent only every 200ms).
         // Instead we use the PlayersPositionInterpolator that will do a smooth animation over the next 200ms.
         const playerMovement = new PlayerMovement({ x: player.x, y: player.y }, this.currentTick, message.position, this.currentTick + POSITION_DELAY);
-        //console.log('Target position: ', player.x, player.y);
         this.playersPositionInterpolator.updatePlayerPosition(player.userId, playerMovement);
     }
 
@@ -1173,11 +1126,6 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     /**
      * Sends to the server an event emitted by one of the ActionableItems.
-     *
-     * @param itemId
-     * @param eventName
-     * @param state
-     * @param parameters
      */
     emitActionableEvent(itemId: number, eventName: string, state: unknown, parameters: unknown) {
         this.connection.emitActionableEvent(itemId, eventName, state, parameters);
@@ -1230,12 +1178,19 @@ export class GameScene extends ResizableScene implements CenterListener {
         jitsiFactory.start(roomName, gameManager.getPlayerName(), jwt);
         this.connection.setSilent(true);
         mediaManager.hideGameOverlay();
+
+        //permit to stop jitsi when user close iframe
+        mediaManager.addTriggerCloseJitsiFrameButton('close-jisi',() => {
+            this.stopJitsi();
+        });
     }
 
     public stopJitsi(): void {
         this.connection.setSilent(false);
         jitsiFactory.stop();
         mediaManager.showGameOverlay();
+
+        mediaManager.removeTriggerCloseJitsiFrameButton('close-jisi');
     }
 
     private loadSpritesheet(name: string, url: string): Promise<void> {
