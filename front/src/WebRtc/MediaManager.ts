@@ -38,6 +38,7 @@ export class MediaManager {
     microphoneClose: HTMLImageElement;
     microphone: HTMLImageElement;
     webrtcInAudio: HTMLAudioElement;
+    private webrtcOutAudio: HTMLAudioElement;
     constraintsMedia : MediaStreamConstraints = {
         audio: true,
         video: videoConstraint
@@ -57,8 +58,6 @@ export class MediaManager {
 
     private discussionManager: DiscussionManager;
 
-    private userInputManager?: UserInputManager;
-
     private hasCamera = true;
 
     private triggerCloseJistiFrame : Map<String, Function> = new Map<String, Function>();
@@ -67,7 +66,9 @@ export class MediaManager {
 
         this.myCamVideo = HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('myCamVideo');
         this.webrtcInAudio = HtmlUtils.getElementByIdOrFail<HTMLAudioElement>('audio-webrtc-in');
+        this.webrtcOutAudio = HtmlUtils.getElementByIdOrFail<HTMLAudioElement>('audio-webrtc-out');
         this.webrtcInAudio.volume = 0.2;
+        this.webrtcOutAudio.volume = 0.2;
 
         this.microphoneBtn = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('btn-micro');
         this.microphoneClose = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('microphone-close');
@@ -565,6 +566,10 @@ export class MediaManager {
     }
     removeActiveScreenSharingVideo(userId: string) {
         this.removeActiveVideo(`screen-sharing-${userId}`)
+    }
+    
+    playWebrtcOutSound(): void {
+        this.webrtcOutAudio.play();
     }
 
     isConnecting(userId: string): void {
