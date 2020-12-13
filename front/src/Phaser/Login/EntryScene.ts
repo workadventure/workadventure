@@ -31,7 +31,8 @@ export class EntryScene extends Scene {
     create() {
         gameManager.init(this.scene).then(() => {
             this.scene.start(LoginSceneName);
-        }).catch(() => {
+        }).catch((err) => {
+            console.error(err)
             this.scene.start(FourOFourSceneName, {
                 url: window.location.pathname.toString()
             });

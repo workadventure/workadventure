@@ -1,4 +1,4 @@
-import {API_URL} from "../Enum/EnvironmentVariable";
+import {API_URL, UPLOADER_URL} from "../Enum/EnvironmentVariable";
 import Axios from "axios";
 import {
     BatchMessage,
@@ -36,7 +36,7 @@ import {ProtobufClientUtils} from "../Network/ProtobufClientUtils";
 import {
     EventMessage,
     GroupCreatedUpdatedMessageInterface, ItemEventMessageInterface,
-    MessageUserJoined, PlayGlobalMessageInterface, PositionInterface,
+    MessageUserJoined, OnConnectInterface, PlayGlobalMessageInterface, PositionInterface,
     RoomJoinedMessageInterface,
     ViewportInterface, WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
@@ -52,7 +52,6 @@ export class RoomConnection implements RoomConnection {
     private static websocketFactory: null|((url: string)=>any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
     private closed: boolean = false;
     private tags: string[] = [];
-    private intervalId!: NodeJS.Timeout;
 
     public static setWebsocketFactory(websocketFactory: (url: string)=>any): void { // eslint-disable-line @typescript-eslint/no-explicit-any
         RoomConnection.websocketFactory = websocketFactory;
@@ -87,15 +86,24 @@ export class RoomConnection implements RoomConnection {
 
         this.socket.binaryType = 'arraybuffer';
 
+        let interval: ReturnType<typeof setInterval>|undefined = undefined;
+
         this.socket.onopen = (ev) => {
             //we manually ping every 20s to not be logged out by the server, even when the game is in background.
             const pingMessage = new PingMessage();
-            this.intervalId = setInterval(() => this.socket.send(pingMessage.serializeBinary().buffer), manualPingDelay);
+            interval = setInterval(() => this.socket.send(pingMessage.serializeBinary().buffer), manualPingDelay);
         };
-        
-        this.socket.onclose = () => {
-            clearTimeout(this.intervalId);
-        }
+
+        this.socket.addEventListener('close', (event) => {
+            if (interval) {
+                clearInterval(interval);
+            }
+
+            // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
+            if (this.userId === null) {
+                this.dispatch(EventMessage.CONNECTING_ERROR, event);
+            }
+        });
 
         this.socket.onmessage = (messageEvent) => {
             const arrayBuffer: ArrayBuffer = messageEvent.data;
@@ -132,8 +140,8 @@ export class RoomConnection implements RoomConnection {
             } else if (message.hasRoomjoinedmessage()) {
                 const roomJoinedMessage = message.getRoomjoinedmessage() as RoomJoinedMessage;
 
-                const users: Array<MessageUserJoined> = roomJoinedMessage.getUserList().map(this.toMessageUserJoined.bind(this));
-                const groups: Array<GroupCreatedUpdatedMessageInterface> = roomJoinedMessage.getGroupList().map(this.toGroupCreatedUpdatedMessage.bind(this));
+                //const users: Array<MessageUserJoined> = roomJoinedMessage.getUserList().map(this.toMessageUserJoined.bind(this));
+                //const groups: Array<GroupCreatedUpdatedMessageInterface> = roomJoinedMessage.getGroupList().map(this.toGroupCreatedUpdatedMessage.bind(this));
                 const items: { [itemId: number] : unknown } = {};
                 for (const item of roomJoinedMessage.getItemList()) {
                     items[item.getItemid()] = JSON.parse(item.getStatejson());
@@ -142,11 +150,22 @@ export class RoomConnection implements RoomConnection {
                 this.userId = roomJoinedMessage.getCurrentuserid();
                 this.tags = roomJoinedMessage.getTagList();
 
-                this.dispatch(EventMessage.START_ROOM, {
-                    users,
-                    groups,
-                    items
+                //console.log('Dispatching CONNECT')
+                this.dispatch(EventMessage.CONNECT, {
+                    connection: this,
+                    room: {
+                        //users,
+                        //groups,
+                        items
+                    } as RoomJoinedMessageInterface
                 });
+
+                /*console.log('Dispatching START_ROOM')
+                this.dispatch(EventMessage.START_ROOM, {
+                    //users,
+                    //groups,
+                    items
+                });*/
             } else if (message.hasErrormessage()) {
                 console.error(EventMessage.MESSAGE_ERROR, message.getErrormessage()?.getMessage());
             } else if (message.hasWebrtcsignaltoclientmessage()) {
@@ -204,7 +223,7 @@ export class RoomConnection implements RoomConnection {
         const positionMessage = new PositionMessage();
         positionMessage.setX(Math.floor(x));
         positionMessage.setY(Math.floor(y));
-        let directionEnum: PositionMessage.DirectionMap[keyof PositionMessage.DirectionMap];
+        let directionEnum: Direction;
         switch (direction) {
             case 'up':
                 directionEnum = Direction.UP;
@@ -356,20 +375,30 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public onConnectingError(callback: (event: CloseEvent) => void): void {
+        this.onMessage(EventMessage.CONNECTING_ERROR, (event: CloseEvent) => {
+            callback(event);
+        });
+    }
+
     public onConnectError(callback: (error: Event) => void): void {
         this.socket.addEventListener('error', callback)
     }
 
-    public onConnect(callback: (event: Event) => void): void {
+    /*public onConnect(callback: (e: Event) => void): void {
         this.socket.addEventListener('open', callback)
+    }*/
+    public onConnect(callback: (roomConnection: OnConnectInterface) => void): void {
+        //this.socket.addEventListener('open', callback)
+        this.onMessage(EventMessage.CONNECT, callback);
     }
 
     /**
      * Triggered when we receive all the details of a room (users, groups, ...)
      */
-    public onStartRoom(callback: (event: RoomJoinedMessageInterface) => void): void {
+    /*public onStartRoom(callback: (event: RoomJoinedMessageInterface) => void): void {
         this.onMessage(EventMessage.START_ROOM, callback);
-    }
+    }*/
 
     public sendWebrtcSignal(signal: unknown, receiverId: number) {
         const webRtcSignal = new WebRtcSignalToServerMessage();
@@ -472,7 +501,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     public uploadAudio(file : FormData){
-        return Axios.post(`${API_URL}/upload-audio-message`, file).then((res: {data:{}}) => {
+        return Axios.post(`${UPLOADER_URL}/upload-audio-message`, file).then((res: {data:{}}) => {
             return res.data;
         }).catch((err) => {
             console.error(err);

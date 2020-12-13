@@ -5,7 +5,3 @@ export class Point implements PointInterface{
     }
 }
 
-export class MessageUserPosition {
-    constructor(public userId: number, public name: string, public characterLayers: string[], public position: PointInterface) {
-    }
-}

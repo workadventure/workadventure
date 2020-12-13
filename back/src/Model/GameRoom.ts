@@ -1,22 +1,23 @@
 import {PointInterface} from "./Websocket/PointInterface";
 import {Group} from "./Group";
-import {User} from "./User";
-import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
+import {User, UserSocket} from "./User";
 import {PositionInterface} from "_Model/PositionInterface";
-import {Identificable} from "_Model/Websocket/Identificable";
 import {EntersCallback, LeavesCallback, MovesCallback} from "_Model/Zone";
 import {PositionNotifier} from "./PositionNotifier";
-import {ViewportInterface} from "_Model/Websocket/ViewportMessage";
 import {Movable} from "_Model/Movable";
 import {extractDataFromPrivateRoomId, extractRoomSlugPublicRoomId, isRoomAnonymous} from "./RoomIdentifier";
 import {arrayIntersect} from "../Services/ArrayHelper";
 import {MAX_USERS_PER_ROOM} from "../Enum/EnvironmentVariable";
+import {JoinRoomMessage} from "../Messages/generated/messages_pb";
+import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
+import {ZoneSocket} from "src/RoomManager";
+import {Admin} from "../Model/Admin";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
 
 export enum GameRoomPolicyTypes {
-    ANONYMUS_POLICY = 1,
+    ANONYMOUS_POLICY = 1,
     MEMBERS_ONLY_POLICY,
     USE_TAGS_POLICY,
 }
@@ -27,7 +28,9 @@ export class GameRoom {
 
     // Users, sorted by ID
     private readonly users: Map<number, User>;
+    private readonly usersByUuid: Map<string, User>;
     private readonly groups: Set<Group>;
+    private readonly admins: Set<Admin>;
 
     private readonly connectCallback: ConnectCallback;
     private readonly disconnectCallback: DisconnectCallback;
@@ -42,6 +45,7 @@ export class GameRoom {
     public readonly roomSlug: string;
     public readonly worldSlug: string = '';
     public readonly organizationSlug: string = '';
+    private nextUserId: number = 1;
 
     constructor(roomId: string,
                 connectCallback: ConnectCallback,
@@ -55,7 +59,7 @@ export class GameRoom {
         this.roomId = roomId;
         this.anonymous = isRoomAnonymous(roomId);
         this.tags = [];
-        this.policyType = GameRoomPolicyTypes.ANONYMUS_POLICY;
+        this.policyType = GameRoomPolicyTypes.ANONYMOUS_POLICY;
 
         if (this.anonymous) {
             this.roomSlug = extractRoomSlugPublicRoomId(this.roomId);
@@ -68,6 +72,8 @@ export class GameRoom {
 
 
         this.users = new Map<number, User>();
+        this.usersByUuid = new Map<string, User>();
+        this.admins = new Set<Admin>();
         this.groups = new Set<Group>();
         this.connectCallback = connectCallback;
         this.disconnectCallback = disconnectCallback;
@@ -85,27 +91,51 @@ export class GameRoom {
         return this.users;
     }
 
-    public join(socket : ExSocketInterface, userPosition: PointInterface): void {
-        const user = new User(socket.userId, socket.userUuid, userPosition, false, this.positionNotifier, socket);
-        this.users.set(socket.userId, user);
+    public getUserByUuid(uuid: string): User|undefined {
+        return this.usersByUuid.get(uuid);
+    }
+
+    public join(socket : UserSocket, joinRoomMessage: JoinRoomMessage): User {
+        const positionMessage = joinRoomMessage.getPositionmessage();
+        if (positionMessage === undefined) {
+            throw new Error('Missing position message');
+        }
+        const position = ProtobufUtils.toPointInterface(positionMessage);
+
+        const user = new User(this.nextUserId, joinRoomMessage.getUseruuid(), position, false, this.positionNotifier, socket, joinRoomMessage.getTagList(), joinRoomMessage.getName(), ProtobufUtils.toCharacterLayerObjects(joinRoomMessage.getCharacterlayerList()));
+        this.nextUserId++;
+        this.users.set(user.id, user);
+        this.usersByUuid.set(user.uuid, user);
         // Let's call update position to trigger the join / leave room
         //this.updatePosition(socket, userPosition);
         this.updateUserGroup(user);
+
+        // Notify admins
+        for (const admin of this.admins) {
+            admin.sendUserJoin(user.uuid);
+        }
+
+        return user;
     }
 
-    public leave(user : Identificable){
-        const userObj = this.users.get(user.userId);
+    public leave(user : User){
+        const userObj = this.users.get(user.id);
         if (userObj === undefined) {
-            console.warn('User ', user.userId, 'does not belong to world! It should!');
+            console.warn('User ', user.id, 'does not belong to this game room! It should!');
         }
         if (userObj !== undefined && typeof userObj.group !== 'undefined') {
             this.leaveGroup(userObj);
         }
-        this.users.delete(user.userId);
+        this.users.delete(user.id);
+        this.usersByUuid.delete(user.uuid);
 
         if (userObj !== undefined) {
-            this.positionNotifier.removeViewport(userObj);
             this.positionNotifier.leave(userObj);
+        }
+
+        // Notify admins
+        for (const admin of this.admins) {
+            admin.sendUserLeft(user.uuid);
         }
     }
 
@@ -114,15 +144,10 @@ export class GameRoom {
     }
 
     public isEmpty(): boolean {
-        return this.users.size === 0;
+        return this.users.size === 0 && this.admins.size === 0;
     }
 
-    public updatePosition(socket : Identificable, userPosition: PointInterface): void {
-        const user = this.users.get(socket.userId);
-        if(typeof user === 'undefined') {
-            return;
-        }
-
+    public updatePosition(user : User, userPosition: PointInterface): void {
         user.setPosition(userPosition);
 
         this.updateUserGroup(user);
@@ -170,12 +195,7 @@ export class GameRoom {
         }
     }
 
-    setSilent(socket: Identificable, silent: boolean) {
-        const user = this.users.get(socket.userId);
-        if(typeof user === 'undefined') {
-            console.warn('In setSilent, could not find user with ID "'+socket.userId+'" in world.');
-            return;
-        }
+    setSilent(user: User, silent: boolean) {
         if (user.silent === silent) {
             return;
         }
@@ -186,7 +206,7 @@ export class GameRoom {
         }
         if (!silent) {
             // If we are back to life, let's trigger a position update to see if we can join some group.
-            this.updatePosition(socket, user.getPosition());
+            this.updatePosition(user, user.getPosition());
         }
     }
 
@@ -281,17 +301,28 @@ export class GameRoom {
         return this.itemsState;
     }
 
-
-    setViewport(socket : Identificable, viewport: ViewportInterface): Movable[] {
-        const user = this.users.get(socket.userId);
-        if(typeof user === 'undefined') {
-            console.warn('In setViewport, could not find user with ID "'+socket.userId+'" in world.');
-            return [];
-        }
-        return this.positionNotifier.setViewport(user, viewport);
+    public canAccess(userTags: string[]): boolean {
+        return arrayIntersect(userTags, this.tags);
     }
 
-    canAccess(userTags: string[]): boolean {
-        return arrayIntersect(userTags, this.tags);
+    public addZoneListener(call: ZoneSocket, x: number, y: number): Set<Movable> {
+        return this.positionNotifier.addZoneListener(call, x, y);
+    }
+
+    public removeZoneListener(call: ZoneSocket, x: number, y: number): void {
+        return this.positionNotifier.removeZoneListener(call, x, y);
+    }
+
+    public adminJoin(admin: Admin): void {
+        this.admins.add(admin);
+
+        // Let's send all connected users
+        for (const user of this.users.values()) {
+            admin.sendUserJoin(user.uuid);
+        }
+    }
+
+    public adminLeave(admin: Admin): void {
+        this.admins.delete(admin);
     }
 }

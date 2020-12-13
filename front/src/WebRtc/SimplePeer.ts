@@ -202,8 +202,8 @@ export class SimplePeer {
      * This is triggered twice. Once by the server, and once by a remote client disconnecting
      */
     private closeConnection(userId : number) {
+        mediaManager.playWebrtcOutSound();
         try {
-            //mediaManager.removeActiveVideo(userId);
             const peer = this.PeerConnectionArray.get(userId);
             if (peer === undefined) {
                 console.warn("closeConnection => Tried to close connection for user "+userId+" but could not find user");

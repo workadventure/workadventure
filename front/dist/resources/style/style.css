@@ -74,6 +74,10 @@ body .message-info.warning{
     height: 100%;
 }
 
+.video-container video:focus{
+    outline: none;
+}
+
 .video-container#div-myCamVideo{
     border: none;
 }
@@ -455,6 +459,8 @@ body {
     flex-grow: 5;
 }
 
+/*CONSOLE*/
+
 .message-container,
 .main-console{
     position: absolute;
@@ -467,6 +473,7 @@ body {
     background: #333333;
     z-index: 200;
     transition: all 0.1s ease-out;
+    border-radius: 0 0 15px 15px;
 }
 
 .message-container{
@@ -497,6 +504,16 @@ body {
     left: calc(50% - 100px);
     border-radius: 15px 15px 15px 15px;
     text-align: center;
+}
+
+.main-console div.message,
+.main-console div.setting{
+    display: none;
+}
+
+.main-console div.message.active,
+.main-console div.setting.active{
+    display: block;
 }
 
 .message-container div.clear{
@@ -647,6 +664,28 @@ body {
     color: white;
     margin-left: 10px;
 }
+
+/* VIDEO QUALITY */
+.main-console div.setting h1{
+    color: white;
+}
+.main-console div.setting select{
+    background: black;
+    color: white;
+    min-width: 280px;
+    text-align: center;
+    min-height: 40px;
+    padding: 10px;
+    border-radius: 15px;
+}
+.main-console div.setting select:focus{
+    border: solid 1px white;
+    outline: none;
+}
+.main-console div.setting.active section{
+    display: block;
+}
+
 
 /*REPORT input*/
 div.modal-report-user{
