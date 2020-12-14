@@ -124,6 +124,31 @@
                 </ul>
                 <p class="text-center"><img src="docs/tiled_screenshot_1.png" alt="" style="width: 70%"></p>
 
+                <h3 id="building-walls" class="pixel-title">Building walls and "collidable" areas</h3>
+                <p>By default, the characters can traverse any tiles. If you want to prevent your characeter from
+                    going through a tile (like a wall or a desktop), you must make this tile "collidable". You can do
+                    this by settings the <code>collides</code> property on a given tile.</p>
+
+                <p>To make a tile "collidable", you should:</p>
+
+                <ol>
+                    <li>select the relevant tileset and switch to "edit" mode:<br/>
+                        <img src="docs/collides-1.png" alt="">
+                    </li>
+                    <li>right click on a tile of the tileset to select it:<br/>
+                        <img src="docs/collides-2.png" alt="">
+                    </li>
+                    <li>on the left pane in the custom properties section, right click and select "Add properties":<br/>
+                        <img src="docs/collides-3.png" alt=""><br/>
+                        Please add a <code>collides</code> property. The type of the property must be <strong>bool</strong>.
+                    </li>
+                    <li>finally, check the checkbox for the <code>collides</code> property:<br/>
+                        <img src="docs/collides-4.png" alt="">
+                    </li>
+                </ol>
+
+                <p>Repeat for every tile that should be "collidable".</p>
+
                 <h3 id="defining-a-default-entry-point" class="pixel-title">Defining a default entry point</h3>
                 <p>In order to define a default start position, you MUST create a layer named &quot;start&quot; on your map.
                     This layer MUST contain at least one tile. The players will start on the tile of this layer.
@@ -134,7 +159,6 @@
                 <p>In the screenshot above, the start layer is made of the 2 white tiles. These tiles are
                 not visible to the end user because they are hidden below the "bottom" layer that displays the floor
                 of the map.</p>
-
 
                 <h3 id="defining-exits" class="pixel-title">Defining exits</h3>
                 <p>In order to place an exit on your scene that leads to another scene:</p>
