@@ -29,8 +29,8 @@
 }
 html{
     cursor: url('../images/cursor_normal.png'), auto;
-    a{
-        cursor: url('../images/cursor_pointer.png'), auto;
+    button, a, select {
+        cursor: url('../images/cursor_pointer.png'), pointer;
     }
 }
 header {
