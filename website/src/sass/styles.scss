@@ -27,7 +27,12 @@
 
     @return $randomNum;
 }
-
+html{
+    cursor: url('../images/cursor_normal.png'), auto;
+    a{
+        cursor: url('../images/cursor_pointer.png'), auto;
+    }
+}
 header {
     background: #28A7FC url("../images/sky.jpg") no-repeat bottom;
     background-size: 100%;
@@ -75,7 +80,7 @@ header {
         .title {
             z-index: 3;
             position: relative;
-            padding: 5rem 0;
+            padding: 2rem 0 4rem 0;
             color: black;
             h1 {
                 font-family: 'Karmatic Arcade';
@@ -138,7 +143,7 @@ header {
 }
 
 .custom-link{
-    cursor: pointer;
+    cursor: url('../images/cursor_pointer.png'), pointer;
     font-family: "VCR OSD Mono";
     font-size: 1.125rem;
     letter-spacing: 5px;
@@ -172,9 +177,15 @@ header {
 			display: block;
 		}
     }
+    &.anonymous{
+        background-image: none;
+        color: black;
+        text-decoration: underline;
+        font-style: italic;
+    }
     &.play {
         background-image: url('../images/btn-bg-3.png');
-		cursor: pointer;
+        cursor: url('../images/cursor_pointer.png'), pointer;
     }
     &.light{
         background-image: url('../images/btn-bg-light.png');
@@ -188,7 +199,7 @@ header {
 }
 
 .social-links a {
-	cursor: pointer;
+    cursor: url('../images/cursor_pointer.png'), pointer;
 
     &:hover{
         text-decoration: none;
@@ -341,7 +352,7 @@ img{
                     margin: 0;
                 }
                 &.bubble-action {
-                    cursor: pointer;
+                    cursor: url('../images/cursor_pointer.png'), pointer;
                     text-decoration: underline
                 }
 
