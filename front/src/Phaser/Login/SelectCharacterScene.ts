@@ -116,11 +116,12 @@ export class SelectCharacterScene extends ResizableScene {
     }
 
     private nextScene(): void {
+        this.scene.sleep(SelectCharacterSceneName);
         if (this.selectedPlayer !== null) {
             gameManager.setCharacterLayers([this.selectedPlayer.texture.key]);
-            this.scene.start(EnableCameraSceneName);
+            this.scene.run(EnableCameraSceneName);
         } else {
-            this.scene.start(CustomizeSceneName);
+            this.scene.run(CustomizeSceneName);
         }
     }
 

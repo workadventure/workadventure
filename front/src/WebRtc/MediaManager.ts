@@ -1,6 +1,6 @@
 import {DivImportance, layoutManager} from "./LayoutManager";
 import {HtmlUtils} from "./HtmlUtils";
-import {DiscussionManager, SendMessageCallback} from "./DiscussionManager";
+import {discussionManager, SendMessageCallback} from "./DiscussionManager";
 import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
 import {VIDEO_QUALITY_SELECT} from "../Administration/ConsoleGlobalMessageManager";
 declare const navigator:any; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -55,8 +55,6 @@ export class MediaManager {
 
     private lastUpdateScene : Date = new Date();
     private setTimeOutlastUpdateScene? : NodeJS.Timeout;
-
-    private discussionManager: DiscussionManager;
 
     private hasCamera = true;
 
@@ -120,8 +118,6 @@ export class MediaManager {
         this.pingCameraStatus();
 
         this.checkActiveUser(); //todo: desactivated in case of bug
-
-        this.discussionManager = new DiscussionManager(this,'');
     }
 
     public setLastUpdateScene(){
@@ -687,11 +683,11 @@ export class MediaManager {
     }
 
     public addNewParticipant(userId: number|string, name: string|undefined, img?: string, reportCallBack?: ReportCallback){
-        this.discussionManager.addParticipant(userId, name, img, false, reportCallBack);
+        discussionManager.addParticipant(userId, name, img, false, reportCallBack);
     }
 
     public removeParticipant(userId: number|string){
-        this.discussionManager.removeParticipant(userId);
+        discussionManager.removeParticipant(userId);
     }
     public addTriggerCloseJitsiFrameButton(id: String, Function: Function){
         this.triggerCloseJistiFrame.set(id, Function);
@@ -718,24 +714,24 @@ export class MediaManager {
     }
 
     public addNewMessage(name: string, message: string, isMe: boolean = false){
-        this.discussionManager.addMessage(name, message, isMe);
+        discussionManager.addMessage(name, message, isMe);
 
         //when there are new message, show discussion
-        if(!this.discussionManager.activatedDiscussion) {
-            this.discussionManager.showDiscussionPart();
+        if(!discussionManager.activatedDiscussion) {
+            discussionManager.showDiscussionPart();
         }
     }
 
     public addSendMessageCallback(userId: string|number, callback: SendMessageCallback){
-        this.discussionManager.onSendMessageCallback(userId, callback);
+        discussionManager.onSendMessageCallback(userId, callback);
     }
 
     get activatedDiscussion(){
-        return this.discussionManager.activatedDiscussion;
+        return discussionManager.activatedDiscussion;
     }
 
     public setUserInputManager(userInputManager : UserInputManager){
-        this.discussionManager.setUserInputManager(userInputManager);
+        discussionManager.setUserInputManager(userInputManager);
     }
     //check if user is active
     private checkActiveUser(){

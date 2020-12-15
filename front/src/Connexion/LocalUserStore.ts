@@ -1,5 +1,9 @@
 import {LocalUser} from "./LocalUser";
 
+const characterLayersKey = 'characterLayers';
+const gameQualityKey = 'gameQuality';
+const videoQualityKey = 'videoQuality';
+
 //todo: add localstorage fallback
 class LocalUserStore {
     
@@ -30,6 +34,27 @@ class LocalUserStore {
     }
     getCustomCursorPosition(): {activeRow:number, selectedLayers:number[]}|null  {
         return JSON.parse(window.localStorage.getItem('customCursorPosition') || "null");
+    }
+
+    setCharacterLayers(layers: string[]): void {
+        window.localStorage.setItem(characterLayersKey, JSON.stringify(layers));
+    }
+    getCharacterLayers(): string[]|null {
+        return JSON.parse(window.localStorage.getItem(characterLayersKey) || "null");
+    }
+    
+    getGameQualityValue(): number {
+        return parseInt(window.localStorage.getItem(gameQualityKey) || '') || 60;
+    }
+    setGameQualityValue(value: number): void {
+        localStorage.setItem(gameQualityKey, '' + value);
+    }
+
+    getVideoQualityValue(): number {
+        return parseInt(window.localStorage.getItem(videoQualityKey) || '') || 20;
+    }
+    setVideoQualityValue(value: number): void {
+        localStorage.setItem(videoQualityKey, '' + value);
     }
 }
 
