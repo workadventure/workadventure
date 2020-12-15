@@ -6,6 +6,7 @@ import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Ch
 import {cypressAsserter} from "../../Cypress/CypressAsserter";
 import {SelectCharacterSceneName} from "./SelectCharacterScene";
 import {ResizableScene} from "./ResizableScene";
+import {EnableCameraSceneName} from "./EnableCameraScene";
 
 //todo: put this constants in a dedicated file
 export const LoginSceneName = "LoginScene";
@@ -84,7 +85,7 @@ export class LoginScene extends ResizableScene {
         gameManager.setPlayerName(name);
 
         this.scene.sleep(LoginSceneName)
-        this.scene.run(SelectCharacterSceneName);
+        gameManager.tryResumingGame(this, SelectCharacterSceneName);
     }
 
     public onResize(ev: UIEvent): void {

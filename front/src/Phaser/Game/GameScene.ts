@@ -311,7 +311,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     //hook create scene
     create(): void {
-        gameManager.currentSceneName = this.scene.key;
+        gameManager.currentGameSceneName = this.scene.key;
         urlManager.pushRoomIdToUrl(this.room);
         this.startLayerName = urlManager.getStartLayerNameFromUrl();
 
@@ -437,7 +437,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.presentationModeSprite.on('pointerup', this.switchLayoutMode.bind(this));
         this.chatModeSprite = new ChatModeIcon(this, 70, this.game.renderer.height - 2);
         this.chatModeSprite.on('pointerup', this.switchLayoutMode.bind(this));
-        this.openChatIcon = new OpenChatIcon(this, 2, this.game.renderer.height - 36)
+        this.openChatIcon = new OpenChatIcon(this, 2, this.game.renderer.height - 2)
 
         // FIXME: change this to use the UserInputManager class for input
         this.input.keyboard.on('keyup-M', () => {
