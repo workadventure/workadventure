@@ -1,5 +1,5 @@
 import Axios from "axios";
-import {API_URL} from "../Enum/EnvironmentVariable";
+import {API_URL, PATH_TO_START_MAP} from "../Enum/EnvironmentVariable";
 import {RoomConnection} from "./RoomConnection";
 import {PositionInterface, ViewportInterface} from "./ConnexionModels";
 import {GameConnexionTypes, urlManager} from "../Url/UrlManager";
@@ -7,7 +7,7 @@ import {localUserStore} from "./LocalUserStore";
 import {LocalUser} from "./LocalUser";
 import {Room} from "./Room";
 
-const URL_ROOM_STARTED = (process.env.PATH_TO_START_MAP) ? process.env.PATH_TO_START_MAP : '/Floor0/floor0.json';
+const URL_ROOM_STARTED = PATH_TO_START_MAP || '/Floor0/floor0.json';
 
 class ConnectionManager {
     private localUser!:LocalUser;
