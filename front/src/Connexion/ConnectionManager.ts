@@ -7,7 +7,7 @@ import {localUserStore} from "./LocalUserStore";
 import {LocalUser} from "./LocalUser";
 import {Room} from "./Room";
 
-const URL_ROOM_STARTED = '/Floor0/floor0.json';
+const URL_ROOM_STARTED = (process.env.PATH_TO_START_MAP) ? process.env.PATH_TO_START_MAP : '/Floor0/floor0.json';
 
 class ConnectionManager {
     private localUser!:LocalUser;
