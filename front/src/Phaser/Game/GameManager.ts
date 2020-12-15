@@ -21,7 +21,7 @@ export class GameManager {
     private playerName: string|null;
     private characterLayers: string[]|null;
     private startRoom!:Room;
-    currentSceneName: string|null = null;
+    currentGameSceneName: string|null = null;
     
     constructor() {
         this.playerName = localUserStore.getName();
@@ -72,8 +72,8 @@ export class GameManager {
     }
 
     public goToStartingMap(scenePlugin: Phaser.Scenes.ScenePlugin): void {
-        console.log('starting '+ (this.currentSceneName || this.startRoom.id))
-        scenePlugin.start(this.currentSceneName || this.startRoom.id);
+        console.log('starting '+ (this.currentGameSceneName || this.startRoom.id))
+        scenePlugin.start(this.currentGameSceneName || this.startRoom.id);
         //the menu scene launches faster than the gameScene, so we delay it to not have menu buttons on a black screen
         setTimeout(() => scenePlugin.launch(MenuSceneName), 1000);
     }
@@ -83,17 +83,30 @@ export class GameManager {
      * This will close the socket connections and stop the gameScene, but won't remove it.
      */
     leaveGame(scene: Phaser.Scene, targetSceneName: string): void {
-        if (this.currentSceneName === null) throw 'No current scene id set!';
-        const gameScene: GameScene = scene.scene.get(this.currentSceneName) as GameScene;
+        if (this.currentGameSceneName === null) throw 'No current scene id set!';
+        const gameScene: GameScene = scene.scene.get(this.currentGameSceneName) as GameScene;
         gameScene.cleanupClosingScene();
-        scene.scene.stop(this.currentSceneName);
+        scene.scene.stop(this.currentGameSceneName);
         scene.scene.stop(MenuSceneName);
         scene.scene.run(targetSceneName);
     }
+
+    /**
+     * follow up to leaveGame()
+     */
+    tryResumingGame(scene: Phaser.Scene, fallbackSceneName: string) {
+        if (this.currentGameSceneName) {
+            scene.scene.start(this.currentGameSceneName);
+            //the menu scene launches faster than the gameScene, so we delay it to not have menu buttons on a black screen
+            setTimeout(() => scene.scene.launch(MenuSceneName), 1000);
+        } else {
+            scene.scene.run(fallbackSceneName)
+        }
+    }
     
     public getCurrentGameScene(scene: Phaser.Scene): GameScene {
-        if (this.currentSceneName === null) throw 'No current scene id set!';
-        return scene.scene.get(this.currentSceneName) as GameScene
+        if (this.currentGameSceneName === null) throw 'No current scene id set!';
+        return scene.scene.get(this.currentGameSceneName) as GameScene
     }
 }
 

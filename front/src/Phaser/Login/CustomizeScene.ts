@@ -122,8 +122,8 @@ export class CustomizeScene extends ResizableScene {
 
             gameManager.setCharacterLayers(layers);
 
-            this.scene.sleep(CustomizeSceneName)
-            this.scene.run(EnableCameraSceneName);
+            this.scene.sleep(CustomizeSceneName);
+            gameManager.tryResumingGame(this, EnableCameraSceneName);
         });
 
         this.input.keyboard.on('keydown-RIGHT', () => this.moveCursorHorizontally(1));
