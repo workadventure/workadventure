@@ -1,9 +1,17 @@
-<style>    
+<style>
+    *{
+        font-family: 'Open Sans', sans-serif;
+        cursor: url('../logos/cursor_normal.png'), auto !important;
+    }
+    * a, button, select{
+        cursor: url('../logos/cursor_pointer.png'), pointer !important;
+    }
     #gameMenu button {
         background-color: black;
         color: white;
         border-radius: 7px;
-        cursor: url('../logos/cursor_pointer.png'), pointer;
+        padding-bottom: 4px;
+        min-width: 100px;
     }
     #gameMenu section {
         margin: 10px;
@@ -17,9 +25,6 @@
             <button id="shareButton">Share url</button>
         </section>
         <section>
-            <button id="sparkButton">Create map</button>
-        </section>
-        <section>
             <button id="changeNameButton">Edit name</button>
         </section>
         <section>
@@ -28,8 +33,11 @@
         <section>
             <button id="editGameSettingsButton">Settings</button>
         </section>
+        <section>
+            <button id="sparkButton">Create map</button>
+        </section>
         <section id="adminConsoleSection" hidden>
-            <button id="adminConsoleButton">Admin console</button>
+            <button id="adminConsoleButton">Admin con.</button>
         </section>
     </main>
 </div>

@@ -1,9 +1,9 @@
 *{
     font-family: 'Open Sans', sans-serif;
-    cursor: url('../logos/cursor_normal.png'), auto;
+    cursor: url('../logos/cursor_normal.png'), auto !important;
 }
 * a, button, select{
-    cursor: url('../logos/cursor_pointer.png'), pointer;
+    cursor: url('../logos/cursor_pointer.png'), pointer !important;
 }
 body{
     overflow: hidden;
