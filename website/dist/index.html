@@ -54,8 +54,17 @@
     <link rel="stylesheet" href="main.css">
     <script src="bundle.js"></script>
     <script>
+        function startDemo() {
+            let playUrl = window.location.protocol + "//play."+window.location.host+'/_/global/gparant.github.io/tcm-client/Demo/demo-v1.json';
+            window.open(playUrl, '_blank');
+        }
         function startGame() {
-            let playUrl = window.location.protocol + "//play."+window.location.host+"/_/global/npeguin.github.io/office-map/map.json";
+            let playUrl = window.location.protocol + "//play."+window.location.host+'/_/global/npeguin.github.io/office-map/map.json';
+            window.open(playUrl, '_blank');
+        }
+        function startConsole() {
+            //let playUrl = window.location.protocol + "//admin."+window.location.host;
+            let playUrl = 'https://admin.workadventu.re';
             window.open(playUrl, '_blank');
         }
 		function shareFB() {
@@ -113,14 +122,23 @@
                     </h3>
                 </div>
                 <div class="row buttons-row justify-content-md-center pt-5">
-                    <div class="col col-lg-3">
-                        <a class="custom-link start" href="/choose-map.html" title="WORK IN PRIVATE">
-                            WORK IN PRIVATE
+                    <div class="col  col-lg-3">
+                        <a class="custom-link start"
+                           style="padding-top: 4px;font-size: 18px;"
+                           target="_BLANK" onclick="startConsole()" title="YOUR ADVENTURE!">
+                            CREATE YOUR MAP
                         </a>
                     </div>
                     <div class="col col-lg-3">
-                        <a class="custom-link play" target="_BLANK" onclick="startGame()" title="WORK ONLINE">
-                            TRY IT NOW!
+                        <a class="custom-link play" target="_BLANK" onclick="startDemo()" title="DEMO!">
+                            TUTORIAL
+                        </a>
+                    </div>
+                </div>
+                <div style="min-height: 100px" class="row buttons-row justify-content-md-center pt-5">
+                    <div class="col col-lg-3">
+                        <a class="custom-link anonymous contribute" target="_BLANK" onclick="startGame()" title="FEEDBACK">
+                            DEMO (Anonymous)
                         </a>
                     </div>
                 </div>
@@ -169,9 +187,9 @@
             <div>
                 <p>Remote work? Friend party? Use WorkAdventure as you prefer.</p>
                 <p>Click the button below to come and say hi!</p>
-                <p class="bubble-action"><span onclick="startGame()">
+                <p class="bubble-action"><span onclick="startDemo()">
                     <img src="static/images/playicon.png" />
-                    TRY IT NOW !
+                    DEMO!
                 </span></p>
             </div>
         </div>

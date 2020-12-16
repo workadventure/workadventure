@@ -2,12 +2,14 @@ import {PlayerAnimationNames} from "../Phaser/Player/Animation";
 import {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
 import {SignalData} from "simple-peer";
 import {BodyResourceDescriptionInterface} from "../Phaser/Entity/body_character";
+import {RoomConnection} from "./RoomConnection";
 
 export enum EventMessage{
+    CONNECT = "connect",
     WEBRTC_SIGNAL = "webrtc-signal",
     WEBRTC_SCREEN_SHARING_SIGNAL = "webrtc-screen-sharing-signal",
     WEBRTC_START = "webrtc-start",
-    START_ROOM = "start-room", // From server to client: list of all room users/groups/items
+    //START_ROOM = "start-room", // From server to client: list of all room users/groups/items
     JOIN_ROOM = "join-room", // bi-directional
     USER_POSITION = "user-position", // From client to server
     USER_MOVED = "user-moved", // From server to client
@@ -20,6 +22,7 @@ export enum EventMessage{
     ITEM_EVENT = 'item-event',
 
     CONNECT_ERROR = "connect_error",
+    CONNECTING_ERROR = "connecting_error",
     SET_SILENT = "set_silent", // Set or unset the silent mode for this user.
     SET_VIEWPORT = "set-viewport",
     BATCH = "batch",
@@ -121,8 +124,8 @@ export interface ItemEventMessageInterface {
 }
 
 export interface RoomJoinedMessageInterface {
-    users: MessageUserPositionInterface[],
-    groups: GroupCreatedUpdatedMessageInterface[],
+    //users: MessageUserPositionInterface[],
+    //groups: GroupCreatedUpdatedMessageInterface[],
     items: { [itemId: number] : unknown }
 }
 
@@ -130,4 +133,9 @@ export interface PlayGlobalMessageInterface {
     id: string
     type: string
     message: string
+}
+
+export interface OnConnectInterface {
+    connection: RoomConnection,
+    room: RoomJoinedMessageInterface
 }

@@ -1,13 +1,22 @@
 import {DivImportance, layoutManager} from "./LayoutManager";
 import {HtmlUtils} from "./HtmlUtils";
-import {DiscussionManager, SendMessageCallback} from "./DiscussionManager";
+import {discussionManager, SendMessageCallback} from "./DiscussionManager";
 import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
+import {VIDEO_QUALITY_SELECT} from "../Administration/ConsoleGlobalMessageManager";
 declare const navigator:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-const videoConstraint: boolean|MediaTrackConstraints = {
-    width: { ideal: 1280 },
-    height: { ideal: 720 },
-    facingMode: "user"
+const localValueVideo = localStorage.getItem(VIDEO_QUALITY_SELECT);
+let valueVideo = 20;
+if(localValueVideo){
+    valueVideo = parseInt(localValueVideo);
+}
+let videoConstraint: boolean|MediaTrackConstraints = {
+    width: { min: 640, ideal: 1280, max: 1920 },
+    height: { min: 400, ideal: 720 },
+    frameRate: {exact: valueVideo, ideal: valueVideo},
+    facingMode: "user",
+    resizeMode: 'crop-and-scale',
+    aspectRatio: 1.777777778
 };
 
 export type UpdatedLocalStreamCallback = (media: MediaStream|null) => void;
@@ -29,6 +38,7 @@ export class MediaManager {
     microphoneClose: HTMLImageElement;
     microphone: HTMLImageElement;
     webrtcInAudio: HTMLAudioElement;
+    private webrtcOutAudio: HTMLAudioElement;
     constraintsMedia : MediaStreamConstraints = {
         audio: true,
         video: videoConstraint
@@ -46,10 +56,6 @@ export class MediaManager {
     private lastUpdateScene : Date = new Date();
     private setTimeOutlastUpdateScene? : NodeJS.Timeout;
 
-    private discussionManager: DiscussionManager;
-
-    private userInputManager?: UserInputManager;
-
     private hasCamera = true;
 
     private triggerCloseJistiFrame : Map<String, Function> = new Map<String, Function>();
@@ -58,7 +64,9 @@ export class MediaManager {
 
         this.myCamVideo = HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('myCamVideo');
         this.webrtcInAudio = HtmlUtils.getElementByIdOrFail<HTMLAudioElement>('audio-webrtc-in');
+        this.webrtcOutAudio = HtmlUtils.getElementByIdOrFail<HTMLAudioElement>('audio-webrtc-out');
         this.webrtcInAudio.volume = 0.2;
+        this.webrtcOutAudio.volume = 0.2;
 
         this.microphoneBtn = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('btn-micro');
         this.microphoneClose = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('microphone-close');
@@ -110,8 +118,6 @@ export class MediaManager {
         this.pingCameraStatus();
 
         this.checkActiveUser(); //todo: desactivated in case of bug
-
-        this.discussionManager = new DiscussionManager(this,'');
     }
 
     public setLastUpdateScene(){
@@ -189,6 +195,17 @@ export class MediaManager {
             this.triggerCloseJitsiFrameButton();
         }
         buttonCloseFrame.addEventListener('click', functionTrigger);
+    }
+
+    public updateCameraQuality(value: number) {
+        this.enableCameraStyle();
+        const newVideoConstraint = JSON.parse(JSON.stringify(videoConstraint));
+        newVideoConstraint.frameRate = {exact: value, ideal: value};
+        videoConstraint = newVideoConstraint;
+        this.constraintsMedia.video = videoConstraint;
+        this.getCamera().then((stream: MediaStream) => {
+            this.triggerUpdatedLocalStreamCallbacks(stream);
+        });
     }
 
     public enableCamera() {
@@ -546,6 +563,10 @@ export class MediaManager {
     removeActiveScreenSharingVideo(userId: string) {
         this.removeActiveVideo(`screen-sharing-${userId}`)
     }
+    
+    playWebrtcOutSound(): void {
+        this.webrtcOutAudio.play();
+    }
 
     isConnecting(userId: string): void {
         const connectingSpinnerDiv = this.getSpinner(userId);
@@ -564,7 +585,7 @@ export class MediaManager {
     }
 
     isError(userId: string): void {
-        console.log("isError", `div-${userId}`);
+        console.info("isError", `div-${userId}`);
         const element = document.getElementById(`div-${userId}`);
         if(!element){
             return;
@@ -662,11 +683,11 @@ export class MediaManager {
     }
 
     public addNewParticipant(userId: number|string, name: string|undefined, img?: string, reportCallBack?: ReportCallback){
-        this.discussionManager.addParticipant(userId, name, img, false, reportCallBack);
+        discussionManager.addParticipant(userId, name, img, false, reportCallBack);
     }
 
     public removeParticipant(userId: number|string){
-        this.discussionManager.removeParticipant(userId);
+        discussionManager.removeParticipant(userId);
     }
     public addTriggerCloseJitsiFrameButton(id: String, Function: Function){
         this.triggerCloseJistiFrame.set(id, Function);
@@ -693,24 +714,24 @@ export class MediaManager {
     }
 
     public addNewMessage(name: string, message: string, isMe: boolean = false){
-        this.discussionManager.addMessage(name, message, isMe);
+        discussionManager.addMessage(name, message, isMe);
 
         //when there are new message, show discussion
-        if(!this.discussionManager.activatedDiscussion) {
-            this.discussionManager.showDiscussionPart();
+        if(!discussionManager.activatedDiscussion) {
+            discussionManager.showDiscussionPart();
         }
     }
 
     public addSendMessageCallback(userId: string|number, callback: SendMessageCallback){
-        this.discussionManager.onSendMessageCallback(userId, callback);
+        discussionManager.onSendMessageCallback(userId, callback);
     }
 
     get activatedDiscussion(){
-        return this.discussionManager.activatedDiscussion;
+        return discussionManager.activatedDiscussion;
     }
 
     public setUserInputManager(userInputManager : UserInputManager){
-        this.discussionManager.setUserInputManager(userInputManager);
+        discussionManager.setUserInputManager(userInputManager);
     }
     //check if user is active
     private checkActiveUser(){

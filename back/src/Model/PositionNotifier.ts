@@ -9,11 +9,9 @@
  * number of players around the current player.
  */
 import {EntersCallback, LeavesCallback, MovesCallback, Zone} from "./Zone";
-import {PointInterface} from "_Model/Websocket/PointInterface";
-import {User} from "_Model/User";
-import {ViewportInterface} from "_Model/Websocket/ViewportMessage";
 import {Movable} from "_Model/Movable";
 import {PositionInterface} from "_Model/PositionInterface";
+import {ZoneSocket} from "../RoomManager";
 
 interface ZoneDescriptor {
     i: number;
@@ -34,44 +32,6 @@ export class PositionNotifier {
             i: Math.floor(x / this.zoneWidth),
             j: Math.floor(y / this.zoneHeight),
         }
-    }
-
-    /**
-     * Sets the viewport coordinates.
-     * Returns the list of new users to add
-     */
-    public setViewport(user: User, viewport: ViewportInterface): Movable[] {
-        if (viewport.left > viewport.right || viewport.top > viewport.bottom) {
-            console.warn('Invalid viewport received: ', viewport);
-            return [];
-        }
-
-        const oldZones = user.listenedZones;
-        const newZones = new Set<Zone>();
-
-        const topLeftDesc = this.getZoneDescriptorFromCoordinates(viewport.left, viewport.top);
-        const bottomRightDesc = this.getZoneDescriptorFromCoordinates(viewport.right, viewport.bottom);
-
-        for (let j = topLeftDesc.j; j <= bottomRightDesc.j; j++) {
-            for (let i = topLeftDesc.i; i <= bottomRightDesc.i; i++) {
-                newZones.add(this.getZone(i, j));
-            }
-        }
-
-        const addedZones = [...newZones].filter(x => !oldZones.has(x));
-        const removedZones = [...oldZones].filter(x => !newZones.has(x));
-
-
-        let things: Movable[] = [];
-        for (const zone of addedZones) {
-            zone.startListening(user);
-            things = things.concat(Array.from(zone.getThings()))
-        }
-        for (const zone of removedZones) {
-            zone.stopListening(user);
-        }
-
-        return things;
     }
 
     public enter(thing: Movable): void {
@@ -108,13 +68,6 @@ export class PositionNotifier {
         oldZone.leave(thing, null);
     }
 
-    public removeViewport(user: User): void {
-        // Also, let's stop listening on viewports
-        for (const zone of user.listenedZones) {
-            zone.stopListening(user);
-        }
-    }
-
     private getZone(i: number, j: number): Zone {
         let zoneRow = this.zones[j];
         if (zoneRow === undefined) {
@@ -128,5 +81,16 @@ export class PositionNotifier {
             this.zones[j][i] = zone;
         }
         return zone;
+    }
+
+    public addZoneListener(call: ZoneSocket, x: number, y: number): Set<Movable> {
+        const zone = this.getZone(x, y);
+        zone.addListener(call);
+        return zone.getThings();
+    }
+
+    public removeZoneListener(call: ZoneSocket, x: number, y: number): void {
+        const zone = this.getZone(x, y);
+        zone.removeListener(call);
     }
 }
