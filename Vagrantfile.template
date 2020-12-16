@@ -2,7 +2,7 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 # Box / OS
-VAGRANT_BOX = 'bento/ubuntu-19.10'
+VAGRANT_BOX = 'bento/ubuntu-20.04'
 
 # VM User — 'vagrant' by default
 VM_USER = 'vagrant'
@@ -58,7 +58,7 @@ Vagrant.configure(2) do |config|
     apt-get update -y
     apt-get install -y git
     apt-get install -y apt-transport-https
-    apt-get install -y build-essential
+    apt-get install -y ca-certificates
     apt-get install -y curl
     apt-get install -y gnupg-agent
     apt-get install -y software-properties-common
@@ -66,8 +66,8 @@ Vagrant.configure(2) do |config|
     apt-key fingerprint 0EBFCD88
     add-apt-repository \
        "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-       $(lsb_release -cs) \
-       stable"
+        $(lsb_release -cs) \
+        stable"
     apt-get update -y
     apt-get install -y docker-ce docker-ce-cli containerd.io
     curl -L "https://github.com/docker/compose/releases/download/1.25.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
