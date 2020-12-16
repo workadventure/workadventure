@@ -151,7 +151,6 @@ export class MenuScene extends Phaser.Scene {
         switch ((event?.target as HTMLInputElement).id) {
             case 'changeNameButton':
                 this.closeSideMenu();
-                this.closeGameQualityMenu();
                 gameManager.leaveGame(this, LoginSceneName, new LoginScene());
                 break;
             case 'sparkButton':
@@ -197,6 +196,6 @@ export class MenuScene extends Phaser.Scene {
 
     private goToSpark() {
         const sparkHost = 'https://'+window.location.host.replace('play.', 'admin.')+'/register';
-        window.location.assign(sparkHost);
+        window.open(sparkHost, '_blank');
     }
 }
