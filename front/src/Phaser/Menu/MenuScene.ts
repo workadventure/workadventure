@@ -86,6 +86,7 @@ export class MenuScene extends Phaser.Scene {
         this.sideMenuOpened = false;
         this.closeGameQualityMenu()
         this.menuButton.getChildByID('openMenuButton').innerHTML = `<img src="/static/images/menu.svg">`;
+        gameManager.getCurrentGameScene(this).ConsoleGlobalMessageManager.disabledMessageConsole();
         this.tweens.add({
             targets: this.menuElement,
             x: closedSideMenuX,
