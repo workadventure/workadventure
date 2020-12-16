@@ -84,8 +84,9 @@ export class LoginScene extends ResizableScene {
     private login(name: string): void {
         gameManager.setPlayerName(name);
 
-        this.scene.sleep(LoginSceneName)
+        this.scene.stop(LoginSceneName)
         gameManager.tryResumingGame(this, SelectCharacterSceneName);
+        this.scene.remove(LoginSceneName)
     }
 
     public onResize(ev: UIEvent): void {

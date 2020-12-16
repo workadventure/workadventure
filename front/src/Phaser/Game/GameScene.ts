@@ -311,7 +311,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     //hook create scene
     create(): void {
-        gameManager.currentGameSceneName = this.scene.key;
+        gameManager.gameSceneIsCreated(this);
         urlManager.pushRoomIdToUrl(this.room);
         this.startLayerName = urlManager.getStartLayerNameFromUrl();
 
