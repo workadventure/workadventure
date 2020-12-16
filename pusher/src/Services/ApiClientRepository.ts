@@ -3,17 +3,30 @@
  */
 import {RoomManagerClient} from "../Messages/generated/messages_grpc_pb";
 import grpc from 'grpc';
+import crypto from 'crypto';
 import {API_URL} from "../Enum/EnvironmentVariable";
 
+import Debug from "debug";
+
+const debug = Debug('apiClientRespository');
 
 class ApiClientRepository {
-    private roomManagerClient: RoomManagerClient|null = null;
+    private roomManagerClients: RoomManagerClient[] = [];
+
+    public constructor(private apiUrls: string[]) {
+    }
 
     public async getClient(roomId: string): Promise<RoomManagerClient> {
-        if (this.roomManagerClient === null) {
-            this.roomManagerClient = new RoomManagerClient(API_URL, grpc.credentials.createInsecure());
+        const array = new Uint32Array(crypto.createHash('md5').update(roomId).digest());
+        const index = array[0] % this.apiUrls.length;
+
+        let client = this.roomManagerClients[index];
+        if (client === undefined) {
+            this.roomManagerClients[index] = client = new RoomManagerClient(this.apiUrls[index], grpc.credentials.createInsecure());
+            debug('Mapping room %s to API server %s', roomId, this.apiUrls[index])
         }
-        return Promise.resolve(this.roomManagerClient);
+
+        return Promise.resolve(client);
     }
 
     public async getAllClients(): Promise<RoomManagerClient[]> {
@@ -21,6 +34,6 @@ class ApiClientRepository {
     }
 }
 
-const apiClientRepository = new ApiClientRepository();
+const apiClientRepository = new ApiClientRepository(API_URL.split(','));
 
 export { apiClientRepository };
