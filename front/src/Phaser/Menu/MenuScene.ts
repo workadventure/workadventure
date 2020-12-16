@@ -38,11 +38,12 @@ export class MenuScene extends Phaser.Scene {
     }
 
     create() {
-        this.menuElement = this.add.dom(closedSideMenuX, 25).createFromCache(gameMenuKey);
+        this.menuElement = this.add.dom(closedSideMenuX, 30).createFromCache(gameMenuKey);
         this.menuElement.setOrigin(0);
+        this.revealAfterInit(this.menuElement, 'gameMenu');
 
-        this.gameQualityMenuElement = this.add.dom(this.game.renderer.width / 2, -400).createFromCache(gameSettingsMenuKey);
-        this.gameQualityMenuElement.setOrigin(0.5);
+        this.gameQualityMenuElement = this.add.dom(300, -400).createFromCache(gameSettingsMenuKey);
+        this.revealAfterInit(this.gameQualityMenuElement, 'gameQuality');
         
         this.input.keyboard.on('keyup-TAB', () => {
             this.sideMenuOpened ? this.closeSideMenu() : this.openSideMenu();
@@ -52,6 +53,14 @@ export class MenuScene extends Phaser.Scene {
         this.menuButton.on('click', () => {
             this.sideMenuOpened ? this.closeSideMenu() : this.openSideMenu();
         });
+    }
+    
+    private revealAfterInit(menuElement: Phaser.GameObjects.DOMElement, rootDomId: string) {
+        //Dom elements will appear inside the viewer screen when creating before being moved out of it, which create a flicker effect.
+        //To prevent this, we put a 'hidden' attribute on the root element, we remove it only after the init is done.
+        setTimeout(() => {
+            (menuElement.getChildByID(rootDomId) as HTMLElement).hidden = false;
+        }, 250);
     }
     
     openSideMenu() {
@@ -111,7 +120,7 @@ export class MenuScene extends Phaser.Scene {
 
         this.tweens.add({
             targets: this.gameQualityMenuElement,
-            y: this.game.renderer.height / 2,
+            y: 100,
             duration: 1000,
             ease: 'Power3'
         });
