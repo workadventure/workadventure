@@ -66,7 +66,7 @@ export class MenuScene extends Phaser.Scene {
     openSideMenu() {
         if (this.sideMenuOpened) return;
         this.sideMenuOpened = true;
-        this.menuButton.getChildByID('openMenuButton').innerHTML = 'Close'
+        this.menuButton.getChildByID('openMenuButton').innerHTML = 'X';
         if (gameManager.getCurrentGameScene(this).connection.isAdmin()) {
             const adminSection = this.menuElement.getChildByID('adminConsoleSection') as HTMLElement;
             adminSection.hidden = false;
@@ -85,7 +85,7 @@ export class MenuScene extends Phaser.Scene {
         if (!this.sideMenuOpened) return;
         this.sideMenuOpened = false;
         this.closeGameQualityMenu()
-        this.menuButton.getChildByID('openMenuButton').innerHTML = 'Menu'
+        this.menuButton.getChildByID('openMenuButton').innerHTML = `<img src="/static/images/menu.svg">`;
         this.tweens.add({
             targets: this.menuElement,
             x: closedSideMenuX,
