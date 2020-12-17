@@ -48,11 +48,9 @@ class CoWebsiteManager {
                     <img src="resources/logos/close.svg">
                 </button>`;
         setTimeout(() => {
-            try {
-                HtmlUtils.getElementByIdOrFail('cowebsite-close').addEventListener('click', () => {
-                    this.closeCoWebsite();
-                });
-            }catch (err){throw err}
+            HtmlUtils.getElementByIdOrFail('cowebsite-close').addEventListener('click', () => {
+                this.closeCoWebsite();
+            });
         }, 100);
 
         const iframe = document.createElement('iframe');
