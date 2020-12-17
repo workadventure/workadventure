@@ -3,6 +3,7 @@ import {SelectCharacterScene, SelectCharacterSceneName} from "../Login/SelectCha
 import {gameManager} from "../Game/GameManager";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {mediaManager} from "../../WebRtc/MediaManager";
+import {coWebsiteManager} from "../../WebRtc/CoWebsiteManager";
 
 export const MenuSceneName = 'MenuScene';
 const gameMenuKey = 'gameMenu';
@@ -42,7 +43,8 @@ export class MenuScene extends Phaser.Scene {
         this.menuElement.setOrigin(0);
         this.revealMenusAfterInit(this.menuElement, 'gameMenu');
 
-        this.gameQualityMenuElement = this.add.dom(300, -400).createFromCache(gameSettingsMenuKey);
+        const middleX = (window.innerWidth / 3) - 298;
+        this.gameQualityMenuElement = this.add.dom(middleX, -400).createFromCache(gameSettingsMenuKey);
         this.revealMenusAfterInit(this.gameQualityMenuElement, 'gameQuality');
 
         this.input.keyboard.on('keyup-TAB', () => {
@@ -74,7 +76,7 @@ export class MenuScene extends Phaser.Scene {
         if (this.sideMenuOpened) return;
         this.sideMenuOpened = true;
         this.menuButton.getChildByID('openMenuButton').innerHTML = 'X';
-        if (gameManager.getCurrentGameScene(this).connection.isAdmin()) {
+        if (gameManager.getCurrentGameScene(this).connection && gameManager.getCurrentGameScene(this).connection.isAdmin()) {
             const adminSection = this.menuElement.getChildByID('adminConsoleSection') as HTMLElement;
             adminSection.hidden = false;
         }
@@ -103,7 +105,10 @@ export class MenuScene extends Phaser.Scene {
 
 
     private openGameSettingsMenu(): void {
-        if (this.settingsMenuOpened) return;
+        if (this.settingsMenuOpened) {
+            this.closeGameQualityMenu();
+            return;
+        }
         this.settingsMenuOpened = true;
 
         const gameQualitySelect = this.gameQualityMenuElement.getChildByID('select-game-quality') as HTMLInputElement;
@@ -123,9 +128,18 @@ export class MenuScene extends Phaser.Scene {
             }
         });
 
+        let middleY = (window.innerHeight / 3) - (257);
+        if(middleY < 0){
+            middleY = 0;
+        }
+        let middleX = (window.innerWidth / 3) - 298;
+        if(middleX < 0){
+            middleX = 0;
+        }
         this.tweens.add({
             targets: this.gameQualityMenuElement,
-            y: 100,
+            y: middleY,
+            x: middleX,
             duration: 1000,
             ease: 'Power3'
         });
