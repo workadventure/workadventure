@@ -160,6 +160,7 @@ video#myCamVideo{
     top: calc(48px - 37px);
     left: calc(48px - 41px);
     position: relative;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
 }
 
 /* Spinner */
