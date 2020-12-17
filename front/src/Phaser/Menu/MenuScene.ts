@@ -1,5 +1,5 @@
-import {LoginSceneName} from "../Login/LoginScene";
-import {SelectCharacterSceneName} from "../Login/SelectCharacterScene";
+import {LoginScene, LoginSceneName} from "../Login/LoginScene";
+import {SelectCharacterScene, SelectCharacterSceneName} from "../Login/SelectCharacterScene";
 import {gameManager} from "../Game/GameManager";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {mediaManager} from "../../WebRtc/MediaManager";
@@ -40,27 +40,31 @@ export class MenuScene extends Phaser.Scene {
     create() {
         this.menuElement = this.add.dom(closedSideMenuX, 30).createFromCache(gameMenuKey);
         this.menuElement.setOrigin(0);
-        this.revealAfterInit(this.menuElement, 'gameMenu');
+        this.revealMenusAfterInit(this.menuElement, 'gameMenu');
 
         this.gameQualityMenuElement = this.add.dom(300, -400).createFromCache(gameSettingsMenuKey);
-        this.revealAfterInit(this.gameQualityMenuElement, 'gameQuality');
+        this.revealMenusAfterInit(this.gameQualityMenuElement, 'gameQuality');
         
         this.input.keyboard.on('keyup-TAB', () => {
             this.sideMenuOpened ? this.closeSideMenu() : this.openSideMenu();
         });
-        this.menuButton = this.add.dom(35, 20).createFromCache(gameMenuIconKey);
+        this.menuButton = this.add.dom(0, 0).createFromCache(gameMenuIconKey);
         this.menuButton.addListener('click');
         this.menuButton.on('click', () => {
             this.sideMenuOpened ? this.closeSideMenu() : this.openSideMenu();
         });
     }
     
-    private revealAfterInit(menuElement: Phaser.GameObjects.DOMElement, rootDomId: string) {
+    private revealMenusAfterInit(menuElement: Phaser.GameObjects.DOMElement, rootDomId: string) {
         //Dom elements will appear inside the viewer screen when creating before being moved out of it, which create a flicker effect.
         //To prevent this, we put a 'hidden' attribute on the root element, we remove it only after the init is done.
         setTimeout(() => {
             (menuElement.getChildByID(rootDomId) as HTMLElement).hidden = false;
         }, 250);
+    }
+    
+    public revealMenuIcon(): void {
+        (this.menuButton.getChildByID('menuIcon') as HTMLElement).hidden = false
     }
     
     openSideMenu() {
@@ -148,15 +152,14 @@ export class MenuScene extends Phaser.Scene {
         switch ((event?.target as HTMLInputElement).id) {
             case 'changeNameButton':
                 this.closeSideMenu();
-                this.closeGameQualityMenu();
-                gameManager.leaveGame(this, LoginSceneName);
+                gameManager.leaveGame(this, LoginSceneName, new LoginScene());
                 break;
             case 'sparkButton':
                 this.goToSpark();
                 break;
             case 'changeSkinButton':
                 this.closeSideMenu();
-                gameManager.leaveGame(this, SelectCharacterSceneName);
+                gameManager.leaveGame(this, SelectCharacterSceneName, new SelectCharacterScene());
                 break;
             case 'closeButton':
                 this.closeSideMenu();
@@ -194,6 +197,6 @@ export class MenuScene extends Phaser.Scene {
 
     private goToSpark() {
         const sparkHost = 'https://'+window.location.host.replace('play.', 'admin.')+'/register';
-        window.location.assign(sparkHost);
+        window.open(sparkHost, '_blank');
     }
 }
