@@ -155,7 +155,7 @@ export class MenuScene extends Phaser.Scene {
                 gameManager.leaveGame(this, LoginSceneName, new LoginScene());
                 break;
             case 'sparkButton':
-                this.goToSpark();
+                this.gotToCreateMapPage();
                 break;
             case 'changeSkinButton':
                 this.closeSideMenu();
@@ -195,8 +195,8 @@ export class MenuScene extends Phaser.Scene {
         this.closeGameQualityMenu();
     }
 
-    private goToSpark() {
-        const sparkHost = 'https://'+window.location.host.replace('play.', 'admin.')+'/register';
+    private gotToCreateMapPage() {
+        const sparkHost = 'https://'+window.location.host.replace('play.', '')+'/choose-map.html';
         window.open(sparkHost, '_blank');
     }
 }

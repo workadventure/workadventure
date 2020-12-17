@@ -62,11 +62,6 @@
             let playUrl = window.location.protocol + "//play."+window.location.host+'/_/global/npeguin.github.io/office-map/map.json';
             window.open(playUrl, '_blank');
         }
-        function startConsole() {
-            //let playUrl = window.location.protocol + "//admin."+window.location.host;
-            let playUrl = 'https://admin.workadventu.re';
-            window.open(playUrl, '_blank');
-        }
 		function shareFB() {
 			window.open('https://www.facebook.com/sharer/sharer.php?u=https://workadventu.re/', '_blank', 'width=500,height=500');
 		}
@@ -118,27 +113,27 @@
                         Stay connected with your clients by providing a dedicated digital place to organize meetings, workshops.
                     </h3>
                     <h3>
-                        Stay connected with your future collaborators by organizing online event.
+                        Engage with your future collaborators by organizing online events.
                     </h3>
                 </div>
                 <div class="row buttons-row justify-content-md-center pt-5"
                      style="min-height: 80px;">
                     <div class="col  col-lg-3">
                         <a class="custom-link start"
-                           target="_BLANK" onclick="startConsole()" title="YOUR ADVENTURE!">
+                           href="/choose-map.html">
                             CREATE YOUR MAP
                         </a>
                     </div>
                     <div class="col col-lg-3">
-                        <a class="custom-link play" target="_BLANK" onclick="startDemo()" title="DEMO!">
+                        <a class="custom-link play" onclick="startDemo()">
                             TUTORIAL
                         </a>
                     </div>
                 </div>
                 <div style="min-height: 100px" class="row buttons-row justify-content-md-center pt-5">
                     <div class="col col-lg-3">
-                        <a class="custom-link anonymous contribute" target="_BLANK" onclick="startGame()" title="FEEDBACK">
-                            DEMO (Anonymous)
+                        <a class="custom-link contribute" onclick="startGame()">
+                            DEMO
                         </a>
                     </div>
                 </div>
