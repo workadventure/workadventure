@@ -1,10 +1,18 @@
 <style>
-
+    *{
+        font-family: 'Open Sans', sans-serif;
+        cursor: url('/resources/logos/cursor_normal.png'), auto;
+    }
+    * a, button, select{
+        cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    }
     #menuIcon button {
         background-color: black;
         color: white;
         border-radius: 7px;
-        cursor: url('../logos/cursor_pointer.png'), pointer;
+    }
+    #menuIcon button img{
+        width: 14px;
     }
     #menuIcon section {
         margin: 10px;
@@ -12,6 +20,8 @@
 </style>
 <main id="menuIcon" hidden>
     <section>
-        <button id="openMenuButton">Menu</button>
+        <button id="openMenuButton">
+            <img src="/static/images/menu.svg">
+        </button>
     </section>
 </main>

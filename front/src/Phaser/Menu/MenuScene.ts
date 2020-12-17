@@ -53,6 +53,9 @@ export class MenuScene extends Phaser.Scene {
         this.menuButton.on('click', () => {
             this.sideMenuOpened ? this.closeSideMenu() : this.openSideMenu();
         });
+
+        this.menuElement.addListener('click');
+        this.menuElement.on('click', this.onMenuClick.bind(this));
     }
     
     private revealMenusAfterInit(menuElement: Phaser.GameObjects.DOMElement, rootDomId: string) {
@@ -70,13 +73,11 @@ export class MenuScene extends Phaser.Scene {
     openSideMenu() {
         if (this.sideMenuOpened) return;
         this.sideMenuOpened = true;
-        this.menuButton.getChildByID('openMenuButton').innerHTML = 'Close'
+        this.menuButton.getChildByID('openMenuButton').innerHTML = 'X';
         if (gameManager.getCurrentGameScene(this).connection.isAdmin()) {
             const adminSection = this.menuElement.getChildByID('adminConsoleSection') as HTMLElement;
             adminSection.hidden = false;
         }
-        this.menuElement.addListener('click');
-        this.menuElement.on('click', this.onMenuClick.bind(this));
         this.tweens.add({
             targets: this.menuElement,
             x: openedSideMenuX,
@@ -89,14 +90,14 @@ export class MenuScene extends Phaser.Scene {
         if (!this.sideMenuOpened) return;
         this.sideMenuOpened = false;
         this.closeGameQualityMenu()
-        this.menuButton.getChildByID('openMenuButton').innerHTML = 'Menu'
+        this.menuButton.getChildByID('openMenuButton').innerHTML = `<img src="/static/images/menu.svg">`;
+        gameManager.getCurrentGameScene(this).ConsoleGlobalMessageManager.disabledMessageConsole();
         this.tweens.add({
             targets: this.menuElement,
             x: closedSideMenuX,
             duration: 500,
             ease: 'Power3'
         });
-        this.menuElement.removeListener('click');
     }
 
 
