@@ -43,7 +43,7 @@ export class MenuScene extends Phaser.Scene {
         this.menuElement.setOrigin(0);
         this.revealMenusAfterInit(this.menuElement, 'gameMenu');
 
-        let middleX = (window.innerWidth / 3) - 298;
+        const middleX = (window.innerWidth / 3) - 298;
         this.gameQualityMenuElement = this.add.dom(middleX, -400).createFromCache(gameSettingsMenuKey);
         this.revealMenusAfterInit(this.gameQualityMenuElement, 'gameQuality');
 
