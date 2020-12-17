@@ -26,7 +26,7 @@ export class MenuScene extends Phaser.Scene {
 
     constructor() {
         super({key: MenuSceneName});
-        
+
         this.gameQualityValue = localUserStore.getGameQualityValue();
         this.videoQualityValue = localUserStore.getVideoQualityValue();
     }
@@ -44,7 +44,7 @@ export class MenuScene extends Phaser.Scene {
 
         this.gameQualityMenuElement = this.add.dom(300, -400).createFromCache(gameSettingsMenuKey);
         this.revealMenusAfterInit(this.gameQualityMenuElement, 'gameQuality');
-        
+
         this.input.keyboard.on('keyup-TAB', () => {
             this.sideMenuOpened ? this.closeSideMenu() : this.openSideMenu();
         });
@@ -57,7 +57,7 @@ export class MenuScene extends Phaser.Scene {
         this.menuElement.addListener('click');
         this.menuElement.on('click', this.onMenuClick.bind(this));
     }
-    
+
     private revealMenusAfterInit(menuElement: Phaser.GameObjects.DOMElement, rootDomId: string) {
         //Dom elements will appear inside the viewer screen when creating before being moved out of it, which create a flicker effect.
         //To prevent this, we put a 'hidden' attribute on the root element, we remove it only after the init is done.
@@ -65,11 +65,11 @@ export class MenuScene extends Phaser.Scene {
             (menuElement.getChildByID(rootDomId) as HTMLElement).hidden = false;
         }, 250);
     }
-    
+
     public revealMenuIcon(): void {
         (this.menuButton.getChildByID('menuIcon') as HTMLElement).hidden = false
     }
-    
+
     openSideMenu() {
         if (this.sideMenuOpened) return;
         this.sideMenuOpened = true;
@@ -85,7 +85,7 @@ export class MenuScene extends Phaser.Scene {
             ease: 'Power3'
         });
     }
-    
+
     private closeSideMenu(): void {
         if (!this.sideMenuOpened) return;
         this.sideMenuOpened = false;
@@ -115,7 +115,7 @@ export class MenuScene extends Phaser.Scene {
         this.gameQualityMenuElement.on('click',  (event:MouseEvent) => {
             event.preventDefault();
             if ((event?.target as HTMLInputElement).id === 'gameQualityFormSubmit') {
-                const gameQualitySelect = this.gameQualityMenuElement.getChildByID('select-game-quality') as HTMLInputElement; 
+                const gameQualitySelect = this.gameQualityMenuElement.getChildByID('select-game-quality') as HTMLInputElement;
                 const videoQualitySelect = this.gameQualityMenuElement.getChildByID('select-video-quality') as HTMLInputElement;
                 this.saveSetting(parseInt(gameQualitySelect.value), parseInt(videoQualitySelect.value));
             } else if((event?.target as HTMLInputElement).id === 'gameQualityFormCancel') {
@@ -143,12 +143,12 @@ export class MenuScene extends Phaser.Scene {
             ease: 'Power3'
         });
     }
-    
-    
-    
+
+
+
     private onMenuClick(event:MouseEvent) {
         event.preventDefault();
-    
+
         switch ((event?.target as HTMLInputElement).id) {
             case 'changeNameButton':
                 this.closeSideMenu();
@@ -175,10 +175,10 @@ export class MenuScene extends Phaser.Scene {
                 break;
         }
     }
-    
+
     private async shareUrl() {
         await navigator.clipboard.writeText(location.toString());
-        alert('URL was copy to your clipboard!');
+        alert('URL is copied to your clipboard!');
     }
 
     private saveSetting(valueGame: number, valueVideo: number){
