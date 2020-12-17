@@ -53,6 +53,9 @@ export class MenuScene extends Phaser.Scene {
         this.menuButton.on('click', () => {
             this.sideMenuOpened ? this.closeSideMenu() : this.openSideMenu();
         });
+
+        this.menuElement.addListener('click');
+        this.menuElement.on('click', this.onMenuClick.bind(this));
     }
     
     private revealMenusAfterInit(menuElement: Phaser.GameObjects.DOMElement, rootDomId: string) {
@@ -75,8 +78,6 @@ export class MenuScene extends Phaser.Scene {
             const adminSection = this.menuElement.getChildByID('adminConsoleSection') as HTMLElement;
             adminSection.hidden = false;
         }
-        this.menuElement.addListener('click');
-        this.menuElement.on('click', this.onMenuClick.bind(this));
         this.tweens.add({
             targets: this.menuElement,
             x: openedSideMenuX,
@@ -97,7 +98,6 @@ export class MenuScene extends Phaser.Scene {
             duration: 500,
             ease: 'Power3'
         });
-        this.menuElement.removeListener('click');
     }
 
 
