@@ -106,7 +106,9 @@ export abstract class Character extends Container {
                 });
             })
             // Needed, otherwise, animations are not handled correctly.
-            this.scene.sys.updateList.add(sprite);
+            if(this.scene) {
+                this.scene.sys.updateList.add(sprite);
+            }
             this.sprites.set(texture, sprite);
         }
     }
@@ -229,7 +231,9 @@ export abstract class Character extends Container {
             this.scene.events.removeListener('postupdate', this.postupdate.bind(this));
         }
         for (const sprite of this.sprites.values()) {
-            this.scene.sys.updateList.remove(sprite);
+            if(this.scene) {
+                this.scene.sys.updateList.remove(sprite);
+            }
         }
         super.destroy(fromScene);
         this.playerName.destroy();

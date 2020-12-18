@@ -63,6 +63,7 @@ import {urlManager} from "../../Url/UrlManager";
 import {PresentationModeIcon} from "../Components/PresentationModeIcon";
 import {ChatModeIcon} from "../Components/ChatModeIcon";
 import {OpenChatIcon, openChatIconName} from "../Components/OpenChatIcon";
+import {SelectCharacterScene, SelectCharacterSceneName} from "../Login/SelectCharacterScene";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -375,7 +376,13 @@ export class GameScene extends ResizableScene implements CenterListener {
         mediaManager.setUserInputManager(this.userInputManager);
 
         //notify game manager can to create currentUser in map
-        this.createCurrentPlayer();
+        try {
+            this.createCurrentPlayer();
+        }catch (err){
+            //permit to return on character custom if any there any changes frame in the new version
+            gameManager.leaveGame(this, SelectCharacterSceneName, new SelectCharacterScene());
+            throw 'characterLayers are not invalid';
+        }
 
         //initialise camera
         this.initCamera();
@@ -670,8 +677,12 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     public cleanupClosingScene(): void {
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
-        this.connection.closeConnection();
-        this.simplePeer.unregister();
+        if(this.connection) {
+            this.connection.closeConnection();
+        }
+        if(this.simplePeer) {
+            this.simplePeer.unregister();
+        }
     }
 
     private switchLayoutMode(): void {
