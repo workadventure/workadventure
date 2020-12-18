@@ -579,8 +579,8 @@ export class GameScene extends ResizableScene implements CenterListener {
             this.ConsoleGlobalMessageManager = new ConsoleGlobalMessageManager(this.connection, this.userInputManager, this.connection.isAdmin());
 
 
-        this.scene.wake();
-            this.scene.sleep(ReconnectingSceneName);
+            this.scene.wake();
+            this.scene.stop(ReconnectingSceneName);
 
             //init user position and play trigger to check layers properties
             this.gameMap.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
