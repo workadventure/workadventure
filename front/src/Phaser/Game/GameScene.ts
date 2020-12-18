@@ -63,6 +63,8 @@ import {urlManager} from "../../Url/UrlManager";
 import {PresentationModeIcon} from "../Components/PresentationModeIcon";
 import {ChatModeIcon} from "../Components/ChatModeIcon";
 import {OpenChatIcon, openChatIconName} from "../Components/OpenChatIcon";
+import {SelectCharacterScene, SelectCharacterSceneName} from "../Login/SelectCharacterScene";
+import {TextureError} from "../../Exception/TextureError";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -670,8 +672,12 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     public cleanupClosingScene(): void {
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
-        this.connection.closeConnection();
-        this.simplePeer.unregister();
+        if(this.connection) {
+            this.connection.closeConnection();
+        }
+        if(this.simplePeer) {
+            this.simplePeer.unregister();
+        }
     }
 
     private switchLayoutMode(): void {
@@ -818,16 +824,23 @@ export class GameScene extends ResizableScene implements CenterListener {
     createCurrentPlayer(){
         //initialise player
         //TODO create animation moving between exit and start
-        this.CurrentPlayer = new Player(
-            this,
-            this.startX,
-            this.startY,
-            this.playerName,
-            this.characterLayers,
-            PlayerAnimationNames.WalkDown,
-            false,
-            this.userInputManager
-        );
+        try {
+            this.CurrentPlayer = new Player(
+                this,
+                this.startX,
+                this.startY,
+                this.playerName,
+                this.characterLayers,
+                PlayerAnimationNames.WalkDown,
+                false,
+                this.userInputManager
+            );
+        }catch (err){
+            if(err instanceof TextureError) {
+                gameManager.leaveGame(this, SelectCharacterSceneName, new SelectCharacterScene());
+            }
+            throw err;
+        }
 
         //create collision
         this.createCollisionWithPlayer();
