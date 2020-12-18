@@ -26,7 +26,8 @@ services:
       JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
       HOST: "0.0.0.0"
       NODE_ENV: development
-      API_URL: api.workadventure.localhost
+      API_URL: pusher.workadventure.localhost
+      UPLOADER_URL: uploader.workadventure.localhost
       ADMIN_URL: admin.workadventure.localhost
       STARTUP_COMMAND_1: yarn install
       TURN_SERVER: "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443"
@@ -43,6 +44,31 @@ services:
       - "traefik.http.routers.front-ssl.entryPoints=websecure"
       - "traefik.http.routers.front-ssl.tls=true"
       - "traefik.http.routers.front-ssl.service=front"
+
+  pusher:
+    image: thecodingmachine/nodejs:12
+    command: yarn dev
+    #command: yarn run prod
+    #command: yarn run profile
+    environment:
+      DEBUG: "*"
+      STARTUP_COMMAND_1: yarn install
+      SECRET_JITSI_KEY: "$SECRET_JITSI_KEY"
+      SECRET_KEY: yourSecretKey
+      ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
+      API_URL: back:50051
+      JITSI_URL: $JITSI_URL
+      JITSI_ISS: $JITSI_ISS
+    volumes:
+      - ./pusher:/usr/src/app
+    labels:
+      - "traefik.http.routers.pusher.rule=Host(`pusher.workadventure.localhost`)"
+      - "traefik.http.routers.pusher.entryPoints=web"
+      - "traefik.http.services.pusher.loadbalancer.server.port=8080"
+      - "traefik.http.routers.pusher-ssl.rule=Host(`pusher.workadventure.localhost`)"
+      - "traefik.http.routers.pusher-ssl.entryPoints=websecure"
+      - "traefik.http.routers.pusher-ssl.tls=true"
+      - "traefik.http.routers.pusher-ssl.service=pusher"
 
   maps:
     image: thecodingmachine/nodejs:12-apache
@@ -72,6 +98,7 @@ services:
     command: yarn dev
     #command: yarn run profile
     environment:
+      DEBUG: "*"
       STARTUP_COMMAND_1: yarn install
       SECRET_KEY: yourSecretKey
       SECRET_JITSI_KEY: "$SECRET_JITSI_KEY"
@@ -90,6 +117,23 @@ services:
       - "traefik.http.routers.back-ssl.tls=true"
       - "traefik.http.routers.back-ssl.service=back"
 
+  uploader:
+    image: thecodingmachine/nodejs:12
+    command: yarn dev
+    #command: yarn run profile
+    environment:
+      DEBUG: "*"
+      STARTUP_COMMAND_1: yarn install
+    volumes:
+      - ./uploader:/usr/src/app
+    labels:
+      - "traefik.http.routers.uploader.rule=Host(`uploader.workadventure.localhost`)"
+      - "traefik.http.routers.uploader.entryPoints=web"
+      - "traefik.http.services.uploader.loadbalancer.server.port=8080"
+      - "traefik.http.routers.uploader-ssl.rule=Host(`uploader.workadventure.localhost`)"
+      - "traefik.http.routers.uploader-ssl.entryPoints=websecure"
+      - "traefik.http.routers.uploader-ssl.tls=true"
+      - "traefik.http.routers.uploader-ssl.service=uploader"
 
   website:
     image: thecodingmachine/nodejs:12-apache
@@ -109,11 +153,14 @@ services:
       - "traefik.http.routers.website-ssl.service=website"
 
   messages:
+    #image: thecodingmachine/nodejs:14
     image: thecodingmachine/workadventure-back-base:latest
     environment:
+      #STARTUP_COMMAND_0: sudo apt-get install -y inotify-tools
       STARTUP_COMMAND_1: yarn install
       STARTUP_COMMAND_2: yarn run proto:watch
     volumes:
       - ./messages:/usr/src/app
       - ./back:/usr/src/back
       - ./front:/usr/src/front
+      - ./pusher:/usr/src/pusher

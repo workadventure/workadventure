@@ -8,6 +8,7 @@ export const CLASS_CONSOLE_MESSAGE = 'main-console';
 export const INPUT_CONSOLE_MESSAGE = 'input-send-text';
 export const UPLOAD_CONSOLE_MESSAGE = 'input-upload-music';
 export const INPUT_TYPE_CONSOLE = 'input-type';
+export const VIDEO_QUALITY_SELECT = 'select-video-quality';
 
 export const AUDIO_TYPE = 'audio';
 export const MESSAGE_TYPE = 'message';
@@ -19,21 +20,35 @@ interface EventTargetFiles extends EventTarget {
 export class ConsoleGlobalMessageManager {
 
     private readonly divMainConsole: HTMLDivElement;
+    private readonly divMessageConsole: HTMLDivElement;
+    //private readonly divSettingConsole: HTMLDivElement;
     private readonly buttonMainConsole: HTMLDivElement;
     private readonly buttonSendMainConsole: HTMLImageElement;
-    private readonly buttonSettingsMainConsole: HTMLImageElement;
+    //private readonly buttonAdminMainConsole: HTMLImageElement;
+    //private readonly buttonSettingsMainConsole: HTMLImageElement;
     private activeConsole: boolean = false;
+    private activeMessage: boolean = false;
+    private activeSetting: boolean = false;
     private userInputManager!: UserInputManager;
     private static cssLoaded: boolean = false;
 
-    constructor(private Connection: RoomConnection, userInputManager : UserInputManager) {
+    constructor(private Connection: RoomConnection, userInputManager : UserInputManager, private isAdmin: Boolean) {
         this.buttonMainConsole = document.createElement('div');
         this.buttonMainConsole.classList.add('console');
+        this.buttonMainConsole.hidden = true;
         this.divMainConsole = document.createElement('div');
+        this.divMainConsole.className = CLASS_CONSOLE_MESSAGE;
+        this.divMessageConsole = document.createElement('div');
+        this.divMessageConsole.className = 'message';
+        //this.divSettingConsole = document.createElement('div');
+        //this.divSettingConsole.className = 'setting';
         this.buttonSendMainConsole = document.createElement('img');
-        this.buttonSettingsMainConsole = document.createElement('img');
+        this.buttonSendMainConsole.id = 'btn-send-message';
+        //this.buttonSettingsMainConsole = document.createElement('img');
+        //this.buttonAdminMainConsole = document.createElement('img');
         this.userInputManager = userInputManager;
         this.initialise();
+        
     }
 
     initialise() {
@@ -78,35 +93,44 @@ export class ConsoleGlobalMessageManager {
         });
         menu.appendChild(textMessage);
         menu.appendChild(textAudio);
-        this.divMainConsole.appendChild(menu);
+        this.divMessageConsole.appendChild(menu);
 
         this.buttonSendMainConsole.src = 'resources/logos/send-yellow.svg';
         this.buttonSendMainConsole.addEventListener('click', () => {
-            if(this.activeConsole){
-                this.disabled();
+            if(this.activeMessage){
+                this.disabledMessageConsole();
             }else{
-                this.buttonSendMainConsole.classList.add('active');
-                this.active();
+                this.activeMessageConsole();
             }
         });
-        this.buttonMainConsole.appendChild(this.buttonSendMainConsole);
 
-        this.buttonSettingsMainConsole.src = 'resources/logos/setting-yellow.svg';
-        this.buttonSettingsMainConsole.addEventListener('click', () => {
+        /*this.buttonAdminMainConsole.src = 'resources/logos/setting-yellow.svg';
+        this.buttonAdminMainConsole.addEventListener('click', () => {
             window.open(ADMIN_URL, '_blank');
-        });
-        this.buttonMainConsole.appendChild(this.buttonSettingsMainConsole);
+        });*/
 
-        /*const buttonText = document.createElement('p');
-        buttonText.innerText = 'Console';
-        this.buttonMainConsole.appendChild(buttonText);*/
+        /*this.buttonSettingsMainConsole.src = 'resources/logos/monitor-yellow.svg';
+        this.buttonSettingsMainConsole.addEventListener('click', () => {
+            if(this.activeSetting){
+                this.disabledSettingConsole();
+            }else{
+                this.activeSettingConsole();
+            }
+        });*/
 
-        this.divMainConsole.className = CLASS_CONSOLE_MESSAGE;
-        this.divMainConsole.appendChild(this.buttonMainConsole);
-        this.divMainConsole.appendChild(typeConsole);
+        this.divMessageConsole.appendChild(typeConsole);
 
+        /*if(this.isAdmin) {
+            this.buttonMainConsole.appendChild(this.buttonSendMainConsole);
+            //this.buttonMainConsole.appendChild(this.buttonAdminMainConsole);
+        }*/
         this.createTextMessagePart();
         this.createUploadAudioPart();
+        //this.buttonMainConsole.appendChild(this.buttonSettingsMainConsole);
+
+        this.divMainConsole.appendChild(this.buttonMainConsole);
+        this.divMainConsole.appendChild(this.divMessageConsole);
+        //this.divMainConsole.appendChild(this.divSettingConsole);
 
         const mainSectionDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-container');
         mainSectionDiv.appendChild(this.divMainConsole);
@@ -120,7 +144,7 @@ export class ConsoleGlobalMessageManager {
         buttonSend.classList.add('btn');
         buttonSend.addEventListener('click', (event: MouseEvent) => {
             this.sendMessage();
-            this.disabled();
+            this.disabledMessageConsole();
         });
         const buttonDiv = document.createElement('div');
         buttonDiv.classList.add('btn-action');
@@ -131,7 +155,7 @@ export class ConsoleGlobalMessageManager {
         section.classList.add('active');
         section.appendChild(div);
         section.appendChild(buttonDiv);
-        this.divMainConsole.appendChild(section);
+        this.divMessageConsole.appendChild(section);
 
         (async () => {
             // Start loading CSS
@@ -171,27 +195,6 @@ export class ConsoleGlobalMessageManager {
                 },
             });
         })();
-    }
-
-    private static loadCss(): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            if (ConsoleGlobalMessageManager.cssLoaded) {
-                resolve();
-                return;
-            }
-            const fileref = document.createElement("link")
-            fileref.setAttribute("rel", "stylesheet")
-            fileref.setAttribute("type", "text/css")
-            fileref.setAttribute("href", "https://cdn.quilljs.com/1.3.7/quill.snow.css");
-            document.getElementsByTagName("head")[0].appendChild(fileref);
-            ConsoleGlobalMessageManager.cssLoaded = true;
-            fileref.onload = () => {
-                resolve();
-            }
-            fileref.onerror = () => {
-                reject();
-            }
-        });
     }
 
     createUploadAudioPart(){
@@ -243,7 +246,7 @@ export class ConsoleGlobalMessageManager {
         buttonSend.classList.add('btn');
         buttonSend.addEventListener('click', (event: MouseEvent) => {
             this.sendMessage();
-            this.disabled();
+            this.disabledMessageConsole();
         });
         const buttonDiv = document.createElement('div');
         buttonDiv.classList.add('btn-action');
@@ -253,7 +256,28 @@ export class ConsoleGlobalMessageManager {
         section.id = this.getSectionId(UPLOAD_CONSOLE_MESSAGE);
         section.appendChild(div);
         section.appendChild(buttonDiv);
-        this.divMainConsole.appendChild(section);
+        this.divMessageConsole.appendChild(section);
+    }
+
+    private static loadCss(): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if (ConsoleGlobalMessageManager.cssLoaded) {
+                resolve();
+                return;
+            }
+            const fileref = document.createElement("link")
+            fileref.setAttribute("rel", "stylesheet")
+            fileref.setAttribute("type", "text/css")
+            fileref.setAttribute("href", "https://cdn.quilljs.com/1.3.7/quill.snow.css");
+            document.getElementsByTagName("head")[0].appendChild(fileref);
+            ConsoleGlobalMessageManager.cssLoaded = true;
+            fileref.onload = () => {
+                resolve();
+            }
+            fileref.onerror = () => {
+                reject();
+            }
+        });
     }
 
     sendMessage(){
@@ -309,17 +333,61 @@ export class ConsoleGlobalMessageManager {
 
     active(){
         this.userInputManager.clearAllInputKeyboard();
-        this.activeConsole = true;
         this.divMainConsole.style.top = '0';
-        this.buttonSendMainConsole.classList.add('active');
+        this.activeConsole = true;
     }
 
     disabled(){
         this.userInputManager.initKeyBoardEvent();
         this.activeConsole = false;
         this.divMainConsole.style.top = '-80%';
+    }
+
+    activeMessageConsole(){
+        if(!this.isAdmin){
+            throw "User is not admin";
+        }
+        if(this.activeMessage){
+            this.disabledMessageConsole();
+            return;
+        }
+        this.activeMessage = true;
+        this.active();
+        this.divMessageConsole.classList.add('active');
+        this.buttonMainConsole.hidden = false;
+        this.buttonSendMainConsole.classList.add('active');
+        //if button not
+        try{
+            HtmlUtils.getElementByIdOrFail('btn-send-message');
+        }catch (e) {
+            this.buttonMainConsole.appendChild(this.buttonSendMainConsole);
+        }
+    }
+
+    disabledMessageConsole(){
+        this.activeMessage = false;
+        this.disabled();
+        this.buttonMainConsole.hidden = true;
+        this.divMessageConsole.classList.remove('active');
         this.buttonSendMainConsole.classList.remove('active');
     }
+
+    /*activeSettingConsole(){
+        this.activeSetting = true;
+        if(this.activeMessage){
+            this.disabledSettingConsole();
+        }
+        this.active();
+        this.divSettingConsole.classList.add('active');
+        //this.buttonSettingsMainConsole.classList.add('active');
+    }
+
+    disabledSettingConsole(){
+        this.activeSetting = false;
+        this.disabled();
+        this.divSettingConsole.classList.remove('active');
+        //this.buttonSettingsMainConsole.classList.remove('active');
+    }*/
 
     private getSectionId(id: string) : string {
         return `section-${id}`;

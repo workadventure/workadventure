@@ -1,0 +1,89 @@
+<style>
+    *{
+        font-family: 'Open Sans', sans-serif;
+        cursor: url('/resources/logos/cursor_normal.png'), auto;
+    }
+    * a, button, select{
+        cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    }
+    #gameQuality {
+        background: #eceeee;
+        border: 1px solid #42464b;
+        border-radius: 6px;
+        height: 257px;
+        margin: 20px auto 0;
+        width: 298px;
+    }
+    #gameQuality .cautiousText {
+        font-size: 50%;
+    }
+    #gameQuality h1 {
+        background-image: linear-gradient(top, #f1f3f3, #d4dae0);
+        border-bottom: 1px solid #a6abaf;
+        border-radius: 6px 6px 0 0;
+        box-sizing: border-box;
+        color: #727678;
+        display: block;
+        height: 43px;
+        padding-top: 10px;
+        margin: 0;
+        text-align: center;
+        text-shadow: 0 -1px 0 rgba(0,0,0,0.2), 0 1px 0 #fff;
+    }
+    #gameQuality select {
+        font-size: 70%;
+        background: linear-gradient(top, #d6d7d7, #dee0e0);
+        border: 1px solid #a1a3a3;
+        border-radius: 4px;
+        box-shadow: 0 1px #fff;
+        box-sizing: border-box;
+        color: #696969;
+        height: 30px;
+        transition: box-shadow 0.3s;
+        width: 240px;
+    }
+    #gameQuality section {
+        margin: 10px;
+    }
+    #gameQuality section.action{
+        text-align: center;
+    }
+    #gameQuality button {
+        margin-top: 10px;
+        background-color: black;
+        color: white;
+        border-radius: 7px;
+        padding-bottom: 4px;
+        width: 60px;
+    }
+    #gameQuality button#gameQualityFormCancel {
+        background-color: #c7c7c700;
+        color: #292929;
+    }
+</style>
+
+<form id="gameQuality" hidden>
+    <section>
+        <h3>Game quality</h3>
+        <p class="cautiousText">(Editing these settings will restart the game)</p>
+        <select id="select-game-quality">
+            <option value="120">High video quality (120 fps)</option>
+            <option value="60">Medium video quality (60 fps, recommended)</option>
+            <option value="40">Minimum video quality (40 fps)</option>
+            <option value="20">Small video quality (20 fps)</option>
+        </select>
+    </section>
+    <section>
+        <h3>Video quality</h3>
+        <select id="select-video-quality">
+            <option value="30">High video quality (30 fps)</option>
+            <option value="20">Medium video quality (20 fps, recommended)</option>
+            <option value="10">Minimum video quality (10 fps)</option>
+            <option value="5">Small video quality (5 fps)</option>
+        </select>
+    </section>
+    <section class="action">
+        <button type="submit" id="gameQualityFormSubmit">Save</button>
+        <button type="reset" class="close" id="gameQualityFormCancel">Cancel</button>
+    </section>
+</form>

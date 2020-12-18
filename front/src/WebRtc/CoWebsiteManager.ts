@@ -47,6 +47,11 @@ class CoWebsiteManager {
         this.cowebsiteDiv.innerHTML = `<button class="close-btn" id="cowebsite-close">
                     <img src="resources/logos/close.svg">
                 </button>`;
+        setTimeout(() => {
+            HtmlUtils.getElementByIdOrFail('cowebsite-close').addEventListener('click', () => {
+                this.closeCoWebsite();
+            });
+        }, 100);
 
         const iframe = document.createElement('iframe');
         iframe.id = 'cowebsite-iframe';

@@ -1,5 +1,9 @@
 *{
     font-family: 'Open Sans', sans-serif;
+    cursor: url('/resources/logos/cursor_normal.png'), auto;
+}
+* a, button, select{
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
 }
 body{
     overflow: hidden;
@@ -74,6 +78,10 @@ body .message-info.warning{
     height: 100%;
 }
 
+.video-container video:focus{
+    outline: none;
+}
+
 .video-container#div-myCamVideo{
     border: none;
 }
@@ -104,7 +112,7 @@ video#myCamVideo{
 }
 /*btn animation*/
 .btn-cam-action div{
-    cursor: pointer;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
     position: absolute;
     border: solid 0px black;
     width: 44px;
@@ -152,6 +160,7 @@ video#myCamVideo{
     top: calc(48px - 37px);
     left: calc(48px - 41px);
     position: relative;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
 }
 
 /* Spinner */
@@ -291,7 +300,7 @@ body {
         right: -100px;
         background: none;
         border: none;
-        cursor: pointer;
+        cursor: url('/resources/logos/cursor_pointer.png'), pointer;
         animation: right .2s ease;
     }
     #cowebsite .close-btn img{
@@ -381,7 +390,7 @@ body {
     margin: 2%;
     flex-basis: 96%;
     transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s, flex-basis 0.2s;
-    cursor: pointer;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
     /*flex-shrink: 2;*/
 }
 
@@ -398,7 +407,7 @@ body {
 .sidebar > div {
     margin: 2%;
     transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s, max-height 0.2s, max-width 0.2s;
-    cursor: pointer;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
     border-radius: 15px 15px 15px 15px;
 }
 
@@ -429,7 +438,7 @@ body {
     margin: 1%;
     max-height: 96%;
     transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s;
-    cursor: pointer;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
 }
 
 .chat-mode > div:hover {
@@ -455,6 +464,8 @@ body {
     flex-grow: 5;
 }
 
+/*CONSOLE*/
+
 .message-container,
 .main-console{
     position: absolute;
@@ -463,10 +474,12 @@ body {
     min-height: 200px;
     max-height: 80%;
     top: -80%;
-    left: 10%;
+    /*left: 10%;*/
+    left: 250px;
     background: #333333;
     z-index: 200;
     transition: all 0.1s ease-out;
+    border-radius: 0 0 15px 15px;
 }
 
 .message-container{
@@ -499,6 +512,16 @@ body {
     text-align: center;
 }
 
+.main-console div.message,
+.main-console div.setting{
+    display: none;
+}
+
+.main-console div.message.active,
+.main-console div.setting.active{
+    display: block;
+}
+
 .message-container div.clear{
     width: 100px;
     left: calc(50% - 50px);
@@ -509,7 +532,7 @@ body {
     margin-top: 6px;
     width: 30px;
     height: 30px;
-    cursor: pointer;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
     padding: 0 5px;
     transition: all .5s ease;
     transform: rotateY(0);
@@ -533,7 +556,7 @@ body {
 
 .main-console div.console:hover,
 .message-container div.clear:hover {
-    cursor: pointer;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
     top: calc(100% + 5px);
     transform: scale(1.2) translateY(3px);
 }
@@ -566,7 +589,7 @@ body {
     transition: all .2s ease;
 }
 .main-console .btn-action .btn:hover{
-    cursor: pointer;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
     background-color: #ffda01;
     color: black;
     border: 1px solid black;
@@ -581,7 +604,7 @@ body {
 
 .main-console .menu span {
     margin: 20px;
-    cursor: pointer;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
 }
 
 .main-console .menu span.active {
@@ -615,11 +638,13 @@ body {
 }
 .main-console section div.upload label img{
     height: 150px;
-    cursor: pointer;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
 }
 .main-console section div.upload label img{
-    cursor: pointer;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
 }
+
+
 
 /*audio html when audio message playing*/
 .main-container .audio-playing {
@@ -647,6 +672,28 @@ body {
     color: white;
     margin-left: 10px;
 }
+
+/* VIDEO QUALITY */
+.main-console div.setting h1{
+    color: white;
+}
+.main-console div.setting select{
+    background: black;
+    color: white;
+    min-width: 280px;
+    text-align: center;
+    min-height: 40px;
+    padding: 10px;
+    border-radius: 15px;
+}
+.main-console div.setting select:focus{
+    border: solid 1px white;
+    outline: none;
+}
+.main-console div.setting.active section{
+    display: block;
+}
+
 
 /*REPORT input*/
 div.modal-report-user{
@@ -686,7 +733,7 @@ div.modal-report-user{
     right: 0;
     left: auto;
     top: 0;
-    cursor: pointer;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
     width: 15px;
     height: 15px;
     margin: 10px;
@@ -705,7 +752,7 @@ div.modal-report-user{
     transition: all .2s ease;
 }
 .modal-report-user button:hover{
-    cursor: pointer;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
     background-color: #ffda01;
     color: black;
     border: 1px solid black;
@@ -748,7 +795,7 @@ div.modal-report-user{
 }
 .discussion .active-btn{
     display: none;
-    cursor: pointer;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
     height: 50px;
     width: 50px;
     background-color: #2d2d2dba;
@@ -777,7 +824,7 @@ div.modal-report-user{
     right: 10px;
     background: none;
     border: none;
-    cursor: pointer;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
 }
 .discussion .close-btn img{
     height: 15px;
@@ -802,7 +849,7 @@ div.modal-report-user{
     background-color: #ffffff69;
     padding: 5px;
     border-radius: 15px;
-    cursor: pointer;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
 }
 
 .discussion .participants .participant:hover{
@@ -835,7 +882,7 @@ div.modal-report-user{
 }
 
 .discussion .participants .participant button.report-btn{
-    cursor: pointer;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
     position: absolute;
     background-color: #2d2d2dba;
     right: 34px;

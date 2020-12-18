@@ -1,10 +1,10 @@
 import {ADMIN_API_TOKEN} from "../Enum/EnvironmentVariable";
-import {IoSocketController} from "_Controller/IoSocketController";
 import {stringify} from "circular-json";
 import {HttpRequest, HttpResponse} from "uWebSockets.js";
 import { parse } from 'query-string';
 import {App} from "../Server/sifrr.server";
 import {socketManager} from "../Services/SocketManager";
+import {ServerWritableStream} from "grpc";
 
 export class DebugController {
     constructor(private App : App) {
@@ -23,6 +23,15 @@ export class DebugController {
             return res.writeStatus('200 OK').writeHeader('Content-Type', 'application/json').end(stringify(
                 socketManager.getWorlds(),
                 (key: unknown, value: unknown) => {
+                    if (key === 'listeners') {
+                        return 'Listeners';
+                    }
+                    if (key === 'socket') {
+                        return 'Socket';
+                    }
+                    if (key === 'batchedMessages') {
+                        return 'BatchedMessages';
+                    }
                     if(value instanceof Map) {
                         const obj: any = {}; // eslint-disable-line @typescript-eslint/no-explicit-any
                         for (const [mapKey, mapValue] of value.entries()) {

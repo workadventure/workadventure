@@ -11,7 +11,7 @@ class ClientEventsEmitter extends EventEmitter {
     emitClientLeave(clientUUid: string, roomId: string): void {
         this.emit(clientLeaveEvent, clientUUid, roomId);
     }
-    
+
     registerToClientJoin(callback: (clientUUid: string, roomId: string) => void): void {
         this.on(clientJoinEvent, callback);
     }

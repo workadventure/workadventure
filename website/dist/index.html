@@ -54,8 +54,12 @@
     <link rel="stylesheet" href="main.css">
     <script src="bundle.js"></script>
     <script>
+        function startDemo() {
+            let playUrl = window.location.protocol + "//play."+window.location.host+'/_/global/gparant.github.io/tcm-client/Demo/demo-v1.json';
+            window.open(playUrl, '_blank');
+        }
         function startGame() {
-            let playUrl = window.location.protocol + "//play."+window.location.host+"/_/global/npeguin.github.io/office-map/map.json";
+            let playUrl = window.location.protocol + "//play."+window.location.host+'/_/global/npeguin.github.io/office-map/map.json';
             window.open(playUrl, '_blank');
         }
 		function shareFB() {
@@ -109,13 +113,13 @@
                         Stay connected with your clients by providing a dedicated digital place to organize meetings, workshops.
                     </h3>
                     <h3>
-                        Stay connected with your future collaborators by organizing online event.
+                        Engage with your future collaborators by organizing online events.
                     </h3>
                 </div>
                 <div class="row buttons-row justify-content-md-center pt-5">
                     <div class="col col-lg-3">
                         <a class="custom-link start" href="/choose-map.html" title="WORK IN PRIVATE">
-                            WORK IN PRIVATE
+                            PRIVATE MAPS
                         </a>
                     </div>
                     <div class="col col-lg-3">
@@ -124,6 +128,27 @@
                         </a>
                     </div>
                 </div>
+                <!--<div class="row buttons-row justify-content-md-center pt-5"
+                     style="min-height: 80px;">
+                    <div class="col  col-lg-3">
+                        <a class="custom-link start"
+                           href="/choose-map.html">
+                            CREATE YOUR MAP
+                        </a>
+                    </div>
+                    <div class="col col-lg-3">
+                        <a class="custom-link play" onclick="startDemo()">
+                            TUTORIAL
+                        </a>
+                    </div>
+                </div>
+                <div style="min-height: 100px" class="row buttons-row justify-content-md-center pt-5">
+                    <div class="col col-lg-3">
+                        <a class="custom-link contribute" onclick="startGame()">
+                            DEMO
+                        </a>
+                    </div>
+                </div>-->
             </div>
         </div>
         <div class="clouds clouds-2">
@@ -169,9 +194,9 @@
             <div>
                 <p>Remote work? Friend party? Use WorkAdventure as you prefer.</p>
                 <p>Click the button below to come and say hi!</p>
-                <p class="bubble-action"><span onclick="startGame()">
+                <p class="bubble-action"><span onclick="startDemo()">
                     <img src="static/images/playicon.png" />
-                    TRY IT NOW !
+                    DEMO!
                 </span></p>
             </div>
         </div>
@@ -324,7 +349,7 @@
             <div class="row mt-5">
                 <div class="col-lg-9 text-right">
                     <p class="py-3 font-weight-bold" style="font-size: 1.25rem">
-                        Want to try Woradventure with your team mates or friends?
+                        Want to try WorkAdventure with your team mates or friends?
                     </p>
                 </div>
                 <div class="col-lg-3">
@@ -334,7 +359,7 @@
                 </div>
             </div>
             <div class="social-links text-center pt-2 pb-4">
-                <span class="share-title">... and if you liked woradventure, share your experience!</span>
+                <span class="share-title">... and if you liked WorkAdventure, share your experience!</span>
                 <a onclick="shareFB()">
                     <img class="social-image" src="static/images/facebook.png" />
                 </a>

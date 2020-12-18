@@ -73,9 +73,9 @@
                 <p>Be sure to keep the repository &quot;Public&quot;.</p>
                 <p>In your newly created repository, click on the <strong>Settings tab</strong> and scroll down to the <strong>GitHub Pages</strong> section.
                     Then select the <strong>gh-pages</strong> branch. It might already be selected, but please be sure to click on it nonetheless (otherwise
-                    GitHub will not enable GitHub pages that we use to host your map.</p>
+                    GitHub will not enable GitHub pages).</p>
                 <p class="text-center"><img src="docs/github_pages.png" alt="" style="width: 70%"></p>
-                <p>Wait a few minutes a Github will deploy a new website with the content of the repository.
+                <p>Wait a few minutes... Github will deploy a new website with the content of the repository.
                     The address of the website is visible in the &quot;GitHub Pages&quot; section.</p>
                 <p class="text-center"><img src="docs/website_address.png" alt="" style="width: 70%"></p>
                 <p>Click on the link. You should be redirected directly to WorkAdventure, on your map!</p>
@@ -124,6 +124,31 @@
                 </ul>
                 <p class="text-center"><img src="docs/tiled_screenshot_1.png" alt="" style="width: 70%"></p>
 
+                <h3 id="building-walls" class="pixel-title">Building walls and "collidable" areas</h3>
+                <p>By default, the characters can traverse any tiles. If you want to prevent your characeter from
+                    going through a tile (like a wall or a desktop), you must make this tile "collidable". You can do
+                    this by settings the <code>collides</code> property on a given tile.</p>
+
+                <p>To make a tile "collidable", you should:</p>
+
+                <ol>
+                    <li>select the relevant tileset and switch to "edit" mode:<br/>
+                        <img src="docs/collides-1.png" alt="">
+                    </li>
+                    <li>right click on a tile of the tileset to select it:<br/>
+                        <img src="docs/collides-2.png" alt="">
+                    </li>
+                    <li>on the left pane in the custom properties section, right click and select "Add properties":<br/>
+                        <img src="docs/collides-3.png" alt=""><br/>
+                        Please add a <code>collides</code> property. The type of the property must be <strong>bool</strong>.
+                    </li>
+                    <li>finally, check the checkbox for the <code>collides</code> property:<br/>
+                        <img src="docs/collides-4.png" alt="">
+                    </li>
+                </ol>
+
+                <p>Repeat for every tile that should be "collidable".</p>
+
                 <h3 id="defining-a-default-entry-point" class="pixel-title">Defining a default entry point</h3>
                 <p>In order to define a default start position, you MUST create a layer named &quot;start&quot; on your map.
                     This layer MUST contain at least one tile. The players will start on the tile of this layer.
@@ -135,13 +160,12 @@
                 not visible to the end user because they are hidden below the "bottom" layer that displays the floor
                 of the map.</p>
 
-
                 <h3 id="defining-exits" class="pixel-title">Defining exits</h3>
                 <p>In order to place an exit on your scene that leads to another scene:</p>
                 <ul>
                     <li>You must create a specific layer. When a character reaches ANY tile of that layer, it will exit the scene.</li>
                     <li>In layer properties, you MUST add "exitUrl&quot; property. It represents the URL of the next scene. You can put relative or absolute URLs.</li>
-                    <li>If you want to have multiple exits, you can create many layers with name &quot;exit&quot;. Each layer has a different key <code>exitSceneUrl</code> and have tiles that represent exits to another scene.</li>
+                    <li>If you want to have multiple exits, you can create many layers with name &quot;exit&quot;. Each layer has a different key <code>exitUrl</code> and have tiles that represent exits to another scene.</li>
                 </ul>
                 <p>
                     <strong>Understanding map URLs in WorkAdventure:</strong><br/>
@@ -185,7 +209,7 @@
                 <p>In order to create Jitsi meet zones:</p>
                 <ul>
                     <li>You must create a specific layer.</li>
-                    <li>In layer properties, you MUST add a boolean &quot;jitsiRoom&quot; property (of type "string"). The value of the property is the name of the room in Jitsi. Note: the name of the room will be prepended with the name of the instance of the map (so that different instances of the map have different rooms)</li>
+                    <li>In layer properties, you MUST add a &quot;jitsiRoom&quot; property (of type "string"). The value of the property is the name of the room in Jitsi. Note: the name of the room will be prepended with the name of the instance of the map (so that different instances of the map have different rooms)</li>
                 </ul>
 
                 <h3 id="making-a-silent-zone" class="pixel-title">Making a "silent" zone</h3>

@@ -13,6 +13,8 @@ import {CustomizeScene} from "./Phaser/Login/CustomizeScene";
 import {ResizableScene} from "./Phaser/Login/ResizableScene";
 import {EntryScene} from "./Phaser/Login/EntryScene";
 import {coWebsiteManager} from "./WebRtc/CoWebsiteManager";
+import {MenuScene} from "./Phaser/Menu/MenuScene";
+import {localUserStore} from "./Connexion/LocalUserStore";
 
 // Load Jitsi if the environment variable is set.
 if (JITSI_URL) {
@@ -23,17 +25,50 @@ if (JITSI_URL) {
 
 const {width, height} = coWebsiteManager.getGameSize();
 
+const valueGameQuality = localUserStore.getGameQualityValue();
+const fps : Phaser.Types.Core.FPSConfig = {
+    /**
+     * The minimum acceptable rendering rate, in frames per second.
+     */
+    min: valueGameQuality,
+    /**
+     * The optimum rendering rate, in frames per second.
+     */
+    target: valueGameQuality,
+    /**
+     * Use setTimeout instead of requestAnimationFrame to run the game loop.
+     */
+    forceSetTimeOut: true,
+    /**
+     * Calculate the average frame delta from this many consecutive frame intervals.
+     */
+    deltaHistory: 120,
+    /**
+     * The amount of frames the time step counts before we trust the delta values again.
+     */
+    panicMax: 20,
+    /**
+     * Apply delta smoothing during the game update to help avoid spikes?
+     */
+    smoothStep: false
+}
+
 const config: GameConfig = {
+    type: Phaser.AUTO,
     title: "WorkAdventure",
     width: width / RESOLUTION,
     height: height / RESOLUTION,
     parent: "game",
-    scene: [EntryScene, LoginScene, SelectCharacterScene, EnableCameraScene, ReconnectingScene, FourOFourScene, CustomizeScene],
+    scene: [EntryScene, LoginScene, SelectCharacterScene, EnableCameraScene, ReconnectingScene, FourOFourScene, CustomizeScene, MenuScene],
     zoom: RESOLUTION,
+    fps: fps,
+    dom: {
+        createContainer: true
+    },
     physics: {
         default: "arcade",
         arcade: {
-            debug: DEBUG_MODE
+            debug: DEBUG_MODE,
         }
     },
     callbacks: {
@@ -60,6 +95,7 @@ window.addEventListener('resize', function (event) {
         }
     }
 });
+
 coWebsiteManager.onStateChange(() => {
     const {width, height} = coWebsiteManager.getGameSize();
     game.scale.resize(width / RESOLUTION, height / RESOLUTION);
