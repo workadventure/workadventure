@@ -838,8 +838,8 @@ export class GameScene extends ResizableScene implements CenterListener {
         }catch (err){
             if(err instanceof TextureError) {
                 gameManager.leaveGame(this, SelectCharacterSceneName, new SelectCharacterScene());
-                throw err;
             }
+            throw err;
         }
 
         //create collision
