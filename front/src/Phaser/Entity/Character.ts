@@ -3,6 +3,7 @@ import {SpeechBubble} from "./SpeechBubble";
 import BitmapText = Phaser.GameObjects.BitmapText;
 import Container = Phaser.GameObjects.Container;
 import Sprite = Phaser.GameObjects.Sprite;
+import {TextureError} from "../../Exception/TextureError";
 
 export interface PlayerResourceDescriptionInterface {
     name: string,
@@ -94,6 +95,9 @@ export abstract class Character extends Container {
 
     public addTextures(textures: string[], frame?: string | number): void {
         for (const texture of textures) {
+            if(!this.scene.textures.exists(texture)){
+                throw new TextureError('texture not found');
+            }
             const sprite = new Sprite(this.scene, 0, 0, texture, frame);
             sprite.setInteractive({useHandCursor: true});
             this.add(sprite);
@@ -154,10 +158,7 @@ export abstract class Character extends Container {
             if (moving && (!sprite.anims.currentAnim || sprite.anims.currentAnim.key !== direction)) {
                 sprite.play(texture+'-'+direction, true);
             } else if (!moving) {
-                /*if (this.anims.currentAnim) {
-                    this.anims.stop();
-                }*/
-                sprite.play(texture+'-'+direction, true);
+                sprite.anims.play(texture + '-' + direction, true);
                 sprite.anims.stop();
             }
         }
