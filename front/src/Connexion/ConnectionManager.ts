@@ -4,15 +4,24 @@ import {RoomConnection} from "./RoomConnection";
 import {OnConnectInterface, PositionInterface, ViewportInterface} from "./ConnexionModels";
 import {GameConnexionTypes, urlManager} from "../Url/UrlManager";
 import {localUserStore} from "./LocalUserStore";
-import {LocalUser} from "./LocalUser";
+import {ConnectedUser, LocalUser} from "./LocalUser";
 import {Room} from "./Room";
+import {NotConnectedError} from "../Exception/NotConnectedError";
+import {ErrorConnectedError} from "../Exception/ErrorConnectedError";
 
 const URL_ROOM_STARTED = '/Floor0/floor0.json';
 
 class ConnectionManager {
     private localUser!:LocalUser;
 
-    private connexionType?: GameConnexionTypes
+    private connexionType?: GameConnexionTypes;
+
+    private connectedUser?: ConnectedUser|null;
+
+    constructor() {
+        this.verifyLoggedUser();
+    }
+
     /**
      * Tries to login to the node server and return the starting map url to be loaded
      */
@@ -108,6 +117,47 @@ class ConnectionManager {
 
     get getConnexionType(){
         return this.connexionType;
+    }
+
+    public verifyLoggedUser(){
+        //Verify spark session
+        Axios.get('http://admin.workadventure.localhost/user/connected').then((res) => {
+            console.log('res', res);
+            Axios.get('http://admin.workadventure.localhost/notifications/recent').then((res) => {
+               this.connectedUser = res.data;
+            }).catch((err) => {
+                console.error(err);
+                this.connectedUser = null;
+                throw new ErrorConnectedError('Error to get user element');
+            });
+        }).catch((err) => {
+            if(err instanceof ErrorConnectedError) {
+                throw err;
+            }
+            console.log('err', err);
+            this.connectedUser = null;
+            throw new NotConnectedError('User not connected');
+        });
+    }
+
+    /**
+     * RegisterUser
+     *
+     * @param name
+     * @param email
+     * @param password
+     * @param confirmPassword
+     */
+    public registerUser(name: string, email: string, password: string, confirmPassword: string){
+        Axios.get('http://admin.workadventure.localhost/member/register')
+            .then((res) => {
+                this.connectedUser = res.data;
+            })
+            .catch((err) => {
+                this.connectedUser = null;
+                console.log(err);
+                throw err;
+            })
     }
 }
 

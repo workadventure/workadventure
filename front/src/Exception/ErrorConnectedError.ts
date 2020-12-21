@@ -1,0 +1,1 @@
+export class ErrorConnectedError extends Error{}
