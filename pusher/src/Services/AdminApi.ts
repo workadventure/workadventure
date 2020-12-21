@@ -110,6 +110,61 @@ class AdminApi {
                 headers: {"Authorization": `${ADMIN_API_TOKEN}`}
             });
     }
+
+    /**
+     *
+     * @param email
+     * @param password
+     */
+    loginUser(email: string, password: string) {
+        console.log('email', email);
+        console.log('password', password);
+        return Axios.post(`${ADMIN_API_URL}/api/user/login`, {
+                email,
+                password,
+            },
+            {
+                headers: {"Authorization": `${ADMIN_API_TOKEN}`}
+            });
+    }
+
+    /**
+     *
+     * @param name
+     * @param email
+     * @param password
+     */
+    register(
+        name: string,
+        email: string,
+        password: string,
+    ) {
+        return Axios.post(`${ADMIN_API_URL}/api/user/register`, {
+                name,
+                email,
+                password,
+            },
+            {
+                headers: {"Authorization": `${ADMIN_API_TOKEN}`}
+            });
+    }
+
+    /**
+     *
+     * @param name
+     * @param email
+     * @param password
+     */
+    forgotPassword(
+        email: string
+    ) {
+        return Axios.post(`${ADMIN_API_URL}/api/user/password/reset`, {
+                email
+            },
+            {
+                headers: {"Authorization": `${ADMIN_API_TOKEN}`}
+            });
+    }
 }
 
 export const adminApi = new AdminApi();

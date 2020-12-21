@@ -4,6 +4,7 @@ import {gameManager} from "../Game/GameManager";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {mediaManager} from "../../WebRtc/MediaManager";
 import {coWebsiteManager} from "../../WebRtc/CoWebsiteManager";
+import {connectionManager} from "../../Connexion/ConnectionManager";
 
 export const MenuSceneName = 'MenuScene';
 const gameMenuKey = 'gameMenu';
@@ -144,6 +145,7 @@ export class MenuScene extends Phaser.Scene {
 
     openSideMenu() {
         if (this.sideMenuOpened) return;
+        this.closeAll();
         this.sideMenuOpened = true;
         this.menuButton.getChildByID('openMenuButton').innerHTML = 'X';
         if (gameManager.getCurrentGameScene(this).connection && gameManager.getCurrentGameScene(this).connection.isAdmin()) {
@@ -161,12 +163,7 @@ export class MenuScene extends Phaser.Scene {
     private closeSideMenu(): void {
         if (!this.sideMenuOpened) return;
         this.sideMenuOpened = false;
-        this.closeGameQualityMenu();
-        this.closeGameForgotPassword();
-        this.closeGameLogin();
-        this.closeGameRegister();
-        this.closeGameShare();
-        this.menuButton.getChildByID('openMenuButton').innerHTML = `<img src="/static/images/menu.svg">`;
+        this.closeAll();
         gameManager.getCurrentGameScene(this).ConsoleGlobalMessageManager.disabledMessageConsole();
         this.tweens.add({
             targets: this.menuElement,
@@ -176,13 +173,13 @@ export class MenuScene extends Phaser.Scene {
         });
     }
 
-
-
     private openGameSettingsMenu(): void {
         if (this.settingsMenuOpened) {
-            this.closeGameQualityMenu();
             return;
         }
+        //close all
+        this.closeAll();
+
         this.settingsMenuOpened = true;
 
         const gameQualitySelect = this.gameQualityMenuElement.getChildByID('select-game-quality') as HTMLInputElement;
@@ -233,12 +230,11 @@ export class MenuScene extends Phaser.Scene {
     }
 
     private openGameLogin(): void{
-        this.closeGameRegister();
-        this.closeGameForgotPassword();
         if (this.gameLoginMenuOpened) {
             this.closeGameLogin();
             return;
         }
+        this.closeAll();
         this.gameLoginMenuOpened = true;
 
         let middleY = (window.innerHeight / 3) - (257);
@@ -273,6 +269,8 @@ export class MenuScene extends Phaser.Scene {
             this.closeGameShare();
             return;
         }
+        //close all
+        this.closeAll();
 
         const gameShareLink = this.gameShareElement.getChildByID('gameShareLink') as HTMLInputElement;
         gameShareLink.value = location.toString();
@@ -313,7 +311,7 @@ export class MenuScene extends Phaser.Scene {
         let errorForm = false;
         const gameLoginEmail = this.gameLoginElement.getChildByID('gameLoginEmail') as HTMLInputElement;
         const gameLoginPassword = this.gameLoginElement.getChildByID('gameLoginPassword') as HTMLInputElement;
-        const gameLoginError = this.gameLoginElement.getChildByID('gameLoginError') as HTMLInputElement;
+        const gameLoginError = this.gameLoginElement.getChildByID('gameLoginError') as HTMLParagraphElement;
 
         gameLoginError.innerText = '';
         gameLoginError.style.display = 'none';
@@ -337,7 +335,15 @@ export class MenuScene extends Phaser.Scene {
         gameLoginError.innerText = 'Login or password incorrect';
         gameLoginError.style.display = 'block';
         //TODO login user in back
+
+        connectionManager.userLogin(gameLoginEmail.value, gameLoginPassword.value).then(() => {
+            this.closeGameLogin();
+        }).catch((err) => {
+            gameLoginError.innerText = err.message;
+            gameLoginError.style.display = 'block';
+        });
     }
+
 
     private sendEmail(){
         const gameForgotPasswordInfo = this.gameForgotPasswordElement.getChildByID('gameForgotPasswordInfo') as HTMLParagraphElement;
@@ -357,8 +363,16 @@ export class MenuScene extends Phaser.Scene {
             return;
         }
         //TODO send email
-        gameForgotPasswordInfo.style.display = 'block';
-        gameForgotPasswordInfo.innerText = 'We have emailed your password reset link!';
+        connectionManager.passwordReset(gameLoginForgotPasswordEmail.value).then(() => {
+            gameForgotPasswordInfo.style.display = 'block';
+            gameForgotPasswordInfo.innerText = 'We have emailed your password reset link!';
+            gameLoginForgotPasswordEmail.value = '';
+            this.closeGameLogin();
+        }).catch((err) => {
+            gameForgotPasswordError.innerText = err.message;
+            gameForgotPasswordError.style.display = 'block';
+            gameLoginForgotPasswordEmail.value = '';
+        });
     }
 
     private register(){
@@ -405,6 +419,9 @@ export class MenuScene extends Phaser.Scene {
     }
 
     private openGameForgotPassword(): void{
+        //close all
+        this.closeAll();
+
         let middleY = (window.innerHeight / 3) - (257);
         if(middleY < 0){
             middleY = 0;
@@ -432,6 +449,9 @@ export class MenuScene extends Phaser.Scene {
     }
 
     private openGameRegister(): void{
+        //close all
+        this.closeAll();
+
         let middleY = (window.innerHeight / 3) - (257);
         if(middleY < 0){
             middleY = 0;
@@ -515,5 +535,14 @@ export class MenuScene extends Phaser.Scene {
     private gotToCreateMapPage() {
         const sparkHost = 'https://'+window.location.host.replace('play.', '')+'/choose-map.html';
         window.open(sparkHost, '_blank');
+    }
+
+    private closeAll(){
+        this.closeGameQualityMenu();
+        this.closeGameForgotPassword();
+        this.closeGameLogin();
+        this.closeGameRegister();
+        this.closeGameShare();
+        this.menuButton.getChildByID('openMenuButton').innerHTML = `<img src="/static/images/menu.svg">`;
     }
 }

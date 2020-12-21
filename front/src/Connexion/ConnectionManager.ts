@@ -19,7 +19,7 @@ class ConnectionManager {
     private connectedUser?: ConnectedUser|null;
 
     constructor() {
-        this.verifyLoggedUser();
+        //this.userLogin();
     }
 
     /**
@@ -119,17 +119,16 @@ class ConnectionManager {
         return this.connexionType;
     }
 
-    public verifyLoggedUser(){
+    /**
+     *
+     * @param email
+     * @param password
+     */
+    public userLogin(email: string, password: string){
         //Verify spark session
-        Axios.get('http://admin.workadventure.localhost/user/connected').then((res) => {
-            console.log('res', res);
-            Axios.get('http://admin.workadventure.localhost/notifications/recent').then((res) => {
-               this.connectedUser = res.data;
-            }).catch((err) => {
-                console.error(err);
-                this.connectedUser = null;
-                throw new ErrorConnectedError('Error to get user element');
-            });
+        //TODO change url addresse
+        return Axios.post('http://pusher.workadventure.localhost/user/login',{email, password}).then((res) => {
+            return res.data;
         }).catch((err) => {
             if(err instanceof ErrorConnectedError) {
                 throw err;
@@ -146,10 +145,33 @@ class ConnectionManager {
      * @param name
      * @param email
      * @param password
-     * @param confirmPassword
      */
-    public registerUser(name: string, email: string, password: string, confirmPassword: string){
-        Axios.get('http://admin.workadventure.localhost/member/register')
+    public registerUser(name: string, email: string, password: string){
+        //TODO change url addresse
+        Axios.post('http://pusher.workadventure.localhost/member/register', {
+            name,
+            email,
+            password
+        })
+            .then((res) => {
+                this.connectedUser = res.data;
+            })
+            .catch((err) => {
+                this.connectedUser = null;
+                console.log(err);
+                throw err;
+            })
+    }
+
+    /**
+     *
+     * @param email
+     */
+    public passwordReset(email: string) {
+        //TODO change url addresse
+        return Axios.post('http://pusher.workadventure.localhost/user/password/reset', {
+            email,
+        })
             .then((res) => {
                 this.connectedUser = res.data;
             })
