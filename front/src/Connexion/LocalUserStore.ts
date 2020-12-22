@@ -1,4 +1,4 @@
-import {LocalUser} from "./LocalUser";
+import {ConnectedUser, LocalUser} from "./LocalUser";
 
 const characterLayersKey = 'characterLayers';
 const gameQualityKey = 'gameQuality';
@@ -6,7 +6,7 @@ const videoQualityKey = 'videoQuality';
 
 //todo: add localstorage fallback
 class LocalUserStore {
-    
+
     saveUser(localUser: LocalUser) {
         localStorage.setItem('localUser', JSON.stringify(localUser));
     }
@@ -55,6 +55,17 @@ class LocalUserStore {
     }
     setVideoQualityValue(value: number): void {
         localStorage.setItem(videoQualityKey, '' + value);
+    }
+
+    clearUserConnected(){
+        localStorage.removeItem('connectedUser');
+    }
+    saveUserConnected(connectedUser: ConnectedUser) {
+        localStorage.setItem('connectedUser', JSON.stringify(connectedUser));
+    }
+    getUserConnected(): ConnectedUser|null {
+        const data = localStorage.getItem('connectedUser');
+        return data ? JSON.parse(data) : null;
     }
 }
 

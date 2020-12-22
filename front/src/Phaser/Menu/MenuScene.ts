@@ -331,11 +331,6 @@ export class MenuScene extends Phaser.Scene {
         }
 
         if(errorForm){return;}
-
-        gameLoginError.innerText = 'Login or password incorrect';
-        gameLoginError.style.display = 'block';
-        //TODO login user in back
-
         connectionManager.userLogin(gameLoginEmail.value, gameLoginPassword.value).then(() => {
             this.closeGameLogin();
         }).catch((err) => {

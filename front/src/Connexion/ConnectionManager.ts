@@ -7,7 +7,6 @@ import {localUserStore} from "./LocalUserStore";
 import {ConnectedUser, LocalUser} from "./LocalUser";
 import {Room} from "./Room";
 import {NotConnectedError} from "../Exception/NotConnectedError";
-import {ErrorConnectedError} from "../Exception/ErrorConnectedError";
 
 const URL_ROOM_STARTED = '/Floor0/floor0.json';
 
@@ -19,7 +18,8 @@ class ConnectionManager {
     private connectedUser?: ConnectedUser|null;
 
     constructor() {
-        //this.userLogin();
+        this.connectedUser = localUserStore.getUserConnected();
+        this.getNotification();
     }
 
     /**
@@ -124,17 +124,39 @@ class ConnectionManager {
      * @param email
      * @param password
      */
-    public userLogin(email: string, password: string){
+    public userLogin(email: string, password: string) {
         //Verify spark session
         //TODO change url addresse
-        return Axios.post('http://pusher.workadventure.localhost/user/login',{email, password}).then((res) => {
-            return res.data;
+
+        return Axios.post('http://pusher.workadventure.localhost/user/login', {email, password}).then((res) => {
+            const user = res.data;
+            this.localUser = new LocalUser(res.data.userUuid, res.data.authToken, res.data.textures || []);
+            localUserStore.saveUser(this.localUser);
+            this.connectedUser = new ConnectedUser(
+                user.name,
+                user.email,
+                user.uuid,
+                user.jwtToken,
+                [],
+                []
+            );
+            localUserStore.saveUserConnected(this.connectedUser);
+
+            return this.getNotification().then((response) => {
+                if (!this.connectedUser) {
+                    return;
+                }
+                this.connectedUser.setNotification(response.data.notification || []);
+                this.connectedUser.setAnnouncements(response.data.announcements || []);
+                localUserStore.saveUserConnected(this.connectedUser);
+            }).catch((err) => {
+                console.info(err);
+            });
+
         }).catch((err) => {
-            if(err instanceof ErrorConnectedError) {
-                throw err;
-            }
             console.log('err', err);
             this.connectedUser = null;
+            localUserStore.clearUserConnected();
             throw new NotConnectedError('User not connected');
         });
     }
@@ -180,6 +202,10 @@ class ConnectionManager {
                 console.log(err);
                 throw err;
             })
+    }
+
+    private getNotification(){
+        return Axios.get('http://pusher.workadventure.localhost/user/notifications/recent');
     }
 }
 

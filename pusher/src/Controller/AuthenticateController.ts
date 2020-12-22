@@ -19,6 +19,7 @@ export class AuthenticateController extends BaseController {
         this.userRegister();
         this.userLogin();
         this.forgotPassword();
+        this.notificationRecent();
     }
 
     //Try to login with an admin token
@@ -239,6 +240,37 @@ export class AuthenticateController extends BaseController {
                     res.end(JSON.stringify({
                         message: 'Email sent!'
                     }));
+                } catch (err) {
+                    res.writeStatus("400 KO");
+                    this.addCorsHeaders(res);
+                    res.end(JSON.stringify({
+                        message: err.message
+                    }));
+                }
+
+            })();
+        });
+    }
+
+    private notificationRecent() {
+        this.App.options("/user/notifications/recent", (res: HttpResponse, req: HttpRequest) => {
+            this.addCorsHeaders(res);
+            res.end();
+        });
+
+        this.App.get("/user/notifications/recent", (res: HttpResponse, req: HttpRequest) => {
+
+            (async () => {
+
+                res.onAborted(() => {
+                    console.warn('Forgot password request was aborted');
+                });
+
+                try {
+                    const response = await adminApi.getNotification();
+                    res.writeStatus("200 OK");
+                    this.addCorsHeaders(res);
+                    res.end(JSON.stringify(response.data));
                 } catch (err) {
                     res.writeStatus("400 KO");
                     this.addCorsHeaders(res);

@@ -165,6 +165,13 @@ class AdminApi {
                 headers: {"Authorization": `${ADMIN_API_TOKEN}`}
             });
     }
+
+    getNotification() {
+        return Axios.get(`${ADMIN_API_URL}/notifications/recent`,
+            {
+                headers: {"Authorization": `${ADMIN_API_TOKEN}`}
+            });
+    }
 }
 
 export const adminApi = new AdminApi();

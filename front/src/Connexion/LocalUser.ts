@@ -14,8 +14,18 @@ export class ConnectedUser {
     constructor(
         public readonly name:string,
         public readonly email: string,
-        public readonly notification: [],
-        public readonly announcements: [],
+        public readonly uuid:string,
+        public readonly jwtToken: string,
+        public notification?: [],
+        public announcements?: [],
     ) {
+    }
+
+    setNotification(notification: []){
+        this.notification = notification;
+    }
+
+    setAnnouncements(announcements: []){
+        this.announcements = announcements;
     }
 }
