@@ -126,10 +126,10 @@ export class CustomizeScene extends ResizableScene {
             gameManager.tryResumingGame(this, EnableCameraSceneName);
         });
 
-        this.input.keyboard.on('keydown-RIGHT', () => this.moveCursorHorizontally(1));
-        this.input.keyboard.on('keydown-LEFT', () => this.moveCursorHorizontally(-1));
-        this.input.keyboard.on('keydown-DOWN', () => this.moveCursorVertically(1));
-        this.input.keyboard.on('keydown-UP', () => this.moveCursorVertically(-1));
+        this.input.keyboard.on('keyup-RIGHT', () => this.moveCursorHorizontally(1));
+        this.input.keyboard.on('keyup-LEFT', () => this.moveCursorHorizontally(-1));
+        this.input.keyboard.on('keyup-DOWN', () => this.moveCursorVertically(1));
+        this.input.keyboard.on('keyup-UP', () => this.moveCursorVertically(-1));
 
         const customCursorPosition = localUserStore.getCustomCursorPosition();
         if (customCursorPosition) {
@@ -148,6 +148,7 @@ export class CustomizeScene extends ResizableScene {
             this.selectedLayers[this.activeRow] = this.layers[this.activeRow].length - 1
         }
         this.moveLayers();
+        this.updateSelectedLayer();
         this.saveInLocalStorage();
     }
 
