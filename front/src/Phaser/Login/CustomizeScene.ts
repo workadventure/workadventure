@@ -148,7 +148,6 @@ export class CustomizeScene extends ResizableScene {
             this.selectedLayers[this.activeRow] = this.layers[this.activeRow].length - 1
         }
         this.moveLayers();
-        this.updateSelectedLayer();
         this.saveInLocalStorage();
     }
 
