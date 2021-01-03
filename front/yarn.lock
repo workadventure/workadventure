@@ -3663,6 +3663,10 @@ pbkdf2@^3.0.3:
     safe-buffer "^5.0.1"
     sha.js "^2.4.8"
 
+phaser-animated-tiles@Informatic/phaser-animated-tiles#2d5c66a9bc426dd4cb2d856c1d599494a74f8067:
+  version "2.0.2"
+  resolved "https://codeload.github.com/Informatic/phaser-animated-tiles/tar.gz/2d5c66a9bc426dd4cb2d856c1d599494a74f8067"
+
 phaser@^3.22.0:
   version "3.51.0"
   resolved "https://registry.yarnpkg.com/phaser/-/phaser-3.51.0.tgz#b0c7ee2b21e795830d74f476dd30816a42b023bd"
