@@ -21,7 +21,7 @@ services:
       - front
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./ssl/:/letsencrypt/acme.json
+      - ./ssl/:/letsencrypt/
 
   front:
     image: thecodingmachine/nodejs:14
