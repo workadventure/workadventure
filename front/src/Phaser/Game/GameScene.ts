@@ -60,6 +60,7 @@ import {ResizableScene} from "../Login/ResizableScene";
 import {Room} from "../../Connexion/Room";
 import {jitsiFactory} from "../../WebRtc/JitsiFactory";
 import {urlManager} from "../../Url/UrlManager";
+import {audioManager} from "../../WebRtc/AudioManager";
 import {PresentationModeIcon} from "../Components/PresentationModeIcon";
 import {ChatModeIcon} from "../Components/ChatModeIcon";
 import {OpenChatIcon, openChatIconName} from "../Components/OpenChatIcon";
@@ -499,11 +500,13 @@ export class GameScene extends ResizableScene implements CenterListener {
             });
 
             this.connection.onGroupUpdatedOrCreated((groupPositionMessage: GroupCreatedUpdatedMessageInterface) => {
+                audioManager.decreaseVolume();
                 this.shareGroupPosition(groupPositionMessage);
                 this.openChatIcon.setVisible(true);
             })
 
             this.connection.onGroupDeleted((groupId: number) => {
+                audioManager.restoreVolume();
                 try {
                     this.deleteGroup(groupId);
                     this.openChatIcon.setVisible(false);
@@ -591,6 +594,20 @@ export class GameScene extends ResizableScene implements CenterListener {
         });
     }
 
+    private playAudio(url: string|number|boolean|undefined, loop=false): void {
+        if (url === undefined) {
+            audioManager.unloadAudio();
+        } else {
+            const mapDirUrl = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf('/'));
+            const realAudioPath = mapDirUrl + '/' + url;
+            audioManager.loadAudio(realAudioPath);
+
+            if (loop) {
+                audioManager.loop();
+            }
+        }
+    }
+
     private triggerOnMapLayerPropertyChange(){
         this.gameMap.onPropertyChange('exitSceneUrl', (newValue, oldValue) => {
             if (newValue) this.onMapExit(newValue as string);
@@ -651,6 +668,14 @@ export class GameScene extends ResizableScene implements CenterListener {
                 this.connection.setSilent(true);
             }
         });
+        this.gameMap.onPropertyChange('playAudio', (newValue, oldValue) => {
+            this.playAudio(newValue);
+        });
+
+        this.gameMap.onPropertyChange('playAudioLoop', (newValue, oldValue) => {
+            this.playAudio(newValue, true);
+        });
+
     }
 
     private onMapExit(exitKey: string) {

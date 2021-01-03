@@ -362,6 +362,148 @@ body {
     height: 100%;
 }
 
+.audioplayer:first-child  {
+    display: grid;
+    grid: 2rem / 4rem 10rem;
+}
+
+.audioplayer > button, .audioplayer > div, .audioplayer > label {
+    background-color: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#audioplayerctrl {
+    position: fixed;
+    top: 0;
+    right: 50%;
+    padding: 0.3rem 0.5rem;
+    color: white;
+    transition: transform 0.5s;
+}
+
+#audioplayer_mute {
+    max-width: 5rem;
+    border: none;
+}
+#audioplayer_mute:focus, #audioplayer_mute:active {
+    outline: none;
+}
+#audioplayer_mute > svg {
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+#audioplayer_volume_icon_playing.muted {
+    visibility: hidden;
+    display: none;
+}
+#audioplayerctrl > #audioplayer_volume {
+    width: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+/*
+ * sollte eigentlich in den aspect-ratio teil ..
+ */
+#audioplayerctrl.loading {
+    transform: translateY(-90%);
+}
+#audioplayerctrl.hidden {
+    transform: translateY(-100%);
+}
+
+/*
+ * Style Input Range
+ * https://www.cssportal.com/style-input-range/
+ */
+input[type=range] {
+    height: 28px;
+    -webkit-appearance: none;
+    margin: 10px 0;
+    width: 100%;
+    background-color: transparent;
+}
+input[type=range]:focus {
+    outline: none;
+}
+input[type=range]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 5px;
+    animate: 0.2s;
+    box-shadow: 1px 1px 1px #000000;
+    background: #FFFFFF;
+    border-radius: 5px;
+    border: 1px solid #000000;
+}
+input[type=range]::-webkit-slider-thumb {
+    box-shadow: 1px 1px 1px #000000;
+    border: 1px solid #000000;
+    height: 20px;
+    width: 10px;
+    border-radius: 5px;
+    background: #FFFFFF;
+    -webkit-appearance: none;
+    margin-top: -8.5px;
+}
+input[type=range]:focus::-webkit-slider-runnable-track {
+    background: #FFFFFF;
+}
+input[type=range]::-moz-range-track {
+    width: 100%;
+    height: 5px;
+    animate: 0.2s;
+    box-shadow: 1px 1px 1px #000000;
+    background: #FFFFFF;
+    border-radius: 5px;
+    border: 1px solid #000000;
+}
+input[type=range]::-moz-range-thumb {
+    box-shadow: 1px 1px 1px #000000;
+    border: 1px solid #000000;
+    height: 20px;
+    width: 10px;
+    border-radius: 5px;
+    background: #FFFFFF;
+}
+input[type=range]::-ms-track {
+    width: 100%;
+    height: 5px;
+    animate: 0.2s;
+    background: transparent;
+    border-color: transparent;
+    color: transparent;
+}
+input[type=range]::-ms-fill-lower {
+    background: #FFFFFF;
+    border: 1px solid #000000;
+    border-radius: 10px;
+    box-shadow: 1px 1px 1px #000000;
+}
+input[type=range]::-ms-fill-upper {
+    background: #FFFFFF;
+    border: 1px solid #000000;
+    border-radius: 10px;
+    box-shadow: 1px 1px 1px #000000;
+}
+input[type=range]::-ms-thumb {
+    margin-top: 1px;
+    box-shadow: 1px 1px 1px #000000;
+    border: 1px solid #000000;
+    height: 20px;
+    width: 10px;
+    border-radius: 5px;
+    background: #FFFFFF;
+}
+input[type=range]:focus::-ms-fill-lower {
+    background: #FFFFFF;
+}
+input[type=range]:focus::-ms-fill-upper {
+    background: #FFFFFF;
+}
+
+
 .game-overlay {
     display: none;
     position: absolute;
