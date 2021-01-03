@@ -26,14 +26,23 @@ Run:
 ```
 cp .en.template .env
 ```
-_``If you want deploy on the dev server, you must update HOST_NAME in your `.env` by your private domain (workadventure.localhost => yourdomain.com).`` 
+_``If you want deploy on the dev server, you must update HOST_NAME in your `.env` by your private domain (workadventure.localhost => yourdomain.com).``
 **_``Don't forgot to add A entry in DNS like this *.yourdomain.com. The different deployed for WorkAdventure are: play. ; pusher. ; maps. ; api. ; uploader. ;``_**
+
+_``If you want to use [Docker-compose with let's encrypt : HTTP Challenge](https://doc.traefik.io/traefik/user-guides/docker-compose/acme-http/) on the dev server, you must update ACME_EMAIL in your `.env` by your email (admin@workadventure.localhost => your_email@yourdomain.com).``
 
 Run:
 
 ```
 docker-compose up
 ```
+
+Or for Docker-compose with let's encrypt : HTTP Challenge run:
+
+```
+docker-compose -f docker-compose.letsencrypt.yaml up
+```
+
 
 The environment will start.
 
