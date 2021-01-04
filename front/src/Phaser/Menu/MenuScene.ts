@@ -9,6 +9,7 @@ export const MenuSceneName = 'MenuScene';
 const gameMenuKey = 'gameMenu';
 const gameMenuIconKey = 'gameMenuIcon';
 const gameSettingsMenuKey = 'gameSettingsMenu';
+const gameShare = 'gameShare';
 
 const closedSideMenuX = -200;
 const openedSideMenuX = 0;
@@ -19,8 +20,10 @@ const openedSideMenuX = 0;
 export class MenuScene extends Phaser.Scene {
     private menuElement!: Phaser.GameObjects.DOMElement;
     private gameQualityMenuElement!: Phaser.GameObjects.DOMElement;
+    private gameShareElement!: Phaser.GameObjects.DOMElement;
     private sideMenuOpened = false;
     private settingsMenuOpened = false;
+    private gameShareOpened = false;
     private gameQualityValue: number;
     private videoQualityValue: number;
     private menuButton!: Phaser.GameObjects.DOMElement;
@@ -36,6 +39,7 @@ export class MenuScene extends Phaser.Scene {
         this.load.html(gameMenuKey, 'resources/html/gameMenu.html');
         this.load.html(gameMenuIconKey, 'resources/html/gameMenuIcon.html');
         this.load.html(gameSettingsMenuKey, 'resources/html/gameQualityMenu.html');
+        this.load.html(gameShare, 'resources/html/gameShare.html');
     }
 
     create() {
@@ -46,6 +50,19 @@ export class MenuScene extends Phaser.Scene {
         const middleX = (window.innerWidth / 3) - 298;
         this.gameQualityMenuElement = this.add.dom(middleX, -400).createFromCache(gameSettingsMenuKey);
         this.revealMenusAfterInit(this.gameQualityMenuElement, 'gameQuality');
+
+
+        this.gameShareElement = this.add.dom(middleX, -400).createFromCache(gameShare);
+        this.revealMenusAfterInit(this.gameShareElement, gameShare);
+        this.gameShareElement.addListener('click');
+        this.gameShareElement.on('click',  (event:MouseEvent) => {
+            event.preventDefault();
+            if((event?.target as HTMLInputElement).id === 'gameShareFormSubmit') {
+                this.copyLink();
+            }else if((event?.target as HTMLInputElement).id === 'gameShareFormCancel') {
+                this.closeGameShare();
+            }
+        });
 
         this.input.keyboard.on('keyup-TAB', () => {
             this.sideMenuOpened ? this.closeSideMenu() : this.openSideMenu();
@@ -74,6 +91,7 @@ export class MenuScene extends Phaser.Scene {
 
     openSideMenu() {
         if (this.sideMenuOpened) return;
+        this.closeAll();
         this.sideMenuOpened = true;
         this.menuButton.getChildByID('openMenuButton').innerHTML = 'X';
         if (gameManager.getCurrentGameScene(this).connection && gameManager.getCurrentGameScene(this).connection.isAdmin()) {
@@ -91,8 +109,7 @@ export class MenuScene extends Phaser.Scene {
     private closeSideMenu(): void {
         if (!this.sideMenuOpened) return;
         this.sideMenuOpened = false;
-        this.closeGameQualityMenu()
-        this.menuButton.getChildByID('openMenuButton').innerHTML = `<img src="/static/images/menu.svg">`;
+        this.closeAll();
         gameManager.getCurrentGameScene(this).ConsoleGlobalMessageManager.disabledMessageConsole();
         this.tweens.add({
             targets: this.menuElement,
@@ -102,13 +119,13 @@ export class MenuScene extends Phaser.Scene {
         });
     }
 
-
-
     private openGameSettingsMenu(): void {
         if (this.settingsMenuOpened) {
-            this.closeGameQualityMenu();
             return;
         }
+        //close all
+        this.closeAll();
+
         this.settingsMenuOpened = true;
 
         const gameQualitySelect = this.gameQualityMenuElement.getChildByID('select-game-quality') as HTMLInputElement;
@@ -159,6 +176,48 @@ export class MenuScene extends Phaser.Scene {
     }
 
 
+    private openGameShare(): void{
+        if (this.gameShareOpened) {
+            this.closeGameShare();
+            return;
+        }
+        //close all
+        this.closeAll();
+
+        const gameShareLink = this.gameShareElement.getChildByID('gameShareLink') as HTMLInputElement;
+        gameShareLink.value = location.toString();
+
+        this.gameShareOpened = true;
+
+        let middleY = (window.innerHeight / 3) - (257);
+        if(middleY < 0){
+            middleY = 0;
+        }
+        let middleX = (window.innerWidth / 3) - 298;
+        if(middleX < 0){
+            middleX = 0;
+        }
+        this.tweens.add({
+            targets: this.gameShareElement,
+            y: middleY,
+            x: middleX,
+            duration: 1000,
+            ease: 'Power3'
+        });
+    }
+
+    private closeGameShare(): void{
+        const gameShareInfo = this.gameShareElement.getChildByID('gameShareInfo') as HTMLParagraphElement;
+        gameShareInfo.innerText = '';
+        gameShareInfo.style.display = 'none';
+        this.gameShareOpened = false;
+        this.tweens.add({
+            targets: this.gameShareElement,
+            y: -400,
+            duration: 1000,
+            ease: 'Power3'
+        });
+    }
 
     private onMenuClick(event:MouseEvent) {
         event.preventDefault();
@@ -179,7 +238,7 @@ export class MenuScene extends Phaser.Scene {
                 this.closeSideMenu();
                 break;
             case 'shareButton':
-                this.shareUrl();
+                this.openGameShare();
                 break;
             case 'editGameSettingsButton':
                 this.openGameSettingsMenu();
@@ -190,9 +249,11 @@ export class MenuScene extends Phaser.Scene {
         }
     }
 
-    private async shareUrl() {
+    private async copyLink() {
         await navigator.clipboard.writeText(location.toString());
-        alert('URL is copied to your clipboard!');
+        const gameShareInfo = this.gameShareElement.getChildByID('gameShareInfo') as HTMLParagraphElement;
+        gameShareInfo.innerText = 'Link copied, you can share it now!';
+        gameShareInfo.style.display = 'block';
     }
 
     private saveSetting(valueGame: number, valueVideo: number){
@@ -212,5 +273,11 @@ export class MenuScene extends Phaser.Scene {
     private gotToCreateMapPage() {
         const sparkHost = 'https://'+window.location.host.replace('play.', '')+'/choose-map.html';
         window.open(sparkHost, '_blank');
+    }
+
+    private closeAll(){
+        this.closeGameQualityMenu();
+        this.closeGameShare();
+        this.menuButton.getChildByID('openMenuButton').innerHTML = `<img src="/static/images/menu.svg">`;
     }
 }
