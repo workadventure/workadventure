@@ -63,6 +63,8 @@ import {urlManager} from "../../Url/UrlManager";
 import {PresentationModeIcon} from "../Components/PresentationModeIcon";
 import {ChatModeIcon} from "../Components/ChatModeIcon";
 import {OpenChatIcon, openChatIconName} from "../Components/OpenChatIcon";
+import {SelectCharacterScene, SelectCharacterSceneName} from "../Login/SelectCharacterScene";
+import {TextureError} from "../../Exception/TextureError";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -155,14 +157,14 @@ export class GameScene extends ResizableScene implements CenterListener {
     private playerName!: string;
     private characterLayers!: string[];
 
-    constructor(private room: Room, MapUrlFile: string) {
+    constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
-            key: room.id
+            key: customKey ?? room.id
         });
         this.Terrains = [];
         this.groups = new Map<number, Sprite>();
         this.instance = room.getInstance();
-        
+
 
         this.MapUrlFile = MapUrlFile;
         this.RoomId = room.id;
@@ -517,7 +519,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                 this.simplePeer.unregister();
 
                 const gameSceneKey = 'somekey' + Math.round(Math.random() * 10000);
-                const game: Phaser.Scene = new GameScene(this.room, this.MapUrlFile);
+                const game: Phaser.Scene = new GameScene(this.room, this.MapUrlFile, gameSceneKey);
                 this.scene.add(gameSceneKey, game, true,
                     {
                         initPosition: {
@@ -579,8 +581,8 @@ export class GameScene extends ResizableScene implements CenterListener {
             this.ConsoleGlobalMessageManager = new ConsoleGlobalMessageManager(this.connection, this.userInputManager, this.connection.isAdmin());
 
 
-        this.scene.wake();
-            this.scene.sleep(ReconnectingSceneName);
+            this.scene.wake();
+            this.scene.stop(ReconnectingSceneName);
 
             //init user position and play trigger to check layers properties
             this.gameMap.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
@@ -670,8 +672,12 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     public cleanupClosingScene(): void {
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
-        this.connection.closeConnection();
-        this.simplePeer.unregister();
+        if(this.connection) {
+            this.connection.closeConnection();
+        }
+        if(this.simplePeer) {
+            this.simplePeer.unregister();
+        }
     }
 
     private switchLayoutMode(): void {
@@ -818,16 +824,23 @@ export class GameScene extends ResizableScene implements CenterListener {
     createCurrentPlayer(){
         //initialise player
         //TODO create animation moving between exit and start
-        this.CurrentPlayer = new Player(
-            this,
-            this.startX,
-            this.startY,
-            this.playerName,
-            this.characterLayers,
-            PlayerAnimationNames.WalkDown,
-            false,
-            this.userInputManager
-        );
+        try {
+            this.CurrentPlayer = new Player(
+                this,
+                this.startX,
+                this.startY,
+                this.playerName,
+                this.characterLayers,
+                PlayerAnimationNames.WalkDown,
+                false,
+                this.userInputManager
+            );
+        }catch (err){
+            if(err instanceof TextureError) {
+                gameManager.leaveGame(this, SelectCharacterSceneName, new SelectCharacterScene());
+            }
+            throw err;
+        }
 
         //create collision
         this.createCollisionWithPlayer();
@@ -1220,6 +1233,6 @@ export class GameScene extends ResizableScene implements CenterListener {
             });
         }))
     }
-    
+
 
 }
