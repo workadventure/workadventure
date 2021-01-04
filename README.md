@@ -24,10 +24,10 @@ Install docker-compose : https://docs.docker.com/compose/install/
 Run:
 
 ```
-cp .en.template .env
+cp .env.template .env
 ```
-_``If you want deploy on the dev server, you must update HOST_NAME in your `.env` by your private domain (workadventure.localhost => yourdomain.com).`` 
-**_``Don't forgot to add A entry in DNS like this *.yourdomain.com. The different deployed for WorkAdventure are: play. ; pusher. ; maps. ; api. ; uploader. ;``_**
+_``If you want to deploy on the dev server, you must update HOST_NAME in your .env with your private domain (workadventure.localhost => yourdomain.com).`` 
+**_``Don't forget to add an entries in DNS like this: *.yourdomain.com. The different subdomains deployed for WorkAdventure are: play. ; pusher. ; maps. ; api. ; uploader. ;``_**
 
 Run:
 
