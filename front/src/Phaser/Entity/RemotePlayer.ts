@@ -23,12 +23,12 @@ export class RemotePlayer extends Character {
 
         //set data
         this.userId = userId;
+        this.setDepth(10);
     }
 
     updatePosition(position: PointInterface): void {
         this.playAnimation(position.direction, position.moving);
         this.setX(position.x);
         this.setY(position.y);
-        this.setDepth(position.y);
     }
 }
