@@ -52,7 +52,7 @@ export class SpeechBubble {
         this.bubble.lineBetween(point2X, point2Y, point3X, point3Y);
         this.bubble.lineBetween(point1X, point1Y, point3X, point3Y);
 
-        this.content = scene.add.text(0, 0, text, { fontFamily: 'Arial', fontSize: 20, color: '#000000', align: 'center', wordWrap: { width: bubbleWidth - (bubblePadding * 2) } });
+        this.content = scene.add.text(0, 0, text, { fontFamily: 'Arial', fontSize: '20', color: '#000000', align: 'center', wordWrap: { width: bubbleWidth - (bubblePadding * 2) } });
 
         const bounds = this.content.getBounds();
         this.content.setPosition(this.bubble.x + (bubbleWidth / 2) - (bounds.width / 2), this.bubble.y + (bubbleHeight / 2) - (bounds.height / 2));

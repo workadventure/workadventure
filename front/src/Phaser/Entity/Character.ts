@@ -227,7 +227,7 @@ export abstract class Character extends Container {
         }, 3000)
     }
 
-    destroy(fromScene?: boolean): void {
+    destroy(): void {
         if (this.scene) {
             this.scene.events.removeListener('postupdate', this.postupdate.bind(this));
         }
@@ -236,7 +236,7 @@ export abstract class Character extends Container {
                 this.scene.sys.updateList.remove(sprite);
             }
         }
-        super.destroy(fromScene);
+        super.destroy();
         this.playerName.destroy();
     }
 }
