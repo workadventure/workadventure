@@ -23,7 +23,7 @@
   "dependencies": {
     "@types/simple-peer": "^9.6.0",
     "@types/socket.io-client": "^1.4.32",
-    "axios": "^0.20.0",
+    "axios": "^0.21.1",
     "generic-type-guard": "^3.2.0",
     "google-protobuf": "^3.13.0",
     "phaser": "^3.22.0",
