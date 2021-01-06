@@ -180,6 +180,8 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     //hook preload scene
     preload(): void {
+        this.initProgressBar();
+
         this.load.image(openChatIconName, 'resources/objects/talk.png');
         this.load.on(FILE_LOAD_ERROR, (file: {src: string}) => {
             this.scene.start(FourOFourSceneName, {
@@ -204,6 +206,16 @@ export class GameScene extends ResizableScene implements CenterListener {
         loadObject(this.load);
 
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
+    }
+
+    private initProgressBar(): void {
+        const progress = this.add.graphics();
+        this.load.on('progress', (value: number) => {
+            progress.clear();
+            progress.fillStyle(0xffffff, 1);
+            progress.fillRect(0, 270, 800 * value, 60);
+        });
+        this.load.on('complete', () => progress.destroy());
     }
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
