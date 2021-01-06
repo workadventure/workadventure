@@ -152,7 +152,7 @@ export class DiscussionManager {
     }
 
     private urlify(text: string) {
-        let urlRegex = /(https?:\/\/[^\s]+)/g;
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
         return text.replace(urlRegex, (url: string) => {
             return '<a href="' + url + '" target="_blank">' + url + '</a>';
         })
@@ -182,8 +182,15 @@ export class DiscussionManager {
         userMessage.innerHTML = this.urlify(message);
         userMessage.classList.add('body');
         divMessage.appendChild(userMessage);
-
         this.divMessages?.appendChild(divMessage);
+
+        //automatic scroll when there are new message
+        setTimeout(() => {
+            this.divMessages?.scroll({
+                top: this.divMessages?.scrollTop + divMessage.getBoundingClientRect().y,
+                behavior: 'smooth'
+            });
+        }, 200);
     }
 
     public removeParticipant(userId: number|string){
