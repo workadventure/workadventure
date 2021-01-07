@@ -1,0 +1,62 @@
+version: "3"
+services:
+  reverse-proxy:
+    image: traefik:v2.3.7
+    command:
+      - --providers.docker
+      - --entryPoints.web.address=:80
+      - --entryPoints.websecure.address=:443
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - back
+      - front
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  front:
+    build:
+      context: .
+      dockerfile: front/Dockerfile
+      args:
+        BASE_DOMAIN: ${BASE_DOMAIN:-workadventure.localhost}
+    labels:
+      - "traefik.http.routers.front.rule=Host(`play.${BASE_DOMAIN:-workadventure.localhost}`)"
+      - "traefik.http.routers.front.entryPoints=web"
+      - "traefik.http.services.front.loadbalancer.server.port=8000"
+      - "traefik.http.routers.front-ssl.rule=Host(`play.${BASE_DOMAIN:-workadventure.localhost}`)"
+      - "traefik.http.routers.front-ssl.entryPoints=websecure"
+      - "traefik.http.routers.front-ssl.tls=true"
+      - "traefik.http.routers.front-ssl.service=front"
+
+  back:
+    build:
+      context: .
+      dockerfile: back/Dockerfile
+    environment:
+      SECRET_KEY: yourSecretKey
+      SECRET_JITSI_KEY: "$SECRET_JITSI_KEY"
+      ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
+      JITSI_URL: $JITSI_URL
+      JITSI_ISS: $JITSI_ISS
+
+  pusher:
+    build:
+      context: .
+      dockerfile: pusher/Dockerfile
+    environment:
+      SECRET_KEY: yourSecretKey
+      SECRET_JITSI_KEY: "$SECRET_JITSI_KEY"
+      ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
+      API_URL: back:50051
+      JITSI_URL: $JITSI_URL
+      JITSI_ISS: $JITSI_ISS
+    labels:
+      - "traefik.http.routers.pusher.rule=Host(`pusher.${BASE_DOMAIN:-workadventure.localhost}`)"
+      - "traefik.http.routers.pusher.entryPoints=web"
+      - "traefik.http.services.pusher.loadbalancer.server.port=8080"
+      - "traefik.http.routers.pusher-ssl.rule=Host(`pusher.${BASE_DOMAIN:-workadventure.localhost}`)"
+      - "traefik.http.routers.pusher-ssl.entryPoints=websecure"
+      - "traefik.http.routers.pusher-ssl.tls=true"
+      - "traefik.http.routers.pusher-ssl.service=pusher"
