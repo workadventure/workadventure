@@ -318,7 +318,8 @@ export class MediaManager {
         const localScreenCapture = this.localScreenCapture;
         this.getCamera().then((stream) => {
             this.triggerStoppedScreenSharingCallbacks(localScreenCapture);
-        }).catch(() => { //catch error get camera
+        }).catch((err) => { //catch error get camera
+            console.error(err);
             this.triggerStoppedScreenSharingCallbacks(localScreenCapture);
         });
         this.localScreenCapture = null;
