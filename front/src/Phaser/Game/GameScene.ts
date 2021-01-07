@@ -66,6 +66,7 @@ import {ChatModeIcon} from "../Components/ChatModeIcon";
 import {OpenChatIcon, openChatIconName} from "../Components/OpenChatIcon";
 import {SelectCharacterScene, SelectCharacterSceneName} from "../Login/SelectCharacterScene";
 import {TextureError} from "../../Exception/TextureError";
+import {TextField} from "../Components/TextField";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -110,7 +111,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     MapPlayers!: Phaser.Physics.Arcade.Group;
     MapPlayersByKey : Map<number, RemotePlayer> = new Map<number, RemotePlayer>();
     Map!: Phaser.Tilemaps.Tilemap;
-    Layers!: Array<Phaser.Tilemaps.StaticTilemapLayer>;
+    Layers!: Array<Phaser.Tilemaps.TilemapLayer>;
     Objects!: Array<Phaser.Physics.Arcade.Sprite>;
     mapFile!: ITiledMap;
     groups: Map<number, Sprite>;
@@ -180,6 +181,8 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     //hook preload scene
     preload(): void {
+        this.initProgressBar();
+
         this.load.image(openChatIconName, 'resources/objects/talk.png');
         this.load.on(FILE_LOAD_ERROR, (file: {src: string}) => {
             this.scene.start(FourOFourSceneName, {
@@ -204,6 +207,20 @@ export class GameScene extends ResizableScene implements CenterListener {
         loadObject(this.load);
 
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
+    }
+
+    private initProgressBar(): void {
+        const loadingText = this.add.text(this.game.renderer.width / 2, 200, 'Loading');
+        const progress = this.add.graphics();
+        this.load.on('progress', (value: number) => {
+            progress.clear();
+            progress.fillStyle(0xffffff, 1);
+            progress.fillRect(0, 270, 800 * value, 60);
+        });
+        this.load.on('complete', () => {
+            loadingText.destroy();
+            progress.destroy();
+        });
     }
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
@@ -342,11 +359,11 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.physics.world.setBounds(0, 0, this.Map.widthInPixels, this.Map.heightInPixels);
 
         //add layer on map
-        this.Layers = new Array<Phaser.Tilemaps.StaticTilemapLayer>();
+        this.Layers = new Array<Phaser.Tilemaps.TilemapLayer>();
         let depth = -2;
         for (const layer of this.mapFile.layers) {
             if (layer.type === 'tilelayer') {
-                this.addLayer(this.Map.createStaticLayer(layer.name, this.Terrains, 0, 0).setDepth(depth));
+                this.addLayer(this.Map.createLayer(layer.name, this.Terrains, 0, 0).setDepth(depth));
 
                 const exitSceneUrl = this.getExitSceneUrl(layer);
                 if (exitSceneUrl !== undefined) {
@@ -379,40 +396,11 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         //notify game manager can to create currentUser in map
         this.createCurrentPlayer();
-
-        //initialise camera
+        this.removeAllRemotePlayers(); //cleanup the list  of remote players in case the scene was rebooted
+        
         this.initCamera();
 
-        // Let's generate the circle for the group delimiter
-        let circleElement = Object.values(this.textures.list).find((object: Texture) => object.key === 'circleSprite-white');
-        if (circleElement) {
-            this.textures.remove('circleSprite-white');
-        }
-
-        circleElement = Object.values(this.textures.list).find((object: Texture) => object.key === 'circleSprite-red');
-        if (circleElement) {
-            this.textures.remove('circleSprite-red');
-        }
-
-        //create white circle canvas use to create sprite
-        this.circleTexture = this.textures.createCanvas('circleSprite-white', 96, 96);
-        const context = this.circleTexture.context;
-        context.beginPath();
-        context.arc(48, 48, 48, 0, 2 * Math.PI, false);
-        // context.lineWidth = 5;
-        context.strokeStyle = '#ffffff';
-        context.stroke();
-        this.circleTexture.refresh();
-
-        //create red circle canvas use to create sprite
-        this.circleRedTexture = this.textures.createCanvas('circleSprite-red', 96, 96);
-        const contextRed = this.circleRedTexture.context;
-        contextRed.beginPath();
-        contextRed.arc(48, 48, 48, 0, 2 * Math.PI, false);
-        // context.lineWidth = 5;
-        contextRed.strokeStyle = '#ff0000';
-        contextRed.stroke();
-        this.circleRedTexture.refresh();
+        this.initCirclesCanvas();
 
         // Let's pause the scene if the connection is not established yet
         if (this.isReconnecting) {
@@ -594,6 +582,40 @@ export class GameScene extends ResizableScene implements CenterListener {
         });
     }
 
+    //todo: into dedicated classes
+    private initCirclesCanvas(): void {
+        // Let's generate the circle for the group delimiter
+        let circleElement = Object.values(this.textures.list).find((object: Texture) => object.key === 'circleSprite-white');
+        if (circleElement) {
+            this.textures.remove('circleSprite-white');
+        }
+
+        circleElement = Object.values(this.textures.list).find((object: Texture) => object.key === 'circleSprite-red');
+        if (circleElement) {
+            this.textures.remove('circleSprite-red');
+        }
+
+        //create white circle canvas use to create sprite
+        this.circleTexture = this.textures.createCanvas('circleSprite-white', 96, 96);
+        const context = this.circleTexture.context;
+        context.beginPath();
+        context.arc(48, 48, 48, 0, 2 * Math.PI, false);
+        // context.lineWidth = 5;
+        context.strokeStyle = '#ffffff';
+        context.stroke();
+        this.circleTexture.refresh();
+
+        //create red circle canvas use to create sprite
+        this.circleRedTexture = this.textures.createCanvas('circleSprite-red', 96, 96);
+        const contextRed = this.circleRedTexture.context;
+        contextRed.beginPath();
+        contextRed.arc(48, 48, 48, 0, 2 * Math.PI, false);
+        // context.lineWidth = 5;
+        contextRed.strokeStyle = '#ff0000';
+        contextRed.stroke();
+        this.circleRedTexture.refresh();
+    }
+
     private playAudio(url: string|number|boolean|undefined, loop=false): void {
         if (url === undefined) {
             audioManager.unloadAudio();
@@ -703,6 +725,14 @@ export class GameScene extends ResizableScene implements CenterListener {
         if(this.simplePeer) {
             this.simplePeer.unregister();
         }
+    }
+
+    private removeAllRemotePlayers(): void {
+        this.MapPlayersByKey.forEach((player: RemotePlayer) => {
+            player.destroy();
+            this.MapPlayers.remove(player);
+        });
+        this.MapPlayersByKey = new Map<number, RemotePlayer>();
     }
 
     private switchLayoutMode(): void {
@@ -824,13 +854,13 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.cameras.main.setZoom(ZOOM_LEVEL);
     }
 
-    addLayer(Layer : Phaser.Tilemaps.StaticTilemapLayer){
+    addLayer(Layer : Phaser.Tilemaps.TilemapLayer){
         this.Layers.push(Layer);
     }
 
     createCollisionWithPlayer() {
         //add collision layer
-        this.Layers.forEach((Layer: Phaser.Tilemaps.StaticTilemapLayer) => {
+        this.Layers.forEach((Layer: Phaser.Tilemaps.TilemapLayer) => {
             this.physics.add.collider(this.CurrentPlayer, Layer, (object1: GameObject, object2: GameObject) => {
                 //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
             });
@@ -1012,14 +1042,7 @@ export class GameScene extends ResizableScene implements CenterListener {
      */
     private doInitUsersPosition(usersPosition: MessageUserPositionInterface[]): void {
         const currentPlayerId = this.connection.getUserId();
-
-        // clean map
-        this.MapPlayersByKey.forEach((player: RemotePlayer) => {
-            player.destroy();
-            this.MapPlayers.remove(player);
-        });
-        this.MapPlayersByKey = new Map<number, RemotePlayer>();
-
+        this.removeAllRemotePlayers();
         // load map
         usersPosition.forEach((userPosition : MessageUserPositionInterface) => {
             if(userPosition.userId === currentPlayerId){
@@ -1212,9 +1235,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         // Let's put this in Game coordinates by applying the zoom level:
         xCenter /= ZOOM_LEVEL * RESOLUTION;
         yCenter /= ZOOM_LEVEL * RESOLUTION;
-
-        //console.log("updateCameraOffset", array, xCenter, yCenter, this.game.renderer.width, this.game.renderer.height);
-
+        
         this.cameras.main.startFollow(this.CurrentPlayer, true, 1, 1,  xCenter - this.game.renderer.width / 2, yCenter - this.game.renderer.height / 2);
     }
 

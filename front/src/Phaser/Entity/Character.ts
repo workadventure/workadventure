@@ -59,6 +59,7 @@ export abstract class Character extends Container {
                 frame?: string | number
     ) {
         super(scene, x, y/*, texture, frame*/);
+        this.PlayerValue = name;
 
         this.sprites = new Map<string, Sprite>();
 
@@ -73,10 +74,9 @@ export abstract class Character extends Container {
         });
         this.add(this.teleportation);*/
 
-        this.PlayerValue = name;
-        this.playerName = new BitmapText(scene, x, y - 25, 'main_font', name, 7);
+        this.playerName = new BitmapText(scene, 0,  - 25, 'main_font', name, 7);
         this.playerName.setOrigin(0.5).setCenterAlign().setDepth(99999);
-        scene.add.existing(this.playerName);
+        this.add(this.playerName);
 
         scene.add.existing(this);
 
@@ -87,8 +87,6 @@ export abstract class Character extends Container {
         this.getBody().setSize(16, 16); //edit the hitbox to better match the character model
         this.getBody().setOffset(0, 8);
         this.setDepth(-1);
-
-        this.scene.events.on('postupdate', this.postupdate.bind(this));
 
         this.playAnimation(direction, moving);
     }
@@ -181,33 +179,19 @@ export abstract class Character extends Container {
         if (body.velocity.y < 0) { //moving up
             this.lastDirection = PlayerAnimationNames.WalkUp;
             this.playAnimation(PlayerAnimationNames.WalkUp, true);
-            //this.play(`${this.PlayerTexture}-${PlayerAnimationNames.WalkUp}`, true);
         } else if (body.velocity.y > 0) { //moving down
             this.lastDirection = PlayerAnimationNames.WalkDown;
             this.playAnimation(PlayerAnimationNames.WalkDown, true);
-            //this.play(`${this.PlayerTexture}-${PlayerAnimationNames.WalkDown}`, true);
         } else if (body.velocity.x > 0) { //moving right
             this.lastDirection = PlayerAnimationNames.WalkRight;
             this.playAnimation(PlayerAnimationNames.WalkRight, true);
-            //this.play(`${this.PlayerTexture}-${PlayerAnimationNames.WalkRight}`, true);
         } else if (body.velocity.x < 0) { //moving left
             this.lastDirection = PlayerAnimationNames.WalkLeft;
             this.playAnimation(PlayerAnimationNames.WalkLeft, true);
-            //this.anims.playReverse(`${this.PlayerTexture}-${PlayerAnimationNames.WalkLeft}`, true);
-        }
-
-        //todo:remove this, use a container tech to move the bubble instead
-        if (this.bubble) {
-            this.bubble.moveBubble(this.x, this.y);
         }
 
         //update depth user
         this.setDepth(this.y);
-    }
-
-    postupdate(time: number, delta: number) {
-        //super.update(delta);
-        this.playerName.setPosition(this.x, this.y - 25);
     }
 
     stop(){
@@ -218,7 +202,6 @@ export abstract class Character extends Container {
     say(text: string) {
         if (this.bubble) return;
         this.bubble = new SpeechBubble(this.scene, this, text)
-        //todo make the bubble destroy on player movement?
         setTimeout(() => {
             if (this.bubble !== null) {
                 this.bubble.destroy();
@@ -227,16 +210,13 @@ export abstract class Character extends Container {
         }, 3000)
     }
 
-    destroy(fromScene?: boolean): void {
-        if (this.scene) {
-            this.scene.events.removeListener('postupdate', this.postupdate.bind(this));
-        }
+    destroy(): void {
         for (const sprite of this.sprites.values()) {
             if(this.scene) {
                 this.scene.sys.updateList.remove(sprite);
             }
         }
-        super.destroy(fromScene);
+        super.destroy();
         this.playerName.destroy();
     }
 }

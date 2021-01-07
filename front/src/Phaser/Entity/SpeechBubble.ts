@@ -1,16 +1,12 @@
 import Scene = Phaser.Scene;
 import {Character} from "./Character";
 
+//todo: improve this WIP
 export class SpeechBubble {
     private bubble: Phaser.GameObjects.Graphics;
     private content: Phaser.GameObjects.Text;
 
-    /**
-     *
-     * @param scene
-     * @param player
-     * @param text
-     */
+    
     constructor(scene: Scene, player: Character, text: string = "") {
 
         const bubbleHeight = 50;
@@ -19,6 +15,7 @@ export class SpeechBubble {
         const arrowHeight = bubbleHeight / 4;
 
         this.bubble = scene.add.graphics({ x: player.x + 16, y: player.y - 80 });
+        player.add(this.bubble);
 
         //  Bubble shadow
         this.bubble.fillStyle(0x222222, 0.5);
@@ -52,29 +49,11 @@ export class SpeechBubble {
         this.bubble.lineBetween(point2X, point2Y, point3X, point3Y);
         this.bubble.lineBetween(point1X, point1Y, point3X, point3Y);
 
-        this.content = scene.add.text(0, 0, text, { fontFamily: 'Arial', fontSize: 20, color: '#000000', align: 'center', wordWrap: { width: bubbleWidth - (bubblePadding * 2) } });
+        this.content = scene.add.text(0, 0, text, { fontFamily: 'Arial', fontSize: '20', color: '#000000', align: 'center', wordWrap: { width: bubbleWidth - (bubblePadding * 2) } });
+        player.add(this.content);
 
         const bounds = this.content.getBounds();
         this.content.setPosition(this.bubble.x + (bubbleWidth / 2) - (bounds.width / 2), this.bubble.y + (bubbleHeight / 2) - (bounds.height / 2));
-    }
-
-    /**
-     *
-     * @param x
-     * @param y
-     */
-    moveBubble(x : number, y : number) {
-        if (this.bubble) {
-            this.bubble.setPosition((x + 16), (y - 80));
-        }
-        if (this.content) {
-            const bubbleHeight = 50;
-            const bubblePadding = 10;
-            const bubbleWidth = bubblePadding * 2 + this.content.text.length * 10;
-            const bounds = this.content.getBounds();
-            //this.content.setPosition(x, y);
-            this.content.setPosition(this.bubble.x + (bubbleWidth / 2) - (bounds.width / 2), this.bubble.y + (bubbleHeight / 2) - (bounds.height / 2));
-        }
     }
 
     destroy(): void {
