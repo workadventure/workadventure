@@ -209,9 +209,10 @@ export class MediaManager {
     }
 
     public enableCamera() {
-        this.enableCameraStyle();
         this.constraintsMedia.video = videoConstraint;
+
         this.getCamera().then((stream: MediaStream) => {
+            this.enableCameraStyle();
             this.triggerUpdatedLocalStreamCallbacks(stream);
         });
     }
@@ -228,10 +229,10 @@ export class MediaManager {
     }
 
     public enableMicrophone() {
-        this.enableMicrophoneStyle();
         this.constraintsMedia.audio = true;
 
         this.getCamera().then((stream) => {
+            this.enableMicrophoneStyle();
             this.triggerUpdatedLocalStreamCallbacks(stream);
         });
     }
