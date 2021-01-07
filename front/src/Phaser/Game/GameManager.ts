@@ -55,7 +55,10 @@ export class GameManager {
         return this.playerName;
     }
 
-    getCharacterLayers(): string[]|null {
+    getCharacterLayers(): string[] {
+        if (!this.characterLayers) {
+            throw 'characterLayers are not set';
+        }
         return this.characterLayers;
     }
 

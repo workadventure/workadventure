@@ -19,12 +19,12 @@ export class Player extends Character implements CurrentGamerInterface {
         x: number,
         y: number,
         name: string,
-        PlayerTextures: string[],
+        texturesPromise: Promise<string[]>,
         direction: string,
         moving: boolean,
         private userInputManager: UserInputManager
     ) {
-        super(Scene, x, y, PlayerTextures, name, direction, moving, 1);
+        super(Scene, x, y, texturesPromise, name, direction, moving, 1);
 
         //the current player model should be push away by other players to prevent conflict
         this.getBody().setImmovable(false);
