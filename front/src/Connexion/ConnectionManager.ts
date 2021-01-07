@@ -1,13 +1,11 @@
 import Axios from "axios";
-import {API_URL} from "../Enum/EnvironmentVariable";
+import {API_URL, START_ROOM_URL} from "../Enum/EnvironmentVariable";
 import {RoomConnection} from "./RoomConnection";
 import {OnConnectInterface, PositionInterface, ViewportInterface} from "./ConnexionModels";
 import {GameConnexionTypes, urlManager} from "../Url/UrlManager";
 import {localUserStore} from "./LocalUserStore";
 import {LocalUser} from "./LocalUser";
 import {Room} from "./Room";
-
-const URL_ROOM_STARTED = 'tcm/workadventure/floor0';
 
 class ConnectionManager {
     private localUser!:LocalUser;
@@ -50,7 +48,11 @@ class ConnectionManager {
             }
             let roomId: string
             if (connexionType === GameConnexionTypes.empty) {
-                roomId = urlManager.editUrlForRoom(URL_ROOM_STARTED, null, null);
+                if (START_ROOM_URL.startsWith('http://') || START_ROOM_URL.startsWith('https://')) {
+                    roomId = '/_/global/' + START_ROOM_URL.replace('http://', '').replace('https://', '');
+                } else {
+                    roomId = urlManager.editUrlForRoom(START_ROOM_URL, null, null);
+                }
             } else {
                 roomId = window.location.pathname + window.location.hash;
             }

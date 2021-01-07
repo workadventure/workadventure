@@ -33,6 +33,7 @@ services:
       TURN_SERVER: "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443"
       TURN_USER: workadventure
       TURN_PASSWORD: WorkAdventure123
+      START_ROOM_URL: "$START_ROOM_URL"
     command: yarn run start
     volumes:
       - ./front:/usr/src/app
