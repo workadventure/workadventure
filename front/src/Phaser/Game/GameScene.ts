@@ -1280,5 +1280,8 @@ export class GameScene extends ResizableScene implements CenterListener {
         }))
     }
 
+    get getInputManager(){
+        return this.userInputManager;
+    }
 
 }

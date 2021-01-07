@@ -733,6 +733,7 @@ export class MediaManager {
     public setUserInputManager(userInputManager : UserInputManager){
         discussionManager.setUserInputManager(userInputManager);
     }
+
     //check if user is active
     private checkActiveUser(){
         if(this.setTimeOutlastUpdateScene){

@@ -4,6 +4,8 @@ import {gameManager} from "../Game/GameManager";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {mediaManager} from "../../WebRtc/MediaManager";
 import {connectionManager} from "../../Connexion/ConnectionManager";
+import {UserInputManager} from "../UserInput/UserInputManager";
+import {GameScene} from "../Game/GameScene";
 
 export const MenuSceneName = 'MenuScene';
 const gameMenuKey = 'gameMenu';
@@ -117,9 +119,8 @@ export class MenuScene extends Phaser.Scene {
             }
         });
 
-        this.input.keyboard.on('keyup-TAB', () => {
-            this.sideMenuOpened ? this.closeSideMenu() : this.openSideMenu();
-        });
+        this.initKeyBoard();
+
         this.menuButton = this.add.dom(0, 0).createFromCache(gameMenuIconKey);
         this.menuButton.addListener('click');
         this.menuButton.on('click', () => {
@@ -128,6 +129,16 @@ export class MenuScene extends Phaser.Scene {
 
         this.menuElement.addListener('click');
         this.menuElement.on('click', this.onMenuClick.bind(this));
+    }
+
+    private initKeyBoard(){
+        this.input.keyboard.on('keydown-TAB', () => {
+            this.sideMenuOpened ? this.closeSideMenu() : this.openSideMenu();
+        });
+    }
+
+    private clearKeyBoard(){
+        this.input.keyboard.off('keydown-TAB');
     }
 
     private revealMenusAfterInit(menuElement: Phaser.GameObjects.DOMElement, rootDomId: string) {
@@ -244,6 +255,7 @@ export class MenuScene extends Phaser.Scene {
         if(middleX < 0){
             middleX = 0;
         }
+
         this.tweens.add({
             targets: this.gameLoginElement,
             y: middleY,
@@ -251,6 +263,37 @@ export class MenuScene extends Phaser.Scene {
             duration: 1000,
             ease: 'Power3'
         });
+
+        //clear / init  keyboard focus and blur
+        if(!gameManager.currentGameSceneName){
+            return;
+        }
+        const gameScene = this.scene.get(gameManager.currentGameSceneName);
+        const gameLoginEmail = this.gameLoginElement.getChildByID('gameLoginEmail');
+        (gameLoginEmail as HTMLDivElement).onfocus = () => {
+            this.clearKeyBoard();
+            (gameScene as GameScene).getInputManager.clearAllInputKeyboard();
+        }
+        (gameLoginEmail as HTMLDivElement).onblur = () => {
+            this.initKeyBoard();
+            (gameScene as GameScene).getInputManager.initKeyBoardEvent();
+        }
+
+        const gameLoginPassword = this.gameLoginElement.getChildByID('gameLoginPassword') as HTMLInputElement;
+        (gameLoginPassword as HTMLDivElement).onfocus = () => {
+            this.clearKeyBoard();
+            (gameScene as GameScene).getInputManager.clearAllInputKeyboard();
+        }
+        (gameLoginPassword as HTMLDivElement).onblur = () => {
+            this.initKeyBoard();
+            (gameScene as GameScene).getInputManager.initKeyBoardEvent();
+        }
+        gameLoginPassword.onkeypress = (event: KeyboardEvent) => {
+            if(event.code === 'Enter'){
+                event.stopPropagation();
+                this.login();
+            }
+        }
     }
 
     private closeGameLogin(): void{
@@ -337,7 +380,6 @@ export class MenuScene extends Phaser.Scene {
             gameLoginError.style.display = 'block';
         });
     }
-
 
     private sendEmail(){
         const gameForgotPasswordInfo = this.gameForgotPasswordElement.getChildByID('gameForgotPasswordInfo') as HTMLParagraphElement;
