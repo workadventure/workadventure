@@ -229,6 +229,14 @@ export class SimplePeer {
         } catch (err) {
             console.error("closeConnection", err)
         }
+
+        //if user left discussion, clear array peer connection of sharing
+        if(this.Users.length === 0) {
+            for (const userId of this.PeerScreenSharingConnectionArray.keys()) {
+                this.closeScreenSharingConnection(userId);
+                this.PeerScreenSharingConnectionArray.delete(userId);
+            }
+        }
     }
 
     /**
