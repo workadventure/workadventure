@@ -212,8 +212,16 @@ export class MediaManager {
         this.constraintsMedia.video = videoConstraint;
 
         this.getCamera().then((stream: MediaStream) => {
+            //TODO show error message tooltip upper of camera button
+            //TODO message : please check camera permission of your navigator
+            if(stream.getVideoTracks().length === 0) {
+                throw Error('Video track is empty, please check camera permission of your navigator')
+            }
             this.enableCameraStyle();
             this.triggerUpdatedLocalStreamCallbacks(stream);
+        }).catch((err) => {
+            console.error(err);
+            this.disableCameraStyle();
         });
     }
 
@@ -232,8 +240,16 @@ export class MediaManager {
         this.constraintsMedia.audio = true;
 
         this.getCamera().then((stream) => {
+            //TODO show error message tooltip upper of camera button
+            //TODO message : please check microphone permission of your navigator
+            if(stream.getAudioTracks().length === 0) {
+                throw Error('Audio track is empty, please check microphone permission of your navigator')
+            }
             this.enableMicrophoneStyle();
             this.triggerUpdatedLocalStreamCallbacks(stream);
+        }).catch((err) => {
+            console.error(err);
+            this.disableMicrophoneStyle();
         });
     }
 
