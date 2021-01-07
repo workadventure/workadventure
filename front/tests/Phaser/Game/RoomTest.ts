@@ -34,6 +34,22 @@ describe("Room getIdFromIdentifier()", () => {
         expect(roomId).toEqual('_/global/maps.workadventu.re/floor1/Floor1.json');
         expect(hash).toEqual('');
     });
+    it("should work with a relative file link that rewrite the map domain", () => {
+        const {roomId, hash} = Room.getIdFromIdentifier('../../maps.workadventure.localhost/Floor1/floor1.json', 'https://maps.workadventu.re/floor0/Floor0.json', 'global');
+        expect(roomId).toEqual('_/global/maps.workadventure.localhost/Floor1/floor1.json');
+        expect(hash).toEqual('');
+    });
+    it("should work with a relative file link that rewrite the map instance", () => {
+        const {roomId, hash} = Room.getIdFromIdentifier('../../../notglobal/maps.workadventu.re/Floor1/floor1.json', 'https://maps.workadventu.re/floor0/Floor0.json', 'global');
+        expect(roomId).toEqual('_/notglobal/maps.workadventu.re/Floor1/floor1.json');
+        expect(hash).toEqual('');
+    });
+    it("should work with a relative file link that change the map type", () => {
+        const {roomId, hash} = Room.getIdFromIdentifier('../../../../@/tcm/is/great', 'https://maps.workadventu.re/floor0/Floor0.json', 'global');
+        expect(roomId).toEqual('@/tcm/is/great');
+        expect(hash).toEqual('');
+    });
+    
     it("should work with a relative file link and a hash as parameters", () => {
         const {roomId, hash} = Room.getIdFromIdentifier('./test2.json#start', 'https://maps.workadventu.re/test.json', 'global');
         expect(roomId).toEqual('_/global/maps.workadventu.re/test2.json');

@@ -3,7 +3,6 @@ import {SelectCharacterScene, SelectCharacterSceneName} from "../Login/SelectCha
 import {gameManager} from "../Game/GameManager";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {mediaManager} from "../../WebRtc/MediaManager";
-import {coWebsiteManager} from "../../WebRtc/CoWebsiteManager";
 import {connectionManager} from "../../Connexion/ConnectionManager";
 
 export const MenuSceneName = 'MenuScene';
