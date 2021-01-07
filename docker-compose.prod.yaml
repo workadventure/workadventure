@@ -21,11 +21,14 @@ services:
       dockerfile: front/Dockerfile
       args:
         BASE_DOMAIN: ${BASE_DOMAIN:-workadventure.localhost}
+
+        # This should fall back to window.location.host
+        API_URL: ""
     labels:
-      - "traefik.http.routers.front.rule=Host(`play.${BASE_DOMAIN:-workadventure.localhost}`)"
+      - "traefik.http.routers.front.rule=PathPrefix(`/`)"
       - "traefik.http.routers.front.entryPoints=web"
       - "traefik.http.services.front.loadbalancer.server.port=8000"
-      - "traefik.http.routers.front-ssl.rule=Host(`play.${BASE_DOMAIN:-workadventure.localhost}`)"
+      - "traefik.http.routers.front-ssl.rule=PathPrefix(`/`)"
       - "traefik.http.routers.front-ssl.entryPoints=websecure"
       - "traefik.http.routers.front-ssl.tls=true"
       - "traefik.http.routers.front-ssl.service=front"
@@ -53,10 +56,10 @@ services:
       JITSI_URL: $JITSI_URL
       JITSI_ISS: $JITSI_ISS
     labels:
-      - "traefik.http.routers.pusher.rule=Host(`pusher.${BASE_DOMAIN:-workadventure.localhost}`)"
+      - "traefik.http.routers.pusher.rule=Path(`/room`, `/verify`, `/register`, `/anonymLogin`)"
       - "traefik.http.routers.pusher.entryPoints=web"
       - "traefik.http.services.pusher.loadbalancer.server.port=8080"
-      - "traefik.http.routers.pusher-ssl.rule=Host(`pusher.${BASE_DOMAIN:-workadventure.localhost}`)"
+      - "traefik.http.routers.pusher-ssl.rule=Path(`/room`, `/verify`, `/register`, `/anonymLogin`)"
       - "traefik.http.routers.pusher-ssl.entryPoints=websecure"
       - "traefik.http.routers.pusher-ssl.tls=true"
       - "traefik.http.routers.pusher-ssl.service=pusher"
