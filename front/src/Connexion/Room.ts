@@ -59,7 +59,7 @@ export class Room {
             if (this.isPublic) {
                 const match = /_\/[^/]+\/(.+)/.exec(this.id);
                 if (!match) throw new Error('Could not extract url from "'+this.id+'"');
-                this.mapUrl = window.location.protocol+'//'+match[1];
+                this.mapUrl = (new URL(match[1], window.location.href)).href;
                 resolve(this.mapUrl);
                 return;
             } else {

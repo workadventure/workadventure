@@ -1,5 +1,5 @@
 import Axios from "axios";
-import {API_URL} from "../Enum/EnvironmentVariable";
+import {MAPS_URL, API_URL} from "../Enum/EnvironmentVariable";
 import {RoomConnection} from "./RoomConnection";
 import {OnConnectInterface, PositionInterface, ViewportInterface} from "./ConnexionModels";
 import {GameConnexionTypes, urlManager} from "../Url/UrlManager";
@@ -50,7 +50,7 @@ class ConnectionManager {
             }
             let roomId: string
             if (connexionType === GameConnexionTypes.empty) {
-                const defaultMapUrl = window.location.host.replace('play.', 'maps.') + URL_ROOM_STARTED;
+                const defaultMapUrl = MAPS_URL + URL_ROOM_STARTED;
                 roomId = urlManager.editUrlForRoom(defaultMapUrl, null, null);
             } else {
                 roomId = window.location.pathname + window.location.hash;

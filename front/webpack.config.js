@@ -45,7 +45,12 @@ module.exports = {
         new webpack.ProvidePlugin({
             Phaser: 'phaser'
         }),
-        new webpack.EnvironmentPlugin(['API_URL', 'UPLOADER_URL', 'ADMIN_URL', 'DEBUG_MODE', 'TURN_SERVER', 'TURN_USER', 'TURN_PASSWORD', 'JITSI_URL', 'JITSI_PRIVATE_MODE'])
+        new webpack.EnvironmentPlugin([
+          'API_URL', 'UPLOADER_URL', 'ADMIN_URL', 'MAPS_URL',
+          'API_PROTOCOL', 'UPLOADER_PROTOCOL', 'ADMIN_PROTOCOL', 'MAPS_PROTOCOL',
+          'API_HOST', 'UPLOADER_HOST', 'ADMIN_HOST', 'MAPS_HOST',
+          'DEBUG_MODE', 'TURN_SERVER', 'TURN_USER', 'TURN_PASSWORD', 'JITSI_URL', 'JITSI_PRIVATE_MODE'
+        ])
     ],
 
 };
