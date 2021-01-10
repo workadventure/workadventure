@@ -13,7 +13,7 @@ if(localValueVideo){
 let videoConstraint: boolean|MediaTrackConstraints = {
     width: { min: 640, ideal: 1280, max: 1920 },
     height: { min: 400, ideal: 720 },
-    frameRate: {exact: valueVideo, ideal: valueVideo},
+    frameRate: { ideal: valueVideo },
     facingMode: "user",
     resizeMode: 'crop-and-scale',
     aspectRatio: 1.777777778
