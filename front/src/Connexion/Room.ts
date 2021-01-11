@@ -33,19 +33,35 @@ export class Room {
             //Relative identifier can be deep enough to rewrite the base domain, so we cannot use the variable 'baseUrl' as the actual base url for the URL objects.
             //We instead use 'workadventure' as a dummy base value.
             const baseUrlObject = new URL(baseUrl);
-            const absoluteExitSceneUrl = new URL(identifier, 'http://workadventure/_/'+currentInstance+'/'+baseUrlObject.hostname+baseUrlObject.pathname);
+            if(identifier.startsWith('../../')) {
+                // Why is this even allowed?
+                // Anyway, this is a hack to preserve backwards compatibility with relative urls without schemes.
+                identifier = `${window.location.protocol}//${identifier.substring('../../'.length)}`;
+            }
+            let absoluteExitSceneUrl = new URL(identifier, 'http://workadventure/_/'+currentInstance+'/'+baseUrlObject.href);
             roomId = absoluteExitSceneUrl.pathname; //in case of a relative url, we need to create a public roomId
             roomId = roomId.substring(1); //remove the leading slash
+            if(identifier.startsWith('http://') || identifier.startsWith('https://')) {
+              absoluteExitSceneUrl = new URL(identifier);
+              absoluteExitSceneUrl.hash = '';
+              roomId = `_/${currentInstance}/${absoluteExitSceneUrl.href}`;
+            }
             hash = absoluteExitSceneUrl.hash;
             hash = hash.substring(1); //remove the leading diese
         } else { //absolute room Id
             const parts = identifier.split('#');
             roomId = parts[0];
             roomId = roomId.substring(1); //remove the leading slash
+            const roomUrl = roomId.substring(`_/${currentInstance}/`.length);
+            if(!roomUrl.startsWith('http://') && !roomUrl.startsWith('https://')) {
+              // Compatibility for map urls without a url scheme.
+              roomId = `_/${currentInstance}/${window.location.protocol}//${roomUrl}`;
+            }
             if (parts.length > 1) {
                 hash = parts[1]
             }
         }
+        console.log(identifier, roomId);
         return {roomId, hash}
     }
 
@@ -56,6 +72,7 @@ export class Room {
                 return;
             }
 
+            console.log('Switching rooms: ' + this.isPublic + ' ' + this.id);
             if (this.isPublic) {
                 const match = /_\/[^/]+\/(.+)/.exec(this.id);
                 if (!match) throw new Error('Could not extract url from "'+this.id+'"');

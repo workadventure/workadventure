@@ -1,8 +1,8 @@
 const DEBUG_MODE: boolean = process.env.DEBUG_MODE == "true";
-const API_URL = process.env.API_URL || (process.env.API_PROTOCOL || (typeof(window) !== 'undefined' ? window.location.protocol : 'http:')) + '//' + (process.env.API_HOST || "pusher.workadventure.localhost");
-const UPLOADER_URL = process.env.UPLOADER_URL || (process.env.API_PROTOCOL || (typeof(window) !== 'undefined' ? window.location.protocol : 'http:')) + '//' + (process.env.UPLOADER_HOST || 'uploader.workadventure.localhost');
-const ADMIN_URL = process.env.ADMIN_URL || (process.env.API_PROTOCOL || (typeof(window) !== 'undefined' ? window.location.protocol : 'http:')) + '//' + (process.env.ADMIN_HOST || "admin.workadventure.localhost");
-const MAPS_URL = process.env.MAPS_URL || (process.env.MAPS_PROTOCOL || (typeof(window) !== 'undefined' ? window.location.protocol : 'http:')) + '//' + (process.env.MAPS_HOST || "maps.workadventure.localhost");
+const API_URL = (new URL(process.env.API_URL || '//api.workadventure.local', window.location.href)).href;
+const UPLOADER_URL = (new URL(process.env.UPLOADER_URL || '//uploader.workadventure.local', window.location.href)).href;
+const ADMIN_URL = (new URL(process.env.ADMIN_URL || '//admin.workadventure.local', window.location.href)).href;
+const MAPS_URL = (new URL(process.env.MAPS_URL || '//maps.workadventure.local', window.location.href)).href;
 const TURN_SERVER: string = process.env.TURN_SERVER || "turn:numb.viagenie.ca";
 const TURN_USER: string = process.env.TURN_USER || 'g.parant@thecodingmachine.com';
 const TURN_PASSWORD: string = process.env.TURN_PASSWORD || 'itcugcOHxle9Acqi$';
