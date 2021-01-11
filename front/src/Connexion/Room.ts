@@ -29,6 +29,7 @@ export class Room {
     public static getIdFromIdentifier(identifier: string, baseUrl: string, currentInstance: string): {roomId: string, hash: string} {
         let roomId = '';
         let hash = '';
+        const protocol = typeof(window) !== 'undefined' ? window.location.protocol : 'https:';
         if (!identifier.startsWith('/_/') && !identifier.startsWith('/@/')) { //relative file link
             //Relative identifier can be deep enough to rewrite the base domain, so we cannot use the variable 'baseUrl' as the actual base url for the URL objects.
             //We instead use 'workadventure' as a dummy base value.
@@ -37,20 +38,27 @@ export class Room {
             if (!identifier.startsWith('http://') && !identifier.startsWith('https://') && identifier.split('../').length == baseUrlObj.pathname.split('/').length) {
               // If the url is relative to the point of going one level beyond /, it attempts to change the hostname.
               // This is a compatibility layer for such broken urls.
-              exitUrl = new URL(`${window.location.protocol}//${identifier.replace(/\.\.\//g, '')}`);
+              exitUrl = new URL(`${protocol}//${identifier.replace(/\.\.\//g, '')}`);
             }
             hash = exitUrl.hash;
             hash = hash.substring(1); //remove the leading diese
             exitUrl.hash = '';
             roomId = `_/${currentInstance}/${exitUrl.href}`;
+            if (identifier.split('../').length == baseUrlObj.pathname.split('/').length + 1) {
+              const instance = exitUrl.pathname.substring(1, exitUrl.pathname.indexOf('/', 1));
+              const url = exitUrl.pathname.substring(instance.length+1);
+              roomId = `_/${instance}/${baseUrlObj.protocol}/${url}`;
+            } else if (identifier.split('../').length == baseUrlObj.pathname.split('/').length + 2) {
+              roomId = exitUrl.pathname.substring(1);
+            }
         } else { //absolute room Id
             const parts = identifier.split('#');
             roomId = parts[0];
             roomId = roomId.substring(1); //remove the leading slash
-            const roomUrl = roomId.substring(`_/${currentInstance}/`.length);
+            const roomUrl = roomId.substring(roomId.indexOf('/', 2) + 1);
             if(!roomUrl.startsWith('http://') && !roomUrl.startsWith('https://')) {
               // Compatibility for map urls without a url scheme.
-              roomId = `_/${currentInstance}/${window.location.protocol}//${roomUrl}`;
+              roomId = `${roomId.substring(0, roomId.length - roomUrl.length)}${protocol}//${roomUrl}`;
             }
             if (parts.length > 1) {
                 hash = parts[1]
