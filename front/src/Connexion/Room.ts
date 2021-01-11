@@ -61,7 +61,6 @@ export class Room {
                 hash = parts[1]
             }
         }
-        console.log(identifier, roomId);
         return {roomId, hash}
     }
 
@@ -72,7 +71,6 @@ export class Room {
                 return;
             }
 
-            console.log('Switching rooms: ' + this.isPublic + ' ' + this.id);
             if (this.isPublic) {
                 const match = /_\/[^/]+\/(.+)/.exec(this.id);
                 if (!match) throw new Error('Could not extract url from "'+this.id+'"');
