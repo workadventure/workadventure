@@ -1,0 +1,179 @@
+version: "3"
+services:
+  reverse-proxy:
+    image: traefik:v2.0
+    command:
+      - --api.insecure=true
+      - --providers.docker
+      - --entryPoints.web.address=:80
+      - --entryPoints.websecure.address=:443
+    ports:
+      - "80:80"
+      - "443:443"
+      # The Web UI (enabled by --api.insecure=true)
+      - "8080:8080"
+    depends_on:
+      - back
+      - front
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  front:
+    image: thecodingmachine/nodejs:14
+    environment:
+      DEBUG_MODE: "$DEBUG_MODE"
+      JITSI_URL: $JITSI_URL
+      JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
+      HOST: "0.0.0.0"
+      NODE_ENV: development
+      API_URL: /pusher
+      UPLOADER_URL: /uploader
+      ADMIN_URL: /admin
+      MAPS_URL: /maps
+      STARTUP_COMMAND_1: yarn install
+      TURN_SERVER: "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443"
+      TURN_USER: workadventure
+      TURN_PASSWORD: WorkAdventure123
+    command: yarn run start
+    volumes:
+      - ./front:/usr/src/app
+    labels:
+      - "traefik.http.routers.front.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.front.entryPoints=web,traefik"
+      - "traefik.http.services.front.loadbalancer.server.port=8080"
+      - "traefik.http.routers.front-ssl.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.front-ssl.entryPoints=websecure"
+      - "traefik.http.routers.front-ssl.tls=true"
+      - "traefik.http.routers.front-ssl.service=front"
+
+  pusher:
+    image: thecodingmachine/nodejs:12
+    command: yarn dev
+    #command: yarn run prod
+    #command: yarn run profile
+    environment:
+      DEBUG: "*"
+      STARTUP_COMMAND_1: yarn install
+      SECRET_JITSI_KEY: "$SECRET_JITSI_KEY"
+      SECRET_KEY: yourSecretKey
+      ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
+      API_URL: back:50051
+      JITSI_URL: $JITSI_URL
+      JITSI_ISS: $JITSI_ISS
+    volumes:
+      - ./pusher:/usr/src/app
+    labels:
+      - "traefik.http.middlewares.strip-pusher-prefix.stripprefix.prefixes=/pusher"
+      - "traefik.http.routers.pusher.rule=PathPrefix(`/pusher`)"
+      - "traefik.http.routers.pusher.middlewares=strip-pusher-prefix@docker"
+      - "traefik.http.routers.pusher.entryPoints=web"
+      - "traefik.http.services.pusher.loadbalancer.server.port=8080"
+      - "traefik.http.routers.pusher-ssl.rule=PathPrefix(`/pusher`)"
+      - "traefik.http.routers.pusher-ssl.middlewares=strip-pusher-prefix@docker"
+      - "traefik.http.routers.pusher-ssl.entryPoints=websecure"
+      - "traefik.http.routers.pusher-ssl.tls=true"
+      - "traefik.http.routers.pusher-ssl.service=pusher"
+
+  maps:
+    image: thecodingmachine/nodejs:12-apache
+    environment:
+      DEBUG_MODE: "$DEBUG_MODE"
+      HOST: "0.0.0.0"
+      NODE_ENV: development
+      #APACHE_DOCUMENT_ROOT: dist/
+      #APACHE_EXTENSIONS: headers
+      #APACHE_EXTENSION_HEADERS: 1
+      STARTUP_COMMAND_0: sudo a2enmod headers
+      STARTUP_COMMAND_1: yarn install
+      STARTUP_COMMAND_2: yarn run dev &
+    volumes:
+      - ./maps:/var/www/html
+    labels:
+      - "traefik.http.middlewares.strip-maps-prefix.stripprefix.prefixes=/maps"
+      - "traefik.http.routers.maps.rule=PathPrefix(`/maps`)"
+      - "traefik.http.routers.maps.middlewares=strip-maps-prefix@docker"
+      - "traefik.http.routers.maps.entryPoints=web,traefik"
+      - "traefik.http.services.maps.loadbalancer.server.port=80"
+      - "traefik.http.routers.maps-ssl.rule=PathPrefix(`/maps`)"
+      - "traefik.http.routers.maps-ssl.middlewares=strip-maps-prefix@docker"
+      - "traefik.http.routers.maps-ssl.entryPoints=websecure"
+      - "traefik.http.routers.maps-ssl.tls=true"
+      - "traefik.http.routers.maps-ssl.service=maps"
+
+  back:
+    image: thecodingmachine/nodejs:12
+    command: yarn dev
+    #command: yarn run profile
+    environment:
+      DEBUG: "*"
+      STARTUP_COMMAND_1: yarn install
+      SECRET_KEY: yourSecretKey
+      SECRET_JITSI_KEY: "$SECRET_JITSI_KEY"
+      ALLOW_ARTILLERY: "true"
+      ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
+      JITSI_URL: $JITSI_URL
+      JITSI_ISS: $JITSI_ISS
+    volumes:
+      - ./back:/usr/src/app
+    labels:
+      - "traefik.http.middlewares.strip-api-prefix.stripprefix.prefixes=/api"
+      - "traefik.http.routers.back.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.back.middlewares=strip-api-prefix@docker"
+      - "traefik.http.routers.back.entryPoints=web"
+      - "traefik.http.services.back.loadbalancer.server.port=8080"
+      - "traefik.http.routers.back-ssl.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.back-ssl.middlewares=strip-api-prefix@docker"
+      - "traefik.http.routers.back-ssl.entryPoints=websecure"
+      - "traefik.http.routers.back-ssl.tls=true"
+      - "traefik.http.routers.back-ssl.service=back"
+
+  uploader:
+    image: thecodingmachine/nodejs:12
+    command: yarn dev
+    #command: yarn run profile
+    environment:
+      DEBUG: "*"
+      STARTUP_COMMAND_1: yarn install
+    volumes:
+      - ./uploader:/usr/src/app
+    labels:
+      - "traefik.http.middlewares.strip-uploader-prefix.stripprefix.prefixes=/uploader"
+      - "traefik.http.routers.uploader.rule=PathPrefix(`/uploader`)"
+      - "traefik.http.routers.uploader.middlewares=strip-uploader-prefix@docker"
+      - "traefik.http.routers.uploader.entryPoints=web"
+      - "traefik.http.services.uploader.loadbalancer.server.port=8080"
+      - "traefik.http.routers.uploader-ssl.rule=PathPrefix(`/uploader`)"
+      - "traefik.http.routers.uploader-ssl.middlewares=strip-uploader-prefix@docker"
+      - "traefik.http.routers.uploader-ssl.entryPoints=websecure"
+      - "traefik.http.routers.uploader-ssl.tls=true"
+      - "traefik.http.routers.uploader-ssl.service=uploader"
+
+  website:
+    image: thecodingmachine/nodejs:12-apache
+    environment:
+      STARTUP_COMMAND_1: npm install
+      STARTUP_COMMAND_2: npm run watch &
+      APACHE_DOCUMENT_ROOT: dist/
+    volumes:
+      - ./website:/var/www/html
+    labels:
+      - "traefik.http.routers.website.rule=Host(`workadventure.localhost`)"
+      - "traefik.http.routers.website.entryPoints=web"
+      - "traefik.http.services.website.loadbalancer.server.port=80"
+      - "traefik.http.routers.website-ssl.rule=Host(`workadventure.localhost`)"
+      - "traefik.http.routers.website-ssl.entryPoints=websecure"
+      - "traefik.http.routers.website-ssl.tls=true"
+      - "traefik.http.routers.website-ssl.service=website"
+
+  messages:
+    #image: thecodingmachine/nodejs:14
+    image: thecodingmachine/workadventure-back-base:latest
+    environment:
+      #STARTUP_COMMAND_0: sudo apt-get install -y inotify-tools
+      STARTUP_COMMAND_1: yarn install
+      STARTUP_COMMAND_2: yarn run proto:watch
+    volumes:
+      - ./messages:/usr/src/app
+      - ./back:/usr/src/back
+      - ./front:/usr/src/front
+      - ./pusher:/usr/src/pusher
