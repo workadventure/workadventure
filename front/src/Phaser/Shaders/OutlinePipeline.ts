@@ -1,5 +1,4 @@
-export class OutlinePipeline extends Phaser.Renderer.WebGL.Pipelines.TextureTintPipeline
-{
+export class OutlinePipeline extends Phaser.Renderer.WebGL.Pipelines.MultiPipeline {
 
     // the unique id of this pipeline
     public static readonly KEY = 'Outline';
@@ -11,7 +10,6 @@ export class OutlinePipeline extends Phaser.Renderer.WebGL.Pipelines.TextureTint
     {
         super({
             game: game,
-            renderer: game.renderer,
             fragShader: `
         precision mediump float;
 
