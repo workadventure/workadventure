@@ -1,8 +1,8 @@
 const DEBUG_MODE: boolean = process.env.DEBUG_MODE == "true";
-const API_URL = (new URL(process.env.API_URL || '//api.workadventure.local', window.location.href)).href;
-const UPLOADER_URL = (new URL(process.env.UPLOADER_URL || '//uploader.workadventure.local', window.location.href)).href;
-const ADMIN_URL = (new URL(process.env.ADMIN_URL || '//admin.workadventure.local', window.location.href)).href;
-const MAPS_URL = (new URL(process.env.MAPS_URL || '//maps.workadventure.local', window.location.href)).href;
+const API_URL = (new URL(process.env.API_URL || '//pusher.workadventure.localhost', window.location.href)).href.replace(/\/$/, '');
+const UPLOADER_URL = (new URL(process.env.UPLOADER_URL || '//uploader.workadventure.localhost', window.location.href)).href.replace(/\/$/, '');
+const ADMIN_URL = (new URL(process.env.ADMIN_URL || '//admin.workadventure.localhost', window.location.href)).href.replace(/\/$/, '');
+const MAPS_URL = (new URL(process.env.MAPS_URL || '//maps.workadventure.localhost', window.location.href)).href.replace(/\/$/, '');
 const TURN_SERVER: string = process.env.TURN_SERVER || "turn:numb.viagenie.ca";
 const TURN_USER: string = process.env.TURN_USER || 'g.parant@thecodingmachine.com';
 const TURN_PASSWORD: string = process.env.TURN_PASSWORD || 'itcugcOHxle9Acqi$';

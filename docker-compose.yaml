@@ -26,10 +26,6 @@ services:
       JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
       HOST: "0.0.0.0"
       NODE_ENV: development
-      API_HOST: pusher.workadventure.localhost
-      UPLOADER_HOST: uploader.workadventure.localhost
-      ADMIN_HOST: admin.workadventure.localhost
-      MAPS_HOST: maps.workadventure.localhost
       STARTUP_COMMAND_1: yarn install
       TURN_SERVER: "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443"
       TURN_USER: workadventure

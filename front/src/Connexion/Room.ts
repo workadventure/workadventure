@@ -32,22 +32,17 @@ export class Room {
         if (!identifier.startsWith('/_/') && !identifier.startsWith('/@/')) { //relative file link
             //Relative identifier can be deep enough to rewrite the base domain, so we cannot use the variable 'baseUrl' as the actual base url for the URL objects.
             //We instead use 'workadventure' as a dummy base value.
-            const baseUrlObject = new URL(baseUrl);
-            if(identifier.startsWith('../../')) {
-                // Why is this even allowed?
-                // Anyway, this is a hack to preserve backwards compatibility with relative urls without schemes.
-                identifier = `${window.location.protocol}//${identifier.substring('../../'.length)}`;
+            const baseUrlObj = new URL(baseUrl);
+            let exitUrl = new URL(identifier, baseUrl);
+            if (!identifier.startsWith('http://') && !identifier.startsWith('https://') && identifier.split('../').length == baseUrlObj.pathname.split('/').length) {
+              // If the url is relative to the point of going one level beyond /, it attempts to change the hostname.
+              // This is a compatibility layer for such broken urls.
+              exitUrl = new URL(`${window.location.protocol}//${identifier.replace(/\.\.\//g, '')}`);
             }
-            let absoluteExitSceneUrl = new URL(identifier, 'http://workadventure/_/'+currentInstance+'/'+baseUrlObject.href);
-            roomId = absoluteExitSceneUrl.pathname; //in case of a relative url, we need to create a public roomId
-            roomId = roomId.substring(1); //remove the leading slash
-            if(identifier.startsWith('http://') || identifier.startsWith('https://')) {
-              absoluteExitSceneUrl = new URL(identifier);
-              absoluteExitSceneUrl.hash = '';
-              roomId = `_/${currentInstance}/${absoluteExitSceneUrl.href}`;
-            }
-            hash = absoluteExitSceneUrl.hash;
+            hash = exitUrl.hash;
             hash = hash.substring(1); //remove the leading diese
+            exitUrl.hash = '';
+            roomId = `_/${currentInstance}/${exitUrl.href}`;
         } else { //absolute room Id
             const parts = identifier.split('#');
             roomId = parts[0];
