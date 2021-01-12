@@ -60,6 +60,9 @@ export class CustomizeScene extends ResizableScene {
         const textures = localUser?.textures;
         if (textures) {
             for (const texture of textures) {
+                if(texture.level === -1){
+                    continue;
+                }
                 loadCustomTexture(this.load, texture);
                 const name = 'customCharacterTexture'+texture.id;
                 this.layers[texture.level].unshift({

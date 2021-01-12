@@ -26,8 +26,8 @@ export const loadAllDefaultModels = (load: LoaderPlugin): BodyResourceDescriptio
 export const loadCustomTexture = (load: LoaderPlugin, texture: CharacterTexture) => {
     const name = 'customCharacterTexture'+texture.id;
     load.spritesheet(name,texture.url,{frameWidth: 32, frameHeight: 32});
+    return name;
 }
-
 
 export const lazyLoadPlayerCharacterTextures = (loadPlugin: LoaderPlugin, texturePlugin: TextureManager, texturekeys:Array<string|BodyResourceDescriptionInterface>): Promise<string[]> => {
     const promisesList:Promise<void>[] = [];

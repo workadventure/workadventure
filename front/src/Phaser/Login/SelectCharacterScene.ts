@@ -6,7 +6,7 @@ import {EnableCameraSceneName} from "./EnableCameraScene";
 import {CustomizeSceneName} from "./CustomizeScene";
 import {ResizableScene} from "./ResizableScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
-import {loadAllDefaultModels} from "../Entity/PlayerTexturesLoadingManager";
+import {loadAllDefaultModels, loadCustomTexture} from "../Entity/PlayerTexturesLoadingManager";
 import {addLoader} from "../Components/Loader";
 import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
 
@@ -22,7 +22,7 @@ enum LoginTextures {
 }
 
 export class SelectCharacterScene extends ResizableScene {
-    private readonly nbCharactersPerRow = 4;
+    private readonly nbCharactersPerRow = 6;
     private textField!: TextField;
     private pressReturnField!: TextField;
     private logo!: Image;
@@ -51,6 +51,18 @@ export class SelectCharacterScene extends ResizableScene {
         this.playerModels = loadAllDefaultModels(this.load);
         this.load.image(LoginTextures.customizeButton, 'resources/objects/customize.png');
         this.load.image(LoginTextures.customizeButtonSelected, 'resources/objects/customize_selected.png');
+
+        const localUser = localUserStore.getLocalUser();
+        const textures = localUser?.textures;
+        if (textures) {
+            for (const texture of textures) {
+                if(texture.level !== -1){
+                    continue;
+                }
+                const name = loadCustomTexture(this.load, texture);
+                this.playerModels.push({name: name, img: texture.url});
+            }
+        }
     }
 
     create() {
