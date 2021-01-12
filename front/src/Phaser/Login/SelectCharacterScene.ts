@@ -2,11 +2,13 @@ import {gameManager} from "../Game/GameManager";
 import {TextField} from "../Components/TextField";
 import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
-import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Character";
 import {EnableCameraSceneName} from "./EnableCameraScene";
 import {CustomizeSceneName} from "./CustomizeScene";
 import {ResizableScene} from "./ResizableScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
+import {loadAllDefaultModels} from "../Entity/PlayerTexturesLoadingManager";
+import {addLoader} from "../Components/Loader";
+import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
 
 
 //todo: put this constants in a dedicated file
@@ -32,6 +34,7 @@ export class SelectCharacterScene extends ResizableScene {
     private selectedRectangleYPos = 0; // Number of the character selected in the columns
     private selectedPlayer!: Phaser.Physics.Arcade.Sprite|null; // null if we are selecting the "customize" option
     private players: Array<Phaser.Physics.Arcade.Sprite> = new Array<Phaser.Physics.Arcade.Sprite>();
+    private playerModels!: BodyResourceDescriptionInterface[];
 
     constructor() {
         super({
@@ -40,18 +43,12 @@ export class SelectCharacterScene extends ResizableScene {
     }
 
     preload() {
+        addLoader(this);
         this.load.image(LoginTextures.playButton, "resources/objects/play_button.png");
         this.load.image(LoginTextures.icon, "resources/logos/tcm_full.png");
         // Note: arcade.png from the Phaser 3 examples at: https://github.com/photonstorm/phaser3-examples/tree/master/public/assets/fonts/bitmap
         this.load.bitmapFont(LoginTextures.mainFont, 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
-        //add player png
-        PLAYER_RESOURCES.forEach((playerResource: PlayerResourceDescriptionInterface) => {
-            this.load.spritesheet(
-                playerResource.name,
-                playerResource.img,
-                {frameWidth: 32, frameHeight: 32}
-            );
-        });
+        this.playerModels = loadAllDefaultModels(this.load);
         this.load.image(LoginTextures.customizeButton, 'resources/objects/customize.png');
         this.load.image(LoginTextures.customizeButtonSelected, 'resources/objects/customize_selected.png');
     }
@@ -85,7 +82,7 @@ export class SelectCharacterScene extends ResizableScene {
             this.updateSelectedPlayer();
         });
         this.input.keyboard.on('keydown-DOWN', () => {
-            if (this.selectedRectangleYPos < Math.ceil(PLAYER_RESOURCES.length / this.nbCharactersPerRow)) {
+            if (this.selectedRectangleYPos < Math.ceil(this.playerModels.length / this.nbCharactersPerRow)) {
                 this.selectedRectangleYPos++;
             }
             this.updateSelectedPlayer();
@@ -106,7 +103,7 @@ export class SelectCharacterScene extends ResizableScene {
             this.selectedRectangleYPos = Math.floor(playerNumber / this.nbCharactersPerRow);
             this.updateSelectedPlayer();
         } else if (playerNumber === -1) {
-            this.selectedRectangleYPos = Math.ceil(PLAYER_RESOURCES.length / this.nbCharactersPerRow);
+            this.selectedRectangleYPos = Math.ceil(this.playerModels.length / this.nbCharactersPerRow);
             this.updateSelectedPlayer();
         }
     }
@@ -127,8 +124,8 @@ export class SelectCharacterScene extends ResizableScene {
     }
 
     createCurrentPlayer(): void {
-        for (let i = 0; i <PLAYER_RESOURCES.length; i++) {
-            const playerResource = PLAYER_RESOURCES[i];
+        for (let i = 0; i <this.playerModels.length; i++) {
+            const playerResource = this.playerModels[i];
 
             const col = i % this.nbCharactersPerRow;
             const row = Math.floor(i / this.nbCharactersPerRow);
@@ -160,12 +157,12 @@ export class SelectCharacterScene extends ResizableScene {
         this.add.existing(this.customizeButtonSelected);
 
         this.customizeButton.setInteractive().on("pointerdown", () => {
-            this.selectedRectangleYPos = Math.ceil(PLAYER_RESOURCES.length / this.nbCharactersPerRow);
+            this.selectedRectangleYPos = Math.ceil(this.playerModels.length / this.nbCharactersPerRow);
             this.updateSelectedPlayer();
         });
 
         this.selectedPlayer = this.players[0];
-        this.selectedPlayer.play(PLAYER_RESOURCES[0].name);
+        this.selectedPlayer.play(this.playerModels[0].name);
     }
 
     /**
@@ -181,7 +178,7 @@ export class SelectCharacterScene extends ResizableScene {
     private updateSelectedPlayer(): void {
         this.selectedPlayer?.anims.pause();
         // If we selected the customize button
-        if (this.selectedRectangleYPos === Math.ceil(PLAYER_RESOURCES.length / this.nbCharactersPerRow)) {
+        if (this.selectedRectangleYPos === Math.ceil(this.playerModels.length / this.nbCharactersPerRow)) {
             this.selectedPlayer = null;
             this.selectedRectangle.setVisible(false);
             this.customizeButtonSelected.setVisible(true);
@@ -198,7 +195,7 @@ export class SelectCharacterScene extends ResizableScene {
         this.selectedRectangle.setSize(32, 32);
         const playerNumber = this.selectedRectangleXPos + this.selectedRectangleYPos * this.nbCharactersPerRow;
         const player = this.players[playerNumber];
-        player.play(PLAYER_RESOURCES[playerNumber].name);
+        player.play(this.playerModels[playerNumber].name);
         this.selectedPlayer = player;
         localUserStore.setPlayerCharacterIndex(playerNumber);
     }
@@ -211,7 +208,7 @@ export class SelectCharacterScene extends ResizableScene {
         this.customizeButton.x = this.game.renderer.width / 2;
         this.customizeButtonSelected.x = this.game.renderer.width / 2;
 
-        for (let i = 0; i <PLAYER_RESOURCES.length; i++) {
+        for (let i = 0; i <this.playerModels.length; i++) {
             const player = this.players[i];
 
             const col = i % this.nbCharactersPerRow;

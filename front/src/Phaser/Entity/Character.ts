@@ -5,33 +5,6 @@ import Container = Phaser.GameObjects.Container;
 import Sprite = Phaser.GameObjects.Sprite;
 import {TextureError} from "../../Exception/TextureError";
 
-export interface PlayerResourceDescriptionInterface {
-    name: string,
-    img: string
-}
-
-export const PLAYER_RESOURCES: Array<PlayerResourceDescriptionInterface> = [
-    {name: "male1", img: "resources/characters/pipoya/Male 01-1.png" /*, x: 32, y: 32*/},
-    {name: "male2", img: "resources/characters/pipoya/Male 02-2.png"/*, x: 64, y: 32*/},
-    {name: "male3", img: "resources/characters/pipoya/Male 03-4.png"/*, x: 96, y: 32*/},
-    {name: "male4", img: "resources/characters/pipoya/Male 09-1.png"/*, x: 128, y: 32*/},
-
-    {name: "male5", img: "resources/characters/pipoya/Male 10-3.png"/*, x: 32, y: 64*/},
-    {name: "male6", img: "resources/characters/pipoya/Male 17-2.png"/*, x: 64, y: 64*/},
-    {name: "male7", img: "resources/characters/pipoya/Male 18-1.png"/*, x: 96, y: 64*/},
-    {name: "male8", img: "resources/characters/pipoya/Male 16-4.png"/*, x: 128, y: 64*/},
-
-    {name: "Female1", img: "resources/characters/pipoya/Female 01-1.png"/*, x: 32, y: 96*/},
-    {name: "Female2", img: "resources/characters/pipoya/Female 02-2.png"/*, x: 64, y: 96*/},
-    {name: "Female3", img: "resources/characters/pipoya/Female 03-4.png"/*, x: 96, y: 96*/},
-    {name: "Female4", img: "resources/characters/pipoya/Female 09-1.png"/*, x: 128, y: 96*/},
-
-    {name: "Female5", img: "resources/characters/pipoya/Female 10-3.png"/*, x: 32, y: 128*/},
-    {name: "Female6", img: "resources/characters/pipoya/Female 17-2.png"/*, x: 64, y: 128*/},
-    {name: "Female7", img: "resources/characters/pipoya/Female 18-1.png"/*, x: 96, y: 128*/},
-    {name: "Female8", img: "resources/characters/pipoya/Female 16-4.png"/*, x: 128, y: 128*/}
-];
-
 interface AnimationData {
     key: string;
     frameRate: number;
@@ -48,11 +21,12 @@ export abstract class Character extends Container {
     public sprites: Map<string, Sprite>;
     private lastDirection: string = PlayerAnimationNames.WalkDown;
     //private teleportation: Sprite;
+    private invisible: boolean;
 
     constructor(scene: Phaser.Scene,
                 x: number,
                 y: number,
-                textures: string[],
+                texturesPromise: Promise<string[]>,
                 name: string,
                 direction: string,
                 moving: boolean,
@@ -60,10 +34,15 @@ export abstract class Character extends Container {
     ) {
         super(scene, x, y/*, texture, frame*/);
         this.PlayerValue = name;
+        this.invisible = true
 
         this.sprites = new Map<string, Sprite>();
 
-        this.addTextures(textures, frame);
+        //textures are inside a Promise in case they need to be lazyloaded before use.
+        texturesPromise.then((textures) => {
+            this.addTextures(textures, frame);
+            this.invisible = false
+        })
 
         /*this.teleportation = new Sprite(scene, -20, -10, 'teleportation', 3);
         this.teleportation.setInteractive();
@@ -148,6 +127,7 @@ export abstract class Character extends Container {
     }
 
     protected playAnimation(direction : string, moving: boolean): void {
+        if (this.invisible) return;
         for (const [texture, sprite] of this.sprites.entries()) {
             if (!sprite.anims) {
                 console.error('ANIMS IS NOT DEFINED!!!');
@@ -190,7 +170,6 @@ export abstract class Character extends Container {
             this.playAnimation(PlayerAnimationNames.WalkLeft, true);
         }
 
-        //update depth user
         this.setDepth(this.y);
     }
 

@@ -1,8 +1,8 @@
 import {PlayerAnimationNames} from "../Phaser/Player/Animation";
 import {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
 import {SignalData} from "simple-peer";
-import {BodyResourceDescriptionInterface} from "../Phaser/Entity/body_character";
 import {RoomConnection} from "./RoomConnection";
+import {BodyResourceDescriptionInterface} from "../Phaser/Entity/PlayerTextures";
 
 export enum EventMessage{
     CONNECT = "connect",

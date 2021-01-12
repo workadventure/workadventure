@@ -41,7 +41,7 @@ import {
     ViewportInterface, WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
-import {BodyResourceDescriptionInterface} from "../Phaser/Entity/body_character";
+import {BodyResourceDescriptionInterface} from "../Phaser/Entity/PlayerTextures";
 
 const manualPingDelay = 20000;
 
