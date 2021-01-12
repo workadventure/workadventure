@@ -59,6 +59,16 @@ export class DiscussionManager {
         const sendDivMessage: HTMLDivElement = document.createElement('div');
         sendDivMessage.classList.add('send-message');
         const inputMessage: HTMLInputElement = document.createElement('input');
+        inputMessage.onfocus = () => {
+            if(this.userInputManager) {
+                this.userInputManager.clearAllInputKeyboard();
+            }
+        }
+        inputMessage.onblur = () => {
+            if(this.userInputManager) {
+                this.userInputManager.initKeyBoardEvent();
+            }
+        }
         inputMessage.type = "text";
         inputMessage.addEventListener('keyup', (event: KeyboardEvent) => {
             if (event.key === 'Enter') {
@@ -141,6 +151,15 @@ export class DiscussionManager {
         this.nbpParticipants.innerText = `PARTICIPANTS (${nb})`;
     }
 
+    private urlify(text: string) {
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        return text.replace(urlRegex, (url: string) => {
+            return '<a href="' + url + '" target="_blank">' + url + '</a>';
+        })
+        // or alternatively
+        // return text.replace(urlRegex, '<a href="$1">$1</a>')
+    }
+
     public addMessage(name: string, message: string, isMe: boolean = false) {
         const divMessage: HTMLDivElement = document.createElement('div');
         divMessage.classList.add('message');
@@ -160,11 +179,18 @@ export class DiscussionManager {
         divMessage.appendChild(pMessage);
 
         const userMessage: HTMLParagraphElement = document.createElement('p');
-        userMessage.innerText = message;
+        userMessage.innerHTML = this.urlify(message);
         userMessage.classList.add('body');
         divMessage.appendChild(userMessage);
-
         this.divMessages?.appendChild(divMessage);
+
+        //automatic scroll when there are new message
+        setTimeout(() => {
+            this.divMessages?.scroll({
+                top: this.divMessages?.scrollTop + divMessage.getBoundingClientRect().y,
+                behavior: 'smooth'
+            });
+        }, 200);
     }
 
     public removeParticipant(userId: number|string){
@@ -188,17 +214,11 @@ export class DiscussionManager {
 
     private showDiscussion(){
         this.activeDiscussion = true;
-        if(this.userInputManager) {
-            this.userInputManager.clearAllInputKeyboard();
-        }
         this.divDiscuss?.classList.add('active');
     }
 
     private hideDiscussion(){
         this.activeDiscussion = false;
-        if(this.userInputManager) {
-            this.userInputManager.initKeyBoardEvent();
-        }
         this.divDiscuss?.classList.remove('active');
     }
     
