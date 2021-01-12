@@ -67,8 +67,11 @@ export class SelectCharacterScene extends ResizableScene {
 
     create() {
         this.textField = new TextField(this, this.game.renderer.width / 2, 50, 'Select your character');
-
-        this.pressReturnField = new TextField(this, this.game.renderer.width / 2, 256, 'Press enter to start');
+        this.pressReturnField = new TextField(
+            this,
+            this.game.renderer.width / 2,
+            90 + 32 * Math.ceil( this.playerModels.length / this.nbCharactersPerRow) + 40,
+            'Press enter to start');
 
         const rectangleXStart = this.game.renderer.width / 2 - (this.nbCharactersPerRow / 2) * 32 + 16;
 
@@ -82,25 +85,38 @@ export class SelectCharacterScene extends ResizableScene {
         });
 
         this.input.keyboard.on('keydown-RIGHT', () => {
-            if (this.selectedRectangleXPos < this.nbCharactersPerRow - 1) {
+            if(this.selectedRectangleYPos * this.nbCharactersPerRow + (this.selectedRectangleXPos + 2))
+            if (
+                this.selectedRectangleXPos < this.nbCharactersPerRow - 1
+                && ((this.selectedRectangleYPos * this.nbCharactersPerRow) + (this.selectedRectangleXPos + 1) + 1) <= this.playerModels.length
+            ) {
                 this.selectedRectangleXPos++;
             }
             this.updateSelectedPlayer();
         });
         this.input.keyboard.on('keydown-LEFT', () => {
-            if (this.selectedRectangleXPos > 0) {
+            if (
+                this.selectedRectangleXPos > 0
+                && ((this.selectedRectangleYPos * this.nbCharactersPerRow) + (this.selectedRectangleXPos - 1) + 1) <= this.playerModels.length
+            ) {
                 this.selectedRectangleXPos--;
             }
             this.updateSelectedPlayer();
         });
         this.input.keyboard.on('keydown-DOWN', () => {
-            if (this.selectedRectangleYPos < Math.ceil(this.playerModels.length / this.nbCharactersPerRow)) {
+            if (
+                this.selectedRectangleYPos < Math.ceil(this.playerModels.length / this.nbCharactersPerRow)
+                && (((this.selectedRectangleYPos + 1) * this.nbCharactersPerRow) + this.selectedRectangleXPos + 1) <= this.playerModels.length
+            ) {
                 this.selectedRectangleYPos++;
             }
             this.updateSelectedPlayer();
         });
         this.input.keyboard.on('keydown-UP', () => {
-            if (this.selectedRectangleYPos > 0) {
+            if (
+                this.selectedRectangleYPos > 0
+                && (((this.selectedRectangleYPos - 1) * this.nbCharactersPerRow) + this.selectedRectangleXPos + 1) <= this.playerModels.length
+            ) {
                 this.selectedRectangleYPos--;
             }
             this.updateSelectedPlayer();
@@ -160,10 +176,11 @@ export class SelectCharacterScene extends ResizableScene {
             this.players.push(player);
         }
 
-        this.customizeButton = new Image(this, this.game.renderer.width / 2, 90 + 32 * 4 + 6, LoginTextures.customizeButton);
+        const maxRow = Math.ceil( this.playerModels.length / this.nbCharactersPerRow);
+        this.customizeButton = new Image(this, this.game.renderer.width / 2, 90 + 32 * maxRow + 6, LoginTextures.customizeButton);
         this.customizeButton.setOrigin(0.5, 0.5);
         this.add.existing(this.customizeButton);
-        this.customizeButtonSelected = new Image(this, this.game.renderer.width / 2, 90 + 32 * 4 + 6, LoginTextures.customizeButtonSelected);
+        this.customizeButtonSelected = new Image(this, this.game.renderer.width / 2, 90 + 32 * maxRow + 6, LoginTextures.customizeButtonSelected);
         this.customizeButtonSelected.setOrigin(0.5, 0.5);
         this.customizeButtonSelected.setVisible(false);
         this.add.existing(this.customizeButtonSelected);
