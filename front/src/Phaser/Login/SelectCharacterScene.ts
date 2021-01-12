@@ -106,7 +106,10 @@ export class SelectCharacterScene extends ResizableScene {
         this.input.keyboard.on('keydown-DOWN', () => {
             if (
                 this.selectedRectangleYPos < Math.ceil(this.playerModels.length / this.nbCharactersPerRow)
-                && (((this.selectedRectangleYPos + 1) * this.nbCharactersPerRow) + this.selectedRectangleXPos + 1) <= this.playerModels.length
+                && (
+                    (((this.selectedRectangleYPos + 1) * this.nbCharactersPerRow) + this.selectedRectangleXPos + 1) <= this.playerModels.length // check if player isn't empty
+                    || (this.selectedRectangleYPos + 1) === Math.ceil(this.playerModels.length / this.nbCharactersPerRow) // check if is custom rectangle
+                )
             ) {
                 this.selectedRectangleYPos++;
             }
