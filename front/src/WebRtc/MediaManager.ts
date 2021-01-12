@@ -209,10 +209,19 @@ export class MediaManager {
     }
 
     public enableCamera() {
-        this.enableCameraStyle();
         this.constraintsMedia.video = videoConstraint;
+
         this.getCamera().then((stream: MediaStream) => {
+            //TODO show error message tooltip upper of camera button
+            //TODO message : please check camera permission of your navigator
+            if(stream.getVideoTracks().length === 0) {
+                throw Error('Video track is empty, please check camera permission of your navigator')
+            }
+            this.enableCameraStyle();
             this.triggerUpdatedLocalStreamCallbacks(stream);
+        }).catch((err) => {
+            console.error(err);
+            this.disableCameraStyle();
         });
     }
 
@@ -228,11 +237,19 @@ export class MediaManager {
     }
 
     public enableMicrophone() {
-        this.enableMicrophoneStyle();
         this.constraintsMedia.audio = true;
 
         this.getCamera().then((stream) => {
+            //TODO show error message tooltip upper of camera button
+            //TODO message : please check microphone permission of your navigator
+            if(stream.getAudioTracks().length === 0) {
+                throw Error('Audio track is empty, please check microphone permission of your navigator')
+            }
+            this.enableMicrophoneStyle();
             this.triggerUpdatedLocalStreamCallbacks(stream);
+        }).catch((err) => {
+            console.error(err);
+            this.disableMicrophoneStyle();
         });
     }
 
@@ -317,6 +334,9 @@ export class MediaManager {
         }
         const localScreenCapture = this.localScreenCapture;
         this.getCamera().then((stream) => {
+            this.triggerStoppedScreenSharingCallbacks(localScreenCapture);
+        }).catch((err) => { //catch error get camera
+            console.error(err);
             this.triggerStoppedScreenSharingCallbacks(localScreenCapture);
         });
         this.localScreenCapture = null;
