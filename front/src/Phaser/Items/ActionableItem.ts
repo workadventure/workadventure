@@ -42,8 +42,10 @@ export class ActionableItem {
             return;
         }
         this.isSelectable = true;
-        this.sprite.setPipeline(OutlinePipeline.KEY);
-        this.sprite.pipeline.set2f('uTextureSize', this.sprite.texture.getSourceImage().width, this.sprite.texture.getSourceImage().height);
+        if (this.sprite.pipeline) {
+            this.sprite.setPipeline(OutlinePipeline.KEY);
+            this.sprite.pipeline.set2f('uTextureSize', this.sprite.texture.getSourceImage().width, this.sprite.texture.getSourceImage().height);
+        }
     }
 
     /**
