@@ -110,6 +110,7 @@ export class MenuScene extends Phaser.Scene {
         if (!this.sideMenuOpened) return;
         this.sideMenuOpened = false;
         this.closeAll();
+        this.menuButton.getChildByID('openMenuButton').innerHTML = `<img src="/static/images/menu.svg">`;
         gameManager.getCurrentGameScene(this).ConsoleGlobalMessageManager.disabledMessageConsole();
         this.tweens.add({
             targets: this.menuElement,
@@ -121,6 +122,7 @@ export class MenuScene extends Phaser.Scene {
 
     private openGameSettingsMenu(): void {
         if (this.settingsMenuOpened) {
+            this.closeGameQualityMenu();
             return;
         }
         //close all
@@ -278,6 +280,5 @@ export class MenuScene extends Phaser.Scene {
     private closeAll(){
         this.closeGameQualityMenu();
         this.closeGameShare();
-        this.menuButton.getChildByID('openMenuButton').innerHTML = `<img src="/static/images/menu.svg">`;
     }
 }

@@ -1072,10 +1072,14 @@ div.modal-report-user{
 }
 
 .discussion .messages .message p.body{
+    color: white;
     font-size: 16px;
     overflow: hidden;
     white-space: pre-wrap;
     word-wrap: break-word;
+}
+.discussion .messages .message p.a{
+    color: white;
 }
 
 .discussion .send-message{
@@ -1083,6 +1087,7 @@ div.modal-report-user{
     bottom: 45px;
     width: 220px;
     height: 26px;
+    margin-bottom: 10px;
 }
 
 .discussion .send-message input{
