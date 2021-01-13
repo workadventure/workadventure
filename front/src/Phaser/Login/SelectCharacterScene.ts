@@ -6,7 +6,7 @@ import {EnableCameraSceneName} from "./EnableCameraScene";
 import {CustomizeSceneName} from "./CustomizeScene";
 import {ResizableScene} from "./ResizableScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
-import {loadAllDefaultModels} from "../Entity/PlayerTexturesLoadingManager";
+import {loadAllDefaultModels, loadCustomTexture} from "../Entity/PlayerTexturesLoadingManager";
 import {addLoader} from "../Components/Loader";
 import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
 
@@ -22,7 +22,7 @@ enum LoginTextures {
 }
 
 export class SelectCharacterScene extends ResizableScene {
-    private readonly nbCharactersPerRow = 4;
+    private readonly nbCharactersPerRow = 6;
     private textField!: TextField;
     private pressReturnField!: TextField;
     private logo!: Image;
@@ -51,12 +51,27 @@ export class SelectCharacterScene extends ResizableScene {
         this.playerModels = loadAllDefaultModels(this.load);
         this.load.image(LoginTextures.customizeButton, 'resources/objects/customize.png');
         this.load.image(LoginTextures.customizeButtonSelected, 'resources/objects/customize_selected.png');
+
+        const localUser = localUserStore.getLocalUser();
+        const textures = localUser?.textures;
+        if (textures) {
+            for (const texture of textures) {
+                if(texture.level !== -1){
+                    continue;
+                }
+                const name = loadCustomTexture(this.load, texture);
+                this.playerModels.push({name: name, img: texture.url});
+            }
+        }
     }
 
     create() {
         this.textField = new TextField(this, this.game.renderer.width / 2, 50, 'Select your character');
-
-        this.pressReturnField = new TextField(this, this.game.renderer.width / 2, 256, 'Press enter to start');
+        this.pressReturnField = new TextField(
+            this,
+            this.game.renderer.width / 2,
+            90 + 32 * Math.ceil( this.playerModels.length / this.nbCharactersPerRow) + 40,
+            'Press enter to start');
 
         const rectangleXStart = this.game.renderer.width / 2 - (this.nbCharactersPerRow / 2) * 32 + 16;
 
@@ -70,25 +85,41 @@ export class SelectCharacterScene extends ResizableScene {
         });
 
         this.input.keyboard.on('keydown-RIGHT', () => {
-            if (this.selectedRectangleXPos < this.nbCharactersPerRow - 1) {
+            if(this.selectedRectangleYPos * this.nbCharactersPerRow + (this.selectedRectangleXPos + 2))
+            if (
+                this.selectedRectangleXPos < this.nbCharactersPerRow - 1
+                && ((this.selectedRectangleYPos * this.nbCharactersPerRow) + (this.selectedRectangleXPos + 1) + 1) <= this.playerModels.length
+            ) {
                 this.selectedRectangleXPos++;
             }
             this.updateSelectedPlayer();
         });
         this.input.keyboard.on('keydown-LEFT', () => {
-            if (this.selectedRectangleXPos > 0) {
+            if (
+                this.selectedRectangleXPos > 0
+                && ((this.selectedRectangleYPos * this.nbCharactersPerRow) + (this.selectedRectangleXPos - 1) + 1) <= this.playerModels.length
+            ) {
                 this.selectedRectangleXPos--;
             }
             this.updateSelectedPlayer();
         });
         this.input.keyboard.on('keydown-DOWN', () => {
-            if (this.selectedRectangleYPos < Math.ceil(this.playerModels.length / this.nbCharactersPerRow)) {
+            if (
+                this.selectedRectangleYPos < Math.ceil(this.playerModels.length / this.nbCharactersPerRow)
+                && (
+                    (((this.selectedRectangleYPos + 1) * this.nbCharactersPerRow) + this.selectedRectangleXPos + 1) <= this.playerModels.length // check if player isn't empty
+                    || (this.selectedRectangleYPos + 1) === Math.ceil(this.playerModels.length / this.nbCharactersPerRow) // check if is custom rectangle
+                )
+            ) {
                 this.selectedRectangleYPos++;
             }
             this.updateSelectedPlayer();
         });
         this.input.keyboard.on('keydown-UP', () => {
-            if (this.selectedRectangleYPos > 0) {
+            if (
+                this.selectedRectangleYPos > 0
+                && (((this.selectedRectangleYPos - 1) * this.nbCharactersPerRow) + this.selectedRectangleXPos + 1) <= this.playerModels.length
+            ) {
                 this.selectedRectangleYPos--;
             }
             this.updateSelectedPlayer();
@@ -148,10 +179,11 @@ export class SelectCharacterScene extends ResizableScene {
             this.players.push(player);
         }
 
-        this.customizeButton = new Image(this, this.game.renderer.width / 2, 90 + 32 * 4 + 6, LoginTextures.customizeButton);
+        const maxRow = Math.ceil( this.playerModels.length / this.nbCharactersPerRow);
+        this.customizeButton = new Image(this, this.game.renderer.width / 2, 90 + 32 * maxRow + 6, LoginTextures.customizeButton);
         this.customizeButton.setOrigin(0.5, 0.5);
         this.add.existing(this.customizeButton);
-        this.customizeButtonSelected = new Image(this, this.game.renderer.width / 2, 90 + 32 * 4 + 6, LoginTextures.customizeButtonSelected);
+        this.customizeButtonSelected = new Image(this, this.game.renderer.width / 2, 90 + 32 * maxRow + 6, LoginTextures.customizeButtonSelected);
         this.customizeButtonSelected.setOrigin(0.5, 0.5);
         this.customizeButtonSelected.setVisible(false);
         this.add.existing(this.customizeButtonSelected);

@@ -18,6 +18,11 @@ export const PLAYER_RESOURCES: BodyResourceDescriptionListInterface = {
     "male6": {name: "male6", img: "resources/characters/pipoya/Male 17-2.png"},
     "male7": {name: "male7", img: "resources/characters/pipoya/Male 18-1.png"},
     "male8": {name: "male8", img: "resources/characters/pipoya/Male 16-4.png"},
+    "male9": {name: "male9", img: "resources/characters/pipoya/Male 07-2.png"},
+    "male10": {name: "male10", img: "resources/characters/pipoya/Male 05-3.png"},
+    "male11": {name: "male11", img: "resources/characters/pipoya/Teacher male 02.png"},
+    "male12": {name: "male12", img: "resources/characters/pipoya/su4 Student male 12.png"},
+
     "Female1": {name: "Female1", img: "resources/characters/pipoya/Female 01-1.png"},
     "Female2": {name: "Female2", img: "resources/characters/pipoya/Female 02-2.png"},
     "Female3": {name: "Female3", img: "resources/characters/pipoya/Female 03-4.png"},
@@ -25,7 +30,11 @@ export const PLAYER_RESOURCES: BodyResourceDescriptionListInterface = {
     "Female5": {name: "Female5", img: "resources/characters/pipoya/Female 10-3.png"},
     "Female6": {name: "Female6", img: "resources/characters/pipoya/Female 17-2.png"},
     "Female7": {name: "Female7", img: "resources/characters/pipoya/Female 18-1.png"},
-    "Female8": {name: "Female8", img: "resources/characters/pipoya/Female 16-4.png"}
+    "Female8": {name: "Female8", img: "resources/characters/pipoya/Female 16-4.png"},
+    "Female9": {name: "Female9", img: "resources/characters/pipoya/Female 07-2.png"},
+    "Female10": {name: "Female10", img: "resources/characters/pipoya/Female 05-3.png"},
+    "Female11": {name: "Female11", img: "resources/characters/pipoya/Teacher fmale 02.png"},
+    "Female12": {name: "Female12", img: "resources/characters/pipoya/su4 Student fmale 12.png"},
 };
 
 export const COLOR_RESOURCES: BodyResourceDescriptionListInterface = {
