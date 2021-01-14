@@ -32,10 +32,9 @@ export const loadCustomTexture = (load: LoaderPlugin, texture: CharacterTexture)
 export const lazyLoadPlayerCharacterTextures = (loadPlugin: LoaderPlugin, texturePlugin: TextureManager, texturekeys:Array<string|BodyResourceDescriptionInterface>): Promise<string[]> => {
     const promisesList:Promise<void>[] = [];
     texturekeys.forEach((textureKey: string|BodyResourceDescriptionInterface) => {
-        const textureName = typeof textureKey === 'string' ? textureKey : textureKey.name;
-        if(!texturePlugin.exists(textureName)) {
-            console.log('Loading '+textureName)
-            const playerResourceDescriptor = typeof textureKey === 'string' ? getRessourceDescriptor(textureKey) : textureKey;
+        const playerResourceDescriptor = getRessourceDescriptor(textureKey);        
+        if(!texturePlugin.exists(playerResourceDescriptor.name)) {
+            console.log('Loading '+playerResourceDescriptor.name)
             promisesList.push(createLoadingPromise(loadPlugin, playerResourceDescriptor));
         }
     })
@@ -51,16 +50,19 @@ export const lazyLoadPlayerCharacterTextures = (loadPlugin: LoaderPlugin, textur
     }))
 }
 
-
-const getRessourceDescriptor = (textureKey: string): BodyResourceDescriptionInterface => {
-    const playerResource = PLAYER_RESOURCES[textureKey];
+export const getRessourceDescriptor = (textureKey: string|BodyResourceDescriptionInterface): BodyResourceDescriptionInterface => {
+    if (typeof textureKey !== 'string' && textureKey.img) {
+        return textureKey;
+    }
+    const textureName:string = typeof textureKey === 'string' ? textureKey : textureKey.name;
+    const playerResource = PLAYER_RESOURCES[textureName];
     if (playerResource !== undefined) return playerResource;
     
     for (let i=0; i<LAYERS.length;i++) {
-        const playerResource = LAYERS[i][textureKey];
+        const playerResource = LAYERS[i][textureName];
         if (playerResource !== undefined) return playerResource;
     }
-    throw 'Could not find a data for texture '+textureKey;
+    throw 'Could not find a data for texture '+textureName;
 }
 
 const createLoadingPromise = (loadPlugin: LoaderPlugin, playerResourceDescriptor: BodyResourceDescriptionInterface) => {
