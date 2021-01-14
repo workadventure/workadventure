@@ -25,6 +25,8 @@ import {
     WebRtcStartMessage,
     QueryJitsiJwtMessage,
     SendJitsiJwtMessage,
+    QueryBbbJoinMessage,
+    SendBbbJoinMessage,
     SendUserMessage,
     JoinRoomMessage,
     CharacterLayerMessage,
@@ -536,6 +538,21 @@ export class SocketManager implements ZoneEventListener {
 
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setSendjitsijwtmessage(sendJitsiJwtMessage);
+
+        client.send(serverToClientMessage.serializeBinary().buffer, true);
+    }
+
+    public async handleQueryBbbJoinMessage(client: ExSocketInterface, queryBbbJoinMessage: QueryBbbJoinMessage) {
+        const room = queryBbbJoinMessage.getBbbroom();
+
+        const sendBbbJoinResponse = new SendBbbJoinMessage();
+
+        // FIXME: Generate join URL here
+        const url = await Promise.resolve('https://example.com?backend=pusher');
+        sendBbbJoinResponse.setUrl(url);
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setSendbbbjoinmessage(sendBbbJoinResponse);
 
         client.send(serverToClientMessage.serializeBinary().buffer, true);
     }

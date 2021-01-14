@@ -67,6 +67,10 @@ message QueryJitsiJwtMessage {
   string tag = 2; // FIXME: rather than reading the tag from the query, we should read it from the current map!
 }
 
+message QueryBbbJoinMessage {
+  string bbbRoom = 1;
+}
+
 message ClientToServerMessage {
   oneof message {
     UserMovesMessage userMovesMessage = 2;
@@ -80,6 +84,7 @@ message ClientToServerMessage {
     StopGlobalMessage stopGlobalMessage = 10;
     ReportPlayerMessage reportPlayerMessage = 11;
     QueryJitsiJwtMessage queryJitsiJwtMessage = 12;
+    QueryBbbJoinMessage queryBbbJoinMessage = 13;
   }
 }
 
@@ -188,6 +193,11 @@ message SendJitsiJwtMessage {
   string jwt = 2;
 }
 
+message SendBbbJoinMessage {
+  string bbbRoom = 1;
+  string url = 2;
+}
+
 message SendUserMessage{
   string type = 1;
   string message = 2;
@@ -207,6 +217,7 @@ message ServerToClientMessage {
     TeleportMessageMessage teleportMessageMessage = 10;
     SendJitsiJwtMessage sendJitsiJwtMessage = 11;
     SendUserMessage sendUserMessage = 12;
+    SendBbbJoinMessage sendBbbJoinMessage = 13;
   }
 }
 
@@ -272,6 +283,7 @@ message PusherToBackMessage {
     StopGlobalMessage stopGlobalMessage = 9;
     ReportPlayerMessage reportPlayerMessage = 10;
     QueryJitsiJwtMessage queryJitsiJwtMessage = 11;
+    QueryBbbJoinMessage queryBbbJoinMessage = 12;
   }
 }
 
