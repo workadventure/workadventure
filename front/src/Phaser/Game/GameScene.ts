@@ -519,6 +519,13 @@ export class GameScene extends ResizableScene implements CenterListener {
                 this.startJitsi(room, jwt);
             });
 
+            /**
+             * Triggered when we receive the BigBlueButton meeting URL
+             */
+            this.connection.onStartBbbRoom((url, room) => {
+                this.startBbb(room, url);
+            });
+
             // When connection is performed, let's connect SimplePeer
             this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic, this.playerName);
             this.GlobalMessageManager = new GlobalMessageManager(this.connection);
@@ -668,7 +675,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                 this.stopBbb();
             }else{
                 const openBbbRoomFunction = () => {
-                    this.startBbb(newValue as string);
+                    this.connection.emitQueryBbbJoinMessage(this.instance.replace('/', '-') + "-" + newValue);
                     layoutManager.removeActionButton('bbbRoom', this.userInputManager);
                 }
 
@@ -1240,8 +1247,8 @@ export class GameScene extends ResizableScene implements CenterListener {
         mediaManager.removeTriggerCloseJitsiFrameButton('close-jisi');
     }
 
-    public startBbb(roomName: string, jwt?: string): void {
-        bbbFactory.start(roomName, this.playerName, jwt);
+    public startBbb(roomName: string, url: string): void {
+        bbbFactory.start(roomName, this.playerName, url);
         this.connection.setSilent(true);
         mediaManager.hideGameOverlay();
 

@@ -25,6 +25,8 @@ import {
     TeleportMessageMessage,
     QueryJitsiJwtMessage,
     SendJitsiJwtMessage,
+    QueryBbbJoinMessage,
+    SendBbbJoinMessage,
     CharacterLayerMessage,
     PingMessage,
     SendUserMessage
@@ -184,6 +186,8 @@ export class RoomConnection implements RoomConnection {
                 this.dispatch(EventMessage.TELEPORT, message.getTeleportmessagemessage());
             } else if (message.hasSendjitsijwtmessage()) {
                 this.dispatch(EventMessage.START_JITSI_ROOM, message.getSendjitsijwtmessage());
+            } else if (message.hasSendbbbjoinmessage()) {
+                this.dispatch(EventMessage.START_BBB_ROOM, message.getSendbbbjoinmessage());
             } else if (message.hasSendusermessage()) {
                 this.dispatch(EventMessage.USER_MESSAGE, message.getSendusermessage());
             } else {
@@ -577,6 +581,22 @@ export class RoomConnection implements RoomConnection {
     public onStartJitsiRoom(callback: (jwt: string, room: string) => void): void {
         this.onMessage(EventMessage.START_JITSI_ROOM, (message: SendJitsiJwtMessage) => {
             callback(message.getJwt(), message.getJitsiroom());
+        });
+    }
+
+    public emitQueryBbbJoinMessage(bbbRoom: string): void {
+        const queryBbbJoinMessage = new QueryBbbJoinMessage();
+        queryBbbJoinMessage.setBbbroom(bbbRoom);
+
+        const clientToServerMessage = new ClientToServerMessage();
+        clientToServerMessage.setQuerybbbjoinmessage(queryBbbJoinMessage);
+
+        this.socket.send(clientToServerMessage.serializeBinary().buffer);
+    }
+
+    public onStartBbbRoom(callback: (url: string, room: string) => void): void {
+        this.onMessage(EventMessage.START_BBB_ROOM, (message: SendBbbJoinMessage) => {
+            callback(message.getUrl(), message.getBbbroom());
         });
     }
 
