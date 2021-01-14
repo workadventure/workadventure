@@ -23,7 +23,7 @@
          "opacity":1,
          "properties":[
                 {
-                 "name":"jitsiRoom",
+                 "name":"bbbRoom",
                  "type":"string",
                  "value":"tcm-patio"
                 }],
@@ -41,12 +41,12 @@
          "opacity":1,
          "properties":[
                 {
-                 "name":"jitsiRoom",
+                 "name":"bbbRoom",
                  "type":"string",
                  "value":"tcm-chillzone-2"
                 }, 
                 {
-                 "name":"jitsiTrigger",
+                 "name":"bbbTrigger",
                  "type":"string",
                  "value":"onaction"
                 }],
@@ -64,12 +64,12 @@
          "opacity":1,
          "properties":[
                 {
-                 "name":"jitsiRoom",
+                 "name":"bbbRoom",
                  "type":"string",
                  "value":"tcm-chillzone-11"
                 }, 
                 {
-                 "name":"jitsiTrigger",
+                 "name":"bbbTrigger",
                  "type":"string",
                  "value":"onaction"
                 }],
@@ -87,12 +87,12 @@
          "opacity":1,
          "properties":[
                 {
-                 "name":"jitsiRoom",
+                 "name":"bbbRoom",
                  "type":"string",
                  "value":"tcm-chillzone-cafe"
                 }, 
                 {
-                 "name":"jitsiTrigger",
+                 "name":"bbbTrigger",
                  "type":"string",
                  "value":"onaction"
                 }],
@@ -110,12 +110,12 @@
          "opacity":1,
          "properties":[
                 {
-                 "name":"jitsiRoom",
+                 "name":"bbbRoom",
                  "type":"string",
                  "value":"tcm-formation"
                 }, 
                 {
-                 "name":"jitsiTrigger",
+                 "name":"bbbTrigger",
                  "type":"string",
                  "value":"onaction"
                 }],
@@ -240,7 +240,7 @@
          "opacity":1,
          "properties":[
                 {
-                 "name":"jitsiRoom",
+                 "name":"bbbRoom",
                  "type":"string",
                  "value":"tcm-amphi"
                 }],

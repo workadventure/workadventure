@@ -29,7 +29,7 @@
          "opacity":1,
          "properties":[
                 {
-                 "name":"jitsiRoom",
+                 "name":"bbbRoom",
                  "type":"string",
                  "value":"tcm-radiant-2"
                 }],
@@ -47,7 +47,7 @@
          "opacity":1,
          "properties":[
                 {
-                 "name":"jitsiRoom",
+                 "name":"bbbRoom",
                  "type":"string",
                  "value":"tcm-white-room-2"
                 }],
@@ -65,7 +65,7 @@
          "opacity":1,
          "properties":[
                 {
-                 "name":"jitsiRoom",
+                 "name":"bbbRoom",
                  "type":"string",
                  "value":"tcm-dire-2"
                 }],

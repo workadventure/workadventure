@@ -26,6 +26,7 @@ export interface CenterListener {
 export const ON_ACTION_TRIGGER_BUTTON = 'onaction';
 export const TRIGGER_WEBSITE_PROPERTIES = 'openWebsiteTrigger';
 export const TRIGGER_JITSI_PROPERTIES = 'jitsiTrigger';
+export const TRIGGER_BBB_PROPERTIES = 'bbbTrigger';
 
 /**
  * This class is in charge of the video-conference layout.

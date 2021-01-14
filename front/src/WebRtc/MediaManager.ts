@@ -60,6 +60,8 @@ export class MediaManager {
 
     private triggerCloseJistiFrame : Map<String, Function> = new Map<String, Function>();
 
+    private triggerCloseBbbFrame : Map<String, Function> = new Map<String, Function>();
+
     constructor() {
 
         this.myCamVideo = HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('myCamVideo');
@@ -722,6 +724,21 @@ export class MediaManager {
             callback();
         }
     }
+
+    public addTriggerCloseBbbFrameButton(id: String, Function: Function){
+        this.triggerCloseBbbFrame.set(id, Function);
+    }
+
+    public removeTriggerCloseBbbFrameButton(id: String){
+        this.triggerCloseBbbFrame.delete(id);
+    }
+
+    private triggerCloseBbbFrameButton(): void {
+        for (const callback of this.triggerCloseBbbFrame.values()) {
+            callback();
+        }
+    }
+
     /**
      * For some reasons, the microphone muted icon or the stream is not always up to date.
      * Here, every 30 seconds, we are "reseting" the streams and sending again the constraints to the other peers via the data channel again (see SimplePeer::pushVideoToRemoteUser)
