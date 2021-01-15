@@ -25,14 +25,14 @@ describe("PositionNotifier", () => {
             leaveTriggered = true;
         });
 
-        const user1 = new User(1, 'test', {
+        const user1 = new User(1, 'test', '10.0.0.2', {
             x: 500,
             y: 500,
             moving: false,
             direction: 'down'
         }, false, positionNotifier, {} as UserSocket, [], 'foo', []);
 
-        const user2 = new User(2, 'test', {
+        const user2 = new User(2, 'test', '10.0.0.2', {
             x: -9999,
             y: -9999,
             moving: false,
@@ -100,14 +100,14 @@ describe("PositionNotifier", () => {
             leaveTriggered = true;
         });
 
-        const user1 = new User(1, 'test', {
+        const user1 = new User(1, 'test', '10.0.0.2', {
             x: 500,
             y: 500,
             moving: false,
             direction: 'down'
         }, false, positionNotifier, {} as UserSocket, [], 'foo', []);
 
-        const user2 = new User(2, 'test', {
+        const user2 = new User(2, 'test', '10.0.0.2', {
             x: 0,
             y: 0,
             moving: false,
