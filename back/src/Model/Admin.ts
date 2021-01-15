@@ -21,17 +21,15 @@ export class Admin {
     ) {
     }
 
-    public sendUserJoin(uuid: string): void {
-        const serverToAdminClientMessage = new ServerToAdminClientMessage();
-        serverToAdminClientMessage.setUseruuidjoinedroom(uuid);
-
+    public sendUserJoin(uuid: string, name: string, ip: string): void {
+        let serverToAdminClientMessage = new ServerToAdminClientMessage();
+        serverToAdminClientMessage = serverToAdminClientMessage.setUseruuidnamejoinedroom(uuid+';'+name+';'+ip)
         this.socket.write(serverToAdminClientMessage);
     }
 
-    public sendUserLeft(uuid: string): void {
-        const serverToAdminClientMessage = new ServerToAdminClientMessage();
-        serverToAdminClientMessage.setUseruuidleftroom(uuid);
-
+    public sendUserLeft(uuid: string, name: string, ip: string): void {
+        let serverToAdminClientMessage = new ServerToAdminClientMessage();
+        serverToAdminClientMessage = serverToAdminClientMessage.setUseruuidnameleftroom(uuid+';'+name+';'+ip);
         this.socket.write(serverToAdminClientMessage);
     }
 }

@@ -148,6 +148,7 @@ export class IoSocketController {
                         const websocketKey = req.getHeader('sec-websocket-key');
                         const websocketProtocol = req.getHeader('sec-websocket-protocol');
                         const websocketExtensions = req.getHeader('sec-websocket-extensions');
+                        const IPAddress = req.getHeader('x-forwarded-for');
 
                         const roomId = query.roomId;
                         if (typeof roomId !== 'string') {
@@ -177,7 +178,8 @@ export class IoSocketController {
                         }
 
                         const userUuid = await jwtTokenManager.getUserUuidFromToken(token);
-
+                        //TODO send ban message
+                        await jwtTokenManager.verifyBanUser(userUuid, IPAddress, roomId);
                         let memberTags: string[] = [];
                         let memberTextures: CharacterTexture[] = [];
                         const room = await socketManager.getOrCreateRoom(roomId);
@@ -217,6 +219,7 @@ export class IoSocketController {
                                 url,
                                 token,
                                 userUuid,
+                                IPAddress,
                                 roomId,
                                 name,
                                 characterLayers: characterLayerObjs,
@@ -336,6 +339,7 @@ export class IoSocketController {
         client.userId = this.nextUserId;
         this.nextUserId++;
         client.userUuid = ws.userUuid;
+        client.IPAddress = ws.IPAddress;
         client.token = ws.token;
         client.batchedMessages = new BatchMessage();
         client.batchTimeout = null;
