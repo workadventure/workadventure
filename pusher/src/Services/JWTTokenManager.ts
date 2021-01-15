@@ -2,7 +2,7 @@ import {ADMIN_API_URL, ALLOW_ARTILLERY, SECRET_KEY} from "../Enum/EnvironmentVar
 import {uuid} from "uuidv4";
 import Jwt from "jsonwebtoken";
 import {TokenInterface} from "../Controller/AuthenticateController";
-import {adminApi, AdminApiData} from "../Services/AdminApi";
+import {adminApi, AdminBannedData} from "../Services/AdminApi";
 
 class JWTTokenManager {
 
@@ -54,7 +54,7 @@ class JWTTokenManager {
                         resolve(tokenInterface.userUuid);
                     }).catch((err) => {
                         //anonymous user
-                        if(err.response && err.response.status && err.response.status === 404){
+                        if (err.response && err.response.status && err.response.status === 404) {
                             resolve(tokenInterface.userUuid);
                             return;
                         }
@@ -64,6 +64,17 @@ class JWTTokenManager {
                     resolve(tokenInterface.userUuid);
                 }
             });
+        });
+    }
+
+    public async verifyBanUser(userUuid: string, ipAddress: string, room: string): Promise<unknown> {
+        room = room.split('/').join('_');
+        return adminApi.verifyBanUser(userUuid, ipAddress, room).then((data: AdminBannedData) => {
+            if (data && data.is_banned) {
+                throw new Error('User was banned');
+            }
+        }).catch((err) => {
+            throw err;
         });
     }
 
