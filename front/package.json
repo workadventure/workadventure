@@ -27,6 +27,7 @@
     "generic-type-guard": "^3.2.0",
     "google-protobuf": "^3.13.0",
     "phaser": "^3.22.0",
+    "phaser-animated-tiles": "Informatic/phaser-animated-tiles#2d5c66a9bc426dd4cb2d856c1d599494a74f8067",
     "queue-typescript": "^1.0.1",
     "quill": "^1.3.7",
     "simple-peer": "^9.6.2",
