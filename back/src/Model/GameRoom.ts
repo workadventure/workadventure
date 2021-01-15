@@ -102,17 +102,7 @@ export class GameRoom {
         }
         const position = ProtobufUtils.toPointInterface(positionMessage);
 
-        const user = new User(this.nextUserId,
-            joinRoomMessage.getUseruuid(),
-            joinRoomMessage.getIpaddress(),
-            position,
-            false,
-            this.positionNotifier,
-            socket,
-            joinRoomMessage.getTagList(),
-            joinRoomMessage.getName(),
-            ProtobufUtils.toCharacterLayerObjects(joinRoomMessage.getCharacterlayerList())
-        );
+        const user = new User(this.nextUserId, joinRoomMessage.getUseruuid(), position, false, this.positionNotifier, socket, joinRoomMessage.getTagList(), joinRoomMessage.getName(), ProtobufUtils.toCharacterLayerObjects(joinRoomMessage.getCharacterlayerList()));
         this.nextUserId++;
         this.users.set(user.id, user);
         this.usersByUuid.set(user.uuid, user);
@@ -122,7 +112,7 @@ export class GameRoom {
 
         // Notify admins
         for (const admin of this.admins) {
-            admin.sendUserJoin(user.uuid, user.name, user.IPAddress);
+            admin.sendUserJoin(user.uuid);
         }
 
         return user;
@@ -145,7 +135,7 @@ export class GameRoom {
 
         // Notify admins
         for (const admin of this.admins) {
-            admin.sendUserLeft(user.uuid, user.name, user.IPAddress);
+            admin.sendUserLeft(user.uuid);
         }
     }
 
@@ -328,7 +318,7 @@ export class GameRoom {
 
         // Let's send all connected users
         for (const user of this.users.values()) {
-            admin.sendUserJoin(user.uuid, user.name, user.IPAddress);
+            admin.sendUserJoin(user.uuid);
         }
     }
 

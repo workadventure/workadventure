@@ -79,20 +79,23 @@ export class SocketManager implements ZoneEventListener {
     }
 
     async handleAdminRoom(client: ExAdminSocketInterface, roomId: string): Promise<void> {
+        console.log('Calling adminRoom')
         const apiClient = await apiClientRepository.getClient(roomId);
         const adminRoomStream = apiClient.adminRoom();
         client.adminConnection = adminRoomStream;
 
         adminRoomStream.on('data', (message: ServerToAdminClientMessage) => {
-            if (message.hasUseruuidnamejoinedroom()) {
-                const userUuidName = message.getUseruuidnamejoinedroom();
+            if (message.hasUseruuidjoinedroom()) {
+                const userUuid = message.getUseruuidjoinedroom();
+
                 if (!client.disconnecting) {
-                    client.send('MemberJoin:'+userUuidName+';'+roomId);
+                    client.send('MemberJoin:'+userUuid+';'+roomId);
                 }
-            } else if (message.hasUseruuidnameleftroom()) {
-                const userUuidName = message.getUseruuidnameleftroom();
+            } else if (message.hasUseruuidleftroom()) {
+                const userUuid = message.getUseruuidleftroom();
+
                 if (!client.disconnecting) {
-                    client.send('MemberLeave:'+userUuidName+';'+roomId);
+                    client.send('MemberLeave:'+userUuid+';'+roomId);
                 }
             } else {
                 throw new Error('Unexpected admin message');
@@ -148,7 +151,6 @@ export class SocketManager implements ZoneEventListener {
 
             const joinRoomMessage = new JoinRoomMessage();
             joinRoomMessage.setUseruuid(client.userUuid);
-            joinRoomMessage.setIpaddress(client.IPAddress);
             joinRoomMessage.setRoomid(client.roomId);
             joinRoomMessage.setName(client.name);
             joinRoomMessage.setPositionmessage(ProtobufUtils.toPositionMessage(client.position));

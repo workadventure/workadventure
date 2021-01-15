@@ -16,7 +16,6 @@ export class User implements Movable {
     public constructor(
         public id: number,
         public readonly uuid: string,
-        public readonly IPAddress: string,
         private position: PointInterface,
         public silent: boolean,
         private positionNotifier: PositionNotifier,

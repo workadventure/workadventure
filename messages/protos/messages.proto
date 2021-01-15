@@ -220,7 +220,6 @@ message JoinRoomMessage {
   string userUuid = 4;
   string roomId = 5;
   repeated string tag = 6;
-  string IPAddress = 7;
 }
 
 message UserJoinedZoneMessage {
@@ -309,8 +308,8 @@ message ServerToAdminClientMessage {
 
 message ServerToAdminClientMessage {
   oneof message {
-    string userUuidNameJoinedRoom = 1;
-    string userUuidNameLeftRoom = 2;
+    string userUuidJoinedRoom = 1;
+    string userUuidLeftRoom = 2;
   }
 }
 
