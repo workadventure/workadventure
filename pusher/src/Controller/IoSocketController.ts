@@ -177,9 +177,8 @@ export class IoSocketController {
                             characterLayers = [ characterLayers ];
                         }
 
-                        const userUuid = await jwtTokenManager.getUserUuidFromToken(token);
-                        //TODO send ban message
-                        await jwtTokenManager.verifyBanUser(userUuid, IPAddress, roomId);
+                        const userUuid = await jwtTokenManager.getUserUuidFromToken(token, IPAddress, roomId);
+
                         let memberTags: string[] = [];
                         let memberTextures: CharacterTexture[] = [];
                         const room = await socketManager.getOrCreateRoom(roomId);
