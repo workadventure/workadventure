@@ -3,6 +3,7 @@ import Image = Phaser.GameObjects.Image;
 import Sprite = Phaser.GameObjects.Sprite;
 import Text = Phaser.GameObjects.Text;
 import ScenePlugin = Phaser.Scenes.ScenePlugin;
+import {WAError} from "./WAError";
 
 export const ErrorSceneName = "ErrorScene";
 enum Textures {
@@ -26,7 +27,7 @@ export class ErrorScene extends Phaser.Scene {
         });
     }
 
-    init({ title, subTitle, message }: { title?: string, subTitle?: string, message?: string }) {
+    init({title, subTitle, message}: { title?: string, subTitle?: string, message?: string }) {
         this.title = title ? title : '';
         this.subTitle = subTitle ? subTitle : '';
         this.message = message ? message : '';
@@ -51,11 +52,14 @@ export class ErrorScene extends Phaser.Scene {
 
         this.subTitleField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height / 2 + 24, this.subTitle);
 
-        this.messageField = this.add.text(this.game.renderer.width / 2, this.game.renderer.height / 2 + 38, this.message, { fontFamily: 'Georgia, "Goudy Bookletter 1911", Times, serif', fontSize: '10px' });
+        this.messageField = this.add.text(this.game.renderer.width / 2, this.game.renderer.height / 2 + 38, this.message, {
+            fontFamily: 'Georgia, "Goudy Bookletter 1911", Times, serif',
+            fontSize: '10px'
+        });
         this.messageField.setOrigin(0.5, 0.5);
 
         this.cat = this.physics.add.sprite(this.game.renderer.width / 2, this.game.renderer.height / 2 - 32, 'cat', 6);
-        this.cat.flipY=true;
+        this.cat.flipY = true;
     }
 
     /**
@@ -68,6 +72,12 @@ export class ErrorScene extends Phaser.Scene {
             scene.start(ErrorSceneName, {
                 title: 'An error occurred',
                 subTitle: error
+            });
+        } else if (error instanceof WAError) {
+            scene.start(ErrorSceneName, {
+                title: error.title,
+                subTitle: error.subTitle,
+                message: error.details
             });
         } else if (error.response) {
             // Axios HTTP error
@@ -94,5 +104,16 @@ export class ErrorScene extends Phaser.Scene {
         } else {
             throw error;
         }
+    }
+
+    /**
+     * Displays the error page, with an error message matching the "error" parameters passed in.
+     */
+    public static startErrorPage(title: string, subTitle: string, message: string, scene: ScenePlugin): void {
+        scene.start(ErrorSceneName, {
+            title,
+            subTitle,
+            message
+        });
     }
 }

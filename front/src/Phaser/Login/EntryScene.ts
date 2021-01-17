@@ -1,7 +1,7 @@
 import {gameManager} from "../Game/GameManager";
 import {Scene} from "phaser";
-import {handleAxiosError} from "../../Network/axios";
 import {ErrorScene} from "../Reconnecting/ErrorScene";
+import {WAError} from "../Reconnecting/WAError";
 
 export const EntrySceneName = "EntryScene";
 
@@ -20,7 +20,11 @@ export class EntryScene extends Scene {
         gameManager.init(this.scene).then((nextSceneName) => {
             this.scene.start(nextSceneName);
         }).catch((err) => {
-            ErrorScene.showError(err, this.scene);
+            if (err.response && err.response.status == 404) {
+                ErrorScene.showError(new WAError('Page Not Found', 'Could not find map', window.location.pathname), this.scene);
+            } else {
+                ErrorScene.showError(err, this.scene);
+            }
         });
     }
 }

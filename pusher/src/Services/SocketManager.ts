@@ -22,7 +22,8 @@ import {
     PusherToBackMessage,
     AdminPusherToBackMessage,
     ServerToAdminClientMessage,
-    AdminMessage, SendUserMessage, BanUserMessage
+    SendUserMessage,
+    BanUserMessage
 } from "../Messages/generated/messages_pb";
 import {PointInterface} from "../Model/Websocket/PointInterface";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
