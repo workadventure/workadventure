@@ -3,6 +3,7 @@ import {
     AdminGlobalMessage,
     AdminMessage,
     AdminPusherToBackMessage,
+    BanMessage,
     EmptyMessage,
     ItemEventMessage,
     JoinRoomMessage,
