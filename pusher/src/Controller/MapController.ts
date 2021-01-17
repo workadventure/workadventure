@@ -59,15 +59,7 @@ export class MapController extends BaseController{
                     this.addCorsHeaders(res);
                     res.end(JSON.stringify(mapDetails));
                 } catch (e) {
-                    if (e.response) {
-                        res.writeStatus(e.response.status+" "+e.response.statusText);
-                        this.addCorsHeaders(res);
-                        res.end("An error occurred: "+e.response.status+" "+e.response.statusText);
-                    } else {
-                        res.writeStatus("500 Internal Server Error")
-                        this.addCorsHeaders(res);
-                        res.end("An error occurred");
-                    }
+                    this.errorToResponse(e, res);
                 }
             })();
 
