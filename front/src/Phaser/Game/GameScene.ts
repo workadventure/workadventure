@@ -45,7 +45,6 @@ import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import {GameMap} from "./GameMap";
 import {coWebsiteManager} from "../../WebRtc/CoWebsiteManager";
 import {mediaManager} from "../../WebRtc/MediaManager";
-import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
 import {ItemFactoryInterface} from "../Items/ItemFactoryInterface";
 import {ActionableItem} from "../Items/ActionableItem";
 import {UserInputManager} from "../UserInput/UserInputManager";
@@ -67,6 +66,7 @@ import {OpenChatIcon, openChatIconName} from "../Components/OpenChatIcon";
 import {SelectCharacterScene, SelectCharacterSceneName} from "../Login/SelectCharacterScene";
 import {TextureError} from "../../Exception/TextureError";
 import {addLoader} from "../Components/Loader";
+import {ErrorSceneName} from "../Reconnecting/ErrorScene";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -185,8 +185,10 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         this.load.image(openChatIconName, 'resources/objects/talk.png');
         this.load.on(FILE_LOAD_ERROR, (file: {src: string}) => {
-            this.scene.start(FourOFourSceneName, {
-                file: file.src
+            this.scene.start(ErrorSceneName, {
+                title: 'Network error',
+                subTitle: 'An error occurred while loading resource:',
+                message: file.src
             });
         });
         this.load.on('filecomplete-tilemapJSON-'+this.MapUrlFile, (key: string, type: string, data: unknown) => {
@@ -375,7 +377,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         //notify game manager can to create currentUser in map
         this.createCurrentPlayer();
         this.removeAllRemotePlayers(); //cleanup the list  of remote players in case the scene was rebooted
-        
+
         this.initCamera();
 
         this.initCirclesCanvas();
@@ -1039,7 +1041,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             event: addPlayerData
         });
     }
-    
+
     private doAddPlayer(addPlayerData : AddPlayerInterface): void {
         //check if exist player, if exist, move position
         if(this.MapPlayersByKey.has(addPlayerData.userId)){
@@ -1192,7 +1194,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         // Let's put this in Game coordinates by applying the zoom level:
         xCenter /= ZOOM_LEVEL * RESOLUTION;
         yCenter /= ZOOM_LEVEL * RESOLUTION;
-        
+
         this.cameras.main.startFollow(this.CurrentPlayer, true, 1, 1,  xCenter - this.game.renderer.width / 2, yCenter - this.game.renderer.height / 2);
     }
 

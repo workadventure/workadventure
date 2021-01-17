@@ -1,7 +1,7 @@
 import {gameManager} from "../Game/GameManager";
 import {Scene} from "phaser";
-import {LoginSceneName} from "./LoginScene";
-import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
+import {handleAxiosError} from "../../Network/axios";
+import {ErrorScene} from "../Reconnecting/ErrorScene";
 
 export const EntrySceneName = "EntryScene";
 
@@ -20,10 +20,7 @@ export class EntryScene extends Scene {
         gameManager.init(this.scene).then((nextSceneName) => {
             this.scene.start(nextSceneName);
         }).catch((err) => {
-            console.error(err)
-            this.scene.start(FourOFourSceneName, {
-                url: window.location.pathname.toString()
-            });
+            ErrorScene.showError(err, this.scene);
         });
     }
 }
