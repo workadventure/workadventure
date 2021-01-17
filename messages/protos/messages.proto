@@ -193,6 +193,11 @@ message SendUserMessage{
   string message = 2;
 }
 
+message BanUserMessage{
+  string type = 1;
+  string message = 2;
+}
+
 message ServerToClientMessage {
   oneof message {
     BatchMessage batchMessage = 1;
@@ -207,6 +212,7 @@ message ServerToClientMessage {
     TeleportMessageMessage teleportMessageMessage = 10;
     SendJitsiJwtMessage sendJitsiJwtMessage = 11;
     SendUserMessage sendUserMessage = 12;
+    BanUserMessage banUserMessage = 13;
   }
 }
 
@@ -273,6 +279,8 @@ message PusherToBackMessage {
     StopGlobalMessage stopGlobalMessage = 9;
     ReportPlayerMessage reportPlayerMessage = 10;
     QueryJitsiJwtMessage queryJitsiJwtMessage = 11;
+    SendUserMessage sendUserMessage = 12;
+    BanUserMessage banUserMessage = 13;
   }
 }
 
@@ -289,6 +297,7 @@ message SubToPusherMessage {
     UserLeftZoneMessage userLeftZoneMessage = 5;
     ItemEventMessage itemEventMessage = 6;
     SendUserMessage sendUserMessage = 7;
+    BanUserMessage banUserMessage = 8;
   }
 }
 

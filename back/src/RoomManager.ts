@@ -2,25 +2,21 @@ import {IRoomManagerServer} from "./Messages/generated/messages_grpc_pb";
 import {
     AdminGlobalMessage,
     AdminMessage,
-    AdminPusherToBackMessage, BanMessage,
-    ClientToServerMessage, EmptyMessage,
+    AdminPusherToBackMessage,
+    EmptyMessage,
     ItemEventMessage,
     JoinRoomMessage,
     PlayGlobalMessage,
     PusherToBackMessage,
     QueryJitsiJwtMessage,
-    ReportPlayerMessage,
-    RoomJoinedMessage,
     ServerToAdminClientMessage,
     ServerToClientMessage,
     SilentMessage,
     UserMovesMessage,
-    ViewportMessage,
     WebRtcSignalToServerMessage,
     ZoneMessage
 } from "./Messages/generated/messages_pb";
-import grpc, {sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream} from "grpc";
-import {Empty} from "google-protobuf/google/protobuf/empty_pb";
+import {sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream} from "grpc";
 import {socketManager} from "./Services/SocketManager";
 import {emitError} from "./Services/MessageHelpers";
 import {User, UserSocket} from "./Model/User";
@@ -74,6 +70,16 @@ const roomManager: IRoomManagerServer = {
                         socketManager.handleReportMessage(client, message.getReportplayermessage() as ReportPlayerMessage);*/
                     } else if (message.hasQueryjitsijwtmessage()){
                         socketManager.handleQueryJitsiJwtMessage(user, message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage);
+                    }else if (message.hasSendusermessage()) {
+                        const sendUserMessage = message.getSendusermessage();
+                        if(sendUserMessage !== undefined) {
+                            socketManager.handlerSendUserMessage(user, sendUserMessage);
+                        }
+                    }else if (message.hasBanusermessage()) {
+                        const banUserMessage = message.getBanusermessage();
+                        if(banUserMessage !== undefined) {
+                            socketManager.handlerBanUserMessage(room, user, banUserMessage);
+                        }
                     } else {
                         throw new Error('Unhandled message type');
                     }

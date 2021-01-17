@@ -91,18 +91,11 @@ export class IoSocketController {
 
                     if(message.event === 'user-message') {
                         const messageToEmit = (message.message as { message: string, type: string, userUuid: string });
-                        switch (message.message.type) {
-                            case 'ban': {
-                                socketManager.emitSendUserMessage(messageToEmit.userUuid, messageToEmit.message, roomId);
-                                break;
-                            }
-                            case 'banned': {
-                                socketManager.emitBan(messageToEmit.userUuid, messageToEmit.message, roomId);
-                                break;
-                            }
-                            default: {
-                                break;
-                            }
+                        if(messageToEmit.type === 'banned'){
+                            socketManager.emitBan(messageToEmit.userUuid, messageToEmit.message, messageToEmit.type);
+                        }
+                        if(messageToEmit.type === 'ban') {
+                            socketManager.emitSendUserMessage(messageToEmit.userUuid, messageToEmit.message, messageToEmit.type);
                         }
                     }
                 }catch (err) {

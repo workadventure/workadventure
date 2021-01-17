@@ -76,8 +76,8 @@ class JWTTokenManager {
     }
 
     private verifyBanUser(userUuid: string, ipAddress: string, room: string): Promise<AdminBannedData> {
-        room = room.split('/').join('_');
-        return adminApi.verifyBanUser(userUuid, ipAddress, room).then((data: AdminBannedData) => {
+        const world = room.split('/')[1]; //check by world
+        return adminApi.verifyBanUser(userUuid, ipAddress, world).then((data: AdminBannedData) => {
             if (data && data.is_banned) {
                 throw new Error('User was banned');
             }

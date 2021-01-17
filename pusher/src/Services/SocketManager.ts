@@ -2,11 +2,8 @@ import {PusherRoom} from "../Model/PusherRoom";
 import {CharacterLayer, ExSocketInterface} from "../Model/Websocket/ExSocketInterface";
 import {
     GroupDeleteMessage,
-    GroupUpdateMessage,
     ItemEventMessage,
-    ItemStateMessage,
     PlayGlobalMessage,
-    PointMessage,
     PositionMessage,
     RoomJoinedMessage,
     ServerToClientMessage,
@@ -14,23 +11,18 @@ import {
     SilentMessage,
     SubMessage,
     ReportPlayerMessage,
-    UserJoinedMessage,
     UserLeftMessage,
-    UserMovedMessage,
     UserMovesMessage,
     ViewportMessage,
-    WebRtcDisconnectMessage,
-    WebRtcSignalToClientMessage,
     WebRtcSignalToServerMessage,
-    WebRtcStartMessage,
     QueryJitsiJwtMessage,
     SendJitsiJwtMessage,
-    SendUserMessage,
     JoinRoomMessage,
     CharacterLayerMessage,
     PusherToBackMessage,
     AdminPusherToBackMessage,
-    ServerToAdminClientMessage, AdminMessage, BanMessage
+    ServerToAdminClientMessage,
+    AdminMessage, SendUserMessage, BanUserMessage
 } from "../Messages/generated/messages_pb";
 import {PointInterface} from "../Model/Websocket/PointInterface";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
@@ -142,7 +134,6 @@ export class SocketManager implements ZoneEventListener {
     }
 
     async handleJoinRoom(client: ExSocketInterface): Promise<void> {
-        const position = client.position;
         const viewport = client.viewport;
         try {
 
@@ -152,6 +143,7 @@ export class SocketManager implements ZoneEventListener {
             joinRoomMessage.setRoomid(client.roomId);
             joinRoomMessage.setName(client.name);
             joinRoomMessage.setPositionmessage(ProtobufUtils.toPositionMessage(client.position));
+            joinRoomMessage.setTagList(client.tags);
             for (const characterLayer of client.characterLayers) {
                 const characterLayerMessage = new CharacterLayerMessage();
                 characterLayerMessage.setName(characterLayer.name);
@@ -538,51 +530,54 @@ export class SocketManager implements ZoneEventListener {
         client.send(serverToClientMessage.serializeBinary().buffer, true);
     }
 
-    public async emitSendUserMessage(userUuid: string, message: string, roomId: string): Promise<void> {
+    public async emitSendUserMessage(userUuid: string, message: string, type: string): Promise<void> {
+        const client = this.searchClientByUuid(userUuid);
+        if(!client){
+            throw Error('client not found');
+        }
 
-        const backConnection = await apiClientRepository.getClient(roomId);
-
-        const adminMessage = new AdminMessage();
-        adminMessage.setRecipientuuid(userUuid);
+        const adminMessage = new SendUserMessage();
         adminMessage.setMessage(message);
-        adminMessage.setRoomid(roomId);
+        adminMessage.setType(type);
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setSendusermessage(adminMessage);
+        client.backConnection.write(pusherToBackMessage);
 
+        /*const backConnection = await apiClientRepository.getClient(client.roomId);
+        const adminMessage = new AdminMessage();
+        adminMessage.setMessage(message);
+        adminMessage.setRoomid(client.roomId);
+        adminMessage.setRecipientuuid(client.userUuid);
         backConnection.sendAdminMessage(adminMessage, (error) => {
             if (error !== null) {
                 console.error('Error while sending admin message', error);
             }
-        });
-/*
-        const socket = this.searchClientByUuid(messageToSend.userUuid);
-        if(!socket){
-            throw 'socket was not found';
-        }
-
-        const sendUserMessage = new SendUserMessage();
-        sendUserMessage.setMessage(messageToSend.message);
-        sendUserMessage.setType(messageToSend.type);
-
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setSendusermessage(sendUserMessage);
-
-        if (!socket.disconnecting) {
-            socket.send(serverToClientMessage.serializeBinary().buffer, true);
-        }
-        return socket;*/
+        });*/
     }
 
-    public async emitBan(userUuid: string, message: string, roomId: string): Promise<void> {
-        const backConnection = await apiClientRepository.getClient(roomId);
+    public async emitBan(userUuid: string, message: string, type: string): Promise<void> {
+        const client = this.searchClientByUuid(userUuid);
+        if(!client){
+            throw Error('client not found');
+        }
 
-        const banMessage = new BanMessage();
-        banMessage.setRecipientuuid(userUuid);
-        banMessage.setRoomid(roomId);
+        const banUserMessage = new BanUserMessage();
+        banUserMessage.setMessage(message);
+        banUserMessage.setType(type);
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setBanusermessage(banUserMessage);
+        client.backConnection.write(pusherToBackMessage);
 
-        backConnection.ban(banMessage, (error) => {
+        /*const backConnection = await apiClientRepository.getClient(client.roomId);
+        const adminMessage = new AdminMessage();
+        adminMessage.setMessage(message);
+        adminMessage.setRoomid(client.roomId);
+        adminMessage.setRecipientuuid(client.userUuid);
+        backConnection.sendAdminMessage(adminMessage, (error) => {
             if (error !== null) {
-                console.error('Error while sending ban message', error);
+                console.error('Error while sending admin message', error);
             }
-        });
+        });*/
     }
 
     /**
