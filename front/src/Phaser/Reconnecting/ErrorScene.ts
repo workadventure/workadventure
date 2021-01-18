@@ -65,6 +65,7 @@ export class ErrorScene extends Phaser.Scene {
     /**
      * Displays the error page, with an error message matching the "error" parameters passed in.
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static showError(error: any, scene: ScenePlugin): void {
         console.error(error);
 
