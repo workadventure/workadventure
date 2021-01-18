@@ -253,6 +253,8 @@ export class EnableCameraScene extends Phaser.Scene {
         this.pressReturnField.setVisible(!!(Math.floor(time / 500) % 2));
 
         this.soundMeterSprite.setVolume(this.soundMeter.getVolume());
+
+        mediaManager.setLastUpdateScene();
     }
 
     private login(): void {
