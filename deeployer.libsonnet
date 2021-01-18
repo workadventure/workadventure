@@ -100,17 +100,6 @@
       },
       "ports": [80]
     },
-    "website": {
-      "image": "thecodingmachine/workadventure-website:"+tag,
-      "host": {
-        "url": url,
-        "https": "enable"
-      },
-      "ports": [80],
-      "env": {
-        "GAME_URL": "https://play."+url
-      }
-    }
   },
   "config": {
     "https": {
