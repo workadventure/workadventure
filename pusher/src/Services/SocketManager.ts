@@ -544,7 +544,7 @@ export class SocketManager implements ZoneEventListener {
         client.send(serverToClientMessage.serializeBinary().buffer, true);
     }
 
-    public async emitSendUserMessage(userUuid: string, message: string, type: string): Promise<void> {
+    public emitSendUserMessage(userUuid: string, message: string, type: string): void {
         const client = this.searchClientByUuid(userUuid);
         if(!client){
             throw Error('client not found');
@@ -569,7 +569,7 @@ export class SocketManager implements ZoneEventListener {
         });*/
     }
 
-    public async emitBan(userUuid: string, message: string, type: string): Promise<void> {
+    public emitBan(userUuid: string, message: string, type: string): void {
         const client = this.searchClientByUuid(userUuid);
         if(!client){
             throw Error('client not found');

@@ -12,6 +12,7 @@ export class BaseController {
     /**
      * Turns any exception into a HTTP response (and logs the error)
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected errorToResponse(e: any, res: HttpResponse): void {
         console.error("An error happened", e);
         if (e.response) {
