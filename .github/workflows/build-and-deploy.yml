@@ -133,7 +133,6 @@ jobs:
       - build-pusher
       - build-maps
       - build-uploader
-      - build-website
     runs-on: ubuntu-latest
 
     steps:
