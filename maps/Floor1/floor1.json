@@ -85,7 +85,7 @@
                 {
                  "name":"exitSceneUrl",
                  "type":"string",
-                 "value":"..\/Floor0\/floor0.json#down-the-stairs"
+                 "value":"\/@\/tcm\/workadventure\/floor0#down-the-stairs"
                 }],
          "type":"tilelayer",
          "visible":true,
@@ -103,7 +103,7 @@
                 {
                  "name":"exitSceneUrl",
                  "type":"string",
-                 "value":"..\/Floor2\/floor2.json#down-the-stairs"
+                 "value":"\/@\/tcm\/workadventure\/floor2#down-the-stairs"
                 }],
          "type":"tilelayer",
          "visible":true,
@@ -121,7 +121,7 @@
                 {
                  "name":"exitSceneUrl",
                  "type":"string",
-                 "value":"..\/Floor2\/floor2.json#down-the-stairs-secours"
+                 "value":"\/@\/tcm\/workadventure\/floor2#down-the-stairs-secours"
                 }],
          "type":"tilelayer",
          "visible":true,

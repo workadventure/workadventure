@@ -6,7 +6,6 @@ import {LoginScene} from "./Phaser/Login/LoginScene";
 import {ReconnectingScene} from "./Phaser/Reconnecting/ReconnectingScene";
 import {SelectCharacterScene} from "./Phaser/Login/SelectCharacterScene";
 import {EnableCameraScene} from "./Phaser/Login/EnableCameraScene";
-import {FourOFourScene} from "./Phaser/Reconnecting/FourOFourScene";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
 import {OutlinePipeline} from "./Phaser/Shaders/OutlinePipeline";
 import {CustomizeScene} from "./Phaser/Login/CustomizeScene";
@@ -15,6 +14,7 @@ import {EntryScene} from "./Phaser/Login/EntryScene";
 import {coWebsiteManager} from "./WebRtc/CoWebsiteManager";
 import {MenuScene} from "./Phaser/Menu/MenuScene";
 import {localUserStore} from "./Connexion/LocalUserStore";
+import {ErrorScene} from "./Phaser/Reconnecting/ErrorScene";
 
 // Load Jitsi if the environment variable is set.
 if (JITSI_URL) {
@@ -59,7 +59,7 @@ const config: GameConfig = {
     width: width / RESOLUTION,
     height: height / RESOLUTION,
     parent: "game",
-    scene: [EntryScene, LoginScene, SelectCharacterScene, EnableCameraScene, ReconnectingScene, FourOFourScene, CustomizeScene, MenuScene],
+    scene: [EntryScene, LoginScene, SelectCharacterScene, EnableCameraScene, ReconnectingScene, ErrorScene, CustomizeScene, MenuScene],
     zoom: RESOLUTION,
     fps: fps,
     dom: {

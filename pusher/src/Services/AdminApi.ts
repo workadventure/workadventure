@@ -14,6 +14,11 @@ export interface AdminApiData {
     textures: CharacterTexture[]
 }
 
+export interface AdminBannedData {
+    is_banned: boolean,
+    message: string
+}
+
 export interface CharacterTexture {
     id: number,
     level: number,
@@ -109,6 +114,18 @@ class AdminApi {
             {
                 headers: {"Authorization": `${ADMIN_API_TOKEN}`}
             });
+    }
+
+    async verifyBanUser(organizationMemberToken: string, ipAddress: string, organization: string, world: string): Promise<AdminBannedData> {
+        if (!ADMIN_API_URL) {
+            return Promise.reject('No admin backoffice set!');
+        }
+        //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
+        return Axios.get(ADMIN_API_URL + '/api/check-moderate-user/'+organization+'/'+world+'?ipAddress='+ipAddress+'&token='+organizationMemberToken,
+            {headers: {"Authorization": `${ADMIN_API_TOKEN}`}}
+        ).then((data) => {
+            return data.data;
+        });
     }
 }
 
