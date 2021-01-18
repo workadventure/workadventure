@@ -116,12 +116,12 @@ class AdminApi {
             });
     }
 
-    async verifyBanUser(organizationMemberToken: string, ipAddress: string, room: string): Promise<AdminBannedData> {
+    async verifyBanUser(organizationMemberToken: string, ipAddress: string, organization: string, world: string): Promise<AdminBannedData> {
         if (!ADMIN_API_URL) {
             return Promise.reject('No admin backoffice set!');
         }
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
-        return Axios.get(ADMIN_API_URL + '/api/check-moderate-user/' + ipAddress + '/' + organizationMemberToken + '/room/' + room,
+        return Axios.get(ADMIN_API_URL + '/api/check-moderate-user/'+organization+'/'+world+'?ipAddress='+ipAddress+'&token='+organizationMemberToken,
             {headers: {"Authorization": `${ADMIN_API_TOKEN}`}}
         ).then((data) => {
             return data.data;
