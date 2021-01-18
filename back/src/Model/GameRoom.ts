@@ -145,7 +145,7 @@ export class GameRoom {
 
         // Notify admins
         for (const admin of this.admins) {
-            admin.sendUserLeft(user.uuid, user.name, user.IPAddress);
+            admin.sendUserLeft(user.uuid/*, user.name, user.IPAddress*/);
         }
     }
 

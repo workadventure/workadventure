@@ -203,8 +203,8 @@ const roomManager: IRoomManagerServer = {
         callback(null, new EmptyMessage());
     },
     ban(call: ServerUnaryCall<BanMessage>, callback: sendUnaryData<EmptyMessage>): void {
-
-        socketManager.banUser(call.request.getRoomid(), call.request.getRecipientuuid());
+        // FIXME Work in progress
+        socketManager.banUser(call.request.getRoomid(), call.request.getRecipientuuid(), 'foo bar TODO change this');
 
         callback(null, new EmptyMessage());
     },

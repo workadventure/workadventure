@@ -23,7 +23,7 @@ import {
     AdminPusherToBackMessage,
     ServerToAdminClientMessage,
     SendUserMessage,
-    BanUserMessage
+    BanUserMessage, UserJoinedRoomMessage, UserLeftRoomMessage
 } from "../Messages/generated/messages_pb";
 import {PointInterface} from "../Model/Websocket/PointInterface";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
@@ -77,15 +77,28 @@ export class SocketManager implements ZoneEventListener {
         client.adminConnection = adminRoomStream;
 
         adminRoomStream.on('data', (message: ServerToAdminClientMessage) => {
-            if (message.hasUseruuidnamejoinedroom()) {
-                const userUuidName = message.getUseruuidnamejoinedroom();
+            if (message.hasUserjoinedroom()) {
+                const userJoinedRoomMessage = message.getUserjoinedroom() as UserJoinedRoomMessage;
                 if (!client.disconnecting) {
-                    client.send('MemberJoin:'+userUuidName+';'+roomId);
+                    client.send(JSON.stringify({
+                        type: 'MemberJoin',
+                        data: {
+                            uuid: userJoinedRoomMessage.getUuid(),
+                            name: userJoinedRoomMessage.getName(),
+                            ipAddress: userJoinedRoomMessage.getIpaddress(),
+                            roomId: roomId,
+                        }
+                    }));
                 }
-            } else if (message.hasUseruuidnameleftroom()) {
-                const userUuidName = message.getUseruuidnameleftroom();
+            } else if (message.hasUserleftroom()) {
+                const userLeftRoomMessage = message.getUserleftroom() as UserLeftRoomMessage;
                 if (!client.disconnecting) {
-                    client.send('MemberLeave:'+userUuidName+';'+roomId);
+                    client.send(JSON.stringify({
+                        type: 'MemberLeave',
+                        data: {
+                            uuid: userLeftRoomMessage.getUuid()
+                        }
+                    }));
                 }
             } else {
                 throw new Error('Unexpected admin message');

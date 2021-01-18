@@ -316,10 +316,20 @@ message ServerToAdminClientMessage {
   repeated SubToAdminPusherMessage payload = 2;
 }*/
 
+message UserJoinedRoomMessage {
+  string uuid = 1;
+  string ipAddress = 2;
+  string name = 3;
+}
+
+message UserLeftRoomMessage {
+  string uuid = 1;
+}
+
 message ServerToAdminClientMessage {
   oneof message {
-    string userUuidNameJoinedRoom = 1;
-    string userUuidNameLeftRoom = 2;
+    UserJoinedRoomMessage userJoinedRoom = 1;
+    UserLeftRoomMessage userLeftRoom = 2;
   }
 }
 
