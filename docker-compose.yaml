@@ -135,23 +135,6 @@ services:
       - "traefik.http.routers.uploader-ssl.tls=true"
       - "traefik.http.routers.uploader-ssl.service=uploader"
 
-  website:
-    image: thecodingmachine/nodejs:12-apache
-    environment:
-      STARTUP_COMMAND_1: npm install
-      STARTUP_COMMAND_2: npm run watch &
-      APACHE_DOCUMENT_ROOT: dist/
-    volumes:
-      - ./website:/var/www/html
-    labels:
-      - "traefik.http.routers.website.rule=Host(`workadventure.localhost`)"
-      - "traefik.http.routers.website.entryPoints=web"
-      - "traefik.http.services.website.loadbalancer.server.port=80"
-      - "traefik.http.routers.website-ssl.rule=Host(`workadventure.localhost`)"
-      - "traefik.http.routers.website-ssl.entryPoints=websecure"
-      - "traefik.http.routers.website-ssl.tls=true"
-      - "traefik.http.routers.website-ssl.service=website"
-
   messages:
     #image: thecodingmachine/nodejs:14
     image: thecodingmachine/workadventure-back-base:latest
