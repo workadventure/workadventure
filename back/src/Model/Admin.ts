@@ -22,9 +22,9 @@ export class Admin {
     }
 
     public sendUserJoin(uuid: string, name: string, ip: string): void {
-        let serverToAdminClientMessage = new ServerToAdminClientMessage();
+        const serverToAdminClientMessage = new ServerToAdminClientMessage();
 
-        let userJoinedRoomMessage = new UserJoinedRoomMessage();
+        const userJoinedRoomMessage = new UserJoinedRoomMessage();
         userJoinedRoomMessage.setUuid(uuid);
         userJoinedRoomMessage.setName(name);
         userJoinedRoomMessage.setIpaddress(ip);
@@ -35,9 +35,9 @@ export class Admin {
     }
 
     public sendUserLeft(uuid: string/*, name: string, ip: string*/): void {
-        let serverToAdminClientMessage = new ServerToAdminClientMessage();
+        const serverToAdminClientMessage = new ServerToAdminClientMessage();
 
-        let userLeftRoomMessage = new UserLeftRoomMessage();
+        const userLeftRoomMessage = new UserLeftRoomMessage();
         userLeftRoomMessage.setUuid(uuid);
 
         serverToAdminClientMessage.setUserleftroom(userLeftRoomMessage);
