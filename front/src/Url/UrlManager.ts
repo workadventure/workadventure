@@ -40,7 +40,7 @@ class UrlManager {
         if (organizationSlug) {
             newUrl = '/@/'+organizationSlug+'/'+worldSlug+'/'+roomSlug;
         } else {
-            newUrl = '/_/global/'+roomSlug;
+            newUrl = '/@/'+roomSlug;
         }
         history.pushState({}, 'WorkAdventure', newUrl);
         return newUrl;
