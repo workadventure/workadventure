@@ -53,9 +53,9 @@ export class EnableCameraScene extends Phaser.Scene {
     }
 
     create() {
-        this.textField = new TextField(this, this.game.renderer.width / 2, 20, 'Turn on your camera and microphone');
+        this.textField = new TextField(this, this.game.renderer.width / 2, 20, 'Allumez votre camera et votre micro');
 
-        this.pressReturnField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height - 30, 'Press enter to start');
+        this.pressReturnField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height - 30, 'Appuyez sur ENTREE pour demarrer');
 
         this.cameraNameField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height - 60, '');
 

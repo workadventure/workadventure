@@ -40,17 +40,17 @@ export class LoginScene extends ResizableScene {
     create() {
         cypressAsserter.initStarted();
 
-        this.textField = new TextField(this, this.game.renderer.width / 2, 50, 'Enter your name:');
+        this.textField = new TextField(this, this.game.renderer.width / 2, 50, 'Entrer un nom :');
         this.nameInput = new TextInput(this, this.game.renderer.width / 2, 70, 8, this.name,(text: string) => {
             this.name = text;
         });
 
-        this.pressReturnField = new TextField(this, this.game.renderer.width / 2, 130, 'Press enter to start');
+        this.pressReturnField = new TextField(this, this.game.renderer.width / 2, 130, 'Appuyez sur ENTREE pour commencer');
 
         this.logo = new Image(this, this.game.renderer.width - 30, this.game.renderer.height - 20, LoginTextures.icon);
         this.add.existing(this.logo);
 
-        const infoText = "Commands: \n - Arrows or Z,Q,S,D to move\n - SHIFT to run";
+        const infoText = "Touches : \n - Les fleches ou Z,Q,S,D pour se deplacer\n - SHIFT pour courir";
         this.infoTextField = new TextField(this, 10, this.game.renderer.height - 35, infoText, false);
 
         this.input.keyboard.on('keyup-ENTER', () => {

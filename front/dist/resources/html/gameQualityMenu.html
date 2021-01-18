@@ -54,7 +54,6 @@
         color: white;
         border-radius: 7px;
         padding-bottom: 4px;
-        width: 60px;
     }
     #gameQuality button#gameQualityFormCancel {
         background-color: #c7c7c700;
@@ -64,26 +63,26 @@
 
 <form id="gameQuality" hidden>
     <section>
-        <h3>Game quality</h3>
-        <p class="cautiousText">(Editing these settings will restart the game)</p>
+        <h3>Temps de calcul pour le jeu</h3>
+        <p class="cautiousText">(Modifier ce réglage redémarrera le jeu)</p>
         <select id="select-game-quality">
-            <option value="120">High video quality (120 fps)</option>
-            <option value="60">Medium video quality (60 fps, recommended)</option>
-            <option value="40">Minimum video quality (40 fps)</option>
-            <option value="20">Small video quality (20 fps)</option>
+            <option value="120">Très fluide (120 fps)</option>
+            <option value="60">Fluide (60 fps, recommandé)</option>
+            <option value="40">Moyenne (40 fps)</option>
+            <option value="20">Minimum (20 fps)</option>
         </select>
     </section>
     <section>
-        <h3>Video quality</h3>
+        <h3>Qualité de la vidéo</h3>
         <select id="select-video-quality">
-            <option value="30">High video quality (30 fps)</option>
-            <option value="20">Medium video quality (20 fps, recommended)</option>
-            <option value="10">Minimum video quality (10 fps)</option>
-            <option value="5">Small video quality (5 fps)</option>
+            <option value="30">Très bonne (30 fps)</option>
+            <option value="20">Bonne (20 fps, recommandé)</option>
+            <option value="10">Moyenne (10 fps)</option>
+            <option value="5">Minimum (5 fps)</option>
         </select>
     </section>
     <section class="action">
-        <button type="submit" id="gameQualityFormSubmit">Save</button>
-        <button type="reset" class="close" id="gameQualityFormCancel">Cancel</button>
+        <button type="submit" id="gameQualityFormSubmit">Enregistrer</button>
+        <button type="reset" class="close" id="gameQualityFormCancel">Annuler</button>
     </section>
 </form>

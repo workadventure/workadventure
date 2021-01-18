@@ -66,7 +66,7 @@ export class SelectCharacterScene extends ResizableScene {
     }
 
     create() {
-        this.textField = new TextField(this, this.game.renderer.width / 2, 50, 'Select your character');
+        this.textField = new TextField(this, this.game.renderer.width / 2, 50, 'Choisissez un avatar');
         this.pressReturnField = new TextField(
             this,
             this.game.renderer.width / 2,

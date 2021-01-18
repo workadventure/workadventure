@@ -44,14 +44,14 @@ export class FourOFourScene extends Phaser.Scene {
         this.logo = new Image(this, this.game.renderer.width - 30, this.game.renderer.height - 20, Textures.icon);
         this.add.existing(this.logo);
 
-        this.mapNotFoundField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height / 2, "404 - File not found");
+        this.mapNotFoundField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height / 2, "404 - Fichier non trouve");
 
         let text: string = '';
         if (this.file !== undefined) {
-            text = "Could not load map"
+            text = "Impossible de charger la carte"
         }
         if (this.url !== undefined) {
-            text = "Invalid URL"
+            text = "URL invalide"
         }
 
         this.couldNotFindField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height / 2 + 24, text);
