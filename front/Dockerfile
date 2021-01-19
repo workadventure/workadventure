@@ -11,5 +11,6 @@ COPY --from=builder --chown=docker:docker /var/www/messages/generated /var/www/h
 RUN yarn install
 
 ENV NODE_ENV=production
+ENV STARTUP_COMMAND_0="./templater.sh"
 ENV STARTUP_COMMAND_1="yarn run build"
 ENV APACHE_DOCUMENT_ROOT=dist/
