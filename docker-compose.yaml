@@ -44,6 +44,9 @@ services:
       - "traefik.http.routers.front-ssl.entryPoints=websecure"
       - "traefik.http.routers.front-ssl.tls=true"
       - "traefik.http.routers.front-ssl.service=front"
+#      - "traefik.http.routers.front.middlewares=auth"
+#      - "traefik.http.middlewares.auth.basicauth.users=$TRAEFIK_BASICAUTH"
+        
 
   pusher:
     image: thecodingmachine/nodejs:12
