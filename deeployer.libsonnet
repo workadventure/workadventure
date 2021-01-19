@@ -3,7 +3,7 @@
   local namespace = env.GITHUB_REF_SLUG,
   local tag = namespace,
   local url = if namespace == "master" then "workadventu.re" else namespace+".workadventure.test.thecodingmachine.com",
-  local adminUrl = if namespace == "master" || namespace == "develop" || std.startsWith(namespace, "admin") then "https://admin."+url else null,
+  local adminUrl = if namespace == "master" || namespace == "develop" || std.startsWith(namespace, "admin") then "https://"+url else null,
   "$schema": "https://raw.githubusercontent.com/thecodingmachine/deeployer/master/deeployer.schema.json",
   "version": "1.0",
   "containers": {
@@ -100,17 +100,6 @@
       },
       "ports": [80]
     },
-    "website": {
-      "image": "thecodingmachine/workadventure-website:"+tag,
-      "host": {
-        "url": url,
-        "https": "enable"
-      },
-      "ports": [80],
-      "env": {
-        "GAME_URL": "https://play."+url
-      }
-    }
   },
   "config": {
     "https": {

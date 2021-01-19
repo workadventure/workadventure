@@ -193,6 +193,11 @@ message SendUserMessage{
   string message = 2;
 }
 
+message BanUserMessage{
+  string type = 1;
+  string message = 2;
+}
+
 message ServerToClientMessage {
   oneof message {
     BatchMessage batchMessage = 1;
@@ -207,6 +212,7 @@ message ServerToClientMessage {
     TeleportMessageMessage teleportMessageMessage = 10;
     SendJitsiJwtMessage sendJitsiJwtMessage = 11;
     SendUserMessage sendUserMessage = 12;
+    BanUserMessage banUserMessage = 13;
   }
 }
 
@@ -220,6 +226,7 @@ message JoinRoomMessage {
   string userUuid = 4;
   string roomId = 5;
   repeated string tag = 6;
+  string IPAddress = 7;
 }
 
 message UserJoinedZoneMessage {
@@ -272,6 +279,8 @@ message PusherToBackMessage {
     StopGlobalMessage stopGlobalMessage = 9;
     ReportPlayerMessage reportPlayerMessage = 10;
     QueryJitsiJwtMessage queryJitsiJwtMessage = 11;
+    SendUserMessage sendUserMessage = 12;
+    BanUserMessage banUserMessage = 13;
   }
 }
 
@@ -288,6 +297,7 @@ message SubToPusherMessage {
     UserLeftZoneMessage userLeftZoneMessage = 5;
     ItemEventMessage itemEventMessage = 6;
     SendUserMessage sendUserMessage = 7;
+    BanUserMessage banUserMessage = 8;
   }
 }
 
@@ -306,10 +316,20 @@ message ServerToAdminClientMessage {
   repeated SubToAdminPusherMessage payload = 2;
 }*/
 
+message UserJoinedRoomMessage {
+  string uuid = 1;
+  string ipAddress = 2;
+  string name = 3;
+}
+
+message UserLeftRoomMessage {
+  string uuid = 1;
+}
+
 message ServerToAdminClientMessage {
   oneof message {
-    string userUuidJoinedRoom = 1;
-    string userUuidLeftRoom = 2;
+    UserJoinedRoomMessage userJoinedRoom = 1;
+    UserLeftRoomMessage userLeftRoom = 2;
   }
 }
 
