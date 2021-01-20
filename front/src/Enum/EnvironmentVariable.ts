@@ -1,7 +1,7 @@
 const DEBUG_MODE: boolean = process.env.DEBUG_MODE == "true";
 const API_URL = (process.env.API_PROTOCOL || (typeof(window) !== 'undefined' ? window.location.protocol : 'http:')) + '//' + (process.env.API_URL || "pusher.workadventure.localhost");
 const UPLOADER_URL = (process.env.API_PROTOCOL || (typeof(window) !== 'undefined' ? window.location.protocol : 'http:')) + '//' + (process.env.UPLOADER_URL || 'uploader.workadventure.localhost');
-const ADMIN_URL = (process.env.API_PROTOCOL || (typeof(window) !== 'undefined' ? window.location.protocol : 'http:')) + '//' + (process.env.ADMIN_URL || "admin.workadventure.localhost");
+const ADMIN_URL = (process.env.API_PROTOCOL || (typeof(window) !== 'undefined' ? window.location.protocol : 'http:')) + '//' + (process.env.ADMIN_URL || "workadventure.localhost");
 const TURN_SERVER: string = process.env.TURN_SERVER || "turn:numb.viagenie.ca";
 const TURN_USER: string = process.env.TURN_USER || 'g.parant@thecodingmachine.com';
 const TURN_PASSWORD: string = process.env.TURN_PASSWORD || 'itcugcOHxle9Acqi$';
