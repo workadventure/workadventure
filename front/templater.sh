@@ -15,10 +15,10 @@ if [[ "${INSERT_ANALYTICS:-NO}" == "NO" ]]; then
     echo "" > "${tmp_trackcodefile}"
 fi
 
-# Automatically insert analytics if TRACKING_NUMBER is set
-if [[ "${TRACKING_NUMBER:-}" != ""  || "${INSERT_ANALYTICS:-NO}" != "NO" ]]; then
+# Automatically insert analytics if GA_TRACKING_ID is set
+if [[ "${GA_TRACKING_ID:-}" != ""  || "${INSERT_ANALYTICS:-NO}" != "NO" ]]; then
     echo "Templating code from ${ANALYTICS_CODE_PATH}"
-    sed "s#<!-- TRACKING NUMBER -->#${TRACKING_NUMBER:-}#g" "${ANALYTICS_CODE_PATH}" > "$tmp_trackcodefile"
+    sed "s#<!-- TRACKING NUMBER -->#${GA_TRACKING_ID:-}#g" "${ANALYTICS_CODE_PATH}" > "$tmp_trackcodefile"
 fi
 
 echo "Templating ${generated_file_index} from ${template_file_index}"
