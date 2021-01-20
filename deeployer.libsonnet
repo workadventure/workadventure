@@ -79,7 +79,7 @@
         "TURN_USER": "workadventure",
         "TURN_PASSWORD": "WorkAdventure123",
         "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
-        "TRACKING_NUMBER": "UA-10196481-11"
+        //"GA_TRACKING_ID": "UA-10196481-11"
       }
     },
     "uploader": {
