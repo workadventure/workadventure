@@ -78,7 +78,8 @@
         "TURN_SERVER": "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443",
         "TURN_USER": "workadventure",
         "TURN_PASSWORD": "WorkAdventure123",
-        "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false"
+        "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
+        "TRACKING_NUMBER": "UA-10196481-11"
       }
     },
     "uploader": {
