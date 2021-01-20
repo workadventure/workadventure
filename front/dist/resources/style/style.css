@@ -110,6 +110,14 @@ video#myCamVideo{
     width: 450px;
     height: 150px;
 }
+/* override copyright btn*/
+.btn-cam-action#btn-copy-action {
+    position: absolute;
+    bottom: 0px;
+    left: 350px;
+    width: 150px;
+    height: 150px;
+}
 /*btn animation*/
 .btn-cam-action div{
     cursor: url('/resources/logos/cursor_pointer.png'), pointer;
