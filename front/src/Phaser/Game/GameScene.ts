@@ -61,13 +61,18 @@ import {Room} from "../../Connexion/Room";
 import {jitsiFactory} from "../../WebRtc/JitsiFactory";
 import {urlManager} from "../../Url/UrlManager";
 import {audioManager} from "../../WebRtc/AudioManager";
+import { copyrightInfo } from "../../WebRtc/CopyrightInfo";
+import {IVirtualJoystick} from "../../types";
+const {
+  default: VirtualJoystick,
+} = require("phaser3-rex-plugins/plugins/virtualjoystick.js");
 import {PresentationModeIcon} from "../Components/PresentationModeIcon";
 import {ChatModeIcon} from "../Components/ChatModeIcon";
 import {OpenChatIcon, openChatIconName} from "../Components/OpenChatIcon";
 import {SelectCharacterScene, SelectCharacterSceneName} from "../Login/SelectCharacterScene";
 import {TextureError} from "../../Exception/TextureError";
 import {addLoader} from "../Components/Loader";
-
+import { localUserStore } from "../../Connexion/LocalUserStore";
 import AnimatedTiles from "phaser-animated-tiles";
 
 export interface GameSceneInitInterface {
@@ -161,6 +166,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     private openChatIcon!: OpenChatIcon;
     private playerName!: string;
     private characterLayers!: string[];
+    public virtualJoystick!: IVirtualJoystick;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
@@ -180,6 +186,16 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.connectionAnswerPromise = new Promise<RoomJoinedMessageInterface>((resolve, reject): void => {
             this.connectionAnswerPromiseResolve = resolve;
         })
+        const joystickVisible = localUserStore.getJoystick();
+        if (joystickVisible) {
+            const canvas = document.querySelector('canvas')
+            canvas?.addEventListener('click', () => {
+                const body = document.querySelector('body')
+                body?.requestFullscreen()
+            }, {
+                once: true
+            })
+        }
     }
 
     //hook preload scene
@@ -188,6 +204,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         this.load.image(openChatIconName, 'resources/objects/talk.png');
         this.load.on(FILE_LOAD_ERROR, (file: {src: string}) => {
+            console.log("File load errors.")
             this.scene.start(FourOFourSceneName, {
                 file: file.src
             });
@@ -372,9 +389,19 @@ export class GameScene extends ResizableScene implements CenterListener {
         //initialise list of other player
         this.MapPlayers = this.physics.add.group({immovable: true});
 
+        this.virtualJoystick = new VirtualJoystick(this, {
+            x: this.game.renderer.width / 2,
+            y: this.game.renderer.height / 2,
+            radius: 20,
+            base: this.add.circle(0, 0, 20, 0x888888),
+            thumb: this.add.circle(0, 0, 10, 0xcccccc),
+            enable: true,
+            dir: "8dir",
+        });
+        this.virtualJoystick.visible = localUserStore.getJoystick()
         //create input to move
-        this.userInputManager = new UserInputManager(this);
         mediaManager.setUserInputManager(this.userInputManager);
+        this.userInputManager = new UserInputManager(this, this.virtualJoystick);
 
         //notify game manager can to create currentUser in map
         this.createCurrentPlayer();
@@ -400,6 +427,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                 }
             }, 500);
         }
+        copyrightInfo.initCopyrightInfo(mapDirUrl);
 
         this.createPromiseResolve();
 
@@ -694,6 +722,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     }
 
     private onMapExit(exitKey: string) {
+        this.playAudio(undefined);
         const {roomId, hash} = Room.getIdFromIdentifier(exitKey, this.MapUrlFile, this.instance);
         if (!roomId) throw new Error('Could not find the room from its exit key: '+exitKey);
         urlManager.pushStartLayerNameToUrl(hash);
