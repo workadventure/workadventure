@@ -14,7 +14,7 @@ COPY front .
 COPY --from=builder /usr/src/generated src/Messages/generated
 ENV NODE_ENV=production
 
-ARG BASE_DOMAIN=workadventure.localhost
+ARG BASE_DOMAIN
 ARG API_URL=pusher.$BASE_DOMAIN
 ARG UPLOADER_URL=uploader.$BASE_DOMAIN
 ARG ADMIN_URL=admin.$BASE_DOMAIN

@@ -26,9 +26,9 @@ services:
       JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
       HOST: "0.0.0.0"
       NODE_ENV: development
-      API_URL: pusher.workadventure.localhost
-      UPLOADER_URL: uploader.workadventure.localhost
-      ADMIN_URL: workadventure.localhost
+      API_URL: pusher.wa.tabascoeye.de
+      UPLOADER_URL: uploader.wa.tabascoeye.de
+      ADMIN_URL: admin.wa.tabascoeye.de
       STARTUP_COMMAND_1: ./templater.sh
       STARTUP_COMMAND_2: yarn install
       TURN_SERVER: "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443"
@@ -39,15 +39,15 @@ services:
     volumes:
       - ./front:/usr/src/app
     labels:
-      - "traefik.http.routers.front.rule=Host(`play.workadventure.localhost`)"
+      - "traefik.http.routers.front.rule=Host(`play.wa.tabascoeye.de`)"
       - "traefik.http.routers.front.entryPoints=web,traefik"
       - "traefik.http.services.front.loadbalancer.server.port=8080"
-      - "traefik.http.routers.front-ssl.rule=Host(`play.workadventure.localhost`)"
+      - "traefik.http.routers.front-ssl.rule=Host(`play.wa.tabascoeye.de`)"
       - "traefik.http.routers.front-ssl.entryPoints=websecure"
       - "traefik.http.routers.front-ssl.tls=true"
       - "traefik.http.routers.front-ssl.service=front"
-#      - "traefik.http.routers.front.middlewares=auth"
-#      - "traefik.http.middlewares.auth.basicauth.users=$TRAEFIK_BASICAUTH"
+      - "traefik.http.routers.front.middlewares=auth"
+      - "traefik.http.middlewares.auth.basicauth.users=$TRAEFIK_BASICAUTH"
         
 
   pusher:
@@ -67,36 +67,13 @@ services:
     volumes:
       - ./pusher:/usr/src/app
     labels:
-      - "traefik.http.routers.pusher.rule=Host(`pusher.workadventure.localhost`)"
+      - "traefik.http.routers.pusher.rule=Host(`pusher.wa.tabascoeye.de`)"
       - "traefik.http.routers.pusher.entryPoints=web"
       - "traefik.http.services.pusher.loadbalancer.server.port=8080"
-      - "traefik.http.routers.pusher-ssl.rule=Host(`pusher.workadventure.localhost`)"
+      - "traefik.http.routers.pusher-ssl.rule=Host(`pusher.wa.tabascoeye.de`)"
       - "traefik.http.routers.pusher-ssl.entryPoints=websecure"
       - "traefik.http.routers.pusher-ssl.tls=true"
       - "traefik.http.routers.pusher-ssl.service=pusher"
-
-  maps:
-    image: thecodingmachine/nodejs:12-apache
-    environment:
-      DEBUG_MODE: "$DEBUG_MODE"
-      HOST: "0.0.0.0"
-      NODE_ENV: development
-      #APACHE_DOCUMENT_ROOT: dist/
-      #APACHE_EXTENSIONS: headers
-      #APACHE_EXTENSION_HEADERS: 1
-      STARTUP_COMMAND_0: sudo a2enmod headers
-      STARTUP_COMMAND_1: yarn install
-      STARTUP_COMMAND_2: yarn run dev &
-    volumes:
-      - ./maps:/var/www/html
-    labels:
-      - "traefik.http.routers.maps.rule=Host(`maps.workadventure.localhost`)"
-      - "traefik.http.routers.maps.entryPoints=web,traefik"
-      - "traefik.http.services.maps.loadbalancer.server.port=80"
-      - "traefik.http.routers.maps-ssl.rule=Host(`maps.workadventure.localhost`)"
-      - "traefik.http.routers.maps-ssl.entryPoints=websecure"
-      - "traefik.http.routers.maps-ssl.tls=true"
-      - "traefik.http.routers.maps-ssl.service=maps"
 
   back:
     image: thecodingmachine/nodejs:12
@@ -114,10 +91,10 @@ services:
     volumes:
       - ./back:/usr/src/app
     labels:
-      - "traefik.http.routers.back.rule=Host(`api.workadventure.localhost`)"
+      - "traefik.http.routers.back.rule=Host(`api.wa.tabascoeye.de`)"
       - "traefik.http.routers.back.entryPoints=web"
       - "traefik.http.services.back.loadbalancer.server.port=8080"
-      - "traefik.http.routers.back-ssl.rule=Host(`api.workadventure.localhost`)"
+      - "traefik.http.routers.back-ssl.rule=Host(`api.wa.tabascoeye.de`)"
       - "traefik.http.routers.back-ssl.entryPoints=websecure"
       - "traefik.http.routers.back-ssl.tls=true"
       - "traefik.http.routers.back-ssl.service=back"
@@ -132,10 +109,10 @@ services:
     volumes:
       - ./uploader:/usr/src/app
     labels:
-      - "traefik.http.routers.uploader.rule=Host(`uploader.workadventure.localhost`)"
+      - "traefik.http.routers.uploader.rule=Host(`uploader.wa.tabascoeye.de`)"
       - "traefik.http.routers.uploader.entryPoints=web"
       - "traefik.http.services.uploader.loadbalancer.server.port=8080"
-      - "traefik.http.routers.uploader-ssl.rule=Host(`uploader.workadventure.localhost`)"
+      - "traefik.http.routers.uploader-ssl.rule=Host(`uploader.wa.tabascoeye.de`)"
       - "traefik.http.routers.uploader-ssl.entryPoints=websecure"
       - "traefik.http.routers.uploader-ssl.tls=true"
       - "traefik.http.routers.uploader-ssl.service=uploader"

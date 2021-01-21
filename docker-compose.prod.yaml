@@ -6,6 +6,9 @@ services:
       - --providers.docker
       - --entryPoints.web.address=:80
       - --entryPoints.websecure.address=:443
+      - --certificatesresolvers.myhttpchallenge.acme.tlschallenge=true
+      - --certificatesresolvers.myhttpchallenge.acme.email=$ACME_EMAIL
+      - --certificatesresolvers.myhttpchallenge.acme.storage=/letsencrypt/acme.json
     ports:
       - "80:80"
       - "443:443"
@@ -14,6 +17,7 @@ services:
       - front
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./ssl/:/letsencrypt/
 
   front:
     build:
@@ -34,12 +38,17 @@ services:
         TURN_USER: "$TURN_USER"
     labels:
       - "traefik.http.routers.front.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.front.rule=Host(`wa.tabascoeye.de`)"
       - "traefik.http.routers.front.entryPoints=web"
       - "traefik.http.services.front.loadbalancer.server.port=8000"
       - "traefik.http.routers.front-ssl.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.front-ssl.rule=Host(`wa.tabascoeye.de`)"
       - "traefik.http.routers.front-ssl.entryPoints=websecure"
       - "traefik.http.routers.front-ssl.tls=true"
       - "traefik.http.routers.front-ssl.service=front"
+      - "traefik.http.routers.front-ssl.tls.certresolver=myhttpchallenge"
+      - "traefik.http.routers.front.middlewares=auth"
+      - "traefik.http.middlewares.auth.basicauth.users=$TRAEFIK_BASICAUTH"
 
   back:
     build:
@@ -71,3 +80,4 @@ services:
       - "traefik.http.routers.pusher-ssl.entryPoints=websecure"
       - "traefik.http.routers.pusher-ssl.tls=true"
       - "traefik.http.routers.pusher-ssl.service=pusher"
+      - "traefik.http.routers.pusher-ssl.tls.certresolver=myhttpchallenge"
