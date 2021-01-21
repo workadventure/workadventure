@@ -27,9 +27,9 @@ class ConnectionManager {
             const organizationSlug = data.organizationSlug;
             const worldSlug = data.worldSlug;
             const roomSlug = data.roomSlug;
-            urlManager.editUrlForRoom(roomSlug, organizationSlug, worldSlug);
 
-            const room = new Room(window.location.pathname + window.location.hash);
+            const room = new Room('/@/'+organizationSlug+'/'+worldSlug+'/'+roomSlug + window.location.hash);
+            urlManager.pushRoomIdToUrl(room);
             return Promise.resolve(room);
         } else if (connexionType === GameConnexionTypes.organization || connexionType === GameConnexionTypes.anonymous || connexionType === GameConnexionTypes.empty) {
             const localUser = localUserStore.getLocalUser();
@@ -48,11 +48,7 @@ class ConnectionManager {
             }
             let roomId: string
             if (connexionType === GameConnexionTypes.empty) {
-                if (START_ROOM_URL.startsWith('http://') || START_ROOM_URL.startsWith('https://')) {
-                    roomId = '/_/global/' + START_ROOM_URL.replace('http://', '').replace('https://', '');
-                } else {
-                    roomId = urlManager.editUrlForRoom(START_ROOM_URL, null, null);
-                }
+                roomId = START_ROOM_URL;
             } else {
                 roomId = window.location.pathname + window.location.hash;
             }
