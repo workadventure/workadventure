@@ -1,24 +1,16 @@
 import {GameRoom} from "../Model/GameRoom";
 import {CharacterLayer} from "_Model/Websocket/CharacterLayer";
 import {
-    GroupDeleteMessage,
-    GroupUpdateMessage,
     ItemEventMessage,
     ItemStateMessage,
     PlayGlobalMessage,
     PointMessage,
-    PositionMessage,
     RoomJoinedMessage,
     ServerToClientMessage,
-    SetPlayerDetailsMessage,
     SilentMessage,
     SubMessage,
-    ReportPlayerMessage,
-    UserJoinedMessage,
-    UserLeftMessage,
     UserMovedMessage,
     UserMovesMessage,
-    ViewportMessage,
     WebRtcDisconnectMessage,
     WebRtcSignalToClientMessage,
     WebRtcSignalToServerMessage,
@@ -28,24 +20,23 @@ import {
     SendUserMessage,
     JoinRoomMessage,
     Zone as ProtoZone,
-    BatchMessage,
     BatchToPusherMessage,
     SubToPusherMessage,
-    UserJoinedZoneMessage, GroupUpdateZoneMessage, GroupLeftZoneMessage, UserLeftZoneMessage, AdminMessage, BanMessage
+    UserJoinedZoneMessage, GroupUpdateZoneMessage, GroupLeftZoneMessage, UserLeftZoneMessage, BanUserMessage
 } from "../Messages/generated/messages_pb";
 import {User, UserSocket} from "../Model/User";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
 import {Group} from "../Model/Group";
 import {cpuTracker} from "./CpuTracker";
-import {ADMIN_API_URL, GROUP_RADIUS, JITSI_ISS, MINIMUM_DISTANCE, SECRET_JITSI_KEY} from "../Enum/EnvironmentVariable";
+import {GROUP_RADIUS, JITSI_ISS, MINIMUM_DISTANCE, SECRET_JITSI_KEY} from "../Enum/EnvironmentVariable";
 import {Movable} from "../Model/Movable";
 import {PositionInterface} from "../Model/PositionInterface";
-import {adminApi, CharacterTexture, FetchMemberDataByUuidResponse} from "./AdminApi";
+import {adminApi, CharacterTexture} from "./AdminApi";
 import Jwt from "jsonwebtoken";
 import {JITSI_URL} from "../Enum/EnvironmentVariable";
 import {clientEventsEmitter} from "./ClientEventsEmitter";
 import {gaugeManager} from "./GaugeManager";
-import {AdminSocket, ZoneSocket} from "../RoomManager";
+import {ZoneSocket} from "../RoomManager";
 import {Zone} from "_Model/Zone";
 import Debug from "debug";
 import {Admin} from "_Model/Admin";
@@ -119,7 +110,7 @@ export class SocketManager {
         //const things = room.setViewport(client, viewport);
 
         const roomJoinedMessage = new RoomJoinedMessage();
-
+        roomJoinedMessage.setTagList(joinRoomMessage.getTagList());
         /*for (const thing of things) {
             if (thing instanceof User) {
                 const player: ExSocketInterface|undefined = this.sockets.get(thing.id);
@@ -626,6 +617,33 @@ export class SocketManager {
         user.socket.write(serverToClientMessage);
     }
 
+    public handlerSendUserMessage(user: User, sendUserMessageToSend: SendUserMessage){
+        const sendUserMessage = new SendUserMessage();
+        sendUserMessage.setMessage(sendUserMessageToSend.getMessage());
+        sendUserMessage.setType(sendUserMessageToSend.getType());
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setSendusermessage(sendUserMessage);
+        user.socket.write(serverToClientMessage);
+    }
+
+    public handlerBanUserMessage(room: GameRoom, user: User, banUserMessageToSend: BanUserMessage){
+        const banUserMessage = new BanUserMessage();
+        banUserMessage.setMessage(banUserMessageToSend.getMessage());
+        banUserMessage.setType(banUserMessageToSend.getType());
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setSendusermessage(banUserMessage);
+        user.socket.write(serverToClientMessage);
+
+        setTimeout(() => {
+            // Let's leave the room now.
+            room.leave(user);
+            // Let's close the connection when the user is banned.
+            user.socket.end();
+        }, 10000);
+    }
+
     /**
      * Merges the characterLayers received from the front (as an array of string) with the custom textures from the back.
      */
@@ -748,7 +766,7 @@ export class SocketManager {
         recipient.socket.write(subToPusherMessage);
     }
 
-    public banUser(roomId: string, recipientUuid: string): void {
+    public banUser(roomId: string, recipientUuid: string, message: string): void {
         const room = this.rooms.get(roomId);
         if (!room) {
             console.error("In banUser, could not find room with id '" +  roomId + "'. Maybe the room was closed a few milliseconds ago and there was a race condition?");
@@ -765,6 +783,7 @@ export class SocketManager {
         room.leave(recipient);
 
         const sendUserMessage = new SendUserMessage();
+        sendUserMessage.setMessage(message);
         sendUserMessage.setType('banned');
 
         const subToPusherMessage = new SubToPusherMessage();

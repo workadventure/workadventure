@@ -91,18 +91,11 @@ export class IoSocketController {
 
                     if(message.event === 'user-message') {
                         const messageToEmit = (message.message as { message: string, type: string, userUuid: string });
-                        switch (message.message.type) {
-                            case 'ban': {
-                                socketManager.emitSendUserMessage(messageToEmit.userUuid, messageToEmit.message, roomId);
-                                break;
-                            }
-                            case 'banned': {
-                                socketManager.emitBan(messageToEmit.userUuid, messageToEmit.message, roomId);
-                                break;
-                            }
-                            default: {
-                                break;
-                            }
+                        if(messageToEmit.type === 'banned'){
+                            socketManager.emitBan(messageToEmit.userUuid, messageToEmit.message, messageToEmit.type);
+                        }
+                        if(messageToEmit.type === 'ban') {
+                            socketManager.emitSendUserMessage(messageToEmit.userUuid, messageToEmit.message, messageToEmit.type);
                         }
                     }
                 }catch (err) {
@@ -148,6 +141,7 @@ export class IoSocketController {
                         const websocketKey = req.getHeader('sec-websocket-key');
                         const websocketProtocol = req.getHeader('sec-websocket-protocol');
                         const websocketExtensions = req.getHeader('sec-websocket-extensions');
+                        const IPAddress = req.getHeader('x-forwarded-for');
 
                         const roomId = query.roomId;
                         if (typeof roomId !== 'string') {
@@ -176,7 +170,7 @@ export class IoSocketController {
                             characterLayers = [ characterLayers ];
                         }
 
-                        const userUuid = await jwtTokenManager.getUserUuidFromToken(token);
+                        const userUuid = await jwtTokenManager.getUserUuidFromToken(token, IPAddress, roomId);
 
                         let memberTags: string[] = [];
                         let memberTextures: CharacterTexture[] = [];
@@ -217,6 +211,7 @@ export class IoSocketController {
                                 url,
                                 token,
                                 userUuid,
+                                IPAddress,
                                 roomId,
                                 name,
                                 characterLayers: characterLayerObjs,
@@ -336,6 +331,7 @@ export class IoSocketController {
         client.userId = this.nextUserId;
         this.nextUserId++;
         client.userUuid = ws.userUuid;
+        client.IPAddress = ws.IPAddress;
         client.token = ws.token;
         client.batchedMessages = new BatchMessage();
         client.batchTimeout = null;

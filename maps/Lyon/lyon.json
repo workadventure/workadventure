@@ -37,7 +37,7 @@
                 {
                  "name":"exitSceneUrl",
                  "type":"string",
-                 "value":"..\/Floor0\/floor0.json"
+                 "value":"\/@\/tcm\/workadventure\/floor0"
                 }],
          "type":"tilelayer",
          "visible":true,

@@ -24,6 +24,14 @@ services:
 
         # This should fall back to window.location.host
         API_URL: ""
+
+        START_ROOM_URL: "$START_ROOM_URL"
+        JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
+        JITSI_URL: "$JITSI_URL"
+        START_ROOM_URL: "$START_ROOM_URL"
+        TURN_PASSWORD: "$TURN_PASSWORD"
+        TURN_SERVER: "$TURN_SERVER"
+        TURN_USER: "$TURN_USER"
     labels:
       - "traefik.http.routers.front.rule=PathPrefix(`/`)"
       - "traefik.http.routers.front.entryPoints=web"

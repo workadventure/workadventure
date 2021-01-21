@@ -103,7 +103,7 @@
                 {
                  "name":"exitSceneUrl",
                  "type":"string",
-                 "value":"..\/Floor1\/floor1.json#down-the-stairs"
+                 "value":"\/@\/tcm\/workadventure\/floor1#down-the-stairs"
                 }],
          "type":"tilelayer",
          "visible":true,
@@ -139,7 +139,7 @@
                 {
                  "name":"exitSceneUrl",
                  "type":"string",
-                 "value":"..\/Floor1\/floor1.json#down-the-stairs-secours"
+                 "value":"\/@\/tcm\/workadventure\/floor1#down-the-stairs-secours"
                 }],
          "type":"tilelayer",
          "visible":true,

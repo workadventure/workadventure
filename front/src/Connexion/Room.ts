@@ -25,7 +25,7 @@ export class Room {
             this.id = this.id.substr(0, indexOfHash);
         }
     }
-    
+
     public static getIdFromIdentifier(identifier: string, baseUrl: string, currentInstance: string): {roomId: string, hash: string} {
         let roomId = '';
         let hash = '';
@@ -72,8 +72,9 @@ export class Room {
                     console.log('Map ', this.id, ' resolves to URL ', data.mapUrl);
                     resolve(data.mapUrl);
                     return;
+                }).catch((reason) => {
+                    reject(reason);
                 });
-
             }
         });
     }

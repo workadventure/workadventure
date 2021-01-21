@@ -28,11 +28,13 @@ services:
       NODE_ENV: development
       API_URL: pusher.workadventure.localhost
       UPLOADER_URL: uploader.workadventure.localhost
-      ADMIN_URL: admin.workadventure.localhost
-      STARTUP_COMMAND_1: yarn install
+      ADMIN_URL: workadventure.localhost
+      STARTUP_COMMAND_1: ./templater.sh
+      STARTUP_COMMAND_2: yarn install
       TURN_SERVER: "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443"
       TURN_USER: workadventure
       TURN_PASSWORD: WorkAdventure123
+      START_ROOM_URL: "$START_ROOM_URL"
     command: yarn run start
     volumes:
       - ./front:/usr/src/app

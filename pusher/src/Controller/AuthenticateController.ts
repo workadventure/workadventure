@@ -60,10 +60,7 @@ export class AuthenticateController extends BaseController {
                     }));
 
                 } catch (e) {
-                    console.error("An error happened", e)
-                    res.writeStatus(e.status || "500 Internal Server Error");
-                    this.addCorsHeaders(res);
-                    res.end('An error happened');
+                    this.errorToResponse(e, res);
                 }
 
 
