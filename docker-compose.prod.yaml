@@ -5,6 +5,9 @@ services:
     command:
       - --providers.docker
       - --entryPoints.web.address=:80
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --entrypoints.web.http.redirections.entrypoint.permanent=true
       - --entryPoints.websecure.address=:443
       - --certificatesresolvers.myhttpchallenge.acme.tlschallenge=true
       - --certificatesresolvers.myhttpchallenge.acme.email=$ACME_EMAIL
@@ -47,8 +50,8 @@ services:
       - "traefik.http.routers.front-ssl.tls=true"
       - "traefik.http.routers.front-ssl.service=front"
       - "traefik.http.routers.front-ssl.tls.certresolver=myhttpchallenge"
-      - "traefik.http.routers.front.middlewares=auth"
-      - "traefik.http.middlewares.auth.basicauth.users=$TRAEFIK_BASICAUTH"
+        #      - "traefik.http.routers.front.middlewares=auth"
+        #      - "traefik.http.middlewares.auth.basicauth.users=$TRAEFIK_BASICAUTH"
 
   back:
     build:
