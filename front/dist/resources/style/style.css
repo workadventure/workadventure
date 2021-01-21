@@ -151,6 +151,7 @@ video#myCamVideo{
 
 
 .btn-cam-action {
+    pointer-events: all;
     position: absolute;
     bottom: 0px;
     right: 0px;
@@ -186,18 +187,26 @@ video#myCamVideo{
     transition: 280ms;
 }
 .btn-micro{
+    pointer-events: auto;
     transition: all .3s;
     right: 44px;
 }
 .btn-video{
+    pointer-events: auto;
     transition: all .25s;
     right: 134px;
 }
 .btn-monitor{
+    pointer-events: auto;
     transition: all .2s;
     right: 224px;
 }
-
+.btn-copy{
+    pointer-events: auto;
+    transition: all .3s;
+    right: 44px;
+    opacity: 1;
+}
 .btn-cam-action div img{
     height: 22px;
     width: 30px;
@@ -554,6 +563,7 @@ input[type=range]:focus::-ms-fill-upper {
     position: absolute;
     width: 100%;
     height: 100%;
+    pointer-events: none;
     /* TODO: DO WE NEED FLEX HERE???? WE WANT A SIDEBAR OF EXACTLY 25% (note: flex useful for direction!!!) */
 }
 
@@ -589,6 +599,7 @@ input[type=range]:focus::-ms-fill-upper {
 .sidebar {
     flex: 0 0 25%;
     display: flex;
+    pointer-events: none;
 }
 
 .sidebar > div {
