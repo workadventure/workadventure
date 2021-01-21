@@ -170,7 +170,7 @@ export class DiscussionManager {
         const pMessage: HTMLParagraphElement = document.createElement('p');
         const date = new Date();
         if(isMe){
-            name = 'Moi';
+            name = 'Me';
         }
         pMessage.innerHTML = `<span style="font-weight: bold">${name}</span>    
                     <span style="color:#bac2cc;display:inline-block;font-size:12px;">
@@ -221,7 +221,7 @@ export class DiscussionManager {
         this.activeDiscussion = false;
         this.divDiscuss?.classList.remove('active');
     }
-    
+
     public setUserInputManager(userInputManager : UserInputManager){
         this.userInputManager = userInputManager;
     }
