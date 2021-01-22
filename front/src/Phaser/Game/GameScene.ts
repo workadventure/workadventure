@@ -386,6 +386,12 @@ export class GameScene extends ResizableScene implements CenterListener {
         mediaManager.setUserInputManager(this.userInputManager);
         this.userInputManager = new UserInputManager(this, this.virtualJoystick);
 
+        // Listener event to reposition virtual joystick
+        // whatever place you click in game area
+        this.input.on('pointerdown', (pointer: { x: number; y: number; }) => {
+            this.virtualJoystick.x = pointer.x;
+            this.virtualJoystick.y = pointer.y;
+        });
         //notify game manager can to create currentUser in map
         this.createCurrentPlayer();
         this.removeAllRemotePlayers(); //cleanup the list  of remote players in case the scene was rebooted
