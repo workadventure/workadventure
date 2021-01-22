@@ -2,6 +2,7 @@ version: "3"
 services:
   reverse-proxy:
     image: traefik:v2.3.7
+    restart: unless-stopped
     command:
       - --providers.docker
       - --entryPoints.web.address=:80
@@ -23,6 +24,7 @@ services:
       - ./ssl/:/letsencrypt/
 
   front:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: front/Dockerfile
@@ -54,6 +56,7 @@ services:
         #      - "traefik.http.middlewares.auth.basicauth.users=$TRAEFIK_BASICAUTH"
 
   back:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: back/Dockerfile
@@ -65,6 +68,7 @@ services:
       JITSI_ISS: $JITSI_ISS
 
   pusher:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: pusher/Dockerfile
