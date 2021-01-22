@@ -17,4 +17,11 @@ export class HtmlUtils {
         elem.remove();
         return elem as T;
     }
+
+    public static urlify(text: string): string {
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        return text.replace(urlRegex, (url: string) => {
+            return '<a href="' + url + '" target="_blank" style=":visited {color: white}">' + url + '</a>';
+        })
+    }
 }
