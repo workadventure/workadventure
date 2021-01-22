@@ -26,9 +26,9 @@ services:
       JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
       HOST: "0.0.0.0"
       NODE_ENV: development
-      API_URL: pusher.wa.tabascoeye.de
-      UPLOADER_URL: uploader.wa.tabascoeye.de
-      ADMIN_URL: admin.wa.tabascoeye.de
+      API_URL: pusher.workadventure.localhost
+      UPLOADER_URL: uploader.workadventure.localhost
+      ADMIN_URL: workadventure.localhost
       STARTUP_COMMAND_1: ./templater.sh
       STARTUP_COMMAND_2: yarn install
       TURN_SERVER: "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443"
