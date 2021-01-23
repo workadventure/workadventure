@@ -49,7 +49,7 @@ export class RoomConnection implements RoomConnection {
     private readonly socket: WebSocket;
     private userId: number|null = null;
     private listeners: Map<string, Function[]> = new Map<string, Function[]>();
-    private static websocketFactory: null|((url: string)=>any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
+    private static websocketFactory: ((url: string) => WebSocket) = (url) => new WebSocket(url);
     private closed: boolean = false;
     private tags: string[] = [];
 
@@ -78,12 +78,9 @@ export class RoomConnection implements RoomConnection {
         url += '&left='+Math.floor(viewport.left);
         url += '&right='+Math.floor(viewport.right);
 
-        if (RoomConnection.websocketFactory) {
-            this.socket = RoomConnection.websocketFactory(url);
-        } else {
-            this.socket = new WebSocket(url);
         }
 
+        this.socket = RoomConnection.websocketFactory(url);
         this.socket.binaryType = 'arraybuffer';
 
         let interval: ReturnType<typeof setInterval>|undefined = undefined;
@@ -583,7 +580,7 @@ export class RoomConnection implements RoomConnection {
     public hasTag(tag: string): boolean {
         return this.tags.includes(tag);
     }
-    
+
     public isAdmin(): boolean {
         return this.hasTag('admin');
     }
