@@ -16,6 +16,8 @@ export interface CursorKeys extends Record<Direction, CursorKey> {
 export interface IVirtualJoystick extends Phaser.GameObjects.GameObject {
     y: number;
     x: number;
+    forceX: number;
+    forceY: number;
     visible: boolean;
     createCursorKeys: () => CursorKeys;
 }

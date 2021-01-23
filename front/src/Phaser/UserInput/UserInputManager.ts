@@ -39,12 +39,20 @@ export class UserInputManager {
     private KeysCode!: UserInputManagerDatum[];
     private Scene: GameScene;
 
+    private joystick : IVirtualJoystick;
     private joystickEvents = new ActiveEventList();
+    private joystickForceThreshold = 60;
+    private joystickForceAccuX = 0;
+    private joystickForceAccuY = 0;
+
     constructor(Scene: GameScene, virtualJoystick: IVirtualJoystick) {
         this.Scene = Scene;
         this.initKeyBoardEvent();
-        virtualJoystick.on("update", () => {
-            const cursorKeys = virtualJoystick.createCursorKeys();
+        this.joystick = virtualJoystick;
+        this.joystick.on("update", () => {
+            this.joystickForceAccuX = this.joystick.forceX ? this.joystickForceAccuX : 0;
+            this.joystickForceAccuY = this.joystick.forceY ? this.joystickForceAccuY : 0;
+            const cursorKeys = this.joystick.createCursorKeys();
             for (const name in cursorKeys) {
                 const key = cursorKeys[name as Direction];
                 switch (name) {
@@ -99,7 +107,24 @@ export class UserInputManager {
         const eventsMap = new ActiveEventList();
         this.joystickEvents.forEach((value, key) => {
             if (value) {
-                eventsMap.set(key, value);
+                switch (key) {
+                case UserInputEvent.MoveUp:
+                case UserInputEvent.MoveDown:
+                    this.joystickForceAccuY += this.joystick.forceY;
+                    if (Math.abs(this.joystickForceAccuY) > this.joystickForceThreshold) {
+                        eventsMap.set(key, value);
+                        this.joystickForceAccuY = 0;
+                    }
+                    break;
+                case UserInputEvent.MoveLeft:
+                case UserInputEvent.MoveRight:
+                    this.joystickForceAccuX += this.joystick.forceX;
+                    if (Math.abs(this.joystickForceAccuX) > this.joystickForceThreshold) {
+                        eventsMap.set(key, value);
+                        this.joystickForceAccuX = 0;
+                    }
+                    break;
+                }
             }
         });
         this.KeysCode.forEach(d => {
