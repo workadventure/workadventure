@@ -698,6 +698,10 @@ export class GameScene extends ResizableScene implements CenterListener {
     }
 
     public cleanupClosingScene(): void {
+        // stop playing audio, close any open website, stop any open Jitsi
+        coWebsiteManager.closeCoWebsite();
+        this.stopJitsi();
+        this.playAudio(undefined);
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
         if(this.connection) {
             this.connection.closeConnection();
