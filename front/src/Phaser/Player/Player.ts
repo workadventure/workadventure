@@ -47,7 +47,7 @@ export class Player extends Character implements CurrentGamerInterface {
         let x = 0;
         let y = 0;
         if (activeEvents.get(UserInputEvent.MoveUp)) {
-            y = - moveAmount;
+            y = -moveAmount;
             direction = PlayerAnimationDirections.Up;
             moving = true;
         } else if (activeEvents.get(UserInputEvent.MoveDown)) {
@@ -64,16 +64,18 @@ export class Player extends Character implements CurrentGamerInterface {
             direction = PlayerAnimationDirections.Right;
             moving = true;
         }
+        moving = moving || activeEvents.get(UserInputEvent.JoystickMove);
 
         if (x !== 0 || y !== 0) {
             this.move(x, y);
             this.emit(hasMovedEventName, {moving, direction, x: this.x, y: this.y});
-        } else {
-            if (this.wasMoving) {
-                //direction = PlayerAnimationNames.None;
-                this.stop();
-                this.emit(hasMovedEventName, {moving, direction: this.previousDirection, x: this.x, y: this.y});
-            }
+        } else if (this.wasMoving && moving) {
+            // slow joystick movement
+            this.move(0, 0);
+            this.emit(hasMovedEventName, {moving, direction: this.previousDirection, x: this.x, y: this.y});
+        } else if (this.wasMoving && !moving) {
+            this.stop();
+            this.emit(hasMovedEventName, {moving, direction: this.previousDirection, x: this.x, y: this.y});
         }
 
         if (direction !== null) {
