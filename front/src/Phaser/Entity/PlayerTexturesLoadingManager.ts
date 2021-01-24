@@ -23,21 +23,25 @@ export const loadAllDefaultModels = (load: LoaderPlugin): BodyResourceDescriptio
     });
     return returnArray;
 }
-export const loadCustomTexture = (load: LoaderPlugin, texture: CharacterTexture) => {
+export const loadCustomTexture = (load: LoaderPlugin, texture: CharacterTexture) : Promise<BodyResourceDescriptionInterface> => {
     const name = 'customCharacterTexture'+texture.id;
-    load.spritesheet(name,texture.url,{frameWidth: 32, frameHeight: 32});
-    return name;
+    return createLoadingPromise(load, {name, img: texture.url}).then(() => {
+        return {name: name, img: texture.url}
+    });
 }
 
 export const lazyLoadPlayerCharacterTextures = (loadPlugin: LoaderPlugin, texturePlugin: TextureManager, texturekeys:Array<string|BodyResourceDescriptionInterface>): Promise<string[]> => {
     const promisesList:Promise<void>[] = [];
     texturekeys.forEach((textureKey: string|BodyResourceDescriptionInterface) => {
-        const playerResourceDescriptor = getRessourceDescriptor(textureKey);        
-        if(!texturePlugin.exists(playerResourceDescriptor.name)) {
-            console.log('Loading '+playerResourceDescriptor.name)
-            promisesList.push(createLoadingPromise(loadPlugin, playerResourceDescriptor));
+        try {
+            const playerResourceDescriptor = getRessourceDescriptor(textureKey);
+            if (playerResourceDescriptor && !texturePlugin.exists(playerResourceDescriptor.name)) {
+                promisesList.push(createLoadingPromise(loadPlugin, playerResourceDescriptor));
+            }
+        }catch (err){
+            console.error(err);
         }
-    })
+    });
     let returnPromise:Promise<Array<string|BodyResourceDescriptionInterface>>;
     if (promisesList.length > 0) {
         loadPlugin.start();

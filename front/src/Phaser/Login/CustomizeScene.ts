@@ -63,11 +63,8 @@ export class CustomizeScene extends ResizableScene {
                 if(texture.level === -1){
                     continue;
                 }
-                loadCustomTexture(this.load, texture);
-                const name = 'customCharacterTexture'+texture.id;
-                this.layers[texture.level].unshift({
-                    name,
-                    img: texture.url
+                loadCustomTexture(this.load, texture).then((bodyResourceDescription: BodyResourceDescriptionInterface) => {
+                    this.layers[texture.level].unshift(bodyResourceDescription);
                 });
             }
         }
