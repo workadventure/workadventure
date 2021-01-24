@@ -10,6 +10,7 @@ import {ResizableScene} from "./ResizableScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {addLoader} from "../Components/Loader";
 import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
+import {AbstractCharacterScene} from "./AbstractCharacterScene";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -20,7 +21,7 @@ enum CustomizeTextures{
     arrowUp = "arrow_up",
 }
 
-export class CustomizeScene extends ResizableScene {
+export class CustomizeScene extends AbstractCharacterScene {
 
     private textField!: TextField;
     private enterField!: TextField;
@@ -48,26 +49,21 @@ export class CustomizeScene extends ResizableScene {
 
     preload() {
         addLoader(this);
+
+        this.layers = loadAllLayers(this.load);
+        this.loadCustomSceneSelectCharacters().then((bodyResourceDescriptions) => {
+            bodyResourceDescriptions.forEach((bodyResourceDescription) => {
+                if(!bodyResourceDescription.level){
+                    throw 'Texture level is null';
+                }
+                this.layers[bodyResourceDescription.level].unshift(bodyResourceDescription);
+            });
+        });
+
         this.load.image(CustomizeTextures.arrowRight, "resources/objects/arrow_right.png");
         this.load.image(CustomizeTextures.icon, "resources/logos/tcm_full.png");
         this.load.image(CustomizeTextures.arrowUp, "resources/objects/arrow_up.png");
         this.load.bitmapFont(CustomizeTextures.mainFont, 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
-
-        this.layers = loadAllLayers(this.load);
-
-        const localUser = localUserStore.getLocalUser();
-
-        const textures = localUser?.textures;
-        if (textures) {
-            for (const texture of textures) {
-                if(texture.level === -1){
-                    continue;
-                }
-                loadCustomTexture(this.load, texture).then((bodyResourceDescription: BodyResourceDescriptionInterface) => {
-                    this.layers[texture.level].unshift(bodyResourceDescription);
-                });
-            }
-        }
     }
 
     create() {

@@ -23,15 +23,19 @@ export const loadAllDefaultModels = (load: LoaderPlugin): BodyResourceDescriptio
     });
     return returnArray;
 }
-export const loadCustomTexture = (load: LoaderPlugin, texture: CharacterTexture) : Promise<BodyResourceDescriptionInterface> => {
+export const loadCustomTexture = (loaderPlugin: LoaderPlugin, texture: CharacterTexture) : Promise<BodyResourceDescriptionInterface> => {
     const name = 'customCharacterTexture'+texture.id;
-    return createLoadingPromise(load, {name, img: texture.url}).then(() => {
-        return {name: name, img: texture.url}
+    const playerResourceDescriptor: BodyResourceDescriptionInterface = {name, img: texture.url, level: texture.level}
+    return new Promise<BodyResourceDescriptionInterface>((solve) => {
+        loaderPlugin.spritesheet(playerResourceDescriptor.name, playerResourceDescriptor.img, {frameWidth: 32, frameHeight: 32});
+        solve(playerResourceDescriptor);
     });
+    //TODO refactor and use lasy loading
+    //return createLoadingPromise(loaderPlugin, {name, img: texture.url, level: texture.level});
 }
 
 export const lazyLoadPlayerCharacterTextures = (loadPlugin: LoaderPlugin, texturePlugin: TextureManager, texturekeys:Array<string|BodyResourceDescriptionInterface>): Promise<string[]> => {
-    const promisesList:Promise<void>[] = [];
+    const promisesList:Promise<unknown>[] = [];
     texturekeys.forEach((textureKey: string|BodyResourceDescriptionInterface) => {
         try {
             const playerResourceDescriptor = getRessourceDescriptor(textureKey);
@@ -70,8 +74,8 @@ export const getRessourceDescriptor = (textureKey: string|BodyResourceDescriptio
 }
 
 const createLoadingPromise = (loadPlugin: LoaderPlugin, playerResourceDescriptor: BodyResourceDescriptionInterface) => {
-    return new Promise<void>((res, rej) => {
+    return new Promise<BodyResourceDescriptionInterface>((res) => {
         loadPlugin.spritesheet(playerResourceDescriptor.name, playerResourceDescriptor.img, {frameWidth: 32, frameHeight: 32});
-        loadPlugin.once('filecomplete-spritesheet-'+playerResourceDescriptor.name, () => res());
+        loadPlugin.once('filecomplete-spritesheet-'+playerResourceDescriptor.name, () => res(playerResourceDescriptor));
     });
 }

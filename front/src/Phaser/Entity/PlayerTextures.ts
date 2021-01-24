@@ -6,7 +6,8 @@ export interface BodyResourceDescriptionListInterface {
 
 export interface BodyResourceDescriptionInterface {
     name: string,
-    img: string
+    img: string,
+    level?: number
 }
 
 export const PLAYER_RESOURCES: BodyResourceDescriptionListInterface = {

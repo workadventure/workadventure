@@ -9,6 +9,7 @@ import {localUserStore} from "../../Connexion/LocalUserStore";
 import {loadAllDefaultModels, loadCustomTexture} from "../Entity/PlayerTexturesLoadingManager";
 import {addLoader} from "../Components/Loader";
 import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
+import {AbstractCharacterScene} from "./AbstractCharacterScene";
 
 
 //todo: put this constants in a dedicated file
@@ -21,7 +22,7 @@ enum LoginTextures {
     customizeButtonSelected = "customize_button_selected"
 }
 
-export class SelectCharacterScene extends ResizableScene {
+export class SelectCharacterScene extends AbstractCharacterScene {
     private readonly nbCharactersPerRow = 6;
     private textField!: TextField;
     private pressReturnField!: TextField;
@@ -44,6 +45,13 @@ export class SelectCharacterScene extends ResizableScene {
 
     preload() {
         addLoader(this);
+
+        this.loadSelectSceneCharacters().then((bodyResourceDescriptions) => {
+            bodyResourceDescriptions.forEach((bodyResourceDescription) => {
+                this.playerModels.push(bodyResourceDescription);
+            });
+        })
+
         this.load.image(LoginTextures.playButton, "resources/objects/play_button.png");
         this.load.image(LoginTextures.icon, "resources/logos/tcm_full.png");
         // Note: arcade.png from the Phaser 3 examples at: https://github.com/photonstorm/phaser3-examples/tree/master/public/assets/fonts/bitmap
@@ -51,19 +59,6 @@ export class SelectCharacterScene extends ResizableScene {
         this.playerModels = loadAllDefaultModels(this.load);
         this.load.image(LoginTextures.customizeButton, 'resources/objects/customize.png');
         this.load.image(LoginTextures.customizeButtonSelected, 'resources/objects/customize_selected.png');
-
-        const localUser = localUserStore.getLocalUser();
-        const textures = localUser?.textures;
-        if (textures) {
-            for (const texture of textures) {
-                if(texture.level !== -1){
-                    continue;
-                }
-                loadCustomTexture(this.load, texture).then((bodyResourceDescription: BodyResourceDescriptionInterface) => {
-                    this.playerModels.push(bodyResourceDescription);
-                });
-            }
-        }
     }
 
     create() {
