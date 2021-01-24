@@ -59,8 +59,9 @@ export class SelectCharacterScene extends ResizableScene {
                 if(texture.level !== -1){
                     continue;
                 }
-                const name = loadCustomTexture(this.load, texture);
-                this.playerModels.push({name: name, img: texture.url});
+                loadCustomTexture(this.load, texture).then((bodyResourceDescription: BodyResourceDescriptionInterface) => {
+                    this.playerModels.push(bodyResourceDescription);
+                });
             }
         }
     }
