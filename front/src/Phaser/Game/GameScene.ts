@@ -184,6 +184,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     //hook preload scene
     preload(): void {
         addLoader(this);
+
         const localUser = localUserStore.getLocalUser();
         const textures = localUser?.textures;
         if (textures) {
