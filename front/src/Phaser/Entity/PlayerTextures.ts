@@ -209,7 +209,7 @@ export const HAIR_RESOURCES: BodyResourceDescriptionListInterface = {
 
 
 export const CLOTHES_RESOURCES: BodyResourceDescriptionListInterface = {
-    "Clothes_0": {name:"clothes_0", img: "resources/customisation/character_clothes/naked.png"},
+    "clothes_0": {name:"clothes_0", img: "resources/customisation/character_clothes/naked.png"},
     "clothes_1": {name:"clothes_1", img: "resources/customisation/character_clothes/character_clothes0.png"},
     "clothes_2": {name:"clothes_2", img: "resources/customisation/character_clothes/character_clothes1.png"},
     "clothes_3": {name:"clothes_3", img: "resources/customisation/character_clothes/character_clothes2.png"},
