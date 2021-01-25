@@ -14,13 +14,16 @@ COPY front .
 COPY --from=builder /usr/src/generated src/Messages/generated
 ENV NODE_ENV=production
 
-ARG BASE_DOMAIN=workadventure.localhost
+ARG LAGOON_PROJECT
+ARG LAGOON_ENVIRONMENT
+ARG LAGOON_CLUSTER
+ARG BASE_DOMAIN=$LAGOON_ENVIRONMENT.$LAGOON_PROJECT.$LAGOON_CLUSTER
 ARG API_URL=pusher.$BASE_DOMAIN
 ARG UPLOADER_URL=uploader.$BASE_DOMAIN
 ARG ADMIN_URL=admin.$BASE_DOMAIN
 ARG INSERT_ANALYTICS=NO
 ARG GA_TRACKING_ID=""
-ARG START_ROOM_URL=/_/global/maps.workadventure.localhost/Floor0/floor0.json
+ARG START_ROOM_URL=/_/global/digitalegesellschaft.github.io/workadventure-map-winterkongress/winterlandschaft.json
 
 RUN API_URL=$API_URL UPLOADER_URL=$UPLOADER_URL ADMIN_URL=$ADMIN_URL INSERT_ANALYTICS=$INSERT_ANALYTICS GA_TRACKING_ID=$GA_TRACKING_ID START_ROOM_URL=$START_ROOM_URL \
     ./templater.sh && yarn run build

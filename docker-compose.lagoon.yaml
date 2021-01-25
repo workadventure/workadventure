@@ -1,0 +1,22 @@
+version: "3"
+services:
+  front:
+    build:
+      context: .
+      dockerfile: front/Dockerfile
+    labels:
+      lagoon.type: nginx
+
+  back:
+    build:
+      context: .
+      dockerfile: back/Dockerfile
+    labels:
+      lagoon.type: node
+
+  pusher:
+    build:
+      context: .
+      dockerfile: pusher/Dockerfile
+    labels:
+      lagoon.type: node

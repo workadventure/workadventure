@@ -1,11 +1,11 @@
 # protobuf build
-FROM node:14.15.4-buster-slim@sha256:cbae886186467bbfd274b82a234a1cdfbbd31201c2a6ee63a6893eefcf3c6e76 as builder
+FROM uselagoon/node-14 as builder
 WORKDIR /usr/src
 COPY messages .
 RUN yarn install && yarn proto
 
 # typescript build
-FROM node:14.15.4-buster-slim@sha256:cbae886186467bbfd274b82a234a1cdfbbd31201c2a6ee63a6893eefcf3c6e76 as builder2
+FROM uselagoon/node-14 as builder2
 WORKDIR /usr/src
 COPY back/yarn.lock back/package.json ./
 RUN yarn install
@@ -15,9 +15,10 @@ ENV NODE_ENV=production
 RUN yarn run tsc
 
 # final production image
-FROM node:14.15.4-buster-slim@sha256:cbae886186467bbfd274b82a234a1cdfbbd31201c2a6ee63a6893eefcf3c6e76
+FROM uselagoon/node-14
 WORKDIR /usr/src
 COPY back/yarn.lock back/package.json ./
+COPY .lagoon.env ./
 COPY --from=builder2 /usr/src/dist /usr/src/dist
 ENV NODE_ENV=production
 RUN yarn install --production
