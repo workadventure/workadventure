@@ -1,105 +1,36 @@
-![](https://github.com/thecodingmachine/workadventure/workflows/Continuous%20Integration/badge.svg)
+# WorkAdventure - Digitale Gesellschaft
 
-![WorkAdventure landscape image](README-INTRO.jpg)
+## Introduction
 
-Demo here : [https://workadventu.re/](https://workadventu.re/).
+This is a fork of [WorkAdventure (WA)](https://github.com/thecodingmachine/workadventure) specifically for the [Digitale Gesellschaft Schweiz](https://www.digitale-gesellschaft.ch/), forked because:
+1. hosting on Lagoon
+2. a couple of merges that have not made it into upstream workadventure yet
 
-# Work Adventure
+## Local Development
 
-## Work in progress
+1. run containers
+    ```
+    docker-compose up -d
+    ```
+    Important: WA brings it's own traffik reverse proxy which tries to bind port 80 and 443, if you have any other container or tool running that tries to do the same, stop them first.
 
-Work Adventure is a web-based collaborative workspace for small to medium teams (2-100 people) presented in the form of a
-16-bit video game.
+2. verify containers running with
+    ```
+    docker-compose logs -f front
+    ```
+    wait until you see `Compiled successfully`
 
-In Work Adventure, you can move around your office and talk to your colleagues (using a video-chat feature that is
-triggered when you move next to a colleague).
+3. Visit: http://play.workadventure.localhost/
 
+The local development enviornment has realtime compile & livereload enabled, means if you change anything on the code of the application your browser will automaatically reloaded (it will take a couple of seconds as the compliation takes a bit).
 
-## Getting started
+### Common issues & Debugging with local Development enviornment
 
-Install Docker.
+- The very first start of the containers can be quite slow, give it some time and follow the start progress with `docker-compose logs -f` (for all services) and `docker-compose logs -f [service]` (for a specific service)
 
-Run:
+## Remote Development
 
-```
-docker-compose up
-```
+This Workadventure instance is deployed via Lagoon and has the following settings:
 
-The environment will start.
-
-You should now be able to browse to http://workadventure.localhost/ and see the application.
-
-Note: on some OSes, you will need to add this line to your `/etc/hosts` file:
-
-**/etc/hosts**
-```
-workadventure.localhost 127.0.0.1
-```
-
-### MacOS developers, your environment with Vagrant
-
-If you are using MacOS, you can increase Docker performance using Vagrant. If you want more explanations, you can read [this medium article](https://medium.com/better-programming/vagrant-to-increase-docker-performance-with-macos-25b354b0c65c).
-
-#### Prerequisites
-
-- VirtualBox*	5.x	Latest version	https://www.virtualbox.org/wiki/Downloads
-- Vagrant	2.2.7	Latest version	https://www.vagrantup.com/downloads.html
-
-#### First steps
-
-Create a config file `Vagrantfile` from `Vagrantfile.template`
-
-```bash
-cp Vagrantfile.template Vagrantfile
-```
-
-In `Vagrantfile`, update `VM_HOST_PATH` with the local project path of your machine.
-
-```
-#VM_HOST_PATH# => your local machine path to the project
-
-```
-
-(run `pwd` and copy the path in this variable)
-
-To start your VM Vagrant, run:
-
-```bash
-Vagrant up
-```
-
-To connect to your VM, run:
-
-
-```bash
-Vagrant ssh
-```
-
-To start project environment, run
-
-```bash
-docker-compose up
-```
-
-You environment runs in you VM Vagrant. When you want stop your VM, you can run:
-
-````bash
-Vagrant halt
-````
-
-If you want to destroy, you can run
-
-````bash
-Vagrant destroy
-````
-
-#### Available commands
-
-* `Vagrant up`: start your VM Vagrant.
-* `Vagrant reload`: reload your VM Vagrant when you change Vagrantfile.
-* `Vagrant ssh`: connect on your VM Vagrant.
-* `Vagrant halt`: stop your VM Vagrant.
-* `Vagrant destroy`: delete your VM Vagrant.
-
-## Features developed
-You have more details of features developed in back [README.md](./back/README.md).
+- Deploy `develop` and `main` branches
+- Deploy each PR in a new test environment - just create a PR, the URL schema for the test environment is: `front.pr-X.workadventure-digiges.ch4.amazee.io` (replace the `X` with our PR number)
