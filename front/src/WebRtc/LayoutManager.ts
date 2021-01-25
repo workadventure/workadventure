@@ -24,6 +24,7 @@ export interface CenterListener {
 }
 
 export const ON_ACTION_TRIGGER_BUTTON = 'onaction';
+
 export const TRIGGER_WEBSITE_PROPERTIES = 'openWebsiteTrigger';
 export const TRIGGER_JITSI_PROPERTIES = 'jitsiTrigger';
 export const TRIGGER_EXIT_PROPERTIES = 'exitTrigger';
