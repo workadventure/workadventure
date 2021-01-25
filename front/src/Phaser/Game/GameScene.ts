@@ -33,9 +33,14 @@ import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
 import {lazyLoadPlayerCharacterTextures} from "../Entity/PlayerTexturesLoadingManager";
 import {
     CenterListener,
+    EXIT_MESSAGE_PROPERTIES, JITSI_MESSAGE_PROPERTIES,
     layoutManager,
     LayoutMode,
-    ON_ACTION_TRIGGER_BUTTON, TRIGGER_JITSI_PROPERTIES, TRIGGER_WEBSITE_PROPERTIES
+    ON_ACTION_TRIGGER_BUTTON,
+    TRIGGER_EXIT_PROPERTIES,
+    TRIGGER_JITSI_PROPERTIES,
+    TRIGGER_WEBSITE_PROPERTIES,
+    WEBSITE_MESSAGE_PROPERTIES
 } from "../../WebRtc/LayoutManager";
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
@@ -621,11 +626,27 @@ export class GameScene extends ResizableScene implements CenterListener {
     }
 
     private triggerOnMapLayerPropertyChange(){
+        /* @deprecated
         this.gameMap.onPropertyChange('exitSceneUrl', (newValue, oldValue) => {
             if (newValue) this.onMapExit(newValue as string);
-        });
-        this.gameMap.onPropertyChange('exitUrl', (newValue, oldValue) => {
-            if (newValue) this.onMapExit(newValue as string);
+        });*/
+        this.gameMap.onPropertyChange('exitUrl', (newValue, oldValue, allProps) => {
+            if (newValue === undefined) {
+                layoutManager.removeActionButton('exitUrl', this.userInputManager);
+            } else {
+                const exitTriggerValue = allProps.get(TRIGGER_EXIT_PROPERTIES);
+                if (exitTriggerValue && exitTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
+                    let message = allProps.get(EXIT_MESSAGE_PROPERTIES);
+                    if(message === undefined){
+                        message = 'Click on SPACE to entrer in next map';
+                    }
+                    layoutManager.addActionButton('exitUrl', message.toString(), () => {
+                        this.onMapExit(newValue as string);
+                    }, this.userInputManager);
+                } else {
+                    this.onMapExit(newValue as string);
+                }
+            }
         });
         this.gameMap.onPropertyChange('openWebsite', (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
@@ -639,7 +660,11 @@ export class GameScene extends ResizableScene implements CenterListener {
 
                 const openWebsiteTriggerValue = allProps.get(TRIGGER_WEBSITE_PROPERTIES);
                 if(openWebsiteTriggerValue && openWebsiteTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
-                    layoutManager.addActionButton('openWebsite', 'Click on SPACE to open the web site', () => {
+                    let message = allProps.get(WEBSITE_MESSAGE_PROPERTIES);
+                    if(message === undefined){
+                        message = 'Click on SPACE to open the web site';
+                    }
+                    layoutManager.addActionButton('openWebsite', message.toString(), () => {
                         openWebsiteFunction();
                     }, this.userInputManager);
                 }else{
@@ -655,7 +680,6 @@ export class GameScene extends ResizableScene implements CenterListener {
                 const openJitsiRoomFunction = () => {
                     if (JITSI_PRIVATE_MODE) {
                         const adminTag = allProps.get("jitsiRoomAdminTag") as string|undefined;
-
                         this.connection.emitQueryJitsiJwtMessage(this.instance.replace('/', '-') + "-" + newValue, adminTag);
                     } else {
                         this.startJitsi(newValue as string);
@@ -665,14 +689,18 @@ export class GameScene extends ResizableScene implements CenterListener {
 
                 const jitsiTriggerValue = allProps.get(TRIGGER_JITSI_PROPERTIES);
                 if(jitsiTriggerValue && jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
-                    layoutManager.addActionButton('jitsiRoom', 'Click on SPACE to enter in jitsi meet room', () => {
+                    let message = allProps.get(JITSI_MESSAGE_PROPERTIES);
+                    if (message === undefined) {
+                        message = 'Click on SPACE to enter in jitsi meet room';
+                    }
+                    layoutManager.addActionButton('jitsiRoom', message.toString(), () => {
                         openJitsiRoomFunction();
                     }, this.userInputManager);
                 }else{
                     openJitsiRoomFunction();
                 }
             }
-        })
+        });
         this.gameMap.onPropertyChange('silent', (newValue, oldValue) => {
             if (newValue === undefined || newValue === false || newValue === '') {
                 this.connection.setSilent(false);
