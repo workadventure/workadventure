@@ -53,8 +53,28 @@ const fps : Phaser.Types.Core.FPSConfig = {
     smoothStep: false
 }
 
+// the ?phaserMode=canvas parameter can be used to force Canvas usage
+let params = new URLSearchParams(document.location.search.substring(1));
+let phaserMode = params.get("phaserMode");
+let mode: number;
+switch (phaserMode) {
+    case 'auto':
+    case null:
+        mode = Phaser.AUTO;
+        break;
+    case 'canvas':
+        mode = Phaser.CANVAS;
+        break;
+    case 'webgl':
+        mode = Phaser.WEBGL;
+        break;
+    default:
+        throw new Error('phaserMode parameter must be one of "auto", "canvas" or "webgl"');
+}
+
+
 const config: GameConfig = {
-    type: Phaser.AUTO,
+    type: mode,
     title: "WorkAdventure",
     width: width / RESOLUTION,
     height: height / RESOLUTION,
