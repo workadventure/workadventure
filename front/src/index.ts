@@ -54,8 +54,8 @@ const fps : Phaser.Types.Core.FPSConfig = {
 }
 
 // the ?phaserMode=canvas parameter can be used to force Canvas usage
-let params = new URLSearchParams(document.location.search.substring(1));
-let phaserMode = params.get("phaserMode");
+const params = new URLSearchParams(document.location.search.substring(1));
+const phaserMode = params.get("phaserMode");
 let mode: number;
 switch (phaserMode) {
     case 'auto':
