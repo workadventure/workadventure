@@ -23,7 +23,7 @@ ENV NODE_ENV=production
 RUN yarn install --production
 
 ENV SECRET_KEY=yourSecretKey \
-    JITSI_URL=meet.jit.si \
+    JITSI_URL=open.meet.switch.ch \
     GRPC_PORT=3000
 
 

@@ -27,7 +27,7 @@ ARG START_ROOM_URL=/_/global/digitalegesellschaft.github.io/workadventure-map-wi
 ARG TURN_SERVER="turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443"
 ARG TURN_USER=workadventure
 ARG TURN_PASSWORD=WorkAdventure123
-ARG JITSI_URL=meet.jit.si
+ARG JITSI_URL=open.meet.switch.ch
 
 RUN API_URL=$API_URL UPLOADER_URL=$UPLOADER_URL ADMIN_URL=$ADMIN_URL INSERT_ANALYTICS=$INSERT_ANALYTICS GA_TRACKING_ID=$GA_TRACKING_ID START_ROOM_URL=$START_ROOM_URL TURN_SERVER=$TURN_SERVER TURN_USER=$TURN_USER TURN_PASSWORD=$TURN_PASSWORD JITSI_URL=$JITSI_URL\
     ./templater.sh && yarn run build
