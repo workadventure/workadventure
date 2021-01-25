@@ -1,5 +1,5 @@
 # protobuf build
-FROM uselagoon/node-14 as builder
+FROM node:14.15.4-buster-slim@sha256:cbae886186467bbfd274b82a234a1cdfbbd31201c2a6ee63a6893eefcf3c6e76 as builder
 WORKDIR /usr/src
 COPY messages .
 RUN yarn install && yarn proto
