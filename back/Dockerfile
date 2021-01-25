@@ -5,7 +5,7 @@ COPY messages .
 RUN yarn install && yarn proto
 
 # typescript build
-FROM uselagoon/node-14 as builder2
+FROM node:14.15.4-buster-slim@sha256:cbae886186467bbfd274b82a234a1cdfbbd31201c2a6ee63a6893eefcf3c6e76  as builder2
 WORKDIR /usr/src
 COPY back/yarn.lock back/package.json ./
 RUN yarn install
@@ -15,13 +15,18 @@ ENV NODE_ENV=production
 RUN yarn run tsc
 
 # final production image
-FROM uselagoon/node-14
+FROM node:14.15.4-buster-slim@sha256:cbae886186467bbfd274b82a234a1cdfbbd31201c2a6ee63a6893eefcf3c6e76
 WORKDIR /usr/src
 COPY back/yarn.lock back/package.json ./
-COPY .lagoon.env ./
 COPY --from=builder2 /usr/src/dist /usr/src/dist
 ENV NODE_ENV=production
 RUN yarn install --production
+
+ENV SECRET_KEY=yourSecretKey \
+    JITSI_URL=meet.jit.si \
+    API_URL=back:3000 \
+    PUSHER_HTTP_PORT=3000
+
 
 USER node
 CMD ["yarn", "run", "runprod"]

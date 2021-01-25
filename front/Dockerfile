@@ -31,4 +31,4 @@ RUN API_URL=$API_URL UPLOADER_URL=$UPLOADER_URL ADMIN_URL=$ADMIN_URL INSERT_ANAL
 # final production image
 FROM uselagoon/nginx
 COPY front/nginx-vhost-lagoon.conf /etc/nginx/conf.d/app.conf
-COPY --from=builder2 /usr/src/dist /app
+COPY --from=builder2 /usr/src/dist /usr/share/nginx/html
