@@ -24,8 +24,7 @@ RUN yarn install --production
 
 ENV SECRET_KEY=yourSecretKey \
     JITSI_URL=meet.jit.si \
-    API_URL=back:3000 \
-    PUSHER_HTTP_PORT=3000
+    GRPC_PORT=3000
 
 
 USER node
