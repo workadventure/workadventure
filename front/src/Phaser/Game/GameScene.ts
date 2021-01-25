@@ -524,6 +524,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic, this.playerName);
             this.GlobalMessageManager = new GlobalMessageManager(this.connection);
             this.UserMessageManager = new UserMessageManager(this.connection);
+            this.UserMessageManager.setReceiveBanListener(this.lockUser.bind(this));
 
             const self = this;
             this.simplePeer.registerPeerConnectionListener({
@@ -1235,5 +1236,10 @@ export class GameScene extends ResizableScene implements CenterListener {
         mediaManager.removeTriggerCloseJitsiFrameButton('close-jisi');
     }
 
+    private lockUser(){
+        this.stopJitsi();
+        coWebsiteManager.closeCoWebsite();
+        this.userInputManager.clearAllInputKeyboard();
+    }
 
 }
