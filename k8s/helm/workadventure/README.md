@@ -1,6 +1,6 @@
-# Helm Chart to deploy Workadventure
+# Helm Chart to deploy Workadventure
 
-## Prerequisites
+## Prerequisites
 
 ### K8S
 
@@ -25,7 +25,7 @@ By default, Workadventure will repond to [play | maps | pusher | uploader | api]
 
 You can also start another universe with another map. For example : http://play.workadventure.minikube/_/anyuniverse/gparant.github.io/tcm-client/Demo/demo-v1.json
 
-### Install workadventure in a specific Git branch (from https://github.com/thecodingmachine/workadventure)
+### Install workadventure in a specific Git branch (from https://github.com/thecodingmachine/workadventure)
 ```
 helm install myrelease . --set image.tag=develop
 ```
@@ -45,6 +45,9 @@ You can override any values defined [values.yaml](./values.yaml). Read Helm doc 
 ## TODO
 
 [ ] TLS in order to make camera and mic working
+
 [ ] How to create private rooms designated by an organization/world/room ?
+
 [ ] Depend from Jitsi Helm to get full self-hosting
+
 [ ] Simplify templates ?
