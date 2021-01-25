@@ -1,0 +1,17 @@
+FROM node:12.19.0-slim
+
+RUN mkdir -p /home/node/app && chown -R node:node /home/node/app
+WORKDIR /home/node/app
+
+USER node
+ENV NODE_ENV=production
+ENV DEBUG=*
+
+COPY --chown=node:node package.json yarn.lock ./
+
+RUN yarn install --prod --frozen-lockfile
+
+COPY --chown=node:node ./dist/ ./dist/
+
+EXPOSE 8080
+CMD ["yarn", "run", "runprod"]
