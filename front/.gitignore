@@ -6,3 +6,4 @@
 /dist/webpack.config.js.map
 /dist/src
 *.sh
+!templater.sh
