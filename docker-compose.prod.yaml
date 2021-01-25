@@ -49,7 +49,7 @@ services:
       SECRET_KEY: yourSecretKey
       SECRET_JITSI_KEY: "$SECRET_JITSI_KEY"
       ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
-      API_URL: back:50051
+      API_URL: back:3000
       JITSI_URL: $JITSI_URL
       JITSI_ISS: $JITSI_ISS
     labels:

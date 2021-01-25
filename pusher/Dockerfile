@@ -23,7 +23,8 @@ ENV NODE_ENV=production
 RUN yarn install --production
 
 ENV API_URL=back:3000 \
-    PUSHER_HTTP_PORT=3000
+    PUSHER_HTTP_PORT=3000 \
+    JITSI_URL=meet.jit.si
 
 USER node
 CMD ["yarn", "run", "runprod"]
