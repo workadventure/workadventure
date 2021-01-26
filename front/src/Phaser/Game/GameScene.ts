@@ -524,7 +524,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic, this.playerName);
             this.GlobalMessageManager = new GlobalMessageManager(this.connection);
             this.UserMessageManager = new UserMessageManager(this.connection);
-            this.UserMessageManager.setReceiveBanListener(this.lockUser.bind(this));
+            this.UserMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
             const self = this;
             this.simplePeer.registerPeerConnectionListener({
@@ -1236,7 +1236,12 @@ export class GameScene extends ResizableScene implements CenterListener {
         mediaManager.removeTriggerCloseJitsiFrameButton('close-jisi');
     }
 
-    private lockUser(){
+    private bannedUser(){
+        this.scene.start(ErrorSceneName, {
+            title: 'Banned',
+            subTitle: 'You was banned of WorkAdventure',
+            message: 'If you want more information, you can contact us: workadventure@thecodingmachine.com'
+        });
         this.stopJitsi();
         coWebsiteManager.closeCoWebsite();
         this.userInputManager.clearAllInputKeyboard();
