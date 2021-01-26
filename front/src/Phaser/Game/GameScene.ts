@@ -1237,14 +1237,13 @@ export class GameScene extends ResizableScene implements CenterListener {
     }
 
     private bannedUser(){
+        this.cleanupClosingScene();
+        this.userInputManager.clearAllInputKeyboard();
         this.scene.start(ErrorSceneName, {
             title: 'Banned',
             subTitle: 'You was banned of WorkAdventure',
             message: 'If you want more information, you can contact us: workadventure@thecodingmachine.com'
         });
-        this.stopJitsi();
-        coWebsiteManager.closeCoWebsite();
-        this.userInputManager.clearAllInputKeyboard();
     }
 
 }
