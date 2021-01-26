@@ -79,6 +79,7 @@
         "TURN_USER": "workadventure",
         "TURN_PASSWORD": "WorkAdventure123",
         "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
+        "START_ROOM_URL": "/_/global/maps."+url+"/Floor0/floor0.json"
         //"GA_TRACKING_ID": "UA-10196481-11"
       }
     },

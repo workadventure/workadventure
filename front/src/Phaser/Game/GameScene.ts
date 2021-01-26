@@ -610,8 +610,18 @@ export class GameScene extends ResizableScene implements CenterListener {
         if (url === undefined) {
             audioManager.unloadAudio();
         } else {
-            const mapDirUrl = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf('/'));
-            const realAudioPath = mapDirUrl + '/' + url;
+            const audioPath = url as string;
+            let realAudioPath = '';
+
+            if (audioPath.indexOf('://') > 0) {
+                // remote file or stream
+                realAudioPath = audioPath;
+            } else {
+                // local file, include it relative to map directory
+                const mapDirUrl = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf('/'));
+                realAudioPath = mapDirUrl + '/' + url;
+            }
+
             audioManager.loadAudio(realAudioPath);
 
             if (loop) {
@@ -708,6 +718,10 @@ export class GameScene extends ResizableScene implements CenterListener {
     }
 
     public cleanupClosingScene(): void {
+        // stop playing audio, close any open website, stop any open Jitsi
+        coWebsiteManager.closeCoWebsite();
+        this.stopJitsi();
+        this.playAudio(undefined);
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
         if(this.connection) {
             this.connection.closeConnection();
