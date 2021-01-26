@@ -23,18 +23,20 @@ export const loadAllDefaultModels = (load: LoaderPlugin): BodyResourceDescriptio
     });
     return returnArray;
 }
+
 export const loadCustomTexture = (loaderPlugin: LoaderPlugin, texture: CharacterTexture) : Promise<BodyResourceDescriptionInterface> => {
     const name = 'customCharacterTexture'+texture.id;
     const playerResourceDescriptor: BodyResourceDescriptionInterface = {name, img: texture.url, level: texture.level}
     return createLoadingPromise(loaderPlugin, playerResourceDescriptor);
 }
 
-export const lazyLoadPlayerCharacterTextures = (loadPlugin: LoaderPlugin, texturePlugin: TextureManager, texturekeys:Array<string|BodyResourceDescriptionInterface>): Promise<string[]> => {
+export const lazyLoadPlayerCharacterTextures = (loadPlugin: LoaderPlugin, texturekeys:Array<string|BodyResourceDescriptionInterface>): Promise<string[]> => {
     const promisesList:Promise<unknown>[] = [];
     texturekeys.forEach((textureKey: string|BodyResourceDescriptionInterface) => {
         try {
+            //TODO refactor
             const playerResourceDescriptor = getRessourceDescriptor(textureKey);
-            if (playerResourceDescriptor && !texturePlugin.exists(playerResourceDescriptor.name)) {
+            if (playerResourceDescriptor && !loadPlugin.textureManager.exists(playerResourceDescriptor.name)) {
                 promisesList.push(createLoadingPromise(loadPlugin, playerResourceDescriptor));
             }
         }catch (err){
@@ -70,11 +72,13 @@ export const getRessourceDescriptor = (textureKey: string|BodyResourceDescriptio
 
 const createLoadingPromise = (loadPlugin: LoaderPlugin, playerResourceDescriptor: BodyResourceDescriptionInterface) => {
     return new Promise<BodyResourceDescriptionInterface>((res) => {
-        const texture = loadPlugin.textureManager.get(playerResourceDescriptor.name);
-        if(texture.key !== '__MISSING'){
+        if (loadPlugin.textureManager.exists(playerResourceDescriptor.name)) {
             return res(playerResourceDescriptor);
         }
-        loadPlugin.spritesheet(playerResourceDescriptor.name, playerResourceDescriptor.img, {frameWidth: 32, frameHeight: 32});
-        loadPlugin.once('filecomplete-spritesheet-'+playerResourceDescriptor.name, () => res(playerResourceDescriptor));
+        loadPlugin.spritesheet(playerResourceDescriptor.name, playerResourceDescriptor.img, {
+            frameWidth: 32,
+            frameHeight: 32
+        });
+        loadPlugin.once('filecomplete-spritesheet-' + playerResourceDescriptor.name, () => res(playerResourceDescriptor));
     });
 }
