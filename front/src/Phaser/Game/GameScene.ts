@@ -882,7 +882,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     createCurrentPlayer(){
         //TODO create animation moving between exit and start
-        const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, this.textures, this.characterLayers);
+        const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, this.characterLayers);
         try {
             this.CurrentPlayer = new Player(
                 this,
@@ -1076,7 +1076,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             return;
         }
 
-        const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, this.textures, addPlayerData.characterLayers);
+        const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, addPlayerData.characterLayers);
         const player = new RemotePlayer(
             addPlayerData.userId,
             this,
