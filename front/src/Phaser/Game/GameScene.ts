@@ -71,7 +71,6 @@ import {OpenChatIcon, openChatIconName} from "../Components/OpenChatIcon";
 import {SelectCharacterScene, SelectCharacterSceneName} from "../Login/SelectCharacterScene";
 import {TextureError} from "../../Exception/TextureError";
 import {addLoader} from "../Components/Loader";
-import { localUserStore } from "../../Connexion/LocalUserStore";
 import AnimatedTiles from "phaser-animated-tiles";
 import {ErrorSceneName} from "../Reconnecting/ErrorScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
