@@ -161,32 +161,3 @@ jobs:
         with:
           msg: Environment deployed at https://${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com
           check_for_duplicate_msg: true
-
-      - name: Run Cypress tests
-        uses: cypress-io/github-action@v2
-        if: ${{ env.GITHUB_REF_SLUG != 'master' }}
-        env:
-          CYPRESS_BASE_URL: https://play.${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com
-        with:
-          env: host=play.${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com,port=80
-          spec: cypress/integration/spec.js
-          wait-on: https://play.${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com
-          working-directory: e2e
-
-      - name: Run Cypress tests in prod
-        uses: cypress-io/github-action@v2
-        if: ${{ env.GITHUB_REF_SLUG == 'master' }}
-        env:
-          CYPRESS_BASE_URL: https://play.workadventu.re
-        with:
-          env: host=play.workadventu.re
-          spec: cypress/integration/spec.js
-          wait-on: https://workadventu.re
-          working-directory: e2e
-
-      - name: "Upload the screenshot on test failure"
-        uses: actions/upload-artifact@v1
-        if: failure()
-        with:
-          name: "screenshot"
-          path: "./e2e/cypress/screenshots/spec.js/WorkAdventureGame -- loads (failed).png"
