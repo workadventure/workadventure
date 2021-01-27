@@ -93,10 +93,11 @@ const config: GameConfig = {
     },
     callbacks: {
         postBoot: game => {
-            const renderer = game.renderer;
+            // Commented out to try to fix MacOS bug
+            /*const renderer = game.renderer;
             if (renderer instanceof WebGLRenderer) {
                 renderer.pipelines.add(OutlinePipeline.KEY, new OutlinePipeline(game));
-            }
+            }*/
         }
     }
 };
