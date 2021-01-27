@@ -27,12 +27,20 @@ class AudioManager {
         this.audioPlayerDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(audioPlayerDivId);
         this.audioPlayerCtrl = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(audioPlayerCtrlId);
 
-        const storedVolume = localStorage.getItem('volume')
+        const storedVolume = localStorage.getItem('audioplayer_volume')
         if (storedVolume === null) {
             this.setVolume(1);
         } else {
             this.volume = parseFloat(storedVolume);
             HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume').value = storedVolume;
+        }
+
+        const storedMute = localStorage.getItem('audioplayer_muted')
+        if (storedMute !== null) {
+            if(storedMute === 'true') {
+                this.muted = true;
+                HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume_icon_playing').classList.add('muted');
+            }
         }
 
         HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume').value = '' + this.volume;
@@ -71,9 +79,8 @@ class AudioManager {
 
     private setVolume(volume: number): void {
         this.volume = volume;
-        localStorage.setItem('volume', '' + volume);
+        localStorage.setItem('audioplayer_volume', '' + volume);
     }
-
 
     public loadAudio(url: string): void {
         this.load();
@@ -102,8 +109,10 @@ class AudioManager {
             this.changeVolume();
 
             if (this.muted) {
+                localStorage.setItem('audioplayer_muted', 'true');
                 HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume_icon_playing').classList.add('muted');
             } else {
+                localStorage.setItem('audioplayer_muted', 'false');
                 HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume_icon_playing').classList.remove('muted');
             }
         }
