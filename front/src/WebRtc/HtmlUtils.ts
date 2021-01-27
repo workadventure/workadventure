@@ -7,6 +7,15 @@ export class HtmlUtils {
         throw new Error("Cannot find HTML element with id '"+id+"'");
     }
 
+    public static querySelectorOrFail<T extends HTMLElement>(selector: string): T {
+        const elem = document.querySelector(selector);
+        if (elem === null) {
+            throw new Error("Cannot find HTML element with selector '"+selector+"'");
+        }
+        // FIXME: does not check the type of the returned type
+        return elem as T;
+    }
+
     public static removeElementByIdOrFail<T extends HTMLElement>(id: string): T {
         const elem = document.getElementById(id);
         if (HtmlUtils.isHtmlElement<T>(elem)) {
