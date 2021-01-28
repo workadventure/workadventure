@@ -8,12 +8,11 @@ export class HtmlUtils {
     }
 
     public static querySelectorOrFail<T extends HTMLElement>(selector: string): T {
-        const elem = document.querySelector(selector);
-        if (elem === null) {
-            throw new Error("Cannot find HTML element with selector '"+selector+"'");
+        const elem = document.querySelector<T>(selector);
+        if (HtmlUtils.isHtmlElement<T>(elem)) {
+            return elem;
         }
-        // FIXME: does not check the type of the returned type
-        return elem as T;
+        throw new Error("Cannot find HTML element with selector '"+selector+"'");
     }
 
     public static removeElementByIdOrFail<T extends HTMLElement>(id: string): T {
