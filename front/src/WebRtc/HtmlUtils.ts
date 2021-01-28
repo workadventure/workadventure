@@ -2,7 +2,7 @@ export class HtmlUtils {
     public static getElementByIdOrFail<T extends HTMLElement>(id: string): T {
         const elem = document.getElementById(id);
         if (HtmlUtils.isHtmlElement<T>(elem)) {
-           return elem
+           return elem;
         }
         throw new Error("Cannot find HTML element with id '"+id+"'");
     }
@@ -11,7 +11,7 @@ export class HtmlUtils {
         const elem = document.getElementById(id);
         if (HtmlUtils.isHtmlElement<T>(elem)) {
             elem.remove();
-            return elem
+            return elem;
         }
         throw new Error("Cannot find HTML element with id '"+id+"'");
     }
@@ -24,6 +24,6 @@ export class HtmlUtils {
     }
 
     private static isHtmlElement<T extends HTMLElement>(elem: HTMLElement | null): elem is T {
-        return elem !== null
+        return elem !== null;
     }
 }
