@@ -1,7 +1,0 @@
-{
-	"baseUrl": "http://workadventure.localhost",
-	"video": false,
-	"defaultCommandTimeout": 20000,
-	"pluginsFile": false,
-	"supportFile": false
-}

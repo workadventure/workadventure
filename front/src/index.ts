@@ -1,7 +1,6 @@
 import 'phaser';
 import GameConfig = Phaser.Types.Core.GameConfig;
 import {DEBUG_MODE, JITSI_URL, RESOLUTION} from "./Enum/EnvironmentVariable";
-import {cypressAsserter} from "./Cypress/CypressAsserter";
 import {LoginScene} from "./Phaser/Login/LoginScene";
 import {ReconnectingScene} from "./Phaser/Reconnecting/ReconnectingScene";
 import {SelectCharacterScene} from "./Phaser/Login/SelectCharacterScene";
@@ -101,8 +100,6 @@ const config: GameConfig = {
         }
     }
 };
-
-cypressAsserter.gameStarted();
 
 const game = new Phaser.Game(config);
 
