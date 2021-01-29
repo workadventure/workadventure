@@ -100,8 +100,10 @@ class AudioManager {
             localUserStore.setAudioPlayerMuted(this.muted);
 
             if (this.muted) {
+                localStorage.setItem('audioplayer_muted', 'true');
                 HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume_icon_playing').classList.add('muted');
             } else {
+                localStorage.setItem('audioplayer_muted', 'false');
                 HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume_icon_playing').classList.remove('muted');
             }
         }
@@ -156,3 +158,4 @@ class AudioManager {
 }
 
 export const audioManager = new AudioManager();
+

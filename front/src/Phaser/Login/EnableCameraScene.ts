@@ -1,6 +1,7 @@
 import {gameManager} from "../Game/GameManager";
 import {TextField} from "../Components/TextField";
 import Image = Phaser.GameObjects.Image;
+import Rectangle = Phaser.GameObjects.Rectangle;
 import {GameSceneInitInterface} from "../Game/GameScene";
 import {StartMapInterface} from "../../Connexion/ConnexionModels";
 import {mediaManager} from "../../WebRtc/MediaManager";
@@ -36,6 +37,7 @@ export class EnableCameraScene extends Phaser.Scene {
     private microphoneNameField!: TextField;
     private repositionCallback!: (this: Window, ev: UIEvent) => void;
 
+    private mobileTapRectangle!: Rectangle;
     constructor() {
         super({
             key: EnableCameraSceneName
@@ -55,7 +57,19 @@ export class EnableCameraScene extends Phaser.Scene {
     create() {
         this.textField = new TextField(this, this.game.renderer.width / 2, 20, 'Turn on your camera and microphone');
 
-        this.pressReturnField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height - 30, 'Press enter to start');
+        this.pressReturnField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height - 30, 'Touch here\n\n or \n\nPress enter to start');
+        // For mobile purposes - we need a big enough touchable area.
+        this.mobileTapRectangle = this.add
+          .rectangle(
+            this.game.renderer.width / 2,
+            this.game.renderer.height - 30,
+            200,
+            50,
+          )
+          .setInteractive()
+          .on("pointerdown", () => {
+            this.login();
+          });
 
         this.cameraNameField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height - 60, '');
 
@@ -220,6 +234,7 @@ export class EnableCameraScene extends Phaser.Scene {
         }
 
         this.textField.x = this.game.renderer.width / 2;
+        this.mobileTapRectangle.x = this.game.renderer.width / 2;
         this.cameraNameField.x = this.game.renderer.width / 2;
         this.microphoneNameField.x = this.game.renderer.width / 2;
         this.pressReturnField.x = this.game.renderer.width / 2;

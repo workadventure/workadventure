@@ -60,12 +60,18 @@ import {Room} from "../../Connexion/Room";
 import {jitsiFactory} from "../../WebRtc/JitsiFactory";
 import {urlManager} from "../../Url/UrlManager";
 import {audioManager} from "../../WebRtc/AudioManager";
+import { copyrightInfo } from "../../WebRtc/CopyrightInfo";
+import {IVirtualJoystick} from "../../types";
+const {
+  default: VirtualJoystick,
+} = require("phaser3-rex-plugins/plugins/virtualjoystick.js");
 import {PresentationModeIcon} from "../Components/PresentationModeIcon";
 import {ChatModeIcon} from "../Components/ChatModeIcon";
 import {OpenChatIcon, openChatIconName} from "../Components/OpenChatIcon";
 import {SelectCharacterScene, SelectCharacterSceneName} from "../Login/SelectCharacterScene";
 import {TextureError} from "../../Exception/TextureError";
 import {addLoader} from "../Components/Loader";
+import AnimatedTiles from "phaser-animated-tiles";
 import {ErrorSceneName} from "../Reconnecting/ErrorScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
@@ -116,6 +122,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     Layers!: Array<Phaser.Tilemaps.TilemapLayer>;
     Objects!: Array<Phaser.Physics.Arcade.Sprite>;
     mapFile!: ITiledMap;
+    animatedTiles!: AnimatedTiles;
     groups: Map<number, Sprite>;
     startX!: number;
     startY!: number;
@@ -160,6 +167,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     private openChatIcon!: OpenChatIcon;
     private playerName!: string;
     private characterLayers!: string[];
+    public virtualJoystick!: IVirtualJoystick;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
@@ -179,6 +187,16 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.connectionAnswerPromise = new Promise<RoomJoinedMessageInterface>((resolve, reject): void => {
             this.connectionAnswerPromiseResolve = resolve;
         })
+        const joystickVisible = localUserStore.getJoystick();
+        if (joystickVisible) {
+            const canvas = document.querySelector('canvas')
+            canvas?.addEventListener('click', () => {
+                const body = document.querySelector('body')
+                body?.requestFullscreen()
+            }, {
+                once: true
+            })
+        }
     }
 
     //hook preload scene
@@ -201,6 +219,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                 message: file.src
             });
         });
+        this.load.scenePlugin('AnimatedTiles', AnimatedTiles, 'animatedTiles', 'animatedTiles');
         this.load.on('filecomplete-tilemapJSON-'+this.MapUrlFile, (key: string, type: string, data: unknown) => {
             this.onMapLoad(data);
         });
@@ -380,16 +399,33 @@ export class GameScene extends ResizableScene implements CenterListener {
         //initialise list of other player
         this.MapPlayers = this.physics.add.group({immovable: true});
 
+        this.virtualJoystick = new VirtualJoystick(this, {
+            x: this.game.renderer.width / 2,
+            y: this.game.renderer.height / 2,
+            radius: 20,
+            base: this.add.circle(0, 0, 20, 0x888888),
+            thumb: this.add.circle(0, 0, 10, 0xcccccc),
+            enable: true,
+            dir: "8dir",
+        });
+        this.virtualJoystick.visible = localUserStore.getJoystick()
         //create input to move
-        this.userInputManager = new UserInputManager(this);
         mediaManager.setUserInputManager(this.userInputManager);
+        this.userInputManager = new UserInputManager(this, this.virtualJoystick);
 
+        // Listener event to reposition virtual joystick
+        // whatever place you click in game area
+        this.input.on('pointerdown', (pointer: { x: number; y: number; }) => {
+            this.virtualJoystick.x = pointer.x;
+            this.virtualJoystick.y = pointer.y;
+        });
         //notify game manager can to create currentUser in map
         this.createCurrentPlayer();
         this.removeAllRemotePlayers(); //cleanup the list  of remote players in case the scene was rebooted
 
         this.initCamera();
 
+        this.animatedTiles.init(this.Map);
         this.initCirclesCanvas();
 
         // Let's pause the scene if the connection is not established yet
@@ -407,6 +443,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                 }
             }, 500);
         }
+        copyrightInfo.initCopyrightInfo(mapDirUrl);
 
         this.createPromiseResolve();
 
@@ -702,6 +739,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     }
 
     private onMapExit(exitKey: string) {
+        this.playAudio(undefined);
         const {roomId, hash} = Room.getIdFromIdentifier(exitKey, this.MapUrlFile, this.instance);
         if (!roomId) throw new Error('Could not find the room from its exit key: '+exitKey);
         urlManager.pushStartLayerNameToUrl(hash);
