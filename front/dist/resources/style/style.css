@@ -55,14 +55,13 @@ body .message-info.warning{
 }
 .video-container img.active{
     display: block;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
 }
 .video-container img{
     position: absolute;
     display: none;
-    width: 15px;
-    height: 15px;
-    background: #d93025;
-    border-radius: 48px;
+    width: 25px;
+    height: 25px;
     left: 5px;
     bottom: 5px;
     padding: 10px;
