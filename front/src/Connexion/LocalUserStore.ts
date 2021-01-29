@@ -1,60 +1,83 @@
 import {LocalUser} from "./LocalUser";
 
-const characterLayersKey = 'characterLayers';
-const gameQualityKey = 'gameQuality';
-const videoQualityKey = 'videoQuality';
+const playerNameKey =           'playerName';
+const selectedPlayerKey =       'selectedPlayer';
+const customCursorPositionKey = 'customCursorPosition';
+const characterLayersKey =      'characterLayers';
+const gameQualityKey =          'gameQuality';
+const videoQualityKey =         'videoQuality';
+const joystickKey =             'showJoystick';
+const audioPlayerVolumeKey =    'audioplayer_volume';
+const audioPlayerMuteKey =      'audioplayer_mute';
+
+const storage = window.localStorage;
 
 //todo: add localstorage fallback
 class LocalUserStore {
-    
+
     saveUser(localUser: LocalUser) {
-        localStorage.setItem('localUser', JSON.stringify(localUser));
+        storage.setItem('localUser', JSON.stringify(localUser));
     }
     getLocalUser(): LocalUser|null {
-        const data = localStorage.getItem('localUser');
+        const data = storage.getItem('localUser');
         return data ? JSON.parse(data) : null;
     }
-    
+
     setName(name:string): void {
-        window.localStorage.setItem('playerName', name);
+        storage.setItem(playerNameKey, name);
     }
     getName(): string {
-        return window.localStorage.getItem('playerName') ?? '';
+        return storage.getItem(playerNameKey) ?? '';
     }
 
     setPlayerCharacterIndex(playerCharacterIndex: number): void {
-        window.localStorage.setItem('selectedPlayer', ''+playerCharacterIndex);
+        storage.setItem(selectedPlayerKey, ''+playerCharacterIndex);
     }
     getPlayerCharacterIndex(): number {
-        return parseInt(window.localStorage.getItem('selectedPlayer') || '');
+        return parseInt(storage.getItem(selectedPlayerKey) || '');
     }
 
     setCustomCursorPosition(activeRow:number, selectedLayers: number[]): void {
-        window.localStorage.setItem('customCursorPosition', JSON.stringify({activeRow, selectedLayers}));
+        storage.setItem(customCursorPositionKey, JSON.stringify({activeRow, selectedLayers}));
     }
     getCustomCursorPosition(): {activeRow:number, selectedLayers:number[]}|null  {
-        return JSON.parse(window.localStorage.getItem('customCursorPosition') || "null");
+        return JSON.parse(storage.getItem(customCursorPositionKey) || "null");
     }
 
     setCharacterLayers(layers: string[]): void {
-        window.localStorage.setItem(characterLayersKey, JSON.stringify(layers));
+        storage.setItem(characterLayersKey, JSON.stringify(layers));
     }
     getCharacterLayers(): string[]|null {
-        return JSON.parse(window.localStorage.getItem(characterLayersKey) || "null");
-    }
-    
-    getGameQualityValue(): number {
-        return parseInt(window.localStorage.getItem(gameQualityKey) || '') || 60;
-    }
-    setGameQualityValue(value: number): void {
-        localStorage.setItem(gameQualityKey, '' + value);
+        return JSON.parse(storage.getItem(characterLayersKey) || "null");
     }
 
-    getVideoQualityValue(): number {
-        return parseInt(window.localStorage.getItem(videoQualityKey) || '') || 20;
+    setGameQualityValue(value: number): void {
+        storage.setItem(gameQualityKey, '' + value);
     }
+    getGameQualityValue(): number {
+        return parseInt(storage.getItem(gameQualityKey) || '') || 60;
+    }
+
     setVideoQualityValue(value: number): void {
-        localStorage.setItem(videoQualityKey, '' + value);
+        storage.setItem(videoQualityKey, '' + value);
+    }
+    getVideoQualityValue(): number {
+        return parseInt(storage.getItem(videoQualityKey) || '') || 20;
+    }
+
+    setAudioPlayerVolume(value: number): void {
+        storage.setItem(audioPlayerVolumeKey, '' + value);
+    }
+    getAudioPlayerVolume(): number {
+        return parseFloat(storage.getItem(audioPlayerVolumeKey) || '') || 1;
+    }
+
+    setAudioPlayerMuted(value: boolean): void {
+        storage.setItem(audioPlayerMuteKey, value.toString());
+    }
+    getAudioPlayerMuted(): boolean {
+        const value = storage.getItem(audioPlayerMuteKey);
+        return (value === 'true') ? true : false;
     }
 }
 
