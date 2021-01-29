@@ -28,11 +28,11 @@ class AudioManager {
         this.audioPlayerDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(audioPlayerDivId);
         this.audioPlayerCtrl = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(audioPlayerCtrlId);
         this.volume = localUserStore.getAudioPlayerVolume();
-        HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume').value = '' + localUser
+        HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume').value = '' + localUserStore.getAudioPlayerVolume();
 
         this.muted = localUserStore.getAudioPlayerMuted();
         if (this.muted) {
-            HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume_icon_playing').class
+            HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume_icon_playing').classList.add('muted');
         }
     }
 
@@ -76,7 +76,7 @@ class AudioManager {
         this.load();
 
         /* Solution 1, remove whole audio player */
-        this.audioPlayerDiv.innerHTML = ''; // necessary, if switching from one audio context to anot
+        this.audioPlayerDiv.innerHTML = ''; // necessary, if switching from one audio context to another! (else both streams would play simultaneously)
 
         this.audioPlayerElem = document.createElement('audio');
         this.audioPlayerElem.id = 'audioplayerelem';
@@ -101,10 +101,10 @@ class AudioManager {
 
             if (this.muted) {
                 localStorage.setItem('audioplayer_muted', 'true');
-                HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume_icon_playing').c
+                HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume_icon_playing').classList.add('muted');
             } else {
                 localStorage.setItem('audioplayer_muted', 'false');
-                HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume_icon_playing').c
+                HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume_icon_playing').classList.remove('muted');
             }
         }
 
@@ -116,7 +116,7 @@ class AudioManager {
             (<HTMLInputElement>ev.currentTarget).blur();
         }
 
-        const decreaseElem = HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_decrease_w
+        const decreaseElem = HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_decrease_while_talking');
         decreaseElem.oninput = (ev: Event)=> {
             this.decreaseWhileTalking = (<HTMLInputElement>ev.currentTarget).checked;
             this.changeVolume();
