@@ -1,5 +1,6 @@
 import {HtmlUtils} from "./HtmlUtils";
 import {isUndefined} from "generic-type-guard";
+import {localUserStore} from "../Connexion/LocalUserStore";
 
 enum audioStates {
     closed = 0,
@@ -26,16 +27,13 @@ class AudioManager {
     constructor() {
         this.audioPlayerDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(audioPlayerDivId);
         this.audioPlayerCtrl = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(audioPlayerCtrlId);
+        this.volume = localUserStore.getAudioPlayerVolume();
+        HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume').value = '' + localUser
 
-        const storedVolume = localStorage.getItem('volume')
-        if (storedVolume === null) {
-            this.setVolume(1);
-        } else {
-            this.volume = parseFloat(storedVolume);
-            HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume').value = storedVolume;
+        this.muted = localUserStore.getAudioPlayerMuted();
+        if (this.muted) {
+            HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume_icon_playing').class
         }
-
-        HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume').value = '' + this.volume;
     }
 
     private close(): void {
@@ -71,15 +69,14 @@ class AudioManager {
 
     private setVolume(volume: number): void {
         this.volume = volume;
-        localStorage.setItem('volume', '' + volume);
+        localUserStore.setAudioPlayerVolume(volume);
     }
-
 
     public loadAudio(url: string): void {
         this.load();
 
         /* Solution 1, remove whole audio player */
-        this.audioPlayerDiv.innerHTML = ''; // necessary, if switching from one audio context to another! (else both streams would play simultaneously)
+        this.audioPlayerDiv.innerHTML = ''; // necessary, if switching from one audio context to anot
 
         this.audioPlayerElem = document.createElement('audio');
         this.audioPlayerElem.id = 'audioplayerelem';
@@ -100,11 +97,14 @@ class AudioManager {
         muteElem.onclick = (ev: Event)=> {
             this.muted = !this.muted;
             this.changeVolume();
+            localUserStore.setAudioPlayerMuted(this.muted);
 
             if (this.muted) {
-                HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume_icon_playing').classList.add('muted');
+                localStorage.setItem('audioplayer_muted', 'true');
+                HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume_icon_playing').c
             } else {
-                HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume_icon_playing').classList.remove('muted');
+                localStorage.setItem('audioplayer_muted', 'false');
+                HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume_icon_playing').c
             }
         }
 
@@ -116,7 +116,7 @@ class AudioManager {
             (<HTMLInputElement>ev.currentTarget).blur();
         }
 
-        const decreaseElem = HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_decrease_while_talking');
+        const decreaseElem = HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_decrease_w
         decreaseElem.oninput = (ev: Event)=> {
             this.decreaseWhileTalking = (<HTMLInputElement>ev.currentTarget).checked;
             this.changeVolume();
