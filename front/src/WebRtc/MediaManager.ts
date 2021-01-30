@@ -18,7 +18,7 @@ let videoConstraint: boolean|MediaTrackConstraints = {
     resizeMode: 'crop-and-scale',
     aspectRatio: 1.777777778
 };
-let audioConstraint: boolean|MediaTrackConstraints = {
+const audioConstraint: boolean|MediaTrackConstraints = {
     //TODO: make these values configurable in the game settings menu and store them in localstorage
     autoGainControl: false,
     echoCancellation: true,
@@ -243,7 +243,7 @@ export class MediaManager {
     }
 
     public enableMicrophone() {
-        this.constraintsMedia.audio = true;
+        this.constraintsMedia.audio = audioConstraint;
 
         this.getCamera().then((stream) => {
             //TODO show error message tooltip upper of camera button
