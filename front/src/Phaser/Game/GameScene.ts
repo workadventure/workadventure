@@ -623,7 +623,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                 coWebsiteManager.closeCoWebsite();
             }else{
                 const openWebsiteFunction = () => {
-                    coWebsiteManager.loadCoWebsite(newValue as string);
+                    coWebsiteManager.loadCoWebsite(newValue as string, this.MapUrlFile);
                     layoutManager.removeActionButton('openWebsite', this.userInputManager);
                 };
 
