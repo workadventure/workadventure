@@ -486,7 +486,13 @@ export class MediaManager {
                 <i id="name-${userId}" style="background-color: ${color};">${userName}</i>
                 <img id="microphone-${userId}" src="resources/logos/microphone-close.svg">
                 ` +
-                ((anonymous === false)?`<img id="report-${userId}" class="report active" src="resources/logos/report.svg">`:'')
+                ((anonymous === false)?`
+                    <button id="report-${userId}" class="report">
+                        <img src="resources/logos/report.svg">
+                        <span>Report</span>
+                    </button>
+                `:''
+                )
                 +
                 `<video id="${userId}" autoplay></video>
             </div>
@@ -506,7 +512,8 @@ export class MediaManager {
 
         if(!anonymous){
             const reportBanUserAction: HTMLImageElement = HtmlUtils.getElementByIdOrFail<HTMLImageElement>(`report-${userId}`);
-            reportBanUserAction.addEventListener('click', () => {
+            reportBanUserAction.addEventListener('click', (e) => {
+                e.preventDefault();
                 showReportUser();
             });
         }
