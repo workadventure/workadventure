@@ -1,4 +1,4 @@
-export class OutlinePipeline extends Phaser.Renderer.WebGL.Pipelines.MultiPipeline {
+export class OutlinePipeline extends Phaser.Renderer.WebGL.Pipelines.TextureTintPipeline {
 
     // the unique id of this pipeline
     public static readonly KEY = 'Outline';

@@ -30,7 +30,7 @@ import {RemotePlayer} from "../Entity/RemotePlayer";
 import {Queue} from 'queue-typescript';
 import {SimplePeer, UserSimplePeerInterface} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
-import {lazyLoadPlayerCharacterTextures} from "../Entity/PlayerTexturesLoadingManager";
+import {lazyLoadPlayerCharacterTextures, loadCustomTexture} from "../Entity/PlayerTexturesLoadingManager";
 import {
     CenterListener,
     layoutManager,
@@ -67,6 +67,8 @@ import {SelectCharacterScene, SelectCharacterSceneName} from "../Login/SelectCha
 import {TextureError} from "../../Exception/TextureError";
 import {addLoader} from "../Components/Loader";
 import {ErrorSceneName} from "../Reconnecting/ErrorScene";
+import {localUserStore} from "../../Connexion/LocalUserStore";
+import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -111,7 +113,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     MapPlayers!: Phaser.Physics.Arcade.Group;
     MapPlayersByKey : Map<number, RemotePlayer> = new Map<number, RemotePlayer>();
     Map!: Phaser.Tilemaps.Tilemap;
-    Layers!: Array<Phaser.Tilemaps.TilemapLayer>;
+    Layers!: Array<Phaser.Tilemaps.StaticTilemapLayer>;
     Objects!: Array<Phaser.Physics.Arcade.Sprite>;
     mapFile!: ITiledMap;
     groups: Map<number, Sprite>;
@@ -182,6 +184,14 @@ export class GameScene extends ResizableScene implements CenterListener {
     //hook preload scene
     preload(): void {
         addLoader(this);
+
+        const localUser = localUserStore.getLocalUser();
+        const textures = localUser?.textures;
+        if (textures) {
+            for (const texture of textures) {
+                loadCustomTexture(this.load, texture);
+            }
+        }
 
         this.load.image(openChatIconName, 'resources/objects/talk.png');
         this.load.on(FILE_LOAD_ERROR, (file: {src: string}) => {
@@ -339,11 +349,11 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.physics.world.setBounds(0, 0, this.Map.widthInPixels, this.Map.heightInPixels);
 
         //add layer on map
-        this.Layers = new Array<Phaser.Tilemaps.TilemapLayer>();
+        this.Layers = new Array<Phaser.Tilemaps.StaticTilemapLayer>();
         let depth = -2;
         for (const layer of this.mapFile.layers) {
             if (layer.type === 'tilelayer') {
-                this.addLayer(this.Map.createLayer(layer.name, this.Terrains, 0, 0).setDepth(depth));
+                this.addLayer(this.Map.createStaticLayer(layer.name, this.Terrains, 0, 0).setDepth(depth));
 
                 const exitSceneUrl = this.getExitSceneUrl(layer);
                 if (exitSceneUrl !== undefined) {
@@ -524,6 +534,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic, this.playerName);
             this.GlobalMessageManager = new GlobalMessageManager(this.connection);
             this.UserMessageManager = new UserMessageManager(this.connection);
+            this.UserMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
             const self = this;
             this.simplePeer.registerPeerConnectionListener({
@@ -848,13 +859,13 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.cameras.main.setZoom(ZOOM_LEVEL);
     }
 
-    addLayer(Layer : Phaser.Tilemaps.TilemapLayer){
+    addLayer(Layer : Phaser.Tilemaps.StaticTilemapLayer){
         this.Layers.push(Layer);
     }
 
     createCollisionWithPlayer() {
         //add collision layer
-        this.Layers.forEach((Layer: Phaser.Tilemaps.TilemapLayer) => {
+        this.Layers.forEach((Layer: Phaser.Tilemaps.StaticTilemapLayer) => {
             this.physics.add.collider(this.CurrentPlayer, Layer, (object1: GameObject, object2: GameObject) => {
                 //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
             });
@@ -872,7 +883,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     createCurrentPlayer(){
         //TODO create animation moving between exit and start
-        const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, this.textures, this.characterLayers);
+        const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, this.characterLayers);
         try {
             this.CurrentPlayer = new Player(
                 this,
@@ -1066,7 +1077,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             return;
         }
 
-        const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, this.textures, addPlayerData.characterLayers);
+        const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, addPlayerData.characterLayers);
         const player = new RemotePlayer(
             addPlayerData.userId,
             this,
@@ -1235,5 +1246,14 @@ export class GameScene extends ResizableScene implements CenterListener {
         mediaManager.removeTriggerCloseJitsiFrameButton('close-jisi');
     }
 
+    private bannedUser(){
+        this.cleanupClosingScene();
+        this.userInputManager.clearAllInputKeyboard();
+        this.scene.start(ErrorSceneName, {
+            title: 'Banned',
+            subTitle: 'You was banned of WorkAdventure',
+            message: 'If you want more information, you can contact us: workadventure@thecodingmachine.com'
+        });
+    }
 
 }
