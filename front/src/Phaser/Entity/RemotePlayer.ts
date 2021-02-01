@@ -15,11 +15,11 @@ export class RemotePlayer extends Character {
         x: number,
         y: number,
         name: string,
-        PlayerTextures: string[],
+        texturesPromise: Promise<string[]>,
         direction: string,
         moving: boolean
     ) {
-        super(Scene, x, y, PlayerTextures, name, direction, moving, 1);
+        super(Scene, x, y, texturesPromise, name, direction, moving, 1);
 
         //set data
         this.userId = userId;

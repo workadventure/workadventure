@@ -25,4 +25,5 @@ RUN API_URL=$API_URL UPLOADER_URL=$UPLOADER_URL ADMIN_URL=$ADMIN_URL \
 # final production image
 FROM nginx:1.19.6-alpine@sha256:01747306a7247dbe928db991eab42e4002118bf636dd85b4ffea05dd907e5b66
 COPY front/nginx-vhost.conf /etc/nginx/conf.d/default.conf
+COPY front/templater.sh /docker-entrypoint.d/templater.sh
 COPY --from=builder2 /usr/src/dist /usr/share/nginx/html

@@ -1,12 +1,10 @@
 import 'phaser';
 import GameConfig = Phaser.Types.Core.GameConfig;
 import {DEBUG_MODE, JITSI_URL, RESOLUTION} from "./Enum/EnvironmentVariable";
-import {cypressAsserter} from "./Cypress/CypressAsserter";
 import {LoginScene} from "./Phaser/Login/LoginScene";
 import {ReconnectingScene} from "./Phaser/Reconnecting/ReconnectingScene";
 import {SelectCharacterScene} from "./Phaser/Login/SelectCharacterScene";
 import {EnableCameraScene} from "./Phaser/Login/EnableCameraScene";
-import {FourOFourScene} from "./Phaser/Reconnecting/FourOFourScene";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
 import {OutlinePipeline} from "./Phaser/Shaders/OutlinePipeline";
 import {CustomizeScene} from "./Phaser/Login/CustomizeScene";
@@ -15,6 +13,7 @@ import {EntryScene} from "./Phaser/Login/EntryScene";
 import {coWebsiteManager} from "./WebRtc/CoWebsiteManager";
 import {MenuScene} from "./Phaser/Menu/MenuScene";
 import {localUserStore} from "./Connexion/LocalUserStore";
+import {ErrorScene} from "./Phaser/Reconnecting/ErrorScene";
 
 // Load Jitsi if the environment variable is set.
 if (JITSI_URL) {
@@ -53,13 +52,33 @@ const fps : Phaser.Types.Core.FPSConfig = {
     smoothStep: false
 }
 
+// the ?phaserMode=canvas parameter can be used to force Canvas usage
+const params = new URLSearchParams(document.location.search.substring(1));
+const phaserMode = params.get("phaserMode");
+let mode: number;
+switch (phaserMode) {
+    case 'auto':
+    case null:
+        mode = Phaser.AUTO;
+        break;
+    case 'canvas':
+        mode = Phaser.CANVAS;
+        break;
+    case 'webgl':
+        mode = Phaser.WEBGL;
+        break;
+    default:
+        throw new Error('phaserMode parameter must be one of "auto", "canvas" or "webgl"');
+}
+
+
 const config: GameConfig = {
-    type: Phaser.AUTO,
+    type: mode,
     title: "WorkAdventure",
     width: width / RESOLUTION,
     height: height / RESOLUTION,
     parent: "game",
-    scene: [EntryScene, LoginScene, SelectCharacterScene, EnableCameraScene, ReconnectingScene, FourOFourScene, CustomizeScene, MenuScene],
+    scene: [EntryScene, LoginScene, SelectCharacterScene, EnableCameraScene, ReconnectingScene, ErrorScene, CustomizeScene, MenuScene],
     zoom: RESOLUTION,
     fps: fps,
     dom: {
@@ -73,14 +92,14 @@ const config: GameConfig = {
     },
     callbacks: {
         postBoot: game => {
-            // FIXME: we should fore WebGL in the config.
-            const renderer = game.renderer as WebGLRenderer;
-            renderer.pipelines.add(OutlinePipeline.KEY, new OutlinePipeline(game));
+            // Commented out to try to fix MacOS bug
+            /*const renderer = game.renderer;
+            if (renderer instanceof WebGLRenderer) {
+                renderer.pipelines.add(OutlinePipeline.KEY, new OutlinePipeline(game));
+            }*/
         }
     }
 };
-
-cypressAsserter.gameStarted();
 
 const game = new Phaser.Game(config);
 

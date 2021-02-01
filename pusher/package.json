@@ -10,8 +10,8 @@
     "runprod": "node --max-old-space-size=4096 ./dist/server.js",
     "profile": "tsc && node --prof ./dist/server.js",
     "test": "ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
-    "lint": "node_modules/.bin/eslint src/ . --ext .ts",
-    "fix": "node_modules/.bin/eslint --fix src/ . --ext .ts"
+    "lint": "DEBUG= node_modules/.bin/eslint src/ . --ext .ts",
+    "fix": "DEBUG= node_modules/.bin/eslint --fix src/ . --ext .ts"
   },
   "repository": {
     "type": "git",
@@ -52,7 +52,7 @@
     "multer": "^1.4.2",
     "prom-client": "^12.0.0",
     "query-string": "^6.13.3",
-    "systeminformation": "^4.30.5",
+    "systeminformation": "^4.31.1",
     "ts-node-dev": "^1.0.0-pre.44",
     "typescript": "^3.8.3",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v18.5.0",

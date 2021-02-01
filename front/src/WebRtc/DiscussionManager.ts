@@ -59,6 +59,16 @@ export class DiscussionManager {
         const sendDivMessage: HTMLDivElement = document.createElement('div');
         sendDivMessage.classList.add('send-message');
         const inputMessage: HTMLInputElement = document.createElement('input');
+        inputMessage.onfocus = () => {
+            if(this.userInputManager) {
+                this.userInputManager.clearAllInputKeyboard();
+            }
+        }
+        inputMessage.onblur = () => {
+            if(this.userInputManager) {
+                this.userInputManager.initKeyBoardEvent();
+            }
+        }
         inputMessage.type = "text";
         inputMessage.addEventListener('keyup', (event: KeyboardEvent) => {
             if (event.key === 'Enter') {
@@ -151,7 +161,7 @@ export class DiscussionManager {
         const pMessage: HTMLParagraphElement = document.createElement('p');
         const date = new Date();
         if(isMe){
-            name = 'Moi';
+            name = 'Me';
         }
         pMessage.innerHTML = `<span style="font-weight: bold">${name}</span>    
                     <span style="color:#bac2cc;display:inline-block;font-size:12px;">
@@ -160,11 +170,18 @@ export class DiscussionManager {
         divMessage.appendChild(pMessage);
 
         const userMessage: HTMLParagraphElement = document.createElement('p');
-        userMessage.innerText = message;
+        userMessage.innerHTML = HtmlUtils.urlify(message);
         userMessage.classList.add('body');
         divMessage.appendChild(userMessage);
-
         this.divMessages?.appendChild(divMessage);
+
+        //automatic scroll when there are new message
+        setTimeout(() => {
+            this.divMessages?.scroll({
+                top: this.divMessages?.scrollTop + divMessage.getBoundingClientRect().y,
+                behavior: 'smooth'
+            });
+        }, 200);
     }
 
     public removeParticipant(userId: number|string){
@@ -188,20 +205,14 @@ export class DiscussionManager {
 
     private showDiscussion(){
         this.activeDiscussion = true;
-        if(this.userInputManager) {
-            this.userInputManager.clearAllInputKeyboard();
-        }
         this.divDiscuss?.classList.add('active');
     }
 
     private hideDiscussion(){
         this.activeDiscussion = false;
-        if(this.userInputManager) {
-            this.userInputManager.initKeyBoardEvent();
-        }
         this.divDiscuss?.classList.remove('active');
     }
-    
+
     public setUserInputManager(userInputManager : UserInputManager){
         this.userInputManager = userInputManager;
     }

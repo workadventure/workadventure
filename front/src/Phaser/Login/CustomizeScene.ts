@@ -2,15 +2,15 @@ import {EnableCameraSceneName} from "./EnableCameraScene";
 import {TextField} from "../Components/TextField";
 import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
-import {BodyResourceDescriptionInterface, LAYERS, loadAllLayers, loadCustomTexture} from "../Entity/body_character";
+import {loadAllLayers, loadCustomTexture} from "../Entity/PlayerTexturesLoadingManager";
 import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
 import {gameManager} from "../Game/GameManager";
 import {ResizableScene} from "./ResizableScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
-import {PlayerResourceDescriptionInterface} from "../Entity/Character";
-import {SelectCharacterSceneName} from "./SelectCharacterScene";
-import {LoginSceneName} from "./LoginScene";
+import {addLoader} from "../Components/Loader";
+import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
+import {AbstractCharacterScene} from "./AbstractCharacterScene";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -21,7 +21,7 @@ enum CustomizeTextures{
     arrowUp = "arrow_up",
 }
 
-export class CustomizeScene extends ResizableScene {
+export class CustomizeScene extends AbstractCharacterScene {
 
     private textField!: TextField;
     private enterField!: TextField;
@@ -48,30 +48,22 @@ export class CustomizeScene extends ResizableScene {
     }
 
     preload() {
+        addLoader(this);
+
+        this.layers = loadAllLayers(this.load);
+        this.loadCustomSceneSelectCharacters().then((bodyResourceDescriptions) => {
+            bodyResourceDescriptions.forEach((bodyResourceDescription) => {
+                if(!bodyResourceDescription.level){
+                    throw 'Texture level is null';
+                }
+                this.layers[bodyResourceDescription.level].unshift(bodyResourceDescription);
+            });
+        });
+
         this.load.image(CustomizeTextures.arrowRight, "resources/objects/arrow_right.png");
         this.load.image(CustomizeTextures.icon, "resources/logos/tcm_full.png");
         this.load.image(CustomizeTextures.arrowUp, "resources/objects/arrow_up.png");
         this.load.bitmapFont(CustomizeTextures.mainFont, 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
-
-        //load all the png files
-        loadAllLayers(this.load);
-
-        // load custom layers
-        this.layers = LAYERS;
-
-        const localUser = localUserStore.getLocalUser();
-
-        const textures = localUser?.textures;
-        if (textures) {
-            for (const texture of textures) {
-                loadCustomTexture(this.load, texture);
-                const name = 'customCharacterTexture'+texture.id;
-                this.layers[texture.level].unshift({
-                    name,
-                    img: texture.url
-                });
-            }
-        }
     }
 
     create() {

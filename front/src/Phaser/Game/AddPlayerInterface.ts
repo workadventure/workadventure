@@ -1,5 +1,5 @@
 import {PointInterface} from "../../Connexion/ConnexionModels";
-import {BodyResourceDescriptionInterface} from "../Entity/body_character";
+import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
 
 export interface AddPlayerInterface {
     userId: number;

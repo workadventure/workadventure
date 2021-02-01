@@ -1,7 +1,7 @@
 import {gameManager} from "../Game/GameManager";
 import {Scene} from "phaser";
-import {LoginSceneName} from "./LoginScene";
-import {FourOFourSceneName} from "../Reconnecting/FourOFourScene";
+import {ErrorScene} from "../Reconnecting/ErrorScene";
+import {WAError} from "../Reconnecting/WAError";
 
 export const EntrySceneName = "EntryScene";
 
@@ -20,10 +20,11 @@ export class EntryScene extends Scene {
         gameManager.init(this.scene).then((nextSceneName) => {
             this.scene.start(nextSceneName);
         }).catch((err) => {
-            console.error(err)
-            this.scene.start(FourOFourSceneName, {
-                url: window.location.pathname.toString()
-            });
+            if (err.response && err.response.status == 404) {
+                ErrorScene.showError(new WAError('Page Not Found', 'Could not find map', window.location.pathname), this.scene);
+            } else {
+                ErrorScene.showError(err, this.scene);
+            }
         });
     }
 }
