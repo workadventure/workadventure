@@ -464,7 +464,8 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public getUserId(): number|null {
+    public getUserId(): number {
+        if (this.userId === null) throw 'UserId cannot be null!'
         return this.userId;
     }
 
