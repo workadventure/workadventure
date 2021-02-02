@@ -352,6 +352,7 @@ body {
 #cowebsite {
     position: fixed;
     transition: transform 0.5s;
+    background-color: white;
 }
 #cowebsite.loading {
     background-color: gray;
