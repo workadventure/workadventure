@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 set -x
 set -o nounset errexit
-template_file_index=/usr/share/nginx/html/index.html.tmpl
-generated_file_index=/usr/share/nginx/html/index.html
+template_file_index=dist/index.html.tmpl
+generated_file_index=dist/index.html
 tmp_trackcodefile=/tmp/trackcode
 
 # To inject tracking code, you have two choices:
 # 1) Template using the provided google analytics
 # 2) Insert with your own provided code, by overriding the ANALYTICS_CODE_PATH
 # The ANALYTICS_CODE_PATH is the location of a file inside the container
-ANALYTICS_CODE_PATH="${ANALYTICS_CODE_PATH:-/usr/share/nginx/html/ga.html.tmpl}"
+ANALYTICS_CODE_PATH="${ANALYTICS_CODE_PATH:-dist/ga.html.tmpl}"
 
 if [[ "${INSERT_ANALYTICS:-NO}" == "NO" ]]; then
     echo "" > "${tmp_trackcodefile}"
