@@ -39,6 +39,7 @@ body .message-info.warning{
     position: relative;
     transition: all 0.2s ease;
     background-color: #00000099;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
 }
 .video-container i{
     position: absolute;
@@ -53,25 +54,62 @@ body .message-info.warning{
     font-size: 28px;
     color: white;
 }
-.video-container img.active{
-    display: block;
-}
+
 .video-container img{
     position: absolute;
     display: none;
-    width: 15px;
-    height: 15px;
-    background: #d93025;
-    border-radius: 48px;
+    width: 25px;
+    height: 25px;
     left: 5px;
     bottom: 5px;
     padding: 10px;
     z-index: 2;
 }
 
-.video-container img.report{
+.video-container button.report{
+    display: block;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    background: none;
+    background-color: rgba(0, 0, 0, 0);
+    border: none;
+    background-color: black;
+    border-radius: 15px;
+    position: absolute;
+    width: 0px;
+    height: 35px;
     right: 5px;
-    left: auto;
+    bottom: 5px;
+    padding: 0px;
+    overflow: hidden;
+    z-index: 2;
+    transition: all .5s ease;
+}
+
+.video-container:hover button.report{
+    width: 35px;
+    padding: 10px;
+}
+
+.video-container button.report:hover {
+    width: 94px;
+}
+
+.video-container button.report img{
+    position: absolute;
+    display: block;
+    bottom: 5px;
+    left: 5px;
+    margin: 0;
+    padding: 0;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+}
+.video-container button.report span{
+    position: absolute;
+    bottom: 8px;
+    left: 36px;
+    color: white;
+    font-size: 16px;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
 }
 
 .video-container video{

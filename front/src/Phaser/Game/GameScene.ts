@@ -154,7 +154,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     private actionableItems: Map<number, ActionableItem> = new Map<number, ActionableItem>();
     // The item that can be selected by pressing the space key.
     private outlinedItem: ActionableItem|null = null;
-    private userInputManager!: UserInputManager;
+    public userInputManager!: UserInputManager;
     private isReconnecting: boolean = false;
     private startLayerName!: string | null;
     private openChatIcon!: OpenChatIcon;
