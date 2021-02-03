@@ -60,6 +60,7 @@ import {Room} from "../../Connexion/Room";
 import {jitsiFactory} from "../../WebRtc/JitsiFactory";
 import {urlManager} from "../../Url/UrlManager";
 import {audioManager} from "../../WebRtc/AudioManager";
+import {videoManager} from "../../WebRtc/VideoManager";
 import {PresentationModeIcon} from "../Components/PresentationModeIcon";
 import {ChatModeIcon} from "../Components/ChatModeIcon";
 import {OpenChatIcon, openChatIconName} from "../Components/OpenChatIcon";
@@ -474,12 +475,14 @@ export class GameScene extends ResizableScene implements CenterListener {
 
             this.connection.onGroupUpdatedOrCreated((groupPositionMessage: GroupCreatedUpdatedMessageInterface) => {
                 audioManager.decreaseVolume();
+                videoManager.decreaseVolume();
                 this.shareGroupPosition(groupPositionMessage);
                 this.openChatIcon.setVisible(true);
             })
 
             this.connection.onGroupDeleted((groupId: number) => {
                 audioManager.restoreVolume();
+                videoManager.restoreVolume();
                 try {
                     this.deleteGroup(groupId);
                     this.openChatIcon.setVisible(false);
@@ -615,6 +618,19 @@ export class GameScene extends ResizableScene implements CenterListener {
         }
     }
 
+    private playVideo(url: string|number|boolean|undefined, loop=false): void {
+        if (url === undefined) {
+            videoManager.unloadVideo();
+        } else {
+            const realVideoPath = '' + url;
+            videoManager.loadVideo(realVideoPath);
+
+            if (loop) {
+                videoManager.loop();
+            }
+        }
+    }
+
     private triggerOnMapLayerPropertyChange(){
         this.gameMap.onPropertyChange('exitSceneUrl', (newValue, oldValue) => {
             if (newValue) this.onMapExit(newValue as string);
@@ -681,6 +697,13 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         this.gameMap.onPropertyChange('playAudioLoop', (newValue, oldValue) => {
             this.playAudio(newValue, true);
+        });
+        this.gameMap.onPropertyChange('playVideo', (newValue, oldValue) => {
+            this.playVideo(newValue);
+        });
+
+        this.gameMap.onPropertyChange('playVideoLoop', (newValue, oldValue) => {
+            this.playVideo(newValue, true);
         });
 
     }

@@ -503,6 +503,30 @@ input[type=range]:focus::-ms-fill-upper {
     background: #FFFFFF;
 }
 
+#videoplayerctrl {
+  position: fixed;
+  width: 25%;
+  top: 0;
+  right: 75%;
+  transform: translate(50%, 0);
+  padding: 0.3rem 0.5rem;
+  color: white;
+  transition: transform 0.5s;
+}
+
+/*
+ * sollte eigentlich in den aspect-ratio teil ..
+ */
+#videoplayerctrl.loading {
+  transform: translate(50%, -90%);
+}
+#videoplayerctrl.hidden {
+  transform: translate(50%, -100%);
+}
+
+#videoplayerelem {
+  width: 100%;
+}
 
 .game-overlay {
     display: none;
