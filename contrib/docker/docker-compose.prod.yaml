@@ -30,7 +30,7 @@ services:
 
   front:
     build:
-      context: .
+      context: ../..
       dockerfile: front/Dockerfile
     #image: thecodingmachine/workadventure-front:master
     environment:
@@ -55,7 +55,7 @@ services:
 
   pusher:
     build:
-      context: .
+      context: ../..
       dockerfile: pusher/Dockerfile
     #image: thecodingmachine/workadventure-pusher:master
     command: yarn run runprod
@@ -78,7 +78,7 @@ services:
 
   back:
     build:
-      context: .
+      context: ../..
       dockerfile: back/Dockerfile
     #image: thecodingmachine/workadventure-back:master
     command: yarn run runprod
