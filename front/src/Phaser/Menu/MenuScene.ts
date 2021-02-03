@@ -4,6 +4,8 @@ import {gameManager} from "../Game/GameManager";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {mediaManager, ReportCallback, ShowReportCallBack} from "../../WebRtc/MediaManager";
 import {coWebsiteManager} from "../../WebRtc/CoWebsiteManager";
+import {GameConnexionTypes} from "../../Url/UrlManager";
+import {connectionManager} from "../../Connexion/ConnectionManager";
 
 export const MenuSceneName = 'MenuScene';
 const gameMenuKey = 'gameMenu';
@@ -113,6 +115,10 @@ export class MenuScene extends Phaser.Scene {
         this.menuButton.getChildByID('openMenuButton').innerHTML = 'X';
         if (gameManager.getCurrentGameScene(this).connection && gameManager.getCurrentGameScene(this).connection.isAdmin()) {
             const adminSection = this.menuElement.getChildByID('adminConsoleSection') as HTMLElement;
+            adminSection.hidden = false;
+        }
+        if (connectionManager.getConnexionType === GameConnexionTypes.anonymous){
+            const adminSection = this.menuElement.getChildByID('socialLinks') as HTMLElement;
             adminSection.hidden = false;
         }
         this.tweens.add({
@@ -304,6 +310,9 @@ export class MenuScene extends Phaser.Scene {
     }
 
     private onMenuClick(event:MouseEvent) {
+        if((event?.target as HTMLInputElement).classList.contains('not-button')){
+            return;
+        }
         event.preventDefault();
 
         switch ((event?.target as HTMLInputElement).id) {
