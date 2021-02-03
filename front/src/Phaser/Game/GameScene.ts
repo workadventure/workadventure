@@ -1202,6 +1202,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     private reposition(): void {
         this.presentationModeSprite.setY(this.game.renderer.height - 2);
         this.chatModeSprite.setY(this.game.renderer.height - 2);
+        this.openChatIcon.setY(this.game.renderer.height - 2);
 
         // Recompute camera offset if needed
         this.updateCameraOffset();

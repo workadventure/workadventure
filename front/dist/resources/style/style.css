@@ -1117,7 +1117,7 @@ div.modal-report-user{
     white-space: pre-wrap;
     word-wrap: break-word;
 }
-.discussion .messages .message p.a{
+.discussion .messages .message p a{
     color: white;
 }
 
