@@ -9,7 +9,8 @@ const gameQualityKey =          'gameQuality';
 const videoQualityKey =         'videoQuality';
 const audioPlayerVolumeKey =    'audioVolume';
 const audioPlayerMuteKey =      'audioMute';
-const helpCameraSettingsShown =      'helpCameraSettingsShown';
+const helpCameraSettingsShown = 'helpCameraSettingsShown';
+const joystickKey =             'showJoystick';
 
 class LocalUserStore {
     saveUser(localUser: LocalUser) {
@@ -99,6 +100,13 @@ class LocalUserStore {
     }
     getHelpCameraSettingsShown(): boolean {
         return localStorage.getItem(helpCameraSettingsShown) === '1';
+    }
+
+    setJoystick(value: boolean): void {
+        localStorage.setItem(joystickKey, value.toString());
+    }
+    getJoystick(): boolean {
+        return localStorage.getItem(joystickKey) === 'true';
     }
 }
 
