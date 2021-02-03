@@ -49,6 +49,10 @@ import {Room} from "../../Connexion/Room";
 import {jitsiFactory} from "../../WebRtc/JitsiFactory";
 import {urlManager} from "../../Url/UrlManager";
 import {audioManager} from "../../WebRtc/AudioManager";
+import {IVirtualJoystick} from "../../types";
+const {
+  default: VirtualJoystick,
+} = require("phaser3-rex-plugins/plugins/virtualjoystick.js");
 import {PresentationModeIcon} from "../Components/PresentationModeIcon";
 import {ChatModeIcon} from "../Components/ChatModeIcon";
 import {OpenChatIcon, openChatIconName} from "../Components/OpenChatIcon";
@@ -154,6 +158,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     private playerName!: string;
     private characterLayers!: string[];
     private messageSubscription: Subscription|null = null;
+    public virtualJoystick!: IVirtualJoystick;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
@@ -173,6 +178,16 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.connectionAnswerPromise = new Promise<RoomJoinedMessageInterface>((resolve, reject): void => {
             this.connectionAnswerPromiseResolve = resolve;
         })
+        const joystickVisible = localUserStore.getJoystick();
+        if (joystickVisible) {
+            const canvas = document.querySelector('canvas')
+            canvas?.addEventListener('click', () => {
+                const body = document.querySelector('body')
+                body?.requestFullscreen()
+            }, {
+                once: true
+            })
+        }
     }
 
     //hook preload scene
@@ -357,9 +372,19 @@ export class GameScene extends ResizableScene implements CenterListener {
         //initialise list of other player
         this.MapPlayers = this.physics.add.group({immovable: true});
 
+        this.virtualJoystick = new VirtualJoystick(this, {
+            x: this.game.renderer.width / 2,
+            y: this.game.renderer.height / 2,
+            radius: 20,
+            base: this.add.circle(0, 0, 20, 0x888888),
+            thumb: this.add.circle(0, 0, 10, 0xcccccc),
+            enable: true,
+            dir: "8dir",
+        });
+        this.virtualJoystick.visible = localUserStore.getJoystick()
         //create input to move
-        this.userInputManager = new UserInputManager(this);
         mediaManager.setUserInputManager(this.userInputManager);
+        this.userInputManager = new UserInputManager(this, this.virtualJoystick);
 
         //notify game manager can to create currentUser in map
         this.createCurrentPlayer();
