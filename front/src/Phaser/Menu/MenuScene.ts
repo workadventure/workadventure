@@ -266,6 +266,7 @@ export class MenuScene extends Phaser.Scene {
                 break;
             case 'showJoystick':
                 this.showJoystick();
+                this.closeSideMenu();
                 break;
             case 'adminConsoleButton':
                 gameManager.getCurrentGameScene(this).ConsoleGlobalMessageManager.activeMessageConsole();
