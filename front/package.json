@@ -21,11 +21,13 @@
     "webpack-merge": "^4.2.2"
   },
   "dependencies": {
+    "@types/hls.js": "^0.13.3",
     "@types/simple-peer": "^9.6.0",
     "@types/socket.io-client": "^1.4.32",
     "axios": "^0.21.1",
     "generic-type-guard": "^3.2.0",
     "google-protobuf": "^3.13.0",
+    "hls.js": "^0.14.17",
     "phaser": "^3.52.0",
     "phaser-animated-tiles": "Informatic/phaser-animated-tiles#2d5c66a9bc426dd4cb2d856c1d599494a74f8067",
     "queue-typescript": "^1.0.1",
