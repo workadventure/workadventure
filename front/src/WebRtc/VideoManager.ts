@@ -1,5 +1,6 @@
 import {HtmlUtils} from "./HtmlUtils";
 import {isUndefined} from "generic-type-guard";
+import Hls from "hls.js";
 
 enum videoStates {
     closed = 0,
@@ -32,10 +33,7 @@ class VideoManager {
             this.setVolume(1);
         } else {
             this.volume = parseFloat(storedVolume);
-            //HtmlUtils.getElementByIdOrFail<HTMLInputElement>('videoplayer_volume').value = storedVolume;
         }
-
-        //HtmlUtils.getElementByIdOrFail<HTMLInputElement>('videoplayer_volume').value = '' + this.volume;
     }
 
     private close(): void {
@@ -77,8 +75,6 @@ class VideoManager {
 
     public loadVideo(url: string): void {
         this.load();
-
-        /* Solution 1, remove whole video player */
         this.videoPlayerDiv.innerHTML = ''; // necessary, if switching from one video context to another! (else both streams would play simultaneously)
 
         this.videoPlayerElem = document.createElement('video');
@@ -86,34 +82,21 @@ class VideoManager {
         this.videoPlayerElem.controls = true;
         this.videoPlayerElem.preload = 'none';
 
-        const srcElem = document.createElement('source');
-        srcElem.src = url;
-
-        this.videoPlayerElem.append(srcElem);
+        if (url.includes('.m3u8')) {
+            this.loadHlsVideo(url);
+        } else {
+            this.videoPlayerElem.src = url;
+        }
 
         this.videoPlayerDiv.append(this.videoPlayerElem);
         this.changeVolume();
         this.videoPlayerElem.play();
 
-        /*const muteElem = HtmlUtils.getElementByIdOrFail<HTMLInputElement>('videoplayer_mute');
-        muteElem.onclick = (ev: Event)=> {
-            this.muted = !this.muted;
-            this.changeVolume();
-
-            if (this.muted) {
-                HtmlUtils.getElementByIdOrFail<HTMLInputElement>('videoplayer_volume_icon_playing').classList.add('muted');
-            } else {
-                HtmlUtils.getElementByIdOrFail<HTMLInputElement>('videoplayer_volume_icon_playing').classList.remove('muted');
-            }
+        // @TODO: The videoPlayerElem variable is needed because of `this` being overridden in event handler.
+        const videoPlayerElem = this.videoPlayerElem;
+        videoPlayerElem.onplay = (e)=> {
+            this.jumpToEnd(videoPlayerElem);
         }
-
-        const volumeElem = HtmlUtils.getElementByIdOrFail<HTMLInputElement>('videoplayer_volume');
-        volumeElem.oninput = (ev: Event)=> {
-            this.setVolume(parseFloat((<HTMLInputElement>ev.currentTarget).value));
-            this.changeVolume();
-
-            (<HTMLInputElement>ev.currentTarget).blur();
-        }*/
 
         const decreaseElem = HtmlUtils.getElementByIdOrFail<HTMLInputElement>('videoplayer_decrease_while_talking');
         decreaseElem.oninput = (ev: Event)=> {
@@ -127,6 +110,28 @@ class VideoManager {
     public loop(): void {
         if (this.videoPlayerElem !== undefined) {
             this.videoPlayerElem.loop = true;
+        }
+    }
+
+    public loadHlsVideo(url: string): void {
+        if (this.videoPlayerElem !== undefined) {
+            // First check for native browser HLS support
+            if (this.videoPlayerElem.canPlayType('application/vnd.apple.mpegurl')) {
+                this.videoPlayerElem.src = url;
+                // If no native HLS support, check if hls.js is supported
+            } else if (Hls.isSupported()) {
+                const hls = new Hls();
+                hls.loadSource(url);
+                hls.attachMedia(this.videoPlayerElem);
+            }
+        }
+    }
+
+    public jumpToEnd(videoPlayerElem: HTMLVideoElement): void {
+        const duration = videoPlayerElem.duration;
+        if (duration){
+            videoPlayerElem.currentTime = duration;
+            videoPlayerElem.play();
         }
     }
 
