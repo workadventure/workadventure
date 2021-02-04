@@ -7,6 +7,14 @@ export class HtmlUtils {
         throw new Error("Cannot find HTML element with id '"+id+"'");
     }
 
+    public static querySelectorOrFail<T extends HTMLElement>(selector: string): T {
+        const elem = document.querySelector<T>(selector);
+        if (HtmlUtils.isHtmlElement<T>(elem)) {
+            return elem;
+        }
+        throw new Error("Cannot find HTML element with selector '"+selector+"'");
+    }
+
     public static removeElementByIdOrFail<T extends HTMLElement>(id: string): T {
         const elem = document.getElementById(id);
         if (HtmlUtils.isHtmlElement<T>(elem)) {

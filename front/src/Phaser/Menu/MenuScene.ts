@@ -2,14 +2,17 @@ import {LoginScene, LoginSceneName} from "../Login/LoginScene";
 import {SelectCharacterScene, SelectCharacterSceneName} from "../Login/SelectCharacterScene";
 import {gameManager} from "../Game/GameManager";
 import {localUserStore} from "../../Connexion/LocalUserStore";
-import {mediaManager} from "../../WebRtc/MediaManager";
+import {mediaManager, ReportCallback, ShowReportCallBack} from "../../WebRtc/MediaManager";
 import {coWebsiteManager} from "../../WebRtc/CoWebsiteManager";
+import {GameConnexionTypes} from "../../Url/UrlManager";
+import {connectionManager} from "../../Connexion/ConnectionManager";
 
 export const MenuSceneName = 'MenuScene';
 const gameMenuKey = 'gameMenu';
 const gameMenuIconKey = 'gameMenuIcon';
 const gameSettingsMenuKey = 'gameSettingsMenu';
 const gameShare = 'gameShare';
+const gameReport = 'gameReport';
 
 const closedSideMenuX = -200;
 const openedSideMenuX = 0;
@@ -21,9 +24,11 @@ export class MenuScene extends Phaser.Scene {
     private menuElement!: Phaser.GameObjects.DOMElement;
     private gameQualityMenuElement!: Phaser.GameObjects.DOMElement;
     private gameShareElement!: Phaser.GameObjects.DOMElement;
+    private gameReportElement!: Phaser.GameObjects.DOMElement;
     private sideMenuOpened = false;
     private settingsMenuOpened = false;
     private gameShareOpened = false;
+    private gameReportOpened = false;
     private gameQualityValue: number;
     private videoQualityValue: number;
     private menuButton!: Phaser.GameObjects.DOMElement;
@@ -40,6 +45,7 @@ export class MenuScene extends Phaser.Scene {
         this.load.html(gameMenuIconKey, 'resources/html/gameMenuIcon.html');
         this.load.html(gameSettingsMenuKey, 'resources/html/gameQualityMenu.html');
         this.load.html(gameShare, 'resources/html/gameShare.html');
+        this.load.html(gameReport, 'resources/html/gameReport.html');
     }
 
     create() {
@@ -63,6 +69,19 @@ export class MenuScene extends Phaser.Scene {
                 this.closeGameShare();
             }
         });
+
+        this.gameReportElement = this.add.dom(middleX, -400).createFromCache(gameReport);
+        this.revealMenusAfterInit(this.gameReportElement, gameReport);
+        this.gameReportElement.addListener('click');
+        this.gameReportElement.on('click',  (event:MouseEvent) => {
+            event.preventDefault();
+            if((event?.target as HTMLInputElement).id === 'gameReportFormSubmit') {
+                this.submitReport();
+            }else if((event?.target as HTMLInputElement).id === 'gameReportFormCancel') {
+                this.closeGameReport();
+            }
+        });
+        mediaManager.setShowReportModalCallBacks(this.openGameReport.bind(this));
 
         this.input.keyboard.on('keyup-TAB', () => {
             this.sideMenuOpened ? this.closeSideMenu() : this.openSideMenu();
@@ -98,6 +117,11 @@ export class MenuScene extends Phaser.Scene {
             const adminSection = this.menuElement.getChildByID('adminConsoleSection') as HTMLElement;
             adminSection.hidden = false;
         }
+        //TODO bind with future metadata of card
+        //if (connectionManager.getConnexionType === GameConnexionTypes.anonymous){
+            const adminSection = this.menuElement.getChildByID('socialLinks') as HTMLElement;
+            adminSection.hidden = false;
+        //}
         this.tweens.add({
             targets: this.menuElement,
             x: openedSideMenuX,
@@ -221,7 +245,75 @@ export class MenuScene extends Phaser.Scene {
         });
     }
 
+    private openGameReport(userId: string, userName: string|undefined){
+        if (this.gameReportOpened) {
+            this.closeGameReport();
+            return;
+        }
+
+        //close all
+        this.closeAll();
+
+        const gameTitleReport = this.gameReportElement.getChildByID('nameReported') as HTMLElement;
+        gameTitleReport.innerText = userName ? `Report user: ${userName}` : 'Report user';
+        const gameIdUserReported = this.gameReportElement.getChildByID('idUserReported') as HTMLInputElement;
+        gameIdUserReported.value = userId;
+
+        this.gameReportOpened = true;
+        let middleY = (window.innerHeight / 3) - (257);
+        if(middleY < 0){
+            middleY = 0;
+        }
+        let middleX = (window.innerWidth / 3) - 298;
+        if(middleX < 0){
+            middleX = 0;
+        }
+
+        gameManager.getCurrentGameScene(this).userInputManager.clearAllInputKeyboard();
+
+        this.tweens.add({
+            targets: this.gameReportElement,
+            y: middleY,
+            x: middleX,
+            duration: 1000,
+            ease: 'Power3'
+        });
+        return;
+    }
+
+    private closeGameReport(): void{
+        this.gameReportOpened = false;
+        gameManager.getCurrentGameScene(this).userInputManager.initKeyBoardEvent();
+        this.tweens.add({
+            targets: this.gameReportElement,
+            y: -400,
+            duration: 1000,
+            ease: 'Power3'
+        });
+    }
+
+    private submitReport(): void{
+        const gamePError = this.gameReportElement.getChildByID('gameReportErr') as HTMLParagraphElement;
+        gamePError.innerText = '';
+        gamePError.style.display = 'none';
+        const gameTextArea = this.gameReportElement.getChildByID('gameReportInput') as HTMLInputElement;
+        const gameIdUserReported = this.gameReportElement.getChildByID('idUserReported') as HTMLInputElement;
+        if(!gameTextArea || !gameTextArea.value || !gameIdUserReported || !gameIdUserReported.value){
+            gamePError.innerText = 'Report message cannot to be empty.';
+            gamePError.style.display = 'block';
+            return;
+        }
+        gameManager.getCurrentGameScene(this).connection.emitReportPlayerMessage(
+            parseInt(gameIdUserReported.value),
+            gameTextArea.value
+        );
+        this.closeGameReport();
+    }
+
     private onMenuClick(event:MouseEvent) {
+        if((event?.target as HTMLInputElement).classList.contains('not-button')){
+            return;
+        }
         event.preventDefault();
 
         switch ((event?.target as HTMLInputElement).id) {
@@ -280,5 +372,6 @@ export class MenuScene extends Phaser.Scene {
     private closeAll(){
         this.closeGameQualityMenu();
         this.closeGameShare();
+        this.closeGameReport();
     }
 }
