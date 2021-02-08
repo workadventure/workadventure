@@ -8,7 +8,7 @@ environments:
       - back:
         - back.world.winterkongress.ch
       - pusher:
-        - pushser.world.winterkongress.ch
+        - pusher.world.winterkongress.ch
   develop:
     routes:
       - front:
@@ -16,4 +16,4 @@ environments:
       - back:
         - back.test.world.winterkongress.ch
       - pusher:
-        - pushser.test.world.winterkongress.ch
+        - pusher.test.world.winterkongress.ch
