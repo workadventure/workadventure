@@ -12,7 +12,7 @@ environments:
   develop:
     routes:
       - front:
-        - world.test.winterkongress.ch
+        - test.world.winterkongress.ch
       - back:
         - back.test.world.winterkongress.ch
       - pusher:
