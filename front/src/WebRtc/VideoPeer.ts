@@ -1,6 +1,6 @@
 import * as SimplePeerNamespace from "simple-peer";
 import {mediaManager} from "./MediaManager";
-import {TURN_PASSWORD, TURN_SERVER, TURN_USER} from "../Enum/EnvironmentVariable";
+import {STUN_SERVER, TURN_PASSWORD, TURN_SERVER, TURN_USER} from "../Enum/EnvironmentVariable";
 import {RoomConnection} from "../Connexion/RoomConnection";
 
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
@@ -21,7 +21,7 @@ export class VideoPeer extends Peer {
             config: {
                 iceServers: [
                     {
-                        urls: 'stun:stun.l.google.com:19302'
+                        urls: STUN_SERVER.split(',')
                     },
                     {
                         urls: TURN_SERVER.split(','),
@@ -38,7 +38,7 @@ export class VideoPeer extends Peer {
             config: {
                 iceServers: [
                     {
-                        urls: 'stun:stun.l.google.com:19302'
+                        urls: STUN_SERVER.split(',')
                     },
                     {
                         urls: TURN_SERVER.split(','),
