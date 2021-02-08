@@ -1,1 +1,19 @@
 docker-compose-yaml: docker-compose.lagoon.yaml
+
+environments:
+  main:
+    routes:
+      - front:
+        - world.winterkongress.ch
+      - back:
+        - back.world.winterkongress.ch
+      - pusher:
+        - pushser.world.winterkongress.ch
+  develop:
+    routes:
+      - front:
+        - world.test.winterkongress.ch
+      - back:
+        - back.test.world.winterkongress.ch
+      - pusher:
+        - pushser.test.world.winterkongress.ch
