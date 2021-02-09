@@ -631,6 +631,15 @@ export class GameScene extends ResizableScene implements CenterListener {
         }
     }
 
+    private safeParseJSONstring(jsonString: string|undefined) {
+        try {
+            return jsonString ? JSON.parse(jsonString) : {};
+        } catch(e) {
+            console.warn(jsonString, e);
+            return {}
+        }
+    }
+
     private triggerOnMapLayerPropertyChange(){
         this.gameMap.onPropertyChange('exitSceneUrl', (newValue, oldValue) => {
             if (newValue) this.onMapExit(newValue as string);
@@ -669,13 +678,10 @@ export class GameScene extends ResizableScene implements CenterListener {
 
                         this.connection.emitQueryJitsiJwtMessage(this.instance.replace('/', '-') + "-" + newValue, adminTag);
                     } else {
-                        const jitsiConfig = allProps.get("jitsiConfig") as string|undefined;
-                        jitsiFactory.setJitsiConfig(jitsiConfig || undefined);
-
-                        const jitsiInterfaceConfig = allProps.get("jitsiInterfaceConfig") as string|undefined;
-                        jitsiFactory.setJitsiInterfaceConfig(jitsiInterfaceConfig || undefined);
-
-                        this.startJitsi(newValue as string);
+                        const jitsiConfig = this.safeParseJSONstring(allProps.get("jitsiConfig") as string|undefined);
+                        const jitsiInterfaceConfig = this.safeParseJSONstring(allProps.get("jitsiInterfaceConfig") as string|undefined);
+  
+                        this.startJitsi(newValue as string, undefined, jitsiConfig, jitsiInterfaceConfig);
                     }
                     layoutManager.removeActionButton('jitsiRoom', this.userInputManager);
                 }
@@ -1234,8 +1240,8 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.updateCameraOffset();
     }
 
-    public startJitsi(roomName: string, jwt?: string): void {
-        jitsiFactory.start(roomName, this.playerName, jwt);
+    public startJitsi(roomName: string, jwt?: string, config: object = {}, interfaceConfig: object = {}): void {
+        jitsiFactory.start(roomName, this.playerName, jwt, config, interfaceConfig);
         this.connection.setSilent(true);
         mediaManager.hideGameOverlay();
 

@@ -3,13 +3,13 @@ import {mediaManager} from "./MediaManager";
 import {coWebsiteManager} from "./CoWebsiteManager";
 declare const window:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-const config = {               
+const defaultConfig = {               
     startWithAudioMuted: !mediaManager.constraintsMedia.audio,
     startWithVideoMuted: mediaManager.constraintsMedia.video === false,
     prejoinPageEnabled: false
 }
 
-const interfaceConfig = {
+const defaultInterfaceConfig = {
     SHOW_CHROME_EXTENSION_BANNER: false,
     MOBILE_APP_PROMO: false,
 
@@ -32,13 +32,11 @@ const interfaceConfig = {
 };
 
 class JitsiFactory {
-    public jitsiConfig: object = config;
-    public jitsiInterfaceConfig: object = interfaceConfig;
     private jitsiApi: any; // eslint-disable-line @typescript-eslint/no-explicit-any
     private audioCallback = this.onAudioChange.bind(this);
     private videoCallback = this.onVideoChange.bind(this);
     
-    public start(roomName: string, playerName:string, jwt?: string): void {
+    public start(roomName: string, playerName:string, jwt?: string, config?: object, interfaceConfig?: object): void {
         coWebsiteManager.insertCoWebsite((cowebsiteDiv => {
             const domain = JITSI_URL;
             const options: any = { // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -47,8 +45,8 @@ class JitsiFactory {
                 width: "100%",
                 height: "100%",
                 parentNode: cowebsiteDiv,
-                configOverwrite: this.jitsiConfig,
-                interfaceConfigOverwrite: this.jitsiInterfaceConfig
+                configOverwrite: {...defaultConfig, ...config},
+                interfaceConfigOverwrite: {...defaultInterfaceConfig, ...interfaceConfig}
             };
             if (!options.jwt) {
                 delete options.jwt;
@@ -89,34 +87,6 @@ class JitsiFactory {
             mediaManager.disableCamera();
         } else if(!muted && mediaManager.constraintsMedia.video === false) {
             mediaManager.enableCamera();
-        }
-    }
-
-    public setJitsiConfig(jitsiConfig: string|undefined): void {
-        if(jitsiConfig) {
-            try {
-                const parsedConfig = JSON.parse(jitsiConfig);
-                this.jitsiConfig = {...config, ...parsedConfig};
-            } catch (e) {
-                console.warn('jitsiConfig', e);
-                this.jitsiConfig = config;
-            }
-        } else {
-            this.jitsiConfig = config;
-        }
-    }
-
-    public setJitsiInterfaceConfig(jitsiInterfaceConfig: string|undefined): void {
-        if(jitsiInterfaceConfig) {
-            try {
-                const parsedInterfaceConfig = JSON.parse(jitsiInterfaceConfig);
-                this.jitsiInterfaceConfig = {...interfaceConfig, ...parsedInterfaceConfig};
-            } catch (e) {
-                console.warn('jitsiInterfaceConfig', e);
-                this.jitsiInterfaceConfig = interfaceConfig;
-            }
-        } else {
-            this.jitsiInterfaceConfig = interfaceConfig;
         }
     }
 }
