@@ -3,6 +3,12 @@ import {mediaManager} from "./MediaManager";
 import {coWebsiteManager} from "./CoWebsiteManager";
 declare const window:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
+const config = {               
+    startWithAudioMuted: !mediaManager.constraintsMedia.audio,
+    startWithVideoMuted: mediaManager.constraintsMedia.video === false,
+    prejoinPageEnabled: false
+}
+
 const interfaceConfig = {
     SHOW_CHROME_EXTENSION_BANNER: false,
     MOBILE_APP_PROMO: false,
@@ -26,6 +32,8 @@ const interfaceConfig = {
 };
 
 class JitsiFactory {
+    public jitsiConfig: object = config;
+    public jitsiInterfaceConfig: object = interfaceConfig;
     private jitsiApi: any; // eslint-disable-line @typescript-eslint/no-explicit-any
     private audioCallback = this.onAudioChange.bind(this);
     private videoCallback = this.onVideoChange.bind(this);
@@ -39,12 +47,8 @@ class JitsiFactory {
                 width: "100%",
                 height: "100%",
                 parentNode: cowebsiteDiv,
-                configOverwrite: {
-                    startWithAudioMuted: !mediaManager.constraintsMedia.audio,
-                    startWithVideoMuted: mediaManager.constraintsMedia.video === false,
-                    prejoinPageEnabled: false
-                },
-                interfaceConfigOverwrite: interfaceConfig,
+                configOverwrite: this.jitsiConfig,
+                interfaceConfigOverwrite: this.jitsiInterfaceConfig
             };
             if (!options.jwt) {
                 delete options.jwt;
@@ -88,6 +92,33 @@ class JitsiFactory {
         }
     }
 
+    public setJitsiConfig(jitsiConfig: string|undefined): void {
+        if(jitsiConfig) {
+            try {
+                const parsedConfig = JSON.parse(jitsiConfig);
+                this.jitsiConfig = {...config, ...parsedConfig};
+            } catch (e) {
+                console.warn('jitsiConfig', e);
+                this.jitsiConfig = config;
+            }
+        } else {
+            this.jitsiConfig = config;
+        }
+    }
+
+    public setJitsiInterfaceConfig(jitsiInterfaceConfig: string|undefined): void {
+        if(jitsiInterfaceConfig) {
+            try {
+                const parsedInterfaceConfig = JSON.parse(jitsiInterfaceConfig);
+                this.jitsiInterfaceConfig = {...interfaceConfig, ...parsedInterfaceConfig};
+            } catch (e) {
+                console.warn('jitsiInterfaceConfig', e);
+                this.jitsiInterfaceConfig = interfaceConfig;
+            }
+        } else {
+            this.jitsiInterfaceConfig = interfaceConfig;
+        }
+    }
 }
 
 export const jitsiFactory = new JitsiFactory();

@@ -669,11 +669,17 @@ export class GameScene extends ResizableScene implements CenterListener {
 
                         this.connection.emitQueryJitsiJwtMessage(this.instance.replace('/', '-') + "-" + newValue, adminTag);
                     } else {
+                        const jitsiConfig = allProps.get("jitsiConfig") as string|undefined;
+                        jitsiFactory.setJitsiConfig(jitsiConfig || undefined);
+
+                        const jitsiInterfaceConfig = allProps.get("jitsiInterfaceConfig") as string|undefined;
+                        jitsiFactory.setJitsiInterfaceConfig(jitsiInterfaceConfig || undefined);
+
                         this.startJitsi(newValue as string);
                     }
                     layoutManager.removeActionButton('jitsiRoom', this.userInputManager);
                 }
-
+                                       
                 const jitsiTriggerValue = allProps.get(TRIGGER_JITSI_PROPERTIES);
                 if(jitsiTriggerValue && jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                     layoutManager.addActionButton('jitsiRoom', 'Click on SPACE to enter in jitsi meet room', () => {
