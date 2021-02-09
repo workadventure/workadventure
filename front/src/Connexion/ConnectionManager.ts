@@ -1,5 +1,5 @@
 import Axios from "axios";
-import {MAPS_URL, API_URL, START_ROOM_URL} from "../Enum/EnvironmentVariable";
+import {API_URL, START_ROOM_URL} from "../Enum/EnvironmentVariable";
 import {RoomConnection} from "./RoomConnection";
 import {OnConnectInterface, PositionInterface, ViewportInterface} from "./ConnexionModels";
 import {GameConnexionTypes, urlManager} from "../Url/UrlManager";
