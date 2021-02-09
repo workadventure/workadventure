@@ -183,8 +183,6 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     //hook preload scene
     preload(): void {
-        addLoader(this);
-
         const localUser = localUserStore.getLocalUser();
         const textures = localUser?.textures;
         if (textures) {
@@ -215,6 +213,8 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         this.load.spritesheet('layout_modes', 'resources/objects/layout_modes.png', {frameWidth: 32, frameHeight: 32});
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
+
+        addLoader(this);
     }
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.

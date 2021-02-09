@@ -6,6 +6,10 @@ const LogoResource: string = 'resources/logos/logo.png';
 const LogoFrame: ImageFrameConfig = {frameWidth: 307, frameHeight: 59};
 
 export const addLoader = (scene: Phaser.Scene): void => {
+    // If there is nothing to load, do not display the loader.
+    if (scene.load.list.entries.length === 0) {
+        return;
+    }
     let loadingText: Phaser.GameObjects.Text|null = null;
     const loadingBarWidth: number = Math.floor(scene.game.renderer.width / 3);
     const loadingBarHeight: number = 16;
