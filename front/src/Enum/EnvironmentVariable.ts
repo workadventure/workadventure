@@ -1,8 +1,9 @@
 const DEBUG_MODE: boolean = process.env.DEBUG_MODE == "true";
-const START_ROOM_URL : string = process.env.START_ROOM_URL || '/_/global/maps.workadventure.localhost/Floor0/floor0.json';
-const API_URL = (process.env.API_PROTOCOL || (typeof(window) !== 'undefined' ? window.location.protocol : 'http:')) + '//' + (process.env.API_URL || "pusher.workadventure.localhost");
-const UPLOADER_URL = (process.env.API_PROTOCOL || (typeof(window) !== 'undefined' ? window.location.protocol : 'http:')) + '//' + (process.env.UPLOADER_URL || 'uploader.workadventure.localhost');
-const ADMIN_URL = (process.env.API_PROTOCOL || (typeof(window) !== 'undefined' ? window.location.protocol : 'http:')) + '//' + (process.env.ADMIN_URL || "workadventure.localhost");
+const API_URL = (new URL(process.env.API_URL || '//pusher.workadventure.localhost', typeof(window) !== 'undefined'? window.location.href : 'https://l')).href.replace(/\/$/, '');
+const UPLOADER_URL = (new URL(process.env.UPLOADER_URL || '//uploader.workadventure.localhost', typeof(window) !== 'undefined' ? window.location.href : 'https://l')).href.replace(/\/$/, '');
+const ADMIN_URL = (new URL(process.env.ADMIN_URL || '//admin.workadventure.localhost', typeof(window) !== 'undefined' ? window.location.href : 'https://l')).href.replace(/\/$/, '');
+const MAPS_URL = (new URL(process.env.MAPS_URL || '//maps.workadventure.localhost', typeof(window) !== 'undefined' ? window.location.href : 'https://l')).href.replace(/\/$/, '');
+const START_ROOM_URL : string = process.env.START_ROOM_URL || `/_/global/${MAPS_URL}/Floor0/floor0.json`;
 const TURN_SERVER: string = process.env.TURN_SERVER || "turn:numb.viagenie.ca";
 const TURN_USER: string = process.env.TURN_USER || 'g.parant@thecodingmachine.com';
 const TURN_PASSWORD: string = process.env.TURN_PASSWORD || 'itcugcOHxle9Acqi$';
@@ -19,6 +20,7 @@ export {
     API_URL,
     UPLOADER_URL,
     ADMIN_URL,
+    MAPS_URL,
     RESOLUTION,
     ZOOM_LEVEL,
     POSITION_DELAY,
