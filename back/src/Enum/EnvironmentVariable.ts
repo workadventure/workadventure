@@ -1,4 +1,3 @@
-const SECRET_KEY = process.env.SECRET_KEY || "THECODINGMACHINE_SECRET_KEY";
 const MINIMUM_DISTANCE = process.env.MINIMUM_DISTANCE ? Number(process.env.MINIMUM_DISTANCE) : 64;
 const GROUP_RADIUS = process.env.GROUP_RADIUS ? Number(process.env.GROUP_RADIUS) : 48;
 const ALLOW_ARTILLERY = process.env.ALLOW_ARTILLERY ? process.env.ALLOW_ARTILLERY == 'true' : false;
@@ -14,7 +13,6 @@ const GRPC_PORT = parseInt(process.env.GRPC_PORT || '50051') || 50051;
 export const SOCKET_IDLE_TIMER = parseInt(process.env.SOCKET_IDLE_TIMER as string) || 30; // maximum time (in second) without activity before a socket is closed
 
 export {
-    SECRET_KEY,
     MINIMUM_DISTANCE,
     ADMIN_API_URL,
     ADMIN_API_TOKEN,
