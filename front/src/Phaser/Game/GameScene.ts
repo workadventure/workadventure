@@ -673,12 +673,13 @@ export class GameScene extends ResizableScene implements CenterListener {
                 this.stopJitsi();
             }else{
                 const openJitsiRoomFunction = () => {
+                    const roomName = jitsiFactory.getRoomName(newValue.toString(), this.instance);
                     if (JITSI_PRIVATE_MODE) {
                         const adminTag = allProps.get("jitsiRoomAdminTag") as string|undefined;
 
-                        this.connection.emitQueryJitsiJwtMessage(this.instance.replace('/', '-') + "-" + newValue, adminTag);
+                        this.connection.emitQueryJitsiJwtMessage(roomName, adminTag);
                     } else {
-                        this.startJitsi(newValue as string, undefined);
+                        this.startJitsi(roomName, undefined);
                     }
                     layoutManager.removeActionButton('jitsiRoom', this.userInputManager);
                 }

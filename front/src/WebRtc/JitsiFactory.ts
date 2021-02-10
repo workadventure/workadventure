@@ -33,10 +33,29 @@ const defaultInterfaceConfig = {
     ],
 };
 
+const slugify = (...args: (string | number)[]): string => {
+    const value = args.join(' ')
+
+    return value
+        .normalize('NFD') // split an accented letter in the base letter and the accent
+        .replace(/[\u0300-\u036f]/g, '') // remove all previously split accents
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9 ]/g, '') // remove all chars not letters, numbers and spaces (to be replaced)
+        .replace(/\s+/g, '-') // separator
+}
+
 class JitsiFactory {
     private jitsiApi: any; // eslint-disable-line @typescript-eslint/no-explicit-any
     private audioCallback = this.onAudioChange.bind(this);
     private videoCallback = this.onVideoChange.bind(this);
+
+    /**
+     * Slugifies the room name and prepends the room name with the instance
+     */
+    public getRoomName(roomName: string, instance: string): string {
+        return slugify(instance.replace('/', '-') + "-" + roomName);
+    }
 
     public start(roomName: string, playerName:string, jwt?: string, config?: object, interfaceConfig?: object): void {
         coWebsiteManager.insertCoWebsite((cowebsiteDiv => {

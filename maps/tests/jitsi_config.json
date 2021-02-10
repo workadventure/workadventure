@@ -1,4 +1,11 @@
 { "compressionlevel":-1,
+ "editorsettings":
+    {
+     "export":
+        {
+         "target":"."
+        }
+    },
  "height":10,
  "infinite":false,
  "layers":[
@@ -46,7 +53,7 @@
                 {
                  "name":"jitsiRoom",
                  "type":"string",
-                 "value":"myRoom"
+                 "value":"myRoom avec espace \u00e9\u00e0$&'\"_ \ud83d\ude00"
                 }],
          "type":"tilelayer",
          "visible":true,
