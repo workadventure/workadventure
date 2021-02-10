@@ -3,7 +3,7 @@ import {mediaManager} from "./MediaManager";
 import {coWebsiteManager} from "./CoWebsiteManager";
 declare const window:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-const defaultConfig = {               
+const defaultConfig = {
     startWithAudioMuted: !mediaManager.constraintsMedia.audio,
     startWithVideoMuted: mediaManager.constraintsMedia.video === false,
     prejoinPageEnabled: false
@@ -14,6 +14,7 @@ const defaultInterfaceConfig = {
     MOBILE_APP_PROMO: false,
 
     HIDE_INVITE_MORE_HEADER: true,
+    DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
 
     // Note: hiding brand does not seem to work, we probably need to put this on the server side.
     SHOW_BRAND_WATERMARK: false,
@@ -35,7 +36,7 @@ class JitsiFactory {
     private jitsiApi: any; // eslint-disable-line @typescript-eslint/no-explicit-any
     private audioCallback = this.onAudioChange.bind(this);
     private videoCallback = this.onVideoChange.bind(this);
-    
+
     public start(roomName: string, playerName:string, jwt?: string, config?: object, interfaceConfig?: object): void {
         coWebsiteManager.insertCoWebsite((cowebsiteDiv => {
             const domain = JITSI_URL;
@@ -51,7 +52,7 @@ class JitsiFactory {
             if (!options.jwt) {
                 delete options.jwt;
             }
-            
+
             return new Promise((resolve, reject) => {
                 options.onload = () => resolve(); //we want for the iframe to be loaded before triggering animations.
                 setTimeout(() => resolve(), 2000); //failsafe in case the iframe is deleted before loading or too long to load
