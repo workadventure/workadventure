@@ -1,5 +1,5 @@
 import {HtmlUtils} from "./HtmlUtils";
-import {mediaManager, ReportCallback} from "./MediaManager";
+import {mediaManager, ReportCallback, ShowReportCallBack} from "./MediaManager";
 import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
 import {connectionManager} from "../Connexion/ConnectionManager";
 import {GameConnexionTypes} from "../Url/UrlManager";
@@ -99,7 +99,7 @@ export class DiscussionManager {
         name: string|undefined,
         img?: string|undefined,
         isMe: boolean = false,
-        reportCallback?: ReportCallback
+        showReportCallBack?: ShowReportCallBack
     ) {
         const divParticipant: HTMLDivElement = document.createElement('div');
         divParticipant.classList.add('participant');
@@ -128,8 +128,8 @@ export class DiscussionManager {
             reportBanUserAction.classList.add('report-btn')
             reportBanUserAction.innerText = 'Report';
             reportBanUserAction.addEventListener('click', () => {
-                if(reportCallback) {
-                    mediaManager.showReportModal(`${userId}`, name ?? '', reportCallback);
+                if(showReportCallBack) {
+                    showReportCallBack(`${userId}`, name);
                 }else{
                     console.info('report feature is not activated!');
                 }
@@ -151,15 +151,6 @@ export class DiscussionManager {
         this.nbpParticipants.innerText = `PARTICIPANTS (${nb})`;
     }
 
-    private urlify(text: string) {
-        const urlRegex = /(https?:\/\/[^\s]+)/g;
-        return text.replace(urlRegex, (url: string) => {
-            return '<a href="' + url + '" target="_blank">' + url + '</a>';
-        })
-        // or alternatively
-        // return text.replace(urlRegex, '<a href="$1">$1</a>')
-    }
-
     public addMessage(name: string, message: string, isMe: boolean = false) {
         const divMessage: HTMLDivElement = document.createElement('div');
         divMessage.classList.add('message');
@@ -179,7 +170,7 @@ export class DiscussionManager {
         divMessage.appendChild(pMessage);
 
         const userMessage: HTMLParagraphElement = document.createElement('p');
-        userMessage.innerHTML = this.urlify(message);
+        userMessage.innerHTML = HtmlUtils.urlify(message);
         userMessage.classList.add('body');
         divMessage.appendChild(userMessage);
         this.divMessages?.appendChild(divMessage);

@@ -304,7 +304,7 @@ export class SocketManager implements ZoneEventListener {
                 throw 'reported socket user not found';
             }
             //TODO report user on admin application
-            await adminApi.reportPlayer(reportedSocket.userUuid, reportPlayerMessage.getReportcomment(),  client.userUuid)
+            await adminApi.reportPlayer(reportedSocket.userUuid, reportPlayerMessage.getReportcomment(),  client.userUuid, client.roomId.split('/')[2])
         } catch (e) {
             console.error('An error occurred on "handleReportMessage"');
             console.error(e);

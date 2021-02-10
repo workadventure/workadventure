@@ -100,11 +100,12 @@ class AdminApi {
         return res.data;
     }
 
-    reportPlayer(reportedUserUuid: string, reportedUserComment: string, reporterUserUuid: string) {
+    reportPlayer(reportedUserUuid: string, reportedUserComment: string, reporterUserUuid: string, reportWorldSlug: string) {
        return Axios.post(`${ADMIN_API_URL}/api/report`, {
                 reportedUserUuid,
                 reportedUserComment,
                 reporterUserUuid,
+               reportWorldSlug,
             },
             {
                 headers: {"Authorization": `${ADMIN_API_TOKEN}`}

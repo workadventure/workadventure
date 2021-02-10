@@ -11,6 +11,8 @@ import {
 import {ScreenSharingPeer} from "./ScreenSharingPeer";
 import {MESSAGE_TYPE_CONSTRAINT, MESSAGE_TYPE_MESSAGE, VideoPeer} from "./VideoPeer";
 import {RoomConnection} from "../Connexion/RoomConnection";
+import {connectionManager} from "../Connexion/ConnectionManager";
+import {GameConnexionTypes} from "../Url/UrlManager";
 
 export interface UserSimplePeerInterface{
     userId: number;
@@ -134,11 +136,7 @@ export class SimplePeer {
 
         mediaManager.removeActiveVideo("" + user.userId);
 
-        const reportCallback = this.enableReporting ? (comment: string) => {
-            this.reportUser(user.userId, comment);
-        } : undefined;
-
-        mediaManager.addActiveVideo("" + user.userId, reportCallback, name);
+        mediaManager.addActiveVideo("" + user.userId, name, connectionManager.getConnexionType === GameConnexionTypes.anonymous);
 
         const peer = new VideoPeer(user.userId, user.initiator ? user.initiator : false, this.Connection);
 
@@ -389,13 +387,6 @@ export class SimplePeer {
         for (const user of this.Users) {
             this.stopLocalScreenSharingStreamToUser(user.userId, stream);
         }
-    }
-
-    /**
-     * Triggered locally when clicking on the report button
-     */
-    public reportUser(userId: number, message: string) {
-        this.Connection.emitReportPlayerMessage(userId, message)
     }
 
     private sendLocalScreenSharingStreamToUser(userId: number): void {

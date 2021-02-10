@@ -60,7 +60,7 @@ export class UserInputManager {
     }
 
     clearAllInputKeyboard(){
-        this.Scene.input.keyboard.removeAllKeys();
+        this.Scene.input.keyboard.removeAllListeners();
     }
 
     getEventListForGameTick(): ActiveEventList {

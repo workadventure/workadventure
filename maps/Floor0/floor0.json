@@ -278,7 +278,7 @@
                 {
                  "name":"exitUrl",
                  "type":"string",
-                 "value":"\/@\/tcm\/workadventure\/floor1"
+                 "value":"..\/Floor1\/floor1.json"
                 }],
          "type":"tilelayer",
          "visible":true,

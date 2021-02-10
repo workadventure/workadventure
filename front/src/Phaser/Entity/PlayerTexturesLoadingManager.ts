@@ -23,21 +23,26 @@ export const loadAllDefaultModels = (load: LoaderPlugin): BodyResourceDescriptio
     });
     return returnArray;
 }
-export const loadCustomTexture = (load: LoaderPlugin, texture: CharacterTexture) => {
+
+export const loadCustomTexture = (loaderPlugin: LoaderPlugin, texture: CharacterTexture) : Promise<BodyResourceDescriptionInterface> => {
     const name = 'customCharacterTexture'+texture.id;
-    load.spritesheet(name,texture.url,{frameWidth: 32, frameHeight: 32});
-    return name;
+    const playerResourceDescriptor: BodyResourceDescriptionInterface = {name, img: texture.url, level: texture.level}
+    return createLoadingPromise(loaderPlugin, playerResourceDescriptor);
 }
 
-export const lazyLoadPlayerCharacterTextures = (loadPlugin: LoaderPlugin, texturePlugin: TextureManager, texturekeys:Array<string|BodyResourceDescriptionInterface>): Promise<string[]> => {
-    const promisesList:Promise<void>[] = [];
+export const lazyLoadPlayerCharacterTextures = (loadPlugin: LoaderPlugin, texturekeys:Array<string|BodyResourceDescriptionInterface>): Promise<string[]> => {
+    const promisesList:Promise<unknown>[] = [];
     texturekeys.forEach((textureKey: string|BodyResourceDescriptionInterface) => {
-        const playerResourceDescriptor = getRessourceDescriptor(textureKey);        
-        if(!texturePlugin.exists(playerResourceDescriptor.name)) {
-            console.log('Loading '+playerResourceDescriptor.name)
-            promisesList.push(createLoadingPromise(loadPlugin, playerResourceDescriptor));
+        try {
+            //TODO refactor
+            const playerResourceDescriptor = getRessourceDescriptor(textureKey);
+            if (playerResourceDescriptor && !loadPlugin.textureManager.exists(playerResourceDescriptor.name)) {
+                promisesList.push(createLoadingPromise(loadPlugin, playerResourceDescriptor));
+            }
+        }catch (err){
+            console.error(err);
         }
-    })
+    });
     let returnPromise:Promise<Array<string|BodyResourceDescriptionInterface>>;
     if (promisesList.length > 0) {
         loadPlugin.start();
@@ -66,8 +71,14 @@ export const getRessourceDescriptor = (textureKey: string|BodyResourceDescriptio
 }
 
 const createLoadingPromise = (loadPlugin: LoaderPlugin, playerResourceDescriptor: BodyResourceDescriptionInterface) => {
-    return new Promise<void>((res, rej) => {
-        loadPlugin.spritesheet(playerResourceDescriptor.name, playerResourceDescriptor.img, {frameWidth: 32, frameHeight: 32});
-        loadPlugin.once('filecomplete-spritesheet-'+playerResourceDescriptor.name, () => res());
+    return new Promise<BodyResourceDescriptionInterface>((res) => {
+        if (loadPlugin.textureManager.exists(playerResourceDescriptor.name)) {
+            return res(playerResourceDescriptor);
+        }
+        loadPlugin.spritesheet(playerResourceDescriptor.name, playerResourceDescriptor.img, {
+            frameWidth: 32,
+            frameHeight: 32
+        });
+        loadPlugin.once('filecomplete-spritesheet-' + playerResourceDescriptor.name, () => res(playerResourceDescriptor));
     });
 }

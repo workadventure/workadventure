@@ -43,8 +43,9 @@ export class ActionableItem {
         }
         this.isSelectable = true;
         if (this.sprite.pipeline) {
-            this.sprite.setPipeline(OutlinePipeline.KEY);
-            this.sprite.pipeline.set2f('uTextureSize', this.sprite.texture.getSourceImage().width, this.sprite.texture.getSourceImage().height);
+            // Commented out to try to fix MacOS issue
+            /*this.sprite.setPipeline(OutlinePipeline.KEY);
+            this.sprite.pipeline.set2f('uTextureSize', this.sprite.texture.getSourceImage().width, this.sprite.texture.getSourceImage().height);*/
         }
     }
 
@@ -56,7 +57,8 @@ export class ActionableItem {
             return;
         }
         this.isSelectable = false;
-        this.sprite.resetPipeline();
+        // Commented out to try to fix MacOS issue
+        //this.sprite.resetPipeline();
     }
 
     /**
