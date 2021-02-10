@@ -631,11 +631,11 @@ export class GameScene extends ResizableScene implements CenterListener {
         }
     }
 
-    private safeParseJSONstring(jsonString: string|undefined) {
+    private safeParseJSONstring(jsonString: string|undefined, propertyName: string) {
         try {
             return jsonString ? JSON.parse(jsonString) : {};
         } catch(e) {
-            console.warn(jsonString, e);
+            console.warn('Invalid JSON found in property "' + propertyName + '" of the map:' + jsonString, e);
             return {}
         }
     }
@@ -678,14 +678,11 @@ export class GameScene extends ResizableScene implements CenterListener {
 
                         this.connection.emitQueryJitsiJwtMessage(this.instance.replace('/', '-') + "-" + newValue, adminTag);
                     } else {
-                        const jitsiConfig = this.safeParseJSONstring(allProps.get("jitsiConfig") as string|undefined);
-                        const jitsiInterfaceConfig = this.safeParseJSONstring(allProps.get("jitsiInterfaceConfig") as string|undefined);
-  
-                        this.startJitsi(newValue as string, undefined, jitsiConfig, jitsiInterfaceConfig);
+                        this.startJitsi(newValue as string, undefined);
                     }
                     layoutManager.removeActionButton('jitsiRoom', this.userInputManager);
                 }
-                                       
+
                 const jitsiTriggerValue = allProps.get(TRIGGER_JITSI_PROPERTIES);
                 if(jitsiTriggerValue && jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                     layoutManager.addActionButton('jitsiRoom', 'Click on SPACE to enter in jitsi meet room', () => {
@@ -1240,8 +1237,12 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.updateCameraOffset();
     }
 
-    public startJitsi(roomName: string, jwt?: string, config: object = {}, interfaceConfig: object = {}): void {
-        jitsiFactory.start(roomName, this.playerName, jwt, config, interfaceConfig);
+    public startJitsi(roomName: string, jwt?: string): void {
+        const allProps = this.gameMap.getCurrentProperties();
+        const jitsiConfig = this.safeParseJSONstring(allProps.get("jitsiConfig") as string|undefined, 'jitsiConfig');
+        const jitsiInterfaceConfig = this.safeParseJSONstring(allProps.get("jitsiInterfaceConfig") as string|undefined, 'jitsiInterfaceConfig');
+
+        jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig);
         this.connection.setSilent(true);
         mediaManager.hideGameOverlay();
 

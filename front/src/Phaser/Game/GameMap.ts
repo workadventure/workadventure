@@ -49,6 +49,10 @@ export class GameMap {
         this.lastProperties = newProps;
     }
 
+    public getCurrentProperties(): Map<string, string|boolean|number> {
+        return this.lastProperties;
+    }
+
     private getProperties(key: number): Map<string, string|boolean|number> {
         const properties = new Map<string, string|boolean|number>();
 
