@@ -15,6 +15,7 @@ const defaultInterfaceConfig = {
 
     HIDE_INVITE_MORE_HEADER: true,
     DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
+    DISABLE_VIDEO_BACKGROUND: true,
 
     // Note: hiding brand does not seem to work, we probably need to put this on the server side.
     SHOW_BRAND_WATERMARK: false,
