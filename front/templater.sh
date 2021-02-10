@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -x
 set -o nounset errexit
-template_file_index=dist/index.tmpl.html
+template_file_index=dist/index.html.tmpl
 generated_file_index=dist/index.html
 tmp_trackcodefile=/tmp/trackcode
 

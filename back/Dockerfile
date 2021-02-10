@@ -1,26 +1,16 @@
-# protobuf build
-FROM node:14.15.4-buster-slim@sha256:cbae886186467bbfd274b82a234a1cdfbbd31201c2a6ee63a6893eefcf3c6e76 as builder
-WORKDIR /usr/src
-COPY messages .
+FROM thecodingmachine/workadventure-back-base:latest as builder
+WORKDIR /var/www/messages
+COPY --chown=docker:docker messages .
 RUN yarn install && yarn proto
 
-# typescript build
-FROM node:14.15.4-buster-slim@sha256:cbae886186467bbfd274b82a234a1cdfbbd31201c2a6ee63a6893eefcf3c6e76 as builder2
-WORKDIR /usr/src
-COPY back/yarn.lock back/package.json ./
+FROM thecodingmachine/nodejs:12
+
+COPY --chown=docker:docker back .
+COPY --from=builder --chown=docker:docker /var/www/messages/generated /usr/src/app/src/Messages/generated
 RUN yarn install
-COPY back .
-COPY --from=builder /usr/src/generated src/Messages/generated
+
 ENV NODE_ENV=production
 RUN yarn run tsc
 
-# final production image
-FROM node:14.15.4-buster-slim@sha256:cbae886186467bbfd274b82a234a1cdfbbd31201c2a6ee63a6893eefcf3c6e76
-WORKDIR /usr/src
-COPY back/yarn.lock back/package.json ./
-COPY --from=builder2 /usr/src/dist /usr/src/dist
-ENV NODE_ENV=production
-RUN yarn install --production
-
-USER node
 CMD ["yarn", "run", "runprod"]
+

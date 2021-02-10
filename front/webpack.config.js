@@ -39,16 +39,7 @@ module.exports = {
     plugins: [
         new HtmlWebpackPlugin(
             {
-                template: './dist/index.tmpl.html',
-                minify: {
-                    collapseWhitespace: true,
-                    keepClosingSlash: true,
-                    removeComments: false,
-                    removeRedundantAttributes: true,
-                    removeScriptTypeAttributes: true,
-                    removeStyleLinkTypeAttributes: true,
-                    useShortDoctype: true
-                }
+                template: './dist/index.html'
             }
         ),
         new webpack.ProvidePlugin({
