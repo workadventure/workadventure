@@ -1263,7 +1263,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     private bannedUser(){
         this.cleanupClosingScene();
-        this.userInputManager.clearAllInputKeyboard();
+        this.userInputManager.clearAllKeys();
         this.scene.start(ErrorSceneName, {
             title: 'Banned',
             subTitle: 'You was banned of WorkAdventure',

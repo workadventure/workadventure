@@ -269,7 +269,7 @@ export class MenuScene extends Phaser.Scene {
             middleX = 0;
         }
 
-        gameManager.getCurrentGameScene(this).userInputManager.clearAllInputKeyboard();
+        gameManager.getCurrentGameScene(this).userInputManager.clearAllKeys();
 
         this.tweens.add({
             targets: this.gameReportElement,
