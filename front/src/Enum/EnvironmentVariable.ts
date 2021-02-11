@@ -3,6 +3,7 @@ const START_ROOM_URL : string = process.env.START_ROOM_URL || '/_/global/maps.wo
 const API_URL = (process.env.API_PROTOCOL || (typeof(window) !== 'undefined' ? window.location.protocol : 'http:')) + '//' + (process.env.API_URL || "pusher.workadventure.localhost");
 const UPLOADER_URL = (process.env.API_PROTOCOL || (typeof(window) !== 'undefined' ? window.location.protocol : 'http:')) + '//' + (process.env.UPLOADER_URL || 'uploader.workadventure.localhost');
 const ADMIN_URL = (process.env.API_PROTOCOL || (typeof(window) !== 'undefined' ? window.location.protocol : 'http:')) + '//' + (process.env.ADMIN_URL || "workadventure.localhost");
+const STUN_SERVER: string = process.env.STUN_SERVER || "stun:stun.l.google.com:19302";
 const TURN_SERVER: string = process.env.TURN_SERVER || "turn:numb.viagenie.ca";
 const TURN_USER: string = process.env.TURN_USER || 'g.parant@thecodingmachine.com';
 const TURN_PASSWORD: string = process.env.TURN_PASSWORD || 'itcugcOHxle9Acqi$';
@@ -23,6 +24,7 @@ export {
     ZOOM_LEVEL,
     POSITION_DELAY,
     MAX_EXTRAPOLATION_TIME,
+    STUN_SERVER,
     TURN_SERVER,
     TURN_USER,
     TURN_PASSWORD,
