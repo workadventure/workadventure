@@ -1,6 +1,6 @@
 import * as SimplePeerNamespace from "simple-peer";
 import {mediaManager} from "./MediaManager";
-import {TURN_SERVER, TURN_USER, TURN_PASSWORD} from "../Enum/EnvironmentVariable";
+import {STUN_SERVER, TURN_SERVER, TURN_USER, TURN_PASSWORD} from "../Enum/EnvironmentVariable";
 import {RoomConnection} from "../Connexion/RoomConnection";
 import {MESSAGE_TYPE_CONSTRAINT} from "./VideoPeer";
 
@@ -24,7 +24,7 @@ export class ScreenSharingPeer extends Peer {
             config: {
                 iceServers: [
                     {
-                        urls: 'stun:stun.l.google.com:19302'
+                        urls: STUN_SERVER.split(',')
                     },
                     {
                         urls: TURN_SERVER.split(','),

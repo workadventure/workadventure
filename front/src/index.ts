@@ -84,6 +84,11 @@ const config: GameConfig = {
     dom: {
         createContainer: true
     },
+    render: {
+        pixelArt: true,
+        roundPixels: true,
+        antialias: false
+    },
     physics: {
         default: "arcade",
         arcade: {
