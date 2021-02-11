@@ -1,10 +1,14 @@
 import * as SimplePeerNamespace from "simple-peer";
-import {mediaManager} from "./MediaManager";
-import {TURN_SERVER, TURN_USER, TURN_PASSWORD} from "../Enum/EnvironmentVariable";
-import {RoomConnection} from "../Connexion/RoomConnection";
-import {MESSAGE_TYPE_CONSTRAINT} from "./VideoPeer";
+import { mediaManager } from "./MediaManager";
+import {
+    TURN_SERVER,
+    TURN_USER,
+    TURN_PASSWORD,
+} from "../Enum/EnvironmentVariable";
+import { RoomConnection } from "../Connexion/RoomConnection";
+import { MESSAGE_TYPE_CONSTRAINT } from "./VideoPeer";
 
-const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
+const Peer: SimplePeerNamespace.SimplePeer = require("simple-peer");
 
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
@@ -13,67 +17,76 @@ export class ScreenSharingPeer extends Peer {
     /**
      * Whether this connection is currently receiving a video stream from a remote user.
      */
-    private isReceivingStream:boolean = false;
+    private isReceivingStream: boolean = false;
     public toClose: boolean = false;
     public _connected: boolean = false;
 
-    constructor(private userId: number, initiator: boolean, private connection: RoomConnection) {
+    constructor(
+        private userId: number,
+        initiator: boolean,
+        private connection: RoomConnection
+    ) {
         super({
             initiator: initiator ? initiator : false,
             reconnectTimer: 10000,
             config: {
                 iceServers: [
                     {
-                        urls: 'stun:stun.l.google.com:19302'
+                        urls: "stun:stun.l.google.com:19302",
                     },
                     {
-                        urls: TURN_SERVER.split(','),
+                        urls: TURN_SERVER.split(","),
                         username: TURN_USER,
-                        credential: TURN_PASSWORD
+                        credential: TURN_PASSWORD,
                     },
-                ]
-            }
+                ],
+            },
         });
 
         //start listen signal for the peer connection
-        this.on('signal', (data: unknown) => {
+        this.on("signal", (data: unknown) => {
             this.sendWebrtcScreenSharingSignal(data);
         });
 
-        this.on('stream', (stream: MediaStream) => {
+        this.on("stream", (stream: MediaStream) => {
             this.stream(stream);
         });
 
-        this.on('close', () => {
+        this.on("close", () => {
             this._connected = false;
             this.toClose = true;
             this.destroy();
         });
 
-        this.on('data',  (chunk: Buffer) => {
+        this.on("data", (chunk: Buffer) => {
             // We unfortunately need to rely on an event to let the other party know a stream has stopped.
             // It seems there is no native way to detect that.
-            const message = JSON.parse(chunk.toString('utf8'));
+            const message = JSON.parse(chunk.toString("utf8"));
             if (message.streamEnded !== true) {
-                console.error('Unexpected message on screen sharing peer connection');
+                console.error(
+                    "Unexpected message on screen sharing peer connection"
+                );
             }
             mediaManager.removeActiveScreenSharingVideo("" + this.userId);
         });
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.on('error', (err: any) => {
-            console.error(`screen sharing error => ${this.userId} => ${err.code}`, err);
+        this.on("error", (err: any) => {
+            console.error(
+                `screen sharing error => ${this.userId} => ${err.code}`,
+                err
+            );
             //mediaManager.isErrorScreenSharing(this.userId);
         });
 
-        this.on('connect', () => {
+        this.on("connect", () => {
             this._connected = true;
             // FIXME: we need to put the loader on the screen sharing connection
             mediaManager.isConnected("" + this.userId);
             console.info(`connect => ${this.userId}`);
         });
 
-        this.once('finish', () => {
+        this.once("finish", () => {
             this._onFinish();
         });
 
@@ -84,7 +97,7 @@ export class ScreenSharingPeer extends Peer {
         //console.log("sendWebrtcScreenSharingSignal", data);
         try {
             this.connection.sendWebrtcScreenSharingSignal(data, this.userId);
-        }catch (e) {
+        } catch (e) {
             console.error(`sendWebrtcScreenSharingSignal => ${this.userId}`, e);
         }
     }
@@ -95,7 +108,7 @@ export class ScreenSharingPeer extends Peer {
     private stream(stream?: MediaStream) {
         //console.log(`ScreenSharingPeer::stream => ${this.userId}`, stream);
         //console.log(`stream => ${this.userId} => `, stream);
-        if(!stream){
+        if (!stream) {
             mediaManager.removeActiveScreenSharingVideo("" + this.userId);
             this.isReceivingStream = false;
         } else {
@@ -110,8 +123,8 @@ export class ScreenSharingPeer extends Peer {
 
     public destroy(error?: Error): void {
         try {
-            this._connected = false
-            if(!this.toClose){
+            this._connected = false;
+            if (!this.toClose) {
                 return;
             }
             mediaManager.removeActiveScreenSharingVideo("" + this.userId);
@@ -121,25 +134,26 @@ export class ScreenSharingPeer extends Peer {
             super.destroy(error);
             //console.log('Nb users in peerConnectionArray '+this.PeerConnectionArray.size);
         } catch (err) {
-            console.error("ScreenSharingPeer::destroy", err)
+            console.error("ScreenSharingPeer::destroy", err);
         }
     }
 
-    _onFinish () {
-        if (this.destroyed) return
+    _onFinish() {
+        if (this.destroyed) return;
         const destroySoon = () => {
             this.destroy();
-        }
+        };
         if (this._connected) {
             destroySoon();
         } else {
-            this.once('connect', destroySoon);
+            this.once("connect", destroySoon);
         }
     }
 
     private pushScreenSharingToRemoteUser() {
-        const localScreenCapture: MediaStream | null = mediaManager.localScreenCapture;
-        if(!localScreenCapture){
+        const localScreenCapture: MediaStream | null =
+            mediaManager.localScreenCapture;
+        if (!localScreenCapture) {
             return;
         }
 
@@ -149,6 +163,13 @@ export class ScreenSharingPeer extends Peer {
 
     public stopPushingScreenSharingToRemoteUser(stream: MediaStream) {
         this.removeStream(stream);
-        this.write(new Buffer(JSON.stringify({type: MESSAGE_TYPE_CONSTRAINT, streamEnded: true})));
+        this.write(
+            new Buffer(
+                JSON.stringify({
+                    type: MESSAGE_TYPE_CONSTRAINT,
+                    streamEnded: true,
+                })
+            )
+        );
     }
 }

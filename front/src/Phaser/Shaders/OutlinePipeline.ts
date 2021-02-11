@@ -1,13 +1,12 @@
-export class OutlinePipeline extends Phaser.Renderer.WebGL.Pipelines.TextureTintPipeline {
-
+export class OutlinePipeline extends Phaser.Renderer.WebGL.Pipelines
+    .TextureTintPipeline {
     // the unique id of this pipeline
-    public static readonly KEY = 'Outline';
+    public static readonly KEY = "Outline";
 
     /**
      * @param {Phaser.Game} game - the controller of the game instance
      */
-    constructor(game: Phaser.Game)
-    {
+    constructor(game: Phaser.Game) {
         super({
             game: game,
             fragShader: `
@@ -53,7 +52,7 @@ export class OutlinePipeline extends Phaser.Renderer.WebGL.Pipelines.TextureTint
 
           gl_FragColor = color;
         }
-      `
+      `,
         });
     }
 }

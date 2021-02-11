@@ -1,10 +1,10 @@
-import {HtmlUtils} from "./HtmlUtils";
-import {isUndefined} from "generic-type-guard";
+import { HtmlUtils } from "./HtmlUtils";
+import { isUndefined } from "generic-type-guard";
 
 enum audioStates {
     closed = 0,
     loading = 1,
-    playing = 2
+    playing = 2,
 }
 
 const audioPlayerDivId = "audioplayer";
@@ -24,69 +24,81 @@ class AudioManager {
     private volumeReduced = false;
 
     constructor() {
-        this.audioPlayerDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(audioPlayerDivId);
-        this.audioPlayerCtrl = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(audioPlayerCtrlId);
+        this.audioPlayerDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(
+            audioPlayerDivId
+        );
+        this.audioPlayerCtrl = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(
+            audioPlayerCtrlId
+        );
 
-        const storedVolume = localStorage.getItem('volume')
+        const storedVolume = localStorage.getItem("volume");
         if (storedVolume === null) {
             this.setVolume(1);
         } else {
             this.volume = parseFloat(storedVolume);
-            HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume').value = storedVolume;
+            HtmlUtils.getElementByIdOrFail<HTMLInputElement>(
+                "audioplayer_volume"
+            ).value = storedVolume;
         }
 
-        HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume').value = '' + this.volume;
+        HtmlUtils.getElementByIdOrFail<HTMLInputElement>(
+            "audioplayer_volume"
+        ).value = "" + this.volume;
     }
 
     private close(): void {
-        this.audioPlayerCtrl.classList.remove('loading');
-        this.audioPlayerCtrl.classList.add('hidden');
+        this.audioPlayerCtrl.classList.remove("loading");
+        this.audioPlayerCtrl.classList.add("hidden");
         this.opened = audioStates.closed;
     }
 
     private load(): void {
-        this.audioPlayerCtrl.classList.remove('hidden');
-        this.audioPlayerCtrl.classList.add('loading');
+        this.audioPlayerCtrl.classList.remove("hidden");
+        this.audioPlayerCtrl.classList.add("loading");
         this.opened = audioStates.loading;
     }
 
     private open(): void {
-        this.audioPlayerCtrl.classList.remove('hidden', 'loading');
+        this.audioPlayerCtrl.classList.remove("hidden", "loading");
         this.opened = audioStates.playing;
     }
 
     private changeVolume(talking = false): void {
         if (!isUndefined(this.audioPlayerElem)) {
-            this.audioPlayerElem.volume = this.naturalVolume(talking && this.decreaseWhileTalking);
+            this.audioPlayerElem.volume = this.naturalVolume(
+                talking && this.decreaseWhileTalking
+            );
             this.audioPlayerElem.muted = this.muted;
         }
     }
 
     private naturalVolume(makeSofter: boolean = false): number {
-        const volume = this.volume
-        const retVol = makeSofter && !this.volumeReduced ? Math.pow(volume * 0.5, 3) : volume
-        this.volumeReduced = makeSofter
+        const volume = this.volume;
+        const retVol =
+            makeSofter && !this.volumeReduced
+                ? Math.pow(volume * 0.5, 3)
+                : volume;
+        this.volumeReduced = makeSofter;
         return retVol;
     }
 
     private setVolume(volume: number): void {
         this.volume = volume;
-        localStorage.setItem('volume', '' + volume);
+        localStorage.setItem("volume", "" + volume);
     }
-
 
     public loadAudio(url: string): void {
         this.load();
 
         /* Solution 1, remove whole audio player */
-        this.audioPlayerDiv.innerHTML = ''; // necessary, if switching from one audio context to another! (else both streams would play simultaneously)
+        this.audioPlayerDiv.innerHTML = ""; // necessary, if switching from one audio context to another! (else both streams would play simultaneously)
 
-        this.audioPlayerElem = document.createElement('audio');
-        this.audioPlayerElem.id = 'audioplayerelem';
+        this.audioPlayerElem = document.createElement("audio");
+        this.audioPlayerElem.id = "audioplayerelem";
         this.audioPlayerElem.controls = false;
-        this.audioPlayerElem.preload = 'none';
+        this.audioPlayerElem.preload = "none";
 
-        const srcElem = document.createElement('source');
+        const srcElem = document.createElement("source");
         srcElem.type = "audio/mp3";
         srcElem.src = url;
 
@@ -96,31 +108,45 @@ class AudioManager {
         this.changeVolume();
         this.audioPlayerElem.play();
 
-        const muteElem = HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_mute');
-        muteElem.onclick = (ev: Event)=> {
+        const muteElem = HtmlUtils.getElementByIdOrFail<HTMLInputElement>(
+            "audioplayer_mute"
+        );
+        muteElem.onclick = (ev: Event) => {
             this.muted = !this.muted;
             this.changeVolume();
 
             if (this.muted) {
-                HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume_icon_playing').classList.add('muted');
+                HtmlUtils.getElementByIdOrFail<HTMLInputElement>(
+                    "audioplayer_volume_icon_playing"
+                ).classList.add("muted");
             } else {
-                HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume_icon_playing').classList.remove('muted');
+                HtmlUtils.getElementByIdOrFail<HTMLInputElement>(
+                    "audioplayer_volume_icon_playing"
+                ).classList.remove("muted");
             }
-        }
+        };
 
-        const volumeElem = HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume');
-        volumeElem.oninput = (ev: Event)=> {
-            this.setVolume(parseFloat((<HTMLInputElement>ev.currentTarget).value));
+        const volumeElem = HtmlUtils.getElementByIdOrFail<HTMLInputElement>(
+            "audioplayer_volume"
+        );
+        volumeElem.oninput = (ev: Event) => {
+            this.setVolume(
+                parseFloat((<HTMLInputElement>ev.currentTarget).value)
+            );
             this.changeVolume();
 
             (<HTMLInputElement>ev.currentTarget).blur();
-        }
+        };
 
-        const decreaseElem = HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_decrease_while_talking');
-        decreaseElem.oninput = (ev: Event)=> {
-            this.decreaseWhileTalking = (<HTMLInputElement>ev.currentTarget).checked;
+        const decreaseElem = HtmlUtils.getElementByIdOrFail<HTMLInputElement>(
+            "audioplayer_decrease_while_talking"
+        );
+        decreaseElem.oninput = (ev: Event) => {
+            this.decreaseWhileTalking = (<HTMLInputElement>(
+                ev.currentTarget
+            )).checked;
             this.changeVolume();
-        }
+        };
 
         this.open();
     }
@@ -133,7 +159,9 @@ class AudioManager {
 
     public unloadAudio(): void {
         try {
-            const audioElem = HtmlUtils.getElementByIdOrFail<HTMLAudioElement>('audioplayerelem');
+            const audioElem = HtmlUtils.getElementByIdOrFail<HTMLAudioElement>(
+                "audioplayerelem"
+            );
             this.volume = audioElem.volume;
             this.muted = audioElem.muted;
             audioElem.pause();
@@ -142,7 +170,7 @@ class AudioManager {
             audioElem.innerHTML = "";
             audioElem.load();
         } catch (e) {
-            console.log('No audio element loaded to unload');
+            console.log("No audio element loaded to unload");
         }
 
         this.close();

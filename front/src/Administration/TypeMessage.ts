@@ -1,49 +1,53 @@
-import {TypeMessageInterface} from "./UserMessageManager";
-import {HtmlUtils} from "../WebRtc/HtmlUtils";
+import { TypeMessageInterface } from "./UserMessageManager";
+import { HtmlUtils } from "../WebRtc/HtmlUtils";
 
-let modalTimeOut : NodeJS.Timeout;
+let modalTimeOut: NodeJS.Timeout;
 
-export class TypeMessageExt implements TypeMessageInterface{
+export class TypeMessageExt implements TypeMessageInterface {
     private nbSecond = 0;
     private maxNbSecond = 10;
-    private titleMessage = 'IMPORTANT !';
+    private titleMessage = "IMPORTANT !";
 
     showMessage(message: string, canDeleteMessage: boolean = true): void {
         //delete previous modal
-        try{
-            if(modalTimeOut){
+        try {
+            if (modalTimeOut) {
                 clearTimeout(modalTimeOut);
             }
-            const modal = HtmlUtils.getElementByIdOrFail('report-message-user');
+            const modal = HtmlUtils.getElementByIdOrFail("report-message-user");
             modal.remove();
-        }catch (err){
+        } catch (err) {
             console.error(err);
         }
 
         //create new modal
-        const div : HTMLDivElement = document.createElement('div');
-        div.classList.add('modal-report-user');
-        div.id = 'report-message-user';
-        div.style.backgroundColor = '#000000e0';
+        const div: HTMLDivElement = document.createElement("div");
+        div.classList.add("modal-report-user");
+        div.id = "report-message-user";
+        div.style.backgroundColor = "#000000e0";
 
-        const img : HTMLImageElement = document.createElement('img');
-        img.src = 'resources/logos/report.svg';
+        const img: HTMLImageElement = document.createElement("img");
+        img.src = "resources/logos/report.svg";
         div.appendChild(img);
 
-        const title : HTMLParagraphElement = document.createElement('p');
-        title.id = 'title-report-user';
+        const title: HTMLParagraphElement = document.createElement("p");
+        title.id = "title-report-user";
         title.innerText = `${this.titleMessage} (${this.maxNbSecond})`;
         div.appendChild(title);
 
-        const p : HTMLParagraphElement = document.createElement('p');
-        p.id = 'body-report-user'
+        const p: HTMLParagraphElement = document.createElement("p");
+        p.id = "body-report-user";
         p.innerText = message;
         div.appendChild(p);
 
-        const mainSectionDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-container');
+        const mainSectionDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(
+            "main-container"
+        );
         mainSectionDiv.appendChild(div);
 
-        const reportMessageAudio = HtmlUtils.getElementByIdOrFail<HTMLAudioElement>('report-message');
+        const reportMessageAudio = HtmlUtils.getElementByIdOrFail<HTMLAudioElement>(
+            "report-message"
+        );
         reportMessageAudio.play();
 
         this.nbSecond = this.maxNbSecond;
@@ -52,36 +56,37 @@ export class TypeMessageExt implements TypeMessageInterface{
         }, 1000);
     }
 
-    forMessage(title: HTMLParagraphElement, canDeleteMessage: boolean = true){
+    forMessage(title: HTMLParagraphElement, canDeleteMessage: boolean = true) {
         this.nbSecond -= 1;
         title.innerText = `${this.titleMessage} (${this.nbSecond})`;
-        if(this.nbSecond > 0){
+        if (this.nbSecond > 0) {
             modalTimeOut = setTimeout(() => {
                 this.forMessage(title, canDeleteMessage);
             }, 1000);
-        }else {
+        } else {
             title.innerText = this.titleMessage;
 
             if (!canDeleteMessage) {
                 return;
             }
-            const imgCancel: HTMLImageElement = document.createElement('img');
-            imgCancel.id = 'cancel-report-user';
-            imgCancel.src = 'resources/logos/close.svg';
+            const imgCancel: HTMLImageElement = document.createElement("img");
+            imgCancel.id = "cancel-report-user";
+            imgCancel.src = "resources/logos/close.svg";
 
-            const div = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('report-message-user');
+            const div = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(
+                "report-message-user"
+            );
             div.appendChild(imgCancel);
-            imgCancel.addEventListener('click', () => {
+            imgCancel.addEventListener("click", () => {
                 div.remove();
             });
         }
     }
 }
-export class Ban extends TypeMessageExt {
-}
+export class Ban extends TypeMessageExt {}
 
 export class Banned extends TypeMessageExt {
-    showMessage(message: string){
+    showMessage(message: string) {
         super.showMessage(message, false);
     }
 }

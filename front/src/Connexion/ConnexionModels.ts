@@ -1,10 +1,10 @@
-import {PlayerAnimationNames} from "../Phaser/Player/Animation";
-import {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
-import {SignalData} from "simple-peer";
-import {RoomConnection} from "./RoomConnection";
-import {BodyResourceDescriptionInterface} from "../Phaser/Entity/PlayerTextures";
+import { PlayerAnimationNames } from "../Phaser/Player/Animation";
+import { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
+import { SignalData } from "simple-peer";
+import { RoomConnection } from "./RoomConnection";
+import { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
 
-export enum EventMessage{
+export enum EventMessage {
     CONNECT = "connect",
     WEBRTC_SIGNAL = "webrtc-signal",
     WEBRTC_SCREEN_SHARING_SIGNAL = "webrtc-screen-sharing-signal",
@@ -19,7 +19,7 @@ export enum EventMessage{
     GROUP_CREATE_UPDATE = "group-create-update",
     GROUP_DELETE = "group-delete",
     SET_PLAYER_DETAILS = "set-player-details", // Send the name and character to the server (on connect), receive back the id.
-    ITEM_EVENT = 'item-event',
+    ITEM_EVENT = "item-event",
 
     CONNECT_ERROR = "connect_error",
     CONNECTING_ERROR = "connecting_error",
@@ -38,13 +38,18 @@ export enum EventMessage{
 export interface PointInterface {
     x: number;
     y: number;
-    direction : string;
+    direction: string;
     moving: boolean;
 }
 
-export class Point implements PointInterface{
-    constructor(public x : number, public y : number, public direction : string = PlayerAnimationNames.WalkDown, public moving : boolean = false) {
-        if(x  === null || y === null){
+export class Point implements PointInterface {
+    constructor(
+        public x: number,
+        public y: number,
+        public direction: string = PlayerAnimationNames.WalkDown,
+        public moving: boolean = false
+    ) {
+        if (x === null || y === null) {
             throw Error("position x and y cannot be null");
         }
     }
@@ -66,76 +71,76 @@ export interface MessageUserJoined {
     userId: number;
     name: string;
     characterLayers: BodyResourceDescriptionInterface[];
-    position: PointInterface
+    position: PointInterface;
 }
 
 export interface PositionInterface {
-    x: number,
-    y: number
+    x: number;
+    y: number;
 }
 
 export interface GroupCreatedUpdatedMessageInterface {
-    position: PositionInterface,
-    groupId: number,
-    groupSize: number
+    position: PositionInterface;
+    groupId: number;
+    groupSize: number;
 }
 
 export interface WebRtcStartMessageInterface {
-    roomId: string,
-    clients: UserSimplePeerInterface[]
+    roomId: string;
+    clients: UserSimplePeerInterface[];
 }
 
 export interface WebRtcDisconnectMessageInterface {
-    userId: number
+    userId: number;
 }
 
 export interface WebRtcSignalSentMessageInterface {
-    receiverId: number,
-    signal: SignalData
+    receiverId: number;
+    signal: SignalData;
 }
 
 export interface WebRtcSignalReceivedMessageInterface {
-    userId: number,
-    signal: SignalData
+    userId: number;
+    signal: SignalData;
 }
 
 export interface StartMapInterface {
-    mapUrlStart: string,
-    startInstance: string
+    mapUrlStart: string;
+    startInstance: string;
 }
 
 export interface ViewportInterface {
-    left: number,
-    top: number,
-    right: number,
-    bottom: number,
+    left: number;
+    top: number;
+    right: number;
+    bottom: number;
 }
 
 export interface BatchedMessageInterface {
-    event: string,
-    payload: unknown
+    event: string;
+    payload: unknown;
 }
 
 export interface ItemEventMessageInterface {
-    itemId: number,
-    event: string,
-    state: unknown,
-    parameters: unknown
+    itemId: number;
+    event: string;
+    state: unknown;
+    parameters: unknown;
 }
 
 export interface RoomJoinedMessageInterface {
     //users: MessageUserPositionInterface[],
     //groups: GroupCreatedUpdatedMessageInterface[],
-    items: { [itemId: number] : unknown }
+    items: { [itemId: number]: unknown };
 }
 
 export interface PlayGlobalMessageInterface {
-    id: string
-    type: string
-    message: string
+    id: string;
+    type: string;
+    message: string;
 }
 
 export interface OnConnectInterface {
-    connection: RoomConnection,
-    room: RoomJoinedMessageInterface
+    connection: RoomConnection;
+    room: RoomJoinedMessageInterface;
 }

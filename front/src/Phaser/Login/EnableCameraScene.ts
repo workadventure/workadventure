@@ -1,13 +1,13 @@
-import {gameManager} from "../Game/GameManager";
-import {TextField} from "../Components/TextField";
+import { gameManager } from "../Game/GameManager";
+import { TextField } from "../Components/TextField";
 import Image = Phaser.GameObjects.Image;
-import {GameSceneInitInterface} from "../Game/GameScene";
-import {StartMapInterface} from "../../Connexion/ConnexionModels";
-import {mediaManager} from "../../WebRtc/MediaManager";
-import {RESOLUTION} from "../../Enum/EnvironmentVariable";
-import {SoundMeter} from "../Components/SoundMeter";
-import {SoundMeterSprite} from "../Components/SoundMeterSprite";
-import {HtmlUtils} from "../../WebRtc/HtmlUtils";
+import { GameSceneInitInterface } from "../Game/GameScene";
+import { StartMapInterface } from "../../Connexion/ConnexionModels";
+import { mediaManager } from "../../WebRtc/MediaManager";
+import { RESOLUTION } from "../../Enum/EnvironmentVariable";
+import { SoundMeter } from "../Components/SoundMeter";
+import { SoundMeterSprite } from "../Components/SoundMeterSprite";
+import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 
 export const EnableCameraSceneName = "EnableCameraScene";
 enum LoginTextures {
@@ -15,7 +15,7 @@ enum LoginTextures {
     icon = "icon",
     mainFont = "main_font",
     arrowRight = "arrow_right",
-    arrowUp = "arrow_up"
+    arrowUp = "arrow_up",
 }
 
 export class EnableCameraScene extends Phaser.Scene {
@@ -38,79 +38,127 @@ export class EnableCameraScene extends Phaser.Scene {
 
     constructor() {
         super({
-            key: EnableCameraSceneName
+            key: EnableCameraSceneName,
         });
         this.soundMeter = new SoundMeter();
     }
 
     preload() {
-        this.load.image(LoginTextures.playButton, "resources/objects/play_button.png");
+        this.load.image(
+            LoginTextures.playButton,
+            "resources/objects/play_button.png"
+        );
         this.load.image(LoginTextures.icon, "resources/logos/tcm_full.png");
-        this.load.image(LoginTextures.arrowRight, "resources/objects/arrow_right.png");
-        this.load.image(LoginTextures.arrowUp, "resources/objects/arrow_up.png");
+        this.load.image(
+            LoginTextures.arrowRight,
+            "resources/objects/arrow_right.png"
+        );
+        this.load.image(
+            LoginTextures.arrowUp,
+            "resources/objects/arrow_up.png"
+        );
         // Note: arcade.png from the Phaser 3 examples at: https://github.com/photonstorm/phaser3-examples/tree/master/public/assets/fonts/bitmap
-        this.load.bitmapFont(LoginTextures.mainFont, 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
+        this.load.bitmapFont(
+            LoginTextures.mainFont,
+            "resources/fonts/arcade.png",
+            "resources/fonts/arcade.xml"
+        );
     }
 
     create() {
-        this.textField = new TextField(this, this.game.renderer.width / 2, 20, 'Turn on your camera and microphone');
+        this.textField = new TextField(
+            this,
+            this.game.renderer.width / 2,
+            20,
+            "Turn on your camera and microphone"
+        );
 
-        this.pressReturnField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height - 30, 'Press enter to start');
+        this.pressReturnField = new TextField(
+            this,
+            this.game.renderer.width / 2,
+            this.game.renderer.height - 30,
+            "Press enter to start"
+        );
 
-        this.cameraNameField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height - 60, '');
+        this.cameraNameField = new TextField(
+            this,
+            this.game.renderer.width / 2,
+            this.game.renderer.height - 60,
+            ""
+        );
 
-        this.microphoneNameField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height - 40, '');
+        this.microphoneNameField = new TextField(
+            this,
+            this.game.renderer.width / 2,
+            this.game.renderer.height - 40,
+            ""
+        );
 
         this.arrowRight = new Image(this, 0, 0, LoginTextures.arrowRight);
         this.arrowRight.setOrigin(0.5, 0.5);
         this.arrowRight.setVisible(false);
-        this.arrowRight.setInteractive().on('pointerdown', this.nextCam.bind(this));
+        this.arrowRight
+            .setInteractive()
+            .on("pointerdown", this.nextCam.bind(this));
         this.add.existing(this.arrowRight);
 
         this.arrowLeft = new Image(this, 0, 0, LoginTextures.arrowRight);
         this.arrowLeft.setOrigin(0.5, 0.5);
         this.arrowLeft.setVisible(false);
         this.arrowLeft.flipX = true;
-        this.arrowLeft.setInteractive().on('pointerdown', this.previousCam.bind(this));
+        this.arrowLeft
+            .setInteractive()
+            .on("pointerdown", this.previousCam.bind(this));
         this.add.existing(this.arrowLeft);
 
         this.arrowUp = new Image(this, 0, 0, LoginTextures.arrowUp);
         this.arrowUp.setOrigin(0.5, 0.5);
         this.arrowUp.setVisible(false);
-        this.arrowUp.setInteractive().on('pointerdown', this.previousMic.bind(this));
+        this.arrowUp
+            .setInteractive()
+            .on("pointerdown", this.previousMic.bind(this));
         this.add.existing(this.arrowUp);
 
         this.arrowDown = new Image(this, 0, 0, LoginTextures.arrowUp);
         this.arrowDown.setOrigin(0.5, 0.5);
         this.arrowDown.setVisible(false);
         this.arrowDown.flipY = true;
-        this.arrowDown.setInteractive().on('pointerdown', this.nextMic.bind(this));
+        this.arrowDown
+            .setInteractive()
+            .on("pointerdown", this.nextMic.bind(this));
         this.add.existing(this.arrowDown);
 
-        this.logo = new Image(this, this.game.renderer.width - 30, this.game.renderer.height - 20, LoginTextures.icon);
+        this.logo = new Image(
+            this,
+            this.game.renderer.width - 30,
+            this.game.renderer.height - 20,
+            LoginTextures.icon
+        );
         this.add.existing(this.logo);
 
-        this.input.keyboard.on('keyup-ENTER', () => {
+        this.input.keyboard.on("keyup-ENTER", () => {
             this.login();
         });
 
-        HtmlUtils.getElementByIdOrFail<HTMLDivElement>('webRtcSetup').classList.add('active');
+        HtmlUtils.getElementByIdOrFail<HTMLDivElement>(
+            "webRtcSetup"
+        ).classList.add("active");
 
         const mediaPromise = mediaManager.getCamera();
         mediaPromise.then(this.getDevices.bind(this));
         mediaPromise.then(this.setupStream.bind(this));
 
-        this.input.keyboard.on('keydown-RIGHT', this.nextCam.bind(this));
-        this.input.keyboard.on('keydown-LEFT', this.previousCam.bind(this));
-        this.input.keyboard.on('keydown-DOWN', this.nextMic.bind(this));
-        this.input.keyboard.on('keydown-UP', this.previousMic.bind(this));
+        this.input.keyboard.on("keydown-RIGHT", this.nextCam.bind(this));
+        this.input.keyboard.on("keydown-LEFT", this.previousCam.bind(this));
+        this.input.keyboard.on("keydown-DOWN", this.nextMic.bind(this));
+        this.input.keyboard.on("keydown-UP", this.previousMic.bind(this));
 
         this.soundMeterSprite = new SoundMeterSprite(this, 50, 50);
         this.soundMeterSprite.setVisible(false);
         this.add.existing(this.soundMeterSprite);
 
         this.repositionCallback = this.reposition.bind(this);
-        window.addEventListener('resize', this.repositionCallback);
+        window.addEventListener("resize", this.repositionCallback);
     }
 
     private previousCam(): void {
@@ -118,43 +166,68 @@ export class EnableCameraScene extends Phaser.Scene {
             return;
         }
         this.cameraSelected--;
-        mediaManager.setCamera(this.camerasList[this.cameraSelected].deviceId).then(this.setupStream.bind(this));
+        mediaManager
+            .setCamera(this.camerasList[this.cameraSelected].deviceId)
+            .then(this.setupStream.bind(this));
     }
 
     private nextCam(): void {
-        if (this.cameraSelected === this.camerasList.length - 1 || this.camerasList.length === 0) {
+        if (
+            this.cameraSelected === this.camerasList.length - 1 ||
+            this.camerasList.length === 0
+        ) {
             return;
         }
         this.cameraSelected++;
         // TODO: the change of camera should be OBSERVED (reactive)
-        mediaManager.setCamera(this.camerasList[this.cameraSelected].deviceId).then(this.setupStream.bind(this));
+        mediaManager
+            .setCamera(this.camerasList[this.cameraSelected].deviceId)
+            .then(this.setupStream.bind(this));
     }
 
     private previousMic(): void {
-        if (this.microphoneSelected === 0 || this.microphonesList.length === 0) {
+        if (
+            this.microphoneSelected === 0 ||
+            this.microphonesList.length === 0
+        ) {
             return;
         }
         this.microphoneSelected--;
-        mediaManager.setMicrophone(this.microphonesList[this.microphoneSelected].deviceId).then(this.setupStream.bind(this));
+        mediaManager
+            .setMicrophone(
+                this.microphonesList[this.microphoneSelected].deviceId
+            )
+            .then(this.setupStream.bind(this));
     }
 
     private nextMic(): void {
-        if (this.microphoneSelected === this.microphonesList.length - 1 || this.microphonesList.length === 0) {
+        if (
+            this.microphoneSelected === this.microphonesList.length - 1 ||
+            this.microphonesList.length === 0
+        ) {
             return;
         }
         this.microphoneSelected++;
         // TODO: the change of camera should be OBSERVED (reactive)
-        mediaManager.setMicrophone(this.microphonesList[this.microphoneSelected].deviceId).then(this.setupStream.bind(this));
+        mediaManager
+            .setMicrophone(
+                this.microphonesList[this.microphoneSelected].deviceId
+            )
+            .then(this.setupStream.bind(this));
     }
 
     /**
      * Function called each time a camera is changed
      */
     private setupStream(stream: MediaStream): void {
-        const img = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('webRtcSetupNoVideo');
-        img.style.display = 'none';
+        const img = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(
+            "webRtcSetupNoVideo"
+        );
+        img.style.display = "none";
 
-        const div = HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('myCamVideoSetup');
+        const div = HtmlUtils.getElementByIdOrFail<HTMLVideoElement>(
+            "myCamVideoSetup"
+        );
         div.srcObject = stream;
 
         this.soundMeter.connectToSource(stream, new window.AudioContext());
@@ -165,11 +238,13 @@ export class EnableCameraScene extends Phaser.Scene {
 
     private updateWebCamName(): void {
         if (this.camerasList.length > 1) {
-            const div = HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('myCamVideoSetup');
+            const div = HtmlUtils.getElementByIdOrFail<HTMLVideoElement>(
+                "myCamVideoSetup"
+            );
 
             let label = this.camerasList[this.cameraSelected].label;
             // remove text in parenthesis
-            label = label.replace(/\([^()]*\)/g, '').trim();
+            label = label.replace(/\([^()]*\)/g, "").trim();
             // remove accents
             label = label.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             this.cameraNameField.text = label;
@@ -189,7 +264,7 @@ export class EnableCameraScene extends Phaser.Scene {
         if (this.microphonesList.length > 1) {
             let label = this.microphonesList[this.microphoneSelected].label;
             // remove text in parenthesis
-            label = label.replace(/\([^()]*\)/g, '').trim();
+            label = label.replace(/\([^()]*\)/g, "").trim();
             // remove accents
             label = label.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
@@ -206,16 +281,19 @@ export class EnableCameraScene extends Phaser.Scene {
             } else {
                 this.arrowUp.setVisible(false);
             }
-
         }
         this.reposition();
     }
 
     private reposition(): void {
-        let div = HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('myCamVideoSetup');
+        let div = HtmlUtils.getElementByIdOrFail<HTMLVideoElement>(
+            "myCamVideoSetup"
+        );
         let bounds = div.getBoundingClientRect();
         if (!div.srcObject) {
-            div = HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('webRtcSetup');
+            div = HtmlUtils.getElementByIdOrFail<HTMLVideoElement>(
+                "webRtcSetup"
+            );
             bounds = div.getBoundingClientRect();
         }
 
@@ -227,7 +305,8 @@ export class EnableCameraScene extends Phaser.Scene {
 
         this.cameraNameField.y = bounds.top / RESOLUTION - 8;
 
-        this.soundMeterSprite.x = this.game.renderer.width / 2 - this.soundMeterSprite.getWidth() / 2;
+        this.soundMeterSprite.x =
+            this.game.renderer.width / 2 - this.soundMeterSprite.getWidth() / 2;
         this.soundMeterSprite.y = bounds.bottom / RESOLUTION + 16;
 
         this.microphoneNameField.y = this.soundMeterSprite.y + 22;
@@ -238,15 +317,27 @@ export class EnableCameraScene extends Phaser.Scene {
         this.arrowLeft.x = bounds.left / RESOLUTION - 16;
         this.arrowLeft.y = (bounds.top + bounds.height / 2) / RESOLUTION;
 
-        this.arrowDown.x = this.microphoneNameField.x + this.microphoneNameField.width / 2 + 16;
+        this.arrowDown.x =
+            this.microphoneNameField.x +
+            this.microphoneNameField.width / 2 +
+            16;
         this.arrowDown.y = this.microphoneNameField.y;
 
-        this.arrowUp.x = this.microphoneNameField.x - this.microphoneNameField.width / 2 - 16;
+        this.arrowUp.x =
+            this.microphoneNameField.x -
+            this.microphoneNameField.width / 2 -
+            16;
         this.arrowUp.y = this.microphoneNameField.y;
 
-        this.pressReturnField.y = Math.max(this.game.renderer.height - 30, this.microphoneNameField.y + 20);
+        this.pressReturnField.y = Math.max(
+            this.game.renderer.height - 30,
+            this.microphoneNameField.y + 20
+        );
         this.logo.x = this.game.renderer.width - 30;
-        this.logo.y = Math.max(this.game.renderer.height - 20, this.microphoneNameField.y + 30);
+        this.logo.y = Math.max(
+            this.game.renderer.height - 20,
+            this.microphoneNameField.y + 30
+        );
     }
 
     update(time: number, delta: number): void {
@@ -258,23 +349,25 @@ export class EnableCameraScene extends Phaser.Scene {
     }
 
     private login(): void {
-        HtmlUtils.getElementByIdOrFail<HTMLDivElement>('webRtcSetup').style.display = 'none';
+        HtmlUtils.getElementByIdOrFail<HTMLDivElement>(
+            "webRtcSetup"
+        ).style.display = "none";
         this.soundMeter.stop();
-        window.removeEventListener('resize', this.repositionCallback);
+        window.removeEventListener("resize", this.repositionCallback);
 
         mediaManager.stopCamera();
         mediaManager.stopMicrophone();
 
-        this.scene.sleep(EnableCameraSceneName)
+        this.scene.sleep(EnableCameraSceneName);
         gameManager.goToStartingMap(this.scene);
     }
 
     private async getDevices() {
         const mediaDeviceInfos = await navigator.mediaDevices.enumerateDevices();
         for (const mediaDeviceInfo of mediaDeviceInfos) {
-            if (mediaDeviceInfo.kind === 'audioinput') {
+            if (mediaDeviceInfo.kind === "audioinput") {
                 this.microphonesList.push(mediaDeviceInfo);
-            } else if (mediaDeviceInfo.kind === 'videoinput') {
+            } else if (mediaDeviceInfo.kind === "videoinput") {
                 this.camerasList.push(mediaDeviceInfo);
             }
         }

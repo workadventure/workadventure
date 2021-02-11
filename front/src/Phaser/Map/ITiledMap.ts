@@ -14,7 +14,7 @@ export interface ITiledMap {
      * Map orientation (orthogonal)
      */
     orientation: string;
-    properties: {[key: string]: string};
+    properties: { [key: string]: string };
 
     /**
      * Render order (right-down)
@@ -29,7 +29,7 @@ export interface ITiledMap {
 export interface ITiledMapLayerProperty {
     name: string;
     type: string;
-    value: string|boolean|number|undefined;
+    value: string | boolean | number | undefined;
 }
 
 /*export interface ITiledMapLayerBooleanProperty {
@@ -39,7 +39,7 @@ export interface ITiledMapLayerProperty {
 }*/
 
 export interface ITiledMapLayer {
-    data: number[]|string;
+    data: number[] | string;
     height: number;
     name: string;
     opacity: number;
@@ -72,7 +72,7 @@ export interface ITiledMapObject {
     gid: number;
     height: number;
     name: string;
-    properties: {[key: string]: string};
+    properties: { [key: string]: string };
     rotation: number;
     type: string;
     visible: boolean;
@@ -88,12 +88,12 @@ export interface ITiledMapObject {
     /**
      * Polygon points
      */
-    polygon: {x: number, y: number}[];
+    polygon: { x: number; y: number }[];
 
     /**
      * Polyline points
      */
-    polyline: {x: number, y: number}[];
+    polyline: { x: number; y: number }[];
 }
 
 export interface ITiledTileSet {
@@ -104,14 +104,14 @@ export interface ITiledTileSet {
     imagewidth: number;
     margin: number;
     name: string;
-    properties: {[key: string]: string};
+    properties: { [key: string]: string };
     spacing: number;
     tilecount: number;
     tileheight: number;
     tilewidth: number;
     transparentcolor: string;
     terrains: ITiledMapTerrain[];
-    tiles: {[key: string]: { terrain: number[] }};
+    tiles: { [key: string]: { terrain: number[] } };
 
     /**
      * Refers to external tileset file (should be JSON)

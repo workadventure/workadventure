@@ -5,10 +5,10 @@ export class SoundMeter {
     private instant: number;
     private clip: number;
     //private script: ScriptProcessorNode;
-    private analyser: AnalyserNode|undefined;
-    private dataArray: Uint8Array|undefined;
-    private context: AudioContext|undefined;
-    private source: MediaStreamAudioSourceNode|undefined;
+    private analyser: AnalyserNode | undefined;
+    private dataArray: Uint8Array | undefined;
+    private context: AudioContext | undefined;
+    private source: MediaStreamAudioSourceNode | undefined;
 
     constructor() {
         this.instant = 0.0;
@@ -27,8 +27,7 @@ export class SoundMeter {
         }
     }
 
-    public connectToSource(stream: MediaStream, context: AudioContext): void
-    {
+    public connectToSource(stream: MediaStream, context: AudioContext): void {
         this.init(context);
 
         this.source = this.context?.createMediaStreamSource(stream);
@@ -38,16 +37,17 @@ export class SoundMeter {
         //analyser.connect(distortion);
         //distortion.connect(this.context.destination);
         //this.analyser.connect(this.context.destination);
-
-
     }
 
     public getVolume(): number {
-        if (this.context === undefined || this.dataArray === undefined || this.analyser === undefined) {
+        if (
+            this.context === undefined ||
+            this.dataArray === undefined ||
+            this.analyser === undefined
+        ) {
             return 0;
         }
         this.analyser.getByteFrequencyData(this.dataArray);
-
 
         const input = this.dataArray;
         let i;
@@ -55,9 +55,9 @@ export class SoundMeter {
         //let clipcount = 0;
         for (i = 0; i < input.length; ++i) {
             sum += input[i] * input[i];
-        //    if (Math.abs(input[i]) > 0.99) {
-        //        clipcount += 1;
-        //    }
+            //    if (Math.abs(input[i]) > 0.99) {
+            //        clipcount += 1;
+            //    }
         }
         this.instant = Math.sqrt(sum / input.length);
         //this.slow = 0.95 * that.slow + 0.05 * that.instant;
@@ -80,9 +80,7 @@ export class SoundMeter {
         this.dataArray = undefined;
         this.source = undefined;
     }
-
 }
-
 
 // Meter class that generates a number correlated to audio volume.
 // The meter class itself displays nothing, but it makes the

@@ -1,18 +1,21 @@
-import {ITiledMap} from "../Map/ITiledMap";
+import { ITiledMap } from "../Map/ITiledMap";
 
-export type PropertyChangeCallback = (newValue: string | number | boolean | undefined, oldValue: string | number | boolean | undefined, allProps: Map<string, string | boolean | number>) => void;
+export type PropertyChangeCallback = (
+    newValue: string | number | boolean | undefined,
+    oldValue: string | number | boolean | undefined,
+    allProps: Map<string, string | boolean | number>
+) => void;
 
 /**
  * A wrapper around a ITiledMap interface to provide additional capabilities.
  * It is used to handle layer properties.
  */
 export class GameMap {
-    private key: number|undefined;
-    private lastProperties = new Map<string, string|boolean|number>();
+    private key: number | undefined;
+    private lastProperties = new Map<string, string | boolean | number>();
     private callbacks = new Map<string, Array<PropertyChangeCallback>>();
 
-    public constructor(private map: ITiledMap) {
-    }
+    public constructor(private map: ITiledMap) {}
 
     /**
      * Sets the position of the current player (in pixels)
@@ -49,11 +52,11 @@ export class GameMap {
         this.lastProperties = newProps;
     }
 
-    private getProperties(key: number): Map<string, string|boolean|number> {
-        const properties = new Map<string, string|boolean|number>();
+    private getProperties(key: number): Map<string, string | boolean | number> {
+        const properties = new Map<string, string | boolean | number>();
 
         for (const layer of this.map.layers) {
-            if (layer.type !== 'tilelayer') {
+            if (layer.type !== "tilelayer") {
                 continue;
             }
             const tiles = layer.data as number[];
@@ -74,7 +77,12 @@ export class GameMap {
         return properties;
     }
 
-    private trigger(propName: string, oldValue: string | number | boolean | undefined, newValue: string | number | boolean | undefined, allProps: Map<string, string | boolean | number>) {
+    private trigger(
+        propName: string,
+        oldValue: string | number | boolean | undefined,
+        newValue: string | number | boolean | undefined,
+        allProps: Map<string, string | boolean | number>
+    ) {
         const callbacksArray = this.callbacks.get(propName);
         if (callbacksArray !== undefined) {
             for (const callback of callbacksArray) {
@@ -86,7 +94,10 @@ export class GameMap {
     /**
      * Registers a callback called when the user moves to a tile where the property propName is different from the last tile the user was on.
      */
-    public onPropertyChange(propName: string, callback: PropertyChangeCallback) {
+    public onPropertyChange(
+        propName: string,
+        callback: PropertyChangeCallback
+    ) {
         let callbacksArray = this.callbacks.get(propName);
         if (callbacksArray === undefined) {
             callbacksArray = new Array<PropertyChangeCallback>();

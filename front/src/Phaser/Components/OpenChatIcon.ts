@@ -1,6 +1,6 @@
-import {discussionManager} from "../../WebRtc/DiscussionManager";
+import { discussionManager } from "../../WebRtc/DiscussionManager";
 
-export const openChatIconName = 'openChatIcon';
+export const openChatIconName = "openChatIcon";
 export class OpenChatIcon extends Phaser.GameObjects.Image {
     constructor(scene: Phaser.Scene, x: number, y: number) {
         super(scene, x, y, openChatIconName, 3);

@@ -1,20 +1,23 @@
-import {EnableCameraSceneName} from "./EnableCameraScene";
-import {TextField} from "../Components/TextField";
+import { EnableCameraSceneName } from "./EnableCameraScene";
+import { TextField } from "../Components/TextField";
 import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
-import {loadAllLayers, loadCustomTexture} from "../Entity/PlayerTexturesLoadingManager";
+import {
+    loadAllLayers,
+    loadCustomTexture,
+} from "../Entity/PlayerTexturesLoadingManager";
 import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
-import {gameManager} from "../Game/GameManager";
-import {ResizableScene} from "./ResizableScene";
-import {localUserStore} from "../../Connexion/LocalUserStore";
-import {addLoader} from "../Components/Loader";
-import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
-import {AbstractCharacterScene} from "./AbstractCharacterScene";
+import { gameManager } from "../Game/GameManager";
+import { ResizableScene } from "./ResizableScene";
+import { localUserStore } from "../../Connexion/LocalUserStore";
+import { addLoader } from "../Components/Loader";
+import { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
+import { AbstractCharacterScene } from "./AbstractCharacterScene";
 
 export const CustomizeSceneName = "CustomizeScene";
 
-enum CustomizeTextures{
+enum CustomizeTextures {
     icon = "icon",
     arrowRight = "arrow_right",
     mainFont = "main_font",
@@ -22,7 +25,6 @@ enum CustomizeTextures{
 }
 
 export class CustomizeScene extends AbstractCharacterScene {
-
     private textField!: TextField;
     private enterField!: TextField;
 
@@ -38,12 +40,12 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     private selectedLayers: number[] = [0];
     private containersRow: Container[][] = [];
-    private activeRow:number = 0;
+    private activeRow: number = 0;
     private layers: BodyResourceDescriptionInterface[][] = [];
 
     constructor() {
         super({
-            key: CustomizeSceneName
+            key: CustomizeSceneName,
         });
     }
 
@@ -51,47 +53,99 @@ export class CustomizeScene extends AbstractCharacterScene {
         addLoader(this);
 
         this.layers = loadAllLayers(this.load);
-        this.loadCustomSceneSelectCharacters().then((bodyResourceDescriptions) => {
-            bodyResourceDescriptions.forEach((bodyResourceDescription) => {
-                if(!bodyResourceDescription.level){
-                    throw 'Texture level is null';
-                }
-                this.layers[bodyResourceDescription.level].unshift(bodyResourceDescription);
-            });
-        });
+        this.loadCustomSceneSelectCharacters().then(
+            (bodyResourceDescriptions) => {
+                bodyResourceDescriptions.forEach((bodyResourceDescription) => {
+                    if (!bodyResourceDescription.level) {
+                        throw "Texture level is null";
+                    }
+                    this.layers[bodyResourceDescription.level].unshift(
+                        bodyResourceDescription
+                    );
+                });
+            }
+        );
 
-        this.load.image(CustomizeTextures.arrowRight, "resources/objects/arrow_right.png");
+        this.load.image(
+            CustomizeTextures.arrowRight,
+            "resources/objects/arrow_right.png"
+        );
         this.load.image(CustomizeTextures.icon, "resources/logos/tcm_full.png");
-        this.load.image(CustomizeTextures.arrowUp, "resources/objects/arrow_up.png");
-        this.load.bitmapFont(CustomizeTextures.mainFont, 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
+        this.load.image(
+            CustomizeTextures.arrowUp,
+            "resources/objects/arrow_up.png"
+        );
+        this.load.bitmapFont(
+            CustomizeTextures.mainFont,
+            "resources/fonts/arcade.png",
+            "resources/fonts/arcade.xml"
+        );
     }
 
     create() {
-        this.textField = new TextField(this, this.game.renderer.width / 2, 30, 'Customize your own Avatar!');
+        this.textField = new TextField(
+            this,
+            this.game.renderer.width / 2,
+            30,
+            "Customize your own Avatar!"
+        );
 
-        this.enterField = new TextField(this, this.game.renderer.width / 2, 40, 'you can start the game by pressing SPACE..');
+        this.enterField = new TextField(
+            this,
+            this.game.renderer.width / 2,
+            40,
+            "you can start the game by pressing SPACE.."
+        );
 
-        this.logo = new Image(this, this.game.renderer.width - 30, this.game.renderer.height - 20, CustomizeTextures.icon);
+        this.logo = new Image(
+            this,
+            this.game.renderer.width - 30,
+            this.game.renderer.height - 20,
+            CustomizeTextures.icon
+        );
         this.add.existing(this.logo);
 
-
-        this.arrowRight = new Image(this, this.game.renderer.width*0.9, this.game.renderer.height/2, CustomizeTextures.arrowRight);
+        this.arrowRight = new Image(
+            this,
+            this.game.renderer.width * 0.9,
+            this.game.renderer.height / 2,
+            CustomizeTextures.arrowRight
+        );
         this.add.existing(this.arrowRight);
 
-        this.arrowLeft = new Image(this, this.game.renderer.width/9, this.game.renderer.height/2, CustomizeTextures.arrowRight);
+        this.arrowLeft = new Image(
+            this,
+            this.game.renderer.width / 9,
+            this.game.renderer.height / 2,
+            CustomizeTextures.arrowRight
+        );
         this.arrowLeft.flipX = true;
         this.add.existing(this.arrowLeft);
 
-
-        this.Rectangle = this.add.rectangle(this.cameras.main.worldView.x + this.cameras.main.width / 2, this.cameras.main.worldView.y + this.cameras.main.height / 2, 32, 33)
-        this.Rectangle.setStrokeStyle(2, 0xFFFFFF);
+        this.Rectangle = this.add.rectangle(
+            this.cameras.main.worldView.x + this.cameras.main.width / 2,
+            this.cameras.main.worldView.y + this.cameras.main.height / 2,
+            32,
+            33
+        );
+        this.Rectangle.setStrokeStyle(2, 0xffffff);
         this.add.existing(this.Rectangle);
 
-        this.arrowDown = new Image(this, this.game.renderer.width - 30, 100, CustomizeTextures.arrowUp);
+        this.arrowDown = new Image(
+            this,
+            this.game.renderer.width - 30,
+            100,
+            CustomizeTextures.arrowUp
+        );
         this.arrowDown.flipY = true;
         this.add.existing(this.arrowDown);
 
-        this.arrowUp = new Image(this, this.game.renderer.width - 30, 60, CustomizeTextures.arrowUp);
+        this.arrowUp = new Image(
+            this,
+            this.game.renderer.width - 30,
+            60,
+            CustomizeTextures.arrowUp
+        );
         this.add.existing(this.arrowUp);
 
         this.createCustomizeLayer(0, 0, 0);
@@ -102,7 +156,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.createCustomizeLayer(0, 0, 5);
 
         this.moveLayers();
-        this.input.keyboard.on('keyup-ENTER', () => {
+        this.input.keyboard.on("keyup-ENTER", () => {
             const layers: string[] = [];
             let i = 0;
             for (const layerItem of this.selectedLayers) {
@@ -118,10 +172,16 @@ export class CustomizeScene extends AbstractCharacterScene {
             gameManager.tryResumingGame(this, EnableCameraSceneName);
         });
 
-        this.input.keyboard.on('keyup-RIGHT', () => this.moveCursorHorizontally(1));
-        this.input.keyboard.on('keyup-LEFT', () => this.moveCursorHorizontally(-1));
-        this.input.keyboard.on('keyup-DOWN', () => this.moveCursorVertically(1));
-        this.input.keyboard.on('keyup-UP', () => this.moveCursorVertically(-1));
+        this.input.keyboard.on("keyup-RIGHT", () =>
+            this.moveCursorHorizontally(1)
+        );
+        this.input.keyboard.on("keyup-LEFT", () =>
+            this.moveCursorHorizontally(-1)
+        );
+        this.input.keyboard.on("keyup-DOWN", () =>
+            this.moveCursorVertically(1)
+        );
+        this.input.keyboard.on("keyup-UP", () => this.moveCursorVertically(-1));
 
         const customCursorPosition = localUserStore.getCustomCursorPosition();
         if (customCursorPosition) {
@@ -135,28 +195,35 @@ export class CustomizeScene extends AbstractCharacterScene {
     private moveCursorHorizontally(index: number): void {
         this.selectedLayers[this.activeRow] += index;
         if (this.selectedLayers[this.activeRow] < 0) {
-            this.selectedLayers[this.activeRow] = 0
-        } else if(this.selectedLayers[this.activeRow] > this.layers[this.activeRow].length - 1) {
-            this.selectedLayers[this.activeRow] = this.layers[this.activeRow].length - 1
+            this.selectedLayers[this.activeRow] = 0;
+        } else if (
+            this.selectedLayers[this.activeRow] >
+            this.layers[this.activeRow].length - 1
+        ) {
+            this.selectedLayers[this.activeRow] =
+                this.layers[this.activeRow].length - 1;
         }
         this.moveLayers();
         this.updateSelectedLayer();
         this.saveInLocalStorage();
     }
 
-    private moveCursorVertically(index:number): void {
+    private moveCursorVertically(index: number): void {
         this.activeRow += index;
         if (this.activeRow < 0) {
-            this.activeRow = 0
+            this.activeRow = 0;
         } else if (this.activeRow > this.layers.length - 1) {
-            this.activeRow = this.layers.length - 1
+            this.activeRow = this.layers.length - 1;
         }
         this.moveLayers();
         this.saveInLocalStorage();
     }
 
     private saveInLocalStorage() {
-        localUserStore.setCustomCursorPosition(this.activeRow, this.selectedLayers);
+        localUserStore.setCustomCursorPosition(
+            this.activeRow,
+            this.selectedLayers
+        );
     }
 
     update(time: number, delta: number): void {
@@ -170,13 +237,22 @@ export class CustomizeScene extends AbstractCharacterScene {
      * @param layerNumber, index of the this.layers array
      * create the layer and display it on the scene
      */
-    private createCustomizeLayer(x: number, y: number, layerNumber: number): void {
+    private createCustomizeLayer(
+        x: number,
+        y: number,
+        layerNumber: number
+    ): void {
         this.containersRow[layerNumber] = [];
         this.selectedLayers[layerNumber] = 0;
         let alpha = 0;
         let layerPosX = 0;
         for (let i = 0; i < this.layers[layerNumber].length; i++) {
-            const container = this.generateCharacter(300 + x + layerPosX, y, layerNumber, i);
+            const container = this.generateCharacter(
+                300 + x + layerPosX,
+                y,
+                layerNumber,
+                i
+            );
 
             this.containersRow[layerNumber][i] = container;
             this.add.existing(container);
@@ -196,23 +272,40 @@ export class CustomizeScene extends AbstractCharacterScene {
      * @param layerNumber, The selected layer number (0 for body...)
      * @param selectedItem, The number of the item select (0 for black body...)
      */
-    private generateCharacter(x: number, y: number, layerNumber: number, selectedItem: number) {
-        return new Container(this, x, y,this.getContainerChildren(layerNumber,selectedItem));
+    private generateCharacter(
+        x: number,
+        y: number,
+        layerNumber: number,
+        selectedItem: number
+    ) {
+        return new Container(
+            this,
+            x,
+            y,
+            this.getContainerChildren(layerNumber, selectedItem)
+        );
     }
 
-    private getContainerChildren(layerNumber: number, selectedItem: number): Array<Sprite> {
+    private getContainerChildren(
+        layerNumber: number,
+        selectedItem: number
+    ): Array<Sprite> {
         const children: Array<Sprite> = new Array<Sprite>();
         for (let j = 0; j <= layerNumber; j++) {
             if (j === layerNumber) {
-                children.push(this.generateLayers(0, 0, this.layers[j][selectedItem].name));
+                children.push(
+                    this.generateLayers(0, 0, this.layers[j][selectedItem].name)
+                );
             } else {
                 const layer = this.selectedLayers[j];
                 if (layer === undefined) {
                     continue;
                 }
-                children.push(this.generateLayers(0, 0, this.layers[j][layer].name));
+                children.push(
+                    this.generateLayers(0, 0, this.layers[j][layer].name)
+                );
             }
-         }
+        }
         return children;
     }
 
@@ -220,23 +313,27 @@ export class CustomizeScene extends AbstractCharacterScene {
      * Move the layer left, right, up and down and update the selected layer
      */
     private moveLayers(): void {
-        const screenCenterX = this.cameras.main.worldView.x + this.cameras.main.width / 2;
-        const screenCenterY = this.cameras.main.worldView.y + this.cameras.main.height / 2;
+        const screenCenterX =
+            this.cameras.main.worldView.x + this.cameras.main.width / 2;
+        const screenCenterY =
+            this.cameras.main.worldView.y + this.cameras.main.height / 2;
         const screenWidth = this.game.renderer.width;
         const screenHeight = this.game.renderer.height;
         for (let i = 0; i < this.containersRow.length; i++) {
             for (let j = 0; j < this.containersRow[i].length; j++) {
-                    let selectedX = this.selectedLayers[i];
-                    if (selectedX === undefined) {
-                        selectedX = 0;
-                    }
-                    this.containersRow[i][j].x = screenCenterX + (j - selectedX) * 40;
-                    this.containersRow[i][j].y = screenCenterY + (i - this.activeRow) * 40;
-                    const alpha1 = Math.abs(selectedX - j)*47*2/screenWidth;
-                    const alpha2 = Math.abs(this.activeRow - i)*49*2/screenHeight;
-                    this.containersRow[i][j].setAlpha((1 -alpha1)*(1 - alpha2));
+                let selectedX = this.selectedLayers[i];
+                if (selectedX === undefined) {
+                    selectedX = 0;
+                }
+                this.containersRow[i][j].x =
+                    screenCenterX + (j - selectedX) * 40;
+                this.containersRow[i][j].y =
+                    screenCenterY + (i - this.activeRow) * 40;
+                const alpha1 = (Math.abs(selectedX - j) * 47 * 2) / screenWidth;
+                const alpha2 =
+                    (Math.abs(this.activeRow - i) * 49 * 2) / screenHeight;
+                this.containersRow[i][j].setAlpha((1 - alpha1) * (1 - alpha2));
             }
-
         }
     }
 
@@ -251,22 +348,24 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     private updateSelectedLayer() {
-        for(let i = 0; i < this.containersRow.length; i++){
-            for(let j = 0; j < this.containersRow[i].length; j++){
-               const children = this.getContainerChildren(i, j);
-               this.containersRow[i][j].removeAll(true);
+        for (let i = 0; i < this.containersRow.length; i++) {
+            for (let j = 0; j < this.containersRow[i].length; j++) {
+                const children = this.getContainerChildren(i, j);
+                this.containersRow[i][j].removeAll(true);
                 this.containersRow[i][j].add(children);
             }
         }
-     }
+    }
 
-     public onResize(): void {
+    public onResize(): void {
         this.moveLayers();
 
-        this.Rectangle.x = this.cameras.main.worldView.x + this.cameras.main.width / 2;
-        this.Rectangle.y = this.cameras.main.worldView.y + this.cameras.main.height / 2;
+        this.Rectangle.x =
+            this.cameras.main.worldView.x + this.cameras.main.width / 2;
+        this.Rectangle.y =
+            this.cameras.main.worldView.y + this.cameras.main.height / 2;
 
-        this.textField.x = this.game.renderer.width/2;
+        this.textField.x = this.game.renderer.width / 2;
 
         this.logo.x = this.game.renderer.width - 30;
         this.logo.y = this.game.renderer.height - 20;
@@ -277,10 +376,10 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.arrowDown.x = this.game.renderer.width - 30;
         this.arrowDown.y = 100;
 
-        this.arrowLeft.x = this.game.renderer.width/9;
-        this.arrowLeft.y = this.game.renderer.height/2;
+        this.arrowLeft.x = this.game.renderer.width / 9;
+        this.arrowLeft.y = this.game.renderer.height / 2;
 
-        this.arrowRight.x = this.game.renderer.width*0.9;
-        this.arrowRight.y = this.game.renderer.height/2;
-     }
+        this.arrowRight.x = this.game.renderer.width * 0.9;
+        this.arrowRight.y = this.game.renderer.height / 2;
+    }
 }

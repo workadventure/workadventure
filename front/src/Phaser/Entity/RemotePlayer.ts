@@ -1,7 +1,7 @@
-import {GameScene} from "../Game/GameScene";
-import {PointInterface} from "../../Connexion/ConnexionModels";
-import {Character} from "../Entity/Character";
-import {Sprite} from "./Sprite";
+import { GameScene } from "../Game/GameScene";
+import { PointInterface } from "../../Connexion/ConnexionModels";
+import { Character } from "../Entity/Character";
+import { Sprite } from "./Sprite";
 
 /**
  * Class representing the sprite of a remote player (a player that plays on another computer)
@@ -29,7 +29,7 @@ export class RemotePlayer extends Character {
         this.playAnimation(position.direction, position.moving);
         this.setX(position.x);
         this.setY(position.y);
-        
+
         this.setDepth(position.y); //this is to make sure the perspective (player models closer the bottom of the screen will appear in front of models nearer the top of the screen).
     }
 }
