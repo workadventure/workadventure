@@ -29,7 +29,7 @@ export class HtmlUtils {
         textReturn.innerText = text;
         const urlRegex = /(https?:\/\/[^\s]+)/g;
         text.replace(urlRegex, (url: string) => {
-            let link : HTMLAnchorElement = document.createElement('a');
+            const link : HTMLAnchorElement = document.createElement('a');
             link.innerText  = ` ${url}`;
             link.href = url;
             link.target = '_blank';
