@@ -24,19 +24,19 @@ export class HtmlUtils {
         throw new Error("Cannot find HTML element with id '"+id+"'");
     }
 
-    public static urlify(text: string): HTMLSpanElement {
-        const textReturn : HTMLSpanElement = document.createElement('span');
-        textReturn.innerText = text;
+    private static escapeHtml(html: string): string {
+        const text = document.createTextNode(html);
+        const p = document.createElement('p');
+        p.appendChild(text);
+        return p.innerHTML;
+    }
+
+    public static urlify(text: string): string {
         const urlRegex = /(https?:\/\/[^\s]+)/g;
-        text.replace(urlRegex, (url: string) => {
-            const link : HTMLAnchorElement = document.createElement('a');
-            link.innerText  = ` ${url}`;
-            link.href = url;
-            link.target = '_blank';
-            textReturn.append(link);
-            return url;
+        text = HtmlUtils.escapeHtml(text);
+        return text.replace(urlRegex, (url: string) => {
+            return '<a href="' + url + '" target="_blank" style=":visited {color: white}">' + url + '</a>';
         });
-        return textReturn;
     }
 
     private static isHtmlElement<T extends HTMLElement>(elem: HTMLElement | null): elem is T {

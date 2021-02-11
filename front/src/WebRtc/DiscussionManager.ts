@@ -170,7 +170,7 @@ export class DiscussionManager {
         divMessage.appendChild(pMessage);
 
         const userMessage: HTMLParagraphElement = document.createElement('p');
-        userMessage.append(HtmlUtils.urlify(message));
+        userMessage.innerHTML = HtmlUtils.urlify(message);
         userMessage.classList.add('body');
         divMessage.appendChild(userMessage);
         this.divMessages?.appendChild(divMessage);
