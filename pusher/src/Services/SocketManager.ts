@@ -172,6 +172,7 @@ export class SocketManager implements ZoneEventListener {
             console.log('Calling joinRoom')
             const apiClient = await apiClientRepository.getClient(client.roomId);
             const streamToPusher = apiClient.joinRoom();
+            clientEventsEmitter.emitClientJoin(client.userUuid, client.roomId);
 
             client.backConnection = streamToPusher;
 
