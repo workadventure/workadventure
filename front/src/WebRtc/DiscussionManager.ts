@@ -61,7 +61,7 @@ export class DiscussionManager {
         const inputMessage: HTMLInputElement = document.createElement('input');
         inputMessage.onfocus = () => {
             if(this.userInputManager) {
-                this.userInputManager.clearAllInputKeyboard();
+                this.userInputManager.clearAllKeys();
             }
         }
         inputMessage.onblur = () => {
