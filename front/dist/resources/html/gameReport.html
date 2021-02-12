@@ -12,10 +12,6 @@
         border-radius: 6px;
         margin: 2px auto 0;
         width: 298px;
-        height: 220px;
-    }
-    #gameReport .cautiousText {
-        font-size: 50%;
     }
     #gameReport h1 {
         background-image: linear-gradient(top, #f1f3f3, #d4dae0);
@@ -29,6 +25,9 @@
         margin: 0;
         text-align: center;
         text-shadow: 0 -1px 0 rgba(0,0,0,0.2), 0 1px 0 #fff;
+    }
+    #gameReport h3 {
+        margin: 0;
     }
     #gameReport textarea {
         font-size: 70%;
@@ -51,15 +50,17 @@
     }
     #gameReport button {
         margin-top: 10px;
-        background-color: black;
+        font-size: 60%;
+        background-color: #dc3545;
         color: white;
         border-radius: 7px;
-        padding-bottom: 4px;
-        width: 60px;
+        padding: 3px 10px 3px 10px;
     }
     #gameReport button#gameReportFormCancel {
         background-color: #c7c7c700;
         color: #292929;
+        display: block; 
+        float: right;
     }
     #gameReport section a{
         text-align: center;
@@ -74,8 +75,11 @@
     #gameReport section.text-center{
         text-align: center;
     }
-    #gameReport section p{
+    #gameReport p{
         font-size: 8px;
+        margin: 3px 0 0 0;
+    }
+    #gameReport form p{
         margin: 0px 70px;
     }
     #gameReport section p.err{
@@ -87,18 +91,32 @@
     }
 </style>
 
-<form id="gameReport" hidden>
-    <section class="text-center">
-        <h5 id="nameReported"></h5>
-        <input type="hidden" id="idUserReported"/>
+<main id="gameReport" hidden>
+    <section>
+        <button id="gameReportFormCancel">X</button>
+        <h1>Moderate <span id="nameReported"></span></h1>
+        <p id="askActionP">What action do you want to take?</p>
     </section>
     <section>
-        <h6>Message</h6>
-        <textarea type="text" name="report" id="gameReportInput"></textarea>
-        <p class="err" id="gameReportErr"></p>
+        <h3>Block: </h3>
+        <p>Block any communication from and to this user. This can be reverted.</p>
+        <section class="action">
+            <button id="toggleBlockButton">Block this user</button>
+        </section>
     </section>
-    <section class="action">
-        <button type="submit" id="gameReportFormSubmit">Submit</button>
-        <button type="submit" id="gameReportFormCancel">Close</button>
+    <section id="reportSection">
+        <h3>Report: </h3>
+        <p>Send a report message to the administrators of this room. They may later ban this user.</p>
+        <form>
+            <section>
+                <h6>Your message: </h6>
+                <textarea type="text" name="report" id="gameReportInput"></textarea>
+                <p class="err" id="gameReportErr"></p>
+            </section>
+            <section class="action">
+                <button type="submit" id="gameReportFormSubmit">Report this user</button>
+            </section>
+        </form>
     </section>
-</form>
+</main>
+
