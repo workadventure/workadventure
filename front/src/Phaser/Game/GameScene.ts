@@ -60,6 +60,7 @@ import {Room} from "../../Connexion/Room";
 import {jitsiFactory} from "../../WebRtc/JitsiFactory";
 import {urlManager} from "../../Url/UrlManager";
 import {audioManager} from "../../WebRtc/AudioManager";
+import {copyrightInfo} from "../../WebRtc/CopyrightInfo";
 import {videoManager} from "../../WebRtc/VideoManager";
 import {PresentationModeIcon} from "../Components/PresentationModeIcon";
 import {ChatModeIcon} from "../Components/ChatModeIcon";
@@ -403,6 +404,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                 }
             }, 500);
         }
+        copyrightInfo.initCopyrightInfo(mapDirUrl);
 
         this.createPromiseResolve();
 
