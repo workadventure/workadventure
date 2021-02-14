@@ -30,24 +30,23 @@ class JitsiFactory {
     private audioCallback = this.onAudioChange.bind(this);
     private videoCallback = this.onVideoChange.bind(this);
 
-    constructor() {
-        // Jitsi meet external API maintains some data in local storage which
-        // is sent via an URL parameter when opening a new conference. Problem
-        // is that this data grows indefinitely. Thus after some time the URLs
-        // are so huge that loading the iframe becomes slow. Thus lets just
-        // clear jitsi local storage whenever this class is loaded.
-        //
-        // see:
-        // https://github.com/jitsi/jitsi-meet/blob/684d12115974a65b48f36c7d4fe74d8f17da6ff6/modules/API/external/external_api.js#L269-L281
-        //
-        // It looks like the demo at play.workadventu.re is not affected by
-        // this problem. This is likely due to how they run their own jitsi
-        // infra.
-        window.localStorage.removeItem("jitsiLocalStorage");
-    }
-    
     public start(roomName: string, playerName:string, jwt?: string): void {
         coWebsiteManager.insertCoWebsite((cowebsiteDiv => {
+            // Jitsi meet external API maintains some data in local storage
+            // which is sent via an URL parameter when opening a new
+            // conference. Problem is that this data grows indefinitely. Thus
+            // after some time the URLs are so huge that loading the iframe
+            // becomes slow. Thus lets just clear jitsi local storage whenever
+            // this class is loaded.
+            //
+            // see:
+            // https://github.com/jitsi/jitsi-meet/blob/684d12115974a65b48f36c7d4fe74d8f17da6ff6/modules/API/external/external_api.js#L269-L281
+            //
+            // It looks like the demo at play.workadventu.re is not affected by
+            // this problem. This is likely due to how they run their own jitsi
+            // infra.
+            window.localStorage.removeItem("jitsiLocalStorage");
+
             const domain = JITSI_URL;
             const options: any = { // eslint-disable-line @typescript-eslint/no-explicit-any
                 roomName: roomName,
