@@ -3,10 +3,12 @@ import {mediaManager} from "./MediaManager";
 import {coWebsiteManager} from "./CoWebsiteManager";
 declare const window:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-const defaultConfig = {
-    startWithAudioMuted: !mediaManager.constraintsMedia.audio,
-    startWithVideoMuted: mediaManager.constraintsMedia.video === false,
-    prejoinPageEnabled: false
+const getDefaultConfig = () => {
+    return {
+        startWithAudioMuted: !mediaManager.constraintsMedia.audio,
+        startWithVideoMuted: mediaManager.constraintsMedia.video === false,
+        prejoinPageEnabled: false
+    }
 }
 
 const defaultInterfaceConfig = {
@@ -66,7 +68,7 @@ class JitsiFactory {
                 width: "100%",
                 height: "100%",
                 parentNode: cowebsiteDiv,
-                configOverwrite: {...defaultConfig, ...config},
+                configOverwrite: {...config, ...getDefaultConfig()},
                 interfaceConfigOverwrite: {...defaultInterfaceConfig, ...interfaceConfig}
             };
             if (!options.jwt) {
