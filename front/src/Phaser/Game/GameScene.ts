@@ -716,6 +716,10 @@ export class GameScene extends ResizableScene implements CenterListener {
         if (!roomId) throw new Error('Could not find the room from its exit key: '+exitKey);
         urlManager.pushStartLayerNameToUrl(hash);
         if (roomId !== this.scene.key) {
+            if (this.scene.get(roomId) === null) {
+                console.error("next room not loaded", exitKey);
+                return;
+            }
             this.cleanupClosingScene();
             this.scene.stop();
             this.scene.remove(this.scene.key);
