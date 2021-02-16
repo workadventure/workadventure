@@ -19,6 +19,8 @@ export interface UserSimplePeerInterface{
     userId: number;
     name?: string;
     initiator?: boolean;
+    webRtcUser?: string|undefined;
+    webRtcPassword?: string|undefined;
 }
 
 export interface PeerConnectionListener {
@@ -99,9 +101,9 @@ export class SimplePeer {
         // Note: the clients array contain the list of all clients (even the ones we are already connected to in case a user joints a group)
         // So we can receive a request we already had before. (which will abort at the first line of createPeerConnection)
         // This would be symmetrical to the way we handle disconnection.
-        
+
         //start connection
-        console.log('receiveWebrtcStart. Initiator: ', user.initiator)
+        //console.log('receiveWebrtcStart. Initiator: ', user.initiator)
         if(!user.initiator){
             return;
         }
@@ -189,7 +191,7 @@ export class SimplePeer {
             mediaManager.addScreenSharingActiveVideo("" + user.userId);
         }
 
-        const peer = new ScreenSharingPeer(user.userId, user.initiator ? user.initiator : false, this.Connection);
+        const peer = new ScreenSharingPeer(user, user.initiator ? user.initiator : false, this.Connection);
         this.PeerScreenSharingConnectionArray.set(user.userId, peer);
 
         for (const peerConnectionListener of this.peerConnectionListeners) {
