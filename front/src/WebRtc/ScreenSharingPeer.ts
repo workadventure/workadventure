@@ -3,6 +3,7 @@ import {mediaManager} from "./MediaManager";
 import {STUN_SERVER, TURN_SERVER, TURN_USER, TURN_PASSWORD} from "../Enum/EnvironmentVariable";
 import {RoomConnection} from "../Connexion/RoomConnection";
 import {MESSAGE_TYPE_CONSTRAINT} from "./VideoPeer";
+import {UserSimplePeerInterface} from "./SimplePeer";
 
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
@@ -16,8 +17,9 @@ export class ScreenSharingPeer extends Peer {
     private isReceivingStream:boolean = false;
     public toClose: boolean = false;
     public _connected: boolean = false;
+    private userId: number;
 
-    constructor(private userId: number, initiator: boolean, private connection: RoomConnection, webRtcUser: string | undefined, webRtcPassword: string | undefined) {
+    constructor(user: UserSimplePeerInterface, initiator: boolean, private connection: RoomConnection) {
         super({
             initiator: initiator ? initiator : false,
             reconnectTimer: 10000,
@@ -28,12 +30,14 @@ export class ScreenSharingPeer extends Peer {
                     },
                     {
                         urls: TURN_SERVER.split(','),
-                        username: webRtcUser || TURN_USER,
-                        credential: webRtcPassword || TURN_PASSWORD
+                        username: user.webRtcUser || TURN_USER,
+                        credential: user.webRtcPassword || TURN_PASSWORD
                     },
                 ]
             }
         });
+
+        this.userId = user.userId;
 
         //start listen signal for the peer connection
         this.on('signal', (data: unknown) => {

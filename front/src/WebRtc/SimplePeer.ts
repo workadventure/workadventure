@@ -191,7 +191,7 @@ export class SimplePeer {
             mediaManager.addScreenSharingActiveVideo("" + user.userId);
         }
 
-        const peer = new ScreenSharingPeer(user.userId, user.initiator ? user.initiator : false, this.Connection, user.webRtcUser, user.webRtcPassword);
+        const peer = new ScreenSharingPeer(user, user.initiator ? user.initiator : false, this.Connection);
         this.PeerScreenSharingConnectionArray.set(user.userId, peer);
 
         for (const peerConnectionListener of this.peerConnectionListeners) {
