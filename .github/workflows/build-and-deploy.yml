@@ -150,6 +150,7 @@ jobs:
           JITSI_ISS: ${{ secrets.JITSI_ISS }}
           JITSI_URL: ${{ secrets.JITSI_URL }}
           SECRET_JITSI_KEY: ${{ secrets.SECRET_JITSI_KEY }}
+          TURN_STATIC_AUTH_SECRET: ${{ secrets.TURN_STATIC_AUTH_SECRET }}
         with:
           namespace: workadventure-${{ env.GITHUB_REF_SLUG }}
 
