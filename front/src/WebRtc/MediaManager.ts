@@ -3,8 +3,7 @@ import {HtmlUtils} from "./HtmlUtils";
 import {discussionManager, SendMessageCallback} from "./DiscussionManager";
 import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
 import {VIDEO_QUALITY_SELECT} from "../Administration/ConsoleGlobalMessageManager";
-import {connectionManager} from "../Connexion/ConnectionManager";
-import {GameConnexionTypes} from "../Url/UrlManager";
+import {UserSimplePeerInterface} from "./SimplePeer";
 declare const navigator:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 const localValueVideo = localStorage.getItem(VIDEO_QUALITY_SELECT);
@@ -28,7 +27,6 @@ export type ReportCallback = (message: string) => void;
 export type ShowReportCallBack = (userId: string, userName: string|undefined) => void;
 
 // TODO: Split MediaManager in 2 classes: MediaManagerUI (in charge of HTML) and MediaManager (singleton in charge of the camera only)
-// TODO: verify that microphone event listeners are not triggered plenty of time NOW (since MediaManager is created many times!!!!)
 export class MediaManager {
     localStream: MediaStream|null = null;
     localScreenCapture: MediaStream|null = null;
@@ -473,8 +471,9 @@ export class MediaManager {
         return this.getCamera();
     }
 
-    addActiveVideo(userId: string, userName: string = "", anonymous: boolean = true){
+    addActiveVideo(user: UserSimplePeerInterface, userName: string = ""){
         this.webrtcInAudio.play();
+        const userId = ''+user.userId
 
         userName = userName.toUpperCase();
         const color = this.getColorByString(userName);
@@ -484,22 +483,18 @@ export class MediaManager {
                 <div class="connecting-spinner"></div>
                 <div class="rtc-error" style="display: none"></div>
                 <i id="name-${userId}" style="background-color: ${color};">${userName}</i>
-                <img id="microphone-${userId}" src="resources/logos/microphone-close.svg">
-                ` +
-                ((anonymous === false)?`
-                    <button id="report-${userId}" class="report">
-                        <img src="resources/logos/report.svg">
-                        <span>Report</span>
-                    </button>
-                `:''
-                )
-                +
-                `<video id="${userId}" autoplay></video>
+                <img id="microphone-${userId}" title="mute" src="resources/logos/microphone-close.svg">
+                <button id="report-${userId}" class="report">
+                    <img title="report this user" src="resources/logos/report.svg">
+                    <span>Report/Block</span>
+                </button>
+                <video id="${userId}" autoplay></video>
+                <img src="resources/logos/blockSign.svg" id="blocking-${userId}" class="block-logo">
             </div>
         `;
 
         layoutManager.add(DivImportance.Normal, userId, html);
-
+        
         this.remoteVideo.set(userId, HtmlUtils.getElementByIdOrFail<HTMLVideoElement>(userId));
 
         //permit to create participant in discussion part
@@ -510,18 +505,17 @@ export class MediaManager {
         };
         this.addNewParticipant(userId, userName, undefined, showReportUser);
 
-        if(!anonymous){
-            const reportBanUserAction: HTMLImageElement = HtmlUtils.getElementByIdOrFail<HTMLImageElement>(`report-${userId}`);
-            reportBanUserAction.addEventListener('click', (e) => {
-                e.preventDefault();
-                showReportUser();
-            });
-        }
+        const reportBanUserActionEl: HTMLImageElement = HtmlUtils.getElementByIdOrFail<HTMLImageElement>(`report-${userId}`);
+        reportBanUserActionEl.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            showReportUser();
+        });
     }
     
     addScreenSharingActiveVideo(userId: string, divImportance: DivImportance = DivImportance.Important){
 
-        userId = `screen-sharing-${userId}`;
+        userId = this.getScreenSharingId(userId);
         const html = `
             <div id="div-${userId}" class="video-container">
                 <video id="${userId}" autoplay></video>
@@ -532,7 +526,11 @@ export class MediaManager {
 
         this.remoteVideo.set(userId, HtmlUtils.getElementByIdOrFail<HTMLVideoElement>(userId));
     }
-    
+
+    private getScreenSharingId(userId: string): string {
+        return `screen-sharing-${userId}`;
+    }
+
     disabledMicrophoneByUserId(userId: number){
         const element = document.getElementById(`microphone-${userId}`);
         if(!element){
@@ -571,6 +569,10 @@ export class MediaManager {
         }
     }
 
+    toggleBlockLogo(userId: number, show: boolean): void {
+        const blockLogoElement = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('blocking-'+userId);
+        show ? blockLogoElement.classList.add('active') : blockLogoElement.classList.remove('active');
+    }
     addStreamRemoteVideo(userId: string, stream : MediaStream): void {
         const remoteVideo = this.remoteVideo.get(userId);
         if (remoteVideo === undefined) {
@@ -580,12 +582,12 @@ export class MediaManager {
     }
     addStreamRemoteScreenSharing(userId: string, stream : MediaStream){
         // In the case of screen sharing (going both ways), we may need to create the HTML element if it does not exist yet
-        const remoteVideo = this.remoteVideo.get(`screen-sharing-${userId}`);
+        const remoteVideo = this.remoteVideo.get(this.getScreenSharingId(userId));
         if (remoteVideo === undefined) {
             this.addScreenSharingActiveVideo(userId);
         }
 
-        this.addStreamRemoteVideo(`screen-sharing-${userId}`, stream);
+        this.addStreamRemoteVideo(this.getScreenSharingId(userId), stream);
     }
     
     removeActiveVideo(userId: string){
@@ -596,7 +598,7 @@ export class MediaManager {
         this.removeParticipant(userId);
     }
     removeActiveScreenSharingVideo(userId: string) {
-        this.removeActiveVideo(`screen-sharing-${userId}`)
+        this.removeActiveVideo(this.getScreenSharingId(userId))
     }
     
     playWebrtcOutSound(): void {
@@ -632,7 +634,7 @@ export class MediaManager {
         errorDiv.style.display = 'block';
     }
     isErrorScreenSharing(userId: string): void {
-        this.isError(`screen-sharing-${userId}`);
+        this.isError(this.getScreenSharingId(userId));
     }
 
 

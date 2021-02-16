@@ -65,6 +65,12 @@ body .message-info.warning{
     padding: 10px;
     z-index: 2;
 }
+.video-container img.block-logo {
+    left: 30%;
+    bottom: 15%;
+    width: 150px;
+    height: 150px;
+}
 
 .video-container button.report{
     display: block;
@@ -91,7 +97,7 @@ body .message-info.warning{
 }
 
 .video-container button.report:hover {
-    width: 94px;
+    width: 150px;
 }
 
 .video-container button.report img{
@@ -110,6 +116,9 @@ body .message-info.warning{
     color: white;
     font-size: 16px;
     cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+}
+.video-container img.active {
+    display: block !important;
 }
 
 .video-container video{
@@ -188,10 +197,7 @@ video#myCamVideo{
     transition: all .2s;
     right: 224px;
 }
-/*.btn-call{
-    transition: all .1s;
-    left: 0px;
-}*/
+
 .btn-cam-action div img{
     height: 22px;
     width: 30px;

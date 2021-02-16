@@ -3,10 +3,12 @@ import {mediaManager} from "./MediaManager";
 import {coWebsiteManager} from "./CoWebsiteManager";
 declare const window:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-const defaultConfig = {
-    startWithAudioMuted: !mediaManager.constraintsMedia.audio,
-    startWithVideoMuted: mediaManager.constraintsMedia.video === false,
-    prejoinPageEnabled: false
+const getDefaultConfig = () => {
+    return {
+        startWithAudioMuted: !mediaManager.constraintsMedia.audio,
+        startWithVideoMuted: mediaManager.constraintsMedia.video === false,
+        prejoinPageEnabled: false
+    }
 }
 
 const defaultInterfaceConfig = {
@@ -59,6 +61,14 @@ class JitsiFactory {
 
     public start(roomName: string, playerName:string, jwt?: string, config?: object, interfaceConfig?: object): void {
         coWebsiteManager.insertCoWebsite((cowebsiteDiv => {
+            // Jitsi meet external API maintains some data in local storage
+            // which is sent via the appData URL parameter when joining a
+            // conference. Problem is that this data grows indefinitely. Thus
+            // after some time the URLs get so huge that loading the iframe
+            // becomes slow and eventually breaks completely. Thus lets just
+            // clear jitsi local storage before starting a new conference.
+            window.localStorage.removeItem("jitsiLocalStorage");
+
             const domain = JITSI_URL;
             const options: any = { // eslint-disable-line @typescript-eslint/no-explicit-any
                 roomName: roomName,
@@ -66,7 +76,7 @@ class JitsiFactory {
                 width: "100%",
                 height: "100%",
                 parentNode: cowebsiteDiv,
-                configOverwrite: {...defaultConfig, ...config},
+                configOverwrite: {...config, ...getDefaultConfig()},
                 interfaceConfigOverwrite: {...defaultInterfaceConfig, ...interfaceConfig}
             };
             if (!options.jwt) {

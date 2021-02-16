@@ -4,9 +4,9 @@ const API_URL = (process.env.API_PROTOCOL || (typeof(window) !== 'undefined' ? w
 const UPLOADER_URL = (process.env.API_PROTOCOL || (typeof(window) !== 'undefined' ? window.location.protocol : 'http:')) + '//' + (process.env.UPLOADER_URL || 'uploader.workadventure.localhost');
 const ADMIN_URL = (process.env.API_PROTOCOL || (typeof(window) !== 'undefined' ? window.location.protocol : 'http:')) + '//' + (process.env.ADMIN_URL || "workadventure.localhost");
 const STUN_SERVER: string = process.env.STUN_SERVER || "stun:stun.l.google.com:19302";
-const TURN_SERVER: string = process.env.TURN_SERVER || "turn:numb.viagenie.ca";
-const TURN_USER: string = process.env.TURN_USER || 'g.parant@thecodingmachine.com';
-const TURN_PASSWORD: string = process.env.TURN_PASSWORD || 'itcugcOHxle9Acqi$';
+const TURN_SERVER: string = process.env.TURN_SERVER || "";
+const TURN_USER: string = process.env.TURN_USER || '';
+const TURN_PASSWORD: string = process.env.TURN_PASSWORD || '';
 const JITSI_URL : string|undefined = (process.env.JITSI_URL === '') ? undefined : process.env.JITSI_URL;
 const JITSI_PRIVATE_MODE : boolean = process.env.JITSI_PRIVATE_MODE == "true";
 const RESOLUTION = 2;

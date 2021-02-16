@@ -150,6 +150,7 @@ jobs:
           JITSI_ISS: ${{ secrets.JITSI_ISS }}
           JITSI_URL: ${{ secrets.JITSI_URL }}
           SECRET_JITSI_KEY: ${{ secrets.SECRET_JITSI_KEY }}
+          TURN_STATIC_AUTH_SECRET: ${{ secrets.TURN_STATIC_AUTH_SECRET }}
         with:
           namespace: workadventure-${{ env.GITHUB_REF_SLUG }}
 
@@ -159,5 +160,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          msg: Environment deployed at https://${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com
+          msg: Environment deployed at https://play.${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com
           check_for_duplicate_msg: true
