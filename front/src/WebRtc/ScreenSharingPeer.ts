@@ -28,12 +28,12 @@ export class ScreenSharingPeer extends Peer {
                     {
                         urls: STUN_SERVER.split(',')
                     },
-                    {
+                    TURN_SERVER !== '' ? {
                         urls: TURN_SERVER.split(','),
                         username: user.webRtcUser || TURN_USER,
                         credential: user.webRtcPassword || TURN_PASSWORD
-                    },
-                ]
+                    } :  undefined,
+                ].filter((value) => value !== undefined)
             }
         });
 

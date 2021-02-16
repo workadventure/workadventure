@@ -428,7 +428,7 @@ export class RoomConnection implements RoomConnection {
                 userId: message.getUserid(),
                 name: message.getName(),
                 initiator: message.getInitiator(),
-                webRtcUser: message.getWebrtcpassword() ?? undefined,
+                webRtcUser: message.getWebrtcusername() ?? undefined,
                 webRtcPassword: message.getWebrtcpassword() ?? undefined,
             });
         });
@@ -438,7 +438,9 @@ export class RoomConnection implements RoomConnection {
         this.onMessage(EventMessage.WEBRTC_SIGNAL, (message: WebRtcSignalToClientMessage) => {
             callback({
                 userId: message.getUserid(),
-                signal: JSON.parse(message.getSignal())
+                signal: JSON.parse(message.getSignal()),
+                webRtcUser: message.getWebrtcusername() ?? undefined,
+                webRtcPassword: message.getWebrtcpassword() ?? undefined,
             });
         });
     }
@@ -447,7 +449,9 @@ export class RoomConnection implements RoomConnection {
         this.onMessage(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, (message: WebRtcSignalToClientMessage) => {
             callback({
                 userId: message.getUserid(),
-                signal: JSON.parse(message.getSignal())
+                signal: JSON.parse(message.getSignal()),
+                webRtcUser: message.getWebrtcusername() ?? undefined,
+                webRtcPassword: message.getWebrtcpassword() ?? undefined,
             });
         });
     }

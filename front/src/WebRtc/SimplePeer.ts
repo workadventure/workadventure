@@ -103,7 +103,7 @@ export class SimplePeer {
         // This would be symmetrical to the way we handle disconnection.
 
         //start connection
-        console.log('receiveWebrtcStart. Initiator: ', user.initiator)
+        //console.log('receiveWebrtcStart. Initiator: ', user.initiator)
         if(!user.initiator){
             return;
         }

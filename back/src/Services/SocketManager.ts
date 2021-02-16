@@ -283,6 +283,12 @@ export class SocketManager {
         const webrtcSignalToClient = new WebRtcSignalToClientMessage();
         webrtcSignalToClient.setUserid(user.id);
         webrtcSignalToClient.setSignal(data.getSignal());
+        // TODO: only compute credentials if data.signal.type === "offer"
+        if (TURN_STATIC_AUTH_SECRET !== '') {
+            const {username, password} = this.getTURNCredentials(''+user.id, TURN_STATIC_AUTH_SECRET);
+            webrtcSignalToClient.setWebrtcusername(username);
+            webrtcSignalToClient.setWebrtcpassword(password);
+        }
 
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setWebrtcsignaltoclientmessage(webrtcSignalToClient);
@@ -303,6 +309,12 @@ export class SocketManager {
         const webrtcSignalToClient = new WebRtcSignalToClientMessage();
         webrtcSignalToClient.setUserid(user.id);
         webrtcSignalToClient.setSignal(data.getSignal());
+        // TODO: only compute credentials if data.signal.type === "offer"
+        if (TURN_STATIC_AUTH_SECRET !== '') {
+            const {username, password} = this.getTURNCredentials(''+user.id, TURN_STATIC_AUTH_SECRET);
+            webrtcSignalToClient.setWebrtcusername(username);
+            webrtcSignalToClient.setWebrtcpassword(password);
+        }
 
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setWebrtcscreensharingsignaltoclientmessage(webrtcSignalToClient);
