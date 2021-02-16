@@ -36,8 +36,8 @@ export class VideoPeer extends Peer {
                     },
                     {
                         urls: TURN_SERVER.split(','),
-                        username: TURN_USER,
-                        credential: TURN_PASSWORD
+                        username: user.webRtcUser || TURN_USER,
+                        credential: user.webRtcPassword || TURN_PASSWORD
                     },
                 ]
             }
@@ -89,7 +89,7 @@ export class VideoPeer extends Peer {
                     mediaManager.addNewMessage(message.name, message.message);
                 }
             } else if(message.type === MESSAGE_TYPE_BLOCKED) {
-                //FIXME when A blacklists B, the output stream from A is muted in B's js client. This is insecure since B can manipulate the code to unmute A stream. 
+                //FIXME when A blacklists B, the output stream from A is muted in B's js client. This is insecure since B can manipulate the code to unmute A stream.
                 // Find a way to block A's output stream in A's js client
                 //However, the output stream stream B is correctly blocked in A client
                 this.blocked = true;
@@ -117,7 +117,7 @@ export class VideoPeer extends Peer {
                 this.sendBlockMessage(false);
             }
         });
-        
+
         if (blackListManager.isBlackListed(this.userId)) {
             this.sendBlockMessage(true)
         }

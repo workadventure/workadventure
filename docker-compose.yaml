@@ -32,8 +32,10 @@ services:
       STARTUP_COMMAND_1: ./templater.sh
       STARTUP_COMMAND_2: yarn install
       TURN_SERVER: "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443"
-      TURN_USER: workadventure
-      TURN_PASSWORD: WorkAdventure123
+      # Use TURN_USER/TURN_PASSWORD if your Coturn server is secured via hard coded credentials.
+      # Advice: you should instead use Coturn REST API along the TURN_STATIC_AUTH_SECRET in the Back container
+      TURN_USER:
+      TURN_PASSWORD:
       START_ROOM_URL: "$START_ROOM_URL"
     command: yarn run start
     volumes:
@@ -108,6 +110,7 @@ services:
       ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
       JITSI_URL: $JITSI_URL
       JITSI_ISS: $JITSI_ISS
+      TURN_STATIC_AUTH_SECRET:
     volumes:
       - ./back:/usr/src/app
     labels:

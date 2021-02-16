@@ -17,7 +17,7 @@ export class ScreenSharingPeer extends Peer {
     public toClose: boolean = false;
     public _connected: boolean = false;
 
-    constructor(private userId: number, initiator: boolean, private connection: RoomConnection) {
+    constructor(private userId: number, initiator: boolean, private connection: RoomConnection, webRtcUser: string | undefined, webRtcPassword: string | undefined) {
         super({
             initiator: initiator ? initiator : false,
             reconnectTimer: 10000,
@@ -28,8 +28,8 @@ export class ScreenSharingPeer extends Peer {
                     },
                     {
                         urls: TURN_SERVER.split(','),
-                        username: TURN_USER,
-                        credential: TURN_PASSWORD
+                        username: webRtcUser || TURN_USER,
+                        credential: webRtcPassword || TURN_PASSWORD
                     },
                 ]
             }

@@ -28,7 +28,13 @@ import {User, UserSocket} from "../Model/User";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
 import {Group} from "../Model/Group";
 import {cpuTracker} from "./CpuTracker";
-import {GROUP_RADIUS, JITSI_ISS, MINIMUM_DISTANCE, SECRET_JITSI_KEY} from "../Enum/EnvironmentVariable";
+import {
+    GROUP_RADIUS,
+    JITSI_ISS,
+    MINIMUM_DISTANCE,
+    SECRET_JITSI_KEY,
+    TURN_STATIC_AUTH_SECRET
+} from "../Enum/EnvironmentVariable";
 import {Movable} from "../Model/Movable";
 import {PositionInterface} from "../Model/PositionInterface";
 import {adminApi, CharacterTexture} from "./AdminApi";
@@ -40,6 +46,8 @@ import {ZoneSocket} from "../RoomManager";
 import {Zone} from "_Model/Zone";
 import Debug from "debug";
 import {Admin} from "_Model/Admin";
+import crypto from "crypto";
+
 
 const debug = Debug('sockermanager');
 
@@ -487,6 +495,11 @@ export class SocketManager {
             webrtcStartMessage1.setUserid(otherUser.id);
             webrtcStartMessage1.setName(otherUser.name);
             webrtcStartMessage1.setInitiator(true);
+            if (TURN_STATIC_AUTH_SECRET !== '') {
+                const {username, password} = this.getTURNCredentials(''+otherUser.id, TURN_STATIC_AUTH_SECRET);
+                webrtcStartMessage1.setWebrtcusername(username);
+                webrtcStartMessage1.setWebrtcpassword(password);
+            }
 
             const serverToClientMessage1 = new ServerToClientMessage();
             serverToClientMessage1.setWebrtcstartmessage(webrtcStartMessage1);
@@ -500,6 +513,11 @@ export class SocketManager {
             webrtcStartMessage2.setUserid(user.id);
             webrtcStartMessage2.setName(user.name);
             webrtcStartMessage2.setInitiator(false);
+            if (TURN_STATIC_AUTH_SECRET !== '') {
+                const {username, password} = this.getTURNCredentials(''+user.id, TURN_STATIC_AUTH_SECRET);
+                webrtcStartMessage2.setWebrtcusername(username);
+                webrtcStartMessage2.setWebrtcpassword(password);
+            }
 
             const serverToClientMessage2 = new ServerToClientMessage();
             serverToClientMessage2.setWebrtcstartmessage(webrtcStartMessage2);
@@ -510,6 +528,25 @@ export class SocketManager {
             //}
 
         }
+    }
+
+    /**
+     * Computes a unique user/password for the TURN server, using a shared secret between the WorkAdventure API server
+     * and the Coturn server.
+     * The Coturn server should be initialized with parameters: `--use-auth-secret --static-auth-secret=MySecretKey`
+     */
+    private getTURNCredentials(name: string, secret: string): {username: string, password: string} {
+        const unixTimeStamp = Math.floor(Date.now()/1000) + 4*3600;   // this credential would be valid for the next 4 hours
+        const username = [unixTimeStamp, name].join(':');
+        const hmac = crypto.createHmac('sha1', secret);
+        hmac.setEncoding('base64');
+        hmac.write(username);
+        hmac.end();
+        const password = hmac.read();
+        return {
+            username: username,
+            password: password
+        };
     }
 
     //disconnect user

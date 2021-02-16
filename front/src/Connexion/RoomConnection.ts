@@ -427,7 +427,9 @@ export class RoomConnection implements RoomConnection {
             callback({
                 userId: message.getUserid(),
                 name: message.getName(),
-                initiator: message.getInitiator()
+                initiator: message.getInitiator(),
+                webRtcUser: message.getWebrtcpassword() ?? undefined,
+                webRtcPassword: message.getWebrtcpassword() ?? undefined,
             });
         });
     }
@@ -584,7 +586,7 @@ export class RoomConnection implements RoomConnection {
     public hasTag(tag: string): boolean {
         return this.tags.includes(tag);
     }
-    
+
     public isAdmin(): boolean {
         return this.hasTag('admin');
     }

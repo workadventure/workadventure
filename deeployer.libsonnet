@@ -22,6 +22,7 @@
          "JITSI_ISS": env.JITSI_ISS,
          "JITSI_URL": env.JITSI_URL,
          "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
+         "TURN_STATIC_AUTH_SECRET": env.TURN_STATIC_AUTH_SECRET,
        } + if adminUrl != null then {
          "ADMIN_API_URL": adminUrl,
        } else {}
@@ -40,6 +41,7 @@
               "JITSI_ISS": env.JITSI_ISS,
               "JITSI_URL": env.JITSI_URL,
               "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
+              "TURN_STATIC_AUTH_SECRET": env.TURN_STATIC_AUTH_SECRET,
             } + if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
             } else {}

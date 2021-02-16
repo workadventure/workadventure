@@ -6,8 +6,6 @@ Demo here : [https://workadventu.re/](https://workadventu.re/).
 
 # Work Adventure
 
-## Work in progress
-
 Work Adventure is a web-based collaborative workspace for small to medium teams (2-100 people) presented in the form of a
 16-bit video game.
 
