@@ -61,6 +61,14 @@ class JitsiFactory {
 
     public start(roomName: string, playerName:string, jwt?: string, config?: object, interfaceConfig?: object): void {
         coWebsiteManager.insertCoWebsite((cowebsiteDiv => {
+            // Jitsi meet external API maintains some data in local storage
+            // which is sent via the appData URL parameter when joining a
+            // conference. Problem is that this data grows indefinitely. Thus
+            // after some time the URLs get so huge that loading the iframe
+            // becomes slow and eventually breaks completely. Thus lets just
+            // clear jitsi local storage before starting a new conference.
+            window.localStorage.removeItem("jitsiLocalStorage");
+
             const domain = JITSI_URL;
             const options: any = { // eslint-disable-line @typescript-eslint/no-explicit-any
                 roomName: roomName,
