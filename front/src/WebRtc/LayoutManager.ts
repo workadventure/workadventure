@@ -27,11 +27,9 @@ export const ON_ACTION_TRIGGER_BUTTON = 'onaction';
 
 export const TRIGGER_WEBSITE_PROPERTIES = 'openWebsiteTrigger';
 export const TRIGGER_JITSI_PROPERTIES = 'jitsiTrigger';
-export const TRIGGER_EXIT_PROPERTIES = 'exitTrigger';
 
 export const WEBSITE_MESSAGE_PROPERTIES = 'openWebsiteTriggerMessage';
 export const JITSI_MESSAGE_PROPERTIES = 'jitsiTriggerMessage';
-export const EXIT_MESSAGE_PROPERTIES = 'exitTriggerMessage';
 
 /**
  * This class is in charge of the video-conference layout.

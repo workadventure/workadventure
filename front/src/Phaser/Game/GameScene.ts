@@ -33,12 +33,10 @@ import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
 import {lazyLoadPlayerCharacterTextures, loadCustomTexture} from "../Entity/PlayerTexturesLoadingManager";
 import {
     CenterListener,
-    EXIT_MESSAGE_PROPERTIES,
     JITSI_MESSAGE_PROPERTIES,
     layoutManager,
     LayoutMode,
     ON_ACTION_TRIGGER_BUTTON,
-    TRIGGER_EXIT_PROPERTIES,
     TRIGGER_JITSI_PROPERTIES,
     TRIGGER_WEBSITE_PROPERTIES,
     WEBSITE_MESSAGE_PROPERTIES
