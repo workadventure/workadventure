@@ -1,7 +1,6 @@
 import {JITSI_URL} from "../Enum/EnvironmentVariable";
 import {mediaManager} from "./MediaManager";
 import {coWebsiteManager} from "./CoWebsiteManager";
-import {AddPlayerInterface} from "../Phaser/Game/AddPlayerInterface";
 declare const window:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 interface jitsiConfigInterface {
