@@ -647,29 +647,11 @@ export class GameScene extends ResizableScene implements CenterListener {
     }
 
     private triggerOnMapLayerPropertyChange(){
-        /* @deprecated
         this.gameMap.onPropertyChange('exitSceneUrl', (newValue, oldValue) => {
             if (newValue) this.onMapExit(newValue as string);
-        });*/
-        this.gameMap.onPropertyChange('exitUrl', (newValue, oldValue, allProps) => {
+        });
+        this.gameMap.onPropertyChange('exitUrl', (newValue, oldValue) => {
             if (newValue) this.onMapExit(newValue as string);
-            /*if (newValue === undefined) {
-                layoutManager.removeActionButton('exitUrl', this.userInputManager);
-            } else {
-                const exitTriggerValue = allProps.get(TRIGGER_EXIT_PROPERTIES);
-                if (exitTriggerValue && exitTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
-                    let message = allProps.get(EXIT_MESSAGE_PROPERTIES);
-                    if (message === undefined) {
-                        message = 'Click on SPACE to enter in next map';
-                    }
-                    layoutManager.addActionButton('exitUrl', message.toString(), () => {
-                        layoutManager.removeActionButton('exitUrl', this.userInputManager);
-                        this.onMapExit(newValue as string);
-                    }, this.userInputManager);
-                } else {
-                    this.onMapExit(newValue as string);
-                }
-            }*/
         });
         this.gameMap.onPropertyChange('openWebsite', (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
