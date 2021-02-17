@@ -41,6 +41,11 @@
          "opacity":1,
          "properties":[
                 {
+                 "name":"jitsiConfig",
+                 "type":"string",
+                 "value":"{ \"startWithAudioMuted\": true, \"startWithVideoMuted\": true } "
+                }, 
+                {
                  "name":"jitsiRoom",
                  "type":"string",
                  "value":"tcm-chillzone-2"
@@ -433,7 +438,7 @@
  "nextobjectid":2,
  "orientation":"orthogonal",
  "renderorder":"right-down",
- "tiledversion":"1.3.3",
+ "tiledversion":"1.4.3",
  "tileheight":32,
  "tilesets":[
         {
@@ -2379,6 +2384,6 @@
         }],
  "tilewidth":32,
  "type":"map",
- "version":1.2,
+ "version":1.4,
  "width":46
 }

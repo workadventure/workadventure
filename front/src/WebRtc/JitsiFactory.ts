@@ -70,6 +70,7 @@ class JitsiFactory {
     private jitsiApi: any; // eslint-disable-line @typescript-eslint/no-explicit-any
     private audioCallback = this.onAudioChange.bind(this);
     private videoCallback = this.onVideoChange.bind(this);
+    private previousConfigMeet? : jitsiConfigInterface;
 
     /**
      * Slugifies the room name and prepends the room name with the instance
@@ -79,6 +80,9 @@ class JitsiFactory {
     }
 
     public start(roomName: string, playerName:string, jwt?: string, config?: object, interfaceConfig?: object): void {
+        //save previous config
+        this.previousConfigMeet = getDefaultConfig();
+
         coWebsiteManager.insertCoWebsite((cowebsiteDiv => {
             // Jitsi meet external API maintains some data in local storage
             // which is sent via the appData URL parameter when joining a
@@ -122,6 +126,19 @@ class JitsiFactory {
         this.jitsiApi.removeListener('audioMuteStatusChanged', this.audioCallback);
         this.jitsiApi.removeListener('videoMuteStatusChanged', this.videoCallback);
         this.jitsiApi?.dispose();
+
+        //restore previous config
+        if(this.previousConfigMeet?.startWithAudioMuted){
+            mediaManager.disableMicrophone();
+        }else{
+            mediaManager.enableMicrophone();
+        }
+
+        if(this.previousConfigMeet?.startWithVideoMuted){
+            mediaManager.disableCamera();
+        }else{
+            mediaManager.enableCamera();
+        }
     }
 
     private onAudioChange({muted}: {muted: boolean}): void {
