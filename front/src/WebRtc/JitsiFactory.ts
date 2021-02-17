@@ -1,13 +1,32 @@
 import {JITSI_URL} from "../Enum/EnvironmentVariable";
 import {mediaManager} from "./MediaManager";
 import {coWebsiteManager} from "./CoWebsiteManager";
+import {AddPlayerInterface} from "../Phaser/Game/AddPlayerInterface";
 declare const window:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-const getDefaultConfig = () => {
+interface jitsiConfigInterface {
+    startWithAudioMuted: boolean
+    startWithVideoMuted: boolean
+    prejoinPageEnabled: boolean
+}
+
+const getDefaultConfig = () : jitsiConfigInterface => {
     return {
         startWithAudioMuted: !mediaManager.constraintsMedia.audio,
         startWithVideoMuted: mediaManager.constraintsMedia.video === false,
         prejoinPageEnabled: false
+    }
+}
+
+const mergeConfig = (config?: object) => {
+    const currentDefaultConfig = getDefaultConfig();
+    if(!config){
+        return currentDefaultConfig;
+    }
+    return {
+        startWithAudioMuted: (config as jitsiConfigInterface).startWithAudioMuted ? true : currentDefaultConfig.startWithAudioMuted,
+        startWithVideoMuted: (config as jitsiConfigInterface).startWithVideoMuted ? true : currentDefaultConfig.startWithVideoMuted,
+        prejoinPageEnabled: (config as jitsiConfigInterface).prejoinPageEnabled ? true : currentDefaultConfig.prejoinPageEnabled
     }
 }
 
@@ -76,7 +95,7 @@ class JitsiFactory {
                 width: "100%",
                 height: "100%",
                 parentNode: cowebsiteDiv,
-                configOverwrite: {...config, ...getDefaultConfig()},
+                configOverwrite: mergeConfig(config),
                 interfaceConfigOverwrite: {...defaultInterfaceConfig, ...interfaceConfig}
             };
             if (!options.jwt) {
