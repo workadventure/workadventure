@@ -39,13 +39,34 @@ module.exports = {
     plugins: [
         new HtmlWebpackPlugin(
             {
-                template: './dist/index.html'
+                template: './dist/index.tmpl.html',
+                minify: {
+                    collapseWhitespace: true,
+                    keepClosingSlash: true,
+                    removeComments: false,
+                    removeRedundantAttributes: true,
+                    removeScriptTypeAttributes: true,
+                    removeStyleLinkTypeAttributes: true,
+                    useShortDoctype: true
+                }
             }
         ),
         new webpack.ProvidePlugin({
             Phaser: 'phaser'
         }),
-        new webpack.EnvironmentPlugin(['API_URL', 'UPLOADER_URL', 'ADMIN_URL', 'DEBUG_MODE', 'TURN_SERVER', 'TURN_USER', 'TURN_PASSWORD', 'JITSI_URL', 'JITSI_PRIVATE_MODE', 'START_ROOM_URL'])
+        new webpack.EnvironmentPlugin([
+            'API_URL',
+            'UPLOADER_URL',
+            'ADMIN_URL',
+            'DEBUG_MODE',
+            'STUN_SERVER',
+            'TURN_SERVER',
+            'TURN_USER',
+            'TURN_PASSWORD',
+            'JITSI_URL',
+            'JITSI_PRIVATE_MODE',
+            'START_ROOM_URL'
+        ])
     ],
 
 };

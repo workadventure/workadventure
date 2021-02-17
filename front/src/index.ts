@@ -1,7 +1,6 @@
 import 'phaser';
 import GameConfig = Phaser.Types.Core.GameConfig;
 import {DEBUG_MODE, JITSI_URL, RESOLUTION} from "./Enum/EnvironmentVariable";
-import {cypressAsserter} from "./Cypress/CypressAsserter";
 import {LoginScene} from "./Phaser/Login/LoginScene";
 import {ReconnectingScene} from "./Phaser/Reconnecting/ReconnectingScene";
 import {SelectCharacterScene} from "./Phaser/Login/SelectCharacterScene";
@@ -53,8 +52,28 @@ const fps : Phaser.Types.Core.FPSConfig = {
     smoothStep: false
 }
 
+// the ?phaserMode=canvas parameter can be used to force Canvas usage
+const params = new URLSearchParams(document.location.search.substring(1));
+const phaserMode = params.get("phaserMode");
+let mode: number;
+switch (phaserMode) {
+    case 'auto':
+    case null:
+        mode = Phaser.AUTO;
+        break;
+    case 'canvas':
+        mode = Phaser.CANVAS;
+        break;
+    case 'webgl':
+        mode = Phaser.WEBGL;
+        break;
+    default:
+        throw new Error('phaserMode parameter must be one of "auto", "canvas" or "webgl"');
+}
+
+
 const config: GameConfig = {
-    type: Phaser.AUTO,
+    type: mode,
     title: "WorkAdventure",
     width: width / RESOLUTION,
     height: height / RESOLUTION,
@@ -65,6 +84,11 @@ const config: GameConfig = {
     dom: {
         createContainer: true
     },
+    render: {
+        pixelArt: true,
+        roundPixels: true,
+        antialias: false
+    },
     physics: {
         default: "arcade",
         arcade: {
@@ -73,15 +97,14 @@ const config: GameConfig = {
     },
     callbacks: {
         postBoot: game => {
-            const renderer = game.renderer;
+            // Commented out to try to fix MacOS bug
+            /*const renderer = game.renderer;
             if (renderer instanceof WebGLRenderer) {
                 renderer.pipelines.add(OutlinePipeline.KEY, new OutlinePipeline(game));
-            }
+            }*/
         }
     }
 };
-
-cypressAsserter.gameStarted();
 
 const game = new Phaser.Game(config);
 

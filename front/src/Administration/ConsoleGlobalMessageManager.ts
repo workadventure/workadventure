@@ -332,7 +332,7 @@ export class ConsoleGlobalMessageManager {
     }
 
     active(){
-        this.userInputManager.clearAllInputKeyboard();
+        this.userInputManager.clearAllKeys();
         this.divMainConsole.style.top = '0';
         this.activeConsole = true;
     }

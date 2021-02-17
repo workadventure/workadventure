@@ -96,7 +96,9 @@ export interface WebRtcSignalSentMessageInterface {
 
 export interface WebRtcSignalReceivedMessageInterface {
     userId: number,
-    signal: SignalData
+    signal: SignalData,
+    webRtcUser: string | undefined,
+    webRtcPassword: string | undefined
 }
 
 export interface StartMapInterface {

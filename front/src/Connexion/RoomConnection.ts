@@ -427,7 +427,9 @@ export class RoomConnection implements RoomConnection {
             callback({
                 userId: message.getUserid(),
                 name: message.getName(),
-                initiator: message.getInitiator()
+                initiator: message.getInitiator(),
+                webRtcUser: message.getWebrtcusername() ?? undefined,
+                webRtcPassword: message.getWebrtcpassword() ?? undefined,
             });
         });
     }
@@ -436,7 +438,9 @@ export class RoomConnection implements RoomConnection {
         this.onMessage(EventMessage.WEBRTC_SIGNAL, (message: WebRtcSignalToClientMessage) => {
             callback({
                 userId: message.getUserid(),
-                signal: JSON.parse(message.getSignal())
+                signal: JSON.parse(message.getSignal()),
+                webRtcUser: message.getWebrtcusername() ?? undefined,
+                webRtcPassword: message.getWebrtcpassword() ?? undefined,
             });
         });
     }
@@ -445,7 +449,9 @@ export class RoomConnection implements RoomConnection {
         this.onMessage(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, (message: WebRtcSignalToClientMessage) => {
             callback({
                 userId: message.getUserid(),
-                signal: JSON.parse(message.getSignal())
+                signal: JSON.parse(message.getSignal()),
+                webRtcUser: message.getWebrtcusername() ?? undefined,
+                webRtcPassword: message.getWebrtcpassword() ?? undefined,
             });
         });
     }
@@ -464,7 +470,8 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public getUserId(): number|null {
+    public getUserId(): number {
+        if (this.userId === null) throw 'UserId cannot be null!'
         return this.userId;
     }
 
@@ -583,7 +590,7 @@ export class RoomConnection implements RoomConnection {
     public hasTag(tag: string): boolean {
         return this.tags.includes(tag);
     }
-    
+
     public isAdmin(): boolean {
         return this.hasTag('admin');
     }

@@ -218,7 +218,7 @@ class LayoutManager {
      * Tries to find the biggest available box of remaining space (this is a space where we can center the character)
      */
     public findBiggestAvailableArray(): {xStart: number, yStart: number, xEnd: number, yEnd: number} {
-        const game = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('game');
+        const game = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>('#game canvas');
         if (this.mode === LayoutMode.VideoChat) {
             const children = document.querySelectorAll<HTMLDivElement>('div.chat-mode > div');
             const htmlChildren = Array.from(children.values());

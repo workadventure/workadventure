@@ -1,5 +1,5 @@
 import {HtmlUtils} from "./HtmlUtils";
-import {mediaManager, ReportCallback} from "./MediaManager";
+import {mediaManager, ReportCallback, ShowReportCallBack} from "./MediaManager";
 import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
 import {connectionManager} from "../Connexion/ConnectionManager";
 import {GameConnexionTypes} from "../Url/UrlManager";
@@ -61,7 +61,7 @@ export class DiscussionManager {
         const inputMessage: HTMLInputElement = document.createElement('input');
         inputMessage.onfocus = () => {
             if(this.userInputManager) {
-                this.userInputManager.clearAllInputKeyboard();
+                this.userInputManager.clearAllKeys();
             }
         }
         inputMessage.onblur = () => {
@@ -99,7 +99,7 @@ export class DiscussionManager {
         name: string|undefined,
         img?: string|undefined,
         isMe: boolean = false,
-        reportCallback?: ReportCallback
+        showReportCallBack?: ShowReportCallBack
     ) {
         const divParticipant: HTMLDivElement = document.createElement('div');
         divParticipant.classList.add('participant');
@@ -128,8 +128,8 @@ export class DiscussionManager {
             reportBanUserAction.classList.add('report-btn')
             reportBanUserAction.innerText = 'Report';
             reportBanUserAction.addEventListener('click', () => {
-                if(reportCallback) {
-                    mediaManager.showReportModal(`${userId}`, name ?? '', reportCallback);
+                if(showReportCallBack) {
+                    showReportCallBack(`${userId}`, name);
                 }else{
                     console.info('report feature is not activated!');
                 }
