@@ -49,6 +49,11 @@
                  "name":"jitsiTrigger",
                  "type":"string",
                  "value":"onaction"
+                }, 
+                {
+                 "name":"jitsiTriggerMessage",
+                 "type":"string",
+                 "value":"Test trigger message"
                 }],
          "type":"tilelayer",
          "visible":true,
@@ -225,6 +230,11 @@
                  "name":"openWebsiteTrigger",
                  "type":"string",
                  "value":"onaction"
+                }, 
+                {
+                 "name":"openWebsiteTriggerMessage",
+                 "type":"string",
+                 "value":"Test d'envoi d'un message"
                 }],
          "type":"tilelayer",
          "visible":true,
@@ -276,6 +286,16 @@
          "opacity":1,
          "properties":[
                 {
+                 "name":"exitTrigger",
+                 "type":"string",
+                 "value":"onaction"
+                }, 
+                {
+                 "name":"exitTriggerMessage",
+                 "type":"string",
+                 "value":"Test d'envoi d'un message"
+                }, 
+                {
                  "name":"exitUrl",
                  "type":"string",
                  "value":"..\/Floor1\/floor1.json"
@@ -294,9 +314,19 @@
          "opacity":1,
          "properties":[
                 {
+                 "name":"exitTrigger",
+                 "type":"string",
+                 "value":"onaction"
+                }, 
+                {
+                 "name":"exitTriggerMessage",
+                 "type":"string",
+                 "value":"Test d'envoi d'un message"
+                }, 
+                {
                  "name":"exitUrl",
                  "type":"string",
-                 "value":"..\/..\/..\/fjhzfiunzedoazmnj\/aurelgit.github.io\/wokalys\/map.json"
+                 "value":"\/@\/tcm\/workadventure\/lyon"
                 }],
          "type":"tilelayer",
          "visible":true,
@@ -312,9 +342,19 @@
          "opacity":1,
          "properties":[
                 {
-                 "name":"exitSceneUrl",
+                 "name":"exitTrigger",
                  "type":"string",
-                 "value":"https:\/\/npeguin.github.io\/coders-map\/map.json"
+                 "value":"onaction"
+                }, 
+                {
+                 "name":"exitTriggerMessage",
+                 "type":"string",
+                 "value":"Test d'envoi d'un message"
+                }, 
+                {
+                 "name":"exitUrl",
+                 "type":"string",
+                 "value":"\/@\/tcm\/workadventure\/coder"
                 }],
          "type":"tilelayer",
          "visible":true,
@@ -330,9 +370,19 @@
          "opacity":1,
          "properties":[
                 {
-                 "name":"exitSceneUrl",
+                 "name":"exitTrigger",
                  "type":"string",
-                 "value":"https:\/\/npeguin.github.io\/corridor-map\/map.json"
+                 "value":"onaction"
+                }, 
+                {
+                 "name":"exitTriggerMessage",
+                 "type":"string",
+                 "value":"Test d'envoi d'un message"
+                }, 
+                {
+                 "name":"exitUrl",
+                 "type":"string",
+                 "value":"\/@\/tcm\/workadventure\/corridor"
                 }],
          "type":"tilelayer",
          "visible":true,
@@ -433,7 +483,7 @@
  "nextobjectid":2,
  "orientation":"orthogonal",
  "renderorder":"right-down",
- "tiledversion":"1.3.3",
+ "tiledversion":"1.4.3",
  "tileheight":32,
  "tilesets":[
         {
@@ -2379,6 +2429,6 @@
         }],
  "tilewidth":32,
  "type":"map",
- "version":1.2,
+ "version":1.4,
  "width":46
 }
