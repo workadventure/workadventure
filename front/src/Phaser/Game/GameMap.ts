@@ -29,6 +29,7 @@ export class GameMap {
 
         const newProps = this.getProperties(key);
         const oldProps = this.lastProperties;
+        this.lastProperties = newProps;
 
         // Let's compare the 2 maps:
         // First new properties vs oldProperties
@@ -45,8 +46,6 @@ export class GameMap {
                 this.trigger(oldPropName, oldPropValue, undefined, newProps);
             }
         }
-
-        this.lastProperties = newProps;
     }
 
     public getCurrentProperties(): Map<string, string|boolean|number> {
