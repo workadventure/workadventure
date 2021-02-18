@@ -23,6 +23,8 @@ const mergeConfig = (config?: object) => {
         return currentDefaultConfig;
     }
     return {
+        ...currentDefaultConfig,
+        ...config,
         startWithAudioMuted: (config as jitsiConfigInterface).startWithAudioMuted ? true : currentDefaultConfig.startWithAudioMuted,
         startWithVideoMuted: (config as jitsiConfigInterface).startWithVideoMuted ? true : currentDefaultConfig.startWithVideoMuted,
         prejoinPageEnabled: (config as jitsiConfigInterface).prejoinPageEnabled ? true : currentDefaultConfig.prejoinPageEnabled
