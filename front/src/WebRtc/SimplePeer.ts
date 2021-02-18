@@ -42,6 +42,8 @@ export class SimplePeer {
     private readonly stopLocalScreenSharingStreamCallback: StopScreenSharingCallback;
     private readonly peerConnectionListeners: Array<PeerConnectionListener> = new Array<PeerConnectionListener>();
     private readonly userId: number;
+    private lastWebrtcUserName: string|undefined;
+    private lastWebrtcPassword: string|undefined;
 
     constructor(private Connection: RoomConnection, private enableReporting: boolean, private myName: string) {
         // We need to go through this weird bound function pointer in order to be able to "free" this reference later.
@@ -142,6 +144,9 @@ export class SimplePeer {
 
         mediaManager.addActiveVideo(user, name);
 
+        this.lastWebrtcUserName = user.webRtcUser;
+        this.lastWebrtcPassword = user.webRtcPassword;
+
         const peer = new VideoPeer(user, user.initiator ? user.initiator : false, this.Connection);
 
         //permit to send message
@@ -189,6 +194,12 @@ export class SimplePeer {
         if (!user.initiator) {
             mediaManager.removeActiveScreenSharingVideo("" + user.userId);
             mediaManager.addScreenSharingActiveVideo("" + user.userId);
+        }
+
+        // Enrich the user with last known credentials (if they are not set in the user object, which happens when a user triggers the screen sharing)
+        if (user.webRtcUser === undefined) {
+            user.webRtcUser = this.lastWebrtcUserName;
+            user.webRtcPassword = this.lastWebrtcPassword;
         }
 
         const peer = new ScreenSharingPeer(user, user.initiator ? user.initiator : false, this.Connection);
