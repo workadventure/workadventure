@@ -10,7 +10,7 @@ services:
       - --entrypoints.web.http.redirections.entryPoint.to=websecure
       - --entrypoints.web.http.redirections.entryPoint.scheme=https
       - --entryPoints.websecure.address=:443
-      - --certificatesresolvers.myresolver.acme.email=d.negrier@thecodingmachine.com
+      - --certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}
       - --certificatesresolvers.myresolver.acme.storage=/acme.json
       # used during the challenge
       - --certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web
