@@ -612,10 +612,9 @@ input[type=range]:focus::-ms-fill-upper {
 }
 
 .chat-mode {
-    display: flex;
+    display: grid;
     width: 100%;
 
-    flex-wrap: wrap;
     align-items: flex-start;
 
     padding: 1%;
@@ -631,24 +630,20 @@ input[type=range]:focus::-ms-fill-upper {
 .chat-mode > div:hover {
     margin: 0%;
 }
-.chat-mode.one-col > div {
-    flex-basis: 98%;
+.chat-mode.one-col {
+    grid-template-columns: repeat(1, 1fr);
 }
 
-.chat-mode.two-col > div {
-    flex-basis: 48%;
+.chat-mode.two-col {
+    grid-template-columns: repeat(2, 1fr);
 }
 
-.chat-mode.three-col > div {
-    flex-basis: 31.333333%;
+.chat-mode.three-col {
+    grid-template-columns: repeat(3, 1fr);
 }
 
-.chat-mode.four-col > div {
-    flex-basis: 23%;
-}
-
-.chat-mode > div:last-child {
-    flex-grow: 5;
+.chat-mode.four-col {
+    grid-template-columns: repeat(4, 1fr);
 }
 
 /*CONSOLE*/
