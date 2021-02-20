@@ -202,6 +202,10 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.customizeButton.setInteractive().on("pointerdown", () => {
             this.selectedRectangleYPos = Math.ceil(this.playerModels.length / this.nbCharactersPerRow);
             this.updateSelectedPlayer();
+            this.nextScene();
+        });
+        this.customizeButtonSelected.setInteractive().on("pointerdown", () => {
+            this.nextScene();
         });
 
         this.selectedPlayer = this.players[0];

@@ -34,6 +34,13 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     private Rectangle!: Rectangle;
 
+    private mobileTapUP!: Rectangle;
+    private mobileTapDOWN!: Rectangle;
+    private mobileTapLEFT!: Rectangle;
+    private mobileTapRIGHT!: Rectangle;
+
+    private mobileTapENTER!: Rectangle;
+
     private logo!: Image;
 
     private selectedLayers: number[] = [0];
@@ -69,7 +76,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     create() {
         this.textField = new TextField(this, this.game.renderer.width / 2, 30, 'Customize your own Avatar!');
 
-        this.enterField = new TextField(this, this.game.renderer.width / 2, 40, 'you can start the game by pressing SPACE..');
+        this.enterField = new TextField(this, this.game.renderer.width / 2, 60, 'Start the game by pressing ENTER\n\n or touching the center rectangle');
 
         this.logo = new Image(this, this.game.renderer.width - 30, this.game.renderer.height - 20, CustomizeTextures.icon);
         this.add.existing(this.logo);
@@ -77,22 +84,88 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         this.arrowRight = new Image(this, this.game.renderer.width*0.9, this.game.renderer.height/2, CustomizeTextures.arrowRight);
         this.add.existing(this.arrowRight);
+        this.mobileTapRIGHT = this.add
+          .rectangle(
+            this.game.renderer.width*0.9,
+            this.game.renderer.height/2,
+            32,
+            32,
+          )
+          .setInteractive()
+          .on("pointerdown", () => {
+            this.moveCursorHorizontally(1);
+          });
 
         this.arrowLeft = new Image(this, this.game.renderer.width/9, this.game.renderer.height/2, CustomizeTextures.arrowRight);
         this.arrowLeft.flipX = true;
         this.add.existing(this.arrowLeft);
-
+        this.mobileTapLEFT = this.add
+          .rectangle(
+            this.game.renderer.width/9,
+            this.game.renderer.height/2,
+            32,
+            32,
+          )
+          .setInteractive()
+          .on("pointerdown", () => {
+            this.moveCursorHorizontally(-1);
+          });
 
         this.Rectangle = this.add.rectangle(this.cameras.main.worldView.x + this.cameras.main.width / 2, this.cameras.main.worldView.y + this.cameras.main.height / 2, 32, 33)
         this.Rectangle.setStrokeStyle(2, 0xFFFFFF);
         this.add.existing(this.Rectangle);
+        this.mobileTapENTER = this.add
+          .rectangle(
+            this.cameras.main.worldView.x + this.cameras.main.width / 2,
+            this.cameras.main.worldView.y + this.cameras.main.height / 2,
+            32,
+            32,
+          )
+          .setInteractive()
+          .on("pointerdown", () => {
+              const layers: string[] = [];
+              let i = 0;
+              for (const layerItem of this.selectedLayers) {
+                  if (layerItem !== undefined) {
+                      layers.push(this.layers[i][layerItem].name);
+                  }
+                  i++;
+              }
+
+              gameManager.setCharacterLayers(layers);
+
+              this.scene.sleep(CustomizeSceneName);
+              gameManager.tryResumingGame(this, EnableCameraSceneName);
+          });
 
         this.arrowDown = new Image(this, this.game.renderer.width - 30, 100, CustomizeTextures.arrowUp);
         this.arrowDown.flipY = true;
         this.add.existing(this.arrowDown);
+        this.mobileTapDOWN = this.add
+          .rectangle(
+            this.game.renderer.width - 30,
+            100,
+            32,
+            32,
+          )
+          .setInteractive()
+          .on("pointerdown", () => {
+            this.moveCursorVertically(1);
+          });
 
         this.arrowUp = new Image(this, this.game.renderer.width - 30, 60, CustomizeTextures.arrowUp);
         this.add.existing(this.arrowUp);
+        this.mobileTapUP = this.add
+          .rectangle(
+            this.game.renderer.width - 30,
+            60,
+            32,
+            32,
+          )
+          .setInteractive()
+          .on("pointerdown", () => {
+            this.moveCursorVertically(-1);
+          });
 
         this.createCustomizeLayer(0, 0, 0);
         this.createCustomizeLayer(0, 0, 1);
@@ -264,7 +337,9 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.moveLayers();
 
         this.Rectangle.x = this.cameras.main.worldView.x + this.cameras.main.width / 2;
+        this.mobileTapENTER.x = this.cameras.main.worldView.x + this.cameras.main.width / 2;
         this.Rectangle.y = this.cameras.main.worldView.y + this.cameras.main.height / 2;
+        this.mobileTapENTER.y = this.cameras.main.worldView.y + this.cameras.main.height / 2;
 
         this.textField.x = this.game.renderer.width/2;
 
@@ -272,15 +347,25 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.logo.y = this.game.renderer.height - 20;
 
         this.arrowUp.x = this.game.renderer.width - 30;
+        this.mobileTapUP.x = this.game.renderer.width - 30;
         this.arrowUp.y = 60;
+        this.mobileTapUP.y = 60;
 
         this.arrowDown.x = this.game.renderer.width - 30;
+        this.mobileTapDOWN.x = this.game.renderer.width - 30;
         this.arrowDown.y = 100;
+        this.mobileTapDOWN.y = 100;
 
         this.arrowLeft.x = this.game.renderer.width/9;
+        this.mobileTapLEFT.x = this.game.renderer.width/9;
         this.arrowLeft.y = this.game.renderer.height/2;
+        this.mobileTapLEFT.y = this.game.renderer.height/2;
 
         this.arrowRight.x = this.game.renderer.width*0.9;
+        this.mobileTapRIGHT.x = this.game.renderer.width*0.9;
         this.arrowRight.y = this.game.renderer.height/2;
+        this.mobileTapRIGHT.y = this.game.renderer.height/2;
+
+
      }
 }
