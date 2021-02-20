@@ -94,6 +94,7 @@ class CopyrightInfo {
     private loadCoWebsite(coDiv: HTMLDivElement) : Promise<void> {
         //let preelem = new HTMLPreElement();
         // add pre-loaded text
+        coDiv.classList.add('copyright-container');
         coDiv.innerHTML= "<pre>" + CopyrightInfo.escapeTags(this.copyrightTxt ?? '') + "</pre>";
         return Promise.resolve();
     }

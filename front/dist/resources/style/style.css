@@ -1144,6 +1144,16 @@ div.modal-report-user{
     background-color: #ffffff;
 }
 
+.copyright-container {
+    overflow: scroll;
+}
+
+.copyright-container pre {
+    margin: 8px;
+    white-space: pre-wrap;
+    word-wrap: normal;
+    font-family: ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace;
+}
 
 /** Action button **/
 div.action{
