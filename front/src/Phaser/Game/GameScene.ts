@@ -710,7 +710,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
                         this.connection.emitQueryJitsiJwtMessage(roomName, adminTag);
                     } else {
-                        this.startJitsi(roomName, undefined);
+                        this.startJitsi(newValue as string);
                     }
                     layoutManager.removeActionButton('jitsiRoom', this.userInputManager);
                 }
