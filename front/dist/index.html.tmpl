@@ -32,7 +32,7 @@
         <link rel="stylesheet" href="/resources/style/style.css">
         <title>WorkAdventure</title>
     </head>
-    <body id="body" style="margin: 0; background-color: #000">
+    <body id="body" style="margin: 0">
         <div class="main-container" id="main-container">
             <!-- Create the editor container -->
             <div id="game" class="game">
@@ -43,11 +43,20 @@
                     </aside>
                     <div id="chat-mode" class="chat-mode three-col" style="display: none;">
                     </div>
+			        <div id="btn-copy-action" class="btn-cam-action">
+			           <div id="btn-copy" class="btn-copy">
+			             <img id="copyright" src="/resources/logos/green_copyright.svg" />
+			             <img id="copyright-close" src="/resources/logos/gray-noncopy.svg" />
+			        	</div>
+					</div>
                     <div id="activeCam" class="activeCam">
                         <div id="div-myCamVideo" class="video-container">
                             <video id="myCamVideo" autoplay muted></video>
                         </div>
                     </div>
+          <div class="audio-playing">
+            <img src="/resources/logos/megaphone.svg" />
+          </div>
                     <div class="btn-cam-action">
                         <div id="btn-micro" class="btn-micro">
                             <img id="microphone" src="resources/logos/microphone.svg">
@@ -69,10 +78,6 @@
                 <button class="close-btn" id="cowebsite-close">
                     <img src="resources/logos/close.svg"/>
                 </button>
-            </div>
-            <div class="audio-playing">
-                <img src="/resources/logos/megaphone.svg"/>
-            </div>
         </div>
 
       <div id="audioplayerctrl" class="hidden">

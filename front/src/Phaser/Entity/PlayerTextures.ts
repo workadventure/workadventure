@@ -6,7 +6,8 @@ export interface BodyResourceDescriptionListInterface {
 
 export interface BodyResourceDescriptionInterface {
     name: string,
-    img: string
+    img: string,
+    level?: number
 }
 
 export const PLAYER_RESOURCES: BodyResourceDescriptionListInterface = {
@@ -70,7 +71,29 @@ export const COLOR_RESOURCES: BodyResourceDescriptionListInterface = {
     "color_30": {name: "color_30", img: "resources/customisation/character_color/character_color29.png"},
     "color_31": {name: "color_31", img: "resources/customisation/character_color/character_color30.png"},
     "color_32": {name: "color_32", img: "resources/customisation/character_color/character_color31.png"},
-    "color_33": {name: "color_33", img: "resources/customisation/character_color/character_color32.png"}
+    "color_33": {name: "color_33", img: "resources/customisation/character_color/character_color32.png"},
+    "bodies_001": {name:"bodies_001",img: "resources/customisation/character_color/bodies_001.png"},
+    "bodies_002": {name:"bodies_002",img: "resources/customisation/character_color/bodies_002.png"},
+    "bodies_003": {name:"bodies_003",img: "resources/customisation/character_color/bodies_003.png"},
+    "bodies_004": {name:"bodies_004",img: "resources/customisation/character_color/bodies_004.png"},
+    "bodies_005": {name:"bodies_005",img: "resources/customisation/character_color/bodies_005.png"},
+    "bodies_006": {name:"bodies_006",img: "resources/customisation/character_color/bodies_006.png"},
+    "bodies_007": {name:"bodies_007",img: "resources/customisation/character_color/bodies_007.png"},
+    "bodies_008": {name:"bodies_008",img: "resources/customisation/character_color/bodies_008.png"},
+    "bodies_009": {name:"bodies_009",img: "resources/customisation/character_color/bodies_009.png"},
+    "bodies_010": {name:"bodies_010",img: "resources/customisation/character_color/bodies_010.png"},
+    "bodies_011": {name:"bodies_011",img: "resources/customisation/character_color/bodies_011.png"},
+    "bodies_012": {name:"bodies_012",img: "resources/customisation/character_color/bodies_012.png"},
+    "bodies_013": {name:"bodies_013",img: "resources/customisation/character_color/bodies_013.png"},
+    "bodies_014": {name:"bodies_014",img: "resources/customisation/character_color/bodies_014.png"},
+    "bodies_015": {name:"bodies_015",img: "resources/customisation/character_color/bodies_015.png"},
+    "bodies_016": {name:"bodies_016",img: "resources/customisation/character_color/bodies_016.png"},
+    "bodies_017": {name:"bodies_017",img: "resources/customisation/character_color/bodies_017.png"},
+    "old_01": {name:"old_01",img: "resources/customisation/character_color/old_01.png"},
+    "old_02": {name:"old_02",img: "resources/customisation/character_color/old_02.png"},
+    "old_03": {name:"old_03",img: "resources/customisation/character_color/old_03.png"},
+    "old_04": {name:"old_04",img: "resources/customisation/character_color/old_04.png"},
+    "old_05": {name:"old_05",img: "resources/customisation/character_color/old_05.png"}
 };
 
 export const EYES_RESOURCES: BodyResourceDescriptionListInterface = {
@@ -186,6 +209,7 @@ export const HAIR_RESOURCES: BodyResourceDescriptionListInterface = {
 
 
 export const CLOTHES_RESOURCES: BodyResourceDescriptionListInterface = {
+    "clothes_naked": {name:"clothes_naked", img: "resources/customisation/character_clothes/naked.png"},
     "clothes_1": {name:"clothes_1", img: "resources/customisation/character_clothes/character_clothes0.png"},
     "clothes_2": {name:"clothes_2", img: "resources/customisation/character_clothes/character_clothes1.png"},
     "clothes_3": {name:"clothes_3", img: "resources/customisation/character_clothes/character_clothes2.png"},
@@ -256,10 +280,17 @@ export const CLOTHES_RESOURCES: BodyResourceDescriptionListInterface = {
     "clothes_68": {name:"clothes_68",img: "resources/customisation/character_clothes/character_clothes67.png"},
     "clothes_69": {name:"clothes_69",img: "resources/customisation/character_clothes/character_clothes68.png"},
     "clothes_70": {name:"clothes_70",img: "resources/customisation/character_clothes/character_clothes69.png"},
+    "clothes_red_stripes": {name:"clothes_red_stripes",img: "resources/customisation/character_clothes/red_stripes.png"},
     "clothes_pride_shirt": {name:"clothes_pride_shirt",img: "resources/customisation/character_clothes/pride_shirt.png"},
     "clothes_black_hoodie": {name:"clothes_black_hoodie",img: "resources/customisation/character_clothes/black_hoodie.png"},
     "clothes_white_hoodie": {name:"clothes_white_hoodie",img: "resources/customisation/character_clothes/white_hoodie.png"},
-    "clothes_engelbert": {name:"clothes_engelbert",img: "resources/customisation/character_clothes/engelbert.png"}
+    "clothes_engelbert": {name:"clothes_engelbert",img: "resources/customisation/character_clothes/engelbert.png"},
+    "clothes_vest_yellow": {name:"clothes_vest_yellow",img: "resources/customisation/character_clothes/vest_yellow.png"},
+    "clothes_vest_orange": {name:"clothes_vest_orange",img: "resources/customisation/character_clothes/vest_orange.png"},
+    "clothes_vest_red": {name:"clothes_vest_red",img: "resources/customisation/character_clothes/vest_red.png"},
+    "clothes_vest_purple": {name:"clothes_vest_purple",img: "resources/customisation/character_clothes/vest_purple.png"},
+    "clothes_vest_blue": {name:"clothes_vest_blue",img: "resources/customisation/character_clothes/vest_blue.png"},
+    "clothes_vest_green": {name:"clothes_vest_green",img: "resources/customisation/character_clothes/vest_green.png"}
 };
 
 export const HATS_RESOURCES: BodyResourceDescriptionListInterface = {
@@ -289,7 +320,12 @@ export const HATS_RESOURCES: BodyResourceDescriptionListInterface = {
     "hats_24": {name: "hats_24", img: "resources/customisation/character_hats/character_hats24.png"},
     "hats_25": {name: "hats_25", img: "resources/customisation/character_hats/character_hats25.png"},
     "hats_26": {name: "hats_26", img: "resources/customisation/character_hats/character_hats26.png"},
-    "tinfoil_hat1": {name: "tinfoil_hat1", img: "resources/customisation/character_hats/tinfoil_hat1.png"}
+    "tinfoil_hat1": {name: "tinfoil_hat1", img: "resources/customisation/character_hats/tinfoil_hat1.png"},
+    "purple_hat": {name: "purple_hat", img: "resources/customisation/character_hats/purple_hat.png"},
+    "diving_mask1": {name: "diving_mask1", img: "resources/customisation/character_hats/diving_mask1.png"},
+    "accessory_mask": {name: "accessory_mask", img: "resources/customisation/character_accessories/mask.png"},
+    "sign-dont-talk": {name: "sign-dont-talk", img: "resources/customisation/character_accessories/sign-dont-talk.png"},
+    "sign-talk": {name: "sign-talk", img: "resources/customisation/character_accessories/sign-talk.png"}
 };
 
 export const ACCESSORIES_RESOURCES: BodyResourceDescriptionListInterface = {
@@ -326,7 +362,14 @@ export const ACCESSORIES_RESOURCES: BodyResourceDescriptionListInterface = {
     "accessory_31": {name: "accessory_31", img: "resources/customisation/character_accessories/character_accessories31.png"},
     "accessory_32": {name: "accessory_32", img: "resources/customisation/character_accessories/character_accessories32.png"},
     "accessory_mate_bottle": {name: "accessory_mate_bottle", img: "resources/customisation/character_accessories/mate_bottle1.png"},
-    "accessory_mask": {name: "accessory_mask", img: "resources/customisation/character_accessories/mask.png"}
+    "accessory_mask": {name: "accessory_mask", img: "resources/customisation/character_accessories/mask.png"},
+    "accessory_wings_01": {name: "accessory_wings_01", img: "resources/customisation/character_accessories/wings_01.png"},
+    "accessory_wings_02": {name: "accessory_wings_02", img: "resources/customisation/character_accessories/wings_02.png"},
+    "accessory_wheelchair": {name: "accessory_wheelchair", img: "resources/customisation/character_accessories/wheelchair.png"},
+    "accessory_backpack": {name: "accessory_backpack", img: "resources/customisation/character_accessories/backpack.png"},
+    "accessory_ring": {name: "accessory_ring", img: "resources/customisation/character_accessories/ring.png"},
+    "accessory_sign-dont-talk": {name: "accessory_sign-dont-talk", img: "resources/customisation/character_accessories/sign-dont-talk.png"},
+    "accessory_sign_talk": {name: "accessory_sign-talk", img: "resources/customisation/character_accessories/sign-talk.png"}
 };
 
 export const LAYERS: BodyResourceDescriptionListInterface[] = [

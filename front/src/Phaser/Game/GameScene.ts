@@ -30,7 +30,7 @@ import {RemotePlayer} from "../Entity/RemotePlayer";
 import {Queue} from 'queue-typescript';
 import {SimplePeer, UserSimplePeerInterface} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
-import {lazyLoadPlayerCharacterTextures} from "../Entity/PlayerTexturesLoadingManager";
+import {lazyLoadPlayerCharacterTextures, loadCustomTexture} from "../Entity/PlayerTexturesLoadingManager";
 import {
     CenterListener,
     layoutManager,
@@ -60,6 +60,7 @@ import {Room} from "../../Connexion/Room";
 import {jitsiFactory} from "../../WebRtc/JitsiFactory";
 import {urlManager} from "../../Url/UrlManager";
 import {audioManager} from "../../WebRtc/AudioManager";
+import {copyrightInfo} from "../../WebRtc/CopyrightInfo";
 import {videoManager} from "../../WebRtc/VideoManager";
 import {PresentationModeIcon} from "../Components/PresentationModeIcon";
 import {ChatModeIcon} from "../Components/ChatModeIcon";
@@ -68,6 +69,8 @@ import {SelectCharacterScene, SelectCharacterSceneName} from "../Login/SelectCha
 import {TextureError} from "../../Exception/TextureError";
 import {addLoader} from "../Components/Loader";
 import {ErrorSceneName} from "../Reconnecting/ErrorScene";
+import {localUserStore} from "../../Connexion/LocalUserStore";
+import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
 
 import AnimatedTiles from "phaser-animated-tiles";
 
@@ -186,6 +189,14 @@ export class GameScene extends ResizableScene implements CenterListener {
     //hook preload scene
     preload(): void {
         addLoader(this);
+
+        const localUser = localUserStore.getLocalUser();
+        const textures = localUser?.textures;
+        if (textures) {
+            for (const texture of textures) {
+                loadCustomTexture(this.load, texture);
+            }
+        }
 
         this.load.image(openChatIconName, 'resources/objects/talk.png');
         this.load.on(FILE_LOAD_ERROR, (file: {src: string}) => {
@@ -403,6 +414,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                 }
             }, 500);
         }
+        copyrightInfo.initCopyrightInfo(mapDirUrl);
 
         this.createPromiseResolve();
 
@@ -532,6 +544,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic, this.playerName);
             this.GlobalMessageManager = new GlobalMessageManager(this.connection);
             this.UserMessageManager = new UserMessageManager(this.connection);
+            this.UserMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
             const self = this;
             this.simplePeer.registerPeerConnectionListener({
@@ -608,8 +621,18 @@ export class GameScene extends ResizableScene implements CenterListener {
         if (url === undefined) {
             audioManager.unloadAudio();
         } else {
-            const mapDirUrl = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf('/'));
-            const realAudioPath = mapDirUrl + '/' + url;
+            const audioPath = url as string;
+            let realAudioPath = '';
+
+            if (audioPath.indexOf('://') > 0) {
+                // remote file or stream
+                realAudioPath = audioPath;
+            } else {
+                // local file, include it relative to map directory
+                const mapDirUrl = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf('/'));
+                realAudioPath = mapDirUrl + '/' + url;
+            }
+
             audioManager.loadAudio(realAudioPath);
 
             if (loop) {
@@ -726,6 +749,10 @@ export class GameScene extends ResizableScene implements CenterListener {
     }
 
     public cleanupClosingScene(): void {
+        // stop playing audio, close any open website, stop any open Jitsi
+        coWebsiteManager.closeCoWebsite();
+        this.stopJitsi();
+        this.playAudio(undefined);
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
         if(this.connection) {
             this.connection.closeConnection();
@@ -886,7 +913,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     createCurrentPlayer(){
         //TODO create animation moving between exit and start
-        const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, this.textures, this.characterLayers);
+        const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, this.characterLayers);
         try {
             this.CurrentPlayer = new Player(
                 this,
@@ -1080,7 +1107,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             return;
         }
 
-        const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, this.textures, addPlayerData.characterLayers);
+        const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, addPlayerData.characterLayers);
         const player = new RemotePlayer(
             addPlayerData.userId,
             this,
@@ -1249,5 +1276,14 @@ export class GameScene extends ResizableScene implements CenterListener {
         mediaManager.removeTriggerCloseJitsiFrameButton('close-jisi');
     }
 
+    private bannedUser(){
+        this.cleanupClosingScene();
+        this.userInputManager.clearAllInputKeyboard();
+        this.scene.start(ErrorSceneName, {
+            title: 'Banned',
+            subTitle: 'You was banned of WorkAdventure',
+            message: 'If you want more information, you can contact us: workadventure@thecodingmachine.com'
+        });
+    }
 
 }
