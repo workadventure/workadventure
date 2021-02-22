@@ -3,7 +3,9 @@ import {SelectCharacterScene, SelectCharacterSceneName} from "../Login/SelectCha
 import {gameManager} from "../Game/GameManager";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {mediaManager} from "../../WebRtc/MediaManager";
-import {coWebsiteManager} from "../../WebRtc/CoWebsiteManager";
+import {gameReportKey, gameReportRessource, ReportMenu} from "./ReportMenu";
+import {connectionManager} from "../../Connexion/ConnectionManager";
+import {GameConnexionTypes} from "../../Url/UrlManager";
 
 export const MenuSceneName = 'MenuScene';
 const gameMenuKey = 'gameMenu';
@@ -21,6 +23,7 @@ export class MenuScene extends Phaser.Scene {
     private menuElement!: Phaser.GameObjects.DOMElement;
     private gameQualityMenuElement!: Phaser.GameObjects.DOMElement;
     private gameShareElement!: Phaser.GameObjects.DOMElement;
+    private gameReportElement!: ReportMenu;
     private sideMenuOpened = false;
     private settingsMenuOpened = false;
     private gameShareOpened = false;
@@ -40,20 +43,21 @@ export class MenuScene extends Phaser.Scene {
         this.load.html(gameMenuIconKey, 'resources/html/gameMenuIcon.html');
         this.load.html(gameSettingsMenuKey, 'resources/html/gameQualityMenu.html');
         this.load.html(gameShare, 'resources/html/gameShare.html');
+        this.load.html(gameReportKey, gameReportRessource);
     }
 
     create() {
         this.menuElement = this.add.dom(closedSideMenuX, 30).createFromCache(gameMenuKey);
         this.menuElement.setOrigin(0);
-        this.revealMenusAfterInit(this.menuElement, 'gameMenu');
+        MenuScene.revealMenusAfterInit(this.menuElement, 'gameMenu');
 
         const middleX = (window.innerWidth / 3) - 298;
         this.gameQualityMenuElement = this.add.dom(middleX, -400).createFromCache(gameSettingsMenuKey);
-        this.revealMenusAfterInit(this.gameQualityMenuElement, 'gameQuality');
+        MenuScene.revealMenusAfterInit(this.gameQualityMenuElement, 'gameQuality');
 
 
         this.gameShareElement = this.add.dom(middleX, -400).createFromCache(gameShare);
-        this.revealMenusAfterInit(this.gameShareElement, gameShare);
+        MenuScene.revealMenusAfterInit(this.gameShareElement, gameShare);
         this.gameShareElement.addListener('click');
         this.gameShareElement.on('click',  (event:MouseEvent) => {
             event.preventDefault();
@@ -62,6 +66,12 @@ export class MenuScene extends Phaser.Scene {
             }else if((event?.target as HTMLInputElement).id === 'gameShareFormCancel') {
                 this.closeGameShare();
             }
+        });
+
+        this.gameReportElement = new ReportMenu(this, connectionManager.getConnexionType === GameConnexionTypes.anonymous);
+        mediaManager.setShowReportModalCallBacks((userId, userName) => {
+            this.closeAll();
+            this.gameReportElement.open(parseInt(userId), userName);
         });
 
         this.input.keyboard.on('keyup-TAB', () => {
@@ -77,7 +87,8 @@ export class MenuScene extends Phaser.Scene {
         this.menuElement.on('click', this.onMenuClick.bind(this));
     }
 
-    private revealMenusAfterInit(menuElement: Phaser.GameObjects.DOMElement, rootDomId: string) {
+    //todo put this method in a parent menuElement class
+    static revealMenusAfterInit(menuElement: Phaser.GameObjects.DOMElement, rootDomId: string) {
         //Dom elements will appear inside the viewer screen when creating before being moved out of it, which create a flicker effect.
         //To prevent this, we put a 'hidden' attribute on the root element, we remove it only after the init is done.
         setTimeout(() => {
@@ -98,6 +109,11 @@ export class MenuScene extends Phaser.Scene {
             const adminSection = this.menuElement.getChildByID('adminConsoleSection') as HTMLElement;
             adminSection.hidden = false;
         }
+        //TODO bind with future metadata of card
+        //if (connectionManager.getConnexionType === GameConnexionTypes.anonymous){
+            const adminSection = this.menuElement.getChildByID('socialLinks') as HTMLElement;
+            adminSection.hidden = false;
+        //}
         this.tweens.add({
             targets: this.menuElement,
             x: openedSideMenuX,
@@ -222,6 +238,9 @@ export class MenuScene extends Phaser.Scene {
     }
 
     private onMenuClick(event:MouseEvent) {
+        if((event?.target as HTMLInputElement).classList.contains('not-button')){
+            return;
+        }
         event.preventDefault();
 
         switch ((event?.target as HTMLInputElement).id) {
@@ -280,5 +299,6 @@ export class MenuScene extends Phaser.Scene {
     private closeAll(){
         this.closeGameQualityMenu();
         this.closeGameShare();
+        this.gameReportElement.close();
     }
 }

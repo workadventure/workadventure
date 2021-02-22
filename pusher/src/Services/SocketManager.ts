@@ -172,6 +172,7 @@ export class SocketManager implements ZoneEventListener {
             console.log('Calling joinRoom')
             const apiClient = await apiClientRepository.getClient(client.roomId);
             const streamToPusher = apiClient.joinRoom();
+            clientEventsEmitter.emitClientJoin(client.userUuid, client.roomId);
 
             client.backConnection = streamToPusher;
 
@@ -304,7 +305,7 @@ export class SocketManager implements ZoneEventListener {
                 throw 'reported socket user not found';
             }
             //TODO report user on admin application
-            await adminApi.reportPlayer(reportedSocket.userUuid, reportPlayerMessage.getReportcomment(),  client.userUuid)
+            await adminApi.reportPlayer(reportedSocket.userUuid, reportPlayerMessage.getReportcomment(),  client.userUuid, client.roomId.split('/')[2])
         } catch (e) {
             console.error('An error occurred on "handleReportMessage"');
             console.error(e);

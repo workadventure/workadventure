@@ -1,0 +1,122 @@
+<style>
+    *{
+        font-family: 'Open Sans', sans-serif;
+        cursor: url('/resources/logos/cursor_normal.png'), auto;
+    }
+    * a, button, input{
+        cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    }
+    #gameReport {
+        background: #eceeee;
+        border: 1px solid #42464b;
+        border-radius: 6px;
+        margin: 2px auto 0;
+        width: 298px;
+    }
+    #gameReport h1 {
+        background-image: linear-gradient(top, #f1f3f3, #d4dae0);
+        border-bottom: 1px solid #a6abaf;
+        border-radius: 6px 6px 0 0;
+        box-sizing: border-box;
+        color: #727678;
+        display: block;
+        height: 43px;
+        padding-top: 10px;
+        margin: 0;
+        text-align: center;
+        text-shadow: 0 -1px 0 rgba(0,0,0,0.2), 0 1px 0 #fff;
+    }
+    #gameReport h3 {
+        margin: 0;
+    }
+    #gameReport textarea {
+        font-size: 70%;
+        background: linear-gradient(top, #d6d7d7, #dee0e0);
+        border: 1px solid #a1a3a3;
+        border-radius: 4px;
+        box-shadow: 0 1px #fff;
+        box-sizing: border-box;
+        color: #696969;
+        height: 100px;
+        transition: box-shadow 0.3s;
+        width: 100%;
+    }
+    #gameReport section {
+        margin: 10px;
+    }
+    #gameReport section.action{
+        text-align: center;
+        margin: 0;
+    }
+    #gameReport button {
+        margin-top: 10px;
+        font-size: 60%;
+        background-color: #dc3545;
+        color: white;
+        border-radius: 7px;
+        padding: 3px 10px 3px 10px;
+    }
+    #gameReport button#gameReportFormCancel {
+        background-color: #c7c7c700;
+        color: #292929;
+        display: block; 
+        float: right;
+    }
+    #gameReport section a{
+        text-align: center;
+        font-size: 12px;
+        margin: 0 6px;
+        color: black;
+    }
+    #gameReport section h6,
+    #gameReport section h5{
+        margin: 1px;
+    }
+    #gameReport section.text-center{
+        text-align: center;
+    }
+    #gameReport p{
+        font-size: 8px;
+        margin: 3px 0 0 0;
+    }
+    #gameReport form p{
+        margin: 0px 70px;
+    }
+    #gameReport section p.err{
+        color: red;
+        display: none;
+    }
+    #gameReport section p.info{
+        display: none;
+    }
+</style>
+
+<main id="gameReport" hidden>
+    <section>
+        <button id="gameReportFormCancel">X</button>
+        <h1>Moderate <span id="nameReported"></span></h1>
+        <p id="askActionP">What action do you want to take?</p>
+    </section>
+    <section>
+        <h3>Block: </h3>
+        <p>Block any communication from and to this user. This can be reverted.</p>
+        <section class="action">
+            <button id="toggleBlockButton">Block this user</button>
+        </section>
+    </section>
+    <section id="reportSection">
+        <h3>Report: </h3>
+        <p>Send a report message to the administrators of this room. They may later ban this user.</p>
+        <form>
+            <section>
+                <h6>Your message: </h6>
+                <textarea type="text" name="report" id="gameReportInput"></textarea>
+                <p class="err" id="gameReportErr"></p>
+            </section>
+            <section class="action">
+                <button type="submit" id="gameReportFormSubmit">Report this user</button>
+            </section>
+        </form>
+    </section>
+</main>
+

@@ -9,13 +9,18 @@ import {
     UpdatedLocalStreamCallback
 } from "./MediaManager";
 import {ScreenSharingPeer} from "./ScreenSharingPeer";
-import {MESSAGE_TYPE_CONSTRAINT, MESSAGE_TYPE_MESSAGE, VideoPeer} from "./VideoPeer";
+import {MESSAGE_TYPE_BLOCKED, MESSAGE_TYPE_CONSTRAINT, MESSAGE_TYPE_MESSAGE, VideoPeer} from "./VideoPeer";
 import {RoomConnection} from "../Connexion/RoomConnection";
+import {connectionManager} from "../Connexion/ConnectionManager";
+import {GameConnexionTypes} from "../Url/UrlManager";
+import {blackListManager} from "./BlackListManager";
 
 export interface UserSimplePeerInterface{
     userId: number;
     name?: string;
     initiator?: boolean;
+    webRtcUser?: string|undefined;
+    webRtcPassword?: string|undefined;
 }
 
 export interface PeerConnectionListener {
@@ -36,6 +41,9 @@ export class SimplePeer {
     private readonly sendLocalScreenSharingStreamCallback: StartScreenSharingCallback;
     private readonly stopLocalScreenSharingStreamCallback: StopScreenSharingCallback;
     private readonly peerConnectionListeners: Array<PeerConnectionListener> = new Array<PeerConnectionListener>();
+    private readonly userId: number;
+    private lastWebrtcUserName: string|undefined;
+    private lastWebrtcPassword: string|undefined;
 
     constructor(private Connection: RoomConnection, private enableReporting: boolean, private myName: string) {
         // We need to go through this weird bound function pointer in order to be able to "free" this reference later.
@@ -46,6 +54,7 @@ export class SimplePeer {
         mediaManager.onUpdateLocalStream(this.sendLocalVideoStreamCallback);
         mediaManager.onStartScreenSharing(this.sendLocalScreenSharingStreamCallback);
         mediaManager.onStopScreenSharing(this.stopLocalScreenSharingStreamCallback);
+        this.userId = Connection.getUserId();
         this.initialise();
     }
 
@@ -89,15 +98,14 @@ export class SimplePeer {
         });
     }
 
-    private receiveWebrtcStart(user: UserSimplePeerInterface) {
-        //this.WebRtcRoomId = data.roomId;
+    private receiveWebrtcStart(user: UserSimplePeerInterface): void {
         this.Users.push(user);
         // Note: the clients array contain the list of all clients (even the ones we are already connected to in case a user joints a group)
         // So we can receive a request we already had before. (which will abort at the first line of createPeerConnection)
         // This would be symmetrical to the way we handle disconnection.
-        
+
         //start connection
-        console.log('receiveWebrtcStart. Initiator: ', user.initiator)
+        //console.log('receiveWebrtcStart. Initiator: ', user.initiator)
         if(!user.initiator){
             return;
         }
@@ -134,17 +142,16 @@ export class SimplePeer {
 
         mediaManager.removeActiveVideo("" + user.userId);
 
-        const reportCallback = this.enableReporting ? (comment: string) => {
-            this.reportUser(user.userId, comment);
-        } : undefined;
+        mediaManager.addActiveVideo(user, name);
 
-        mediaManager.addActiveVideo("" + user.userId, reportCallback, name);
+        this.lastWebrtcUserName = user.webRtcUser;
+        this.lastWebrtcPassword = user.webRtcPassword;
 
-        const peer = new VideoPeer(user.userId, user.initiator ? user.initiator : false, this.Connection);
+        const peer = new VideoPeer(user, user.initiator ? user.initiator : false, this.Connection);
 
         //permit to send message
         mediaManager.addSendMessageCallback(user.userId,(message: string) => {
-            peer.write(new Buffer(JSON.stringify({type: MESSAGE_TYPE_MESSAGE, name: this.myName.toUpperCase(), message: message})));
+            peer.write(new Buffer(JSON.stringify({type: MESSAGE_TYPE_MESSAGE, name: this.myName.toUpperCase(), userId: this.userId, message: message})));
         });
 
         peer.toClose = false;
@@ -189,7 +196,13 @@ export class SimplePeer {
             mediaManager.addScreenSharingActiveVideo("" + user.userId);
         }
 
-        const peer = new ScreenSharingPeer(user.userId, user.initiator ? user.initiator : false, this.Connection);
+        // Enrich the user with last known credentials (if they are not set in the user object, which happens when a user triggers the screen sharing)
+        if (user.webRtcUser === undefined) {
+            user.webRtcUser = this.lastWebrtcUserName;
+            user.webRtcPassword = this.lastWebrtcPassword;
+        }
+
+        const peer = new ScreenSharingPeer(user, user.initiator ? user.initiator : false, this.Connection);
         this.PeerScreenSharingConnectionArray.set(user.userId, peer);
 
         for (const peerConnectionListener of this.peerConnectionListeners) {
@@ -300,6 +313,7 @@ export class SimplePeer {
     }
 
     private receiveWebrtcScreenSharingSignal(data: WebRtcSignalReceivedMessageInterface) {
+        if (blackListManager.isBlackListed(data.userId)) return;
         console.log("receiveWebrtcScreenSharingSignal", data);
         try {
             //if offer type, create peer connection
@@ -391,14 +405,8 @@ export class SimplePeer {
         }
     }
 
-    /**
-     * Triggered locally when clicking on the report button
-     */
-    public reportUser(userId: number, message: string) {
-        this.Connection.emitReportPlayerMessage(userId, message)
-    }
-
     private sendLocalScreenSharingStreamToUser(userId: number): void {
+        if (blackListManager.isBlackListed(userId)) return;
         // If a connection already exists with user (because it is already sharing a screen with us... let's use this connection)
         if (this.PeerScreenSharingConnectionArray.has(userId)) {
             this.pushScreenSharingToRemoteUser(userId);

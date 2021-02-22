@@ -3,11 +3,41 @@ import {mediaManager} from "./MediaManager";
 import {coWebsiteManager} from "./CoWebsiteManager";
 declare const window:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-const interfaceConfig = {
+interface jitsiConfigInterface {
+    startWithAudioMuted: boolean
+    startWithVideoMuted: boolean
+    prejoinPageEnabled: boolean
+}
+
+const getDefaultConfig = () : jitsiConfigInterface => {
+    return {
+        startWithAudioMuted: !mediaManager.constraintsMedia.audio,
+        startWithVideoMuted: mediaManager.constraintsMedia.video === false,
+        prejoinPageEnabled: false
+    }
+}
+
+const mergeConfig = (config?: object) => {
+    const currentDefaultConfig = getDefaultConfig();
+    if(!config){
+        return currentDefaultConfig;
+    }
+    return {
+        ...currentDefaultConfig,
+        ...config,
+        startWithAudioMuted: (config as jitsiConfigInterface).startWithAudioMuted ? true : currentDefaultConfig.startWithAudioMuted,
+        startWithVideoMuted: (config as jitsiConfigInterface).startWithVideoMuted ? true : currentDefaultConfig.startWithVideoMuted,
+        prejoinPageEnabled: (config as jitsiConfigInterface).prejoinPageEnabled ? true : currentDefaultConfig.prejoinPageEnabled
+    }
+}
+
+const defaultInterfaceConfig = {
     SHOW_CHROME_EXTENSION_BANNER: false,
     MOBILE_APP_PROMO: false,
 
     HIDE_INVITE_MORE_HEADER: true,
+    DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
+    DISABLE_VIDEO_BACKGROUND: true,
 
     // Note: hiding brand does not seem to work, we probably need to put this on the server side.
     SHOW_BRAND_WATERMARK: false,
@@ -25,26 +55,42 @@ const interfaceConfig = {
     ],
 };
 
+const slugify = (...args: (string | number)[]): string => {
+    const value = args.join(' ')
+
+    return value
+        .normalize('NFD') // split an accented letter in the base letter and the accent
+        .replace(/[\u0300-\u036f]/g, '') // remove all previously split accents
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9 ]/g, '') // remove all chars not letters, numbers and spaces (to be replaced)
+        .replace(/\s+/g, '-') // separator
+}
+
 class JitsiFactory {
     private jitsiApi: any; // eslint-disable-line @typescript-eslint/no-explicit-any
     private audioCallback = this.onAudioChange.bind(this);
     private videoCallback = this.onVideoChange.bind(this);
+    private previousConfigMeet? : jitsiConfigInterface;
 
-    public start(roomName: string, playerName:string, jwt?: string): void {
+    /**
+     * Slugifies the room name and prepends the room name with the instance
+     */
+    public getRoomName(roomName: string, instance: string): string {
+        return slugify(instance.replace('/', '-') + "-" + roomName);
+    }
+
+    public start(roomName: string, playerName:string, jwt?: string, config?: object, interfaceConfig?: object): void {
+        //save previous config
+        this.previousConfigMeet = getDefaultConfig();
+
         coWebsiteManager.insertCoWebsite((cowebsiteDiv => {
             // Jitsi meet external API maintains some data in local storage
-            // which is sent via an URL parameter when opening a new
+            // which is sent via the appData URL parameter when joining a
             // conference. Problem is that this data grows indefinitely. Thus
-            // after some time the URLs are so huge that loading the iframe
-            // becomes slow. Thus lets just clear jitsi local storage whenever
-            // this class is loaded.
-            //
-            // see:
-            // https://github.com/jitsi/jitsi-meet/blob/684d12115974a65b48f36c7d4fe74d8f17da6ff6/modules/API/external/external_api.js#L269-L281
-            //
-            // It looks like the demo at play.workadventu.re is not affected by
-            // this problem. This is likely due to how they run their own jitsi
-            // infra.
+            // after some time the URLs get so huge that loading the iframe
+            // becomes slow and eventually breaks completely. Thus lets just
+            // clear jitsi local storage before starting a new conference.
             window.localStorage.removeItem("jitsiLocalStorage");
 
             const domain = JITSI_URL;
@@ -54,17 +100,13 @@ class JitsiFactory {
                 width: "100%",
                 height: "100%",
                 parentNode: cowebsiteDiv,
-                configOverwrite: {
-                    startWithAudioMuted: !mediaManager.constraintsMedia.audio,
-                    startWithVideoMuted: mediaManager.constraintsMedia.video === false,
-                    prejoinPageEnabled: false
-                },
-                interfaceConfigOverwrite: interfaceConfig,
+                configOverwrite: mergeConfig(config),
+                interfaceConfigOverwrite: {...defaultInterfaceConfig, ...interfaceConfig}
             };
             if (!options.jwt) {
                 delete options.jwt;
             }
-            
+
             return new Promise((resolve, reject) => {
                 options.onload = () => resolve(); //we want for the iframe to be loaded before triggering animations.
                 setTimeout(() => resolve(), 2000); //failsafe in case the iframe is deleted before loading or too long to load
@@ -85,6 +127,19 @@ class JitsiFactory {
         this.jitsiApi.removeListener('audioMuteStatusChanged', this.audioCallback);
         this.jitsiApi.removeListener('videoMuteStatusChanged', this.videoCallback);
         this.jitsiApi?.dispose();
+
+        //restore previous config
+        if(this.previousConfigMeet?.startWithAudioMuted){
+            mediaManager.disableMicrophone();
+        }else{
+            mediaManager.enableMicrophone();
+        }
+
+        if(this.previousConfigMeet?.startWithVideoMuted){
+            mediaManager.disableCamera();
+        }else{
+            mediaManager.enableCamera();
+        }
     }
 
     private onAudioChange({muted}: {muted: boolean}): void {
@@ -102,7 +157,6 @@ class JitsiFactory {
             mediaManager.enableCamera();
         }
     }
-
 }
 
 export const jitsiFactory = new JitsiFactory();
