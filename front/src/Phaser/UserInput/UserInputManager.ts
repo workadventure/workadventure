@@ -59,7 +59,11 @@ export class UserInputManager {
         ];
     }
 
-    clearAllInputKeyboard(){
+    clearAllListeners(){
+        this.Scene.input.keyboard.removeAllListeners();
+    }
+
+    clearAllKeys(){
         this.Scene.input.keyboard.removeAllKeys();
     }
 

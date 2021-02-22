@@ -42,7 +42,7 @@ class CoWebsiteManager {
         this.opened = iframeStates.opened;
     }
 
-    public loadCoWebsite(url: string, base: string): void {
+    public loadCoWebsite(url: string, base: string, allowPolicy?: string): void {
         this.load();
         this.cowebsiteDiv.innerHTML = `<button class="close-btn" id="cowebsite-close">
                     <img src="resources/logos/close.svg">
@@ -56,6 +56,9 @@ class CoWebsiteManager {
         const iframe = document.createElement('iframe');
         iframe.id = 'cowebsite-iframe';
         iframe.src = (new URL(url, base)).toString();
+        if (allowPolicy) {
+            iframe.allow = allowPolicy; 
+        }
         const onloadPromise = new Promise((resolve) => {
             iframe.onload = () => resolve();
         });

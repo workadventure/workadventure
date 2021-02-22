@@ -168,6 +168,8 @@ message WebRtcStartMessage {
   int32 userId = 1;
   string name = 2;
   bool initiator = 3;
+  string webrtcUserName = 4;
+  string webrtcPassword = 5;
 }
 
 message WebRtcDisconnectMessage {
@@ -177,6 +179,8 @@ message WebRtcDisconnectMessage {
 message WebRtcSignalToClientMessage {
   int32 userId = 1;
   string signal = 2;
+  string webrtcUserName = 4;
+  string webrtcPassword = 5;
 }
 
 message TeleportMessageMessage{

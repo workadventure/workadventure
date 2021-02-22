@@ -3,6 +3,7 @@ import {HtmlUtils} from "./HtmlUtils";
 import {discussionManager, SendMessageCallback} from "./DiscussionManager";
 import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
 import {VIDEO_QUALITY_SELECT} from "../Administration/ConsoleGlobalMessageManager";
+import {UserSimplePeerInterface} from "./SimplePeer";
 declare const navigator:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 const localValueVideo = localStorage.getItem(VIDEO_QUALITY_SELECT);
@@ -23,9 +24,9 @@ export type UpdatedLocalStreamCallback = (media: MediaStream|null) => void;
 export type StartScreenSharingCallback = (media: MediaStream) => void;
 export type StopScreenSharingCallback = (media: MediaStream) => void;
 export type ReportCallback = (message: string) => void;
+export type ShowReportCallBack = (userId: string, userName: string|undefined) => void;
 
 // TODO: Split MediaManager in 2 classes: MediaManagerUI (in charge of HTML) and MediaManager (singleton in charge of the camera only)
-// TODO: verify that microphone event listeners are not triggered plenty of time NOW (since MediaManager is created many times!!!!)
 export class MediaManager {
     localStream: MediaStream|null = null;
     localScreenCapture: MediaStream|null = null;
@@ -46,6 +47,7 @@ export class MediaManager {
     updatedLocalStreamCallBacks : Set<UpdatedLocalStreamCallback> = new Set<UpdatedLocalStreamCallback>();
     startScreenSharingCallBacks : Set<StartScreenSharingCallback> = new Set<StartScreenSharingCallback>();
     stopScreenSharingCallBacks : Set<StopScreenSharingCallback> = new Set<StopScreenSharingCallback>();
+    showReportModalCallBacks : Set<ShowReportCallBack> = new Set<ShowReportCallBack>();
     private microphoneBtn: HTMLDivElement;
     private cinemaBtn: HTMLDivElement;
     private monitorBtn: HTMLDivElement;
@@ -469,8 +471,9 @@ export class MediaManager {
         return this.getCamera();
     }
 
-    addActiveVideo(userId: string, reportCallBack: ReportCallback|undefined, userName: string = ""){
+    addActiveVideo(user: UserSimplePeerInterface, userName: string = ""){
         this.webrtcInAudio.play();
+        const userId = ''+user.userId
 
         userName = userName.toUpperCase();
         const color = this.getColorByString(userName);
@@ -480,33 +483,39 @@ export class MediaManager {
                 <div class="connecting-spinner"></div>
                 <div class="rtc-error" style="display: none"></div>
                 <i id="name-${userId}" style="background-color: ${color};">${userName}</i>
-                <img id="microphone-${userId}" src="resources/logos/microphone-close.svg">
-                ` +
-                ((reportCallBack!==undefined)?`<img id="report-${userId}" class="report active" src="resources/logos/report.svg">`:'')
-                +
-                `<video id="${userId}" autoplay></video>
+                <img id="microphone-${userId}" title="mute" src="resources/logos/microphone-close.svg">
+                <button id="report-${userId}" class="report">
+                    <img title="report this user" src="resources/logos/report.svg">
+                    <span>Report/Block</span>
+                </button>
+                <video id="${userId}" autoplay></video>
+                <img src="resources/logos/blockSign.svg" id="blocking-${userId}" class="block-logo">
             </div>
         `;
 
         layoutManager.add(DivImportance.Normal, userId, html);
-
-        if (reportCallBack) {
-            const reportBtn = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(`report-${userId}`);
-            reportBtn.addEventListener('click', (e: MouseEvent) => {
-                e.preventDefault();
-                this.showReportModal(userId, userName, reportCallBack);
-            });
-        }
-
+        
         this.remoteVideo.set(userId, HtmlUtils.getElementByIdOrFail<HTMLVideoElement>(userId));
 
         //permit to create participant in discussion part
-        this.addNewParticipant(userId, userName, undefined, reportCallBack);
+        const showReportUser = () => {
+            for(const callBack of this.showReportModalCallBacks){
+                callBack(userId, userName);
+            }
+        };
+        this.addNewParticipant(userId, userName, undefined, showReportUser);
+
+        const reportBanUserActionEl: HTMLImageElement = HtmlUtils.getElementByIdOrFail<HTMLImageElement>(`report-${userId}`);
+        reportBanUserActionEl.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            showReportUser();
+        });
     }
     
     addScreenSharingActiveVideo(userId: string, divImportance: DivImportance = DivImportance.Important){
 
-        userId = `screen-sharing-${userId}`;
+        userId = this.getScreenSharingId(userId);
         const html = `
             <div id="div-${userId}" class="video-container">
                 <video id="${userId}" autoplay></video>
@@ -517,7 +526,11 @@ export class MediaManager {
 
         this.remoteVideo.set(userId, HtmlUtils.getElementByIdOrFail<HTMLVideoElement>(userId));
     }
-    
+
+    private getScreenSharingId(userId: string): string {
+        return `screen-sharing-${userId}`;
+    }
+
     disabledMicrophoneByUserId(userId: number){
         const element = document.getElementById(`microphone-${userId}`);
         if(!element){
@@ -556,6 +569,10 @@ export class MediaManager {
         }
     }
 
+    toggleBlockLogo(userId: number, show: boolean): void {
+        const blockLogoElement = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('blocking-'+userId);
+        show ? blockLogoElement.classList.add('active') : blockLogoElement.classList.remove('active');
+    }
     addStreamRemoteVideo(userId: string, stream : MediaStream): void {
         const remoteVideo = this.remoteVideo.get(userId);
         if (remoteVideo === undefined) {
@@ -565,12 +582,12 @@ export class MediaManager {
     }
     addStreamRemoteScreenSharing(userId: string, stream : MediaStream){
         // In the case of screen sharing (going both ways), we may need to create the HTML element if it does not exist yet
-        const remoteVideo = this.remoteVideo.get(`screen-sharing-${userId}`);
+        const remoteVideo = this.remoteVideo.get(this.getScreenSharingId(userId));
         if (remoteVideo === undefined) {
             this.addScreenSharingActiveVideo(userId);
         }
 
-        this.addStreamRemoteVideo(`screen-sharing-${userId}`, stream);
+        this.addStreamRemoteVideo(this.getScreenSharingId(userId), stream);
     }
     
     removeActiveVideo(userId: string){
@@ -581,7 +598,7 @@ export class MediaManager {
         this.removeParticipant(userId);
     }
     removeActiveScreenSharingVideo(userId: string) {
-        this.removeActiveVideo(`screen-sharing-${userId}`)
+        this.removeActiveVideo(this.getScreenSharingId(userId))
     }
     
     playWebrtcOutSound(): void {
@@ -617,7 +634,7 @@ export class MediaManager {
         errorDiv.style.display = 'block';
     }
     isErrorScreenSharing(userId: string): void {
-        this.isError(`screen-sharing-${userId}`);
+        this.isError(this.getScreenSharingId(userId));
     }
 
 
@@ -645,65 +662,8 @@ export class MediaManager {
         return color;
     }
 
-    public showReportModal(userId: string, userName: string, reportCallBack: ReportCallback){
-        //create report text area
-        const mainContainer = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-container');
-
-        const divReport = document.createElement('div');
-        divReport.classList.add('modal-report-user');
-
-        const inputHidden = document.createElement('input');
-        inputHidden.id = 'input-report-user';
-        inputHidden.type = 'hidden';
-        inputHidden.value = userId;
-        divReport.appendChild(inputHidden);
-
-        const titleMessage = document.createElement('p');
-        titleMessage.id = 'title-report-user';
-        titleMessage.innerText = 'Open a report';
-        divReport.appendChild(titleMessage);
-
-        const bodyMessage = document.createElement('p');
-        bodyMessage.id = 'body-report-user';
-        bodyMessage.innerText = `You are about to open a report regarding an offensive conduct from user ${userName.toUpperCase()}. Please explain to us how you think ${userName.toUpperCase()} breached the code of conduct.`;
-        divReport.appendChild(bodyMessage);
-
-        const imgReportUser = document.createElement('img');
-        imgReportUser.id = 'img-report-user';
-        imgReportUser.src = 'resources/logos/report.svg';
-        divReport.appendChild(imgReportUser);
-
-        const textareaUser = document.createElement('textarea');
-        textareaUser.id = 'textarea-report-user';
-        textareaUser.placeholder = 'Write ...';
-        divReport.appendChild(textareaUser);
-
-        const buttonReport = document.createElement('button');
-        buttonReport.id = 'button-save-report-user';
-        buttonReport.innerText = 'Report';
-        buttonReport.addEventListener('click', () => {
-            if(!textareaUser.value){
-                textareaUser.style.border = '1px solid red'
-                return;
-            }
-            reportCallBack(textareaUser.value);
-            divReport.remove();
-        });
-        divReport.appendChild(buttonReport);
-
-        const buttonCancel = document.createElement('img');
-        buttonCancel.id = 'cancel-report-user';
-        buttonCancel.src = 'resources/logos/close.svg';
-        buttonCancel.addEventListener('click', () => {
-            divReport.remove();
-        });
-        divReport.appendChild(buttonCancel);
-
-        mainContainer.appendChild(divReport);
-    }
-
-    public addNewParticipant(userId: number|string, name: string|undefined, img?: string, reportCallBack?: ReportCallback){
-        discussionManager.addParticipant(userId, name, img, false, reportCallBack);
+    public addNewParticipant(userId: number|string, name: string|undefined, img?: string, showReportUserCallBack?: ShowReportCallBack){
+        discussionManager.addParticipant(userId, name, img, false, showReportUserCallBack);
     }
 
     public removeParticipant(userId: number|string){
@@ -768,6 +728,10 @@ export class MediaManager {
             }
             this.checkActiveUser();
         }, this.focused ? 10000 : 1000);
+    }
+
+    public setShowReportModalCallBacks(callback: ShowReportCallBack){
+        this.showReportModalCallBacks.add(callback);
     }
 }
 
