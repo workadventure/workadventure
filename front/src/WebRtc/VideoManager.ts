@@ -98,6 +98,17 @@ class VideoManager {
             this.jumpToEnd(videoPlayerElem);
         }
 
+        videoPlayerElem.onwaiting = (e)=> {
+            if (videoPlayerElem.networkState === videoPlayerElem.NETWORK_LOADING) {
+                const currentTime = videoPlayerElem.currentTime;
+                setTimeout(() => {
+                    if (currentTime === videoPlayerElem.currentTime) {
+                        this.fixError(url);
+                    }
+                }, 10000);
+            }
+        }
+
         const decreaseElem = HtmlUtils.getElementByIdOrFail<HTMLInputElement>('videoplayer_decrease_while_talking');
         decreaseElem.oninput = (ev: Event)=> {
             this.decreaseWhileTalking = (<HTMLInputElement>ev.currentTarget).checked;
@@ -134,6 +145,12 @@ class VideoManager {
             videoPlayerElem.play();
         }
     }
+
+    public fixError(url: string): void {
+        this.unloadVideo()
+        this.loadVideo(url)
+    }
+
 
     public unloadVideo(): void {
         try {
