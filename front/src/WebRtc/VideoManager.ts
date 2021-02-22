@@ -23,6 +23,7 @@ class VideoManager {
     private muted = false;
     private decreaseWhileTalking = true;
     private volumeReduced = false;
+    private retryTimeout = 1000 * 60;
 
     constructor() {
         this.videoPlayerDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(videoPlayerDivId);
@@ -98,6 +99,10 @@ class VideoManager {
             this.jumpToEnd(videoPlayerElem);
         }
 
+        videoPlayerElem.onplaying = (e)=> {
+            this.retryTimeout = 1000 * 10;
+        }
+
         videoPlayerElem.onwaiting = (e)=> {
             if (videoPlayerElem.networkState === videoPlayerElem.NETWORK_LOADING) {
                 const currentTime = videoPlayerElem.currentTime;
@@ -105,7 +110,7 @@ class VideoManager {
                     if (currentTime === videoPlayerElem.currentTime) {
                         this.fixError(url);
                     }
-                }, 10000);
+                }, this.retryTimeout);
             }
         }
 
@@ -150,7 +155,6 @@ class VideoManager {
         this.unloadVideo()
         this.loadVideo(url)
     }
-
 
     public unloadVideo(): void {
         try {
