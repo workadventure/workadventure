@@ -240,9 +240,6 @@ export class MenuScene extends Phaser.Scene {
                 this.closeSideMenu();
                 gameManager.leaveGame(this, LoginSceneName, new LoginScene());
                 break;
-            case 'sparkButton':
-                this.gotToCreateMapPage();
-                break;
             case 'changeSkinButton':
                 this.closeSideMenu();
                 gameManager.leaveGame(this, SelectCharacterSceneName, new SelectCharacterScene());
