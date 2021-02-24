@@ -809,10 +809,10 @@ export class SocketManager {
         sendUserMessage.setMessage(message);
         sendUserMessage.setType('ban');
 
-        const subToPusherMessage = new SubToPusherMessage();
-        subToPusherMessage.setSendusermessage(sendUserMessage);
 
-        recipient.socket.write(subToPusherMessage);
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setSendusermessage(sendUserMessage);
+        recipient.socket.write(serverToClientMessage);
     }
 
     public banUser(roomId: string, recipientUuid: string, message: string): void {
@@ -835,10 +835,9 @@ export class SocketManager {
         sendUserMessage.setMessage(message);
         sendUserMessage.setType('banned');
 
-        const subToPusherMessage = new SubToPusherMessage();
-        subToPusherMessage.setSendusermessage(sendUserMessage);
-
-        recipient.socket.write(subToPusherMessage);
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setSendusermessage(sendUserMessage);
+        recipient.socket.write(serverToClientMessage);
 
         // Let's close the connection when the user is banned.
         recipient.socket.end();
