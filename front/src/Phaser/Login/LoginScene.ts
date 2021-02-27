@@ -1,3 +1,4 @@
+import {HtmlUtils} from "../../WebRtc/HtmlUtils";
 import {gameManager} from "../Game/GameManager";
 import {TextField} from "../Components/TextField";
 import {TextInput} from "../Components/TextInput";
@@ -39,6 +40,22 @@ export class LoginScene extends ResizableScene {
         this.textField = new TextField(this, this.game.renderer.width / 2, 50, 'Enter your name:');
         this.nameInput = new TextInput(this, this.game.renderer.width / 2, 70, 8, this.name,(text: string) => {
             this.name = text;
+        });
+
+        // Mobile Browsers need an input field, so that a virtual keyboard
+        // gets shown
+        const nameInputElement = HtmlUtils.getElementByIdOrFail<HTMLInputElement>('playerName');
+        // As we need an input field for mobile browsers, use it also for
+        // the desktop. Therefore make sure that is has the focus when the page
+        // is loaded, so that all keyboard events are handled by that input
+        // field.
+        nameInputElement.focus()
+        // Mobile browsers won't show the virtual keyboard on page load, hence
+        // re-focus to make it pop up. On desktop browsers it doesn't do any
+        // harm.
+        this.input.on('pointerdown', () => {
+            nameInputElement.blur();
+            nameInputElement.focus();
         });
 
         this.pressReturnField = new TextField(this, this.game.renderer.width / 2, 130, 'Press enter to start');
