@@ -61,6 +61,11 @@ export interface ITiledMapLayer {
      */
     draworder: string;
     objects: ITiledMapObject[];
+
+    /**
+     * Layers for group layer
+     */
+    layers: this[];
 }
 
 export interface ITiledMapObject {

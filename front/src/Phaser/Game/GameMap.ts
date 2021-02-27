@@ -1,4 +1,4 @@
-import {ITiledMap} from "../Map/ITiledMap";
+import {ITiledMap, ITiledMapLayer} from "../Map/ITiledMap";
 
 export type PropertyChangeCallback = (newValue: string | number | boolean | undefined, oldValue: string | number | boolean | undefined, allProps: Map<string, string | boolean | number>) => void;
 
@@ -52,10 +52,15 @@ export class GameMap {
         return this.lastProperties;
     }
 
-    private getProperties(key: number): Map<string, string|boolean|number> {
-        const properties = new Map<string, string|boolean|number>();
+    // helper for recursive group layer support
+    private getPropertiesHelper(key: number, layers: ITiledMapLayer[], properties: Map<string, string|boolean|number>): Map<string, string|boolean|number> {
 
-        for (const layer of this.map.layers) {
+        for (const layer of layers) {
+            if (layer.type === 'group') {
+                this.getPropertiesHelper(key, layer.layers, properties);
+                continue;
+            }
+
             if (layer.type !== 'tilelayer') {
                 continue;
             }
@@ -75,6 +80,11 @@ export class GameMap {
         }
 
         return properties;
+    }
+
+    private getProperties(key: number): Map<string, string|boolean|number> {
+        const properties = new Map<string, string|boolean|number>();
+        return this.getPropertiesHelper(key, this.map.layers, properties);
     }
 
     private trigger(propName: string, oldValue: string | number | boolean | undefined, newValue: string | number | boolean | undefined, allProps: Map<string, string | boolean | number>) {
