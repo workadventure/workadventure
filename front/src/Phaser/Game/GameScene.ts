@@ -353,6 +353,31 @@ export class GameScene extends ResizableScene implements CenterListener {
         }
     }
 
+    // helper for recursive group layer support
+    private createHelper(that: this, layers: ITiledMapLayer[], depth: integer, prefix: string): integer {
+        for(const layer of layers) {
+            if(layer.type === 'tilelayer') {
+                that.addLayer(that.Map.createStaticLayer(prefix + layer.name, that.Terrains, 0, 0).setDepth(depth));
+
+                const exitSceneUrl = that.getExitSceneUrl(layer);
+                if(exitSceneUrl !== undefined) {
+                    that.loadNextGame(exitSceneUrl);
+                }
+                const exitUrl = that.getExitUrl(layer);
+                if(exitUrl !== undefined) {
+                    that.loadNextGame(exitUrl);
+                }
+            }
+            if(layer.type === 'group') {
+                that.createHelper(that, layer.layers, depth, prefix + layer.name + '/');
+            }
+            if(layer.type === 'objectgroup' && layer.name === 'floorLayer') {
+                depth = 10000;
+            }
+        }
+        return depth;
+    }
+
     //hook create scene
     create(): void {
         gameManager.gameSceneIsCreated(this);
@@ -386,24 +411,8 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         //add layer on map
         this.Layers = new Array<Phaser.Tilemaps.StaticTilemapLayer>();
-        let depth = -2;
-        for (const layer of this.mapFile.layers) {
-            if (layer.type === 'tilelayer') {
-                this.addLayer(this.Map.createStaticLayer(layer.name, this.Terrains, 0, 0).setDepth(depth));
-
-                const exitSceneUrl = this.getExitSceneUrl(layer);
-                if (exitSceneUrl !== undefined) {
-                    this.loadNextGame(exitSceneUrl);
-                }
-                const exitUrl = this.getExitUrl(layer);
-                if (exitUrl !== undefined) {
-                    this.loadNextGame(exitUrl);
-                }
-            }
-            if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
-                depth = 10000;
-            }
-        }
+        let depth = this.createHelper(this, this.mapFile.layers, -2, '');
+        
         if (depth === -2) {
             throw new Error('Your map MUST contain a layer of type "objectgroup" whose name is "floorLayer" that represents the layer characters are drawn at.');
         }
