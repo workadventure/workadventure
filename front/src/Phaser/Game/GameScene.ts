@@ -411,9 +411,8 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         //add layer on map
         this.Layers = new Array<Phaser.Tilemaps.StaticTilemapLayer>();
-        let depth = this.createHelper(this.mapFile.layers, -2, '');
         
-        if (depth === -2) {
+        if (this.createHelper(this.mapFile.layers, -2, '') === -2) {
             throw new Error('Your map MUST contain a layer of type "objectgroup" whose name is "floorLayer" that represents the layer characters are drawn at.');
         }
 
