@@ -72,6 +72,11 @@ export class LoginScene extends ResizableScene {
             }
             this.login(this.name);
         });
+
+        this.events.on('destroy', () => {
+            // Make sure the virtual keyboard isn't visible in the next scene
+            nameInputElement.blur()
+        })
     }
 
     update(time: number, delta: number): void {
