@@ -22,7 +22,7 @@ export class TextInput extends Phaser.GameObjects.BitmapText {
         inputElement.maxLength = maxLength
         // Make sure that now scolling is needed and that the input field is
         // not visible
-        inputElement.setAttribute('style', 'opacity:0;position:absolute;bottom:0');
+        inputElement.setAttribute('style', 'opacity:0;position:absolute;top:0');
         mainContainer.appendChild(inputElement);
 
         inputElement.addEventListener('input', this.onInput.bind(this)  as EventListener);
