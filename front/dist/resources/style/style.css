@@ -346,11 +346,20 @@ body {
         border: none;
         cursor: url('/resources/logos/cursor_pointer.png'), pointer;
         animation: right .2s ease;
-    }
-    #cowebsite .close-btn img{
-        height: 15px;
+    } 
+    
+    #cowebsite .close-btn img {
+        height: 20px;
         right: 15px;
+        background-color: rgba(0,0.0,0,0.3);
+        padding: 5px;
+        border-radius: 3px;
     }
+    
+    #cowebsite .close-btn img:hover {
+        background-color: rgba(0,0,0,0.4);
+    }
+        
     #cowebsite:hover .close-btn{
         right: 10px;
     }
