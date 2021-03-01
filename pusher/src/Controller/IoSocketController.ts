@@ -182,15 +182,15 @@ export class IoSocketController {
                         }*/
                         if (ADMIN_API_URL) {
                             try {
-                                let userData = {
+                                let userData : FetchMemberDataByUuidResponse = {
                                     uuid: v4(),
-                                    anonymous: true,
                                     tags: [],
                                     textures: [],
                                     messages: [],
+                                    anonymous: true
                                 };
                                 try {
-                                    (userData as FetchMemberDataByUuidResponse) = await adminApi.fetchMemberDataByUuid(userUuid);
+                                    userData = await adminApi.fetchMemberDataByUuid(userUuid);
                                 }catch (err){
                                     if (err?.response?.status == 404) {
                                         // If we get an HTTP 404, the token is invalid. Let's perform an anonymous login!

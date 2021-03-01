@@ -30,6 +30,7 @@ export interface FetchMemberDataByUuidResponse {
     tags: string[];
     textures: CharacterTexture[];
     messages: unknown[];
+    anonymous?: boolean;
 }
 
 class AdminApi {
@@ -61,14 +62,10 @@ class AdminApi {
         if (!ADMIN_API_URL) {
             return Promise.reject('No admin backoffice set!');
         }
-        try {
-            const res = await Axios.get(ADMIN_API_URL+'/api/membership/'+uuid,
-                { headers: {"Authorization" : `${ADMIN_API_TOKEN}`} }
-            )
-            return res.data;
-        } catch (e) {
-            throw e;
-        }
+        const res = await Axios.get(ADMIN_API_URL+'/api/membership/'+uuid,
+            { headers: {"Authorization" : `${ADMIN_API_TOKEN}`} }
+        )
+        return res.data;
     }
 
     async fetchMemberDataByToken(organizationMemberToken: string): Promise<AdminApiData> {
