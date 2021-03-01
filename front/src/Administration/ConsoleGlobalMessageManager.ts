@@ -48,7 +48,7 @@ export class ConsoleGlobalMessageManager {
         //this.buttonAdminMainConsole = document.createElement('img');
         this.userInputManager = userInputManager;
         this.initialise();
-        
+
     }
 
     initialise() {
@@ -140,7 +140,7 @@ export class ConsoleGlobalMessageManager {
         const div = document.createElement('div');
         div.id = INPUT_CONSOLE_MESSAGE
         const buttonSend = document.createElement('button');
-        buttonSend.innerText = 'Envoyer';
+        buttonSend.innerText = 'Send';
         buttonSend.classList.add('btn');
         buttonSend.addEventListener('click', (event: MouseEvent) => {
             this.sendMessage();
@@ -242,7 +242,7 @@ export class ConsoleGlobalMessageManager {
         div.appendChild(input);
 
         const buttonSend = document.createElement('button');
-        buttonSend.innerText = 'Envoyer';
+        buttonSend.innerText = 'Send';
         buttonSend.classList.add('btn');
         buttonSend.addEventListener('click', (event: MouseEvent) => {
             this.sendMessage();
