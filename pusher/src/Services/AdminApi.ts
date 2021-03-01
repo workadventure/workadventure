@@ -1,6 +1,5 @@
 import {ADMIN_API_TOKEN, ADMIN_API_URL} from "../Enum/EnvironmentVariable";
 import Axios from "axios";
-import {v4} from "uuid";
 
 export interface AdminApiData {
     organizationSlug: string
@@ -68,18 +67,7 @@ class AdminApi {
             )
             return res.data;
         } catch (e) {
-            if (e?.response?.status == 404) {
-                // If we get an HTTP 404, the token is invalid. Let's perform an anonymous login!
-                console.warn('Cannot find user with uuid "'+uuid+'". Performing an anonymous login instead.');
-                return {
-                    uuid: v4(),
-                    tags: [],
-                    textures: [],
-                    messages: [],
-                }
-            } else {
-                throw e;
-            }
+            throw e;
         }
     }
 
