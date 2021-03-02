@@ -25,6 +25,7 @@ import {clientEventsEmitter} from "../Services/ClientEventsEmitter";
 import {ADMIN_API_TOKEN, ADMIN_API_URL, SOCKET_IDLE_TIMER} from "../Enum/EnvironmentVariable";
 import {Zone} from "_Model/Zone";
 import {ExAdminSocketInterface} from "_Model/Websocket/ExAdminSocketInterface";
+import {v4} from "uuid";
 
 export class IoSocketController {
     private nextUserId: number = 1;
@@ -181,13 +182,32 @@ export class IoSocketController {
                         }*/
                         if (ADMIN_API_URL) {
                             try {
-                                const userData = await adminApi.fetchMemberDataByUuid(userUuid);
-                                //console.log('USERDATA', userData)
+                                let userData : FetchMemberDataByUuidResponse = {
+                                    uuid: v4(),
+                                    tags: [],
+                                    textures: [],
+                                    messages: [],
+                                    anonymous: true
+                                };
+                                try {
+                                    userData = await adminApi.fetchMemberDataByUuid(userUuid);
+                                }catch (err){
+                                    if (err?.response?.status == 404) {
+                                        // If we get an HTTP 404, the token is invalid. Let's perform an anonymous login!
+                                        console.warn('Cannot find user with uuid "'+userUuid+'". Performing an anonymous login instead.');
+                                    }else{
+                                        throw err;
+                                    }
+                                }
                                 memberTags = userData.tags;
                                 memberTextures = userData.textures;
-                                if (!room.anonymous && room.policyType === GameRoomPolicyTypes.USE_TAGS_POLICY && !room.canAccess(memberTags)) {
+                                if (!room.anonymous && room.policyType === GameRoomPolicyTypes.USE_TAGS_POLICY && (userData.anonymous === true || !room.canAccess(memberTags))) {
                                     throw new Error('No correct tags')
                                 }
+                                if (!room.anonymous && room.policyType === GameRoomPolicyTypes.MEMBERS_ONLY_POLICY && userData.anonymous === true) {
+                                    throw new Error('No correct member')
+                                }
+
                                 //console.log('access granted for user '+userUuid+' and room '+roomId);
                             } catch (e) {
                                 console.log('access not granted for user '+userUuid+' and room '+roomId);
