@@ -14,6 +14,8 @@ import {coWebsiteManager} from "./WebRtc/CoWebsiteManager";
 import {MenuScene} from "./Phaser/Menu/MenuScene";
 import {localUserStore} from "./Connexion/LocalUserStore";
 import {ErrorScene} from "./Phaser/Reconnecting/ErrorScene";
+import {iframeListener} from "./Api/IframeListener";
+import {discussionManager} from "./WebRtc/DiscussionManager";
 
 // Load Jitsi if the environment variable is set.
 if (JITSI_URL) {
@@ -124,3 +126,5 @@ coWebsiteManager.onStateChange(() => {
     const {width, height} = coWebsiteManager.getGameSize();
     game.scale.resize(width / RESOLUTION, height / RESOLUTION);
 });
+
+iframeListener.init();
