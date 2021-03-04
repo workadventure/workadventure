@@ -2,7 +2,8 @@ import {IRoomManagerServer} from "./Messages/generated/messages_grpc_pb";
 import {
     AdminGlobalMessage,
     AdminMessage,
-    AdminPusherToBackMessage,
+    AdminPusherToBackMessage, 
+    AdminRoomMessage,
     BanMessage,
     EmptyMessage,
     ItemEventMessage,
@@ -51,12 +52,8 @@ const roomManager: IRoomManagerServer = {
                 } else {
                     if (message.hasJoinroommessage()) {
                         throw new Error('Cannot call JoinRoomMessage twice!');
-                    /*} else if (message.hasViewportmessage()) {
-                        socketManager.handleViewport(client, message.getViewportmessage() as ViewportMessage);*/
                     } else if (message.hasUsermovesmessage()) {
                         socketManager.handleUserMovesMessage(room, user, message.getUsermovesmessage() as UserMovesMessage);
-                        /*} else if (message.hasSetplayerdetailsmessage()) {
-                            socketManager.handleSetPlayerDetails(client, message.getSetplayerdetailsmessage() as SetPlayerDetailsMessage);*/
                     } else if (message.hasSilentmessage()) {
                         socketManager.handleSilentMessage(room, user, message.getSilentmessage() as SilentMessage);
                     } else if (message.hasItemeventmessage()) {
@@ -67,8 +64,6 @@ const roomManager: IRoomManagerServer = {
                         socketManager.emitScreenSharing(room, user, message.getWebrtcscreensharingsignaltoservermessage() as WebRtcSignalToServerMessage);
                     } else if (message.hasPlayglobalmessage()) {
                         socketManager.emitPlayGlobalMessage(room, message.getPlayglobalmessage() as PlayGlobalMessage);
-                    /*} else if (message.hasReportplayermessage()){
-                        socketManager.handleReportMessage(client, message.getReportplayermessage() as ReportPlayerMessage);*/
                     } else if (message.hasQueryjitsijwtmessage()){
                         socketManager.handleQueryJitsiJwtMessage(user, message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage);
                     }else if (message.hasSendusermessage()) {
@@ -119,10 +114,7 @@ const roomManager: IRoomManagerServer = {
             socketManager.removeZoneListener(call, zoneMessage.getRoomid(), zoneMessage.getX(), zoneMessage.getY());
             call.end();
         })
-
-        /*call.on('finish', () => {
-            debug('listenZone finish');
-        })*/
+        
         call.on('close', () => {
             debug('listenZone connection closed');
             socketManager.removeZoneListener(call, zoneMessage.getRoomid(), zoneMessage.getX(), zoneMessage.getY());
@@ -150,26 +142,6 @@ const roomManager: IRoomManagerServer = {
                     } else {
                         throw new Error('The first message sent MUST be of type JoinRoomMessage');
                     }
-                } else {
-                    /*if (message.hasJoinroommessage()) {
-                        throw new Error('Cannot call JoinRoomMessage twice!');
-                    } else if (message.hasUsermovesmessage()) {
-                        socketManager.handleUserMovesMessage(room, user, message.getUsermovesmessage() as UserMovesMessage);
-                    } else if (message.hasSilentmessage()) {
-                        socketManager.handleSilentMessage(room, user, message.getSilentmessage() as SilentMessage);
-                    } else if (message.hasItemeventmessage()) {
-                        socketManager.handleItemEvent(room, user, message.getItemeventmessage() as ItemEventMessage);
-                    } else if (message.hasWebrtcsignaltoservermessage()) {
-                        socketManager.emitVideo(room, user, message.getWebrtcsignaltoservermessage() as WebRtcSignalToServerMessage);
-                    } else if (message.hasWebrtcscreensharingsignaltoservermessage()) {
-                        socketManager.emitScreenSharing(room, user, message.getWebrtcscreensharingsignaltoservermessage() as WebRtcSignalToServerMessage);
-                    } else if (message.hasPlayglobalmessage()) {
-                        socketManager.emitPlayGlobalMessage(room, message.getPlayglobalmessage() as PlayGlobalMessage);
-                    } else if (message.hasQueryjitsijwtmessage()){
-                        socketManager.handleQueryJitsiJwtMessage(user, message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage);
-                    } else {
-                        throw new Error('Unhandled message type');
-                    }*/
                 }
             } catch (e) {
                 emitError(call, e);
@@ -206,6 +178,10 @@ const roomManager: IRoomManagerServer = {
         // FIXME Work in progress
         socketManager.banUser(call.request.getRoomid(), call.request.getRecipientuuid(), 'foo bar TODO change this');
 
+        callback(null, new EmptyMessage());
+    },
+    sendAdminMessageToRoom(call: ServerUnaryCall<AdminRoomMessage>, callback: sendUnaryData<EmptyMessage>): void {
+        socketManager.sendAdminRoomMessage(call.request.getRoomid(), call.request.getMessage());
         callback(null, new EmptyMessage());
     },
 };

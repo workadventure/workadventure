@@ -217,6 +217,7 @@ message ServerToClientMessage {
     SendJitsiJwtMessage sendJitsiJwtMessage = 11;
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
+    AdminRoomMessage adminRoomMessage = 14;
   }
 }
 
@@ -351,6 +352,12 @@ message AdminMessage {
   string roomId = 3;
 }
 
+// A message sent by an administrator to everyone in a specific room
+message AdminRoomMessage {
+  string message = 1;
+  string roomId = 2;
+}
+
 // A message sent by an administrator to absolutely everybody
 message AdminGlobalMessage {
   string message = 1;
@@ -372,4 +379,5 @@ service RoomManager {
   rpc sendAdminMessage(AdminMessage) returns (EmptyMessage);
   rpc sendGlobalAdminMessage(AdminGlobalMessage) returns (EmptyMessage);
   rpc ban(BanMessage) returns (EmptyMessage);
+  rpc sendAdminMessageToRoom(AdminRoomMessage) returns (EmptyMessage);
 }

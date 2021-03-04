@@ -1,5 +1,4 @@
-import {HttpRequest, HttpResponse} from "uWebSockets.js";
-import {ADMIN_API_TOKEN} from "../Enum/EnvironmentVariable";
+import {HttpResponse} from "uWebSockets.js";
 
 
 export class BaseController {
