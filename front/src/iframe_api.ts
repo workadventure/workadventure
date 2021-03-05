@@ -1,13 +1,18 @@
+import {ChatEvent} from "./Api/Events/ChatEvent";
+
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
+    onChatMessage(callback: (message: string) => void): void;
 }
 
-// eslint-disable-next-line no-var
-declare var WA: WorkAdventureApi;
+declare global {
+    // eslint-disable-next-line no-var
+    var WA: WorkAdventureApi
+}
 
 window.WA = {
     /**
-     * Sends a message in the chat.
+     * Send a message in the chat.
      * Only the local user will receive this message.
      */
     sendChatMessage(message: string, author: string) {
@@ -16,7 +21,13 @@ window.WA = {
             'data': {
                 'message': message,
                 'author': author
-            }
+            } as ChatEvent
         }, '*');
+    },
+    /**
+     * Listen to messages sent by the local user, in the chat.
+     */
+    onChatMessage(callback: (message: string) => void): void {
+
     }
 }

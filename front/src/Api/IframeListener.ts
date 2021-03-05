@@ -1,9 +1,8 @@
 import {Subject} from "rxjs";
+import {ChatEvent, isChatEvent} from "./Events/ChatEvent";
+import {isIframeEventWrapper} from "./Events/IframeEvent";
 
-interface ChatEvent {
-    message: string,
-    author: string
-}
+
 
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.
@@ -21,11 +20,13 @@ class IframeListener {
             // event.source is window.opener
             // event.data is the data sent by the iframe
 
-            // FIXME: this is WAAAAAAAY too sloppy as "any" let's us put anything in the message.
-
-            if (event.data.type === 'chat') {
-                this._chatStream.next(event.data.data);
+            const payload = event.data;
+            if (isIframeEventWrapper(payload)) {
+                if (payload.type === 'chat' && isChatEvent(payload.data)) {
+                    this._chatStream.next(payload.data);
+                }
             }
+
 
         }, false);
     }
