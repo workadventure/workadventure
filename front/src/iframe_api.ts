@@ -2,6 +2,7 @@ interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
 }
 
+// eslint-disable-next-line no-var
 declare var WA: WorkAdventureApi;
 
 window.WA = {
