@@ -43,6 +43,7 @@ import {
 } from "./ConnexionModels";
 import {BodyResourceDescriptionInterface} from "../Phaser/Entity/PlayerTextures";
 import {adminMessagesService} from "./AdminMessagesService";
+import {connectionManager, ConnexionMessageEventTypes} from "./ConnectionManager";
 
 const manualPingDelay = 20000;
 
@@ -101,7 +102,7 @@ export class RoomConnection implements RoomConnection {
             }
 
             // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
-            if (this.userId === null) {
+            if (this.userId === null && !this.closed) {
                 this.dispatch(EventMessage.CONNECTING_ERROR, event);
             }
         });
@@ -156,7 +157,8 @@ export class RoomConnection implements RoomConnection {
                     } as RoomJoinedMessageInterface
                 });
             } else if (message.hasErrormessage()) {
-                console.error(EventMessage.MESSAGE_ERROR, message.getErrormessage()?.getMessage());
+                connectionManager._connexionMessageStream.next({type: ConnexionMessageEventTypes.worldFull}); //todo: generalize this behavior to all messages
+                this.closed = true;
             } else if (message.hasWebrtcsignaltoclientmessage()) {
                 this.dispatch(EventMessage.WEBRTC_SIGNAL, message.getWebrtcsignaltoclientmessage());
             } else if (message.hasWebrtcscreensharingsignaltoclientmessage()) {
