@@ -5,7 +5,7 @@ import {roomManager} from "./src/RoomManager";
 import {IRoomManagerServer, RoomManagerService} from "./src/Messages/generated/messages_grpc_pb";
 import {HTTP_PORT, GRPC_PORT} from "./src/Enum/EnvironmentVariable";
 
-App.listen(HTTP_PORT, () => console.log(`WorkAdventure HTTP API starting on port %d!`, HTTP_PORT))
+App.listen(HTTP_PORT, () => console.log(`WorkAdventure HTTP API starting on port %d!`, HTTP_PORT));
 
 const server = new grpc.Server();
 server.addService<IRoomManagerServer>(RoomManagerService, roomManager);

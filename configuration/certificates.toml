@@ -1,0 +1,10 @@
+# in files/certificates.toml
+
+[[entryPoints.websecure.tls.certificates]] #first certificate
+   certFile = "/home/ec2-user/skateshop.live/cert1.pem"
+   keyFile = "/home/ec2-user/skateshop.live/privkey1.key"
+
+
+
+   
+# and so on

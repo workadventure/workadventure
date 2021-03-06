@@ -221,7 +221,9 @@ export class MediaManager {
             if(stream.getVideoTracks().length === 0) {
                 throw Error('Video track is empty, please check camera permission of your navigator')
             }
-            this.enableCameraStyle();
+            
+	    
+	    this.enableCameraStyle();
             this.triggerUpdatedLocalStreamCallbacks(stream);
         }).catch((err) => {
             console.error(err);

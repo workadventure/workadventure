@@ -100,28 +100,28 @@ export abstract class Character extends Container {
             frameModel: name,
             frameStart: 0,
             frameEnd: 2,
-            frameRate: 10,
+            frameRate: 5,
             repeat: -1
         }, {
             key: `${name}-${PlayerAnimationNames.WalkLeft}`,
             frameModel: name,
             frameStart: 3,
             frameEnd: 5,
-            frameRate: 10,
+            frameRate: 5,
             repeat: -1
         }, {
             key: `${name}-${PlayerAnimationNames.WalkRight}`,
             frameModel: name,
             frameStart: 6,
             frameEnd: 8,
-            frameRate: 10,
+            frameRate: 5,
             repeat: -1
         }, {
             key: `${name}-${PlayerAnimationNames.WalkUp}`,
             frameModel: name,
             frameStart: 9,
             frameEnd: 11,
-            frameRate: 10,
+            frameRate: 5,
             repeat: -1
         }];
     }

@@ -321,12 +321,12 @@ body {
 
     #cowebsite {
         right: 0;
-        top: 0;
-        width: 50%;
-        height: 100vh;
+        top: 5vh;
+        width: 50vw;
+        height: 80vh;
     }
     #cowebsite.loading {
-        transform: translateX(90%);
+        transform: translateX(50%);
     }
     #cowebsite.hidden {
         transform: translateX(100%);
@@ -371,7 +371,7 @@ body {
         left: 0;
         bottom: 0;
         width: 100%;
-        height: 50%;
+        height: 90%;
     }
     #cowebsite.loading {
         transform: translateY(90%);
@@ -398,7 +398,7 @@ body {
 
 #cowebsite > iframe {
     width: 100%;
-    height: 100%;
+    height: 90%;
 }
 
 .audioplayer:first-child  {
