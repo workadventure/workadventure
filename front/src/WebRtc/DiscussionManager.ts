@@ -31,6 +31,9 @@ export class DiscussionManager {
             this.addMessage(chatEvent.author, chatEvent.message, false);
             this.showDiscussion();
         });
+        this.onSendMessageCallback('iframe_listener', (message) => {
+            iframeListener.sendUserInputChat(message);
+        })
     }
 
     private createDiscussPart(name: string) {

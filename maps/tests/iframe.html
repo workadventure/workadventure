@@ -13,5 +13,13 @@
                 WA.sendChatMessage('Hello world!', 'Mr Robot');
             }
         </script>
+        <div id="chatSent"></div>
+        <script>
+            WA.onChatMessage((message => {
+                const chatDiv = document.createElement('p');
+                chatDiv.innerText = message;
+                document.getElementById('chatSent').append(chatDiv);
+            }));
+        </script>
     </body>
 </html>

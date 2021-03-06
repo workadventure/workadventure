@@ -1,4 +1,4 @@
-interface IframeEvent {
+export interface IframeEvent {
     type: string;
     data: unknown;
 }
