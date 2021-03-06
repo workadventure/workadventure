@@ -7,19 +7,29 @@ import {UserInputChatEvent} from "./Events/UserInputChatEvent";
 
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.
+ * Also allows to send messages to those iframes.
  */
 class IframeListener {
     private readonly _chatStream: Subject<ChatEvent> = new Subject();
     public readonly chatStream = this._chatStream.asObservable();
 
+    private readonly iframes = new Set<HTMLIFrameElement>();
+
     init() {
         window.addEventListener("message", (message) => {
             // Do we trust the sender of this message?
-            //if (message.origin !== "http://example.com:8080")
-            //    return;
-
-            // message.source is window.opener
-            // message.data is the data sent by the iframe
+            // Let's only accept messages from the iframe that are allowed.
+            // Note: maybe we could restrict on the domain too for additional security (in case the iframe goes to another domain).
+            let found = false;
+            for (const iframe of this.iframes) {
+                if (iframe.contentWindow === message.source) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                return;
+            }
 
             const payload = message.data;
             if (isIframeEventWrapper(payload)) {
@@ -31,7 +41,17 @@ class IframeListener {
 
         }, false);
 
+    }
 
+    /**
+     * Allows the passed iFrame to send/receive messages via the API.
+     */
+    registerIframe(iframe: HTMLIFrameElement): void {
+        this.iframes.add(iframe);
+    }
+
+    unregisterIframe(iframe: HTMLIFrameElement): void {
+        this.iframes.delete(iframe);
     }
 
     sendUserInputChat(message: string) {
@@ -44,11 +64,10 @@ class IframeListener {
     }
 
     /**
-     * Sends the message... to absolutely all the iFrames that can be found in the current document.
+     * Sends the message... to all allowed iframes.
      */
     private postMessage(message: IframeEvent) {
-        // TODO: not the most effecient implementation if there are many events sent!
-        for (const iframe of document.querySelectorAll<HTMLIFrameElement>('iframe')) {
+        for (const iframe of this.iframes) {
             iframe.contentWindow?.postMessage(message, '*');
         }
     }

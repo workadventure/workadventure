@@ -1,4 +1,5 @@
 import {HtmlUtils} from "./HtmlUtils";
+import {iframeListener} from "../Api/IframeListener";
 
 export type CoWebsiteStateChangedCallback = () => void;
 
@@ -12,8 +13,8 @@ const cowebsiteDivId = "cowebsite"; // the id of the parent div of the iframe.
 const animationTime = 500; //time used by the css transitions, in ms.
 
 class CoWebsiteManager {
-    
-    private opened: iframeStates = iframeStates.closed; 
+
+    private opened: iframeStates = iframeStates.closed;
 
     private observers = new Array<CoWebsiteStateChangedCallback>();
     /**
@@ -21,12 +22,12 @@ class CoWebsiteManager {
      * So we use this promise to queue up every cowebsite state transition
      */
     private currentOperationPromise: Promise<void> = Promise.resolve();
-    private cowebsiteDiv: HTMLDivElement; 
-    
+    private cowebsiteDiv: HTMLDivElement;
+
     constructor() {
         this.cowebsiteDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteDivId);
     }
-    
+
     private close(): void {
         this.cowebsiteDiv.classList.remove('loaded'); //edit the css class to trigger the transition
         this.cowebsiteDiv.classList.add('hidden');
@@ -42,7 +43,7 @@ class CoWebsiteManager {
         this.opened = iframeStates.opened;
     }
 
-    public loadCoWebsite(url: string, base: string, allowPolicy?: string): void {
+    public loadCoWebsite(url: string, base: string, allowApi?: boolean, allowPolicy?: string): void {
         this.load();
         this.cowebsiteDiv.innerHTML = `<button class="close-btn" id="cowebsite-close">
                     <img src="resources/logos/close.svg">
@@ -57,11 +58,14 @@ class CoWebsiteManager {
         iframe.id = 'cowebsite-iframe';
         iframe.src = (new URL(url, base)).toString();
         if (allowPolicy) {
-            iframe.allow = allowPolicy; 
+            iframe.allow = allowPolicy;
         }
         const onloadPromise = new Promise((resolve) => {
             iframe.onload = () => resolve();
         });
+        if (allowApi) {
+            iframeListener.registerIframe(iframe);
+        }
         this.cowebsiteDiv.appendChild(iframe);
         const onTimeoutPromise = new Promise((resolve) => {
             setTimeout(() => resolve(), 2000);
@@ -92,6 +96,10 @@ class CoWebsiteManager {
             if(this.opened === iframeStates.closed) resolve(); //this method may be called twice, in case of iframe error for example
             this.close();
             this.fire();
+            const iframe = this.cowebsiteDiv.querySelector('iframe');
+            if (iframe) {
+                iframeListener.unregisterIframe(iframe);
+            }
             setTimeout(() => {
                 this.cowebsiteDiv.innerHTML = `<button class="close-btn" id="cowebsite-close">
                     <img src="resources/logos/close.svg">
@@ -122,7 +130,7 @@ class CoWebsiteManager {
         }
     }
 
-    //todo: is it still useful to allow any kind of observers? 
+    //todo: is it still useful to allow any kind of observers?
     public onStateChange(observer: CoWebsiteStateChangedCallback) {
         this.observers.push(observer);
     }

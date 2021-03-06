@@ -44,6 +44,11 @@
                  "name":"openWebsite",
                  "type":"string",
                  "value":"iframe.html"
+                }, 
+                {
+                 "name":"openWebsiteAllowApi",
+                 "type":"bool",
+                 "value":true
                 }],
          "type":"tilelayer",
          "visible":true,
