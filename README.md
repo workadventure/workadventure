@@ -8,11 +8,11 @@ Demo here : [https://workadventu.re/](https://workadventu.re/).
 
 ## Work in progress
 
-Work Adventure is a web-based collaborative workspace for small to medium teams (2-100 people) presented in the form of a
-16-bit video game.
+Skate Adventure is Work Adventure a web-based collaborative workspace for small to medium teams (2-100 people) presented in the form of a
+16-bit video game with characters that skateboard and a slightly different logo added to the mix .
 
-In Work Adventure, you can move around your office and talk to your colleagues (using a video-chat feature that is
-triggered when you move next to a colleague).
+In Skate Adventure, you can move around your office and outside talk to your colleagues or skater buddies (using a video-chat feature that is
+triggered when you move next to another avatar
 
 
 ## Getting started
