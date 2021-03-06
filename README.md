@@ -1,12 +1,12 @@
-![](https://github.com/thecodingmachine/workadventure/workflows/Continuous%20Integration/badge.svg)
+![](https://github.com/jlkuester/skateadventure/workflows/Continuous%20Integration/badge.svg)
 
 ![WorkAdventure landscape image](README-INTRO.jpg)
 
 Demo here : [https://workadventu.re/](https://workadventu.re/).
 
-# Work Adventure
+# Skate Adventure
 
-## Work in progress
+## Skate in progress
 
 Skate Adventure is Work Adventure a web-based collaborative workspace for small to medium teams (2-100 people) presented in the form of a
 16-bit video game with characters that skateboard and a slightly different logo added to the mix .
