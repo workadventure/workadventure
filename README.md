@@ -2,7 +2,7 @@
 
 ![WorkAdventure landscape image](README-INTRO.jpg)
 
-Demo here : [https://workadventu.re/](https://workadventu.re/).
+Demo here : [https://play.skateshop.live/](https://play.skateshop.live/).
 
 # Skate Adventure
 
