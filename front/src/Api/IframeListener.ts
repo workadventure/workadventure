@@ -2,6 +2,8 @@ import {Subject} from "rxjs";
 import {ChatEvent, isChatEvent} from "./Events/ChatEvent";
 import {IframeEvent, isIframeEventWrapper} from "./Events/IframeEvent";
 import {UserInputChatEvent} from "./Events/UserInputChatEvent";
+import * as crypto from "crypto";
+import {HtmlUtils} from "../WebRtc/HtmlUtils";
 
 
 
@@ -14,6 +16,7 @@ class IframeListener {
     public readonly chatStream = this._chatStream.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
+    private readonly scripts = new Map<string, HTMLIFrameElement>();
 
     init() {
         window.addEventListener("message", (message) => {
@@ -52,6 +55,70 @@ class IframeListener {
 
     unregisterIframe(iframe: HTMLIFrameElement): void {
         this.iframes.delete(iframe);
+    }
+
+    registerScript(scriptUrl: string): void {
+        console.log('Loading map related script at ', scriptUrl)
+
+        if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
+            // Using external iframe mode (
+            const iframe = document.createElement('iframe');
+            iframe.id = this.getIFrameId(scriptUrl);
+            iframe.style.display = 'none';
+            iframe.src = '/iframe.html?script='+encodeURIComponent(scriptUrl);
+
+            // We are putting a sandbox on this script because it will run in the same domain as the main website.
+            iframe.sandbox.add('allow-scripts');
+            iframe.sandbox.add('allow-top-navigation-by-user-activation');
+
+            document.body.prepend(iframe);
+
+            this.scripts.set(scriptUrl, iframe);
+            this.registerIframe(iframe);
+        } else {
+            // production code
+            const iframe = document.createElement('iframe');
+            iframe.id = this.getIFrameId(scriptUrl);
+
+            // We are putting a sandbox on this script because it will run in the same domain as the main website.
+            iframe.sandbox.add('allow-scripts');
+            iframe.sandbox.add('allow-top-navigation-by-user-activation');
+
+            const html = '<!doctype html>\n' +
+                '\n' +
+                '<html lang="en">\n' +
+                '<head>\n' +
+                '<script src="'+window.location.protocol+'//'+window.location.host+'/iframe_api.js" ></script>\n' +
+                '<script src="'+scriptUrl+'" ></script>\n' +
+                '</head>\n' +
+                '</html>\n';
+
+            //iframe.src = "data:text/html;charset=utf-8," + escape(html);
+            iframe.srcdoc = html;
+
+            document.body.prepend(iframe);
+
+            this.scripts.set(scriptUrl, iframe);
+            this.registerIframe(iframe);
+        }
+
+
+    }
+
+    private getIFrameId(scriptUrl: string): string {
+        return 'script'+crypto.createHash('md5').update(scriptUrl).digest("hex");
+    }
+
+    unregisterScript(scriptUrl: string): void {
+        const iFrameId = this.getIFrameId(scriptUrl);
+        const iframe = HtmlUtils.getElementByIdOrFail<HTMLIFrameElement>(iFrameId);
+        if (!iframe) {
+            throw new Error('Unknown iframe for script "'+scriptUrl+'"');
+        }
+        this.unregisterIframe(iframe);
+        iframe.remove();
+
+        this.scripts.delete(scriptUrl);
     }
 
     sendUserInputChat(message: string) {
