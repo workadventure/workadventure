@@ -2,10 +2,13 @@ import {ChatEvent, isChatEvent} from "./Api/Events/ChatEvent";
 import {isIframeEventWrapper} from "./Api/Events/IframeEvent";
 import {isUserInputChatEvent, UserInputChatEvent} from "./Api/Events/UserInputChatEvent";
 import {Subject} from "rxjs";
+import {EnterLeaveEvent, isEnterLeaveEvent} from "./Api/Events/EnterLeaveEvent";
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
     onChatMessage(callback: (message: string) => void): void;
+    onEnterZone(name: string, callback: () => void): void;
+    onLeaveZone(name: string, callback: () => void): void;
 }
 
 declare global {
@@ -16,6 +19,8 @@ declare global {
 type ChatMessageCallback = (message: string) => void;
 
 const userInputChatStream: Subject<UserInputChatEvent> = new Subject();
+const enterStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
+const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
 
 
 window.WA = {
@@ -39,19 +44,42 @@ window.WA = {
         userInputChatStream.subscribe((userInputChatEvent) => {
             callback(userInputChatEvent.message);
         });
-    }
+    },
+    onEnterZone(name: string, callback: () => void): void {
+        let subject = enterStreams.get(name);
+        if (subject === undefined) {
+            subject = new Subject<EnterLeaveEvent>();
+            enterStreams.set(name, subject);
+        }
+        subject.subscribe(callback);
+    },
+    onLeaveZone(name: string, callback: () => void): void {
+        let subject = leaveStreams.get(name);
+        if (subject === undefined) {
+            subject = new Subject<EnterLeaveEvent>();
+            leaveStreams.set(name, subject);
+        }
+        subject.subscribe(callback);
+    },
 }
 
 window.addEventListener('message', message => {
     if (message.source !== window.parent) {
-        console.log('MESSAGE SKIPPED!!!')
         return; // Skip message in this event listener
     }
 
     const payload = message.data;
+
+    console.log(payload);
+
     if (isIframeEventWrapper(payload)) {
-        if (payload.type === 'userInputChat' && isUserInputChatEvent(payload.data)) {
-            userInputChatStream.next(payload.data);
+        const payloadData = payload.data;
+        if (payload.type === 'userInputChat' && isUserInputChatEvent(payloadData)) {
+            userInputChatStream.next(payloadData);
+        } else if (payload.type === 'enterEvent' && isEnterLeaveEvent(payloadData)) {
+            enterStreams.get(payloadData.name)?.next();
+        } else if (payload.type === 'leaveEvent' && isEnterLeaveEvent(payloadData)) {
+            leaveStreams.get(payloadData.name)?.next();
         }
     }
 

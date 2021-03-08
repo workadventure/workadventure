@@ -4,6 +4,7 @@ import {IframeEvent, isIframeEventWrapper} from "./Events/IframeEvent";
 import {UserInputChatEvent} from "./Events/UserInputChatEvent";
 import * as crypto from "crypto";
 import {HtmlUtils} from "../WebRtc/HtmlUtils";
+import {EnterLeaveEvent} from "./Events/EnterLeaveEvent";
 
 
 
@@ -127,6 +128,24 @@ class IframeListener {
             'data': {
                 'message': message,
             } as UserInputChatEvent
+        });
+    }
+
+    sendEnterEvent(name: string) {
+        this.postMessage({
+            'type': 'enterEvent',
+            'data': {
+                "name": name
+            } as EnterLeaveEvent
+        });
+    }
+
+    sendLeaveEvent(name: string) {
+        this.postMessage({
+            'type': 'leaveEvent',
+            'data': {
+                "name": name
+            } as EnterLeaveEvent
         });
     }
 

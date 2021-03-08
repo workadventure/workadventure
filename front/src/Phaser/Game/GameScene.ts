@@ -725,6 +725,14 @@ export class GameScene extends ResizableScene implements CenterListener {
             this.playAudio(newValue, true);
         });
 
+        this.gameMap.onPropertyChange('zone', (newValue, oldValue) => {
+            if (newValue === undefined || newValue === false || newValue === '') {
+                iframeListener.sendLeaveEvent(oldValue as string);
+            } else {
+                iframeListener.sendEnterEvent(newValue as string);
+            }
+        });
+
     }
 
     private onMapExit(exitKey: string) {
