@@ -17,20 +17,24 @@ export enum UserInputEvent {
     SpeedUp,
     Interact,
     Shout,
+    JoystickMove,
 }
 
-//we cannot the map structure so we have to create a replacment
+//we cannot use a map structure so we have to create a replacment
 export class ActiveEventList {
-    private KeysCode : Map<UserInputEvent, boolean> = new Map<UserInputEvent, boolean>();
+    private eventMap : Map<UserInputEvent, boolean> = new Map<UserInputEvent, boolean>();
 
     get(event: UserInputEvent): boolean {
-        return this.KeysCode.get(event) || false;
+        return this.eventMap.get(event) || false;
     }
     set(event: UserInputEvent, value: boolean): void {
-        this.KeysCode.set(event, value);
+        this.eventMap.set(event, value);
     }
     forEach(callback: (value: boolean, key: UserInputEvent) => void): void {
-        this.KeysCode.forEach(callback);
+        this.eventMap.forEach(callback);
+    }
+    any(): boolean {
+        return Array.from(this.eventMap.values()).reduce((accu, curr) => accu || curr, false);
     }
 }
 
@@ -127,8 +131,9 @@ export class UserInputManager {
                 }
             }
         });
+        eventsMap.set(UserInputEvent.JoystickMove, this.joystickEvents.any());
         this.KeysCode.forEach(d => {
-            if (d. keyInstance.isDown) {
+            if (d.keyInstance.isDown) {
                 eventsMap.set(d.event, true);
             }
         });
