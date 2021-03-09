@@ -18,3 +18,26 @@ WA.onLeaveZone('myTrigger', () => {
 WA.onEnterZone('notExist', () => {
     WA.sendChatMessage("YOU SHOULD NEVER SEE THIS", 'Poly Parrot');
 })
+
+let popupId;
+
+WA.onEnterZone('popupZone', () => {
+    popupId = WA.openPopup('foobar', 'This is a test message. Hi!', [
+        {
+            label: "Close",
+            className: "normal",
+            closeOnClick: true
+        },
+        {
+            label: "Next",
+            className: "success",
+            callback: () => {
+                console.log('BUTTON CLICKED')
+            }
+        }
+    ])
+})
+
+/*WA.onLeaveZone('popupZone', () => {
+    WA.sendChatMessage("Thanks!", 'Poly Parrot');
+})*/

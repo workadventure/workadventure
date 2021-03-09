@@ -75,6 +75,7 @@ import {localUserStore} from "../../Connexion/LocalUserStore";
 import {iframeListener} from "../../Api/IframeListener";
 import DOMElement = Phaser.GameObjects.DOMElement;
 import Tween = Phaser.Tweens.Tween;
+import {HtmlUtils} from "../../WebRtc/HtmlUtils";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -165,8 +166,8 @@ export class GameScene extends ResizableScene implements CenterListener {
     private openChatIcon!: OpenChatIcon;
     private playerName!: string;
     private characterLayers!: string[];
+    private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
 
-    private popUpElement : DOMElement| undefined;
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
             key: customKey ?? room.id
@@ -442,6 +443,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         // From now, this game scene will be notified of reposition events
         layoutManager.setListener(this);
         this.triggerOnMapLayerPropertyChange();
+        this.listenToIframeEvents();
 
         const camera = this.cameras.main;
 
@@ -655,33 +657,6 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.gameMap.onPropertyChange('exitSceneUrl', (newValue, oldValue) => {
             if (newValue) this.onMapExit(newValue as string);
         });
-        this.gameMap.onPropertyChange('inGameConsoleMessage', (newValue, oldValue, allProps) => {
-            if (newValue !== undefined) {
-                this.popUpElement?.destroy();
-                this.popUpElement = this.add.dom(2100, 150).createFromHTML(newValue as string);
-                this.popUpElement.scale = 0;
-                this.tweens.add({
-                    targets     : this.popUpElement ,
-                    scale       : 1,
-                    ease        : "EaseOut",
-                    duration    : 400,
-                });
-
-                this.popUpElement.setClassName("popUpElement");
-
-            } else {
-                this.tweens.add({
-                    targets     : this.popUpElement ,
-                    scale       : 0,
-                    ease        : "EaseOut",
-                    duration    : 400,
-                    onComplete  : () => {
-                        this.popUpElement?.destroy();
-                        this.popUpElement = undefined;
-                    },
-                });
-            }
-        });
         this.gameMap.onPropertyChange('exitUrl', (newValue, oldValue) => {
             if (newValue) this.onMapExit(newValue as string);
         });
@@ -762,6 +737,56 @@ export class GameScene extends ResizableScene implements CenterListener {
                 iframeListener.sendEnterEvent(newValue as string);
             }
         });
+
+    }
+
+    private listenToIframeEvents(): void {
+        iframeListener.openPopupStream.subscribe((openPopupEvent) => {
+            const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
+
+            let html = `<div class="nes-container with-title is-centered">
+${escapedMessage}
+</div>`;
+
+            const domElement = this.add.dom(150, 150).createFromHTML(html);
+            domElement.scale = 0;
+            domElement.setClassName('popUpElement');
+            this.tweens.add({
+                targets     : domElement ,
+                scale       : 1,
+                ease        : "EaseOut",
+                duration    : 400,
+            });
+
+            this.popUpElements.set(openPopupEvent.popupId, domElement);
+        });
+        /*this.gameMap.onPropertyChange('inGameConsoleMessage', (newValue, oldValue, allProps) => {
+            if (newValue !== undefined) {
+                this.popUpElement?.destroy();
+                this.popUpElement = this.add.dom(2100, 150).createFromHTML(newValue as string);
+                this.popUpElement.scale = 0;
+                this.tweens.add({
+                    targets     : this.popUpElement ,
+                    scale       : 1,
+                    ease        : "EaseOut",
+                    duration    : 400,
+                });
+
+                this.popUpElement.setClassName("popUpElement");
+
+            } else {
+                this.tweens.add({
+                    targets     : this.popUpElement ,
+                    scale       : 0,
+                    ease        : "EaseOut",
+                    duration    : 400,
+                    onComplete  : () => {
+                        this.popUpElement?.destroy();
+                        this.popUpElement = undefined;
+                    },
+                });
+            }
+        });*/
 
     }
 

@@ -3,12 +3,14 @@ import {isIframeEventWrapper} from "./Api/Events/IframeEvent";
 import {isUserInputChatEvent, UserInputChatEvent} from "./Api/Events/UserInputChatEvent";
 import {Subject} from "rxjs";
 import {EnterLeaveEvent, isEnterLeaveEvent} from "./Api/Events/EnterLeaveEvent";
+import {OpenPopupEvent} from "./Api/Events/OpenPopupEvent";
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
     onChatMessage(callback: (message: string) => void): void;
     onEnterZone(name: string, callback: () => void): void;
     onLeaveZone(name: string, callback: () => void): void;
+    openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): number;
 }
 
 declare global {
@@ -21,6 +23,25 @@ type ChatMessageCallback = (message: string) => void;
 const userInputChatStream: Subject<UserInputChatEvent> = new Subject();
 const enterStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
 const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
+let popupId = 0;
+interface ButtonDescriptor {
+    /**
+     * The label of the button
+     */
+    label: string,
+    /**
+     * The type of the button. Can be one of "normal", "primary", "success", "warning", "error", "disabled"
+     */
+    className?: "normal"|"primary"|"success"|"warning"|"error"|"disabled",
+    /**
+     * Callback called if the button is pressed
+     */
+    callback?: () => void,
+    /**
+     * If set to true, the popup is closed when the button is clicked
+     */
+    closeOnClick?: boolean
+}
 
 
 window.WA = {
@@ -36,6 +57,25 @@ window.WA = {
                 'author': author
             } as ChatEvent
         }, '*');
+    },
+    openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): number {
+        popupId++;
+        window.parent.postMessage({
+            'type': 'openPopup',
+            'data': {
+                popupId,
+                targetObject,
+                message,
+                buttons: buttons.map((button) => {
+                    return {
+                        label: button.label,
+                        className: button.className,
+                        closeOnClick: button.closeOnClick
+                    };
+                })
+            } as OpenPopupEvent
+        }, '*');
+        return popupId;
     },
     /**
      * Listen to messages sent by the local user, in the chat.

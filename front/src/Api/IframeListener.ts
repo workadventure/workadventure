@@ -5,6 +5,7 @@ import {UserInputChatEvent} from "./Events/UserInputChatEvent";
 import * as crypto from "crypto";
 import {HtmlUtils} from "../WebRtc/HtmlUtils";
 import {EnterLeaveEvent} from "./Events/EnterLeaveEvent";
+import {isOpenPopupEvent, OpenPopupEvent} from "./Events/OpenPopupEvent";
 
 
 
@@ -15,6 +16,9 @@ import {EnterLeaveEvent} from "./Events/EnterLeaveEvent";
 class IframeListener {
     private readonly _chatStream: Subject<ChatEvent> = new Subject();
     public readonly chatStream = this._chatStream.asObservable();
+
+    private readonly _openPopupStream: Subject<OpenPopupEvent> = new Subject();
+    public readonly openPopupStream = this._openPopupStream.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
@@ -36,9 +40,14 @@ class IframeListener {
             }
 
             const payload = message.data;
+            console.log('FOO');
             if (isIframeEventWrapper(payload)) {
+                console.log('FOOBAR', payload);
                 if (payload.type === 'chat' && isChatEvent(payload.data)) {
                     this._chatStream.next(payload.data);
+                } else if (payload.type === 'openPopup' && isOpenPopupEvent(payload.data)) {
+                    console.log('OPENPOPUP called');
+                    this._openPopupStream.next(payload.data);
                 }
             }
 
