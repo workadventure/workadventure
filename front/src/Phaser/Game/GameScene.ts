@@ -661,18 +661,20 @@ export class GameScene extends ResizableScene implements CenterListener {
                     scale       : 1,
                     ease        : "EaseOut",
                     duration    : 400,
-
-
                 });
 
-                this.popUpElement.setClassName("popUpElement"); 
+                this.popUpElement.setClassName("popUpElement");
+
             } else {
                 this.tweens.add({
                     targets     : this.popUpElement ,
                     scale       : 0,
                     ease        : "EaseOut",
                     duration    : 400,
-
+                    onComplete  : () => {
+                        this.popUpElement?.destroy();
+                        this.popUpElement = undefined;
+                    },
                 });
             }
         });
