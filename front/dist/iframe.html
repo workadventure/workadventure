@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <script src="/iframe_api.js" ></script>
+    <script>
+        // Note: this is a huge XSS flow as we allow anyone to load a Javascript file in our domain.
+        // This file must ABSOLUTELY be removed from the Docker images/deployments and is only here
+        // for development purpose (because dynamically generated iframes are not working with
+        // webpack hot reload due to an issue with rights)
+        const urlParams = new URLSearchParams(window.location.search);
+        const scriptUrl = urlParams.get('script');
+        const script = document.createElement('script');
+        script.src = scriptUrl;
+        document.head.append(script);
+    </script>
+    </head>
+</html>

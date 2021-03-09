@@ -3,7 +3,10 @@ const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-    entry: './src/index.ts',
+    entry: {
+        'main': './src/index.ts',
+        'iframe_api': './src/iframe_api.ts'
+    },
     devtool: 'inline-source-map',
     devServer: {
         contentBase: './dist',
@@ -29,7 +32,11 @@ module.exports = {
         extensions: [ '.tsx', '.ts', '.js' ],
     },
     output: {
-        filename: '[name].[contenthash].js',
+        filename: (pathData) => {
+            // Add a content hash only for the main bundle.
+            // We want the iframe_api.js file to keep its name as it will be referenced from outside iframes.
+            return pathData.chunk.name === 'main' ? 'js/[name].[contenthash].js': '[name].js';
+        },
         path: path.resolve(__dirname, 'dist'),
         publicPath: '/'
     },
@@ -48,7 +55,8 @@ module.exports = {
                     removeScriptTypeAttributes: true,
                     removeStyleLinkTypeAttributes: true,
                     useShortDoctype: true
-                }
+                },
+                chunks: ['main']
             }
         ),
         new webpack.ProvidePlugin({

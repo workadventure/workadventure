@@ -72,8 +72,10 @@ import {TextureError} from "../../Exception/TextureError";
 import {addLoader} from "../Components/Loader";
 import {ErrorSceneName} from "../Reconnecting/ErrorScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
+import {iframeListener} from "../../Api/IframeListener";
 import DOMElement = Phaser.GameObjects.DOMElement;
 import Tween = Phaser.Tweens.Tween;
+import {HtmlUtils} from "../../WebRtc/HtmlUtils";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -164,8 +166,8 @@ export class GameScene extends ResizableScene implements CenterListener {
     private openChatIcon!: OpenChatIcon;
     private playerName!: string;
     private characterLayers!: string[];
+    private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
 
-    private popUpElement : DOMElement| undefined;
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
             key: customKey ?? room.id
@@ -316,6 +318,12 @@ export class GameScene extends ResizableScene implements CenterListener {
             //     });
             // });
         }
+
+        // Now, let's load the script, if any
+        const scripts = this.getScriptUrls(this.mapFile);
+        for (const script of scripts) {
+            iframeListener.registerScript(script);
+        }
     }
 
     //hook initialisation
@@ -435,6 +443,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         // From now, this game scene will be notified of reposition events
         layoutManager.setListener(this);
         this.triggerOnMapLayerPropertyChange();
+        this.listenToIframeEvents();
 
         const camera = this.cameras.main;
 
@@ -648,33 +657,6 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.gameMap.onPropertyChange('exitSceneUrl', (newValue, oldValue) => {
             if (newValue) this.onMapExit(newValue as string);
         });
-        this.gameMap.onPropertyChange('inGameConsoleMessage', (newValue, oldValue, allProps) => {
-            if (newValue !== undefined) {
-                this.popUpElement?.destroy();
-                this.popUpElement = this.add.dom(2100, 150).createFromHTML(newValue as string);
-                this.popUpElement.scale = 0;
-                this.tweens.add({
-                    targets     : this.popUpElement ,
-                    scale       : 1,
-                    ease        : "EaseOut",
-                    duration    : 400,
-                });
-
-                this.popUpElement.setClassName("popUpElement");
-
-            } else {
-                this.tweens.add({
-                    targets     : this.popUpElement ,
-                    scale       : 0,
-                    ease        : "EaseOut",
-                    duration    : 400,
-                    onComplete  : () => {
-                        this.popUpElement?.destroy();
-                        this.popUpElement = undefined;
-                    },
-                });
-            }
-        });
         this.gameMap.onPropertyChange('exitUrl', (newValue, oldValue) => {
             if (newValue) this.onMapExit(newValue as string);
         });
@@ -684,7 +666,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                 coWebsiteManager.closeCoWebsite();
             }else{
                 const openWebsiteFunction = () => {
-                    coWebsiteManager.loadCoWebsite(newValue as string, this.MapUrlFile, allProps.get('openWebsitePolicy') as string | undefined);
+                    coWebsiteManager.loadCoWebsite(newValue as string, this.MapUrlFile, allProps.get('openWebsiteAllowApi') as boolean | undefined, allProps.get('openWebsitePolicy') as string | undefined);
                     layoutManager.removeActionButton('openWebsite', this.userInputManager);
                 };
 
@@ -748,6 +730,64 @@ export class GameScene extends ResizableScene implements CenterListener {
             this.playAudio(newValue, true);
         });
 
+        this.gameMap.onPropertyChange('zone', (newValue, oldValue) => {
+            if (newValue === undefined || newValue === false || newValue === '') {
+                iframeListener.sendLeaveEvent(oldValue as string);
+            } else {
+                iframeListener.sendEnterEvent(newValue as string);
+            }
+        });
+
+    }
+
+    private listenToIframeEvents(): void {
+        iframeListener.openPopupStream.subscribe((openPopupEvent) => {
+            const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
+
+            let html = `<div class="nes-container with-title is-centered">
+${escapedMessage}
+</div>`;
+
+            const domElement = this.add.dom(150, 150).createFromHTML(html);
+            domElement.scale = 0;
+            domElement.setClassName('popUpElement');
+            this.tweens.add({
+                targets     : domElement ,
+                scale       : 1,
+                ease        : "EaseOut",
+                duration    : 400,
+            });
+
+            this.popUpElements.set(openPopupEvent.popupId, domElement);
+        });
+        /*this.gameMap.onPropertyChange('inGameConsoleMessage', (newValue, oldValue, allProps) => {
+            if (newValue !== undefined) {
+                this.popUpElement?.destroy();
+                this.popUpElement = this.add.dom(2100, 150).createFromHTML(newValue as string);
+                this.popUpElement.scale = 0;
+                this.tweens.add({
+                    targets     : this.popUpElement ,
+                    scale       : 1,
+                    ease        : "EaseOut",
+                    duration    : 400,
+                });
+
+                this.popUpElement.setClassName("popUpElement");
+
+            } else {
+                this.tweens.add({
+                    targets     : this.popUpElement ,
+                    scale       : 0,
+                    ease        : "EaseOut",
+                    duration    : 400,
+                    onComplete  : () => {
+                        this.popUpElement?.destroy();
+                        this.popUpElement = undefined;
+                    },
+                });
+            }
+        });*/
+
     }
 
     private onMapExit(exitKey: string) {
@@ -774,6 +814,12 @@ export class GameScene extends ResizableScene implements CenterListener {
     public cleanupClosingScene(): void {
         // stop playing audio, close any open website, stop any open Jitsi
         coWebsiteManager.closeCoWebsite();
+        // Stop the script, if any
+        const scripts = this.getScriptUrls(this.mapFile);
+        for (const script of scripts) {
+            iframeListener.unregisterScript(script);
+        }
+
         this.stopJitsi();
         this.playAudio(undefined);
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
@@ -859,8 +905,12 @@ export class GameScene extends ResizableScene implements CenterListener {
         return this.getProperty(layer, "startLayer") == true;
     }
 
-    private getProperty(layer: ITiledMapLayer, name: string): string|boolean|number|undefined {
-        const properties = layer.properties;
+    private getScriptUrls(map: ITiledMap): string[] {
+        return (this.getProperties(map, "script") as string[]).map((script) => (new URL(script, this.MapUrlFile)).toString());
+    }
+
+    private getProperty(layer: ITiledMapLayer|ITiledMap, name: string): string|boolean|number|undefined {
+        const properties: ITiledMapLayerProperty[] = layer.properties;
         if (!properties) {
             return undefined;
         }
@@ -869,6 +919,14 @@ export class GameScene extends ResizableScene implements CenterListener {
             return undefined;
         }
         return obj.value;
+    }
+
+    private getProperties(layer: ITiledMapLayer|ITiledMap, name: string): (string|number|boolean|undefined)[] {
+        const properties: ITiledMapLayerProperty[] = layer.properties;
+        if (!properties) {
+            return [];
+        }
+        return properties.filter((property: ITiledMapLayerProperty) => property.name.toLowerCase() === name.toLowerCase()).map((property) => property.value);
     }
 
     //todo: push that into the gameManager
