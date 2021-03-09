@@ -21,10 +21,10 @@ import {jwtTokenManager} from "../Services/JWTTokenManager";
 import {adminApi, CharacterTexture, FetchMemberDataByUuidResponse} from "../Services/AdminApi";
 import {SocketManager, socketManager} from "../Services/SocketManager";
 import {emitInBatch} from "../Services/IoSocketHelpers";
-import {clientEventsEmitter} from "../Services/ClientEventsEmitter";
 import {ADMIN_API_TOKEN, ADMIN_API_URL, SOCKET_IDLE_TIMER} from "../Enum/EnvironmentVariable";
 import {Zone} from "_Model/Zone";
 import {ExAdminSocketInterface} from "_Model/Websocket/ExAdminSocketInterface";
+import {v4} from "uuid";
 
 export class IoSocketController {
     private nextUserId: number = 1;
@@ -64,22 +64,6 @@ export class IoSocketController {
                 ws.disconnecting = false;
 
                 socketManager.handleAdminRoom(ws as ExAdminSocketInterface, ws.roomId as string);
-
-                /*ws.send('Data:'+JSON.stringify(socketManager.getAdminSocketDataFor(ws.roomId as string)));
-                ws.clientJoinCallback = (clientUUid: string, roomId: string) => {
-                    const wsroomId = ws.roomId as string;
-                    if(wsroomId === roomId) {
-                        ws.send('MemberJoin:'+clientUUid+';'+roomId);
-                    }
-                };
-                ws.clientLeaveCallback = (clientUUid: string, roomId: string) => {
-                    const wsroomId = ws.roomId as string;
-                    if(wsroomId === roomId) {
-                        ws.send('MemberLeave:'+clientUUid+';'+roomId);
-                    }
-                };
-                clientEventsEmitter.registerToClientJoin(ws.clientJoinCallback);
-                clientEventsEmitter.registerToClientLeave(ws.clientLeaveCallback);*/
             },
             message: (ws, arrayBuffer, isBinary): void => {
                 try {
@@ -106,7 +90,6 @@ export class IoSocketController {
                 const Client = (ws as ExAdminSocketInterface);
                 try {
                     Client.disconnecting = true;
-                    //leave room
                     socketManager.leaveAdminRoom(Client);
                 } catch (e) {
                     console.error('An error occurred on admin "disconnect"');
@@ -181,14 +164,31 @@ export class IoSocketController {
                         }*/
                         if (ADMIN_API_URL) {
                             try {
-                                const userData = await adminApi.fetchMemberDataByUuid(userUuid);
-                                //console.log('USERDATA', userData)
+                                let userData : FetchMemberDataByUuidResponse = {
+                                    uuid: v4(),
+                                    tags: [],
+                                    textures: [],
+                                    messages: [],
+                                    anonymous: true
+                                };
+                                try {
+                                    userData = await adminApi.fetchMemberDataByUuid(userUuid);
+                                }catch (err){
+                                    if (err?.response?.status == 404) {
+                                        // If we get an HTTP 404, the token is invalid. Let's perform an anonymous login!
+                                        console.warn('Cannot find user with uuid "'+userUuid+'". Performing an anonymous login instead.');
+                                    }else{
+                                        throw err;
+                                    }
+                                }
                                 memberTags = userData.tags;
                                 memberTextures = userData.textures;
-                                if (!room.anonymous && room.policyType === GameRoomPolicyTypes.USE_TAGS_POLICY && !room.canAccess(memberTags)) {
+                                if (!room.anonymous && room.policyType === GameRoomPolicyTypes.USE_TAGS_POLICY && (userData.anonymous === true || !room.canAccess(memberTags))) {
                                     throw new Error('No correct tags')
                                 }
-                                //console.log('access granted for user '+userUuid+' and room '+roomId);
+                                if (!room.anonymous && room.policyType === GameRoomPolicyTypes.MEMBERS_ONLY_POLICY && userData.anonymous === true) {
+                                    throw new Error('No correct member')
+                                }
                             } catch (e) {
                                 console.log('access not granted for user '+userUuid+' and room '+roomId);
                                 console.error(e);

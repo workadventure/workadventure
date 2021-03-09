@@ -1,5 +1,4 @@
 import {GameRoom} from "../Model/GameRoom";
-import {CharacterLayer} from "_Model/Websocket/CharacterLayer";
 import {
     ItemEventMessage,
     ItemStateMessage,
@@ -22,7 +21,11 @@ import {
     Zone as ProtoZone,
     BatchToPusherMessage,
     SubToPusherMessage,
-    UserJoinedZoneMessage, GroupUpdateZoneMessage, GroupLeftZoneMessage, UserLeftZoneMessage, BanUserMessage
+    UserJoinedZoneMessage,
+    GroupUpdateZoneMessage,
+    GroupLeftZoneMessage,
+    UserLeftZoneMessage,
+    BanUserMessage,
 } from "../Messages/generated/messages_pb";
 import {User, UserSocket} from "../Model/User";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
@@ -51,18 +54,6 @@ import crypto from "crypto";
 
 const debug = Debug('sockermanager');
 
-interface AdminSocketRoomsList {
-    [index: string]: number;
-}
-interface AdminSocketUsersList {
-    [index: string]: boolean;
-}
-
-export interface AdminSocketData {
-    rooms: AdminSocketRoomsList,
-    users: AdminSocketUsersList,
-}
-
 function emitZoneMessage(subMessage: SubToPusherMessage, socket: ZoneSocket): void {
     // TODO: should we batch those every 100ms?
     const batchMessage = new BatchToPusherMessage();
@@ -83,68 +74,13 @@ export class SocketManager {
         });
     }
 
-    /*getAdminSocketDataFor(roomId:string): AdminSocketData {
-        const data:AdminSocketData = {
-            rooms: {},
-            users: {},
-        }
-        const room = this.rooms.get(roomId);
-        if (room === undefined) {
-            return data;
-        }
-        const users = room.getUsers();
-        data.rooms[roomId] = users.size;
-        users.forEach(user => {
-            data.users[user.uuid] = true
-        })
-        return data;
-    }*/
-
     public async handleJoinRoom(socket: UserSocket, joinRoomMessage: JoinRoomMessage): Promise<{ room: GameRoom; user: User }> {
-        /*const positionMessage = joinRoomMessage.getPositionmessage();
-        if (positionMessage === undefined) {
-            // TODO: send error message?
-            throw new Error('Empty pointMessage found in JoinRoomMessage');
-        }*/
-
-        //const position = ProtobufUtils.toPointInterface(positionMessage);
-        //const viewport = client.viewport;
-
-        //this.sockets.set(client.userId, client); //todo: should this be at the end of the function?
 
         //join new previous room
         const {room, user} = await this.joinRoom(socket, joinRoomMessage);
 
-        //const things = room.setViewport(client, viewport);
-
         const roomJoinedMessage = new RoomJoinedMessage();
         roomJoinedMessage.setTagList(joinRoomMessage.getTagList());
-        /*for (const thing of things) {
-            if (thing instanceof User) {
-                const player: ExSocketInterface|undefined = this.sockets.get(thing.id);
-                if (player === undefined) {
-                    console.warn('Something went wrong. The World contains a user "'+thing.id+"' but this user does not exist in the sockets list!");
-                    continue;
-                }
-
-                const userJoinedMessage = new UserJoinedMessage();
-                userJoinedMessage.setUserid(thing.id);
-                userJoinedMessage.setName(player.name);
-                userJoinedMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(player.characterLayers));
-                userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(player.position));
-
-                roomJoinedMessage.addUser(userJoinedMessage);
-                roomJoinedMessage.setTagList(joinRoomMessage.getTagList());
-            } else if (thing instanceof Group) {
-                const groupUpdateMessage = new GroupUpdateMessage();
-                groupUpdateMessage.setGroupid(thing.getId());
-                groupUpdateMessage.setPosition(ProtobufUtils.toPointMessage(thing.getPosition()));
-
-                roomJoinedMessage.addGroup(groupUpdateMessage);
-            } else {
-                console.error("Unexpected type for Movable returned by setViewport");
-            }
-        }*/
 
         for (const [itemId, item] of room.getItemsState().entries()) {
             const itemStateMessage = new ItemStateMessage();
@@ -158,8 +94,6 @@ export class SocketManager {
 
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setRoomjoinedmessage(roomJoinedMessage);
-
-        //user.socket.write(serverToClientMessage);
         console.log('SENDING MESSAGE roomJoinedMessage');
         socket.write(serverToClientMessage);
 
@@ -167,13 +101,6 @@ export class SocketManager {
             room,
             user
         };
-
-        /*const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setRoomjoinedmessage(roomJoinedMessage);
-
-        if (!client.disconnecting) {
-            client.send(serverToClientMessage.serializeBinary().buffer, true);
-        }*/
 
     }
 
@@ -693,33 +620,6 @@ export class SocketManager {
         }, 10000);
     }
 
-    /**
-     * Merges the characterLayers received from the front (as an array of string) with the custom textures from the back.
-     */
-    static mergeCharacterLayersAndCustomTextures(characterLayers: string[], memberTextures: CharacterTexture[]): CharacterLayer[] {
-        const characterLayerObjs: CharacterLayer[] = [];
-        for (const characterLayer of characterLayers) {
-            if (characterLayer.startsWith('customCharacterTexture')) {
-                const customCharacterLayerId: number = +characterLayer.substr(22);
-                for (const memberTexture of memberTextures) {
-                    if (memberTexture.id == customCharacterLayerId) {
-                        characterLayerObjs.push({
-                            name: characterLayer,
-                            url: memberTexture.url
-                        })
-                        break;
-                    }
-                }
-            } else {
-                characterLayerObjs.push({
-                    name: characterLayer,
-                    url: undefined
-                })
-            }
-        }
-        return characterLayerObjs;
-    }
-
     public addZoneListener(call: ZoneSocket, roomId: string, x: number, y: number): void {
         const room = this.rooms.get(roomId);
         if (!room) {
@@ -773,11 +673,6 @@ export class SocketManager {
     public async handleJoinAdminRoom(admin: Admin, roomId: string): Promise<GameRoom> {
         const room = await socketManager.getOrCreateRoom(roomId);
 
-        // Dispatch groups position to newly connected user
-        /*world.getGroups().forEach((group: Group) => {
-            this.emitCreateUpdateGroupEvent(socket, group);
-        });*/
-
         room.adminJoin(admin);
 
         return room;
@@ -807,7 +702,7 @@ export class SocketManager {
 
         const sendUserMessage = new SendUserMessage();
         sendUserMessage.setMessage(message);
-        sendUserMessage.setType('ban');
+        sendUserMessage.setType('ban'); //todo: is the type correct?
 
         const subToPusherMessage = new SubToPusherMessage();
         subToPusherMessage.setSendusermessage(sendUserMessage);
@@ -842,6 +737,27 @@ export class SocketManager {
 
         // Let's close the connection when the user is banned.
         recipient.socket.end();
+    }
+
+
+    sendAdminRoomMessage(roomId: string, message: string) {
+        const room = this.rooms.get(roomId);
+        if (!room) {
+            //todo: this should cause the http call to return a 500
+            console.error("In sendAdminRoomMessage, could not find room with id '" +  roomId + "'. Maybe the room was closed a few milliseconds ago and there was a race condition?");
+            return;
+        }
+
+        room.getUsers().forEach((recipient) => {
+            const sendUserMessage = new SendUserMessage();
+            sendUserMessage.setMessage(message);
+            sendUserMessage.setType('message');
+
+            const clientMessage = new ServerToClientMessage();
+            clientMessage.setSendusermessage(sendUserMessage);
+
+            recipient.socket.write(clientMessage);
+        });
     }
 }
 

@@ -4,7 +4,7 @@
   local tag = namespace,
   local url = if namespace == "master" then "workadventu.re" else namespace+".workadventure.test.thecodingmachine.com",
   // develop branch does not use admin because of issue with SSL certificate of admin as of now.
-  local adminUrl = if namespace == "master" /*|| namespace == "develop"*/ || std.startsWith(namespace, "admin") then "https://"+url else null,
+  local adminUrl = if namespace == "master" || namespace == "develop" || std.startsWith(namespace, "admin") then "https://"+url else null,
   "$schema": "https://raw.githubusercontent.com/thecodingmachine/deeployer/master/deeployer.schema.json",
   "version": "1.0",
   "containers": {
@@ -23,9 +23,12 @@
          "JITSI_URL": env.JITSI_URL,
          "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
          "TURN_STATIC_AUTH_SECRET": env.TURN_STATIC_AUTH_SECRET,
-       } + if adminUrl != null then {
+       } + (if adminUrl != null then {
          "ADMIN_API_URL": adminUrl,
-       } else {}
+       } else {}) + if namespace != "master" then {
+         // Absolutely ugly WorkAround to circumvent broken certificates on the K8S test cluster. Don't do this in production kids!
+         "NODE_TLS_REJECT_UNAUTHORIZED": "0"
+       }
      },
      "back2": {
             "image": "thecodingmachine/workadventure-back:"+tag,
@@ -42,9 +45,12 @@
               "JITSI_URL": env.JITSI_URL,
               "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
               "TURN_STATIC_AUTH_SECRET": env.TURN_STATIC_AUTH_SECRET,
-            } + if adminUrl != null then {
+            } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
-            } else {}
+            } else {}) + if namespace != "master" then {
+              // Absolutely ugly WorkAround to circumvent broken certificates on the K8S test cluster. Don't do this in production kids!
+              "NODE_TLS_REJECT_UNAUTHORIZED": "0"
+            }
           },
      "pusher": {
             "replicas": 2,
@@ -61,9 +67,12 @@
               "JITSI_URL": env.JITSI_URL,
               "API_URL": "back1:50051,back2:50051",
               "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
-            } + if adminUrl != null then {
+            } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
-            } else {}
+            } else {}) + if namespace != "master" then {
+              // Absolutely ugly WorkAround to circumvent broken certificates on the K8S test cluster. Don't do this in production kids!
+              "NODE_TLS_REJECT_UNAUTHORIZED": "0"
+            }
           },
     "front": {
       "image": "thecodingmachine/workadventure-front:"+tag,

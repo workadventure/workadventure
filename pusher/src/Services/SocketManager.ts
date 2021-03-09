@@ -493,11 +493,7 @@ export class SocketManager implements ZoneEventListener {
     public getWorlds(): Map<string, PusherRoom> {
         return this.Worlds;
     }
-
-    /**
-     *
-     * @param token
-     */
+    
     searchClientByUuid(uuid: string): ExSocketInterface | null {
         for(const socket of this.sockets.values()){
             if(socket.userUuid === uuid){

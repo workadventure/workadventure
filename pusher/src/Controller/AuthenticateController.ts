@@ -56,6 +56,7 @@ export class AuthenticateController extends BaseController {
                         worldSlug,
                         roomSlug,
                         mapUrlStart,
+                        organizationMemberToken,
                         textures
                     }));
 
