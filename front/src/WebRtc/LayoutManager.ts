@@ -337,14 +337,10 @@ class LayoutManager {
         const mainContainer = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-container');
         mainContainer.appendChild(div);
 
-        const callBackFunctionTrigger = (() => {
-            console.log('user click on space => ', id);
-            callBack();
-        });
-
         //add trigger action
-        this.actionButtonTrigger.set(id, callBackFunctionTrigger);
-        userInputManager.addSpaceEventListner(callBackFunctionTrigger);
+        div.onpointerdown = () => callBack();
+        this.actionButtonTrigger.set(id, callBack);
+        userInputManager.addSpaceEventListner(callBack);
     }
 
     public removeActionButton(id: string, userInputManager: UserInputManager){
