@@ -42,11 +42,7 @@ interface ButtonDescriptor {
     /**
      * Callback called if the button is pressed
      */
-    callback?: ButtonClickedCallback,
-    /**
-     * If set to true, the popup is closed when the button is clicked
-     */
-    closeOnClick?: boolean
+    callback: ButtonClickedCallback,
 }
 
 class Popup {
@@ -109,8 +105,7 @@ window.WA = {
                 buttons: buttons.map((button) => {
                     return {
                         label: button.label,
-                        className: button.className,
-                        closeOnClick: button.closeOnClick
+                        className: button.className
                     };
                 })
             } as OpenPopupEvent

@@ -3,8 +3,7 @@ import * as tg from "generic-type-guard";
 const isButtonDescriptor =
     new tg.IsInterface().withProperties({
         label: tg.isString,
-        className: tg.isOptional(tg.isString),
-        closeOnClick: tg.isOptional(tg.isBoolean)
+        className: tg.isOptional(tg.isString)
     }).get();
 
 export const isOpenPopupEvent =

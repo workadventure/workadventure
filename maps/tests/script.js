@@ -24,7 +24,9 @@ WA.onEnterZone('popupZone', () => {
         {
             label: "Close",
             className: "normal",
-            closeOnClick: true
+            callback: (popup) => {
+                popup.close();
+            }
         },
         {
             label: "Next",
