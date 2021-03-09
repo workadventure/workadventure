@@ -23,9 +23,9 @@
          "JITSI_URL": env.JITSI_URL,
          "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
          "TURN_STATIC_AUTH_SECRET": env.TURN_STATIC_AUTH_SECRET,
-       } + if adminUrl != null then {
+       } + (if adminUrl != null then {
          "ADMIN_API_URL": adminUrl,
-       } else {} + if namespace != "master" then {
+       } else {}) + if namespace != "master" then {
          // Absolutely ugly WorkAround to circumvent broken certificates on the K8S test cluster. Don't do this in production kids!
          "NODE_TLS_REJECT_UNAUTHORIZED": "0"
        }
@@ -45,9 +45,9 @@
               "JITSI_URL": env.JITSI_URL,
               "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
               "TURN_STATIC_AUTH_SECRET": env.TURN_STATIC_AUTH_SECRET,
-            } + if adminUrl != null then {
+            } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
-            } else {} + if namespace != "master" then {
+            } else {}) + if namespace != "master" then {
               // Absolutely ugly WorkAround to circumvent broken certificates on the K8S test cluster. Don't do this in production kids!
               "NODE_TLS_REJECT_UNAUTHORIZED": "0"
             }
@@ -67,9 +67,9 @@
               "JITSI_URL": env.JITSI_URL,
               "API_URL": "back1:50051,back2:50051",
               "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
-            } + if adminUrl != null then {
+            } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
-            } else {} + if namespace != "master" then {
+            } else {}) + if namespace != "master" then {
               // Absolutely ugly WorkAround to circumvent broken certificates on the K8S test cluster. Don't do this in production kids!
               "NODE_TLS_REJECT_UNAUTHORIZED": "0"
             }
