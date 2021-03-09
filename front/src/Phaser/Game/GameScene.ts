@@ -273,7 +273,8 @@ export class GameScene extends ResizableScene implements CenterListener {
                     break;
                 }
                 default:
-                    throw new Error('Unsupported object type: "'+ itemType +'"');
+                    continue;
+                    //throw new Error('Unsupported object type: "'+ itemType +'"');
             }
 
             itemFactory.preload(this.load);
@@ -747,10 +748,27 @@ export class GameScene extends ResizableScene implements CenterListener {
             let html = `<div class="nes-container with-title is-centered">
 ${escapedMessage}
 </div>`;
+            let id = 0;
+            for (const button of openPopupEvent.buttons) {
+                html += `<button type="button" class="nes-btn is-${HtmlUtils.escapeHtml(button.className ?? '')}" id="popup-${openPopupEvent.popupId}-${id}">${HtmlUtils.escapeHtml(button.label)}</button>`;
+                id++;
+            }
 
             const domElement = this.add.dom(150, 150).createFromHTML(html);
             domElement.scale = 0;
             domElement.setClassName('popUpElement');
+
+            id = 0;
+            for (const button of openPopupEvent.buttons) {
+                const button = HtmlUtils.getElementByIdOrFail<HTMLButtonElement>(`popup-${openPopupEvent.popupId}-${id}`);
+                const btnId = id;
+                button.onclick = () => {
+                    iframeListener.sendButtonClickedEvent(openPopupEvent.popupId, btnId);
+                    console.log('BUTTON CLICKED', btnId);
+                }
+                id++;
+            }
+
             this.tweens.add({
                 targets     : domElement ,
                 scale       : 1,

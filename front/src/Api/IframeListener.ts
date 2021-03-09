@@ -6,6 +6,7 @@ import * as crypto from "crypto";
 import {HtmlUtils} from "../WebRtc/HtmlUtils";
 import {EnterLeaveEvent} from "./Events/EnterLeaveEvent";
 import {isOpenPopupEvent, OpenPopupEvent} from "./Events/OpenPopupEvent";
+import {ButtonClickedEvent} from "./Events/ButtonClickedEvent";
 
 
 
@@ -40,13 +41,10 @@ class IframeListener {
             }
 
             const payload = message.data;
-            console.log('FOO');
             if (isIframeEventWrapper(payload)) {
-                console.log('FOOBAR', payload);
                 if (payload.type === 'chat' && isChatEvent(payload.data)) {
                     this._chatStream.next(payload.data);
                 } else if (payload.type === 'openPopup' && isOpenPopupEvent(payload.data)) {
-                    console.log('OPENPOPUP called');
                     this._openPopupStream.next(payload.data);
                 }
             }
@@ -158,6 +156,16 @@ class IframeListener {
         });
     }
 
+    sendButtonClickedEvent(popupId: number, buttonId: number): void {
+        this.postMessage({
+            'type': 'buttonClickedEvent',
+            'data': {
+                popupId,
+                buttonId
+            } as ButtonClickedEvent
+        });
+    }
+
     /**
      * Sends the message... to all allowed iframes.
      */
@@ -166,6 +174,7 @@ class IframeListener {
             iframe.contentWindow?.postMessage(message, '*');
         }
     }
+
 }
 
 export const iframeListener = new IframeListener();

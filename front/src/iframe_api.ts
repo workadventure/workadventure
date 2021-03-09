@@ -4,6 +4,7 @@ import {isUserInputChatEvent, UserInputChatEvent} from "./Api/Events/UserInputCh
 import {Subject} from "rxjs";
 import {EnterLeaveEvent, isEnterLeaveEvent} from "./Api/Events/EnterLeaveEvent";
 import {OpenPopupEvent} from "./Api/Events/OpenPopupEvent";
+import {isButtonClickedEvent} from "./Api/Events/ButtonClickedEvent";
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
@@ -23,6 +24,8 @@ type ChatMessageCallback = (message: string) => void;
 const userInputChatStream: Subject<UserInputChatEvent> = new Subject();
 const enterStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
 const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
+const popupCallbacks: Map<number, Map<number, () => void>> = new Map<number, Map<number, () => void>>();
+
 let popupId = 0;
 interface ButtonDescriptor {
     /**
@@ -120,6 +123,11 @@ window.addEventListener('message', message => {
             enterStreams.get(payloadData.name)?.next();
         } else if (payload.type === 'leaveEvent' && isEnterLeaveEvent(payloadData)) {
             leaveStreams.get(payloadData.name)?.next();
+        } else if (payload.type === 'buttonClickedEvent' && isButtonClickedEvent(payloadData)) {
+            const callback = popupCallbacks.get(payloadData.popupId)?.get(payloadData.buttonId);
+            if (callback) {
+                callback();
+            }
         }
     }
 
