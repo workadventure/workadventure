@@ -6,14 +6,13 @@ const isButtonDescriptor =
         className: tg.isOptional(tg.isString),
         closeOnClick: tg.isOptional(tg.isBoolean)
     }).get();
-type ButtonDescriptor = tg.GuardedType<typeof isButtonDescriptor>;
 
 export const isOpenPopupEvent =
     new tg.IsInterface().withProperties({
         popupId: tg.isNumber,
         targetObject: tg.isString,
         message: tg.isString,
-        buttons: tg.isAny //tg.isArray<ButtonDescriptor>,
+        buttons: tg.isArray(isButtonDescriptor)
     }).get();
 
 /**
