@@ -1175,6 +1175,31 @@ div.action p.action-body{
     margin-left: calc(50% - 75px);
     border-radius: 15px;
 }
+.popUpElement{
+    animation-duration: 1s;
+    animation-delay: 3s;
+    animation-name: slidein;
+}
+.popUpElement p {
+    font-family: 'Press Start 2P';
+    text-align: left;
+    font-size: 10px;
+    background-color: #727678;
+    color: white;
+}
+.popUpElement div {
+    width: 300px;
+    height: 120px;
+    background-color: #727678;
+}
+
+.popUpElement button {
+    font-family: 'Press Start 2P';
+    position: center;
+    font-size: 10px;
+}
+
+
 @keyframes mymove {
     0% {bottom: 40px;}
     50% {bottom: 30px;}

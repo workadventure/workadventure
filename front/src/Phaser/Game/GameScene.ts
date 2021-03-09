@@ -73,6 +73,8 @@ import {addLoader} from "../Components/Loader";
 import {ErrorSceneName} from "../Reconnecting/ErrorScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {iframeListener} from "../../Api/IframeListener";
+import DOMElement = Phaser.GameObjects.DOMElement;
+import Tween = Phaser.Tweens.Tween;
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -164,6 +166,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     private playerName!: string;
     private characterLayers!: string[];
 
+    private popUpElement : DOMElement| undefined;
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
             key: customKey ?? room.id
@@ -651,6 +654,33 @@ export class GameScene extends ResizableScene implements CenterListener {
     private triggerOnMapLayerPropertyChange(){
         this.gameMap.onPropertyChange('exitSceneUrl', (newValue, oldValue) => {
             if (newValue) this.onMapExit(newValue as string);
+        });
+        this.gameMap.onPropertyChange('inGameConsoleMessage', (newValue, oldValue, allProps) => {
+            if (newValue !== undefined) {
+                this.popUpElement?.destroy();
+                this.popUpElement = this.add.dom(2100, 150).createFromHTML(newValue as string);
+                this.popUpElement.scale = 0;
+                this.tweens.add({
+                    targets     : this.popUpElement ,
+                    scale       : 1,
+                    ease        : "EaseOut",
+                    duration    : 400,
+                });
+
+                this.popUpElement.setClassName("popUpElement");
+
+            } else {
+                this.tweens.add({
+                    targets     : this.popUpElement ,
+                    scale       : 0,
+                    ease        : "EaseOut",
+                    duration    : 400,
+                    onComplete  : () => {
+                        this.popUpElement?.destroy();
+                        this.popUpElement = undefined;
+                    },
+                });
+            }
         });
         this.gameMap.onPropertyChange('exitUrl', (newValue, oldValue) => {
             if (newValue) this.onMapExit(newValue as string);
