@@ -1,6 +1,5 @@
 import {ADMIN_API_TOKEN, ADMIN_API_URL} from "../Enum/EnvironmentVariable";
 import Axios from "axios";
-import {v4} from "uuid";
 
 export interface AdminApiData {
     organizationSlug: string
@@ -31,6 +30,7 @@ export interface FetchMemberDataByUuidResponse {
     tags: string[];
     textures: CharacterTexture[];
     messages: unknown[];
+    anonymous?: boolean;
 }
 
 class AdminApi {
@@ -58,29 +58,14 @@ class AdminApi {
         return res.data;
     }
 
-    async fetchMemberDataByUuid(uuid: string): Promise<FetchMemberDataByUuidResponse> {
+    async fetchMemberDataByUuid(uuid: string, roomId: string): Promise<FetchMemberDataByUuidResponse> {
         if (!ADMIN_API_URL) {
             return Promise.reject('No admin backoffice set!');
         }
-        try {
-            const res = await Axios.get(ADMIN_API_URL+'/api/membership/'+uuid,
-                { headers: {"Authorization" : `${ADMIN_API_TOKEN}`} }
-            )
-            return res.data;
-        } catch (e) {
-            if (e?.response?.status == 404) {
-                // If we get an HTTP 404, the token is invalid. Let's perform an anonymous login!
-                console.warn('Cannot find user with uuid "'+uuid+'". Performing an anonymous login instead.');
-                return {
-                    uuid: v4(),
-                    tags: [],
-                    textures: [],
-                    messages: [],
-                }
-            } else {
-                throw e;
-            }
-        }
+        const res = await Axios.get(ADMIN_API_URL+'/api/room/access',
+            { params: {uuid, roomId}, headers: {"Authorization" : `${ADMIN_API_TOKEN}`} }
+        )
+        return res.data;
     }
 
     async fetchMemberDataByToken(organizationMemberToken: string): Promise<AdminApiData> {

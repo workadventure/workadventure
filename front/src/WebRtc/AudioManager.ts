@@ -38,6 +38,25 @@ class AudioManager {
         HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume').value = '' + this.volume;
     }
 
+    public playAudio(url: string|number|boolean, mapDirUrl: string, loop=false): void {
+        const audioPath = url as string;
+        let realAudioPath = '';
+
+        if (audioPath.indexOf('://') > 0) {
+            // remote file or stream
+            realAudioPath = audioPath;
+        } else {
+            // local file, include it relative to map directory
+            realAudioPath = mapDirUrl + '/' + url;
+        }
+
+        this.loadAudio(realAudioPath);
+
+        if (loop) {
+            this.loop();
+        }
+    }
+
     private close(): void {
         this.audioPlayerCtrl.classList.remove('loading');
         this.audioPlayerCtrl.classList.add('hidden');
@@ -75,7 +94,7 @@ class AudioManager {
     }
 
 
-    public loadAudio(url: string): void {
+    private loadAudio(url: string): void {
         this.load();
 
         /* Solution 1, remove whole audio player */
@@ -125,7 +144,7 @@ class AudioManager {
         this.open();
     }
 
-    public loop(): void {
+    private loop(): void {
         if (this.audioPlayerElem !== undefined) {
             this.audioPlayerElem.loop = true;
         }

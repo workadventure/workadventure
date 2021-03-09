@@ -5,6 +5,7 @@ import {MapController} from "./Controller/MapController";
 import {PrometheusController} from "./Controller/PrometheusController";
 import {DebugController} from "./Controller/DebugController";
 import {App as uwsApp} from "./Server/sifrr.server";
+import {AdminController} from "./Controller/AdminController";
 
 class App {
     public app: uwsApp;
@@ -13,6 +14,7 @@ class App {
     public mapController: MapController;
     public prometheusController: PrometheusController;
     private debugController: DebugController;
+    private adminController: AdminController;
 
     constructor() {
         this.app = new uwsApp();
@@ -23,6 +25,7 @@ class App {
         this.mapController = new MapController(this.app);
         this.prometheusController = new PrometheusController(this.app);
         this.debugController = new DebugController(this.app);
+        this.adminController = new AdminController(this.app);
     }
 }
 
