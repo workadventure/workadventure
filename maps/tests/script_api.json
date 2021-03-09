@@ -82,8 +82,8 @@
                  "type":"",
                  "visible":true,
                  "width":162.815914588373,
-                 "x":77.4042872633247,
-                 "y":61.1226958044874
+                 "x":76.1933509951528,
+                 "y":167.886910114979
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -101,7 +101,7 @@
          "value":"script.js"
         }],
  "renderorder":"right-down",
- "tiledversion":"1.3.3",
+ "tiledversion":"1.4.3",
  "tileheight":32,
  "tilesets":[
         {
@@ -119,6 +119,6 @@
         }],
  "tilewidth":32,
  "type":"map",
- "version":1.2,
+ "version":1.4,
  "width":10
 }

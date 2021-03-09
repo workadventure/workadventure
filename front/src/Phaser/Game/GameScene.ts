@@ -167,6 +167,8 @@ export class GameScene extends ResizableScene implements CenterListener {
     private playerName!: string;
     private characterLayers!: string[];
     private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
+    private popUpX! : number;
+    private popUpY! : number;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
@@ -379,6 +381,13 @@ export class GameScene extends ResizableScene implements CenterListener {
             }
             if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
                 depth = 10000;
+                for (const object of layer.objects) {
+                    if (object.name === 'myPopup') {
+                        this.popUpX = Math.floor(object.x);
+                        this.popUpY = Math.floor(object.y);
+                    }
+
+                }
             }
         }
         if (depth === -2) {
@@ -734,6 +743,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             if (newValue === undefined || newValue === false || newValue === '') {
                 iframeListener.sendLeaveEvent(oldValue as string);
             } else {
+                console.log("je passe dans zone");
                 iframeListener.sendEnterEvent(newValue as string);
             }
         });
@@ -743,13 +753,11 @@ export class GameScene extends ResizableScene implements CenterListener {
     private listenToIframeEvents(): void {
         iframeListener.openPopupStream.subscribe((openPopupEvent) => {
             const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
-
             let html = `<div class="nes-container with-title is-centered">
 ${escapedMessage}
 </div>`;
-
-            const domElement = this.add.dom(150, 150).createFromHTML(html);
-            domElement.scale = 0;
+            const domElement = this.add.dom(this.popUpX, this.popUpY).createFromHTML(html);
+            domElement.scale = 1;
             domElement.setClassName('popUpElement');
             this.tweens.add({
                 targets     : domElement ,
