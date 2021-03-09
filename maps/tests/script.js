@@ -19,10 +19,8 @@ WA.onEnterZone('notExist', () => {
     WA.sendChatMessage("YOU SHOULD NEVER SEE THIS", 'Poly Parrot');
 })
 
-let popupId;
-
 WA.onEnterZone('popupZone', () => {
-    popupId = WA.openPopup('foobar', 'This is a test message. Hi!', [
+    WA.openPopup('foobar', 'This is a test message. Hi!', [
         {
             label: "Close",
             className: "normal",
@@ -31,8 +29,8 @@ WA.onEnterZone('popupZone', () => {
         {
             label: "Next",
             className: "success",
-            callback: () => {
-                console.log('BUTTON CLICKED')
+            callback: (popup) => {
+                popup.close();
             }
         }
     ])

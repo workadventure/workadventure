@@ -7,6 +7,7 @@ import {HtmlUtils} from "../WebRtc/HtmlUtils";
 import {EnterLeaveEvent} from "./Events/EnterLeaveEvent";
 import {isOpenPopupEvent, OpenPopupEvent} from "./Events/OpenPopupEvent";
 import {ButtonClickedEvent} from "./Events/ButtonClickedEvent";
+import {ClosePopupEvent, isClosePopupEvent} from "./Events/ClosePopupEvent";
 
 
 
@@ -20,6 +21,9 @@ class IframeListener {
 
     private readonly _openPopupStream: Subject<OpenPopupEvent> = new Subject();
     public readonly openPopupStream = this._openPopupStream.asObservable();
+
+    private readonly _closePopupStream: Subject<ClosePopupEvent> = new Subject();
+    public readonly closePopupStream = this._closePopupStream.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
@@ -46,6 +50,8 @@ class IframeListener {
                     this._chatStream.next(payload.data);
                 } else if (payload.type === 'openPopup' && isOpenPopupEvent(payload.data)) {
                     this._openPopupStream.next(payload.data);
+                } else if (payload.type === 'closePopup' && isClosePopupEvent(payload.data)) {
+                    this._closePopupStream.next(payload.data);
                 }
             }
 
