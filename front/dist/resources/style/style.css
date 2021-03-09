@@ -1181,6 +1181,7 @@ div.action p.action-body{
     animation-name: slidein;
 }
 .popUpElement p {
+    font-family: 'Press Start 2P';
     text-align: left;
     font-size: 10px;
     background-color: #727678;
@@ -1193,6 +1194,7 @@ div.action p.action-body{
 }
 
 .popUpElement button {
+    font-family: 'Press Start 2P';
     position: center;
     font-size: 10px;
 }
