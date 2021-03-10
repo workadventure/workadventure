@@ -75,15 +75,26 @@
          "name":"floorLayer",
          "objects":[
                 {
-                 "height":162.662798398032,
+                 "height":120.885497146101,
                  "id":1,
-                 "name":"myPopup",
+                 "name":"tutoChat",
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":16.3413326605909,
-                 "x":275.392367109435,
-                 "y":141.649957637921
+                 "width":82.9428274100469,
+                 "x":1.31712507985543,
+                 "y":141.448134926559
+                }, 
+                {
+                 "height":169.934722966794,
+                 "id":2,
+                 "name":"tutoBobble",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":125.735549178518,
+                 "x":105.149632619596,
+                 "y":11.1002491249093
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -92,7 +103,7 @@
          "y":0
         }],
  "nextlayerid":8,
- "nextobjectid":2,
+ "nextobjectid":3,
  "orientation":"orthogonal",
  "properties":[
         {

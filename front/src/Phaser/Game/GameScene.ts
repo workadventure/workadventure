@@ -167,10 +167,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     private playerName!: string;
     private characterLayers!: string[];
     private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
-    private popUpX! : number;
-    private popUpY! : number;
-    private popUpWidth! : number;
-    private popUpHeight! : number;
+    private objectLayerPopUp! : ITiledMapObject;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
@@ -384,14 +381,6 @@ export class GameScene extends ResizableScene implements CenterListener {
             }
             if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
                 depth = 10000;
-                for (const object of layer.objects) {
-                    if (object.name === 'myPopup') {
-                        this.popUpX = Math.floor(object.x);
-                        this.popUpY = Math.floor(object.y);
-                        this.popUpWidth = Math.floor(object.width);
-                        this.popUpHeight = Math.floor(object.height);
-                    }
-                }
             }
         }
         if (depth === -2) {
@@ -746,15 +735,24 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.gameMap.onPropertyChange('zone', (newValue, oldValue) => {
             if (newValue === undefined || newValue === false || newValue === '') {
                 iframeListener.sendLeaveEvent(oldValue as string);
+
             } else {
+                console.log(newValue);
                 iframeListener.sendEnterEvent(newValue as string);
             }
         });
-
     }
 
     private listenToIframeEvents(): void {
         iframeListener.openPopupStream.subscribe((openPopupEvent) => {
+            let  objectLayerSquare : ITiledMapObject;
+            if (this.getObjectLayerData(openPopupEvent.targetObject) !== undefined){
+                    objectLayerSquare  =  this.getObjectLayerData(openPopupEvent.targetObject) as ITiledMapObject;
+            }
+           else{
+                console.error("The name of your square is not mathing with your param targetObject, check the two names. ")
+                return;
+            }
             const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
             let html = `<div id="container" <div class="nes-container with-title is-centered" 
 >
@@ -765,14 +763,16 @@ ${escapedMessage}
                 html += `<button type="button" class="nes-btn is-${HtmlUtils.escapeHtml(button.className ?? '')}" id="popup-${openPopupEvent.popupId}-${id}">${HtmlUtils.escapeHtml(button.label)}</button>`;
                 id++;
             }
-            const domElement = this.add.dom(this.popUpX + this.popUpWidth/2 ,
-                this.popUpY + this.popUpHeight/2).createFromHTML(html);
+            const domElement = this.add.dom(objectLayerSquare.x  + objectLayerSquare.width/2 ,
+                objectLayerSquare.y + objectLayerSquare.height/2).createFromHTML(html);
 
             let container : HTMLDivElement =  domElement.getChildByID("container") as HTMLDivElement;
-            container.style.width = this.popUpWidth + "px";
-            container.style.height = this.popUpHeight + "px";
+            container.style.width = objectLayerSquare.width + "px";
+            container.style.height = objectLayerSquare.height + "px";
             domElement.scale = 0;
             domElement.setClassName('popUpElement');
+
+
 
             id = 0;
             for (const button of openPopupEvent.buttons) {
@@ -1332,7 +1332,23 @@ ${escapedMessage}
             bottom: camera.scrollY + camera.height,
         });
     }
+    private getObjectLayerData(objectName : string) : ITiledMapObject| undefined{
+        for (const layer of this.mapFile.layers) {
+            if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
+                for (const object of layer.objects) {
+                    if (object.name === objectName) {
+                        console.log("je return l'object");
+                        return object;
+                    }
+                    else continue;
 
+                }
+            }
+        }
+        console.log("je return undefined");
+        return undefined;
+
+    }
     private reposition(): void {
         this.presentationModeSprite.setY(this.game.renderer.height - 2);
         this.chatModeSprite.setY(this.game.renderer.height - 2);
