@@ -777,7 +777,6 @@ ${escapedMessage}
                 const btnId = id;
                 button.onclick = () => {
                     iframeListener.sendButtonClickedEvent(openPopupEvent.popupId, btnId);
-                    console.log('BUTTON CLICKED', btnId);
                 }
                 id++;
             }
@@ -791,34 +790,24 @@ ${escapedMessage}
 
             this.popUpElements.set(openPopupEvent.popupId, domElement);
         });
-        /*this.gameMap.onPropertyChange('inGameConsoleMessage', (newValue, oldValue, allProps) => {
-            if (newValue !== undefined) {
-                this.popUpElement?.destroy();
-                this.popUpElement = this.add.dom(2100, 150).createFromHTML(newValue as string);
-                this.popUpElement.scale = 0;
-                this.tweens.add({
-                    targets     : this.popUpElement ,
-                    scale       : 1,
-                    ease        : "EaseOut",
-                    duration    : 400,
-                });
 
-                this.popUpElement.setClassName("popUpElement");
-
-            } else {
-                this.tweens.add({
-                    targets     : this.popUpElement ,
-                    scale       : 0,
-                    ease        : "EaseOut",
-                    duration    : 400,
-                    onComplete  : () => {
-                        this.popUpElement?.destroy();
-                        this.popUpElement = undefined;
-                    },
-                });
+        iframeListener.closePopupStream.subscribe((closePopupEvent) => {
+            const popUpElement = this.popUpElements.get(closePopupEvent.popupId);
+            if (popUpElement === undefined) {
+                console.error('Could not close popup with ID ', closePopupEvent.popupId,'. Maybe it has already been closed?');
             }
-        });*/
 
+            this.tweens.add({
+                targets     : popUpElement ,
+                scale       : 0,
+                ease        : "EaseOut",
+                duration    : 400,
+                onComplete  : () => {
+                    popUpElement?.destroy();
+                    this.popUpElements.delete(closePopupEvent.popupId);
+                },
+            });
+        });
     }
 
     private onMapExit(exitKey: string) {

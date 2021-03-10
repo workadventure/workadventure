@@ -5,13 +5,14 @@ import {Subject} from "rxjs";
 import {EnterLeaveEvent, isEnterLeaveEvent} from "./Api/Events/EnterLeaveEvent";
 import {OpenPopupEvent} from "./Api/Events/OpenPopupEvent";
 import {isButtonClickedEvent} from "./Api/Events/ButtonClickedEvent";
+import {ClosePopupEvent} from "./Api/Events/ClosePopupEvent";
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
     onChatMessage(callback: (message: string) => void): void;
     onEnterZone(name: string, callback: () => void): void;
     onLeaveZone(name: string, callback: () => void): void;
-    openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): number;
+    openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup;
 }
 
 declare global {
@@ -20,11 +21,13 @@ declare global {
 }
 
 type ChatMessageCallback = (message: string) => void;
+type ButtonClickedCallback = (popup: Popup) => void;
 
 const userInputChatStream: Subject<UserInputChatEvent> = new Subject();
 const enterStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
 const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
-const popupCallbacks: Map<number, Map<number, () => void>> = new Map<number, Map<number, () => void>>();
+const popups: Map<number, Popup> = new Map<number, Popup>();
+const popupCallbacks: Map<number, Map<number, ButtonClickedCallback>> = new Map<number, Map<number, ButtonClickedCallback>>();
 
 let popupId = 0;
 interface ButtonDescriptor {
@@ -39,11 +42,24 @@ interface ButtonDescriptor {
     /**
      * Callback called if the button is pressed
      */
-    callback?: () => void,
+    callback: ButtonClickedCallback,
+}
+
+class Popup {
+    constructor(private id: number) {
+    }
+
     /**
-     * If set to true, the popup is closed when the button is clicked
+     * Closes the popup
      */
-    closeOnClick?: boolean
+    public close(): void {
+        window.parent.postMessage({
+            'type': 'closePopup',
+            'data': {
+                'popupId': this.id,
+            } as ClosePopupEvent
+        }, '*');
+    }
 }
 
 
@@ -61,8 +77,25 @@ window.WA = {
             } as ChatEvent
         }, '*');
     },
-    openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): number {
+    openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup {
         popupId++;
+
+        const popup = new Popup(popupId);
+
+        const btnMap = new Map<number, () => void>();
+        popupCallbacks.set(popupId, btnMap);
+
+        let id = 0;
+        for (const button of buttons) {
+            const callback = button.callback;
+            if (callback) {
+                btnMap.set(id, () => {
+                    callback(popup);
+                });
+            }
+            id++;
+        }
+
         window.parent.postMessage({
             'type': 'openPopup',
             'data': {
@@ -72,13 +105,14 @@ window.WA = {
                 buttons: buttons.map((button) => {
                     return {
                         label: button.label,
-                        className: button.className,
-                        closeOnClick: button.closeOnClick
+                        className: button.className
                     };
                 })
             } as OpenPopupEvent
         }, '*');
-        return popupId;
+
+        popups.set(popupId, popup)
+        return popup;
     },
     /**
      * Listen to messages sent by the local user, in the chat.
@@ -125,8 +159,12 @@ window.addEventListener('message', message => {
             leaveStreams.get(payloadData.name)?.next();
         } else if (payload.type === 'buttonClickedEvent' && isButtonClickedEvent(payloadData)) {
             const callback = popupCallbacks.get(payloadData.popupId)?.get(payloadData.buttonId);
+            const popup = popups.get(payloadData.popupId);
+            if (popup === undefined) {
+                throw new Error('Could not find popup with ID "'+payloadData.popupId+'"');
+            }
             if (callback) {
-                callback();
+                callback(popup);
             }
         }
     }
