@@ -169,6 +169,8 @@ export class GameScene extends ResizableScene implements CenterListener {
     private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private popUpX! : number;
     private popUpY! : number;
+    private popUpWidth! : number;
+    private popUpHeight! : number;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
@@ -386,6 +388,8 @@ export class GameScene extends ResizableScene implements CenterListener {
                     if (object.name === 'myPopup') {
                         this.popUpX = Math.floor(object.x);
                         this.popUpY = Math.floor(object.y);
+                        this.popUpWidth = Math.floor(object.width);
+                        this.popUpHeight = Math.floor(object.height);
                     }
 
                 }
@@ -753,16 +757,17 @@ export class GameScene extends ResizableScene implements CenterListener {
     private listenToIframeEvents(): void {
         iframeListener.openPopupStream.subscribe((openPopupEvent) => {
             const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
-            let html = `<div class="nes-container with-title is-centered">
+            let html = ` <div class="nes-container with-title is-centered" 
+>
 ${escapedMessage}
-</div>`;
+ </div> `;
             let id = 0;
             for (const button of openPopupEvent.buttons) {
                 html += `<button type="button" class="nes-btn is-${HtmlUtils.escapeHtml(button.className ?? '')}" id="popup-${openPopupEvent.popupId}-${id}">${HtmlUtils.escapeHtml(button.label)}</button>`;
                 id++;
             }
+            const domElement = this.add.dom(this.popUpX, this.popUpY,).createFromHTML(html);
 
-            const domElement = this.add.dom(150, 150).createFromHTML(html);
             domElement.scale = 0;
             domElement.setClassName('popUpElement');
 
