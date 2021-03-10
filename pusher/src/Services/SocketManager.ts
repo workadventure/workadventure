@@ -509,40 +509,44 @@ export class SocketManager implements ZoneEventListener {
 
 
     public handleQueryJitsiJwtMessage(client: ExSocketInterface, queryJitsiJwtMessage: QueryJitsiJwtMessage) {
-        const room = queryJitsiJwtMessage.getJitsiroom();
-        const tag = queryJitsiJwtMessage.getTag(); // FIXME: this is not secure. We should load the JSON for the current room and check rights associated to room instead.
+        try {
+            const room = queryJitsiJwtMessage.getJitsiroom();
+            const tag = queryJitsiJwtMessage.getTag(); // FIXME: this is not secure. We should load the JSON for the current room and check rights associated to room instead.
 
-        if (SECRET_JITSI_KEY === '') {
-            throw new Error('You must set the SECRET_JITSI_KEY key to the secret to generate JWT tokens for Jitsi.');
+            if (SECRET_JITSI_KEY === '') {
+                throw new Error('You must set the SECRET_JITSI_KEY key to the secret to generate JWT tokens for Jitsi.');
+            }
+
+            // Let's see if the current client has
+            const isAdmin = client.tags.includes(tag);
+
+            const jwt = Jwt.sign({
+                "aud": "jitsi",
+                "iss": JITSI_ISS,
+                "sub": JITSI_URL,
+                "room": room,
+                "moderator": isAdmin
+            }, SECRET_JITSI_KEY, {
+                expiresIn: '1d',
+                algorithm: "HS256",
+                header:
+                    {
+                        "alg": "HS256",
+                        "typ": "JWT"
+                    }
+            });
+
+            const sendJitsiJwtMessage = new SendJitsiJwtMessage();
+            sendJitsiJwtMessage.setJitsiroom(room);
+            sendJitsiJwtMessage.setJwt(jwt);
+
+            const serverToClientMessage = new ServerToClientMessage();
+            serverToClientMessage.setSendjitsijwtmessage(sendJitsiJwtMessage);
+
+            client.send(serverToClientMessage.serializeBinary().buffer, true);
+        } catch (e) {
+            console.error('An error occured while generating the Jitsi JWT token: ', e);
         }
-
-        // Let's see if the current client has
-        const isAdmin = client.tags.includes(tag);
-
-        const jwt = Jwt.sign({
-            "aud": "jitsi",
-            "iss": JITSI_ISS,
-            "sub": JITSI_URL,
-            "room": room,
-            "moderator": isAdmin
-        }, SECRET_JITSI_KEY, {
-            expiresIn: '1d',
-            algorithm: "HS256",
-            header:
-                {
-                    "alg": "HS256",
-                    "typ": "JWT"
-                }
-        });
-
-        const sendJitsiJwtMessage = new SendJitsiJwtMessage();
-        sendJitsiJwtMessage.setJitsiroom(room);
-        sendJitsiJwtMessage.setJwt(jwt);
-
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setSendjitsijwtmessage(sendJitsiJwtMessage);
-
-        client.send(serverToClientMessage.serializeBinary().buffer, true);
     }
 
     public emitSendUserMessage(userUuid: string, message: string, type: string): void {
