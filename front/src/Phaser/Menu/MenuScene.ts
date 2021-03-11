@@ -6,6 +6,8 @@ import {mediaManager} from "../../WebRtc/MediaManager";
 import {gameReportKey, gameReportRessource, ReportMenu} from "./ReportMenu";
 import {connectionManager} from "../../Connexion/ConnectionManager";
 import {GameConnexionTypes} from "../../Url/UrlManager";
+import {WarningContainer, warningContainerHtml, warningContainerKey} from "../Components/WarningContainer";
+import {worldFullWarningStream} from "../../Connexion/WorldFullWarningStream";
 
 export const MenuSceneName = 'MenuScene';
 const gameMenuKey = 'gameMenu';
@@ -30,6 +32,8 @@ export class MenuScene extends Phaser.Scene {
     private gameQualityValue: number;
     private videoQualityValue: number;
     private menuButton!: Phaser.GameObjects.DOMElement;
+    private warningContainer: WarningContainer | null = null;
+    private warningContainerTimeout: NodeJS.Timeout | null = null;
 
     constructor() {
         super({key: MenuSceneName});
@@ -44,6 +48,7 @@ export class MenuScene extends Phaser.Scene {
         this.load.html(gameSettingsMenuKey, 'resources/html/gameQualityMenu.html');
         this.load.html(gameShare, 'resources/html/gameShare.html');
         this.load.html(gameReportKey, gameReportRessource);
+        this.load.html(warningContainerKey, warningContainerHtml);
     }
 
     create() {
@@ -85,6 +90,8 @@ export class MenuScene extends Phaser.Scene {
 
         this.menuElement.addListener('click');
         this.menuElement.on('click', this.onMenuClick.bind(this));
+        
+        worldFullWarningStream.stream.subscribe(() => this.showWorldCapacityWarning());
     }
 
     //todo put this method in a parent menuElement class
@@ -120,6 +127,21 @@ export class MenuScene extends Phaser.Scene {
             duration: 500,
             ease: 'Power3'
         });
+    }
+    
+    private showWorldCapacityWarning() {
+        if (!this.warningContainer) {
+            this.warningContainer = new WarningContainer(this);
+        }
+        if (this.warningContainerTimeout) {
+            clearTimeout(this.warningContainerTimeout);
+        }
+        this.warningContainerTimeout = setTimeout(() => {
+            this.warningContainer?.destroy();
+            this.warningContainer = null
+            this.warningContainerTimeout = null
+        }, 2000);
+        
     }
 
     private closeSideMenu(): void {

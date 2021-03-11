@@ -19,15 +19,15 @@ import {
     JoinRoomMessage,
     CharacterLayerMessage,
     PusherToBackMessage,
+    WorldFullMessage,
     AdminPusherToBackMessage,
     ServerToAdminClientMessage,
-    SendUserMessage,
-    BanUserMessage, UserJoinedRoomMessage, UserLeftRoomMessage, AdminMessage, BanMessage
+    UserJoinedRoomMessage, UserLeftRoomMessage, AdminMessage, BanMessage
 } from "../Messages/generated/messages_pb";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
 import {JITSI_ISS, SECRET_JITSI_KEY} from "../Enum/EnvironmentVariable";
 import {adminApi, CharacterTexture} from "./AdminApi";
-import {emitError, emitInBatch} from "./IoSocketHelpers";
+import {emitInBatch} from "./IoSocketHelpers";
 import Jwt from "jsonwebtoken";
 import {JITSI_URL} from "../Enum/EnvironmentVariable";
 import {clientEventsEmitter} from "./ClientEventsEmitter";
@@ -36,6 +36,7 @@ import {apiClientRepository} from "./ApiClientRepository";
 import {GroupDescriptor, UserDescriptor, ZoneEventListener} from "_Model/Zone";
 import Debug from "debug";
 import {ExAdminSocketInterface} from "_Model/Websocket/ExAdminSocketInterface";
+import {WebSocket} from "uWebSockets.js";
 
 const debug = Debug('socket');
 
@@ -52,6 +53,7 @@ export interface AdminSocketData {
 }
 
 export class SocketManager implements ZoneEventListener {
+    
     private Worlds: Map<string, PusherRoom> = new Map<string, PusherRoom>();
     private sockets: Map<number, ExSocketInterface> = new Map<number, ExSocketInterface>();
 
@@ -532,6 +534,15 @@ export class SocketManager implements ZoneEventListener {
         subMessage.setGroupdeletemessage(groupDeleteMessage);
 
         emitInBatch(listener, subMessage);
+    }
+    
+    public emitWorldFullMessage(client: WebSocket) {
+        const errorMessage = new WorldFullMessage();
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setWorldfullmessage(errorMessage);
+
+        client.send(serverToClientMessage.serializeBinary().buffer, true);
     }
 }
 

@@ -2,7 +2,7 @@ import {BaseController} from "./BaseController";
 import {HttpRequest, HttpResponse, TemplatedApp} from "uWebSockets.js";
 import {ADMIN_API_TOKEN} from "../Enum/EnvironmentVariable";
 import {apiClientRepository} from "../Services/ApiClientRepository";
-import {AdminRoomMessage} from "../Messages/generated/messages_pb";
+import {AdminRoomMessage, WorldFullWarningToRoomMessage} from "../Messages/generated/messages_pb";
 
 
 export class AdminController extends BaseController{
@@ -40,22 +40,36 @@ export class AdminController extends BaseController{
                 if (typeof body.text !== 'string') {
                    throw 'Incorrect text parameter'
                 }
+                if (body.type !== 'warning' || body.type !== 'message') {
+                    throw 'Incorrect type parameter'
+                }
                 if (!body.targets || typeof body.targets !== 'object') {
                     throw 'Incorrect targets parameter'
                 }
                 const text: string = body.text;
+                const type: string = body.type;
                 const targets: string[] = body.targets;
 
                 await Promise.all(targets.map((roomId) => {
                     return apiClientRepository.getClient(roomId).then((roomClient) =>{
                         return new Promise((res, rej) => {
-                            const roomMessage = new AdminRoomMessage();
-                            roomMessage.setMessage(text);
-                            roomMessage.setRoomid(roomId);
-                            
-                            roomClient.sendAdminMessageToRoom(roomMessage, (err) => {
-                                err ? rej(err) : res();
-                            });
+                            if (type === 'message') {
+                                const roomMessage = new AdminRoomMessage();
+                                roomMessage.setMessage(text);
+                                roomMessage.setRoomid(roomId);
+
+                                roomClient.sendAdminMessageToRoom(roomMessage, (err) => {
+                                    err ? rej(err) : res();
+                                });
+                            } else {
+                                const roomMessage = new WorldFullWarningToRoomMessage();
+                                roomMessage.setRoomid(roomId);
+
+                                roomClient.sendWorldFullWarningToRoom(roomMessage, (err) => {
+                                    err ? rej(err) : res();
+                                });
+                            }
+
                         });
                     });
                 }));
