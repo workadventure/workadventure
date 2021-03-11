@@ -668,11 +668,10 @@ export class GameScene extends ResizableScene implements CenterListener {
             const loop = allProps.get(AUDIO_LOOP_PROPERTY) as boolean|undefined;
             newValue === undefined ? audioManager.unloadAudio() : audioManager.playAudio(newValue, this.getMapDirUrl(), volume, loop);
         });
-
+        // TODO: This legacy property should be removed at some point
         this.gameMap.onPropertyChange('playAudioLoop', (newValue, oldValue) => {
-            newValue === undefined ? audioManager.unloadAudio() : audioManager.playAudio(newValue, this.getMapDirUrl());
+            newValue === undefined ? audioManager.unloadAudio() : audioManager.playAudio(newValue, this.getMapDirUrl(), undefined, true);
         });
-
     }
 
     private getMapDirUrl(): string {
