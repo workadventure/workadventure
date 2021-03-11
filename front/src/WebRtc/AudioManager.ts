@@ -78,18 +78,21 @@ class AudioManager {
     }
 
     private changeVolume(talking = false): void {
-        if (!isUndefined(this.audioPlayerElem)) {
-            this.audioPlayerElem.volume = this.naturalVolume(talking && this.decreaseWhileTalking);
-            this.audioPlayerVol.value = '' + this.audioPlayerElem.volume;
-            this.audioPlayerElem.muted = this.muted;
+        if (isUndefined(this.audioPlayerElem)) {
+            return;
         }
-    }
 
-    private naturalVolume(makeSofter: boolean = false): number {
-        const volume = this.volume
-        const retVol = makeSofter && !this.volumeReduced ? Math.pow(volume * 0.5, 3) : volume
-        this.volumeReduced = makeSofter
-        return retVol;
+        const reduceVolume = talking && this.decreaseWhileTalking;
+        if (reduceVolume && !this.volumeReduced) {
+            this.volume *= 0.5;
+        } else if (!reduceVolume && this.volumeReduced) {
+            this.volume *= 2.0;
+        }
+        this.volumeReduced = reduceVolume;
+
+        this.audioPlayerElem.volume = this.volume;
+        this.audioPlayerVol.value = '' + this.volume;
+        this.audioPlayerElem.muted = this.muted;
     }
 
     private setVolume(volume: number): void {
