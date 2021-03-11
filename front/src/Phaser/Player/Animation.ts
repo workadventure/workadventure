@@ -1,9 +1,13 @@
 
-export enum PlayerAnimationNames {
-    WalkDown = 'down',
-    WalkLeft = 'left',
-    WalkUp = 'up',
-    WalkRight = 'right',
+export enum PlayerAnimationDirections {
+    Down = 'down',
+    Left = 'left',
+    Up = 'up',
+    Right = 'right',
+}
+export enum PlayerAnimationTypes {
+    Walk = 'walk',
+    Idle = 'idle',
 }
 
 

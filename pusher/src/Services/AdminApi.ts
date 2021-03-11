@@ -58,12 +58,12 @@ class AdminApi {
         return res.data;
     }
 
-    async fetchMemberDataByUuid(uuid: string): Promise<FetchMemberDataByUuidResponse> {
+    async fetchMemberDataByUuid(uuid: string, roomId: string): Promise<FetchMemberDataByUuidResponse> {
         if (!ADMIN_API_URL) {
             return Promise.reject('No admin backoffice set!');
         }
-        const res = await Axios.get(ADMIN_API_URL+'/api/membership/'+uuid,
-            { headers: {"Authorization" : `${ADMIN_API_TOKEN}`} }
+        const res = await Axios.get(ADMIN_API_URL+'/api/room/access',
+            { params: {uuid, roomId}, headers: {"Authorization" : `${ADMIN_API_TOKEN}`} }
         )
         return res.data;
     }

@@ -4,7 +4,6 @@ import {
     GroupDeleteMessage,
     ItemEventMessage,
     PlayGlobalMessage,
-    PositionMessage,
     RoomJoinedMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
@@ -23,23 +22,17 @@ import {
     AdminPusherToBackMessage,
     ServerToAdminClientMessage,
     SendUserMessage,
-    BanUserMessage, UserJoinedRoomMessage, UserLeftRoomMessage
+    BanUserMessage, UserJoinedRoomMessage, UserLeftRoomMessage, AdminMessage, BanMessage
 } from "../Messages/generated/messages_pb";
-import {PointInterface} from "../Model/Websocket/PointInterface";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
-import {cpuTracker} from "./CpuTracker";
-import {GROUP_RADIUS, JITSI_ISS, MINIMUM_DISTANCE, SECRET_JITSI_KEY} from "../Enum/EnvironmentVariable";
-import {Movable} from "../Model/Movable";
-import {PositionInterface} from "../Model/PositionInterface";
+import {JITSI_ISS, SECRET_JITSI_KEY} from "../Enum/EnvironmentVariable";
 import {adminApi, CharacterTexture} from "./AdminApi";
-import Direction = PositionMessage.Direction;
 import {emitError, emitInBatch} from "./IoSocketHelpers";
 import Jwt from "jsonwebtoken";
 import {JITSI_URL} from "../Enum/EnvironmentVariable";
 import {clientEventsEmitter} from "./ClientEventsEmitter";
 import {gaugeManager} from "./GaugeManager";
 import {apiClientRepository} from "./ApiClientRepository";
-import {ServiceError} from "grpc";
 import {GroupDescriptor, UserDescriptor, ZoneEventListener} from "_Model/Zone";
 import Debug from "debug";
 import {ExAdminSocketInterface} from "_Model/Websocket/ExAdminSocketInterface";
@@ -271,31 +264,6 @@ export class SocketManager implements ZoneEventListener {
         pusherToBackMessage.setItemeventmessage(itemEventMessage);
 
         client.backConnection.write(pusherToBackMessage);
-
-        /*const itemEvent = ProtobufUtils.toItemEvent(itemEventMessage);
-
-        try {
-            const world = this.Worlds.get(ws.roomId);
-            if (!world) {
-                console.error("Could not find world with id '", ws.roomId, "'");
-                return;
-            }
-
-            const subMessage = new SubMessage();
-            subMessage.setItemeventmessage(itemEventMessage);
-
-            // Let's send the event without using the SocketIO room.
-            for (const user of world.getUsers().values()) {
-                const client = this.searchClientByIdOrFail(user.id);
-                //client.emit(SocketIoEvent.ITEM_EVENT, itemEvent);
-                emitInBatch(client, subMessage);
-            }
-
-            world.setItemState(itemEvent.itemId, itemEvent.state);
-        } catch (e) {
-            console.error('An error occurred on "item_event"');
-            console.error(e);
-        }*/
     }
 
     async handleReportMessage(client: ExSocketInterface, reportPlayerMessage: ReportPlayerMessage) {
@@ -317,25 +285,6 @@ export class SocketManager implements ZoneEventListener {
         pusherToBackMessage.setWebrtcsignaltoservermessage(data);
 
         socket.backConnection.write(pusherToBackMessage);
-
-
-        //send only at user
-        /*const client = this.sockets.get(data.getReceiverid());
-        if (client === undefined) {
-            console.warn("While exchanging a WebRTC signal: client with id ", data.getReceiverid(), " does not exist. This might be a race condition.");
-            return;
-        }
-
-        const webrtcSignalToClient = new WebRtcSignalToClientMessage();
-        webrtcSignalToClient.setUserid(socket.userId);
-        webrtcSignalToClient.setSignal(data.getSignal());
-
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setWebrtcsignaltoclientmessage(webrtcSignalToClient);
-
-        if (!client.disconnecting) {
-            client.send(serverToClientMessage.serializeBinary().buffer, true);
-        }*/
     }
 
     emitScreenSharing(socket: ExSocketInterface, data: WebRtcSignalToServerMessage): void {
@@ -343,24 +292,6 @@ export class SocketManager implements ZoneEventListener {
         pusherToBackMessage.setWebrtcscreensharingsignaltoservermessage(data);
 
         socket.backConnection.write(pusherToBackMessage);
-
-        //send only at user
-        /*const client = this.sockets.get(data.getReceiverid());
-        if (client === undefined) {
-            console.warn("While exchanging a WEBRTC_SCREEN_SHARING signal: client with id ", data.getReceiverid(), " does not exist. This might be a race condition.");
-            return;
-        }
-
-        const webrtcSignalToClient = new WebRtcSignalToClientMessage();
-        webrtcSignalToClient.setUserid(socket.userId);
-        webrtcSignalToClient.setSignal(data.getSignal());
-
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setWebrtcscreensharingsignaltoclientmessage(webrtcSignalToClient);
-
-        if (!client.disconnecting) {
-            client.send(serverToClientMessage.serializeBinary().buffer, true);
-        }*/
     }
 
     private searchClientByIdOrFail(userId: number): ExSocketInterface {
@@ -408,17 +339,7 @@ export class SocketManager implements ZoneEventListener {
         //check and create new world for a room
         let world = this.Worlds.get(roomId)
         if(world === undefined){
-            world = new PusherRoom(
-                roomId,
-                this
-/*                (user: User, group: Group) => this.joinWebRtcRoom(user, group),
-                (user: User, group: Group) => this.disConnectedUser(user, group),
-                MINIMUM_DISTANCE,
-                GROUP_RADIUS,
-                (thing: Movable, listener: User) => this.onRoomEnter(thing, listener),
-                (thing: Movable, position:PositionInterface, listener:User) => this.onClientMove(thing, position, listener),
-                (thing: Movable, listener:User) => this.onClientLeave(thing, listener)*/
-            );
+            world = new PusherRoom(roomId, this);
             if (!world.anonymous) {
                 const data = await adminApi.fetchMapDetails(world.organizationSlug, world.worldSlug, world.roomSlug)
                 world.tags = data.tags
@@ -428,60 +349,6 @@ export class SocketManager implements ZoneEventListener {
         }
         return Promise.resolve(world)
     }
-
-/*    private joinRoom(client : ExSocketInterface, position: PointInterface): PusherRoom {
-
-        const roomId = client.roomId;
-        client.position = position;
-
-        const world = this.Worlds.get(roomId)
-        if(world === undefined){
-            throw new Error('Could not find room for ID: '+client.roomId)
-        }
-
-        // Dispatch groups position to newly connected user
-        world.getGroups().forEach((group: Group) => {
-            this.emitCreateUpdateGroupEvent(client, group);
-        });
-        //join world
-        world.join(client, client.position);
-        clientEventsEmitter.emitClientJoin(client.userUuid, client.roomId);
-        console.log(new Date().toISOString() + ' A user joined (', this.sockets.size, ' connected users)');
-        return world;
-    }
-
-    private onClientMove(thing: Movable, position:PositionInterface, listener:User): void {
-        const clientListener = this.searchClientByIdOrFail(listener.id);
-        if (thing instanceof User) {
-            const clientUser = this.searchClientByIdOrFail(thing.id);
-
-            const userMovedMessage = new UserMovedMessage();
-            userMovedMessage.setUserid(clientUser.userId);
-            userMovedMessage.setPosition(ProtobufUtils.toPositionMessage(clientUser.position));
-
-            const subMessage = new SubMessage();
-            subMessage.setUsermovedmessage(userMovedMessage);
-
-            clientListener.emitInBatch(subMessage);
-            //console.log("Sending USER_MOVED event");
-        } else if (thing instanceof Group) {
-            this.emitCreateUpdateGroupEvent(clientListener, thing);
-        } else {
-            console.error('Unexpected type for Movable.');
-        }
-    }
-
-    private onClientLeave(thing: Movable, listener:User) {
-        const clientListener = this.searchClientByIdOrFail(listener.id);
-        if (thing instanceof User) {
-            const clientUser = this.searchClientByIdOrFail(thing.id);
-            this.emitUserLeftEvent(clientListener, clientUser.userId);
-        } else if (thing instanceof Group) {
-            this.emitDeleteGroupEvent(clientListener, thing.getId());
-        } else {
-            console.error('Unexpected type for Movable.');
-        }
-    }*/
 
     emitPlayGlobalMessage(client: ExSocketInterface, playglobalmessage: PlayGlobalMessage) {
         const pusherToBackMessage = new PusherToBackMessage();
@@ -505,90 +372,94 @@ export class SocketManager implements ZoneEventListener {
 
 
     public handleQueryJitsiJwtMessage(client: ExSocketInterface, queryJitsiJwtMessage: QueryJitsiJwtMessage) {
-        const room = queryJitsiJwtMessage.getJitsiroom();
-        const tag = queryJitsiJwtMessage.getTag(); // FIXME: this is not secure. We should load the JSON for the current room and check rights associated to room instead.
+        try {
+            const room = queryJitsiJwtMessage.getJitsiroom();
+            const tag = queryJitsiJwtMessage.getTag(); // FIXME: this is not secure. We should load the JSON for the current room and check rights associated to room instead.
 
-        if (SECRET_JITSI_KEY === '') {
-            throw new Error('You must set the SECRET_JITSI_KEY key to the secret to generate JWT tokens for Jitsi.');
+            if (SECRET_JITSI_KEY === '') {
+                throw new Error('You must set the SECRET_JITSI_KEY key to the secret to generate JWT tokens for Jitsi.');
+            }
+
+            // Let's see if the current client has
+            const isAdmin = client.tags.includes(tag);
+
+            const jwt = Jwt.sign({
+                "aud": "jitsi",
+                "iss": JITSI_ISS,
+                "sub": JITSI_URL,
+                "room": room,
+                "moderator": isAdmin
+            }, SECRET_JITSI_KEY, {
+                expiresIn: '1d',
+                algorithm: "HS256",
+                header:
+                    {
+                        "alg": "HS256",
+                        "typ": "JWT"
+                    }
+            });
+
+            const sendJitsiJwtMessage = new SendJitsiJwtMessage();
+            sendJitsiJwtMessage.setJitsiroom(room);
+            sendJitsiJwtMessage.setJwt(jwt);
+
+            const serverToClientMessage = new ServerToClientMessage();
+            serverToClientMessage.setSendjitsijwtmessage(sendJitsiJwtMessage);
+
+            client.send(serverToClientMessage.serializeBinary().buffer, true);
+        } catch (e) {
+            console.error('An error occured while generating the Jitsi JWT token: ', e);
         }
+    }
 
-        // Let's see if the current client has
-        const isAdmin = client.tags.includes(tag);
+    public async emitSendUserMessage(userUuid: string, message: string, type: string, roomId: string) {
+        /*const client = this.searchClientByUuid(userUuid);
+        if(client) {
+            const adminMessage = new SendUserMessage();
+            adminMessage.setMessage(message);
+            adminMessage.setType(type);
+            const pusherToBackMessage = new PusherToBackMessage();
+            pusherToBackMessage.setSendusermessage(adminMessage);
+            client.backConnection.write(pusherToBackMessage);
+            return;
+        }*/
 
-        const jwt = Jwt.sign({
-            "aud": "jitsi",
-            "iss": JITSI_ISS,
-            "sub": JITSI_URL,
-            "room": room,
-            "moderator": isAdmin
-        }, SECRET_JITSI_KEY, {
-            expiresIn: '1d',
-            algorithm: "HS256",
-            header:
-                {
-                    "alg": "HS256",
-                    "typ": "JWT"
-                }
+        const backConnection = await apiClientRepository.getClient(roomId);
+        const backAdminMessage = new AdminMessage();
+        backAdminMessage.setMessage(message);
+        backAdminMessage.setRoomid(roomId);
+        backAdminMessage.setRecipientuuid(userUuid);
+        backAdminMessage.setType(type);
+        backConnection.sendAdminMessage(backAdminMessage, (error) => {
+            if (error !== null) {
+                console.error('Error while sending admin message', error);
+            }
         });
-
-        const sendJitsiJwtMessage = new SendJitsiJwtMessage();
-        sendJitsiJwtMessage.setJitsiroom(room);
-        sendJitsiJwtMessage.setJwt(jwt);
-
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setSendjitsijwtmessage(sendJitsiJwtMessage);
-
-        client.send(serverToClientMessage.serializeBinary().buffer, true);
     }
 
-    public emitSendUserMessage(userUuid: string, message: string, type: string): void {
-        const client = this.searchClientByUuid(userUuid);
-        if(!client){
-            throw Error('client not found');
-        }
+    public async emitBan(userUuid: string, message: string, type: string, roomId: string) {
+        /*const client = this.searchClientByUuid(userUuid);
+        if(client) {
+            const banUserMessage = new BanUserMessage();
+            banUserMessage.setMessage(message);
+            banUserMessage.setType(type);
+            const pusherToBackMessage = new PusherToBackMessage();
+            pusherToBackMessage.setBanusermessage(banUserMessage);
+            client.backConnection.write(pusherToBackMessage);
+            return;
+        }*/
 
-        const adminMessage = new SendUserMessage();
-        adminMessage.setMessage(message);
-        adminMessage.setType(type);
-        const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setSendusermessage(adminMessage);
-        client.backConnection.write(pusherToBackMessage);
-
-        /*const backConnection = await apiClientRepository.getClient(client.roomId);
-        const adminMessage = new AdminMessage();
-        adminMessage.setMessage(message);
-        adminMessage.setRoomid(client.roomId);
-        adminMessage.setRecipientuuid(client.userUuid);
-        backConnection.sendAdminMessage(adminMessage, (error) => {
+        const backConnection = await apiClientRepository.getClient(roomId);
+        const banMessage = new BanMessage();
+        banMessage.setMessage(message);
+        banMessage.setRoomid(roomId);
+        banMessage.setRecipientuuid(userUuid);
+        banMessage.setType(type);
+        backConnection.ban(banMessage, (error) => {
             if (error !== null) {
                 console.error('Error while sending admin message', error);
             }
-        });*/
-    }
-
-    public emitBan(userUuid: string, message: string, type: string): void {
-        const client = this.searchClientByUuid(userUuid);
-        if(!client){
-            throw Error('client not found');
-        }
-
-        const banUserMessage = new BanUserMessage();
-        banUserMessage.setMessage(message);
-        banUserMessage.setType(type);
-        const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setBanusermessage(banUserMessage);
-        client.backConnection.write(pusherToBackMessage);
-
-        /*const backConnection = await apiClientRepository.getClient(client.roomId);
-        const adminMessage = new AdminMessage();
-        adminMessage.setMessage(message);
-        adminMessage.setRoomid(client.roomId);
-        adminMessage.setRecipientuuid(client.userUuid);
-        backConnection.sendAdminMessage(adminMessage, (error) => {
-            if (error !== null) {
-                console.error('Error while sending admin message', error);
-            }
-        });*/
+        });
     }
 
     /**

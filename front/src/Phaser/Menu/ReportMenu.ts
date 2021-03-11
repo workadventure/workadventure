@@ -104,8 +104,7 @@ export class ReportMenu extends Phaser.GameObjects.DOMElement {
         gamePError.innerText = '';
         gamePError.style.display = 'none';
         const gameTextArea = this.getChildByID('gameReportInput') as HTMLInputElement;
-        const gameIdUserReported = this.getChildByID('idUserReported') as HTMLInputElement;
-        if(!gameTextArea || !gameTextArea.value ){
+        if(!gameTextArea || !gameTextArea.value){
             gamePError.innerText = 'Report message cannot to be empty.';
             gamePError.style.display = 'block';
             return;

@@ -1,5 +1,5 @@
 import {CharacterLayer, ExSocketInterface} from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
-import {GameRoomPolicyTypes} from "../Model/PusherRoom";
+import {GameRoomPolicyTypes, PusherRoom} from "../Model/PusherRoom";
 import {PointInterface} from "../Model/Websocket/PointInterface";
 import {
     SetPlayerDetailsMessage,
@@ -20,7 +20,7 @@ import {parse} from "query-string";
 import {jwtTokenManager} from "../Services/JWTTokenManager";
 import {adminApi, CharacterTexture, FetchMemberDataByUuidResponse} from "../Services/AdminApi";
 import {SocketManager, socketManager} from "../Services/SocketManager";
-import {emitInBatch} from "../Services/IoSocketHelpers";
+import {emitError, emitInBatch} from "../Services/IoSocketHelpers";
 import {ADMIN_API_TOKEN, ADMIN_API_URL, SOCKET_IDLE_TIMER} from "../Enum/EnvironmentVariable";
 import {Zone} from "_Model/Zone";
 import {ExAdminSocketInterface} from "_Model/Websocket/ExAdminSocketInterface";
@@ -76,10 +76,10 @@ export class IoSocketController {
                     if(message.event === 'user-message') {
                         const messageToEmit = (message.message as { message: string, type: string, userUuid: string });
                         if(messageToEmit.type === 'banned'){
-                            socketManager.emitBan(messageToEmit.userUuid, messageToEmit.message, messageToEmit.type);
+                            socketManager.emitBan(messageToEmit.userUuid, messageToEmit.message, messageToEmit.type, ws.roomId as string);
                         }
                         if(messageToEmit.type === 'ban') {
-                            socketManager.emitSendUserMessage(messageToEmit.userUuid, messageToEmit.message, messageToEmit.type);
+                            socketManager.emitSendUserMessage(messageToEmit.userUuid, messageToEmit.message, messageToEmit.type, ws.roomId as string);
                         }
                     }
                 }catch (err) {
@@ -108,7 +108,6 @@ export class IoSocketController {
             maxBackpressure: 65536, // Maximum 64kB of data in the buffer.
             //idleTimeout: 10,
             upgrade: (res, req, context) => {
-                //console.log('An Http connection wants to become WebSocket, URL: ' + req.getUrl() + '!');
                 (async () => {
                     /* Keep track of abortions */
                     const upgradeAborted = {aborted: false};
@@ -156,12 +155,9 @@ export class IoSocketController {
                         const userUuid = await jwtTokenManager.getUserUuidFromToken(token, IPAddress, roomId);
 
                         let memberTags: string[] = [];
+                        let memberMessages: unknown;
                         let memberTextures: CharacterTexture[] = [];
                         const room = await socketManager.getOrCreateRoom(roomId);
-                        // TODO: make sure the room isFull is ported in the back part.
-                        /*if(room.isFull){
-                            throw new Error('Room is full');
-                        }*/
                         if (ADMIN_API_URL) {
                             try {
                                 let userData : FetchMemberDataByUuidResponse = {
@@ -172,15 +168,26 @@ export class IoSocketController {
                                     anonymous: true
                                 };
                                 try {
-                                    userData = await adminApi.fetchMemberDataByUuid(userUuid);
+                                    userData = await adminApi.fetchMemberDataByUuid(userUuid, roomId);
                                 }catch (err){
                                     if (err?.response?.status == 404) {
                                         // If we get an HTTP 404, the token is invalid. Let's perform an anonymous login!
                                         console.warn('Cannot find user with uuid "'+userUuid+'". Performing an anonymous login instead.');
+                                    } else if(err?.response?.status == 403) {
+                                        // If we get an HTTP 404, the world is full. We need to broadcast a special error to the client.
+                                        // we finish immediatly the upgrade then we will close the socket as soon as it starts opening. 
+                                        res.upgrade({
+                                            rejected: true,
+                                        }, websocketKey,
+                                        websocketProtocol,
+                                        websocketExtensions,
+                                        context);
+                                        return;
                                     }else{
                                         throw err;
                                     }
                                 }
+                                memberMessages = userData.messages;
                                 memberTags = userData.tags;
                                 memberTextures = userData.textures;
                                 if (!room.anonymous && room.policyType === GameRoomPolicyTypes.USE_TAGS_POLICY && (userData.anonymous === true || !room.canAccess(memberTags))) {
@@ -215,6 +222,7 @@ export class IoSocketController {
                                 roomId,
                                 name,
                                 characterLayers: characterLayerObjs,
+                                messages: memberMessages,
                                 tags: memberTags,
                                 textures: memberTextures,
                                 position: {
@@ -241,7 +249,6 @@ export class IoSocketController {
                             console.log(e.message);
                             res.writeStatus("401 Unauthorized").end(e.message);
                         } else {
-                            console.log(e);
                             res.writeStatus("500 Internal Server Error").end('An error occurred');
                         }
                         return;
@@ -250,32 +257,30 @@ export class IoSocketController {
             },
             /* Handlers */
             open: (ws) => {
+                if(ws.rejected === true) {
+                    emitError(ws, 'World is full');
+                    ws.close();
+                }
+                
                 // Let's join the room
                 const client = this.initClient(ws); //todo: into the upgrade instead?
                 socketManager.handleJoinRoom(client);
 
                 //get data information and show messages
-                if (ADMIN_API_URL) {
-                    adminApi.fetchMemberDataByUuid(client.userUuid).then((res: FetchMemberDataByUuidResponse) => {
-                        if (!res.messages) {
-                            return;
+                if (client.messages && Array.isArray(client.messages)) {
+                    client.messages.forEach((c: unknown) => {
+                        const messageToSend = c as { type: string, message: string };
+
+                        const sendUserMessage = new SendUserMessage();
+                        sendUserMessage.setType(messageToSend.type);
+                        sendUserMessage.setMessage(messageToSend.message);
+
+                        const serverToClientMessage = new ServerToClientMessage();
+                        serverToClientMessage.setSendusermessage(sendUserMessage);
+
+                        if (!client.disconnecting) {
+                            client.send(serverToClientMessage.serializeBinary().buffer, true);
                         }
-                        res.messages.forEach((c: unknown) => {
-                            const messageToSend = c as { type: string, message: string };
-
-                            const sendUserMessage = new SendUserMessage();
-                            sendUserMessage.setType(messageToSend.type);
-                            sendUserMessage.setMessage(messageToSend.message);
-
-                            const serverToClientMessage = new ServerToClientMessage();
-                            serverToClientMessage.setSendusermessage(sendUserMessage);
-
-                            if (!client.disconnecting) {
-                                client.send(serverToClientMessage.serializeBinary().buffer, true);
-                            }
-                        });
-                    }).catch((err) => {
-                        console.error('fetchMemberDataByUuid => err', err);
                     });
                 }
             },
@@ -340,6 +345,7 @@ export class IoSocketController {
         }
         client.disconnecting = false;
 
+        client.messages = ws.messages;
         client.name = ws.name;
         client.tags = ws.tags;
         client.textures = ws.textures;

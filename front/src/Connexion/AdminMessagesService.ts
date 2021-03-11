@@ -1,5 +1,5 @@
 import {Subject} from "rxjs";
-import {SendUserMessage} from "../Messages/generated/messages_pb";
+import {BanUserMessage, SendUserMessage} from "../Messages/generated/messages_pb";
 
 export enum AdminMessageEventTypes {
     admin = 'message',
@@ -23,7 +23,7 @@ class AdminMessagesService {
         this.messageStream.subscribe((event) => console.log('message', event))
     }
     
-    onSendusermessage(message: SendUserMessage) {
+    onSendusermessage(message: SendUserMessage|BanUserMessage) {
         this._messageStream.next({
             type: message.getType() as unknown as AdminMessageEventTypes,
             text: message.getMessage(),

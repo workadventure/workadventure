@@ -6,11 +6,22 @@ import {GameConnexionTypes, urlManager} from "../Url/UrlManager";
 import {localUserStore} from "./LocalUserStore";
 import {LocalUser} from "./LocalUser";
 import {Room} from "./Room";
+import {Subject} from "rxjs";
+
+export enum ConnexionMessageEventTypes {
+    worldFull = 1,
+}
+
+export interface ConnexionMessageEvent {
+    type: ConnexionMessageEventTypes,
+}
 
 class ConnectionManager {
     private localUser!:LocalUser;
 
     private connexionType?: GameConnexionTypes
+    
+    public _connexionMessageStream:Subject<ConnexionMessageEvent> = new Subject();
     /**
      * Tries to login to the node server and return the starting map url to be loaded
      */
