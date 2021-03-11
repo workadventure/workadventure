@@ -23,7 +23,7 @@ import {
     AdminPusherToBackMessage,
     ServerToAdminClientMessage,
     SendUserMessage,
-    BanUserMessage, UserJoinedRoomMessage, UserLeftRoomMessage
+    BanUserMessage, UserJoinedRoomMessage, UserLeftRoomMessage, AdminMessage, BanMessage
 } from "../Messages/generated/messages_pb";
 import {PointInterface} from "../Model/Websocket/PointInterface";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
@@ -549,54 +549,54 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public emitSendUserMessage(userUuid: string, message: string, type: string): void {
+    public async emitSendUserMessage(userUuid: string, message: string, type: string, roomId: string) {
         const client = this.searchClientByUuid(userUuid);
-        if(!client){
-            throw Error('client not found');
+        if(client) {
+            const adminMessage = new SendUserMessage();
+            adminMessage.setMessage(message);
+            adminMessage.setType(type);
+            const pusherToBackMessage = new PusherToBackMessage();
+            pusherToBackMessage.setSendusermessage(adminMessage);
+            client.backConnection.write(pusherToBackMessage);
+            return;
         }
 
-        const adminMessage = new SendUserMessage();
-        adminMessage.setMessage(message);
-        adminMessage.setType(type);
-        const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setSendusermessage(adminMessage);
-        client.backConnection.write(pusherToBackMessage);
-
-        /*const backConnection = await apiClientRepository.getClient(client.roomId);
-        const adminMessage = new AdminMessage();
-        adminMessage.setMessage(message);
-        adminMessage.setRoomid(client.roomId);
-        adminMessage.setRecipientuuid(client.userUuid);
-        backConnection.sendAdminMessage(adminMessage, (error) => {
+        const backConnection = await apiClientRepository.getClient(roomId);
+        const backAdminMessage = new AdminMessage();
+        backAdminMessage.setMessage(message);
+        backAdminMessage.setRoomid(roomId);
+        backAdminMessage.setRecipientuuid(userUuid);
+        backAdminMessage.setType(type);
+        backConnection.sendAdminMessage(backAdminMessage, (error) => {
             if (error !== null) {
                 console.error('Error while sending admin message', error);
             }
-        });*/
+        });
     }
 
-    public emitBan(userUuid: string, message: string, type: string): void {
+    public async emitBan(userUuid: string, message: string, type: string, roomId: string) {
         const client = this.searchClientByUuid(userUuid);
-        if(!client){
-            throw Error('client not found');
+        if(client) {
+            const banUserMessage = new BanUserMessage();
+            banUserMessage.setMessage(message);
+            banUserMessage.setType(type);
+            const pusherToBackMessage = new PusherToBackMessage();
+            pusherToBackMessage.setBanusermessage(banUserMessage);
+            client.backConnection.write(pusherToBackMessage);
+            return;
         }
 
-        const banUserMessage = new BanUserMessage();
-        banUserMessage.setMessage(message);
-        banUserMessage.setType(type);
-        const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setBanusermessage(banUserMessage);
-        client.backConnection.write(pusherToBackMessage);
-
-        /*const backConnection = await apiClientRepository.getClient(client.roomId);
-        const adminMessage = new AdminMessage();
-        adminMessage.setMessage(message);
-        adminMessage.setRoomid(client.roomId);
-        adminMessage.setRecipientuuid(client.userUuid);
-        backConnection.sendAdminMessage(adminMessage, (error) => {
+        const backConnection = await apiClientRepository.getClient(roomId);
+        const banMessage = new BanMessage();
+        banMessage.setMessage(message);
+        banMessage.setRoomid(roomId);
+        banMessage.setRecipientuuid(userUuid);
+        banMessage.setType(type);
+        backConnection.ban(banMessage, (error) => {
             if (error !== null) {
                 console.error('Error while sending admin message', error);
             }
-        });*/
+        });
     }
 
     /**

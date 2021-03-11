@@ -349,6 +349,7 @@ message AdminMessage {
   string message = 1;
   string recipientUuid = 2;
   string roomId = 3;
+  string type = 4;
 }
 
 // A message sent by an administrator to absolutely everybody
@@ -359,6 +360,8 @@ message AdminGlobalMessage {
 message BanMessage {
   string recipientUuid = 1;
   string roomId = 2;
+  string type = 3;
+  string message = 4;
 }
 
 message EmptyMessage {

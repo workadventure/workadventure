@@ -186,6 +186,8 @@ export class RoomConnection implements RoomConnection {
                 this.dispatch(EventMessage.START_JITSI_ROOM, message.getSendjitsijwtmessage());
             } else if (message.hasSendusermessage()) {
                 this.dispatch(EventMessage.USER_MESSAGE, message.getSendusermessage());
+            } else if (message.hasBanusermessage()) {
+                this.dispatch(EventMessage.USER_MESSAGE, message.getBanusermessage());
             } else {
                 throw new Error('Unknown message received');
             }
