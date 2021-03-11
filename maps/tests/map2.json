@@ -100,22 +100,6 @@
          "name":"noteText",
          "objects":[
                 {
-                 "height":67.0909090909091,
-                 "id":4,
-                 "name":"",
-                 "rotation":0,
-                 "text":
-                    {
-                     "text":"Ins\u00e9rer textTuto \" Great ! You can use Shift to run !\" ",
-                     "wrap":true
-                    },
-                 "type":"",
-                 "visible":true,
-                 "width":144,
-                 "x":1315.45454545455,
-                 "y":19.2878787878784
-                }, 
-                {
                  "height":183.166666666667,
                  "id":5,
                  "name":"",
