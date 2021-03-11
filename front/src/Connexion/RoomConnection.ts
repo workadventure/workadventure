@@ -27,7 +27,7 @@ import {
     SendJitsiJwtMessage,
     CharacterLayerMessage,
     PingMessage,
-    SendUserMessage
+    SendUserMessage, BanUserMessage
 } from "../Messages/generated/messages_pb"
 
 import {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
@@ -177,6 +177,8 @@ export class RoomConnection implements RoomConnection {
                 this.dispatch(EventMessage.START_JITSI_ROOM, message.getSendjitsijwtmessage());
             } else if (message.hasSendusermessage()) {
                 adminMessagesService.onSendusermessage(message.getSendusermessage() as SendUserMessage);
+            } else if (message.hasBanusermessage()) {
+                adminMessagesService.onSendusermessage(message.getSendusermessage() as BanUserMessage);
             } else {
                 throw new Error('Unknown message received');
             }

@@ -76,10 +76,10 @@ export class IoSocketController {
                     if(message.event === 'user-message') {
                         const messageToEmit = (message.message as { message: string, type: string, userUuid: string });
                         if(messageToEmit.type === 'banned'){
-                            socketManager.emitBan(messageToEmit.userUuid, messageToEmit.message, messageToEmit.type);
+                            socketManager.emitBan(messageToEmit.userUuid, messageToEmit.message, messageToEmit.type, ws.roomId as string);
                         }
                         if(messageToEmit.type === 'ban') {
-                            socketManager.emitSendUserMessage(messageToEmit.userUuid, messageToEmit.message, messageToEmit.type);
+                            socketManager.emitSendUserMessage(messageToEmit.userUuid, messageToEmit.message, messageToEmit.type, ws.roomId as string);
                         }
                     }
                 }catch (err) {

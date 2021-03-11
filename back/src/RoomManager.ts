@@ -176,7 +176,7 @@ const roomManager: IRoomManagerServer = {
     },
     ban(call: ServerUnaryCall<BanMessage>, callback: sendUnaryData<EmptyMessage>): void {
         // FIXME Work in progress
-        socketManager.banUser(call.request.getRoomid(), call.request.getRecipientuuid(), 'foo bar TODO change this');
+        socketManager.banUser(call.request.getRoomid(), call.request.getRecipientuuid(), call.request.getMessage());
 
         callback(null, new EmptyMessage());
     },

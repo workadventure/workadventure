@@ -22,7 +22,7 @@ import {
     AdminPusherToBackMessage,
     ServerToAdminClientMessage,
     SendUserMessage,
-    BanUserMessage, UserJoinedRoomMessage, UserLeftRoomMessage
+    BanUserMessage, UserJoinedRoomMessage, UserLeftRoomMessage, AdminMessage, BanMessage
 } from "../Messages/generated/messages_pb";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
 import {JITSI_ISS, SECRET_JITSI_KEY} from "../Enum/EnvironmentVariable";
@@ -434,90 +434,94 @@ export class SocketManager implements ZoneEventListener {
 
 
     public handleQueryJitsiJwtMessage(client: ExSocketInterface, queryJitsiJwtMessage: QueryJitsiJwtMessage) {
-        const room = queryJitsiJwtMessage.getJitsiroom();
-        const tag = queryJitsiJwtMessage.getTag(); // FIXME: this is not secure. We should load the JSON for the current room and check rights associated to room instead.
+        try {
+            const room = queryJitsiJwtMessage.getJitsiroom();
+            const tag = queryJitsiJwtMessage.getTag(); // FIXME: this is not secure. We should load the JSON for the current room and check rights associated to room instead.
 
-        if (SECRET_JITSI_KEY === '') {
-            throw new Error('You must set the SECRET_JITSI_KEY key to the secret to generate JWT tokens for Jitsi.');
+            if (SECRET_JITSI_KEY === '') {
+                throw new Error('You must set the SECRET_JITSI_KEY key to the secret to generate JWT tokens for Jitsi.');
+            }
+
+            // Let's see if the current client has
+            const isAdmin = client.tags.includes(tag);
+
+            const jwt = Jwt.sign({
+                "aud": "jitsi",
+                "iss": JITSI_ISS,
+                "sub": JITSI_URL,
+                "room": room,
+                "moderator": isAdmin
+            }, SECRET_JITSI_KEY, {
+                expiresIn: '1d',
+                algorithm: "HS256",
+                header:
+                    {
+                        "alg": "HS256",
+                        "typ": "JWT"
+                    }
+            });
+
+            const sendJitsiJwtMessage = new SendJitsiJwtMessage();
+            sendJitsiJwtMessage.setJitsiroom(room);
+            sendJitsiJwtMessage.setJwt(jwt);
+
+            const serverToClientMessage = new ServerToClientMessage();
+            serverToClientMessage.setSendjitsijwtmessage(sendJitsiJwtMessage);
+
+            client.send(serverToClientMessage.serializeBinary().buffer, true);
+        } catch (e) {
+            console.error('An error occured while generating the Jitsi JWT token: ', e);
+        }
+    }
+
+    public async emitSendUserMessage(userUuid: string, message: string, type: string, roomId: string) {
+        const client = this.searchClientByUuid(userUuid);
+        if(client) {
+            const adminMessage = new SendUserMessage();
+            adminMessage.setMessage(message);
+            adminMessage.setType(type);
+            const pusherToBackMessage = new PusherToBackMessage();
+            pusherToBackMessage.setSendusermessage(adminMessage);
+            client.backConnection.write(pusherToBackMessage);
+            return;
         }
 
-        // Let's see if the current client has
-        const isAdmin = client.tags.includes(tag);
-
-        const jwt = Jwt.sign({
-            "aud": "jitsi",
-            "iss": JITSI_ISS,
-            "sub": JITSI_URL,
-            "room": room,
-            "moderator": isAdmin
-        }, SECRET_JITSI_KEY, {
-            expiresIn: '1d',
-            algorithm: "HS256",
-            header:
-                {
-                    "alg": "HS256",
-                    "typ": "JWT"
-                }
+        const backConnection = await apiClientRepository.getClient(roomId);
+        const backAdminMessage = new AdminMessage();
+        backAdminMessage.setMessage(message);
+        backAdminMessage.setRoomid(roomId);
+        backAdminMessage.setRecipientuuid(userUuid);
+        backAdminMessage.setType(type);
+        backConnection.sendAdminMessage(backAdminMessage, (error) => {
+            if (error !== null) {
+                console.error('Error while sending admin message', error);
+            }
         });
-
-        const sendJitsiJwtMessage = new SendJitsiJwtMessage();
-        sendJitsiJwtMessage.setJitsiroom(room);
-        sendJitsiJwtMessage.setJwt(jwt);
-
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setSendjitsijwtmessage(sendJitsiJwtMessage);
-
-        client.send(serverToClientMessage.serializeBinary().buffer, true);
     }
 
-    public emitSendUserMessage(userUuid: string, message: string, type: string): void {
+    public async emitBan(userUuid: string, message: string, type: string, roomId: string) {
         const client = this.searchClientByUuid(userUuid);
-        if(!client){
-            throw Error('client not found');
+        if(client) {
+            const banUserMessage = new BanUserMessage();
+            banUserMessage.setMessage(message);
+            banUserMessage.setType(type);
+            const pusherToBackMessage = new PusherToBackMessage();
+            pusherToBackMessage.setBanusermessage(banUserMessage);
+            client.backConnection.write(pusherToBackMessage);
+            return;
         }
 
-        const adminMessage = new SendUserMessage();
-        adminMessage.setMessage(message);
-        adminMessage.setType(type);
-        const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setSendusermessage(adminMessage);
-        client.backConnection.write(pusherToBackMessage);
-
-        /*const backConnection = await apiClientRepository.getClient(client.roomId);
-        const adminMessage = new AdminMessage();
-        adminMessage.setMessage(message);
-        adminMessage.setRoomid(client.roomId);
-        adminMessage.setRecipientuuid(client.userUuid);
-        backConnection.sendAdminMessage(adminMessage, (error) => {
+        const backConnection = await apiClientRepository.getClient(roomId);
+        const banMessage = new BanMessage();
+        banMessage.setMessage(message);
+        banMessage.setRoomid(roomId);
+        banMessage.setRecipientuuid(userUuid);
+        banMessage.setType(type);
+        backConnection.ban(banMessage, (error) => {
             if (error !== null) {
                 console.error('Error while sending admin message', error);
             }
-        });*/
-    }
-
-    public emitBan(userUuid: string, message: string, type: string): void {
-        const client = this.searchClientByUuid(userUuid);
-        if(!client){
-            throw Error('client not found');
-        }
-
-        const banUserMessage = new BanUserMessage();
-        banUserMessage.setMessage(message);
-        banUserMessage.setType(type);
-        const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setBanusermessage(banUserMessage);
-        client.backConnection.write(pusherToBackMessage);
-
-        /*const backConnection = await apiClientRepository.getClient(client.roomId);
-        const adminMessage = new AdminMessage();
-        adminMessage.setMessage(message);
-        adminMessage.setRoomid(client.roomId);
-        adminMessage.setRecipientuuid(client.userUuid);
-        backConnection.sendAdminMessage(adminMessage, (error) => {
-            if (error !== null) {
-                console.error('Error while sending admin message', error);
-            }
-        });*/
+        });
     }
 
     /**
