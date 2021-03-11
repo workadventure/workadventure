@@ -475,7 +475,7 @@ export class SocketManager implements ZoneEventListener {
     }
 
     public async emitSendUserMessage(userUuid: string, message: string, type: string, roomId: string) {
-        const client = this.searchClientByUuid(userUuid);
+        /*const client = this.searchClientByUuid(userUuid);
         if(client) {
             const adminMessage = new SendUserMessage();
             adminMessage.setMessage(message);
@@ -484,7 +484,7 @@ export class SocketManager implements ZoneEventListener {
             pusherToBackMessage.setSendusermessage(adminMessage);
             client.backConnection.write(pusherToBackMessage);
             return;
-        }
+        }*/
 
         const backConnection = await apiClientRepository.getClient(roomId);
         const backAdminMessage = new AdminMessage();
@@ -500,7 +500,7 @@ export class SocketManager implements ZoneEventListener {
     }
 
     public async emitBan(userUuid: string, message: string, type: string, roomId: string) {
-        const client = this.searchClientByUuid(userUuid);
+        /*const client = this.searchClientByUuid(userUuid);
         if(client) {
             const banUserMessage = new BanUserMessage();
             banUserMessage.setMessage(message);
@@ -509,7 +509,7 @@ export class SocketManager implements ZoneEventListener {
             pusherToBackMessage.setBanusermessage(banUserMessage);
             client.backConnection.write(pusherToBackMessage);
             return;
-        }
+        }*/
 
         const backConnection = await apiClientRepository.getClient(roomId);
         const banMessage = new BanMessage();
