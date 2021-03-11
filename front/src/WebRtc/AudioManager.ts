@@ -9,6 +9,7 @@ enum audioStates {
 
 const audioPlayerDivId = "audioplayer";
 const audioPlayerCtrlId = "audioplayerctrl";
+const audioPlayerVolId = "audioplayer_volume";
 const animationTime = 500;
 
 class AudioManager {
@@ -17,6 +18,7 @@ class AudioManager {
     private audioPlayerDiv: HTMLDivElement;
     private audioPlayerCtrl: HTMLDivElement;
     private audioPlayerElem: HTMLAudioElement | undefined;
+    private audioPlayerVol: HTMLInputElement;
 
     private volume = 1;
     private muted = false;
@@ -26,16 +28,17 @@ class AudioManager {
     constructor() {
         this.audioPlayerDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(audioPlayerDivId);
         this.audioPlayerCtrl = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(audioPlayerCtrlId);
+        this.audioPlayerVol = HtmlUtils.getElementByIdOrFail<HTMLInputElement>(audioPlayerVolId);
 
         const storedVolume = localStorage.getItem('volume')
         if (storedVolume === null) {
             this.setVolume(1);
         } else {
             this.volume = parseFloat(storedVolume);
-            HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume').value = storedVolume;
+            this.audioPlayerVol.value = storedVolume;
         }
 
-        HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume').value = '' + this.volume;
+        this.audioPlayerVol.value = '' + this.volume;
     }
 
     public playAudio(url: string|number|boolean, mapDirUrl: string, loop=false): void {
@@ -77,6 +80,7 @@ class AudioManager {
     private changeVolume(talking = false): void {
         if (!isUndefined(this.audioPlayerElem)) {
             this.audioPlayerElem.volume = this.naturalVolume(talking && this.decreaseWhileTalking);
+            this.audioPlayerVol.value = '' + this.audioPlayerElem.volume;
             this.audioPlayerElem.muted = this.muted;
         }
     }
@@ -127,8 +131,7 @@ class AudioManager {
             }
         }
 
-        const volumeElem = HtmlUtils.getElementByIdOrFail<HTMLInputElement>('audioplayer_volume');
-        volumeElem.oninput = (ev: Event)=> {
+        this.audioPlayerVol.oninput = (ev: Event)=> {
             this.setVolume(parseFloat((<HTMLInputElement>ev.currentTarget).value));
             this.changeVolume();
 
