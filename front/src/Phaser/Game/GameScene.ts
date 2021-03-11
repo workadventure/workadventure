@@ -29,7 +29,9 @@ import {
     ON_ACTION_TRIGGER_BUTTON,
     TRIGGER_JITSI_PROPERTIES,
     TRIGGER_WEBSITE_PROPERTIES,
-    WEBSITE_MESSAGE_PROPERTIES
+    WEBSITE_MESSAGE_PROPERTIES,
+    AUDIO_VOLUME_PROPERTY,
+    AUDIO_LOOP_PROPERTY
 } from "../../WebRtc/LayoutManager";
 import {GameMap} from "./GameMap";
 import {coWebsiteManager} from "../../WebRtc/CoWebsiteManager";
@@ -661,8 +663,10 @@ export class GameScene extends ResizableScene implements CenterListener {
                 this.connection.setSilent(true);
             }
         });
-        this.gameMap.onPropertyChange('playAudio', (newValue, oldValue) => {
-            newValue === undefined ? audioManager.unloadAudio() : audioManager.playAudio(newValue, this.getMapDirUrl());
+        this.gameMap.onPropertyChange('playAudio', (newValue, oldValue, allProps) => {
+            const volume = allProps.get(AUDIO_VOLUME_PROPERTY) as number|undefined;
+            const loop = allProps.get(AUDIO_LOOP_PROPERTY) as boolean|undefined;
+            newValue === undefined ? audioManager.unloadAudio() : audioManager.playAudio(newValue, this.getMapDirUrl(), volume, loop);
         });
 
         this.gameMap.onPropertyChange('playAudioLoop', (newValue, oldValue) => {
