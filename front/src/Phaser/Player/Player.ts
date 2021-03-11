@@ -1,4 +1,4 @@
-import {PlayerAnimationNames} from "./Animation";
+import {PlayerAnimationDirections} from "./Animation";
 import {GameScene} from "../Game/GameScene";
 import {UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
 import {Character} from "../Entity/Character";
@@ -11,7 +11,7 @@ export interface CurrentGamerInterface extends Character{
 }
 
 export class Player extends Character implements CurrentGamerInterface {
-    private previousDirection: string = PlayerAnimationNames.WalkDown;
+    private previousDirection: string = PlayerAnimationDirections.Down;
     private wasMoving: boolean = false;
 
     constructor(
@@ -20,7 +20,7 @@ export class Player extends Character implements CurrentGamerInterface {
         y: number,
         name: string,
         texturesPromise: Promise<string[]>,
-        direction: string,
+        direction: PlayerAnimationDirections,
         moving: boolean,
         private userInputManager: UserInputManager
     ) {
@@ -43,20 +43,20 @@ export class Player extends Character implements CurrentGamerInterface {
         let y = 0;
         if (activeEvents.get(UserInputEvent.MoveUp)) {
             y = - moveAmount;
-            direction = PlayerAnimationNames.WalkUp;
+            direction = PlayerAnimationDirections.Up;
             moving = true;
         } else if (activeEvents.get(UserInputEvent.MoveDown)) {
             y = moveAmount;
-            direction = PlayerAnimationNames.WalkDown;
+            direction = PlayerAnimationDirections.Down;
             moving = true;
         }
         if (activeEvents.get(UserInputEvent.MoveLeft)) {
             x = -moveAmount;
-            direction = PlayerAnimationNames.WalkLeft;
+            direction = PlayerAnimationDirections.Left;
             moving = true;
         } else if (activeEvents.get(UserInputEvent.MoveRight)) {
             x = moveAmount;
-            direction = PlayerAnimationNames.WalkRight;
+            direction = PlayerAnimationDirections.Right;
             moving = true;
         }
         if (x !== 0 || y !== 0) {

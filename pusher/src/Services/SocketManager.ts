@@ -264,31 +264,6 @@ export class SocketManager implements ZoneEventListener {
         pusherToBackMessage.setItemeventmessage(itemEventMessage);
 
         client.backConnection.write(pusherToBackMessage);
-
-        /*const itemEvent = ProtobufUtils.toItemEvent(itemEventMessage);
-
-        try {
-            const world = this.Worlds.get(ws.roomId);
-            if (!world) {
-                console.error("Could not find world with id '", ws.roomId, "'");
-                return;
-            }
-
-            const subMessage = new SubMessage();
-            subMessage.setItemeventmessage(itemEventMessage);
-
-            // Let's send the event without using the SocketIO room.
-            for (const user of world.getUsers().values()) {
-                const client = this.searchClientByIdOrFail(user.id);
-                //client.emit(SocketIoEvent.ITEM_EVENT, itemEvent);
-                emitInBatch(client, subMessage);
-            }
-
-            world.setItemState(itemEvent.itemId, itemEvent.state);
-        } catch (e) {
-            console.error('An error occurred on "item_event"');
-            console.error(e);
-        }*/
     }
 
     async handleReportMessage(client: ExSocketInterface, reportPlayerMessage: ReportPlayerMessage) {
@@ -310,25 +285,6 @@ export class SocketManager implements ZoneEventListener {
         pusherToBackMessage.setWebrtcsignaltoservermessage(data);
 
         socket.backConnection.write(pusherToBackMessage);
-
-
-        //send only at user
-        /*const client = this.sockets.get(data.getReceiverid());
-        if (client === undefined) {
-            console.warn("While exchanging a WebRTC signal: client with id ", data.getReceiverid(), " does not exist. This might be a race condition.");
-            return;
-        }
-
-        const webrtcSignalToClient = new WebRtcSignalToClientMessage();
-        webrtcSignalToClient.setUserid(socket.userId);
-        webrtcSignalToClient.setSignal(data.getSignal());
-
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setWebrtcsignaltoclientmessage(webrtcSignalToClient);
-
-        if (!client.disconnecting) {
-            client.send(serverToClientMessage.serializeBinary().buffer, true);
-        }*/
     }
 
     emitScreenSharing(socket: ExSocketInterface, data: WebRtcSignalToServerMessage): void {
@@ -336,24 +292,6 @@ export class SocketManager implements ZoneEventListener {
         pusherToBackMessage.setWebrtcscreensharingsignaltoservermessage(data);
 
         socket.backConnection.write(pusherToBackMessage);
-
-        //send only at user
-        /*const client = this.sockets.get(data.getReceiverid());
-        if (client === undefined) {
-            console.warn("While exchanging a WEBRTC_SCREEN_SHARING signal: client with id ", data.getReceiverid(), " does not exist. This might be a race condition.");
-            return;
-        }
-
-        const webrtcSignalToClient = new WebRtcSignalToClientMessage();
-        webrtcSignalToClient.setUserid(socket.userId);
-        webrtcSignalToClient.setSignal(data.getSignal());
-
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setWebrtcscreensharingsignaltoclientmessage(webrtcSignalToClient);
-
-        if (!client.disconnecting) {
-            client.send(serverToClientMessage.serializeBinary().buffer, true);
-        }*/
     }
 
     private searchClientByIdOrFail(userId: number): ExSocketInterface {

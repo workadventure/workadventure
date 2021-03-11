@@ -1,4 +1,4 @@
-import {PlayerAnimationNames} from "../Phaser/Player/Animation";
+import {PlayerAnimationDirections} from "../Phaser/Player/Animation";
 import {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
 import {SignalData} from "simple-peer";
 import {RoomConnection} from "./RoomConnection";

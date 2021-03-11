@@ -13,7 +13,7 @@ import {CurrentGamerInterface, hasMovedEventName, Player} from "../Player/Player
 import {DEBUG_MODE, JITSI_PRIVATE_MODE, POSITION_DELAY, RESOLUTION, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import {ITiledMap, ITiledMapLayer, ITiledMapLayerProperty, ITiledMapObject, ITiledTileSet} from "../Map/ITiledMap";
 import {AddPlayerInterface} from "./AddPlayerInterface";
-import {PlayerAnimationNames} from "../Player/Animation";
+import {PlayerAnimationDirections} from "../Player/Animation";
 import {PlayerMovement} from "./PlayerMovement";
 import {PlayersPositionInterpolator} from "./PlayersPositionInterpolator";
 import {RemotePlayer} from "../Entity/RemotePlayer";
@@ -865,7 +865,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                 this.startY,
                 this.playerName,
                 texturesPromise,
-                PlayerAnimationNames.WalkDown,
+                PlayerAnimationDirections.Down,
                 false,
                 this.userInputManager
             );
@@ -914,16 +914,16 @@ export class GameScene extends ResizableScene implements CenterListener {
         let x = event.x;
         let y = event.y;
         switch (event.direction) {
-            case PlayerAnimationNames.WalkUp:
+            case PlayerAnimationDirections.Up:
                 y -= 32;
                 break;
-            case PlayerAnimationNames.WalkDown:
+            case PlayerAnimationDirections.Down:
                 y += 32;
                 break;
-            case PlayerAnimationNames.WalkLeft:
+            case PlayerAnimationDirections.Left:
                 x -= 32;
                 break;
-            case PlayerAnimationNames.WalkRight:
+            case PlayerAnimationDirections.Right:
                 x += 32;
                 break;
             default:
@@ -1059,7 +1059,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             addPlayerData.position.y,
             addPlayerData.name,
             texturesPromise,
-            addPlayerData.position.direction,
+            addPlayerData.position.direction as PlayerAnimationDirections,
             addPlayerData.position.moving
         );
         this.MapPlayers.add(player);

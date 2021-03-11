@@ -7,7 +7,6 @@ import {PositionNotifier} from "./PositionNotifier";
 import {Movable} from "_Model/Movable";
 import {extractDataFromPrivateRoomId, extractRoomSlugPublicRoomId, isRoomAnonymous} from "./RoomIdentifier";
 import {arrayIntersect} from "../Services/ArrayHelper";
-import {MAX_USERS_PER_ROOM} from "../Enum/EnvironmentVariable";
 import {JoinRoomMessage} from "../Messages/generated/messages_pb";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
 import {ZoneSocket} from "src/RoomManager";
@@ -116,8 +115,6 @@ export class GameRoom {
         this.nextUserId++;
         this.users.set(user.id, user);
         this.usersByUuid.set(user.uuid, user);
-        // Let's call update position to trigger the join / leave room
-        //this.updatePosition(socket, userPosition);
         this.updateUserGroup(user);
 
         // Notify admins
@@ -147,10 +144,6 @@ export class GameRoom {
         for (const admin of this.admins) {
             admin.sendUserLeft(user.uuid/*, user.name, user.IPAddress*/);
         }
-    }
-
-    get isFull(): boolean {
-        return this.users.size >= MAX_USERS_PER_ROOM;
     }
 
     public isEmpty(): boolean {
