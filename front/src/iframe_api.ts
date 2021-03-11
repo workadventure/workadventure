@@ -79,11 +79,9 @@ window.WA = {
     },
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup {
         popupId++;
-
         const popup = new Popup(popupId);
         const btnMap = new Map<number, () => void>();
         popupCallbacks.set(popupId, btnMap);
-        targetObject = "tutoBobble";
         let id = 0;
         for (const button of buttons) {
             const callback = button.callback;
@@ -94,6 +92,7 @@ window.WA = {
             }
             id++;
         }
+
 
         window.parent.postMessage({
             'type': 'openPopup',
