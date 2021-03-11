@@ -41,7 +41,7 @@ class AudioManager {
         this.audioPlayerVol.value = '' + this.volume;
     }
 
-    public playAudio(url: string|number|boolean, mapDirUrl: string, loop=false): void {
+    public playAudio(url: string|number|boolean, mapDirUrl: string, volume: number|undefined, loop=false): void {
         const audioPath = url as string;
         let realAudioPath = '';
 
@@ -53,7 +53,7 @@ class AudioManager {
             realAudioPath = mapDirUrl + '/' + url;
         }
 
-        this.loadAudio(realAudioPath);
+        this.loadAudio(realAudioPath, volume);
 
         if (loop) {
             this.loop();
@@ -100,8 +100,7 @@ class AudioManager {
         localStorage.setItem('volume', '' + volume);
     }
 
-
-    private loadAudio(url: string): void {
+    private loadAudio(url: string, volume: number|undefined): void {
         this.load();
 
         /* Solution 1, remove whole audio player */
@@ -119,6 +118,7 @@ class AudioManager {
         this.audioPlayerElem.append(srcElem);
 
         this.audioPlayerDiv.append(this.audioPlayerElem);
+        this.volume = volume ? Math.min(volume, this.volume) : this.volume;
         this.changeVolume();
         this.audioPlayerElem.play();
 
