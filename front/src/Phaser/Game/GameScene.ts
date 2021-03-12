@@ -57,7 +57,6 @@ import {TextureError} from "../../Exception/TextureError";
 import {addLoader} from "../Components/Loader";
 import {ErrorSceneName} from "../Reconnecting/ErrorScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
-import {Subscription} from "rxjs";
 import {iframeListener} from "../../Api/IframeListener";
 import {HtmlUtils} from "../../WebRtc/HtmlUtils";
 import Texture = Phaser.Textures.Texture;
@@ -66,6 +65,7 @@ import CanvasTexture = Phaser.Textures.CanvasTexture;
 import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import DOMElement = Phaser.GameObjects.DOMElement;
+import {Subscription} from "rxjs";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -158,7 +158,6 @@ export class GameScene extends ResizableScene implements CenterListener {
     private characterLayers!: string[];
     private messageSubscription: Subscription|null = null;
     private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
-    private objectLayerPopUp! : ITiledMapObject;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
