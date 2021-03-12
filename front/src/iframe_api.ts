@@ -13,6 +13,10 @@ interface WorkAdventureApi {
     onEnterZone(name: string, callback: () => void): void;
     onLeaveZone(name: string, callback: () => void): void;
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup;
+    disablePlayerControl() : void;
+    enablePlayerControl() : void;
+    displayBubble() : void;
+    removeBubble() : void;
 }
 
 declare global {
@@ -62,7 +66,6 @@ class Popup {
     }
 }
 
-
 window.WA = {
     /**
      * Send a message in the chat.
@@ -77,6 +80,22 @@ window.WA = {
             } as ChatEvent
         }, '*');
     },
+    disablePlayerControl() : void {
+        window.parent.postMessage({'type' : 'disablePlayerControl'},'*');
+    },
+
+    enablePlayerControl() : void {
+        window.parent.postMessage({'type' : 'enablePlayerControl'},'*');
+    },
+
+    displayBubble() : void {
+        window.parent.postMessage({'type' : 'displayBubble'},'*');
+    },
+
+    removeBubble() : void {
+        window.parent.postMessage({'type' : 'removeBubble'},'*');
+    },
+
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup {
         popupId++;
         const popup = new Popup(popupId);
@@ -165,6 +184,7 @@ window.addEventListener('message', message => {
                 callback(popup);
             }
         }
+
     }
 
     // ...

@@ -10,7 +10,6 @@ import {ButtonClickedEvent} from "./Events/ButtonClickedEvent";
 import {ClosePopupEvent, isClosePopupEvent} from "./Events/ClosePopupEvent";
 
 
-
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.
  * Also allows to send messages to those iframes.
@@ -22,8 +21,20 @@ class IframeListener {
     private readonly _openPopupStream: Subject<OpenPopupEvent> = new Subject();
     public readonly openPopupStream = this._openPopupStream.asObservable();
 
+    private readonly _disablePlayerControlStream: Subject<void> = new Subject();
+    public readonly disablePlayerControlStream = this._disablePlayerControlStream.asObservable();
+
+    private readonly _enablePlayerControl: Subject<void> = new Subject();
+    public readonly enablePlayerControl = this._enablePlayerControl.asObservable();
+
     private readonly _closePopupStream: Subject<ClosePopupEvent> = new Subject();
     public readonly closePopupStream = this._closePopupStream.asObservable();
+
+    private readonly _displayBubble: Subject<void> = new Subject();
+    public readonly displayBubble = this._displayBubble.asObservable();
+
+    private readonly _removeBubble: Subject<void> = new Subject();
+    public readonly removeBubble = this._removeBubble.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
@@ -52,6 +63,18 @@ class IframeListener {
                     this._openPopupStream.next(payload.data);
                 } else if (payload.type === 'closePopup' && isClosePopupEvent(payload.data)) {
                     this._closePopupStream.next(payload.data);
+                }
+                else if (payload.type === 'disablePlayerControl'){
+                    this._disablePlayerControlStream.next();
+                }
+                else if (payload.type === 'enablePlayerControl'){
+                    this._enablePlayerControl.next();
+                }
+                else if (payload.type === 'displayBubble'){
+                    this._displayBubble.next();
+                }
+                else if (payload.type === 'removeBubble'){
+                    this._removeBubble.next();
                 }
             }
 

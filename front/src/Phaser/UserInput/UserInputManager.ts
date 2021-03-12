@@ -31,10 +31,11 @@ export class ActiveEventList {
 export class UserInputManager {
     private KeysCode!: UserInputManagerDatum[];
     private Scene: GameScene;
-
+    private isInputDisable : boolean;
     constructor(Scene : GameScene) {
         this.Scene = Scene;
         this.initKeyBoardEvent();
+        this.isInputDisable = false;
     }
 
     initKeyBoardEvent(){
@@ -65,14 +66,21 @@ export class UserInputManager {
 
     clearAllKeys(){
         this.Scene.input.keyboard.removeAllKeys();
+        this.isInputDisable = true;
     }
 
+    restoreAllKeys(){
+        this.initKeyBoardEvent();
+        this.isInputDisable = false;
+    }
     getEventListForGameTick(): ActiveEventList {
         const eventsMap = new ActiveEventList();
+        if (this.isInputDisable) return eventsMap;
         this.KeysCode.forEach(d => {
             if (d. keyInstance.isDown) {
                 eventsMap.set(d.event, true);
             }
+
         });
         return eventsMap;
     }

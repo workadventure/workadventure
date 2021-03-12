@@ -57,16 +57,15 @@ import {TextureError} from "../../Exception/TextureError";
 import {addLoader} from "../Components/Loader";
 import {ErrorSceneName} from "../Reconnecting/ErrorScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
+import {Subscription} from "rxjs";
+import {iframeListener} from "../../Api/IframeListener";
+import {HtmlUtils} from "../../WebRtc/HtmlUtils";
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
 import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
-import {Subscription} from "rxjs";
-import {iframeListener} from "../../Api/IframeListener";
 import DOMElement = Phaser.GameObjects.DOMElement;
-import Tween = Phaser.Tweens.Tween;
-import {HtmlUtils} from "../../WebRtc/HtmlUtils";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -589,7 +588,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         const contextRed = this.circleRedTexture.context;
         contextRed.beginPath();
         contextRed.arc(48, 48, 48, 0, 2 * Math.PI, false);
-        // context.lineWidth = 5;
+         //context.lineWidth = 5;
         contextRed.strokeStyle = '#ff0000';
         contextRed.stroke();
         this.circleRedTexture.refresh();
@@ -687,7 +686,6 @@ export class GameScene extends ResizableScene implements CenterListener {
                 iframeListener.sendLeaveEvent(oldValue as string);
 
             } else {
-                console.log(newValue);
                 iframeListener.sendEnterEvent(newValue as string);
             }
         });
@@ -695,12 +693,13 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     private listenToIframeEvents(): void {
         iframeListener.openPopupStream.subscribe((openPopupEvent) => {
+
             let  objectLayerSquare : ITiledMapObject;
             if (this.getObjectLayerData(openPopupEvent.targetObject) !== undefined){
                     objectLayerSquare  =  this.getObjectLayerData(openPopupEvent.targetObject) as ITiledMapObject;
             }
            else{
-                console.error("The name of your square is not mathing with your param targetObject, check the two names. ")
+                console.error("Cannot find an Object with name  " + openPopupEvent.targetObject + "The name of your rectangle object is not matching with your param targetObject, check the two names.")
                 return;
             }
             const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
@@ -761,6 +760,23 @@ ${escapedMessage}
                 },
             });
         });
+
+        iframeListener.disablePlayerControlStream.subscribe(()=>{
+            this.userInputManager.clearAllKeys();
+        })
+        iframeListener.enablePlayerControl.subscribe(()=>{
+            this.userInputManager.restoreAllKeys();
+        })
+        let sprite : Sprite;
+        iframeListener.displayBubble.subscribe(()=>{
+            sprite = new Sprite(this,this.CurrentPlayer.x + 25,this.CurrentPlayer.y,'circleSprite-white');
+            sprite.setDisplayOrigin(48, 48);
+            this.add.existing(sprite);
+        })
+        iframeListener.removeBubble.subscribe(()=>{
+            sprite.destroy();
+        })
+
     }
 
     private getMapDirUrl(): string {
@@ -1288,7 +1304,6 @@ ${escapedMessage}
             if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
                 for (const object of layer.objects) {
                     if (object.name === objectName) {
-                        console.log("je return l'object");
                         return object;
                     }
                     else continue;
@@ -1296,7 +1311,6 @@ ${escapedMessage}
                 }
             }
         }
-        console.log("je return undefined");
         return undefined;
 
     }
