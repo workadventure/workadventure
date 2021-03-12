@@ -690,7 +690,7 @@ export class SocketManager {
     public sendAdminMessage(roomId: string, recipientUuid: string, message: string): void {
         const room = this.rooms.get(roomId);
         if (!room) {
-            console.error("In sendAdminMessage, could not find room with id '" +  roomId + "'. Maybe the room was closed a few milliseconds ago and there was a race condition?");
+            console.error("In sendAdminMessage, could not find room with id '" + roomId + "'. Maybe the room was closed a few milliseconds ago and there was a race condition?");
             return;
         }
 
@@ -704,10 +704,10 @@ export class SocketManager {
         sendUserMessage.setMessage(message);
         sendUserMessage.setType('ban'); //todo: is the type correct?
 
-        const subToPusherMessage = new SubToPusherMessage();
-        subToPusherMessage.setSendusermessage(sendUserMessage);
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setSendusermessage(sendUserMessage);
 
-        recipient.socket.write(subToPusherMessage);
+        recipient.socket.write(serverToClientMessage);
     }
 
     public banUser(roomId: string, recipientUuid: string, message: string): void {
@@ -726,16 +726,15 @@ export class SocketManager {
         // Let's leave the room now.
         room.leave(recipient);
 
-        const sendUserMessage = new SendUserMessage();
-        sendUserMessage.setMessage(message);
-        sendUserMessage.setType('banned');
+        const banUserMessage = new BanUserMessage();
+        banUserMessage.setMessage(message);
+        banUserMessage.setType('banned');
 
-        const subToPusherMessage = new SubToPusherMessage();
-        subToPusherMessage.setSendusermessage(sendUserMessage);
-
-        recipient.socket.write(subToPusherMessage);
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setBanusermessage(banUserMessage);
 
         // Let's close the connection when the user is banned.
+        recipient.socket.write(serverToClientMessage);
         recipient.socket.end();
     }
 
