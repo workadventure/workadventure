@@ -330,6 +330,10 @@ body {
         top: 0;
         width: 50%;
         height: 100vh;
+        cursor: ew-resize;
+    }
+    #cowebsite iframe {
+        margin-left: 30px;
     }
     #cowebsite.loading {
         transform: translateX(90%);

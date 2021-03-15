@@ -22,9 +22,26 @@ class CoWebsiteManager {
      */
     private currentOperationPromise: Promise<void> = Promise.resolve();
     private cowebsiteDiv: HTMLDivElement; 
+    private resizing: boolean = false;
     
     constructor() {
         this.cowebsiteDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteDivId);
+        
+        this.cowebsiteDiv.addEventListener('mousedown', (event) => {
+            this.resizing = true;
+            this.getIframeDom().style.display = 'none';
+            
+            document.onmousemove = (event) => {
+                this.cowebsiteDiv.style.width = (this.cowebsiteDiv.clientWidth - event.movementX) + 'px';
+            }
+        });
+
+        document.addEventListener('mouseup', (event) => {
+            if (!this.resizing) return;
+            document.onmousemove = null;
+            this.getIframeDom().style.display = 'block';
+            this.resizing = false;
+        });
     }
     
     private close(): void {
@@ -40,6 +57,12 @@ class CoWebsiteManager {
     private open(): void {
         this.cowebsiteDiv.classList.remove('loading', 'hidden'); //edit the css class to trigger the transition
         this.opened = iframeStates.opened;
+    }
+    
+    private getIframeDom(): HTMLIFrameElement {
+        const iframe = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteDivId).querySelector('iframe');
+        if (!iframe) throw new Error('Could not find iframe!');
+        return iframe;
     }
 
     public loadCoWebsite(url: string, base: string, allowPolicy?: string): void {
