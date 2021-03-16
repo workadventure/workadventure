@@ -16,13 +16,6 @@ import {HelpCameraSettingsScene} from "./Phaser/Menu/HelpCameraSettingsScene";
 import {localUserStore} from "./Connexion/LocalUserStore";
 import {ErrorScene} from "./Phaser/Reconnecting/ErrorScene";
 
-// Load Jitsi if the environment variable is set.
-if (JITSI_URL) {
-    const jitsiScript = document.createElement('script');
-    jitsiScript.src = 'https://' + JITSI_URL + '/external_api.js';
-    document.head.appendChild(jitsiScript);
-}
-
 const {width, height} = coWebsiteManager.getGameSize();
 
 const valueGameQuality = localUserStore.getGameQualityValue();
