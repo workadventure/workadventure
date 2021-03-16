@@ -72,6 +72,7 @@ class JitsiFactory {
     private audioCallback = this.onAudioChange.bind(this);
     private videoCallback = this.onVideoChange.bind(this);
     private previousConfigMeet? : jitsiConfigInterface;
+    private jitsiScriptLoaded: boolean = false;
 
     /**
      * Slugifies the room name and prepends the room name with the instance
@@ -80,11 +81,11 @@ class JitsiFactory {
         return slugify(instance.replace('/', '-') + "-" + roomName);
     }
 
-    public start(roomName: string, playerName:string, jwt?: string, config?: object, interfaceConfig?: object): void {
+    public start(roomName: string, playerName:string, jwt?: string, config?: object, interfaceConfig?: object, jitsiUrl?: string): void {
         //save previous config
         this.previousConfigMeet = getDefaultConfig();
 
-        coWebsiteManager.insertCoWebsite((cowebsiteDiv => {
+        coWebsiteManager.insertCoWebsite((async cowebsiteDiv => {
             // Jitsi meet external API maintains some data in local storage
             // which is sent via the appData URL parameter when joining a
             // conference. Problem is that this data grows indefinitely. Thus
@@ -93,7 +94,12 @@ class JitsiFactory {
             // clear jitsi local storage before starting a new conference.
             window.localStorage.removeItem("jitsiLocalStorage");
 
-            const domain = JITSI_URL;
+            const domain = jitsiUrl || JITSI_URL;
+            if (domain === undefined) {
+                throw new Error('Missing JITSI_URL environment variable or jitsiUrl parameter in the map.')
+            }
+            await this.loadJitsiScript(domain);
+
             const options: any = { // eslint-disable-line @typescript-eslint/no-explicit-any
                 roomName: roomName,
                 jwt: jwt,
@@ -156,6 +162,32 @@ class JitsiFactory {
         } else if(!muted && mediaManager.constraintsMedia.video === false) {
             mediaManager.enableCamera();
         }
+    }
+
+    private async loadJitsiScript(domain: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            if (this.jitsiScriptLoaded) {
+                resolve();
+                return;
+            }
+
+            this.jitsiScriptLoaded = true;
+
+            // Load Jitsi if the environment variable is set.
+            const jitsiScript = document.createElement('script');
+            jitsiScript.src = 'https://' + domain + '/external_api.js';
+            jitsiScript.onload = () => {
+                resolve();
+            }
+            jitsiScript.onerror = () => {
+                reject();
+            }
+
+            document.head.appendChild(jitsiScript);
+
+        })
+
+
     }
 }
 
