@@ -5,12 +5,16 @@ enum iframeStates {
     closed = 1,
     loading, // loading an iframe can be slow, so we show some placeholder until it is ready
     opened,
+    fullscreen,
 }
 
 const cowebsiteDivId = 'cowebsite'; // the id of the whole container.
 const cowebsiteMainDomId = 'cowebsite-main'; // the id of the parent div of the iframe.
 const cowebsiteAsideDomId = 'cowebsite-aside'; // the id of the parent div of the iframe.
 const cowebsiteCloseButtonId = 'cowebsite-close';
+const cowebsiteFullScreenButtonId = 'cowebsite-fullscreen';
+const cowebsiteOpenFullScreenImageId = 'cowebsite-fullscreen-open';
+const cowebsiteCloseFullScreenImageId = 'cowebsite-fullscreen-close';
 const animationTime = 500; //time used by the css transitions, in ms.
 
 class CoWebsiteManager {
@@ -26,7 +30,6 @@ class CoWebsiteManager {
     private currentOperationPromise: Promise<void> = Promise.resolve();
     private cowebsiteDiv: HTMLDivElement; 
     private resizing: boolean = false;
-    private currentWidth: number = 0;
     private cowebsiteMainDom: HTMLDivElement;
     private cowebsiteAsideDom: HTMLDivElement;
     
@@ -47,6 +50,9 @@ class CoWebsiteManager {
 
         HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId).addEventListener('click', () => {
             this.closeCoWebsite();
+        });
+        HtmlUtils.getElementByIdOrFail(cowebsiteFullScreenButtonId).addEventListener('click', () => {
+            this.fullscreen();
         });
     }
 
@@ -168,6 +174,22 @@ class CoWebsiteManager {
     
     private fire(): void {
         this._onStateChange.next();
+    }
+
+    private fullscreen(): void {
+        if (this.opened === iframeStates.fullscreen) {
+            this.opened = iframeStates.opened;
+            this.width = window.innerWidth / 2;
+            //we don't trigger a resize of the phaser game since it won't be visible anyway.
+            HtmlUtils.getElementByIdOrFail(cowebsiteOpenFullScreenImageId).style.display = 'inline';
+            HtmlUtils.getElementByIdOrFail(cowebsiteCloseFullScreenImageId).style.display = 'none';
+        } else {
+            this.opened = iframeStates.fullscreen;
+            this.width = window.innerWidth;
+            //we don't trigger a resize of the phaser game since it won't be visible anyway.
+            HtmlUtils.getElementByIdOrFail(cowebsiteOpenFullScreenImageId).style.display = 'none';
+            HtmlUtils.getElementByIdOrFail(cowebsiteCloseFullScreenImageId).style.display = 'inline';
+        }
     }
 }
 
