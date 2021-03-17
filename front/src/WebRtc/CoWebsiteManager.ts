@@ -1,6 +1,5 @@
 import {HtmlUtils} from "./HtmlUtils";
-
-export type CoWebsiteStateChangedCallback = () => void;
+import {Subject} from "rxjs";
 
 enum iframeStates {
     closed = 1,
@@ -8,14 +7,18 @@ enum iframeStates {
     opened,
 }
 
-const cowebsiteDivId = "cowebsite"; // the id of the parent div of the iframe.
+const cowebsiteDivId = 'cowebsite'; // the id of the whole container.
+const cowebsiteMainDomId = 'cowebsite-main'; // the id of the parent div of the iframe.
+const cowebsiteAsideDomId = 'cowebsite-aside'; // the id of the parent div of the iframe.
+const cowebsiteCloseButtonId = 'cowebsite-close';
 const animationTime = 500; //time used by the css transitions, in ms.
 
 class CoWebsiteManager {
     
     private opened: iframeStates = iframeStates.closed; 
 
-    private observers = new Array<CoWebsiteStateChangedCallback>();
+    private _onStateChange: Subject<void> = new Subject();
+    public onStateChange = this._onStateChange.asObservable();
     /**
      * Quickly going in and out of an iframe trigger can create conflicts between the iframe states.
      * So we use this promise to queue up every cowebsite state transition
@@ -23,16 +26,38 @@ class CoWebsiteManager {
     private currentOperationPromise: Promise<void> = Promise.resolve();
     private cowebsiteDiv: HTMLDivElement; 
     private resizing: boolean = false;
+    private currentWidth: number = 0;
+    private cowebsiteMainDom: HTMLDivElement;
+    private cowebsiteAsideDom: HTMLDivElement;
+    
+    get width(): number {
+        return this.cowebsiteDiv.clientWidth;
+    }
+
+    set width(width: number) {
+        this.cowebsiteDiv.style.width = width+'px';
+    }
     
     constructor() {
         this.cowebsiteDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteDivId);
-        
-        this.cowebsiteDiv.addEventListener('mousedown', (event) => {
+        this.cowebsiteMainDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteMainDomId);
+        this.cowebsiteAsideDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteAsideDomId);
+
+        this.initResizeListeners();
+
+        HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId).addEventListener('click', () => {
+            this.closeCoWebsite();
+        });
+    }
+
+    private initResizeListeners() {
+        this.cowebsiteAsideDom.addEventListener('mousedown', (event) => {
             this.resizing = true;
             this.getIframeDom().style.display = 'none';
-            
+
             document.onmousemove = (event) => {
-                this.cowebsiteDiv.style.width = (this.cowebsiteDiv.clientWidth - event.movementX) + 'px';
+                this.width = this.width - event.movementX;
+                this.fire();
             }
         });
 
@@ -43,7 +68,7 @@ class CoWebsiteManager {
             this.resizing = false;
         });
     }
-    
+
     private close(): void {
         this.cowebsiteDiv.classList.remove('loaded'); //edit the css class to trigger the transition
         this.cowebsiteDiv.classList.add('hidden');
@@ -57,8 +82,13 @@ class CoWebsiteManager {
     private open(): void {
         this.cowebsiteDiv.classList.remove('loading', 'hidden'); //edit the css class to trigger the transition
         this.opened = iframeStates.opened;
+        this.resetWidth();
     }
-    
+
+    private resetWidth() {
+        this.width = window.innerWidth / 2;
+    }
+
     private getIframeDom(): HTMLIFrameElement {
         const iframe = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteDivId).querySelector('iframe');
         if (!iframe) throw new Error('Could not find iframe!');
@@ -67,14 +97,7 @@ class CoWebsiteManager {
 
     public loadCoWebsite(url: string, base: string, allowPolicy?: string): void {
         this.load();
-        this.cowebsiteDiv.innerHTML = `<button class="close-btn" id="cowebsite-close">
-                    <img src="resources/logos/close.svg">
-                </button>`;
-        setTimeout(() => {
-            HtmlUtils.getElementByIdOrFail('cowebsite-close').addEventListener('click', () => {
-                this.closeCoWebsite();
-            });
-        }, 100);
+        this.cowebsiteMainDom.innerHTML = ``;
 
         const iframe = document.createElement('iframe');
         iframe.id = 'cowebsite-iframe';
@@ -85,7 +108,7 @@ class CoWebsiteManager {
         const onloadPromise = new Promise((resolve) => {
             iframe.onload = () => resolve();
         });
-        this.cowebsiteDiv.appendChild(iframe);
+        this.cowebsiteMainDom.appendChild(iframe);
         const onTimeoutPromise = new Promise((resolve) => {
             setTimeout(() => resolve(), 2000);
         });
@@ -116,9 +139,7 @@ class CoWebsiteManager {
             this.close();
             this.fire();
             setTimeout(() => {
-                this.cowebsiteDiv.innerHTML = `<button class="close-btn" id="cowebsite-close">
-                    <img src="resources/logos/close.svg">
-                </button>`;
+                this.cowebsiteMainDom.innerHTML = ``;
                 resolve();
             }, animationTime)
         }));
@@ -134,7 +155,7 @@ class CoWebsiteManager {
         }
         if (window.innerWidth >= window.innerHeight) {
             return {
-                width: window.innerWidth / 2,
+                width: window.innerWidth - this.width,
                 height: window.innerHeight
             }
         } else {
@@ -144,16 +165,9 @@ class CoWebsiteManager {
             }
         }
     }
-
-    //todo: is it still useful to allow any kind of observers? 
-    public onStateChange(observer: CoWebsiteStateChangedCallback) {
-        this.observers.push(observer);
-    }
-
+    
     private fire(): void {
-        for (const callback of this.observers) {
-            callback();
-        }
+        this._onStateChange.next();
     }
 }
 

@@ -118,7 +118,7 @@ window.addEventListener('resize', function (event) {
     }
 });
 
-coWebsiteManager.onStateChange(() => {
+coWebsiteManager.onStateChange.subscribe(() => {
     const {width, height} = coWebsiteManager.getGameSize();
     game.scale.resize(width / RESOLUTION, height / RESOLUTION);
 });
