@@ -1,5 +1,7 @@
 import 'phaser';
 import GameConfig = Phaser.Types.Core.GameConfig;
+import "../dist/resources/style/index.scss";
+
 import {DEBUG_MODE, JITSI_URL, RESOLUTION} from "./Enum/EnvironmentVariable";
 import {LoginScene} from "./Phaser/Login/LoginScene";
 import {ReconnectingScene} from "./Phaser/Reconnecting/ReconnectingScene";
