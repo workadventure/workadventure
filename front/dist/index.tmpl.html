@@ -29,7 +29,6 @@
 
 
         <base href="/">
-        <link rel="stylesheet" href="/resources/style/style.css">
         <title>WorkAdventure</title>
     </head>
     <body id="body" style="margin: 0; background-color: #000">
@@ -66,7 +65,16 @@
                 </div>
             </div>
             <div id="cowebsite" class="cowebsite hidden">
-                <button class="close-btn" id="cowebsite-close">
+                <aside id="cowebsite-aside">
+                    <img src="/static/images/menu.svg" alt="hold to resize"/>
+                </aside>
+                <main id="cowebsite-main">
+                </main>
+                <button class="top-right-btn" id="cowebsite-fullscreen">
+                    <img id="cowebsite-fullscreen-open" src="resources/logos/monitor.svg"/>
+                    <img id="cowebsite-fullscreen-close" style="display: none;" src="resources/logos/monitor-close.svg"/>
+                </button>
+                <button class="top-right-btn" id="cowebsite-close">
                     <img src="resources/logos/close.svg"/>
                 </button>
             </div>

@@ -1,12 +1,12 @@
 import 'phaser';
 import GameConfig = Phaser.Types.Core.GameConfig;
+import "../dist/resources/style/index.scss";
+
 import {DEBUG_MODE, JITSI_URL, RESOLUTION} from "./Enum/EnvironmentVariable";
 import {LoginScene} from "./Phaser/Login/LoginScene";
 import {ReconnectingScene} from "./Phaser/Reconnecting/ReconnectingScene";
 import {SelectCharacterScene} from "./Phaser/Login/SelectCharacterScene";
 import {EnableCameraScene} from "./Phaser/Login/EnableCameraScene";
-import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
-import {OutlinePipeline} from "./Phaser/Shaders/OutlinePipeline";
 import {CustomizeScene} from "./Phaser/Login/CustomizeScene";
 import {ResizableScene} from "./Phaser/Login/ResizableScene";
 import {EntryScene} from "./Phaser/Login/EntryScene";
@@ -109,6 +109,7 @@ const config: GameConfig = {
 const game = new Phaser.Game(config);
 
 window.addEventListener('resize', function (event) {
+    coWebsiteManager.resetStyle();
     const {width, height} = coWebsiteManager.getGameSize();
     game.scale.resize(width / RESOLUTION, height / RESOLUTION);
 
@@ -120,7 +121,7 @@ window.addEventListener('resize', function (event) {
     }
 });
 
-coWebsiteManager.onStateChange(() => {
+coWebsiteManager.onResize.subscribe(() => {
     const {width, height} = coWebsiteManager.getGameSize();
     game.scale.resize(width / RESOLUTION, height / RESOLUTION);
 });
