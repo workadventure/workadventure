@@ -5,7 +5,6 @@ enum iframeStates {
     closed = 1,
     loading, // loading an iframe can be slow, so we show some placeholder until it is ready
     opened,
-    fullscreen,
 }
 
 const cowebsiteDivId = 'cowebsite'; // the id of the whole container.
@@ -21,8 +20,8 @@ class CoWebsiteManager {
     
     private opened: iframeStates = iframeStates.closed; 
 
-    private _onStateChange: Subject<void> = new Subject();
-    public onStateChange = this._onStateChange.asObservable();
+    private _onResize: Subject<void> = new Subject();
+    public onResize = this._onResize.asObservable();
     /**
      * Quickly going in and out of an iframe trigger can create conflicts between the iframe states.
      * So we use this promise to queue up every cowebsite state transition
@@ -39,6 +38,22 @@ class CoWebsiteManager {
 
     set width(width: number) {
         this.cowebsiteDiv.style.width = width+'px';
+    }
+
+    get height(): number {
+        return this.cowebsiteDiv.clientHeight;
+    }
+
+    set height(height: number) {
+        this.cowebsiteDiv.style.height = height+'px';
+    }
+    
+    get verticalMode(): boolean {
+        return window.innerWidth < window.innerHeight;
+    }
+    
+    get isFullScreen(): boolean {
+        return this.verticalMode ? this.height === this.cowebsiteDiv.clientHeight : this.width === this.cowebsiteDiv.clientWidth
     }
     
     constructor() {
@@ -57,19 +72,21 @@ class CoWebsiteManager {
     }
 
     private initResizeListeners() {
+        const movecallback = (event:MouseEvent) => {
+            this.verticalMode ? this.height -= event.movementY : this.width -= event.movementX;
+            this.fire();
+        }
+        
         this.cowebsiteAsideDom.addEventListener('mousedown', (event) => {
             this.resizing = true;
             this.getIframeDom().style.display = 'none';
 
-            document.onmousemove = (event) => {
-                this.width = this.width - event.movementX;
-                this.fire();
-            }
+            document.addEventListener('mousemove', movecallback);
         });
 
         document.addEventListener('mouseup', (event) => {
             if (!this.resizing) return;
-            document.onmousemove = null;
+            document.removeEventListener('mousemove', movecallback);
             this.getIframeDom().style.display = 'block';
             this.resizing = false;
         });
@@ -79,6 +96,7 @@ class CoWebsiteManager {
         this.cowebsiteDiv.classList.remove('loaded'); //edit the css class to trigger the transition
         this.cowebsiteDiv.classList.add('hidden');
         this.opened = iframeStates.closed;
+        this.resetStyle();
     }
     private load(): void {
         this.cowebsiteDiv.classList.remove('hidden'); //edit the css class to trigger the transition
@@ -88,11 +106,12 @@ class CoWebsiteManager {
     private open(): void {
         this.cowebsiteDiv.classList.remove('loading', 'hidden'); //edit the css class to trigger the transition
         this.opened = iframeStates.opened;
-        this.resetWidth();
+        this.resetStyle();
     }
 
-    private resetWidth() {
-        this.width = window.innerWidth / 2;
+    public resetStyle() {
+        this.cowebsiteDiv.style.width = '';
+        this.cowebsiteDiv.style.height = '';
     }
 
     private getIframeDom(): HTMLIFrameElement {
@@ -159,7 +178,7 @@ class CoWebsiteManager {
                 height: window.innerHeight
             }
         }
-        if (window.innerWidth >= window.innerHeight) {
+        if (!this.verticalMode) {
             return {
                 width: window.innerWidth - this.width,
                 height: window.innerHeight
@@ -167,25 +186,23 @@ class CoWebsiteManager {
         } else {
             return {
                 width: window.innerWidth,
-                height: window.innerHeight / 2
+                height: window.innerHeight - this.height,
             }
         }
     }
     
     private fire(): void {
-        this._onStateChange.next();
+        this._onResize.next();
     }
-
+    
     private fullscreen(): void {
-        if (this.opened === iframeStates.fullscreen) {
-            this.opened = iframeStates.opened;
-            this.width = window.innerWidth / 2;
+        if (this.isFullScreen) {
+            this.resetStyle();
             //we don't trigger a resize of the phaser game since it won't be visible anyway.
             HtmlUtils.getElementByIdOrFail(cowebsiteOpenFullScreenImageId).style.display = 'inline';
             HtmlUtils.getElementByIdOrFail(cowebsiteCloseFullScreenImageId).style.display = 'none';
         } else {
-            this.opened = iframeStates.fullscreen;
-            this.width = window.innerWidth;
+            this.verticalMode ? this.height = window.innerHeight : this.width = window.innerWidth;
             //we don't trigger a resize of the phaser game since it won't be visible anyway.
             HtmlUtils.getElementByIdOrFail(cowebsiteOpenFullScreenImageId).style.display = 'none';
             HtmlUtils.getElementByIdOrFail(cowebsiteCloseFullScreenImageId).style.display = 'inline';

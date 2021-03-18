@@ -1,10 +1,27 @@
+/* A potentially shared website could appear in an iframe in the cowebsite space. */
+
 #cowebsite {
+  position: fixed;
+  transition: transform 0.5s;
+  background-color: white;
+  
+  &.loading {
+    background-color: gray;
+  }
+
+  main {
+    iframe {
+      width: 100%;
+      height: 100%;
+    }
+  }
+  
   aside {
     background: gray;
-    cursor: ew-resize;
+    align-items: center;
+    display: flex;
 
     img {
-      cursor: ew-resize;
       margin: 3px;
       pointer-events: none;
       height: 20px;
@@ -52,10 +69,10 @@
 
     aside {
       width: 30px;
-      align-items: center;
-      display: flex;
+      cursor: ew-resize;
 
       img {
+        cursor: ew-resize;
         transform: rotate(90deg);
       }
     }
@@ -85,7 +102,7 @@
     }
 
     #cowebsite-fullscreen{
-      right: 40px;
+      right: 45px;
     }
   }
 }
@@ -114,9 +131,12 @@
 
     aside {
       height: 30px;
-      align-items: center;
-      display: flex;
+      cursor: ns-resize;
       flex-direction: column;
+      
+      img {
+        cursor: ns-resize;
+      }
     }
 
     .top-right-btn{
@@ -144,7 +164,7 @@
     }
 
     #cowebsite-fullscreen{
-      right: 40px;
+      right: 45px;
     }
   }  
 }

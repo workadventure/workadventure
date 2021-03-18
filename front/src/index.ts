@@ -109,6 +109,7 @@ const config: GameConfig = {
 const game = new Phaser.Game(config);
 
 window.addEventListener('resize', function (event) {
+    coWebsiteManager.resetStyle();
     const {width, height} = coWebsiteManager.getGameSize();
     game.scale.resize(width / RESOLUTION, height / RESOLUTION);
 
@@ -120,7 +121,7 @@ window.addEventListener('resize', function (event) {
     }
 });
 
-coWebsiteManager.onStateChange.subscribe(() => {
+coWebsiteManager.onResize.subscribe(() => {
     const {width, height} = coWebsiteManager.getGameSize();
     game.scale.resize(width / RESOLUTION, height / RESOLUTION);
 });

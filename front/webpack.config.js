@@ -42,7 +42,7 @@ module.exports = {
         require('webpack-require-http')
     ],
     plugins: [
-        new MiniCssExtractPlugin({filename: 'style.css'}),
+        new MiniCssExtractPlugin({filename: 'style.[contenthash].css'}),
         new HtmlWebpackPlugin(
             {
                 template: './dist/index.tmpl.html.tmp',
