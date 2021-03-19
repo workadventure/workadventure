@@ -1289,9 +1289,9 @@ export class GameScene extends ResizableScene implements CenterListener {
         if(middleX < 0){
             middleX = 0;
         }
-        if(window.navigator.userAgent.indexOf('Firefox') != -1){
+        if(window.navigator.userAgent.includes('Firefox')){
             HtmlUtils.getElementByIdOrFail<HTMLParagraphElement>('browserHelpSetting').innerHTML ='<img src="/resources/objects/help-setting-camera-permission-firefox.png"/>';
-        }else if(window.navigator.userAgent.indexOf('Chrome') != -1){
+        }else if(window.navigator.userAgent.includes('Chrome')){
             HtmlUtils.getElementByIdOrFail<HTMLParagraphElement>('browserHelpSetting').innerHTML ='<img src="/resources/objects/help-setting-camera-permission-chrome.png"/>';
         }
         this.tweens.add({
