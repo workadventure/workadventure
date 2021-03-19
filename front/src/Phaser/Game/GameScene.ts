@@ -102,7 +102,6 @@ interface DeleteGroupEventInterface {
 }
 
 const defaultStartLayerName = 'start';
-const helpCameraSettings = 'helpCameraSettings';
 
 export class GameScene extends ResizableScene implements CenterListener {
     Terrains : Array<Phaser.Tilemaps.Tileset>;
@@ -130,8 +129,6 @@ export class GameScene extends ResizableScene implements CenterListener {
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
     private createPromise: Promise<void>;
     private createPromiseResolve!: (value?: void | PromiseLike<void>) => void;
-    private helpCameraSettingsElement!: Phaser.GameObjects.DOMElement; //#700
-    private helpCameraSettingsOpened: boolean = false; //#700
 
     MapUrlFile: string;
     RoomId: string;
@@ -212,7 +209,6 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         this.load.spritesheet('layout_modes', 'resources/objects/layout_modes.png', {frameWidth: 32, frameHeight: 32});
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
-        this.load.html(helpCameraSettings, 'resources/html/helpCameraSettings.html'); //#700
 
         addLoader(this);
     }
@@ -550,29 +546,9 @@ export class GameScene extends ResizableScene implements CenterListener {
 
             //init user position and play trigger to check layers properties
             this.gameMap.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
-
-            // #700
-            const middleX = (window.innerWidth / 3) - (370*0.85);
-            this.helpCameraSettingsElement = this.add.dom(middleX, -800, undefined, {overflow: 'scroll'}).createFromCache(helpCameraSettings);
-            this.revealMenusAfterInit(this.helpCameraSettingsElement, helpCameraSettings);
-            this.helpCameraSettingsElement.addListener('click');
-            this.helpCameraSettingsElement.on('click',  (event:MouseEvent) => {
-                event.preventDefault();
-                if((event?.target as HTMLInputElement).id === 'helpCameraSettingsFormRefresh') {
-                    window.location.reload();
-                }else if((event?.target as HTMLInputElement).id === 'helpCameraSettingsFormContinue') {
-                    this.closeHelpCameraSettingsOpened();
-                }
-            });
-            if(this.helpCameraSettingsElement.parent){
-                (this.helpCameraSettingsElement.parent as HTMLDivElement).style.overflow = 'scroll';
-            }
-
-            if(!mediaManager.constraintsMedia.audio || !mediaManager.constraintsMedia.video){
-                 this.openHelpCameraSettingsOpened(); //#700
-            }
         });
     }
+
 
     //todo: into dedicated classes
     private initCirclesCanvas(): void {
@@ -994,44 +970,42 @@ export class GameScene extends ResizableScene implements CenterListener {
      */
     update(time: number, delta: number) : void {
         mediaManager.setLastUpdateScene();
-        if(!this.helpCameraSettingsOpened) {
-            this.currentTick = time;
-            this.CurrentPlayer.moveUser(delta);
+        this.currentTick = time;
+        this.CurrentPlayer.moveUser(delta);
 
-            // Let's handle all events
-            while (this.pendingEvents.length !== 0) {
-                const event = this.pendingEvents.dequeue();
-                switch (event.type) {
-                    case "InitUserPositionEvent":
-                        this.doInitUsersPosition(event.event);
-                        break;
-                    case "AddPlayerEvent":
-                        this.doAddPlayer(event.event);
-                        break;
-                    case "RemovePlayerEvent":
-                        this.doRemovePlayer(event.userId);
-                        break;
-                    case "UserMovedEvent":
-                        this.doUpdatePlayerPosition(event.event);
-                        break;
-                    case "GroupCreatedUpdatedEvent":
-                        this.doShareGroupPosition(event.event);
-                        break;
-                    case "DeleteGroupEvent":
-                        this.doDeleteGroup(event.groupId);
-                        break;
-                }
+        // Let's handle all events
+        while (this.pendingEvents.length !== 0) {
+            const event = this.pendingEvents.dequeue();
+            switch (event.type) {
+                case "InitUserPositionEvent":
+                    this.doInitUsersPosition(event.event);
+                    break;
+                case "AddPlayerEvent":
+                    this.doAddPlayer(event.event);
+                    break;
+                case "RemovePlayerEvent":
+                    this.doRemovePlayer(event.userId);
+                    break;
+                case "UserMovedEvent":
+                    this.doUpdatePlayerPosition(event.event);
+                    break;
+                case "GroupCreatedUpdatedEvent":
+                    this.doShareGroupPosition(event.event);
+                    break;
+                case "DeleteGroupEvent":
+                    this.doDeleteGroup(event.groupId);
+                    break;
             }
-            // Let's move all users
-            const updatedPlayersPositions = this.playersPositionInterpolator.getUpdatedPositions(time);
-            updatedPlayersPositions.forEach((moveEvent: HasMovedEvent, userId: number) => {
-                const player: RemotePlayer | undefined = this.MapPlayersByKey.get(userId);
-                if (player === undefined) {
-                    throw new Error('Cannot find player with ID "' + userId + '"');
-                }
-                player.updatePosition(moveEvent);
-            });
         }
+        // Let's move all users
+        const updatedPlayersPositions = this.playersPositionInterpolator.getUpdatedPositions(time);
+        updatedPlayersPositions.forEach((moveEvent: HasMovedEvent, userId: number) => {
+            const player: RemotePlayer | undefined = this.MapPlayersByKey.get(userId);
+            if (player === undefined) {
+                throw new Error('Cannot find player with ID "' + userId + '"');
+            }
+            player.updatePosition(moveEvent);
+        });
     }
 
     /**
@@ -1275,54 +1249,5 @@ export class GameScene extends ResizableScene implements CenterListener {
                 message: 'If you want more information, you may contact us at: workadventure@thecodingmachine.com'
             });
         }
-    }
-
-    //#700
-    private openHelpCameraSettingsOpened(): void{
-        HtmlUtils.getElementByIdOrFail<HTMLDivElement>('webRtcSetup').style.display = 'none';
-        this.helpCameraSettingsOpened = true;
-        let middleY = (window.innerHeight / 3) - 275;
-        if(middleY < 0){
-            middleY = 0;
-        }
-        let middleX =  (window.innerWidth / 3) - 50;
-        if(middleX < 0){
-            middleX = 0;
-        }
-        if(window.navigator.userAgent.includes('Firefox')){
-            HtmlUtils.getElementByIdOrFail<HTMLParagraphElement>('browserHelpSetting').innerHTML ='<img src="/resources/objects/help-setting-camera-permission-firefox.png"/>';
-        }else if(window.navigator.userAgent.includes('Chrome')){
-            HtmlUtils.getElementByIdOrFail<HTMLParagraphElement>('browserHelpSetting').innerHTML ='<img src="/resources/objects/help-setting-camera-permission-chrome.png"/>';
-        }
-        this.tweens.add({
-            targets: this.helpCameraSettingsElement,
-            y: this.startY - (370/2),
-            x: this.startX - (400/2),
-            duration: 1000,
-            ease: 'Power3',
-            overflow: 'scroll'
-        });
-    }
-
-    private closeHelpCameraSettingsOpened(): void{
-        const helpCameraSettingsInfo = this.helpCameraSettingsElement.getChildByID('helpCameraSettings') as HTMLParagraphElement;
-        helpCameraSettingsInfo.innerText = '';
-        helpCameraSettingsInfo.style.display = 'none';
-        this.helpCameraSettingsOpened = false;
-        this.tweens.add({
-            targets: this.helpCameraSettingsElement,
-            y: -400,
-            duration: 1000,
-            ease: 'Power3',
-            overflow: 'scroll'
-        });
-    }
-
-    private revealMenusAfterInit(menuElement: Phaser.GameObjects.DOMElement, rootDomId: string) {
-        //Dom elements will appear inside the viewer screen when creating before being moved out of it, which create a flicker effect.
-        //To prevent this, we put a 'hidden' attribute on the root element, we remove it only after the init is done.
-        setTimeout(() => {
-            (menuElement.getChildByID(rootDomId) as HTMLElement).hidden = false;
-        }, 250);
     }
 }

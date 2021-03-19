@@ -279,17 +279,4 @@ export class EnableCameraScene extends Phaser.Scene {
         }
         this.updateWebCamName();
     }
-
-    private reset(){
-        this.textField.destroy();
-        this.pressReturnField.destroy();
-        this.cameraNameField.destroy();
-        this.microphoneNameField.destroy();
-        this.arrowRight.destroy();
-        this.arrowLeft.destroy();
-        this.arrowUp.destroy();
-        this.arrowDown.destroy();
-        this.soundMeterSprite.destroy();
-        this.input.keyboard.removeAllKeys();
-    }
 }
