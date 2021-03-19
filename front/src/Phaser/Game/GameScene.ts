@@ -457,16 +457,12 @@ export class GameScene extends ResizableScene implements CenterListener {
             });
 
             this.connection.onGroupUpdatedOrCreated((groupPositionMessage: GroupCreatedUpdatedMessageInterface) => {
-                audioManager.decreaseVolume();
                 this.shareGroupPosition(groupPositionMessage);
-                this.openChatIcon.setVisible(true);
             })
 
             this.connection.onGroupDeleted((groupId: number) => {
-                audioManager.restoreVolume();
                 try {
                     this.deleteGroup(groupId);
-                    this.openChatIcon.setVisible(false);
                 } catch (e) {
                     console.error(e);
                 }
@@ -519,11 +515,15 @@ export class GameScene extends ResizableScene implements CenterListener {
                 onConnect(user: UserSimplePeerInterface) {
                     self.presentationModeSprite.setVisible(true);
                     self.chatModeSprite.setVisible(true);
+                    self.openChatIcon.setVisible(true);
+                    audioManager.decreaseVolume();
                 },
                 onDisconnect(userId: number) {
                     if (self.simplePeer.getNbConnections() === 0) {
                         self.presentationModeSprite.setVisible(false);
                         self.chatModeSprite.setVisible(false);
+                        self.openChatIcon.setVisible(false);
+                        audioManager.restoreVolume();
                     }
                 }
             })
