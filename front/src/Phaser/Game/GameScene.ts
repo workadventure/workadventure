@@ -547,6 +547,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         });
     }
 
+
     //todo: into dedicated classes
     private initCirclesCanvas(): void {
         // Let's generate the circle for the group delimiter
@@ -994,13 +995,12 @@ export class GameScene extends ResizableScene implements CenterListener {
                     break;
             }
         }
-
         // Let's move all users
         const updatedPlayersPositions = this.playersPositionInterpolator.getUpdatedPositions(time);
         updatedPlayersPositions.forEach((moveEvent: HasMovedEvent, userId: number) => {
-            const player : RemotePlayer | undefined = this.MapPlayersByKey.get(userId);
+            const player: RemotePlayer | undefined = this.MapPlayersByKey.get(userId);
             if (player === undefined) {
-                throw new Error('Cannot find player with ID "' + userId +'"');
+                throw new Error('Cannot find player with ID "' + userId + '"');
             }
             player.updatePosition(moveEvent);
         });
