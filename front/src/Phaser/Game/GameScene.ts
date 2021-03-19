@@ -63,8 +63,6 @@ import CanvasTexture = Phaser.Textures.CanvasTexture;
 import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import {Subscription} from "rxjs";
-import {tryCatch} from "rxjs/internal-compatibility";
-import {HtmlUtils} from "../../WebRtc/HtmlUtils";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
