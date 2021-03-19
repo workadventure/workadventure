@@ -16,7 +16,6 @@ enum LoginTextures {
     arrowUp = "arrow_up"
 }
 
-const helpCameraSettings = 'helpCameraSettings';
 
 export class EnableCameraScene extends Phaser.Scene {
     private textField!: TextField;
@@ -35,8 +34,6 @@ export class EnableCameraScene extends Phaser.Scene {
     private soundMeterSprite!: SoundMeterSprite;
     private microphoneNameField!: TextField;
     private repositionCallback!: (this: Window, ev: UIEvent) => void;
-    private helpCameraSettingsElement!: Phaser.GameObjects.DOMElement;
-    private helpCameraSettingsOpened: boolean = false;
 
     constructor() {
         super({
@@ -52,7 +49,6 @@ export class EnableCameraScene extends Phaser.Scene {
         this.load.image(LoginTextures.arrowUp, "resources/objects/arrow_up.png");
         // Note: arcade.png from the Phaser 3 examples at: https://github.com/photonstorm/phaser3-examples/tree/master/public/assets/fonts/bitmap
         this.load.bitmapFont(LoginTextures.mainFont, 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
-        this.load.html(helpCameraSettings, 'resources/html/helpCameraSettings.html');
     }
 
     create() {
@@ -112,27 +108,6 @@ export class EnableCameraScene extends Phaser.Scene {
         this.soundMeterSprite.setVisible(false);
         this.add.existing(this.soundMeterSprite);
 
-        const middleX = (window.innerWidth / 3) - (370*0.85);
-        this.helpCameraSettingsElement = this.add.dom(middleX, -800, undefined, {overflow: 'scroll'}).createFromCache(helpCameraSettings);
-        this.revealMenusAfterInit(this.helpCameraSettingsElement, helpCameraSettings);
-        this.helpCameraSettingsElement.addListener('click');
-        this.helpCameraSettingsElement.on('click',  (event:MouseEvent) => {
-            event.preventDefault();
-            if((event?.target as HTMLInputElement).id !== 'helpCameraSettingsFormRefresh') {
-                return;
-            }
-            const permission: Element = this.helpCameraSettingsElement.getChildByID('permissionError');
-            permission.innerHTML = '';
-            return mediaManager.getCamera().then(() => {
-                window.location.reload();
-            }).catch((err) => {
-                permission.innerHTML = err.message;
-            });
-        });
-        if(this.helpCameraSettingsElement.parent){
-            (this.helpCameraSettingsElement.parent as HTMLDivElement).style.overflow = 'scroll';
-        }
-
         this.repositionCallback = this.reposition.bind(this);
         window.addEventListener('resize', this.repositionCallback);
     }
@@ -175,9 +150,6 @@ export class EnableCameraScene extends Phaser.Scene {
      * Function called each time a camera is changed
      */
     private setupStream(stream: MediaStream): void {
-        if(this.helpCameraSettingsOpened){
-            return;
-        }
         const img = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('webRtcSetupNoVideo');
         img.style.display = 'none';
 
@@ -284,27 +256,19 @@ export class EnableCameraScene extends Phaser.Scene {
         mediaManager.setLastUpdateScene();
     }
 
-    private login(): Promise<MediaStream> {
-        return mediaManager.getCamera()
-            .then((mediaStream: MediaStream) => {
-                HtmlUtils.getElementByIdOrFail<HTMLDivElement>('webRtcSetup').style.display = 'none';
-                this.soundMeter.stop();
-                window.removeEventListener('resize', this.repositionCallback);
-                mediaManager.stopCamera();
-                mediaManager.stopMicrophone();
-                this.scene.sleep(EnableCameraSceneName)
-                gameManager.goToStartingMap(this.scene);
-                return mediaStream;
-            }).catch((err) => {
-                this.openHelpCameraSettingsOpened();
-                throw err;
-            });
+    private login(): void {
+        HtmlUtils.getElementByIdOrFail<HTMLDivElement>('webRtcSetup').style.display = 'none';
+        this.soundMeter.stop();
+        window.removeEventListener('resize', this.repositionCallback);
+
+        mediaManager.stopCamera();
+        mediaManager.stopMicrophone();
+
+        this.scene.sleep(EnableCameraSceneName)
+        gameManager.goToStartingMap(this.scene);
     }
 
     private async getDevices() {
-        if(this.helpCameraSettingsOpened){
-            return;
-        }
         const mediaDeviceInfos = await navigator.mediaDevices.enumerateDevices();
         for (const mediaDeviceInfo of mediaDeviceInfos) {
             if (mediaDeviceInfo.kind === 'audioinput') {
@@ -314,36 +278,6 @@ export class EnableCameraScene extends Phaser.Scene {
             }
         }
         this.updateWebCamName();
-    }
-
-    private openHelpCameraSettingsOpened(): void{
-        this.reset();
-        HtmlUtils.getElementByIdOrFail<HTMLDivElement>('webRtcSetup').style.display = 'none';
-        this.helpCameraSettingsOpened = true;
-        let middleY = (window.innerHeight / 3) - (495);
-        if(middleY < 0){
-            middleY = 0;
-        }
-        let middleX = (window.innerWidth / 3) - (370*0.85);
-        if(middleX < 0){
-            middleX = 0;
-        }
-        this.tweens.add({
-            targets: this.helpCameraSettingsElement,
-            y: middleY,
-            x: middleX,
-            duration: 1000,
-            ease: 'Power3',
-            overflow: 'scroll'
-        });
-    }
-
-    private revealMenusAfterInit(menuElement: Phaser.GameObjects.DOMElement, rootDomId: string) {
-        //Dom elements will appear inside the viewer screen when creating before being moved out of it, which create a flicker effect.
-        //To prevent this, we put a 'hidden' attribute on the root element, we remove it only after the init is done.
-        setTimeout(() => {
-            (menuElement.getChildByID(rootDomId) as HTMLElement).hidden = false;
-        }, 250);
     }
 
     private reset(){

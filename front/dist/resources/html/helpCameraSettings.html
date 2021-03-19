@@ -76,7 +76,7 @@
         margin: 0px 20px;
     }
     #helpCameraSettings section p.err{
-        color: red;
+        color: #ff0000;
     }
     #helpCameraSettings section ul{
         margin: 6px;
@@ -101,9 +101,11 @@
                 <li>Please ensure that you have a camera AND microphone plugged into your computer.</li>
             </ul>
         <p class="info">Once you've followed these steps, please refresh this page.</p>
-        <img src="/resources/objects/help-setting-camera-permission.png">
+        <p>If you prefer to continue without allowing camera and microphone access, click on Continue</p>
+        <p id='browserHelpSetting'></p>
     </section>
     <section class="action">
         <button type="submit" id="helpCameraSettingsFormRefresh">Refresh</button>
+        <button type="submit" id="helpCameraSettingsFormContinue">Continue</button>
     </section>
 </form>
