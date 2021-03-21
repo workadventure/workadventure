@@ -35,9 +35,6 @@ export class HelpCameraSettingsScene extends Phaser.Scene {
                 this.closeHelpCameraSettingsOpened();
             }
         });
-        if(this.helpCameraSettingsElement.parent){
-            (this.helpCameraSettingsElement.parent as HTMLDivElement).style.overflow = 'scroll';
-        }
 
         if(!mediaManager.constraintsMedia.audio || !mediaManager.constraintsMedia.video){
             this.openHelpCameraSettingsOpened();
