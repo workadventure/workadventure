@@ -77,8 +77,10 @@ export class TypeMessageExt implements TypeMessageInterface{
         }
     }
 }
-export class Ban extends TypeMessageExt {
-}
+
+export class Message extends TypeMessageExt {}
+
+export class Ban extends TypeMessageExt {}
 
 export class Banned extends TypeMessageExt {
     showMessage(message: string){

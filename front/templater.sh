@@ -2,7 +2,7 @@
 set -x
 set -o nounset errexit
 template_file_index=dist/index.tmpl.html
-generated_file_index=dist/index.html
+generated_file_index=dist/index.tmpl.html.tmp
 tmp_trackcodefile=/tmp/trackcode
 
 # To inject tracking code, you have two choices:

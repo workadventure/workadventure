@@ -1,4 +1,4 @@
-import {PlayerAnimationNames} from "../Player/Animation";
+import {PlayerAnimationDirections, PlayerAnimationTypes} from "../Player/Animation";
 import {SpeechBubble} from "./SpeechBubble";
 import BitmapText = Phaser.GameObjects.BitmapText;
 import Container = Phaser.GameObjects.Container;
@@ -10,8 +10,7 @@ interface AnimationData {
     frameRate: number;
     repeat: number;
     frameModel: string; //todo use an enum
-    frameStart: number;
-    frameEnd: number;
+    frames : number[]
 }
 
 export abstract class Character extends Container {
@@ -19,7 +18,7 @@ export abstract class Character extends Container {
     private readonly playerName: BitmapText;
     public PlayerValue: string;
     public sprites: Map<string, Sprite>;
-    private lastDirection: string = PlayerAnimationNames.WalkDown;
+    private lastDirection: PlayerAnimationDirections = PlayerAnimationDirections.Down;
     //private teleportation: Sprite;
     private invisible: boolean;
 
@@ -28,7 +27,7 @@ export abstract class Character extends Container {
                 y: number,
                 texturesPromise: Promise<string[]>,
                 name: string,
-                direction: string,
+                direction: PlayerAnimationDirections,
                 moving: boolean,
                 frame?: string | number
     ) {
@@ -81,7 +80,7 @@ export abstract class Character extends Container {
             this.getPlayerAnimations(texture).forEach(d => {
                 this.scene.anims.create({
                     key: d.key,
-                    frames: this.scene.anims.generateFrameNumbers(d.frameModel, {start: d.frameStart, end: d.frameEnd}),
+                    frames: this.scene.anims.generateFrameNumbers(d.frameModel, {frames: d.frames}),
                     frameRate: d.frameRate,
                     repeat: d.repeat
                 });
@@ -96,37 +95,57 @@ export abstract class Character extends Container {
 
     private getPlayerAnimations(name: string): AnimationData[] {
         return [{
-            key: `${name}-${PlayerAnimationNames.WalkDown}`,
+            key: `${name}-${PlayerAnimationDirections.Down}-${PlayerAnimationTypes.Walk}`,
             frameModel: name,
-            frameStart: 0,
-            frameEnd: 2,
+            frames: [0, 1, 2, 1],
             frameRate: 10,
             repeat: -1
         }, {
-            key: `${name}-${PlayerAnimationNames.WalkLeft}`,
+            key: `${name}-${PlayerAnimationDirections.Left}-${PlayerAnimationTypes.Walk}`,
             frameModel: name,
-            frameStart: 3,
-            frameEnd: 5,
+            frames: [3, 4, 5, 4],
             frameRate: 10,
             repeat: -1
         }, {
-            key: `${name}-${PlayerAnimationNames.WalkRight}`,
+            key: `${name}-${PlayerAnimationDirections.Right}-${PlayerAnimationTypes.Walk}`,
             frameModel: name,
-            frameStart: 6,
-            frameEnd: 8,
+            frames: [6, 7, 8, 7],
             frameRate: 10,
             repeat: -1
         }, {
-            key: `${name}-${PlayerAnimationNames.WalkUp}`,
+            key: `${name}-${PlayerAnimationDirections.Up}-${PlayerAnimationTypes.Walk}`,
             frameModel: name,
-            frameStart: 9,
-            frameEnd: 11,
+            frames: [9, 10, 11, 10],
             frameRate: 10,
             repeat: -1
+        },{
+            key: `${name}-${PlayerAnimationDirections.Down}-${PlayerAnimationTypes.Idle}`,
+            frameModel: name,
+            frames: [1],
+            frameRate: 10,
+            repeat: 1
+        }, {
+            key: `${name}-${PlayerAnimationDirections.Left}-${PlayerAnimationTypes.Idle}`,
+            frameModel: name,
+            frames: [4],
+            frameRate: 10,
+            repeat: 1
+        }, {
+            key: `${name}-${PlayerAnimationDirections.Right}-${PlayerAnimationTypes.Idle}`,
+            frameModel: name,
+            frames: [7],
+            frameRate: 10,
+            repeat: 1
+        }, {
+            key: `${name}-${PlayerAnimationDirections.Up}-${PlayerAnimationTypes.Idle}`,
+            frameModel: name,
+            frames: [10],
+            frameRate: 10,
+            repeat: 1
         }];
     }
 
-    protected playAnimation(direction : string, moving: boolean): void {
+    protected playAnimation(direction : PlayerAnimationDirections, moving: boolean): void {
         if (this.invisible) return;
         for (const [texture, sprite] of this.sprites.entries()) {
             if (!sprite.anims) {
@@ -134,10 +153,9 @@ export abstract class Character extends Container {
                 return;
             }
             if (moving && (!sprite.anims.currentAnim || sprite.anims.currentAnim.key !== direction)) {
-                sprite.play(texture+'-'+direction, true);
+                sprite.play(texture+'-'+direction+'-'+PlayerAnimationTypes.Walk, true);
             } else if (!moving) {
-                sprite.anims.play(texture + '-' + direction, true);
-                sprite.anims.stop();
+                sprite.anims.play(texture + '-' + direction + '-'+PlayerAnimationTypes.Idle, true);
             }
         }
     }
@@ -157,17 +175,17 @@ export abstract class Character extends Container {
 
         // up or down animations are prioritized over left and right
         if (body.velocity.y < 0) { //moving up
-            this.lastDirection = PlayerAnimationNames.WalkUp;
-            this.playAnimation(PlayerAnimationNames.WalkUp, true);
+            this.lastDirection = PlayerAnimationDirections.Up;
+            this.playAnimation(PlayerAnimationDirections.Up, true);
         } else if (body.velocity.y > 0) { //moving down
-            this.lastDirection = PlayerAnimationNames.WalkDown;
-            this.playAnimation(PlayerAnimationNames.WalkDown, true);
+            this.lastDirection = PlayerAnimationDirections.Down;
+            this.playAnimation(PlayerAnimationDirections.Down, true);
         } else if (body.velocity.x > 0) { //moving right
-            this.lastDirection = PlayerAnimationNames.WalkRight;
-            this.playAnimation(PlayerAnimationNames.WalkRight, true);
+            this.lastDirection = PlayerAnimationDirections.Right;
+            this.playAnimation(PlayerAnimationDirections.Right, true);
         } else if (body.velocity.x < 0) { //moving left
-            this.lastDirection = PlayerAnimationNames.WalkLeft;
-            this.playAnimation(PlayerAnimationNames.WalkLeft, true);
+            this.lastDirection = PlayerAnimationDirections.Left;
+            this.playAnimation(PlayerAnimationDirections.Left, true);
         }
 
         this.setDepth(this.y);

@@ -325,35 +325,7 @@ body {
         max-height: 25%;
     }
 
-    #cowebsite {
-        right: 0;
-        top: 0;
-        width: 50%;
-        height: 100vh;
-    }
-    #cowebsite.loading {
-        transform: translateX(90%);
-    }
-    #cowebsite.hidden {
-        transform: translateX(100%);
-    }
-
-    #cowebsite .close-btn{
-        position: absolute;
-        top: 10px;
-        right: -100px;
-        background: none;
-        border: none;
-        cursor: url('/resources/logos/cursor_pointer.png'), pointer;
-        animation: right .2s ease;
-    }
-    #cowebsite .close-btn img{
-        height: 15px;
-        right: 15px;
-    }
-    #cowebsite:hover .close-btn{
-        right: 10px;
-    }
+    
 }
 @media (max-aspect-ratio: 1/1) {
     .game-overlay {
@@ -372,39 +344,11 @@ body {
     .sidebar > div:hover {
         max-width: 25%;
     }
-
-    #cowebsite {
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        height: 50%;
-    }
-    #cowebsite.loading {
-        transform: translateY(90%);
-    }
-    #cowebsite.hidden {
-        transform: translateY(100%);
-    }
 }
 
 #game {
     width: 100%;
     position: relative; /* Position relative is needed for the game-overlay. */
-}
-
-/* A potentially shared website could appear in an iframe in the cowebsite space. */
-#cowebsite {
-    position: fixed;
-    transition: transform 0.5s;
-    background-color: white;
-}
-#cowebsite.loading {
-    background-color: gray;
-}
-
-#cowebsite > iframe {
-    width: 100%;
-    height: 100%;
 }
 
 .audioplayer:first-child  {
@@ -612,10 +556,9 @@ input[type=range]:focus::-ms-fill-upper {
 }
 
 .chat-mode {
-    display: flex;
+    display: grid;
     width: 100%;
 
-    flex-wrap: wrap;
     align-items: flex-start;
 
     padding: 1%;
@@ -631,24 +574,20 @@ input[type=range]:focus::-ms-fill-upper {
 .chat-mode > div:hover {
     margin: 0%;
 }
-.chat-mode.one-col > div {
-    flex-basis: 98%;
+.chat-mode.one-col {
+    grid-template-columns: repeat(1, 1fr);
 }
 
-.chat-mode.two-col > div {
-    flex-basis: 48%;
+.chat-mode.two-col {
+    grid-template-columns: repeat(2, 1fr);
 }
 
-.chat-mode.three-col > div {
-    flex-basis: 31.333333%;
+.chat-mode.three-col {
+    grid-template-columns: repeat(3, 1fr);
 }
 
-.chat-mode.four-col > div {
-    flex-basis: 23%;
-}
-
-.chat-mode > div:last-child {
-    flex-grow: 5;
+.chat-mode.four-col {
+    grid-template-columns: repeat(4, 1fr);
 }
 
 /*CONSOLE*/

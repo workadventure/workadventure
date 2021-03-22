@@ -1,8 +1,6 @@
 import {gameManager} from "../Game/GameManager";
 import {TextField} from "../Components/TextField";
 import Image = Phaser.GameObjects.Image;
-import {GameSceneInitInterface} from "../Game/GameScene";
-import {StartMapInterface} from "../../Connexion/ConnexionModels";
 import {mediaManager} from "../../WebRtc/MediaManager";
 import {RESOLUTION} from "../../Enum/EnvironmentVariable";
 import {SoundMeter} from "../Components/SoundMeter";
@@ -17,6 +15,7 @@ enum LoginTextures {
     arrowRight = "arrow_right",
     arrowUp = "arrow_up"
 }
+
 
 export class EnableCameraScene extends Phaser.Scene {
     private textField!: TextField;

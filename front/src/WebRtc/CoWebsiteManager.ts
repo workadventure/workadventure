@@ -1,6 +1,5 @@
 import {HtmlUtils} from "./HtmlUtils";
-
-export type CoWebsiteStateChangedCallback = () => void;
+import {Subject} from "rxjs";
 
 enum iframeStates {
     closed = 1,
@@ -8,29 +7,96 @@ enum iframeStates {
     opened,
 }
 
-const cowebsiteDivId = "cowebsite"; // the id of the parent div of the iframe.
+const cowebsiteDivId = 'cowebsite'; // the id of the whole container.
+const cowebsiteMainDomId = 'cowebsite-main'; // the id of the parent div of the iframe.
+const cowebsiteAsideDomId = 'cowebsite-aside'; // the id of the parent div of the iframe.
+const cowebsiteCloseButtonId = 'cowebsite-close';
+const cowebsiteFullScreenButtonId = 'cowebsite-fullscreen';
+const cowebsiteOpenFullScreenImageId = 'cowebsite-fullscreen-open';
+const cowebsiteCloseFullScreenImageId = 'cowebsite-fullscreen-close';
 const animationTime = 500; //time used by the css transitions, in ms.
 
 class CoWebsiteManager {
     
     private opened: iframeStates = iframeStates.closed; 
 
-    private observers = new Array<CoWebsiteStateChangedCallback>();
+    private _onResize: Subject<void> = new Subject();
+    public onResize = this._onResize.asObservable();
     /**
      * Quickly going in and out of an iframe trigger can create conflicts between the iframe states.
      * So we use this promise to queue up every cowebsite state transition
      */
     private currentOperationPromise: Promise<void> = Promise.resolve();
     private cowebsiteDiv: HTMLDivElement; 
+    private resizing: boolean = false;
+    private cowebsiteMainDom: HTMLDivElement;
+    private cowebsiteAsideDom: HTMLDivElement;
+    
+    get width(): number {
+        return this.cowebsiteDiv.clientWidth;
+    }
+
+    set width(width: number) {
+        this.cowebsiteDiv.style.width = width+'px';
+    }
+
+    get height(): number {
+        return this.cowebsiteDiv.clientHeight;
+    }
+
+    set height(height: number) {
+        this.cowebsiteDiv.style.height = height+'px';
+    }
+    
+    get verticalMode(): boolean {
+        return window.innerWidth < window.innerHeight;
+    }
+    
+    get isFullScreen(): boolean {
+        return this.verticalMode ? this.height === this.cowebsiteDiv.clientHeight : this.width === this.cowebsiteDiv.clientWidth
+    }
     
     constructor() {
         this.cowebsiteDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteDivId);
+        this.cowebsiteMainDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteMainDomId);
+        this.cowebsiteAsideDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteAsideDomId);
+
+        this.initResizeListeners();
+
+        HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId).addEventListener('click', () => {
+            this.closeCoWebsite();
+        });
+        HtmlUtils.getElementByIdOrFail(cowebsiteFullScreenButtonId).addEventListener('click', () => {
+            this.fullscreen();
+        });
     }
-    
+
+    private initResizeListeners() {
+        const movecallback = (event:MouseEvent) => {
+            this.verticalMode ? this.height -= event.movementY : this.width -= event.movementX;
+            this.fire();
+        }
+        
+        this.cowebsiteAsideDom.addEventListener('mousedown', (event) => {
+            this.resizing = true;
+            this.getIframeDom().style.display = 'none';
+
+            document.addEventListener('mousemove', movecallback);
+        });
+
+        document.addEventListener('mouseup', (event) => {
+            if (!this.resizing) return;
+            document.removeEventListener('mousemove', movecallback);
+            this.getIframeDom().style.display = 'block';
+            this.resizing = false;
+        });
+    }
+
     private close(): void {
         this.cowebsiteDiv.classList.remove('loaded'); //edit the css class to trigger the transition
         this.cowebsiteDiv.classList.add('hidden');
         this.opened = iframeStates.closed;
+        this.resetStyle();
     }
     private load(): void {
         this.cowebsiteDiv.classList.remove('hidden'); //edit the css class to trigger the transition
@@ -40,29 +106,34 @@ class CoWebsiteManager {
     private open(): void {
         this.cowebsiteDiv.classList.remove('loading', 'hidden'); //edit the css class to trigger the transition
         this.opened = iframeStates.opened;
+        this.resetStyle();
     }
 
-    public loadCoWebsite(url: string, allowPolicy?: string): void {
+    public resetStyle() {
+        this.cowebsiteDiv.style.width = '';
+        this.cowebsiteDiv.style.height = '';
+    }
+
+    private getIframeDom(): HTMLIFrameElement {
+        const iframe = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteDivId).querySelector('iframe');
+        if (!iframe) throw new Error('Could not find iframe!');
+        return iframe;
+    }
+
+    public loadCoWebsite(url: string, base: string, allowPolicy?: string): void {
         this.load();
-        this.cowebsiteDiv.innerHTML = `<button class="close-btn" id="cowebsite-close">
-                    <img src="resources/logos/close.svg">
-                </button>`;
-        setTimeout(() => {
-            HtmlUtils.getElementByIdOrFail('cowebsite-close').addEventListener('click', () => {
-                this.closeCoWebsite();
-            });
-        }, 100);
+        this.cowebsiteMainDom.innerHTML = ``;
 
         const iframe = document.createElement('iframe');
         iframe.id = 'cowebsite-iframe';
-        iframe.src = url;
+        iframe.src = (new URL(url, base)).toString();
         if (allowPolicy) {
             iframe.allow = allowPolicy; 
         }
         const onloadPromise = new Promise((resolve) => {
             iframe.onload = () => resolve();
         });
-        this.cowebsiteDiv.appendChild(iframe);
+        this.cowebsiteMainDom.appendChild(iframe);
         const onTimeoutPromise = new Promise((resolve) => {
             setTimeout(() => resolve(), 2000);
         });
@@ -79,7 +150,8 @@ class CoWebsiteManager {
      */
     public insertCoWebsite(callback: (cowebsite: HTMLDivElement) => Promise<void>): void {
         this.load();
-        this.currentOperationPromise = this.currentOperationPromise.then(() => callback(this.cowebsiteDiv)).then(() => {
+        this.cowebsiteMainDom.innerHTML = ``;
+        this.currentOperationPromise = this.currentOperationPromise.then(() => callback(this.cowebsiteMainDom)).then(() => {
             this.open();
             setTimeout(() => {
                 this.fire();
@@ -93,9 +165,7 @@ class CoWebsiteManager {
             this.close();
             this.fire();
             setTimeout(() => {
-                this.cowebsiteDiv.innerHTML = `<button class="close-btn" id="cowebsite-close">
-                    <img src="resources/logos/close.svg">
-                </button>`;
+                this.cowebsiteMainDom.innerHTML = ``;
                 resolve();
             }, animationTime)
         }));
@@ -109,27 +179,34 @@ class CoWebsiteManager {
                 height: window.innerHeight
             }
         }
-        if (window.innerWidth >= window.innerHeight) {
+        if (!this.verticalMode) {
             return {
-                width: window.innerWidth / 2,
+                width: window.innerWidth - this.width,
                 height: window.innerHeight
             }
         } else {
             return {
                 width: window.innerWidth,
-                height: window.innerHeight / 2
+                height: window.innerHeight - this.height,
             }
         }
     }
-
-    //todo: is it still useful to allow any kind of observers? 
-    public onStateChange(observer: CoWebsiteStateChangedCallback) {
-        this.observers.push(observer);
-    }
-
+    
     private fire(): void {
-        for (const callback of this.observers) {
-            callback();
+        this._onResize.next();
+    }
+    
+    private fullscreen(): void {
+        if (this.isFullScreen) {
+            this.resetStyle();
+            //we don't trigger a resize of the phaser game since it won't be visible anyway.
+            HtmlUtils.getElementByIdOrFail(cowebsiteOpenFullScreenImageId).style.display = 'inline';
+            HtmlUtils.getElementByIdOrFail(cowebsiteCloseFullScreenImageId).style.display = 'none';
+        } else {
+            this.verticalMode ? this.height = window.innerHeight : this.width = window.innerWidth;
+            //we don't trigger a resize of the phaser game since it won't be visible anyway.
+            HtmlUtils.getElementByIdOrFail(cowebsiteOpenFullScreenImageId).style.display = 'none';
+            HtmlUtils.getElementByIdOrFail(cowebsiteCloseFullScreenImageId).style.display = 'inline';
         }
     }
 }

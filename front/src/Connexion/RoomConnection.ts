@@ -27,7 +27,7 @@ import {
     SendJitsiJwtMessage,
     CharacterLayerMessage,
     PingMessage,
-    SendUserMessage
+    SendUserMessage, BanUserMessage
 } from "../Messages/generated/messages_pb"
 
 import {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
@@ -42,6 +42,8 @@ import {
     WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
 import {BodyResourceDescriptionInterface} from "../Phaser/Entity/PlayerTextures";
+import {adminMessagesService} from "./AdminMessagesService";
+import {connectionManager, ConnexionMessageEventTypes} from "./ConnectionManager";
 
 const manualPingDelay = 20000;
 
@@ -100,7 +102,7 @@ export class RoomConnection implements RoomConnection {
             }
 
             // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
-            if (this.userId === null) {
+            if (this.userId === null && !this.closed) {
                 this.dispatch(EventMessage.CONNECTING_ERROR, event);
             }
         });
@@ -140,8 +142,6 @@ export class RoomConnection implements RoomConnection {
             } else if (message.hasRoomjoinedmessage()) {
                 const roomJoinedMessage = message.getRoomjoinedmessage() as RoomJoinedMessage;
 
-                //const users: Array<MessageUserJoined> = roomJoinedMessage.getUserList().map(this.toMessageUserJoined.bind(this));
-                //const groups: Array<GroupCreatedUpdatedMessageInterface> = roomJoinedMessage.getGroupList().map(this.toGroupCreatedUpdatedMessage.bind(this));
                 const items: { [itemId: number] : unknown } = {};
                 for (const item of roomJoinedMessage.getItemList()) {
                     items[item.getItemid()] = JSON.parse(item.getStatejson());
@@ -150,24 +150,15 @@ export class RoomConnection implements RoomConnection {
                 this.userId = roomJoinedMessage.getCurrentuserid();
                 this.tags = roomJoinedMessage.getTagList();
 
-                //console.log('Dispatching CONNECT')
                 this.dispatch(EventMessage.CONNECT, {
                     connection: this,
                     room: {
-                        //users,
-                        //groups,
                         items
                     } as RoomJoinedMessageInterface
                 });
-
-                /*console.log('Dispatching START_ROOM')
-                this.dispatch(EventMessage.START_ROOM, {
-                    //users,
-                    //groups,
-                    items
-                });*/
             } else if (message.hasErrormessage()) {
-                console.error(EventMessage.MESSAGE_ERROR, message.getErrormessage()?.getMessage());
+                connectionManager._connexionMessageStream.next({type: ConnexionMessageEventTypes.worldFull}); //todo: generalize this behavior to all messages
+                this.closed = true;
             } else if (message.hasWebrtcsignaltoclientmessage()) {
                 this.dispatch(EventMessage.WEBRTC_SIGNAL, message.getWebrtcsignaltoclientmessage());
             } else if (message.hasWebrtcscreensharingsignaltoclientmessage()) {
@@ -185,9 +176,9 @@ export class RoomConnection implements RoomConnection {
             } else if (message.hasSendjitsijwtmessage()) {
                 this.dispatch(EventMessage.START_JITSI_ROOM, message.getSendjitsijwtmessage());
             } else if (message.hasSendusermessage()) {
-                this.dispatch(EventMessage.USER_MESSAGE, message.getSendusermessage());
+                adminMessagesService.onSendusermessage(message.getSendusermessage() as SendUserMessage);
             } else if (message.hasBanusermessage()) {
-                this.dispatch(EventMessage.USER_MESSAGE, message.getBanusermessage());
+                adminMessagesService.onSendusermessage(message.getSendusermessage() as BanUserMessage);
             } else {
                 throw new Error('Unknown message received');
             }
@@ -538,12 +529,6 @@ export class RoomConnection implements RoomConnection {
     public receiveTeleportMessage(callback: (messageId: string) => void) {
         return this.onMessage(EventMessage.TELEPORT, (message: TeleportMessageMessage) => {
             callback(message.getMap());
-        });
-    }
-
-    public receiveUserMessage(callback: (type: string, message: string) => void) {
-        return this.onMessage(EventMessage.USER_MESSAGE, (message: SendUserMessage) => {
-            callback(message.getType(), message.getMessage());
         });
     }
 

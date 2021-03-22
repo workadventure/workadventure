@@ -4,7 +4,6 @@ import {HttpRequest, HttpResponse} from "uWebSockets.js";
 import { parse } from 'query-string';
 import {App} from "../Server/sifrr.server";
 import {socketManager} from "../Services/SocketManager";
-import {ServerWritableStream} from "grpc";
 
 export class DebugController {
     constructor(private App : App) {
