@@ -150,7 +150,8 @@ class CoWebsiteManager {
      */
     public insertCoWebsite(callback: (cowebsite: HTMLDivElement) => Promise<void>): void {
         this.load();
-        this.currentOperationPromise = this.currentOperationPromise.then(() => callback(this.cowebsiteDiv)).then(() => {
+        this.cowebsiteMainDom.innerHTML = ``;
+        this.currentOperationPromise = this.currentOperationPromise.then(() => callback(this.cowebsiteMainDom)).then(() => {
             this.open();
             setTimeout(() => {
                 this.fire();
