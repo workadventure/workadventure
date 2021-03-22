@@ -25,7 +25,8 @@ docker-compose up
 
 The environment will start.
 
-You should now be able to browse to http://workadventure.localhost/ and see the application.
+You should now be able to browse to http://play.workadventure.localhost/ and see the application.
+You can view the dashboard at http://workadventure.localhost:8080/
 
 Note: on some OSes, you will need to add this line to your `/etc/hosts` file:
 
