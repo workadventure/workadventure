@@ -14,7 +14,7 @@ interface WorkAdventureApi {
     onLeaveZone(name: string, callback: () => void): void;
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup;
     disablePlayerControl() : void;
-    enablePlayerControl() : void;
+    restorePlayerControl() : void;
     displayBubble() : void;
     removeBubble() : void;
 }
@@ -84,8 +84,8 @@ window.WA = {
         window.parent.postMessage({'type' : 'disablePlayerControl'},'*');
     },
 
-    enablePlayerControl() : void {
-        window.parent.postMessage({'type' : 'enablePlayerControl'},'*');
+    restorePlayerControl() : void {
+        window.parent.postMessage({'type' : 'restorePlayerControl'},'*');
     },
 
     displayBubble() : void {

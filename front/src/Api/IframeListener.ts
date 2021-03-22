@@ -30,11 +30,11 @@ class IframeListener {
     private readonly _closePopupStream: Subject<ClosePopupEvent> = new Subject();
     public readonly closePopupStream = this._closePopupStream.asObservable();
 
-    private readonly _displayBubble: Subject<void> = new Subject();
-    public readonly displayBubble = this._displayBubble.asObservable();
+    private readonly _displayBubbleStream: Subject<void> = new Subject();
+    public readonly displayBubbleStream = this._displayBubbleStream.asObservable();
 
-    private readonly _removeBubble: Subject<void> = new Subject();
-    public readonly removeBubble = this._removeBubble.asObservable();
+    private readonly _removeBubbleStream: Subject<void> = new Subject();
+    public readonly removeBubbleStream = this._removeBubbleStream.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
@@ -67,14 +67,14 @@ class IframeListener {
                 else if (payload.type === 'disablePlayerControl'){
                     this._disablePlayerControlStream.next();
                 }
-                else if (payload.type === 'enablePlayerControl'){
+                else if (payload.type === 'restorePlayerControl'){
                     this._enablePlayerControl.next();
                 }
                 else if (payload.type === 'displayBubble'){
-                    this._displayBubble.next();
+                    this._displayBubbleStream.next();
                 }
                 else if (payload.type === 'removeBubble'){
-                    this._removeBubble.next();
+                    this._removeBubbleStream.next();
                 }
             }
 

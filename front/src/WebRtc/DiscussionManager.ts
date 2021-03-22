@@ -70,12 +70,12 @@ export class DiscussionManager {
         const inputMessage: HTMLInputElement = document.createElement('input');
         inputMessage.onfocus = () => {
             if(this.userInputManager) {
-                this.userInputManager.clearAllKeys();
+                this.userInputManager.disableControls();
             }
         }
         inputMessage.onblur = () => {
             if(this.userInputManager) {
-                this.userInputManager.initKeyBoardEvent();
+                this.userInputManager.restoreControls();
             }
         }
         inputMessage.type = "text";

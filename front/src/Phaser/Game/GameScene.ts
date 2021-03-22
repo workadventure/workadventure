@@ -698,17 +698,20 @@ export class GameScene extends ResizableScene implements CenterListener {
                     objectLayerSquare  =  this.getObjectLayerData(openPopupEvent.targetObject) as ITiledMapObject;
             }
            else{
-                console.error("Cannot find an Object with name  " + openPopupEvent.targetObject + "The name of your rectangle object is not matching with your param targetObject, check the two names.")
+                console.error("'Cannot find an Object with name  '" + openPopupEvent.targetObject + ". The name of your rectangle object is not matching with your param targetObject, check the two names.");
                 return;
             }
             const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
-            let html = `<div id="container" <div class="nes-container with-title is-centered" 
+            let html = `<div id="container"><div class="nes-container with-title is-centered" 
+
 >
 ${escapedMessage}
  </div> </div>`;
+            let buttonContainer = `<div class="buttonContainer"</div>`;
+            html += buttonContainer;
             let id = 0;
             for (const button of openPopupEvent.buttons) {
-                html += `<button type="button" class="nes-btn is-${HtmlUtils.escapeHtml(button.className ?? '')}" id="popup-${openPopupEvent.popupId}-${id}">${HtmlUtils.escapeHtml(button.label)}</button>`;
+                html  += `<button type="button" class="nes-btn is-${HtmlUtils.escapeHtml(button.className ?? '')}" id="popup-${openPopupEvent.popupId}-${id}">${HtmlUtils.escapeHtml(button.label)}</button>`;
                 id++;
             }
             const domElement = this.add.dom(objectLayerSquare.x  + objectLayerSquare.width/2 ,
@@ -716,7 +719,6 @@ ${escapedMessage}
 
             let container : HTMLDivElement =  domElement.getChildByID("container") as HTMLDivElement;
             container.style.width = objectLayerSquare.width + "px";
-            container.style.height = objectLayerSquare.height + "px";
             domElement.scale = 0;
             domElement.setClassName('popUpElement');
 
@@ -761,19 +763,19 @@ ${escapedMessage}
         });
 
         iframeListener.disablePlayerControlStream.subscribe(()=>{
-            this.userInputManager.clearAllKeys();
+            this.userInputManager.disableControls();
         })
         iframeListener.enablePlayerControl.subscribe(()=>{
-            this.userInputManager.restoreAllKeys();
+            this.userInputManager.restoreControls();
         })
-        let sprite : Sprite;
-        iframeListener.displayBubble.subscribe(()=>{
-            sprite = new Sprite(this,this.CurrentPlayer.x + 25,this.CurrentPlayer.y,'circleSprite-white');
-            sprite.setDisplayOrigin(48, 48);
-            this.add.existing(sprite);
+        let scriptedBubbleSprite : Sprite;
+        iframeListener.displayBubbleStream.subscribe(()=>{
+            scriptedBubbleSprite = new Sprite(this,this.CurrentPlayer.x + 25,this.CurrentPlayer.y,'circleSprite-white');
+            scriptedBubbleSprite.setDisplayOrigin(48, 48);
+            this.add.existing(scriptedBubbleSprite);
         })
-        iframeListener.removeBubble.subscribe(()=>{
-            sprite.destroy();
+        iframeListener.removeBubbleStream.subscribe(()=>{
+            scriptedBubbleSprite.destroy();
         })
 
     }
@@ -1305,8 +1307,6 @@ ${escapedMessage}
                     if (object.name === objectName) {
                         return object;
                     }
-                    else continue;
-
                 }
             }
         }
@@ -1368,7 +1368,7 @@ ${escapedMessage}
     //todo: into onConnexionMessage
     private bannedUser(){
         this.cleanupClosingScene();
-        this.userInputManager.clearAllKeys();
+        this.userInputManager.disableControls();
         this.scene.start(ErrorSceneName, {
             title: 'Banned',
             subTitle: 'You were banned from WorkAdventure',
@@ -1380,7 +1380,7 @@ ${escapedMessage}
         if (event.type === ConnexionMessageEventTypes.worldFull) {
             this.cleanupClosingScene();
             this.scene.stop(ReconnectingSceneName);
-            this.userInputManager.clearAllKeys();
+            this.userInputManager.disableControls();
             this.scene.start(ErrorSceneName, {
                 title: 'Connection rejected',
                 subTitle: 'The world you are trying to join is full. Try again later.',

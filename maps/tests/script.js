@@ -10,18 +10,18 @@ function launchTuto (){
         WA.openPopup(targetObjectTutoBubble, textFirstPopup, [
             {
                 label: "Next",
-                className: "normal",
+                className: "popUpElement",
                 callback: (popup) => {
                     popup.close();
 
                     WA.openPopup(targetObjectTutoChat, textSecondPopup, [
                         {
                             label: "Open Chat",
-                            className: "normal",
+                            className: "popUpElement",
                             callback: (popup1) => {
                                 WA.sendChatMessage("Hey you can talk here too ! ", 'WA Guide');
                                 popup1.close();
-                                WA.enablePlayerControl();
+                                WA.restorePlayerControl();
                             }
                         }
 
@@ -54,17 +54,17 @@ WA.onEnterZone('popupZone', () => {
         isFirstTimeTuto = true;
         launchTuto();
     }
-     else popUpExplanation =  WA.openPopup(targetObjectTutoBubble,'Do you want to review the explantion', [
+     else popUpExplanation =  WA.openPopup(targetObjectTutoChat,'Do you want to review the explanation ? ', [
         {
             label: "No",
-            className: "normal",
+            className: "popUpElementReviewexplanation",
             callback: (popup) => {
                 popup.close();
             }
         },
         {
             label: "Yes",
-            className: "normal",
+            className: "popUpElementReviewexplanation",
             callback: (popup) => {
                 popup.close();
                 launchTuto();

@@ -64,12 +64,12 @@ export class UserInputManager {
         this.Scene.input.keyboard.removeAllListeners();
     }
 
-    clearAllKeys(){
+    disableControls(){
         this.Scene.input.keyboard.removeAllKeys();
         this.isInputDisable = true;
     }
 
-    restoreAllKeys(){
+    restoreControls(){
         this.initKeyBoardEvent();
         this.isInputDisable = false;
     }
