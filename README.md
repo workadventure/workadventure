@@ -31,7 +31,7 @@ Note: on some OSes, you will need to add this line to your `/etc/hosts` file:
 
 **/etc/hosts**
 ```
-workadventure.localhost 127.0.0.1
+127.0.0.1 workadventure.localhost
 ```
 
 ### MacOS developers, your environment with Vagrant
