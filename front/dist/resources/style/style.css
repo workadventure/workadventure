@@ -363,10 +363,14 @@ body {
     justify-content: center;
 }
 
+.audioplayer > div {
+    padding-right: 1.2rem;
+}
+
 #audioplayerctrl {
     position: fixed;
     top: 0;
-    right: 50%;
+    right: calc(50% - 120px);
     padding: 0.3rem 0.5rem;
     color: white;
     transition: transform 0.5s;

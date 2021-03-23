@@ -29,7 +29,9 @@ import {
     ON_ACTION_TRIGGER_BUTTON,
     TRIGGER_JITSI_PROPERTIES,
     TRIGGER_WEBSITE_PROPERTIES,
-    WEBSITE_MESSAGE_PROPERTIES
+    WEBSITE_MESSAGE_PROPERTIES,
+    AUDIO_VOLUME_PROPERTY,
+    AUDIO_LOOP_PROPERTY
 } from "../../WebRtc/LayoutManager";
 import {GameMap} from "./GameMap";
 import {coWebsiteManager} from "../../WebRtc/CoWebsiteManager";
@@ -455,16 +457,12 @@ export class GameScene extends ResizableScene implements CenterListener {
             });
 
             this.connection.onGroupUpdatedOrCreated((groupPositionMessage: GroupCreatedUpdatedMessageInterface) => {
-                audioManager.decreaseVolume();
                 this.shareGroupPosition(groupPositionMessage);
-                this.openChatIcon.setVisible(true);
             })
 
             this.connection.onGroupDeleted((groupId: number) => {
-                audioManager.restoreVolume();
                 try {
                     this.deleteGroup(groupId);
-                    this.openChatIcon.setVisible(false);
                 } catch (e) {
                     console.error(e);
                 }
@@ -517,11 +515,15 @@ export class GameScene extends ResizableScene implements CenterListener {
                 onConnect(user: UserSimplePeerInterface) {
                     self.presentationModeSprite.setVisible(true);
                     self.chatModeSprite.setVisible(true);
+                    self.openChatIcon.setVisible(true);
+                    audioManager.decreaseVolume();
                 },
                 onDisconnect(userId: number) {
                     if (self.simplePeer.getNbConnections() === 0) {
                         self.presentationModeSprite.setVisible(false);
                         self.chatModeSprite.setVisible(false);
+                        self.openChatIcon.setVisible(false);
+                        audioManager.restoreVolume();
                     }
                 }
             })
@@ -662,14 +664,15 @@ export class GameScene extends ResizableScene implements CenterListener {
                 this.connection.setSilent(true);
             }
         });
-        this.gameMap.onPropertyChange('playAudio', (newValue, oldValue) => {
-            newValue === undefined ? audioManager.unloadAudio() : audioManager.playAudio(newValue, this.getMapDirUrl());
+        this.gameMap.onPropertyChange('playAudio', (newValue, oldValue, allProps) => {
+            const volume = allProps.get(AUDIO_VOLUME_PROPERTY) as number|undefined;
+            const loop = allProps.get(AUDIO_LOOP_PROPERTY) as boolean|undefined;
+            newValue === undefined ? audioManager.unloadAudio() : audioManager.playAudio(newValue, this.getMapDirUrl(), volume, loop);
         });
-
+        // TODO: This legacy property should be removed at some point
         this.gameMap.onPropertyChange('playAudioLoop', (newValue, oldValue) => {
-            newValue === undefined ? audioManager.unloadAudio() : audioManager.playAudio(newValue, this.getMapDirUrl());
+            newValue === undefined ? audioManager.unloadAudio() : audioManager.playAudio(newValue, this.getMapDirUrl(), undefined, true);
         });
-
     }
 
     private getMapDirUrl(): string {
