@@ -630,7 +630,8 @@ export class GameScene extends ResizableScene implements CenterListener {
             }else{
                 const openJitsiRoomFunction = () => {
                     const roomName = jitsiFactory.getRoomName(newValue.toString(), this.instance);
-                    if (JITSI_PRIVATE_MODE) {
+                    const jitsiUrl = allProps.get("jitsiUrl") as string|undefined;
+                    if (JITSI_PRIVATE_MODE && !jitsiUrl) {
                         const adminTag = allProps.get("jitsiRoomAdminTag") as string|undefined;
 
                         this.connection.emitQueryJitsiJwtMessage(roomName, adminTag);
@@ -1206,8 +1207,9 @@ export class GameScene extends ResizableScene implements CenterListener {
         const allProps = this.gameMap.getCurrentProperties();
         const jitsiConfig = this.safeParseJSONstring(allProps.get("jitsiConfig") as string|undefined, 'jitsiConfig');
         const jitsiInterfaceConfig = this.safeParseJSONstring(allProps.get("jitsiInterfaceConfig") as string|undefined, 'jitsiInterfaceConfig');
+        const jitsiUrl = allProps.get("jitsiUrl") as string|undefined;
 
-        jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig);
+        jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl);
         this.connection.setSilent(true);
         mediaManager.hideGameOverlay();
 
