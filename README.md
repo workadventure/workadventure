@@ -1,4 +1,4 @@
-![](https://github.com/thecodingmachine/workadventure/workflows/Continuous%20Integration/badge.svg)
+![](https://github.com/thecodingmachine/workadventure/workflows/Continuous%20Integration/badge.svg) [![Discord](https://img.shields.io/discord/821338762134290432?label=Discord)](https://discord.gg/JVVhXzcE)
 
 ![WorkAdventure landscape image](README-INTRO.jpg)
 
