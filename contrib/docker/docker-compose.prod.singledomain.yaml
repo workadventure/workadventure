@@ -1,0 +1,147 @@
+version: "3"
+services:
+  reverse-proxy:
+    image: traefik:v2.3.7
+    restart: unless-stopped
+    command:
+      - --providers.docker
+      - --entryPoints.web.address=:80
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --entrypoints.web.http.redirections.entrypoint.permanent=true
+      - --entryPoints.websecure.address=:443
+      - --providers.file.directory=/configs/
+      - --certificatesresolvers.myhttpchallenge.acme.tlschallenge=true
+      - --certificatesresolvers.myhttpchallenge.acme.email=$ACME_EMAIL
+      - --certificatesresolvers.myhttpchallenge.acme.storage=/acme/acme.json
+# uncomment for debugging traefik
+#      - --log.level=DEBUG
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - back
+      - front
+      - uploader
+      - pusher
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./acme:/acme
+      - ./traefik_tls.yaml:/configs/traefik_tls.yml
+      - ./.htpasswd:/.htpasswd
+
+  front:
+    restart: unless-stopped
+    build:
+      context: ../..
+      dockerfile: front/Dockerfile
+    environment:
+        BASE_DOMAIN: ${BASE_DOMAIN:-workadventure.localhost}
+
+        # These should fall back to window.location.host
+        PUSHER_URL: /pusher
+        UPLOADER_URL: /uploader
+        ADMIN_URL: /admin
+        MAPS_URL: /maps
+
+        START_ROOM_URL: "$START_ROOM_URL"
+        JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
+        JITSI_URL: "$JITSI_URL"
+        START_ROOM_URL: "$START_ROOM_URL"
+        STUN_SERVER: "$STUN_SERVER"
+        TURN_PASSWORD: "$TURN_PASSWORD"
+        TURN_SERVER: "$TURN_SERVER"
+        TURN_USER: "$TURN_USER"
+        MAX_PER_GROUP: $MAX_PER_GROUP
+        MAX_USERNAME_LENGTH: $MAX_USERNAME_LENGTH
+        DISABLE_NOTIFICATIONS: "$DISABLE_NOTIFICATIONS"
+        SKIP_RENDER_OPTIMIZATIONS: "$SKIP_RENDER_OPTIMIZATIONS"
+        DISPLAY_TERMS_OF_USE: "$DISPLAY_TERMS_OF_USE"
+    labels:
+      - "traefik.http.routers.front.rule=Host(`${BASE_DOMAIN}`) && PathPrefix(`/`)"
+      - "traefik.http.routers.front.entryPoints=web,websecure"
+      - "traefik.http.services.front.loadbalancer.server.port=80"
+      - "traefik.http.routers.front.tls=true"
+      - "traefik.http.routers.front.service=front"
+      - "traefik.http.routers.front.tls.certresolver=myhttpchallenge"
+# uncomment to enable user/pass basic auth
+#      - "traefik.http.routers.front.middlewares=auth"
+#      - "traefik.http.middlewares.auth.basicauth.users=${TRAEFIK_BASICAUTH}"
+#      - "traefik.http.middlewares.auth.basicauth.usersFile=${TRAEFIK_BASICAUTHFILE}"
+#      - "traefik.http.middlewares.auth.basicauth.headerField=X-WebAuth-User"
+
+
+
+  pusher:
+    restart: unless-stopped
+    build:
+      context: ../..
+      dockerfile: pusher/Dockerfile
+    environment:
+      SECRET_KEY: yourSecretKey
+      SECRET_JITSI_KEY: "$SECRET_JITSI_KEY"
+      ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
+      ADMIN_API_URL: "$ADMIN_API_URL"
+      API_URL: back:50051
+      JITSI_URL: $JITSI_URL
+      JITSI_ISS: $JITSI_ISS
+    labels:
+      - "traefik.http.middlewares.strip-pusher-prefix.stripprefix.prefixes=/pusher"
+      - "traefik.http.routers.pusher.rule=Host(`${BASE_DOMAIN}`) && PathPrefix(`/pusher`)"
+      - "traefik.http.routers.pusher.middlewares=strip-pusher-prefix@docker"
+      - "traefik.http.routers.pusher.entryPoints=web,websecure"
+      - "traefik.http.services.pusher.loadbalancer.server.port=8080"
+      - "traefik.http.routers.pusher.tls=true"
+      - "traefik.http.routers.pusher.service=pusher"
+
+  back:
+    restart: unless-stopped
+    build:
+      context: ../..
+      dockerfile: back/Dockerfile
+    environment:
+      SECRET_KEY: yourSecretKey
+      SECRET_JITSI_KEY: "$SECRET_JITSI_KEY"
+      ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
+      ADMIN_API_URL: "$ADMIN_API_URL"
+      JITSI_URL: $JITSI_URL
+      JITSI_ISS: $JITSI_ISS
+      MAX_PER_GROUP: $MAX_PER_GROUP
+    labels:
+      - "traefik.http.middlewares.strip-api-prefix.stripprefix.prefixes=/api"
+      - "traefik.http.routers.back.rule=Host(`${BASE_DOMAIN}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.back.middlewares=strip-api-prefix@docker"
+      - "traefik.http.routers.back.entryPoints=web,websecure"
+      - "traefik.http.services.back.loadbalancer.server.port=8080"
+      - "traefik.http.routers.back.tls=true"
+      - "traefik.http.routers.back.service=back"
+
+  uploader:
+    restart: unless-stopped
+    build:
+      context: ../..
+      dockerfile: uploader/Dockerfile
+    labels:
+      - "traefik.http.middlewares.strip-uploader-prefix.stripprefix.prefixes=/uploader"
+      - "traefik.http.routers.uploader.rule=Host(`${BASE_DOMAIN}`) && PathPrefix(`/uploader`)"
+      - "traefik.http.routers.uploader.middlewares=strip-uploader-prefix@docker"
+      - "traefik.http.routers.uploader.entryPoints=web,websecure"
+      - "traefik.http.services.uploader.loadbalancer.server.port=8080"
+      - "traefik.http.routers.uploader.tls=true"
+      - "traefik.http.routers.uploader.service=uploader"
+
+  maps:
+    restart: unless-stopped
+    build:
+      context: ../..
+      dockerfile: maps/Dockerfile
+    volumes:
+      - ../../maps:/var/www/html/
+    labels:
+      - "traefik.http.middlewares.strip-maps-prefix.stripprefix.prefixes=/maps"
+      - "traefik.http.routers.maps.rule=Host(`${BASE_DOMAIN}`) && PathPrefix(`/maps`)"
+      - "traefik.http.routers.maps.middlewares=strip-maps-prefix@docker"
+      - "traefik.http.routers.maps.entryPoints=web,websecure"
+      - "traefik.http.services.maps.loadbalancer.server.port=80"
+      - "traefik.http.routers.maps.tls=true"
+      - "traefik.http.routers.maps.service=maps"
