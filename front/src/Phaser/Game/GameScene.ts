@@ -707,7 +707,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 >
 ${escapedMessage}
  </div> </div>`;
-            let buttonContainer = `<div class="buttonContainer"</div>`;
+            const buttonContainer = `<div class="buttonContainer"</div>`;
             html += buttonContainer;
             let id = 0;
             for (const button of openPopupEvent.buttons) {
@@ -717,7 +717,7 @@ ${escapedMessage}
             const domElement = this.add.dom(objectLayerSquare.x  + objectLayerSquare.width/2 ,
                 objectLayerSquare.y + objectLayerSquare.height/2).createFromHTML(html);
 
-            let container : HTMLDivElement =  domElement.getChildByID("container") as HTMLDivElement;
+            const container : HTMLDivElement =  domElement.getChildByID("container") as HTMLDivElement;
             container.style.width = objectLayerSquare.width + "px";
             domElement.scale = 0;
             domElement.setClassName('popUpElement');
