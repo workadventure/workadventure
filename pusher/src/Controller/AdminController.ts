@@ -40,7 +40,7 @@ export class AdminController extends BaseController{
                 if (typeof body.text !== 'string') {
                    throw 'Incorrect text parameter'
                 }
-                if (body.type !== 'warning' || body.type !== 'message') {
+                if (body.type !== 'capacity' && body.type !== 'message') {
                     throw 'Incorrect type parameter'
                 }
                 if (!body.targets || typeof body.targets !== 'object') {
@@ -61,7 +61,7 @@ export class AdminController extends BaseController{
                                 roomClient.sendAdminMessageToRoom(roomMessage, (err) => {
                                     err ? rej(err) : res();
                                 });
-                            } else {
+                            } else if (type === 'capacity') {
                                 const roomMessage = new WorldFullWarningToRoomMessage();
                                 roomMessage.setRoomid(roomId);
 
