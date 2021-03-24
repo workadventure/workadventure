@@ -79,7 +79,10 @@ export class GameManager {
         console.log('starting '+ (this.currentGameSceneName || this.startRoom.id))
         scenePlugin.start(this.currentGameSceneName || this.startRoom.id);
         scenePlugin.launch(MenuSceneName);
-        scenePlugin.launch(HelpCameraSettingsSceneName);//700
+        
+        if (!localUserStore.getHelpCameraSettingsShown()) {
+            scenePlugin.launch(HelpCameraSettingsSceneName);//700
+        }
     }
     
     public gameSceneIsCreated(scene: GameScene) {

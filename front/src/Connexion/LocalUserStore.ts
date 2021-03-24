@@ -8,6 +8,7 @@ const gameQualityKey =          'gameQuality';
 const videoQualityKey =         'videoQuality';
 const audioPlayerVolumeKey =    'audioVolume';
 const audioPlayerMuteKey =      'audioMute';
+const helpCameraSettingsShown =      'helpCameraSettingsShown';
 
 class LocalUserStore {
     saveUser(localUser: LocalUser) {
@@ -72,6 +73,13 @@ class LocalUserStore {
     }
     getAudioPlayerMuted(): boolean {
         return localStorage.getItem(audioPlayerMuteKey) === 'true';
+    }
+
+    setHelpCameraSettingsShown(): void {
+        localStorage.setItem(helpCameraSettingsShown, '1');
+    }
+    getHelpCameraSettingsShown(): boolean {
+        return localStorage.getItem(helpCameraSettingsShown) === '1';
     }
 }
 
