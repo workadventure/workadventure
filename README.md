@@ -17,6 +17,8 @@ triggered when you move next to a colleague).
 
 Install Docker.
 
+Make a copy of the `.env.template` file and name it `.env`
+
 Run:
 
 ```
