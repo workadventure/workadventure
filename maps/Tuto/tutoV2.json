@@ -31,7 +31,7 @@
                 {
                  "name":"exitUrl",
                  "type":"string",
-                 "value":"http:\/\/play.workadventure.localhost\/_\/qsdqsd\/maps.workadventure.localhost\/Tuto\/mapAfterTuto.json"
+                 "value":"\n"
                 }],
          "type":"tilelayer",
          "visible":true,
