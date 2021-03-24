@@ -53,7 +53,7 @@ class CoWebsiteManager {
     }
     
     get isFullScreen(): boolean {
-        return this.verticalMode ? this.height === this.cowebsiteDiv.clientHeight : this.width === this.cowebsiteDiv.clientWidth
+        return this.verticalMode ? this.height === window.innerHeight : this.width === window.innerWidth;
     }
     
     constructor() {
@@ -199,6 +199,7 @@ class CoWebsiteManager {
     private fullscreen(): void {
         if (this.isFullScreen) {
             this.resetStyle();
+            this.fire();
             //we don't trigger a resize of the phaser game since it won't be visible anyway.
             HtmlUtils.getElementByIdOrFail(cowebsiteOpenFullScreenImageId).style.display = 'inline';
             HtmlUtils.getElementByIdOrFail(cowebsiteCloseFullScreenImageId).style.display = 'none';
