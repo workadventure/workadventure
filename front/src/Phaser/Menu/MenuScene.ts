@@ -140,7 +140,7 @@ export class MenuScene extends Phaser.Scene {
             this.warningContainer?.destroy();
             this.warningContainer = null
             this.warningContainerTimeout = null
-        }, 2000);
+        }, 120000);
         
     }
 
