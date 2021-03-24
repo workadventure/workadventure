@@ -1,5 +1,6 @@
 import {mediaManager} from "../../WebRtc/MediaManager";
 import {HtmlUtils} from "../../WebRtc/HtmlUtils";
+import {localUserStore} from "../../Connexion/LocalUserStore";
 
 export const HelpCameraSettingsSceneName = 'HelpCameraSettingsScene';
 const helpCameraSettings = 'helpCameraSettings';
@@ -19,6 +20,7 @@ export class HelpCameraSettingsScene extends Phaser.Scene {
     }
 
     create(){
+        localUserStore.setHelpCameraSettingsShown();
         this.createHelpCameraSettings();
     }
 
