@@ -2,7 +2,7 @@ import {IRoomManagerServer} from "./Messages/generated/messages_grpc_pb";
 import {
     AdminGlobalMessage,
     AdminMessage,
-    AdminPusherToBackMessage, 
+    AdminPusherToBackMessage,
     AdminRoomMessage,
     BanMessage,
     EmptyMessage,
@@ -15,7 +15,7 @@ import {
     ServerToClientMessage,
     SilentMessage,
     UserMovesMessage,
-    WebRtcSignalToServerMessage,
+    WebRtcSignalToServerMessage, WorldFullWarningToRoomMessage,
     ZoneMessage
 } from "./Messages/generated/messages_pb";
 import {sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream} from "grpc";
@@ -182,6 +182,10 @@ const roomManager: IRoomManagerServer = {
     },
     sendAdminMessageToRoom(call: ServerUnaryCall<AdminRoomMessage>, callback: sendUnaryData<EmptyMessage>): void {
         socketManager.sendAdminRoomMessage(call.request.getRoomid(), call.request.getMessage());
+        callback(null, new EmptyMessage());
+    },
+    sendWorldFullWarningToRoom(call: ServerUnaryCall<WorldFullWarningToRoomMessage>, callback: sendUnaryData<EmptyMessage>): void {
+        socketManager.dispatchWorlFullWarning(call.request.getRoomid());
         callback(null, new EmptyMessage());
     },
 };
