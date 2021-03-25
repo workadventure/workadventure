@@ -73,7 +73,7 @@ class CoWebsiteManager {
 
     private initResizeListeners() {
         const movecallback = (event:MouseEvent) => {
-            this.verticalMode ? this.height -= event.movementY : this.width -= event.movementX;
+            this.verticalMode ? this.height -= event.movementY / this.getDevicePixelRatio() : this.width -= event.movementX / this.getDevicePixelRatio();
             this.fire();
         }
         
@@ -90,6 +90,12 @@ class CoWebsiteManager {
             this.getIframeDom().style.display = 'block';
             this.resizing = false;
         });
+    }
+    
+    private getDevicePixelRatio(): number {
+        //on chrome engines, movementX and movementY return global screens coordinates while other browser return pixels
+        //so on chrome-based browser we need to adjust using 'devicePixelRatio'
+        return window.navigator.userAgent.includes('Firefox') ? 1 : window.devicePixelRatio;
     }
 
     private close(): void {
