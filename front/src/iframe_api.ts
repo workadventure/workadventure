@@ -6,6 +6,9 @@ import {EnterLeaveEvent, isEnterLeaveEvent} from "./Api/Events/EnterLeaveEvent";
 import {OpenPopupEvent} from "./Api/Events/OpenPopupEvent";
 import {isButtonClickedEvent} from "./Api/Events/ButtonClickedEvent";
 import {ClosePopupEvent} from "./Api/Events/ClosePopupEvent";
+import {OpenTabEvent} from "./Api/Events/OpenTabEvent";
+import {GoToPageEvent} from "./Api/Events/GoToPageEvent";
+import {OpenCoWebSiteEvent} from "./Api/Events/OpenCoWebSiteEvent";
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
@@ -13,6 +16,10 @@ interface WorkAdventureApi {
     onEnterZone(name: string, callback: () => void): void;
     onLeaveZone(name: string, callback: () => void): void;
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup;
+    openTab(url : string): void;
+    goToPage(url : string): void;
+    openCoWebSite(url : string): void;
+    closeCoWebSite(): void;
     disablePlayerControl() : void;
     restorePlayerControl() : void;
     displayBubble() : void;
@@ -22,6 +29,7 @@ interface WorkAdventureApi {
 declare global {
     // eslint-disable-next-line no-var
     var WA: WorkAdventureApi
+
 }
 
 type ChatMessageCallback = (message: string) => void;
@@ -94,6 +102,39 @@ window.WA = {
 
     removeBubble() : void {
         window.parent.postMessage({'type' : 'removeBubble'},'*');
+    },
+
+    openTab(url : string) : void{
+        window.parent.postMessage({
+            "type" : 'openTab',
+            "data" : {
+                url
+            } as OpenTabEvent
+            },'*');
+    },
+
+    goToPage(url : string) : void{
+        window.parent.postMessage({
+            "type" : 'goToPage',
+            "data" : {
+                url
+            } as GoToPageEvent
+            },'*');
+    },
+
+    openCoWebSite(url : string) : void{
+        window.parent.postMessage({
+            "type" : 'openCoWebSite',
+            "data" : {
+                url
+            } as OpenCoWebSiteEvent
+            },'*');
+    },
+
+    closeCoWebSite() : void{
+        window.parent.postMessage({
+            "type" : 'closeCoWebSite'
+            },'*');
     },
 
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup {
