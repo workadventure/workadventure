@@ -81,6 +81,13 @@ export class SocketManager {
         //join new previous room
         const {room, user} = await this.joinRoom(socket, joinRoomMessage);
         
+        if (!socket.writable) {
+            console.warn('Socket was aborted');
+            return {
+                room,
+                user
+            };
+        }
         const roomJoinedMessage = new RoomJoinedMessage();
         roomJoinedMessage.setTagList(joinRoomMessage.getTagList());
 
@@ -96,7 +103,6 @@ export class SocketManager {
 
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setRoomjoinedmessage(roomJoinedMessage);
-        console.log('SENDING MESSAGE roomJoinedMessage');
         socket.write(serverToClientMessage);
 
         return {
@@ -264,8 +270,6 @@ export class SocketManager {
                 debug('Room is empty. Deleting room "%s"', room.roomId);
             }
         } finally {
-            //delete Client.roomId;
-            //this.sockets.delete(Client.userId);
             clientEventsEmitter.emitClientLeave(user.uuid, room.roomId);
             console.log('A user left');
         }
@@ -415,10 +419,6 @@ export class SocketManager {
     }
 
     private joinWebRtcRoom(user: User, group: Group) {
-        /*const roomId: string = "webrtcroom"+group.getId();
-        if (user.socket.webRtcRoomId === roomId) {
-            return;
-        }*/
 
         for (const otherUser of group.getUsers()) {
             if (user === otherUser) {

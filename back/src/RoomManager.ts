@@ -43,8 +43,13 @@ const roomManager: IRoomManagerServer = {
                 if (room === null || user === null) {
                     if (message.hasJoinroommessage()) {
                         socketManager.handleJoinRoom(call, message.getJoinroommessage() as JoinRoomMessage).then(({room: gameRoom, user: myUser}) => {
-                            room = gameRoom;
-                            user = myUser;
+                            if (call.writable) {
+                                room = gameRoom;
+                                user = myUser;
+                            } else {
+                                //Connexion may have been closed before the init was finished, so we have to manually disconnect the user.
+                                socketManager.leaveRoom(gameRoom, myUser);
+                            }
                         });
                     } else {
                         throw new Error('The first message sent MUST be of type JoinRoomMessage');
