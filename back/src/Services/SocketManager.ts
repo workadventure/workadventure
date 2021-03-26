@@ -77,10 +77,10 @@ export class SocketManager {
     }
 
     public async handleJoinRoom(socket: UserSocket, joinRoomMessage: JoinRoomMessage): Promise<{ room: GameRoom; user: User }> {
-
+        
         //join new previous room
         const {room, user} = await this.joinRoom(socket, joinRoomMessage);
-
+        
         const roomJoinedMessage = new RoomJoinedMessage();
         roomJoinedMessage.setTagList(joinRoomMessage.getTagList());
 

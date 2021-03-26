@@ -45,6 +45,7 @@ import {BodyResourceDescriptionInterface} from "../Phaser/Entity/PlayerTextures"
 import {adminMessagesService} from "./AdminMessagesService";
 import {worldFullMessageStream} from "./WorldFullMessageStream";
 import {worldFullWarningStream} from "./WorldFullWarningStream";
+import {connectionManager} from "./ConnectionManager";
 
 const manualPingDelay = 20000;
 
@@ -380,10 +381,7 @@ export class RoomConnection implements RoomConnection {
     public onConnectError(callback: (error: Event) => void): void {
         this.socket.addEventListener('error', callback)
     }
-
-    /*public onConnect(callback: (e: Event) => void): void {
-        this.socket.addEventListener('open', callback)
-    }*/
+    
     public onConnect(callback: (roomConnection: OnConnectInterface) => void): void {
         //this.socket.addEventListener('open', callback)
         this.onMessage(EventMessage.CONNECT, callback);
@@ -452,9 +450,9 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public onServerDisconnected(callback: (event: CloseEvent) => void): void {
+    public onServerDisconnected(callback: () => void): void {
         this.socket.addEventListener('close', (event) => {
-            if (this.closed === true) {
+            if (this.closed === true || connectionManager.unloading) {
                 return;
             }
             console.log('Socket closed with code '+event.code+". Reason: "+event.reason);
@@ -462,7 +460,7 @@ export class RoomConnection implements RoomConnection {
                 // Normal closure case
                 return;
             }
-            callback(event);
+            callback();
         });
     }
 

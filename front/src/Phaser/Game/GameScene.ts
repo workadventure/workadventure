@@ -471,9 +471,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
             this.connection.onServerDisconnected(() => {
                 console.log('Player disconnected from server. Reloading scene.');
-
-                this.simplePeer.closeAllConnections();
-                this.simplePeer.unregister();
+                this.cleanupClosingScene();
 
                 const gameSceneKey = 'somekey' + Math.round(Math.random() * 10000);
                 const game: Phaser.Scene = new GameScene(this.room, this.MapUrlFile, gameSceneKey);
@@ -708,6 +706,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         audioManager.unloadAudio();
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
         this.connection?.closeConnection();
+        this.simplePeer.closeAllConnections();
         this.simplePeer?.unregister();
         this.messageSubscription?.unsubscribe();
     }
