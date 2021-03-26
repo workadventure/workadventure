@@ -53,10 +53,8 @@ services:
   pusher:
     image: thecodingmachine/nodejs:12
     command: yarn dev
-    #command: yarn run prod
-    #command: yarn run profile
     environment:
-      DEBUG: "*"
+      DEBUG: "socket:*"
       STARTUP_COMMAND_1: yarn install
       SECRET_JITSI_KEY: "$SECRET_JITSI_KEY"
       SECRET_KEY: yourSecretKey

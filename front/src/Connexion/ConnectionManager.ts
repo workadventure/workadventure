@@ -6,16 +6,25 @@ import {GameConnexionTypes, urlManager} from "../Url/UrlManager";
 import {localUserStore} from "./LocalUserStore";
 import {LocalUser} from "./LocalUser";
 import {Room} from "./Room";
-import {Subject} from "rxjs";
-import {ServerToClientMessage} from "../Messages/generated/messages_pb";
 
 
 class ConnectionManager {
     private localUser!:LocalUser;
 
     private connexionType?: GameConnexionTypes
+    private reconnectingTimeout: NodeJS.Timeout|null = null;
+    private _unloading:boolean = false;
     
-    public _serverToClientMessageStream:Subject<ServerToClientMessage> = new Subject();
+    get unloading () {
+        return this._unloading;
+    }
+    
+    constructor() {
+        window.addEventListener('beforeunload', () => {
+            this._unloading = true;
+            if (this.reconnectingTimeout) clearTimeout(this.reconnectingTimeout)
+        })
+    }
     /**
      * Tries to login to the node server and return the starting map url to be loaded
      */
@@ -99,7 +108,7 @@ class ConnectionManager {
         }).catch((err) => {
             // Let's retry in 4-6 seconds
             return new Promise<OnConnectInterface>((resolve, reject) => {
-                setTimeout(() => {
+                this.reconnectingTimeout = setTimeout(() => {
                     //todo: allow a way to break recursion?
                     //todo: find a way to avoid recursive function. Otherwise, the call stack will grow indefinitely.
                     this.connectToRoomSocket(roomId, name, characterLayers, position, viewport).then((connection) => resolve(connection));

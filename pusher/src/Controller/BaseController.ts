@@ -1,5 +1,4 @@
-import {HttpRequest, HttpResponse} from "uWebSockets.js";
-import {ADMIN_API_TOKEN} from "../Enum/EnvironmentVariable";
+import {HttpResponse} from "uWebSockets.js";
 
 
 export class BaseController {
@@ -14,7 +13,8 @@ export class BaseController {
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected errorToResponse(e: any, res: HttpResponse): void {
-        console.error("An error happened", e);
+        console.error(e.message || "An error happened.", e?.config.url);
+        console.error(e.stack || 'no stack defined.');
         if (e.response) {
             res.writeStatus(e.response.status+" "+e.response.statusText);
             this.addCorsHeaders(res);
