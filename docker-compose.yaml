@@ -26,7 +26,7 @@ services:
       JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
       HOST: "0.0.0.0"
       NODE_ENV: development
-      API_URL: $UPLOADER_SUBDOMAIN.$DOMAIN
+      API_URL: $PUSHER_SUBDOMAIN.$DOMAIN
       UPLOADER_URL: $UPLOADER_SUBDOMAIN.$DOMAIN
       ADMIN_URL: $DOMAIN
       STARTUP_COMMAND_1: ./templater.sh
@@ -67,10 +67,10 @@ services:
     volumes:
       - ./pusher:/usr/src/app
     labels:
-      - "traefik.http.routers.pusher.rule=Host(`$UPLOADER_SUBDOMAIN.$DOMAIN`)"
+      - "traefik.http.routers.pusher.rule=Host(`$PUSHER_SUBDOMAIN.$DOMAIN`)"
       - "traefik.http.routers.pusher.entryPoints=web"
       - "traefik.http.services.pusher.loadbalancer.server.port=8080"
-      - "traefik.http.routers.pusher-ssl.rule=Host(`$UPLOADER_SUBDOMAIN.$DOMAIN`)"
+      - "traefik.http.routers.pusher-ssl.rule=Host(`$PUSHER_SUBDOMAIN.$DOMAIN`)"
       - "traefik.http.routers.pusher-ssl.entryPoints=websecure"
       - "traefik.http.routers.pusher-ssl.tls=true"
       - "traefik.http.routers.pusher-ssl.service=pusher"
