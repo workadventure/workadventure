@@ -817,7 +817,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             const y = Math.floor(key / layer.width);
             const x = key % layer.width;
 
-            possibleStartPositions.push({x: x*32, y: y*32});
+            possibleStartPositions.push({x: x * this.mapFile.tilewidth, y: y * this.mapFile.tilewidth});
         });
         // Get a value at random amongst allowed values
         if (possibleStartPositions.length === 0) {
