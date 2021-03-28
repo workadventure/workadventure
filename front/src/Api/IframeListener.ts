@@ -144,6 +144,7 @@ class IframeListener {
             // production code
             const iframe = document.createElement('iframe');
             iframe.id = this.getIFrameId(scriptUrl);
+            iframe.style.display = 'none';
 
             // We are putting a sandbox on this script because it will run in the same domain as the main website.
             iframe.sandbox.add('allow-scripts');
