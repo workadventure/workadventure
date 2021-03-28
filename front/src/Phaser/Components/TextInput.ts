@@ -15,8 +15,10 @@ export class TextInput extends Phaser.GameObjects.BitmapText {
         this.scene.input.keyboard.on('keydown', (event: KeyboardEvent) => {
             if (event.keyCode === 8 && this.text.length > 0) {
                 this.deleteLetter();
+                event.preventDefault();
             } else if ((event.keyCode === 32 || (event.keyCode >= 48 && event.keyCode <= 90)) && this.text.length < maxLength) {
                 this.addLetter(event.key);
+                event.preventDefault();
             }
             this.underLine.text = this.getUnderLineBody(this.text.length);
             onChange(this.text);
