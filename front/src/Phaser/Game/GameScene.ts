@@ -29,7 +29,9 @@ import {
     ON_ACTION_TRIGGER_BUTTON,
     TRIGGER_JITSI_PROPERTIES,
     TRIGGER_WEBSITE_PROPERTIES,
-    WEBSITE_MESSAGE_PROPERTIES
+    WEBSITE_MESSAGE_PROPERTIES,
+    AUDIO_VOLUME_PROPERTY,
+    AUDIO_LOOP_PROPERTY
 } from "../../WebRtc/LayoutManager";
 import {GameMap} from "./GameMap";
 import {coWebsiteManager} from "../../WebRtc/CoWebsiteManager";
@@ -66,6 +68,7 @@ import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import DOMElement = Phaser.GameObjects.DOMElement;
 import {Subscription} from "rxjs";
+import {worldFullMessageStream} from "../../Connexion/WorldFullMessageStream";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -315,7 +318,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         urlManager.pushRoomIdToUrl(this.room);
         this.startLayerName = urlManager.getStartLayerNameFromUrl();
 
-        this.messageSubscription = connectionManager._connexionMessageStream.subscribe((event) => this.onConnexionMessage(event))
+        this.messageSubscription = worldFullMessageStream.stream.subscribe((message) => this.showWorldFullError())
 
         const playerName = gameManager.getPlayerName();
         if (!playerName) {
@@ -467,16 +470,12 @@ export class GameScene extends ResizableScene implements CenterListener {
             });
 
             this.connection.onGroupUpdatedOrCreated((groupPositionMessage: GroupCreatedUpdatedMessageInterface) => {
-                audioManager.decreaseVolume();
                 this.shareGroupPosition(groupPositionMessage);
-                this.openChatIcon.setVisible(true);
             })
 
             this.connection.onGroupDeleted((groupId: number) => {
-                audioManager.restoreVolume();
                 try {
                     this.deleteGroup(groupId);
-                    this.openChatIcon.setVisible(false);
                 } catch (e) {
                     console.error(e);
                 }
@@ -484,9 +483,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
             this.connection.onServerDisconnected(() => {
                 console.log('Player disconnected from server. Reloading scene.');
-
-                this.simplePeer.closeAllConnections();
-                this.simplePeer.unregister();
+                this.cleanupClosingScene();
 
                 const gameSceneKey = 'somekey' + Math.round(Math.random() * 10000);
                 const game: Phaser.Scene = new GameScene(this.room, this.MapUrlFile, gameSceneKey);
@@ -529,11 +526,15 @@ export class GameScene extends ResizableScene implements CenterListener {
                 onConnect(user: UserSimplePeerInterface) {
                     self.presentationModeSprite.setVisible(true);
                     self.chatModeSprite.setVisible(true);
+                    self.openChatIcon.setVisible(true);
+                    audioManager.decreaseVolume();
                 },
                 onDisconnect(userId: number) {
                     if (self.simplePeer.getNbConnections() === 0) {
                         self.presentationModeSprite.setVisible(false);
                         self.chatModeSprite.setVisible(false);
+                        self.openChatIcon.setVisible(false);
+                        audioManager.restoreVolume();
                     }
                 }
             })
@@ -558,6 +559,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             this.gameMap.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
         });
     }
+
 
     //todo: into dedicated classes
     private initCirclesCanvas(): void {
@@ -641,7 +643,8 @@ export class GameScene extends ResizableScene implements CenterListener {
             }else{
                 const openJitsiRoomFunction = () => {
                     const roomName = jitsiFactory.getRoomName(newValue.toString(), this.instance);
-                    if (JITSI_PRIVATE_MODE) {
+                    const jitsiUrl = allProps.get("jitsiUrl") as string|undefined;
+                    if (JITSI_PRIVATE_MODE && !jitsiUrl) {
                         const adminTag = allProps.get("jitsiRoomAdminTag") as string|undefined;
 
                         this.connection.emitQueryJitsiJwtMessage(roomName, adminTag);
@@ -672,12 +675,14 @@ export class GameScene extends ResizableScene implements CenterListener {
                 this.connection.setSilent(true);
             }
         });
-        this.gameMap.onPropertyChange('playAudio', (newValue, oldValue) => {
-            newValue === undefined ? audioManager.unloadAudio() : audioManager.playAudio(newValue, this.getMapDirUrl());
+        this.gameMap.onPropertyChange('playAudio', (newValue, oldValue, allProps) => {
+            const volume = allProps.get(AUDIO_VOLUME_PROPERTY) as number|undefined;
+            const loop = allProps.get(AUDIO_LOOP_PROPERTY) as boolean|undefined;
+            newValue === undefined ? audioManager.unloadAudio() : audioManager.playAudio(newValue, this.getMapDirUrl(), volume, loop);
         });
-
+        // TODO: This legacy property should be removed at some point
         this.gameMap.onPropertyChange('playAudioLoop', (newValue, oldValue) => {
-            newValue === undefined ? audioManager.unloadAudio() : audioManager.playAudio(newValue, this.getMapDirUrl());
+            newValue === undefined ? audioManager.unloadAudio() : audioManager.playAudio(newValue, this.getMapDirUrl(), undefined, true);
         });
 
         this.gameMap.onPropertyChange('zone', (newValue, oldValue) => {
@@ -816,6 +821,7 @@ ${escapedMessage}
         audioManager.unloadAudio();
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
         this.connection?.closeConnection();
+        this.simplePeer.closeAllConnections();
         this.simplePeer?.unregister();
         this.messageSubscription?.unsubscribe();
     }
@@ -1120,13 +1126,12 @@ ${escapedMessage}
                     break;
             }
         }
-
         // Let's move all users
         const updatedPlayersPositions = this.playersPositionInterpolator.getUpdatedPositions(time);
         updatedPlayersPositions.forEach((moveEvent: HasMovedEvent, userId: number) => {
-            const player : RemotePlayer | undefined = this.MapPlayersByKey.get(userId);
+            const player: RemotePlayer | undefined = this.MapPlayersByKey.get(userId);
             if (player === undefined) {
-                throw new Error('Cannot find player with ID "' + userId +'"');
+                throw new Error('Cannot find player with ID "' + userId + '"');
             }
             player.updatePosition(moveEvent);
         });
@@ -1344,8 +1349,9 @@ ${escapedMessage}
         const allProps = this.gameMap.getCurrentProperties();
         const jitsiConfig = this.safeParseJSONstring(allProps.get("jitsiConfig") as string|undefined, 'jitsiConfig');
         const jitsiInterfaceConfig = this.safeParseJSONstring(allProps.get("jitsiInterfaceConfig") as string|undefined, 'jitsiInterfaceConfig');
+        const jitsiUrl = allProps.get("jitsiUrl") as string|undefined;
 
-        jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig);
+        jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl);
         this.connection.setSilent(true);
         mediaManager.hideGameOverlay();
 
@@ -1363,7 +1369,7 @@ ${escapedMessage}
         mediaManager.removeTriggerCloseJitsiFrameButton('close-jisi');
     }
 
-    //todo: into onConnexionMessage
+    //todo: put this into an 'orchestrator' scene (EntryScene?)
     private bannedUser(){
         this.cleanupClosingScene();
         this.userInputManager.disableControls();
@@ -1385,5 +1391,17 @@ ${escapedMessage}
                 message: 'If you want more information, you may contact us at: workadventure@thecodingmachine.com'
             });
         }
+    }
+
+    //todo: put this into an 'orchestrator' scene (EntryScene?)
+    private showWorldFullError(): void {
+        this.cleanupClosingScene();
+        this.scene.stop(ReconnectingSceneName);
+        this.userInputManager.disableControls();
+        this.scene.start(ErrorSceneName, {
+            title: 'Connection rejected',
+            subTitle: 'The world you are trying to join is full. Try again later.',
+            message: 'If you want more information, you may contact us at: workadventure@thecodingmachine.com'
+        });
     }
 }

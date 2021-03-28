@@ -1,28 +1,22 @@
 import 'phaser';
 import GameConfig = Phaser.Types.Core.GameConfig;
+import "../dist/resources/style/index.scss";
+
 import {DEBUG_MODE, JITSI_URL, RESOLUTION} from "./Enum/EnvironmentVariable";
 import {LoginScene} from "./Phaser/Login/LoginScene";
 import {ReconnectingScene} from "./Phaser/Reconnecting/ReconnectingScene";
 import {SelectCharacterScene} from "./Phaser/Login/SelectCharacterScene";
 import {EnableCameraScene} from "./Phaser/Login/EnableCameraScene";
-import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
-import {OutlinePipeline} from "./Phaser/Shaders/OutlinePipeline";
 import {CustomizeScene} from "./Phaser/Login/CustomizeScene";
 import {ResizableScene} from "./Phaser/Login/ResizableScene";
 import {EntryScene} from "./Phaser/Login/EntryScene";
 import {coWebsiteManager} from "./WebRtc/CoWebsiteManager";
 import {MenuScene} from "./Phaser/Menu/MenuScene";
+import {HelpCameraSettingsScene} from "./Phaser/Menu/HelpCameraSettingsScene";
 import {localUserStore} from "./Connexion/LocalUserStore";
 import {ErrorScene} from "./Phaser/Reconnecting/ErrorScene";
 import {iframeListener} from "./Api/IframeListener";
 import {discussionManager} from "./WebRtc/DiscussionManager";
-
-// Load Jitsi if the environment variable is set.
-if (JITSI_URL) {
-    const jitsiScript = document.createElement('script');
-    jitsiScript.src = 'https://' + JITSI_URL + '/external_api.js';
-    document.head.appendChild(jitsiScript);
-}
 
 const {width, height} = coWebsiteManager.getGameSize();
 
@@ -80,7 +74,7 @@ const config: GameConfig = {
     width: width / RESOLUTION,
     height: height / RESOLUTION,
     parent: "game",
-    scene: [EntryScene, LoginScene, SelectCharacterScene, EnableCameraScene, ReconnectingScene, ErrorScene, CustomizeScene, MenuScene],
+    scene: [EntryScene, LoginScene, SelectCharacterScene, EnableCameraScene, ReconnectingScene, ErrorScene, CustomizeScene, MenuScene, HelpCameraSettingsScene],
     zoom: RESOLUTION,
     fps: fps,
     dom: {
@@ -111,6 +105,7 @@ const config: GameConfig = {
 const game = new Phaser.Game(config);
 
 window.addEventListener('resize', function (event) {
+    coWebsiteManager.resetStyle();
     const {width, height} = coWebsiteManager.getGameSize();
     game.scale.resize(width / RESOLUTION, height / RESOLUTION);
 
@@ -122,7 +117,7 @@ window.addEventListener('resize', function (event) {
     }
 });
 
-coWebsiteManager.onStateChange(() => {
+coWebsiteManager.onResize.subscribe(() => {
     const {width, height} = coWebsiteManager.getGameSize();
     game.scale.resize(width / RESOLUTION, height / RESOLUTION);
 });

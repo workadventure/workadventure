@@ -24,6 +24,7 @@ import {
     UserJoinedZoneMessage,
     GroupUpdateZoneMessage,
     GroupLeftZoneMessage,
+    WorldFullWarningMessage,
     UserLeftZoneMessage,
     BanUserMessage,
 } from "../Messages/generated/messages_pb";
@@ -58,6 +59,7 @@ function emitZoneMessage(subMessage: SubToPusherMessage, socket: ZoneSocket): vo
     // TODO: should we batch those every 100ms?
     const batchMessage = new BatchToPusherMessage();
     batchMessage.addPayload(subMessage);
+    
 
     socket.write(batchMessage);
 }
@@ -75,10 +77,17 @@ export class SocketManager {
     }
 
     public async handleJoinRoom(socket: UserSocket, joinRoomMessage: JoinRoomMessage): Promise<{ room: GameRoom; user: User }> {
-
+        
         //join new previous room
         const {room, user} = await this.joinRoom(socket, joinRoomMessage);
-
+        
+        if (!socket.writable) {
+            console.warn('Socket was aborted');
+            return {
+                room,
+                user
+            };
+        }
         const roomJoinedMessage = new RoomJoinedMessage();
         roomJoinedMessage.setTagList(joinRoomMessage.getTagList());
 
@@ -94,7 +103,6 @@ export class SocketManager {
 
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setRoomjoinedmessage(roomJoinedMessage);
-        console.log('SENDING MESSAGE roomJoinedMessage');
         socket.write(serverToClientMessage);
 
         return {
@@ -262,8 +270,6 @@ export class SocketManager {
                 debug('Room is empty. Deleting room "%s"', room.roomId);
             }
         } finally {
-            //delete Client.roomId;
-            //this.sockets.delete(Client.userId);
             clientEventsEmitter.emitClientLeave(user.uuid, room.roomId);
             console.log('A user left');
         }
@@ -298,20 +304,14 @@ export class SocketManager {
 
         const roomId = joinRoomMessage.getRoomid();
 
-        const world = await socketManager.getOrCreateRoom(roomId);
-
-        // Dispatch groups position to newly connected user
-        /*world.getGroups().forEach((group: Group) => {
-            this.emitCreateUpdateGroupEvent(socket, group);
-        });*/
+        const room = await socketManager.getOrCreateRoom(roomId);
 
         //join world
-        const user = world.join(socket, joinRoomMessage);
+        const user = room.join(socket, joinRoomMessage);
 
         clientEventsEmitter.emitClientJoin(user.uuid, roomId);
-        //console.log(new Date().toISOString() + ' A user joined (', this.sockets.size, ' connected users)');
         console.log(new Date().toISOString() + ' A user joined');
-        return {room: world, user};
+        return {room, user};
     }
 
     private onZoneEnter(thing: Movable, fromZone: Zone|null, listener: ZoneSocket) {
@@ -419,10 +419,6 @@ export class SocketManager {
     }
 
     private joinWebRtcRoom(user: User, group: Group) {
-        /*const roomId: string = "webrtcroom"+group.getId();
-        if (user.socket.webRtcRoomId === roomId) {
-            return;
-        }*/
 
         for (const otherUser of group.getUsers()) {
             if (user === otherUser) {
@@ -754,6 +750,24 @@ export class SocketManager {
 
             const clientMessage = new ServerToClientMessage();
             clientMessage.setSendusermessage(sendUserMessage);
+
+            recipient.socket.write(clientMessage);
+        });
+    }
+
+    dispatchWorlFullWarning(roomId: string,): void {
+        const room = this.rooms.get(roomId);
+        if (!room) {
+            //todo: this should cause the http call to return a 500
+            console.error("In sendAdminRoomMessage, could not find room with id '" +  roomId + "'. Maybe the room was closed a few milliseconds ago and there was a race condition?");
+            return;
+        }
+        
+        room.getUsers().forEach((recipient) => {
+            const worldFullMessage = new WorldFullWarningMessage();
+
+            const clientMessage = new ServerToClientMessage();
+            clientMessage.setWorldfullwarningmessage(worldFullMessage);
 
             recipient.socket.write(clientMessage);
         });

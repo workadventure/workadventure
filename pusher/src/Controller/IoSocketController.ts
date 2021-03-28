@@ -258,12 +258,12 @@ export class IoSocketController {
             /* Handlers */
             open: (ws) => {
                 if(ws.rejected === true) {
-                    emitError(ws, 'World is full');
+                    socketManager.emitWorldFullMessage(ws);
                     ws.close();
                 }
                 
                 // Let's join the room
-                const client = this.initClient(ws); //todo: into the upgrade instead?
+                const client = this.initClient(ws);
                 socketManager.handleJoinRoom(client);
 
                 //get data information and show messages
