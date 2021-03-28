@@ -41,7 +41,7 @@ import {ActionableItem} from "../Items/ActionableItem";
 import {UserInputManager} from "../UserInput/UserInputManager";
 import {UserMovedMessage} from "../../Messages/generated/messages_pb";
 import {ProtobufClientUtils} from "../../Network/ProtobufClientUtils";
-import {connectionManager, ConnexionMessageEvent, ConnexionMessageEventTypes} from "../../Connexion/ConnectionManager";
+import {connectionManager} from "../../Connexion/ConnectionManager";
 import {RoomConnection} from "../../Connexion/RoomConnection";
 import {GlobalMessageManager} from "../../Administration/GlobalMessageManager";
 import {userMessageManager} from "../../Administration/UserMessageManager";
@@ -1378,19 +1378,6 @@ ${escapedMessage}
             subTitle: 'You were banned from WorkAdventure',
             message: 'If you want more information, you may contact us at: workadventure@thecodingmachine.com'
         });
-    }
-
-    private onConnexionMessage(event: ConnexionMessageEvent) {
-        if (event.type === ConnexionMessageEventTypes.worldFull) {
-            this.cleanupClosingScene();
-            this.scene.stop(ReconnectingSceneName);
-            this.userInputManager.disableControls();
-            this.scene.start(ErrorSceneName, {
-                title: 'Connection rejected',
-                subTitle: 'The world you are trying to join is full. Try again later.',
-                message: 'If you want more information, you may contact us at: workadventure@thecodingmachine.com'
-            });
-        }
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
