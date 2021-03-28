@@ -61,7 +61,7 @@ export class ReportMenu extends Phaser.GameObjects.DOMElement {
 
         this.opened = true;
 
-        gameManager.getCurrentGameScene(this.scene).userInputManager.clearAllKeys();
+        gameManager.getCurrentGameScene(this.scene).userInputManager.disableControls();
 
         this.scene.tweens.add({
             targets: this,

@@ -6,9 +6,12 @@ import * as crypto from "crypto";
 import {HtmlUtils} from "../WebRtc/HtmlUtils";
 import {EnterLeaveEvent} from "./Events/EnterLeaveEvent";
 import {isOpenPopupEvent, OpenPopupEvent} from "./Events/OpenPopupEvent";
+import {isOpenTabEvent, OpenTabEvent} from "./Events/OpenTabEvent";
 import {ButtonClickedEvent} from "./Events/ButtonClickedEvent";
 import {ClosePopupEvent, isClosePopupEvent} from "./Events/ClosePopupEvent";
-
+import {scriptUtils} from "./ScriptUtils";
+import {GoToPageEvent, isGoToPageEvent} from "./Events/GoToPageEvent";
+import {isOpenCoWebsite, OpenCoWebSiteEvent} from "./Events/OpenCoWebSiteEvent";
 
 
 /**
@@ -22,8 +25,32 @@ class IframeListener {
     private readonly _openPopupStream: Subject<OpenPopupEvent> = new Subject();
     public readonly openPopupStream = this._openPopupStream.asObservable();
 
+    private readonly _openTabStream: Subject<OpenTabEvent> = new Subject();
+    public readonly openTabStream = this._openTabStream.asObservable();
+
+    private readonly _goToPageStream: Subject<GoToPageEvent> = new Subject();
+    public readonly goToPageStream = this._goToPageStream.asObservable();
+
+    private readonly _openCoWebSiteStream: Subject<OpenCoWebSiteEvent> = new Subject();
+    public readonly openCoWebSiteStream = this._openCoWebSiteStream.asObservable();
+
+    private readonly _closeCoWebSiteStream: Subject<void> = new Subject();
+    public readonly closeCoWebSiteStream = this._closeCoWebSiteStream.asObservable();
+
+    private readonly _disablePlayerControlStream: Subject<void> = new Subject();
+    public readonly disablePlayerControlStream = this._disablePlayerControlStream.asObservable();
+
+    private readonly _enablePlayerControlStream: Subject<void> = new Subject();
+    public readonly enablePlayerControlStream = this._enablePlayerControlStream.asObservable();
+
     private readonly _closePopupStream: Subject<ClosePopupEvent> = new Subject();
     public readonly closePopupStream = this._closePopupStream.asObservable();
+
+    private readonly _displayBubbleStream: Subject<void> = new Subject();
+    public readonly displayBubbleStream = this._displayBubbleStream.asObservable();
+
+    private readonly _removeBubbleStream: Subject<void> = new Subject();
+    public readonly removeBubbleStream = this._removeBubbleStream.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
@@ -52,6 +79,30 @@ class IframeListener {
                     this._openPopupStream.next(payload.data);
                 } else if (payload.type === 'closePopup' && isClosePopupEvent(payload.data)) {
                     this._closePopupStream.next(payload.data);
+                }
+                else if(payload.type === 'openTab' && isOpenTabEvent(payload.data)) {
+                    scriptUtils.openTab(payload.data.url);
+                }
+                else if(payload.type === 'goToPage' && isGoToPageEvent(payload.data)) {
+                    scriptUtils.goToPage(payload.data.url);
+                }
+                else if(payload.type === 'openCoWebSite' && isOpenCoWebsite(payload.data)) {
+                    scriptUtils.openCoWebsite(payload.data.url);
+                }
+                else if(payload.type === 'closeCoWebSite') {
+                    scriptUtils.closeCoWebSite();
+                }
+                else if (payload.type === 'disablePlayerControl'){
+                    this._disablePlayerControlStream.next();
+                }
+                else if (payload.type === 'restorePlayerControl'){
+                    this._enablePlayerControlStream.next();
+                }
+                else if (payload.type === 'displayBubble'){
+                    this._displayBubbleStream.next();
+                }
+                else if (payload.type === 'removeBubble'){
+                    this._removeBubbleStream.next();
                 }
             }
 

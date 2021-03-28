@@ -6,6 +6,9 @@ import {EnterLeaveEvent, isEnterLeaveEvent} from "./Api/Events/EnterLeaveEvent";
 import {OpenPopupEvent} from "./Api/Events/OpenPopupEvent";
 import {isButtonClickedEvent} from "./Api/Events/ButtonClickedEvent";
 import {ClosePopupEvent} from "./Api/Events/ClosePopupEvent";
+import {OpenTabEvent} from "./Api/Events/OpenTabEvent";
+import {GoToPageEvent} from "./Api/Events/GoToPageEvent";
+import {OpenCoWebSiteEvent} from "./Api/Events/OpenCoWebSiteEvent";
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
@@ -13,11 +16,20 @@ interface WorkAdventureApi {
     onEnterZone(name: string, callback: () => void): void;
     onLeaveZone(name: string, callback: () => void): void;
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup;
+    openTab(url : string): void;
+    goToPage(url : string): void;
+    openCoWebSite(url : string): void;
+    closeCoWebSite(): void;
+    disablePlayerControl() : void;
+    restorePlayerControl() : void;
+    displayBubble() : void;
+    removeBubble() : void;
 }
 
 declare global {
     // eslint-disable-next-line no-var
     var WA: WorkAdventureApi
+
 }
 
 type ChatMessageCallback = (message: string) => void;
@@ -62,7 +74,6 @@ class Popup {
     }
 }
 
-
 window.WA = {
     /**
      * Send a message in the chat.
@@ -77,14 +88,60 @@ window.WA = {
             } as ChatEvent
         }, '*');
     },
+    disablePlayerControl() : void {
+        window.parent.postMessage({'type' : 'disablePlayerControl'},'*');
+    },
+
+    restorePlayerControl() : void {
+        window.parent.postMessage({'type' : 'restorePlayerControl'},'*');
+    },
+
+    displayBubble() : void {
+        window.parent.postMessage({'type' : 'displayBubble'},'*');
+    },
+
+    removeBubble() : void {
+        window.parent.postMessage({'type' : 'removeBubble'},'*');
+    },
+
+    openTab(url : string) : void{
+        window.parent.postMessage({
+            "type" : 'openTab',
+            "data" : {
+                url
+            } as OpenTabEvent
+            },'*');
+    },
+
+    goToPage(url : string) : void{
+        window.parent.postMessage({
+            "type" : 'goToPage',
+            "data" : {
+                url
+            } as GoToPageEvent
+            },'*');
+    },
+
+    openCoWebSite(url : string) : void{
+        window.parent.postMessage({
+            "type" : 'openCoWebSite',
+            "data" : {
+                url
+            } as OpenCoWebSiteEvent
+            },'*');
+    },
+
+    closeCoWebSite() : void{
+        window.parent.postMessage({
+            "type" : 'closeCoWebSite'
+            },'*');
+    },
+
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup {
         popupId++;
-
         const popup = new Popup(popupId);
-
         const btnMap = new Map<number, () => void>();
         popupCallbacks.set(popupId, btnMap);
-
         let id = 0;
         for (const button of buttons) {
             const callback = button.callback;
@@ -95,6 +152,7 @@ window.WA = {
             }
             id++;
         }
+
 
         window.parent.postMessage({
             'type': 'openPopup',
@@ -167,6 +225,7 @@ window.addEventListener('message', message => {
                 callback(popup);
             }
         }
+
     }
 
     // ...

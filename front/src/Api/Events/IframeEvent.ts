@@ -4,4 +4,4 @@ export interface IframeEvent {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const isIframeEventWrapper = (event: any): event is IframeEvent => typeof event.type === 'string' && typeof event.data === 'object';
+export const isIframeEventWrapper = (event: any): event is IframeEvent => typeof event.type === 'string';
