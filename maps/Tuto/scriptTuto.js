@@ -18,11 +18,11 @@ function launchTuto (){
                         label: "Open Chat",
                         className: "popUpElement",
                         callback: (popup1) => {
-                            WA.sendChatMessage("Hey you can talk here too ! ", 'WA Guide');
+                            WA.sendChatMessage("Hey you can talk here too!", 'WA Guide');
                             popup1.close();
-                            WA.openPopup("TutoFinal","You are good to go ! You can meet the dev team and discover the features in the next room !",[
+                            WA.openPopup("TutoFinal","You are good to go! You can meet the dev team and discover the features in the next room!",[
                                 {
-                                    label: "Got it !",
+                                    label: "Got it!",
                                     className : "success",callback:(popup2 => {
                                         popup2.close();
                                         WA.restorePlayerControl();
@@ -39,21 +39,7 @@ function launchTuto (){
     WA.disablePlayerControl();
 
 }
-WA.onChatMessage((message => {
-    console.log('CHAT MESSAGE RECEIVED BY SCRIPT');
-    WA.sendChatMessage('Poly Parrot says: "'+message+'"', 'Poly Parrot');
-}));
 
-WA.onEnterZone('myTrigger', () => {
-    WA.sendChatMessage("Don't step on my carpet!", 'Poly Parrot');
-})
-
-WA.onLeaveZone('popupZone', () => {
-})
-
-WA.onEnterZone('notExist', () => {
-    WA.sendChatMessage("YOU SHOULD NEVER SEE THIS", 'Poly Parrot');
-})
 
 WA.onEnterZone('popupZone', () => {
     WA.displayBubble();
@@ -61,23 +47,25 @@ WA.onEnterZone('popupZone', () => {
         isFirstTimeTuto = true;
         launchTuto();
     }
-    else popUpExplanation =  WA.openPopup(targetObjectTutoExplanation,'Do you want to review the explanation ? ', [
-        {
-            label: "No",
-            className: "error",
-            callback: (popup) => {
-                popup.close();
+    else {
+        popUpExplanation = WA.openPopup(targetObjectTutoExplanation, 'Do you want to review the explanation?', [
+            {
+                label: "No",
+                className: "error",
+                callback: (popup) => {
+                    popup.close();
+                }
+            },
+            {
+                label: "Yes",
+                className: "success",
+                callback: (popup) => {
+                    popup.close();
+                    launchTuto();
+                }
             }
-        },
-        {
-            label: "Yes",
-            className: "success",
-            callback: (popup) => {
-                popup.close();
-                launchTuto();
-            }
-        }
-    ])
+        ])
+    }
 });
 
 WA.onLeaveZone('popupZone', () => {

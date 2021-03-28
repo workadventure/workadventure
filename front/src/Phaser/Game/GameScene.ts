@@ -694,17 +694,15 @@ export class GameScene extends ResizableScene implements CenterListener {
         iframeListener.openPopupStream.subscribe((openPopupEvent) => {
 
             let  objectLayerSquare : ITiledMapObject;
-            if (this.getObjectLayerData(openPopupEvent.targetObject) !== undefined){
-                    objectLayerSquare  =  this.getObjectLayerData(openPopupEvent.targetObject) as ITiledMapObject;
-            }
-           else{
-                console.error("'Cannot find an Object with name  '" + openPopupEvent.targetObject + ". The name of your rectangle object is not matching with your param targetObject, check the two names.");
+            const targetObjectData = this.getObjectLayerData(openPopupEvent.targetObject);
+            if (targetObjectData !== undefined){
+                    objectLayerSquare = targetObjectData;
+            } else {
+                console.error("Error while opening a popup. Cannot find an object on the map with name '" + openPopupEvent.targetObject + "'. The first parameter of WA.openPopup() must be the name of a rectangle object in your map.");
                 return;
             }
             const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
-            let html = `<div id="container"><div class="nes-container with-title is-centered" 
-
->
+            let html = `<div id="container"><div class="nes-container with-title is-centered">
 ${escapedMessage}
  </div> </div>`;
             const buttonContainer = `<div class="buttonContainer"</div>`;
@@ -765,7 +763,7 @@ ${escapedMessage}
         iframeListener.disablePlayerControlStream.subscribe(()=>{
             this.userInputManager.disableControls();
         })
-        iframeListener.enablePlayerControl.subscribe(()=>{
+        iframeListener.enablePlayerControlStream.subscribe(()=>{
             this.userInputManager.restoreControls();
         })
         let scriptedBubbleSprite : Sprite;
