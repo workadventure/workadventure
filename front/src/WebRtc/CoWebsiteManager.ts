@@ -1,5 +1,6 @@
 import {HtmlUtils} from "./HtmlUtils";
 import {Subject} from "rxjs";
+import {iframeListener} from "../Api/IframeListener";
 
 enum iframeStates {
     closed = 1,
@@ -17,8 +18,8 @@ const cowebsiteCloseFullScreenImageId = 'cowebsite-fullscreen-close';
 const animationTime = 500; //time used by the css transitions, in ms.
 
 class CoWebsiteManager {
-    
-    private opened: iframeStates = iframeStates.closed; 
+
+    private opened: iframeStates = iframeStates.closed;
 
     private _onResize: Subject<void> = new Subject();
     public onResize = this._onResize.asObservable();
@@ -27,11 +28,11 @@ class CoWebsiteManager {
      * So we use this promise to queue up every cowebsite state transition
      */
     private currentOperationPromise: Promise<void> = Promise.resolve();
-    private cowebsiteDiv: HTMLDivElement; 
+    private cowebsiteDiv: HTMLDivElement;
     private resizing: boolean = false;
     private cowebsiteMainDom: HTMLDivElement;
     private cowebsiteAsideDom: HTMLDivElement;
-    
+
     get width(): number {
         return this.cowebsiteDiv.clientWidth;
     }
@@ -47,15 +48,15 @@ class CoWebsiteManager {
     set height(height: number) {
         this.cowebsiteDiv.style.height = height+'px';
     }
-    
+
     get verticalMode(): boolean {
         return window.innerWidth < window.innerHeight;
     }
-    
+
     get isFullScreen(): boolean {
         return this.verticalMode ? this.height === window.innerHeight : this.width === window.innerWidth;
     }
-    
+
     constructor() {
         this.cowebsiteDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteDivId);
         this.cowebsiteMainDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteMainDomId);
@@ -76,7 +77,7 @@ class CoWebsiteManager {
             this.verticalMode ? this.height -= event.movementY / this.getDevicePixelRatio() : this.width -= event.movementX / this.getDevicePixelRatio();
             this.fire();
         }
-        
+
         this.cowebsiteAsideDom.addEventListener('mousedown', (event) => {
             this.resizing = true;
             this.getIframeDom().style.display = 'none';
@@ -91,7 +92,7 @@ class CoWebsiteManager {
             this.resizing = false;
         });
     }
-    
+
     private getDevicePixelRatio(): number {
         //on chrome engines, movementX and movementY return global screens coordinates while other browser return pixels
         //so on chrome-based browser we need to adjust using 'devicePixelRatio'
@@ -126,7 +127,7 @@ class CoWebsiteManager {
         return iframe;
     }
 
-    public loadCoWebsite(url: string, base: string, allowPolicy?: string): void {
+    public loadCoWebsite(url: string, base: string, allowApi?: boolean, allowPolicy?: string): void {
         this.load();
         this.cowebsiteMainDom.innerHTML = ``;
 
@@ -134,11 +135,14 @@ class CoWebsiteManager {
         iframe.id = 'cowebsite-iframe';
         iframe.src = (new URL(url, base)).toString();
         if (allowPolicy) {
-            iframe.allow = allowPolicy; 
+            iframe.allow = allowPolicy;
         }
         const onloadPromise = new Promise((resolve) => {
             iframe.onload = () => resolve();
         });
+        if (allowApi) {
+            iframeListener.registerIframe(iframe);
+        }
         this.cowebsiteMainDom.appendChild(iframe);
         const onTimeoutPromise = new Promise((resolve) => {
             setTimeout(() => resolve(), 2000);
@@ -170,6 +174,10 @@ class CoWebsiteManager {
             if(this.opened === iframeStates.closed) resolve(); //this method may be called twice, in case of iframe error for example
             this.close();
             this.fire();
+            const iframe = this.cowebsiteDiv.querySelector('iframe');
+            if (iframe) {
+                iframeListener.unregisterIframe(iframe);
+            }
             setTimeout(() => {
                 this.cowebsiteMainDom.innerHTML = ``;
                 resolve();
@@ -197,11 +205,11 @@ class CoWebsiteManager {
             }
         }
     }
-    
+
     private fire(): void {
         this._onResize.next();
     }
-    
+
     private fullscreen(): void {
         if (this.isFullScreen) {
             this.resetStyle();

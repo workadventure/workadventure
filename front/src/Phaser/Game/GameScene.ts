@@ -59,11 +59,14 @@ import {TextureError} from "../../Exception/TextureError";
 import {addLoader} from "../Components/Loader";
 import {ErrorSceneName} from "../Reconnecting/ErrorScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
+import {iframeListener} from "../../Api/IframeListener";
+import {HtmlUtils} from "../../WebRtc/HtmlUtils";
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
 import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
+import DOMElement = Phaser.GameObjects.DOMElement;
 import {Subscription} from "rxjs";
 import {worldFullMessageStream} from "../../Connexion/WorldFullMessageStream";
 
@@ -157,6 +160,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     private playerName!: string;
     private characterLayers!: string[];
     private messageSubscription: Subscription|null = null;
+    private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
@@ -263,7 +267,8 @@ export class GameScene extends ResizableScene implements CenterListener {
                     break;
                 }
                 default:
-                    throw new Error('Unsupported object type: "'+ itemType +'"');
+                    continue;
+                    //throw new Error('Unsupported object type: "'+ itemType +'"');
             }
 
             itemFactory.preload(this.load);
@@ -289,6 +294,12 @@ export class GameScene extends ResizableScene implements CenterListener {
                 });
             });
         }
+
+        // Now, let's load the script, if any
+        const scripts = this.getScriptUrls(this.mapFile);
+        for (const script of scripts) {
+            iframeListener.registerScript(script);
+        }
     }
 
     //hook initialisation
@@ -306,7 +317,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         gameManager.gameSceneIsCreated(this);
         urlManager.pushRoomIdToUrl(this.room);
         this.startLayerName = urlManager.getStartLayerNameFromUrl();
-        
+
         this.messageSubscription = worldFullMessageStream.stream.subscribe((message) => this.showWorldFullError())
 
         const playerName = gameManager.getPlayerName();
@@ -410,6 +421,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         // From now, this game scene will be notified of reposition events
         layoutManager.setListener(this);
         this.triggerOnMapLayerPropertyChange();
+        this.listenToIframeEvents();
 
         const camera = this.cameras.main;
 
@@ -577,12 +589,12 @@ export class GameScene extends ResizableScene implements CenterListener {
         const contextRed = this.circleRedTexture.context;
         contextRed.beginPath();
         contextRed.arc(48, 48, 48, 0, 2 * Math.PI, false);
-        // context.lineWidth = 5;
+         //context.lineWidth = 5;
         contextRed.strokeStyle = '#ff0000';
         contextRed.stroke();
         this.circleRedTexture.refresh();
     }
-    
+
 
     private safeParseJSONstring(jsonString: string|undefined, propertyName: string) {
         try {
@@ -606,7 +618,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                 coWebsiteManager.closeCoWebsite();
             }else{
                 const openWebsiteFunction = () => {
-                    coWebsiteManager.loadCoWebsite(newValue as string, this.MapUrlFile, allProps.get('openWebsitePolicy') as string | undefined);
+                    coWebsiteManager.loadCoWebsite(newValue as string, this.MapUrlFile, allProps.get('openWebsiteAllowApi') as boolean | undefined, allProps.get('openWebsitePolicy') as string | undefined);
                     layoutManager.removeActionButton('openWebsite', this.userInputManager);
                 };
 
@@ -672,6 +684,103 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.gameMap.onPropertyChange('playAudioLoop', (newValue, oldValue) => {
             newValue === undefined ? audioManager.unloadAudio() : audioManager.playAudio(newValue, this.getMapDirUrl(), undefined, true);
         });
+
+        this.gameMap.onPropertyChange('zone', (newValue, oldValue) => {
+            if (newValue === undefined || newValue === false || newValue === '') {
+                iframeListener.sendLeaveEvent(oldValue as string);
+
+            } else {
+                iframeListener.sendEnterEvent(newValue as string);
+            }
+        });
+    }
+
+    private listenToIframeEvents(): void {
+        iframeListener.openPopupStream.subscribe((openPopupEvent) => {
+
+            let  objectLayerSquare : ITiledMapObject;
+            const targetObjectData = this.getObjectLayerData(openPopupEvent.targetObject);
+            if (targetObjectData !== undefined){
+                    objectLayerSquare = targetObjectData;
+            } else {
+                console.error("Error while opening a popup. Cannot find an object on the map with name '" + openPopupEvent.targetObject + "'. The first parameter of WA.openPopup() must be the name of a rectangle object in your map.");
+                return;
+            }
+            const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
+            let html = `<div id="container"><div class="nes-container with-title is-centered">
+${escapedMessage}
+ </div> </div>`;
+            const buttonContainer = `<div class="buttonContainer"</div>`;
+            html += buttonContainer;
+            let id = 0;
+            for (const button of openPopupEvent.buttons) {
+                html  += `<button type="button" class="nes-btn is-${HtmlUtils.escapeHtml(button.className ?? '')}" id="popup-${openPopupEvent.popupId}-${id}">${HtmlUtils.escapeHtml(button.label)}</button>`;
+                id++;
+            }
+            const domElement = this.add.dom(objectLayerSquare.x  + objectLayerSquare.width/2 ,
+                objectLayerSquare.y + objectLayerSquare.height/2).createFromHTML(html);
+
+            const container : HTMLDivElement =  domElement.getChildByID("container") as HTMLDivElement;
+            container.style.width = objectLayerSquare.width + "px";
+            domElement.scale = 0;
+            domElement.setClassName('popUpElement');
+
+
+
+            id = 0;
+            for (const button of openPopupEvent.buttons) {
+                const button = HtmlUtils.getElementByIdOrFail<HTMLButtonElement>(`popup-${openPopupEvent.popupId}-${id}`);
+                const btnId = id;
+                button.onclick = () => {
+                    iframeListener.sendButtonClickedEvent(openPopupEvent.popupId, btnId);
+                }
+                id++;
+            }
+
+            this.tweens.add({
+                targets     : domElement ,
+                scale       : 1,
+                ease        : "EaseOut",
+                duration    : 400,
+            });
+
+            this.popUpElements.set(openPopupEvent.popupId, domElement);
+        });
+
+        iframeListener.closePopupStream.subscribe((closePopupEvent) => {
+            const popUpElement = this.popUpElements.get(closePopupEvent.popupId);
+            if (popUpElement === undefined) {
+                console.error('Could not close popup with ID ', closePopupEvent.popupId,'. Maybe it has already been closed?');
+            }
+
+            this.tweens.add({
+                targets     : popUpElement ,
+                scale       : 0,
+                ease        : "EaseOut",
+                duration    : 400,
+                onComplete  : () => {
+                    popUpElement?.destroy();
+                    this.popUpElements.delete(closePopupEvent.popupId);
+                },
+            });
+        });
+
+        iframeListener.disablePlayerControlStream.subscribe(()=>{
+            this.userInputManager.disableControls();
+        })
+        iframeListener.enablePlayerControlStream.subscribe(()=>{
+            this.userInputManager.restoreControls();
+        })
+        let scriptedBubbleSprite : Sprite;
+        iframeListener.displayBubbleStream.subscribe(()=>{
+            scriptedBubbleSprite = new Sprite(this,this.CurrentPlayer.x + 25,this.CurrentPlayer.y,'circleSprite-white');
+            scriptedBubbleSprite.setDisplayOrigin(48, 48);
+            this.add.existing(scriptedBubbleSprite);
+        })
+        iframeListener.removeBubbleStream.subscribe(()=>{
+            scriptedBubbleSprite.destroy();
+        })
+
     }
 
     private getMapDirUrl(): string {
@@ -702,6 +811,12 @@ export class GameScene extends ResizableScene implements CenterListener {
     public cleanupClosingScene(): void {
         // stop playing audio, close any open website, stop any open Jitsi
         coWebsiteManager.closeCoWebsite();
+        // Stop the script, if any
+        const scripts = this.getScriptUrls(this.mapFile);
+        for (const script of scripts) {
+            iframeListener.unregisterScript(script);
+        }
+
         this.stopJitsi();
         audioManager.unloadAudio();
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
@@ -785,8 +900,12 @@ export class GameScene extends ResizableScene implements CenterListener {
         return this.getProperty(layer, "startLayer") == true;
     }
 
-    private getProperty(layer: ITiledMapLayer, name: string): string|boolean|number|undefined {
-        const properties = layer.properties;
+    private getScriptUrls(map: ITiledMap): string[] {
+        return (this.getProperties(map, "script") as string[]).map((script) => (new URL(script, this.MapUrlFile)).toString());
+    }
+
+    private getProperty(layer: ITiledMapLayer|ITiledMap, name: string): string|boolean|number|undefined {
+        const properties: ITiledMapLayerProperty[] = layer.properties;
         if (!properties) {
             return undefined;
         }
@@ -795,6 +914,14 @@ export class GameScene extends ResizableScene implements CenterListener {
             return undefined;
         }
         return obj.value;
+    }
+
+    private getProperties(layer: ITiledMapLayer|ITiledMap, name: string): (string|number|boolean|undefined)[] {
+        const properties: ITiledMapLayerProperty[] = layer.properties;
+        if (!properties) {
+            return [];
+        }
+        return properties.filter((property: ITiledMapLayerProperty) => property.name.toLowerCase() === name.toLowerCase()).map((property) => property.value);
     }
 
     //todo: push that into the gameManager
@@ -1176,7 +1303,19 @@ export class GameScene extends ResizableScene implements CenterListener {
             bottom: camera.scrollY + camera.height,
         });
     }
+    private getObjectLayerData(objectName : string) : ITiledMapObject| undefined{
+        for (const layer of this.mapFile.layers) {
+            if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
+                for (const object of layer.objects) {
+                    if (object.name === objectName) {
+                        return object;
+                    }
+                }
+            }
+        }
+        return undefined;
 
+    }
     private reposition(): void {
         this.presentationModeSprite.setY(this.game.renderer.height - 2);
         this.chatModeSprite.setY(this.game.renderer.height - 2);
@@ -1233,7 +1372,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     //todo: put this into an 'orchestrator' scene (EntryScene?)
     private bannedUser(){
         this.cleanupClosingScene();
-        this.userInputManager.clearAllKeys();
+        this.userInputManager.disableControls();
         this.scene.start(ErrorSceneName, {
             title: 'Banned',
             subTitle: 'You were banned from WorkAdventure',
@@ -1245,7 +1384,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     private showWorldFullError(): void {
         this.cleanupClosingScene();
         this.scene.stop(ReconnectingSceneName);
-        this.userInputManager.clearAllKeys();
+        this.userInputManager.disableControls();
         this.scene.start(ErrorSceneName, {
             title: 'Connection rejected',
             subTitle: 'The world you are trying to join is full. Try again later.',
