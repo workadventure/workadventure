@@ -306,7 +306,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         gameManager.gameSceneIsCreated(this);
         urlManager.pushRoomIdToUrl(this.room);
         this.startLayerName = urlManager.getStartLayerNameFromUrl();
-        
+
         this.messageSubscription = worldFullMessageStream.stream.subscribe((message) => this.showWorldFullError())
 
         const playerName = gameManager.getPlayerName();
@@ -373,19 +373,21 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.initCirclesCanvas();
 
         // Let's pause the scene if the connection is not established yet
-        if (this.isReconnecting) {
-            setTimeout(() => {
-            this.scene.sleep();
-            this.scene.launch(ReconnectingSceneName);
-            }, 0);
-        } else if (this.connection === undefined) {
-            // Let's wait 1 second before printing the "connecting" screen to avoid blinking
-            setTimeout(() => {
-                if (this.connection === undefined) {
+        if (!this.room.isDisconnected()) {
+            if (this.isReconnecting) {
+                setTimeout(() => {
                     this.scene.sleep();
                     this.scene.launch(ReconnectingSceneName);
-                }
-            }, 1000);
+                }, 0);
+            } else if (this.connection === undefined) {
+                // Let's wait 1 second before printing the "connecting" screen to avoid blinking
+                setTimeout(() => {
+                    if (this.connection === undefined) {
+                        this.scene.sleep();
+                        this.scene.launch(ReconnectingSceneName);
+                    }
+                }, 1000);
+            }
         }
 
         this.createPromiseResolve();
@@ -411,6 +413,16 @@ export class GameScene extends ResizableScene implements CenterListener {
         layoutManager.setListener(this);
         this.triggerOnMapLayerPropertyChange();
 
+
+        if (!this.room.isDisconnected()) {
+            this.connect();
+        }
+    }
+
+    /**
+     * Initializes the connection to Pusher.
+     */
+    private connect(): void {
         const camera = this.cameras.main;
 
         connectionManager.connectToRoomSocket(
@@ -548,7 +560,6 @@ export class GameScene extends ResizableScene implements CenterListener {
         });
     }
 
-
     //todo: into dedicated classes
     private initCirclesCanvas(): void {
         // Let's generate the circle for the group delimiter
@@ -582,7 +593,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         contextRed.stroke();
         this.circleRedTexture.refresh();
     }
-    
+
 
     private safeParseJSONstring(jsonString: string|undefined, propertyName: string) {
         try {
