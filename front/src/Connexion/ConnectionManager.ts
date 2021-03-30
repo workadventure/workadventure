@@ -14,11 +14,11 @@ class ConnectionManager {
     private connexionType?: GameConnexionTypes
     private reconnectingTimeout: NodeJS.Timeout|null = null;
     private _unloading:boolean = false;
-    
+
     get unloading () {
         return this._unloading;
     }
-    
+
     constructor() {
         window.addEventListener('beforeunload', () => {
             this._unloading = true;
@@ -42,7 +42,7 @@ class ConnectionManager {
             const worldSlug = data.worldSlug;
             const roomSlug = data.roomSlug;
 
-            const room = new Room('/@/'+organizationSlug+'/'+worldSlug+'/'+roomSlug + window.location.hash);
+            const room = new Room('/@/'+organizationSlug+'/'+worldSlug+'/'+roomSlug + window.location.search + window.location.hash);
             urlManager.pushRoomIdToUrl(room);
             return Promise.resolve(room);
         } else if (connexionType === GameConnexionTypes.organization || connexionType === GameConnexionTypes.anonymous || connexionType === GameConnexionTypes.empty) {
@@ -64,7 +64,7 @@ class ConnectionManager {
             if (connexionType === GameConnexionTypes.empty) {
                 roomId = START_ROOM_URL;
             } else {
-                roomId = window.location.pathname + window.location.hash;
+                roomId = window.location.pathname + window.location.search + window.location.hash;
             }
             return Promise.resolve(new Room(roomId));
         }

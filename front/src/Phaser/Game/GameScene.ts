@@ -384,19 +384,21 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.initCirclesCanvas();
 
         // Let's pause the scene if the connection is not established yet
-        if (this.isReconnecting) {
-            setTimeout(() => {
-            this.scene.sleep();
-            this.scene.launch(ReconnectingSceneName);
-            }, 0);
-        } else if (this.connection === undefined) {
-            // Let's wait 1 second before printing the "connecting" screen to avoid blinking
-            setTimeout(() => {
-                if (this.connection === undefined) {
+        if (!this.room.isDisconnected()) {
+            if (this.isReconnecting) {
+                setTimeout(() => {
                     this.scene.sleep();
                     this.scene.launch(ReconnectingSceneName);
-                }
-            }, 1000);
+                }, 0);
+            } else if (this.connection === undefined) {
+                // Let's wait 1 second before printing the "connecting" screen to avoid blinking
+                setTimeout(() => {
+                    if (this.connection === undefined) {
+                        this.scene.sleep();
+                        this.scene.launch(ReconnectingSceneName);
+                    }
+                }, 1000);
+            }
         }
 
         this.createPromiseResolve();
@@ -423,6 +425,16 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.triggerOnMapLayerPropertyChange();
         this.listenToIframeEvents();
 
+
+        if (!this.room.isDisconnected()) {
+            this.connect();
+        }
+    }
+
+    /**
+     * Initializes the connection to Pusher.
+     */
+    private connect(): void {
         const camera = this.cameras.main;
 
         connectionManager.connectToRoomSocket(
@@ -559,7 +571,6 @@ export class GameScene extends ResizableScene implements CenterListener {
             this.gameMap.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
         });
     }
-
 
     //todo: into dedicated classes
     private initCirclesCanvas(): void {
