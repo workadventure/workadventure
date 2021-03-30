@@ -194,6 +194,15 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         this.load.image(openChatIconName, 'resources/objects/talk.png');
         this.load.on(FILE_LOAD_ERROR, (file: {src: string}) => {
+            // If we happen to be in HTTP and we are trying to load a URL in HTTPS only... (this happens only in dev environments)
+            if (window.location.protocol === 'http:' && file.src === this.MapUrlFile && file.src.startsWith('http:')) {
+                this.MapUrlFile = this.MapUrlFile.replace('http://', 'https://');
+                this.load.tilemapTiledJSON(this.MapUrlFile, this.MapUrlFile);
+                this.load.on('filecomplete-tilemapJSON-'+this.MapUrlFile, (key: string, type: string, data: unknown) => {
+                    this.onMapLoad(data);
+                });
+                return;
+            }
             this.scene.start(ErrorSceneName, {
                 title: 'Network error',
                 subTitle: 'An error occurred while loading resource:',
