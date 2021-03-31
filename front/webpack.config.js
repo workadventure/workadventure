@@ -70,6 +70,7 @@ module.exports = {
         }),
         new webpack.EnvironmentPlugin([
             'API_URL',
+            'PUSHER_URL',
             'UPLOADER_URL',
             'ADMIN_URL',
             'DEBUG_MODE',

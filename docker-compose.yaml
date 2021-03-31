@@ -26,9 +26,9 @@ services:
       JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
       HOST: "0.0.0.0"
       NODE_ENV: development
-      API_URL: pusher.workadventure.localhost
-      UPLOADER_URL: uploader.workadventure.localhost
-      ADMIN_URL: workadventure.localhost
+      PUSHER_URL: //pusher.workadventure.localhost
+      UPLOADER_URL: //uploader.workadventure.localhost
+      ADMIN_URL: //workadventure.localhost
       STARTUP_COMMAND_1: ./templater.sh
       STARTUP_COMMAND_2: yarn install
       STUN_SERVER: "stun:stun.l.google.com:19302"

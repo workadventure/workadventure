@@ -3,7 +3,7 @@ WORKDIR /var/www/messages
 COPY --chown=docker:docker messages .
 RUN yarn install && yarn proto
 
-# we are rebuilding on each deploy to cope with the API_URL environment URL
+# we are rebuilding on each deploy to cope with the PUSHER_URL environment URL
 FROM thecodingmachine/nodejs:14-apache
 
 COPY --chown=docker:docker front .

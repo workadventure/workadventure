@@ -1,4 +1,4 @@
-import {API_URL, UPLOADER_URL} from "../Enum/EnvironmentVariable";
+import {PUSHER_URL, UPLOADER_URL} from "../Enum/EnvironmentVariable";
 import Axios from "axios";
 import {
     BatchMessage,
@@ -67,7 +67,11 @@ export class RoomConnection implements RoomConnection {
      * @param roomId The ID of the room in the form "_/[instance]/[map_url]" or "@/[org]/[event]/[map]"
      */
     public constructor(token: string|null, roomId: string, name: string, characterLayers: string[], position: PositionInterface, viewport: ViewportInterface) {
-        let url = API_URL.replace('http://', 'ws://').replace('https://', 'wss://');
+        let url = PUSHER_URL;
+        if (url.startsWith('//')) {
+            url = window.location.protocol+url;
+        }
+        url = url.replace('http://', 'ws://').replace('https://', 'wss://');
         url += '/room';
         url += '?roomId='+(roomId ?encodeURIComponent(roomId):'');
         url += '&token='+(token ?encodeURIComponent(token):'');
@@ -381,7 +385,7 @@ export class RoomConnection implements RoomConnection {
     public onConnectError(callback: (error: Event) => void): void {
         this.socket.addEventListener('error', callback)
     }
-    
+
     public onConnect(callback: (roomConnection: OnConnectInterface) => void): void {
         //this.socket.addEventListener('open', callback)
         this.onMessage(EventMessage.CONNECT, callback);

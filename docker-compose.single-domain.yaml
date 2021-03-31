@@ -26,7 +26,7 @@ services:
       JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
       HOST: "0.0.0.0"
       NODE_ENV: development
-      API_URL: /pusher
+      PUSHER_URL: /pusher
       UPLOADER_URL: /uploader
       ADMIN_URL: /admin
       MAPS_URL: /maps
