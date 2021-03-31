@@ -69,7 +69,10 @@ export class RoomConnection implements RoomConnection {
     public constructor(token: string|null, roomId: string, name: string, characterLayers: string[], position: PositionInterface, viewport: ViewportInterface) {
         let url = new URL(PUSHER_URL, window.location.toString()).toString();
         url = url.replace('http://', 'ws://').replace('https://', 'wss://');
-        url += '/room';
+        if (!url.endsWith('/')) {
+            url += '/';
+        }
+        url += 'room';
         url += '?roomId='+(roomId ?encodeURIComponent(roomId):'');
         url += '&token='+(token ?encodeURIComponent(token):'');
         url += '&name='+encodeURIComponent(name);
