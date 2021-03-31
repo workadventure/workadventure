@@ -69,7 +69,7 @@ class ConnectionManager {
             return Promise.resolve(new Room(roomId));
         }
 
-        return Promise.reject('Invalid URL');
+        return Promise.reject(new Error('Invalid URL'));
     }
 
     private async verifyToken(token: string): Promise<void> {

@@ -13,8 +13,20 @@ export class BaseController {
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected errorToResponse(e: any, res: HttpResponse): void {
-        console.error(e.message || "An error happened.", e?.config.url);
-        console.error(e.stack || 'no stack defined.');
+        if (e && e.message) {
+            let url = e?.config?.url;
+            if (url !== undefined) {
+                url = ' for URL: '+url;
+            } else {
+                url = '';
+            }
+            console.error('ERROR: '+e.message+url);
+        } else if (typeof(e) === 'string') {
+            console.error(e);
+        }
+        if (e.stack) {
+            console.error(e.stack);
+        }
         if (e.response) {
             res.writeStatus(e.response.status+" "+e.response.statusText);
             this.addCorsHeaders(res);
