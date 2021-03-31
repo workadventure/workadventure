@@ -31,9 +31,12 @@ services:
       ADMIN_URL: /admin
       MAPS_URL: /maps
       STARTUP_COMMAND_1: yarn install
-      TURN_SERVER: "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443"
-      TURN_USER: workadventure
-      TURN_PASSWORD: WorkAdventure123
+      TURN_SERVER: "turn:localhost:3478,turns:localhost:5349"
+      # Use TURN_USER/TURN_PASSWORD if your Coturn server is secured via hard coded credentials.
+      # Advice: you should instead use Coturn REST API along the TURN_STATIC_AUTH_SECRET in the Back container
+      TURN_USER: ""
+      TURN_PASSWORD: ""
+      START_ROOM_URL: "$START_ROOM_URL"
     command: yarn run start
     volumes:
       - ./front:/usr/src/app
@@ -177,3 +180,28 @@ services:
       - ./back:/usr/src/back
       - ./front:/usr/src/front
       - ./pusher:/usr/src/pusher
+
+#  coturn:
+#    image: coturn/coturn:4.5.2
+#    command:
+#      - turnserver
+#      #- -c=/etc/coturn/turnserver.conf
+#      - --log-file=stdout
+#      - --external-ip=$$(detect-external-ip)
+#      - --listening-port=3478
+#      - --min-port=10000
+#      - --max-port=10010
+#      - --tls-listening-port=5349
+#      - --listening-ip=0.0.0.0
+#      - --realm=localhost
+#      - --server-name=localhost
+#      - --lt-cred-mech
+#      # Enable Coturn "REST API" to validate temporary passwords.
+#      #- --use-auth-secret
+#      #- --static-auth-secret=SomeStaticAuthSecret
+#      #- --userdb=/var/lib/turn/turndb
+#      - --user=workadventure:WorkAdventure123
+#      # use real-valid certificate/privatekey files
+#      #- --cert=/root/letsencrypt/fullchain.pem
+#      #- --pkey=/root/letsencrypt/privkey.pem
+#    network_mode: host
