@@ -91,6 +91,7 @@ import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
 import {joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey} from "../Components/MobileJoystick";
 import {waScaleManager} from "../Services/WaScaleManager";
+import {EmoteManager} from "./EmoteManager";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -189,6 +190,7 @@ export class GameScene extends DirtyScene implements CenterListener {
     private physicsEnabled: boolean = true;
     private mapTransitioning: boolean = false; //used to prevent transitions happenning at the same time.
     private onVisibilityChangeCallback: () => void;
+    private emoteManager!: EmoteManager;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
@@ -226,6 +228,11 @@ export class GameScene extends DirtyScene implements CenterListener {
             this.load.image(joystickBaseKey, joystickBaseImg);
             this.load.image(joystickThumbKey, joystickThumbImg);
         }
+        //todo: in an emote manager.
+        this.load.spritesheet('emote-music', 'resources/emotes/pipo-popupemotes005.png', {
+            frameHeight: 32,
+            frameWidth: 32,
+        });
         this.load.on(FILE_LOAD_ERROR, (file: {src: string}) => {
             // If we happen to be in HTTP and we are trying to load a URL in HTTPS only... (this happens only in dev environments)
             if (window.location.protocol === 'http:' && file.src === this.MapUrlFile && file.src.startsWith('http:') && this.originalMapUrl === undefined) {
@@ -509,6 +516,8 @@ export class GameScene extends DirtyScene implements CenterListener {
         }
 
         document.addEventListener('visibilitychange', this.onVisibilityChangeCallback);
+        
+        this.emoteManager = new EmoteManager(this);
     }
 
     /**

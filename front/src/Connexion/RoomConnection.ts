@@ -27,6 +27,8 @@ import {
     SendJitsiJwtMessage,
     CharacterLayerMessage,
     PingMessage,
+    EmoteEventMessage,
+    EmotePromptMessage,
     SendUserMessage,
     BanUserMessage
 } from "../Messages/generated/messages_pb"
@@ -47,6 +49,7 @@ import {adminMessagesService} from "./AdminMessagesService";
 import {worldFullMessageStream} from "./WorldFullMessageStream";
 import {worldFullWarningStream} from "./WorldFullWarningStream";
 import {connectionManager} from "./ConnectionManager";
+import {emoteEventStream} from "./EmoteEventStream";
 
 const manualPingDelay = 20000;
 
@@ -124,7 +127,7 @@ export class RoomConnection implements RoomConnection {
 
             if (message.hasBatchmessage()) {
                 for (const subMessage of (message.getBatchmessage() as BatchMessage).getPayloadList()) {
-                    let event: string;
+                    let event: string|null = null;
                     let payload;
                     if (subMessage.hasUsermovedmessage()) {
                         event = EventMessage.USER_MOVED;
@@ -144,11 +147,16 @@ export class RoomConnection implements RoomConnection {
                     } else if (subMessage.hasItemeventmessage()) {
                         event = EventMessage.ITEM_EVENT;
                         payload = subMessage.getItemeventmessage();
+                    } else if (subMessage.hasEmoteeventmessage()) {
+                        const emoteMessage = subMessage.getEmoteeventmessage() as EmoteEventMessage;
+                        emoteEventStream.onMessage(emoteMessage.getActoruserid(), emoteMessage.getEmote());
                     } else {
                         throw new Error('Unexpected batch message type');
                     }
 
-                    this.dispatch(event, payload);
+                    if (event) {
+                        this.dispatch(event, payload);
+                    }
                 }
             } else if (message.hasRoomjoinedmessage()) {
                 const roomJoinedMessage = message.getRoomjoinedmessage() as RoomJoinedMessage;
@@ -598,5 +606,15 @@ export class RoomConnection implements RoomConnection {
 
     public isAdmin(): boolean {
         return this.hasTag('admin');
+    }
+
+    public emitEmoteEvent(emoteName: string): void {
+        const emoteMessage = new EmotePromptMessage();
+        emoteMessage.setEmote(emoteName)
+
+        const clientToServerMessage = new ClientToServerMessage();
+        clientToServerMessage.setEmotepromptmessage(emoteMessage);
+
+        this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 }

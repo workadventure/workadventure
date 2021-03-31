@@ -23,7 +23,7 @@ describe("PositionNotifier", () => {
             moveTriggered = true;
         }, (thing: Movable) => {
             leaveTriggered = true;
-        });
+        }, () => {});
 
         const user1 = new User(1, 'test', '10.0.0.2', {
             x: 500,
@@ -98,7 +98,7 @@ describe("PositionNotifier", () => {
             moveTriggered = true;
         }, (thing: Movable) => {
             leaveTriggered = true;
-        });
+        }, () => {});
 
         const user1 = new User(1, 'test', '10.0.0.2', {
             x: 500,
