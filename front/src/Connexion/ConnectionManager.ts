@@ -1,5 +1,5 @@
 import Axios from "axios";
-import {API_URL, START_ROOM_URL} from "../Enum/EnvironmentVariable";
+import {PUSHER_URL, START_ROOM_URL} from "../Enum/EnvironmentVariable";
 import {RoomConnection} from "./RoomConnection";
 import {OnConnectInterface, PositionInterface, ViewportInterface} from "./ConnexionModels";
 import {GameConnexionTypes, urlManager} from "../Url/UrlManager";
@@ -34,7 +34,7 @@ class ConnectionManager {
         this.connexionType = connexionType;
         if(connexionType === GameConnexionTypes.register) {
            const organizationMemberToken = urlManager.getOrganizationToken();
-            const data = await Axios.post(`${API_URL}/register`, {organizationMemberToken}).then(res => res.data);
+            const data = await Axios.post(`${PUSHER_URL}/register`, {organizationMemberToken}).then(res => res.data);
             this.localUser = new LocalUser(data.userUuid, data.authToken, data.textures);
             localUserStore.saveUser(this.localUser);
 
@@ -69,15 +69,15 @@ class ConnectionManager {
             return Promise.resolve(new Room(roomId));
         }
 
-        return Promise.reject('Invalid URL');
+        return Promise.reject(new Error('Invalid URL'));
     }
 
     private async verifyToken(token: string): Promise<void> {
-        await Axios.get(`${API_URL}/verify`, {params: {token}});
+        await Axios.get(`${PUSHER_URL}/verify`, {params: {token}});
     }
 
     public async anonymousLogin(isBenchmark: boolean = false): Promise<void> {
-        const data = await Axios.post(`${API_URL}/anonymLogin`).then(res => res.data);
+        const data = await Axios.post(`${PUSHER_URL}/anonymLogin`).then(res => res.data);
         this.localUser = new LocalUser(data.userUuid, data.authToken, []);
         if (!isBenchmark) { // In benchmark, we don't have a local storage.
             localUserStore.saveUser(this.localUser);

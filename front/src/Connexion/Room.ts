@@ -1,5 +1,5 @@
 import Axios from "axios";
-import {API_URL} from "../Enum/EnvironmentVariable";
+import {PUSHER_URL} from "../Enum/EnvironmentVariable";
 
 export class Room {
     public readonly id: string;
@@ -67,7 +67,7 @@ export class Room {
                 // We have a private ID, we need to query the map URL from the server.
                 const urlParts = this.parsePrivateUrl(this.id);
 
-                Axios.get(`${API_URL}/map`, {
+                Axios.get(`${PUSHER_URL}/map`, {
                     params: urlParts
                 }).then(({data}) => {
                     console.log('Map ', this.id, ' resolves to URL ', data.mapUrl);
