@@ -8,18 +8,19 @@ export class Companion extends Container {
 
     private delta: number;
     private invisible: boolean;
-    private target: { x: number, y: number };
+    private stepListener: Function;
+    private target: { x: number, y: number, direction: PlayerAnimationDirections };
 
     constructor(
         scene: Phaser.Scene,
         x: number,
         y: number
         ) {
-        super(scene, x, y);
+        super(scene, x + 8, y + 8);
             
         this.delta = 0;
         this.invisible = true;
-        this.target = { x, y };
+        this.target = { x, y, direction: PlayerAnimationDirections.Down };
         this.sprites = new Map<string, Sprite>();
 
         const animal = ["dog1", "dog2", "dog3", "cat1", "cat2", "cat3"];
@@ -40,19 +41,21 @@ export class Companion extends Container {
 
         this.setDepth(-1);
 
-        scene.game.events.addListener('step', this.step.bind(this));
+        this.stepListener = this.step.bind(this);
+
+        scene.game.events.addListener('step', this.stepListener);
         scene.add.existing(this);
     }
 
-    public setTarget(x: number, y: number) {
-        this.target = { x, y };
+    public setTarget(x: number, y: number, direction: PlayerAnimationDirections) {
+        this.target = { x, y, direction };
     }
 
     private step(time: any, delta: any) {
         if (typeof this.target === 'undefined') return;
 
         this.delta += delta;
-        if (this.delta < 256) {
+        if (this.delta < 128) {
             return;
         }
         this.delta = 0;
@@ -63,10 +66,12 @@ export class Companion extends Container {
         let direction: PlayerAnimationDirections;
         let type: PlayerAnimationTypes;
 
-        const distance = Math.sqrt(Math.pow(Math.abs(xDist), 2) + Math.pow(Math.abs(yDist), 2));
+        const distance = Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2));
 
         if (distance < 16) {
             type = PlayerAnimationTypes.Idle;
+            direction = this.target.direction;
+
             this.getBody().stop();
         } else {
             type = PlayerAnimationTypes.Walk;
@@ -76,22 +81,22 @@ export class Companion extends Container {
 
             const speed = 256;
             this.getBody().setVelocity(Math.min(Math.abs(xDist * 2), speed) * xDir, Math.min(Math.abs(yDist * 2), speed) * yDir);
-        }
 
-        if (Math.abs(xDist) > Math.abs(yDist)) {
-            if (xDist < 0) {
-                direction = PlayerAnimationDirections.Left;
+            if (Math.abs(xDist) > Math.abs(yDist)) {
+                if (xDist < 0) {
+                    direction = PlayerAnimationDirections.Left;
+                } else {
+                    direction = PlayerAnimationDirections.Right;
+                }
             } else {
-                direction = PlayerAnimationDirections.Right;
-            }
-        } else {
-            if (yDist < 0) {
-                direction = PlayerAnimationDirections.Up;
-            } else {
-                direction = PlayerAnimationDirections.Down;
+                if (yDist < 0) {
+                    direction = PlayerAnimationDirections.Up;
+                } else {
+                    direction = PlayerAnimationDirections.Down;
+                }
             }
         }
-
+        
         this.setDepth(this.y);
         this.playAnimation(direction, type);
     }
@@ -188,7 +193,7 @@ export class Companion extends Container {
         }
 
         if (this.scene) {
-            this.scene.game.events.removeListener('step', this.step.bind(this));
+            this.scene.game.events.removeListener('step', this.stepListener);
         }
 
         super.destroy();

@@ -4,6 +4,7 @@ import BitmapText = Phaser.GameObjects.BitmapText;
 import Container = Phaser.GameObjects.Container;
 import Sprite = Phaser.GameObjects.Sprite;
 import {TextureError} from "../../Exception/TextureError";
+import {Companion} from "../Companion/Companion";
 
 interface AnimationData {
     key: string;
@@ -21,6 +22,7 @@ export abstract class Character extends Container {
     private lastDirection: PlayerAnimationDirections = PlayerAnimationDirections.Down;
     //private teleportation: Sprite;
     private invisible: boolean;
+    public companion?: Companion;
 
     constructor(scene: Phaser.Scene,
                 x: number,
@@ -67,6 +69,12 @@ export abstract class Character extends Container {
         this.setDepth(-1);
 
         this.playAnimation(direction, moving);
+
+        this.addCompanion();
+    }
+
+    private addCompanion(): void {
+        this.companion = new Companion(this.scene, this.x, this.y);
     }
 
     public addTextures(textures: string[], frame?: string | number): void {
@@ -189,6 +197,10 @@ export abstract class Character extends Container {
         }
 
         this.setDepth(this.y);
+
+        if (this.companion) {
+            this.companion.setTarget(this.x, this.y, this.lastDirection);
+        }
     }
 
     stop(){
@@ -215,5 +227,9 @@ export abstract class Character extends Container {
         }
         super.destroy();
         this.playerName.destroy();
+
+        if (this.companion) {
+            this.companion.destroy();
+        }
     }
 }

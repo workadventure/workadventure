@@ -2,7 +2,6 @@ import {PlayerAnimationDirections} from "./Animation";
 import {GameScene} from "../Game/GameScene";
 import {UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
 import {Character} from "../Entity/Character";
-import {Companion} from "../Companion/Companion";
 
 export const hasMovedEventName = "hasMoved";
 export interface CurrentGamerInterface extends Character{
@@ -13,7 +12,6 @@ export interface CurrentGamerInterface extends Character{
 export class Player extends Character implements CurrentGamerInterface {
     private previousDirection: string = PlayerAnimationDirections.Down;
     private wasMoving: boolean = false;
-    private companion?: Companion;
 
     constructor(
         Scene: GameScene,
@@ -29,20 +27,6 @@ export class Player extends Character implements CurrentGamerInterface {
 
         //the current player model should be push away by other players to prevent conflict
         this.getBody().setImmovable(false);
-
-        this.addCompanion();
-    }
-
-    addCompanion(): void {
-        this.companion = new Companion(this.scene, this.x, this.y);
-    }
-
-    move(x: number, y: number) {
-        super.move(x, y);
-
-        if (this.companion) {
-            this.companion.setTarget(this.x, this.y);
-        }
     }
 
     moveUser(delta: number): void {
