@@ -187,6 +187,8 @@ export class RoomConnection implements RoomConnection {
                 adminMessagesService.onSendusermessage(message.getSendusermessage() as BanUserMessage);
             } else if (message.hasWorldfullwarningmessage()) {
                 worldFullWarningStream.onMessage();
+            } else if (message.hasRefreshroommessage()) {
+                //todo: implement a way to notify the user the room was refreshed.
             } else {
                 throw new Error('Unknown message received');
             }

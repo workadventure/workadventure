@@ -26,7 +26,7 @@ import {
     GroupLeftZoneMessage,
     WorldFullWarningMessage,
     UserLeftZoneMessage,
-    BanUserMessage,
+    BanUserMessage, RefreshRoomMessage,
 } from "../Messages/generated/messages_pb";
 import {User, UserSocket} from "../Model/User";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
@@ -41,7 +41,6 @@ import {
 } from "../Enum/EnvironmentVariable";
 import {Movable} from "../Model/Movable";
 import {PositionInterface} from "../Model/PositionInterface";
-import {adminApi, CharacterTexture} from "./AdminApi";
 import Jwt from "jsonwebtoken";
 import {JITSI_URL} from "../Enum/EnvironmentVariable";
 import {clientEventsEmitter} from "./ClientEventsEmitter";
@@ -129,15 +128,7 @@ export class SocketManager {
             if (viewport === undefined) {
                 throw new Error('Viewport not found in message');
             }
-
-            // sending to all clients in room except sender
-            /*client.position = {
-                x: position.x,
-                y: position.y,
-                direction,
-                moving: position.moving,
-            };
-            client.viewport = viewport;*/
+            
 
             // update position in the world
             room.updatePosition(user, ProtobufUtils.toPointInterface(position));
@@ -191,21 +182,6 @@ export class SocketManager {
             console.error(e);
         }
     }
-
-    // TODO: handle this message in pusher
-    /*async handleReportMessage(client: ExSocketInterface, reportPlayerMessage: ReportPlayerMessage) {
-        try {
-            const reportedSocket = this.sockets.get(reportPlayerMessage.getReporteduserid());
-            if (!reportedSocket) {
-                throw 'reported socket user not found';
-            }
-            //TODO report user on admin application
-            await adminApi.reportPlayer(reportedSocket.userUuid, reportPlayerMessage.getReportcomment(),  client.userUuid)
-        } catch (e) {
-            console.error('An error occurred on "handleReportMessage"');
-            console.error(e);
-        }
-    }*/
 
     emitVideo(room: GameRoom, user: User, data: WebRtcSignalToServerMessage): void {
         //send only at user
@@ -289,11 +265,6 @@ export class SocketManager {
                 (thing: Movable, position:PositionInterface, listener: ZoneSocket) => this.onClientMove(thing, position, listener),
                 (thing: Movable, newZone: Zone|null, listener: ZoneSocket) => this.onClientLeave(thing, newZone, listener)
             );
-            if (!world.anonymous) {
-                const data = await adminApi.fetchMapDetails(world.organizationSlug, world.worldSlug, world.roomSlug)
-                world.tags = data.tags
-                world.policyType = Number(data.policy_type)
-            }
             gaugeManager.incNbRoomGauge();
             this.rooms.set(roomId, world);
         }
@@ -768,6 +739,25 @@ export class SocketManager {
 
             const clientMessage = new ServerToClientMessage();
             clientMessage.setWorldfullwarningmessage(worldFullMessage);
+
+            recipient.socket.write(clientMessage);
+        });
+    }
+
+    dispatchRoomRefresh(roomId: string,): void {
+        const room = this.rooms.get(roomId);
+        if (!room) {
+            return;
+        }
+        
+        const versionNumber = room.incrementVersion();
+        room.getUsers().forEach((recipient) => {
+            const worldFullMessage = new RefreshRoomMessage();
+            worldFullMessage.setRoomid(roomId)
+            worldFullMessage.setVersionnumber(versionNumber)
+
+            const clientMessage = new ServerToClientMessage();
+            clientMessage.setRefreshroommessage(worldFullMessage);
 
             recipient.socket.write(clientMessage);
         });
