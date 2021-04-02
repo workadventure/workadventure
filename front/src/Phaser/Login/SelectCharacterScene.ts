@@ -2,6 +2,7 @@ import {gameManager} from "../Game/GameManager";
 import {TextField} from "../Components/TextField";
 import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
+import {SelectCompanionSceneName} from "./SelectCompanionScene";
 import {EnableCameraSceneName} from "./EnableCameraScene";
 import {CustomizeSceneName} from "./CustomizeScene";
 import {ResizableScene} from "./ResizableScene";
@@ -145,7 +146,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.scene.stop(SelectCharacterSceneName);
         if (this.selectedPlayer !== null) {
             gameManager.setCharacterLayers([this.selectedPlayer.texture.key]);
-            gameManager.tryResumingGame(this, EnableCameraSceneName);
+            gameManager.tryResumingGame(this, localUserStore.wasCompanionSet() ? EnableCameraSceneName : SelectCompanionSceneName);
         } else {
             this.scene.run(CustomizeSceneName);
         }
