@@ -36,10 +36,12 @@ export class Companion extends Container {
 
         this.companionName = name;
 
-        lazyLoadResource(this.scene.load, this.companionName).then(resource => {
-            this.addResource(resource);
-            this.invisible = false;
-        })
+        lazyLoadResource(this.scene.load, this.companionName)
+            .then(resource => {
+                this.addResource(resource);
+                this.invisible = false;
+            })
+            .catch(error => console.error(error));
 
         this.scene.physics.world.enableBody(this);
 

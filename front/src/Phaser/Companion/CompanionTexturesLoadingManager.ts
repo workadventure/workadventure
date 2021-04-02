@@ -13,17 +13,17 @@ export const loadAll = (loader: LoaderPlugin): CompanionResourceDescriptionInter
 }
 
 export const lazyLoadResource = (loader: LoaderPlugin, name: string): Promise<string> => {
-    const resource = COMPANION_RESOURCES.find(item => item.name === name);
+    return new Promise((resolve, reject) => {
+        const resource = COMPANION_RESOURCES.find(item => item.name === name);
 
-    if (typeof resource === 'undefined') {
-        throw new TextureError(`Texture '${name}' not found!`);
-    }
-
-    if (loader.textureManager.exists(resource.name)) {
-        return Promise.resolve(resource.name);
-    }
-
-    return new Promise(resolve => {
+        if (typeof resource === 'undefined') {
+            return reject(`Texture '${name}' not found!`);
+        }
+    
+        if (loader.textureManager.exists(resource.name)) {
+            return resolve(resource.name);
+        }
+    
         loader.spritesheet(resource.name, resource.img, { frameWidth: 32, frameHeight: 32, endFrame: 12 });
         loader.once(`filecomplete-spritesheet-${resource.name}`, () => resolve(resource.name));
     });
