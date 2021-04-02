@@ -1,5 +1,4 @@
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
-import { TextureError } from "../../Exception/TextureError";
 import { COMPANION_RESOURCES, CompanionResourceDescriptionInterface } from "./CompanionTextures";
 
 export const loadAll = (loader: LoaderPlugin): CompanionResourceDescriptionInterface[] => {
