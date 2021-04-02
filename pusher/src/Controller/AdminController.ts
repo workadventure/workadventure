@@ -2,7 +2,7 @@ import {BaseController} from "./BaseController";
 import {HttpRequest, HttpResponse, TemplatedApp} from "uWebSockets.js";
 import {ADMIN_API_TOKEN} from "../Enum/EnvironmentVariable";
 import {apiClientRepository} from "../Services/ApiClientRepository";
-import {AdminRoomMessage, WorldFullWarningToRoomMessage} from "../Messages/generated/messages_pb";
+import {AdminRoomMessage, WorldFullWarningToRoomMessage, RefreshRoomPromptMessage} from "../Messages/generated/messages_pb";
 
 
 export class AdminController extends BaseController{
@@ -11,6 +11,56 @@ export class AdminController extends BaseController{
         super();
         this.App = App;
         this.receiveGlobalMessagePrompt();
+        this.receiveRoomEditionPrompt();
+    }
+    
+    receiveRoomEditionPrompt() {
+        this.App.options("/room/refresh", (res: HttpResponse, req: HttpRequest) => {
+            this.addCorsHeaders(res);
+            res.end();
+        });
+
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        this.App.post("/room/refresh", async (res: HttpResponse, req: HttpRequest) => {
+            res.onAborted(() => {
+                console.warn('/message request was aborted');
+            })
+
+            const token = req.getHeader('admin-token');
+            const body = await res.json();
+
+            if (token !== ADMIN_API_TOKEN) {
+                console.error('Admin access refused for token: '+token)
+                res.writeStatus("401 Unauthorized").end('Incorrect token');
+                return;
+            }
+
+            try {
+                if (typeof body.roomId !== 'string') {
+                    throw 'Incorrect roomId parameter'
+                }
+                const roomId: string = body.roomId;
+
+                await apiClientRepository.getClient(roomId).then((roomClient) =>{
+                    return new Promise((res, rej) => {
+                        const roomMessage = new RefreshRoomPromptMessage();
+                        roomMessage.setRoomid(roomId);
+
+                        roomClient.sendRefreshRoomPrompt(roomMessage, (err) => {
+                            err ? rej(err) : res();
+                        });
+                    });
+                });
+            } catch (err) {
+                this.errorToResponse(err, res);
+                return;
+            }
+
+            res.writeStatus("200");
+            res.end('ok');
+            
+            
+        });
     }
     
     receiveGlobalMessagePrompt() {

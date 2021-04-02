@@ -1,9 +1,3 @@
-import { Group } from "./Group";
-import { PointInterface } from "./Websocket/PointInterface";
-import {Zone} from "_Model/Zone";
-import {Movable} from "_Model/Movable";
-import {PositionNotifier} from "_Model/PositionNotifier";
-import {ServerDuplexStream} from "grpc";
 import {
     BatchMessage,
     PusherToBackMessage,
@@ -11,7 +5,6 @@ import {
     ServerToClientMessage,
     SubMessage, UserJoinedRoomMessage, UserLeftRoomMessage
 } from "../Messages/generated/messages_pb";
-import {CharacterLayer} from "_Model/Websocket/CharacterLayer";
 import {AdminSocket} from "../RoomManager";
 
 
