@@ -212,7 +212,9 @@ export class Companion extends Container {
             }
         }
 
-        this.scene.events.removeListener('update', this.step, this);
+        if (this.scene) {
+            this.scene.events.removeListener('update', this.step, this);
+        }
 
         super.destroy();
     }
