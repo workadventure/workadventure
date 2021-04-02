@@ -1,5 +1,6 @@
 import {LoginScene, LoginSceneName} from "../Login/LoginScene";
 import {SelectCharacterScene, SelectCharacterSceneName} from "../Login/SelectCharacterScene";
+import {SelectCompanionScene, SelectCompanionSceneName} from "../Login/SelectCompanionScene";
 import {gameManager} from "../Game/GameManager";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {mediaManager} from "../../WebRtc/MediaManager";
@@ -276,6 +277,10 @@ export class MenuScene extends Phaser.Scene {
             case 'changeSkinButton':
                 this.closeSideMenu();
                 gameManager.leaveGame(this, SelectCharacterSceneName, new SelectCharacterScene());
+                break;
+            case 'changeCompanionButton':
+                this.closeSideMenu();
+                gameManager.leaveGame(this, SelectCompanionSceneName, new SelectCompanionScene());
                 break;
             case 'closeButton':
                 this.closeSideMenu();

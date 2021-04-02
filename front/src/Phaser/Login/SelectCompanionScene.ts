@@ -1,13 +1,13 @@
 import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
-import {gameManager} from "../Game/GameManager";
 import { addLoader } from "../Components/Loader";
-import {TextField} from "../Components/TextField";
+import { gameManager} from "../Game/GameManager";
 import { ResizableScene } from "./ResizableScene";
-import {EnableCameraSceneName} from "./EnableCameraScene";
-import {localUserStore} from "../../Connexion/LocalUserStore";
-import { loadAll } from "../Companion/CompanionTexturesLoadingManager";
+import { TextField } from "../Components/TextField";
+import { EnableCameraSceneName } from "./EnableCameraScene";
+import { localUserStore } from "../../Connexion/LocalUserStore";
 import { CompanionResourceDescriptionInterface } from "../Companion/CompanionTextures";
+import { getAllResources, lazyLoadAllResources } from "../Companion/CompanionTexturesLoadingManager";
 
 export const SelectCompanionSceneName = "SelectCompanionScene";
 
@@ -38,10 +38,12 @@ export class SelectCompanionScene extends ResizableScene {
     }
 
     preload() {
-        loadAll(this.load).then(resourceDescriptions => {
-            resourceDescriptions.forEach(resourceDescription => {
-                this.companionModels.push(resourceDescription);
-            });
+        lazyLoadAllResources(this.load).then(() => {
+            console.log("Loaded all companion textures.");
+        });
+
+        getAllResources().forEach(model => {
+            this.companionModels.push(model);
         });
 
         this.load.image(LoginTextures.icon, "resources/logos/tcm_full.png");

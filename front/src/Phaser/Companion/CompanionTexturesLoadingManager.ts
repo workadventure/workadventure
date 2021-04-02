@@ -1,7 +1,11 @@
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 import { COMPANION_RESOURCES, CompanionResourceDescriptionInterface } from "./CompanionTextures";
 
-export const loadAll = (loader: LoaderPlugin): Promise<CompanionResourceDescriptionInterface[]> => {
+export const getAllResources = (): CompanionResourceDescriptionInterface[] => {
+    return COMPANION_RESOURCES;
+}
+
+export const lazyLoadAllResources = (loader: LoaderPlugin): Promise<CompanionResourceDescriptionInterface[]> => {
     const promises: Promise<string>[] = [];
 
     COMPANION_RESOURCES.forEach((resource: CompanionResourceDescriptionInterface) => {
