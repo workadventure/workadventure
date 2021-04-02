@@ -69,11 +69,9 @@ export abstract class Character extends Container {
         this.setDepth(-1);
 
         this.playAnimation(direction, moving);
-
-        this.addCompanion();
     }
 
-    private addCompanion(): void {
+    public addCompanion(): void {
         this.companion = new Companion(this.scene, this.x, this.y);
     }
 

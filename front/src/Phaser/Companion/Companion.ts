@@ -3,13 +3,24 @@ import Container = Phaser.GameObjects.Container;
 import { lazyLoadResource } from "./CompanionTexturesLoadingManager";
 import { PlayerAnimationDirections, PlayerAnimationTypes } from "../Player/Animation";
 
+export interface CompanionStatus {
+    x: number;
+    y: number;
+    name: string;
+    moving: boolean;
+    direction: PlayerAnimationDirections;
+}
+
 export class Companion extends Container {
     public sprites: Map<string, Sprite>;
 
     private delta: number;
     private invisible: boolean;
-    private stepListener: Function;
     private target: { x: number, y: number, direction: PlayerAnimationDirections };
+
+    private companionName: string;
+    private direction: PlayerAnimationDirections;
+    private animationType: PlayerAnimationTypes;
 
     constructor(
         scene: Phaser.Scene,
@@ -18,15 +29,22 @@ export class Companion extends Container {
         ) {
         super(scene, x + 8, y + 8);
             
+        this.sprites = new Map<string, Sprite>();
+
         this.delta = 0;
         this.invisible = true;
         this.target = { x, y, direction: PlayerAnimationDirections.Down };
-        this.sprites = new Map<string, Sprite>();
 
+        this.direction = PlayerAnimationDirections.Down;
+        this.animationType = PlayerAnimationTypes.Idle;
+
+        // select random animal
         const animal = ["dog1", "dog2", "dog3", "cat1", "cat2", "cat3"];
         const random = Math.floor(Math.random() * animal.length);
 
-        lazyLoadResource(this.scene.load, animal[random]).then(resource => {
+        this.companionName = animal[random];
+
+        lazyLoadResource(this.scene.load, this.companionName).then(resource => {
             this.addResource(resource);
             this.invisible = false;
         })
@@ -34,16 +52,13 @@ export class Companion extends Container {
         this.scene.physics.world.enableBody(this);
 
         this.getBody().setImmovable(true);
-        this.getBody().setCollideWorldBounds(true);
+        this.getBody().setCollideWorldBounds(false);
         this.setSize(16, 16);
         this.getBody().setSize(16, 16);
         this.getBody().setOffset(0, 8);
 
         this.setDepth(-1);
 
-        this.stepListener = this.step.bind(this);
-
-        scene.game.events.addListener('step', this.stepListener);
         scene.add.existing(this);
     }
 
@@ -51,7 +66,7 @@ export class Companion extends Container {
         this.target = { x, y, direction };
     }
 
-    private step(time: any, delta: any) {
+    public step(delta: number) {
         if (typeof this.target === 'undefined') return;
 
         this.delta += delta;
@@ -63,18 +78,15 @@ export class Companion extends Container {
         const xDist = this.target.x - this.x;
         const yDist = this.target.y - this.y;
 
-        let direction: PlayerAnimationDirections;
-        let type: PlayerAnimationTypes;
+        const distance = Math.pow(xDist, 2) + Math.pow(yDist, 2);
 
-        const distance = Math.sqrt(Math.pow(xDist, 2) + Math.pow(yDist, 2));
-
-        if (distance < 16) {
-            type = PlayerAnimationTypes.Idle;
-            direction = this.target.direction;
+        if (distance < 576) { // 24^2
+            this.animationType = PlayerAnimationTypes.Idle;
+            this.direction = this.target.direction;
 
             this.getBody().stop();
         } else {
-            type = PlayerAnimationTypes.Walk;
+            this.animationType = PlayerAnimationTypes.Walk;
 
             const xDir = xDist / Math.max(Math.abs(xDist), 1);
             const yDir = yDist / Math.max(Math.abs(yDist), 1);
@@ -84,21 +96,33 @@ export class Companion extends Container {
 
             if (Math.abs(xDist) > Math.abs(yDist)) {
                 if (xDist < 0) {
-                    direction = PlayerAnimationDirections.Left;
+                    this.direction = PlayerAnimationDirections.Left;
                 } else {
-                    direction = PlayerAnimationDirections.Right;
+                    this.direction = PlayerAnimationDirections.Right;
                 }
             } else {
                 if (yDist < 0) {
-                    direction = PlayerAnimationDirections.Up;
+                    this.direction = PlayerAnimationDirections.Up;
                 } else {
-                    direction = PlayerAnimationDirections.Down;
+                    this.direction = PlayerAnimationDirections.Down;
                 }
             }
         }
         
         this.setDepth(this.y);
-        this.playAnimation(direction, type);
+        this.playAnimation(this.direction, this.animationType);
+    }
+
+    public getStatus(): CompanionStatus {
+        const { x, y, direction, animationType, companionName } = this;
+
+        return {
+            x,
+            y,
+            direction,
+            moving: animationType === PlayerAnimationTypes.Walk,
+            name: companionName
+        }
     }
 
     private playAnimation(direction: PlayerAnimationDirections, type: PlayerAnimationTypes): void {
@@ -190,10 +214,6 @@ export class Companion extends Container {
             if (this.scene) {
                 this.scene.sys.updateList.remove(sprite);
             }
-        }
-
-        if (this.scene) {
-            this.scene.game.events.removeListener('step', this.stepListener);
         }
 
         super.destroy();
