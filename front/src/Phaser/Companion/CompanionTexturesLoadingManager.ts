@@ -1,14 +1,16 @@
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 import { COMPANION_RESOURCES, CompanionResourceDescriptionInterface } from "./CompanionTextures";
 
-export const loadAll = (loader: LoaderPlugin): CompanionResourceDescriptionInterface[] => {
-    const resources = COMPANION_RESOURCES;
+export const loadAll = (loader: LoaderPlugin): Promise<CompanionResourceDescriptionInterface[]> => {
+    const promises: Promise<string>[] = [];
 
-    resources.forEach((resource: CompanionResourceDescriptionInterface) => {
-        loader.spritesheet(resource.name, resource.img, { frameWidth: 32, frameHeight: 32, endFrame: 12 });
+    COMPANION_RESOURCES.forEach((resource: CompanionResourceDescriptionInterface) => {
+        promises.push(lazyLoadResource(loader, resource.name));
     });
 
-    return resources;
+    return Promise.all(promises).then(() => {
+        return COMPANION_RESOURCES;
+    });
 }
 
 export const lazyLoadResource = (loader: LoaderPlugin, name: string): Promise<string> => {

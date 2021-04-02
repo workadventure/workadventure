@@ -5,6 +5,7 @@ import {MenuScene, MenuSceneName} from "../Menu/MenuScene";
 import {HelpCameraSettingsScene, HelpCameraSettingsSceneName} from "../Menu/HelpCameraSettingsScene";
 import {LoginSceneName} from "../Login/LoginScene";
 import {SelectCharacterSceneName} from "../Login/SelectCharacterScene";
+import {SelectCompanionSceneName} from "../Login/SelectCompanionScene";
 import {EnableCameraSceneName} from "../Login/EnableCameraScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 
@@ -39,6 +40,8 @@ export class GameManager {
             return LoginSceneName;
         } else if (!this.characterLayers) {
             return SelectCharacterSceneName;
+        } else if (!localUserStore.wasCompanionSet()) {
+            return SelectCompanionSceneName;
         } else {
             return EnableCameraSceneName;
         }
@@ -63,6 +66,11 @@ export class GameManager {
             throw 'characterLayers are not set';
         }
         return this.characterLayers;
+    }
+
+    
+    setCompanion(companion: string|null): void {
+        this.companion = companion;
     }
 
     getCompanion(): string|null {

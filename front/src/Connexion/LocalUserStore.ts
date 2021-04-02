@@ -48,11 +48,14 @@ class LocalUserStore {
         return JSON.parse(localStorage.getItem(characterLayersKey) || "null");
     }
 
-    setCompanion(companion: string): void {
-        localStorage.setItem(companionKey, companion);
+    setCompanion(companion: string|null): void {
+        return localStorage.setItem(companionKey, JSON.stringify(companion));
     }
     getCompanion(): string|null {
-        return localStorage.getItem(companionKey);
+        return JSON.parse(localStorage.getItem(companionKey) || "null");
+    }
+    wasCompanionSet(): boolean {
+        return localStorage.getItem(companionKey) ? true : false;
     }
 
     setGameQualityValue(value: number): void {
