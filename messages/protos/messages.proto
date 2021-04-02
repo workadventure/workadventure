@@ -36,6 +36,10 @@ message CharacterLayerMessage {
   string name = 2;
 }
 
+message Companion {
+  string name = 1;
+}
+
 /*********** CLIENT TO SERVER MESSAGES *************/
 
 message PingMessage {
@@ -141,6 +145,7 @@ message UserJoinedMessage {
   string name = 2;
   repeated CharacterLayerMessage characterLayers = 3;
   PositionMessage position = 4;
+  Companion companion = 5;
 }
 
 message UserLeftMessage {
@@ -243,6 +248,7 @@ message JoinRoomMessage {
   string roomId = 5;
   repeated string tag = 6;
   string IPAddress = 7;
+  Companion companion = 8;
 }
 
 message UserJoinedZoneMessage {
@@ -251,6 +257,7 @@ message UserJoinedZoneMessage {
   repeated CharacterLayerMessage characterLayers = 3;
   PositionMessage position = 4;
   Zone fromZone = 5;
+  Companion companion = 6;
 }
 
 message UserLeftZoneMessage {

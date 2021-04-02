@@ -6,4 +6,5 @@ export interface AddPlayerInterface {
     name: string;
     characterLayers: BodyResourceDescriptionInterface[];
     position: PointInterface;
+    companion: string|null;
 }

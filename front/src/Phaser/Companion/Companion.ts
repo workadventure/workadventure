@@ -22,11 +22,7 @@ export class Companion extends Container {
     private direction: PlayerAnimationDirections;
     private animationType: PlayerAnimationTypes;
 
-    constructor(
-        scene: Phaser.Scene,
-        x: number,
-        y: number
-        ) {
+    constructor(scene: Phaser.Scene, x: number, y: number, name: string) {
         super(scene, x + 8, y + 8);
             
         this.sprites = new Map<string, Sprite>();
@@ -38,11 +34,7 @@ export class Companion extends Container {
         this.direction = PlayerAnimationDirections.Down;
         this.animationType = PlayerAnimationTypes.Idle;
 
-        // select random animal
-        const animal = ["dog1", "dog2", "dog3", "cat1", "cat2", "cat3"];
-        const random = Math.floor(Math.random() * animal.length);
-
-        this.companionName = animal[random];
+        this.companionName = name;
 
         lazyLoadResource(this.scene.load, this.companionName).then(resource => {
             this.addResource(resource);
@@ -59,14 +51,16 @@ export class Companion extends Container {
 
         this.setDepth(-1);
 
-        scene.add.existing(this);
+        this.scene.events.addListener('update', this.step, this);
+
+        this.scene.add.existing(this);
     }
 
     public setTarget(x: number, y: number, direction: PlayerAnimationDirections) {
         this.target = { x, y, direction };
     }
 
-    public step(delta: number) {
+    public step(time: number, delta: number) {
         if (typeof this.target === 'undefined') return;
 
         this.delta += delta;
@@ -215,6 +209,8 @@ export class Companion extends Container {
                 this.scene.sys.updateList.remove(sprite);
             }
         }
+
+        this.scene.events.removeListener('update', this.step, this);
 
         super.destroy();
     }

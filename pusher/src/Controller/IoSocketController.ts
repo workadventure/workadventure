@@ -12,7 +12,7 @@ import {
     WebRtcSignalToServerMessage,
     PlayGlobalMessage,
     ReportPlayerMessage,
-    QueryJitsiJwtMessage, SendUserMessage, ServerToClientMessage
+    QueryJitsiJwtMessage, SendUserMessage, ServerToClientMessage, Companion
 } from "../Messages/generated/messages_pb";
 import {UserMovesMessage} from "../Messages/generated/messages_pb";
 import {TemplatedApp} from "uWebSockets.js"
@@ -138,6 +138,14 @@ export class IoSocketController {
                         const left = Number(query.left);
                         const right = Number(query.right);
                         const name = query.name;
+
+                        let companion: Companion|undefined = undefined;
+
+                        if (typeof query.companion === 'string') {
+                            companion = new Companion();
+                            companion.setName(query.companion);
+                        }
+
                         if (typeof name !== 'string') {
                             throw new Error('Expecting name');
                         }
@@ -221,6 +229,7 @@ export class IoSocketController {
                                 IPAddress,
                                 roomId,
                                 name,
+                                companion,
                                 characterLayers: characterLayerObjs,
                                 messages: memberMessages,
                                 tags: memberTags,
@@ -350,6 +359,7 @@ export class IoSocketController {
         client.tags = ws.tags;
         client.textures = ws.textures;
         client.characterLayers = ws.characterLayers;
+        client.companion = ws.companion;
         client.roomId = ws.roomId;
         client.listenedZones = new Set<Zone>();
         return client;

@@ -66,7 +66,7 @@ export class RoomConnection implements RoomConnection {
      * @param token A JWT token containing the UUID of the user
      * @param roomId The ID of the room in the form "_/[instance]/[map_url]" or "@/[org]/[event]/[map]"
      */
-    public constructor(token: string|null, roomId: string, name: string, characterLayers: string[], position: PositionInterface, viewport: ViewportInterface) {
+    public constructor(token: string|null, roomId: string, name: string, characterLayers: string[], position: PositionInterface, viewport: ViewportInterface, companion: string|null) {
         let url = API_URL.replace('http://', 'ws://').replace('https://', 'wss://');
         url += '/room';
         url += '?roomId='+(roomId ?encodeURIComponent(roomId):'');
@@ -81,6 +81,10 @@ export class RoomConnection implements RoomConnection {
         url += '&bottom='+Math.floor(viewport.bottom);
         url += '&left='+Math.floor(viewport.left);
         url += '&right='+Math.floor(viewport.right);
+        
+        if (typeof companion === 'string') {
+            url += '&companion='+encodeURIComponent(companion);
+        }
 
         if (RoomConnection.websocketFactory) {
             this.socket = RoomConnection.websocketFactory(url);
@@ -316,11 +320,14 @@ export class RoomConnection implements RoomConnection {
             }
         })
 
+        const companion = message.getCompanion();
+
         return {
             userId: message.getUserid(),
             name: message.getName(),
             characterLayers,
-            position: ProtobufClientUtils.toPointInterface(position)
+            position: ProtobufClientUtils.toPointInterface(position),
+            companion: companion ? companion.getName() : null
         }
     }
 

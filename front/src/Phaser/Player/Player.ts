@@ -21,14 +21,17 @@ export class Player extends Character implements CurrentGamerInterface {
         texturesPromise: Promise<string[]>,
         direction: PlayerAnimationDirections,
         moving: boolean,
-        private userInputManager: UserInputManager
+        private userInputManager: UserInputManager,
+        companion: string|null
     ) {
         super(Scene, x, y, texturesPromise, name, direction, moving, 1);
 
         //the current player model should be push away by other players to prevent conflict
         this.getBody().setImmovable(false);
 
-        this.addCompanion();
+        if (typeof companion === 'string') {
+            this.addCompanion(companion);
+        }
     }
 
     moveUser(delta: number): void {
@@ -59,10 +62,6 @@ export class Player extends Character implements CurrentGamerInterface {
             x = moveAmount;
             direction = PlayerAnimationDirections.Right;
             moving = true;
-        }
-
-        if (this.companion) {
-            this.companion.step(delta);
         }
 
         if (x !== 0 || y !== 0) {

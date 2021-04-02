@@ -17,12 +17,17 @@ export class RemotePlayer extends Character {
         name: string,
         texturesPromise: Promise<string[]>,
         direction: PlayerAnimationDirections,
-        moving: boolean
+        moving: boolean,
+        companion: string|null
     ) {
         super(Scene, x, y, texturesPromise, name, direction, moving, 1);
-
+        
         //set data
         this.userId = userId;
+
+        if (typeof companion === 'string') {
+            this.addCompanion(companion);
+        }
     }
 
     updatePosition(position: PointInterface): void {

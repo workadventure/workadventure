@@ -4,6 +4,7 @@ const playerNameKey =           'playerName';
 const selectedPlayerKey =       'selectedPlayer';
 const customCursorPositionKey = 'customCursorPosition';
 const characterLayersKey =      'characterLayers';
+const companionKey =            'companion';
 const gameQualityKey =          'gameQuality';
 const videoQualityKey =         'videoQuality';
 const audioPlayerVolumeKey =    'audioVolume';
@@ -45,6 +46,13 @@ class LocalUserStore {
     }
     getCharacterLayers(): string[]|null {
         return JSON.parse(localStorage.getItem(characterLayersKey) || "null");
+    }
+
+    setCompanion(companion: string): void {
+        localStorage.setItem(companionKey, companion);
+    }
+    getCompanion(): string|null {
+        return localStorage.getItem(companionKey);
     }
 
     setGameQualityValue(value: number): void {

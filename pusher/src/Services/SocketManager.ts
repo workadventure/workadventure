@@ -153,6 +153,8 @@ export class SocketManager implements ZoneEventListener {
             joinRoomMessage.setName(client.name);
             joinRoomMessage.setPositionmessage(ProtobufUtils.toPositionMessage(client.position));
             joinRoomMessage.setTagList(client.tags);
+            joinRoomMessage.setCompanion(client.companion);
+
             for (const characterLayer of client.characterLayers) {
                 const characterLayerMessage = new CharacterLayerMessage();
                 characterLayerMessage.setName(characterLayer.name);
