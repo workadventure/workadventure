@@ -23,7 +23,7 @@ export class Companion extends Container {
     private animationType: PlayerAnimationTypes;
 
     constructor(scene: Phaser.Scene, x: number, y: number, name: string) {
-        super(scene, x + 8, y + 8);
+        super(scene, x + 14, y + 4);
             
         this.sprites = new Map<string, Sprite>();
 
@@ -59,7 +59,7 @@ export class Companion extends Container {
     }
 
     public setTarget(x: number, y: number, direction: PlayerAnimationDirections) {
-        this.target = { x, y, direction };
+        this.target = { x, y: y + 4, direction };
     }
 
     public step(time: number, delta: number) {
@@ -76,7 +76,7 @@ export class Companion extends Container {
 
         const distance = Math.pow(xDist, 2) + Math.pow(yDist, 2);
 
-        if (distance < 576) { // 24^2
+        if (distance < 650) {
             this.animationType = PlayerAnimationTypes.Idle;
             this.direction = this.target.direction;
 
@@ -88,7 +88,7 @@ export class Companion extends Container {
             const yDir = yDist / Math.max(Math.abs(yDist), 1);
 
             const speed = 256;
-            this.getBody().setVelocity(Math.min(Math.abs(xDist * 2), speed) * xDir, Math.min(Math.abs(yDist * 2), speed) * yDir);
+            this.getBody().setVelocity(Math.min(Math.abs(xDist * 2.5), speed) * xDir, Math.min(Math.abs(yDist * 2.5), speed) * yDir);
 
             if (Math.abs(xDist) > Math.abs(yDist)) {
                 if (xDist < 0) {
