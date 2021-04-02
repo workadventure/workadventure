@@ -12,6 +12,7 @@ module.exports = {
     devServer: {
         contentBase: './dist',
         host: '0.0.0.0',
+        sockPort: 80,
         disableHostCheck: true,
         historyApiFallback: {
             rewrites: [
@@ -68,19 +69,20 @@ module.exports = {
         new webpack.ProvidePlugin({
             Phaser: 'phaser'
         }),
-        new webpack.EnvironmentPlugin([
-            'API_URL',
-            'UPLOADER_URL',
-            'ADMIN_URL',
-            'DEBUG_MODE',
-            'STUN_SERVER',
-            'TURN_SERVER',
-            'TURN_USER',
-            'TURN_PASSWORD',
-            'JITSI_URL',
-            'JITSI_PRIVATE_MODE',
-            'START_ROOM_URL'
-        ])
+        new webpack.EnvironmentPlugin({
+            'API_URL': null,
+            'PUSHER_URL': undefined,
+            'UPLOADER_URL': null,
+            'ADMIN_URL': null,
+            'DEBUG_MODE': null,
+            'STUN_SERVER': null,
+            'TURN_SERVER': null,
+            'TURN_USER': null,
+            'TURN_PASSWORD': null,
+            'JITSI_URL': null,
+            'JITSI_PRIVATE_MODE': null,
+            'START_ROOM_URL': null
+        })
     ],
 
 };

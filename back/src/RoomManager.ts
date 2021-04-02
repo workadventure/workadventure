@@ -10,7 +10,7 @@ import {
     JoinRoomMessage,
     PlayGlobalMessage,
     PusherToBackMessage,
-    QueryJitsiJwtMessage,
+    QueryJitsiJwtMessage, RefreshRoomPromptMessage,
     ServerToAdminClientMessage,
     ServerToClientMessage,
     SilentMessage,
@@ -191,6 +191,10 @@ const roomManager: IRoomManagerServer = {
     },
     sendWorldFullWarningToRoom(call: ServerUnaryCall<WorldFullWarningToRoomMessage>, callback: sendUnaryData<EmptyMessage>): void {
         socketManager.dispatchWorlFullWarning(call.request.getRoomid());
+        callback(null, new EmptyMessage());
+    },
+    sendRefreshRoomPrompt(call: ServerUnaryCall<RefreshRoomPromptMessage>, callback: sendUnaryData<EmptyMessage>): void {
+        socketManager.dispatchRoomRefresh(call.request.getRoomid());
         callback(null, new EmptyMessage());
     },
 };

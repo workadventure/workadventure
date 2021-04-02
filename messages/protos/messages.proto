@@ -207,6 +207,13 @@ message WorldFullWarningMessage{
 message WorldFullWarningToRoomMessage{
     string roomId = 1;
 }
+message RefreshRoomPromptMessage{
+    string roomId = 1;
+}
+message RefreshRoomMessage{
+    string roomId = 1;
+    int32 versionNumber = 2;
+}
 
 message WorldFullMessage{
 }
@@ -234,6 +241,7 @@ message ServerToClientMessage {
     AdminRoomMessage adminRoomMessage = 14;
     WorldFullWarningMessage worldFullWarningMessage = 15;
     WorldFullMessage worldFullMessage = 16;
+    RefreshRoomMessage refreshRoomMessage = 17; 
   }
 }
 
@@ -402,4 +410,5 @@ service RoomManager {
   rpc ban(BanMessage) returns (EmptyMessage);
   rpc sendAdminMessageToRoom(AdminRoomMessage) returns (EmptyMessage);
   rpc sendWorldFullWarningToRoom(WorldFullWarningToRoomMessage) returns (EmptyMessage);
+  rpc sendRefreshRoomPrompt(RefreshRoomPromptMessage) returns (EmptyMessage);
 }
