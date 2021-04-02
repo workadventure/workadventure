@@ -16,6 +16,7 @@ export class Companion extends Container {
 
     private delta: number;
     private invisible: boolean;
+    private updateListener: Function;
     private target: { x: number, y: number, direction: PlayerAnimationDirections };
 
     private companionName: string;
@@ -53,7 +54,8 @@ export class Companion extends Container {
 
         this.setDepth(-1);
 
-        this.scene.events.addListener('update', this.step, this);
+        this.updateListener = this.step.bind(this);
+        this.scene.events.addListener('update', this.updateListener);
 
         this.scene.add.existing(this);
     }
@@ -213,7 +215,7 @@ export class Companion extends Container {
         }
 
         if (this.scene) {
-            this.scene.events.removeListener('update', this.step, this);
+            this.scene.events.removeListener('update', this.updateListener);
         }
 
         super.destroy();
