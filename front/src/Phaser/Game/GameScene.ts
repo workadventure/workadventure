@@ -61,7 +61,15 @@ import type {
 import type { RoomConnection } from "../../Connexion/RoomConnection";
 import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
-import type { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapObject, ITiledTileSet } from "../Map/ITiledMap";
+import type {
+    ITiledMap,
+    ITiledMapLayer,
+    ITiledMapTileLayer,
+    ITiledMapProperty,
+    ITiledMapObject,
+    ITiledTileSet,
+} from "../Map/ITiledMap";
+import { InteractiveLayer } from "../Map/InteractiveLayer";
 import type { AddPlayerInterface } from "./AddPlayerInterface";
 import { CameraManager, CameraManagerEvent, CameraManagerEventCameraUpdateData } from "./CameraManager";
 import type { HasPlayerMovedEvent } from "../../Api/Events/HasPlayerMovedEvent";
@@ -149,6 +157,8 @@ export class GameScene extends DirtyScene {
     MapPlayers!: Phaser.Physics.Arcade.Group;
     MapPlayersByKey: MapStore<number, RemotePlayer> = new MapStore<number, RemotePlayer>();
     Map!: Phaser.Tilemaps.Tilemap;
+    Layers!: Array<Phaser.Tilemaps.TilemapLayer>;
+    interactiveLayers!: Array<InteractiveLayer>;
     Objects!: Array<Phaser.Physics.Arcade.Sprite>;
     mapFile!: ITiledMap;
     animatedTiles!: AnimatedTiles;
@@ -484,8 +494,14 @@ export class GameScene extends DirtyScene {
 
         //add layer on map
         this.gameMap = new GameMap(this.mapFile, this.Map, this.Terrains);
+        this.interactiveLayers = new Array<InteractiveLayer>();
+        const depth = -2;
         for (const layer of this.gameMap.flatLayers) {
             if (layer.type === "tilelayer") {
+                if (this.isLayerInteractive(layer)) {
+                    this.addInteractiveLayer(this.createInteractiveLayer(layer).setDepth(depth));
+                    continue;
+                }
                 const exitSceneUrl = this.getExitSceneUrl(layer);
                 if (exitSceneUrl !== undefined) {
                     this.loadNextGame(
@@ -1644,6 +1660,10 @@ ${escapedMessage}
         return this.getProperty(layer, GameMapProperties.EXIT_URL) as string | undefined;
     }
 
+    private isLayerInteractive(layer: ITiledMapLayer): boolean {
+        return Boolean(this.getProperty(layer, "interactive"));
+    }
+
     /**
      * @deprecated the map property exitSceneUrl is deprecated
      */
@@ -1704,6 +1724,14 @@ ${escapedMessage}
             ...this.actionableItems.values(),
         ]);
         this.activatablesManager.deduceSelectedActivatableObjectByDistance();
+    }
+
+    private createInteractiveLayer(layer: ITiledMapTileLayer): InteractiveLayer {
+        return new InteractiveLayer(this, layer);
+    }
+
+    private addInteractiveLayer(layer: InteractiveLayer): void {
+        this.interactiveLayers.push(layer);
     }
 
     private createCollisionWithPlayer() {
