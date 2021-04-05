@@ -1,5 +1,6 @@
 import {ADMIN_API_TOKEN, ADMIN_API_URL} from "../Enum/EnvironmentVariable";
 import Axios from "axios";
+import {GameRoomPolicyTypes} from "_Model/PusherRoom";
 
 export interface AdminApiData {
     organizationSlug: string
@@ -11,6 +12,13 @@ export interface AdminApiData {
     userUuid: string
     messages?: unknown[],
     textures: CharacterTexture[]
+}
+
+export interface MapDetailsData {
+    roomSlug: string,
+    mapUrl: string,
+    policy_type: GameRoomPolicyTypes,
+    tags: string[],
 }
 
 export interface AdminBannedData {
@@ -35,9 +43,9 @@ export interface FetchMemberDataByUuidResponse {
 
 class AdminApi {
 
-    async fetchMapDetails(organizationSlug: string, worldSlug: string, roomSlug: string|undefined): Promise<AdminApiData> {
+    async fetchMapDetails(organizationSlug: string, worldSlug: string, roomSlug: string|undefined): Promise<MapDetailsData> {
         if (!ADMIN_API_URL) {
-            return Promise.reject('No admin backoffice set!');
+            return Promise.reject(new Error('No admin backoffice set!'));
         }
 
         const params: { organizationSlug: string, worldSlug: string, roomSlug?: string } = {
@@ -60,7 +68,7 @@ class AdminApi {
 
     async fetchMemberDataByUuid(uuid: string, roomId: string): Promise<FetchMemberDataByUuidResponse> {
         if (!ADMIN_API_URL) {
-            return Promise.reject('No admin backoffice set!');
+            return Promise.reject(new Error('No admin backoffice set!'));
         }
         const res = await Axios.get(ADMIN_API_URL+'/api/room/access',
             { params: {uuid, roomId}, headers: {"Authorization" : `${ADMIN_API_TOKEN}`} }
@@ -70,7 +78,7 @@ class AdminApi {
 
     async fetchMemberDataByToken(organizationMemberToken: string): Promise<AdminApiData> {
         if (!ADMIN_API_URL) {
-            return Promise.reject('No admin backoffice set!');
+            return Promise.reject(new Error('No admin backoffice set!'));
         }
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
         const res = await Axios.get(ADMIN_API_URL+'/api/login-url/'+organizationMemberToken,
@@ -81,7 +89,7 @@ class AdminApi {
 
     async fetchCheckUserByToken(organizationMemberToken: string): Promise<AdminApiData> {
         if (!ADMIN_API_URL) {
-            return Promise.reject('No admin backoffice set!');
+            return Promise.reject(new Error('No admin backoffice set!'));
         }
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
         const res = await Axios.get(ADMIN_API_URL+'/api/check-user/'+organizationMemberToken,
@@ -104,7 +112,7 @@ class AdminApi {
 
     async verifyBanUser(organizationMemberToken: string, ipAddress: string, organization: string, world: string): Promise<AdminBannedData> {
         if (!ADMIN_API_URL) {
-            return Promise.reject('No admin backoffice set!');
+            return Promise.reject(new Error('No admin backoffice set!'));
         }
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
         return Axios.get(ADMIN_API_URL + '/api/check-moderate-user/'+organization+'/'+world+'?ipAddress='+ipAddress+'&token='+organizationMemberToken,

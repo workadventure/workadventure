@@ -1,69 +1,68 @@
 import {LocalUser} from "./LocalUser";
 
-const characterLayersKey = 'characterLayers';
-const gameQualityKey = 'gameQuality';
-const videoQualityKey = 'videoQuality';
+const playerNameKey =           'playerName';
+const selectedPlayerKey =       'selectedPlayer';
+const customCursorPositionKey = 'customCursorPosition';
+const characterLayersKey =      'characterLayers';
+const gameQualityKey =          'gameQuality';
+const videoQualityKey =         'videoQuality';
+const audioPlayerVolumeKey =    'audioVolume';
+const audioPlayerMuteKey =      'audioMute';
+const helpCameraSettingsShown =      'helpCameraSettingsShown';
 const joystickKey = 'showJoystick';
 
-
-const storage = window.localStorage
-
-//todo: add localstorage fallback
 class LocalUserStore {
 
     saveUser(localUser: LocalUser) {
-        storage.setItem('localUser', JSON.stringify(localUser));
+        localStorage.setItem('localUser', JSON.stringify(localUser));
     }
     getLocalUser(): LocalUser|null {
-        const data = storage.getItem('localUser');
+        const data = localStorage.getItem('localUser');
         return data ? JSON.parse(data) : null;
     }
 
     setName(name:string): void {
-        storage.setItem('playerName', name);
+        localStorage.setItem(playerNameKey, name);
     }
     getName(): string {
-        return storage.getItem('playerName') ?? '';
+        return localStorage.getItem(playerNameKey) || '';
     }
 
     setPlayerCharacterIndex(playerCharacterIndex: number): void {
-        storage.setItem('selectedPlayer', ''+playerCharacterIndex);
+        localStorage.setItem(selectedPlayerKey, ''+playerCharacterIndex);
     }
     getPlayerCharacterIndex(): number {
-        return parseInt(storage.getItem('selectedPlayer') || '');
+        return parseInt(localStorage.getItem(selectedPlayerKey) || '');
     }
 
     setCustomCursorPosition(activeRow:number, selectedLayers: number[]): void {
-        storage.setItem('customCursorPosition', JSON.stringify({activeRow, selectedLayers}));
+        localStorage.setItem(customCursorPositionKey, JSON.stringify({activeRow, selectedLayers}));
     }
     getCustomCursorPosition(): {activeRow:number, selectedLayers:number[]}|null  {
-        return JSON.parse(storage.getItem('customCursorPosition') || "null");
+        return JSON.parse(localStorage.getItem(customCursorPositionKey) || "null");
     }
 
     setCharacterLayers(layers: string[]): void {
-        storage.setItem(characterLayersKey, JSON.stringify(layers));
+        localStorage.setItem(characterLayersKey, JSON.stringify(layers));
     }
     getCharacterLayers(): string[]|null {
-        return JSON.parse(storage.getItem(characterLayersKey) || "null");
+        return JSON.parse(localStorage.getItem(characterLayersKey) || "null");
     }
 
-    getGameQualityValue(): number {
-        return parseInt(storage.getItem(gameQualityKey) || '') || 60;
-    }
     setGameQualityValue(value: number): void {
-        storage.setItem(gameQualityKey, '' + value);
+        localStorage.setItem(gameQualityKey, '' + value);
+    }
+    getGameQualityValue(): number {
+        return parseInt(localStorage.getItem(gameQualityKey) || '60');
     }
 
-    getVideoQualityValue(): number {
-        return parseInt(storage.getItem(videoQualityKey) || '') || 20;
-    }
     setVideoQualityValue(value: number): void {
-        storage.setItem(videoQualityKey, '' + value);
+        localStorage.setItem(videoQualityKey, '' + value);
     }
 
     getJoystick(): boolean {
         try {
-            const joystickVisible = storage.getItem(joystickKey)
+            const joystickVisible = localStorage.getItem(joystickKey)
             if (joystickVisible) {
                 const joystick = JSON.parse(joystickVisible)
                 return joystick ?? false
@@ -76,7 +75,31 @@ class LocalUserStore {
     }
 
     setJoystick(value: boolean): void {
-        storage.setItem(joystickKey, value.toString())
+        localStorage.setItem(joystickKey, value.toString())
+    }
+    getVideoQualityValue(): number {
+        return parseInt(localStorage.getItem(videoQualityKey) || '20');
+    }
+
+    setAudioPlayerVolume(value: number): void {
+        localStorage.setItem(audioPlayerVolumeKey, '' + value);
+    }
+    getAudioPlayerVolume(): number {
+        return parseFloat(localStorage.getItem(audioPlayerVolumeKey) || '1');
+    }
+
+    setAudioPlayerMuted(value: boolean): void {
+        localStorage.setItem(audioPlayerMuteKey, value.toString());
+    }
+    getAudioPlayerMuted(): boolean {
+        return localStorage.getItem(audioPlayerMuteKey) === 'true';
+    }
+
+    setHelpCameraSettingsShown(): void {
+        localStorage.setItem(helpCameraSettingsShown, '1');
+    }
+    getHelpCameraSettingsShown(): boolean {
+        return localStorage.getItem(helpCameraSettingsShown) === '1';
     }
 }
 

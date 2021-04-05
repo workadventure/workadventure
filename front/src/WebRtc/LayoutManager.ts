@@ -31,6 +31,9 @@ export const TRIGGER_JITSI_PROPERTIES = 'jitsiTrigger';
 export const WEBSITE_MESSAGE_PROPERTIES = 'openWebsiteTriggerMessage';
 export const JITSI_MESSAGE_PROPERTIES = 'jitsiTriggerMessage';
 
+export const AUDIO_VOLUME_PROPERTY = 'audioVolume';
+export const AUDIO_LOOP_PROPERTY = 'audioLoop';
+
 /**
  * This class is in charge of the video-conference layout.
  * It receives positioning requests for videos and does its best to place them on the screen depending on the active layout mode.

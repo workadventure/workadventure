@@ -1,0 +1,28 @@
+License
+-------
+
+CC-BY-SA 3.0:
+- http://creativecommons.org/licenses/by-sa/3.0/
+GNU GPL 3.0:
+- http://www.gnu.org/licenses/gpl-3.0.html
+
+If you need to figure out exactly who made what please see the Liberated Pixel Cup entries.
+
+Liberated Pixel Cup Assets:
+http://opengameart.org/lpc-art-entries
+
+LPC participants:
+----------------
+
+Johann CHARLOT
+	Homepage  http://poufpoufproduction.fr
+	Email     johannc@poufpoufproduction.fr
+- Shoot'em up graphic kit
+
+
+
+Recolored Leaves
+
+William Thompson
+	Email: william.thompsonj@gmail.com
+	OpenGameArt.org: williamthompsonj

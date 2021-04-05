@@ -42,7 +42,7 @@ export class ActiveEventList {
 export class UserInputManager {
     private KeysCode!: UserInputManagerDatum[];
     private Scene: GameScene;
-
+    private isInputDisabled : boolean;
     private joystick : IVirtualJoystick;
     private joystickEvents = new ActiveEventList();
     private joystickForceThreshold = 60;
@@ -52,6 +52,7 @@ export class UserInputManager {
     constructor(Scene: GameScene, virtualJoystick: IVirtualJoystick) {
         this.Scene = Scene;
         this.initKeyBoardEvent();
+        this.isInputDisabled = false;
         this.joystick = virtualJoystick;
         this.joystick.on("update", () => {
             this.joystickForceAccuX = this.joystick.forceX ? this.joystickForceAccuX : 0;
@@ -103,12 +104,20 @@ export class UserInputManager {
         this.Scene.input.keyboard.removeAllListeners();
     }
 
-    clearAllKeys(){
+    disableControls(){
         this.Scene.input.keyboard.removeAllKeys();
+        this.isInputDisabled = true;
     }
 
+    restoreControls(){
+        this.initKeyBoardEvent();
+        this.isInputDisabled = false;
+    }
     getEventListForGameTick(): ActiveEventList {
         const eventsMap = new ActiveEventList();
+        if (this.isInputDisabled) {
+            return eventsMap;
+        }
         this.joystickEvents.forEach((value, key) => {
             if (value) {
                 switch (key) {
@@ -136,6 +145,7 @@ export class UserInputManager {
             if (d.keyInstance.isDown) {
                 eventsMap.set(d.event, true);
             }
+
         });
         return eventsMap;
     }

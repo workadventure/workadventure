@@ -197,6 +197,22 @@ message SendUserMessage{
   string message = 2;
 }
 
+message WorldFullWarningMessage{
+}
+message WorldFullWarningToRoomMessage{
+    string roomId = 1;
+}
+message RefreshRoomPromptMessage{
+    string roomId = 1;
+}
+message RefreshRoomMessage{
+    string roomId = 1;
+    int32 versionNumber = 2;
+}
+
+message WorldFullMessage{
+}
+
 message BanUserMessage{
   string type = 1;
   string message = 2;
@@ -218,6 +234,9 @@ message ServerToClientMessage {
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
     AdminRoomMessage adminRoomMessage = 14;
+    WorldFullWarningMessage worldFullWarningMessage = 15;
+    WorldFullMessage worldFullMessage = 16;
+    RefreshRoomMessage refreshRoomMessage = 17; 
   }
 }
 
@@ -350,6 +369,7 @@ message AdminMessage {
   string message = 1;
   string recipientUuid = 2;
   string roomId = 3;
+  string type = 4;
 }
 
 // A message sent by an administrator to everyone in a specific room
@@ -366,6 +386,8 @@ message AdminGlobalMessage {
 message BanMessage {
   string recipientUuid = 1;
   string roomId = 2;
+  string type = 3;
+  string message = 4;
 }
 
 message EmptyMessage {
@@ -380,4 +402,6 @@ service RoomManager {
   rpc sendGlobalAdminMessage(AdminGlobalMessage) returns (EmptyMessage);
   rpc ban(BanMessage) returns (EmptyMessage);
   rpc sendAdminMessageToRoom(AdminRoomMessage) returns (EmptyMessage);
+  rpc sendWorldFullWarningToRoom(WorldFullWarningToRoomMessage) returns (EmptyMessage);
+  rpc sendRefreshRoomPrompt(RefreshRoomPromptMessage) returns (EmptyMessage);
 }
