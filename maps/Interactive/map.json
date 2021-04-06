@@ -223,14 +223,16 @@
                          "tileid":0
                         }, 
                         {
-                         "duration":1500,
-                         "tileid":1
-                        }, 
-                        {
                          "duration":50,
-                         "tileid":0
+                         "tileid":1
                         }],
-                 "id":0
+                 "id":0,
+                 "properties":[
+                        {
+                         "name":"reverseInactive",
+                         "type":"bool",
+                         "value":true
+                        }]
                 }],
          "tilewidth":32
         }],

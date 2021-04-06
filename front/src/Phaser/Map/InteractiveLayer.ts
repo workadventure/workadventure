@@ -3,14 +3,18 @@ import Container = Phaser.GameObjects.Container;
 import { ITiledMapLayer, ITiledMapLayerProperty } from "./ITiledMap";
 import { GameScene } from "../Game/GameScene";
 
+interface SpriteEntity {
+    animation: string|false;
+    sprite: Sprite;
+    state: boolean;
+    properties: { reverseInactive: boolean; } | undefined;
+}
+
 export class InteractiveLayer extends Container {
+    private lastUpdate: number;
     private allActive: boolean;
     private layer: ITiledMapLayer;
-    private spritesCollection: Array<{
-        animation: string|false;
-        sprite: Sprite;
-        state: boolean;
-    }>;
+    private spritesCollection: Array<SpriteEntity>;
     
     private updateListener: Function;
 
@@ -19,6 +23,7 @@ export class InteractiveLayer extends Container {
 
         super(scene, x, y);
 
+        this.lastUpdate = 0;
         this.allActive = false;
         this.layer = layer;
         this.spritesCollection = [];
@@ -32,7 +37,14 @@ export class InteractiveLayer extends Container {
         this.scene.add.existing(this);
     }
 
-    public update(): void {
+    public update(time: number, delta: number): void {
+        // running this function max. 15 times per second should be enough
+        if (this.lastUpdate + (1000 / 15) > time) {
+            return;
+        }
+
+        this.lastUpdate = time;
+
         const scene = this.getScene();
 
         const radius = this.getInteractionRadius();
@@ -54,19 +66,24 @@ export class InteractiveLayer extends Container {
                 && sprite.y + sprite.height * (r + 1) >= y  // bottom
             ) {
                 if (!entity.state) {
-                    if (entity.animation !== false) {
+                    if (entity.animation === false) {
+                        entity.state = true;
+                    } else if (!sprite.anims.isPlaying) {
                         sprite.play(entity.animation, true);
+                        entity.state = true;
                     }
-
-                    entity.state = true;
                 }
 
                 foundActive = true;
                 if (radius == -1) {
                     break;
                 }
-            } else if (radius != -1) {
+            } else if (radius != -1 && entity.state && !sprite.anims.isPlaying) {
                 entity.state = false;
+                
+                if (entity.animation !== false && this.shouldReverse(entity)) {
+                    sprite.anims.playReverse(entity.animation);
+                }
             }
         }
 
@@ -89,6 +106,12 @@ export class InteractiveLayer extends Container {
                 for (const i in this.spritesCollection) {
                     const entity = this.spritesCollection[i];
                     entity.state = false;
+
+                    if (entity.animation !== false && this.shouldReverse(entity)) {
+                        const sprite = entity.sprite;
+                        sprite.anims.pause();
+                        sprite.anims.playReverse(entity.animation);
+                    }
                 }
 
                 this.allActive = false;
@@ -171,7 +194,8 @@ export class InteractiveLayer extends Container {
                     this.spritesCollection.push({
                         animation: animation === null ? false : key,
                         sprite,
-                        state: false
+                        state: false,
+                        properties: tileset.getTileProperties(index) as any
                     });
                 }
             }
@@ -228,12 +252,16 @@ export class InteractiveLayer extends Container {
             return undefined;
         }
         
-        const prop = properties.find((property: ITiledMapLayerProperty) => property.name.toLowerCase() === name.toLowerCase());
+        const prop = properties.find((property: ITiledMapLayerProperty) => property.name === name);
 
         if (typeof prop === "undefined") {
             return undefined;
         }
 
         return prop.value;
+    }
+
+    private shouldReverse(entity: SpriteEntity): boolean {
+        return typeof entity.properties !== "undefined" && entity.properties["reverseInactive"]
     }
 }
