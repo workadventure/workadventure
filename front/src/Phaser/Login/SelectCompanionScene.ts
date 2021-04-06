@@ -24,8 +24,6 @@ export class SelectCompanionScene extends ResizableScene {
     private readonly nbCharactersPerRow = 7;
 
     private selectedRectangle!: Rectangle;
-    private selectedRectangleXPos = 0;
-    private selectedRectangleYPos = 0;
     
     private selectedCompanion!: Phaser.Physics.Arcade.Sprite;
     private companions: Array<Phaser.Physics.Arcade.Sprite> = new Array<Phaser.Physics.Arcade.Sprite>();
@@ -70,75 +68,84 @@ export class SelectCompanionScene extends ResizableScene {
         this.add.existing(this.logo);
 
         // input events
-        this.input.keyboard.on('keyup-ENTER', () => {
-            return this.nextScene();
-        });
+        this.input.keyboard.on('keyup-ENTER', this.nextScene.bind(this));
 
-        this.input.keyboard.on('keydown-RIGHT', () => {
-            if(this.selectedRectangleYPos * this.nbCharactersPerRow + (this.selectedRectangleXPos + 2))
-            if (
-                this.selectedRectangleXPos < this.nbCharactersPerRow - 1
-                && ((this.selectedRectangleYPos * this.nbCharactersPerRow) + (this.selectedRectangleXPos + 1) + 1) <= this.companionModels.length
-            ) {
-                this.selectedRectangleXPos++;
-            }
-            this.updateSelectedCompanion();
-        });
-
-        this.input.keyboard.on('keydown-LEFT', () => {
-            if (
-                this.selectedRectangleXPos > 0
-                && ((this.selectedRectangleYPos * this.nbCharactersPerRow) + (this.selectedRectangleXPos - 1) + 1) <= this.companionModels.length
-            ) {
-                this.selectedRectangleXPos--;
-            }
-            this.updateSelectedCompanion();
-        });
-
-        this.input.keyboard.on('keydown-DOWN', () => {
-            if (
-                this.selectedRectangleYPos + 1 < Math.ceil(this.companionModels.length / this.nbCharactersPerRow)
-                && (
-                    (((this.selectedRectangleYPos + 1) * this.nbCharactersPerRow) + this.selectedRectangleXPos + 1) <= this.companionModels.length // check if companion isn't empty
-                    || (this.selectedRectangleYPos + 1) === Math.ceil(this.companionModels.length / this.nbCharactersPerRow) // check if is custom rectangle
-                )
-            ) {
-                this.selectedRectangleYPos++;
-            }
-            this.updateSelectedCompanion();
-        });
-
-        this.input.keyboard.on('keydown-UP', () => {
-            if (
-                this.selectedRectangleYPos > 0
-                && (((this.selectedRectangleYPos - 1) * this.nbCharactersPerRow) + this.selectedRectangleXPos + 1) <= this.companionModels.length
-            ) {
-                this.selectedRectangleYPos--;
-            }
-            this.updateSelectedCompanion();
-        });
+        this.input.keyboard.on('keydown-RIGHT', this.selectNext.bind(this));
+        this.input.keyboard.on('keydown-LEFT', this.selectPrevious.bind(this));
+        this.input.keyboard.on('keydown-DOWN', this.jumpToNextRow.bind(this));
+        this.input.keyboard.on('keydown-UP', this.jumpToPreviousRow.bind(this));
 
         this.createCurrentCompanion();
-
-        const companionNumber = this.getCompanionIndex();
-
-        this.selectedRectangleXPos = companionNumber % this.nbCharactersPerRow;
-        this.selectedRectangleYPos = Math.floor(companionNumber / this.nbCharactersPerRow);
-
-        this.updateSelectedCompanion();
+        this.selectCompanion(this.getCompanionIndex());
     }
 
     update(time: number, delta: number): void {
         this.pressReturnField.setVisible(!!(Math.floor(time / 500) % 2));
     }
 
-    private nextScene(): void {
-        // store companion
-        const companionNumber = this.selectedRectangleXPos + this.selectedRectangleYPos * this.nbCharactersPerRow;
-        const model = this.companionModels[companionNumber];
+    private jumpToPreviousRow(): void {
+        const index = this.companions.indexOf(this.selectedCompanion) - this.nbCharactersPerRow;
+        if (index >= 0) {
+            this.selectCompanion(index);  
+        }
+    }
+
+    private jumpToNextRow(): void {
+        const index = this.companions.indexOf(this.selectedCompanion) + this.nbCharactersPerRow;
+        if (index < this.companions.length) {
+            this.selectCompanion(index);  
+        }
+    }
+
+    private selectPrevious(): void {
+        const index = this.companions.indexOf(this.selectedCompanion);
+        this.selectCompanion(index - 1);  
+    }
+
+    private selectNext(): void {
+        const index = this.companions.indexOf(this.selectedCompanion);
+        this.selectCompanion(index + 1);  
+    }
+
+    private selectCompanion(index?: number): void {
+        if (typeof index === 'undefined') {
+            index = this.companions.indexOf(this.selectedCompanion);
+        }
+
+        // make sure index is inside possible range
+        index = Math.min(this.companions.length - 1, Math.max(0, index));
+
+        if (this.selectedCompanion === this.companions[index]) {
+            return;
+        }
+
+        this.selectedCompanion.anims.pause();
+        this.selectedCompanion = this.companions[index];
+
+        this.selectedRectangle.setVisible(true);
+        this.selectedRectangle.setX(this.selectedCompanion.x);
+        this.selectedRectangle.setY(this.selectedCompanion.y);
+        this.selectedRectangle.setSize(32, 32);
+
+        const model = this.companionModels[index];
+
+        if (model !== null) {
+            this.selectedCompanion.anims.play(model.name);
+        }
+    }
+
+    private storeCompanionSelection(): string|null {
+        const index = this.companions.indexOf(this.selectedCompanion);
+        const model = this.companionModels[index];
         const companion = model === null ? null : model.name;
 
         localUserStore.setCompanion(companion);
+
+        return companion;
+    }
+
+    private nextScene(): void {
+        const companion = this.storeCompanionSelection();
 
         // next scene
         this.scene.stop(SelectCompanionSceneName);
@@ -177,9 +184,7 @@ export class SelectCompanionScene extends ResizableScene {
             }
 
             companion.setInteractive().on("pointerdown", () => {
-                this.selectedRectangleXPos = col;
-                this.selectedRectangleYPos = row;
-                this.updateSelectedCompanion();
+                this.selectCompanion(i);
             });
 
             this.companions.push(companion);
@@ -195,34 +200,13 @@ export class SelectCompanionScene extends ResizableScene {
         ];
     }
 
-    private updateSelectedCompanion(): void {
-        this.selectedCompanion?.anims.pause();
-
-        const [x, y] = this.getCharacterPosition(this.selectedRectangleXPos, this.selectedRectangleYPos);
-        this.selectedRectangle.setVisible(true);
-        this.selectedRectangle.setX(x);
-        this.selectedRectangle.setY(y);
-        this.selectedRectangle.setSize(32, 32);
-
-        const companionNumber = this.selectedRectangleXPos + this.selectedRectangleYPos * this.nbCharactersPerRow;
-        const model = this.companionModels[companionNumber];
-
-        const companion = this.companions[companionNumber];
-
-        if (model !== null) {
-            companion.play(model.name);
-        }
-
-        this.selectedCompanion = companion;
-    }
-
     public onResize(ev: UIEvent): void {
         this.textField.x = this.game.renderer.width / 2;
         this.pressReturnField.x = this.game.renderer.width / 2;
         this.logo.x = this.game.renderer.width - 30;
         this.logo.y = this.game.renderer.height - 20;
 
-        for (let i = 0; i <this.companionModels.length; i++) {
+        for (let i = 0; i < this.companionModels.length; i++) {
             const companion = this.companions[i];
 
             const col = i % this.nbCharactersPerRow;
@@ -233,7 +217,7 @@ export class SelectCompanionScene extends ResizableScene {
             companion.y = y;
         }
 
-        this.updateSelectedCompanion();
+        this.selectCompanion();
     }
 
     private getCompanionIndex(): number {
