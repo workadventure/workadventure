@@ -12,7 +12,7 @@ import {
     WebRtcSignalToServerMessage,
     PlayGlobalMessage,
     ReportPlayerMessage,
-    QueryJitsiJwtMessage, SendUserMessage, ServerToClientMessage, Companion
+    QueryJitsiJwtMessage, SendUserMessage, ServerToClientMessage, CompanionMessage
 } from "../Messages/generated/messages_pb";
 import {UserMovesMessage} from "../Messages/generated/messages_pb";
 import {TemplatedApp} from "uWebSockets.js"
@@ -139,10 +139,10 @@ export class IoSocketController {
                         const right = Number(query.right);
                         const name = query.name;
 
-                        let companion: Companion|undefined = undefined;
+                        let companion: CompanionMessage|undefined = undefined;
 
                         if (typeof query.companion === 'string') {
-                            companion = new Companion();
+                            companion = new CompanionMessage();
                             companion.setName(query.companion);
                         }
 

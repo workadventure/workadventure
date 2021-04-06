@@ -1,6 +1,6 @@
 import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
-import { lazyLoadResource } from "./CompanionTexturesLoadingManager";
+import { lazyLoadCompanionResource } from "./CompanionTexturesLoadingManager";
 import { PlayerAnimationDirections, PlayerAnimationTypes } from "../Player/Animation";
 
 export interface CompanionStatus {
@@ -37,7 +37,7 @@ export class Companion extends Container {
 
         this.companionName = name;
 
-        lazyLoadResource(this.scene.load, this.companionName)
+        lazyLoadCompanionResource(this.scene.load, this.companionName)
             .then(resource => {
                 this.addResource(resource);
                 this.invisible = false;

@@ -1,23 +1,15 @@
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 import { COMPANION_RESOURCES, CompanionResourceDescriptionInterface } from "./CompanionTextures";
 
-export const getAllResources = (): CompanionResourceDescriptionInterface[] => {
+export const getAllCompanionResources = (loader: LoaderPlugin): CompanionResourceDescriptionInterface[] => {
+    COMPANION_RESOURCES.forEach((resource: CompanionResourceDescriptionInterface) => {
+        lazyLoadCompanionResource(loader, resource.name);
+    });
+
     return COMPANION_RESOURCES;
 }
 
-export const lazyLoadAllResources = (loader: LoaderPlugin): Promise<CompanionResourceDescriptionInterface[]> => {
-    const promises: Promise<string>[] = [];
-
-    COMPANION_RESOURCES.forEach((resource: CompanionResourceDescriptionInterface) => {
-        promises.push(lazyLoadResource(loader, resource.name));
-    });
-
-    return Promise.all(promises).then(() => {
-        return COMPANION_RESOURCES;
-    });
-}
-
-export const lazyLoadResource = (loader: LoaderPlugin, name: string): Promise<string> => {
+export const lazyLoadCompanionResource = (loader: LoaderPlugin, name: string): Promise<string> => {
     return new Promise((resolve, reject) => {
         const resource = COMPANION_RESOURCES.find(item => item.name === name);
 

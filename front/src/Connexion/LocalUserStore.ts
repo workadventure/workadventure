@@ -52,7 +52,13 @@ class LocalUserStore {
         return localStorage.setItem(companionKey, JSON.stringify(companion));
     }
     getCompanion(): string|null {
-        return JSON.parse(localStorage.getItem(companionKey) || "null");
+        const companion = JSON.parse(localStorage.getItem(companionKey) || "null");
+
+        if (typeof companion !== "string" || companion === "") {
+            return null;
+        }
+
+        return companion;
     }
     wasCompanionSet(): boolean {
         return localStorage.getItem(companionKey) ? true : false;

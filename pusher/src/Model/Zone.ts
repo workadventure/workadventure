@@ -6,7 +6,7 @@ import {
     PointMessage, PositionMessage, UserJoinedMessage,
     UserJoinedZoneMessage, UserLeftZoneMessage, UserMovedMessage,
     ZoneMessage,
-    Companion
+    CompanionMessage
 } from "../Messages/generated/messages_pb";
 import * as messages_pb from "../Messages/generated/messages_pb";
 import {ClientReadableStream} from "grpc";
@@ -31,7 +31,7 @@ export type MovesCallback = (thing: Movable, position: PositionInterface, listen
 export type LeavesCallback = (thing: Movable, listener: User) => void;*/
 
 export class UserDescriptor {
-    private constructor(public readonly userId: number, private name: string, private characterLayers: CharacterLayerMessage[], private position: PositionMessage, private companion?: Companion) {
+    private constructor(public readonly userId: number, private name: string, private characterLayers: CharacterLayerMessage[], private position: PositionMessage, private companion?: CompanionMessage) {
         if (!Number.isInteger(this.userId)) {
             throw new Error('UserDescriptor.userId is not an integer: '+this.userId);
         }

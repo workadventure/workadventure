@@ -7,7 +7,7 @@ import { TextField } from "../Components/TextField";
 import { EnableCameraSceneName } from "./EnableCameraScene";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { CompanionResourceDescriptionInterface } from "../Companion/CompanionTextures";
-import { getAllResources, lazyLoadAllResources } from "../Companion/CompanionTexturesLoadingManager";
+import { getAllCompanionResources } from "../Companion/CompanionTexturesLoadingManager";
 
 export const SelectCompanionSceneName = "SelectCompanionScene";
 
@@ -38,11 +38,9 @@ export class SelectCompanionScene extends ResizableScene {
     }
 
     preload() {
-        lazyLoadAllResources(this.load).then(() => {
-            console.log("Loaded all companion textures.");
-        });
+        addLoader(this);
 
-        getAllResources().forEach(model => {
+        getAllCompanionResources(this.load).forEach(model => {
             this.companionModels.push(model);
         });
 
