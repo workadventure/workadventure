@@ -122,16 +122,20 @@ export class SelectCompanionScene extends ResizableScene {
         this.selectedCompanion.anims.pause();
         this.selectedCompanion = this.companions[index];
 
-        this.selectedRectangle.setVisible(true);
-        this.selectedRectangle.setX(this.selectedCompanion.x);
-        this.selectedRectangle.setY(this.selectedCompanion.y);
-        this.selectedRectangle.setSize(32, 32);
+        this.redrawSelectedRectangle();
 
         const model = this.companionModels[index];
 
         if (model !== null) {
             this.selectedCompanion.anims.play(model.name);
         }
+    }
+
+    private redrawSelectedRectangle(): void {
+        this.selectedRectangle.setVisible(true);
+        this.selectedRectangle.setX(this.selectedCompanion.x);
+        this.selectedRectangle.setY(this.selectedCompanion.y);
+        this.selectedRectangle.setSize(32, 32);
     }
 
     private storeCompanionSelection(): string|null {
@@ -217,7 +221,7 @@ export class SelectCompanionScene extends ResizableScene {
             companion.y = y;
         }
 
-        this.selectCompanion();
+        this.redrawSelectedRectangle();
     }
 
     private getCompanionIndex(): number {
