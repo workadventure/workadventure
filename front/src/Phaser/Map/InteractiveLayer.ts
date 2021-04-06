@@ -1,13 +1,15 @@
 import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
-import { ITiledMapLayer } from "./ITiledMap";
+import { ITiledMapLayer, ITiledMapLayerProperty } from "./ITiledMap";
 import { GameScene } from "../Game/GameScene";
 
 export class InteractiveLayer extends Container {
-    private activeSprite: string|null;
+    private allActive: boolean;
+    private layer: ITiledMapLayer;
     private spritesCollection: Array<{
-        animation: string;
+        animation: string|false;
         sprite: Sprite;
+        state: boolean;
     }>;
     
     private updateListener: Function;
@@ -17,13 +19,14 @@ export class InteractiveLayer extends Container {
 
         super(scene, x, y);
 
-        this.activeSprite = null;
+        this.allActive = false;
+        this.layer = layer;
         this.spritesCollection = [];
 
         this.addSprites(layer);
         
         this.updateListener = this.update.bind(this);
-        scene.events.addListener('update', this.updateListener);
+        scene.events.addListener("update", this.updateListener);
 
         this.setDepth(-2);
         this.scene.add.existing(this);
@@ -32,28 +35,64 @@ export class InteractiveLayer extends Container {
     public update(): void {
         const scene = this.getScene();
 
+        const radius = this.getInteractionRadius();
+        const r = radius == -1 ? 0 : radius;
+
         const x = scene.CurrentPlayer.x + scene.CurrentPlayer.width;
         const y = scene.CurrentPlayer.y + scene.CurrentPlayer.height * 2;
 
-        let foundSprite = false;
+        let foundActive = false;
 
         for (const i in this.spritesCollection) {
             const entity = this.spritesCollection[i];
             const sprite = entity.sprite;
 
-            if (sprite.x < x && sprite.y < y && sprite.x + sprite.width > x && sprite.y + sprite.height > y) {
-                if (this.activeSprite !== i) {
-                    sprite.play(entity.animation, true);
+            if (
+                sprite.x - sprite.width * r <= x            // left
+                && sprite.y - sprite.height * r <= y        // top
+                && sprite.x + sprite.width * (r + 1) >= x   // right
+                && sprite.y + sprite.height * (r + 1) >= y  // bottom
+            ) {
+                if (!entity.state) {
+                    if (entity.animation !== false) {
+                        sprite.play(entity.animation, true);
+                    }
+
+                    entity.state = true;
                 }
 
-                foundSprite = true;
-                this.activeSprite = i;
-                break;
+                foundActive = true;
+                if (radius == -1) {
+                    break;
+                }
+            } else if (radius != -1) {
+                entity.state = false;
             }
         }
 
-        if (foundSprite === false) {
-            this.activeSprite = null;
+        if (radius == -1) {
+            if (foundActive && !this.allActive) {
+                // play all sprites
+                for (const i in this.spritesCollection) {
+                    const entity = this.spritesCollection[i];
+                    const sprite = entity.sprite;
+
+                    if (entity.animation !== false) {
+                        sprite.play(entity.animation, true);
+                    }
+
+                    entity.state = true;
+                }
+
+                this.allActive = true;
+            } else if (!foundActive && this.allActive) {
+                for (const i in this.spritesCollection) {
+                    const entity = this.spritesCollection[i];
+                    entity.state = false;
+                }
+
+                this.allActive = false;
+            }
         }
     }
 
@@ -67,7 +106,7 @@ export class InteractiveLayer extends Container {
         }
 
         if (scene) {
-            scene.events.removeListener('update', this.updateListener);
+            scene.events.removeListener("update", this.updateListener);
         }
 
         super.destroy();
@@ -87,18 +126,20 @@ export class InteractiveLayer extends Container {
                 const tileset = this.getTileset(index);
 
                 if (tileset !== null) {
-                    const x = (i % layer.width) * tileset.tileWidth;
-                    const y = (Math.floor(i / layer.width)) * tileset.tileHeight;
+                    const x = (i % layer.width) * tileset.tileWidth + tileset.tileWidth / 2;
+                    const y = (Math.floor(i / layer.width)) * tileset.tileHeight + tileset.tileHeight / 2;
 
                     const animation = this.getAnimationFromTile(tileset, index);
                     const key = `interactive-layer-${tileset.name}-${index}`;
                     
+                    let sprite: Sprite;
+
                     if (animation !== null) {
-                        if (typeof scene.anims.get(key) === 'undefined') {
+                        if (typeof scene.anims.get(key) === "undefined") {
                             for (const j in animation) {
                                 if (!tileset.image.has(String(animation[j].tileid))) {
                                     const frameCoordinates = (tileset.getTileTextureCoordinates(animation[j].tileid + tileset.firstgid) as any);
-                                    tileset.image.add(animation[j].tileid, 0, frameCoordinates.x, frameCoordinates.y, tileset.tileWidth, tileset.tileHeight);
+                                    tileset.image.add(String(animation[j].tileid), 0, frameCoordinates.x, frameCoordinates.y, tileset.tileWidth, tileset.tileHeight);
                                 }
                             }
     
@@ -106,22 +147,31 @@ export class InteractiveLayer extends Container {
                                 key,
                                 frames: animation.map(frame => ({
                                     key: tileset.image.key,
-                                    frame: frame.tileid,
+                                    frame: String(frame.tileid),
                                     duration: frame.duration
                                 })),
                                 repeat: 0
                             });
                         }
-                    }
-                    
-                    const sprite = new Sprite(scene, x, y, tileset.image, 0);
 
-                    scene.sys.updateList.add(sprite);
+                        sprite = new Sprite(scene, x, y, tileset.image, String(animation[0].tileid));
+                        scene.sys.updateList.add(sprite);
+                    } else {
+                        const id = index - tileset.firstgid;
+
+                        if (!tileset.image.has(String(id))) {
+                            const coordinates = (tileset.getTileTextureCoordinates(index) as any);
+                            tileset.image.add(String(id), 0, coordinates.x, coordinates.y, tileset.tileWidth, tileset.tileHeight);
+                        }
+
+                        sprite = new Sprite(scene, x, y, tileset.image, String(id));
+                    }
 
                     this.add(sprite);
                     this.spritesCollection.push({
-                        animation: key,
-                        sprite
+                        animation: animation === null ? false : key,
+                        sprite,
+                        state: false
                     });
                 }
             }
@@ -155,5 +205,35 @@ export class InteractiveLayer extends Container {
 
     private getScene(): GameScene {
         return (this.scene as GameScene);
+    }
+
+    private getInteractionRadius(): number {
+        const radius = this.getProperty("interactionRadius");
+
+        if (typeof radius === "undefined" || isNaN(radius)) {
+            return 0;
+        }
+
+        if (radius == -1) {
+            return -1;
+        }
+
+        return Math.abs(radius);
+    }
+
+    private getProperty(name: string): any {
+        const properties: ITiledMapLayerProperty[] = this.layer.properties;
+
+        if (!properties) {
+            return undefined;
+        }
+        
+        const prop = properties.find((property: ITiledMapLayerProperty) => property.name.toLowerCase() === name.toLowerCase());
+
+        if (typeof prop === "undefined") {
+            return undefined;
+        }
+
+        return prop.value;
     }
 }
