@@ -34,7 +34,6 @@ export class InteractiveLayer extends Container {
         this.updateListener = this.update.bind(this);
         scene.events.addListener("update", this.updateListener);
 
-        this.setDepth(-2);
         this.scene.add.existing(this);
     }
 

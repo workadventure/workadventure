@@ -115,6 +115,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     MapPlayersByKey : Map<number, RemotePlayer> = new Map<number, RemotePlayer>();
     Map!: Phaser.Tilemaps.Tilemap;
     Layers!: Array<Phaser.Tilemaps.StaticTilemapLayer>;
+    interactiveLayers!: Array<InteractiveLayer>;
     Objects!: Array<Phaser.Physics.Arcade.Sprite>;
     mapFile!: ITiledMap;
     groups: Map<number, Sprite>;
@@ -351,6 +352,8 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         //add layer on map
         this.Layers = new Array<Phaser.Tilemaps.StaticTilemapLayer>();
+        this.interactiveLayers = new Array<InteractiveLayer>();
+
         let depth = -2;
         for (const layer of this.mapFile.layers) {
             if (layer.type === 'tilelayer') {
@@ -366,7 +369,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                         this.loadNextGame(exitUrl);
                     }
                 } else {
-                    this.addInteractiveLayer(layer);
+                    this.addInteractiveLayer(this.createInteractiveLayer(layer).setDepth(depth));
                 }
             }
             if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
@@ -998,8 +1001,12 @@ ${escapedMessage}
         this.Layers.push(Layer);
     }
 
-    addInteractiveLayer(layer: ITiledMapLayer): void {
-        new InteractiveLayer(this, layer);
+    createInteractiveLayer(layer: ITiledMapLayer): InteractiveLayer {
+        return new InteractiveLayer(this, layer);
+    }
+
+    addInteractiveLayer(layer: InteractiveLayer): void {
+        this.interactiveLayers.push(layer);
     }
 
     createCollisionWithPlayer() {
