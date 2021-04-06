@@ -2,6 +2,7 @@ import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
 import { ITiledMapLayer, ITiledMapLayerProperty } from "./ITiledMap";
 import { GameScene } from "../Game/GameScene";
+import { Character } from "../Entity/Character";
 
 interface SpriteEntity {
     animation: string|false;
@@ -47,70 +48,99 @@ export class InteractiveLayer extends Container {
 
         const scene = this.getScene();
 
+        // if radius is -1, one tile activation will activate all tiles in the layer
         const radius = this.getInteractionRadius();
         const r = radius == -1 ? 0 : radius;
 
-        const x = scene.CurrentPlayer.x + scene.CurrentPlayer.width;
-        const y = scene.CurrentPlayer.y + scene.CurrentPlayer.height * 2;
+        // collecting all player positions
+        const positions = [this.getCharacterPosition(scene.CurrentPlayer)];
+        for (const player of scene.MapPlayersByKey.values()) {
+            positions.push(this.getCharacterPosition(player));
+        }
 
-        let foundActive = false;
+        let activateAll = false;
 
-        for (const i in this.spritesCollection) {
-            const entity = this.spritesCollection[i];
+        for (const entity of this.spritesCollection) {
             const sprite = entity.sprite;
+            let wasActivatedThisRound = false;
 
-            if (
-                sprite.x - sprite.width * r <= x            // left
-                && sprite.y - sprite.height * r <= y        // top
-                && sprite.x + sprite.width * (r + 1) >= x   // right
-                && sprite.y + sprite.height * (r + 1) >= y  // bottom
-            ) {
-                if (!entity.state) {
-                    if (entity.animation === false) {
+            for (const position of positions) {
+                const { x, y } = position;
+
+                if (
+                    sprite.x - sprite.width * r <= x            // left
+                    && sprite.y - sprite.height * r <= y        // top
+                    && sprite.x + sprite.width * (r + 1) > x   // right
+                    && sprite.y + sprite.height * (r + 1) > y  // bottom
+                ) {
+                    if (radius == -1) {
+                        activateAll = true;
+                        break;
+                    }
+
+                    wasActivatedThisRound = true;
+
+                    if (!entity.state) {
                         entity.state = true;
-                    } else if (!sprite.anims.isPlaying) {
-                        sprite.play(entity.animation, true);
-                        entity.state = true;
+                        
+                        if (entity.animation !== false) {
+                            if (sprite.anims.isPlaying) {
+                                sprite.anims.play(entity.animation, false, sprite.anims.currentFrame.index);
+                            } else {
+                                sprite.anims.play(entity.animation);
+                            }
+                        }
                     }
                 }
+            }
 
-                foundActive = true;
-                if (radius == -1) {
-                    break;
-                }
-            } else if (radius != -1 && entity.state && !sprite.anims.isPlaying) {
+            if (radius == -1 && activateAll) {
+                break;
+            }
+
+            if (radius != -1 && !wasActivatedThisRound && entity.state) {
                 entity.state = false;
-                
+
                 if (entity.animation !== false && this.shouldReverse(entity)) {
-                    sprite.anims.playReverse(entity.animation);
+                    if (sprite.anims.isPlaying) {
+                        sprite.anims.reverse();
+                    } else {
+                        sprite.anims.playReverse(entity.animation);
+                    }
                 }
             }
         }
 
         if (radius == -1) {
-            if (foundActive && !this.allActive) {
+            if (activateAll && !this.allActive) {
                 // play all sprites
-                for (const i in this.spritesCollection) {
-                    const entity = this.spritesCollection[i];
+                for (const entity of this.spritesCollection) {
                     const sprite = entity.sprite;
 
                     if (entity.animation !== false) {
-                        sprite.play(entity.animation, true);
+                        if (sprite.anims.isPlaying) {
+                            sprite.anims.play(entity.animation, false, sprite.anims.currentFrame.index);
+                        } else {
+                            sprite.anims.play(entity.animation);
+                        }
                     }
 
                     entity.state = true;
                 }
 
                 this.allActive = true;
-            } else if (!foundActive && this.allActive) {
-                for (const i in this.spritesCollection) {
-                    const entity = this.spritesCollection[i];
+            } else if (!activateAll && this.allActive) {
+                for (const entity of this.spritesCollection) {
                     entity.state = false;
 
                     if (entity.animation !== false && this.shouldReverse(entity)) {
                         const sprite = entity.sprite;
-                        sprite.anims.pause();
-                        sprite.anims.playReverse(entity.animation);
+
+                        if (sprite.anims.isPlaying) {
+                            sprite.anims.reverse();
+                        } else {
+                            sprite.anims.playReverse(entity.animation);
+                        }
                     }
                 }
 
@@ -263,5 +293,12 @@ export class InteractiveLayer extends Container {
 
     private shouldReverse(entity: SpriteEntity): boolean {
         return typeof entity.properties !== "undefined" && entity.properties["reverseInactive"]
+    }
+
+    private getCharacterPosition(char: Character) {
+        return {
+            x: char.x + char.width,
+            y: char.y + char.height * 2
+        }
     }
 }
