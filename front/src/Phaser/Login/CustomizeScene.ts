@@ -1,5 +1,4 @@
 import {EnableCameraSceneName} from "./EnableCameraScene";
-import {SelectCompanionSceneName} from "./SelectCompanionScene";
 import {TextField} from "../Components/TextField";
 import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
@@ -116,7 +115,7 @@ export class CustomizeScene extends AbstractCharacterScene {
             gameManager.setCharacterLayers(layers);
 
             this.scene.sleep(CustomizeSceneName);
-            gameManager.tryResumingGame(this, localUserStore.wasCompanionSet() ? EnableCameraSceneName : SelectCompanionSceneName);
+            gameManager.tryResumingGame(this, EnableCameraSceneName);
         });
 
         this.input.keyboard.on('keyup-RIGHT', () => this.moveCursorHorizontally(1));
