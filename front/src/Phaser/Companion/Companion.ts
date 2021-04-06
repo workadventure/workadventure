@@ -23,7 +23,7 @@ export class Companion extends Container {
     private direction: PlayerAnimationDirections;
     private animationType: PlayerAnimationTypes;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, name: string) {
+    constructor(scene: Phaser.Scene, x: number, y: number, name: string, texturePromise: Promise<string>) {
         super(scene, x + 14, y + 4);
             
         this.sprites = new Map<string, Sprite>();
@@ -37,12 +37,10 @@ export class Companion extends Container {
 
         this.companionName = name;
 
-        lazyLoadCompanionResource(this.scene.load, this.companionName)
-            .then(resource => {
-                this.addResource(resource);
-                this.invisible = false;
-            })
-            .catch(error => console.error(error));
+        texturePromise.then(resource => {
+            this.addResource(resource);
+            this.invisible = false;
+        })
 
         this.scene.physics.world.enableBody(this);
 

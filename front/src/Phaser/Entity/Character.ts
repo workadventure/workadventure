@@ -71,8 +71,10 @@ export abstract class Character extends Container {
         this.playAnimation(direction, moving);
     }
 
-    public addCompanion(name: string): void {
-        this.companion = new Companion(this.scene, this.x, this.y, name);
+    public addCompanion(name: string, texturePromise?: Promise<string>): void {
+        if (typeof texturePromise !== 'undefined') {
+            this.companion = new Companion(this.scene, this.x, this.y, name, texturePromise);
+        }
     }
 
     public addTextures(textures: string[], frame?: string | number): void {

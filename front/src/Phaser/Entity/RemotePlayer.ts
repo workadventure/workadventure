@@ -18,7 +18,8 @@ export class RemotePlayer extends Character {
         texturesPromise: Promise<string[]>,
         direction: PlayerAnimationDirections,
         moving: boolean,
-        companion: string|null
+        companion: string|null,
+        companionTexturePromise?: Promise<string>
     ) {
         super(Scene, x, y, texturesPromise, name, direction, moving, 1);
         
@@ -26,7 +27,7 @@ export class RemotePlayer extends Character {
         this.userId = userId;
 
         if (typeof companion === 'string') {
-            this.addCompanion(companion);
+            this.addCompanion(companion, companionTexturePromise);
         }
     }
 

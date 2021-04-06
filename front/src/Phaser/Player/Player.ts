@@ -22,7 +22,8 @@ export class Player extends Character implements CurrentGamerInterface {
         direction: PlayerAnimationDirections,
         moving: boolean,
         private userInputManager: UserInputManager,
-        companion: string|null
+        companion: string|null,
+        companionTexturePromise?: Promise<string>
     ) {
         super(Scene, x, y, texturesPromise, name, direction, moving, 1);
 
@@ -30,7 +31,7 @@ export class Player extends Character implements CurrentGamerInterface {
         this.getBody().setImmovable(false);
 
         if (typeof companion === 'string') {
-            this.addCompanion(companion);
+            this.addCompanion(companion, companionTexturePromise);
         }
     }
 
