@@ -386,8 +386,10 @@ export class InteractiveLayer extends Container {
     }
 
     /**
+     * Add frames to the image associated with the tileset. They will only be added,
+     * if the frame doesn't already exist.
      * 
-     * @param {} tileset 
+     * @param {Tileset} tileset 
      * @param {string} key 
      * @param {number} index 
      * @returns {void}
