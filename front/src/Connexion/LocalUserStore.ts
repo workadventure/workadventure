@@ -10,7 +10,7 @@ const videoQualityKey =         'videoQuality';
 const audioPlayerVolumeKey =    'audioVolume';
 const audioPlayerMuteKey =      'audioMute';
 const helpCameraSettingsShown = 'helpCameraSettingsShown';
-const joystickKey =             'showJoystick';
+const fullscreenKey =           'fullscreen';
 
 class LocalUserStore {
     saveUser(localUser: LocalUser) {
@@ -102,11 +102,11 @@ class LocalUserStore {
         return localStorage.getItem(helpCameraSettingsShown) === '1';
     }
 
-    setJoystick(value: boolean): void {
-        localStorage.setItem(joystickKey, value.toString());
+    setFullscreen(value: boolean): void {
+        localStorage.setItem(fullscreenKey, value.toString());
     }
-    getJoystick(): boolean {
-        return localStorage.getItem(joystickKey) === 'true';
+    getFullscreen(): boolean {
+        return localStorage.getItem(fullscreenKey) === 'true';
     }
 }
 

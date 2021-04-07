@@ -188,16 +188,6 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.connectionAnswerPromise = new Promise<RoomJoinedMessageInterface>((resolve, reject): void => {
             this.connectionAnswerPromiseResolve = resolve;
         })
-        const joystickVisible = localUserStore.getJoystick();
-        if (joystickVisible) {
-            const canvas = document.querySelector('canvas')
-            canvas?.addEventListener('click', () => {
-                const body = document.querySelector('body')
-                body?.requestFullscreen()
-            }, {
-                once: true
-            })
-        }
     }
 
     //hook preload scene
@@ -423,7 +413,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             enable: true,
             dir: "8dir",
         });
-        this.virtualJoystick.visible = localUserStore.getJoystick()
+        this.virtualJoystick.visible = true;
         //create input to move
         mediaManager.setUserInputManager(this.userInputManager);
         this.userInputManager = new UserInputManager(this, this.virtualJoystick);
@@ -434,6 +424,11 @@ export class GameScene extends ResizableScene implements CenterListener {
             this.virtualJoystick.x = pointer.x;
             this.virtualJoystick.y = pointer.y;
         });
+
+        if (localUserStore.getFullscreen()) {
+            document.querySelector('body')?.requestFullscreen();
+        }
+
         //notify game manager can to create currentUser in map
         this.createCurrentPlayer();
         this.removeAllRemotePlayers(); //cleanup the list  of remote players in case the scene was rebooted
