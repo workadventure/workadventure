@@ -2,7 +2,7 @@ import {IRoomManagerServer} from "./Messages/generated/messages_grpc_pb";
 import {
     AdminGlobalMessage,
     AdminMessage,
-    AdminPusherToBackMessage, 
+    AdminPusherToBackMessage,
     AdminRoomMessage,
     BanMessage,
     EmptyMessage,
@@ -10,12 +10,12 @@ import {
     JoinRoomMessage,
     PlayGlobalMessage,
     PusherToBackMessage,
-    QueryJitsiJwtMessage,
+    QueryJitsiJwtMessage, RefreshRoomPromptMessage,
     ServerToAdminClientMessage,
     ServerToClientMessage,
     SilentMessage,
     UserMovesMessage,
-    WebRtcSignalToServerMessage,
+    WebRtcSignalToServerMessage, WorldFullWarningToRoomMessage,
     ZoneMessage
 } from "./Messages/generated/messages_pb";
 import {sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream} from "grpc";
@@ -43,8 +43,13 @@ const roomManager: IRoomManagerServer = {
                 if (room === null || user === null) {
                     if (message.hasJoinroommessage()) {
                         socketManager.handleJoinRoom(call, message.getJoinroommessage() as JoinRoomMessage).then(({room: gameRoom, user: myUser}) => {
-                            room = gameRoom;
-                            user = myUser;
+                            if (call.writable) {
+                                room = gameRoom;
+                                user = myUser;
+                            } else {
+                                //Connexion may have been closed before the init was finished, so we have to manually disconnect the user.
+                                socketManager.leaveRoom(gameRoom, myUser);
+                            }
                         });
                     } else {
                         throw new Error('The first message sent MUST be of type JoinRoomMessage');
@@ -182,6 +187,14 @@ const roomManager: IRoomManagerServer = {
     },
     sendAdminMessageToRoom(call: ServerUnaryCall<AdminRoomMessage>, callback: sendUnaryData<EmptyMessage>): void {
         socketManager.sendAdminRoomMessage(call.request.getRoomid(), call.request.getMessage());
+        callback(null, new EmptyMessage());
+    },
+    sendWorldFullWarningToRoom(call: ServerUnaryCall<WorldFullWarningToRoomMessage>, callback: sendUnaryData<EmptyMessage>): void {
+        socketManager.dispatchWorlFullWarning(call.request.getRoomid());
+        callback(null, new EmptyMessage());
+    },
+    sendRefreshRoomPrompt(call: ServerUnaryCall<RefreshRoomPromptMessage>, callback: sendUnaryData<EmptyMessage>): void {
+        socketManager.dispatchRoomRefresh(call.request.getRoomid());
         callback(null, new EmptyMessage());
     },
 };

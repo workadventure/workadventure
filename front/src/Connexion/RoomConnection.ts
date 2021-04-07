@@ -1,4 +1,4 @@
-import {API_URL, UPLOADER_URL} from "../Enum/EnvironmentVariable";
+import {PUSHER_URL, UPLOADER_URL} from "../Enum/EnvironmentVariable";
 import Axios from "axios";
 import {
     BatchMessage,
@@ -43,7 +43,9 @@ import {
 } from "./ConnexionModels";
 import {BodyResourceDescriptionInterface} from "../Phaser/Entity/PlayerTextures";
 import {adminMessagesService} from "./AdminMessagesService";
-import {connectionManager, ConnexionMessageEventTypes} from "./ConnectionManager";
+import {worldFullMessageStream} from "./WorldFullMessageStream";
+import {worldFullWarningStream} from "./WorldFullWarningStream";
+import {connectionManager} from "./ConnectionManager";
 
 const manualPingDelay = 20000;
 
@@ -65,8 +67,12 @@ export class RoomConnection implements RoomConnection {
      * @param roomId The ID of the room in the form "_/[instance]/[map_url]" or "@/[org]/[event]/[map]"
      */
     public constructor(token: string|null, roomId: string, name: string, characterLayers: string[], position: PositionInterface, viewport: ViewportInterface) {
-        let url = API_URL.replace('http://', 'ws://').replace('https://', 'wss://');
-        url += '/room';
+        let url = new URL(PUSHER_URL, window.location.toString()).toString();
+        url = url.replace('http://', 'ws://').replace('https://', 'wss://');
+        if (!url.endsWith('/')) {
+            url += '/';
+        }
+        url += 'room';
         url += '?roomId='+(roomId ?encodeURIComponent(roomId):'');
         url += '&token='+(token ?encodeURIComponent(token):'');
         url += '&name='+encodeURIComponent(name);
@@ -156,8 +162,8 @@ export class RoomConnection implements RoomConnection {
                         items
                     } as RoomJoinedMessageInterface
                 });
-            } else if (message.hasErrormessage()) {
-                connectionManager._connexionMessageStream.next({type: ConnexionMessageEventTypes.worldFull}); //todo: generalize this behavior to all messages
+            } else if (message.hasWorldfullmessage()) {
+                worldFullMessageStream.onMessage();
                 this.closed = true;
             } else if (message.hasWebrtcsignaltoclientmessage()) {
                 this.dispatch(EventMessage.WEBRTC_SIGNAL, message.getWebrtcsignaltoclientmessage());
@@ -179,6 +185,10 @@ export class RoomConnection implements RoomConnection {
                 adminMessagesService.onSendusermessage(message.getSendusermessage() as SendUserMessage);
             } else if (message.hasBanusermessage()) {
                 adminMessagesService.onSendusermessage(message.getSendusermessage() as BanUserMessage);
+            } else if (message.hasWorldfullwarningmessage()) {
+                worldFullWarningStream.onMessage();
+            } else if (message.hasRefreshroommessage()) {
+                //todo: implement a way to notify the user the room was refreshed.
             } else {
                 throw new Error('Unknown message received');
             }
@@ -378,9 +388,6 @@ export class RoomConnection implements RoomConnection {
         this.socket.addEventListener('error', callback)
     }
 
-    /*public onConnect(callback: (e: Event) => void): void {
-        this.socket.addEventListener('open', callback)
-    }*/
     public onConnect(callback: (roomConnection: OnConnectInterface) => void): void {
         //this.socket.addEventListener('open', callback)
         this.onMessage(EventMessage.CONNECT, callback);
@@ -449,9 +456,9 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public onServerDisconnected(callback: (event: CloseEvent) => void): void {
+    public onServerDisconnected(callback: () => void): void {
         this.socket.addEventListener('close', (event) => {
-            if (this.closed === true) {
+            if (this.closed === true || connectionManager.unloading) {
                 return;
             }
             console.log('Socket closed with code '+event.code+". Reason: "+event.reason);
@@ -459,7 +466,7 @@ export class RoomConnection implements RoomConnection {
                 // Normal closure case
                 return;
             }
-            callback(event);
+            callback();
         });
     }
 

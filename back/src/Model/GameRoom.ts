@@ -38,12 +38,10 @@ export class GameRoom {
 
     private readonly positionNotifier: PositionNotifier;
     public readonly roomId: string;
-    public readonly anonymous: boolean;
-    public tags: string[];
-    public policyType: GameRoomPolicyTypes;
     public readonly roomSlug: string;
     public readonly worldSlug: string = '';
     public readonly organizationSlug: string = '';
+    private versionNumber:number = 1;
     private nextUserId: number = 1;
 
     constructor(roomId: string,
@@ -56,11 +54,8 @@ export class GameRoom {
                 onLeaves: LeavesCallback)
     {
         this.roomId = roomId;
-        this.anonymous = isRoomAnonymous(roomId);
-        this.tags = [];
-        this.policyType = GameRoomPolicyTypes.ANONYMOUS_POLICY;
 
-        if (this.anonymous) {
+        if (isRoomAnonymous(roomId)) {
             this.roomSlug = extractRoomSlugPublicRoomId(this.roomId);
         } else {
             const {organizationSlug, worldSlug, roomSlug} = extractDataFromPrivateRoomId(this.roomId);
@@ -304,10 +299,6 @@ export class GameRoom {
         return this.itemsState;
     }
 
-    public canAccess(userTags: string[]): boolean {
-        return arrayIntersect(userTags, this.tags);
-    }
-
     public addZoneListener(call: ZoneSocket, x: number, y: number): Set<Movable> {
         return this.positionNotifier.addZoneListener(call, x, y);
     }
@@ -327,5 +318,10 @@ export class GameRoom {
 
     public adminLeave(admin: Admin): void {
         this.admins.delete(admin);
+    }
+    
+    public incrementVersion(): number {
+        this.versionNumber++
+        return this.versionNumber;
     }
 }

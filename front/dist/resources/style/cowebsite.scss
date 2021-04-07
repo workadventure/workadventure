@@ -35,9 +35,8 @@
     cursor: url('/resources/logos/cursor_pointer.png'), pointer;
 
     img {
-      height: 20px;
-      background-color: rgba(0,0.0,0,0.3);
-      padding: 5px;
+      height: 25px;
+      padding: 4px;
       border-radius: 3px;
     }
 
@@ -78,31 +77,13 @@
     }
 
     .top-right-btn{
-      top: 10px;
-      right: -100px;
-      animation: right .2s ease;
-
-      img {
-        right: 15px;
+      left: -6px;
+      &#cowebsite-close {
+        top: 0px;
       }
-    }
-
-    #cowebsite-close {
-      right: -140px;
-    }
-    #cowebsite-fullscreen {
-      right: -100px;
-    }
-
-  }
-
-  #cowebsite:hover {
-    #cowebsite-close{
-      right: 10px;
-    }
-
-    #cowebsite-fullscreen{
-      right: 45px;
+      &#cowebsite-fullscreen {
+        top: 25px;
+      }
     }
   }
 }
@@ -139,32 +120,13 @@
       }
     }
 
-    .top-right-btn{
-      top: 10px;
-      right: -100px;
-      animation: right .2s ease;
-
-      img {
-        right: 15px;
+    .top-right-btn {
+      &#cowebsite-close {
+        right: 0px;
+      }
+      &#cowebsite-fullscreen {
+        right: 25px;
       }
     }
-
-    #cowebsite-close {
-      right: -140px;
-    }
-    #cowebsite-fullscreen {
-      right: -100px;
-    }
-
   }
-
-  #cowebsite:hover {
-    #cowebsite-close{
-      right: 10px;
-    }
-
-    #cowebsite-fullscreen{
-      right: 45px;
-    }
-  }  
 }

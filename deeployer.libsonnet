@@ -82,14 +82,12 @@
       },
       "ports": [80],
       "env": {
-        "API_URL": "pusher."+url,
-        "UPLOADER_URL": "uploader."+url,
-        "ADMIN_URL": url,
+        "PUSHER_URL": "//pusher."+url,
+        "UPLOADER_URL": "//uploader."+url,
+        "ADMIN_URL": "//"+url,
         "JITSI_URL": env.JITSI_URL,
         "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
         "TURN_SERVER": "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443",
-        "TURN_USER": "workadventure",
-        "TURN_PASSWORD": "WorkAdventure123",
         "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
         "START_ROOM_URL": "/_/global/maps."+url+"/Floor0/floor0.json"
         //"GA_TRACKING_ID": "UA-10196481-11"

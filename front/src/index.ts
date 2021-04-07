@@ -15,6 +15,8 @@ import {MenuScene} from "./Phaser/Menu/MenuScene";
 import {HelpCameraSettingsScene} from "./Phaser/Menu/HelpCameraSettingsScene";
 import {localUserStore} from "./Connexion/LocalUserStore";
 import {ErrorScene} from "./Phaser/Reconnecting/ErrorScene";
+import {iframeListener} from "./Api/IframeListener";
+import {discussionManager} from "./WebRtc/DiscussionManager";
 
 const {width, height} = coWebsiteManager.getGameSize();
 
@@ -119,3 +121,5 @@ coWebsiteManager.onResize.subscribe(() => {
     const {width, height} = coWebsiteManager.getGameSize();
     game.scale.resize(width / RESOLUTION, height / RESOLUTION);
 });
+
+iframeListener.init();

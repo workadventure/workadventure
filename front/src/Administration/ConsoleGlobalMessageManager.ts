@@ -336,7 +336,7 @@ export class ConsoleGlobalMessageManager {
     }
 
     active(){
-        this.userInputManager.clearAllKeys();
+        this.userInputManager.disableControls();
         this.divMainConsole.style.top = '0';
         this.activeConsole = true;
     }

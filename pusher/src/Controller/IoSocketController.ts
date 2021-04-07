@@ -190,10 +190,10 @@ export class IoSocketController {
                                 memberMessages = userData.messages;
                                 memberTags = userData.tags;
                                 memberTextures = userData.textures;
-                                if (!room.anonymous && room.policyType === GameRoomPolicyTypes.USE_TAGS_POLICY && (userData.anonymous === true || !room.canAccess(memberTags))) {
+                                if (!room.public && room.policyType === GameRoomPolicyTypes.USE_TAGS_POLICY && (userData.anonymous === true || !room.canAccess(memberTags))) {
                                     throw new Error('No correct tags')
                                 }
-                                if (!room.anonymous && room.policyType === GameRoomPolicyTypes.MEMBERS_ONLY_POLICY && userData.anonymous === true) {
+                                if (!room.public && room.policyType === GameRoomPolicyTypes.MEMBERS_ONLY_POLICY && userData.anonymous === true) {
                                     throw new Error('No correct member')
                                 }
                             } catch (e) {
@@ -258,12 +258,12 @@ export class IoSocketController {
             /* Handlers */
             open: (ws) => {
                 if(ws.rejected === true) {
-                    emitError(ws, 'World is full');
+                    socketManager.emitWorldFullMessage(ws);
                     ws.close();
                 }
                 
                 // Let's join the room
-                const client = this.initClient(ws); //todo: into the upgrade instead?
+                const client = this.initClient(ws);
                 socketManager.handleJoinRoom(client);
 
                 //get data information and show messages

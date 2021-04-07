@@ -29,6 +29,9 @@
 
 
         <base href="/">
+        <link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
+        <link href="https://unpkg.com/nes.css@2.3.0/css/nes.min.css" rel="stylesheet" />
+
         <title>WorkAdventure</title>
     </head>
     <body id="body" style="margin: 0; background-color: #000">
@@ -70,11 +73,11 @@
                 </aside>
                 <main id="cowebsite-main">
                 </main>
-                <button class="top-right-btn" id="cowebsite-fullscreen">
-                    <img id="cowebsite-fullscreen-open" src="resources/logos/monitor.svg"/>
-                    <img id="cowebsite-fullscreen-close" style="display: none;" src="resources/logos/monitor-close.svg"/>
+                <button class="top-right-btn" id="cowebsite-fullscreen" alt="fullscreen mode">
+                    <img id="cowebsite-fullscreen-open" src="resources/logos/fullscreen.svg"/>
+                    <img id="cowebsite-fullscreen-close" style="display: none;" src="resources/logos/fullscreen-exit.svg"/>
                 </button>
-                <button class="top-right-btn" id="cowebsite-close">
+                <button class="top-right-btn" id="cowebsite-close" alt="close the iframe">
                     <img src="resources/logos/close.svg"/>
                 </button>
             </div>
@@ -92,12 +95,12 @@
                         </svg>
                     </button>
                     <div class="audioplayer">
-                        <input type="range" id="audioplayer_volume" min="0" max="1" step="0.05" value="1" />
+                        <input type="range" id="audioplayer_volume" min="0" max="1" step="0.025" value="1" />
                     </div>
                 </div>
                 <div class="audioplayer">
                     <label id="label-audioplayer_decrease_while_talking" for="audiooplayer_decrease_while_talking" title="decrease background volume by 50% when entering conversations">
-                        autoreduce
+                        reduce in conversations
                         <input type="checkbox" id="audioplayer_decrease_while_talking" checked />
                     </label>
                     <div id="audioplayer" style="visibility: hidden"></div>
