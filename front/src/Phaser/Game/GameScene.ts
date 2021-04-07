@@ -418,8 +418,8 @@ export class GameScene extends ResizableScene implements CenterListener {
             x: this.game.renderer.width / 2,
             y: this.game.renderer.height / 2,
             radius: 20,
-            base: this.add.circle(0, 0, 20, 0x888888),
-            thumb: this.add.circle(0, 0, 10, 0xcccccc),
+            base: this.add.circle(0, 0, 20),
+            thumb: this.add.circle(0, 0, 10),
             enable: true,
             dir: "8dir",
         });
