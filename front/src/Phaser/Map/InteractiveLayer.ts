@@ -1,14 +1,21 @@
 import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
-import { ITiledMapLayer, ITiledMapLayerProperty } from "./ITiledMap";
+
 import { GameScene } from "../Game/GameScene";
 import { Character } from "../Entity/Character";
+import { PositionInterface } from "../../Connexion/ConnexionModels";
+import { ITiledMapLayer, ITiledMapLayerProperty } from "./ITiledMap";
 
 interface SpriteEntity {
     animation: string|false;
     sprite: Sprite;
     state: boolean;
     properties: { reverseInactive: boolean; } | undefined;
+}
+
+interface TileAnimation {
+    duration: number; 
+    tileid: number;
 }
 
 export class InteractiveLayer extends Container {
@@ -18,7 +25,7 @@ export class InteractiveLayer extends Container {
     private spritesCollection: Array<SpriteEntity>;
     
     private updateListener: Function;
-
+    
     constructor(scene: GameScene, layer: ITiledMapLayer) {
         const { x, y } = layer;
 
@@ -37,8 +44,15 @@ export class InteractiveLayer extends Container {
         this.scene.add.existing(this);
     }
 
+    /**
+     * Will check if the state of SpriteEntities has changed and trigger the animations.
+     * 
+     * @param {number} time 
+     * @param {number} delta 
+     * @returns {void}
+     */
     public update(time: number, delta: number): void {
-        // running this function max. 15 times per second should be enough
+        // limit this function to max. 15 times per second should be enough
         if (this.lastUpdate + (1000 / 15) > time) {
             return;
         }
@@ -47,7 +61,6 @@ export class InteractiveLayer extends Container {
 
         const scene = this.getScene();
 
-        // if radius is -1, one tile activation will activate all tiles in the layer
         const radius = this.getInteractionRadius();
         const r = radius == -1 ? 0 : radius;
 
@@ -66,12 +79,15 @@ export class InteractiveLayer extends Container {
             for (const position of positions) {
                 const { x, y } = position;
 
+                // check if player is inside of sprite / interaction radius
                 if (
                     sprite.x - sprite.width * r <= x            // left
                     && sprite.y - sprite.height * r <= y        // top
-                    && sprite.x + sprite.width * (r + 1) > x   // right
-                    && sprite.y + sprite.height * (r + 1) > y  // bottom
+                    && sprite.x + sprite.width * (r + 1) > x    // right
+                    && sprite.y + sprite.height * (r + 1) > y   // bottom
                 ) {
+                    // (1) if one active sprite was found and radius = -1, 
+                    // there is no need to check for other ones
                     if (radius == -1) {
                         activateAll = true;
                         break;
@@ -80,67 +96,33 @@ export class InteractiveLayer extends Container {
                     wasActivatedThisRound = true;
 
                     if (!entity.state) {
-                        entity.state = true;
-                        
-                        if (entity.animation !== false) {
-                            if (sprite.anims.isPlaying) {
-                                sprite.anims.play(entity.animation, false, sprite.anims.currentFrame.index);
-                            } else {
-                                sprite.anims.play(entity.animation);
-                            }
-                        }
+                        this.playEntityAnimation(entity);
                     }
                 }
             }
 
+            // same as comment (1)
             if (radius == -1 && activateAll) {
                 break;
             }
 
             if (radius != -1 && !wasActivatedThisRound && entity.state) {
-                entity.state = false;
-
-                if (entity.animation !== false && this.shouldReverse(entity)) {
-                    if (sprite.anims.isPlaying) {
-                        sprite.anims.reverse();
-                    } else {
-                        sprite.anims.playReverse(entity.animation);
-                    }
-                }
+                this.reverseEntityAnimation(entity);
             }
         }
 
         if (radius == -1) {
             if (activateAll && !this.allActive) {
-                // play all sprites
+                // if one entity changes to active: play all sprite animations
                 for (const entity of this.spritesCollection) {
-                    const sprite = entity.sprite;
-
-                    if (entity.animation !== false) {
-                        if (sprite.anims.isPlaying) {
-                            sprite.anims.play(entity.animation, false, sprite.anims.currentFrame.index);
-                        } else {
-                            sprite.anims.play(entity.animation);
-                        }
-                    }
-
-                    entity.state = true;
+                    this.playEntityAnimation(entity);
                 }
 
                 this.allActive = true;
             } else if (!activateAll && this.allActive) {
+                // if one entity changes to inactive: stop all sprite animations
                 for (const entity of this.spritesCollection) {
-                    entity.state = false;
-
-                    if (entity.animation !== false && this.shouldReverse(entity)) {
-                        const sprite = entity.sprite;
-
-                        if (sprite.anims.isPlaying) {
-                            sprite.anims.reverse();
-                        } else {
-                            sprite.anims.playReverse(entity.animation);
-                        }
-                    }
+                    this.reverseEntityAnimation(entity);
                 }
 
                 this.allActive = false;
@@ -148,22 +130,72 @@ export class InteractiveLayer extends Container {
         }
     }
 
+    /**
+     * Destroyes all sprites and removes the update listener.
+     * 
+     * @returns {void}
+     */
     public destroy(): void {
         const scene = this.getScene();
 
-        for (const entity of this.spritesCollection) {
-            if (scene) {
+        if (scene) {
+            for (const entity of this.spritesCollection) {
                 scene.sys.updateList.remove(entity.sprite);
             }
-        }
 
-        if (scene) {
             scene.events.removeListener("update", this.updateListener);
         }
 
         super.destroy();
     }
 
+    /**
+     * Plays or resumes to animation of a sprite.
+     * 
+     * @param {SpriteEntity} entity 
+     * @returns {void}
+     */
+    private playEntityAnimation(entity: SpriteEntity): void {
+        entity.state = true;
+
+        if (entity.animation !== false) {
+            const sprite = entity.sprite;
+
+            if (sprite.anims.isPlaying) {
+                sprite.anims.play(entity.animation, false, sprite.anims.currentFrame.index);
+            } else {
+                sprite.anims.play(entity.animation);
+            }
+        }
+    }
+
+    /**
+     * Reverses the animation, if defined in the tile properties.
+     * 
+     * @param {SpriteEntity} entity 
+     * @returns {void}
+     */
+    private reverseEntityAnimation(entity: SpriteEntity): void {
+        entity.state = false;
+
+        if (entity.animation !== false && this.shouldReverse(entity)) {
+            const sprite = entity.sprite;
+
+            if (sprite.anims.isPlaying) {
+                sprite.anims.reverse();
+            } else {
+                sprite.anims.playReverse(entity.animation);
+            }
+        }
+    }
+
+    /**
+     * Adds all tiles from the layer as sprites to the scene. It will also define the 
+     * animation frames, if they aren't already defined.
+     * 
+     * @param {ITiledMapLayer} layer 
+     * @returns {void}
+     */
     private addSprites(layer: ITiledMapLayer): void {
         if (typeof layer.data === "string") {
             return;
@@ -175,7 +207,7 @@ export class InteractiveLayer extends Container {
             const index = layer.data[i];
             
             if (index !== 0) {
-                const tileset = this.getTileset(index);
+                const tileset = this.getTilesetContainingTile(index);
 
                 if (tileset !== null) {
                     const x = (i % layer.width) * tileset.tileWidth + tileset.tileWidth / 2;
@@ -187,6 +219,7 @@ export class InteractiveLayer extends Container {
                     let sprite: Sprite;
 
                     if (animation !== null) {
+                        // if an animation was found, add each frame to the image (if it doesn't already exist)
                         if (typeof scene.anims.get(key) === "undefined") {
                             for (const j in animation) {
                                 if (!tileset.image.has(String(animation[j].tileid))) {
@@ -209,6 +242,7 @@ export class InteractiveLayer extends Container {
                         sprite = new Sprite(scene, x, y, tileset.image, String(animation[0].tileid));
                         scene.sys.updateList.add(sprite);
                     } else {
+                        // if no animation was found, just add the on e tile as a frame (if it doesn't already exist)
                         const id = index - tileset.firstgid;
 
                         if (!tileset.image.has(String(id))) {
@@ -231,7 +265,14 @@ export class InteractiveLayer extends Container {
         }
     }
 
-    private getTileset(index: number): Phaser.Tilemaps.Tileset|null {
+    /**
+     * Will return the tileset, which contains the specified tile index.
+     * If non was found it will just return null.
+     * 
+     * @param {number} index 
+     * @returns {Phaser.Tilemaps.Tileset|null}
+     */
+    private getTilesetContainingTile(index: number): Phaser.Tilemaps.Tileset|null {
         const scene = this.getScene();
 
         for (const i in scene.Map.tilesets) {
@@ -245,23 +286,42 @@ export class InteractiveLayer extends Container {
         return null;
     }
     
-    private getAnimationFromTile(tileset: Phaser.Tilemaps.Tileset, index: number) {
+    /**
+     * Will return the animation from a tile. If non is defined it will return null.
+     * 
+     * @param {Phaser.Tilemaps.Tileset} tileset 
+     * @param {number} index 
+     * @returns {TileAnimation[]|null}
+     */
+    private getAnimationFromTile(tileset: Phaser.Tilemaps.Tileset, index: number): TileAnimation[]|null {
         const data = tileset.getTileData(index);
 
         if (typeof data === "object" && data !== null && Array.isArray((data as any).animation)) {
-            const animation: Array<{duration: number; tileid: number}> = (data as any).animation;
+            const animation: Array<TileAnimation> = (data as any).animation;
             return animation;
         }
 
         return null
     }
 
+    /**
+     * Returns the current scene as the GameScene type.
+     * 
+     * @returns {GameScene}
+     */
     private getScene(): GameScene {
         return (this.scene as GameScene);
     }
 
+    /**
+     * The map creator has the possibility to define an interaction radius as a layer property. 
+     * The Player will activate all tiles inside of it. If the radius is defined as -1, 
+     * then activating one tile will lead to activating all tiles in this layer.
+     * 
+     * @returns {number}
+     */
     private getInteractionRadius(): number {
-        const radius = this.getProperty("interactionRadius");
+        const radius = this.getLayerProperty("interactionRadius");
 
         if (typeof radius === "undefined" || isNaN(radius)) {
             return 0;
@@ -274,7 +334,14 @@ export class InteractiveLayer extends Container {
         return Math.abs(radius);
     }
 
-    private getProperty(name: string): any {
+    /**
+     * Returns the property of the current layer by name.
+     * If the propertry wasn't found, it will return undefined.
+     * 
+     * @param {string} name 
+     * @returns {any}
+     */
+    private getLayerProperty(name: string): any {
         const properties: ITiledMapLayerProperty[] = this.layer.properties;
 
         if (!properties) {
@@ -290,11 +357,25 @@ export class InteractiveLayer extends Container {
         return prop.value;
     }
 
+    /**
+     * Will return true, if the animation of the entity should be reversed 
+     * after its state switches to inactive.
+     * 
+     * @param {SpriteEntity} entity 
+     * @returns {boolean}
+     */
     private shouldReverse(entity: SpriteEntity): boolean {
         return typeof entity.properties !== "undefined" && entity.properties["reverseInactive"]
     }
 
-    private getCharacterPosition(char: Character) {
+    /**
+     * Returns the charachters position. Response is prepared 
+     * for SpriteEntity hitbox calculation.
+     * 
+     * @param {Character} char 
+     * @returns {PositionInterface}
+     */
+    private getCharacterPosition(char: Character): PositionInterface {
         return {
             x: char.x + char.width,
             y: char.y + char.height * 2
