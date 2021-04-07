@@ -1,3 +1,4 @@
+import Tileset = Phaser.Tilemaps.Tileset;
 import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
 
@@ -214,10 +215,7 @@ export class InteractiveLayer extends Container {
                         // if an animation was found, add each frame to the image (if it doesn't already exist)
                         if (typeof scene.anims.get(key) === "undefined") {
                             for (const j in animation) {
-                                if (!tileset.image.has(String(animation[j].tileid))) {
-                                    const frameCoordinates = (tileset.getTileTextureCoordinates(animation[j].tileid + tileset.firstgid) as any);
-                                    tileset.image.add(String(animation[j].tileid), 0, frameCoordinates.x, frameCoordinates.y, tileset.tileWidth, tileset.tileHeight);
-                                }
+                                this.addFrameToTilesetImage(tileset, String(animation[j].tileid), animation[j].tileid + tileset.firstgid);
                             }
     
                             scene.anims.create({
@@ -235,14 +233,10 @@ export class InteractiveLayer extends Container {
                         scene.sys.updateList.add(sprite);
                     } else {
                         // if no animation was found, just add the on e tile as a frame (if it doesn't already exist)
-                        const id = index - tileset.firstgid;
+                        const id = String(index - tileset.firstgid);
+                        this.addFrameToTilesetImage(tileset, id, index);
 
-                        if (!tileset.image.has(String(id))) {
-                            const coordinates = (tileset.getTileTextureCoordinates(index) as any);
-                            tileset.image.add(String(id), 0, coordinates.x, coordinates.y, tileset.tileWidth, tileset.tileHeight);
-                        }
-
-                        sprite = new Sprite(scene, x, y, tileset.image, String(id));
+                        sprite = new Sprite(scene, x, y, tileset.image, id);
                     }
 
                     this.add(sprite);
@@ -262,9 +256,9 @@ export class InteractiveLayer extends Container {
      * If non was found it will just return null.
      * 
      * @param {number} index 
-     * @returns {Phaser.Tilemaps.Tileset|null}
+     * @returns {Tileset|null}
      */
-    private getTilesetContainingTile(index: number): Phaser.Tilemaps.Tileset|null {
+    private getTilesetContainingTile(index: number): Tileset|null {
         const scene = this.getScene();
 
         for (const i in scene.Map.tilesets) {
@@ -281,11 +275,11 @@ export class InteractiveLayer extends Container {
     /**
      * Will return the animation from a tile. If non is defined it will return null.
      * 
-     * @param {Phaser.Tilemaps.Tileset} tileset 
+     * @param {Tileset} tileset 
      * @param {number} index 
      * @returns {TileAnimation[]|null}
      */
-    private getAnimationFromTile(tileset: Phaser.Tilemaps.Tileset, index: number): TileAnimation[]|null {
+    private getAnimationFromTile(tileset: Tileset, index: number): TileAnimation[]|null {
         const data = tileset.getTileData(index);
 
         if (typeof data === "object" && data !== null && Array.isArray((data as any).animation)) {
@@ -389,5 +383,19 @@ export class InteractiveLayer extends Container {
             && sprite.y - sprite.height * radius <= y        // top
             && sprite.x + sprite.width * (radius + 1) > x    // right
             && sprite.y + sprite.height * (radius + 1) > y   // bottom
+    }
+
+    /**
+     * 
+     * @param {} tileset 
+     * @param {string} key 
+     * @param {number} index 
+     * @returns {void}
+     */
+    private addFrameToTilesetImage(tileset: Tileset, key: string, index: number): void {
+        if (!tileset.image.has(key)) {
+            const coordinates = (tileset.getTileTextureCoordinates(index) as any);
+            tileset.image.add(key, 0, coordinates.x, coordinates.y, tileset.tileWidth, tileset.tileHeight);
+        }
     }
 }
