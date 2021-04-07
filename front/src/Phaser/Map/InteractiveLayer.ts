@@ -77,15 +77,7 @@ export class InteractiveLayer extends Container {
             let wasActivatedThisRound = false;
 
             for (const position of positions) {
-                const { x, y } = position;
-
-                // check if player is inside of sprite / interaction radius
-                if (
-                    sprite.x - sprite.width * r <= x            // left
-                    && sprite.y - sprite.height * r <= y        // top
-                    && sprite.x + sprite.width * (r + 1) > x    // right
-                    && sprite.y + sprite.height * (r + 1) > y   // bottom
-                ) {
+                if (this.isPlayerInsideInteractionRadius(position, sprite, r)) {
                     // (1) if one active sprite was found and radius = -1, 
                     // there is no need to check for other ones
                     if (radius == -1) {
@@ -380,5 +372,22 @@ export class InteractiveLayer extends Container {
             x: char.x + char.width,
             y: char.y + char.height * 2
         }
+    }
+
+    /**
+     * Returns if a player is inside of the specified interaction radius of a tile.
+     * 
+     * @param {PositionInterface} playerPosition 
+     * @param {Sprite} sprite 
+     * @param {number} radius 
+     * @returns {boolean}
+     */
+    private isPlayerInsideInteractionRadius(playerPosition: PositionInterface, sprite: Sprite, radius: number): boolean {
+        const { x, y } = playerPosition;
+
+        return sprite.x - sprite.width * radius <= x         // left
+            && sprite.y - sprite.height * radius <= y        // top
+            && sprite.x + sprite.width * (radius + 1) > x    // right
+            && sprite.y + sprite.height * (radius + 1) > y   // bottom
     }
 }
