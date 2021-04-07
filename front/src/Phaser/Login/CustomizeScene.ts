@@ -11,6 +11,7 @@ import {localUserStore} from "../../Connexion/LocalUserStore";
 import {addLoader} from "../Components/Loader";
 import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
 import {AbstractCharacterScene} from "./AbstractCharacterScene";
+import {areCharacterLayersValid} from "../../Connexion/LocalUser";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -110,6 +111,9 @@ export class CustomizeScene extends AbstractCharacterScene {
                     layers.push(this.layers[i][layerItem].name);
                 }
                 i++;
+            }
+            if (!areCharacterLayersValid(layers)) {
+                return;
             }
 
             gameManager.setCharacterLayers(layers);

@@ -35,7 +35,7 @@ export class GameManager {
         
         if (!this.playerName) {
             return LoginSceneName;
-        } else if (!this.characterLayers) {
+        } else if (!this.characterLayers || !this.characterLayers.length) {
             return SelectCharacterSceneName;
         } else {
             return EnableCameraSceneName;
