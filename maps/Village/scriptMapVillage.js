@@ -46,29 +46,17 @@ WA.onEnterZone(zoneSchoolName, () => {
         }]);
 })
 
-WA.onLeaveZone(zoneSchoolName, () => {
-    if (currentPopup !== undefined) {
-        currentPopup.close();
-        currentPopup = undefined;
-    }
-})
+WA.onLeaveZone(zoneSchoolName, closePopUp)
 
-WA.onLeaveZone(zoneTCMName, () => {
-    if (currentPopup !== undefined) {
-        currentPopup.close();
-        currentPopup = undefined;
-    }
-})
+WA.onLeaveZone(zoneTCMName, closePopUp)
 
-WA.onLeaveZone(zoneEventName, () => {
+WA.onLeaveZone(zoneEventName, closePopUp)
+
+WA.onLeaveZone(zoneOfficeName, closePopUp)
+
+function closePopUp(){
     if (currentPopup !== undefined) {
         currentPopup.close();
         currentPopup = undefined;
     }
-})
-WA.onLeaveZone(zoneOfficeName, () => {
-    if (currentPopup !== undefined) {
-        currentPopup.close();
-        currentPopup = undefined;
-    }
-})
+}
