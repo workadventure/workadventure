@@ -24,7 +24,7 @@ export class HtmlUtils {
         throw new Error("Cannot find HTML element with id '"+id+"'");
     }
 
-    private static escapeHtml(html: string): string {
+    public static escapeHtml(html: string): string {
         const text = document.createTextNode(html);
         const p = document.createElement('p');
         p.appendChild(text);

@@ -14,7 +14,7 @@ export interface ITiledMap {
      * Map orientation (orthogonal)
      */
     orientation: string;
-    properties: {[key: string]: string};
+    properties: ITiledMapLayerProperty[];
 
     /**
      * Render order (right-down)

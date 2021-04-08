@@ -1,4 +1,3 @@
-# we are rebuilding on each deploy to cope with the API_URL environment URL
 FROM thecodingmachine/nodejs:12-apache
 
 COPY --chown=docker:docker . .

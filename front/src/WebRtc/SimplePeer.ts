@@ -63,7 +63,7 @@ export class SimplePeer {
     }
 
     public getNbConnections(): number {
-        return this.PeerConnectionArray.size;
+        return this.Users.length;
     }
 
     /**
@@ -230,9 +230,6 @@ export class SimplePeer {
 
             this.closeScreenSharingConnection(userId);
 
-            for (const peerConnectionListener of this.peerConnectionListeners) {
-                peerConnectionListener.onDisconnect(userId);
-            }
             const userIndex = this.Users.findIndex(user => user.userId === userId);
             if(userIndex < 0){
                 throw 'Couln\'t delete user';
@@ -249,6 +246,10 @@ export class SimplePeer {
                 this.closeScreenSharingConnection(userId);
                 this.PeerScreenSharingConnectionArray.delete(userId);
             }
+        }
+
+        for (const peerConnectionListener of this.peerConnectionListeners) {
+            peerConnectionListener.onDisconnect(userId);
         }
     }
 
