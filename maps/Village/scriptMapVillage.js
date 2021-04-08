@@ -5,6 +5,7 @@ var zoneTCMName = "popupTCMZone";
 
 var urlPricing = "https://workadventu.re/pricing";
 var urlSchoolOffer = "https://workadventu.re/school-offer";
+var urlEvent = "https://workadventu.re/events";
 var currentPopup = undefined;
 
 WA.onEnterZone(zoneOfficeName, () => {
@@ -21,10 +22,10 @@ WA.onEnterZone(zoneOfficeName, () => {
 WA.onEnterZone(zoneEventName, () => {
     currentPopup =  WA.openPopup("popUpEvent","You can create your own Event in WorkAdventure",[
         {
-            label: "See the pricing",
+            label: "See the event page",
             className: "popUpElement",
             callback: (popup => {
-                WA.openTab(urlPricing);
+                WA.openTab(urlEvent);
             })
         }]);
 })
