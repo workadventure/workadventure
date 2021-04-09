@@ -11,7 +11,11 @@ interface SpriteEntity {
     animation: string|false;
     sprite: Sprite;
     state: boolean;
-    properties: { reverseInactive: boolean; } | undefined;
+    properties: TileProperties | undefined;
+}
+
+interface TileProperties {
+    reverseInactive: boolean;
 }
 
 interface TileAnimation {
@@ -216,8 +220,8 @@ export class InteractiveLayer extends Container {
                     if (animation !== null) {
                         // if an animation was found, add each frame to the image (if it doesn't already exist)
                         if (typeof scene.anims.get(key) === "undefined") {
-                            for (const j in animation) {
-                                this.addFrameToTilesetImage(tileset, String(animation[j].tileid), animation[j].tileid + tileset.firstgid);
+                            for (const anim of animation) {
+                                this.addFrameToTilesetImage(tileset, String(anim.tileid), anim.tileid + tileset.firstgid);
                             }
     
                             scene.anims.create({
@@ -246,7 +250,7 @@ export class InteractiveLayer extends Container {
                         animation: animation === null ? false : key,
                         sprite,
                         state: false,
-                        properties: tileset.getTileProperties(index) as any
+                        properties: tileset.getTileProperties(index) as TileProperties | undefined
                     });
                 }
             }
@@ -263,9 +267,7 @@ export class InteractiveLayer extends Container {
     private getTilesetContainingTile(index: number): Tileset|null {
         const scene = this.getScene();
 
-        for (const i in scene.Map.tilesets) {
-            const tileset = scene.Map.tilesets[i];
-
+        for (const tileset of scene.Map.tilesets) {
             if (tileset.getTileData(index) !== null) {
                 return tileset;
             }
@@ -282,10 +284,10 @@ export class InteractiveLayer extends Container {
      * @returns {TileAnimation[]|null}
      */
     private getAnimationFromTile(tileset: Tileset, index: number): TileAnimation[]|null {
-        const data = tileset.getTileData(index);
+        const data = tileset.getTileData(index) as { animation: Array<TileAnimation> } | null;
 
-        if (typeof data === "object" && data !== null && Array.isArray((data as any).animation)) {
-            const animation: Array<TileAnimation> = (data as any).animation;
+        if (typeof data === "object" && data !== null && Array.isArray(data.animation)) {
+            const animation: Array<TileAnimation> = data.animation;
             return animation;
         }
 
@@ -309,7 +311,7 @@ export class InteractiveLayer extends Container {
      * @returns {number}
      */
     private getInteractionRadius(): number {
-        const radius = this.getLayerProperty("interactionRadius");
+        const radius = this.getLayerProperty("interactionRadius") as number | undefined;
 
         if (typeof radius === "undefined" || isNaN(radius)) {
             return 0;
@@ -327,9 +329,9 @@ export class InteractiveLayer extends Container {
      * If the propertry wasn't found, it will return undefined.
      * 
      * @param {string} name 
-     * @returns {any}
+     * @returns {string|boolean|number|undefined}
      */
-    private getLayerProperty(name: string): any {
+    private getLayerProperty(name: string): string|boolean|number|undefined {
         const properties: ITiledMapLayerProperty[] = this.layer.properties;
 
         if (!properties) {
@@ -397,7 +399,7 @@ export class InteractiveLayer extends Container {
      */
     private addFrameToTilesetImage(tileset: Tileset, key: string, index: number): void {
         if (!tileset.image.has(key)) {
-            const coordinates = (tileset.getTileTextureCoordinates(index) as any);
+            const coordinates = (tileset.getTileTextureCoordinates(index) as { x: number, y: number });
             tileset.image.add(key, 0, coordinates.x, coordinates.y, tileset.tileWidth, tileset.tileHeight);
         }
     }
