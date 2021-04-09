@@ -31,7 +31,7 @@ WA.onEnterZone(zoneEventName, () => {
 })
 
 WA.onEnterZone(zoneTCMName, () => {
-    currentPopup =  WA.openPopup("popUpTCM","Come meet the TCM team in our office ! ",[]);
+    currentPopup =  WA.openPopup("popUpTCM","Come meet the WorkAdventure team in our office ! ",[]);
 })
 
 
