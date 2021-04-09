@@ -355,16 +355,15 @@ export class InteractiveLayer extends Container {
     }
 
     /**
-     * Returns the charachters position. Response is prepared 
-     * for SpriteEntity hitbox calculation.
+     * Returns the charachters position.
      * 
      * @param {Character} char 
      * @returns {PositionInterface}
      */
     private getCharacterPosition(char: Character): PositionInterface {
         return {
-            x: char.x + char.width,
-            y: char.y + char.height * 2
+            x: char.x,
+            y: char.y
         }
     }
 
@@ -379,10 +378,10 @@ export class InteractiveLayer extends Container {
     private isPlayerInsideInteractionRadius(playerPosition: PositionInterface, sprite: Sprite, radius: number): boolean {
         const { x, y } = playerPosition;
 
-        return sprite.x - sprite.width * radius <= x         // left
-            && sprite.y - sprite.height * radius <= y        // top
-            && sprite.x + sprite.width * (radius + 1) > x    // right
-            && sprite.y + sprite.height * (radius + 1) > y   // bottom
+        return sprite.x - sprite.width * radius <= x + sprite.width / 2        // left
+            && sprite.y - sprite.height * radius <= y + sprite.height          // top
+            && sprite.x + sprite.width * (radius + 1) > x + sprite.width / 2   // right
+            && sprite.y + sprite.height * (radius + 1) > y + sprite.height     // bottom
     }
 
     /**
