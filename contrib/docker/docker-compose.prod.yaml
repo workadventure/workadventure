@@ -10,7 +10,7 @@ services:
       - --entrypoints.web.http.redirections.entryPoint.to=websecure
       - --entrypoints.web.http.redirections.entryPoint.scheme=https
       - --entryPoints.websecure.address=:443
-      - --certificatesresolvers.myresolver.acme.email=d.negrier@thecodingmachine.com
+      - --certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}
       - --certificatesresolvers.myresolver.acme.storage=/acme.json
       # used during the challenge
       - --certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web
@@ -37,7 +37,7 @@ services:
       DEBUG_MODE: "$DEBUG_MODE"
       JITSI_URL: $JITSI_URL
       JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
-      API_URL: pusher.${DOMAIN}
+      PUSHER_URL: //pusher.${DOMAIN}
       TURN_SERVER: "${TURN_SERVER}"
       TURN_USER: "${TURN_USER}"
       TURN_PASSWORD: "${TURN_PASSWORD}"

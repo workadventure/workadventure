@@ -24,7 +24,7 @@
                 {
                  "name":"exitUrl",
                  "type":"string",
-                 "value":"\/@\/tcm\/workadventure\/floor0"
+                 "value":"@\/tcm\/workadventure\/floor0"
                 }],
          "type":"tilelayer",
          "visible":true,
@@ -355,7 +355,7 @@
          "value":"scriptTuto.js"
         }],
  "renderorder":"right-down",
- "tiledversion":"1.5.0",
+ "tiledversion":"2021.03.23",
  "tileheight":32,
  "tilesets":[
         {

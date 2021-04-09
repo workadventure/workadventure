@@ -24,8 +24,9 @@ import {
     UserJoinedZoneMessage,
     GroupUpdateZoneMessage,
     GroupLeftZoneMessage,
+    WorldFullWarningMessage,
     UserLeftZoneMessage,
-    BanUserMessage,
+    BanUserMessage, RefreshRoomMessage,
 } from "../Messages/generated/messages_pb";
 import {User, UserSocket} from "../Model/User";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
@@ -40,7 +41,6 @@ import {
 } from "../Enum/EnvironmentVariable";
 import {Movable} from "../Model/Movable";
 import {PositionInterface} from "../Model/PositionInterface";
-import {adminApi, CharacterTexture} from "./AdminApi";
 import Jwt from "jsonwebtoken";
 import {JITSI_URL} from "../Enum/EnvironmentVariable";
 import {clientEventsEmitter} from "./ClientEventsEmitter";
@@ -58,6 +58,7 @@ function emitZoneMessage(subMessage: SubToPusherMessage, socket: ZoneSocket): vo
     // TODO: should we batch those every 100ms?
     const batchMessage = new BatchToPusherMessage();
     batchMessage.addPayload(subMessage);
+    
 
     socket.write(batchMessage);
 }
@@ -75,10 +76,17 @@ export class SocketManager {
     }
 
     public async handleJoinRoom(socket: UserSocket, joinRoomMessage: JoinRoomMessage): Promise<{ room: GameRoom; user: User }> {
-
+        
         //join new previous room
         const {room, user} = await this.joinRoom(socket, joinRoomMessage);
-
+        
+        if (!socket.writable) {
+            console.warn('Socket was aborted');
+            return {
+                room,
+                user
+            };
+        }
         const roomJoinedMessage = new RoomJoinedMessage();
         roomJoinedMessage.setTagList(joinRoomMessage.getTagList());
 
@@ -94,7 +102,6 @@ export class SocketManager {
 
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setRoomjoinedmessage(roomJoinedMessage);
-        console.log('SENDING MESSAGE roomJoinedMessage');
         socket.write(serverToClientMessage);
 
         return {
@@ -121,15 +128,7 @@ export class SocketManager {
             if (viewport === undefined) {
                 throw new Error('Viewport not found in message');
             }
-
-            // sending to all clients in room except sender
-            /*client.position = {
-                x: position.x,
-                y: position.y,
-                direction,
-                moving: position.moving,
-            };
-            client.viewport = viewport;*/
+            
 
             // update position in the world
             room.updatePosition(user, ProtobufUtils.toPointInterface(position));
@@ -183,21 +182,6 @@ export class SocketManager {
             console.error(e);
         }
     }
-
-    // TODO: handle this message in pusher
-    /*async handleReportMessage(client: ExSocketInterface, reportPlayerMessage: ReportPlayerMessage) {
-        try {
-            const reportedSocket = this.sockets.get(reportPlayerMessage.getReporteduserid());
-            if (!reportedSocket) {
-                throw 'reported socket user not found';
-            }
-            //TODO report user on admin application
-            await adminApi.reportPlayer(reportedSocket.userUuid, reportPlayerMessage.getReportcomment(),  client.userUuid)
-        } catch (e) {
-            console.error('An error occurred on "handleReportMessage"');
-            console.error(e);
-        }
-    }*/
 
     emitVideo(room: GameRoom, user: User, data: WebRtcSignalToServerMessage): void {
         //send only at user
@@ -262,8 +246,6 @@ export class SocketManager {
                 debug('Room is empty. Deleting room "%s"', room.roomId);
             }
         } finally {
-            //delete Client.roomId;
-            //this.sockets.delete(Client.userId);
             clientEventsEmitter.emitClientLeave(user.uuid, room.roomId);
             console.log('A user left');
         }
@@ -283,11 +265,6 @@ export class SocketManager {
                 (thing: Movable, position:PositionInterface, listener: ZoneSocket) => this.onClientMove(thing, position, listener),
                 (thing: Movable, newZone: Zone|null, listener: ZoneSocket) => this.onClientLeave(thing, newZone, listener)
             );
-            if (!world.anonymous) {
-                const data = await adminApi.fetchMapDetails(world.organizationSlug, world.worldSlug, world.roomSlug)
-                world.tags = data.tags
-                world.policyType = Number(data.policy_type)
-            }
             gaugeManager.incNbRoomGauge();
             this.rooms.set(roomId, world);
         }
@@ -298,20 +275,14 @@ export class SocketManager {
 
         const roomId = joinRoomMessage.getRoomid();
 
-        const world = await socketManager.getOrCreateRoom(roomId);
-
-        // Dispatch groups position to newly connected user
-        /*world.getGroups().forEach((group: Group) => {
-            this.emitCreateUpdateGroupEvent(socket, group);
-        });*/
+        const room = await socketManager.getOrCreateRoom(roomId);
 
         //join world
-        const user = world.join(socket, joinRoomMessage);
+        const user = room.join(socket, joinRoomMessage);
 
         clientEventsEmitter.emitClientJoin(user.uuid, roomId);
-        //console.log(new Date().toISOString() + ' A user joined (', this.sockets.size, ' connected users)');
         console.log(new Date().toISOString() + ' A user joined');
-        return {room: world, user};
+        return {room, user};
     }
 
     private onZoneEnter(thing: Movable, fromZone: Zone|null, listener: ZoneSocket) {
@@ -419,10 +390,6 @@ export class SocketManager {
     }
 
     private joinWebRtcRoom(user: User, group: Group) {
-        /*const roomId: string = "webrtcroom"+group.getId();
-        if (user.socket.webRtcRoomId === roomId) {
-            return;
-        }*/
 
         for (const otherUser of group.getUsers()) {
             if (user === otherUser) {
@@ -754,6 +721,43 @@ export class SocketManager {
 
             const clientMessage = new ServerToClientMessage();
             clientMessage.setSendusermessage(sendUserMessage);
+
+            recipient.socket.write(clientMessage);
+        });
+    }
+
+    dispatchWorlFullWarning(roomId: string,): void {
+        const room = this.rooms.get(roomId);
+        if (!room) {
+            //todo: this should cause the http call to return a 500
+            console.error("In sendAdminRoomMessage, could not find room with id '" +  roomId + "'. Maybe the room was closed a few milliseconds ago and there was a race condition?");
+            return;
+        }
+        
+        room.getUsers().forEach((recipient) => {
+            const worldFullMessage = new WorldFullWarningMessage();
+
+            const clientMessage = new ServerToClientMessage();
+            clientMessage.setWorldfullwarningmessage(worldFullMessage);
+
+            recipient.socket.write(clientMessage);
+        });
+    }
+
+    dispatchRoomRefresh(roomId: string,): void {
+        const room = this.rooms.get(roomId);
+        if (!room) {
+            return;
+        }
+        
+        const versionNumber = room.incrementVersion();
+        room.getUsers().forEach((recipient) => {
+            const worldFullMessage = new RefreshRoomMessage();
+            worldFullMessage.setRoomid(roomId)
+            worldFullMessage.setVersionnumber(versionNumber)
+
+            const clientMessage = new ServerToClientMessage();
+            clientMessage.setRefreshroommessage(worldFullMessage);
 
             recipient.socket.write(clientMessage);
         });

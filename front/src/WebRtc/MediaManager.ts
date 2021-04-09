@@ -2,19 +2,14 @@ import {DivImportance, layoutManager} from "./LayoutManager";
 import {HtmlUtils} from "./HtmlUtils";
 import {discussionManager, SendMessageCallback} from "./DiscussionManager";
 import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
-import {VIDEO_QUALITY_SELECT} from "../Administration/ConsoleGlobalMessageManager";
+import {localUserStore} from "../Connexion/LocalUserStore";
 import {UserSimplePeerInterface} from "./SimplePeer";
 declare const navigator:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-const localValueVideo = localStorage.getItem(VIDEO_QUALITY_SELECT);
-let valueVideo = 20;
-if(localValueVideo){
-    valueVideo = parseInt(localValueVideo);
-}
 let videoConstraint: boolean|MediaTrackConstraints = {
     width: { min: 640, ideal: 1280, max: 1920 },
     height: { min: 400, ideal: 720 },
-    frameRate: { ideal: valueVideo },
+    frameRate: { ideal: localUserStore.getVideoQualityValue() },
     facingMode: "user",
     resizeMode: 'crop-and-scale',
     aspectRatio: 1.777777778

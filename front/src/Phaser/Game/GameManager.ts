@@ -2,6 +2,7 @@ import {GameScene} from "./GameScene";
 import {connectionManager} from "../../Connexion/ConnectionManager";
 import {Room} from "../../Connexion/Room";
 import {MenuScene, MenuSceneName} from "../Menu/MenuScene";
+import {HelpCameraSettingsScene, HelpCameraSettingsSceneName} from "../Menu/HelpCameraSettingsScene";
 import {LoginSceneName} from "../Login/LoginScene";
 import {SelectCharacterSceneName} from "../Login/SelectCharacterScene";
 import {EnableCameraSceneName} from "../Login/EnableCameraScene";
@@ -78,6 +79,10 @@ export class GameManager {
         console.log('starting '+ (this.currentGameSceneName || this.startRoom.id))
         scenePlugin.start(this.currentGameSceneName || this.startRoom.id);
         scenePlugin.launch(MenuSceneName);
+        
+        if (!localUserStore.getHelpCameraSettingsShown()) {
+            scenePlugin.launch(HelpCameraSettingsSceneName);//700
+        }
     }
     
     public gameSceneIsCreated(scene: GameScene) {
