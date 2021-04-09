@@ -854,6 +854,11 @@ ${escapedMessage}
     private removeAllRemotePlayers(): void {
         this.MapPlayersByKey.forEach((player: RemotePlayer) => {
             player.destroy();
+
+            if (player.companion) {
+                player.companion.destroy();
+            }
+
             this.MapPlayers.remove(player);
         });
         this.MapPlayersByKey = new Map<number, RemotePlayer>();
@@ -1243,6 +1248,11 @@ ${escapedMessage}
             console.error('Cannot find user with id ', userId);
         } else {
             player.destroy();
+
+            if (player.companion) {
+                player.companion.destroy();
+            }
+
             this.MapPlayers.remove(player);
         }
         this.MapPlayersByKey.delete(userId);

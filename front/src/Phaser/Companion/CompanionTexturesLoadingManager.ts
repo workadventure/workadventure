@@ -23,5 +23,7 @@ export const lazyLoadCompanionResource = (loader: LoaderPlugin, name: string): P
     
         loader.spritesheet(resource.name, resource.img, { frameWidth: 32, frameHeight: 32, endFrame: 12 });
         loader.once(`filecomplete-spritesheet-${resource.name}`, () => resolve(resource.name));
+    
+        loader.start(); // It's only automatically started during the Scene preload.
     });
 }

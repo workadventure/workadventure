@@ -227,9 +227,5 @@ export abstract class Character extends Container {
         }
         super.destroy();
         this.playerName.destroy();
-
-        if (this.companion) {
-            this.companion.destroy();
-        }
     }
 }
