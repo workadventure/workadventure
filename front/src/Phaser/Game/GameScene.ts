@@ -727,9 +727,9 @@ export class GameScene extends ResizableScene implements CenterListener {
                 return;
             }
             const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
-            let html = `<div id="container"><div class="nes-container with-title is-centered">
+            let html = `<div id="container" hidden><div class="nes-container with-title is-centered">
 ${escapedMessage}
- </div> </div>`;
+ </div> `;
             const buttonContainer = `<div class="buttonContainer"</div>`;
             html += buttonContainer;
             let id = 0;
@@ -737,15 +737,18 @@ ${escapedMessage}
                 html  += `<button type="button" class="nes-btn is-${HtmlUtils.escapeHtml(button.className ?? '')}" id="popup-${openPopupEvent.popupId}-${id}">${HtmlUtils.escapeHtml(button.label)}</button>`;
                 id++;
             }
-            const domElement = this.add.dom(objectLayerSquare.x  + objectLayerSquare.width/2 ,
-                objectLayerSquare.y + objectLayerSquare.height/2).createFromHTML(html);
+            html += '</div>';
+            const domElement = this.add.dom(objectLayerSquare.x  ,
+                objectLayerSquare.y).createFromHTML(html);
 
             const container : HTMLDivElement =  domElement.getChildByID("container") as HTMLDivElement;
             container.style.width = objectLayerSquare.width + "px";
             domElement.scale = 0;
             domElement.setClassName('popUpElement');
 
-
+            setTimeout(() => {
+                (container).hidden = false;
+            }, 100);
 
             id = 0;
             for (const button of openPopupEvent.buttons) {
@@ -753,6 +756,7 @@ ${escapedMessage}
                 const btnId = id;
                 button.onclick = () => {
                     iframeListener.sendButtonClickedEvent(openPopupEvent.popupId, btnId);
+                    button.disabled = true;
                 }
                 id++;
             }
