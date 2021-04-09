@@ -725,7 +725,6 @@ ${escapedMessage}
                 (container).hidden = false;
             }, 100);
 
-            console.log("afterTimeOut");
             id = 0;
             for (const button of openPopupEvent.buttons) {
                 const button = HtmlUtils.getElementByIdOrFail<HTMLButtonElement>(`popup-${openPopupEvent.popupId}-${id}`);
