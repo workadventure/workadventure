@@ -42,12 +42,15 @@ jobs:
         env:
           API_URL: "localhost:8080"
         working-directory: "front"
+
       # We build the front to generate the typings of iframe_api, then we copy those typings in a separate package.
       - name: Copy typings to package dir
         run: cp front/dist/src/iframe_api.d.ts front/packages/iframe-api-typings/iframe_api.d.ts
+
       - name: Install dependencies in package
         run: yarn install
         working-directory: "front/packages/iframe-api-typings"
+
       - name: Publish package
         run: yarn publish
         working-directory: "front/packages/iframe-api-typings"
