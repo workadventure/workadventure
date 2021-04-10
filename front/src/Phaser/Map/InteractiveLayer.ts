@@ -67,7 +67,7 @@ export class InteractiveLayer extends Container {
         const scene = this.getScene();
 
         const radius = this.getInteractionRadius();
-        const r = radius == -1 ? 0 : radius;
+        const r = Math.abs(radius);
 
         // collecting all player positions
         const positions = [this.getCharacterPosition(scene.CurrentPlayer)];
@@ -85,7 +85,7 @@ export class InteractiveLayer extends Container {
                 if (this.isPlayerInsideInteractionRadius(position, sprite, r)) {
                     // (1) if one active sprite was found and radius = -1, 
                     // there is no need to check for other ones
-                    if (radius == -1) {
+                    if (radius < 0) {
                         activateAll = true;
                         break;
                     }
@@ -99,16 +99,16 @@ export class InteractiveLayer extends Container {
             }
 
             // same as comment (1)
-            if (radius == -1 && activateAll) {
+            if (radius < 0 && activateAll) {
                 break;
             }
 
-            if (radius != -1 && !wasActivatedThisRound && entity.state) {
+            if (radius >= 0 && !wasActivatedThisRound && entity.state) {
                 this.reverseEntityAnimation(entity);
             }
         }
 
-        if (radius == -1) {
+        if (radius < 0) {
             if (activateAll && !this.allActive) {
                 // if one entity changes to active: play all sprite animations
                 for (const entity of this.spritesCollection) {
@@ -317,11 +317,7 @@ export class InteractiveLayer extends Container {
             return 0;
         }
 
-        if (radius == -1) {
-            return -1;
-        }
-
-        return Math.abs(radius);
+        return radius;
     }
 
     /**
