@@ -161,6 +161,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     private characterLayers!: string[];
     private messageSubscription: Subscription|null = null;
     private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
+    private originalMapUrl: string|undefined;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
@@ -195,7 +196,8 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.load.image(openChatIconName, 'resources/objects/talk.png');
         this.load.on(FILE_LOAD_ERROR, (file: {src: string}) => {
             // If we happen to be in HTTP and we are trying to load a URL in HTTPS only... (this happens only in dev environments)
-            if (window.location.protocol === 'http:' && file.src === this.MapUrlFile && file.src.startsWith('http:')) {
+            if (window.location.protocol === 'http:' && file.src === this.MapUrlFile && file.src.startsWith('http:') && this.originalMapUrl === undefined) {
+                this.originalMapUrl = this.MapUrlFile;
                 this.MapUrlFile = this.MapUrlFile.replace('http://', 'https://');
                 this.load.tilemapTiledJSON(this.MapUrlFile, this.MapUrlFile);
                 this.load.on('filecomplete-tilemapJSON-'+this.MapUrlFile, (key: string, type: string, data: unknown) => {
@@ -203,10 +205,25 @@ export class GameScene extends ResizableScene implements CenterListener {
                 });
                 return;
             }
+            // 127.0.0.1, localhost and *.localhost are considered secure, even on HTTP.
+            // So if we are in https, we can still try to load a HTTP local resource (can be useful for testing purposes)
+            // See https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure
+            const url = new URL(file.src);
+            const host = url.host.split(':')[0];
+            if (window.location.protocol === 'https:' && file.src === this.MapUrlFile && (host === '127.0.0.1' || host === 'localhost' || host.endsWith('.localhost')) && this.originalMapUrl === undefined) {
+                this.originalMapUrl = this.MapUrlFile;
+                this.MapUrlFile = this.MapUrlFile.replace('https://', 'http://');
+                this.load.tilemapTiledJSON(this.MapUrlFile, this.MapUrlFile);
+                this.load.on('filecomplete-tilemapJSON-'+this.MapUrlFile, (key: string, type: string, data: unknown) => {
+                    this.onMapLoad(data);
+                });
+                return;
+            }
+
             this.scene.start(ErrorSceneName, {
                 title: 'Network error',
                 subTitle: 'An error occurred while loading resource:',
-                message: file.src
+                message: this.originalMapUrl ?? file.src
             });
         });
         this.load.on('filecomplete-tilemapJSON-'+this.MapUrlFile, (key: string, type: string, data: unknown) => {
@@ -727,9 +744,9 @@ export class GameScene extends ResizableScene implements CenterListener {
                 return;
             }
             const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
-            let html = `<div id="container"><div class="nes-container with-title is-centered">
+            let html = `<div id="container" hidden><div class="nes-container with-title is-centered">
 ${escapedMessage}
- </div> </div>`;
+ </div> `;
             const buttonContainer = `<div class="buttonContainer"</div>`;
             html += buttonContainer;
             let id = 0;
@@ -737,15 +754,18 @@ ${escapedMessage}
                 html  += `<button type="button" class="nes-btn is-${HtmlUtils.escapeHtml(button.className ?? '')}" id="popup-${openPopupEvent.popupId}-${id}">${HtmlUtils.escapeHtml(button.label)}</button>`;
                 id++;
             }
-            const domElement = this.add.dom(objectLayerSquare.x  + objectLayerSquare.width/2 ,
-                objectLayerSquare.y + objectLayerSquare.height/2).createFromHTML(html);
+            html += '</div>';
+            const domElement = this.add.dom(objectLayerSquare.x  ,
+                objectLayerSquare.y).createFromHTML(html);
 
             const container : HTMLDivElement =  domElement.getChildByID("container") as HTMLDivElement;
             container.style.width = objectLayerSquare.width + "px";
             domElement.scale = 0;
             domElement.setClassName('popUpElement');
 
-
+            setTimeout(() => {
+                (container).hidden = false;
+            }, 100);
 
             id = 0;
             for (const button of openPopupEvent.buttons) {
@@ -753,6 +773,7 @@ ${escapedMessage}
                 const btnId = id;
                 button.onclick = () => {
                     iframeListener.sendButtonClickedEvent(openPopupEvent.popupId, btnId);
+                    button.disabled = true;
                 }
                 id++;
             }
