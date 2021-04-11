@@ -1,7 +1,5 @@
 name: Push @workadventure/iframe-api-typings to NPM
 on:
-  # TODO remove action on push
-  push: ~
   release:
     types: [created]
 jobs:
@@ -14,8 +12,19 @@ jobs:
         with:
           node-version: '14.x'
           registry-url: 'https://registry.npmjs.org'
-      # TODO: replace version with RELEASE tag
-      # TODO: enable declaration flag in tsconfig dynamically
+
+      - name: Edit tsconfig.json to add declarations
+        run: "sed -i 's/\"declaration\": false/\"declaration\": true/g' tsconfig.json"
+        working-directory: "front"
+
+      - name: Replace version number
+        run: 'sed -i "s#VERSION_PLACEHOLDER#${GITHUB_REF/refs\/tags\//}#g" package.json'
+        working-directory: "front/packages/iframe-api-typings"
+
+      - name: Debug package.json
+        run: cat package.json
+        working-directory: "front/packages/iframe-api-typings"
+
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
         with:
