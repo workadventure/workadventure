@@ -21,12 +21,14 @@ export interface HasMovedEvent {
 export class GameManager {
     private playerName: string|null;
     private characterLayers: string[]|null;
+    private companion: string|null;
     private startRoom!:Room;
     currentGameSceneName: string|null = null;
     
     constructor() {
         this.playerName = localUserStore.getName();
         this.characterLayers = localUserStore.getCharacterLayers();
+        this.companion = localUserStore.getCompanion();
     }
 
     public async init(scenePlugin: Phaser.Scenes.ScenePlugin): Promise<string> {
@@ -63,6 +65,14 @@ export class GameManager {
         return this.characterLayers;
     }
 
+    
+    setCompanion(companion: string|null): void {
+        this.companion = companion;
+    }
+
+    getCompanion(): string|null {
+        return this.companion;
+    }
 
     public async loadMap(room: Room, scenePlugin: Phaser.Scenes.ScenePlugin): Promise<void> {
         const roomID = room.id;

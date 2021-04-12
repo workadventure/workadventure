@@ -296,6 +296,7 @@ export class SocketManager {
             userJoinedZoneMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
             userJoinedZoneMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
             userJoinedZoneMessage.setFromzone(this.toProtoZone(fromZone));
+            userJoinedZoneMessage.setCompanion(thing.companion);
 
             const subMessage = new SubToPusherMessage();
             subMessage.setUserjoinedzonemessage(userJoinedZoneMessage);
@@ -605,6 +606,7 @@ export class SocketManager {
                 userJoinedMessage.setName(thing.name);
                 userJoinedMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
                 userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
+                userJoinedMessage.setCompanion(thing.companion);
 
                 const subMessage = new SubToPusherMessage();
                 subMessage.setUserjoinedzonemessage(userJoinedMessage);
