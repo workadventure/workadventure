@@ -319,7 +319,9 @@ export class MenuScene extends Phaser.Scene {
     }
 
     private gotToCreateMapPage() {
-        const sparkHost = 'https://'+window.location.host.replace('play.', '')+'/choose-map.html';
+        //const sparkHost = 'https://'+window.location.host.replace('play.', '')+'/choose-map.html';
+        //TODO fix me: this button can to send us on WorkAdventure BO.
+        const sparkHost = 'https://workadventu.re/choose-map.html';
         window.open(sparkHost, '_blank');
     }
 
