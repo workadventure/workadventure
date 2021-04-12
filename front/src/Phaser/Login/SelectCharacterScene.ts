@@ -10,6 +10,7 @@ import {loadAllDefaultModels, loadCustomTexture} from "../Entity/PlayerTexturesL
 import {addLoader} from "../Components/Loader";
 import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
 import {AbstractCharacterScene} from "./AbstractCharacterScene";
+import {areCharacterLayersValid} from "../../Connexion/LocalUser";
 
 
 //todo: put this constants in a dedicated file
@@ -142,6 +143,9 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     private nextScene(): void {
+        if (this.selectedPlayer !== null && !areCharacterLayersValid([this.selectedPlayer.texture.key])) {
+            return;
+        }
         this.scene.stop(SelectCharacterSceneName);
         if (this.selectedPlayer !== null) {
             gameManager.setCharacterLayers([this.selectedPlayer.texture.key]);
