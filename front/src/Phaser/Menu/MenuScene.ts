@@ -104,7 +104,11 @@ export class MenuScene extends Phaser.Scene {
     }
 
     public revealMenuIcon(): void {
-        (this.menuButton.getChildByID('menuIcon') as HTMLElement).hidden = false
+        try {
+            (this.menuButton.getChildByID('menuIcon') as HTMLElement).hidden = false;
+        } catch (err) {
+            console.error(err);
+        }
     }
 
     openSideMenu() {

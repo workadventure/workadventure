@@ -72,8 +72,8 @@ export class ReportMenu extends Phaser.GameObjects.DOMElement {
     }
 
     public close(): void {
+        gameManager.getCurrentGameScene(this.scene).userInputManager.restoreControls();
         this.opened = false;
-        gameManager.getCurrentGameScene(this.scene).userInputManager.initKeyBoardEvent();
         const mainEl = this.getChildByID('gameReport') as HTMLElement;
         this.scene.tweens.add({
             targets: this,

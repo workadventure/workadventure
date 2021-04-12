@@ -44,13 +44,13 @@ body .message-info.warning{
 .video-container i{
     position: absolute;
     width: 100px;
-    height: 65px;
+    height: 100px;
     left: calc(50% - 50px);
     top: calc(50% - 50px);
     background-color: black;
     border-radius: 50%;
     text-align: center;
-    padding-top: 35px;
+    padding-top: 32px;
     font-size: 28px;
     color: white;
 }
@@ -58,8 +58,8 @@ body .message-info.warning{
 .video-container img{
     position: absolute;
     display: none;
-    width: 25px;
-    height: 25px;
+    width: 40px;
+    height: 40px;
     left: 5px;
     bottom: 5px;
     padding: 10px;
@@ -108,10 +108,12 @@ body .message-info.warning{
     margin: 0;
     padding: 0;
     cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    width: 25px;
+    height: 25px;
 }
 .video-container button.report span{
     position: absolute;
-    bottom: 8px;
+    bottom: 6px;
     left: 36px;
     color: white;
     font-size: 16px;
@@ -211,8 +213,8 @@ video#myCamVideo{
 .connecting-spinner {
       /*display: inline-block;*/
       position: absolute;
-      left: calc(50% - 68px);
-      top: calc(50% - 68px);
+      left: calc(50% - 62px);
+      top: calc(50% - 62px);
 
 
       width: 130px;
@@ -850,10 +852,10 @@ div.modal-report-user{
 
 .modal-report-user img{
     position: absolute;
-    height: 50px;
-    width: 50px;
+    height: 24px;
+    width: 24px;
     z-index: 999;
-    left: calc(50% - 25px);
+    left: calc(50% - 12px);
     top: 10px;
 }
 
@@ -1017,7 +1019,7 @@ div.modal-report-user{
     background-color: #2d2d2dba;
     right: 34px;
     margin: 0px;
-    padding: 6px 0px;
+    padding: 2px 0px;
     border-radius: 15px;
     border: none;
     color: white;
@@ -1073,18 +1075,18 @@ div.modal-report-user{
 .discussion .send-message{
     position: absolute;
     bottom: 45px;
-    width: 220px;
+    width: 200px;
     height: 26px;
     margin-bottom: 10px;
 }
 
 .discussion .send-message input{
     position: absolute;
-    width: calc(100% - 10px);
-    height: 20px;
+    width: calc(100% - 20px);
+    height: 30px;
     background-color: #171717;
     color: white;
-    border-radius: 15px;
+    border-radius: 10px;
     border: none;
     padding: 6px;
 }
@@ -1117,10 +1119,11 @@ div.action p.action-body{
     padding: 10px;
     background-color: #2d2d2dba;
     color: #fff;
-    font-size: 12px;
+    font-size: 14px;
+    font-weight: 500;
     text-align: center;
-    max-width: 150px;
-    margin-left: calc(50% - 75px);
+    max-width: 250px;
+    margin-left: calc(50% - 125px);
     border-radius: 15px;
 }
 .popUpElement{
