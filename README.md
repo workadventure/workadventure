@@ -5,14 +5,14 @@
 
 Live demo [here](https://play.workadventu.re/@/tcm/workadventure/wa-village).
 
-# WorkAdventure
+# WorkAdventure XCE
 
 WorkAdventure is a web-based collaborative workspace presented in the form of a
 16-bit video game.
 
 In WorkAdventure you can move around your office and talk to your colleagues (using a video-chat system, triggered when you approach someone).
 
-See more features for your virtual office: https://workadventu.re/virtual-office
+The XCE fork of Work Adventure is meant as an experimental playground to pre-test some new features, change other aspects of the software and have fun.
 
 ## Community resources
 
