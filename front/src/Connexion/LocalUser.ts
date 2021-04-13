@@ -14,8 +14,8 @@ export function isUserNameValid(value: string): boolean {
     return regexp.test(value);
 }
 
-export function areCharacterLayersValid(value: string[]): boolean {
-    if (!value.length) return false;
+export function areCharacterLayersValid(value: string[] | null): boolean {
+    if (!value || !value.length) return false;
     for (let i = 0; i < value.length; i++) {
         if (/^\w+$/.exec(value[i]) === null) {
             return false;
