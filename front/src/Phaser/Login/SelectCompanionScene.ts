@@ -29,6 +29,8 @@ export class SelectCompanionScene extends ResizableScene {
     private companions: Array<Phaser.Physics.Arcade.Sprite> = new Array<Phaser.Physics.Arcade.Sprite>();
     private companionModels: Array<CompanionResourceDescriptionInterface|null> = [null];
 
+    private confirmTouchArea!: Rectangle;
+
     constructor() {
         super({
             key: SelectCompanionSceneName
@@ -54,12 +56,17 @@ export class SelectCompanionScene extends ResizableScene {
     create() {
         this.textField = new TextField(this, this.game.renderer.width / 2, 50, 'Select your companion');
 
+        const confirmTouchAreaY = 115 + 32 * Math.ceil(this.companionModels.length / this.nbCharactersPerRow);
         this.pressReturnField = new TextField(
             this,
             this.game.renderer.width / 2,
-            90 + 32 * Math.ceil(this.companionModels.length / this.nbCharactersPerRow),
-            'Press enter to start'
+            confirmTouchAreaY,
+            'Touch here\n\n or \n\n press enter to start'
         );
+        this.confirmTouchArea = this.add
+            .rectangle(this.game.renderer.width / 2, confirmTouchAreaY, 200, 50)
+            .setInteractive()
+            .on("pointerdown", this.nextScene.bind(this));
 
         const rectangleXStart = this.game.renderer.width / 2 - (this.nbCharactersPerRow / 2) * 32 + 16;
         this.selectedRectangle = this.add.rectangle(rectangleXStart, 90, 32, 32).setStrokeStyle(2, 0xFFFFFF);
