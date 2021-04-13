@@ -2,7 +2,7 @@ import {ADMIN_API_URL, ALLOW_ARTILLERY, SECRET_KEY} from "../Enum/EnvironmentVar
 import {uuid} from "uuidv4";
 import Jwt from "jsonwebtoken";
 import {TokenInterface} from "../Controller/AuthenticateController";
-import {adminApi, AdminApiData} from "../Services/AdminApi";
+import {adminApi, AdminBannedData} from "../Services/AdminApi";
 
 class JWTTokenManager {
 
@@ -10,7 +10,7 @@ class JWTTokenManager {
         return Jwt.sign({userUuid: userUuid}, SECRET_KEY, {expiresIn: '200d'}); //todo: add a mechanic to refresh or recreate token
     }
 
-    public async getUserUuidFromToken(token: unknown): Promise<string> {
+    public async getUserUuidFromToken(token: unknown, ipAddress?: string, room?: string): Promise<string> {
 
         if (!token) {
             throw new Error('An authentication error happened, a user tried to connect without a token.');
@@ -50,20 +50,49 @@ class JWTTokenManager {
 
                 if (ADMIN_API_URL) {
                     //verify user in admin
-                    adminApi.fetchCheckUserByToken(tokenInterface.userUuid).then(() => {
-                        resolve(tokenInterface.userUuid);
-                    }).catch((err) => {
-                        //anonymous user
-                        if(err.response && err.response.status && err.response.status === 404){
+                    let promise = new Promise((resolve) => resolve());
+                    if(ipAddress && room) {
+                        promise = this.verifyBanUser(tokenInterface.userUuid, ipAddress, room);
+                    }
+                    promise.then(() => {
+                        adminApi.fetchCheckUserByToken(tokenInterface.userUuid).then(() => {
                             resolve(tokenInterface.userUuid);
-                            return;
-                        }
+                        }).catch((err) => {
+                            //anonymous user
+                            if (err.response && err.response.status && err.response.status === 404) {
+                                resolve(tokenInterface.userUuid);
+                                return;
+                            }
+                            reject(err);
+                        });
+                    }).catch((err) => {
                         reject(err);
                     });
                 } else {
                     resolve(tokenInterface.userUuid);
                 }
             });
+        });
+    }
+
+    private verifyBanUser(userUuid: string, ipAddress: string, room: string): Promise<AdminBannedData> {
+        const parts = room.split('/');
+        if (parts.length < 3 || parts[0] !== '@') {
+            return Promise.resolve({
+                is_banned: false,
+                message: ''
+            });
+        }
+
+        const organization = parts[1];
+        const world = parts[2];
+        return adminApi.verifyBanUser(userUuid, ipAddress, organization, world).then((data: AdminBannedData) => {
+            if (data && data.is_banned) {
+                throw new Error('User was banned');
+            }
+            return data;
+        }).catch((err) => {
+            throw err;
         });
     }
 

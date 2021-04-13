@@ -13,8 +13,7 @@ const debug = Debug('apiClientRespository');
 class ApiClientRepository {
     private roomManagerClients: RoomManagerClient[] = [];
 
-    public constructor(private apiUrls: string[]) {
-    }
+    public constructor(private apiUrls: string[]) {}
 
     public async getClient(roomId: string): Promise<RoomManagerClient> {
         const array = new Uint32Array(crypto.createHash('md5').update(roomId).digest());

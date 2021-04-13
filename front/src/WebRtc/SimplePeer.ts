@@ -9,13 +9,18 @@ import {
     UpdatedLocalStreamCallback
 } from "./MediaManager";
 import {ScreenSharingPeer} from "./ScreenSharingPeer";
-import {MESSAGE_TYPE_CONSTRAINT, MESSAGE_TYPE_MESSAGE, VideoPeer} from "./VideoPeer";
+import {MESSAGE_TYPE_BLOCKED, MESSAGE_TYPE_CONSTRAINT, MESSAGE_TYPE_MESSAGE, VideoPeer} from "./VideoPeer";
 import {RoomConnection} from "../Connexion/RoomConnection";
+import {connectionManager} from "../Connexion/ConnectionManager";
+import {GameConnexionTypes} from "../Url/UrlManager";
+import {blackListManager} from "./BlackListManager";
 
 export interface UserSimplePeerInterface{
     userId: number;
     name?: string;
     initiator?: boolean;
+    webRtcUser?: string|undefined;
+    webRtcPassword?: string|undefined;
 }
 
 export interface PeerConnectionListener {
@@ -36,6 +41,9 @@ export class SimplePeer {
     private readonly sendLocalScreenSharingStreamCallback: StartScreenSharingCallback;
     private readonly stopLocalScreenSharingStreamCallback: StopScreenSharingCallback;
     private readonly peerConnectionListeners: Array<PeerConnectionListener> = new Array<PeerConnectionListener>();
+    private readonly userId: number;
+    private lastWebrtcUserName: string|undefined;
+    private lastWebrtcPassword: string|undefined;
 
     constructor(private Connection: RoomConnection, private enableReporting: boolean, private myName: string) {
         // We need to go through this weird bound function pointer in order to be able to "free" this reference later.
@@ -46,6 +54,7 @@ export class SimplePeer {
         mediaManager.onUpdateLocalStream(this.sendLocalVideoStreamCallback);
         mediaManager.onStartScreenSharing(this.sendLocalScreenSharingStreamCallback);
         mediaManager.onStopScreenSharing(this.stopLocalScreenSharingStreamCallback);
+        this.userId = Connection.getUserId();
         this.initialise();
     }
 
@@ -54,7 +63,7 @@ export class SimplePeer {
     }
 
     public getNbConnections(): number {
-        return this.PeerConnectionArray.size;
+        return this.Users.length;
     }
 
     /**
@@ -89,15 +98,14 @@ export class SimplePeer {
         });
     }
 
-    private receiveWebrtcStart(user: UserSimplePeerInterface) {
-        //this.WebRtcRoomId = data.roomId;
+    private receiveWebrtcStart(user: UserSimplePeerInterface): void {
         this.Users.push(user);
         // Note: the clients array contain the list of all clients (even the ones we are already connected to in case a user joints a group)
         // So we can receive a request we already had before. (which will abort at the first line of createPeerConnection)
         // This would be symmetrical to the way we handle disconnection.
-        
+
         //start connection
-        console.log('receiveWebrtcStart. Initiator: ', user.initiator)
+        //console.log('receiveWebrtcStart. Initiator: ', user.initiator)
         if(!user.initiator){
             return;
         }
@@ -134,17 +142,16 @@ export class SimplePeer {
 
         mediaManager.removeActiveVideo("" + user.userId);
 
-        const reportCallback = this.enableReporting ? (comment: string) => {
-            this.reportUser(user.userId, comment);
-        } : undefined;
+        mediaManager.addActiveVideo(user, name);
 
-        mediaManager.addActiveVideo("" + user.userId, reportCallback, name);
+        this.lastWebrtcUserName = user.webRtcUser;
+        this.lastWebrtcPassword = user.webRtcPassword;
 
-        const peer = new VideoPeer(user.userId, user.initiator ? user.initiator : false, this.Connection);
+        const peer = new VideoPeer(user, user.initiator ? user.initiator : false, this.Connection);
 
         //permit to send message
         mediaManager.addSendMessageCallback(user.userId,(message: string) => {
-            peer.write(new Buffer(JSON.stringify({type: MESSAGE_TYPE_MESSAGE, name: this.myName.toUpperCase(), message: message})));
+            peer.write(new Buffer(JSON.stringify({type: MESSAGE_TYPE_MESSAGE, name: this.myName.toUpperCase(), userId: this.userId, message: message})));
         });
 
         peer.toClose = false;
@@ -189,7 +196,13 @@ export class SimplePeer {
             mediaManager.addScreenSharingActiveVideo("" + user.userId);
         }
 
-        const peer = new ScreenSharingPeer(user.userId, user.initiator ? user.initiator : false, this.Connection);
+        // Enrich the user with last known credentials (if they are not set in the user object, which happens when a user triggers the screen sharing)
+        if (user.webRtcUser === undefined) {
+            user.webRtcUser = this.lastWebrtcUserName;
+            user.webRtcPassword = this.lastWebrtcPassword;
+        }
+
+        const peer = new ScreenSharingPeer(user, user.initiator ? user.initiator : false, this.Connection);
         this.PeerScreenSharingConnectionArray.set(user.userId, peer);
 
         for (const peerConnectionListener of this.peerConnectionListeners) {
@@ -217,9 +230,6 @@ export class SimplePeer {
 
             this.closeScreenSharingConnection(userId);
 
-            for (const peerConnectionListener of this.peerConnectionListeners) {
-                peerConnectionListener.onDisconnect(userId);
-            }
             const userIndex = this.Users.findIndex(user => user.userId === userId);
             if(userIndex < 0){
                 throw 'Couln\'t delete user';
@@ -228,6 +238,18 @@ export class SimplePeer {
             }
         } catch (err) {
             console.error("closeConnection", err)
+        }
+
+        //if user left discussion, clear array peer connection of sharing
+        if(this.Users.length === 0) {
+            for (const userId of this.PeerScreenSharingConnectionArray.keys()) {
+                this.closeScreenSharingConnection(userId);
+                this.PeerScreenSharingConnectionArray.delete(userId);
+            }
+        }
+
+        for (const peerConnectionListener of this.peerConnectionListeners) {
+            peerConnectionListener.onDisconnect(userId);
         }
     }
 
@@ -245,9 +267,11 @@ export class SimplePeer {
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
             peer.destroy();
-            if(!this.PeerScreenSharingConnectionArray.delete(userId)){
+
+            //Comment this peer connexion because if we delete and try to reshare screen, the RTCPeerConnection send renegociate event. This array will be remove when user left circle discussion
+            /*if(!this.PeerScreenSharingConnectionArray.delete(userId)){
                 throw 'Couln\'t delete peer screen sharing connexion';
-            }
+            }*/
             //console.log('Nb users in peerConnectionArray '+this.PeerConnectionArray.size);
         } catch (err) {
             console.error("closeConnection", err)
@@ -290,6 +314,7 @@ export class SimplePeer {
     }
 
     private receiveWebrtcScreenSharingSignal(data: WebRtcSignalReceivedMessageInterface) {
+        if (blackListManager.isBlackListed(data.userId)) return;
         console.log("receiveWebrtcScreenSharingSignal", data);
         try {
             //if offer type, create peer connection
@@ -301,11 +326,13 @@ export class SimplePeer {
                 peer.signal(data.signal);
             } else {
                 console.error('Could not find peer whose ID is "'+data.userId+'" in receiveWebrtcScreenSharingSignal');
+                console.info('tentative to create new peer connexion');
+                this.sendLocalScreenSharingStreamToUser(data.userId);
             }
         } catch (e) {
             console.error(`receiveWebrtcSignal => ${data.userId}`, e);
-            //force delete and recreate peer connexion
-            this.PeerScreenSharingConnectionArray.delete(data.userId);
+            //Comment this peer connexion because if we delete and try to reshare screen, the RTCPeerConnection send renegociate event. This array will be remove when user left circle discussion
+            //this.PeerScreenSharingConnectionArray.delete(data.userId);
             this.receiveWebrtcScreenSharingSignal(data);
         }
     }
@@ -379,14 +406,8 @@ export class SimplePeer {
         }
     }
 
-    /**
-     * Triggered locally when clicking on the report button
-     */
-    public reportUser(userId: number, message: string) {
-        this.Connection.emitReportPlayerMessage(userId, message)
-    }
-
     private sendLocalScreenSharingStreamToUser(userId: number): void {
+        if (blackListManager.isBlackListed(userId)) return;
         // If a connection already exists with user (because it is already sharing a screen with us... let's use this connection)
         if (this.PeerScreenSharingConnectionArray.has(userId)) {
             this.pushScreenSharingToRemoteUser(userId);
@@ -416,8 +437,8 @@ export class SimplePeer {
 
         if (!PeerConnectionScreenSharing.isReceivingScreenSharingStream()) {
             PeerConnectionScreenSharing.destroy();
-
-            this.PeerScreenSharingConnectionArray.delete(userId);
+            //Comment this peer connexion because if we delete and try to reshare screen, the RTCPeerConnection send renegociate event. This array will be remove when user left circle discussion
+            //this.PeerScreenSharingConnectionArray.delete(userId);
         }
     }
 }

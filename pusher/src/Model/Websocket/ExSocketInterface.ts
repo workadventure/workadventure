@@ -3,6 +3,7 @@ import {Identificable} from "./Identificable";
 import {ViewportInterface} from "_Model/Websocket/ViewportMessage";
 import {
     BatchMessage,
+    CompanionMessage,
     PusherToBackMessage,
     ServerToClientMessage,
     SubMessage
@@ -24,10 +25,12 @@ export interface ExSocketInterface extends WebSocket, Identificable {
     roomId: string;
     //userId: number;   // A temporary (autoincremented) identifier for this user
     userUuid: string; // A unique identifier for this user
+    IPAddress: string; // IP address
     name: string;
     characterLayers: CharacterLayer[];
     position: PointInterface;
     viewport: ViewportInterface;
+    companion?: CompanionMessage;
     /**
      * Pushes an event that will be sent in the next batch of events
      */
@@ -35,6 +38,7 @@ export interface ExSocketInterface extends WebSocket, Identificable {
     batchedMessages: BatchMessage;
     batchTimeout: NodeJS.Timeout|null;
     disconnecting: boolean,
+    messages: unknown,
     tags: string[],
     textures: CharacterTexture[],
     backConnection: BackConnection,

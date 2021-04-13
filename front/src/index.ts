@@ -1,27 +1,23 @@
 import 'phaser';
 import GameConfig = Phaser.Types.Core.GameConfig;
+import "../dist/resources/style/index.scss";
+
 import {DEBUG_MODE, JITSI_URL, RESOLUTION} from "./Enum/EnvironmentVariable";
-import {cypressAsserter} from "./Cypress/CypressAsserter";
 import {LoginScene} from "./Phaser/Login/LoginScene";
 import {ReconnectingScene} from "./Phaser/Reconnecting/ReconnectingScene";
 import {SelectCharacterScene} from "./Phaser/Login/SelectCharacterScene";
+import {SelectCompanionScene} from "./Phaser/Login/SelectCompanionScene";
 import {EnableCameraScene} from "./Phaser/Login/EnableCameraScene";
-import {FourOFourScene} from "./Phaser/Reconnecting/FourOFourScene";
-import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
-import {OutlinePipeline} from "./Phaser/Shaders/OutlinePipeline";
 import {CustomizeScene} from "./Phaser/Login/CustomizeScene";
 import {ResizableScene} from "./Phaser/Login/ResizableScene";
 import {EntryScene} from "./Phaser/Login/EntryScene";
 import {coWebsiteManager} from "./WebRtc/CoWebsiteManager";
 import {MenuScene} from "./Phaser/Menu/MenuScene";
+import {HelpCameraSettingsScene} from "./Phaser/Menu/HelpCameraSettingsScene";
 import {localUserStore} from "./Connexion/LocalUserStore";
-
-// Load Jitsi if the environment variable is set.
-if (JITSI_URL) {
-    const jitsiScript = document.createElement('script');
-    jitsiScript.src = 'https://' + JITSI_URL + '/external_api.js';
-    document.head.appendChild(jitsiScript);
-}
+import {ErrorScene} from "./Phaser/Reconnecting/ErrorScene";
+import {iframeListener} from "./Api/IframeListener";
+import {discussionManager} from "./WebRtc/DiscussionManager";
 
 const {width, height} = coWebsiteManager.getGameSize();
 
@@ -53,17 +49,42 @@ const fps : Phaser.Types.Core.FPSConfig = {
     smoothStep: false
 }
 
+// the ?phaserMode=canvas parameter can be used to force Canvas usage
+const params = new URLSearchParams(document.location.search.substring(1));
+const phaserMode = params.get("phaserMode");
+let mode: number;
+switch (phaserMode) {
+    case 'auto':
+    case null:
+        mode = Phaser.AUTO;
+        break;
+    case 'canvas':
+        mode = Phaser.CANVAS;
+        break;
+    case 'webgl':
+        mode = Phaser.WEBGL;
+        break;
+    default:
+        throw new Error('phaserMode parameter must be one of "auto", "canvas" or "webgl"');
+}
+
+
 const config: GameConfig = {
-    type: Phaser.AUTO,
+    type: mode,
     title: "WorkAdventure",
     width: width / RESOLUTION,
     height: height / RESOLUTION,
     parent: "game",
-    scene: [EntryScene, LoginScene, SelectCharacterScene, EnableCameraScene, ReconnectingScene, FourOFourScene, CustomizeScene, MenuScene],
+    scene: [EntryScene, LoginScene, SelectCharacterScene, SelectCompanionScene, EnableCameraScene, ReconnectingScene, ErrorScene, CustomizeScene, MenuScene, HelpCameraSettingsScene],
     zoom: RESOLUTION,
     fps: fps,
     dom: {
         createContainer: true
+    },
+    render: {
+        pixelArt: true,
+        roundPixels: true,
+        antialias: false
     },
     physics: {
         default: "arcade",
@@ -73,18 +94,19 @@ const config: GameConfig = {
     },
     callbacks: {
         postBoot: game => {
-            // FIXME: we should fore WebGL in the config.
-            const renderer = game.renderer as WebGLRenderer;
-            renderer.pipelines.add(OutlinePipeline.KEY, new OutlinePipeline(game));
+            // Commented out to try to fix MacOS bug
+            /*const renderer = game.renderer;
+            if (renderer instanceof WebGLRenderer) {
+                renderer.pipelines.add(OutlinePipeline.KEY, new OutlinePipeline(game));
+            }*/
         }
     }
 };
 
-cypressAsserter.gameStarted();
-
 const game = new Phaser.Game(config);
 
 window.addEventListener('resize', function (event) {
+    coWebsiteManager.resetStyle();
     const {width, height} = coWebsiteManager.getGameSize();
     game.scale.resize(width / RESOLUTION, height / RESOLUTION);
 
@@ -96,7 +118,9 @@ window.addEventListener('resize', function (event) {
     }
 });
 
-coWebsiteManager.onStateChange(() => {
+coWebsiteManager.onResize.subscribe(() => {
     const {width, height} = coWebsiteManager.getGameSize();
     game.scale.resize(width / RESOLUTION, height / RESOLUTION);
 });
+
+iframeListener.init();

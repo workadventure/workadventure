@@ -2,15 +2,16 @@ import {EnableCameraSceneName} from "./EnableCameraScene";
 import {TextField} from "../Components/TextField";
 import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
-import {BodyResourceDescriptionInterface, LAYERS, loadAllLayers, loadCustomTexture} from "../Entity/body_character";
+import {loadAllLayers, loadCustomTexture} from "../Entity/PlayerTexturesLoadingManager";
 import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
 import {gameManager} from "../Game/GameManager";
 import {ResizableScene} from "./ResizableScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
-import {PlayerResourceDescriptionInterface} from "../Entity/Character";
-import {SelectCharacterSceneName} from "./SelectCharacterScene";
-import {LoginSceneName} from "./LoginScene";
+import {addLoader} from "../Components/Loader";
+import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
+import {AbstractCharacterScene} from "./AbstractCharacterScene";
+import {areCharacterLayersValid} from "../../Connexion/LocalUser";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -21,7 +22,7 @@ enum CustomizeTextures{
     arrowUp = "arrow_up",
 }
 
-export class CustomizeScene extends ResizableScene {
+export class CustomizeScene extends AbstractCharacterScene {
 
     private textField!: TextField;
     private enterField!: TextField;
@@ -33,6 +34,13 @@ export class CustomizeScene extends ResizableScene {
     private arrowUp!: Image;
 
     private Rectangle!: Rectangle;
+
+    private mobileTapUP!: Rectangle;
+    private mobileTapDOWN!: Rectangle;
+    private mobileTapLEFT!: Rectangle;
+    private mobileTapRIGHT!: Rectangle;
+
+    private mobileTapENTER!: Rectangle;
 
     private logo!: Image;
 
@@ -48,36 +56,28 @@ export class CustomizeScene extends ResizableScene {
     }
 
     preload() {
+        addLoader(this);
+
+        this.layers = loadAllLayers(this.load);
+        this.loadCustomSceneSelectCharacters().then((bodyResourceDescriptions) => {
+            bodyResourceDescriptions.forEach((bodyResourceDescription) => {
+                if(!bodyResourceDescription.level){
+                    throw 'Texture level is null';
+                }
+                this.layers[bodyResourceDescription.level].unshift(bodyResourceDescription);
+            });
+        });
+
         this.load.image(CustomizeTextures.arrowRight, "resources/objects/arrow_right.png");
         this.load.image(CustomizeTextures.icon, "resources/logos/tcm_full.png");
         this.load.image(CustomizeTextures.arrowUp, "resources/objects/arrow_up.png");
         this.load.bitmapFont(CustomizeTextures.mainFont, 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
-
-        //load all the png files
-        loadAllLayers(this.load);
-
-        // load custom layers
-        this.layers = LAYERS;
-
-        const localUser = localUserStore.getLocalUser();
-
-        const textures = localUser?.textures;
-        if (textures) {
-            for (const texture of textures) {
-                loadCustomTexture(this.load, texture);
-                const name = 'customCharacterTexture'+texture.id;
-                this.layers[texture.level].unshift({
-                    name,
-                    img: texture.url
-                });
-            }
-        }
     }
 
     create() {
         this.textField = new TextField(this, this.game.renderer.width / 2, 30, 'Customize your own Avatar!');
 
-        this.enterField = new TextField(this, this.game.renderer.width / 2, 40, 'you can start the game by pressing SPACE..');
+        this.enterField = new TextField(this, this.game.renderer.width / 2, 60, 'Start the game by pressing ENTER\n\n or touching the center rectangle');
 
         this.logo = new Image(this, this.game.renderer.width - 30, this.game.renderer.height - 20, CustomizeTextures.icon);
         this.add.existing(this.logo);
@@ -85,22 +85,88 @@ export class CustomizeScene extends ResizableScene {
 
         this.arrowRight = new Image(this, this.game.renderer.width*0.9, this.game.renderer.height/2, CustomizeTextures.arrowRight);
         this.add.existing(this.arrowRight);
+        this.mobileTapRIGHT = this.add
+          .rectangle(
+            this.game.renderer.width*0.9,
+            this.game.renderer.height/2,
+            32,
+            32,
+          )
+          .setInteractive()
+          .on("pointerdown", () => {
+            this.moveCursorHorizontally(1);
+          });
 
         this.arrowLeft = new Image(this, this.game.renderer.width/9, this.game.renderer.height/2, CustomizeTextures.arrowRight);
         this.arrowLeft.flipX = true;
         this.add.existing(this.arrowLeft);
-
+        this.mobileTapLEFT = this.add
+          .rectangle(
+            this.game.renderer.width/9,
+            this.game.renderer.height/2,
+            32,
+            32,
+          )
+          .setInteractive()
+          .on("pointerdown", () => {
+            this.moveCursorHorizontally(-1);
+          });
 
         this.Rectangle = this.add.rectangle(this.cameras.main.worldView.x + this.cameras.main.width / 2, this.cameras.main.worldView.y + this.cameras.main.height / 2, 32, 33)
         this.Rectangle.setStrokeStyle(2, 0xFFFFFF);
         this.add.existing(this.Rectangle);
+        this.mobileTapENTER = this.add
+          .rectangle(
+            this.cameras.main.worldView.x + this.cameras.main.width / 2,
+            this.cameras.main.worldView.y + this.cameras.main.height / 2,
+            32,
+            32,
+          )
+          .setInteractive()
+          .on("pointerdown", () => {
+              const layers: string[] = [];
+              let i = 0;
+              for (const layerItem of this.selectedLayers) {
+                  if (layerItem !== undefined) {
+                      layers.push(this.layers[i][layerItem].name);
+                  }
+                  i++;
+              }
+
+              gameManager.setCharacterLayers(layers);
+
+              this.scene.sleep(CustomizeSceneName);
+              gameManager.tryResumingGame(this, EnableCameraSceneName);
+          });
 
         this.arrowDown = new Image(this, this.game.renderer.width - 30, 100, CustomizeTextures.arrowUp);
         this.arrowDown.flipY = true;
         this.add.existing(this.arrowDown);
+        this.mobileTapDOWN = this.add
+          .rectangle(
+            this.game.renderer.width - 30,
+            100,
+            32,
+            32,
+          )
+          .setInteractive()
+          .on("pointerdown", () => {
+            this.moveCursorVertically(1);
+          });
 
         this.arrowUp = new Image(this, this.game.renderer.width - 30, 60, CustomizeTextures.arrowUp);
         this.add.existing(this.arrowUp);
+        this.mobileTapUP = this.add
+          .rectangle(
+            this.game.renderer.width - 30,
+            60,
+            32,
+            32,
+          )
+          .setInteractive()
+          .on("pointerdown", () => {
+            this.moveCursorVertically(-1);
+          });
 
         this.createCustomizeLayer(0, 0, 0);
         this.createCustomizeLayer(0, 0, 1);
@@ -118,6 +184,9 @@ export class CustomizeScene extends ResizableScene {
                     layers.push(this.layers[i][layerItem].name);
                 }
                 i++;
+            }
+            if (!areCharacterLayersValid(layers)) {
+                return;
             }
 
             gameManager.setCharacterLayers(layers);
@@ -272,7 +341,9 @@ export class CustomizeScene extends ResizableScene {
         this.moveLayers();
 
         this.Rectangle.x = this.cameras.main.worldView.x + this.cameras.main.width / 2;
+        this.mobileTapENTER.x = this.cameras.main.worldView.x + this.cameras.main.width / 2;
         this.Rectangle.y = this.cameras.main.worldView.y + this.cameras.main.height / 2;
+        this.mobileTapENTER.y = this.cameras.main.worldView.y + this.cameras.main.height / 2;
 
         this.textField.x = this.game.renderer.width/2;
 
@@ -280,15 +351,25 @@ export class CustomizeScene extends ResizableScene {
         this.logo.y = this.game.renderer.height - 20;
 
         this.arrowUp.x = this.game.renderer.width - 30;
+        this.mobileTapUP.x = this.game.renderer.width - 30;
         this.arrowUp.y = 60;
+        this.mobileTapUP.y = 60;
 
         this.arrowDown.x = this.game.renderer.width - 30;
+        this.mobileTapDOWN.x = this.game.renderer.width - 30;
         this.arrowDown.y = 100;
+        this.mobileTapDOWN.y = 100;
 
         this.arrowLeft.x = this.game.renderer.width/9;
+        this.mobileTapLEFT.x = this.game.renderer.width/9;
         this.arrowLeft.y = this.game.renderer.height/2;
+        this.mobileTapLEFT.y = this.game.renderer.height/2;
 
         this.arrowRight.x = this.game.renderer.width*0.9;
+        this.mobileTapRIGHT.x = this.game.renderer.width*0.9;
         this.arrowRight.y = this.game.renderer.height/2;
+        this.mobileTapRIGHT.y = this.game.renderer.height/2;
+
+
      }
 }

@@ -2,11 +2,11 @@ import {gameManager} from "../Game/GameManager";
 import {TextField} from "../Components/TextField";
 import {TextInput} from "../Components/TextInput";
 import Image = Phaser.GameObjects.Image;
-import {PLAYER_RESOURCES, PlayerResourceDescriptionInterface} from "../Entity/Character";
-import {cypressAsserter} from "../../Cypress/CypressAsserter";
 import {SelectCharacterSceneName} from "./SelectCharacterScene";
 import {ResizableScene} from "./ResizableScene";
-import {EnableCameraSceneName} from "./EnableCameraScene";
+import {isUserNameValid, maxUserNameLength} from "../../Connexion/LocalUser";
+import { localUserStore } from "../../Connexion/LocalUserStore";
+import Rectangle = Phaser.GameObjects.Rectangle;
 
 //todo: put this constants in a dedicated file
 export const LoginSceneName = "LoginScene";
@@ -22,6 +22,7 @@ export class LoginScene extends ResizableScene {
     private pressReturnField!: TextField;
     private logo!: Image;
     private name: string = '';
+    private mobileTapRectangle!: Rectangle;
 
     constructor() {
         super({
@@ -31,46 +32,51 @@ export class LoginScene extends ResizableScene {
     }
 
     preload() {
-        cypressAsserter.preloadStarted();
         //this.load.image(LoginTextures.playButton, "resources/objects/play_button.png");
         this.load.image(LoginTextures.icon, "resources/logos/tcm_full.png");
         // Note: arcade.png from the Phaser 3 examples at: https://github.com/photonstorm/phaser3-examples/tree/master/public/assets/fonts/bitmap
         this.load.bitmapFont(LoginTextures.mainFont, 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
-        cypressAsserter.preloadFinished();
-        //add player png
-        PLAYER_RESOURCES.forEach((playerResource: PlayerResourceDescriptionInterface) => {
-            this.load.spritesheet(
-                playerResource.name,
-                playerResource.img,
-                {frameWidth: 32, frameHeight: 32}
-            );
-        });
     }
 
     create() {
-        cypressAsserter.initStarted();
 
-        this.textField = new TextField(this, this.game.renderer.width / 2, 50, 'Enter your name:');
-        this.nameInput = new TextInput(this, this.game.renderer.width / 2, 70, 8, this.name,(text: string) => {
+        this.nameInput = new TextInput(this, this.game.renderer.width / 2, 70, maxUserNameLength, this.name,(text: string) => {
             this.name = text;
-        });
+            localUserStore.setName(text);
+        })
+            .setInteractive()
+            .on('pointerdown', () => {
+                this.nameInput.focus();
+            })
 
-        this.pressReturnField = new TextField(this, this.game.renderer.width / 2, 130, 'Press enter to start');
+        this.textField = new TextField(this, this.game.renderer.width / 2, 50, 'Enter your name:')
+            .setInteractive()
+            .on('pointerdown', () => {
+                this.nameInput.focus();
+            })
+        // For mobile purposes - we need a big enough touchable area.
+        this.mobileTapRectangle = this.add.rectangle(
+            this.game.renderer.width / 2,
+            130,
+            this.game.renderer.width / 2,
+            60,
+        ).setInteractive()
+        .on('pointerdown', () => {
+            this.login(this.name)
+        })
+        this.pressReturnField = new TextField(this, this.game.renderer.width / 2, 130, 'Touch here\n\n or \n\nPress enter to start')
 
         this.logo = new Image(this, this.game.renderer.width - 30, this.game.renderer.height - 20, LoginTextures.icon);
         this.add.existing(this.logo);
 
-        const infoText = "Commands: \n - Arrows or Z,Q,S,D to move\n - SHIFT to run";
+        const infoText = "Commands: \n - Arrows or W, A, S, D to move\n - SHIFT to run";
         this.infoTextField = new TextField(this, 10, this.game.renderer.height - 35, infoText, false);
 
         this.input.keyboard.on('keyup-ENTER', () => {
-            if (this.name === '') {
-                return
+            if (isUserNameValid(this.name)) {
+                this.login(this.name);
             }
-            this.login(this.name);
         });
-
-        cypressAsserter.initFinished();
     }
 
     update(time: number, delta: number): void {
@@ -82,6 +88,7 @@ export class LoginScene extends ResizableScene {
     }
 
     private login(name: string): void {
+        if (this.name === '') return
         gameManager.setPlayerName(name);
 
         this.scene.stop(LoginSceneName)
@@ -93,6 +100,7 @@ export class LoginScene extends ResizableScene {
         this.textField.x = this.game.renderer.width / 2;
         this.nameInput.setX(this.game.renderer.width / 2 - 64);
         this.pressReturnField.x = this.game.renderer.width / 2;
+        this.mobileTapRectangle.x = this.game.renderer.width / 2;
         this.logo.x = this.game.renderer.width - 30;
         this.logo.y = this.game.renderer.height - 20;
         this.infoTextField.y = this.game.renderer.height - 35;

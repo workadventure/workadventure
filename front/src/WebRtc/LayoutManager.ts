@@ -24,8 +24,15 @@ export interface CenterListener {
 }
 
 export const ON_ACTION_TRIGGER_BUTTON = 'onaction';
+
 export const TRIGGER_WEBSITE_PROPERTIES = 'openWebsiteTrigger';
 export const TRIGGER_JITSI_PROPERTIES = 'jitsiTrigger';
+
+export const WEBSITE_MESSAGE_PROPERTIES = 'openWebsiteTriggerMessage';
+export const JITSI_MESSAGE_PROPERTIES = 'jitsiTriggerMessage';
+
+export const AUDIO_VOLUME_PROPERTY = 'audioVolume';
+export const AUDIO_LOOP_PROPERTY = 'audioLoop';
 
 /**
  * This class is in charge of the video-conference layout.
@@ -188,7 +195,7 @@ class LayoutManager {
         } else {
             HtmlUtils.getElementByIdOrFail<HTMLDivElement>('sidebar').style.display = 'none';
             HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-section').style.display = 'none';
-            HtmlUtils.getElementByIdOrFail<HTMLDivElement>('chat-mode').style.display = 'flex';
+            HtmlUtils.getElementByIdOrFail<HTMLDivElement>('chat-mode').style.display = 'grid';
         }
 
         for (const div of this.importantDivs.values()) {
@@ -212,7 +219,7 @@ class LayoutManager {
      * Tries to find the biggest available box of remaining space (this is a space where we can center the character)
      */
     public findBiggestAvailableArray(): {xStart: number, yStart: number, xEnd: number, yEnd: number} {
-        const game = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('game');
+        const game = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>('#game canvas');
         if (this.mode === LayoutMode.VideoChat) {
             const children = document.querySelectorAll<HTMLDivElement>('div.chat-mode > div');
             const htmlChildren = Array.from(children.values());
@@ -333,14 +340,10 @@ class LayoutManager {
         const mainContainer = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-container');
         mainContainer.appendChild(div);
 
-        const callBackFunctionTrigger = (() => {
-            console.log('user click on space => ', id);
-            callBack();
-        });
-
         //add trigger action
-        this.actionButtonTrigger.set(id, callBackFunctionTrigger);
-        userInputManager.addSpaceEventListner(callBackFunctionTrigger);
+        div.onpointerdown = () => callBack();
+        this.actionButtonTrigger.set(id, callBack);
+        userInputManager.addSpaceEventListner(callBack);
     }
 
     public removeActionButton(id: string, userInputManager: UserInputManager){

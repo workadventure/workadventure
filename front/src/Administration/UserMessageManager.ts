@@ -1,28 +1,29 @@
-import {RoomConnection} from "../Connexion/RoomConnection";
 import * as TypeMessages from "./TypeMessage";
+import {Banned} from "./TypeMessage";
+import {adminMessagesService} from "../Connexion/AdminMessagesService";
 
 export interface TypeMessageInterface {
     showMessage(message: string): void;
 }
 
-export class UserMessageManager {
+class UserMessageManager {
 
     typeMessages: Map<string, TypeMessageInterface> = new Map<string, TypeMessageInterface>();
+    receiveBannedMessageListener!: Function;
 
-    constructor(private Connection: RoomConnection) {
+    constructor() {
         const valueTypeMessageTab = Object.values(TypeMessages);
         Object.keys(TypeMessages).forEach((value: string, index: number) => {
             const typeMessageInstance: TypeMessageInterface = (new valueTypeMessageTab[index]() as TypeMessageInterface);
             this.typeMessages.set(value.toLowerCase(), typeMessageInstance);
         });
-        this.initialise();
-    }
 
-    initialise() {
-        //receive signal to show message
-        this.Connection.receiveUserMessage((type: string, message: string) => {
-            this.showMessage(type, message);
-        });
+        adminMessagesService.messageStream.subscribe((event) => {
+            const typeMessage = this.showMessage(event.type, event.text);
+            if(typeMessage instanceof Banned) {
+                this.receiveBannedMessageListener();
+            }
+        })
     }
 
     showMessage(type: string, message: string) {
@@ -32,5 +33,11 @@ export class UserMessageManager {
             return;
         }
         classTypeMessage.showMessage(message);
+        return classTypeMessage;
+    }
+
+    setReceiveBanListener(callback: Function){
+        this.receiveBannedMessageListener = callback;
     }
 }
+export const userMessageManager = new UserMessageManager()

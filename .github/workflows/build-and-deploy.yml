@@ -102,29 +102,6 @@ jobs:
           tags: ${{ env.GITHUB_REF_SLUG }}
           add_git_labels: true
 
-  build-website:
-
-    runs-on: ubuntu-latest
-
-    steps:
-
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      # Create a slugified value of the branch
-      - uses: rlespinasse/github-slug-action@3.1.0
-
-      - name: "Build and push back image"
-        uses: docker/build-push-action@v1
-        with:
-          dockerfile: website/Dockerfile
-          path: website/
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: thecodingmachine/workadventure-website
-          tags: ${{ env.GITHUB_REF_SLUG }}
-          add_git_labels: true
-
   build-maps:
 
     runs-on: ubuntu-latest
@@ -156,7 +133,6 @@ jobs:
       - build-pusher
       - build-maps
       - build-uploader
-      - build-website
     runs-on: ubuntu-latest
 
     steps:
@@ -174,6 +150,7 @@ jobs:
           JITSI_ISS: ${{ secrets.JITSI_ISS }}
           JITSI_URL: ${{ secrets.JITSI_URL }}
           SECRET_JITSI_KEY: ${{ secrets.SECRET_JITSI_KEY }}
+          TURN_STATIC_AUTH_SECRET: ${{ secrets.TURN_STATIC_AUTH_SECRET }}
         with:
           namespace: workadventure-${{ env.GITHUB_REF_SLUG }}
 
@@ -183,34 +160,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          msg: Environment deployed at https://${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com
+          msg: Environment deployed at https://play.${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com
           check_for_duplicate_msg: true
-
-      - name: Run Cypress tests
-        uses: cypress-io/github-action@v2
-        if: ${{ env.GITHUB_REF_SLUG != 'master' }}
-        env:
-          CYPRESS_BASE_URL: https://play.${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com
-        with:
-          env: host=play.${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com,port=80
-          spec: cypress/integration/spec.js
-          wait-on: https://play.${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com
-          working-directory: e2e
-
-      - name: Run Cypress tests in prod
-        uses: cypress-io/github-action@v2
-        if: ${{ env.GITHUB_REF_SLUG == 'master' }}
-        env:
-          CYPRESS_BASE_URL: https://play.workadventu.re
-        with:
-          env: host=play.workadventu.re
-          spec: cypress/integration/spec.js
-          wait-on: https://workadventu.re
-          working-directory: e2e
-
-      - name: "Upload the screenshot on test failure"
-        uses: actions/upload-artifact@v1
-        if: failure()
-        with:
-          name: "screenshot"
-          path: "./e2e/cypress/screenshots/spec.js/WorkAdventureGame -- loads (failed).png"

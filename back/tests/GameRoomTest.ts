@@ -26,6 +26,7 @@ function createJoinRoomMessage(uuid: string, x: number, y: number): JoinRoomMess
     positionMessage.setMoving(false);
     const joinRoomMessage = new JoinRoomMessage();
     joinRoomMessage.setUseruuid('1');
+    joinRoomMessage.setIpaddress('10.0.0.2');
     joinRoomMessage.setName('foo');
     joinRoomMessage.setRoomid('_/global/test.json');
     joinRoomMessage.setPositionmessage(positionMessage);
