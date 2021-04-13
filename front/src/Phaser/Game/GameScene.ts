@@ -440,9 +440,10 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.openChatIcon = new OpenChatIcon(this, 2, this.game.renderer.height - 2)
 
         // FIXME: change this to use the UserInputManager class for input
-        this.input.keyboard.on('keyup-M', () => {
+        // FIXME: Comment this feature because when user write M key in report input, the layout change.
+        /*this.input.keyboard.on('keyup-M', () => {
             this.switchLayoutMode();
-        });
+        });*/
 
         this.reposition();
 
