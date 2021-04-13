@@ -88,21 +88,26 @@
   }
 }
 @media (max-aspect-ratio: 1/1) {
+  
+  #main-container {
+    display: flex;
+    flex-direction: column-reverse;
+  }
 
 
   #cowebsite {
     left: 0;
-    bottom: 0;
+    top: 0;
     width: 100%;
     height: 50%;
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
 
     &.loading {
-      transform: translateY(90%);
+      transform: translateY(-90%);
     }
     &.hidden {
-      transform: translateY(100%);
+      transform: translateY(-100%);
     }
 
     main {
