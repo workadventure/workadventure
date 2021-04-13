@@ -1,6 +1,6 @@
 ![](https://github.com/thecodingmachine/workadventure/workflows/Continuous%20Integration/badge.svg) [![Discord](https://img.shields.io/discord/821338762134290432?label=Discord)](https://discord.gg/G6Xh9ZM9aR)
 
-![WorkAdventure logo](README-LOGO.svg)
+![WorkAdventure logo](README-INTRO.jpg)
 ![WorkAdventure office image](README-MAP.png)
 
 Live demo [here](https://play.workadventu.re/@/tcm/workadventure/wa-village).
