@@ -4,13 +4,14 @@ import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
 import {EnableCameraSceneName} from "./EnableCameraScene";
 import {CustomizeSceneName} from "./CustomizeScene";
-import {ResizableScene} from "./ResizableScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
-import {loadAllDefaultModels, loadCustomTexture} from "../Entity/PlayerTexturesLoadingManager";
+import {loadAllDefaultModels} from "../Entity/PlayerTexturesLoadingManager";
 import {addLoader} from "../Components/Loader";
 import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
 import {AbstractCharacterScene} from "./AbstractCharacterScene";
 import {areCharacterLayersValid} from "../../Connexion/LocalUser";
+import {touchScreenManager} from "../../Touch/TouchScreenManager";
+import {PinchManager} from "../UserInput/PinchManager";
 
 
 //todo: put this constants in a dedicated file
@@ -66,6 +67,9 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     create() {
+        if (touchScreenManager.supportTouchScreen) {
+            new PinchManager(this);
+        }
         this.textField = new TextField(this, this.game.renderer.width / 2, 50, 'Select your character');
         this.pressReturnField = new TextField(
             this,

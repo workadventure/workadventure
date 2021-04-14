@@ -52,9 +52,7 @@ import {jitsiFactory} from "../../WebRtc/JitsiFactory";
 import {urlManager} from "../../Url/UrlManager";
 import {audioManager} from "../../WebRtc/AudioManager";
 import {IVirtualJoystick} from "../../types";
-const {
-  default: VirtualJoystick,
-} = require("phaser3-rex-plugins/plugins/virtualjoystick.js");
+import VirtualJoystick from 'phaser3-rex-plugins/plugins/virtualjoystick.js';
 import {PresentationModeIcon} from "../Components/PresentationModeIcon";
 import {ChatModeIcon} from "../Components/ChatModeIcon";
 import {OpenChatIcon, openChatIconName} from "../Components/OpenChatIcon";
@@ -74,6 +72,8 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 import {Subscription} from "rxjs";
 import {worldFullMessageStream} from "../../Connexion/WorldFullMessageStream";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
+import {touchScreenManager} from "../../Touch/TouchScreenManager";
+import {PinchManager} from "../UserInput/PinchManager";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -350,6 +350,10 @@ export class GameScene extends ResizableScene implements CenterListener {
         gameManager.gameSceneIsCreated(this);
         urlManager.pushRoomIdToUrl(this.room);
         this.startLayerName = urlManager.getStartLayerNameFromUrl();
+
+        if (touchScreenManager.supportTouchScreen) {
+            new PinchManager(this);
+        }
 
         this.messageSubscription = worldFullMessageStream.stream.subscribe((message) => this.showWorldFullError())
 

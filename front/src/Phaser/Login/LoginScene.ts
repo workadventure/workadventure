@@ -7,6 +7,8 @@ import {ResizableScene} from "./ResizableScene";
 import {isUserNameValid, maxUserNameLength} from "../../Connexion/LocalUser";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import Rectangle = Phaser.GameObjects.Rectangle;
+import {touchScreenManager} from "../../Touch/TouchScreenManager";
+import {PinchManager} from "../UserInput/PinchManager";
 
 //todo: put this constants in a dedicated file
 export const LoginSceneName = "LoginScene";
@@ -39,6 +41,9 @@ export class LoginScene extends ResizableScene {
     }
 
     create() {
+        if (touchScreenManager.supportTouchScreen) {
+            new PinchManager(this);
+        }
 
         this.nameInput = new TextInput(this, this.game.renderer.width / 2, 70, maxUserNameLength, this.name,(text: string) => {
             this.name = text;

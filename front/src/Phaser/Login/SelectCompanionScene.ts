@@ -8,6 +8,8 @@ import { EnableCameraSceneName } from "./EnableCameraScene";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { CompanionResourceDescriptionInterface } from "../Companion/CompanionTextures";
 import { getAllCompanionResources } from "../Companion/CompanionTexturesLoadingManager";
+import {touchScreenManager} from "../../Touch/TouchScreenManager";
+import {PinchManager} from "../UserInput/PinchManager";
 
 export const SelectCompanionSceneName = "SelectCompanionScene";
 
@@ -54,6 +56,10 @@ export class SelectCompanionScene extends ResizableScene {
     }
 
     create() {
+        if (touchScreenManager.supportTouchScreen) {
+            new PinchManager(this);
+        }
+        
         this.textField = new TextField(this, this.game.renderer.width / 2, 50, 'Select your companion');
 
         const confirmTouchAreaY = 115 + 32 * Math.ceil(this.companionModels.length / this.nbCharactersPerRow);
