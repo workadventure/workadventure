@@ -20,7 +20,7 @@ function launchTuto (){
                         callback: (popup1) => {
                             WA.sendChatMessage("Hey you can talk here too!", 'WA Guide');
                             popup1.close();
-                            WA.openPopup("TutoFinal","You are good to go! You can meet the dev team and discover the features in the next room!",[
+                            WA.openPopup("TutoFinal","You are good to go! Go through the gate to meet the dev team and discover the features !",[
                                 {
                                     label: "Got it!",
                                     className : "success",callback:(popup2 => {

@@ -51,6 +51,10 @@ import {Room} from "../../Connexion/Room";
 import {jitsiFactory} from "../../WebRtc/JitsiFactory";
 import {urlManager} from "../../Url/UrlManager";
 import {audioManager} from "../../WebRtc/AudioManager";
+import {IVirtualJoystick} from "../../types";
+const {
+  default: VirtualJoystick,
+} = require("phaser3-rex-plugins/plugins/virtualjoystick.js");
 import {PresentationModeIcon} from "../Components/PresentationModeIcon";
 import {ChatModeIcon} from "../Components/ChatModeIcon";
 import {OpenChatIcon, openChatIconName} from "../Components/OpenChatIcon";
@@ -69,6 +73,7 @@ import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import DOMElement = Phaser.GameObjects.DOMElement;
 import {Subscription} from "rxjs";
 import {worldFullMessageStream} from "../../Connexion/WorldFullMessageStream";
+import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -159,8 +164,11 @@ export class GameScene extends ResizableScene implements CenterListener {
     private openChatIcon!: OpenChatIcon;
     private playerName!: string;
     private characterLayers!: string[];
+    private companion!: string|null;
     private messageSubscription: Subscription|null = null;
     private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
+    private originalMapUrl: string|undefined;
+    public virtualJoystick!: IVirtualJoystick;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
@@ -195,7 +203,8 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.load.image(openChatIconName, 'resources/objects/talk.png');
         this.load.on(FILE_LOAD_ERROR, (file: {src: string}) => {
             // If we happen to be in HTTP and we are trying to load a URL in HTTPS only... (this happens only in dev environments)
-            if (window.location.protocol === 'http:' && file.src === this.MapUrlFile && file.src.startsWith('http:')) {
+            if (window.location.protocol === 'http:' && file.src === this.MapUrlFile && file.src.startsWith('http:') && this.originalMapUrl === undefined) {
+                this.originalMapUrl = this.MapUrlFile;
                 this.MapUrlFile = this.MapUrlFile.replace('http://', 'https://');
                 this.load.tilemapTiledJSON(this.MapUrlFile, this.MapUrlFile);
                 this.load.on('filecomplete-tilemapJSON-'+this.MapUrlFile, (key: string, type: string, data: unknown) => {
@@ -203,10 +212,25 @@ export class GameScene extends ResizableScene implements CenterListener {
                 });
                 return;
             }
+            // 127.0.0.1, localhost and *.localhost are considered secure, even on HTTP.
+            // So if we are in https, we can still try to load a HTTP local resource (can be useful for testing purposes)
+            // See https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure
+            const url = new URL(file.src);
+            const host = url.host.split(':')[0];
+            if (window.location.protocol === 'https:' && file.src === this.MapUrlFile && (host === '127.0.0.1' || host === 'localhost' || host.endsWith('.localhost')) && this.originalMapUrl === undefined) {
+                this.originalMapUrl = this.MapUrlFile;
+                this.MapUrlFile = this.MapUrlFile.replace('https://', 'http://');
+                this.load.tilemapTiledJSON(this.MapUrlFile, this.MapUrlFile);
+                this.load.on('filecomplete-tilemapJSON-'+this.MapUrlFile, (key: string, type: string, data: unknown) => {
+                    this.onMapLoad(data);
+                });
+                return;
+            }
+
             this.scene.start(ErrorSceneName, {
                 title: 'Network error',
                 subTitle: 'An error occurred while loading resource:',
-                message: file.src
+                message: this.originalMapUrl ?? file.src
             });
         });
         this.load.on('filecomplete-tilemapJSON-'+this.MapUrlFile, (key: string, type: string, data: unknown) => {
@@ -335,7 +359,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         }
         this.playerName = playerName;
         this.characterLayers = gameManager.getCharacterLayers();
-
+        this.companion = gameManager.getCompanion();
 
         //initalise map
         this.Map = this.add.tilemap(this.MapUrlFile);
@@ -380,9 +404,30 @@ export class GameScene extends ResizableScene implements CenterListener {
         //initialise list of other player
         this.MapPlayers = this.physics.add.group({immovable: true});
 
+        this.virtualJoystick = new VirtualJoystick(this, {
+            x: this.game.renderer.width / 2,
+            y: this.game.renderer.height / 2,
+            radius: 20,
+            base: this.add.circle(0, 0, 20),
+            thumb: this.add.circle(0, 0, 10),
+            enable: true,
+            dir: "8dir",
+        });
+        this.virtualJoystick.visible = true;
         //create input to move
-        this.userInputManager = new UserInputManager(this);
         mediaManager.setUserInputManager(this.userInputManager);
+        this.userInputManager = new UserInputManager(this, this.virtualJoystick);
+
+        // Listener event to reposition virtual joystick
+        // whatever place you click in game area
+        this.input.on('pointerdown', (pointer: { x: number; y: number; }) => {
+            this.virtualJoystick.x = pointer.x;
+            this.virtualJoystick.y = pointer.y;
+        });
+
+        if (localUserStore.getFullscreen()) {
+            document.querySelector('body')?.requestFullscreen();
+        }
 
         //notify game manager can to create currentUser in map
         this.createCurrentPlayer();
@@ -459,7 +504,9 @@ export class GameScene extends ResizableScene implements CenterListener {
                 top: camera.scrollY,
                 right: camera.scrollX + camera.width,
                 bottom: camera.scrollY + camera.height,
-            }).then((onConnect: OnConnectInterface) => {
+            },
+            this.companion
+            ).then((onConnect: OnConnectInterface) => {
             this.connection = onConnect.connection;
 
             this.connection.onUserJoins((message: MessageUserJoined) => {
@@ -467,7 +514,8 @@ export class GameScene extends ResizableScene implements CenterListener {
                     userId: message.userId,
                     characterLayers: message.characterLayers,
                     name: message.name,
-                    position: message.position
+                    position: message.position,
+                    companion: message.companion
                 }
                 this.addPlayer(userMessage);
             });
@@ -646,7 +694,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                 if(openWebsiteTriggerValue && openWebsiteTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                     let message = allProps.get(WEBSITE_MESSAGE_PROPERTIES);
                     if(message === undefined){
-                        message = 'Press on SPACE to open the web site';
+                        message = 'Press SPACE or touch here to open web site';
                     }
                     layoutManager.addActionButton('openWebsite', message.toString(), () => {
                         openWebsiteFunction();
@@ -678,7 +726,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                 if(jitsiTriggerValue && jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                     let message = allProps.get(JITSI_MESSAGE_PROPERTIES);
                     if (message === undefined) {
-                        message = 'Press on SPACE to enter in jitsi meet room';
+                        message = 'Press SPACE or touch here to enter Jitsi Meet room';
                     }
                     layoutManager.addActionButton('jitsiRoom', message.toString(), () => {
                         openJitsiRoomFunction();
@@ -727,9 +775,9 @@ export class GameScene extends ResizableScene implements CenterListener {
                 return;
             }
             const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
-            let html = `<div id="container"><div class="nes-container with-title is-centered">
+            let html = `<div id="container" hidden><div class="nes-container with-title is-centered">
 ${escapedMessage}
- </div> </div>`;
+ </div> `;
             const buttonContainer = `<div class="buttonContainer"</div>`;
             html += buttonContainer;
             let id = 0;
@@ -737,15 +785,18 @@ ${escapedMessage}
                 html  += `<button type="button" class="nes-btn is-${HtmlUtils.escapeHtml(button.className ?? '')}" id="popup-${openPopupEvent.popupId}-${id}">${HtmlUtils.escapeHtml(button.label)}</button>`;
                 id++;
             }
-            const domElement = this.add.dom(objectLayerSquare.x  + objectLayerSquare.width/2 ,
-                objectLayerSquare.y + objectLayerSquare.height/2).createFromHTML(html);
+            html += '</div>';
+            const domElement = this.add.dom(objectLayerSquare.x  ,
+                objectLayerSquare.y).createFromHTML(html);
 
             const container : HTMLDivElement =  domElement.getChildByID("container") as HTMLDivElement;
             container.style.width = objectLayerSquare.width + "px";
             domElement.scale = 0;
             domElement.setClassName('popUpElement');
 
-
+            setTimeout(() => {
+                (container).hidden = false;
+            }, 100);
 
             id = 0;
             for (const button of openPopupEvent.buttons) {
@@ -753,6 +804,7 @@ ${escapedMessage}
                 const btnId = id;
                 button.onclick = () => {
                     iframeListener.sendButtonClickedEvent(openPopupEvent.popupId, btnId);
+                    button.disabled = true;
                 }
                 id++;
             }
@@ -849,6 +901,11 @@ ${escapedMessage}
     private removeAllRemotePlayers(): void {
         this.MapPlayersByKey.forEach((player: RemotePlayer) => {
             player.destroy();
+
+            if (player.companion) {
+                player.companion.destroy();
+            }
+
             this.MapPlayers.remove(player);
         });
         this.MapPlayersByKey = new Map<number, RemotePlayer>();
@@ -1019,7 +1076,9 @@ ${escapedMessage}
                 texturesPromise,
                 PlayerAnimationDirections.Down,
                 false,
-                this.userInputManager
+                this.userInputManager,
+                this.companion,
+                this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
         }catch (err){
             if(err instanceof TextureError) {
@@ -1211,7 +1270,9 @@ ${escapedMessage}
             addPlayerData.name,
             texturesPromise,
             addPlayerData.position.direction as PlayerAnimationDirections,
-            addPlayerData.position.moving
+            addPlayerData.position.moving,
+            addPlayerData.companion,
+            addPlayerData.companion !== null ? lazyLoadCompanionResource(this.load, addPlayerData.companion) : undefined
         );
         this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);
@@ -1234,6 +1295,11 @@ ${escapedMessage}
             console.error('Cannot find user with id ', userId);
         } else {
             player.destroy();
+
+            if (player.companion) {
+                player.companion.destroy();
+            }
+
             this.MapPlayers.remove(player);
         }
         this.MapPlayersByKey.delete(userId);

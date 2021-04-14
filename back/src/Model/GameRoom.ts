@@ -105,7 +105,8 @@ export class GameRoom {
             socket,
             joinRoomMessage.getTagList(),
             joinRoomMessage.getName(),
-            ProtobufUtils.toCharacterLayerObjects(joinRoomMessage.getCharacterlayerList())
+            ProtobufUtils.toCharacterLayerObjects(joinRoomMessage.getCharacterlayerList()),
+            joinRoomMessage.getCompanion()
         );
         this.nextUserId++;
         this.users.set(user.id, user);
