@@ -105,7 +105,12 @@ export class MenuScene extends Phaser.Scene {
     }
 
     public revealMenuIcon(): void {
-        (this.menuButton.getChildByID('menuIcon') as HTMLElement).hidden = false
+        //TODO fix me: add try catch because at the same time, 'this.menuButton' variable doesn't exist and there is error on 'getChildByID' function
+        try {
+            (this.menuButton.getChildByID('menuIcon') as HTMLElement).hidden = false;
+        } catch (err) {
+            console.error(err);
+        }
     }
 
     openSideMenu() {
@@ -322,7 +327,9 @@ export class MenuScene extends Phaser.Scene {
     }
 
     private gotToCreateMapPage() {
-        const sparkHost = 'https://'+window.location.host.replace('play.', '')+'/choose-map.html';
+        //const sparkHost = 'https://'+window.location.host.replace('play.', '')+'/choose-map.html';
+        //TODO fix me: this button can to send us on WorkAdventure BO.
+        const sparkHost = 'https://workadventu.re/getting-started';
         window.open(sparkHost, '_blank');
     }
 
