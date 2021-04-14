@@ -510,19 +510,6 @@ export class SocketManager {
         return this.rooms;
     }
 
-    /**
-     *
-     * @param token
-     */
-    /*searchClientByUuid(uuid: string): ExSocketInterface | null {
-        for(const socket of this.sockets.values()){
-            if(socket.userUuid === uuid){
-                return socket;
-            }
-        }
-        return null;
-    }*/
-
 
     public handleQueryJitsiJwtMessage(user: User, queryJitsiJwtMessage: QueryJitsiJwtMessage) {
         const room = queryJitsiJwtMessage.getJitsiroom();

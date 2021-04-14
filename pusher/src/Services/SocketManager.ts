@@ -364,6 +364,10 @@ export class SocketManager implements ZoneEventListener {
     }
 
     emitPlayGlobalMessage(client: ExSocketInterface, playglobalmessage: PlayGlobalMessage) {
+        if (!client.tags.includes('admin')) {
+            //In case of xss injection, we just kill the connection.
+            throw 'Client is not an admin!'; 
+        }
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setPlayglobalmessage(playglobalmessage);
 
