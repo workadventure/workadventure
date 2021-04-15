@@ -18,7 +18,14 @@ import {
     RESOLUTION,
     ZOOM_LEVEL
 } from "../../Enum/EnvironmentVariable";
-import {ITiledMap, ITiledMapLayer, ITiledMapLayerProperty, ITiledMapObject, ITiledTileSet} from "../Map/ITiledMap";
+import {
+    ITiledMap,
+    ITiledMapLayer,
+    ITiledMapLayerProperty,
+    ITiledMapObject,
+    ITiledMapTileLayer,
+    ITiledTileSet
+} from "../Map/ITiledMap";
 import {AddPlayerInterface} from "./AddPlayerInterface";
 import {PlayerAnimationDirections} from "../Player/Animation";
 import {PlayerMovement} from "./PlayerMovement";
@@ -77,6 +84,7 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 import {Subscription} from "rxjs";
 import {worldFullMessageStream} from "../../Connexion/WorldFullMessageStream";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
+import {LayersIterator} from "../Map/LayersIterator";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
 import {joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey} from "../Components/MobileJoystick";
@@ -353,31 +361,6 @@ export class GameScene extends ResizableScene implements CenterListener {
         }
     }
 
-    // helper for recursive group layer support
-    private createHelper(layers: ITiledMapLayer[], depth: integer, prefix: string): integer {
-        for(const layer of layers) {
-            if(layer.type === 'tilelayer') {
-                this.addLayer(this.Map.createStaticLayer(prefix + layer.name, this.Terrains, 0, 0).setDepth(depth));
-
-                const exitSceneUrl = this.getExitSceneUrl(layer);
-                if(exitSceneUrl !== undefined) {
-                    this.loadNextGame(exitSceneUrl);
-                }
-                const exitUrl = this.getExitUrl(layer);
-                if(exitUrl !== undefined) {
-                    this.loadNextGame(exitUrl);
-                }
-            }
-            if(layer.type === 'group') {
-                this.createHelper(layer.layers, depth, prefix + layer.name + '/');
-            }
-            if(layer.type === 'objectgroup' && layer.name === 'floorLayer') {
-                depth = 10000;
-            }
-        }
-        return depth;
-    }
-
     //hook create scene
     create(): void {
         gameManager.gameSceneIsCreated(this);
@@ -411,9 +394,27 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         //add layer on map
         this.Layers = new Array<Phaser.Tilemaps.StaticTilemapLayer>();
-        
-        if (this.createHelper(this.mapFile.layers, -2, '') === -2) {
-            throw new Error('Your map MUST contain a layer of type "objectgroup" whose name is "floorLayer" that represents the layer characters are drawn at.');
+
+        let depth = -2;
+        for (const layer of this.gameMap.layersIterator) {
+            if (layer.type === 'tilelayer') {
+                this.addLayer(this.Map.createStaticLayer(layer.name, this.Terrains, 0, 0).setDepth(depth));
+
+                const exitSceneUrl = this.getExitSceneUrl(layer);
+                if (exitSceneUrl !== undefined) {
+                    this.loadNextGame(exitSceneUrl);
+                }
+                const exitUrl = this.getExitUrl(layer);
+                if (exitUrl !== undefined) {
+                    this.loadNextGame(exitUrl);
+                }
+            }
+            if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
+                depth = 10000;
+            }
+        }
+        if (depth === -2) {
+            throw new Error('Your map MUST contain a layer of type "objectgroup" whose name is "floorLayer" that represents the layer characters are drawn at. This layer cannot be contained in a group.');
         }
 
         this.initStartXAndStartY();
@@ -963,20 +964,15 @@ ${escapedMessage}
         }
     }
 
-    private initPositionFromLayerNameHelper(layerName: string, layers : ITiledMapLayer[]) {
-        for (const layer of layers) {
-            if (layerName === layer.name && layer.type === 'tilelayer' && (layerName === defaultStartLayerName || this.isStartLayer(layer))) {
+    private initPositionFromLayerName(layerName: string) {
+        for (const layer of this.gameMap.layersIterator) {
+            if ((layerName === layer.name || layer.name.endsWith('/'+layerName)) && layer.type === 'tilelayer' && (layerName === defaultStartLayerName || this.isStartLayer(layer))) {
                 const startPosition = this.startUser(layer);
                 this.startX = startPosition.x + this.mapFile.tilewidth/2;
                 this.startY = startPosition.y + this.mapFile.tileheight/2;
-            } else if (layer.type === 'group') {
-                this.initPositionFromLayerNameHelper(layerName, layer.layers);
             }
         }
-    }
 
-    private initPositionFromLayerName(layerName: string) {
-        this.initPositionFromLayerNameHelper(layerName, this.mapFile.layers);
     }
 
     private getExitUrl(layer: ITiledMapLayer): string|undefined {
@@ -999,7 +995,7 @@ ${escapedMessage}
     }
 
     private getProperty(layer: ITiledMapLayer|ITiledMap, name: string): string|boolean|number|undefined {
-        const properties: ITiledMapLayerProperty[] = layer.properties;
+        const properties: ITiledMapLayerProperty[]|undefined = layer.properties;
         if (!properties) {
             return undefined;
         }
@@ -1011,7 +1007,7 @@ ${escapedMessage}
     }
 
     private getProperties(layer: ITiledMapLayer|ITiledMap, name: string): (string|number|boolean|undefined)[] {
-        const properties: ITiledMapLayerProperty[] = layer.properties;
+        const properties: ITiledMapLayerProperty[]|undefined = layer.properties;
         if (!properties) {
             return [];
         }
@@ -1025,7 +1021,7 @@ ${escapedMessage}
         await gameManager.loadMap(room, this.scene);
     }
 
-    private startUser(layer: ITiledMapLayer): PositionInterface {
+    private startUser(layer: ITiledMapTileLayer): PositionInterface {
         const tiles = layer.data;
         if (typeof(tiles) === 'string') {
             throw new Error('The content of a JSON map must be filled as a JSON array, not as a string');
