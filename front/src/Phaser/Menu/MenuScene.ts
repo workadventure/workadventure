@@ -334,6 +334,9 @@ export class MenuScene extends Phaser.Scene {
             const joystickVisible = !gameScene.virtualJoystick.visible
             gameScene.virtualJoystick.visible = joystickVisible
             localUserStore.setJoystick(joystickVisible)
+            const showJoystickButton = this.menuElement.getChildByID('showJoystick') as HTMLParagraphElement;
+            console.log('showJoystickButton', showJoystickButton);
+            showJoystickButton.innerHTML = gameScene.virtualJoystick.visible ? 'Hide joystick' : 'Show joystick';
         }
         const body = document.querySelector('body')
         if (body) {
