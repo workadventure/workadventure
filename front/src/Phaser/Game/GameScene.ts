@@ -408,26 +408,10 @@ export class GameScene extends ResizableScene implements CenterListener {
         //initialise list of other player
         this.MapPlayers = this.physics.add.group({immovable: true});
 
-        this.virtualJoystick = new VirtualJoystick(this, {
-            x: this.game.renderer.width / 2,
-            y: this.game.renderer.height / 2,
-            radius: 20,
-            base: this.add.circle(0, 0, 20),
-            thumb: this.add.circle(0, 0, 10),
-            enable: true,
-            dir: "8dir",
-        });
-        this.virtualJoystick.visible = true;
+        
         //create input to move
         mediaManager.setUserInputManager(this.userInputManager);
-        this.userInputManager = new UserInputManager(this, this.virtualJoystick);
-
-        // Listener event to reposition virtual joystick
-        // whatever place you click in game area
-        this.input.on('pointerdown', (pointer: { x: number; y: number; }) => {
-            this.virtualJoystick.x = pointer.x;
-            this.virtualJoystick.y = pointer.y;
-        });
+        this.userInputManager = new UserInputManager(this);
 
         if (localUserStore.getFullscreen()) {
             document.querySelector('body')?.requestFullscreen();

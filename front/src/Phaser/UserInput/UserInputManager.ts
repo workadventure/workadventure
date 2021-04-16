@@ -1,5 +1,6 @@
 import { Direction, IVirtualJoystick } from "../../types";
 import {GameScene} from "../Game/GameScene";
+import {touchScreenManager} from "../../Touch/TouchScreenManager";
 const {
   default: VirtualJoystick,
 } = require("phaser3-rex-plugins/plugins/virtualjoystick.js");
@@ -44,17 +45,39 @@ export class UserInputManager {
     private Scene: GameScene;
     private isInputDisabled : boolean;
 
-    private joystick : IVirtualJoystick;
+    private joystick!: IVirtualJoystick;
     private joystickEvents = new ActiveEventList();
     private joystickForceThreshold = 60;
     private joystickForceAccuX = 0;
     private joystickForceAccuY = 0;
 
-    constructor(Scene: GameScene, virtualJoystick: IVirtualJoystick) {
+    constructor(Scene: GameScene) {
         this.Scene = Scene;
         this.isInputDisabled = false;
         this.initKeyBoardEvent();
-        this.joystick = virtualJoystick;
+        if (touchScreenManager.supportTouchScreen) {
+            this.initVirtualJoystick();
+        }
+    }
+    
+    initVirtualJoystick() {
+        this.joystick = new VirtualJoystick(this, {
+            x: this.Scene.game.renderer.width / 2,
+            y: this.Scene.game.renderer.height / 2,
+            radius: 20,
+            base: this.Scene.add.circle(0, 0, 20),
+            thumb: this.Scene.add.circle(0, 0, 10),
+            enable: true,
+            dir: "8dir",
+        });
+        this.joystick.visible = true;
+
+        // Listener event to reposition virtual joystick
+        // whatever place you click in game area
+        this.Scene.input.on('pointerdown', (pointer: { x: number; y: number; }) => {
+            this.joystick.x = pointer.x;
+            this.joystick.y = pointer.y;
+        });
         this.joystick.on("update", () => {
             this.joystickForceAccuX = this.joystick.forceX ? this.joystickForceAccuX : 0;
             this.joystickForceAccuY = this.joystick.forceY ? this.joystickForceAccuY : 0;
@@ -62,18 +85,18 @@ export class UserInputManager {
             for (const name in cursorKeys) {
                 const key = cursorKeys[name as Direction];
                 switch (name) {
-                case "up":
-                    this.joystickEvents.set(UserInputEvent.MoveUp, key.isDown);
-                    break;
-                case "left":
-                    this.joystickEvents.set(UserInputEvent.MoveLeft, key.isDown);
-                    break;
-                case "down":
-                    this.joystickEvents.set(UserInputEvent.MoveDown, key.isDown);
-                    break;
-                case "right":
-                    this.joystickEvents.set(UserInputEvent.MoveRight, key.isDown);
-                    break;
+                    case "up":
+                        this.joystickEvents.set(UserInputEvent.MoveUp, key.isDown);
+                        break;
+                    case "left":
+                        this.joystickEvents.set(UserInputEvent.MoveLeft, key.isDown);
+                        break;
+                    case "down":
+                        this.joystickEvents.set(UserInputEvent.MoveDown, key.isDown);
+                        break;
+                    case "right":
+                        this.joystickEvents.set(UserInputEvent.MoveRight, key.isDown);
+                        break;
                 }
             }
         });
