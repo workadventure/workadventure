@@ -94,6 +94,20 @@ export interface ITiledMapObject {
      * Polyline points
      */
     polyline: {x: number, y: number}[];
+
+    text?: ITiledText
+}
+
+export interface ITiledText {
+    text: string,
+    wrap?: boolean,
+    fontfamily?: string,
+    pixelsize?: number,
+    color?: string,
+    underline?: boolean,
+    italic?: boolean,
+    strikeout?: boolean,
+    halign?: "center"|"right"|"justify"|"left"
 }
 
 export interface ITiledTileSet {

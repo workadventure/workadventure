@@ -18,7 +18,14 @@ import {
     RESOLUTION,
     ZOOM_LEVEL
 } from "../../Enum/EnvironmentVariable";
-import {ITiledMap, ITiledMapLayer, ITiledMapLayerProperty, ITiledMapObject, ITiledTileSet} from "../Map/ITiledMap";
+import {
+    ITiledMap,
+    ITiledMapLayer,
+    ITiledMapLayerProperty,
+    ITiledMapObject,
+    ITiledText,
+    ITiledTileSet
+} from "../Map/ITiledMap";
 import {AddPlayerInterface} from "./AddPlayerInterface";
 import {PlayerAnimationDirections} from "../Player/Animation";
 import {PlayerMovement} from "./PlayerMovement";
@@ -81,6 +88,7 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 import {Subscription} from "rxjs";
 import {worldFullMessageStream} from "../../Connexion/WorldFullMessageStream";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
+import {TextUtils} from "../Components/TextUtils";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -397,6 +405,13 @@ export class GameScene extends ResizableScene implements CenterListener {
             }
             if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
                 depth = 10000;
+            }
+            if (layer.type === 'objectgroup') {
+                for (const object of layer.objects) {
+                    if (object.text) {
+                        TextUtils.createTextFromITiledMapObject(this, object);
+                    }
+                }
             }
         }
         if (depth === -2) {
