@@ -89,7 +89,7 @@ export class LoginScene extends ResizableScene {
     }
 
     private getMiddleX() : number{
-        const middleX = (window.innerWidth / 3) - (this.loginSceneElement && this.loginSceneElement.width > 0 ? this.loginSceneElement.width : 298 /*FIXME to use a const will be injected in HTMLElement*/);
+        const middleX = (window.innerWidth / 3) - (this.loginSceneElement && this.loginSceneElement.width > 0 ? this.loginSceneElement.width : 200 /*FIXME to use a const will be injected in HTMLElement*/);
         return (middleX > 0 ? middleX : 0);
     }
 }
