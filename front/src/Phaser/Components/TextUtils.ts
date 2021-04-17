@@ -8,38 +8,46 @@ export class TextUtils {
         if (object.text === undefined) {
             throw new Error('This object has not textual representation.');
         }
-        const options: {font?: string} = {};
-        let font = '';
+        const options: {
+            fontStyle?: string,
+            fontSize?: string,
+            fontFamily?: string,
+            color?: string,
+            align?: string,
+            wordWrap?: {
+                width: number,
+                useAdvancedWrap?: boolean
+            }
+        } = {};
         if (object.text.italic) {
-            font += 'italic ';
+            options.fontStyle = 'italic';
         }
         // Note: there is no support for "strikeout" and "underline"
         let fontSize: number = 16;
         if (object.text.pixelsize) {
-            font += object.text.pixelsize+'px ';
             fontSize = object.text.pixelsize;
-        } else {
-            font += '16px ';
         }
+        options.fontSize = fontSize + 'px';
         if (object.text.fontfamily) {
-            font += '"'+object.text.fontfamily+'"';
+            options.fontFamily = '"'+object.text.fontfamily+'"';
         }
-        if (font !== '') {
-            options.font = font;
-        }
-        const textElem = scene.add.text(object.x, object.y, object.text.text, options);
-        textElem.setFontSize(fontSize);
         let color = '#000000';
         if (object.text.color !== undefined) {
             color = object.text.color;
         }
-        textElem.setColor(color);
-        if (object.text.wrap) {
-            textElem.setWordWrapWidth(textElem.width);
+        options.color = color;
+        if (object.text.wrap === true) {
+            options.wordWrap = {
+                width: object.width,
+                //useAdvancedWrap: true
+            }
         }
-        textElem.setAngle(object.rotation);
         if (object.text.halign !== undefined) {
-            textElem.setAlign(object.text.halign);
+            options.align = object.text.halign;
         }
+
+        console.warn(options);
+        const textElem = scene.add.text(object.x, object.y, object.text.text, options);
+        textElem.setAngle(object.rotation);
     }
 }
