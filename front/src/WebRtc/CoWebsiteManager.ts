@@ -180,6 +180,7 @@ class CoWebsiteManager {
             }
             setTimeout(() => {
                 this.cowebsiteMainDom.innerHTML = ``;
+                HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId).blur();
                 resolve();
             }, animationTime)
         }));

@@ -52,6 +52,9 @@ class IframeListener {
     private readonly _removeBubbleStream: Subject<void> = new Subject();
     public readonly removeBubbleStream = this._removeBubbleStream.asObservable();
 
+    private readonly _unregisterIFrameStream: Subject<void> = new Subject();
+    public readonly unregisterIFrameStream = this._unregisterIFrameStream.asObservable();
+
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
 
@@ -119,6 +122,7 @@ class IframeListener {
     }
 
     unregisterIframe(iframe: HTMLIFrameElement): void {
+        this._unregisterIFrameStream.next();
         this.iframes.delete(iframe);
     }
 
