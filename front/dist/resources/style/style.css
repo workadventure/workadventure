@@ -795,7 +795,7 @@ input[type=range]:focus::-ms-fill-upper {
     right: 0;
 }
 .main-container .audio-playing img{
-    width: 30px;
+    /*width: 30px;*/
     border-radius: 50%;
     background-color: #ffda01;
     padding: 10px;
@@ -803,6 +803,7 @@ input[type=range]:focus::-ms-fill-upper {
 .main-container .audio-playing p{
     color: white;
     margin-left: 10px;
+    margin-top: 14px;
 }
 
 /* VIDEO QUALITY */
