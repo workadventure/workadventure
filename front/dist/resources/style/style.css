@@ -138,7 +138,7 @@ body .message-info.warning{
 #div-myCamVideo {
     position: absolute;
     right: 15px;
-    bottom: 15px;
+    bottom: 30px;
     border-radius: 15px 15px 15px 15px;
 }
 
@@ -170,7 +170,7 @@ video#myCamVideo{
     background: #666;
     box-shadow: 2px 2px 24px #444;
     border-radius: 48px;
-    transform: translateY(40px);
+    transform: translateY(20px);
     transition-timing-function: ease-in-out;
     bottom: 20px;
 }
@@ -186,7 +186,7 @@ video#myCamVideo{
 .btn-cam-action div:hover{
     background: #407cf7;
     box-shadow: 4px 4px 48px #666;
-    transition: 280ms;
+    transition: 120ms;
 }
 .btn-micro{
     pointer-events: auto;
