@@ -145,7 +145,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
     private createPromise: Promise<void>;
     private createPromiseResolve!: (value?: void | PromiseLike<void>) => void;
-
+    private iframeSubscriptionList! : Array<Subscription>;
     MapUrlFile: string;
     RoomId: string;
     instance: string;
@@ -772,7 +772,8 @@ export class GameScene extends ResizableScene implements CenterListener {
     }
 
     private listenToIframeEvents(): void {
-        iframeListener.openPopupStream.subscribe((openPopupEvent) => {
+            this.iframeSubscriptionList = [];
+            this.iframeSubscriptionList.push(iframeListener.openPopupStream.subscribe((openPopupEvent) => {
 
             let  objectLayerSquare : ITiledMapObject;
             const targetObjectData = this.getObjectLayerData(openPopupEvent.targetObject);
@@ -816,7 +817,6 @@ ${escapedMessage}
                 }
                 id++;
             }
-
             this.tweens.add({
                 targets     : domElement ,
                 scale       : 1,
@@ -825,9 +825,9 @@ ${escapedMessage}
             });
 
             this.popUpElements.set(openPopupEvent.popupId, domElement);
-        });
+        }));
 
-        iframeListener.closePopupStream.subscribe((closePopupEvent) => {
+       this.iframeSubscriptionList.push(iframeListener.closePopupStream.subscribe((closePopupEvent) => {
             const popUpElement = this.popUpElements.get(closePopupEvent.popupId);
             if (popUpElement === undefined) {
                 console.error('Could not close popup with ID ', closePopupEvent.popupId,'. Maybe it has already been closed?');
@@ -843,23 +843,25 @@ ${escapedMessage}
                     this.popUpElements.delete(closePopupEvent.popupId);
                 },
             });
-        });
+        }));
 
-        iframeListener.disablePlayerControlStream.subscribe(()=>{
+       this.iframeSubscriptionList.push(iframeListener.disablePlayerControlStream.subscribe(()=>{
             this.userInputManager.disableControls();
-        })
-        iframeListener.enablePlayerControlStream.subscribe(()=>{
+        }));
+
+       this.iframeSubscriptionList.push(iframeListener.enablePlayerControlStream.subscribe(()=>{
             this.userInputManager.restoreControls();
-        })
+        }));
         let scriptedBubbleSprite : Sprite;
-        iframeListener.displayBubbleStream.subscribe(()=>{
+       this.iframeSubscriptionList.push(iframeListener.displayBubbleStream.subscribe(()=>{
             scriptedBubbleSprite = new Sprite(this,this.CurrentPlayer.x + 25,this.CurrentPlayer.y,'circleSprite-white');
             scriptedBubbleSprite.setDisplayOrigin(48, 48);
             this.add.existing(scriptedBubbleSprite);
-        })
-        iframeListener.removeBubbleStream.subscribe(()=>{
+        }));
+
+       this.iframeSubscriptionList.push(iframeListener.removeBubbleStream.subscribe(()=>{
             scriptedBubbleSprite.destroy();
-        })
+        }));
 
     }
 
@@ -904,6 +906,10 @@ ${escapedMessage}
         this.simplePeer.closeAllConnections();
         this.simplePeer?.unregister();
         this.messageSubscription?.unsubscribe();
+
+        for(const iframeEvents of this.iframeSubscriptionList){
+            iframeEvents.unsubscribe();
+        }
     }
 
     private removeAllRemotePlayers(): void {
