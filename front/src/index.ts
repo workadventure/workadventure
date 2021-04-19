@@ -33,7 +33,7 @@ const fps : Phaser.Types.Core.FPSConfig = {
     /**
      * Use setTimeout instead of requestAnimationFrame to run the game loop.
      */
-    forceSetTimeOut: true,
+    forceSetTimeOut: false,
     /**
      * Calculate the average frame delta from this many consecutive frame intervals.
      */

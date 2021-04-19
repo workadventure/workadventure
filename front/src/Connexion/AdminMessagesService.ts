@@ -5,6 +5,7 @@ export enum AdminMessageEventTypes {
     admin = 'message',
     audio = 'audio',
     ban = 'ban',
+    banned = 'banned',
 }
 
 interface AdminMessageEvent {

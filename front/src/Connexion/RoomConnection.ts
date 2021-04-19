@@ -184,7 +184,7 @@ export class RoomConnection implements RoomConnection {
             } else if (message.hasSendusermessage()) {
                 adminMessagesService.onSendusermessage(message.getSendusermessage() as SendUserMessage);
             } else if (message.hasBanusermessage()) {
-                adminMessagesService.onSendusermessage(message.getSendusermessage() as BanUserMessage);
+                adminMessagesService.onSendusermessage(message.getBanusermessage() as BanUserMessage);
             } else if (message.hasWorldfullwarningmessage()) {
                 worldFullWarningStream.onMessage();
             } else if (message.hasRefreshroommessage()) {
