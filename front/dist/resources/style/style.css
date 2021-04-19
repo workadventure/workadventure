@@ -517,6 +517,14 @@ input[type=range]:focus::-ms-fill-upper {
     /* TODO: DO WE NEED FLEX HERE???? WE WANT A SIDEBAR OF EXACTLY 25% (note: flex useful for direction!!!) */
 }
 
+.game-overlay + div {
+    pointer-events: none;
+}
+
+.game-overlay + div > div {
+    pointer-events: auto;
+}
+
 .game-overlay.active {
     display: flex;
 }
