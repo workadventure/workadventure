@@ -1,9 +1,7 @@
 import { Direction, IVirtualJoystick } from "../../types";
 import {GameScene} from "../Game/GameScene";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
-const {
-  default: VirtualJoystick,
-} = require("phaser3-rex-plugins/plugins/virtualjoystick.js");
+import VirtualJoystick from 'phaser3-rex-plugins/plugins/virtualjoystick.js';
 
 interface UserInputManagerDatum {
     keyInstance: Phaser.Input.Keyboard.Key;
@@ -20,6 +18,9 @@ export enum UserInputEvent {
     Shout,
     JoystickMove,
 }
+
+const outOfScreenX = -1000;
+const outOfScreenY = -1000;
 
 //we cannot use a map structure so we have to create a replacment
 export class ActiveEventList {
@@ -62,21 +63,22 @@ export class UserInputManager {
     
     initVirtualJoystick() {
         this.joystick = new VirtualJoystick(this, {
-            x: this.Scene.game.renderer.width / 2,
-            y: this.Scene.game.renderer.height / 2,
+            x: outOfScreenX,
+            y: outOfScreenY,
             radius: 20,
-            base: this.Scene.add.circle(0, 0, 20),
-            thumb: this.Scene.add.circle(0, 0, 10),
+            base: this.Scene.add.circle(0, 0, 20, 0xdddddd),
+            thumb: this.Scene.add.circle(0, 0, 10, 0x000000),
             enable: true,
             dir: "8dir",
         });
-        this.joystick.visible = true;
 
-        // Listener event to reposition virtual joystick
-        // whatever place you click in game area
         this.Scene.input.on('pointerdown', (pointer: { x: number; y: number; }) => {
             this.joystick.x = pointer.x;
             this.joystick.y = pointer.y;
+        });
+        this.Scene.input.on('pointerup', (pointer: { x: number; y: number; }) => {
+            this.joystick.x = outOfScreenX;
+            this.joystick.y = outOfScreenY;
         });
         this.joystick.on("update", () => {
             this.joystickForceAccuX = this.joystick.forceX ? this.joystickForceAccuX : 0;
@@ -128,6 +130,7 @@ export class UserInputManager {
         this.Scene.input.keyboard.removeAllListeners();
     }
 
+    //todo: should we also disable the joystick?
     disableControls(){
         this.Scene.input.keyboard.removeAllKeys();
         this.isInputDisabled = true;
