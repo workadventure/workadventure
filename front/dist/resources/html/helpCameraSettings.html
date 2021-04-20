@@ -3,9 +3,11 @@
         background: #eceeee;
         border: 1px solid #42464b;
         border-radius: 6px;
-        margin: 10px auto 0;
+        margin: 25px auto 0;
         width: 400px;
-        height: 370px;
+        max-height: calc(50vh - 25px);
+        overflow: scroll;
+        max-width: 50vw;
     }
     #helpCameraSettings h1 {
         background-image: linear-gradient(top, #f1f3f3, #d4dae0);
@@ -20,18 +22,6 @@
         text-align: center;
         text-shadow: 0 -1px 0 rgba(0,0,0,0.2), 0 1px 0 #fff;
     }
-    #helpCameraSettings input {
-        font-size: 70%;
-        background: linear-gradient(top, #d6d7d7, #dee0e0);
-        border: 1px solid #a1a3a3;
-        border-radius: 4px;
-        box-shadow: 0 1px #fff;
-        box-sizing: border-box;
-        color: #696969;
-        height: 30px;
-        transition: box-shadow 0.3s;
-        width: 100%;
-    }
     #helpCameraSettings section {
         margin: 10px;
     }
@@ -40,7 +30,7 @@
         margin: 0;
     }
     #helpCameraSettings button {
-        margin-top: 10px;
+        margin: 10px;
         background-color: black;
         color: white;
         border-radius: 7px;

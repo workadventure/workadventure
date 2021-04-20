@@ -1,12 +1,14 @@
 <style>
     #loginScene {
-        background: #eceeee;
-        border: 1px solid #42464b;
+        background: #000000;
+        border: 1px solid #ebeeee;
         border-radius: 6px;
         margin: 20px auto 0;
         width: 90%;
         max-width: 200px;
-        height: 200px;
+        color: #ebeeee;
+        max-height: 40vh;
+        overflow: scroll;
     }
     #loginScene h1 {
         background-image: linear-gradient(top, #f1f3f3, #d4dae0);
@@ -42,9 +44,9 @@
         margin: 0;
     }
     #loginScene button {
-        margin-top: 10px;
-        background-color: black;
-        color: white;
+        margin: 10px;
+        background-color: #ebeeee;;
+        color: black;
         border-radius: 7px;
         padding-bottom: 4px;
         width: 100px;
@@ -63,7 +65,7 @@
     #loginScene section a{
         font-size: 8px;
         text-decoration: underline;
-        color: black;
+        color: #ebeeee;
     }
     #loginScene section a:hover{
         font-weight: 700;
@@ -84,9 +86,16 @@
     #loginScene section input#loginSceneLink{
         background-color: #a1a3a3;
     }
+    #loginScene section img{
+        width: 160px;
+        margin: 20px 0;
+    }
 </style>
 
 <form id="loginScene" hidden>
+    <section class="text-center">
+        <img src="resources/logos/logo.png">
+    </section>
     <section class="text-center">
         <h5>Enter your name</h5>
         <p class="info">9 chars maximum</p>
