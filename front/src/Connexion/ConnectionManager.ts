@@ -88,9 +88,9 @@ class ConnectionManager {
         this.localUser = new LocalUser('', 'test', []);
     }
 
-    public connectToRoomSocket(roomId: string, name: string, characterLayers: string[], position: PositionInterface, viewport: ViewportInterface): Promise<OnConnectInterface> {
+    public connectToRoomSocket(roomId: string, name: string, characterLayers: string[], position: PositionInterface, viewport: ViewportInterface, companion: string|null): Promise<OnConnectInterface> {
         return new Promise<OnConnectInterface>((resolve, reject) => {
-            const connection = new RoomConnection(this.localUser.jwtToken, roomId, name, characterLayers, position, viewport);
+            const connection = new RoomConnection(this.localUser.jwtToken, roomId, name, characterLayers, position, viewport, companion);
             connection.onConnectError((error: object) => {
                 console.log('An error occurred while connecting to socket server. Retrying');
                 reject(error);
@@ -111,7 +111,7 @@ class ConnectionManager {
                 this.reconnectingTimeout = setTimeout(() => {
                     //todo: allow a way to break recursion?
                     //todo: find a way to avoid recursive function. Otherwise, the call stack will grow indefinitely.
-                    this.connectToRoomSocket(roomId, name, characterLayers, position, viewport).then((connection) => resolve(connection));
+                    this.connectToRoomSocket(roomId, name, characterLayers, position, viewport, companion).then((connection) => resolve(connection));
                 }, 4000 + Math.floor(Math.random() * 2000) );
             });
         });

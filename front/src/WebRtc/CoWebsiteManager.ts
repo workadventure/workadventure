@@ -32,7 +32,7 @@ class CoWebsiteManager {
     private resizing: boolean = false;
     private cowebsiteMainDom: HTMLDivElement;
     private cowebsiteAsideDom: HTMLDivElement;
-
+    
     get width(): number {
         return this.cowebsiteDiv.clientWidth;
     }
@@ -74,7 +74,7 @@ class CoWebsiteManager {
 
     private initResizeListeners() {
         const movecallback = (event:MouseEvent) => {
-            this.verticalMode ? this.height -= event.movementY / this.getDevicePixelRatio() : this.width -= event.movementX / this.getDevicePixelRatio();
+            this.verticalMode ? this.height += event.movementY / this.getDevicePixelRatio() : this.width -= event.movementX / this.getDevicePixelRatio();
             this.fire();
         }
 

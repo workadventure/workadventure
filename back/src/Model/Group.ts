@@ -4,9 +4,9 @@ import {PositionInterface} from "_Model/PositionInterface";
 import {Movable} from "_Model/Movable";
 import {PositionNotifier} from "_Model/PositionNotifier";
 import {gaugeManager} from "../Services/GaugeManager";
+import {MAX_PER_GROUP} from "../Enum/EnvironmentVariable";
 
 export class Group implements Movable {
-    static readonly MAX_PER_GROUP = 4;
 
     private static nextId: number = 1;
 
@@ -88,7 +88,7 @@ export class Group implements Movable {
     }
 
     isFull(): boolean {
-        return this.users.size >= Group.MAX_PER_GROUP;
+        return this.users.size >= MAX_PER_GROUP;
     }
 
     isEmpty(): boolean {

@@ -43,6 +43,7 @@ export class UserInputManager {
     private KeysCode!: UserInputManagerDatum[];
     private Scene: GameScene;
     private isInputDisabled : boolean;
+
     private joystick : IVirtualJoystick;
     private joystickEvents = new ActiveEventList();
     private joystickForceThreshold = 60;
@@ -145,7 +146,6 @@ export class UserInputManager {
             if (d.keyInstance.isDown) {
                 eventsMap.set(d.event, true);
             }
-
         });
         return eventsMap;
     }

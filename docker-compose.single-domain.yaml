@@ -116,6 +116,7 @@ services:
       ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
       JITSI_URL: $JITSI_URL
       JITSI_ISS: $JITSI_ISS
+      MAX_PER_GROUP: "$MAX_PER_GROUP"
     volumes:
       - ./back:/usr/src/app
     labels:

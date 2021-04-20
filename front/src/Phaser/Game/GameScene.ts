@@ -10,7 +10,14 @@ import {
     RoomJoinedMessageInterface
 } from "../../Connexion/ConnexionModels";
 import {CurrentGamerInterface, hasMovedEventName, Player} from "../Player/Player";
-import {DEBUG_MODE, JITSI_PRIVATE_MODE, POSITION_DELAY, RESOLUTION, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
+import {
+    DEBUG_MODE,
+    JITSI_PRIVATE_MODE,
+    MAX_PER_GROUP,
+    POSITION_DELAY,
+    RESOLUTION,
+    ZOOM_LEVEL
+} from "../../Enum/EnvironmentVariable";
 import {ITiledMap, ITiledMapLayer, ITiledMapLayerProperty, ITiledMapObject, ITiledTileSet} from "../Map/ITiledMap";
 import {AddPlayerInterface} from "./AddPlayerInterface";
 import {PlayerAnimationDirections} from "../Player/Animation";
@@ -73,6 +80,7 @@ import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import DOMElement = Phaser.GameObjects.DOMElement;
 import {Subscription} from "rxjs";
 import {worldFullMessageStream} from "../../Connexion/WorldFullMessageStream";
+import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -137,7 +145,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
     private createPromise: Promise<void>;
     private createPromiseResolve!: (value?: void | PromiseLike<void>) => void;
-
+    private iframeSubscriptionList! : Array<Subscription>;
     MapUrlFile: string;
     RoomId: string;
     instance: string;
@@ -163,8 +171,10 @@ export class GameScene extends ResizableScene implements CenterListener {
     private openChatIcon!: OpenChatIcon;
     private playerName!: string;
     private characterLayers!: string[];
+    private companion!: string|null;
     private messageSubscription: Subscription|null = null;
     private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
+    private originalMapUrl: string|undefined;
     public virtualJoystick!: IVirtualJoystick;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
@@ -210,7 +220,8 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.load.image(openChatIconName, 'resources/objects/talk.png');
         this.load.on(FILE_LOAD_ERROR, (file: {src: string}) => {
             // If we happen to be in HTTP and we are trying to load a URL in HTTPS only... (this happens only in dev environments)
-            if (window.location.protocol === 'http:' && file.src === this.MapUrlFile && file.src.startsWith('http:')) {
+            if (window.location.protocol === 'http:' && file.src === this.MapUrlFile && file.src.startsWith('http:') && this.originalMapUrl === undefined) {
+                this.originalMapUrl = this.MapUrlFile;
                 this.MapUrlFile = this.MapUrlFile.replace('http://', 'https://');
                 this.load.tilemapTiledJSON(this.MapUrlFile, this.MapUrlFile);
                 this.load.on('filecomplete-tilemapJSON-'+this.MapUrlFile, (key: string, type: string, data: unknown) => {
@@ -218,10 +229,25 @@ export class GameScene extends ResizableScene implements CenterListener {
                 });
                 return;
             }
+            // 127.0.0.1, localhost and *.localhost are considered secure, even on HTTP.
+            // So if we are in https, we can still try to load a HTTP local resource (can be useful for testing purposes)
+            // See https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure
+            const url = new URL(file.src);
+            const host = url.host.split(':')[0];
+            if (window.location.protocol === 'https:' && file.src === this.MapUrlFile && (host === '127.0.0.1' || host === 'localhost' || host.endsWith('.localhost')) && this.originalMapUrl === undefined) {
+                this.originalMapUrl = this.MapUrlFile;
+                this.MapUrlFile = this.MapUrlFile.replace('https://', 'http://');
+                this.load.tilemapTiledJSON(this.MapUrlFile, this.MapUrlFile);
+                this.load.on('filecomplete-tilemapJSON-'+this.MapUrlFile, (key: string, type: string, data: unknown) => {
+                    this.onMapLoad(data);
+                });
+                return;
+            }
+
             this.scene.start(ErrorSceneName, {
                 title: 'Network error',
                 subTitle: 'An error occurred while loading resource:',
-                message: file.src
+                message: this.originalMapUrl ?? file.src
             });
         });
         this.load.on('filecomplete-tilemapJSON-'+this.MapUrlFile, (key: string, type: string, data: unknown) => {
@@ -350,7 +376,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         }
         this.playerName = playerName;
         this.characterLayers = gameManager.getCharacterLayers();
-
+        this.companion = gameManager.getCompanion();
 
         //initalise map
         this.Map = this.add.tilemap(this.MapUrlFile);
@@ -399,14 +425,26 @@ export class GameScene extends ResizableScene implements CenterListener {
             x: this.game.renderer.width / 2,
             y: this.game.renderer.height / 2,
             radius: 20,
-            base: this.add.circle(0, 0, 20, 0x888888),
-            thumb: this.add.circle(0, 0, 10, 0xcccccc),
+            base: this.add.circle(0, 0, 20),
+            thumb: this.add.circle(0, 0, 10),
             enable: true,
             dir: "8dir",
         });
-        this.virtualJoystick.visible = localUserStore.getJoystick()
+        this.virtualJoystick.visible = true;
         //create input to move
         mediaManager.setUserInputManager(this.userInputManager);
+        this.userInputManager = new UserInputManager(this, this.virtualJoystick);
+
+        // Listener event to reposition virtual joystick
+        // whatever place you click in game area
+        this.input.on('pointerdown', (pointer: { x: number; y: number; }) => {
+            this.virtualJoystick.x = pointer.x;
+            this.virtualJoystick.y = pointer.y;
+        });
+
+        if (localUserStore.getFullscreen()) {
+            document.querySelector('body')?.requestFullscreen();
+        }
         this.userInputManager = new UserInputManager(this, this.virtualJoystick);
 
         // Listener event to reposition virtual joystick
@@ -454,9 +492,10 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.openChatIcon = new OpenChatIcon(this, 2, this.game.renderer.height - 2)
 
         // FIXME: change this to use the UserInputManager class for input
-        this.input.keyboard.on('keyup-M', () => {
+        // FIXME: Comment this feature because when user write M key in report input, the layout change.
+        /*this.input.keyboard.on('keyup-M', () => {
             this.switchLayoutMode();
-        });
+        });*/
 
         this.reposition();
 
@@ -490,7 +529,9 @@ export class GameScene extends ResizableScene implements CenterListener {
                 top: camera.scrollY,
                 right: camera.scrollX + camera.width,
                 bottom: camera.scrollY + camera.height,
-            }).then((onConnect: OnConnectInterface) => {
+            },
+            this.companion
+            ).then((onConnect: OnConnectInterface) => {
             this.connection = onConnect.connection;
 
             this.connection.onUserJoins((message: MessageUserJoined) => {
@@ -498,7 +539,8 @@ export class GameScene extends ResizableScene implements CenterListener {
                     userId: message.userId,
                     characterLayers: message.characterLayers,
                     name: message.name,
-                    position: message.position
+                    position: message.position,
+                    companion: message.companion
                 }
                 this.addPlayer(userMessage);
             });
@@ -747,7 +789,8 @@ export class GameScene extends ResizableScene implements CenterListener {
     }
 
     private listenToIframeEvents(): void {
-        iframeListener.openPopupStream.subscribe((openPopupEvent) => {
+            this.iframeSubscriptionList = [];
+            this.iframeSubscriptionList.push(iframeListener.openPopupStream.subscribe((openPopupEvent) => {
 
             let  objectLayerSquare : ITiledMapObject;
             const targetObjectData = this.getObjectLayerData(openPopupEvent.targetObject);
@@ -758,9 +801,9 @@ export class GameScene extends ResizableScene implements CenterListener {
                 return;
             }
             const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
-            let html = `<div id="container"><div class="nes-container with-title is-centered">
+            let html = `<div id="container" hidden><div class="nes-container with-title is-centered">
 ${escapedMessage}
- </div> </div>`;
+ </div> `;
             const buttonContainer = `<div class="buttonContainer"</div>`;
             html += buttonContainer;
             let id = 0;
@@ -768,15 +811,18 @@ ${escapedMessage}
                 html  += `<button type="button" class="nes-btn is-${HtmlUtils.escapeHtml(button.className ?? '')}" id="popup-${openPopupEvent.popupId}-${id}">${HtmlUtils.escapeHtml(button.label)}</button>`;
                 id++;
             }
-            const domElement = this.add.dom(objectLayerSquare.x  + objectLayerSquare.width/2 ,
-                objectLayerSquare.y + objectLayerSquare.height/2).createFromHTML(html);
+            html += '</div>';
+            const domElement = this.add.dom(objectLayerSquare.x  ,
+                objectLayerSquare.y).createFromHTML(html);
 
             const container : HTMLDivElement =  domElement.getChildByID("container") as HTMLDivElement;
             container.style.width = objectLayerSquare.width + "px";
             domElement.scale = 0;
             domElement.setClassName('popUpElement');
 
-
+            setTimeout(() => {
+                (container).hidden = false;
+            }, 100);
 
             id = 0;
             for (const button of openPopupEvent.buttons) {
@@ -784,10 +830,10 @@ ${escapedMessage}
                 const btnId = id;
                 button.onclick = () => {
                     iframeListener.sendButtonClickedEvent(openPopupEvent.popupId, btnId);
+                    button.disabled = true;
                 }
                 id++;
             }
-
             this.tweens.add({
                 targets     : domElement ,
                 scale       : 1,
@@ -796,9 +842,9 @@ ${escapedMessage}
             });
 
             this.popUpElements.set(openPopupEvent.popupId, domElement);
-        });
+        }));
 
-        iframeListener.closePopupStream.subscribe((closePopupEvent) => {
+       this.iframeSubscriptionList.push(iframeListener.closePopupStream.subscribe((closePopupEvent) => {
             const popUpElement = this.popUpElements.get(closePopupEvent.popupId);
             if (popUpElement === undefined) {
                 console.error('Could not close popup with ID ', closePopupEvent.popupId,'. Maybe it has already been closed?');
@@ -814,23 +860,25 @@ ${escapedMessage}
                     this.popUpElements.delete(closePopupEvent.popupId);
                 },
             });
-        });
+        }));
 
-        iframeListener.disablePlayerControlStream.subscribe(()=>{
+       this.iframeSubscriptionList.push(iframeListener.disablePlayerControlStream.subscribe(()=>{
             this.userInputManager.disableControls();
-        })
-        iframeListener.enablePlayerControlStream.subscribe(()=>{
+        }));
+
+       this.iframeSubscriptionList.push(iframeListener.enablePlayerControlStream.subscribe(()=>{
             this.userInputManager.restoreControls();
-        })
+        }));
         let scriptedBubbleSprite : Sprite;
-        iframeListener.displayBubbleStream.subscribe(()=>{
+       this.iframeSubscriptionList.push(iframeListener.displayBubbleStream.subscribe(()=>{
             scriptedBubbleSprite = new Sprite(this,this.CurrentPlayer.x + 25,this.CurrentPlayer.y,'circleSprite-white');
             scriptedBubbleSprite.setDisplayOrigin(48, 48);
             this.add.existing(scriptedBubbleSprite);
-        })
-        iframeListener.removeBubbleStream.subscribe(()=>{
+        }));
+
+       this.iframeSubscriptionList.push(iframeListener.removeBubbleStream.subscribe(()=>{
             scriptedBubbleSprite.destroy();
-        })
+        }));
 
     }
 
@@ -875,11 +923,20 @@ ${escapedMessage}
         this.simplePeer.closeAllConnections();
         this.simplePeer?.unregister();
         this.messageSubscription?.unsubscribe();
+
+        for(const iframeEvents of this.iframeSubscriptionList){
+            iframeEvents.unsubscribe();
+        }
     }
 
     private removeAllRemotePlayers(): void {
         this.MapPlayersByKey.forEach((player: RemotePlayer) => {
             player.destroy();
+
+            if (player.companion) {
+                player.companion.destroy();
+            }
+
             this.MapPlayers.remove(player);
         });
         this.MapPlayersByKey = new Map<number, RemotePlayer>();
@@ -1050,7 +1107,9 @@ ${escapedMessage}
                 texturesPromise,
                 PlayerAnimationDirections.Down,
                 false,
-                this.userInputManager
+                this.userInputManager,
+                this.companion,
+                this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
         }catch (err){
             if(err instanceof TextureError) {
@@ -1242,7 +1301,9 @@ ${escapedMessage}
             addPlayerData.name,
             texturesPromise,
             addPlayerData.position.direction as PlayerAnimationDirections,
-            addPlayerData.position.moving
+            addPlayerData.position.moving,
+            addPlayerData.companion,
+            addPlayerData.companion !== null ? lazyLoadCompanionResource(this.load, addPlayerData.companion) : undefined
         );
         this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);
@@ -1265,6 +1326,11 @@ ${escapedMessage}
             console.error('Cannot find user with id ', userId);
         } else {
             player.destroy();
+
+            if (player.companion) {
+                player.companion.destroy();
+            }
+
             this.MapPlayers.remove(player);
         }
         this.MapPlayersByKey.delete(userId);
@@ -1309,7 +1375,7 @@ ${escapedMessage}
             this,
             Math.round(groupPositionMessage.position.x),
             Math.round(groupPositionMessage.position.y),
-            groupPositionMessage.groupSize === 4 ? 'circleSprite-red' : 'circleSprite-white'
+            groupPositionMessage.groupSize === MAX_PER_GROUP ? 'circleSprite-red' : 'circleSprite-white'
         );
         sprite.setDisplayOrigin(48, 48);
         this.add.existing(sprite);

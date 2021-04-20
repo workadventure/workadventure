@@ -6,6 +6,8 @@ import {SelectCharacterSceneName} from "./SelectCharacterScene";
 import {ResizableScene} from "./ResizableScene";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import Rectangle = Phaser.GameObjects.Rectangle;
+import {isUserNameValid, maxUserNameLength} from "../../Connexion/LocalUser";
+
 
 //todo: put this constants in a dedicated file
 export const LoginSceneName = "LoginScene";
@@ -21,6 +23,7 @@ export class LoginScene extends ResizableScene {
     private pressReturnField!: TextField;
     private logo!: Image;
     private name: string = '';
+    private mobileTapRectangle!: Rectangle;
 
     private mobileTapRectangle!: Phaser.GameObjects.Rectangle;
     constructor() {
@@ -39,7 +42,7 @@ export class LoginScene extends ResizableScene {
 
     create() {
 
-        this.nameInput = new TextInput(this, this.game.renderer.width / 2, 70, 10, this.name,(text: string) => {
+        this.nameInput = new TextInput(this, this.game.renderer.width / 2, 70, maxUserNameLength, this.name,(text: string) => {
             this.name = text;
             localUserStore.setName(text);
         })
@@ -72,10 +75,9 @@ export class LoginScene extends ResizableScene {
         this.infoTextField = new TextField(this, 10, this.game.renderer.height - 35, infoText, false);
 
         this.input.keyboard.on('keyup-ENTER', () => {
-            if (this.name === '') {
-                return
+            if (isUserNameValid(this.name)) {
+                this.login(this.name);
             }
-            this.login(this.name);
         });
     }
 

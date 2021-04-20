@@ -2,22 +2,23 @@ import {DivImportance, layoutManager} from "./LayoutManager";
 import {HtmlUtils} from "./HtmlUtils";
 import {discussionManager, SendMessageCallback} from "./DiscussionManager";
 import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
-import {VIDEO_QUALITY_SELECT} from "../Administration/ConsoleGlobalMessageManager";
+import {localUserStore} from "../Connexion/LocalUserStore";
 import {UserSimplePeerInterface} from "./SimplePeer";
 declare const navigator:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-const localValueVideo = localStorage.getItem(VIDEO_QUALITY_SELECT);
-let valueVideo = 20;
-if(localValueVideo){
-    valueVideo = parseInt(localValueVideo);
-}
 let videoConstraint: boolean|MediaTrackConstraints = {
     width: { min: 640, ideal: 1280, max: 1920 },
     height: { min: 400, ideal: 720 },
-    frameRate: { ideal: valueVideo },
+    frameRate: { ideal: localUserStore.getVideoQualityValue() },
     facingMode: "user",
     resizeMode: 'crop-and-scale',
     aspectRatio: 1.777777778
+};
+const audioConstraint: boolean|MediaTrackConstraints = {
+    //TODO: make these values configurable in the game settings menu and store them in localstorage
+    autoGainControl: false,
+    echoCancellation: true,
+    noiseSuppression: false
 };
 
 export type UpdatedLocalStreamCallback = (media: MediaStream|null) => void;
@@ -41,7 +42,7 @@ export class MediaManager {
     webrtcInAudio: HTMLAudioElement;
     private webrtcOutAudio: HTMLAudioElement;
     constraintsMedia : MediaStreamConstraints = {
-        audio: true,
+        audio: audioConstraint,
         video: videoConstraint
     };
     updatedLocalStreamCallBacks : Set<UpdatedLocalStreamCallback> = new Set<UpdatedLocalStreamCallback>();
@@ -239,7 +240,7 @@ export class MediaManager {
     }
 
     public enableMicrophone() {
-        this.constraintsMedia.audio = true;
+        this.constraintsMedia.audio = audioConstraint;
 
         this.getCamera().then((stream) => {
             //TODO show error message tooltip upper of camera button
@@ -314,12 +315,17 @@ export class MediaManager {
     }
 
     private enableScreenSharing() {
-        this.monitorClose.style.display = "none";
-        this.monitor.style.display = "block";
-        this.monitorBtn.classList.add("enabled");
         this.getScreenMedia().then((stream) => {
             this.triggerStartedScreenSharingCallbacks(stream);
+            this.monitorClose.style.display = "none";
+            this.monitor.style.display = "block";
+            this.monitorBtn.classList.add("enabled");
+        }, () => {
+            this.monitorClose.style.display = "block";
+            this.monitor.style.display = "none";
+            this.monitorBtn.classList.remove("enabled");
         });
+
     }
 
     private disableScreenSharing() {

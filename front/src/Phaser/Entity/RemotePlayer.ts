@@ -17,12 +17,18 @@ export class RemotePlayer extends Character {
         name: string,
         texturesPromise: Promise<string[]>,
         direction: PlayerAnimationDirections,
-        moving: boolean
+        moving: boolean,
+        companion: string|null,
+        companionTexturePromise?: Promise<string>
     ) {
         super(Scene, x, y, texturesPromise, name, direction, moving, 1);
-
+        
         //set data
         this.userId = userId;
+
+        if (typeof companion === 'string') {
+            this.addCompanion(companion, companionTexturePromise);
+        }
     }
 
     updatePosition(position: PointInterface): void {
@@ -31,5 +37,9 @@ export class RemotePlayer extends Character {
         this.setY(position.y);
         
         this.setDepth(position.y); //this is to make sure the perspective (player models closer the bottom of the screen will appear in front of models nearer the top of the screen).
+    
+        if (this.companion) {
+            this.companion.setTarget(position.x, position.y, position.direction as PlayerAnimationDirections);
+        }
     }
 }

@@ -153,6 +153,8 @@ export class SocketManager implements ZoneEventListener {
             joinRoomMessage.setName(client.name);
             joinRoomMessage.setPositionmessage(ProtobufUtils.toPositionMessage(client.position));
             joinRoomMessage.setTagList(client.tags);
+            joinRoomMessage.setCompanion(client.companion);
+
             for (const characterLayer of client.characterLayers) {
                 const characterLayerMessage = new CharacterLayerMessage();
                 characterLayerMessage.setName(characterLayer.name);
@@ -362,6 +364,10 @@ export class SocketManager implements ZoneEventListener {
     }
 
     emitPlayGlobalMessage(client: ExSocketInterface, playglobalmessage: PlayGlobalMessage) {
+        if (!client.tags.includes('admin')) {
+            //In case of xss injection, we just kill the connection.
+            throw 'Client is not an admin!'; 
+        }
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setPlayglobalmessage(playglobalmessage);
 
@@ -371,16 +377,6 @@ export class SocketManager implements ZoneEventListener {
     public getWorlds(): Map<string, PusherRoom> {
         return this.rooms;
     }
-    
-    searchClientByUuid(uuid: string): ExSocketInterface | null {
-        for(const socket of this.sockets.values()){
-            if(socket.userUuid === uuid){
-                return socket;
-            }
-        }
-        return null;
-    }
-
 
     public handleQueryJitsiJwtMessage(client: ExSocketInterface, queryJitsiJwtMessage: QueryJitsiJwtMessage) {
         try {
@@ -424,17 +420,6 @@ export class SocketManager implements ZoneEventListener {
     }
 
     public async emitSendUserMessage(userUuid: string, message: string, type: string, roomId: string) {
-        /*const client = this.searchClientByUuid(userUuid);
-        if(client) {
-            const adminMessage = new SendUserMessage();
-            adminMessage.setMessage(message);
-            adminMessage.setType(type);
-            const pusherToBackMessage = new PusherToBackMessage();
-            pusherToBackMessage.setSendusermessage(adminMessage);
-            client.backConnection.write(pusherToBackMessage);
-            return;
-        }*/
-
         const backConnection = await apiClientRepository.getClient(roomId);
         const backAdminMessage = new AdminMessage();
         backAdminMessage.setMessage(message);
@@ -449,17 +434,6 @@ export class SocketManager implements ZoneEventListener {
     }
 
     public async emitBan(userUuid: string, message: string, type: string, roomId: string) {
-        /*const client = this.searchClientByUuid(userUuid);
-        if(client) {
-            const banUserMessage = new BanUserMessage();
-            banUserMessage.setMessage(message);
-            banUserMessage.setType(type);
-            const pusherToBackMessage = new PusherToBackMessage();
-            pusherToBackMessage.setBanusermessage(banUserMessage);
-            client.backConnection.write(pusherToBackMessage);
-            return;
-        }*/
-
         const backConnection = await apiClientRepository.getClient(roomId);
         const banMessage = new BanMessage();
         banMessage.setMessage(message);
