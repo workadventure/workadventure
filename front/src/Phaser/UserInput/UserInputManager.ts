@@ -1,7 +1,7 @@
-import { Direction, IVirtualJoystick } from "../../types";
+import { Direction } from "../../types";
 import {GameScene} from "../Game/GameScene";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
-import VirtualJoystick from 'phaser3-rex-plugins/plugins/virtualjoystick.js';
+import {MobileJoystick} from "../Components/MobileJoystick";
 
 interface UserInputManagerDatum {
     keyInstance: Phaser.Input.Keyboard.Key;
@@ -19,8 +19,6 @@ export enum UserInputEvent {
     JoystickMove,
 }
 
-const outOfScreenX = -1000;
-const outOfScreenY = -1000;
 
 //we cannot use a map structure so we have to create a replacment
 export class ActiveEventList {
@@ -46,7 +44,7 @@ export class UserInputManager {
     private Scene: GameScene;
     private isInputDisabled : boolean;
 
-    private joystick!: IVirtualJoystick;
+    private joystick!: MobileJoystick;
     private joystickEvents = new ActiveEventList();
     private joystickForceThreshold = 60;
     private joystickForceAccuX = 0;
@@ -62,24 +60,7 @@ export class UserInputManager {
     }
     
     initVirtualJoystick() {
-        this.joystick = new VirtualJoystick(this, {
-            x: outOfScreenX,
-            y: outOfScreenY,
-            radius: 20,
-            base: this.Scene.add.circle(0, 0, 20, 0xdddddd),
-            thumb: this.Scene.add.circle(0, 0, 10, 0x000000),
-            enable: true,
-            dir: "8dir",
-        });
-
-        this.Scene.input.on('pointerdown', (pointer: { x: number; y: number; }) => {
-            this.joystick.x = pointer.x;
-            this.joystick.y = pointer.y;
-        });
-        this.Scene.input.on('pointerup', (pointer: { x: number; y: number; }) => {
-            this.joystick.x = outOfScreenX;
-            this.joystick.y = outOfScreenY;
-        });
+        this.joystick = new MobileJoystick(this.Scene);
         this.joystick.on("update", () => {
             this.joystickForceAccuX = this.joystick.forceX ? this.joystickForceAccuX : 0;
             this.joystickForceAccuY = this.joystick.forceY ? this.joystickForceAccuY : 0;
