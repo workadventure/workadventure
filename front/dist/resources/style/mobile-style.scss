@@ -1,17 +1,50 @@
-@media only screen and (max-width: 600px) {
-  .sidebar > div {
-    max-height: 240px;
+@media only screen and (max-width: 700px) {
+  video#myCamVideo {
+    width: 200px;
   }
 
-  .sidebar > div {
-    max-height: 240px;
+  .sidebar {
+    width: 20%;
+    min-width: 200px;
+    position: absolute;
+    display: block;
+    right: 0;
+    height: 80%;
+
+    &> div {
+      max-height: 120px;
+      min-width: 200px;
+    }
+
+    .video-container{
+      min-width: 200px;
+    }
   }
 
-  .sidebar{
-    max-width: 200px;
+  .btn-cam-action div {
+    bottom: 30px;
+
+    &.btn-micro {
+      right: 15px;
+    }
+
+    &.btn-monitor {
+      right: 171px;
+    }
+
+    &.btn-video {
+      right: 95px;
+    }
   }
 
-  .btn-cam-action div{
-    bottom: 50px;
+  .main-section {
+    position: absolute;
+    width: 100%;
+    min-width: 400px;
+
+    & > div {
+      z-index: 2;
+    }
   }
 }
+

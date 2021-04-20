@@ -338,24 +338,6 @@ body {
 
     
 }
-@media (max-aspect-ratio: 1/1) {
-    .game-overlay {
-        flex-direction: column;
-    }
-
-    .sidebar {
-        flex-direction: row;
-        align-items: flex-end;
-    }
-
-    .sidebar > div {
-        max-width: 21%;
-    }
-
-    .sidebar > div:hover {
-        max-width: 25%;
-    }
-}
 
 #game {
     width: 100%;
