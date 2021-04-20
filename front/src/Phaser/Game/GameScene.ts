@@ -58,10 +58,6 @@ import {Room} from "../../Connexion/Room";
 import {jitsiFactory} from "../../WebRtc/JitsiFactory";
 import {urlManager} from "../../Url/UrlManager";
 import {audioManager} from "../../WebRtc/AudioManager";
-import {IVirtualJoystick} from "../../types";
-const {
-  default: VirtualJoystick,
-} = require("phaser3-rex-plugins/plugins/virtualjoystick.js");
 import {PresentationModeIcon} from "../Components/PresentationModeIcon";
 import {ChatModeIcon} from "../Components/ChatModeIcon";
 import {OpenChatIcon, openChatIconName} from "../Components/OpenChatIcon";
@@ -81,6 +77,9 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 import {Subscription} from "rxjs";
 import {worldFullMessageStream} from "../../Connexion/WorldFullMessageStream";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
+import {touchScreenManager} from "../../Touch/TouchScreenManager";
+import {PinchManager} from "../UserInput/PinchManager";
+import {joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey} from "../Components/MobileJoystick";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -175,7 +174,6 @@ export class GameScene extends ResizableScene implements CenterListener {
     private messageSubscription: Subscription|null = null;
     private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string|undefined;
-    public virtualJoystick!: IVirtualJoystick;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
@@ -199,6 +197,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     //hook preload scene
     preload(): void {
+        addLoader(this);
         const localUser = localUserStore.getLocalUser();
         const textures = localUser?.textures;
         if (textures) {
@@ -208,6 +207,10 @@ export class GameScene extends ResizableScene implements CenterListener {
         }
 
         this.load.image(openChatIconName, 'resources/objects/talk.png');
+        if (touchScreenManager.supportTouchScreen) {
+            this.load.image(joystickBaseKey, joystickBaseImg);
+            this.load.image(joystickThumbKey, joystickThumbImg);
+        }
         this.load.on(FILE_LOAD_ERROR, (file: {src: string}) => {
             // If we happen to be in HTTP and we are trying to load a URL in HTTPS only... (this happens only in dev environments)
             if (window.location.protocol === 'http:' && file.src === this.MapUrlFile && file.src.startsWith('http:') && this.originalMapUrl === undefined) {
@@ -254,8 +257,6 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         this.load.spritesheet('layout_modes', 'resources/objects/layout_modes.png', {frameWidth: 32, frameHeight: 32});
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
-
-        addLoader(this);
     }
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
@@ -358,6 +359,10 @@ export class GameScene extends ResizableScene implements CenterListener {
         urlManager.pushRoomIdToUrl(this.room);
         this.startLayerName = urlManager.getStartLayerNameFromUrl();
 
+        if (touchScreenManager.supportTouchScreen) {
+            new PinchManager(this);
+        }
+
         this.messageSubscription = worldFullMessageStream.stream.subscribe((message) => this.showWorldFullError())
 
         const playerName = gameManager.getPlayerName();
@@ -411,26 +416,10 @@ export class GameScene extends ResizableScene implements CenterListener {
         //initialise list of other player
         this.MapPlayers = this.physics.add.group({immovable: true});
 
-        this.virtualJoystick = new VirtualJoystick(this, {
-            x: this.game.renderer.width / 2,
-            y: this.game.renderer.height / 2,
-            radius: 20,
-            base: this.add.circle(0, 0, 20),
-            thumb: this.add.circle(0, 0, 10),
-            enable: true,
-            dir: "8dir",
-        });
-        this.virtualJoystick.visible = true;
+        
         //create input to move
         mediaManager.setUserInputManager(this.userInputManager);
-        this.userInputManager = new UserInputManager(this, this.virtualJoystick);
-
-        // Listener event to reposition virtual joystick
-        // whatever place you click in game area
-        this.input.on('pointerdown', (pointer: { x: number; y: number; }) => {
-            this.virtualJoystick.x = pointer.x;
-            this.virtualJoystick.y = pointer.y;
-        });
+        this.userInputManager = new UserInputManager(this);
 
         if (localUserStore.getFullscreen()) {
             document.querySelector('body')?.requestFullscreen();

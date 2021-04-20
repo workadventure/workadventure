@@ -2,7 +2,7 @@ import 'phaser';
 import GameConfig = Phaser.Types.Core.GameConfig;
 import "../dist/resources/style/index.scss";
 
-import {DEBUG_MODE, JITSI_URL, RESOLUTION} from "./Enum/EnvironmentVariable";
+import {DEBUG_MODE, RESOLUTION} from "./Enum/EnvironmentVariable";
 import {LoginScene} from "./Phaser/Login/LoginScene";
 import {ReconnectingScene} from "./Phaser/Reconnecting/ReconnectingScene";
 import {SelectCharacterScene} from "./Phaser/Login/SelectCharacterScene";
@@ -17,7 +17,6 @@ import {HelpCameraSettingsScene} from "./Phaser/Menu/HelpCameraSettingsScene";
 import {localUserStore} from "./Connexion/LocalUserStore";
 import {ErrorScene} from "./Phaser/Reconnecting/ErrorScene";
 import {iframeListener} from "./Api/IframeListener";
-import {discussionManager} from "./WebRtc/DiscussionManager";
 
 const {width, height} = coWebsiteManager.getGameSize();
 

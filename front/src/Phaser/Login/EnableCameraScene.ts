@@ -7,6 +7,8 @@ import {RESOLUTION} from "../../Enum/EnvironmentVariable";
 import {SoundMeter} from "../Components/SoundMeter";
 import {SoundMeterSprite} from "../Components/SoundMeterSprite";
 import {HtmlUtils} from "../../WebRtc/HtmlUtils";
+import {touchScreenManager} from "../../Touch/TouchScreenManager";
+import {PinchManager} from "../UserInput/PinchManager";
 
 export const EnableCameraSceneName = "EnableCameraScene";
 enum LoginTextures {
@@ -54,6 +56,10 @@ export class EnableCameraScene extends Phaser.Scene {
     }
 
     create() {
+        if (touchScreenManager.supportTouchScreen) {
+            new PinchManager(this);
+        }
+        
         this.textField = new TextField(this, this.game.renderer.width / 2, 20, 'Turn on your camera and microphone');
 
         this.pressReturnField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height - 30, 'Touch here\n\n or \n\nPress enter to start');
