@@ -12,6 +12,7 @@ import {ClosePopupEvent, isClosePopupEvent} from "./Events/ClosePopupEvent";
 import {scriptUtils} from "./ScriptUtils";
 import {GoToPageEvent, isGoToPageEvent} from "./Events/GoToPageEvent";
 import {isOpenCoWebsite, OpenCoWebSiteEvent} from "./Events/OpenCoWebSiteEvent";
+import { isLoadPageEvent } from './Events/LoadPageEvent';
 
 
 /**
@@ -30,6 +31,10 @@ class IframeListener {
 
     private readonly _goToPageStream: Subject<GoToPageEvent> = new Subject();
     public readonly goToPageStream = this._goToPageStream.asObservable();
+
+    
+    private readonly _loadPageStream: Subject<string> = new Subject();
+    public readonly loadPageStream = this._loadPageStream.asObservable();
 
     private readonly _openCoWebSiteStream: Subject<OpenCoWebSiteEvent> = new Subject();
     public readonly openCoWebSiteStream = this._openCoWebSiteStream.asObservable();
@@ -103,6 +108,8 @@ class IframeListener {
                 }
                 else if (payload.type === 'removeBubble'){
                     this._removeBubbleStream.next();
+                }else if (payload.type === 'loadPage' && isLoadPageEvent(payload.data)){
+                    this._loadPageStream.next(payload.data.url);
                 }
             }
 

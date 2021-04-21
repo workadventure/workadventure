@@ -9,6 +9,7 @@ import {ClosePopupEvent} from "./Api/Events/ClosePopupEvent";
 import {OpenTabEvent} from "./Api/Events/OpenTabEvent";
 import {GoToPageEvent} from "./Api/Events/GoToPageEvent";
 import {OpenCoWebSiteEvent} from "./Api/Events/OpenCoWebSiteEvent";
+import { LoadPageEvent } from './Api/Events/LoadPageEvent';
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
@@ -18,6 +19,7 @@ interface WorkAdventureApi {
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup;
     openTab(url : string): void;
     goToPage(url : string): void;
+    loadPage(url : string): void;
     openCoWebSite(url : string): void;
     closeCoWebSite(): void;
     disablePlayerControl() : void;
@@ -119,6 +121,15 @@ window.WA = {
             "data" : {
                 url
             } as GoToPageEvent
+            },'*');
+    },
+
+    loadPage(url : string) : void{
+        window.parent.postMessage({
+            "type" : 'loadPage',
+            "data" : {
+                url
+            } as LoadPageEvent
             },'*');
     },
 
