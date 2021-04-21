@@ -39,6 +39,7 @@ import {mediaManager} from "../../WebRtc/MediaManager";
 import {ItemFactoryInterface} from "../Items/ItemFactoryInterface";
 import {ActionableItem} from "../Items/ActionableItem";
 import {UserInputManager} from "../UserInput/UserInputManager";
+import {soundManager} from "./SoundManager";
 import {UserMovedMessage} from "../../Messages/generated/messages_pb";
 import {ProtobufClientUtils} from "../../Network/ProtobufClientUtils";
 import {connectionManager} from "../../Connexion/ConnectionManager";
@@ -792,6 +793,11 @@ ${escapedMessage}
        this.iframeSubscriptionList.push(iframeListener.disablePlayerControlStream.subscribe(()=>{
             this.userInputManager.disableControls();
         }));
+
+       this.iframeSubscriptionList.push(iframeListener.playSoundStream.subscribe((playSoundEvent)=>
+       {
+           soundManager.playSound(this.load,this.sound,playSoundEvent.url,playSoundEvent.config);
+       }))
 
        this.iframeSubscriptionList.push(iframeListener.enablePlayerControlStream.subscribe(()=>{
             this.userInputManager.restoreControls();

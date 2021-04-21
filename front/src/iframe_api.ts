@@ -9,6 +9,8 @@ import {ClosePopupEvent} from "./Api/Events/ClosePopupEvent";
 import {OpenTabEvent} from "./Api/Events/OpenTabEvent";
 import {GoToPageEvent} from "./Api/Events/GoToPageEvent";
 import {OpenCoWebSiteEvent} from "./Api/Events/OpenCoWebSiteEvent";
+import {PlaySoundEvent} from "./Api/Events/PlaySoundEvent";
+import SoundConfig = Phaser.Types.Sound.SoundConfig;
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
@@ -24,6 +26,7 @@ interface WorkAdventureApi {
     restorePlayerControl() : void;
     displayBubble() : void;
     removeBubble() : void;
+    playSound(url : string, config : SoundConfig): void;
 }
 
 declare global {
@@ -111,6 +114,18 @@ window.WA = {
                 url
             } as OpenTabEvent
             },'*');
+    },
+
+    playSound(url: string, config : SoundConfig) : string{
+        window.parent.postMessage({
+            "type" : 'playSound',
+            "data": {
+                url,
+                config
+            } as PlaySoundEvent
+
+        },'*');
+        return url;
     },
 
     goToPage(url : string) : void{
