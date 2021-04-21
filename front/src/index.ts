@@ -71,11 +71,12 @@ switch (phaserMode) {
 const config: GameConfig = {
     type: mode,
     title: "WorkAdventure",
-    width: width / RESOLUTION,
-    height: height / RESOLUTION,
+    width: width / 2,
+    height: height / 2,
     parent: "game",
+    zoom: 2,
     scene: [EntryScene, LoginScene, SelectCharacterScene, SelectCompanionScene, EnableCameraScene, ReconnectingScene, ErrorScene, CustomizeScene, MenuScene, HelpCameraSettingsScene],
-    zoom: RESOLUTION,
+    resolution: window.devicePixelRatio / 2,
     fps: fps,
     dom: {
         createContainer: true

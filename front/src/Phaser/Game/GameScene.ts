@@ -52,6 +52,7 @@ import {connectionManager} from "../../Connexion/ConnectionManager";
 import {RoomConnection} from "../../Connexion/RoomConnection";
 import {GlobalMessageManager} from "../../Administration/GlobalMessageManager";
 import {userMessageManager} from "../../Administration/UserMessageManager";
+import MouseWheelToUpDown from 'phaser3-rex-plugins/plugins/mousewheeltoupdown.js';
 import {ConsoleGlobalMessageManager} from "../../Administration/ConsoleGlobalMessageManager";
 import {ResizableScene} from "../Login/ResizableScene";
 import {Room} from "../../Connexion/Room";
@@ -174,6 +175,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     private messageSubscription: Subscription|null = null;
     private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string|undefined;
+    private cursorKeys: any;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
@@ -192,7 +194,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         })
         this.connectionAnswerPromise = new Promise<RoomJoinedMessageInterface>((resolve, reject): void => {
             this.connectionAnswerPromiseResolve = resolve;
-        })
+        });
     }
 
     //hook preload scene
@@ -355,6 +357,8 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     //hook create scene
     create(): void {
+        const mouseWheelToUpDown = new MouseWheelToUpDown(this);
+        this.cursorKeys = mouseWheelToUpDown.createCursorKeys();
         gameManager.gameSceneIsCreated(this);
         urlManager.pushRoomIdToUrl(this.room);
         this.startLayerName = urlManager.getStartLayerNameFromUrl();
@@ -1041,8 +1045,8 @@ ${escapedMessage}
     //todo: in a dedicated class/function?
     initCamera() {
         this.cameras.main.setBounds(0,0, this.Map.widthInPixels, this.Map.heightInPixels);
+        this.cameras.main.startFollow(this.CurrentPlayer, true);
         this.updateCameraOffset();
-        this.cameras.main.setZoom(ZOOM_LEVEL);
     }
 
     addLayer(Layer : Phaser.Tilemaps.StaticTilemapLayer){
@@ -1180,6 +1184,12 @@ ${escapedMessage}
      * @param delta The delta time in ms since the last frame. This is a smoothed and capped value based on the FPS rate.
      */
     update(time: number, delta: number) : void {
+        if (this.cursorKeys.up.isDown) {
+            this.cameras.main.zoom *= 1.2;
+        } else if(this.cursorKeys.down.isDown) {
+            this.cameras.main.zoom *= 0.8;
+        }
+        
         mediaManager.setLastUpdateScene();
         this.currentTick = time;
         this.CurrentPlayer.moveUser(delta);
@@ -1424,10 +1434,8 @@ ${escapedMessage}
         let yCenter = (array.yEnd - array.yStart) / 2 + array.yStart;
 
         // Let's put this in Game coordinates by applying the zoom level:
-        xCenter /= ZOOM_LEVEL * RESOLUTION;
-        yCenter /= ZOOM_LEVEL * RESOLUTION;
 
-        this.cameras.main.startFollow(this.CurrentPlayer, true, 1, 1,  xCenter - this.game.renderer.width / 2, yCenter - this.game.renderer.height / 2);
+        this.cameras.main.setFollowOffset(xCenter - this.game.renderer.width / 2, yCenter - this.game.renderer.height / 2);
     }
 
     public onCenterChange(): void {

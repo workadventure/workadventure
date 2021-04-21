@@ -2,6 +2,7 @@ import { Direction } from "../../types";
 import {GameScene} from "../Game/GameScene";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {MobileJoystick} from "../Components/MobileJoystick";
+import MouseWheelToUpDown from 'phaser3-rex-plugins/plugins/mousewheeltoupdown.js';
 
 interface UserInputManagerDatum {
     keyInstance: Phaser.Input.Keyboard.Key;

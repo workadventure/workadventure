@@ -3,12 +3,13 @@ import {TextField} from "../Components/TextField";
 import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
 import {mediaManager} from "../../WebRtc/MediaManager";
-import {RESOLUTION} from "../../Enum/EnvironmentVariable";
+import {RESOLUTION, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import {SoundMeter} from "../Components/SoundMeter";
 import {SoundMeterSprite} from "../Components/SoundMeterSprite";
 import {HtmlUtils} from "../../WebRtc/HtmlUtils";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
+import MouseWheelToUpDown from "phaser3-rex-plugins/plugins/mousewheeltoupdown.js";
 
 export const EnableCameraSceneName = "EnableCameraScene";
 enum LoginTextures {
@@ -39,6 +40,7 @@ export class EnableCameraScene extends Phaser.Scene {
     private repositionCallback!: (this: Window, ev: UIEvent) => void;
 
     private mobileTapRectangle!: Rectangle;
+    private cursorKeys!: any;
     constructor() {
         super({
             key: EnableCameraSceneName
@@ -59,10 +61,14 @@ export class EnableCameraScene extends Phaser.Scene {
         if (touchScreenManager.supportTouchScreen) {
             new PinchManager(this);
         }
+        //this.scale.setZoom(ZOOM_LEVEL);
+        //Phaser.Display.Align.In.BottomCenter(this.pressReturnField, zone);
+        const mouseWheelToUpDown = new MouseWheelToUpDown(this);
+        this.cursorKeys = mouseWheelToUpDown.createCursorKeys();
         
-        this.textField = new TextField(this, this.game.renderer.width / 2, 20, 'Turn on your camera and microphone');
+        this.textField = new TextField(this, this.scale.width / 2, 20, 'Turn on your camera and microphone');
 
-        this.pressReturnField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height - 30, 'Touch here\n\n or \n\nPress enter to start');
+        this.pressReturnField = new TextField(this, this.scale.width / 2, this.scale.height - 30, 'Touch here\n\n or \n\nPress enter to start');
         // For mobile purposes - we need a big enough touchable area.
         this.mobileTapRectangle = this.add
           .rectangle(
@@ -247,6 +253,11 @@ export class EnableCameraScene extends Phaser.Scene {
 
     update(time: number, delta: number): void {
         this.pressReturnField.setVisible(!!(Math.floor(time / 500) % 2));
+        if (this.cursorKeys.up.isDown) {
+            this.cameras.main.zoom *= 1.2;
+        } else if(this.cursorKeys.down.isDown) {
+            this.cameras.main.zoom *= 0.8;
+        }
 
         this.soundMeterSprite.setVolume(this.soundMeter.getVolume());
 
