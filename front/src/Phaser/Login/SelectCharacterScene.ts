@@ -12,6 +12,7 @@ import {AbstractCharacterScene} from "./AbstractCharacterScene";
 import {areCharacterLayersValid} from "../../Connexion/LocalUser";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
+import Zone = Phaser.GameObjects.Zone;
 
 
 //todo: put this constants in a dedicated file
@@ -37,7 +38,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     private selectedRectangleYPos = 0; // Number of the character selected in the columns
     private selectedPlayer!: Phaser.Physics.Arcade.Sprite|null; // null if we are selecting the "customize" option
     private players: Array<Phaser.Physics.Arcade.Sprite> = new Array<Phaser.Physics.Arcade.Sprite>();
-    private mobileTapRectangle!: Rectangle;
+    private mobileTapZone!: Zone;
     private playerModels!: BodyResourceDescriptionInterface[];
 
     constructor() {
@@ -77,15 +78,8 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             90 + 32 * Math.ceil( this.playerModels.length / this.nbCharactersPerRow) + 60,
             'Touch here\n\n or \n\nPress enter to start');
         // For mobile purposes - we need a big enough touchable area.
-        this.mobileTapRectangle = this.add
-          .rectangle(
-            this.game.renderer.width / 2,
-            275,
-            this.game.renderer.width / 2,
-            50,
-          )
-          .setInteractive()
-          .on("pointerdown", () => {
+        this.mobileTapZone = this.add.zone(this.game.renderer.width / 2, 275, this.game.renderer.width / 2, 50)
+          .setInteractive().on("pointerdown", () => {
             this.nextScene();
           });
 
