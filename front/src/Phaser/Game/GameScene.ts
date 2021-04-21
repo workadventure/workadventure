@@ -81,6 +81,9 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 import {Subscription} from "rxjs";
 import {worldFullMessageStream} from "../../Connexion/WorldFullMessageStream";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
+import RenderTexture = Phaser.GameObjects.RenderTexture;
+import Tilemap = Phaser.Tilemaps.Tilemap;
+import {FloorCeilingTexture} from "../Components/FloorCeilingTexture";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -125,7 +128,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     MapPlayers!: Phaser.Physics.Arcade.Group;
     MapPlayersByKey : Map<number, RemotePlayer> = new Map<number, RemotePlayer>();
     Map!: Phaser.Tilemaps.Tilemap;
-    Layers!: Array<Phaser.Tilemaps.TilemapLayer>;
+    layers!: Array<Phaser.Tilemaps.TilemapLayer>;
     Objects!: Array<Phaser.Physics.Arcade.Sprite>;
     mapFile!: ITiledMap;
     groups: Map<number, Sprite>;
@@ -176,6 +179,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string|undefined;
     public virtualJoystick!: IVirtualJoystick;
+    private floorCeilingTexture!: FloorCeilingTexture;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
@@ -354,9 +358,11 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     //hook create scene
     create(): void {
+
         gameManager.gameSceneIsCreated(this);
         urlManager.pushRoomIdToUrl(this.room);
         this.startLayerName = urlManager.getStartLayerNameFromUrl();
+        this.floorCeilingTexture = new FloorCeilingTexture(this);
 
         this.messageSubscription = worldFullMessageStream.stream.subscribe((message) => this.showWorldFullError())
 
@@ -380,11 +386,19 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.physics.world.setBounds(0, 0, this.Map.widthInPixels, this.Map.heightInPixels);
 
         //add layer on map
-        this.Layers = new Array<Phaser.Tilemaps.TilemapLayer>();
+        this.layers = [];
         let depth = -2;
         for (const layer of this.mapFile.layers) {
             if (layer.type === 'tilelayer') {
-                this.addLayer(this.Map.createLayer(layer.name, this.Terrains, 0, 0).setDepth(depth));
+                const layerElem = this.Map.createLayer(layer.name, this.Terrains, 0, 0);
+                this.layers.push(layerElem);
+                if (depth < 10000) {
+                    this.floorCeilingTexture.addFloorLayer(layerElem);
+                } else {
+                    this.floorCeilingTexture.addTopLayer(layerElem);
+                }
+                layerElem.setDepth(depth);
+                layerElem.setVisible(false);
 
                 const exitSceneUrl = this.getExitSceneUrl(layer);
                 if (exitSceneUrl !== undefined) {
@@ -1056,20 +1070,14 @@ ${escapedMessage}
         this.cameras.main.setZoom(ZOOM_LEVEL);
     }
 
-    addLayer(Layer : Phaser.Tilemaps.TilemapLayer){
-        this.Layers.push(Layer);
-    }
-
     createCollisionWithPlayer() {
         //add collision layer
-        this.Layers.forEach((Layer: Phaser.Tilemaps.TilemapLayer) => {
-            this.physics.add.collider(this.CurrentPlayer, Layer, (object1: GameObject, object2: GameObject) => {
-                //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
-            });
-            Layer.setCollisionByProperty({collides: true});
+        this.layers.forEach((layer: Phaser.Tilemaps.TilemapLayer) => {
+            this.physics.add.collider(this.CurrentPlayer, layer);
+            layer.setCollisionByProperty({collides: true});
             if (DEBUG_MODE) {
                 //debug code to see the collision hitbox of the object in the top layer
-                Layer.renderDebug(this.add.graphics(), {
+                layer.renderDebug(this.add.graphics(), {
                     tileColor: null, //non-colliding tiles
                     collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles,
                     faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Colliding face edges
@@ -1186,6 +1194,8 @@ ${escapedMessage}
         });
     }
 
+    private needRedraw:boolean = true;
+
     /**
      * @param time
      * @param delta The delta time in ms since the last frame. This is a smoothed and capped value based on the FPS rate.
@@ -1228,6 +1238,8 @@ ${escapedMessage}
             }
             player.updatePosition(moveEvent);
         });
+
+        this.floorCeilingTexture.update();
     }
 
     /**
