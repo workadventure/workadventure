@@ -841,6 +841,13 @@ ${escapedMessage}
        this.iframeSubscriptionList.push(iframeListener.enablePlayerControlStream.subscribe(()=>{
             this.userInputManager.restoreControls();
         }));
+        this.iframeSubscriptionList.push(iframeListener.gameStateStream.subscribe(()=>{
+            iframeListener.sendFrozenGameStateEvent({
+                    roomId:this.RoomId,
+                    data: this.mapFile
+            })
+        }));
+
         let scriptedBubbleSprite : Sprite;
        this.iframeSubscriptionList.push(iframeListener.displayBubbleStream.subscribe(()=>{
             scriptedBubbleSprite = new Sprite(this,this.CurrentPlayer.x + 25,this.CurrentPlayer.y,'circleSprite-white');
