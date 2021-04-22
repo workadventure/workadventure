@@ -16,7 +16,7 @@ const gameMenuIconKey = 'gameMenuIcon';
 const gameSettingsMenuKey = 'gameSettingsMenu';
 const gameShare = 'gameShare';
 
-const closedSideMenuX = -400;
+const closedSideMenuX = -1000;
 const openedSideMenuX = 0;
 
 /**
