@@ -10,6 +10,7 @@ import { getAllCompanionResources } from "../Companion/CompanionTexturesLoadingM
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
 import { MenuScene } from "../Menu/MenuScene";
+import Zone = Phaser.GameObjects.Zone;
 
 export const SelectCompanionSceneName = "SelectCompanionScene";
 
@@ -232,7 +233,7 @@ export class SelectCompanionScene extends ResizableScene {
             this.game.renderer.height / 3
         ];
     }
-    
+
     private setUpCompanion(companion: Phaser.Physics.Arcade.Sprite, numero: number){
 
         const {companionX, companionY, companionScale, companionOpactity, companionVisible} = this.defineSetupCompanion(numero);
@@ -246,7 +247,7 @@ export class SelectCompanionScene extends ResizableScene {
     }
 
     private getMiddleX() : number{
-        return (this.game.renderer.width / 2) -  
+        return (this.game.renderer.width / 2) -
         (
             this.selectCompanionSceneElement
             && this.selectCompanionSceneElement.node

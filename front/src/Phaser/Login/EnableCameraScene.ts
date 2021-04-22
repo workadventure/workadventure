@@ -9,6 +9,7 @@ import {SoundMeterSprite} from "../Components/SoundMeterSprite";
 import {HtmlUtils} from "../../WebRtc/HtmlUtils";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
+import Zone = Phaser.GameObjects.Zone;
 import { MenuScene } from "../Menu/MenuScene";
 
 export const EnableCameraSceneName = "EnableCameraScene";
@@ -38,11 +39,9 @@ export class EnableCameraScene extends Phaser.Scene {
     private microphoneNameField!: TextField;
     private repositionCallback!: (this: Window, ev: UIEvent) => void;
 
-    private mobileTapRectangle!: Rectangle;
-
-
     private enableCameraSceneElement!: Phaser.GameObjects.DOMElement;
 
+    private mobileTapZone!: Zone;
     constructor() {
         super({
             key: EnableCameraSceneName
@@ -82,15 +81,8 @@ export class EnableCameraScene extends Phaser.Scene {
         this.textField = new TextField(this, this.game.renderer.width / 2, 20, '');
 
         // For mobile purposes - we need a big enough touchable area.
-        this.mobileTapRectangle = this.add
-          .rectangle(
-            this.game.renderer.width / 2,
-            this.game.renderer.height - 30,
-            200,
-            50,
-          )
-          .setInteractive()
-          .on("pointerdown", () => {
+        this.mobileTapZone = this.add.zone(this.game.renderer.width / 2,this.game.renderer.height - 30,200,50)
+          .setInteractive().on("pointerdown", () => {
             this.login();
           });
 
@@ -230,7 +222,7 @@ export class EnableCameraScene extends Phaser.Scene {
         }
 
         this.textField.x = this.game.renderer.width / 2;
-        this.mobileTapRectangle.x = this.game.renderer.width / 2;
+        this.mobileTapZone.x = this.game.renderer.width / 2;
         this.cameraNameField.x = this.game.renderer.width / 2;
         this.microphoneNameField.x = this.game.renderer.width / 2;
 
@@ -293,7 +285,7 @@ export class EnableCameraScene extends Phaser.Scene {
     }
 
     private getMiddleX() : number{
-        return (this.game.renderer.width / 2) -  
+        return (this.game.renderer.width / 2) -
         (
             this.enableCameraSceneElement
             && this.enableCameraSceneElement.node

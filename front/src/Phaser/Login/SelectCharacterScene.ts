@@ -13,6 +13,7 @@ import {areCharacterLayersValid} from "../../Connexion/LocalUser";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
 import {MenuScene} from "../Menu/MenuScene";
+import Zone = Phaser.GameObjects.Zone;
 
 
 //todo: put this constants in a dedicated file
@@ -207,7 +208,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         }
         return {playerX, playerY, playerScale, playserOpactity, playerVisible}
     }
-    
+
     private setUpPlayer(player: Phaser.Physics.Arcade.Sprite, numero: number){
 
         const {playerX, playerY, playerScale, playserOpactity, playerVisible} = this.defineSetupPlayer(numero);
@@ -262,7 +263,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     private getMiddleX() : number{
-        return (this.game.renderer.width / 2) -  
+        return (this.game.renderer.width / 2) -
         (
             this.selectCharacterSceneElement
             && this.selectCharacterSceneElement.node

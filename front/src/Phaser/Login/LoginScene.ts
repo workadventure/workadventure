@@ -12,6 +12,7 @@ export class LoginScene extends ResizableScene {
 
     private loginSceneElement!: Phaser.GameObjects.DOMElement;
     private name: string = '';
+    private mobileTapZone!: Phaser.GameObjects.Zone;
 
     constructor() {
         super({
