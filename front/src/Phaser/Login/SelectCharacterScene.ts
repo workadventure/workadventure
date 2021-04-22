@@ -169,6 +169,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
     private defineSetupPlayer(numero: number){
         const deltaX = 30;
+        const deltaY = 2;
         let [playerX, playerY] = this.getCharacterPosition();
         let playerVisible = true;
         let playerScale = 1.5;
@@ -177,24 +178,28 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             playerVisible = false;
         }
         if( numero === (this.currentSelectUser + 1) ){
+            playerY -= deltaY;
             playerX += deltaX;
             playerScale = 0.8;
             playserOpactity = 0.6;
             playerVisible = true;
         }
         if( numero === (this.currentSelectUser + 2) ){
+            playerY -= deltaY;
             playerX += (deltaX * 2);
             playerScale = 0.8;
             playserOpactity = 0.6;
             playerVisible = true;
         }
         if( numero === (this.currentSelectUser - 1) ){
+            playerY -= deltaY;
             playerX -= deltaX;
             playerScale = 0.8;
             playserOpactity = 0.6;
             playerVisible = true;
         }
         if( numero === (this.currentSelectUser - 2) ){
+            playerY -= deltaY;
             playerX -= (deltaX * 2);
             playerScale = 0.8;
             playserOpactity = 0.6;
