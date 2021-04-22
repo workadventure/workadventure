@@ -24,7 +24,7 @@ export class LoginScene extends ResizableScene {
     private pressReturnField!: TextField;
     private logo!: Image;
     private name: string = '';
-    private mobileTapRectangle!: Rectangle;
+    private mobileTapZone!: Phaser.GameObjects.Zone;
 
     constructor() {
         super({
@@ -60,13 +60,8 @@ export class LoginScene extends ResizableScene {
                 this.nameInput.focus();
             })
         // For mobile purposes - we need a big enough touchable area.
-        this.mobileTapRectangle = this.add.rectangle(
-            this.game.renderer.width / 2,
-            130,
-            this.game.renderer.width / 2,
-            60,
-        ).setInteractive()
-        .on('pointerdown', () => {
+        this.mobileTapZone = this.add.zone(this.game.renderer.width / 2,130,this.game.renderer.width / 2,60,)
+            .setInteractive().on('pointerdown', () => {
             this.login(this.name)
         })
         this.pressReturnField = new TextField(this, this.game.renderer.width / 2, 130, 'Touch here\n\n or \n\nPress enter to start')
@@ -105,7 +100,7 @@ export class LoginScene extends ResizableScene {
         this.textField.x = this.game.renderer.width / 2;
         this.nameInput.setX(this.game.renderer.width / 2 - 64);
         this.pressReturnField.x = this.game.renderer.width / 2;
-        this.mobileTapRectangle.x = this.game.renderer.width / 2;
+        this.mobileTapZone.x = this.game.renderer.width / 2;
         this.logo.x = this.game.renderer.width - 30;
         this.logo.y = this.game.renderer.height - 20;
         this.infoTextField.y = this.game.renderer.height - 35;

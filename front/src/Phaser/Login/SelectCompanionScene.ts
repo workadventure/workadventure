@@ -10,6 +10,7 @@ import { CompanionResourceDescriptionInterface } from "../Companion/CompanionTex
 import { getAllCompanionResources } from "../Companion/CompanionTexturesLoadingManager";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
+import Zone = Phaser.GameObjects.Zone;
 
 export const SelectCompanionSceneName = "SelectCompanionScene";
 
@@ -31,7 +32,7 @@ export class SelectCompanionScene extends ResizableScene {
     private companions: Array<Phaser.Physics.Arcade.Sprite> = new Array<Phaser.Physics.Arcade.Sprite>();
     private companionModels: Array<CompanionResourceDescriptionInterface|null> = [null];
 
-    private confirmTouchArea!: Rectangle;
+    private confirmTouchArea!: Zone;
 
     constructor() {
         super({
@@ -69,10 +70,8 @@ export class SelectCompanionScene extends ResizableScene {
             confirmTouchAreaY,
             'Touch here\n\n or \n\n press enter to start'
         );
-        this.confirmTouchArea = this.add
-            .rectangle(this.game.renderer.width / 2, confirmTouchAreaY, 200, 50)
-            .setInteractive()
-            .on("pointerdown", this.nextScene.bind(this));
+        this.confirmTouchArea = this.add.zone(this.game.renderer.width / 2, confirmTouchAreaY, 200, 50)
+            .setInteractive().on("pointerdown", this.nextScene.bind(this));
 
         const rectangleXStart = this.game.renderer.width / 2 - (this.nbCharactersPerRow / 2) * 32 + 16;
         this.selectedRectangle = this.add.rectangle(rectangleXStart, 90, 32, 32).setStrokeStyle(2, 0xFFFFFF);
