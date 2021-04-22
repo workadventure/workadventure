@@ -7,7 +7,7 @@
         width: 400px;
         max-height: calc(50vh - 25px);
         overflow: scroll;
-        max-width: 50vw;
+        max-width: 48vw;
     }
     #helpCameraSettings h1 {
         background-image: linear-gradient(top, #f1f3f3, #d4dae0);
@@ -30,7 +30,7 @@
         margin: 0;
     }
     #helpCameraSettings button {
-        margin: 10px;
+        margin: 10px 4px;
         background-color: black;
         color: white;
         border-radius: 7px;
@@ -41,9 +41,8 @@
         color: #292929;
     }
     #helpCameraSettings section a{
-        text-align: center;
         font-size: 12px;
-        margin: 0 6px;
+        text-decoration: underline;
         color: black;
     }
     #helpCameraSettings section h6,
@@ -87,7 +86,7 @@
         <p id='browserHelpSetting'></p>
     </section>
     <section class="action">
-        <button type="submit" id="helpCameraSettingsFormRefresh">Refresh</button>
+        <a href="#" id="helpCameraSettingsFormRefresh">Refresh</a>
         <button type="submit" id="helpCameraSettingsFormContinue">Continue</button>
     </section>
 </form>

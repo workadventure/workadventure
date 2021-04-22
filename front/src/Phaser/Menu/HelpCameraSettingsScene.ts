@@ -112,12 +112,14 @@ export class HelpCameraSettingsScene extends Phaser.Scene {
     }
 
     private getMiddleX() : number{
-        const middleX = ((window.innerWidth) - ((
+        return (this.game.renderer.width / 2) -  
+        (
             this.helpCameraSettingsElement
             && this.helpCameraSettingsElement.node
             && this.helpCameraSettingsElement.node.getBoundingClientRect().width > 0
-                ? this.helpCameraSettingsElement.node.getBoundingClientRect().width : 300 /*FIXME to use a const will be injected in HTMLElement*/)*2)) / 2;
-        return (middleX > 0 ? middleX / 2 : 0);
+            ? (this.helpCameraSettingsElement.node.getBoundingClientRect().width / 4)
+            : (400 / 2)
+        );
     }
 
     private getMiddleY() : number{
