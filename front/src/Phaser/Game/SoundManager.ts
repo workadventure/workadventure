@@ -24,11 +24,10 @@ class SoundManager {
         return soundPromise;
     }
 
-    public async playSound(loadPlugin: LoaderPlugin, soundManager : BaseSoundManager, soundUrl: string, config: SoundConfig) : Promise<void> {
+    public async playSound(loadPlugin: LoaderPlugin, soundManager : BaseSoundManager, soundUrl: string, config: SoundConfig|undefined) : Promise<void> {
         const sound = await this.loadSound(loadPlugin,soundManager,soundUrl);
-        sound.play(config);
-
-
+        if (config === undefined) sound.play();
+        else sound.play(config);
     }
 
     public stopSound(soundManager : BaseSoundManager,soundUrl : string){

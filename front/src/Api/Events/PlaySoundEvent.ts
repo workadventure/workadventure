@@ -15,7 +15,7 @@ const isSoundConfig =
 export const isPlaySoundEvent =
     new tg.IsInterface().withProperties({
         url: tg.isString,
-        config : isSoundConfig,
+        config : tg.isOptional(isSoundConfig),
     }).get();
 
 /**
