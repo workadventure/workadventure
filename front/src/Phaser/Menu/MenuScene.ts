@@ -91,7 +91,7 @@ export class MenuScene extends Phaser.Scene {
 
         this.menuElement.addListener('click');
         this.menuElement.on('click', this.onMenuClick.bind(this));
-        
+
         worldFullWarningStream.stream.subscribe(() => this.showWorldCapacityWarning());
     }
 
@@ -118,7 +118,8 @@ export class MenuScene extends Phaser.Scene {
         this.closeAll();
         this.sideMenuOpened = true;
         this.menuButton.getChildByID('openMenuButton').innerHTML = 'X';
-        if (gameManager.getCurrentGameScene(this).connection && gameManager.getCurrentGameScene(this).connection.isAdmin()) {
+        const connection = gameManager.getCurrentGameScene(this).connection;
+        if (connection && connection.isAdmin()) {
             const adminSection = this.menuElement.getChildByID('adminConsoleSection') as HTMLElement;
             adminSection.hidden = false;
         }
@@ -134,7 +135,7 @@ export class MenuScene extends Phaser.Scene {
             ease: 'Power3'
         });
     }
-    
+
     private showWorldCapacityWarning() {
         if (!this.warningContainer) {
             this.warningContainer = new WarningContainer(this);
@@ -147,7 +148,7 @@ export class MenuScene extends Phaser.Scene {
             this.warningContainer = null
             this.warningContainerTimeout = null
         }, 120000);
-        
+
     }
 
     private closeSideMenu(): void {

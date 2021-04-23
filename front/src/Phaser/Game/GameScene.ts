@@ -135,7 +135,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     pendingEvents: Queue<InitUserPositionEventInterface|AddPlayerEventInterface|RemovePlayerEventInterface|UserMovedEventInterface|GroupCreatedUpdatedEventInterface|DeleteGroupEventInterface> = new Queue<InitUserPositionEventInterface|AddPlayerEventInterface|RemovePlayerEventInterface|UserMovedEventInterface|GroupCreatedUpdatedEventInterface|DeleteGroupEventInterface>();
     private initPosition: PositionInterface|null = null;
     private playersPositionInterpolator = new PlayersPositionInterpolator();
-    public connection!: RoomConnection;
+    public connection: RoomConnection|undefined;
     private simplePeer!: SimplePeer;
     private GlobalMessageManager!: GlobalMessageManager;
     public ConsoleGlobalMessageManager!: ConsoleGlobalMessageManager;
@@ -416,7 +416,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         //initialise list of other player
         this.MapPlayers = this.physics.add.group({immovable: true});
 
-        
+
         //create input to move
         mediaManager.setUserInputManager(this.userInputManager);
         this.userInputManager = new UserInputManager(this);
@@ -712,7 +712,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                     if (JITSI_PRIVATE_MODE && !jitsiUrl) {
                         const adminTag = allProps.get("jitsiRoomAdminTag") as string|undefined;
 
-                        this.connection.emitQueryJitsiJwtMessage(roomName, adminTag);
+                        this.connection?.emitQueryJitsiJwtMessage(roomName, adminTag);
                     } else {
                         this.startJitsi(roomName, undefined);
                     }
@@ -735,9 +735,9 @@ export class GameScene extends ResizableScene implements CenterListener {
         });
         this.gameMap.onPropertyChange('silent', (newValue, oldValue) => {
             if (newValue === undefined || newValue === false || newValue === '') {
-                this.connection.setSilent(false);
+                this.connection?.setSilent(false);
             } else {
-                this.connection.setSilent(true);
+                this.connection?.setSilent(true);
             }
         });
         this.gameMap.onPropertyChange('playAudio', (newValue, oldValue, allProps) => {
@@ -1167,7 +1167,7 @@ ${escapedMessage}
         this.lastMoveEventSent = event;
         this.lastSentTick = this.currentTick;
         const camera = this.cameras.main;
-        this.connection.sharePosition(event.x, event.y, event.direction, event.moving, {
+        this.connection?.sharePosition(event.x, event.y, event.direction, event.moving, {
             left: camera.scrollX,
             top: camera.scrollY,
             right: camera.scrollX + camera.width,
@@ -1233,7 +1233,7 @@ ${escapedMessage}
      * Put all the players on the map on map load.
      */
     private doInitUsersPosition(usersPosition: MessageUserPositionInterface[]): void {
-        const currentPlayerId = this.connection.getUserId();
+        const currentPlayerId = this.connection?.getUserId();
         this.removeAllRemotePlayers();
         // load map
         usersPosition.forEach((userPosition : MessageUserPositionInterface) => {
@@ -1377,7 +1377,7 @@ ${escapedMessage}
      * Sends to the server an event emitted by one of the ActionableItems.
      */
     emitActionableEvent(itemId: number, eventName: string, state: unknown, parameters: unknown) {
-        this.connection.emitActionableEvent(itemId, eventName, state, parameters);
+        this.connection?.emitActionableEvent(itemId, eventName, state, parameters);
     }
 
     public onResize(): void {
@@ -1385,7 +1385,7 @@ ${escapedMessage}
 
         // Send new viewport to server
         const camera = this.cameras.main;
-        this.connection.setViewport({
+        this.connection?.setViewport({
             left: camera.scrollX,
             top: camera.scrollY,
             right: camera.scrollX + camera.width,
@@ -1441,7 +1441,7 @@ ${escapedMessage}
         const jitsiUrl = allProps.get("jitsiUrl") as string|undefined;
 
         jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl);
-        this.connection.setSilent(true);
+        this.connection?.setSilent(true);
         mediaManager.hideGameOverlay();
 
         //permit to stop jitsi when user close iframe
