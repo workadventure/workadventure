@@ -349,4 +349,8 @@ export class MenuScene extends Phaser.Scene {
             }
         }
     }
+
+    public isDirty(): boolean {
+        return false;
+    }
 }

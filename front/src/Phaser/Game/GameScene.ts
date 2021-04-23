@@ -1071,6 +1071,7 @@ ${escapedMessage}
     }
 
     createCollisionWithPlayer() {
+        this.physics.disableUpdate();
         //add collision layer
         this.layers.forEach((layer: Phaser.Tilemaps.TilemapLayer) => {
             this.physics.add.collider(this.CurrentPlayer, layer);
@@ -1194,19 +1195,36 @@ ${escapedMessage}
         });
     }
 
-    private needRedraw:boolean = true;
+    private dirty:boolean = true;
 
     /**
      * @param time
      * @param delta The delta time in ms since the last frame. This is a smoothed and capped value based on the FPS rate.
      */
     update(time: number, delta: number) : void {
+        // TODO: add Events.ADDED_TO_SCENE to the scene to track new objects.
+        // When an object is added, add ANIMATION_UPDATE event on this object (and remove the listener on Events.REMOVE_FROM_SCENE)
+        // This way, we can set the dirty flag only when an animation is added!!!
+
+
+        this.dirty = false;
         mediaManager.setLastUpdateScene();
         this.currentTick = time;
+        if (this.CurrentPlayer.isMoving() === true) {
+            this.dirty = true;
+        }
         this.CurrentPlayer.moveUser(delta);
+        if (this.CurrentPlayer.isMoving() === true) {
+            this.dirty = true;
+            this.physics.enableUpdate();
+        } else {
+            this.physics.disableUpdate();
+        }
+
 
         // Let's handle all events
         while (this.pendingEvents.length !== 0) {
+            this.dirty = true;
             const event = this.pendingEvents.dequeue();
             switch (event.type) {
                 case "InitUserPositionEvent":
@@ -1232,6 +1250,7 @@ ${escapedMessage}
         // Let's move all users
         const updatedPlayersPositions = this.playersPositionInterpolator.getUpdatedPositions(time);
         updatedPlayersPositions.forEach((moveEvent: HasMovedEvent, userId: number) => {
+            this.dirty = true;
             const player: RemotePlayer | undefined = this.MapPlayersByKey.get(userId);
             if (player === undefined) {
                 throw new Error('Cannot find player with ID "' + userId + '"');
@@ -1502,5 +1521,9 @@ ${escapedMessage}
             subTitle: 'The world you are trying to join is full. Try again later.',
             message: 'If you want more information, you may contact us at: workadventure@thecodingmachine.com'
         });
+    }
+
+    public isDirty(): boolean {
+        return this.dirty;
     }
 }
