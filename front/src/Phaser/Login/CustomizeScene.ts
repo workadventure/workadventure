@@ -129,12 +129,22 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         if(index === -1 && this.activeRow === 5){
             const button = this.customizeSceneElement.getChildByID('customizeSceneFormSubmit') as HTMLButtonElement;
-            button.innerText = 'Next';
+            button.innerHTML = `Next <img src="resources/objects/arrow_up.png"/>`;
         }
 
         if(index === 1 && this.activeRow === 4){
             const button = this.customizeSceneElement.getChildByID('customizeSceneFormSubmit') as HTMLButtonElement;
             button.innerText = 'Finish';
+        }
+
+        if(index === -1 && this.activeRow === 1){
+            const button = this.customizeSceneElement.getChildByID('customizeSceneFormBack') as HTMLButtonElement;
+            button.innerText = `Back`;
+        }
+
+        if(index === 1 && this.activeRow === 0){
+            const button = this.customizeSceneElement.getChildByID('customizeSceneFormBack') as HTMLButtonElement;
+            button.innerHTML = `Back <img src="resources/objects/arrow_up.png"/>`;
         }
 
         this.activeRow += index;
@@ -305,38 +315,5 @@ export class CustomizeScene extends AbstractCharacterScene {
     private backToPreviousScene(){
         this.scene.sleep(CustomizeSceneName);
         this.scene.run(SelectCharacterSceneName);
-    }
-
-    /**
-     * TODO fix me and mutualize code
-     */
-    defineSetupPosition() : {playerX: number, playerY: number, playerScale: number, playserOpactity: number, playerVisible: boolean}{
-        throw new Error('defineSetupPosition cannot be used');
-        return {playerX: 0, playerY: 0, playerScale: 0, playserOpactity: 0, playerVisible: false};
-    }
-
-    /**
-     * TODO fix me and mutualize code
-     */
-    nextSceneToCameraScene(): void {
-        throw new Error('nextSceneToCameraScene cannot be used in this scene');
-    }
-
-    /**
-     * TODO fix me and mutualize code
-     */
-    nextSceneToCustomizeScene(): void {
-        throw new Error('nextSceneToCustomizeScene cannot be used in this scene');
-    }
-
-    /**
-     * TODO fix me and mutualize code
-     * Returns pixel position by on column and row number
-     */
-    getCharacterPosition(): [number, number] {
-        return [
-            this.game.renderer.width / 2,
-            this.game.renderer.height / 2
-        ];
     }
 }
