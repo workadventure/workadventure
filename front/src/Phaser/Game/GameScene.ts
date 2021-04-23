@@ -84,6 +84,7 @@ import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoading
 import RenderTexture = Phaser.GameObjects.RenderTexture;
 import Tilemap = Phaser.Tilemaps.Tilemap;
 import {FloorCeilingTexture} from "../Components/FloorCeilingTexture";
+import {DirtyScene} from "./DirtyScene";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -122,7 +123,7 @@ interface DeleteGroupEventInterface {
 
 const defaultStartLayerName = 'start';
 
-export class GameScene extends ResizableScene implements CenterListener {
+export class GameScene extends DirtyScene implements CenterListener {
     Terrains : Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer!: CurrentGamerInterface;
     MapPlayers!: Phaser.Physics.Arcade.Group;
@@ -199,6 +200,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.connectionAnswerPromise = new Promise<RoomJoinedMessageInterface>((resolve, reject): void => {
             this.connectionAnswerPromiseResolve = resolve;
         })
+
     }
 
     //hook preload scene
@@ -358,6 +360,7 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     //hook create scene
     create(): void {
+        this.trackDirtyAnims();
 
         gameManager.gameSceneIsCreated(this);
         urlManager.pushRoomIdToUrl(this.room);
@@ -1195,8 +1198,6 @@ ${escapedMessage}
         });
     }
 
-    private dirty:boolean = true;
-
     /**
      * @param time
      * @param delta The delta time in ms since the last frame. This is a smoothed and capped value based on the FPS rate.
@@ -1210,11 +1211,11 @@ ${escapedMessage}
         this.dirty = false;
         mediaManager.setLastUpdateScene();
         this.currentTick = time;
-        if (this.CurrentPlayer.isMoving() === true) {
+        if (this.CurrentPlayer.isMoving()) {
             this.dirty = true;
         }
         this.CurrentPlayer.moveUser(delta);
-        if (this.CurrentPlayer.isMoving() === true) {
+        if (this.CurrentPlayer.isMoving()) {
             this.dirty = true;
             this.physics.enableUpdate();
         } else {
@@ -1423,6 +1424,7 @@ ${escapedMessage}
     }
 
     public onResize(): void {
+        super.onResize();
         this.reposition();
 
         // Send new viewport to server
@@ -1521,9 +1523,5 @@ ${escapedMessage}
             subTitle: 'The world you are trying to join is full. Try again later.',
             message: 'If you want more information, you may contact us at: workadventure@thecodingmachine.com'
         });
-    }
-
-    public isDirty(): boolean {
-        return this.dirty;
     }
 }
