@@ -796,12 +796,26 @@ ${escapedMessage}
 
        this.iframeSubscriptionList.push(iframeListener.playSoundStream.subscribe((playSoundEvent)=>
        {
-           soundManager.playSound(this.load,this.sound,playSoundEvent.url,playSoundEvent.config);
+           const url = new URL(playSoundEvent.url, this.MapUrlFile);
+           soundManager.playSound(this.load,this.sound,url.toString(),playSoundEvent.config);
        }))
+
+        this.iframeSubscriptionList.push(iframeListener.stopSoundStream.subscribe((stopSoundEvent)=>
+        {
+            const url = new URL(stopSoundEvent.url, this.MapUrlFile);
+            soundManager.stopSound(this.sound,url.toString());
+        }))
+
+        this.iframeSubscriptionList.push(iframeListener.loadSoundStream.subscribe((loadSoundEvent)=>
+        {
+            const url = new URL(loadSoundEvent.url, this.MapUrlFile);
+            soundManager.loadSound(this.load,this.sound,url.toString());
+        }))
 
        this.iframeSubscriptionList.push(iframeListener.enablePlayerControlStream.subscribe(()=>{
             this.userInputManager.restoreControls();
         }));
+
         let scriptedBubbleSprite : Sprite;
        this.iframeSubscriptionList.push(iframeListener.displayBubbleStream.subscribe(()=>{
             scriptedBubbleSprite = new Sprite(this,this.CurrentPlayer.x + 25,this.CurrentPlayer.y,'circleSprite-white');

@@ -13,6 +13,8 @@ import {scriptUtils} from "./ScriptUtils";
 import {GoToPageEvent, isGoToPageEvent} from "./Events/GoToPageEvent";
 import {isOpenCoWebsite, OpenCoWebSiteEvent} from "./Events/OpenCoWebSiteEvent";
 import {isPlaySoundEvent, PlaySoundEvent} from "./Events/PlaySoundEvent";
+import {isStopSoundEvent, StopSoundEvent} from "./Events/StopSoundEvent";
+import {isLoadSoundEvent, LoadSoundEvent} from "./Events/LoadSoundEvent";
 
 
 /**
@@ -56,6 +58,12 @@ class IframeListener {
     private readonly _playSoundStream: Subject<PlaySoundEvent> = new Subject();
     public readonly playSoundStream = this._playSoundStream.asObservable();
 
+    private readonly _stopSoundStream: Subject<StopSoundEvent> = new Subject();
+    public readonly stopSoundStream = this._stopSoundStream.asObservable();
+
+    private readonly _loadSoundStream: Subject<LoadSoundEvent> = new Subject();
+    public readonly loadSoundStream = this._loadSoundStream.asObservable();
+
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
 
@@ -95,6 +103,12 @@ class IframeListener {
                 }
                 else if(payload.type === 'playSound' && isPlaySoundEvent(payload.data)) {
                     this._playSoundStream.next(payload.data);
+                }
+                else if(payload.type === 'stopSound' && isStopSoundEvent(payload.data)) {
+                    this._stopSoundStream.next(payload.data);
+                }
+                else if(payload.type === 'loadSound' && isLoadSoundEvent(payload.data)) {
+                    this._loadSoundStream.next(payload.data);
                 }
                 else if(payload.type === 'closeCoWebSite') {
                     scriptUtils.closeCoWebSite();

@@ -10,6 +10,8 @@ import {OpenTabEvent} from "./Api/Events/OpenTabEvent";
 import {GoToPageEvent} from "./Api/Events/GoToPageEvent";
 import {OpenCoWebSiteEvent} from "./Api/Events/OpenCoWebSiteEvent";
 import {PlaySoundEvent} from "./Api/Events/PlaySoundEvent";
+import {StopSoundEvent} from "./Api/Events/StopSoundEvent";
+import {LoadSoundEvent} from "./Api/Events/LoadSoundEvent";
 import SoundConfig = Phaser.Types.Sound.SoundConfig;
 
 interface WorkAdventureApi {
@@ -26,7 +28,7 @@ interface WorkAdventureApi {
     restorePlayerControl() : void;
     displayBubble() : void;
     removeBubble() : void;
-    playSound(url : string, config : SoundConfig): void;
+    loadSound(url : string): Sound;
 }
 
 declare global {
@@ -77,6 +79,42 @@ class Popup {
     }
 }
 
+class Sound {
+    constructor(private url: string) {
+        // TODO: send a "loadSound" event
+        window.parent.postMessage({
+            "type" : 'loadSound',
+            "data": {
+                url: this.url,
+            } as LoadSoundEvent
+
+        },'*');
+    }
+
+    public play(config : SoundConfig) {
+        window.parent.postMessage({
+            "type" : 'playSound',
+            "data": {
+                url: this.url,
+                config
+            } as PlaySoundEvent
+
+        },'*');
+        return this.url;
+    }
+    public stop() {
+        window.parent.postMessage({
+            "type" : 'stopSound',
+            "data": {
+                url: this.url,
+            } as StopSoundEvent
+
+        },'*');
+        return this.url;
+    }
+
+}
+
 window.WA = {
     /**
      * Send a message in the chat.
@@ -116,7 +154,7 @@ window.WA = {
             },'*');
     },
 
-    playSound(url: string, config : SoundConfig) : string{
+    /*playSound(url: string, config : SoundConfig) : string{
         window.parent.postMessage({
             "type" : 'playSound',
             "data": {
@@ -126,6 +164,10 @@ window.WA = {
 
         },'*');
         return url;
+    },*/
+
+    loadSound(url: string) : Sound {
+        return new Sound(url);
     },
 
     goToPage(url : string) : void{

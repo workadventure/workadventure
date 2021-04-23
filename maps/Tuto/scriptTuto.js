@@ -5,10 +5,10 @@ var targetObjectTutoBubble ='Tutobubble';
 var targetObjectTutoChat ='tutoChat';
 var targetObjectTutoExplanation ='tutoExplanation';
 var popUpExplanation = undefined;
-var enterSoundUrl = "/resources/objects/webrtc-in.mp3";
-var exitSoundUrl = "/resources/objects/webrtc-out.mp3";
+var enterSoundUrl = "webrtc-in.mp3";
+var exitSoundUrl = "webrtc-out.mp3";
 var soundConfig = {
-    volume : 0.5,
+    volume : 0.2,
     loop : false
 }
 function launchTuto (){
@@ -32,6 +32,7 @@ function launchTuto (){
                                     className : "success",callback:(popup2 => {
                                         popup2.close();
                                         WA.restorePlayerControl();
+                                        WA.loadSound(winSoundUrl).play(soundConfig);
                                     })
                                 }
                             ])
@@ -49,8 +50,7 @@ function launchTuto (){
 
 WA.onEnterZone('popupZone', () => {
     WA.displayBubble();
-
-    WA.playSound(enterSoundUrl,soundConfig);
+    WA.loadSound(enterSoundUrl).play(soundConfig);
     if (!isFirstTimeTuto) {
         isFirstTimeTuto = true;
         launchTuto();
@@ -79,6 +79,5 @@ WA.onEnterZone('popupZone', () => {
 WA.onLeaveZone('popupZone', () => {
     if (popUpExplanation !== undefined) popUpExplanation.close();
     WA.removeBubble();
-    WA.playSound(exitSoundUrl,soundConfig);
-
+    WA.loadSound(exitSoundUrl).play(soundConfig);
 })
