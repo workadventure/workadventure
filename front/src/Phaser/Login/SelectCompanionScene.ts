@@ -10,15 +10,8 @@ import { getAllCompanionResources } from "../Companion/CompanionTexturesLoadingM
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
 import { MenuScene } from "../Menu/MenuScene";
-import Zone = Phaser.GameObjects.Zone;
 
 export const SelectCompanionSceneName = "SelectCompanionScene";
-
-enum LoginTextures {
-    playButton = "play_button",
-    icon = "icon",
-    mainFont = "main_font"
-}
 
 const selectCompanionSceneKey = 'selectCompanionScene';
 

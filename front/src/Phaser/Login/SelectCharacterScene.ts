@@ -1,5 +1,4 @@
 import {gameManager} from "../Game/GameManager";
-import {TextField} from "../Components/TextField";
 import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
 import {EnableCameraSceneName} from "./EnableCameraScene";
@@ -13,29 +12,23 @@ import {areCharacterLayersValid} from "../../Connexion/LocalUser";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
 import {MenuScene} from "../Menu/MenuScene";
-import Zone = Phaser.GameObjects.Zone;
-
+import { SelectCharacterMobileScene } from "./SelectCharacterMobileScene";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
-enum LoginTextures {
-    playButton = "play_button",
-    icon = "icon",
-    mainFont = "main_font",
-    customizeButton = "customize_button",
-    customizeButtonSelected = "customize_button_selected"
-}
 
 const selectCharacterKey = 'selectCharacterScene';
 
 export class SelectCharacterScene extends AbstractCharacterScene {
-    private readonly nbCharactersPerRow = 6;
-    private selectedPlayer!: Phaser.Physics.Arcade.Sprite|null; // null if we are selecting the "customize" option
-    private players: Array<Phaser.Physics.Arcade.Sprite> = new Array<Phaser.Physics.Arcade.Sprite>();
-    private playerModels!: BodyResourceDescriptionInterface[];
+    protected readonly nbCharactersPerRow = 6;
+    protected selectedPlayer!: Phaser.Physics.Arcade.Sprite|null; // null if we are selecting the "customize" option
+    protected players: Array<Phaser.Physics.Arcade.Sprite> = new Array<Phaser.Physics.Arcade.Sprite>();
+    protected playerModels!: BodyResourceDescriptionInterface[];
 
-    private selectCharacterSceneElement!: Phaser.GameObjects.DOMElement;
-    private currentSelectUser = 0;
+    protected selectedRectangle!: Rectangle;
+
+    protected selectCharacterSceneElement!: Phaser.GameObjects.DOMElement;
+    protected currentSelectUser = 0;
 
     constructor() {
         super({
@@ -58,6 +51,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     create() {
+
         const middleX = this.getMiddleX();
         this.selectCharacterSceneElement = this.add.dom(middleX, 0).createFromCache(selectCharacterKey);
         MenuScene.revealMenusAfterInit(this.selectCharacterSceneElement, selectCharacterKey);
@@ -80,6 +74,10 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             new PinchManager(this);
         }
 
+        const rectangleXStart = this.game.renderer.width / 2 - (this.nbCharactersPerRow / 2) * 32 + 16;
+        this.selectedRectangle = this.add.rectangle(rectangleXStart, 90, 32, 32).setStrokeStyle(2, 0xFFFFFF);
+        this.selectedRectangle.setDepth(2);
+
         /*create user*/
         this.createCurrentPlayer();
         const playerNumber = localUserStore.getPlayerCharacterIndex();
@@ -94,9 +92,15 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.input.keyboard.on('keydown-LEFT', () => {
             this.moveToLeft();
         });
+        this.input.keyboard.on('keydown-UP', () => {
+            this.moveToUp();
+        });
+        this.input.keyboard.on('keydown-DOWN', () => {
+            this.moveToDown();
+        });
     }
 
-    private nextSceneToCameraScene(): void {
+    protected nextSceneToCameraScene(): void {
         if (this.selectedPlayer !== null && !areCharacterLayersValid([this.selectedPlayer.texture.key])) {
             return;
         }
@@ -109,7 +113,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.scene.remove(SelectCharacterSceneName);
     }
 
-    private nextSceneToCustomizeScene(): void {
+    protected nextSceneToCustomizeScene(): void {
         if (this.selectedPlayer !== null && !areCharacterLayersValid([this.selectedPlayer.texture.key])) {
             return;
         }
@@ -126,8 +130,8 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             this.setUpPlayer(player, i);
             this.anims.create({
                 key: playerResource.name,
-                frames: this.anims.generateFrameNumbers(playerResource.name, {start: 0, end: 2,}),
-                frameRate: 10,
+                frames: this.anims.generateFrameNumbers(playerResource.name, {start: 0, end: 11}),
+                frameRate: 8,
                 repeat: -1
             });
             player.setInteractive().on("pointerdown", () => {
@@ -144,7 +148,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.selectedPlayer.play(this.playerModels[this.currentSelectUser].name);
     }
 
-    private moveUser(){
+    protected moveUser(){
         for(let i = 0; i < this.players.length; i++){
             const player = this.players[i];
             this.setUpPlayer(player, i);
@@ -152,7 +156,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.updateSelectedPlayer();
     }
 
-    private moveToLeft(){
+    protected moveToLeft(){
         if(this.currentSelectUser === 0){
             return;
         }
@@ -160,7 +164,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.moveUser();
     }
 
-    private moveToRight(){
+    protected moveToRight(){
         if(this.currentSelectUser === (this.players.length - 1)){
             return;
         }
@@ -168,48 +172,44 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.moveUser();
     }
 
-    private defineSetupPlayer(numero: number){
-        const deltaX = 30;
-        const deltaY = 2;
-        let [playerX, playerY] = this.getCharacterPosition();
-        let playerVisible = true;
-        let playerScale = 1.5;
-        let playserOpactity = 1;
-        if( this.currentSelectUser !== numero ){
-            playerVisible = false;
+    protected moveToUp(){
+        if(this.currentSelectUser < this.nbCharactersPerRow){
+            return;
         }
-        if( numero === (this.currentSelectUser + 1) ){
-            playerY -= deltaY;
-            playerX += deltaX;
-            playerScale = 0.8;
-            playserOpactity = 0.6;
-            playerVisible = true;
+        this.currentSelectUser -= this.nbCharactersPerRow;
+        this.moveUser();
+    }
+
+    protected moveToDown(){
+        if((this.currentSelectUser + this.nbCharactersPerRow) > (this.players.length - 1)){
+            return;
         }
-        if( numero === (this.currentSelectUser + 2) ){
-            playerY -= deltaY;
-            playerX += (deltaX * 2);
-            playerScale = 0.8;
-            playserOpactity = 0.6;
-            playerVisible = true;
+        this.currentSelectUser += this.nbCharactersPerRow;
+        this.moveUser();
+    }
+
+    protected defineSetupPlayer(numero: number){
+        const deltaX = 32;
+        const deltaY = 32;
+        let [playerX, playerY] = this.getCharacterPosition(); // player X and player y are middle of the
+
+        playerX = ( (playerX - (deltaX * 2.5)) + ((deltaX) * (numero % this.nbCharactersPerRow)) ); // calcul position on line users
+        playerY = ( (playerY - (deltaY * 2)) + ((deltaY) * ( Math.floor(numero / this.nbCharactersPerRow) )) ); // calcul position on column users
+
+        const playerVisible = true;
+        const playerScale = 1;
+        const playserOpactity = 1;
+
+        // if selected
+        if( numero === this.currentSelectUser ){
+            this.selectedRectangle.setX(playerX);
+            this.selectedRectangle.setY(playerY);
         }
-        if( numero === (this.currentSelectUser - 1) ){
-            playerY -= deltaY;
-            playerX -= deltaX;
-            playerScale = 0.8;
-            playserOpactity = 0.6;
-            playerVisible = true;
-        }
-        if( numero === (this.currentSelectUser - 2) ){
-            playerY -= deltaY;
-            playerX -= (deltaX * 2);
-            playerScale = 0.8;
-            playserOpactity = 0.6;
-            playerVisible = true;
-        }
+
         return {playerX, playerY, playerScale, playserOpactity, playerVisible}
     }
 
-    private setUpPlayer(player: Phaser.Physics.Arcade.Sprite, numero: number){
+    protected setUpPlayer(player: Phaser.Physics.Arcade.Sprite, numero: number){
 
         const {playerX, playerY, playerScale, playserOpactity, playerVisible} = this.defineSetupPlayer(numero);
         player.setBounce(0.2);
@@ -224,15 +224,15 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     /**
      * Returns pixel position by on column and row number
      */
-    private getCharacterPosition(): [number, number] {
+    protected getCharacterPosition(): [number, number] {
         return [
             this.game.renderer.width / 2,
-            this.game.renderer.height / 3
+            this.game.renderer.height / 2.5
         ];
     }
 
-    private updateSelectedPlayer(): void {
-        this.selectedPlayer?.anims.pause();
+    protected updateSelectedPlayer(): void {
+        this.selectedPlayer?.anims.pause(this.selectedPlayer?.anims.currentAnim.frames[0]);
         const player = this.players[this.currentSelectUser];
         player.play(this.playerModels[this.currentSelectUser].name);
         this.selectedPlayer = player;
@@ -262,7 +262,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         });
     }
 
-    private getMiddleX() : number{
+    protected getMiddleX() : number{
         return (this.game.renderer.width / 2) -
         (
             this.selectCharacterSceneElement

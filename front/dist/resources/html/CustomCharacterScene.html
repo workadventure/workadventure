@@ -1,4 +1,7 @@
 <style>
+    *{
+        font-family: PixelFont-7,monospace!important;
+    }
     #customizeScene {
         background: #0000;
         /*border: 1px solid #ebeeee;*/
@@ -8,7 +11,7 @@
         overflow: scroll;
         width: 42vw;
         height: 38vh;
-        max-width: 300px;
+        /*max-width: 300px;*/
         max-height: 40vh;
     }
     #customizeScene h1 {
@@ -48,7 +51,7 @@
         width: 100%;
     }
     #customizeScene section.action.action-move { 
-        top: 96%;
+        top: 55%;
     }
     #customizeScene button {
         margin: 2px 10px;
@@ -140,11 +143,11 @@
     <section class="action action-move">
         <button class="customizeSceneButton" id="customizeSceneButtonLeft"> < </button>
         <button class="customizeSceneButton" id="customizeSceneButtonRight"> > </button>
-        <button class="customizeSceneButton" id="customizeSceneButtonUp"> < </button>
-        <button class="customizeSceneButton" id="customizeSceneButtonDown"> > </button>
+        <!--<button class="customizeSceneButton" id="customizeSceneButtonUp"> < </button>
+        <button class="customizeSceneButton" id="customizeSceneButtonDown"> > </button>-->
     </section>
     <section class="action">
         <a type="submit" id="customizeSceneFormBack">Back</a>
-        <button type="submit" id="customizeSceneFormSubmit">Finish</button>
+        <button type="submit" id="customizeSceneFormSubmit">Next</button>
     </section>
 </form>

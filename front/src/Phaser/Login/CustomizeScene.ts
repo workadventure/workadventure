@@ -1,12 +1,9 @@
 import {EnableCameraSceneName} from "./EnableCameraScene";
-import {TextField} from "../Components/TextField";
-import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
-import {loadAllLayers, loadCustomTexture} from "../Entity/PlayerTexturesLoadingManager";
+import {loadAllLayers} from "../Entity/PlayerTexturesLoadingManager";
 import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
 import {gameManager} from "../Game/GameManager";
-import {ResizableScene} from "./ResizableScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {addLoader} from "../Components/Loader";
 import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
@@ -17,33 +14,11 @@ import { SelectCharacterSceneName } from "./SelectCharacterScene";
 
 export const CustomizeSceneName = "CustomizeScene";
 
-enum CustomizeTextures{
-    icon = "icon",
-    arrowRight = "arrow_right",
-    mainFont = "main_font",
-    arrowUp = "arrow_up",
-}
-
 export const CustomizeSceneKey = "CustomizeScene";
 const customizeSceneKey = 'customizeScene';
 
 export class CustomizeScene extends AbstractCharacterScene {
-    private arrowRight!: Image;
-    private arrowLeft!: Image;
-
-    private arrowDown!: Image;
-    private arrowUp!: Image;
-
     private Rectangle!: Rectangle;
-
-    private mobileTapUP!: Rectangle;
-    private mobileTapDOWN!: Rectangle;
-    private mobileTapLEFT!: Rectangle;
-    private mobileTapRIGHT!: Rectangle;
-
-    private mobileTapENTER!: Rectangle;
-
-    private logo!: Image;
 
     private selectedLayers: number[] = [0];
     private containersRow: Container[][] = [];
@@ -91,9 +66,17 @@ export class CustomizeScene extends AbstractCharacterScene {
             }else if((event?.target as HTMLInputElement).id === 'customizeSceneButtonUp') {
                 this.moveCursorVertically(-1);
             }else if((event?.target as HTMLInputElement).id === 'customizeSceneFormBack') {
-                this.backToPreviousScene();
-            }else if((event?.target as HTMLInputElement).id === 'customizeSceneFormSubmit') {
-                this.nextSceneToCamera();
+                if(this.activeRow > 0){
+                    this.moveCursorVertically(-1);
+                }else{
+                    this.backToPreviousScene();
+                }
+            }else if((event?.target as HTMLButtonElement).id === 'customizeSceneFormSubmit') {
+                if(this.activeRow < 5){
+                    this.moveCursorVertically(1);
+                }else{
+                    this.nextSceneToCamera();
+                }
             }
         });
 
@@ -143,6 +126,17 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     private moveCursorVertically(index:number): void {
+
+        if(index === -1 && this.activeRow === 5){
+            const button = this.customizeSceneElement.getChildByID('customizeSceneFormSubmit') as HTMLButtonElement;
+            button.innerText = 'Next';
+        }
+
+        if(index === 1 && this.activeRow === 4){
+            const button = this.customizeSceneElement.getChildByID('customizeSceneFormSubmit') as HTMLButtonElement;
+            button.innerText = 'Finish';
+        }
+
         this.activeRow += index;
         if (this.activeRow < 0) {
             this.activeRow = 0
@@ -278,7 +272,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         });
      }
 
-     private getMiddleX() : number{
+     protected getMiddleX() : number{
         return (this.game.renderer.width / 2) -  
         (
             this.customizeSceneElement
@@ -311,5 +305,38 @@ export class CustomizeScene extends AbstractCharacterScene {
     private backToPreviousScene(){
         this.scene.sleep(CustomizeSceneName);
         this.scene.run(SelectCharacterSceneName);
+    }
+
+    /**
+     * TODO fix me and mutualize code
+     */
+    defineSetupPosition() : {playerX: number, playerY: number, playerScale: number, playserOpactity: number, playerVisible: boolean}{
+        throw new Error('defineSetupPosition cannot be used');
+        return {playerX: 0, playerY: 0, playerScale: 0, playserOpactity: 0, playerVisible: false};
+    }
+
+    /**
+     * TODO fix me and mutualize code
+     */
+    nextSceneToCameraScene(): void {
+        throw new Error('nextSceneToCameraScene cannot be used in this scene');
+    }
+
+    /**
+     * TODO fix me and mutualize code
+     */
+    nextSceneToCustomizeScene(): void {
+        throw new Error('nextSceneToCustomizeScene cannot be used in this scene');
+    }
+
+    /**
+     * TODO fix me and mutualize code
+     * Returns pixel position by on column and row number
+     */
+    getCharacterPosition(): [number, number] {
+        return [
+            this.game.renderer.width / 2,
+            this.game.renderer.height / 2
+        ];
     }
 }

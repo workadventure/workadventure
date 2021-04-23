@@ -3,6 +3,7 @@ import {SelectCharacterSceneName} from "./SelectCharacterScene";
 import {ResizableScene} from "./ResizableScene";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import {MenuScene} from "../Menu/MenuScene";
+import { isUserNameValid } from "../../Connexion/LocalUser";
 
 export const LoginSceneName = "LoginScene";
 
@@ -12,7 +13,6 @@ export class LoginScene extends ResizableScene {
 
     private loginSceneElement!: Phaser.GameObjects.DOMElement;
     private name: string = '';
-    private mobileTapZone!: Phaser.GameObjects.Zone;
 
     constructor() {
         super({
@@ -35,11 +35,14 @@ export class LoginScene extends ResizableScene {
         inputElement.value = localUserStore.getName() ?? '';
         inputElement.focus();
         inputElement.addEventListener('keypress', (event: KeyboardEvent) => {
-            if(inputElement.value.length > 8){
+            if(inputElement.value.length > 7){
                 event.preventDefault();
                 return;
             }
             pErrorElement.innerHTML = '';
+            if(inputElement.value && !isUserNameValid(inputElement.value)){
+                pErrorElement.innerHTML = 'Invalid user name: only letters and numbers are allowed. No spaces.';
+            }
             if (event.key === 'Enter') {
                 event.preventDefault();
                 this.login(inputElement);
@@ -59,6 +62,10 @@ export class LoginScene extends ResizableScene {
         this.name = inputElement.value;
         if (this.name === '') {
             pErrorElement.innerHTML = 'The name is empty';
+            return
+        }
+        if(!isUserNameValid(this.name)){
+            pErrorElement.innerHTML = 'Invalid user name: only letters and numbers are allowed. No spaces.';
             return
         }
         if (this.name === '') return

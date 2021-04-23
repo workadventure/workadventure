@@ -63,7 +63,6 @@ export class EnableCameraScene extends Phaser.Scene {
     create() {
 
         const middleX = this.getMiddleX();
-        console.log('create => middleX', middleX);
         this.enableCameraSceneElement = this.add.dom(middleX, 0).createFromCache(enableCameraSceneKey);
         MenuScene.revealMenusAfterInit(this.enableCameraSceneElement, enableCameraSceneKey);
 

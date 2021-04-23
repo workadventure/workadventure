@@ -123,7 +123,6 @@ export class HelpCameraSettingsScene extends Phaser.Scene {
     }
 
     private getMiddleY() : number{
-        console.log('this.helpCameraSettingsElement.node.getBoundingClientRect()', this.helpCameraSettingsElement.node.getBoundingClientRect());
         const middleY = ((window.innerHeight) - (
             (this.helpCameraSettingsElement
             && this.helpCameraSettingsElement.node
