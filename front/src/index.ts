@@ -18,6 +18,7 @@ import {localUserStore} from "./Connexion/LocalUserStore";
 import {ErrorScene} from "./Phaser/Reconnecting/ErrorScene";
 import {iframeListener} from "./Api/IframeListener";
 import {discussionManager} from "./WebRtc/DiscussionManager";
+import {Game} from "./Phaser/Game/Game";
 
 const {width, height} = coWebsiteManager.getGameSize();
 
@@ -103,7 +104,8 @@ const config: GameConfig = {
     }
 };
 
-const game = new Phaser.Game(config);
+//const game = new Phaser.Game(config);
+const game = new Game(config);
 
 window.addEventListener('resize', function (event) {
     coWebsiteManager.resetStyle();
