@@ -22,6 +22,7 @@ export class FloorCeilingTexture {
 
     public constructor(private scene: GameScene) {
         this.floorTexture = this.scene.add.renderTexture(0, 0, 1, 1);
+        this.floorTexture.setDepth(-1);
         this.topTexture = this.scene.add.renderTexture(0, 0, 1, 1);
         this.topTexture.setDepth(10001);
     }
