@@ -53,6 +53,7 @@ body .message-info.warning{
     padding-top: 32px;
     font-size: 28px;
     color: white;
+    overflow: hidden;
 }
 
 .video-container img{
