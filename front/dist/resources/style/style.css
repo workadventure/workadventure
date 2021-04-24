@@ -1035,7 +1035,7 @@ div.modal-report-user{
 
 .discussion .messages{
     position: absolute;
-    height: calc(100% - 360px);
+    height: calc(100% - 390px);
     overflow-x: hidden;
     overflow-y: auto;
     max-width: calc(100% - 40px);
