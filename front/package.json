@@ -25,11 +25,13 @@
     "webpack-merge": "^4.2.2"
   },
   "dependencies": {
+    "@fontsource/press-start-2p": "^4.2.2",
     "@types/simple-peer": "^9.6.0",
     "@types/socket.io-client": "^1.4.32",
     "axios": "^0.21.1",
     "generic-type-guard": "^3.2.0",
     "google-protobuf": "^3.13.0",
+    "nes.css": "^2.3.0",
     "phaser": "3.24.1",
     "phaser3-rex-plugins": "^1.1.42",
     "queue-typescript": "^1.0.1",

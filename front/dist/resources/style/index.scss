@@ -1,3 +1,7 @@
-@import "nes.css";
+@import "~@fontsource/press-start-2p/scss/mixins";
+@include fontFace(
+  $fontDir: "./resources/fonts"
+);
+@import "~nes.css/css/nes.min.css";
 @import "cowebsite.scss";
 @import "style.css";
