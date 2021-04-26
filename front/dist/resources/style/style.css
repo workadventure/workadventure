@@ -53,6 +53,7 @@ body .message-info.warning{
     padding-top: 32px;
     font-size: 28px;
     color: white;
+    overflow: hidden;
 }
 
 .video-container img{
@@ -337,24 +338,6 @@ body {
     }
 
     
-}
-@media (max-aspect-ratio: 1/1) {
-    .game-overlay {
-        flex-direction: column;
-    }
-
-    .sidebar {
-        flex-direction: row;
-        align-items: flex-end;
-    }
-
-    .sidebar > div {
-        max-width: 21%;
-    }
-
-    .sidebar > div:hover {
-        max-width: 25%;
-    }
 }
 
 #game {
@@ -1046,7 +1029,7 @@ div.modal-report-user{
 
 .discussion .messages{
     position: absolute;
-    height: calc(100% - 360px);
+    height: calc(100% - 390px);
     overflow-x: hidden;
     overflow-y: auto;
     max-width: calc(100% - 40px);
