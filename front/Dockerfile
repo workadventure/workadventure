@@ -1,6 +1,9 @@
 FROM thecodingmachine/workadventure-back-base:latest as builder
 WORKDIR /var/www/messages
 COPY --chown=docker:docker messages .
+
+# In my environment, yarn install fails with EACCESS error unless I add this
+USER root
 RUN yarn install && yarn proto
 
 # we are rebuilding on each deploy to cope with the PUSHER_URL environment URL
