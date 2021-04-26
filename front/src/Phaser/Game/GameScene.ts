@@ -23,6 +23,7 @@ import {
     ITiledMapLayer,
     ITiledMapLayerProperty,
     ITiledMapObject,
+    ITiledText,
     ITiledMapTileLayer,
     ITiledTileSet
 } from "../Map/ITiledMap";
@@ -84,6 +85,7 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 import {Subscription} from "rxjs";
 import {worldFullMessageStream} from "../../Connexion/WorldFullMessageStream";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
+import {TextUtils} from "../Components/TextUtils";
 import {LayersIterator} from "../Map/LayersIterator";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
@@ -411,6 +413,13 @@ export class GameScene extends ResizableScene implements CenterListener {
             }
             if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
                 depth = 10000;
+            }
+            if (layer.type === 'objectgroup') {
+                for (const object of layer.objects) {
+                    if (object.text) {
+                        TextUtils.createTextFromITiledMapObject(this, object);
+                    }
+                }
             }
         }
         if (depth === -2) {
