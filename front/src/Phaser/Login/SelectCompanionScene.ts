@@ -125,7 +125,7 @@ export class SelectCompanionScene extends ResizableScene {
 
             companion.setInteractive().on("pointerdown", () => {
                 this.currentCompanion = i;
-                this.updateSelectedCompanion();
+                this.moveCompanion();
             });
 
             this.companions.push(companion);
