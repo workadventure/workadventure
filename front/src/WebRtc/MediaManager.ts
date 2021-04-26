@@ -14,6 +14,12 @@ let videoConstraint: boolean|MediaTrackConstraints = {
     resizeMode: 'crop-and-scale',
     aspectRatio: 1.777777778
 };
+const audioConstraint: boolean|MediaTrackConstraints = {
+    //TODO: make these values configurable in the game settings menu and store them in localstorage
+    autoGainControl: false,
+    echoCancellation: true,
+    noiseSuppression: false
+};
 
 export type UpdatedLocalStreamCallback = (media: MediaStream|null) => void;
 export type StartScreenSharingCallback = (media: MediaStream) => void;
@@ -36,7 +42,7 @@ export class MediaManager {
     webrtcInAudio: HTMLAudioElement;
     private webrtcOutAudio: HTMLAudioElement;
     constraintsMedia : MediaStreamConstraints = {
-        audio: true,
+        audio: audioConstraint,
         video: videoConstraint
     };
     updatedLocalStreamCallBacks : Set<UpdatedLocalStreamCallback> = new Set<UpdatedLocalStreamCallback>();
@@ -234,7 +240,7 @@ export class MediaManager {
     }
 
     public enableMicrophone() {
-        this.constraintsMedia.audio = true;
+        this.constraintsMedia.audio = audioConstraint;
 
         this.getCamera().then((stream) => {
             //TODO show error message tooltip upper of camera button
@@ -309,12 +315,17 @@ export class MediaManager {
     }
 
     private enableScreenSharing() {
-        this.monitorClose.style.display = "none";
-        this.monitor.style.display = "block";
-        this.monitorBtn.classList.add("enabled");
         this.getScreenMedia().then((stream) => {
             this.triggerStartedScreenSharingCallbacks(stream);
+            this.monitorClose.style.display = "none";
+            this.monitor.style.display = "block";
+            this.monitorBtn.classList.add("enabled");
+        }, () => {
+            this.monitorClose.style.display = "block";
+            this.monitor.style.display = "none";
+            this.monitorBtn.classList.remove("enabled");
         });
+
     }
 
     private disableScreenSharing() {

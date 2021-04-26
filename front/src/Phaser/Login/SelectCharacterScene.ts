@@ -1,254 +1,275 @@
 import {gameManager} from "../Game/GameManager";
-import {TextField} from "../Components/TextField";
 import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
 import {EnableCameraSceneName} from "./EnableCameraScene";
 import {CustomizeSceneName} from "./CustomizeScene";
-import {ResizableScene} from "./ResizableScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
-import {loadAllDefaultModels, loadCustomTexture} from "../Entity/PlayerTexturesLoadingManager";
+import {loadAllDefaultModels} from "../Entity/PlayerTexturesLoadingManager";
 import {addLoader} from "../Components/Loader";
 import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
 import {AbstractCharacterScene} from "./AbstractCharacterScene";
-
+import {areCharacterLayersValid} from "../../Connexion/LocalUser";
+import {touchScreenManager} from "../../Touch/TouchScreenManager";
+import {PinchManager} from "../UserInput/PinchManager";
+import {MenuScene} from "../Menu/MenuScene";
+import { SelectCharacterMobileScene } from "./SelectCharacterMobileScene";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
-enum LoginTextures {
-    playButton = "play_button",
-    icon = "icon",
-    mainFont = "main_font",
-    customizeButton = "customize_button",
-    customizeButtonSelected = "customize_button_selected"
-}
+
+const selectCharacterKey = 'selectCharacterScene';
 
 export class SelectCharacterScene extends AbstractCharacterScene {
-    private readonly nbCharactersPerRow = 6;
-    private textField!: TextField;
-    private pressReturnField!: TextField;
-    private logo!: Image;
-    private customizeButton!: Image;
-    private customizeButtonSelected!: Image;
+    protected readonly nbCharactersPerRow = 6;
+    protected selectedPlayer!: Phaser.Physics.Arcade.Sprite|null; // null if we are selecting the "customize" option
+    protected players: Array<Phaser.Physics.Arcade.Sprite> = new Array<Phaser.Physics.Arcade.Sprite>();
+    protected playerModels!: BodyResourceDescriptionInterface[];
 
-    private selectedRectangle!: Rectangle;
-    private selectedRectangleXPos = 0; // Number of the character selected in the rows
-    private selectedRectangleYPos = 0; // Number of the character selected in the columns
-    private selectedPlayer!: Phaser.Physics.Arcade.Sprite|null; // null if we are selecting the "customize" option
-    private players: Array<Phaser.Physics.Arcade.Sprite> = new Array<Phaser.Physics.Arcade.Sprite>();
-    private playerModels!: BodyResourceDescriptionInterface[];
+    protected selectedRectangle!: Rectangle;
+
+    protected selectCharacterSceneElement!: Phaser.GameObjects.DOMElement;
+    protected currentSelectUser = 0;
 
     constructor() {
         super({
-            key: SelectCharacterSceneName
+            key: SelectCharacterSceneName,
         });
     }
 
     preload() {
         addLoader(this);
 
+        this.load.html(selectCharacterKey, 'resources/html/selectCharacterScene.html');
+
         this.loadSelectSceneCharacters().then((bodyResourceDescriptions) => {
             bodyResourceDescriptions.forEach((bodyResourceDescription) => {
                 this.playerModels.push(bodyResourceDescription);
             });
         })
-
-        this.load.image(LoginTextures.playButton, "resources/objects/play_button.png");
-        this.load.image(LoginTextures.icon, "resources/logos/tcm_full.png");
-        // Note: arcade.png from the Phaser 3 examples at: https://github.com/photonstorm/phaser3-examples/tree/master/public/assets/fonts/bitmap
-        this.load.bitmapFont(LoginTextures.mainFont, 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
         this.playerModels = loadAllDefaultModels(this.load);
-        this.load.image(LoginTextures.customizeButton, 'resources/objects/customize.png');
-        this.load.image(LoginTextures.customizeButtonSelected, 'resources/objects/customize_selected.png');
-
         addLoader(this);
     }
 
     create() {
-        this.textField = new TextField(this, this.game.renderer.width / 2, 50, 'Select your character');
-        this.pressReturnField = new TextField(
-            this,
-            this.game.renderer.width / 2,
-            90 + 32 * Math.ceil( this.playerModels.length / this.nbCharactersPerRow) + 40,
-            'Press enter to start');
+
+        const middleX = this.getMiddleX();
+        this.selectCharacterSceneElement = this.add.dom(middleX, 0).createFromCache(selectCharacterKey);
+        MenuScene.revealMenusAfterInit(this.selectCharacterSceneElement, selectCharacterKey);
+
+        this.selectCharacterSceneElement.addListener('click');
+        this.selectCharacterSceneElement.on('click',  (event:MouseEvent) => {
+            event.preventDefault();
+            if((event?.target as HTMLInputElement).id === 'selectCharacterButtonLeft') {
+                this.moveToLeft();
+            }else if((event?.target as HTMLInputElement).id === 'selectCharacterButtonRight') {
+                this.moveToRight();
+            }else if((event?.target as HTMLInputElement).id === 'selectCharacterSceneFormSubmit') {
+                this.nextSceneToCameraScene();
+            }else if((event?.target as HTMLInputElement).id === 'selectCharacterSceneFormCustomYourOwnSubmit') {
+                this.nextSceneToCustomizeScene();
+            }
+        });
+
+        if (touchScreenManager.supportTouchScreen) {
+            new PinchManager(this);
+        }
 
         const rectangleXStart = this.game.renderer.width / 2 - (this.nbCharactersPerRow / 2) * 32 + 16;
-
         this.selectedRectangle = this.add.rectangle(rectangleXStart, 90, 32, 32).setStrokeStyle(2, 0xFFFFFF);
-
-        this.logo = new Image(this, this.game.renderer.width - 30, this.game.renderer.height - 20, LoginTextures.icon);
-        this.add.existing(this.logo);
-
-        this.input.keyboard.on('keyup-ENTER', () => {
-            return this.nextScene();
-        });
-
-        this.input.keyboard.on('keydown-RIGHT', () => {
-            if(this.selectedRectangleYPos * this.nbCharactersPerRow + (this.selectedRectangleXPos + 2))
-            if (
-                this.selectedRectangleXPos < this.nbCharactersPerRow - 1
-                && ((this.selectedRectangleYPos * this.nbCharactersPerRow) + (this.selectedRectangleXPos + 1) + 1) <= this.playerModels.length
-            ) {
-                this.selectedRectangleXPos++;
-            }
-            this.updateSelectedPlayer();
-        });
-        this.input.keyboard.on('keydown-LEFT', () => {
-            if (
-                this.selectedRectangleXPos > 0
-                && ((this.selectedRectangleYPos * this.nbCharactersPerRow) + (this.selectedRectangleXPos - 1) + 1) <= this.playerModels.length
-            ) {
-                this.selectedRectangleXPos--;
-            }
-            this.updateSelectedPlayer();
-        });
-        this.input.keyboard.on('keydown-DOWN', () => {
-            if (
-                this.selectedRectangleYPos < Math.ceil(this.playerModels.length / this.nbCharactersPerRow)
-                && (
-                    (((this.selectedRectangleYPos + 1) * this.nbCharactersPerRow) + this.selectedRectangleXPos + 1) <= this.playerModels.length // check if player isn't empty
-                    || (this.selectedRectangleYPos + 1) === Math.ceil(this.playerModels.length / this.nbCharactersPerRow) // check if is custom rectangle
-                )
-            ) {
-                this.selectedRectangleYPos++;
-            }
-            this.updateSelectedPlayer();
-        });
-        this.input.keyboard.on('keydown-UP', () => {
-            if (
-                this.selectedRectangleYPos > 0
-                && (((this.selectedRectangleYPos - 1) * this.nbCharactersPerRow) + this.selectedRectangleXPos + 1) <= this.playerModels.length
-            ) {
-                this.selectedRectangleYPos--;
-            }
-            this.updateSelectedPlayer();
-        });
+        this.selectedRectangle.setDepth(2);
 
         /*create user*/
         this.createCurrentPlayer();
-
         const playerNumber = localUserStore.getPlayerCharacterIndex();
-        if (playerNumber && playerNumber !== -1) {
-            this.selectedRectangleXPos = playerNumber % this.nbCharactersPerRow;
-            this.selectedRectangleYPos = Math.floor(playerNumber / this.nbCharactersPerRow);
-            this.updateSelectedPlayer();
-        } else if (playerNumber === -1) {
-            this.selectedRectangleYPos = Math.ceil(this.playerModels.length / this.nbCharactersPerRow);
-            this.updateSelectedPlayer();
+
+        this.input.keyboard.on('keyup-ENTER', () => {
+            return this.nextSceneToCameraScene();
+        });
+
+        this.input.keyboard.on('keydown-RIGHT', () => {
+            this.moveToRight();
+        });
+        this.input.keyboard.on('keydown-LEFT', () => {
+            this.moveToLeft();
+        });
+        this.input.keyboard.on('keydown-UP', () => {
+            this.moveToUp();
+        });
+        this.input.keyboard.on('keydown-DOWN', () => {
+            this.moveToDown();
+        });
+    }
+
+    protected nextSceneToCameraScene(): void {
+        if (this.selectedPlayer !== null && !areCharacterLayersValid([this.selectedPlayer.texture.key])) {
+            return;
         }
-    }
-
-    update(time: number, delta: number): void {
-        this.pressReturnField.setVisible(!!(Math.floor(time / 500) % 2));
-    }
-
-    private nextScene(): void {
+        if(!this.selectedPlayer){
+            return;
+        }
         this.scene.stop(SelectCharacterSceneName);
-        if (this.selectedPlayer !== null) {
-            gameManager.setCharacterLayers([this.selectedPlayer.texture.key]);
-            gameManager.tryResumingGame(this, EnableCameraSceneName);
-        } else {
-            this.scene.run(CustomizeSceneName);
-        }
+        gameManager.setCharacterLayers([this.selectedPlayer.texture.key]);
+        gameManager.tryResumingGame(this, EnableCameraSceneName);
         this.scene.remove(SelectCharacterSceneName);
+    }
+
+    protected nextSceneToCustomizeScene(): void {
+        if (this.selectedPlayer !== null && !areCharacterLayersValid([this.selectedPlayer.texture.key])) {
+            return;
+        }
+        this.scene.sleep(SelectCharacterSceneName);
+        this.scene.run(CustomizeSceneName);
     }
 
     createCurrentPlayer(): void {
         for (let i = 0; i <this.playerModels.length; i++) {
             const playerResource = this.playerModels[i];
 
-            const col = i % this.nbCharactersPerRow;
-            const row = Math.floor(i / this.nbCharactersPerRow);
-
-            const [x, y] = this.getCharacterPosition(col, row);
-            const player = this.physics.add.sprite(x, y, playerResource.name, 0);
-            player.setBounce(0.2);
-            player.setCollideWorldBounds(true);
+            const [middleX, middleY] = this.getCharacterPosition();
+            const player = this.physics.add.sprite(middleX, middleY, playerResource.name, 0);
+            this.setUpPlayer(player, i);
             this.anims.create({
                 key: playerResource.name,
-                frames: this.anims.generateFrameNumbers(playerResource.name, {start: 0, end: 2,}),
-                frameRate: 10,
+                frames: this.anims.generateFrameNumbers(playerResource.name, {start: 0, end: 11}),
+                frameRate: 8,
                 repeat: -1
             });
             player.setInteractive().on("pointerdown", () => {
-                this.selectedRectangleXPos = col;
-                this.selectedRectangleYPos = row;
-                this.updateSelectedPlayer();
+                if(this.currentSelectUser === i){
+                    return;
+                }
+                this.currentSelectUser = i;
+                this.moveUser();
             });
             this.players.push(player);
         }
 
-        const maxRow = Math.ceil( this.playerModels.length / this.nbCharactersPerRow);
-        this.customizeButton = new Image(this, this.game.renderer.width / 2, 90 + 32 * maxRow + 6, LoginTextures.customizeButton);
-        this.customizeButton.setOrigin(0.5, 0.5);
-        this.add.existing(this.customizeButton);
-        this.customizeButtonSelected = new Image(this, this.game.renderer.width / 2, 90 + 32 * maxRow + 6, LoginTextures.customizeButtonSelected);
-        this.customizeButtonSelected.setOrigin(0.5, 0.5);
-        this.customizeButtonSelected.setVisible(false);
-        this.add.existing(this.customizeButtonSelected);
+        this.selectedPlayer = this.players[this.currentSelectUser];
+        this.selectedPlayer.play(this.playerModels[this.currentSelectUser].name);
+    }
 
-        this.customizeButton.setInteractive().on("pointerdown", () => {
-            this.selectedRectangleYPos = Math.ceil(this.playerModels.length / this.nbCharactersPerRow);
-            this.updateSelectedPlayer();
-        });
+    protected moveUser(){
+        for(let i = 0; i < this.players.length; i++){
+            const player = this.players[i];
+            this.setUpPlayer(player, i);
+        }
+        this.updateSelectedPlayer();
+    }
 
-        this.selectedPlayer = this.players[0];
-        this.selectedPlayer.play(this.playerModels[0].name);
+    protected moveToLeft(){
+        if(this.currentSelectUser === 0){
+            return;
+        }
+        this.currentSelectUser -= 1;
+        this.moveUser();
+    }
+
+    protected moveToRight(){
+        if(this.currentSelectUser === (this.players.length - 1)){
+            return;
+        }
+        this.currentSelectUser += 1;
+        this.moveUser();
+    }
+
+    protected moveToUp(){
+        if(this.currentSelectUser < this.nbCharactersPerRow){
+            return;
+        }
+        this.currentSelectUser -= this.nbCharactersPerRow;
+        this.moveUser();
+    }
+
+    protected moveToDown(){
+        if((this.currentSelectUser + this.nbCharactersPerRow) > (this.players.length - 1)){
+            return;
+        }
+        this.currentSelectUser += this.nbCharactersPerRow;
+        this.moveUser();
+    }
+
+    protected defineSetupPlayer(numero: number){
+        const deltaX = 32;
+        const deltaY = 32;
+        let [playerX, playerY] = this.getCharacterPosition(); // player X and player y are middle of the
+
+        playerX = ( (playerX - (deltaX * 2.5)) + ((deltaX) * (numero % this.nbCharactersPerRow)) ); // calcul position on line users
+        playerY = ( (playerY - (deltaY * 2)) + ((deltaY) * ( Math.floor(numero / this.nbCharactersPerRow) )) ); // calcul position on column users
+
+        const playerVisible = true;
+        const playerScale = 1;
+        const playserOpactity = 1;
+
+        // if selected
+        if( numero === this.currentSelectUser ){
+            this.selectedRectangle.setX(playerX);
+            this.selectedRectangle.setY(playerY);
+        }
+
+        return {playerX, playerY, playerScale, playserOpactity, playerVisible}
+    }
+
+    protected setUpPlayer(player: Phaser.Physics.Arcade.Sprite, numero: number){
+
+        const {playerX, playerY, playerScale, playserOpactity, playerVisible} = this.defineSetupPlayer(numero);
+        player.setBounce(0.2);
+        player.setCollideWorldBounds(true);
+        player.setVisible( playerVisible );
+        player.setScale(playerScale, playerScale);
+        player.setAlpha(playserOpactity);
+        player.setX(playerX);
+        player.setY(playerY);
     }
 
     /**
      * Returns pixel position by on column and row number
      */
-    private getCharacterPosition(x: number, y: number): [number, number] {
+    protected getCharacterPosition(): [number, number] {
         return [
-            this.game.renderer.width / 2 + 16 + (x - this.nbCharactersPerRow / 2) * 32,
-            y * 32 + 90
+            this.game.renderer.width / 2,
+            this.game.renderer.height / 2.5
         ];
     }
 
-    private updateSelectedPlayer(): void {
-        this.selectedPlayer?.anims.pause();
-        // If we selected the customize button
-        if (this.selectedRectangleYPos === Math.ceil(this.playerModels.length / this.nbCharactersPerRow)) {
-            this.selectedPlayer = null;
-            this.selectedRectangle.setVisible(false);
-            this.customizeButtonSelected.setVisible(true);
-            this.customizeButton.setVisible(false);
-            localUserStore.setPlayerCharacterIndex(-1);
-            return;
-        }
-        this.customizeButtonSelected.setVisible(false);
-        this.customizeButton.setVisible(true);
-        const [x, y] = this.getCharacterPosition(this.selectedRectangleXPos, this.selectedRectangleYPos);
-        this.selectedRectangle.setVisible(true);
-        this.selectedRectangle.setX(x);
-        this.selectedRectangle.setY(y);
-        this.selectedRectangle.setSize(32, 32);
-        const playerNumber = this.selectedRectangleXPos + this.selectedRectangleYPos * this.nbCharactersPerRow;
-        const player = this.players[playerNumber];
-        player.play(this.playerModels[playerNumber].name);
+    protected updateSelectedPlayer(): void {
+        this.selectedPlayer?.anims.pause(this.selectedPlayer?.anims.currentAnim.frames[0]);
+        const player = this.players[this.currentSelectUser];
+        player.play(this.playerModels[this.currentSelectUser].name);
         this.selectedPlayer = player;
-        localUserStore.setPlayerCharacterIndex(playerNumber);
+        localUserStore.setPlayerCharacterIndex(this.currentSelectUser);
+    }
+
+    update(time: number, delta: number): void {
+        const middleX = this.getMiddleX();
+        this.tweens.add({
+            targets: this.selectCharacterSceneElement,
+            x: middleX,
+            duration: 1000,
+            ease: 'Power3'
+        });
     }
 
     public onResize(ev: UIEvent): void {
-        this.textField.x = this.game.renderer.width / 2;
-        this.pressReturnField.x = this.game.renderer.width / 2;
-        this.logo.x = this.game.renderer.width - 30;
-        this.logo.y = this.game.renderer.height - 20;
-        this.customizeButton.x = this.game.renderer.width / 2;
-        this.customizeButtonSelected.x = this.game.renderer.width / 2;
+        //move position of user
+        this.moveUser();
 
-        for (let i = 0; i <this.playerModels.length; i++) {
-            const player = this.players[i];
-
-            const col = i % this.nbCharactersPerRow;
-            const row = Math.floor(i / this.nbCharactersPerRow);
-
-            const [x, y] = this.getCharacterPosition(col, row);
-            player.x = x;
-            player.y = y;
-        }
-        this.updateSelectedPlayer();
+        const middleX = this.getMiddleX();
+        this.tweens.add({
+            targets: this.selectCharacterSceneElement,
+            x: middleX,
+            duration: 1000,
+            ease: 'Power3'
+        });
     }
 
+    protected getMiddleX() : number{
+        return (this.game.renderer.width / 2) -
+        (
+            this.selectCharacterSceneElement
+            && this.selectCharacterSceneElement.node
+            && this.selectCharacterSceneElement.node.getBoundingClientRect().width > 0
+            ? (this.selectCharacterSceneElement.node.getBoundingClientRect().width / 4)
+            : 150
+        );
+    }
 }

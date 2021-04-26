@@ -47,6 +47,7 @@ export interface MessageUserPositionInterface {
     name: string;
     characterLayers: BodyResourceDescriptionInterface[];
     position: PointInterface;
+    companion: string|null;
 }
 
 export interface MessageUserMovedInterface {
@@ -58,7 +59,8 @@ export interface MessageUserJoined {
     userId: number;
     name: string;
     characterLayers: BodyResourceDescriptionInterface[];
-    position: PointInterface
+    position: PointInterface;
+    companion: string|null;
 }
 
 export interface PositionInterface {

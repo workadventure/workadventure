@@ -1,5 +1,6 @@
 import {LoginScene, LoginSceneName} from "../Login/LoginScene";
 import {SelectCharacterScene, SelectCharacterSceneName} from "../Login/SelectCharacterScene";
+import {SelectCompanionScene, SelectCompanionSceneName} from "../Login/SelectCompanionScene";
 import {gameManager} from "../Game/GameManager";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {mediaManager} from "../../WebRtc/MediaManager";
@@ -15,7 +16,7 @@ const gameMenuIconKey = 'gameMenuIcon';
 const gameSettingsMenuKey = 'gameSettingsMenu';
 const gameShare = 'gameShare';
 
-const closedSideMenuX = -200;
+const closedSideMenuX = -1000;
 const openedSideMenuX = 0;
 
 /**
@@ -90,7 +91,7 @@ export class MenuScene extends Phaser.Scene {
 
         this.menuElement.addListener('click');
         this.menuElement.on('click', this.onMenuClick.bind(this));
-        
+
         worldFullWarningStream.stream.subscribe(() => this.showWorldCapacityWarning());
     }
 
@@ -117,7 +118,8 @@ export class MenuScene extends Phaser.Scene {
         this.closeAll();
         this.sideMenuOpened = true;
         this.menuButton.getChildByID('openMenuButton').innerHTML = 'X';
-        if (gameManager.getCurrentGameScene(this).connection && gameManager.getCurrentGameScene(this).connection.isAdmin()) {
+        const connection = gameManager.getCurrentGameScene(this).connection;
+        if (connection && connection.isAdmin()) {
             const adminSection = this.menuElement.getChildByID('adminConsoleSection') as HTMLElement;
             adminSection.hidden = false;
         }
@@ -133,7 +135,7 @@ export class MenuScene extends Phaser.Scene {
             ease: 'Power3'
         });
     }
-    
+
     private showWorldCapacityWarning() {
         if (!this.warningContainer) {
             this.warningContainer = new WarningContainer(this);
@@ -146,7 +148,7 @@ export class MenuScene extends Phaser.Scene {
             this.warningContainer = null
             this.warningContainerTimeout = null
         }, 120000);
-        
+
     }
 
     private closeSideMenu(): void {
@@ -282,6 +284,10 @@ export class MenuScene extends Phaser.Scene {
                 this.closeSideMenu();
                 gameManager.leaveGame(this, SelectCharacterSceneName, new SelectCharacterScene());
                 break;
+            case 'changeCompanionButton':
+                this.closeSideMenu();
+                gameManager.leaveGame(this, SelectCompanionSceneName, new SelectCompanionScene());
+                break;
             case 'closeButton':
                 this.closeSideMenu();
                 break;
@@ -290,6 +296,9 @@ export class MenuScene extends Phaser.Scene {
                 break;
             case 'editGameSettingsButton':
                 this.openGameSettingsMenu();
+                break;
+            case 'toggleFullscreen':
+                this.toggleFullscreen();
                 break;
             case 'adminConsoleButton':
                 gameManager.getCurrentGameScene(this).ConsoleGlobalMessageManager.activeMessageConsole();
@@ -329,5 +338,16 @@ export class MenuScene extends Phaser.Scene {
         this.closeGameQualityMenu();
         this.closeGameShare();
         this.gameReportElement.close();
+    }
+
+    private toggleFullscreen() {
+        const body = document.querySelector('body')
+        if (body) {
+            if (document.fullscreenElement ?? document.fullscreen) {
+                document.exitFullscreen()
+            } else {
+                body.requestFullscreen();
+            }
+        }
     }
 }

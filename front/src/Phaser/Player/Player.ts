@@ -3,7 +3,6 @@ import {GameScene} from "../Game/GameScene";
 import {UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
 import {Character} from "../Entity/Character";
 
-
 export const hasMovedEventName = "hasMoved";
 export interface CurrentGamerInterface extends Character{
     moveUser(delta: number) : void;
@@ -22,12 +21,18 @@ export class Player extends Character implements CurrentGamerInterface {
         texturesPromise: Promise<string[]>,
         direction: PlayerAnimationDirections,
         moving: boolean,
-        private userInputManager: UserInputManager
+        private userInputManager: UserInputManager,
+        companion: string|null,
+        companionTexturePromise?: Promise<string>
     ) {
         super(Scene, x, y, texturesPromise, name, direction, moving, 1);
 
         //the current player model should be push away by other players to prevent conflict
         this.getBody().setImmovable(false);
+
+        if (typeof companion === 'string') {
+            this.addCompanion(companion, companionTexturePromise);
+        }
     }
 
     moveUser(delta: number): void {
@@ -42,7 +47,7 @@ export class Player extends Character implements CurrentGamerInterface {
         let x = 0;
         let y = 0;
         if (activeEvents.get(UserInputEvent.MoveUp)) {
-            y = - moveAmount;
+            y = -moveAmount;
             direction = PlayerAnimationDirections.Up;
             moving = true;
         } else if (activeEvents.get(UserInputEvent.MoveDown)) {
@@ -59,15 +64,18 @@ export class Player extends Character implements CurrentGamerInterface {
             direction = PlayerAnimationDirections.Right;
             moving = true;
         }
+        moving = moving || activeEvents.get(UserInputEvent.JoystickMove);
+
         if (x !== 0 || y !== 0) {
             this.move(x, y);
             this.emit(hasMovedEventName, {moving, direction, x: this.x, y: this.y});
-        } else {
-            if (this.wasMoving) {
-                //direction = PlayerAnimationNames.None;
-                this.stop();
-                this.emit(hasMovedEventName, {moving, direction: this.previousDirection, x: this.x, y: this.y});
-            }
+        } else if (this.wasMoving && moving) {
+            // slow joystick movement
+            this.move(0, 0);
+            this.emit(hasMovedEventName, {moving, direction: this.previousDirection, x: this.x, y: this.y});
+        } else if (this.wasMoving && !moving) {
+            this.stop();
+            this.emit(hasMovedEventName, {moving, direction: this.previousDirection, x: this.x, y: this.y});
         }
 
         if (direction !== null) {

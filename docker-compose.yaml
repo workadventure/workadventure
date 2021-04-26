@@ -38,6 +38,8 @@ services:
       TURN_USER: ""
       TURN_PASSWORD: ""
       START_ROOM_URL: "$START_ROOM_URL"
+      MAX_PER_GROUP: "$MAX_PER_GROUP"
+      MAX_USERNAME_LENGTH: "$MAX_USERNAME_LENGTH"
     command: yarn run start
     volumes:
       - ./front:/usr/src/app
@@ -110,6 +112,7 @@ services:
       JITSI_URL: $JITSI_URL
       JITSI_ISS: $JITSI_ISS
       TURN_STATIC_AUTH_SECRET: SomeStaticAuthSecret
+      MAX_PER_GROUP: "MAX_PER_GROUP"
     volumes:
       - ./back:/usr/src/app
     labels:
