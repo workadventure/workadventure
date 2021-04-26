@@ -39,7 +39,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     preload() {
         addLoader(this);
 
-        this.load.html(selectCharacterKey, 'resources/html/selectCharacterScene.html');
+        this.load.html(selectCharacterKey, 'resources/html/SelectCharacterScene.html');
 
         this.loadSelectSceneCharacters().then((bodyResourceDescriptions) => {
             bodyResourceDescriptions.forEach((bodyResourceDescription) => {
