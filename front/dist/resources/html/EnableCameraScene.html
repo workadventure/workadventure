@@ -11,7 +11,7 @@
         max-height: 40vh;
         width: 42vw;
         max-width: 300px;
-        /*overflow: scroll;*/
+        overflow: none;
     }
     #enableCameraScene h1 {
         background-image: linear-gradient(top, #f1f3f3, #d4dae0);
@@ -97,6 +97,12 @@
         width: 160px;
         margin: 20px 0;
     }
+    /*@media only screen and (max-width: 800px),
+            only screen and (max-height: 600px) {
+        #enableCameraScene{
+            overflow-y: scroll;
+        }
+    }*/
 </style>
 
 <form id="enableCameraScene" hidden>
