@@ -13,6 +13,8 @@ import {scriptUtils} from "./ScriptUtils";
 import {GoToPageEvent, isGoToPageEvent} from "./Events/GoToPageEvent";
 import {isOpenCoWebsite, OpenCoWebSiteEvent} from "./Events/OpenCoWebSiteEvent";
 import { isLoadPageEvent } from './Events/LoadPageEvent';
+import { isMenuItemRegisterEvent } from './Events/MenuItemRegisterEvent';
+import { MenuItemClickedEvent } from './Events/MenuItemClickedEvent';
 
 
 /**
@@ -57,6 +59,8 @@ class IframeListener {
     private readonly _removeBubbleStream: Subject<void> = new Subject();
     public readonly removeBubbleStream = this._removeBubbleStream.asObservable();
 
+    private readonly _registerMenuCommandStream: Subject<string> = new Subject();
+    public readonly registerMenuCommandStream = this._registerMenuCommandStream.asObservable();
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
 
@@ -110,6 +114,8 @@ class IframeListener {
                     this._removeBubbleStream.next();
                 }else if (payload.type === 'loadPage' && isLoadPageEvent(payload.data)){
                     this._loadPageStream.next(payload.data.url);
+                } else if (payload.type == "registerMenuCommand" && isMenuItemRegisterEvent(payload.data)) {
+                    this._registerMenuCommandStream.next(payload.data.menutItem)
                 }
             }
 
@@ -192,6 +198,15 @@ class IframeListener {
         iframe.remove();
 
         this.scripts.delete(scriptUrl);
+    }
+
+    sendMenuClickedEvent(menuItem: string) {
+        this.postMessage({
+            'type': 'menuItemClicked',
+            'data': {
+                menuItem: menuItem,
+            } as MenuItemClickedEvent
+        });
     }
 
     sendUserInputChat(message: string) {

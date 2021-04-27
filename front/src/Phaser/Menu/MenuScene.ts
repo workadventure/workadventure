@@ -9,6 +9,9 @@ import {connectionManager} from "../../Connexion/ConnectionManager";
 import {GameConnexionTypes} from "../../Url/UrlManager";
 import {WarningContainer, warningContainerHtml, warningContainerKey} from "../Components/WarningContainer";
 import {worldFullWarningStream} from "../../Connexion/WorldFullWarningStream";
+import { HtmlUtils } from '../../WebRtc/HtmlUtils';
+import { iframeListener } from '../../Api/IframeListener';
+import { Subscription } from 'rxjs';
 
 export const MenuSceneName = 'MenuScene';
 const gameMenuKey = 'gameMenu';
@@ -36,11 +39,20 @@ export class MenuScene extends Phaser.Scene {
     private warningContainer: WarningContainer | null = null;
     private warningContainerTimeout: NodeJS.Timeout | null = null;
 
+    private apiMenus = []
+
+
+    private subscriptions = new Subscription()
     constructor() {
         super({key: MenuSceneName});
 
         this.gameQualityValue = localUserStore.getGameQualityValue();
         this.videoQualityValue = localUserStore.getVideoQualityValue();
+
+        this.subscriptions.add(iframeListener.registerMenuCommandStream.subscribe(menuCommand => {
+            this.addMenuOption(menuCommand);
+
+        }))
     }
 
     preload () {
@@ -266,13 +278,28 @@ export class MenuScene extends Phaser.Scene {
         });
     }
 
-    private onMenuClick(event:MouseEvent) {
-        if((event?.target as HTMLInputElement).classList.contains('not-button')){
+    public addMenuOption(menuText: string) {
+        const wrappingSection = document.createElement("section")
+        wrappingSection.innerHTML = `<button class="fromApi" id="${HtmlUtils.escapeHtml(menuText)}">${HtmlUtils.escapeHtml(menuText)}</button>`
+        const menuItemContainer = this.menuElement.node.querySelector("#gameMenu main");
+        if (menuItemContainer) {
+            menuItemContainer.insertBefore(wrappingSection, menuItemContainer.querySelector("#socialLinks"))
+        }
+    }
+
+    private onMenuClick(event: MouseEvent) {
+        const htmlMenuItem = (event?.target as HTMLInputElement);
+        if (htmlMenuItem.classList.contains('not-button')) {
             return;
         }
         event.preventDefault();
 
-        switch ((event?.target as HTMLInputElement).id) {
+        if (htmlMenuItem.classList.contains("fromApi")) {
+            iframeListener.sendMenuClickedEvent(htmlMenuItem.id)
+            return
+        }
+
+        switch (htmlMenuItem.id) {
             case 'changeNameButton':
                 this.closeSideMenu();
                 gameManager.leaveGame(this, LoginSceneName, new LoginScene());
