@@ -1,7 +1,9 @@
 name: Build, push and deploy Docker image
 
 on:
-  - push
+  pull_request:
+    types: [ labeled, synchronize ]
+
 
 # Enables BuildKit
 env:
@@ -10,7 +12,7 @@ env:
 jobs:
 
   build-front:
-
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -30,11 +32,11 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-front
-          tags: ${{ env.GITHUB_REF_SLUG }}
+          tags: ${{ env.GITHUB_HEAD_REF_SLUG }}
           add_git_labels: true
 
   build-back:
-
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -53,11 +55,11 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-back
-          tags: ${{ env.GITHUB_REF_SLUG }}
+          tags: ${{ env.GITHUB_HEAD_REF_SLUG }}
           add_git_labels: true
 
   build-pusher:
-
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -76,11 +78,11 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-pusher
-          tags: ${{ env.GITHUB_REF_SLUG }}
+          tags: ${{ env.GITHUB_HEAD_REF_SLUG }}
           add_git_labels: true
 
   build-uploader:
-
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -99,11 +101,11 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-uploader
-          tags: ${{ env.GITHUB_REF_SLUG }}
+          tags: ${{ env.GITHUB_HEAD_REF_SLUG }}
           add_git_labels: true
 
   build-maps:
-
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -123,7 +125,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-maps
-          tags: ${{ env.GITHUB_REF_SLUG }}
+          tags: ${{ env.GITHUB_HEAD_REF_SLUG }}
           add_git_labels: true
 
   deeploy:
@@ -152,13 +154,13 @@ jobs:
           SECRET_JITSI_KEY: ${{ secrets.SECRET_JITSI_KEY }}
           TURN_STATIC_AUTH_SECRET: ${{ secrets.TURN_STATIC_AUTH_SECRET }}
         with:
-          namespace: workadventure-${{ env.GITHUB_REF_SLUG }}
+          namespace: workadventure-${{ env.GITHUB_HEAD_REF_SLUG }}
 
       - name: Add a comment in PR
         uses: unsplash/comment-on-pr@v1.2.0
-        if: ${{ env.GITHUB_REF_SLUG != 'master' }}
+        if: ${{ env.GITHUB_HEAD_REF_SLUG != 'master' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          msg: Environment deployed at https://play.${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com
+          msg: Environment deployed at https://play.${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re
           check_for_duplicate_msg: true
