@@ -8,11 +8,10 @@
         border-radius: 6px;
         margin: 10px auto 0;
         color: #ebeeee;
-        max-height: 40vh;
-        overflow: scroll;
+        max-height: 48vh;
         max-width: 300px;
         width: 40vw;
-        overflow: unset;
+        overflow: hidden;
     }
     #selectCharacterScene h1 {
         background-image: linear-gradient(top, #f1f3f3, #d4dae0);
@@ -118,6 +117,9 @@
     }
     @media only screen and (max-width: 800px),
             only screen and (max-height: 600px) {
+        #selectCharacterScene{
+            overflow-y: scroll;
+        }
         #selectCharacterScene section button.selectCharacterButton#selectCharacterButtonRight{
             display: block;
         }

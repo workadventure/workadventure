@@ -11,6 +11,7 @@ import {AbstractCharacterScene} from "./AbstractCharacterScene";
 import {areCharacterLayersValid} from "../../Connexion/LocalUser";
 import { MenuScene } from "../Menu/MenuScene";
 import { SelectCharacterSceneName } from "./SelectCharacterScene";
+import { RESOLUTION } from "../../Enum/EnvironmentVariable";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -139,7 +140,7 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         if(index === -1 && this.activeRow === 1){
             const button = this.customizeSceneElement.getChildByID('customizeSceneFormBack') as HTMLButtonElement;
-            button.innerText = `Back`;
+            button.innerText = `Return`;
         }
 
         if(index === 1 && this.activeRow === 0){
@@ -283,12 +284,12 @@ export class CustomizeScene extends AbstractCharacterScene {
      }
 
      protected getMiddleX() : number{
-        return (this.game.renderer.width / 2) -  
+        return (this.game.renderer.width / RESOLUTION) -  
         (
             this.customizeSceneElement
             && this.customizeSceneElement.node
             && this.customizeSceneElement.node.getBoundingClientRect().width > 0
-            ? (this.customizeSceneElement.node.getBoundingClientRect().width / 4)
+            ? (this.customizeSceneElement.node.getBoundingClientRect().width / (2*RESOLUTION))
             : 150
         );
     }
