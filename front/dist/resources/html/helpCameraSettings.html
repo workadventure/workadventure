@@ -8,9 +8,9 @@
         border-radius: 6px;
         margin: 25px auto 0;
         width: 400px;
-        max-height: calc(50vh - 25px);
-        overflow: scroll;
+        max-height: calc(48vh - 50px);
         max-width: 48vw;
+        overflow: hidden;
     }
     #helpCameraSettings h1 {
         background-image: linear-gradient(top, #f1f3f3, #d4dae0);
@@ -72,6 +72,12 @@
     #helpCameraSettings section img {
         width: 200px;
         margin-top: 10px;
+    }
+    @media only screen and (max-width: 800px),
+            only screen and (max-height: 600px) {
+        #helpCameraSettings{
+            overflow-y: scroll;
+        }
     }
 </style>
 

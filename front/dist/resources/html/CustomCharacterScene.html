@@ -8,11 +8,11 @@
         border-radius: 6px;
         margin: 10px auto 0;
         color: #ebeeee;
-        overflow: scroll;
         width: 42vw;
-        height: 38vh;
-        /*max-width: 300px;*/
-        max-height: 40vh;
+        height: 48vh;
+        /*max-width: 300px;
+        max-height: 48vh;*/
+        overflow: hidden;
     }
     #customizeScene h1 {
         background-image: linear-gradient(top, #f1f3f3, #d4dae0);
@@ -130,6 +130,7 @@
     @media only screen and (max-width: 600px) {
         #customizeScene {
             max-width: 160px;
+            overflow-y: scroll;
         }
     }
     @media only screen and (max-height: 400px) {

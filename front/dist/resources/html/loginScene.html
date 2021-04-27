@@ -11,7 +11,7 @@
         max-width: 200px;
         color: #ebeeee;
         max-height: 40vh;
-        overflow: scroll;
+        overflow: hidden;
     }
     #loginScene h1 {
         background-image: linear-gradient(top, #f1f3f3, #d4dae0);
@@ -92,6 +92,12 @@
     #loginScene section img{
         width: 160px;
         margin: 20px 0;
+    }
+    @media only screen and (max-width: 800px),
+            only screen and (max-height: 600px) {
+        #loginScene{
+            overflow-y: scroll;
+        }
     }
 </style>
 

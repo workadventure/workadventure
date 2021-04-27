@@ -1,6 +1,7 @@
 import {mediaManager} from "../../WebRtc/MediaManager";
 import {HtmlUtils} from "../../WebRtc/HtmlUtils";
 import {localUserStore} from "../../Connexion/LocalUserStore";
+import { RESOLUTION } from "../../Enum/EnvironmentVariable";
 
 export const HelpCameraSettingsSceneName = 'HelpCameraSettingsScene';
 const helpCameraSettings = 'helpCameraSettings';
@@ -112,7 +113,7 @@ export class HelpCameraSettingsScene extends Phaser.Scene {
     }
 
     private getMiddleX() : number{
-        return (this.game.renderer.width / 2) -  
+        return (this.game.renderer.width / RESOLUTION) -  
         (
             this.helpCameraSettingsElement
             && this.helpCameraSettingsElement.node
@@ -128,7 +129,7 @@ export class HelpCameraSettingsScene extends Phaser.Scene {
             && this.helpCameraSettingsElement.node
             && this.helpCameraSettingsElement.node.getBoundingClientRect().height > 0
                 ? this.helpCameraSettingsElement.node.getBoundingClientRect().height : 400 /*FIXME to use a const will be injected in HTMLElement*/)*2)) / 2;
-        return (middleY > 0 ? middleY / 2 : 0);
+        return (middleY > 0 ? middleY / RESOLUTION : 0);
     }
 
 }
