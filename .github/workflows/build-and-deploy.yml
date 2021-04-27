@@ -1,7 +1,9 @@
 name: Build, push and deploy Docker image
 
 on:
-  - push
+  pull_request:
+    types: [ labeled, synchronize ]
+
 
 # Enables BuildKit
 env:
@@ -10,7 +12,7 @@ env:
 jobs:
 
   build-front:
-
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -34,7 +36,7 @@ jobs:
           add_git_labels: true
 
   build-back:
-
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -57,7 +59,7 @@ jobs:
           add_git_labels: true
 
   build-pusher:
-
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -80,7 +82,7 @@ jobs:
           add_git_labels: true
 
   build-uploader:
-
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -103,7 +105,7 @@ jobs:
           add_git_labels: true
 
   build-maps:
-
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:

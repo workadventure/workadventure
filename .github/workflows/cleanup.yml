@@ -1,7 +1,8 @@
 name: Cleanup images and environments
 
 on:
-  - delete
+  pull_request:
+    types: [ closed ]
 
 # Enables BuildKit
 env:
