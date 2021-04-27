@@ -280,9 +280,11 @@ export class MenuScene extends Phaser.Scene {
 
     public addMenuOption(menuText: string) {
         const wrappingSection = document.createElement("section")
-        wrappingSection.innerHTML = `<button class="fromApi" id="${HtmlUtils.escapeHtml(menuText)}">${HtmlUtils.escapeHtml(menuText)}</button>`
+        const excapedHtml = HtmlUtils.escapeHtml(menuText);
+        wrappingSection.innerHTML = `<button class="fromApi" id="${excapedHtml}">${excapedHtml}</button>`
         const menuItemContainer = this.menuElement.node.querySelector("#gameMenu main");
         if (menuItemContainer) {
+            menuItemContainer.querySelector(`#${excapedHtml}.fromApi`)?.remove()
             menuItemContainer.insertBefore(wrappingSection, menuItemContainer.querySelector("#socialLinks"))
         }
     }
