@@ -90,6 +90,7 @@ import {LayersIterator} from "../Map/LayersIterator";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
 import {joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey} from "../Components/MobileJoystick";
+import { MenuScene, MenuSceneName } from '../Menu/MenuScene';
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -880,6 +881,8 @@ ${escapedMessage}
         const {roomId, hash} = Room.getIdFromIdentifier(exitKey, this.MapUrlFile, this.instance);
         if (!roomId) throw new Error('Could not find the room from its exit key: '+exitKey);
         urlManager.pushStartLayerNameToUrl(hash);
+        const menuScene: MenuScene = this.scene.get(MenuSceneName) as MenuScene
+        menuScene.reset()
         if (roomId !== this.scene.key) {
             if (this.scene.get(roomId) === null) {
                 console.error("next room not loaded", exitKey);

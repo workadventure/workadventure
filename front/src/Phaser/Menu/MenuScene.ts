@@ -38,10 +38,6 @@ export class MenuScene extends Phaser.Scene {
     private menuButton!: Phaser.GameObjects.DOMElement;
     private warningContainer: WarningContainer | null = null;
     private warningContainerTimeout: NodeJS.Timeout | null = null;
-
-    private apiMenus = []
-
-
     private subscriptions = new Subscription()
     constructor() {
         super({key: MenuSceneName});
@@ -62,6 +58,13 @@ export class MenuScene extends Phaser.Scene {
         this.load.html(gameShare, 'resources/html/gameShare.html');
         this.load.html(gameReportKey, gameReportRessource);
         this.load.html(warningContainerKey, warningContainerHtml);
+    }
+
+    reset() {
+        const addedMenuItems=[...this.menuElement.node.querySelectorAll(".fromApi")];
+        for(let index=addedMenuItems.length-1;index>=0;index--){
+            addedMenuItems[index].remove()
+        }
     }
 
     create() {
