@@ -162,5 +162,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          msg: Environment deployed at https://play.${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com
+          msg: Environment deployed at https://play.${{ env.GITHUB_REF_SLUG }}.test.workadventu.re
           check_for_duplicate_msg: true
