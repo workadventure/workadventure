@@ -284,13 +284,13 @@ export class EnableCameraScene extends Phaser.Scene {
     }
 
     private getMiddleX() : number{
-        return (this.game.renderer.width / 2) -
+        return (this.game.renderer.width / RESOLUTION) -
         (
             this.enableCameraSceneElement
             && this.enableCameraSceneElement.node
             && this.enableCameraSceneElement.node.getBoundingClientRect().width > 0
-            ? (this.enableCameraSceneElement.node.getBoundingClientRect().width / 4)
-            : (300 / 2)
+            ? (this.enableCameraSceneElement.node.getBoundingClientRect().width / (2*RESOLUTION))
+            : (300 / RESOLUTION)
         );
     }
 }

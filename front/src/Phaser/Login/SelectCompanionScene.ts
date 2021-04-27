@@ -10,6 +10,7 @@ import { getAllCompanionResources } from "../Companion/CompanionTexturesLoadingM
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
 import { MenuScene } from "../Menu/MenuScene";
+import { RESOLUTION } from "../../Enum/EnvironmentVariable";
 
 export const SelectCompanionSceneName = "SelectCompanionScene";
 
@@ -240,12 +241,12 @@ export class SelectCompanionScene extends ResizableScene {
     }
 
     private getMiddleX() : number{
-        return (this.game.renderer.width / 2) -
+        return (this.game.renderer.width / RESOLUTION) -
         (
             this.selectCompanionSceneElement
             && this.selectCompanionSceneElement.node
             && this.selectCompanionSceneElement.node.getBoundingClientRect().width > 0
-            ? (this.selectCompanionSceneElement.node.getBoundingClientRect().width / 4)
+            ? (this.selectCompanionSceneElement.node.getBoundingClientRect().width / (2*RESOLUTION))
             : 150
         );
     }
