@@ -55,6 +55,9 @@ export class Game extends Phaser.Game {
             //  The final event before the step repeats. Your last chance to do anything to the canvas before it all starts again.
 
             eventEmitter.emit(Events.POST_RENDER, renderer, time, delta);
+        } else {
+            // @ts-ignore
+            this.scene.isProcessing = false;
         }
     }
 
