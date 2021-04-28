@@ -141,6 +141,7 @@ body .message-info.warning{
     right: 15px;
     bottom: 30px;
     border-radius: 15px 15px 15px 15px;
+    max-height: 200px;
 }
 
 video#myCamVideo{
