@@ -53,7 +53,7 @@ module.exports = {
         new MiniCssExtractPlugin({filename: 'style.[contenthash].css'}),
         new HtmlWebpackPlugin(
             {
-                template: './dist/index.tmpl.html.tmp',
+                template: './dist/index.tmpl.html',
                 minify: {
                     collapseWhitespace: true,
                     keepClosingSlash: true,
