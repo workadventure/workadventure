@@ -82,6 +82,7 @@ import CanvasTexture = Phaser.Textures.CanvasTexture;
 import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import DOMElement = Phaser.GameObjects.DOMElement;
+import {RadialMenu} from "../Components/RadialMenu";
 import {Subscription} from "rxjs";
 import {worldFullMessageStream} from "../../Connexion/WorldFullMessageStream";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
@@ -493,6 +494,14 @@ export class GameScene extends ResizableScene implements CenterListener {
         layoutManager.setListener(this);
         this.triggerOnMapLayerPropertyChange();
         this.listenToIframeEvents();
+
+
+        new RadialMenu(this, 500, 500, [
+            {name: 'lol', textureKey: 'emote-music'},
+            {name: 'lol', textureKey: 'emote-music'},
+            {name: 'lol', textureKey: 'emote-music'},
+            {name: 'lol', textureKey: 'emote-music'},
+        ]);
 
 
         if (!this.room.isDisconnected()) {
