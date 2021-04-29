@@ -19,7 +19,7 @@ interface WorkAdventureApi {
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup;
     openTab(url : string): void;
     goToPage(url : string): void;
-    loadPage(url : string): void;
+    exitSceneTo(url : string): void;
     openCoWebSite(url : string): void;
     closeCoWebSite(): void;
     disablePlayerControl() : void;
@@ -124,7 +124,7 @@ window.WA = {
             },'*');
     },
 
-    loadPage(url : string) : void{
+    exitSceneTo(url : string) : void{
         window.parent.postMessage({
             "type" : 'loadPage',
             "data" : {

@@ -39,7 +39,7 @@ WA.onEnterZone(zoneName, () => {
             label: "load grouped map",
             className: "popUpElement",
             callback: (popup => {
-                WA.loadPage(urlRelativeMap);
+                WA.exitSceneTo(urlRelativeMap);
                 popup.close();
             })
 
