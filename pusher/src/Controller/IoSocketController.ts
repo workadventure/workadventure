@@ -117,15 +117,15 @@ export class IoSocketController {
                         upgradeAborted.aborted = true;
                     });
 
-                    try {
-                        const url = req.getUrl();
-                        const query = parse(req.getQuery());
-                        const websocketKey = req.getHeader('sec-websocket-key');
-                        const websocketProtocol = req.getHeader('sec-websocket-protocol');
-                        const websocketExtensions = req.getHeader('sec-websocket-extensions');
-                        const IPAddress = req.getHeader('x-forwarded-for');
+                    const url = req.getUrl();
+                    const query = parse(req.getQuery());
+                    const websocketKey = req.getHeader('sec-websocket-key');
+                    const websocketProtocol = req.getHeader('sec-websocket-protocol');
+                    const websocketExtensions = req.getHeader('sec-websocket-extensions');
+                    const IPAddress = req.getHeader('x-forwarded-for');
 
-                        const roomId = query.roomId;
+                    const roomId = query.roomId;
+                    try {
                         if (typeof roomId !== 'string') {
                             throw new Error('Undefined room ID: ');
                         }
@@ -184,13 +184,14 @@ export class IoSocketController {
                                     } else if(err?.response?.status == 403) {
                                         // If we get an HTTP 404, the world is full. We need to broadcast a special error to the client.
                                         // we finish immediatly the upgrade then we will close the socket as soon as it starts opening. 
-                                        res.upgrade({
+                                        return res.upgrade({
                                             rejected: true,
+                                            message: err?.response?.data.message,
+                                            status: err?.response?.status
                                         }, websocketKey,
                                         websocketProtocol,
                                         websocketExtensions,
                                         context);
-                                        return;
                                     }else{
                                         throw err;
                                     }
@@ -207,7 +208,7 @@ export class IoSocketController {
                             } catch (e) {
                                 console.log('access not granted for user '+userUuid+' and room '+roomId);
                                 console.error(e);
-                                throw new Error('Client cannot acces this ressource.')
+                                throw new Error('User cannot acces on this world')
                             }
                         }
 
@@ -254,21 +255,33 @@ export class IoSocketController {
                             context);
 
                     } catch (e) {
-                        if (e instanceof Error) {
+                        /*if (e instanceof Error) {
                             console.log(e.message);
                             res.writeStatus("401 Unauthorized").end(e.message);
                         } else {
                             res.writeStatus("500 Internal Server Error").end('An error occurred');
-                        }
-                        return;
+                        }*/
+                        return res.upgrade({
+                            rejected: true,
+                            message: e.message ? e.message : '500 Internal Server Error'
+                        }, websocketKey,
+                        websocketProtocol,
+                        websocketExtensions,
+                        context);
                     }
                 })();
             },
             /* Handlers */
             open: (ws) => {
                 if(ws.rejected === true) {
-                    socketManager.emitWorldFullMessage(ws);
+                    //FIX ME to use status code
+                    if(ws.message === 'World is full'){
+                        socketManager.emitWorldFullMessage(ws);
+                    }else{
+                        socketManager.emitConnexionErrorMessage(ws, ws.message as string);
+                    }
                     ws.close();
+                    return;
                 }
                 
                 // Let's join the room
