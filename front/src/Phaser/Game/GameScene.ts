@@ -86,7 +86,6 @@ import {Subscription} from "rxjs";
 import {worldFullMessageStream} from "../../Connexion/WorldFullMessageStream";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
 import {TextUtils} from "../Components/TextUtils";
-import {LayersIterator} from "../Map/LayersIterator";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
 import {joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey} from "../Components/MobileJoystick";

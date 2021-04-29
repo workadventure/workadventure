@@ -1,11 +1,4 @@
 { "compressionlevel":-1,
- "editorsettings":
-    {
-     "export":
-        {
-         "target":"."
-        }
-    },
  "height":10,
  "infinite":false,
  "layers":[
@@ -60,7 +53,25 @@
          "draworder":"topdown",
          "id":3,
          "name":"floorLayer",
-         "objects":[],
+         "objects":[
+                {
+                 "height":141,
+                 "id":1,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "fontfamily":"Sans Serif",
+                     "pixelsize":11,
+                     "text":"Test:\nWalk on carpet, an iframe open, click the \"Send chat message\" button\nResult:\nThe chat opens and a \"Hello world!\" message is displayed.\nTest:\nEnter something in the chat\nResult:\nThe message is displayed in the iframe",
+                     "wrap":true
+                    },
+                 "type":"",
+                 "visible":true,
+                 "width":316.770833333333,
+                 "x":0.28125,
+                 "y":187.833333333333
+                }],
          "opacity":1,
          "type":"objectgroup",
          "visible":true,
@@ -68,10 +79,10 @@
          "y":0
         }],
  "nextlayerid":6,
- "nextobjectid":1,
+ "nextobjectid":3,
  "orientation":"orthogonal",
  "renderorder":"right-down",
- "tiledversion":"1.3.3",
+ "tiledversion":"2021.03.23",
  "tileheight":32,
  "tilesets":[
         {
@@ -89,6 +100,6 @@
         }],
  "tilewidth":32,
  "type":"map",
- "version":1.2,
+ "version":1.5,
  "width":10
 }

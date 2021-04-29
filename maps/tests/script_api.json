@@ -1,11 +1,4 @@
 { "compressionlevel":-1,
- "editorsettings":
-    {
-     "export":
-        {
-         "target":"."
-        }
-    },
  "height":10,
  "infinite":false,
  "layers":[
@@ -95,6 +88,42 @@
                  "width":125.735549178518,
                  "x":13.649632619596,
                  "y":50.8502491249093
+                }, 
+                {
+                 "height":67,
+                 "id":3,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "fontfamily":"Sans Serif",
+                     "pixelsize":11,
+                     "text":"Test:\nWalk on top carpet\nResult:\nA message \"Don't step on my carpet\" is displayed",
+                     "wrap":true
+                    },
+                 "type":"",
+                 "visible":true,
+                 "width":252.4375,
+                 "x":2.78125,
+                 "y":2.5
+                }, 
+                {
+                 "height":67,
+                 "id":4,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "fontfamily":"Sans Serif",
+                     "pixelsize":11,
+                     "text":"Test:\nWalk on bottom carpet\nResult:\nA series of 2 popups open. A bubble opens. The player cannot move until popup closes.\nWhen the player leaves the zone, the bubble closes.",
+                     "wrap":true
+                    },
+                 "type":"",
+                 "visible":true,
+                 "width":252.438,
+                 "x":-1.71899999999999,
+                 "y":163.5
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -103,7 +132,7 @@
          "y":0
         }],
  "nextlayerid":8,
- "nextobjectid":3,
+ "nextobjectid":5,
  "orientation":"orthogonal",
  "properties":[
         {
@@ -112,7 +141,7 @@
          "value":"script.js"
         }],
  "renderorder":"right-down",
- "tiledversion":"1.4.3",
+ "tiledversion":"2021.03.23",
  "tileheight":32,
  "tilesets":[
         {
@@ -130,6 +159,6 @@
         }],
  "tilewidth":32,
  "type":"map",
- "version":1.4,
+ "version":1.5,
  "width":10
 }
