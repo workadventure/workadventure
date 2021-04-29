@@ -2,12 +2,12 @@ import {Subject} from "rxjs";
 
 class WorldFullMessageStream {
     
-    private _stream:Subject<void> = new Subject();
+    private _stream:Subject<string|null> = new Subject<string|null>();
     public stream = this._stream.asObservable();
 
 
-    onMessage() {
-        this._stream.next();
+    onMessage(message? :string) {
+        this._stream.next(message);
     }
 }
 
