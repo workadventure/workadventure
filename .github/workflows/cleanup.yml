@@ -18,6 +18,7 @@ jobs:
       - uses: rlespinasse/github-slug-action@3.1.0
 
       - name: Cleanup
+        continue-on-error: true
         uses: thecodingmachine/deeployer-cleanup-action@master
         env:
           KUBE_CONFIG_FILE: ${{ secrets.KUBE_CONFIG_FILE }}

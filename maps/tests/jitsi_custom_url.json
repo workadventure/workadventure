@@ -1,11 +1,4 @@
 { "compressionlevel":-1,
- "editorsettings":
-    {
-     "export":
-        {
-         "target":"."
-        }
-    },
  "height":10,
  "infinite":false,
  "layers":[
@@ -60,7 +53,25 @@
          "draworder":"topdown",
          "id":3,
          "name":"floorLayer",
-         "objects":[],
+         "objects":[
+                {
+                 "height":94.6489098314831,
+                 "id":1,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "fontfamily":"Sans Serif",
+                     "pixelsize":11,
+                     "text":"Test:\nWalk on the carpet and press space\nResult:\nJitsi opens on meet.jit.si (check this in the network tab). Note: this test only makes sense if the default configured Jitsi instance is NOT meet.jit.si  (check your .env file)",
+                     "wrap":true
+                    },
+                 "type":"",
+                 "visible":true,
+                 "width":317.361946929159,
+                 "x":2.32853056864467,
+                 "y":224.602707451482
+                }],
          "opacity":1,
          "type":"objectgroup",
          "visible":true,
@@ -68,10 +79,10 @@
          "y":0
         }],
  "nextlayerid":6,
- "nextobjectid":1,
+ "nextobjectid":2,
  "orientation":"orthogonal",
  "renderorder":"right-down",
- "tiledversion":"1.3.3",
+ "tiledversion":"2021.03.23",
  "tileheight":32,
  "tilesets":[
         {
@@ -89,6 +100,6 @@
         }],
  "tilewidth":32,
  "type":"map",
- "version":1.2,
+ "version":1.5,
  "width":10
 }
