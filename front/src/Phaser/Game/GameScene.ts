@@ -372,7 +372,7 @@ export class GameScene extends ResizableScene implements CenterListener {
             new PinchManager(this);
         }
 
-        this.messageSubscription = worldFullMessageStream.stream.subscribe((message) => this.showWorldFullError())
+        this.messageSubscription = worldFullMessageStream.stream.subscribe((message) => this.showWorldFullError(message))
 
         const playerName = gameManager.getPlayerName();
         if (!playerName) {
@@ -909,7 +909,7 @@ ${escapedMessage}
         audioManager.unloadAudio();
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
         this.connection?.closeConnection();
-        this.simplePeer.closeAllConnections();
+        this.simplePeer?.closeAllConnections();
         this.simplePeer?.unregister();
         this.messageSubscription?.unsubscribe();
 
@@ -1488,14 +1488,24 @@ ${escapedMessage}
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
-    private showWorldFullError(): void {
+    private showWorldFullError(message: string|null): void {
         this.cleanupClosingScene();
         this.scene.stop(ReconnectingSceneName);
+        this.scene.remove(ReconnectingSceneName);
         this.userInputManager.disableControls();
-        this.scene.start(ErrorSceneName, {
-            title: 'Connection rejected',
-            subTitle: 'The world you are trying to join is full. Try again later.',
-            message: 'If you want more information, you may contact us at: workadventure@thecodingmachine.com'
-        });
+        //FIX ME to use status code
+        if(message == undefined){
+            this.scene.start(ErrorSceneName, {
+                title: 'Connection rejected',
+                subTitle: 'The world you are trying to join is full. Try again later.',
+                message: 'If you want more information, you may contact us at: workadventure@thecodingmachine.com'
+            });
+        }else{
+            this.scene.start(ErrorSceneName, {
+                title: 'Connection rejected',
+                subTitle: 'You cannot join the World. Try again later. \n\r \n\r Error: '+message+'.',
+                message: 'If you want more information, you may contact administrator or contact us at: workadventure@thecodingmachine.com'
+            });
+        }
     }
 }
