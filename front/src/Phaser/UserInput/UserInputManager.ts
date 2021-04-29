@@ -1,8 +1,7 @@
-import { Direction, IVirtualJoystick } from "../../types";
+import { Direction } from "../../types";
 import {GameScene} from "../Game/GameScene";
-const {
-  default: VirtualJoystick,
-} = require("phaser3-rex-plugins/plugins/virtualjoystick.js");
+import {touchScreenManager} from "../../Touch/TouchScreenManager";
+import {MobileJoystick} from "../Components/MobileJoystick";
 
 interface UserInputManagerDatum {
     keyInstance: Phaser.Input.Keyboard.Key;
@@ -19,6 +18,7 @@ export enum UserInputEvent {
     Shout,
     JoystickMove,
 }
+
 
 //we cannot use a map structure so we have to create a replacment
 export class ActiveEventList {
@@ -44,17 +44,23 @@ export class UserInputManager {
     private Scene: GameScene;
     private isInputDisabled : boolean;
 
-    private joystick : IVirtualJoystick;
+    private joystick!: MobileJoystick;
     private joystickEvents = new ActiveEventList();
     private joystickForceThreshold = 60;
     private joystickForceAccuX = 0;
     private joystickForceAccuY = 0;
 
-    constructor(Scene: GameScene, virtualJoystick: IVirtualJoystick) {
+    constructor(Scene: GameScene) {
         this.Scene = Scene;
         this.isInputDisabled = false;
         this.initKeyBoardEvent();
-        this.joystick = virtualJoystick;
+        if (touchScreenManager.supportTouchScreen) {
+            this.initVirtualJoystick();
+        }
+    }
+    
+    initVirtualJoystick() {
+        this.joystick = new MobileJoystick(this.Scene);
         this.joystick.on("update", () => {
             this.joystickForceAccuX = this.joystick.forceX ? this.joystickForceAccuX : 0;
             this.joystickForceAccuY = this.joystick.forceY ? this.joystickForceAccuY : 0;
@@ -62,18 +68,18 @@ export class UserInputManager {
             for (const name in cursorKeys) {
                 const key = cursorKeys[name as Direction];
                 switch (name) {
-                case "up":
-                    this.joystickEvents.set(UserInputEvent.MoveUp, key.isDown);
-                    break;
-                case "left":
-                    this.joystickEvents.set(UserInputEvent.MoveLeft, key.isDown);
-                    break;
-                case "down":
-                    this.joystickEvents.set(UserInputEvent.MoveDown, key.isDown);
-                    break;
-                case "right":
-                    this.joystickEvents.set(UserInputEvent.MoveRight, key.isDown);
-                    break;
+                    case "up":
+                        this.joystickEvents.set(UserInputEvent.MoveUp, key.isDown);
+                        break;
+                    case "left":
+                        this.joystickEvents.set(UserInputEvent.MoveLeft, key.isDown);
+                        break;
+                    case "down":
+                        this.joystickEvents.set(UserInputEvent.MoveDown, key.isDown);
+                        break;
+                    case "right":
+                        this.joystickEvents.set(UserInputEvent.MoveRight, key.isDown);
+                        break;
                 }
             }
         });
@@ -105,6 +111,7 @@ export class UserInputManager {
         this.Scene.input.keyboard.removeAllListeners();
     }
 
+    //todo: should we also disable the joystick?
     disableControls(){
         this.Scene.input.keyboard.removeAllKeys();
         this.isInputDisabled = true;

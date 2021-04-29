@@ -1,6 +1,7 @@
 import {mediaManager} from "../../WebRtc/MediaManager";
 import {HtmlUtils} from "../../WebRtc/HtmlUtils";
 import {localUserStore} from "../../Connexion/LocalUserStore";
+import { RESOLUTION } from "../../Enum/EnvironmentVariable";
 
 export const HelpCameraSettingsSceneName = 'HelpCameraSettingsScene';
 const helpCameraSettings = 'helpCameraSettings';
@@ -25,7 +26,7 @@ export class HelpCameraSettingsScene extends Phaser.Scene {
     }
 
     private createHelpCameraSettings() : void {
-        const middleX = (window.innerWidth / 3) - (370*0.85);
+        const middleX = this.getMiddleX();
         this.helpCameraSettingsElement = this.add.dom(middleX, -800, undefined, {overflow: 'scroll'}).createFromCache(helpCameraSettings);
         this.revealMenusAfterInit(this.helpCameraSettingsElement, helpCameraSettings);
         this.helpCameraSettingsElement.addListener('click');
@@ -46,19 +47,13 @@ export class HelpCameraSettingsScene extends Phaser.Scene {
     private openHelpCameraSettingsOpened(): void{
         HtmlUtils.getElementByIdOrFail<HTMLDivElement>('webRtcSetup').style.display = 'none';
         this.helpCameraSettingsOpened = true;
-        let middleY = (window.innerHeight / 3) - (495);
-        if(middleY < 0){
-            middleY = 0;
-        }
-        let middleX =  (window.innerWidth / 3) - (370*0.85);
-        if(middleX < 0){
-            middleX = 0;
-        }
         if(window.navigator.userAgent.includes('Firefox')){
             HtmlUtils.getElementByIdOrFail<HTMLParagraphElement>('browserHelpSetting').innerHTML ='<img src="/resources/objects/help-setting-camera-permission-firefox.png"/>';
         }else if(window.navigator.userAgent.includes('Chrome')){
             HtmlUtils.getElementByIdOrFail<HTMLParagraphElement>('browserHelpSetting').innerHTML ='<img src="/resources/objects/help-setting-camera-permission-chrome.png"/>';
         }
+        const middleY = this.getMiddleY();
+        const middleX = this.getMiddleX();
         this.tweens.add({
             targets: this.helpCameraSettingsElement,
             y: middleY,
@@ -70,6 +65,7 @@ export class HelpCameraSettingsScene extends Phaser.Scene {
     }
 
     private closeHelpCameraSettingsOpened(): void{
+        const middleX = this.getMiddleX();
         const helpCameraSettingsInfo = this.helpCameraSettingsElement.getChildByID('helpCameraSettings') as HTMLParagraphElement;
         helpCameraSettingsInfo.innerText = '';
         helpCameraSettingsInfo.style.display = 'none';
@@ -77,6 +73,7 @@ export class HelpCameraSettingsScene extends Phaser.Scene {
         this.tweens.add({
             targets: this.helpCameraSettingsElement,
             y: -400,
+            x: middleX,
             duration: 1000,
             ease: 'Power3',
             overflow: 'scroll'
@@ -89,6 +86,50 @@ export class HelpCameraSettingsScene extends Phaser.Scene {
         setTimeout(() => {
             (menuElement.getChildByID(rootDomId) as HTMLElement).hidden = false;
         }, 250);
+    }
+
+    update(time: number, delta: number): void {
+        const middleX = this.getMiddleX();
+        const middleY = this.getMiddleY();
+        this.tweens.add({
+            targets: this.helpCameraSettingsElement,
+            x: middleX,
+            y: middleY,
+            duration: 1000,
+            ease: 'Power3'
+        });
+    }
+
+    public onResize(ev: UIEvent): void {
+        const middleX = this.getMiddleX();
+        const middleY = this.getMiddleY();
+        this.tweens.add({
+            targets: this.helpCameraSettingsElement,
+            x: middleX,
+            y: middleY,
+            duration: 1000,
+            ease: 'Power3'
+        });
+    }
+
+    private getMiddleX() : number{
+        return (this.game.renderer.width / RESOLUTION) -  
+        (
+            this.helpCameraSettingsElement
+            && this.helpCameraSettingsElement.node
+            && this.helpCameraSettingsElement.node.getBoundingClientRect().width > 0
+            ? (this.helpCameraSettingsElement.node.getBoundingClientRect().width / 4)
+            : (400 / 2)
+        );
+    }
+
+    private getMiddleY() : number{
+        const middleY = ((window.innerHeight) - (
+            (this.helpCameraSettingsElement
+            && this.helpCameraSettingsElement.node
+            && this.helpCameraSettingsElement.node.getBoundingClientRect().height > 0
+                ? this.helpCameraSettingsElement.node.getBoundingClientRect().height : 400 /*FIXME to use a const will be injected in HTMLElement*/)*2)) / 2;
+        return (middleY > 0 ? middleY / RESOLUTION : 0);
     }
 
 }

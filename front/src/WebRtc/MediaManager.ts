@@ -315,12 +315,17 @@ export class MediaManager {
     }
 
     private enableScreenSharing() {
-        this.monitorClose.style.display = "none";
-        this.monitor.style.display = "block";
-        this.monitorBtn.classList.add("enabled");
         this.getScreenMedia().then((stream) => {
             this.triggerStartedScreenSharingCallbacks(stream);
+            this.monitorClose.style.display = "none";
+            this.monitor.style.display = "block";
+            this.monitorBtn.classList.add("enabled");
+        }, () => {
+            this.monitorClose.style.display = "block";
+            this.monitor.style.display = "none";
+            this.monitorBtn.classList.remove("enabled");
         });
+
     }
 
     private disableScreenSharing() {

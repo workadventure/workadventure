@@ -1,0 +1,142 @@
+<style>
+    *{
+        font-family: PixelFont-7,monospace!important;
+    }
+    #selectCharacterScene {
+        background: #0000;
+        /*border: 1px solid #ebeeee;*/
+        border-radius: 6px;
+        margin: 10px auto 0;
+        color: #ebeeee;
+        max-height: 48vh;
+        max-width: 300px;
+        width: 40vw;
+        overflow: hidden;
+    }
+    #selectCharacterScene h1 {
+        background-image: linear-gradient(top, #f1f3f3, #d4dae0);
+        border-bottom: 1px solid #a6abaf;
+        border-radius: 6px 6px 0 0;
+        box-sizing: border-box;
+        color: #727678;
+        display: block;
+        height: 43px;
+        padding-top: 10px;
+        margin: 0;
+        text-align: center;
+        text-shadow: 0 -1px 0 rgba(0,0,0,0.2), 0 1px 0 #fff;
+    }
+    #selectCharacterScene input {
+        font-size: 70%;
+        background: linear-gradient(top, #d6d7d7, #dee0e0);
+        border: 1px solid #a1a3a3;
+        border-radius: 4px;
+        box-shadow: 0 1px #fff;
+        box-sizing: border-box;
+        color: #696969;
+        height: 30px;
+        transition: box-shadow 0.3s;
+        width: 100%;
+        text-align: center;
+    }
+    #selectCharacterScene section {
+        margin: 10px;
+    }
+    #selectCharacterScene section.action {
+        text-align: center;
+        margin: 0;
+        margin-top: 28vh;
+    }
+    #selectCharacterScene button {
+        margin: 10px 0px;
+        background-color: black;;
+        color: #ebeeee;
+        border-radius: 7px;
+        padding-bottom: 4px;
+        width: 100px;
+    }
+    #selectCharacterScene button#selectCharacterSceneFormCancel {
+        background-color: #aca6a600;
+        color: #292929;
+    }
+    #selectCharacterScene section h6,
+    #selectCharacterScene section h5{
+        margin: 1px;
+    }
+    #selectCharacterScene section.text-center{
+        text-align: center;
+    }
+    #selectCharacterScene section a{
+        font-size: 8px;
+        text-decoration: underline;
+        color: #ebeeee;
+    }
+    #selectCharacterScene section a:hover{
+        font-weight: 700;
+    }
+    #selectCharacterScene section p{
+        text-align: left;
+        font-size: 8px;
+        margin: 10px 10px;
+    }
+    #selectCharacterScene section p.err{
+        color: red;
+        text-align: center;
+    }
+    #selectCharacterScene section p.info{
+        display: none;
+        text-align: center;
+    }
+    #selectCharacterScene section input#selectCharacterSceneLink{
+        background-color: #a1a3a3;
+    }
+    #selectCharacterScene section img{
+        width: 160px;
+        margin: 20px 0;
+    }
+    #selectCharacterScene section button.selectCharacterButton{
+        position: absolute;
+        top: 20vh;
+        margin: 0;
+        width: 25px;
+    }
+    #selectCharacterScene section button.selectCharacterButton#selectCharacterButtonLeft{
+        display: none;
+        left: 1vw;
+    }
+    #selectCharacterScene section button.selectCharacterButton#selectCharacterButtonRight{
+        display: none;
+        right: 1vw;
+    }
+    #selectCharacterScene section button#selectCharacterSceneFormCustomYourOwnSubmit{
+        font-size: 14px;
+        width: auto;
+        margin-top: -2px;
+        background-color: #ffd700;
+        color: black;
+    }
+    @media only screen and (max-width: 800px),
+            only screen and (max-height: 600px) {
+        #selectCharacterScene{
+            overflow-y: scroll;
+        }
+        #selectCharacterScene section button.selectCharacterButton#selectCharacterButtonRight{
+            display: block;
+        }
+        #selectCharacterScene section button.selectCharacterButton#selectCharacterButtonLeft{
+            display: block;
+        }
+    }
+</style>
+
+<form id="selectCharacterScene" hidden>
+    <section class="text-center">
+        <h5>Select your WOKA</h5>
+        <button class="selectCharacterButton" id="selectCharacterButtonLeft"> < </button>
+        <button class="selectCharacterButton" id="selectCharacterButtonRight"> > </button>
+    </section>
+    <section class="action">
+        <button type="submit" id="selectCharacterSceneFormSubmit">Continue</button>
+        <button type="submit" id="selectCharacterSceneFormCustomYourOwnSubmit">Custom your WOKA</button>
+    </section>
+</form>

@@ -53,6 +53,7 @@ body .message-info.warning{
     padding-top: 32px;
     font-size: 28px;
     color: white;
+    overflow: hidden;
 }
 
 .video-container img{
@@ -138,8 +139,9 @@ body .message-info.warning{
 #div-myCamVideo {
     position: absolute;
     right: 15px;
-    bottom: 15px;
+    bottom: 30px;
     border-radius: 15px 15px 15px 15px;
+    max-height: 200px;
 }
 
 video#myCamVideo{
@@ -170,7 +172,7 @@ video#myCamVideo{
     background: #666;
     box-shadow: 2px 2px 24px #444;
     border-radius: 48px;
-    transform: translateY(40px);
+    transform: translateY(20px);
     transition-timing-function: ease-in-out;
     bottom: 20px;
 }
@@ -186,7 +188,7 @@ video#myCamVideo{
 .btn-cam-action div:hover{
     background: #407cf7;
     box-shadow: 4px 4px 48px #666;
-    transition: 280ms;
+    transition: 120ms;
 }
 .btn-micro{
     pointer-events: auto;
@@ -337,24 +339,6 @@ body {
     }
 
     
-}
-@media (max-aspect-ratio: 1/1) {
-    .game-overlay {
-        flex-direction: column;
-    }
-
-    .sidebar {
-        flex-direction: row;
-        align-items: flex-end;
-    }
-
-    .sidebar > div {
-        max-width: 21%;
-    }
-
-    .sidebar > div:hover {
-        max-width: 25%;
-    }
 }
 
 #game {
@@ -806,7 +790,7 @@ input[type=range]:focus::-ms-fill-upper {
     right: 0;
 }
 .main-container .audio-playing img{
-    width: 30px;
+    /*width: 30px;*/
     border-radius: 50%;
     background-color: #ffda01;
     padding: 10px;
@@ -814,6 +798,7 @@ input[type=range]:focus::-ms-fill-upper {
 .main-container .audio-playing p{
     color: white;
     margin-left: 10px;
+    margin-top: 14px;
 }
 
 /* VIDEO QUALITY */
@@ -1045,7 +1030,7 @@ div.modal-report-user{
 
 .discussion .messages{
     position: absolute;
-    height: calc(100% - 360px);
+    height: calc(100% - 390px);
     overflow-x: hidden;
     overflow-y: auto;
     max-width: calc(100% - 40px);

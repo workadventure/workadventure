@@ -14,7 +14,7 @@ export interface ITiledMap {
      * Map orientation (orthogonal)
      */
     orientation: string;
-    properties: ITiledMapLayerProperty[];
+    properties?: ITiledMapLayerProperty[];
 
     /**
      * Render order (right-down)
@@ -24,6 +24,11 @@ export interface ITiledMap {
     tilewidth: number;
     tilesets: ITiledTileSet[];
     version: number;
+    compressionlevel?: number;
+    infinite?: boolean;
+    nextlayerid?: number;
+    tiledversion?: string;
+    type?: string;
 }
 
 export interface ITiledMapLayerProperty {
@@ -38,19 +43,35 @@ export interface ITiledMapLayerProperty {
     value: boolean
 }*/
 
-export interface ITiledMapLayer {
+export type ITiledMapLayer = ITiledMapGroupLayer | ITiledMapObjectLayer | ITiledMapTileLayer;
+
+export interface ITiledMapGroupLayer {
+    id?: number,
+    name: string;
+    opacity: number;
+    properties?: ITiledMapLayerProperty[];
+
+    type: "group";
+    visible: boolean;
+    x: number;
+    y: number;
+    /**
+     * Layers for group layer
+     */
+    layers: ITiledMapLayer[];
+}
+
+export interface ITiledMapTileLayer {
+    id?: number,
     data: number[]|string;
     height: number;
     name: string;
     opacity: number;
-    properties: ITiledMapLayerProperty[];
-    encoding: string;
+    properties?: ITiledMapLayerProperty[];
+    encoding?: string;
     compression?: string;
 
-    /**
-     * Type of layer (tilelayer, objectgroup)
-     */
-    type: string;
+    type: "tilelayer";
     visible: boolean;
     width: number;
     x: number;
@@ -59,7 +80,28 @@ export interface ITiledMapLayer {
     /**
      * Draw order (topdown (default), index)
      */
-    draworder: string;
+    draworder?: string;
+}
+
+export interface ITiledMapObjectLayer {
+    id?: number,
+    height: number;
+    name: string;
+    opacity: number;
+    properties?: ITiledMapLayerProperty[];
+    encoding?: string;
+    compression?: string;
+
+    type: "objectgroup";
+    visible: boolean;
+    width: number;
+    x: number;
+    y: number;
+
+    /**
+     * Draw order (topdown (default), index)
+     */
+    draworder?: string;
     objects: ITiledMapObject[];
 }
 

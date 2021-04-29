@@ -34,7 +34,7 @@ export class GameManager {
     public async init(scenePlugin: Phaser.Scenes.ScenePlugin): Promise<string> {
         this.startRoom = await connectionManager.initGameConnexion();
         await this.loadMap(this.startRoom, scenePlugin);
-        
+
         if (!this.playerName) {
             return LoginSceneName;
         } else if (!this.characterLayers || !this.characterLayers.length) {

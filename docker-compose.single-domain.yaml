@@ -30,7 +30,8 @@ services:
       UPLOADER_URL: /uploader
       ADMIN_URL: /admin
       MAPS_URL: /maps
-      STARTUP_COMMAND_1: yarn install
+      STARTUP_COMMAND_1: ./templater.sh
+      STARTUP_COMMAND_2: yarn install
       TURN_SERVER: "turn:localhost:3478,turns:localhost:5349"
       # Use TURN_USER/TURN_PASSWORD if your Coturn server is secured via hard coded credentials.
       # Advice: you should instead use Coturn REST API along the TURN_STATIC_AUTH_SECRET in the Back container
