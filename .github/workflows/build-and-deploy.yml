@@ -2,7 +2,7 @@ name: Build, push and deploy Docker image
 
 on:
   release:
-    types: [released]
+    types: [created]
   pull_request:
     types: [ labeled, synchronize ]
 
@@ -34,7 +34,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-front
-          tags: ${{ github.event.pull_request && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF }}
+          tags: ${{ github.event.pull_request && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           add_git_labels: true
 
   build-back:
@@ -57,7 +57,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-back
-          tags: ${{ github.event.pull_request && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF }}
+          tags: ${{ github.event.pull_request && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           add_git_labels: true
 
   build-pusher:
@@ -80,7 +80,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-pusher
-          tags: ${{ github.event.pull_request && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF }}
+          tags: ${{ github.event.pull_request && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           add_git_labels: true
 
   build-uploader:
@@ -103,7 +103,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-uploader
-          tags: ${{ github.event.pull_request && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF }}
+          tags: ${{ github.event.pull_request && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           add_git_labels: true
 
   build-maps:
@@ -127,7 +127,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-maps
-          tags: ${{ github.event.pull_request && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF }}
+          tags: ${{ github.event.pull_request && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           add_git_labels: true
 
   deeploy:
