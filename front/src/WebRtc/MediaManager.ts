@@ -402,13 +402,14 @@ export class MediaManager {
             }
         }
 
-        return this.getLocalStream().catch(() => {
-            console.info('Error get camera, trying with video option at null');
+        return this.getLocalStream().catch((err) => {
+            console.info('Error get camera, trying with video option at null =>', err);
             this.disableCameraStyle();
             return this.getLocalStream().then((stream : MediaStream) => {
                 this.hasCamera = false;
                 return stream;
             }).catch((err) => {
+                this.disableMicrophoneStyle();
                 console.info("error get media ", this.constraintsMedia.video, this.constraintsMedia.audio, err);
                 throw err;
             });
