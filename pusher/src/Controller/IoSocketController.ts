@@ -183,7 +183,7 @@ export class IoSocketController {
                                         console.warn('Cannot find user with uuid "'+userUuid+'". Performing an anonymous login instead.');
                                     } else if(err?.response?.status == 403) {
                                         // If we get an HTTP 404, the world is full. We need to broadcast a special error to the client.
-                                        // we finish immediatly the upgrade then we will close the socket as soon as it starts opening. 
+                                        // we finish immediately the upgrade then we will close the socket as soon as it starts opening.
                                         return res.upgrade({
                                             rejected: true,
                                             message: err?.response?.data.message,
@@ -200,15 +200,15 @@ export class IoSocketController {
                                 memberTags = userData.tags;
                                 memberTextures = userData.textures;
                                 if (!room.public && room.policyType === GameRoomPolicyTypes.USE_TAGS_POLICY && (userData.anonymous === true || !room.canAccess(memberTags))) {
-                                    throw new Error('No correct tags')
+                                    throw new Error('Insufficient privileges to access this room')
                                 }
                                 if (!room.public && room.policyType === GameRoomPolicyTypes.MEMBERS_ONLY_POLICY && userData.anonymous === true) {
-                                    throw new Error('No correct member')
+                                    throw new Error('Use the login URL to connect')
                                 }
                             } catch (e) {
                                 console.log('access not granted for user '+userUuid+' and room '+roomId);
                                 console.error(e);
-                                throw new Error('User cannot acces on this world')
+                                throw new Error('User cannot access this world')
                             }
                         }
 
@@ -283,7 +283,7 @@ export class IoSocketController {
                     ws.close();
                     return;
                 }
-                
+
                 // Let's join the room
                 const client = this.initClient(ws);
                 socketManager.handleJoinRoom(client);
