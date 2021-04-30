@@ -1111,16 +1111,33 @@ div.action{
     animation-iteration-count: infinite;
     animation-timing-function: ease-in-out;
 }
+div.action.info,
+div.action.warning,
+div.action.danger{
+    transition: all 1s ease;
+    animation: mymove 1s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+}
 div.action p.action-body{
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
     padding: 10px;
     background-color: #2d2d2dba;
     color: #fff;
     font-size: 14px;
     font-weight: 500;
     text-align: center;
-    max-width: 250px;
-    margin-left: calc(50% - 125px);
+    max-width: 350px;
+    margin-left: calc(50% - 175px);
     border-radius: 15px;
+}
+div.action.warning p.action-body{
+    background-color: #ff9800eb;
+    color: #000;
+}
+div.action.danger p.action-body{
+    background-color: #da0000e3;
+    color: #000;
 }
 .popUpElement{
     font-family: 'Press Start 2P';

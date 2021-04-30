@@ -26,6 +26,7 @@ export type StartScreenSharingCallback = (media: MediaStream) => void;
 export type StopScreenSharingCallback = (media: MediaStream) => void;
 export type ReportCallback = (message: string) => void;
 export type ShowReportCallBack = (userId: string, userName: string|undefined) => void;
+export type HelpCameraSettingsCallBack = () => void;
 
 // TODO: Split MediaManager in 2 classes: MediaManagerUI (in charge of HTML) and MediaManager (singleton in charge of the camera only)
 export class MediaManager {
@@ -49,6 +50,8 @@ export class MediaManager {
     startScreenSharingCallBacks : Set<StartScreenSharingCallback> = new Set<StartScreenSharingCallback>();
     stopScreenSharingCallBacks : Set<StopScreenSharingCallback> = new Set<StopScreenSharingCallback>();
     showReportModalCallBacks : Set<ShowReportCallBack> = new Set<ShowReportCallBack>();
+    helpCameraSettingsCallBacks : Set<HelpCameraSettingsCallBack> = new Set<HelpCameraSettingsCallBack>();
+    
     private microphoneBtn: HTMLDivElement;
     private cinemaBtn: HTMLDivElement;
     private monitorBtn: HTMLDivElement;
@@ -62,6 +65,8 @@ export class MediaManager {
     private hasCamera = true;
 
     private triggerCloseJistiFrame : Map<String, Function> = new Map<String, Function>();
+
+    private userInputManager?: UserInputManager;
 
     constructor() {
 
@@ -225,6 +230,10 @@ export class MediaManager {
         }).catch((err) => {
             console.error(err);
             this.disableCameraStyle();
+
+            layoutManager.addInformation('warning', 'Access dinied of your camera. Click here and check right of your navigator.', () => {
+                this.showHelpCameraSettingsCallBack();
+            }, this.userInputManager);
         });
     }
 
@@ -253,6 +262,10 @@ export class MediaManager {
         }).catch((err) => {
             console.error(err);
             this.disableMicrophoneStyle();
+
+            layoutManager.addInformation('warning', 'Access dinied of your microphone. Click here and check right of your navigator.', () => {
+                this.showHelpCameraSettingsCallBack();
+            }, this.userInputManager);
         });
     }
 
@@ -324,6 +337,10 @@ export class MediaManager {
             this.monitorClose.style.display = "block";
             this.monitor.style.display = "none";
             this.monitorBtn.classList.remove("enabled");
+
+            layoutManager.addInformation('warning', 'Access dinied for screen sharing. Click here and check right of your navigator.', () => {
+                this.showHelpCameraSettingsCallBack();
+            }, this.userInputManager);
         });
 
     }
@@ -718,6 +735,7 @@ export class MediaManager {
     }
 
     public setUserInputManager(userInputManager : UserInputManager){
+        this.userInputManager = userInputManager;
         discussionManager.setUserInputManager(userInputManager);
     }
     //check if user is active
@@ -739,6 +757,16 @@ export class MediaManager {
 
     public setShowReportModalCallBacks(callback: ShowReportCallBack){
         this.showReportModalCallBacks.add(callback);
+    }
+
+    public setHelpCameraSettingsCallBack(callback: HelpCameraSettingsCallBack){
+        this.helpCameraSettingsCallBacks.add(callback);
+    }
+
+    private showHelpCameraSettingsCallBack(){
+        for(const callBack of this.helpCameraSettingsCallBacks){
+            callBack();
+        }
     }
 }
 
