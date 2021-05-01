@@ -15,6 +15,8 @@ import {isOpenCoWebsite, OpenCoWebSiteEvent} from "./Events/OpenCoWebSiteEvent";
 import { isMenuItemRegisterEvent } from './Events/MenuItemRegisterEvent';
 import { MenuItemClickedEvent } from './Events/MenuItemClickedEvent';
 import { isLoadPageEvent } from './Events/LoadPageEvent';
+import { GameStateEvent } from './Events/ApiGameStateEvent';
+import { deepFreezeClone as deepFreezeClone } from '../utility';
 
 
 /**
@@ -61,6 +63,10 @@ class IframeListener {
 
     private readonly _registerMenuCommandStream: Subject<string> = new Subject();
     public readonly registerMenuCommandStream = this._registerMenuCommandStream.asObservable();
+    
+    private readonly _gameStateStream: Subject<void> = new Subject();
+    public readonly gameStateStream = this._gameStateStream.asObservable();
+
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
 
@@ -120,12 +126,22 @@ class IframeListener {
                     this._registerMenuCommandStream.next(payload.data.menutItem)
                 }else if (payload.type === 'loadPage' && isLoadPageEvent(payload.data)){
                     this._loadPageStream.next(payload.data.url);
+                }else if(payload.type=="getState"){
+                    this._gameStateStream.next();
                 }
             }
 
 
         }, false);
 
+    }
+
+    
+    sendFrozenGameStateEvent(gameStateEvent: GameStateEvent) {
+        this.postMessage({
+            'type': 'gameState',
+            'data': deepFreezeClone(gameStateEvent) 
+        });
     }
 
     /**

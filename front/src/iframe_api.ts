@@ -12,6 +12,7 @@ import {OpenCoWebSiteEvent} from "./Api/Events/OpenCoWebSiteEvent";
 import { LoadPageEvent } from './Api/Events/LoadPageEvent';
 import { isMenuItemClickedEvent } from './Api/Events/MenuItemClickedEvent';
 import { MenuItemRegisterEvent } from './Api/Events/MenuItemRegisterEvent';
+import { GameStateEvent, isGameStateEvent } from './Api/Events/ApiGameStateEvent';
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
@@ -29,6 +30,7 @@ interface WorkAdventureApi {
     displayBubble() : void;
     removeBubble() : void;
     registerMenuCommand(commandDescriptor: string, callback: (commandDescriptor: string) => void): void
+    getGameState():Promise<unknown>
 }
 
 declare global {
@@ -79,7 +81,23 @@ class Popup {
     }
 }
 
+
+const stateResolvers:Array<(event:GameStateEvent)=>void> =[]
+
 window.WA = {
+
+
+
+    getGameState(){
+        return new Promise<GameStateEvent>((resolver,thrower)=>{
+            stateResolvers.push(resolver);
+            window.parent.postMessage({ 
+                type:"getState"
+            },"*")
+        })
+    },
+
+
     /**
      * Send a message in the chat.
      * Only the local user will receive this message.
@@ -253,6 +271,10 @@ window.addEventListener('message', message => {
             if (callback) {
                 callback(payload.data.menuItem)
             }
+        }else if(payload.type=="gameState" && isGameStateEvent(payloadData)){
+            stateResolvers.forEach(resolver=>{
+                resolver(payloadData);
+            })
         }
     }
 
