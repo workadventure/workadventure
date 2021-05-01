@@ -80,6 +80,7 @@ import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoading
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
 import {joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey} from "../Components/MobileJoystick";
+import { PlayerStateObject } from '../../Api/Events/ApiGameStateEvent';
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -841,10 +842,35 @@ ${escapedMessage}
        this.iframeSubscriptionList.push(iframeListener.enablePlayerControlStream.subscribe(()=>{
             this.userInputManager.restoreControls();
         }));
-        this.iframeSubscriptionList.push(iframeListener.gameStateStream.subscribe(()=>{
+        this.iframeSubscriptionList.push(iframeListener.gameStateStream.subscribe(() => {
+            const playerObject: PlayerStateObject = {
+                [this.playerName]: {
+                    position: {
+                        x: this.CurrentPlayer.x,
+                        y: this.CurrentPlayer.y
+                    },
+                    pusherId: this.connection?.getUserId()
+                }
+            }
+            for (const mapPlayer of this.MapPlayers.children.entries) {
+                const remotePlayer: RemotePlayer = mapPlayer as RemotePlayer;
+                playerObject[remotePlayer.PlayerValue] = {
+                    position: {
+                        x: remotePlayer.x,
+                        y: remotePlayer.y
+                    },
+                    pusherId: remotePlayer.userId
+
+                }
+            }
             iframeListener.sendFrozenGameStateEvent({
-                    roomId:this.RoomId,
-                    data: this.mapFile
+                mapUrl: this.MapUrlFile,
+                nickName: this.playerName,
+                startLayerName: this.startLayerName,
+                uuid: localUserStore.getLocalUser()?.uuid,
+                roomId: this.RoomId,
+                data: this.mapFile,
+                players: playerObject
             })
         }));
 
