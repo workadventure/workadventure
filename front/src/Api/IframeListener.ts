@@ -86,8 +86,12 @@ class IframeListener {
                 else if(payload.type === 'goToPage' && isGoToPageEvent(payload.data)) {
                     scriptUtils.goToPage(payload.data.url);
                 }
-                else if(payload.type === 'openCoWebSite' && isOpenCoWebsite(payload.data)) {
-                    scriptUtils.openCoWebsite(payload.data.url);
+                else if (payload.type === 'openCoWebSite' && isOpenCoWebsite(payload.data)) {
+                    const scriptUrl = [...this.scripts.keys()].find(key => {
+                        return this.scripts.get(key)?.contentWindow == message.source
+                    })
+
+                    scriptUtils.openCoWebsite(payload.data.url, scriptUrl || payload.data.url);
                 }
                 else if(payload.type === 'closeCoWebSite') {
                     scriptUtils.closeCoWebSite();
