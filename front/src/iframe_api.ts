@@ -9,6 +9,7 @@ import {ClosePopupEvent} from "./Api/Events/ClosePopupEvent";
 import {OpenTabEvent} from "./Api/Events/OpenTabEvent";
 import {GoToPageEvent} from "./Api/Events/GoToPageEvent";
 import {OpenCoWebSiteEvent} from "./Api/Events/OpenCoWebSiteEvent";
+import { LoadPageEvent } from './Api/Events/LoadPageEvent';
 import { isMenuItemClickedEvent } from './Api/Events/MenuItemClickedEvent';
 import { MenuItemRegisterEvent } from './Api/Events/MenuItemRegisterEvent';
 
@@ -20,6 +21,7 @@ interface WorkAdventureApi {
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup;
     openTab(url : string): void;
     goToPage(url : string): void;
+    exitSceneTo(url : string): void;
     openCoWebSite(url : string): void;
     closeCoWebSite(): void;
     disablePlayerControl() : void;
@@ -122,6 +124,15 @@ window.WA = {
             "data" : {
                 url
             } as GoToPageEvent
+            },'*');
+    },
+
+    exitSceneTo(url : string) : void{
+        window.parent.postMessage({
+            "type" : 'loadPage',
+            "data" : {
+                url
+            } as LoadPageEvent
             },'*');
     },
 

@@ -82,6 +82,7 @@ import CanvasTexture = Phaser.Textures.CanvasTexture;
 import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import DOMElement = Phaser.GameObjects.DOMElement;
+import EVENT_TYPE =Phaser.Scenes.Events
 import {Subscription} from "rxjs";
 import {worldFullMessageStream} from "../../Connexion/WorldFullMessageStream";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
@@ -858,6 +859,13 @@ ${escapedMessage}
 
        this.iframeSubscriptionList.push(iframeListener.enablePlayerControlStream.subscribe(()=>{
             this.userInputManager.restoreControls();
+        }));
+        this.iframeSubscriptionList.push(iframeListener.loadPageStream.subscribe((url:string)=>{
+            this.loadNextGame(url).then(()=>{
+                this.events.once(EVENT_TYPE.POST_UPDATE,()=>{
+                    this.onMapExit(url);
+                })
+            })
         }));
         let scriptedBubbleSprite : Sprite;
        this.iframeSubscriptionList.push(iframeListener.displayBubbleStream.subscribe(()=>{
