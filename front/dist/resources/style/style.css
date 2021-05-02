@@ -141,7 +141,7 @@ body .message-info.warning{
     right: 15px;
     bottom: 30px;
     border-radius: 15px 15px 15px 15px;
-    max-height: 100px;
+    max-height: 20%;
 }
 
 video#myCamVideo{
@@ -154,50 +154,59 @@ video#myCamVideo{
 }
 
 .sound-progress{
+    display: none;
     position: absolute;
     right: 14px;
     top: calc(50% - 5px);
 }
+.sound-progress.active{
+    display: table-column;
+}
 .sound-progress span{
     position: absolute;
-    display: table-column;
     color: black;
-    background-color: #00000045;
+    background-color: #00000020;
     width: 5px;
     height: 5px;
     border-radius: 50%;
 }
 .sound-progress span.active{
-    background-color: rgba(0, 195, 255, 0.45);
+    background-color: #00c3ff66
 }
 .sound-progress span:nth-child(1){
-    top: calc(50% + 30px);
+    top: calc(50% + 20px);
 }
 .sound-progress span:nth-child(2){
-    top: calc(50% + 15px);
+    top: calc(50% + 10px);
 }
 .sound-progress span:nth-child(3){
     top: calc(50% - 0px);
 }
 .sound-progress span:nth-child(4){
-    top: calc(50% - 15px);
+    top: calc(50% - 10px);
 }
 .sound-progress span:nth-child(5){
-    top: calc(50% - 30px);
+    top: calc(50% - 20px);
 }
 
 .btn-cam-action {
     pointer-events: all;
     position: absolute;
-    bottom: 0px;
-    right: 0px;
-    width: 450px;
-    height: 150px;
+    display: inline-flex;
+    bottom: 10px;
+    right: 15px;
+    width: 15vw;
+    height: 40px;
+    text-align: center;
+    align-content: center;
+    align-items: center;
+    justify-content: center;
+    justify-items: center;
 }
 /*btn animation*/
 .btn-cam-action div{
     cursor: url('/resources/logos/cursor_pointer.png'), pointer;
-    position: absolute;
+    /*position: absolute;*/
     border: solid 0px black;
     width: 44px;
     height: 44px;
@@ -206,7 +215,8 @@ video#myCamVideo{
     border-radius: 48px;
     transform: translateY(20px);
     transition-timing-function: ease-in-out;
-    bottom: 20px;
+    margin-bottom: 20px;
+    margin: 0 4%;
 }
 .btn-cam-action div.disabled {
     background: #d75555;
@@ -225,17 +235,17 @@ video#myCamVideo{
 .btn-micro{
     pointer-events: auto;
     transition: all .3s;
-    right: 44px;
+    /*right: 44px;*/
 }
 .btn-video{
     pointer-events: auto;
     transition: all .25s;
-    right: 134px;
+    /*right: 134px;*/
 }
 .btn-monitor{
     pointer-events: auto;
     transition: all .2s;
-    right: 224px;
+    /*right: 224px;*/
 }
 .btn-copy{
     pointer-events: auto;

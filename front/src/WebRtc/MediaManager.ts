@@ -72,6 +72,7 @@ export class MediaManager {
     private userInputManager?: UserInputManager;
 
     private mySoundMeter?: SoundMeter|null;
+    private soundMeterUsers: Map<string, SoundMeter> = new Map<string, SoundMeter>();
 
     constructor() {
 
@@ -467,10 +468,6 @@ export class MediaManager {
         });
     }
 
-    private getMyMicrophoneVolume(): number {
-        return this.mySoundMeter ? this.mySoundMeter.getVolume() : 0;
-    }
-
     /**
      * Stops the camera from filming
      */
@@ -491,6 +488,7 @@ export class MediaManager {
                 track.stop();
             }
         }
+        this.mySoundMeter?.stop();
     }
 
     setCamera(id: string): Promise<MediaStream> {
@@ -536,6 +534,13 @@ export class MediaManager {
                 </button>
                 <video id="${userId}" autoplay></video>
                 <img src="resources/logos/blockSign.svg" id="blocking-${userId}" class="block-logo">
+                <div id="soundMeter-${userId}" class="sound-progress">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
             </div>
         `;
 
@@ -625,6 +630,11 @@ export class MediaManager {
             throw `Unable to find video for ${userId}`;
         }
         remoteVideo.srcObject = stream;
+
+        //sound metter
+        const soundMeter = new SoundMeter();
+        soundMeter.connectToSource(stream, new AudioContext());
+        this.soundMeterUsers.set(userId, soundMeter);
     }
     addStreamRemoteScreenSharing(userId: string, stream : MediaStream){
         // In the case of screen sharing (going both ways), we may need to create the HTML element if it does not exist yet
@@ -639,6 +649,9 @@ export class MediaManager {
     removeActiveVideo(userId: string){
         layoutManager.remove(userId);
         this.remoteVideo.delete(userId);
+
+        this.soundMeterUsers.get(userId)?.stop();
+        this.soundMeterUsers.delete(userId);
 
         //permit to remove user in discussion part
         this.removeParticipant(userId);
@@ -793,21 +806,42 @@ export class MediaManager {
 
     updateSoudMeter(){
         try{
-            const volume = parseInt((this.getMyMicrophoneVolume() / 10).toFixed(0));
-            this.mySoundMeterElement.childNodes.forEach((value: ChildNode, index) => {
-                const element = this.mySoundMeterElement.children.item(index);
-                if(!element){
+            const volume = parseInt(((this.mySoundMeter ? this.mySoundMeter.getVolume() : 0) / 10).toFixed(0));
+            this.setVolumeSoundMeter(volume, this.mySoundMeterElement);
+            for(const indexUserId of this.soundMeterUsers.keys()){
+                const soundMeter = this.soundMeterUsers.get(indexUserId);
+                if(!soundMeter){
                     return;
                 }
-                element.classList.remove('active');
-                if((index +1) > volume){
-                    return;
-                }
-                element.classList.add('active');
-            });
+                const soudMeterElement = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(`soundMeter-${indexUserId}`);
+                const volumeByUser = parseInt((soundMeter.getVolume() / 10).toFixed(0));
+                this.setVolumeSoundMeter(volumeByUser, soudMeterElement);
+            }
         }catch(err){
             //console.error(err);
         }
+    }
+
+    private setVolumeSoundMeter(volume: number, element: HTMLDivElement){
+        if(volume <= 0 && !element.classList.contains('active')){
+            return;
+        }
+        element.classList.remove('active');
+        if(volume <= 0){
+            return;
+        }
+        element.classList.add('active');
+        element.childNodes.forEach((value: ChildNode, index) => {
+            const elementChildre = element.children.item(index);
+            if(!elementChildre){
+                return;
+            }
+            elementChildre.classList.remove('active');
+            if((index +1) > volume){
+                return;
+            }
+            elementChildre.classList.add('active');
+        });
     }
 }
 
