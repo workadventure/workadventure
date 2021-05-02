@@ -72,7 +72,8 @@ export class MediaManager {
     private userInputManager?: UserInputManager;
 
     private mySoundMeter?: SoundMeter|null;
-    private soundMeterUsers: Map<string, SoundMeter> = new Map<string, SoundMeter>();
+    private soundMeters: Map<string, SoundMeter> = new Map<string, SoundMeter>();
+    private soudMeterElements: Map<string, HTMLDivElement> = new Map<string, HTMLDivElement>();
 
     constructor() {
 
@@ -133,7 +134,7 @@ export class MediaManager {
 
         this.checkActiveUser(); //todo: desactivated in case of bug
 
-        this.mySoundMeterElement = HtmlUtils.getElementByIdOrFail('mySoundMeter') as HTMLDivElement;
+        this.mySoundMeterElement = (HtmlUtils.getElementByIdOrFail('mySoundMeter'));
         this.mySoundMeterElement.childNodes.forEach((value: ChildNode, index) => {
             this.mySoundMeterElement.children.item(index)?.classList.remove('active');
         });
@@ -634,7 +635,8 @@ export class MediaManager {
         //sound metter
         const soundMeter = new SoundMeter();
         soundMeter.connectToSource(stream, new AudioContext());
-        this.soundMeterUsers.set(userId, soundMeter);
+        this.soundMeters.set(userId, soundMeter);
+        this.soudMeterElements.set(userId, HtmlUtils.getElementByIdOrFail<HTMLImageElement>('soundMeter-'+userId));
     }
     addStreamRemoteScreenSharing(userId: string, stream : MediaStream){
         // In the case of screen sharing (going both ways), we may need to create the HTML element if it does not exist yet
@@ -650,8 +652,9 @@ export class MediaManager {
         layoutManager.remove(userId);
         this.remoteVideo.delete(userId);
 
-        this.soundMeterUsers.get(userId)?.stop();
-        this.soundMeterUsers.delete(userId);
+        this.soundMeters.get(userId)?.stop();
+        this.soundMeters.delete(userId);
+        this.soudMeterElements.delete(userId);
 
         //permit to remove user in discussion part
         this.removeParticipant(userId);
@@ -808,14 +811,15 @@ export class MediaManager {
         try{
             const volume = parseInt(((this.mySoundMeter ? this.mySoundMeter.getVolume() : 0) / 10).toFixed(0));
             this.setVolumeSoundMeter(volume, this.mySoundMeterElement);
-            for(const indexUserId of this.soundMeterUsers.keys()){
-                const soundMeter = this.soundMeterUsers.get(indexUserId);
-                if(!soundMeter){
+            
+            for(const indexUserId of this.soundMeters.keys()){
+                const soundMeter = this.soundMeters.get(indexUserId);
+                const soundMeterElement = this.soudMeterElements.get(indexUserId);
+                if(!soundMeter || !soundMeterElement){
                     return;
                 }
-                const soudMeterElement = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(`soundMeter-${indexUserId}`);
                 const volumeByUser = parseInt((soundMeter.getVolume() / 10).toFixed(0));
-                this.setVolumeSoundMeter(volumeByUser, soudMeterElement);
+                this.setVolumeSoundMeter(volumeByUser, soundMeterElement);
             }
         }catch(err){
             //console.error(err);
