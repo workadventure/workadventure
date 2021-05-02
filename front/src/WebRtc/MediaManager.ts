@@ -4,6 +4,8 @@ import {discussionManager, SendMessageCallback} from "./DiscussionManager";
 import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
 import {localUserStore} from "../Connexion/LocalUserStore";
 import {UserSimplePeerInterface} from "./SimplePeer";
+import {SoundMeter} from "../Phaser/Components/SoundMeter";
+
 declare const navigator:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 let videoConstraint: boolean|MediaTrackConstraints = {
@@ -41,6 +43,7 @@ export class MediaManager {
     microphoneClose: HTMLImageElement;
     microphone: HTMLImageElement;
     webrtcInAudio: HTMLAudioElement;
+    mySoundMeterElement: HTMLDivElement;
     private webrtcOutAudio: HTMLAudioElement;
     constraintsMedia : MediaStreamConstraints = {
         audio: audioConstraint,
@@ -67,6 +70,8 @@ export class MediaManager {
     private triggerCloseJistiFrame : Map<String, Function> = new Map<String, Function>();
 
     private userInputManager?: UserInputManager;
+
+    private mySoundMeter?: SoundMeter|null;
 
     constructor() {
 
@@ -126,10 +131,16 @@ export class MediaManager {
         this.pingCameraStatus();
 
         this.checkActiveUser(); //todo: desactivated in case of bug
+
+        this.mySoundMeterElement = HtmlUtils.getElementByIdOrFail('mySoundMeter') as HTMLDivElement;
+        this.mySoundMeterElement.childNodes.forEach((value: ChildNode, index) => {
+            this.mySoundMeterElement.children.item(index)?.classList.remove('active');
+        });
     }
 
-    public setLastUpdateScene(){
+    public updateScene(){
         this.lastUpdateScene = new Date();
+        this.updateSoudMeter();
     }
 
     public blurCamera() {
@@ -443,10 +454,21 @@ export class MediaManager {
         return navigator.mediaDevices.getUserMedia(this.constraintsMedia).then((stream : MediaStream) => {
             this.localStream = stream;
             this.myCamVideo.srcObject = this.localStream;
+
+            //init soud meter
+            this.mySoundMeter = null;
+            if(this.constraintsMedia.audio){
+                this.mySoundMeter = new SoundMeter();
+                this.mySoundMeter.connectToSource(stream, new AudioContext());
+            }
             return stream;
         }).catch((err: Error) => {
             throw err;
         });
+    }
+
+    private getMyMicrophoneVolume(): number {
+        return this.mySoundMeter ? this.mySoundMeter.getVolume() : 0;
     }
 
     /**
@@ -766,6 +788,25 @@ export class MediaManager {
     private showHelpCameraSettingsCallBack(){
         for(const callBack of this.helpCameraSettingsCallBacks){
             callBack();
+        }
+    }
+
+    updateSoudMeter(){
+        try{
+            const volume = parseInt((this.getMyMicrophoneVolume() / 10).toFixed(0));
+            this.mySoundMeterElement.childNodes.forEach((value: ChildNode, index) => {
+                const element = this.mySoundMeterElement.children.item(index);
+                if(!element){
+                    return;
+                }
+                element.classList.remove('active');
+                if((index +1) > volume){
+                    return;
+                }
+                element.classList.add('active');
+            });
+        }catch(err){
+            //console.error(err);
         }
     }
 }

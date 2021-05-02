@@ -141,7 +141,7 @@ body .message-info.warning{
     right: 15px;
     bottom: 30px;
     border-radius: 15px 15px 15px 15px;
-    max-height: 200px;
+    max-height: 100px;
 }
 
 video#myCamVideo{
@@ -153,6 +153,38 @@ video#myCamVideo{
     /*height: 113px;*/
 }
 
+.sound-progress{
+    position: absolute;
+    right: 14px;
+    top: calc(50% - 5px);
+}
+.sound-progress span{
+    position: absolute;
+    display: table-column;
+    color: black;
+    background-color: #00000045;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+}
+.sound-progress span.active{
+    background-color: rgba(0, 195, 255, 0.45);
+}
+.sound-progress span:nth-child(1){
+    top: calc(50% + 30px);
+}
+.sound-progress span:nth-child(2){
+    top: calc(50% + 15px);
+}
+.sound-progress span:nth-child(3){
+    top: calc(50% - 0px);
+}
+.sound-progress span:nth-child(4){
+    top: calc(50% - 15px);
+}
+.sound-progress span:nth-child(5){
+    top: calc(50% - 30px);
+}
 
 .btn-cam-action {
     pointer-events: all;

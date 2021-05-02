@@ -247,8 +247,7 @@ export class EnableCameraScene extends Phaser.Scene {
 
     update(time: number, delta: number): void {
         this.soundMeterSprite.setVolume(this.soundMeter.getVolume());
-
-        mediaManager.setLastUpdateScene();
+        mediaManager.updateScene();
 
         const middleX = this.getMiddleX();
         this.tweens.add({
