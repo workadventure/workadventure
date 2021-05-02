@@ -126,6 +126,7 @@ body .message-info.warning{
 
 .video-container video{
     height: 100%;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
 }
 
 .video-container video:focus{
@@ -587,6 +588,10 @@ input[type=range]:focus::-ms-fill-upper {
 
 .sidebar > div:hover {
     margin: 0%;
+}
+
+.sidebar > div video {
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
 }
 
 /* Let's make sure videos are vertically centered if they need to be cropped */
