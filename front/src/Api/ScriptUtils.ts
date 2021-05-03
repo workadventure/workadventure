@@ -12,6 +12,7 @@ class ScriptUtils {
     }
 
     public openCoWebsite(url: string, base: string) {
+           coWebsiteManager.loadCoWebsite(url, base);
     }
 
     public closeCoWebSite(){
