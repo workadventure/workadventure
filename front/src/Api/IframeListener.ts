@@ -106,7 +106,7 @@ class IframeListener {
                         return this.scripts.get(key)?.contentWindow == message.source
                     })
 
-                    scriptUtils.openCoWebsite(payload.data.url, scriptUrl || payload.data.url, payload.data.options);
+                    scriptUtils.openCoWebsite(payload.data.url, scriptUrl || payload.data.url, message.source, payload.data.options);
                 }
                 else if(payload.type === 'closeCoWebSite') {
                     scriptUtils.closeCoWebSite();

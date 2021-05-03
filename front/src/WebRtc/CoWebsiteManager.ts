@@ -130,7 +130,7 @@ class CoWebsiteManager {
         return iframe;
     }
 
-    public loadCoWebsite(url: string, base: string, allowApi?: boolean, allowPolicy?: string, options: OpenCoWebSiteOptionsEvent = {}): void {
+    public loadCoWebsite(url: string, base: string, allowApi?: boolean, allowPolicy?: string, options: OpenCoWebSiteOptionsEvent = {}): Window | null {
         this.load();
         this.cowebsiteMainDom.innerHTML = ``;
         this.isOverlay = !!options.asOverlay
@@ -161,6 +161,8 @@ class CoWebsiteManager {
                 this.fire();
             }, animationTime)
         }).catch(() => this.closeCoWebsite());
+
+        return iframe.contentWindow
     }
 
     /**

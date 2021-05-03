@@ -12,8 +12,18 @@ class ScriptUtils {
 
     }
 
-    public openCoWebsite(url: string, base: string, options?: OpenCoWebSiteOptionsEvent) {
-        coWebsiteManager.loadCoWebsite(url, base, undefined, undefined, options);
+    public openCoWebsite(url: string, base: string, scriptWindow: MessageEventSource | null, options?: OpenCoWebSiteOptionsEvent|undefined) {
+        const iframeWindow = coWebsiteManager.loadCoWebsite(url, base, undefined, undefined, options);
+        if (scriptWindow && iframeWindow) {
+            const messgaeChannel = new MessageChannel()
+            window.addEventListener("message", (event: MessageEvent) => {
+                if (event.source === scriptWindow) {
+                    iframeWindow.postMessage(event.data, "*")
+                } else if (event.source === iframeWindow) {
+                    (scriptWindow as Window).postMessage(event.data, "*")
+                }
+            })
+        }
     }
 
     public closeCoWebSite(){
