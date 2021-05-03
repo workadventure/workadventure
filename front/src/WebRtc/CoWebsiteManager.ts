@@ -1,6 +1,7 @@
 import {HtmlUtils} from "./HtmlUtils";
 import {Subject} from "rxjs";
 import {iframeListener} from "../Api/IframeListener";
+import { OpenCoWebSiteOptionsEvent } from '../Api/Events/OpenCoWebSiteEvent';
 
 enum iframeStates {
     closed = 1,
@@ -133,12 +134,14 @@ class CoWebsiteManager {
         this.load();
         this.cowebsiteMainDom.innerHTML = ``;
         this.isOverlay = !!options.asOverlay
-        if (this.isOverlay) {
-            this.cowebsiteDiv.style.backgroundColor = "#0a0a0a00"
-        }
+
         const iframe = document.createElement('iframe');
         iframe.id = 'cowebsite-iframe';
         iframe.src = (new URL(url, base)).toString();
+        if (this.isOverlay) {
+            this.cowebsiteDiv.style.backgroundColor = "#0a0a0a00"
+            this.cowebsiteDiv.classList.add("overlay")
+        }
         if (allowPolicy) {
             iframe.allow = allowPolicy;
         }

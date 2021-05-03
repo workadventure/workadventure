@@ -54,6 +54,10 @@
     height: 100vh;
     display: flex;
 
+    &.overlay{
+      width:10%
+    }
+
     &.loading {
       transform: translateX(90%);
     }

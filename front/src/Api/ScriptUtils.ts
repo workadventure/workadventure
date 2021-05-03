@@ -1,4 +1,5 @@
 import {coWebsiteManager} from "../WebRtc/CoWebsiteManager";
+import { OpenCoWebSiteOptionsEvent } from './Events/OpenCoWebSiteEvent';
 
 class ScriptUtils {
 
