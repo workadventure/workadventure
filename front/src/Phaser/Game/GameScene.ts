@@ -435,8 +435,8 @@ export class GameScene extends ResizableScene implements CenterListener {
 
 
         //create input to move
-        mediaManager.setUserInputManager(this.userInputManager);
         this.userInputManager = new UserInputManager(this);
+        mediaManager.setUserInputManager(this.userInputManager);
 
         if (localUserStore.getFullscreen()) {
             document.querySelector('body')?.requestFullscreen();
