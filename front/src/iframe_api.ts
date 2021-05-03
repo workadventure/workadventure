@@ -154,13 +154,14 @@ window.WA = {
             },'*');
     },
 
-    openCoWebSite(url : string) : void{
+    openCoWebSite(url: string, options: { asOverlay?: boolean } = {}): void {
         window.parent.postMessage({
-            "type" : 'openCoWebSite',
-            "data" : {
-                url
+            "type": 'openCoWebSite',
+            "data": {
+                url,
+                options
             } as OpenCoWebSiteEvent
-            },'*');
+        }, '*');
     },
 
     closeCoWebSite() : void{

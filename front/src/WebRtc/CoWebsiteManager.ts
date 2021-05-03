@@ -33,6 +33,8 @@ class CoWebsiteManager {
     private cowebsiteMainDom: HTMLDivElement;
     private cowebsiteAsideDom: HTMLDivElement;
     
+    private isOverlay = true
+
     get width(): number {
         return this.cowebsiteDiv.clientWidth;
     }
@@ -127,10 +129,13 @@ class CoWebsiteManager {
         return iframe;
     }
 
-    public loadCoWebsite(url: string, base: string, allowApi?: boolean, allowPolicy?: string): void {
+    public loadCoWebsite(url: string, base: string, allowApi?: boolean, allowPolicy?: string, options: OpenCoWebSiteOptionsEvent = {}): void {
         this.load();
         this.cowebsiteMainDom.innerHTML = ``;
-
+        this.isOverlay = !!options.asOverlay
+        if (this.isOverlay) {
+            this.cowebsiteDiv.style.backgroundColor = "#0a0a0a00"
+        }
         const iframe = document.createElement('iframe');
         iframe.id = 'cowebsite-iframe';
         iframe.src = (new URL(url, base)).toString();
@@ -207,7 +212,9 @@ class CoWebsiteManager {
     }
 
     private fire(): void {
-        this._onResize.next();
+        if (!this.isOverlay) {
+            this._onResize.next();
+        }
     }
 
     private fullscreen(): void {
