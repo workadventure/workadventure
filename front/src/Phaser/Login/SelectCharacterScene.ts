@@ -5,7 +5,7 @@ import {EnableCameraSceneName} from "./EnableCameraScene";
 import {CustomizeSceneName} from "./CustomizeScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {loadAllDefaultModels} from "../Entity/PlayerTexturesLoadingManager";
-import {addLoader} from "../Components/Loader";
+import {addLoader, endLoader} from "../Components/Loader";
 import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
 import {AbstractCharacterScene} from "./AbstractCharacterScene";
 import {areCharacterLayersValid} from "../../Connexion/LocalUser";
@@ -47,7 +47,6 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             });
         })
         this.playerModels = loadAllDefaultModels(this.load);
-        addLoader(this);
     }
 
     create() {
@@ -98,6 +97,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.input.keyboard.on('keydown-DOWN', () => {
             this.moveToDown();
         });
+        endLoader(this);
     }
 
     protected nextSceneToCameraScene(): void {
