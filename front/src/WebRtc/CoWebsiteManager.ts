@@ -1,7 +1,7 @@
-import {HtmlUtils} from "./HtmlUtils";
-import {Subject} from "rxjs";
-import {iframeListener} from "../Api/IframeListener";
+import { Subject } from "rxjs";
 import { OpenCoWebSiteOptionsEvent } from '../Api/Events/OpenCoWebSiteEvent';
+import { iframeListener } from "../Api/IframeListener";
+import { HtmlUtils } from "./HtmlUtils";
 
 enum iframeStates {
     closed = 1,
@@ -33,7 +33,7 @@ class CoWebsiteManager {
     private resizing: boolean = false;
     private cowebsiteMainDom: HTMLDivElement;
     private cowebsiteAsideDom: HTMLDivElement;
-    
+
     private isOverlay = true
 
     get width(): number {
@@ -41,7 +41,7 @@ class CoWebsiteManager {
     }
 
     set width(width: number) {
-        this.cowebsiteDiv.style.width = width+'px';
+        this.cowebsiteDiv.style.width = width + 'px';
     }
 
     get height(): number {
@@ -49,7 +49,7 @@ class CoWebsiteManager {
     }
 
     set height(height: number) {
-        this.cowebsiteDiv.style.height = height+'px';
+        this.cowebsiteDiv.style.height = height + 'px';
     }
 
     get verticalMode(): boolean {
@@ -76,7 +76,7 @@ class CoWebsiteManager {
     }
 
     private initResizeListeners() {
-        const movecallback = (event:MouseEvent) => {
+        const movecallback = (event: MouseEvent) => {
             this.verticalMode ? this.height += event.movementY / this.getDevicePixelRatio() : this.width -= event.movementX / this.getDevicePixelRatio();
             this.fire();
         }
@@ -158,7 +158,7 @@ class CoWebsiteManager {
         const onTimeoutPromise = new Promise((resolve) => {
             setTimeout(() => resolve(), 2000);
         });
-        this.currentOperationPromise = this.currentOperationPromise.then(() =>Promise.race([onloadPromise, onTimeoutPromise])).then(() => {
+        this.currentOperationPromise = this.currentOperationPromise.then(() => Promise.race([onloadPromise, onTimeoutPromise])).then(() => {
             this.open();
             setTimeout(() => {
                 this.fire();
@@ -184,7 +184,7 @@ class CoWebsiteManager {
 
     public closeCoWebsite(): Promise<void> {
         this.currentOperationPromise = this.currentOperationPromise.then(() => new Promise((resolve, reject) => {
-            if(this.opened === iframeStates.closed) resolve(); //this method may be called twice, in case of iframe error for example
+            if (this.opened === iframeStates.closed) resolve(); //this method may be called twice, in case of iframe error for example
             this.close();
             this.fire();
             const iframe = this.cowebsiteDiv.querySelector('iframe');
@@ -199,7 +199,7 @@ class CoWebsiteManager {
         return this.currentOperationPromise;
     }
 
-    public getGameSize(): {width: number, height: number} {
+    public getGameSize(): { width: number, height: number } {
         if (this.opened !== iframeStates.opened) {
             return {
                 width: window.innerWidth,
