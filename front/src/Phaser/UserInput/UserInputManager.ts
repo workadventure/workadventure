@@ -59,7 +59,7 @@ export class UserInputManager {
             this.initVirtualJoystick();
         }
     }
-    
+
     initVirtualJoystick() {
         this.joystick = new MobileJoystick(this.Scene);
         this.joystick.on("update", () => {
@@ -170,5 +170,9 @@ export class UserInputManager {
     }
     removeSpaceEventListner(callback : Function){
         this.Scene.input.keyboard.removeListener('keyup-SPACE', callback);
+    }
+
+    destroy(): void {
+        this.joystick.destroy();
     }
 }

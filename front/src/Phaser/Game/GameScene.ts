@@ -81,6 +81,7 @@ import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoading
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
 import {joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey} from "../Components/MobileJoystick";
+import {waScaleManager} from "../Services/WaScaleManager";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -176,6 +177,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string|undefined;
     private cursorKeys: any;
+    private pinchManager: PinchManager|undefined;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
@@ -364,7 +366,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.startLayerName = urlManager.getStartLayerNameFromUrl();
 
         if (touchScreenManager.supportTouchScreen) {
-            new PinchManager(this);
+            this.pinchManager = new PinchManager(this);
         }
 
         this.messageSubscription = worldFullMessageStream.stream.subscribe((message) => this.showWorldFullError())
@@ -420,7 +422,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         //initialise list of other player
         this.MapPlayers = this.physics.add.group({immovable: true});
 
-        
+
         //create input to move
         mediaManager.setUserInputManager(this.userInputManager);
         this.userInputManager = new UserInputManager(this);
@@ -899,6 +901,8 @@ ${escapedMessage}
         this.simplePeer.closeAllConnections();
         this.simplePeer?.unregister();
         this.messageSubscription?.unsubscribe();
+        this.userInputManager.destroy();
+        this.pinchManager?.destroy();
 
         for(const iframeEvents of this.iframeSubscriptionList){
             iframeEvents.unsubscribe();
@@ -1185,11 +1189,17 @@ ${escapedMessage}
      */
     update(time: number, delta: number) : void {
         if (this.cursorKeys.up.isDown) {
-            this.cameras.main.zoom *= 1.2;
+            //this.cameras.main.zoom *= 1.2;
+            //this.scale.setGameSize(this.scale.width * 1.2, this.scale.height * 1.2);
+            waScaleManager.zoomModifier *= 1.2;
+            this.updateCameraOffset();
         } else if(this.cursorKeys.down.isDown) {
-            this.cameras.main.zoom *= 0.8;
+            //this.scale.setGameSize(this.scale.width * 0.8, this.scale.height * 0.8);
+            //this.cameras.main.zoom *= 0.8;
+            waScaleManager.zoomModifier /= 1.2;
+            this.updateCameraOffset();
         }
-        
+
         mediaManager.setLastUpdateScene();
         this.currentTick = time;
         this.CurrentPlayer.moveUser(delta);
@@ -1425,17 +1435,18 @@ ${escapedMessage}
     }
 
     /**
-     * Updates the offset of the character compared to the center of the screen according to the layout mananger
-     * (tries to put the character in the center of the reamining space if there is a discussion going on.
+     * Updates the offset of the character compared to the center of the screen according to the layout manager
+     * (tries to put the character in the center of the remaining space if there is a discussion going on.
      */
     private updateCameraOffset(): void {
         const array = layoutManager.findBiggestAvailableArray();
         let xCenter = (array.xEnd - array.xStart) / 2 + array.xStart;
         let yCenter = (array.yEnd - array.yStart) / 2 + array.yStart;
 
+        const game = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>('#game canvas');
         // Let's put this in Game coordinates by applying the zoom level:
 
-        this.cameras.main.setFollowOffset(xCenter - this.game.renderer.width / 2, yCenter - this.game.renderer.height / 2);
+        this.cameras.main.setFollowOffset((xCenter - game.offsetWidth/2) * window.devicePixelRatio / this.scale.zoom , (yCenter - game.offsetHeight/2) * window.devicePixelRatio / this.scale.zoom);
     }
 
     public onCenterChange(): void {

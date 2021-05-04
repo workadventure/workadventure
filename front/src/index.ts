@@ -17,6 +17,8 @@ import {HelpCameraSettingsScene} from "./Phaser/Menu/HelpCameraSettingsScene";
 import {localUserStore} from "./Connexion/LocalUserStore";
 import {ErrorScene} from "./Phaser/Reconnecting/ErrorScene";
 import {iframeListener} from "./Api/IframeListener";
+import {HdpiManager} from "./Phaser/Services/HdpiManager";
+import {waScaleManager} from "./Phaser/Services/WaScaleManager";
 
 const {width, height} = coWebsiteManager.getGameSize();
 
@@ -67,16 +69,22 @@ switch (phaserMode) {
         throw new Error('phaserMode parameter must be one of "auto", "canvas" or "webgl"');
 }
 
+const hdpiManager = new HdpiManager(640*480);
+const { game: gameSize, real: realSize } = hdpiManager.getOptimalGameSize({width, height});
 
 const config: GameConfig = {
     type: mode,
     title: "WorkAdventure",
-    width: width / 2,
-    height: height / 2,
-    parent: "game",
-    zoom: 2,
+    scale: {
+        parent: "game",
+        width: gameSize.width,
+        height: gameSize.height,
+        zoom: realSize.width / gameSize.width,
+        autoRound: true,
+        resizeInterval: 999999999999
+    },
     scene: [EntryScene, LoginScene, SelectCharacterScene, SelectCompanionScene, EnableCameraScene, ReconnectingScene, ErrorScene, CustomizeScene, MenuScene, HelpCameraSettingsScene],
-    resolution: window.devicePixelRatio / 2,
+    //resolution: window.devicePixelRatio / 2,
     fps: fps,
     dom: {
         createContainer: true
@@ -105,10 +113,13 @@ const config: GameConfig = {
 
 const game = new Phaser.Game(config);
 
+waScaleManager.setScaleManager(game.scale);
+waScaleManager.applyNewSize();
+
 window.addEventListener('resize', function (event) {
     coWebsiteManager.resetStyle();
-    const {width, height} = coWebsiteManager.getGameSize();
-    game.scale.resize(width / RESOLUTION, height / RESOLUTION);
+
+    waScaleManager.applyNewSize();
 
     // Let's trigger the onResize method of any active scene that is a ResizableScene
     for (const scene of game.scene.getScenes(true)) {
@@ -119,8 +130,7 @@ window.addEventListener('resize', function (event) {
 });
 
 coWebsiteManager.onResize.subscribe(() => {
-    const {width, height} = coWebsiteManager.getGameSize();
-    game.scale.resize(width / RESOLUTION, height / RESOLUTION);
+    waScaleManager.applyNewSize();
 });
 
 iframeListener.init();

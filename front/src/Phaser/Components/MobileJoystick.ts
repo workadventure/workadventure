@@ -1,4 +1,6 @@
 import VirtualJoystick from 'phaser3-rex-plugins/plugins/virtualjoystick.js';
+import ScaleManager = Phaser.Scale.ScaleManager;
+import {waScaleManager} from "../Services/WaScaleManager";
 
 const outOfScreenX = -1000;
 const outOfScreenY = -1000;
@@ -11,7 +13,8 @@ export const joystickThumbKey = 'joystickThumb';
 export const joystickThumbImg = 'resources/objects/smallHandleFilledGrey.png';
 
 export class MobileJoystick extends VirtualJoystick {
-    
+    private resizeCallback: () => void;
+
     constructor(scene: Phaser.Scene) {
         super(scene, {
             x: outOfScreenX,
@@ -31,5 +34,18 @@ export class MobileJoystick extends VirtualJoystick {
             this.x = outOfScreenX;
             this.y = outOfScreenY;
         });
+        this.resizeCallback = this.resize.bind(this);
+        this.scene.scale.on(Phaser.Scale.Events.RESIZE, this.resizeCallback);
+    }
+
+    private resize() {
+        this.base.setDisplaySize(60 / waScaleManager.zoomModifier, 60 / waScaleManager.zoomModifier);
+        this.thumb.setDisplaySize(30 / waScaleManager.zoomModifier, 30 / waScaleManager.zoomModifier);
+        this.setRadius(20 / waScaleManager.zoomModifier);
+    }
+
+    public destroy() {
+        super.destroy();
+        this.scene.scale.removeListener(Phaser.Scale.Events.RESIZE, this.resizeCallback);
     }
 }
