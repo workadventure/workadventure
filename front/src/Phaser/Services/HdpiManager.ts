@@ -41,6 +41,23 @@ export class HdpiManager {
             i++;
         }
 
+        // Has the canvas more pixels than the screen? This is forbidden
+        if ((i - 1) * this._zoomModifier < 1) {
+            // Let's reset the zoom modifier (WARNING this is a SIDE EFFECT in a getter)
+            this._zoomModifier = 1 / (i - 1);
+
+            return {
+                game: {
+                    width: realPixelScreenSize.width,
+                    height: realPixelScreenSize.height,
+                },
+                real: {
+                    width: realPixelScreenSize.width,
+                    height: realPixelScreenSize.height,
+                }
+            }
+        }
+
         return {
             game: {
                 width: Math.ceil(realPixelScreenSize.width / (i - 1) / this._zoomModifier),
