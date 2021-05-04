@@ -31,14 +31,13 @@ export class SelectCompanionScene extends ResizableScene {
     }
 
     preload() {
-        addLoader(this);
-
         this.load.html(selectCompanionSceneKey, 'resources/html/SelectCompanionScene.html');
 
         getAllCompanionResources(this.load).forEach(model => {
             this.companionModels.push(model);
         });
 
+        //this function must stay at the end of preload function
         addLoader(this);
     }
 
