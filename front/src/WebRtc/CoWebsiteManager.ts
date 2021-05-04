@@ -141,6 +141,9 @@ class CoWebsiteManager {
         if (this.isOverlay) {
             this.cowebsiteDiv.style.backgroundColor = "#0a0a0a00"
             this.cowebsiteDiv.classList.add("overlay")
+        } else {
+            this.cowebsiteDiv.classList.remove("overlay")
+            this.cowebsiteDiv.style.backgroundColor = "white"
         }
         if (allowPolicy) {
             iframe.allow = allowPolicy;
