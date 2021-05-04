@@ -200,7 +200,7 @@ class CoWebsiteManager {
     }
 
     public getGameSize(): { width: number, height: number } {
-        if (this.opened !== iframeStates.opened) {
+        if (this.opened !== iframeStates.opened || this.isOverlay) {
             return {
                 width: window.innerWidth,
                 height: window.innerHeight
@@ -220,9 +220,7 @@ class CoWebsiteManager {
     }
 
     private fire(): void {
-        if (!this.isOverlay) {
-            this._onResize.next();
-        }
+        this._onResize.next();
     }
 
     private fullscreen(): void {
