@@ -73,7 +73,7 @@ export class MediaManager {
 
     private mySoundMeter?: SoundMeter|null;
     private soundMeters: Map<string, SoundMeter> = new Map<string, SoundMeter>();
-    private soudMeterElements: Map<string, HTMLDivElement> = new Map<string, HTMLDivElement>();
+    private soundMeterElements: Map<string, HTMLDivElement> = new Map<string, HTMLDivElement>();
 
     constructor() {
 
@@ -457,7 +457,7 @@ export class MediaManager {
             this.localStream = stream;
             this.myCamVideo.srcObject = this.localStream;
 
-            //init soud meter
+            //init sound meter
             this.mySoundMeter = null;
             if(this.constraintsMedia.audio){
                 this.mySoundMeter = new SoundMeter();
@@ -636,7 +636,7 @@ export class MediaManager {
         const soundMeter = new SoundMeter();
         soundMeter.connectToSource(stream, new AudioContext());
         this.soundMeters.set(userId, soundMeter);
-        this.soudMeterElements.set(userId, HtmlUtils.getElementByIdOrFail<HTMLImageElement>('soundMeter-'+userId));
+        this.soundMeterElements.set(userId, HtmlUtils.getElementByIdOrFail<HTMLImageElement>('soundMeter-'+userId));
     }
     addStreamRemoteScreenSharing(userId: string, stream : MediaStream){
         // In the case of screen sharing (going both ways), we may need to create the HTML element if it does not exist yet
@@ -654,7 +654,7 @@ export class MediaManager {
 
         this.soundMeters.get(userId)?.stop();
         this.soundMeters.delete(userId);
-        this.soudMeterElements.delete(userId);
+        this.soundMeterElements.delete(userId);
 
         //permit to remove user in discussion part
         this.removeParticipant(userId);
@@ -814,7 +814,7 @@ export class MediaManager {
             
             for(const indexUserId of this.soundMeters.keys()){
                 const soundMeter = this.soundMeters.get(indexUserId);
-                const soundMeterElement = this.soudMeterElements.get(indexUserId);
+                const soundMeterElement = this.soundMeterElements.get(indexUserId);
                 if(!soundMeter || !soundMeterElement){
                     return;
                 }
