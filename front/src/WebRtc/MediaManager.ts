@@ -244,7 +244,7 @@ export class MediaManager {
             console.error(err);
             this.disableCameraStyle();
 
-            layoutManager.addInformation('warning', 'Access dinied of your camera. Click here and check right of your navigator.', () => {
+            layoutManager.addInformation('warning', 'Camera access denied. Click here and check navigators permissions.', () => {
                 this.showHelpCameraSettingsCallBack();
             }, this.userInputManager);
         });
@@ -276,7 +276,7 @@ export class MediaManager {
             console.error(err);
             this.disableMicrophoneStyle();
 
-            layoutManager.addInformation('warning', 'Access dinied of your microphone. Click here and check right of your navigator.', () => {
+            layoutManager.addInformation('warning', 'Microphone access denied. Click here and check navigators permissions.', () => {
                 this.showHelpCameraSettingsCallBack();
             }, this.userInputManager);
         });
@@ -351,7 +351,7 @@ export class MediaManager {
             this.monitor.style.display = "none";
             this.monitorBtn.classList.remove("enabled");
 
-            layoutManager.addInformation('warning', 'Access dinied for screen sharing. Click here and check right of your navigator.', () => {
+            layoutManager.addInformation('warning', 'Screen sharing access denied. Click here and check navigators permissions.', () => {
                 this.showHelpCameraSettingsCallBack();
             }, this.userInputManager);
         });
