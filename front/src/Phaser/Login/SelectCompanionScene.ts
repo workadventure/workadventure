@@ -1,6 +1,6 @@
 import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
-import { addLoader, endLoader } from "../Components/Loader";
+import { addLoader } from "../Components/Loader";
 import { gameManager} from "../Game/GameManager";
 import { ResizableScene } from "./ResizableScene";
 import { EnableCameraSceneName } from "./EnableCameraScene";
@@ -38,6 +38,8 @@ export class SelectCompanionScene extends ResizableScene {
         getAllCompanionResources(this.load).forEach(model => {
             this.companionModels.push(model);
         });
+
+        addLoader(this);
     }
 
     create() {
@@ -83,8 +85,6 @@ export class SelectCompanionScene extends ResizableScene {
 
         this.createCurrentCompanion();
         this.updateSelectedCompanion();
-        
-        endLoader(this);
     }
 
     update(time: number, delta: number): void {

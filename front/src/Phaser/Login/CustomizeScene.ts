@@ -5,7 +5,7 @@ import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
 import {gameManager} from "../Game/GameManager";
 import {localUserStore} from "../../Connexion/LocalUserStore";
-import {addLoader, endLoader} from "../Components/Loader";
+import {addLoader} from "../Components/Loader";
 import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
 import {AbstractCharacterScene} from "./AbstractCharacterScene";
 import {areCharacterLayersValid} from "../../Connexion/LocalUser";
@@ -112,8 +112,6 @@ export class CustomizeScene extends AbstractCharacterScene {
             this.moveLayers();
             this.updateSelectedLayer();
         }
-        
-        endLoader(this);
     }
 
     private moveCursorHorizontally(index: number): void {
