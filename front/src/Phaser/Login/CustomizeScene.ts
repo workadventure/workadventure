@@ -5,7 +5,7 @@ import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
 import {gameManager} from "../Game/GameManager";
 import {localUserStore} from "../../Connexion/LocalUserStore";
-import {addLoader, endLoader} from "../Components/Loader";
+import {addLoader} from "../Components/Loader";
 import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
 import {AbstractCharacterScene} from "./AbstractCharacterScene";
 import {areCharacterLayersValid} from "../../Connexion/LocalUser";
@@ -35,8 +35,6 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     preload() {
-        addLoader(this);
-
         this.load.html(customizeSceneKey, 'resources/html/CustomCharacterScene.html');
 
         this.layers = loadAllLayers(this.load);
@@ -48,6 +46,9 @@ export class CustomizeScene extends AbstractCharacterScene {
                 this.layers[bodyResourceDescription.level].unshift(bodyResourceDescription);
             });
         });
+
+        //this function must stay at the end of preload function
+        addLoader(this);
     }
 
     create() {
@@ -112,8 +113,6 @@ export class CustomizeScene extends AbstractCharacterScene {
             this.moveLayers();
             this.updateSelectedLayer();
         }
-        
-        endLoader(this);
     }
 
     private moveCursorHorizontally(index: number): void {

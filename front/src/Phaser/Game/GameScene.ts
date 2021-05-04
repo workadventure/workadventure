@@ -71,7 +71,7 @@ import {ChatModeIcon} from "../Components/ChatModeIcon";
 import {OpenChatIcon, openChatIconName} from "../Components/OpenChatIcon";
 import {SelectCharacterScene, SelectCharacterSceneName} from "../Login/SelectCharacterScene";
 import {TextureError} from "../../Exception/TextureError";
-import {addLoader, endLoader} from "../Components/Loader";
+import {addLoader} from "../Components/Loader";
 import {ErrorSceneName} from "../Reconnecting/ErrorScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {iframeListener} from "../../Api/IframeListener";
@@ -206,7 +206,6 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     //hook preload scene
     preload(): void {
-        addLoader(this);
         const localUser = localUserStore.getLocalUser();
         const textures = localUser?.textures;
         if (textures) {
@@ -266,6 +265,9 @@ export class GameScene extends ResizableScene implements CenterListener {
 
         this.load.spritesheet('layout_modes', 'resources/objects/layout_modes.png', {frameWidth: 32, frameHeight: 32});
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
+
+        //this function must stay at the end of preload function
+        addLoader(this);
     }
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
@@ -497,8 +499,6 @@ export class GameScene extends ResizableScene implements CenterListener {
         if (!this.room.isDisconnected()) {
             this.connect();
         }
-        
-        endLoader(this);
     }
 
     /**
