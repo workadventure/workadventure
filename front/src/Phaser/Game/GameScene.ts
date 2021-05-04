@@ -1200,7 +1200,7 @@ ${escapedMessage}
      * @param delta The delta time in ms since the last frame. This is a smoothed and capped value based on the FPS rate.
      */
     update(time: number, delta: number) : void {
-        mediaManager.setLastUpdateScene();
+        mediaManager.updateScene();
         this.currentTick = time;
         this.CurrentPlayer.moveUser(delta);
 
