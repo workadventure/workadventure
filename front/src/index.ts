@@ -69,7 +69,7 @@ switch (phaserMode) {
         throw new Error('phaserMode parameter must be one of "auto", "canvas" or "webgl"');
 }
 
-const hdpiManager = new HdpiManager(640*480);
+const hdpiManager = new HdpiManager(640*480, 196*196);
 const { game: gameSize, real: realSize } = hdpiManager.getOptimalGameSize({width, height});
 
 const config: GameConfig = {

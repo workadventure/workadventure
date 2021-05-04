@@ -3,7 +3,7 @@ import {HdpiManager} from "../../../src/Phaser/Services/HdpiManager";
 
 describe("Test HdpiManager", () => {
     it("should match screen size if size is too small.", () => {
-        const hdpiManager = new HdpiManager(640*480);
+        const hdpiManager = new HdpiManager(640*480, 64*64);
 
         const result = hdpiManager.getOptimalGameSize({ width: 320, height: 200 });
         expect(result.game.width).toEqual(320);
@@ -13,7 +13,7 @@ describe("Test HdpiManager", () => {
     });
 
     it("should match multiple just above.", () => {
-        const hdpiManager = new HdpiManager(640*480);
+        const hdpiManager = new HdpiManager(640*480, 64*64);
 
         let result = hdpiManager.getOptimalGameSize({ width: 960, height: 600 });
         expect(result.game.width).toEqual(960);
@@ -28,5 +28,28 @@ describe("Test HdpiManager", () => {
         expect(result.game.height).toEqual(Math.ceil((480 * 3 + 50) / 3));
         expect(result.real.width).toEqual(result.game.width * 3);
         expect(result.real.height).toEqual(result.game.height * 3);
+    });
+
+    it("should not zoom in too much.", () => {
+        const hdpiManager = new HdpiManager(640*480, 64*64);
+
+        hdpiManager.zoomModifier = 11;
+
+        let result = hdpiManager.getOptimalGameSize({ width: 640, height: 640 });
+        expect(result.game.width).toEqual(64);
+        expect(result.game.height).toEqual(64);
+        expect(hdpiManager.zoomModifier).toEqual(10);
+
+    });
+
+    it("should not zoom out too much.", () => {
+        const hdpiManager = new HdpiManager(640*480, 64*64);
+
+        hdpiManager.zoomModifier = 1/10;
+
+        let result = hdpiManager.getOptimalGameSize({ width: 1280, height: 768 });
+        expect(result.game.width).toEqual(1280);
+        expect(result.game.height).toEqual(768);
+        expect(hdpiManager.zoomModifier).toEqual(1);
     });
 });

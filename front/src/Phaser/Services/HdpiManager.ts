@@ -8,7 +8,12 @@ interface Size {
 export class HdpiManager {
     private _zoomModifier: number = 1;
 
-    public constructor(private minGamePixelsNumber: number) {
+    /**
+     *
+     * @param minRecommendedGamePixelsNumber The minimum number of pixels we want to display "by default" to the user
+     * @param absoluteMinPixelNumber The very minimum of game pixels to display. Below, we forbid zooming more
+     */
+    public constructor(private minRecommendedGamePixelsNumber: number, private absoluteMinPixelNumber: number) {
     }
 
     /**
@@ -24,7 +29,7 @@ export class HdpiManager {
         const realPixelNumber = realPixelScreenSize.width * realPixelScreenSize.height;
         // If the screen has not a definition small enough to match the minimum number of pixels we want to display,
         // let's make the canvas the size of the screen (in real pixels)
-        if (realPixelNumber <= this.minGamePixelsNumber) {
+        if (realPixelNumber <= this.minRecommendedGamePixelsNumber) {
             return {
                 game: realPixelScreenSize,
                 real: realPixelScreenSize
@@ -34,7 +39,7 @@ export class HdpiManager {
         let i = 1;
 
         while (true) {
-            if (realPixelNumber <= this.minGamePixelsNumber * i * i) {
+            if (realPixelNumber <= this.minRecommendedGamePixelsNumber * i * i) {
                 break;
             }
 
@@ -58,10 +63,34 @@ export class HdpiManager {
             }
         }
 
+        const gameWidth = Math.ceil(realPixelScreenSize.width / (i - 1) / this._zoomModifier);
+        const gameHeight = Math.ceil(realPixelScreenSize.height / (i - 1) / this._zoomModifier);
+
+        // Let's ensure we display a minimum of pixels, even if crazily zoomed in.
+        if (gameWidth * gameHeight < this.absoluteMinPixelNumber) {
+            const minGameHeight = Math.sqrt(this.absoluteMinPixelNumber * realPixelScreenSize.height / realPixelScreenSize.width);
+            const minGameWidth = Math.sqrt(this.absoluteMinPixelNumber * realPixelScreenSize.width / realPixelScreenSize.height);
+
+            // Let's reset the zoom modifier (WARNING this is a SIDE EFFECT in a getter)
+            this._zoomModifier = realPixelScreenSize.width / minGameWidth / (i - 1);
+
+            return {
+                game: {
+                    width: minGameWidth,
+                    height: minGameHeight,
+                },
+                real: {
+                    width: realPixelScreenSize.width,
+                    height: realPixelScreenSize.height,
+                }
+            }
+
+        }
+
         return {
             game: {
-                width: Math.ceil(realPixelScreenSize.width / (i - 1) / this._zoomModifier),
-                height: Math.ceil(realPixelScreenSize.height / (i - 1) / this._zoomModifier),
+                width: gameWidth,
+                height: gameHeight,
             },
             real: {
                 width: Math.ceil(realPixelScreenSize.width / (i - 1)) * (i - 1),

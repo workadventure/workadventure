@@ -7,8 +7,8 @@ class WaScaleManager {
     private hdpiManager: HdpiManager;
     private scaleManager!: ScaleManager;
 
-    public constructor(private minGamePixelsNumber: number) {
-        this.hdpiManager = new HdpiManager(minGamePixelsNumber);
+    public constructor(private minGamePixelsNumber: number, private absoluteMinPixelNumber: number) {
+        this.hdpiManager = new HdpiManager(minGamePixelsNumber, absoluteMinPixelNumber);
     }
 
     public setScaleManager(scaleManager: ScaleManager) {
@@ -44,4 +44,4 @@ class WaScaleManager {
     }
 }
 
-export const waScaleManager = new WaScaleManager(640*480);
+export const waScaleManager = new WaScaleManager(640*480, 196*196);
