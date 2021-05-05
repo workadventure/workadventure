@@ -246,6 +246,11 @@ export class EnableCameraScene extends Phaser.Scene {
 
         this.arrowUp.x = this.microphoneNameField.x - this.microphoneNameField.width / 2 - 16;
         this.arrowUp.y = this.microphoneNameField.y;
+
+        const actionBtn = document.querySelector<HTMLDivElement>('#enableCameraScene .action');
+        if (actionBtn !== null) {
+            actionBtn.style.top = (this.scale.height - 65) + 'px';
+        }
     }
 
     update(time: number, delta: number): void {
@@ -259,6 +264,7 @@ export class EnableCameraScene extends Phaser.Scene {
             duration: 1000,
             ease: 'Power3'
         });
+
     }
 
     private login(): void {
@@ -286,12 +292,12 @@ export class EnableCameraScene extends Phaser.Scene {
     }
 
     private getMiddleX() : number{
-        return (this.game.renderer.width / RESOLUTION) -
+        return (this.scale.width / 2) -
         (
             this.enableCameraSceneElement
             && this.enableCameraSceneElement.node
             && this.enableCameraSceneElement.node.getBoundingClientRect().width > 0
-            ? (this.enableCameraSceneElement.node.getBoundingClientRect().width / (2*RESOLUTION))
+            ? (this.enableCameraSceneElement.node.getBoundingClientRect().width / 2 / this.scale.zoom)
             : (300 / RESOLUTION)
         );
     }
