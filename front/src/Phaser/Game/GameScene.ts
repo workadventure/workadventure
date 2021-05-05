@@ -89,6 +89,7 @@ import {TextUtils} from "../Components/TextUtils";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
 import {joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey} from "../Components/MobileJoystick";
+import {waScaleManager} from "../Services/WaScaleManager";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -183,6 +184,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     private messageSubscription: Subscription|null = null;
     private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string|undefined;
+    private pinchManager: PinchManager|undefined;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
@@ -201,7 +203,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         })
         this.connectionAnswerPromise = new Promise<RoomJoinedMessageInterface>((resolve, reject): void => {
             this.connectionAnswerPromiseResolve = resolve;
-        })
+        });
     }
 
     //hook preload scene
@@ -371,7 +373,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.startLayerName = urlManager.getStartLayerNameFromUrl();
 
         if (touchScreenManager.supportTouchScreen) {
-            new PinchManager(this);
+            this.pinchManager = new PinchManager(this);
         }
 
         this.messageSubscription = worldFullMessageStream.stream.subscribe((message) => this.showWorldFullError(message))
@@ -914,6 +916,8 @@ ${escapedMessage}
         this.simplePeer?.closeAllConnections();
         this.simplePeer?.unregister();
         this.messageSubscription?.unsubscribe();
+        this.userInputManager.destroy();
+        this.pinchManager?.destroy();
 
         for(const iframeEvents of this.iframeSubscriptionList){
             iframeEvents.unsubscribe();
@@ -1061,8 +1065,8 @@ ${escapedMessage}
     //todo: in a dedicated class/function?
     initCamera() {
         this.cameras.main.setBounds(0,0, this.Map.widthInPixels, this.Map.heightInPixels);
+        this.cameras.main.startFollow(this.CurrentPlayer, true);
         this.updateCameraOffset();
-        this.cameras.main.setZoom(ZOOM_LEVEL);
     }
 
     addLayer(Layer : Phaser.Tilemaps.StaticTilemapLayer){
@@ -1435,19 +1439,18 @@ ${escapedMessage}
     }
 
     /**
-     * Updates the offset of the character compared to the center of the screen according to the layout mananger
-     * (tries to put the character in the center of the reamining space if there is a discussion going on.
+     * Updates the offset of the character compared to the center of the screen according to the layout manager
+     * (tries to put the character in the center of the remaining space if there is a discussion going on.
      */
     private updateCameraOffset(): void {
         const array = layoutManager.findBiggestAvailableArray();
-        let xCenter = (array.xEnd - array.xStart) / 2 + array.xStart;
-        let yCenter = (array.yEnd - array.yStart) / 2 + array.yStart;
+        const xCenter = (array.xEnd - array.xStart) / 2 + array.xStart;
+        const yCenter = (array.yEnd - array.yStart) / 2 + array.yStart;
 
+        const game = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>('#game canvas');
         // Let's put this in Game coordinates by applying the zoom level:
-        xCenter /= ZOOM_LEVEL * RESOLUTION;
-        yCenter /= ZOOM_LEVEL * RESOLUTION;
 
-        this.cameras.main.startFollow(this.CurrentPlayer, true, 1, 1,  xCenter - this.game.renderer.width / 2, yCenter - this.game.renderer.height / 2);
+        this.cameras.main.setFollowOffset((xCenter - game.offsetWidth/2) * window.devicePixelRatio / this.scale.zoom , (yCenter - game.offsetHeight/2) * window.devicePixelRatio / this.scale.zoom);
     }
 
     public onCenterChange(): void {
@@ -1509,5 +1512,10 @@ ${escapedMessage}
                 message: 'If you want more information, you may contact administrator or contact us at: workadventure@thecodingmachine.com'
             });
         }
+    }
+
+    zoomByFactor(zoomFactor: number) {
+        waScaleManager.zoomModifier *= zoomFactor;
+        this.updateCameraOffset();
     }
 }

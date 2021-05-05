@@ -3,7 +3,7 @@ import {TextField} from "../Components/TextField";
 import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
 import {mediaManager} from "../../WebRtc/MediaManager";
-import {RESOLUTION} from "../../Enum/EnvironmentVariable";
+import {RESOLUTION, ZOOM_LEVEL} from "../../Enum/EnvironmentVariable";
 import {SoundMeter} from "../Components/SoundMeter";
 import {SoundMeterSprite} from "../Components/SoundMeterSprite";
 import {HtmlUtils} from "../../WebRtc/HtmlUtils";
@@ -42,6 +42,7 @@ export class EnableCameraScene extends Phaser.Scene {
     private enableCameraSceneElement!: Phaser.GameObjects.DOMElement;
 
     private mobileTapZone!: Zone;
+
     constructor() {
         super({
             key: EnableCameraSceneName
@@ -75,12 +76,14 @@ export class EnableCameraScene extends Phaser.Scene {
         if (touchScreenManager.supportTouchScreen) {
             new PinchManager(this);
         }
-        
+        //this.scale.setZoom(ZOOM_LEVEL);
+        //Phaser.Display.Align.In.BottomCenter(this.pressReturnField, zone);
+
         /* FIX ME */
-        this.textField = new TextField(this, this.game.renderer.width / 2, 20, '');
+        this.textField = new TextField(this, this.scale.width / 2, 20, '');
 
         // For mobile purposes - we need a big enough touchable area.
-        this.mobileTapZone = this.add.zone(this.game.renderer.width / 2,this.game.renderer.height - 30,200,50)
+        this.mobileTapZone = this.add.zone(this.scale.width / 2,this.scale.height - 30,200,50)
           .setInteractive().on("pointerdown", () => {
             this.login();
           });
@@ -243,6 +246,11 @@ export class EnableCameraScene extends Phaser.Scene {
 
         this.arrowUp.x = this.microphoneNameField.x - this.microphoneNameField.width / 2 - 16;
         this.arrowUp.y = this.microphoneNameField.y;
+
+        const actionBtn = document.querySelector<HTMLDivElement>('#enableCameraScene .action');
+        if (actionBtn !== null) {
+            actionBtn.style.top = (this.scale.height - 65) + 'px';
+        }
     }
 
     update(time: number, delta: number): void {
@@ -256,6 +264,7 @@ export class EnableCameraScene extends Phaser.Scene {
             duration: 1000,
             ease: 'Power3'
         });
+
     }
 
     private login(): void {
@@ -283,12 +292,12 @@ export class EnableCameraScene extends Phaser.Scene {
     }
 
     private getMiddleX() : number{
-        return (this.game.renderer.width / RESOLUTION) -
+        return (this.scale.width / 2) -
         (
             this.enableCameraSceneElement
             && this.enableCameraSceneElement.node
             && this.enableCameraSceneElement.node.getBoundingClientRect().width > 0
-            ? (this.enableCameraSceneElement.node.getBoundingClientRect().width / (2*RESOLUTION))
+            ? (this.enableCameraSceneElement.node.getBoundingClientRect().width / 2 / this.scale.zoom)
             : (300 / RESOLUTION)
         );
     }
