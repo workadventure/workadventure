@@ -52,7 +52,7 @@ export class ErrorScene extends Phaser.Scene {
 
         this.subTitleField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height / 2 + 24, this.subTitle);
 
-        this.messageField = this.add.text(this.game.renderer.width / 2, this.game.renderer.height / 2 + 38, this.message, {
+        this.messageField = this.add.text(this.game.renderer.width / 2, this.game.renderer.height / 2 + 48, this.message, {
             fontFamily: 'Georgia, "Goudy Bookletter 1911", Times, serif',
             fontSize: '10px'
         });

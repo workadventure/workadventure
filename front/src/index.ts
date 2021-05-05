@@ -2,7 +2,7 @@ import 'phaser';
 import GameConfig = Phaser.Types.Core.GameConfig;
 import "../dist/resources/style/index.scss";
 
-import {DEBUG_MODE, RESOLUTION} from "./Enum/EnvironmentVariable";
+import {DEBUG_MODE, isMobile, RESOLUTION} from "./Enum/EnvironmentVariable";
 import {LoginScene} from "./Phaser/Login/LoginScene";
 import {ReconnectingScene} from "./Phaser/Reconnecting/ReconnectingScene";
 import {SelectCharacterScene} from "./Phaser/Login/SelectCharacterScene";
@@ -17,6 +17,7 @@ import {HelpCameraSettingsScene} from "./Phaser/Menu/HelpCameraSettingsScene";
 import {localUserStore} from "./Connexion/LocalUserStore";
 import {ErrorScene} from "./Phaser/Reconnecting/ErrorScene";
 import {iframeListener} from "./Api/IframeListener";
+import { SelectCharacterMobileScene } from './Phaser/Login/SelectCharacterMobileScene';
 import {HdpiManager} from "./Phaser/Services/HdpiManager";
 import {waScaleManager} from "./Phaser/Services/WaScaleManager";
 
@@ -83,7 +84,16 @@ const config: GameConfig = {
         autoRound: true,
         resizeInterval: 999999999999
     },
-    scene: [EntryScene, LoginScene, SelectCharacterScene, SelectCompanionScene, EnableCameraScene, ReconnectingScene, ErrorScene, CustomizeScene, MenuScene, HelpCameraSettingsScene],
+    scene: [EntryScene,
+        LoginScene,
+        isMobile() ? SelectCharacterMobileScene : SelectCharacterScene,
+        SelectCompanionScene,
+        EnableCameraScene,
+        ReconnectingScene,
+        ErrorScene,
+        CustomizeScene,
+        MenuScene,
+        HelpCameraSettingsScene],
     //resolution: window.devicePixelRatio / 2,
     fps: fps,
     dom: {

@@ -53,6 +53,7 @@ body .message-info.warning{
     padding-top: 32px;
     font-size: 28px;
     color: white;
+    overflow: hidden;
 }
 
 .video-container img{
@@ -97,7 +98,7 @@ body .message-info.warning{
 }
 
 .video-container button.report:hover {
-    width: 150px;
+    width: 160px;
 }
 
 .video-container button.report img{
@@ -125,6 +126,7 @@ body .message-info.warning{
 
 .video-container video{
     height: 100%;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
 }
 
 .video-container video:focus{
@@ -140,6 +142,7 @@ body .message-info.warning{
     right: 15px;
     bottom: 30px;
     border-radius: 15px 15px 15px 15px;
+    max-height: 20%;
 }
 
 video#myCamVideo{
@@ -151,19 +154,60 @@ video#myCamVideo{
     /*height: 113px;*/
 }
 
+.sound-progress{
+    display: none;
+    position: absolute;
+    right: 14px;
+    top: calc(50% - 5px);
+}
+.sound-progress.active{
+    display: table-column;
+}
+.sound-progress span{
+    position: absolute;
+    color: black;
+    background-color: #00000020;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+}
+.sound-progress span.active{
+    background-color: #00c3ff66
+}
+.sound-progress span:nth-child(1){
+    top: calc(50% + 20px);
+}
+.sound-progress span:nth-child(2){
+    top: calc(50% + 10px);
+}
+.sound-progress span:nth-child(3){
+    top: calc(50% - 0px);
+}
+.sound-progress span:nth-child(4){
+    top: calc(50% - 10px);
+}
+.sound-progress span:nth-child(5){
+    top: calc(50% - 20px);
+}
 
 .btn-cam-action {
     pointer-events: all;
     position: absolute;
-    bottom: 0px;
-    right: 0px;
-    width: 450px;
-    height: 150px;
+    display: inline-flex;
+    bottom: 10px;
+    right: 15px;
+    width: 15vw;
+    height: 40px;
+    text-align: center;
+    align-content: center;
+    align-items: center;
+    justify-content: center;
+    justify-items: center;
 }
 /*btn animation*/
 .btn-cam-action div{
     cursor: url('/resources/logos/cursor_pointer.png'), pointer;
-    position: absolute;
+    /*position: absolute;*/
     border: solid 0px black;
     width: 44px;
     height: 44px;
@@ -172,7 +216,8 @@ video#myCamVideo{
     border-radius: 48px;
     transform: translateY(20px);
     transition-timing-function: ease-in-out;
-    bottom: 20px;
+    margin-bottom: 20px;
+    margin: 0 4%;
 }
 .btn-cam-action div.disabled {
     background: #d75555;
@@ -191,17 +236,17 @@ video#myCamVideo{
 .btn-micro{
     pointer-events: auto;
     transition: all .3s;
-    right: 44px;
+    /*right: 44px;*/
 }
 .btn-video{
     pointer-events: auto;
     transition: all .25s;
-    right: 134px;
+    /*right: 134px;*/
 }
 .btn-monitor{
     pointer-events: auto;
     transition: all .2s;
-    right: 224px;
+    /*right: 224px;*/
 }
 .btn-copy{
     pointer-events: auto;
@@ -337,24 +382,6 @@ body {
     }
 
     
-}
-@media (max-aspect-ratio: 1/1) {
-    .game-overlay {
-        flex-direction: column;
-    }
-
-    .sidebar {
-        flex-direction: row;
-        align-items: flex-end;
-    }
-
-    .sidebar > div {
-        max-width: 21%;
-    }
-
-    .sidebar > div:hover {
-        max-width: 25%;
-    }
 }
 
 #game {
@@ -513,7 +540,7 @@ input[type=range]:focus::-ms-fill-upper {
     position: absolute;
     width: 100%;
     height: 100%;
-    pointer-events: none;
+    pointer-events: all;
     /* TODO: DO WE NEED FLEX HERE???? WE WANT A SIDEBAR OF EXACTLY 25% (note: flex useful for direction!!!) */
 }
 
@@ -549,7 +576,7 @@ input[type=range]:focus::-ms-fill-upper {
 .sidebar {
     flex: 0 0 25%;
     display: flex;
-    pointer-events: none;
+    pointer-events: all;
 }
 
 .sidebar > div {
@@ -561,6 +588,10 @@ input[type=range]:focus::-ms-fill-upper {
 
 .sidebar > div:hover {
     margin: 0%;
+}
+
+.sidebar > div video {
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
 }
 
 /* Let's make sure videos are vertically centered if they need to be cropped */
@@ -1046,7 +1077,7 @@ div.modal-report-user{
 
 .discussion .messages{
     position: absolute;
-    height: calc(100% - 360px);
+    height: calc(100% - 390px);
     overflow-x: hidden;
     overflow-y: auto;
     max-width: calc(100% - 40px);
@@ -1127,16 +1158,33 @@ div.action{
     animation-iteration-count: infinite;
     animation-timing-function: ease-in-out;
 }
+div.action.info,
+div.action.warning,
+div.action.danger{
+    transition: all 1s ease;
+    animation: mymove 1s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+}
 div.action p.action-body{
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
     padding: 10px;
     background-color: #2d2d2dba;
     color: #fff;
     font-size: 14px;
     font-weight: 500;
     text-align: center;
-    max-width: 250px;
-    margin-left: calc(50% - 125px);
+    max-width: 350px;
+    margin-left: calc(50% - 175px);
     border-radius: 15px;
+}
+div.action.warning p.action-body{
+    background-color: #ff9800eb;
+    color: #000;
+}
+div.action.danger p.action-body{
+    background-color: #da0000e3;
+    color: #000;
 }
 .popUpElement{
     font-family: 'Press Start 2P';
