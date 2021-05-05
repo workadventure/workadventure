@@ -52,8 +52,8 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
     create() {
 
-        const middleX = this.getMiddleX();
-        this.selectCharacterSceneElement = this.add.dom(middleX, 0).createFromCache(selectCharacterKey);
+        this.selectCharacterSceneElement = this.add.dom(-1000, 0).createFromCache(selectCharacterKey);
+        this.centerXDomElement(this.selectCharacterSceneElement, 150);
         MenuScene.revealMenusAfterInit(this.selectCharacterSceneElement, selectCharacterKey);
 
         this.selectCharacterSceneElement.addListener('click');
@@ -240,36 +240,12 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     update(time: number, delta: number): void {
-        const middleX = this.getMiddleX();
-        this.tweens.add({
-            targets: this.selectCharacterSceneElement,
-            x: middleX,
-            duration: 1000,
-            ease: 'Power3'
-        });
     }
 
     public onResize(ev: UIEvent): void {
         //move position of user
         this.moveUser();
 
-        const middleX = this.getMiddleX();
-        this.tweens.add({
-            targets: this.selectCharacterSceneElement,
-            x: middleX,
-            duration: 1000,
-            ease: 'Power3'
-        });
-    }
-
-    protected getMiddleX() : number{
-        return (this.game.renderer.width / 2) -
-        (
-            this.selectCharacterSceneElement
-            && this.selectCharacterSceneElement.node
-            && this.selectCharacterSceneElement.node.getBoundingClientRect().width > 0
-            ? (this.selectCharacterSceneElement.node.getBoundingClientRect().width / 4)
-            : 150
-        );
+        this.centerXDomElement(this.selectCharacterSceneElement, 150);
     }
 }
