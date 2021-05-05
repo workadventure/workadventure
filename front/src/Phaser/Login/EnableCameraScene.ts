@@ -9,7 +9,6 @@ import {SoundMeterSprite} from "../Components/SoundMeterSprite";
 import {HtmlUtils} from "../../WebRtc/HtmlUtils";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
-import MouseWheelToUpDown from "phaser3-rex-plugins/plugins/mousewheeltoupdown.js";
 import Zone = Phaser.GameObjects.Zone;
 import { MenuScene } from "../Menu/MenuScene";
 
@@ -43,7 +42,7 @@ export class EnableCameraScene extends Phaser.Scene {
     private enableCameraSceneElement!: Phaser.GameObjects.DOMElement;
 
     private mobileTapZone!: Zone;
-    private cursorKeys!: any;
+
     constructor() {
         super({
             key: EnableCameraSceneName
@@ -79,8 +78,6 @@ export class EnableCameraScene extends Phaser.Scene {
         }
         //this.scale.setZoom(ZOOM_LEVEL);
         //Phaser.Display.Align.In.BottomCenter(this.pressReturnField, zone);
-        const mouseWheelToUpDown = new MouseWheelToUpDown(this);
-        this.cursorKeys = mouseWheelToUpDown.createCursorKeys();
 
         /* FIX ME */
         this.textField = new TextField(this, this.scale.width / 2, 20, '');

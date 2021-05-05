@@ -60,7 +60,6 @@ import {connectionManager} from "../../Connexion/ConnectionManager";
 import {RoomConnection} from "../../Connexion/RoomConnection";
 import {GlobalMessageManager} from "../../Administration/GlobalMessageManager";
 import {userMessageManager} from "../../Administration/UserMessageManager";
-import MouseWheelToUpDown from 'phaser3-rex-plugins/plugins/mousewheeltoupdown.js';
 import {ConsoleGlobalMessageManager} from "../../Administration/ConsoleGlobalMessageManager";
 import {ResizableScene} from "../Login/ResizableScene";
 import {Room} from "../../Connexion/Room";
@@ -185,7 +184,6 @@ export class GameScene extends ResizableScene implements CenterListener {
     private messageSubscription: Subscription|null = null;
     private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string|undefined;
-    private cursorKeys: any;
     private pinchManager: PinchManager|undefined;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
@@ -370,8 +368,6 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     //hook create scene
     create(): void {
-        const mouseWheelToUpDown = new MouseWheelToUpDown(this);
-        this.cursorKeys = mouseWheelToUpDown.createCursorKeys();
         gameManager.gameSceneIsCreated(this);
         urlManager.pushRoomIdToUrl(this.room);
         this.startLayerName = urlManager.getStartLayerNameFromUrl();
