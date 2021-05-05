@@ -40,7 +40,7 @@
     "webpack-require-http": "^0.4.3"
   },
   "scripts": {
-    "start": "webpack-dev-server --open",
+    "start": "webpack-dev-server -d --open",
     "build": "webpack --config webpack.prod.js",
     "test": "ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
     "lint": "node_modules/.bin/eslint src/ . --ext .ts",
