@@ -3,6 +3,7 @@ import {GameScene} from "../Game/GameScene";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {MobileJoystick} from "../Components/MobileJoystick";
 import MouseWheelToUpDown from 'phaser3-rex-plugins/plugins/mousewheeltoupdown.js';
+import {waScaleManager} from "../Services/WaScaleManager";
 
 interface UserInputManagerDatum {
     keyInstance: Phaser.Input.Keyboard.Key;
@@ -55,6 +56,7 @@ export class UserInputManager {
         this.Scene = Scene;
         this.isInputDisabled = false;
         this.initKeyBoardEvent();
+        this.initMouseWheel();
         if (touchScreenManager.supportTouchScreen) {
             this.initVirtualJoystick();
         }
@@ -174,5 +176,11 @@ export class UserInputManager {
 
     destroy(): void {
         this.joystick.destroy();
+    }
+
+    private initMouseWheel() {
+        this.Scene.input.on('wheel', (pointer: unknown, gameObjects: unknown, deltaX: number, deltaY: number, deltaZ: number) => {
+            this.Scene.zoomByFactor(1 - deltaY / 53 * 0.1);
+        });
     }
 }

@@ -1188,18 +1188,6 @@ ${escapedMessage}
      * @param delta The delta time in ms since the last frame. This is a smoothed and capped value based on the FPS rate.
      */
     update(time: number, delta: number) : void {
-        if (this.cursorKeys.up.isDown) {
-            //this.cameras.main.zoom *= 1.2;
-            //this.scale.setGameSize(this.scale.width * 1.2, this.scale.height * 1.2);
-            waScaleManager.zoomModifier *= 1.2;
-            this.updateCameraOffset();
-        } else if(this.cursorKeys.down.isDown) {
-            //this.scale.setGameSize(this.scale.width * 0.8, this.scale.height * 0.8);
-            //this.cameras.main.zoom *= 0.8;
-            waScaleManager.zoomModifier /= 1.2;
-            this.updateCameraOffset();
-        }
-
         mediaManager.setLastUpdateScene();
         this.currentTick = time;
         this.CurrentPlayer.moveUser(delta);
@@ -1498,5 +1486,10 @@ ${escapedMessage}
             subTitle: 'The world you are trying to join is full. Try again later.',
             message: 'If you want more information, you may contact us at: workadventure@thecodingmachine.com'
         });
+    }
+
+    zoomByFactor(zoomFactor: number) {
+        waScaleManager.zoomModifier *= zoomFactor;
+        this.updateCameraOffset();
     }
 }
