@@ -37,7 +37,7 @@ services:
       # Advice: you should instead use Coturn REST API along the TURN_STATIC_AUTH_SECRET in the Back container
       TURN_USER: ""
       TURN_PASSWORD: ""
-      START_ROOM_URL: "/_/global/npeguin.github.io/office-map/map.json"
+      START_ROOM_URL: "$START_ROOM_URL"
     command: yarn run start
     volumes:
       - ./front:/usr/src/app
