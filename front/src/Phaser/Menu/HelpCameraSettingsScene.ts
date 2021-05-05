@@ -1,14 +1,14 @@
 import {mediaManager} from "../../WebRtc/MediaManager";
 import {HtmlUtils} from "../../WebRtc/HtmlUtils";
 import {localUserStore} from "../../Connexion/LocalUserStore";
-import { RESOLUTION } from "../../Enum/EnvironmentVariable";
+import {ResizableScene} from "../Login/ResizableScene";
 
 export const HelpCameraSettingsSceneName = 'HelpCameraSettingsScene';
 const helpCameraSettings = 'helpCameraSettings';
 /**
  * The scene that show how to permit Camera and Microphone access if there are not already allowed
  */
-export class HelpCameraSettingsScene extends Phaser.Scene {
+export class HelpCameraSettingsScene extends ResizableScene {
     private helpCameraSettingsElement!: Phaser.GameObjects.DOMElement;
     private helpCameraSettingsOpened: boolean = false;
 
@@ -126,23 +126,23 @@ export class HelpCameraSettingsScene extends Phaser.Scene {
     }
 
     private getMiddleX() : number{
-        return (this.game.renderer.width / RESOLUTION) -  
+        return (this.scale.width / 2) -
         (
             this.helpCameraSettingsElement
             && this.helpCameraSettingsElement.node
             && this.helpCameraSettingsElement.node.getBoundingClientRect().width > 0
-            ? (this.helpCameraSettingsElement.node.getBoundingClientRect().width / 4)
+            ? (this.helpCameraSettingsElement.node.getBoundingClientRect().width / (2 * this.scale.zoom))
             : (400 / 2)
         );
     }
 
     private getMiddleY() : number{
-        const middleY = ((window.innerHeight) - (
+        const middleY = ((this.scale.height) - (
             (this.helpCameraSettingsElement
             && this.helpCameraSettingsElement.node
             && this.helpCameraSettingsElement.node.getBoundingClientRect().height > 0
-                ? this.helpCameraSettingsElement.node.getBoundingClientRect().height : 400 /*FIXME to use a const will be injected in HTMLElement*/)*2)) / 2;
-        return (middleY > 0 ? middleY / RESOLUTION : 0);
+                ? this.helpCameraSettingsElement.node.getBoundingClientRect().height : 400 /*FIXME to use a const will be injected in HTMLElement*/)/this.scale.zoom)) / 2;
+        return (middleY > 0 ? middleY : 0);
     }
 
 }

@@ -15,8 +15,6 @@ import {
     JITSI_PRIVATE_MODE,
     MAX_PER_GROUP,
     POSITION_DELAY,
-    RESOLUTION,
-    ZOOM_LEVEL
 } from "../../Enum/EnvironmentVariable";
 import {
     ITiledMap,
