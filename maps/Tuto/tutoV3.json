@@ -24,7 +24,7 @@
                 {
                  "name":"exitUrl",
                  "type":"string",
-                 "value":"\/@\/tcm\/workadventure\/floor0"
+                 "value":"\/@\/tcm\/workadventure\/wa-village"
                 }],
          "type":"tilelayer",
          "visible":true,
