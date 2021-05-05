@@ -114,7 +114,6 @@ const config: GameConfig = {
 const game = new Phaser.Game(config);
 
 waScaleManager.setScaleManager(game.scale);
-waScaleManager.applyNewSize();
 
 window.addEventListener('resize', function (event) {
     coWebsiteManager.resetStyle();

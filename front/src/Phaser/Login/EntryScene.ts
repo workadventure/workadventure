@@ -18,9 +18,10 @@ export class EntryScene extends Scene {
     }
 
     create() {
-//        waScaleManager.applyNewSize();
 
         gameManager.init(this.scene).then((nextSceneName) => {
+            // Let's rescale before starting the game
+            // We can do it at this stage.
             waScaleManager.applyNewSize();
             this.scene.start(nextSceneName);
         }).catch((err) => {
