@@ -32,7 +32,7 @@ class WaScaleManager {
         const style = this.scaleManager.canvas.style;
         style.width = Math.ceil(realSize.width / devicePixelRatio) + 'px';
         style.height = Math.ceil(realSize.height / devicePixelRatio) + 'px';
-    };
+    }
 
     public get zoomModifier(): number {
         return this.hdpiManager.zoomModifier;

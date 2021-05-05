@@ -38,11 +38,7 @@ export class HdpiManager {
 
         let i = 1;
 
-        while (true) {
-            if (realPixelNumber <= this.minRecommendedGamePixelsNumber * i * i) {
-                break;
-            }
-
+        while (realPixelNumber > this.minRecommendedGamePixelsNumber * i * i) {
             i++;
         }
 

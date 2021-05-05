@@ -1444,8 +1444,8 @@ ${escapedMessage}
      */
     private updateCameraOffset(): void {
         const array = layoutManager.findBiggestAvailableArray();
-        let xCenter = (array.xEnd - array.xStart) / 2 + array.xStart;
-        let yCenter = (array.yEnd - array.yStart) / 2 + array.yStart;
+        const xCenter = (array.xEnd - array.xStart) / 2 + array.xStart;
+        const yCenter = (array.yEnd - array.yStart) / 2 + array.yStart;
 
         const game = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>('#game canvas');
         // Let's put this in Game coordinates by applying the zoom level:
