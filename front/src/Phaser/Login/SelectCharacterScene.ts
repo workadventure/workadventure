@@ -37,8 +37,6 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     preload() {
-        addLoader(this);
-
         this.load.html(selectCharacterKey, 'resources/html/selectCharacterScene.html');
 
         this.loadSelectSceneCharacters().then((bodyResourceDescriptions) => {
@@ -47,6 +45,8 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             });
         })
         this.playerModels = loadAllDefaultModels(this.load);
+
+        //this function must stay at the end of preload function
         addLoader(this);
     }
 

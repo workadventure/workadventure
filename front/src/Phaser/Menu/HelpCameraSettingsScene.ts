@@ -21,7 +21,6 @@ export class HelpCameraSettingsScene extends Phaser.Scene {
     }
 
     create(){
-        localUserStore.setHelpCameraSettingsShown();
         this.createHelpCameraSettings();
     }
 
@@ -31,6 +30,9 @@ export class HelpCameraSettingsScene extends Phaser.Scene {
         this.revealMenusAfterInit(this.helpCameraSettingsElement, helpCameraSettings);
         this.helpCameraSettingsElement.addListener('click');
         this.helpCameraSettingsElement.on('click',  (event:MouseEvent) => {
+            if((event?.target as HTMLInputElement).id === 'mailto') {
+                return;
+            }
             event.preventDefault();
             if((event?.target as HTMLInputElement).id === 'helpCameraSettingsFormRefresh') {
                 window.location.reload();
@@ -39,18 +41,27 @@ export class HelpCameraSettingsScene extends Phaser.Scene {
             }
         });
 
-        if(!mediaManager.constraintsMedia.audio || !mediaManager.constraintsMedia.video){
+        if(!localUserStore.getHelpCameraSettingsShown() && (!mediaManager.constraintsMedia.audio || !mediaManager.constraintsMedia.video)){
             this.openHelpCameraSettingsOpened();
+            localUserStore.setHelpCameraSettingsShown();
         }
+
+        mediaManager.setHelpCameraSettingsCallBack(() => {
+            this.openHelpCameraSettingsOpened();
+        });
     }
 
     private openHelpCameraSettingsOpened(): void{
         HtmlUtils.getElementByIdOrFail<HTMLDivElement>('webRtcSetup').style.display = 'none';
         this.helpCameraSettingsOpened = true;
-        if(window.navigator.userAgent.includes('Firefox')){
-            HtmlUtils.getElementByIdOrFail<HTMLParagraphElement>('browserHelpSetting').innerHTML ='<img src="/resources/objects/help-setting-camera-permission-firefox.png"/>';
-        }else if(window.navigator.userAgent.includes('Chrome')){
-            HtmlUtils.getElementByIdOrFail<HTMLParagraphElement>('browserHelpSetting').innerHTML ='<img src="/resources/objects/help-setting-camera-permission-chrome.png"/>';
+        try{
+            if(window.navigator.userAgent.includes('Firefox')){
+                HtmlUtils.getElementByIdOrFail<HTMLParagraphElement>('browserHelpSetting').innerHTML ='<img src="/resources/objects/help-setting-camera-permission-firefox.png"/>';
+            }else if(window.navigator.userAgent.includes('Chrome')){
+                HtmlUtils.getElementByIdOrFail<HTMLParagraphElement>('browserHelpSetting').innerHTML ='<img src="/resources/objects/help-setting-camera-permission-chrome.png"/>';
+            }
+        }catch(err) {
+            console.error('openHelpCameraSettingsOpened => getElementByIdOrFail => error', err);
         }
         const middleY = this.getMiddleY();
         const middleX = this.getMiddleX();
@@ -66,13 +77,13 @@ export class HelpCameraSettingsScene extends Phaser.Scene {
 
     private closeHelpCameraSettingsOpened(): void{
         const middleX = this.getMiddleX();
-        const helpCameraSettingsInfo = this.helpCameraSettingsElement.getChildByID('helpCameraSettings') as HTMLParagraphElement;
+        /*const helpCameraSettingsInfo = this.helpCameraSettingsElement.getChildByID('helpCameraSettings') as HTMLParagraphElement;
         helpCameraSettingsInfo.innerText = '';
-        helpCameraSettingsInfo.style.display = 'none';
+        helpCameraSettingsInfo.style.display = 'none';*/
         this.helpCameraSettingsOpened = false;
         this.tweens.add({
             targets: this.helpCameraSettingsElement,
-            y: -400,
+            y: -1000,
             x: middleX,
             duration: 1000,
             ease: 'Power3',
@@ -89,15 +100,17 @@ export class HelpCameraSettingsScene extends Phaser.Scene {
     }
 
     update(time: number, delta: number): void {
-        const middleX = this.getMiddleX();
-        const middleY = this.getMiddleY();
-        this.tweens.add({
-            targets: this.helpCameraSettingsElement,
-            x: middleX,
-            y: middleY,
-            duration: 1000,
-            ease: 'Power3'
-        });
+        if(this.helpCameraSettingsOpened){
+            const middleX = this.getMiddleX();
+            const middleY = this.getMiddleY();
+            this.tweens.add({
+                targets: this.helpCameraSettingsElement,
+                x: middleX,
+                y: middleY,
+                duration: 1000,
+                ease: 'Power3'
+            });
+        }
     }
 
     public onResize(ev: UIEvent): void {

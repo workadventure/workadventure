@@ -35,8 +35,6 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     preload() {
-        addLoader(this);
-
         this.load.html(customizeSceneKey, 'resources/html/CustomCharacterScene.html');
 
         this.layers = loadAllLayers(this.load);
@@ -48,6 +46,9 @@ export class CustomizeScene extends AbstractCharacterScene {
                 this.layers[bodyResourceDescription.level].unshift(bodyResourceDescription);
             });
         });
+
+        //this function must stay at the end of preload function
+        addLoader(this);
     }
 
     create() {
