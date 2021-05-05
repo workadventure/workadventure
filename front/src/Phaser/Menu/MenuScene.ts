@@ -1,17 +1,17 @@
-import {LoginScene, LoginSceneName} from "../Login/LoginScene";
-import {SelectCharacterScene, SelectCharacterSceneName} from "../Login/SelectCharacterScene";
-import {SelectCompanionScene, SelectCompanionSceneName} from "../Login/SelectCompanionScene";
-import {gameManager} from "../Game/GameManager";
-import {localUserStore} from "../../Connexion/LocalUserStore";
-import {mediaManager} from "../../WebRtc/MediaManager";
-import {gameReportKey, gameReportRessource, ReportMenu} from "./ReportMenu";
-import {connectionManager} from "../../Connexion/ConnectionManager";
-import {GameConnexionTypes} from "../../Url/UrlManager";
-import {WarningContainer, warningContainerHtml, warningContainerKey} from "../Components/WarningContainer";
-import {worldFullWarningStream} from "../../Connexion/WorldFullWarningStream";
-import { HtmlUtils } from '../../WebRtc/HtmlUtils';
-import { iframeListener } from '../../Api/IframeListener';
 import { Subscription } from 'rxjs';
+import { iframeListener } from '../../Api/IframeListener';
+import { connectionManager } from "../../Connexion/ConnectionManager";
+import { localUserStore } from "../../Connexion/LocalUserStore";
+import { worldFullWarningStream } from "../../Connexion/WorldFullWarningStream";
+import { GameConnexionTypes } from "../../Url/UrlManager";
+import { HtmlUtils } from '../../WebRtc/HtmlUtils';
+import { mediaManager } from "../../WebRtc/MediaManager";
+import { WarningContainer, warningContainerHtml, warningContainerKey } from "../Components/WarningContainer";
+import { gameManager } from "../Game/GameManager";
+import { LoginScene, LoginSceneName } from "../Login/LoginScene";
+import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
+import { SelectCompanionScene, SelectCompanionSceneName } from "../Login/SelectCompanionScene";
+import { gameReportKey, gameReportRessource, ReportMenu } from "./ReportMenu";
 
 export const MenuSceneName = 'MenuScene';
 const gameMenuKey = 'gameMenu';
@@ -40,7 +40,7 @@ export class MenuScene extends Phaser.Scene {
     private warningContainerTimeout: NodeJS.Timeout | null = null;
     private subscriptions = new Subscription()
     constructor() {
-        super({key: MenuSceneName});
+        super({ key: MenuSceneName });
 
         this.gameQualityValue = localUserStore.getGameQualityValue();
         this.videoQualityValue = localUserStore.getVideoQualityValue();
@@ -51,7 +51,7 @@ export class MenuScene extends Phaser.Scene {
         }))
     }
 
-    preload () {
+    preload() {
         this.load.html(gameMenuKey, 'resources/html/gameMenu.html');
         this.load.html(gameMenuIconKey, 'resources/html/gameMenuIcon.html');
         this.load.html(gameSettingsMenuKey, 'resources/html/gameQualityMenu.html');
@@ -61,8 +61,8 @@ export class MenuScene extends Phaser.Scene {
     }
 
     reset() {
-        const addedMenuItems=[...this.menuElement.node.querySelectorAll(".fromApi")];
-        for(let index=addedMenuItems.length-1;index>=0;index--){
+        const addedMenuItems = [...this.menuElement.node.querySelectorAll(".fromApi")];
+        for (let index = addedMenuItems.length - 1; index >= 0; index--) {
             addedMenuItems[index].remove()
         }
     }
@@ -80,11 +80,11 @@ export class MenuScene extends Phaser.Scene {
         this.gameShareElement = this.add.dom(middleX, -400).createFromCache(gameShare);
         MenuScene.revealMenusAfterInit(this.gameShareElement, gameShare);
         this.gameShareElement.addListener('click');
-        this.gameShareElement.on('click',  (event:MouseEvent) => {
+        this.gameShareElement.on('click', (event: MouseEvent) => {
             event.preventDefault();
-            if((event?.target as HTMLInputElement).id === 'gameShareFormSubmit') {
+            if ((event?.target as HTMLInputElement).id === 'gameShareFormSubmit') {
                 this.copyLink();
-            }else if((event?.target as HTMLInputElement).id === 'gameShareFormCancel') {
+            } else if ((event?.target as HTMLInputElement).id === 'gameShareFormCancel') {
                 this.closeGameShare();
             }
         });
@@ -140,8 +140,8 @@ export class MenuScene extends Phaser.Scene {
         }
         //TODO bind with future metadata of card
         //if (connectionManager.getConnexionType === GameConnexionTypes.anonymous){
-            const adminSection = this.menuElement.getChildByID('socialLinks') as HTMLElement;
-            adminSection.hidden = false;
+        const adminSection = this.menuElement.getChildByID('socialLinks') as HTMLElement;
+        adminSection.hidden = false;
         //}
         this.tweens.add({
             targets: this.menuElement,
@@ -191,28 +191,28 @@ export class MenuScene extends Phaser.Scene {
         this.settingsMenuOpened = true;
 
         const gameQualitySelect = this.gameQualityMenuElement.getChildByID('select-game-quality') as HTMLInputElement;
-        gameQualitySelect.value = ''+this.gameQualityValue;
+        gameQualitySelect.value = '' + this.gameQualityValue;
         const videoQualitySelect = this.gameQualityMenuElement.getChildByID('select-video-quality') as HTMLInputElement;
-        videoQualitySelect.value = ''+this.videoQualityValue;
+        videoQualitySelect.value = '' + this.videoQualityValue;
 
         this.gameQualityMenuElement.addListener('click');
-        this.gameQualityMenuElement.on('click',  (event:MouseEvent) => {
+        this.gameQualityMenuElement.on('click', (event: MouseEvent) => {
             event.preventDefault();
             if ((event?.target as HTMLInputElement).id === 'gameQualityFormSubmit') {
                 const gameQualitySelect = this.gameQualityMenuElement.getChildByID('select-game-quality') as HTMLInputElement;
                 const videoQualitySelect = this.gameQualityMenuElement.getChildByID('select-video-quality') as HTMLInputElement;
                 this.saveSetting(parseInt(gameQualitySelect.value), parseInt(videoQualitySelect.value));
-            } else if((event?.target as HTMLInputElement).id === 'gameQualityFormCancel') {
+            } else if ((event?.target as HTMLInputElement).id === 'gameQualityFormCancel') {
                 this.closeGameQualityMenu();
             }
         });
 
         let middleY = (window.innerHeight / 3) - (257);
-        if(middleY < 0){
+        if (middleY < 0) {
             middleY = 0;
         }
         let middleX = (window.innerWidth / 3) - 298;
-        if(middleX < 0){
+        if (middleX < 0) {
             middleX = 0;
         }
         this.tweens.add({
@@ -238,7 +238,7 @@ export class MenuScene extends Phaser.Scene {
     }
 
 
-    private openGameShare(): void{
+    private openGameShare(): void {
         if (this.gameShareOpened) {
             this.closeGameShare();
             return;
@@ -252,11 +252,11 @@ export class MenuScene extends Phaser.Scene {
         this.gameShareOpened = true;
 
         let middleY = (window.innerHeight / 3) - (257);
-        if(middleY < 0){
+        if (middleY < 0) {
             middleY = 0;
         }
         let middleX = (window.innerWidth / 3) - 298;
-        if(middleX < 0){
+        if (middleX < 0) {
             middleX = 0;
         }
         this.tweens.add({
@@ -268,7 +268,7 @@ export class MenuScene extends Phaser.Scene {
         });
     }
 
-    private closeGameShare(): void{
+    private closeGameShare(): void {
         const gameShareInfo = this.gameShareElement.getChildByID('gameShareInfo') as HTMLParagraphElement;
         gameShareInfo.innerText = '';
         gameShareInfo.style.display = 'none';
@@ -284,10 +284,11 @@ export class MenuScene extends Phaser.Scene {
     public addMenuOption(menuText: string) {
         const wrappingSection = document.createElement("section")
         const excapedHtml = HtmlUtils.escapeHtml(menuText);
-        wrappingSection.innerHTML = `<button class="fromApi" id="${excapedHtml}">${excapedHtml}</button>`
+        const id = excapedHtml.replace(/[^a-zA-Z0-9]/g, "");
+        wrappingSection.innerHTML = `<button class="fromApi" id="${id}">${excapedHtml}</button>`
         const menuItemContainer = this.menuElement.node.querySelector("#gameMenu main");
         if (menuItemContainer) {
-            menuItemContainer.querySelector(`#${excapedHtml}.fromApi`)?.remove()
+            menuItemContainer.querySelector(`#${id}.fromApi`)?.remove()
             menuItemContainer.insertBefore(wrappingSection, menuItemContainer.querySelector("#socialLinks"))
         }
     }
@@ -345,7 +346,7 @@ export class MenuScene extends Phaser.Scene {
         gameShareInfo.style.display = 'block';
     }
 
-    private saveSetting(valueGame: number, valueVideo: number){
+    private saveSetting(valueGame: number, valueVideo: number) {
         if (valueGame !== this.gameQualityValue) {
             this.gameQualityValue = valueGame;
             localUserStore.setGameQualityValue(valueGame);
@@ -366,7 +367,7 @@ export class MenuScene extends Phaser.Scene {
         window.open(sparkHost, '_blank');
     }
 
-    private closeAll(){
+    private closeAll() {
         this.closeGameQualityMenu();
         this.closeGameShare();
         this.gameReportElement.close();
