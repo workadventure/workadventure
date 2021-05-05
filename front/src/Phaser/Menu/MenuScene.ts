@@ -301,7 +301,7 @@ export class MenuScene extends Phaser.Scene {
         event.preventDefault();
 
         if (htmlMenuItem.classList.contains("fromApi")) {
-            iframeListener.sendMenuClickedEvent(htmlMenuItem.id)
+            iframeListener.sendMenuClickedEvent(htmlMenuItem.textContent || htmlMenuItem.id)
             return
         }
 
