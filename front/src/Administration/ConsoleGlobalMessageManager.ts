@@ -2,7 +2,6 @@ import {HtmlUtils} from "../WebRtc/HtmlUtils";
 import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
 import {RoomConnection} from "../Connexion/RoomConnection";
 import {PlayGlobalMessageInterface} from "../Connexion/ConnexionModels";
-import {ADMIN_URL} from "../Enum/EnvironmentVariable";
 import {AdminMessageEventTypes} from "../Connexion/AdminMessagesService";
 
 export const CLASS_CONSOLE_MESSAGE = 'main-console';
@@ -162,42 +161,46 @@ export class ConsoleGlobalMessageManager {
         this.divMessageConsole.appendChild(section);
 
         (async () => {
-            // Start loading CSS
-            const cssPromise = ConsoleGlobalMessageManager.loadCss();
-            // Import quill
-            const Quill:any = await import("quill"); // eslint-disable-line @typescript-eslint/no-explicit-any
-            // Wait for CSS to be loaded
-            await cssPromise;
+            try{
+                // Start loading CSS
+                const cssPromise = ConsoleGlobalMessageManager.loadCss();
+                // Import quill
+                const {default: Quill}:any = await import("quill"); // eslint-disable-line @typescript-eslint/no-explicit-any
+                // Wait for CSS to be loaded
+                await cssPromise;
 
-            const toolbarOptions = [
-                ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
-                ['blockquote', 'code-block'],
+                const toolbarOptions = [
+                    ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+                    ['blockquote', 'code-block'],
 
-                [{'header': 1}, {'header': 2}],               // custom button values
-                [{'list': 'ordered'}, {'list': 'bullet'}],
-                [{'script': 'sub'}, {'script': 'super'}],      // superscript/subscript
-                [{'indent': '-1'}, {'indent': '+1'}],          // outdent/indent
-                [{'direction': 'rtl'}],                         // text direction
+                    [{'header': 1}, {'header': 2}],               // custom button values
+                    [{'list': 'ordered'}, {'list': 'bullet'}],
+                    [{'script': 'sub'}, {'script': 'super'}],      // superscript/subscript
+                    [{'indent': '-1'}, {'indent': '+1'}],          // outdent/indent
+                    [{'direction': 'rtl'}],                         // text direction
 
-                [{'size': ['small', false, 'large', 'huge']}],  // custom dropdown
-                [{'header': [1, 2, 3, 4, 5, 6, false]}],
+                    [{'size': ['small', false, 'large', 'huge']}],  // custom dropdown
+                    [{'header': [1, 2, 3, 4, 5, 6, false]}],
 
-                [{'color': []}, {'background': []}],          // dropdown with defaults from theme
-                [{'font': []}],
-                [{'align': []}],
+                    [{'color': []}, {'background': []}],          // dropdown with defaults from theme
+                    [{'font': []}],
+                    [{'align': []}],
 
-                ['clean'],
+                    ['clean'],
 
-                ['link', 'image', 'video']
-                // remove formatting button
-            ];
+                    ['link', 'image', 'video']
+                    // remove formatting button
+                ];
 
-            new Quill(`#${INPUT_CONSOLE_MESSAGE}`, {
-                theme: 'snow',
-                modules: {
-                    toolbar: toolbarOptions
-                },
-            });
+                new Quill(`#${INPUT_CONSOLE_MESSAGE}`, {
+                    theme: 'snow',
+                    modules: {
+                        toolbar: toolbarOptions
+                    },
+                });
+            }catch(err){
+                console.error(err);
+            }
         })();
     }
 

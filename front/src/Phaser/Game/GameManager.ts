@@ -34,7 +34,7 @@ export class GameManager {
     public async init(scenePlugin: Phaser.Scenes.ScenePlugin): Promise<string> {
         this.startRoom = await connectionManager.initGameConnexion();
         await this.loadMap(this.startRoom, scenePlugin);
-        
+
         if (!this.playerName) {
             return LoginSceneName;
         } else if (!this.characterLayers || !this.characterLayers.length) {
@@ -89,10 +89,7 @@ export class GameManager {
         console.log('starting '+ (this.currentGameSceneName || this.startRoom.id))
         scenePlugin.start(this.currentGameSceneName || this.startRoom.id);
         scenePlugin.launch(MenuSceneName);
-        
-        if (!localUserStore.getHelpCameraSettingsShown()) {
-            scenePlugin.launch(HelpCameraSettingsSceneName);//700
-        }
+        scenePlugin.launch(HelpCameraSettingsSceneName);//700
     }
     
     public gameSceneIsCreated(scene: GameScene) {

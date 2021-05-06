@@ -3,33 +3,25 @@ import Rectangle = Phaser.GameObjects.Rectangle;
 import { addLoader } from "../Components/Loader";
 import { gameManager} from "../Game/GameManager";
 import { ResizableScene } from "./ResizableScene";
-import { TextField } from "../Components/TextField";
 import { EnableCameraSceneName } from "./EnableCameraScene";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { CompanionResourceDescriptionInterface } from "../Companion/CompanionTextures";
 import { getAllCompanionResources } from "../Companion/CompanionTexturesLoadingManager";
+import {touchScreenManager} from "../../Touch/TouchScreenManager";
+import {PinchManager} from "../UserInput/PinchManager";
+import { MenuScene } from "../Menu/MenuScene";
 
 export const SelectCompanionSceneName = "SelectCompanionScene";
 
-enum LoginTextures {
-    playButton = "play_button",
-    icon = "icon",
-    mainFont = "main_font"
-}
+const selectCompanionSceneKey = 'selectCompanionScene';
 
 export class SelectCompanionScene extends ResizableScene {
-    private logo!: Image;
-    private textField!: TextField;
-    private pressReturnField!: TextField;
-    private readonly nbCharactersPerRow = 7;
-
-    private selectedRectangle!: Rectangle;
-    
     private selectedCompanion!: Phaser.Physics.Arcade.Sprite;
     private companions: Array<Phaser.Physics.Arcade.Sprite> = new Array<Phaser.Physics.Arcade.Sprite>();
-    private companionModels: Array<CompanionResourceDescriptionInterface|null> = [null];
+    private companionModels: Array<CompanionResourceDescriptionInterface> = [];
 
-    private confirmTouchArea!: Rectangle;
+    private selectCompanionSceneElement!: Phaser.GameObjects.DOMElement;
+    private currentCompanion = 0;
 
     constructor() {
         super({
@@ -38,206 +30,199 @@ export class SelectCompanionScene extends ResizableScene {
     }
 
     preload() {
-        addLoader(this);
+        this.load.html(selectCompanionSceneKey, 'resources/html/SelectCompanionScene.html');
 
         getAllCompanionResources(this.load).forEach(model => {
             this.companionModels.push(model);
         });
 
-        this.load.image(LoginTextures.icon, "resources/logos/tcm_full.png");
-        this.load.image(LoginTextures.playButton, "resources/objects/play_button.png");
-
-        // Note: arcade.png from the Phaser 3 examples at: https://github.com/photonstorm/phaser3-examples/tree/master/public/assets/fonts/bitmap
-        this.load.bitmapFont(LoginTextures.mainFont, 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
-
+        //this function must stay at the end of preload function
         addLoader(this);
     }
 
     create() {
-        this.textField = new TextField(this, this.game.renderer.width / 2, 50, 'Select your companion');
 
-        const confirmTouchAreaY = 115 + 32 * Math.ceil(this.companionModels.length / this.nbCharactersPerRow);
-        this.pressReturnField = new TextField(
-            this,
-            this.game.renderer.width / 2,
-            confirmTouchAreaY,
-            'Touch here\n\n or \n\n press enter to start'
-        );
-        this.confirmTouchArea = this.add
-            .rectangle(this.game.renderer.width / 2, confirmTouchAreaY, 200, 50)
-            .setInteractive()
-            .on("pointerdown", this.nextScene.bind(this));
+        this.selectCompanionSceneElement = this.add.dom(-1000, 0).createFromCache(selectCompanionSceneKey);
+        this.centerXDomElement(this.selectCompanionSceneElement, 150);
+        MenuScene.revealMenusAfterInit(this.selectCompanionSceneElement, selectCompanionSceneKey);
 
-        const rectangleXStart = this.game.renderer.width / 2 - (this.nbCharactersPerRow / 2) * 32 + 16;
-        this.selectedRectangle = this.add.rectangle(rectangleXStart, 90, 32, 32).setStrokeStyle(2, 0xFFFFFF);
+        this.selectCompanionSceneElement.addListener('click');
+        this.selectCompanionSceneElement.on('click',  (event:MouseEvent) => {
+            event.preventDefault();
+            if((event?.target as HTMLInputElement).id === 'selectCharacterButtonLeft') {
+                this.moveToLeft();
+            }else if((event?.target as HTMLInputElement).id === 'selectCharacterButtonRight') {
+                this.moveToRight();
+            }else if((event?.target as HTMLInputElement).id === 'selectCompanionSceneFormSubmit') {
+                this.nextScene();
+            }else if((event?.target as HTMLInputElement).id === 'selectCompanionSceneFormBack') {
+                this._nextScene();
+            }
+        });
 
-        this.logo = new Image(this, this.game.renderer.width - 30, this.game.renderer.height - 20, LoginTextures.icon);
-        this.add.existing(this.logo);
+        if (touchScreenManager.supportTouchScreen) {
+            new PinchManager(this);
+        }
 
         // input events
         this.input.keyboard.on('keyup-ENTER', this.nextScene.bind(this));
 
-        this.input.keyboard.on('keydown-RIGHT', this.selectNext.bind(this));
-        this.input.keyboard.on('keydown-LEFT', this.selectPrevious.bind(this));
-        this.input.keyboard.on('keydown-DOWN', this.jumpToNextRow.bind(this));
-        this.input.keyboard.on('keydown-UP', this.jumpToPreviousRow.bind(this));
+        this.input.keyboard.on('keydown-RIGHT', this.moveToRight.bind(this));
+        this.input.keyboard.on('keydown-LEFT', this.moveToLeft.bind(this));
+
+        if(localUserStore.getCompanion()){
+            const companionIndex = this.companionModels.findIndex((companion) => companion.name === localUserStore.getCompanion());
+            if(companionIndex > -1 || companionIndex < this.companions.length){
+                this.currentCompanion = companionIndex;
+                this.selectedCompanion = this.companions[companionIndex];
+            }
+        }
+
+        localUserStore.setCompanion(null);
+        gameManager.setCompanion(null);
 
         this.createCurrentCompanion();
-        this.selectCompanion(this.getCompanionIndex());
+        this.updateSelectedCompanion();
     }
 
     update(time: number, delta: number): void {
-        this.pressReturnField.setVisible(!!(Math.floor(time / 500) % 2));
-    }
 
-    private jumpToPreviousRow(): void {
-        const index = this.companions.indexOf(this.selectedCompanion) - this.nbCharactersPerRow;
-        if (index >= 0) {
-            this.selectCompanion(index);  
-        }
-    }
-
-    private jumpToNextRow(): void {
-        const index = this.companions.indexOf(this.selectedCompanion) + this.nbCharactersPerRow;
-        if (index < this.companions.length) {
-            this.selectCompanion(index);  
-        }
-    }
-
-    private selectPrevious(): void {
-        const index = this.companions.indexOf(this.selectedCompanion);
-        this.selectCompanion(index - 1);  
-    }
-
-    private selectNext(): void {
-        const index = this.companions.indexOf(this.selectedCompanion);
-        this.selectCompanion(index + 1);  
-    }
-
-    private selectCompanion(index?: number): void {
-        if (typeof index === 'undefined') {
-            index = this.companions.indexOf(this.selectedCompanion);
-        }
-
-        // make sure index is inside possible range
-        index = Math.min(this.companions.length - 1, Math.max(0, index));
-
-        if (this.selectedCompanion === this.companions[index]) {
-            return;
-        }
-
-        this.selectedCompanion.anims.pause();
-        this.selectedCompanion = this.companions[index];
-
-        this.redrawSelectedRectangle();
-
-        const model = this.companionModels[index];
-
-        if (model !== null) {
-            this.selectedCompanion.anims.play(model.name);
-        }
-    }
-
-    private redrawSelectedRectangle(): void {
-        this.selectedRectangle.setVisible(true);
-        this.selectedRectangle.setX(this.selectedCompanion.x);
-        this.selectedRectangle.setY(this.selectedCompanion.y);
-        this.selectedRectangle.setSize(32, 32);
-    }
-
-    private storeCompanionSelection(): string|null {
-        const index = this.companions.indexOf(this.selectedCompanion);
-        const model = this.companionModels[index];
-        const companion = model === null ? null : model.name;
-
-        localUserStore.setCompanion(companion);
-
-        return companion;
     }
 
     private nextScene(): void {
-        const companion = this.storeCompanionSelection();
+        localUserStore.setCompanion(this.companionModels[this.currentCompanion].name);
+        gameManager.setCompanion(this.companionModels[this.currentCompanion].name);
 
+        this._nextScene();
+    }
+
+    private _nextScene(){
         // next scene
         this.scene.stop(SelectCompanionSceneName);
-
-        gameManager.setCompanion(companion);
         gameManager.tryResumingGame(this, EnableCameraSceneName);
-
         this.scene.remove(SelectCompanionSceneName);
     }
 
     private createCurrentCompanion(): void {
         for (let i = 0; i < this.companionModels.length; i++) {
-            const companionResource = this.companionModels[i];
-
-            const col = i % this.nbCharactersPerRow;
-            const row = Math.floor(i / this.nbCharactersPerRow);
-
-            const [x, y] = this.getCharacterPosition(col, row);
-
-            let name = "null";
-            if (companionResource !== null) {
-                name = companionResource.name;
-            }
-
-            const companion = this.physics.add.sprite(x, y, name, 0);
-            companion.setBounce(0.2);
-            companion.setCollideWorldBounds(true);
-
-            if (companionResource !== null) {
-                this.anims.create({
-                    key: name,
-                    frames: this.anims.generateFrameNumbers(name, {start: 0, end: 2,}),
-                    frameRate: 10,
-                    repeat: -1
-                });
-            }
+            const companionResource = this.companionModels[i]
+            const [middleX, middleY] = this.getCompanionPosition();
+            const companion = this.physics.add.sprite(middleX, middleY, companionResource.name, 0);
+            this.setUpCompanion(companion, i);
+            this.anims.create({
+                key: companionResource.name,
+                frames: this.anims.generateFrameNumbers(companionResource.name, {start: 0, end: 2,}),
+                frameRate: 10,
+                repeat: -1
+            });
 
             companion.setInteractive().on("pointerdown", () => {
-                this.selectCompanion(i);
+                this.currentCompanion = i;
+                this.moveCompanion();
             });
 
             this.companions.push(companion);
         }
-
-        this.selectedCompanion = this.companions[0];
-    }
-
-    private getCharacterPosition(x: number, y: number): [number, number] {
-        return [
-            this.game.renderer.width / 2 + 16 + (x - this.nbCharactersPerRow / 2) * 32,
-            y * 32 + 90
-        ];
+        this.selectedCompanion = this.companions[this.currentCompanion];
     }
 
     public onResize(ev: UIEvent): void {
-        this.textField.x = this.game.renderer.width / 2;
-        this.pressReturnField.x = this.game.renderer.width / 2;
-        this.logo.x = this.game.renderer.width - 30;
-        this.logo.y = this.game.renderer.height - 20;
+        this.moveCompanion();
 
-        for (let i = 0; i < this.companionModels.length; i++) {
-            const companion = this.companions[i];
-
-            const col = i % this.nbCharactersPerRow;
-            const row = Math.floor(i / this.nbCharactersPerRow);
-
-            const [x, y] = this.getCharacterPosition(col, row);
-            companion.x = x;
-            companion.y = y;
-        }
-
-        this.redrawSelectedRectangle();
+        this.centerXDomElement(this.selectCompanionSceneElement, 150);
     }
 
-    private getCompanionIndex(): number {
-        const companion = localUserStore.getCompanion();
+    private updateSelectedCompanion(): void {
+        this.selectedCompanion?.anims.pause();
+        const companion = this.companions[this.currentCompanion];
+        companion.play(this.companionModels[this.currentCompanion].name);
+        this.selectedCompanion = companion;
+    }
 
-        if (companion === null) {
-            return 0;
+    private moveCompanion(){
+        for(let i = 0; i < this.companions.length; i++){
+            const companion = this.companions[i];
+            this.setUpCompanion(companion, i);
         }
+        this.updateSelectedCompanion();
+    }
 
-        return this.companionModels.findIndex(model => model !== null && model.name === companion);
+    private moveToLeft(){
+        if(this.currentCompanion === 0){
+            return;
+        }
+        this.currentCompanion -= 1;
+        this.moveCompanion();
+    }
+
+    private moveToRight(){
+        if(this.currentCompanion === (this.companions.length - 1)){
+            return;
+        }
+        this.currentCompanion += 1;
+        this.moveCompanion();
+    }
+
+    private defineSetupCompanion(numero: number){
+        const deltaX = 30;
+        const deltaY = 2;
+        let [companionX, companionY] = this.getCompanionPosition();
+        let companionVisible = true;
+        let companionScale = 1.5;
+        let companionOpactity = 1;
+        if( this.currentCompanion !== numero ){
+            companionVisible = false;
+        }
+        if( numero === (this.currentCompanion + 1) ){
+            companionY -= deltaY;
+            companionX += deltaX;
+            companionScale = 0.8;
+            companionOpactity = 0.6;
+            companionVisible = true;
+        }
+        if( numero === (this.currentCompanion + 2) ){
+            companionY -= deltaY;
+            companionX += (deltaX * 2);
+            companionScale = 0.8;
+            companionOpactity = 0.6;
+            companionVisible = true;
+        }
+        if( numero === (this.currentCompanion - 1) ){
+            companionY -= deltaY;
+            companionX -= deltaX;
+            companionScale = 0.8;
+            companionOpactity = 0.6;
+            companionVisible = true;
+        }
+        if( numero === (this.currentCompanion - 2) ){
+            companionY -= deltaY;
+            companionX -= (deltaX * 2);
+            companionScale = 0.8;
+            companionOpactity = 0.6;
+            companionVisible = true;
+        }
+        return {companionX, companionY, companionScale, companionOpactity, companionVisible}
+    }
+
+    /**
+     * Returns pixel position by on column and row number
+     */
+    private getCompanionPosition(): [number, number] {
+        return [
+            this.game.renderer.width / 2,
+            this.game.renderer.height / 3
+        ];
+    }
+
+    private setUpCompanion(companion: Phaser.Physics.Arcade.Sprite, numero: number){
+
+        const {companionX, companionY, companionScale, companionOpactity, companionVisible} = this.defineSetupCompanion(numero);
+        companion.setBounce(0.2);
+        companion.setCollideWorldBounds(true);
+        companion.setVisible( companionVisible );
+        companion.setScale(companionScale, companionScale);
+        companion.setAlpha(companionOpactity);
+        companion.setX(companionX);
+        companion.setY(companionY);
     }
 }
