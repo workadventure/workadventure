@@ -40,7 +40,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.layers = loadAllLayers(this.load);
         this.loadCustomSceneSelectCharacters().then((bodyResourceDescriptions) => {
             bodyResourceDescriptions.forEach((bodyResourceDescription) => {
-                if(!bodyResourceDescription.level){
+                if(bodyResourceDescription.level == undefined || bodyResourceDescription.level < 0 || bodyResourceDescription.level > 5 ){
                     throw 'Texture level is null';
                 }
                 this.layers[bodyResourceDescription.level].unshift(bodyResourceDescription);
