@@ -20,6 +20,7 @@ import {
     CharacterLayerMessage,
     PusherToBackMessage,
     WorldFullMessage,
+    WorldConnexionMessage,
     AdminPusherToBackMessage,
     ServerToAdminClientMessage,
     UserJoinedRoomMessage, UserLeftRoomMessage, AdminMessage, BanMessage, RefreshRoomMessage
@@ -556,6 +557,16 @@ export class SocketManager implements ZoneEventListener {
 
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setWorldfullmessage(errorMessage);
+
+        client.send(serverToClientMessage.serializeBinary().buffer, true);
+    }
+
+    public emitConnexionErrorMessage(client: WebSocket, message: string) {
+        const errorMessage = new WorldConnexionMessage();
+        errorMessage.setMessage(message);
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setWorldconnexionmessage(errorMessage);
 
         client.send(serverToClientMessage.serializeBinary().buffer, true);
     }

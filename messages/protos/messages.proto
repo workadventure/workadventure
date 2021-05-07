@@ -218,6 +218,10 @@ message RefreshRoomMessage{
 message WorldFullMessage{
 }
 
+message WorldConnexionMessage{
+  string message = 2;
+}
+
 message BanUserMessage{
   string type = 1;
   string message = 2;
@@ -242,6 +246,7 @@ message ServerToClientMessage {
     WorldFullWarningMessage worldFullWarningMessage = 15;
     WorldFullMessage worldFullMessage = 16;
     RefreshRoomMessage refreshRoomMessage = 17; 
+    WorldConnexionMessage worldConnexionMessage = 18;
   }
 }
 

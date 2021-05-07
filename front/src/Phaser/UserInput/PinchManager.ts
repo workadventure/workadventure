@@ -1,22 +1,41 @@
 import {Pinch} from "phaser3-rex-plugins/plugins/gestures.js";
+import {waScaleManager} from "../Services/WaScaleManager";
+import {GameScene} from "../Game/GameScene";
 
 export class PinchManager {
     private scene: Phaser.Scene;
     private pinch!: any; // eslint-disable-line
-    
+
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
         this.pinch = new Pinch(scene);
+        this.pinch.setDragThreshold(10);
+
+        // The "pinch.scaleFactor" value is very sensitive and causes the screen to flicker.
+        // We are smoothing its value with previous values to prevent the flicking.
+        let smoothPinch = 1;
+
+        this.pinch.on('pinchstart', () => {
+            smoothPinch = 1;
+        });
+
 
         this.pinch.on('pinch', (pinch:any) => { // eslint-disable-line
-            let newZoom = this.scene.cameras.main.zoom * pinch.scaleFactor;
-            if (newZoom < 0.25) {
-                newZoom = 0.25;
-            } else if(newZoom > 2) {
-                newZoom = 2;
+            if (pinch.scaleFactor > 1.2 || pinch.scaleFactor < 0.8) {
+                // Pinch too fast! Probably a bad measure.
+                return;
             }
-            this.scene.cameras.main.setZoom(newZoom);
+
+            smoothPinch = 3/5*smoothPinch + 2/5*pinch.scaleFactor;
+            if (this.scene instanceof GameScene) {
+                this.scene.zoomByFactor(smoothPinch);
+            } else {
+                waScaleManager.zoomModifier *= smoothPinch;
+            }
         });
     }
-    
+
+    destroy() {
+        this.pinch.removeAllListeners();
+    }
 }
