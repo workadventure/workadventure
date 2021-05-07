@@ -6,17 +6,27 @@ var zoneTCMName = "popupTCMZone";
 var urlPricing = "https://workadventu.re/pricing";
 var urlSchoolOffer = "https://workadventu.re/school-offer";
 var urlEvent = "https://workadventu.re/events";
+var urlGettingStarted = "https://workadventu.re/getting-started";
+
 var currentPopup = undefined;
 
 WA.onEnterZone(zoneOfficeName, () => {
-   currentPopup =  WA.openPopup("popUpOffice","You can purchase virtual office in WorkAdventure",[
+   currentPopup =  WA.openPopup("popUpOffice","Create your own virtual office in WorkAdventure, it's easy !",[
         {
             label: "See the pricing",
             className: "popUpElement",
             callback: (popup => {
                 WA.openTab(urlPricing);
             })
-        }]);
+        },
+       {
+           label : "Getting Started",
+           className :"popUpElementFlex",
+           callback : (popup => {
+               WA.openTab(urlGettingStarted);
+           })
+
+       }]);
 })
 
 WA.onEnterZone(zoneEventName, () => {
@@ -31,7 +41,8 @@ WA.onEnterZone(zoneEventName, () => {
 })
 
 WA.onEnterZone(zoneTCMName, () => {
-    currentPopup =  WA.openPopup("popUpTCM","Come meet the WorkAdventure team in our office ! ",[]);
+    currentPopup =  WA.openPopup("popUpTCM","Come meet the WorkAdventure team in our office ! " +
+        " We are open from 9 am to 7pm CEST.",[]);
 })
 
 

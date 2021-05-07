@@ -1144,7 +1144,7 @@ div.action p.action-body{
 .popUpElement .buttonContainer {
     float: right;
     background-color: inherit;
-
+    display: flex;
 }
 
 
