@@ -83,6 +83,9 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 import {Subscription} from "rxjs";
 import {worldFullMessageStream} from "../../Connexion/WorldFullMessageStream";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
+import RenderTexture = Phaser.GameObjects.RenderTexture;
+import Tilemap = Phaser.Tilemaps.Tilemap;
+import {DirtyScene} from "./DirtyScene";
 import {TextUtils} from "../Components/TextUtils";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
@@ -126,13 +129,13 @@ interface DeleteGroupEventInterface {
 
 const defaultStartLayerName = 'start';
 
-export class GameScene extends ResizableScene implements CenterListener {
+export class GameScene extends DirtyScene implements CenterListener {
     Terrains : Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer!: CurrentGamerInterface;
     MapPlayers!: Phaser.Physics.Arcade.Group;
     MapPlayersByKey : Map<number, RemotePlayer> = new Map<number, RemotePlayer>();
     Map!: Phaser.Tilemaps.Tilemap;
-    Layers!: Array<Phaser.Tilemaps.StaticTilemapLayer>;
+    Layers!: Array<Phaser.Tilemaps.TilemapLayer>;
     Objects!: Array<Phaser.Physics.Arcade.Sprite>;
     mapFile!: ITiledMap;
     groups: Map<number, Sprite>;
@@ -366,6 +369,8 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     //hook create scene
     create(): void {
+        this.trackDirtyAnims();
+
         gameManager.gameSceneIsCreated(this);
         urlManager.pushRoomIdToUrl(this.room);
         this.startLayerName = urlManager.getStartLayerNameFromUrl();
@@ -396,12 +401,11 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.physics.world.setBounds(0, 0, this.Map.widthInPixels, this.Map.heightInPixels);
 
         //add layer on map
-        this.Layers = new Array<Phaser.Tilemaps.StaticTilemapLayer>();
-
+        this.Layers = new Array<Phaser.Tilemaps.TilemapLayer>();
         let depth = -2;
         for (const layer of this.gameMap.layersIterator) {
             if (layer.type === 'tilelayer') {
-                this.addLayer(this.Map.createStaticLayer(layer.name, this.Terrains, 0, 0).setDepth(depth));
+                this.addLayer(this.Map.createLayer(layer.name, this.Terrains, 0, 0).setDepth(depth));
 
                 const exitSceneUrl = this.getExitSceneUrl(layer);
                 if (exitSceneUrl !== undefined) {
@@ -1067,13 +1071,14 @@ ${escapedMessage}
         this.updateCameraOffset();
     }
 
-    addLayer(Layer : Phaser.Tilemaps.StaticTilemapLayer){
+    addLayer(Layer : Phaser.Tilemaps.TilemapLayer){
         this.Layers.push(Layer);
     }
 
     createCollisionWithPlayer() {
+        this.physics.disableUpdate();
         //add collision layer
-        this.Layers.forEach((Layer: Phaser.Tilemaps.StaticTilemapLayer) => {
+        this.Layers.forEach((Layer: Phaser.Tilemaps.TilemapLayer) => {
             this.physics.add.collider(this.CurrentPlayer, Layer, (object1: GameObject, object2: GameObject) => {
                 //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
             });
@@ -1202,12 +1207,24 @@ ${escapedMessage}
      * @param delta The delta time in ms since the last frame. This is a smoothed and capped value based on the FPS rate.
      */
     update(time: number, delta: number) : void {
+        this.dirty = false;
         mediaManager.updateScene();
         this.currentTick = time;
+        if (this.CurrentPlayer.isMoving()) {
+            this.dirty = true;
+        }
         this.CurrentPlayer.moveUser(delta);
+        if (this.CurrentPlayer.isMoving()) {
+            this.dirty = true;
+            this.physics.enableUpdate();
+        } else {
+            this.physics.disableUpdate();
+        }
+
 
         // Let's handle all events
         while (this.pendingEvents.length !== 0) {
+            this.dirty = true;
             const event = this.pendingEvents.dequeue();
             switch (event.type) {
                 case "InitUserPositionEvent":
@@ -1233,6 +1250,7 @@ ${escapedMessage}
         // Let's move all users
         const updatedPlayersPositions = this.playersPositionInterpolator.getUpdatedPositions(time);
         updatedPlayersPositions.forEach((moveEvent: HasMovedEvent, userId: number) => {
+            this.dirty = true;
             const player: RemotePlayer | undefined = this.MapPlayersByKey.get(userId);
             if (player === undefined) {
                 throw new Error('Cannot find player with ID "' + userId + '"');
@@ -1402,7 +1420,8 @@ ${escapedMessage}
         this.connection?.emitActionableEvent(itemId, eventName, state, parameters);
     }
 
-    public onResize(): void {
+    public onResize(ev: UIEvent): void {
+        super.onResize(ev);
         this.reposition();
 
         // Send new viewport to server

@@ -1,14 +1,14 @@
 import {mediaManager} from "../../WebRtc/MediaManager";
 import {HtmlUtils} from "../../WebRtc/HtmlUtils";
 import {localUserStore} from "../../Connexion/LocalUserStore";
-import {ResizableScene} from "../Login/ResizableScene";
+import {DirtyScene} from "../Game/DirtyScene";
 
 export const HelpCameraSettingsSceneName = 'HelpCameraSettingsScene';
 const helpCameraSettings = 'helpCameraSettings';
 /**
  * The scene that show how to permit Camera and Microphone access if there are not already allowed
  */
-export class HelpCameraSettingsScene extends ResizableScene {
+export class HelpCameraSettingsScene extends DirtyScene {
     private helpCameraSettingsElement!: Phaser.GameObjects.DOMElement;
     private helpCameraSettingsOpened: boolean = false;
 
@@ -73,6 +73,8 @@ export class HelpCameraSettingsScene extends ResizableScene {
             ease: 'Power3',
             overflow: 'scroll'
         });
+
+        this.dirty = true;
     }
 
     private closeHelpCameraSettingsOpened(): void{
@@ -89,6 +91,8 @@ export class HelpCameraSettingsScene extends ResizableScene {
             ease: 'Power3',
             overflow: 'scroll'
         });
+
+        this.dirty = true;
     }
 
     private revealMenusAfterInit(menuElement: Phaser.GameObjects.DOMElement, rootDomId: string) {
@@ -100,20 +104,11 @@ export class HelpCameraSettingsScene extends ResizableScene {
     }
 
     update(time: number, delta: number): void {
-        if(this.helpCameraSettingsOpened){
-            const middleX = this.getMiddleX();
-            const middleY = this.getMiddleY();
-            this.tweens.add({
-                targets: this.helpCameraSettingsElement,
-                x: middleX,
-                y: middleY,
-                duration: 1000,
-                ease: 'Power3'
-            });
-        }
+        this.dirty = false;
     }
 
     public onResize(ev: UIEvent): void {
+        super.onResize(ev);
         const middleX = this.getMiddleX();
         const middleY = this.getMiddleY();
         this.tweens.add({
@@ -145,5 +140,8 @@ export class HelpCameraSettingsScene extends ResizableScene {
         return (middleY > 0 ? middleY : 0);
     }
 
+    public isDirty(): boolean {
+        return this.dirty;
+    }
 }
 

@@ -22,7 +22,7 @@ export class ScreenSharingPeer extends Peer {
     constructor(user: UserSimplePeerInterface, initiator: boolean, private connection: RoomConnection) {
         super({
             initiator: initiator ? initiator : false,
-            reconnectTimer: 10000,
+            //reconnectTimer: 10000,
             config: {
                 iceServers: [
                     {

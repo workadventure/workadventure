@@ -20,6 +20,7 @@ import {iframeListener} from "./Api/IframeListener";
 import { SelectCharacterMobileScene } from './Phaser/Login/SelectCharacterMobileScene';
 import {HdpiManager} from "./Phaser/Services/HdpiManager";
 import {waScaleManager} from "./Phaser/Services/WaScaleManager";
+import {Game} from "./Phaser/Game/Game";
 
 const {width, height} = coWebsiteManager.getGameSize();
 
@@ -110,6 +111,8 @@ const config: GameConfig = {
             debug: DEBUG_MODE,
         }
     },
+    // Instruct systems with 2 GPU to choose the low power one. We don't need that extra power and we want to save battery
+    powerPreference: "low-power",
     callbacks: {
         postBoot: game => {
             // Commented out to try to fix MacOS bug
@@ -121,7 +124,8 @@ const config: GameConfig = {
     }
 };
 
-const game = new Phaser.Game(config);
+//const game = new Phaser.Game(config);
+const game = new Game(config);
 
 waScaleManager.setScaleManager(game.scale);
 
