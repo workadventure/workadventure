@@ -23,27 +23,17 @@
   }
 
   .btn-cam-action {
+    min-width: 150px;
+
     &:hover{
       transform: translateY(20px);
     }
     div {
+      margin: 0 1%;
       &:hover {
         background-color: #666;
       }
-
-      bottom: 30px;
-
-      &.btn-micro {
-        right: 0;
-      }
-
-      &.btn-monitor {
-        right: 130px;
-      }
-
-      &.btn-video {
-        right: 65px;
-      }
+      margin-bottom: 30px;
     }
   }
 

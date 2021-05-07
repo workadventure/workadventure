@@ -30,21 +30,20 @@ export class SelectCompanionScene extends ResizableScene {
     }
 
     preload() {
-        addLoader(this);
-
         this.load.html(selectCompanionSceneKey, 'resources/html/SelectCompanionScene.html');
 
         getAllCompanionResources(this.load).forEach(model => {
             this.companionModels.push(model);
         });
 
+        //this function must stay at the end of preload function
         addLoader(this);
     }
 
     create() {
 
-        const middleX = this.getMiddleX();
-        this.selectCompanionSceneElement = this.add.dom(middleX, 0).createFromCache(selectCompanionSceneKey);
+        this.selectCompanionSceneElement = this.add.dom(-1000, 0).createFromCache(selectCompanionSceneKey);
+        this.centerXDomElement(this.selectCompanionSceneElement, 150);
         MenuScene.revealMenusAfterInit(this.selectCompanionSceneElement, selectCompanionSceneKey);
 
         this.selectCompanionSceneElement.addListener('click');
@@ -87,13 +86,7 @@ export class SelectCompanionScene extends ResizableScene {
     }
 
     update(time: number, delta: number): void {
-        const middleX = this.getMiddleX();
-        this.tweens.add({
-            targets: this.selectCompanionSceneElement,
-            x: middleX,
-            duration: 1000,
-            ease: 'Power3'
-        });
+
     }
 
     private nextScene(): void {
@@ -125,7 +118,7 @@ export class SelectCompanionScene extends ResizableScene {
 
             companion.setInteractive().on("pointerdown", () => {
                 this.currentCompanion = i;
-                this.updateSelectedCompanion();
+                this.moveCompanion();
             });
 
             this.companions.push(companion);
@@ -136,13 +129,7 @@ export class SelectCompanionScene extends ResizableScene {
     public onResize(ev: UIEvent): void {
         this.moveCompanion();
 
-        const middleX = this.getMiddleX();
-        this.tweens.add({
-            targets: this.selectCompanionSceneElement,
-            x: middleX,
-            duration: 1000,
-            ease: 'Power3'
-        });
+        this.centerXDomElement(this.selectCompanionSceneElement, 150);
     }
 
     private updateSelectedCompanion(): void {
@@ -237,16 +224,5 @@ export class SelectCompanionScene extends ResizableScene {
         companion.setAlpha(companionOpactity);
         companion.setX(companionX);
         companion.setY(companionY);
-    }
-
-    private getMiddleX() : number{
-        return (this.game.renderer.width / 2) -
-        (
-            this.selectCompanionSceneElement
-            && this.selectCompanionSceneElement.node
-            && this.selectCompanionSceneElement.node.getBoundingClientRect().width > 0
-            ? (this.selectCompanionSceneElement.node.getBoundingClientRect().width / 4)
-            : 150
-        );
     }
 }

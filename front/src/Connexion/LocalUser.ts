@@ -10,7 +10,7 @@ export interface CharacterTexture {
 export const maxUserNameLength: number = MAX_USERNAME_LENGTH;
 
 export function isUserNameValid(value: string): boolean {
-    const regexp = new RegExp('^[A-Za-z]{1,'+maxUserNameLength+'}$');
+    const regexp = new RegExp('^[A-Za-z0-9]{1,'+maxUserNameLength+'}$');
     return regexp.test(value);
 }
 

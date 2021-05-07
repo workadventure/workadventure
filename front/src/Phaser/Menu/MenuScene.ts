@@ -207,11 +207,11 @@ export class MenuScene extends Phaser.Scene {
             }
         });
 
-        let middleY = (window.innerHeight / 3) - (257);
+        let middleY = this.scale.height / 2 - 392/2;
         if(middleY < 0){
             middleY = 0;
         }
-        let middleX = (window.innerWidth / 3) - 298;
+        let middleX = this.scale.width / 2 - 457/2;
         if(middleX < 0){
             middleX = 0;
         }
@@ -251,11 +251,11 @@ export class MenuScene extends Phaser.Scene {
 
         this.gameShareOpened = true;
 
-        let middleY = (window.innerHeight / 3) - (257);
+        let middleY = this.scale.height / 2 - 85;
         if(middleY < 0){
             middleY = 0;
         }
-        let middleX = (window.innerWidth / 3) - 298;
+        let middleX = this.scale.width / 2 - 200;
         if(middleX < 0){
             middleX = 0;
         }
@@ -381,5 +381,9 @@ export class MenuScene extends Phaser.Scene {
                 body.requestFullscreen();
             }
         }
+    }
+
+    public isDirty(): boolean {
+        return false;
     }
 }

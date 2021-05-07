@@ -8,9 +8,10 @@
         border-radius: 6px;
         margin: 25px auto 0;
         width: 400px;
-        max-height: calc(50vh - 25px);
-        overflow: scroll;
+        max-height: calc(48vh - 50px);
         max-width: 48vw;
+        overflow: hidden;
+        overflow-y: scroll;
     }
     #helpCameraSettings h1 {
         background-image: linear-gradient(top, #f1f3f3, #d4dae0);
@@ -59,6 +60,9 @@
         font-size: 8px;
         margin: 0px 20px;
     }
+    #helpCameraSettings section p a{
+        font-size: 8px;
+    }
     #helpCameraSettings section p.err{
         color: #ff0000;
     }
@@ -72,6 +76,12 @@
     #helpCameraSettings section img {
         width: 200px;
         margin-top: 10px;
+    }
+    @media only screen and (max-width: 800px),
+            only screen and (max-height: 600px) {
+        #helpCameraSettings{
+            overflow-y: scroll;
+        }
     }
 </style>
 
@@ -87,6 +97,10 @@
         <p class="info">Once you've followed these steps, please refresh this page.</p>
         <p>If you prefer to continue without allowing camera and microphone access, click on Continue</p>
         <p id='browserHelpSetting'></p>
+    </section>
+    <!--<section class="text-center">
+        <p>If your problem persist, please contact us: <a id="mailto" href="mailto:workadventure@thecodingmachine.com?subject=Support camera and microphone settings" target="_blank"> workadventure@thecodingmachine.com</a>.</p>
+    </section>-->
     </section>
     <section class="action">
         <a href="#" id="helpCameraSettingsFormRefresh">Refresh</a>

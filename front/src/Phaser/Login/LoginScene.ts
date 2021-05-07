@@ -26,8 +26,8 @@ export class LoginScene extends ResizableScene {
     }
 
     create() {
-        const middleX = this.getMiddleX();
-        this.loginSceneElement = this.add.dom((middleX/2), 0).createFromCache(loginSceneKey);
+        this.loginSceneElement = this.add.dom(-1000, 0).createFromCache(loginSceneKey);
+        this.centerXDomElement(this.loginSceneElement, 200);
         MenuScene.revealMenusAfterInit(this.loginSceneElement, loginSceneKey);
 
         const pErrorElement = this.loginSceneElement.getChildByID('errorLoginScene') as HTMLInputElement;
@@ -77,27 +77,10 @@ export class LoginScene extends ResizableScene {
     }
 
     update(time: number, delta: number): void {
-        const middleX = this.getMiddleX();
-        this.tweens.add({
-            targets: this.loginSceneElement,
-            x: (middleX/2),
-            duration: 1000,
-            ease: 'Power3'
-        });
+
     }
 
     public onResize(ev: UIEvent): void {
-        const middleX = this.getMiddleX();
-        this.tweens.add({
-            targets: this.loginSceneElement,
-            x: (middleX/2),
-            duration: 1000,
-            ease: 'Power3'
-        });
-    }
-
-    private getMiddleX() : number{
-        const middleX = ((window.innerWidth) - ((this.loginSceneElement && this.loginSceneElement.width > 0 ? this.loginSceneElement.width : 200 /*FIXME to use a const will be injected in HTMLElement*/)*2)) / 2;
-        return (middleX > 0 ? middleX : 0);
+        this.centerXDomElement(this.loginSceneElement, 200);
     }
 }

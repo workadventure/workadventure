@@ -82,15 +82,11 @@ export class SimplePeer {
         });
 
         mediaManager.showGameOverlay();
-        mediaManager.getCamera().then(() => {
-
+        mediaManager.getCamera().finally(() => {
             //receive message start
             this.Connection.receiveWebrtcStart((message: UserSimplePeerInterface) => {
                 this.receiveWebrtcStart(message);
             });
-
-        }).catch((err) => {
-            console.error("err", err);
         });
 
         this.Connection.disconnectMessage((data: WebRtcDisconnectMessageInterface): void => {
