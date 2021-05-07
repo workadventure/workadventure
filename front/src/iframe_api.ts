@@ -62,7 +62,7 @@ interface ButtonDescriptor {
     callback: ButtonClickedCallback,
 }
 
-class Popup {
+export class Popup {
     constructor(private id: number) {
     }
 
@@ -79,7 +79,7 @@ class Popup {
     }
 }
 
-class Sound {
+export class Sound {
     constructor(private url: string) {
         // TODO: send a "loadSound" event
         window.parent.postMessage({

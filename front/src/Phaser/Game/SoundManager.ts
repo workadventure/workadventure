@@ -12,7 +12,7 @@ class SoundManager {
         }
         soundPromise =  new Promise<BaseSound>((res) => {
 
-            let sound = soundManager.get(soundUrl);
+            const sound = soundManager.get(soundUrl);
             if (sound !== null) {
                 return res(sound);
             }
