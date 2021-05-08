@@ -20,10 +20,10 @@ interface WorkAdventureApi {
     onEnterZone(name: string, callback: () => void): void;
     onLeaveZone(name: string, callback: () => void): void;
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup;
-    openTab(url : string): void;
-    goToPage(url : string): void;
-    exitSceneTo(url : string): void;
-    openCoWebSite(url : string): void;
+    openTab(url: string): void;
+    goToPage(url: string): void;
+    exitSceneTo(url: string): void;
+    openCoWebSite(url: string, options?: { asOverlay?: boolean, passInputEvents?: boolean }): void;
     closeCoWebSite(): void;
     disablePlayerControl() : void;
     restorePlayerControl() : void;
@@ -154,7 +154,7 @@ window.WA = {
             },'*');
     },
 
-    openCoWebSite(url: string, options: { asOverlay?: boolean } = {}): void {
+    openCoWebSite(url: string, options: { asOverlay?: boolean, passInputEvents?: boolean } = {}): void {
         window.parent.postMessage({
             "type": 'openCoWebSite',
             "data": {
