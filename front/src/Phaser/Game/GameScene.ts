@@ -883,8 +883,8 @@ ${escapedMessage}
                         tile.index = eventTile.tile
                     }
                 }
-                this.scene.scene.sys.game.events.emit("contextrestored")
             }
+            this.scene.scene.sys.game.events.emit("contextrestored")
         }))
 
         let scriptedBubbleSprite: Sprite;
