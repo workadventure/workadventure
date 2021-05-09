@@ -1,10 +1,10 @@
 import * as SimplePeerNamespace from "simple-peer";
-import {mediaManager} from "./MediaManager";
-import {STUN_SERVER, TURN_PASSWORD, TURN_SERVER, TURN_USER} from "../Enum/EnvironmentVariable";
-import {RoomConnection} from "../Connexion/RoomConnection";
-import {blackListManager} from "./BlackListManager";
-import {Subscription} from "rxjs";
-import {UserSimplePeerInterface} from "./SimplePeer";
+import { mediaManager } from "./MediaManager";
+import { STUN_SERVER, TURN_PASSWORD, TURN_SERVER, TURN_USER } from "../Enum/EnvironmentVariable";
+import { RoomConnection } from "../Connexion/RoomConnection";
+import { blackListManager } from "./BlackListManager";
+import { Subscription } from "rxjs";
+import { UserSimplePeerInterface } from "./SimplePeer";
 
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
@@ -28,7 +28,6 @@ export class VideoPeer extends Peer {
     constructor(public user: UserSimplePeerInterface, initiator: boolean, private connection: RoomConnection) {
         super({
             initiator: initiator ? initiator : false,
-            reconnectTimer: 10000,
             config: {
                 iceServers: [
                     {
@@ -38,7 +37,7 @@ export class VideoPeer extends Peer {
                         urls: TURN_SERVER.split(','),
                         username: user.webRtcUser || TURN_USER,
                         credential: user.webRtcPassword || TURN_PASSWORD
-                    } :  undefined,
+                    } : undefined,
                 ].filter((value) => value !== undefined)
             }
         });
@@ -71,9 +70,9 @@ export class VideoPeer extends Peer {
             console.info(`connect => ${this.userId}`);
         });
 
-        this.on('data',  (chunk: Buffer) => {
+        this.on('data', (chunk: Buffer) => {
             const message = JSON.parse(chunk.toString('utf8'));
-            if(message.type === MESSAGE_TYPE_CONSTRAINT) {
+            if (message.type === MESSAGE_TYPE_CONSTRAINT) {
                 if (message.audio) {
                     mediaManager.enabledMicrophoneByUserId(this.userId);
                 } else {
@@ -85,17 +84,17 @@ export class VideoPeer extends Peer {
                 } else {
                     mediaManager.disabledVideoByUserId(this.userId);
                 }
-            } else if(message.type === MESSAGE_TYPE_MESSAGE) {
+            } else if (message.type === MESSAGE_TYPE_MESSAGE) {
                 if (!blackListManager.isBlackListed(message.userId)) {
                     mediaManager.addNewMessage(message.name, message.message);
                 }
-            } else if(message.type === MESSAGE_TYPE_BLOCKED) {
+            } else if (message.type === MESSAGE_TYPE_BLOCKED) {
                 //FIXME when A blacklists B, the output stream from A is muted in B's js client. This is insecure since B can manipulate the code to unmute A stream.
                 // Find a way to block A's output stream in A's js client
                 //However, the output stream stream B is correctly blocked in A client
                 this.blocked = true;
                 this.toggleRemoteStream(false);
-            } else if(message.type === MESSAGE_TYPE_UNBLOCKED) {
+            } else if (message.type === MESSAGE_TYPE_UNBLOCKED) {
                 this.blocked = false;
                 this.toggleRemoteStream(true);
             }
@@ -125,7 +124,7 @@ export class VideoPeer extends Peer {
     }
 
     private sendBlockMessage(blocking: boolean) {
-        this.write(new Buffer(JSON.stringify({type: blocking ? MESSAGE_TYPE_BLOCKED : MESSAGE_TYPE_UNBLOCKED, name: this.userName.toUpperCase(), userId: this.userId, message: ''})));
+        this.write(new Buffer(JSON.stringify({ type: blocking ? MESSAGE_TYPE_BLOCKED : MESSAGE_TYPE_UNBLOCKED, name: this.userName.toUpperCase(), userId: this.userId, message: '' })));
     }
 
     private toggleRemoteStream(enable: boolean) {
@@ -136,7 +135,7 @@ export class VideoPeer extends Peer {
     private sendWebrtcSignal(data: unknown) {
         try {
             this.connection.sendWebrtcSignal(data, this.userId);
-        }catch (e) {
+        } catch (e) {
             console.error(`sendWebrtcSignal => ${this.userId}`, e);
         }
     }
@@ -151,7 +150,7 @@ export class VideoPeer extends Peer {
                 this.toggleRemoteStream(false);
             }
             mediaManager.addStreamRemoteVideo("" + this.userId, stream);
-        }catch (err){
+        } catch (err) {
             console.error(err);
         }
     }
@@ -162,7 +161,7 @@ export class VideoPeer extends Peer {
     public destroy(error?: Error): void {
         try {
             this._connected = false
-            if(!this.toClose){
+            if (!this.toClose) {
                 return;
             }
             this.onBlockSubscribe.unsubscribe();
@@ -176,7 +175,7 @@ export class VideoPeer extends Peer {
         }
     }
 
-    _onFinish () {
+    _onFinish() {
         if (this.destroyed) return
         const destroySoon = () => {
             this.destroy();
@@ -191,16 +190,16 @@ export class VideoPeer extends Peer {
     private pushVideoToRemoteUser() {
         try {
             const localStream: MediaStream | null = mediaManager.localStream;
-            this.write(new Buffer(JSON.stringify({type: MESSAGE_TYPE_CONSTRAINT, ...mediaManager.constraintsMedia})));
+            this.write(new Buffer(JSON.stringify({ type: MESSAGE_TYPE_CONSTRAINT, ...mediaManager.constraintsMedia })));
 
-            if(!localStream){
+            if (!localStream) {
                 return;
             }
 
             for (const track of localStream.getTracks()) {
                 this.addTrack(track, localStream);
             }
-        }catch (e) {
+        } catch (e) {
             console.error(`pushVideoToRemoteUser => ${this.userId}`, e);
         }
     }

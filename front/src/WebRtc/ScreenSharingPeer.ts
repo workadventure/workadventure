@@ -1,9 +1,9 @@
 import * as SimplePeerNamespace from "simple-peer";
-import {mediaManager} from "./MediaManager";
-import {STUN_SERVER, TURN_SERVER, TURN_USER, TURN_PASSWORD} from "../Enum/EnvironmentVariable";
-import {RoomConnection} from "../Connexion/RoomConnection";
-import {MESSAGE_TYPE_CONSTRAINT} from "./VideoPeer";
-import {UserSimplePeerInterface} from "./SimplePeer";
+import { mediaManager } from "./MediaManager";
+import { STUN_SERVER, TURN_SERVER, TURN_USER, TURN_PASSWORD } from "../Enum/EnvironmentVariable";
+import { RoomConnection } from "../Connexion/RoomConnection";
+import { MESSAGE_TYPE_CONSTRAINT } from "./VideoPeer";
+import { UserSimplePeerInterface } from "./SimplePeer";
 
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
@@ -14,7 +14,7 @@ export class ScreenSharingPeer extends Peer {
     /**
      * Whether this connection is currently receiving a video stream from a remote user.
      */
-    private isReceivingStream:boolean = false;
+    private isReceivingStream: boolean = false;
     public toClose: boolean = false;
     public _connected: boolean = false;
     private userId: number;
@@ -22,7 +22,6 @@ export class ScreenSharingPeer extends Peer {
     constructor(user: UserSimplePeerInterface, initiator: boolean, private connection: RoomConnection) {
         super({
             initiator: initiator ? initiator : false,
-            reconnectTimer: 10000,
             config: {
                 iceServers: [
                     {
@@ -32,7 +31,7 @@ export class ScreenSharingPeer extends Peer {
                         urls: TURN_SERVER.split(','),
                         username: user.webRtcUser || TURN_USER,
                         credential: user.webRtcPassword || TURN_PASSWORD
-                    } :  undefined,
+                    } : undefined,
                 ].filter((value) => value !== undefined)
             }
         });
@@ -54,7 +53,7 @@ export class ScreenSharingPeer extends Peer {
             this.destroy();
         });
 
-        this.on('data',  (chunk: Buffer) => {
+        this.on('data', (chunk: Buffer) => {
             // We unfortunately need to rely on an event to let the other party know a stream has stopped.
             // It seems there is no native way to detect that.
             const message = JSON.parse(chunk.toString('utf8'));
@@ -88,7 +87,7 @@ export class ScreenSharingPeer extends Peer {
         //console.log("sendWebrtcScreenSharingSignal", data);
         try {
             this.connection.sendWebrtcScreenSharingSignal(data, this.userId);
-        }catch (e) {
+        } catch (e) {
             console.error(`sendWebrtcScreenSharingSignal => ${this.userId}`, e);
         }
     }
@@ -99,7 +98,7 @@ export class ScreenSharingPeer extends Peer {
     private stream(stream?: MediaStream) {
         //console.log(`ScreenSharingPeer::stream => ${this.userId}`, stream);
         //console.log(`stream => ${this.userId} => `, stream);
-        if(!stream){
+        if (!stream) {
             mediaManager.removeActiveScreenSharingVideo("" + this.userId);
             this.isReceivingStream = false;
         } else {
@@ -115,7 +114,7 @@ export class ScreenSharingPeer extends Peer {
     public destroy(error?: Error): void {
         try {
             this._connected = false
-            if(!this.toClose){
+            if (!this.toClose) {
                 return;
             }
             mediaManager.removeActiveScreenSharingVideo("" + this.userId);
@@ -129,7 +128,7 @@ export class ScreenSharingPeer extends Peer {
         }
     }
 
-    _onFinish () {
+    _onFinish() {
         if (this.destroyed) return
         const destroySoon = () => {
             this.destroy();
@@ -143,7 +142,7 @@ export class ScreenSharingPeer extends Peer {
 
     private pushScreenSharingToRemoteUser() {
         const localScreenCapture: MediaStream | null = mediaManager.localScreenCapture;
-        if(!localScreenCapture){
+        if (!localScreenCapture) {
             return;
         }
 
@@ -153,6 +152,6 @@ export class ScreenSharingPeer extends Peer {
 
     public stopPushingScreenSharingToRemoteUser(stream: MediaStream) {
         this.removeStream(stream);
-        this.write(new Buffer(JSON.stringify({type: MESSAGE_TYPE_CONSTRAINT, streamEnded: true})));
+        this.write(new Buffer(JSON.stringify({ type: MESSAGE_TYPE_CONSTRAINT, streamEnded: true })));
     }
 }
