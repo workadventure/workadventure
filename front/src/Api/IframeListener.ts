@@ -3,13 +3,13 @@ import { Subject } from "rxjs";
 import { deepFreezeClone as deepFreezeClone } from '../utility';
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import { GameStateEvent } from './Events/ApiGameStateEvent';
-import { isUpdateTileEvent } from './Events/ApiUpdateTileEvent';
+import { isUpdateTileEvent, UpdateTileEvent } from './Events/ApiUpdateTileEvent';
 import { ButtonClickedEvent } from "./Events/ButtonClickedEvent";
 import { ChatEvent, isChatEvent } from "./Events/ChatEvent";
 import { ClosePopupEvent, isClosePopupEvent } from "./Events/ClosePopupEvent";
 import { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
 import { GoToPageEvent, isGoToPageEvent } from "./Events/GoToPageEvent";
-import { IframeEventMap, IframeEvent, IframeResponseEvent, IframeResponseEventMap, isIframeEventWrapper } from "./Events/IframeEvent";
+import { IframeEventMap, IframeEvent, IframeResponseEvent, IframeResponseEventMap, isIframeEventWrapper, TypedMessageEvent } from "./Events/IframeEvent";
 import { isLoadPageEvent } from './Events/LoadPageEvent';
 import { MenuItemClickedEvent } from './Events/MenuItemClickedEvent';
 import { isMenuItemRegisterEvent } from './Events/MenuItemRegisterEvent';
@@ -67,6 +67,9 @@ class IframeListener {
 
     private readonly _gameStateStream: Subject<void> = new Subject();
     public readonly gameStateStream = this._gameStateStream.asObservable();
+
+    private readonly _updateTileEvent: Subject<UpdateTileEvent> = new Subject();
+    public readonly updateTileEvent = this._updateTileEvent.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
@@ -130,7 +133,7 @@ class IframeListener {
                 } else if (payload.type == "getState") {
                     this._gameStateStream.next();
                 } else if (payload.type == "updateTile" && isUpdateTileEvent(payload.data)) {
-                    
+                    this._updateTileEvent.next(payload.data)
                 }
             }
 
