@@ -1,18 +1,19 @@
-import {Subject} from "rxjs";
-import {ChatEvent, isChatEvent} from "./Events/ChatEvent";
-import {IframeEvent, isIframeEventWrapper} from "./Events/IframeEvent";
-import {UserInputChatEvent} from "./Events/UserInputChatEvent";
+import { Subject } from "rxjs";
+import { ChatEvent, isChatEvent } from "./Events/ChatEvent";
+import { IframeEvent, isIframeEventWrapper } from "./Events/IframeEvent";
+import { UserInputChatEvent } from "./Events/UserInputChatEvent";
 import * as crypto from "crypto";
-import {HtmlUtils} from "../WebRtc/HtmlUtils";
-import {EnterLeaveEvent} from "./Events/EnterLeaveEvent";
-import {isOpenPopupEvent, OpenPopupEvent} from "./Events/OpenPopupEvent";
-import {isOpenTabEvent, OpenTabEvent} from "./Events/OpenTabEvent";
-import {ButtonClickedEvent} from "./Events/ButtonClickedEvent";
-import {ClosePopupEvent, isClosePopupEvent} from "./Events/ClosePopupEvent";
-import {scriptUtils} from "./ScriptUtils";
-import {GoToPageEvent, isGoToPageEvent} from "./Events/GoToPageEvent";
-import {isOpenCoWebsite, OpenCoWebSiteEvent} from "./Events/OpenCoWebSiteEvent";
+import { HtmlUtils } from "../WebRtc/HtmlUtils";
+import { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
+import { isOpenPopupEvent, OpenPopupEvent } from "./Events/OpenPopupEvent";
+import { isOpenTabEvent, OpenTabEvent } from "./Events/OpenTabEvent";
+import { ButtonClickedEvent } from "./Events/ButtonClickedEvent";
+import { ClosePopupEvent, isClosePopupEvent } from "./Events/ClosePopupEvent";
+import { scriptUtils } from "./ScriptUtils";
+import { GoToPageEvent, isGoToPageEvent } from "./Events/GoToPageEvent";
+import { isOpenCoWebsite, OpenCoWebSiteEvent } from "./Events/OpenCoWebSiteEvent";
 import { isLoadPageEvent } from './Events/LoadPageEvent';
+import { isUpdateTileEvent, UpdateTileEvent } from './Events/ApiUpdateTileEvent';
 
 
 /**
@@ -32,7 +33,7 @@ class IframeListener {
     private readonly _goToPageStream: Subject<GoToPageEvent> = new Subject();
     public readonly goToPageStream = this._goToPageStream.asObservable();
 
-    
+
     private readonly _loadPageStream: Subject<string> = new Subject();
     public readonly loadPageStream = this._loadPageStream.asObservable();
 
@@ -88,33 +89,31 @@ class IframeListener {
                 } else if (payload.type === 'closePopup' && isClosePopupEvent(payload.data)) {
                     this._closePopupStream.next(payload.data);
                 }
-                else if(payload.type === 'openTab' && isOpenTabEvent(payload.data)) {
+                else if (payload.type === 'openTab' && isOpenTabEvent(payload.data)) {
                     scriptUtils.openTab(payload.data.url);
                 }
-                else if(payload.type === 'goToPage' && isGoToPageEvent(payload.data)) {
+                else if (payload.type === 'goToPage' && isGoToPageEvent(payload.data)) {
                     scriptUtils.goToPage(payload.data.url);
                 }
-                else if(payload.type === 'openCoWebSite' && isOpenCoWebsite(payload.data)) {
+                else if (payload.type === 'openCoWebSite' && isOpenCoWebsite(payload.data)) {
                     scriptUtils.openCoWebsite(payload.data.url);
                 }
-                else if(payload.type === 'closeCoWebSite') {
+                else if (payload.type === 'closeCoWebSite') {
                     scriptUtils.closeCoWebSite();
                 }
-                else if (payload.type === 'disablePlayerControl'){
+                else if (payload.type === 'disablePlayerControl') {
                     this._disablePlayerControlStream.next();
                 }
-                else if (payload.type === 'restorePlayerControl'){
+                else if (payload.type === 'restorePlayerControl') {
                     this._enablePlayerControlStream.next();
                 }
-                else if (payload.type === 'displayBubble'){
+                else if (payload.type === 'displayBubble') {
                     this._displayBubbleStream.next();
                 }
-                else if (payload.type === 'removeBubble'){
+                else if (payload.type === 'removeBubble') {
                     this._removeBubbleStream.next();
-                }else if (payload.type === 'loadPage' && isLoadPageEvent(payload.data)){
+                } else if (payload.type === 'loadPage' && isLoadPageEvent(payload.data)) {
                     this._loadPageStream.next(payload.data.url);
-                } else if (payload.type == "getState") {
-                    this._gameStateStream.next();
                 } else if (payload.type == "updateTile" && isUpdateTileEvent(payload.data)) {
                     this._updateTileEvent.next(payload.data)
                 }
@@ -144,7 +143,7 @@ class IframeListener {
             const iframe = document.createElement('iframe');
             iframe.id = this.getIFrameId(scriptUrl);
             iframe.style.display = 'none';
-            iframe.src = '/iframe.html?script='+encodeURIComponent(scriptUrl);
+            iframe.src = '/iframe.html?script=' + encodeURIComponent(scriptUrl);
 
             // We are putting a sandbox on this script because it will run in the same domain as the main website.
             iframe.sandbox.add('allow-scripts');
@@ -168,8 +167,8 @@ class IframeListener {
                 '\n' +
                 '<html lang="en">\n' +
                 '<head>\n' +
-                '<script src="'+window.location.protocol+'//'+window.location.host+'/iframe_api.js" ></script>\n' +
-                '<script src="'+scriptUrl+'" ></script>\n' +
+                '<script src="' + window.location.protocol + '//' + window.location.host + '/iframe_api.js" ></script>\n' +
+                '<script src="' + scriptUrl + '" ></script>\n' +
                 '</head>\n' +
                 '</html>\n';
 
@@ -186,14 +185,14 @@ class IframeListener {
     }
 
     private getIFrameId(scriptUrl: string): string {
-        return 'script'+crypto.createHash('md5').update(scriptUrl).digest("hex");
+        return 'script' + crypto.createHash('md5').update(scriptUrl).digest("hex");
     }
 
     unregisterScript(scriptUrl: string): void {
         const iFrameId = this.getIFrameId(scriptUrl);
         const iframe = HtmlUtils.getElementByIdOrFail<HTMLIFrameElement>(iFrameId);
         if (!iframe) {
-            throw new Error('Unknown iframe for script "'+scriptUrl+'"');
+            throw new Error('Unknown iframe for script "' + scriptUrl + '"');
         }
         this.unregisterIframe(iframe);
         iframe.remove();
