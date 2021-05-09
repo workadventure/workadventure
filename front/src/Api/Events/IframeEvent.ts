@@ -16,6 +16,9 @@ import { OpenTabEvent } from './OpenTabEvent';
 import { UserInputChatEvent } from './UserInputChatEvent';
 
 
+export interface TypedMessageEvent<T> extends MessageEvent {
+    data: T
+}
 export type IframeEventMap = {
     getState: GameStateEvent,
     updateTile: UpdateTileEvent
