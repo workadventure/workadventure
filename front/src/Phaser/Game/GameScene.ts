@@ -868,18 +868,20 @@ ${escapedMessage}
         }));
 
         this.iframeSubscriptionList.push(iframeListener.updateTileEvent.subscribe(event => {
-            const layer = this.Layers.find(layer => layer.layer.name == event.layer)
-            if (layer) {
-                const tile = layer.getTileAt(event.x, event.y)
-                if (typeof event.tile == "string") {
-                    const tileIndex = this.getIndexForTileType(event.tile);
-                    if (tileIndex) {
-                        tile.index = tileIndex
+            for (const eventTile of event) {
+                const layer = this.Layers.find(layer => layer.layer.name == eventTile.layer)
+                if (layer) {
+                    const tile = layer.getTileAt(eventTile.x, eventTile.y)
+                    if (typeof eventTile.tile == "string") {
+                        const tileIndex = this.getIndexForTileType(eventTile.tile);
+                        if (tileIndex) {
+                            tile.index = tileIndex
+                        } else {
+                            return
+                        }
                     } else {
-                        return
+                        tile.index = eventTile.tile
                     }
-                } else {
-                    tile.index = event.tile
                 }
                 this.scene.scene.sys.game.events.emit("contextrestored")
             }
@@ -898,7 +900,7 @@ ${escapedMessage}
 
     }
 
-    private getIndexForTileType(tileType: string): number | undefined {
+    private getIndexForTileType(tileType: string): number | null {
         for (const tileset of this.mapFile.tilesets) {
             if (tileset.tiles) {
                 for (const tilesetTile of tileset.tiles) {
@@ -908,7 +910,7 @@ ${escapedMessage}
                 }
             }
         }
-        return undefined
+        return null
     }
 
     private getMapDirUrl(): string {
