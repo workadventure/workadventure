@@ -1,15 +1,10 @@
 
 
-//import { GameStateEvent } from './ApiGameStateEvent';
-//import { UpdateTileEvent } from './ApiUpdateTileEvent';
 import { ButtonClickedEvent } from './ButtonClickedEvent';
 import { ChatEvent } from './ChatEvent';
 import { ClosePopupEvent } from './ClosePopupEvent';
 import { EnterLeaveEvent } from './EnterLeaveEvent';
 import { GoToPageEvent } from './GoToPageEvent';
-import { LoadPageEvent } from './LoadPageEvent';
-import { MenuItemClickedEvent } from './MenuItemClickedEvent';
-import { MenuItemRegisterEvent } from './MenuItemRegisterEvent';
 import { OpenCoWebSiteEvent } from './OpenCoWebSiteEvent';
 import { OpenPopupEvent } from './OpenPopupEvent';
 import { OpenTabEvent } from './OpenTabEvent';
@@ -30,8 +25,6 @@ export type IframeEventMap = {
     restorePlayerControl: null
     displayBubble: null
     removeBubble: null
-    registerMenuCommand: MenuItemRegisterEvent
-    loadPage: LoadPageEvent
 }
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;
@@ -43,7 +36,6 @@ export interface IframeEvent<T extends keyof IframeEventMap> {
 export const isIframeEventWrapper = (event: any): event is IframeEvent<keyof IframeEventMap> => typeof event.type === 'string';
 
 export interface IframeResponseEventMap {
-    menuItemClicked: MenuItemClickedEvent
     userInputChat: UserInputChatEvent
     enterEvent: EnterLeaveEvent
     leaveEvent: EnterLeaveEvent
