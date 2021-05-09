@@ -13,6 +13,7 @@ import { LoadPageEvent } from './Api/Events/LoadPageEvent';
 import { isMenuItemClickedEvent } from './Api/Events/MenuItemClickedEvent';
 import { MenuItemRegisterEvent } from './Api/Events/MenuItemRegisterEvent';
 import { GameStateEvent, isGameStateEvent } from './Api/Events/ApiGameStateEvent';
+import { updateTile, UpdateTileEvent } from './Api/Events/ApiUpdateTileEvent';
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
@@ -30,7 +31,9 @@ interface WorkAdventureApi {
     displayBubble(): void;
     removeBubble(): void;
     registerMenuCommand(commandDescriptor: string, callback: (commandDescriptor: string) => void): void
-    getGameState():Promise<unknown>
+    getGameState(): Promise<GameStateEvent>
+
+    updateTile(tileData: UpdateTileEvent): void
 }
 
 declare global {
@@ -81,19 +84,23 @@ class Popup {
     }
 }
 
-
-const stateResolvers:Array<(event:GameStateEvent)=>void> =[]
+const stateResolvers: Array<(event: GameStateEvent) => void> = []
 
 window.WA = {
 
+    updateTile(data: UpdateTileEvent) {
+        window.parent.postMessage({
+            type: updateTile,
+            data: data
+        }, "*")
+    },
 
-
-    getGameState(){
-        return new Promise<GameStateEvent>((resolver,thrower)=>{
+    getGameState() {
+        return new Promise<GameStateEvent>((resolver, thrower) => {
             stateResolvers.push(resolver);
-            window.parent.postMessage({ 
-                type:"getState"
-            },"*")
+            window.parent.postMessage({
+                type: "getState"
+            }, "*")
         })
     },
 
@@ -272,8 +279,8 @@ window.addEventListener('message', message => {
             if (callback) {
                 callback(payload.data.menuItem)
             }
-        }else if(payload.type=="gameState" && isGameStateEvent(payloadData)){
-            stateResolvers.forEach(resolver=>{
+        } else if (payload.type == "gameState" && isGameStateEvent(payloadData)) {
+            stateResolvers.forEach(resolver => {
                 resolver(payloadData);
             })
         }

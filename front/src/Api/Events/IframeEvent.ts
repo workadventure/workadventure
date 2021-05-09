@@ -1,7 +1,7 @@
 
 
-//import { GameStateEvent } from './ApiGameStateEvent';
-//import { UpdateTileEvent } from './ApiUpdateTileEvent';
+import { GameStateEvent } from './ApiGameStateEvent';
+import { UpdateTileEvent } from './ApiUpdateTileEvent';
 import { ButtonClickedEvent } from './ButtonClickedEvent';
 import { ChatEvent } from './ChatEvent';
 import { ClosePopupEvent } from './ClosePopupEvent';
@@ -17,8 +17,8 @@ import { UserInputChatEvent } from './UserInputChatEvent';
 
 
 export type IframeEventMap = {
-    //getState: GameStateEvent,
-    // updateTile: UpdateTileEvent
+    getState: GameStateEvent,
+    updateTile: UpdateTileEvent
     chat: ChatEvent,
     openPopup: OpenPopupEvent
     closePopup: ClosePopupEvent
@@ -48,7 +48,7 @@ export interface IframeResponseEventMap {
     enterEvent: EnterLeaveEvent
     leaveEvent: EnterLeaveEvent
     buttonClickedEvent: ButtonClickedEvent
-    // gameState: GameStateEvent
+    gameState: GameStateEvent
 }
 export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
     type: T;

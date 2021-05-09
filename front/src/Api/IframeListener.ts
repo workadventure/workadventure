@@ -3,6 +3,7 @@ import { Subject } from "rxjs";
 import { deepFreezeClone as deepFreezeClone } from '../utility';
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import { GameStateEvent } from './Events/ApiGameStateEvent';
+import { isUpdateTileEvent } from './Events/ApiUpdateTileEvent';
 import { ButtonClickedEvent } from "./Events/ButtonClickedEvent";
 import { ChatEvent, isChatEvent } from "./Events/ChatEvent";
 import { ClosePopupEvent, isClosePopupEvent } from "./Events/ClosePopupEvent";
@@ -128,6 +129,8 @@ class IframeListener {
                     this._loadPageStream.next(payload.data.url);
                 } else if (payload.type == "getState") {
                     this._gameStateStream.next();
+                } else if (payload.type == "updateTile" && isUpdateTileEvent(payload.data)) {
+                    
                 }
             }
 
