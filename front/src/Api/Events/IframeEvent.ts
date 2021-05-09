@@ -1,7 +1,59 @@
-export interface IframeEvent {
-    type: string;
-    data: unknown;
+
+
+//import { GameStateEvent } from './ApiGameStateEvent';
+//import { UpdateTileEvent } from './ApiUpdateTileEvent';
+import { ButtonClickedEvent } from './ButtonClickedEvent';
+import { ChatEvent } from './ChatEvent';
+import { ClosePopupEvent } from './ClosePopupEvent';
+import { EnterLeaveEvent } from './EnterLeaveEvent';
+import { GoToPageEvent } from './GoToPageEvent';
+import { LoadPageEvent } from './LoadPageEvent';
+import { MenuItemClickedEvent } from './MenuItemClickedEvent';
+import { MenuItemRegisterEvent } from './MenuItemRegisterEvent';
+import { OpenCoWebSiteEvent } from './OpenCoWebSiteEvent';
+import { OpenPopupEvent } from './OpenPopupEvent';
+import { OpenTabEvent } from './OpenTabEvent';
+import { UserInputChatEvent } from './UserInputChatEvent';
+
+
+export type IframeEventMap = {
+    //getState: GameStateEvent,
+    // updateTile: UpdateTileEvent
+    chat: ChatEvent,
+    openPopup: OpenPopupEvent
+    closePopup: ClosePopupEvent
+    openTab: OpenTabEvent
+    goToPage: GoToPageEvent
+    openCoWebSite: OpenCoWebSiteEvent
+    closeCoWebSite: null
+    disablePlayerControl: null
+    restorePlayerControl: null
+    displayBubble: null
+    removeBubble: null
+    registerMenuCommand: MenuItemRegisterEvent
+    loadPage: LoadPageEvent
+}
+export interface IframeEvent<T extends keyof IframeEventMap> {
+    type: T;
+    data: IframeEventMap[T];
+}
+
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const isIframeEventWrapper = (event: any): event is IframeEvent<keyof IframeEventMap> => typeof event.type === 'string';
+
+export interface IframeResponseEventMap {
+    menuItemClicked: MenuItemClickedEvent
+    userInputChat: UserInputChatEvent
+    enterEvent: EnterLeaveEvent
+    leaveEvent: EnterLeaveEvent
+    buttonClickedEvent: ButtonClickedEvent
+    // gameState: GameStateEvent
+}
+export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
+    type: T;
+    data: IframeResponseEventMap[T];
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const isIframeEventWrapper = (event: any): event is IframeEvent => typeof event.type === 'string';
+export const isIframeResponseEventWrapper = (event: { type?: string }): event is IframeResponseEvent<keyof IframeResponseEventMap> => typeof event.type === 'string';
