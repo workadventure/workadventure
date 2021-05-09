@@ -57,6 +57,9 @@ class IframeListener {
     private readonly _removeBubbleStream: Subject<void> = new Subject();
     public readonly removeBubbleStream = this._removeBubbleStream.asObservable();
 
+    private readonly _updateTileEvent: Subject<UpdateTileEvent> = new Subject();
+    public readonly updateTileEvent = this._updateTileEvent.asObservable();
+
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
 
@@ -110,6 +113,10 @@ class IframeListener {
                     this._removeBubbleStream.next();
                 }else if (payload.type === 'loadPage' && isLoadPageEvent(payload.data)){
                     this._loadPageStream.next(payload.data.url);
+                } else if (payload.type == "getState") {
+                    this._gameStateStream.next();
+                } else if (payload.type == "updateTile" && isUpdateTileEvent(payload.data)) {
+                    this._updateTileEvent.next(payload.data)
                 }
             }
 
