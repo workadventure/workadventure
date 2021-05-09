@@ -10,7 +10,7 @@ import { ClosePopupEvent, isClosePopupEvent } from "./Events/ClosePopupEvent";
 import { scriptUtils } from "./ScriptUtils";
 import { GoToPageEvent, isGoToPageEvent } from "./Events/GoToPageEvent";
 import { isOpenCoWebsite, OpenCoWebSiteEvent } from "./Events/OpenCoWebSiteEvent";
-import { IframeEventMap, IframeEvent, IframeResponseEvent, IframeResponseEventMap, isIframeEventWrapper } from "./Events/IframeEvent";
+import { IframeEventMap, IframeEvent, IframeResponseEvent, IframeResponseEventMap, isIframeEventWrapper, TypedMessageEvent } from "./Events/IframeEvent";
 import { UserInputChatEvent } from "./Events/UserInputChatEvent";
 
 
@@ -56,7 +56,7 @@ class IframeListener {
     private readonly scripts = new Map<string, HTMLIFrameElement>();
 
     init() {
-        window.addEventListener("message", (message: MessageEvent<IframeEvent<keyof IframeEventMap>>) => {
+        window.addEventListener("message", (message: TypedMessageEvent<IframeEvent<keyof IframeEventMap>>) => {
             // Do we trust the sender of this message?
             // Let's only accept messages from the iframe that are allowed.
             // Note: maybe we could restrict on the domain too for additional security (in case the iframe goes to another domain).
