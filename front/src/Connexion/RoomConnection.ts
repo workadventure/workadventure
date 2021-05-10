@@ -27,7 +27,8 @@ import {
     SendJitsiJwtMessage,
     CharacterLayerMessage,
     PingMessage,
-    SendUserMessage, BanUserMessage
+    SendUserMessage, 
+    BanUserMessage
 } from "../Messages/generated/messages_pb"
 
 import {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
@@ -169,7 +170,10 @@ export class RoomConnection implements RoomConnection {
             } else if (message.hasWorldfullmessage()) {
                 worldFullMessageStream.onMessage();
                 this.closed = true;
-            } else if (message.hasWebrtcsignaltoclientmessage()) {
+            } else if (message.hasWorldconnexionmessage()) {
+                worldFullMessageStream.onMessage(message.getWorldconnexionmessage()?.getMessage());
+                this.closed = true;
+            }else if (message.hasWebrtcsignaltoclientmessage()) {
                 this.dispatch(EventMessage.WEBRTC_SIGNAL, message.getWebrtcsignaltoclientmessage());
             } else if (message.hasWebrtcscreensharingsignaltoclientmessage()) {
                 this.dispatch(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, message.getWebrtcscreensharingsignaltoclientmessage());

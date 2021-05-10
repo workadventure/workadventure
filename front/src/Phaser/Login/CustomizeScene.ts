@@ -11,7 +11,6 @@ import {AbstractCharacterScene} from "./AbstractCharacterScene";
 import {areCharacterLayersValid} from "../../Connexion/LocalUser";
 import { MenuScene } from "../Menu/MenuScene";
 import { SelectCharacterSceneName } from "./SelectCharacterScene";
-import { RESOLUTION } from "../../Enum/EnvironmentVariable";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -35,24 +34,25 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     preload() {
-        addLoader(this);
-
         this.load.html(customizeSceneKey, 'resources/html/CustomCharacterScene.html');
 
         this.layers = loadAllLayers(this.load);
         this.loadCustomSceneSelectCharacters().then((bodyResourceDescriptions) => {
             bodyResourceDescriptions.forEach((bodyResourceDescription) => {
-                if(!bodyResourceDescription.level){
+                if(bodyResourceDescription.level == undefined || bodyResourceDescription.level < 0 || bodyResourceDescription.level > 5 ){
                     throw 'Texture level is null';
                 }
                 this.layers[bodyResourceDescription.level].unshift(bodyResourceDescription);
             });
         });
+
+        //this function must stay at the end of preload function
+        addLoader(this);
     }
 
     create() {
-        const middleX = this.getMiddleX();
-        this.customizeSceneElement = this.add.dom(middleX, 0).createFromCache(customizeSceneKey);
+        this.customizeSceneElement = this.add.dom(-1000, 0).createFromCache(customizeSceneKey);
+        this.centerXDomElement(this.customizeSceneElement, 150);
         MenuScene.revealMenusAfterInit(this.customizeSceneElement, customizeSceneKey);
 
         this.customizeSceneElement.addListener('click');
@@ -112,6 +112,8 @@ export class CustomizeScene extends AbstractCharacterScene {
             this.moveLayers();
             this.updateSelectedLayer();
         }
+
+        this.onResize();
     }
 
     private moveCursorHorizontally(index: number): void {
@@ -256,16 +258,10 @@ export class CustomizeScene extends AbstractCharacterScene {
                 this.containersRow[i][j].add(children);
             }
         }
-     }
+    }
 
-     update(time: number, delta: number): void {
-        const middleX = this.getMiddleX();
-        this.tweens.add({
-            targets: this.customizeSceneElement,
-            x: middleX,
-            duration: 1000,
-            ease: 'Power3'
-        });
+    update(time: number, delta: number): void {
+
     }
 
      public onResize(): void {
@@ -274,25 +270,8 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.Rectangle.x = this.cameras.main.worldView.x + this.cameras.main.width / 2;
         this.Rectangle.y = this.cameras.main.worldView.y + this.cameras.main.height / 3;
 
-        const middleX = this.getMiddleX();
-        this.tweens.add({
-            targets: this.customizeSceneElement,
-            x: middleX,
-            duration: 1000,
-            ease: 'Power3'
-        });
+        this.centerXDomElement(this.customizeSceneElement, 150);
      }
-
-     protected getMiddleX() : number{
-        return (this.game.renderer.width / RESOLUTION) -  
-        (
-            this.customizeSceneElement
-            && this.customizeSceneElement.node
-            && this.customizeSceneElement.node.getBoundingClientRect().width > 0
-            ? (this.customizeSceneElement.node.getBoundingClientRect().width / (2*RESOLUTION))
-            : 150
-        );
-    }
 
     private nextSceneToCamera(){
         const layers: string[] = [];

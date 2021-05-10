@@ -62,7 +62,7 @@ export const getRessourceDescriptor = (textureKey: string|BodyResourceDescriptio
     const textureName:string = typeof textureKey === 'string' ? textureKey : textureKey.name;
     const playerResource = PLAYER_RESOURCES[textureName];
     if (playerResource !== undefined) return playerResource;
-    
+
     for (let i=0; i<LAYERS.length;i++) {
         const playerResource = LAYERS[i][textureName];
         if (playerResource !== undefined) return playerResource;
