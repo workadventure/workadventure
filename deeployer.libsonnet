@@ -2,7 +2,7 @@
   local env = std.extVar("env"),
   local namespace = env.DEPLOY_REF,
   local tag = namespace,
-  local url = if namespace == "master" then "workadventu.re" else namespace+".test.workadventu.re",
+  local url = namespace+".test.workadventu.re",
   // develop branch does not use admin because of issue with SSL certificate of admin as of now.
   local adminUrl = if namespace == "master" || namespace == "develop" || std.startsWith(namespace, "admin") then "https://"+url else null,
   "$schema": "https://raw.githubusercontent.com/thecodingmachine/deeployer/master/deeployer.schema.json",
@@ -25,10 +25,7 @@
          "TURN_STATIC_AUTH_SECRET": env.TURN_STATIC_AUTH_SECRET,
        } + (if adminUrl != null then {
          "ADMIN_API_URL": adminUrl,
-       } else {}) + if namespace != "master" then {
-         // Absolutely ugly WorkAround to circumvent broken certificates on the K8S test cluster. Don't do this in production kids!
-         "NODE_TLS_REJECT_UNAUTHORIZED": "0"
-       }
+       } else {})
      },
      "back2": {
             "image": "thecodingmachine/workadventure-back:"+tag,
@@ -47,10 +44,7 @@
               "TURN_STATIC_AUTH_SECRET": env.TURN_STATIC_AUTH_SECRET,
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
-            } else {}) + if namespace != "master" then {
-              // Absolutely ugly WorkAround to circumvent broken certificates on the K8S test cluster. Don't do this in production kids!
-              "NODE_TLS_REJECT_UNAUTHORIZED": "0"
-            }
+            } else {})
           },
      "pusher": {
             "replicas": 2,
@@ -69,10 +63,7 @@
               "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
-            } else {}) + if namespace != "master" then {
-              // Absolutely ugly WorkAround to circumvent broken certificates on the K8S test cluster. Don't do this in production kids!
-              "NODE_TLS_REJECT_UNAUTHORIZED": "0"
-            }
+            } else {})
           },
     "front": {
       "image": "thecodingmachine/workadventure-front:"+tag,
