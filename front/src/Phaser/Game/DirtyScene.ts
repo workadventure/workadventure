@@ -35,6 +35,7 @@ export abstract class DirtyScene extends ResizableScene {
 
         this.events.on(Events.RENDER, () => {
             this.objectListChanged = false;
+            this.dirty = false;
         });
     }
 

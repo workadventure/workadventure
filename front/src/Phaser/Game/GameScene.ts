@@ -91,6 +91,7 @@ import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
 import {joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey} from "../Components/MobileJoystick";
 import {waScaleManager} from "../Services/WaScaleManager";
+import {LayerEvent} from "../../Api/Events/LayerEvent";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -839,7 +840,7 @@ ${escapedMessage}
             this.popUpElements.set(openPopupEvent.popupId, domElement);
         }));
 
-       this.iframeSubscriptionList.push(iframeListener.closePopupStream.subscribe((closePopupEvent) => {
+        this.iframeSubscriptionList.push(iframeListener.closePopupStream.subscribe((closePopupEvent) => {
             const popUpElement = this.popUpElements.get(closePopupEvent.popupId);
             if (popUpElement === undefined) {
                 console.error('Could not close popup with ID ', closePopupEvent.popupId,'. Maybe it has already been closed?');
@@ -857,25 +858,47 @@ ${escapedMessage}
             });
         }));
 
-       this.iframeSubscriptionList.push(iframeListener.disablePlayerControlStream.subscribe(()=>{
+        this.iframeSubscriptionList.push(iframeListener.disablePlayerControlStream.subscribe(()=>{
             this.userInputManager.disableControls();
         }));
 
-       this.iframeSubscriptionList.push(iframeListener.enablePlayerControlStream.subscribe(()=>{
+        this.iframeSubscriptionList.push(iframeListener.enablePlayerControlStream.subscribe(()=>{
             this.userInputManager.restoreControls();
         }));
         let scriptedBubbleSprite : Sprite;
-       this.iframeSubscriptionList.push(iframeListener.displayBubbleStream.subscribe(()=>{
+        this.iframeSubscriptionList.push(iframeListener.displayBubbleStream.subscribe(()=>{
             scriptedBubbleSprite = new Sprite(this,this.CurrentPlayer.x + 25,this.CurrentPlayer.y,'circleSprite-white');
             scriptedBubbleSprite.setDisplayOrigin(48, 48);
             this.add.existing(scriptedBubbleSprite);
         }));
 
-       this.iframeSubscriptionList.push(iframeListener.removeBubbleStream.subscribe(()=>{
+        this.iframeSubscriptionList.push(iframeListener.removeBubbleStream.subscribe(()=>{
             scriptedBubbleSprite.destroy();
         }));
 
+        this.iframeSubscriptionList.push(iframeListener.showLayerStream.subscribe((layerEvent)=>{
+            console.log('showLayer 3');
+            this.setLayerVisibility(layerEvent.name, true);
+        }));
+
+        this.iframeSubscriptionList.push(iframeListener.hideLayerStream.subscribe((layerEvent)=>{
+            console.log('hideLayer 3');
+            this.setLayerVisibility(layerEvent.name, false);
+        }));
+
     }
+
+    private setLayerVisibility(layerName: string, visible: boolean): void {
+        console.log('visibility');
+        const layer = this.Layers.find((layer) => layer.layer.name === layerName);
+        if (layer === undefined) {
+            console.warn('Could not find layer "' + layerName + '" when calling WA.hideLayer / WA.showLayer');
+            return;
+        }
+        layer.setVisible(visible);
+        this.dirty = true;
+    }
+
 
     private getMapDirUrl(): string {
         return this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf('/'));
@@ -1207,7 +1230,6 @@ ${escapedMessage}
      * @param delta The delta time in ms since the last frame. This is a smoothed and capped value based on the FPS rate.
      */
     update(time: number, delta: number) : void {
-        this.dirty = false;
         mediaManager.updateScene();
         this.currentTick = time;
         if (this.CurrentPlayer.isMoving()) {
