@@ -15,6 +15,8 @@ import { UserInputChatEvent } from "./Events/UserInputChatEvent";
 import { GameStateEvent } from './Events/ApiGameStateEvent';
 import { deepFreezeClone as deepFreezeClone } from '../utility';
 import { HasMovedEvent } from './Events/HasMovedEvent';
+import { Math } from 'phaser';
+
 
 
 /**
@@ -63,6 +65,7 @@ class IframeListener {
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
     private sendMoveEvents: boolean = false;
+    private lastMoveTimestamp: number = 0
 
     init() {
         window.addEventListener("message", (message: TypedMessageEvent<IframeEvent<keyof IframeEventMap>>) => {
@@ -237,10 +240,14 @@ class IframeListener {
 
     hasMovedEvent(event: HasMovedEvent) {
         if (this.sendMoveEvents) {
-            this.postMessage({
-                'type': 'hasMovedEvent',
-                'data': event
-            });
+            if (this.lastMoveTimestamp < Date.now() - 100) {
+                this.lastMoveTimestamp = Date.now()
+                this.postMessage({
+                    'type': 'hasMovedEvent',
+                    'data': event
+                });
+            }
+
         }
     }
 
