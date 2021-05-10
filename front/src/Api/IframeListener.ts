@@ -12,6 +12,7 @@ import {ClosePopupEvent, isClosePopupEvent} from "./Events/ClosePopupEvent";
 import {scriptUtils} from "./ScriptUtils";
 import {GoToPageEvent, isGoToPageEvent} from "./Events/GoToPageEvent";
 import {isOpenCoWebsite, OpenCoWebSiteEvent} from "./Events/OpenCoWebSiteEvent";
+import {isLayerEvent, LayerEvent} from "./Events/LayerEvent";
 
 
 /**
@@ -52,6 +53,12 @@ class IframeListener {
     private readonly _removeBubbleStream: Subject<void> = new Subject();
     public readonly removeBubbleStream = this._removeBubbleStream.asObservable();
 
+    private readonly _showLayerStream: Subject<LayerEvent> = new Subject();
+    public readonly showLayerStream = this._showLayerStream.asObservable();
+
+    private readonly _hideLayerStream: Subject<LayerEvent> = new Subject();
+    public readonly hideLayerStream = this._hideLayerStream.asObservable();
+
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
 
@@ -73,7 +80,13 @@ class IframeListener {
 
             const payload = message.data;
             if (isIframeEventWrapper(payload)) {
-                if (payload.type === 'chat' && isChatEvent(payload.data)) {
+                if (payload.type ==='showLayer' && isLayerEvent(payload.data)) {
+                    console.log('showLayer 2');
+                    this._showLayerStream.next(payload.data);
+                } else if (payload.type === 'hideLayer' && isLayerEvent(payload.data)) {
+                    console.log('hideLayer 2');
+                    this._hideLayerStream.next(payload.data);
+                } else if (payload.type === 'chat' && isChatEvent(payload.data)) {
                     this._chatStream.next(payload.data);
                 } else if (payload.type === 'openPopup' && isOpenPopupEvent(payload.data)) {
                     this._openPopupStream.next(payload.data);
