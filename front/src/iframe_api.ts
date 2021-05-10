@@ -21,8 +21,8 @@ interface WorkAdventureApi {
     goToPage(url : string): void;
     openCoWebSite(url : string): void;
     closeCoWebSite(): void;
-    disablePlayerControl() : void;
-    restorePlayerControl() : void;
+    disablePlayerControls() : void;
+    restorePlayerControls() : void;
     displayBubble() : void;
     removeBubble() : void;
     showLayer(layer: string) : void;
@@ -107,12 +107,12 @@ window.WA = {
             } as LayerEvent
         }, '*');
     },
-    disablePlayerControl(): void {
-        window.parent.postMessage({ 'type': 'disablePlayerControl' }, '*');
+    disablePlayerControls(): void {
+        window.parent.postMessage({ 'type': 'disablePlayerControls' }, '*');
     },
 
-    restorePlayerControl(): void {
-        window.parent.postMessage({ 'type': 'restorePlayerControl' }, '*');
+    restorePlayerControls(): void {
+        window.parent.postMessage({ 'type': 'restorePlayerControls' }, '*');
     },
 
     displayBubble(): void {

@@ -26,8 +26,8 @@ export type IframeEventMap = {
     goToPage: GoToPageEvent
     openCoWebSite: OpenCoWebSiteEvent
     closeCoWebSite: null
-    disablePlayerControl: null
-    restorePlayerControl: null
+    disablePlayerControls: null
+    restorePlayerControls: null
     displayBubble: null
     removeBubble: null
     showLayer: LayerEvent
