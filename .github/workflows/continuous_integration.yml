@@ -3,8 +3,11 @@
 name: "Continuous Integration"
 
 on:
-  - "pull_request"
-  - "push"
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
 
 jobs:
 
@@ -39,6 +42,10 @@ jobs:
         run: yarn run proto && yarn run copy-to-front
         working-directory: "messages"
 
+      - name: "Create index.html"
+        run: ./templater.sh
+        working-directory: "front"
+
       - name: "Build"
         run: yarn run build
         env:
@@ -52,6 +59,49 @@ jobs:
       - name: "Jasmine"
         run: yarn test
         working-directory: "front"
+
+  continuous-integration-pusher:
+    name: "Continuous Integration Pusher"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2.0.0"
+
+      - name: "Setup NodeJS"
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          version: '3.x'
+
+      - name: "Install dependencies"
+        run: yarn install
+        working-directory: "pusher"
+
+      - name: "Install messages dependencies"
+        run: yarn install
+        working-directory: "messages"
+
+      - name: "Build proto messages"
+        run: yarn run proto && yarn run copy-to-pusher
+        working-directory: "messages"
+
+      - name: "Build"
+        run: yarn run tsc
+        working-directory: "pusher"
+
+      - name: "Lint"
+        run: yarn run lint
+        working-directory: "pusher"
+
+      - name: "Jasmine"
+        run: yarn test
+        working-directory: "pusher"
 
   continuous-integration-back:
     name: "Continuous Integration Back"

@@ -39,43 +39,94 @@ body .message-info.warning{
     position: relative;
     transition: all 0.2s ease;
     background-color: #00000099;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
 }
 .video-container i{
     position: absolute;
     width: 100px;
-    height: 65px;
+    height: 100px;
     left: calc(50% - 50px);
     top: calc(50% - 50px);
     background-color: black;
     border-radius: 50%;
     text-align: center;
-    padding-top: 35px;
+    padding-top: 32px;
     font-size: 28px;
     color: white;
+    overflow: hidden;
 }
-.video-container img.active{
-    display: block;
-}
+
 .video-container img{
     position: absolute;
     display: none;
-    width: 15px;
-    height: 15px;
-    background: #d93025;
-    border-radius: 48px;
+    width: 40px;
+    height: 40px;
     left: 5px;
     bottom: 5px;
     padding: 10px;
     z-index: 2;
 }
+.video-container img.block-logo {
+    left: 30%;
+    bottom: 15%;
+    width: 150px;
+    height: 150px;
+}
 
-.video-container img.report{
+.video-container button.report{
+    display: block;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    background: none;
+    background-color: rgba(0, 0, 0, 0);
+    border: none;
+    background-color: black;
+    border-radius: 15px;
+    position: absolute;
+    width: 0px;
+    height: 35px;
     right: 5px;
-    left: auto;
+    bottom: 5px;
+    padding: 0px;
+    overflow: hidden;
+    z-index: 2;
+    transition: all .5s ease;
+}
+
+.video-container:hover button.report{
+    width: 35px;
+    padding: 10px;
+}
+
+.video-container button.report:hover {
+    width: 160px;
+}
+
+.video-container button.report img{
+    position: absolute;
+    display: block;
+    bottom: 5px;
+    left: 5px;
+    margin: 0;
+    padding: 0;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    width: 25px;
+    height: 25px;
+}
+.video-container button.report span{
+    position: absolute;
+    bottom: 6px;
+    left: 36px;
+    color: white;
+    font-size: 16px;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+}
+.video-container img.active {
+    display: block !important;
 }
 
 .video-container video{
     height: 100%;
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
 }
 
 .video-container video:focus{
@@ -89,8 +140,9 @@ body .message-info.warning{
 #div-myCamVideo {
     position: absolute;
     right: 15px;
-    bottom: 15px;
+    bottom: 30px;
     border-radius: 15px 15px 15px 15px;
+    max-height: 20%;
 }
 
 video#myCamVideo{
@@ -102,27 +154,70 @@ video#myCamVideo{
     /*height: 113px;*/
 }
 
+.sound-progress{
+    display: none;
+    position: absolute;
+    right: 14px;
+    top: calc(50% - 5px);
+}
+.sound-progress.active{
+    display: table-column;
+}
+.sound-progress span{
+    position: absolute;
+    color: black;
+    background-color: #00000020;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+}
+.sound-progress span.active{
+    background-color: #00c3ff66
+}
+.sound-progress span:nth-child(1){
+    top: calc(50% + 20px);
+}
+.sound-progress span:nth-child(2){
+    top: calc(50% + 10px);
+}
+.sound-progress span:nth-child(3){
+    top: calc(50% - 0px);
+}
+.sound-progress span:nth-child(4){
+    top: calc(50% - 10px);
+}
+.sound-progress span:nth-child(5){
+    top: calc(50% - 20px);
+}
 
 .btn-cam-action {
+    pointer-events: all;
     position: absolute;
-    bottom: 0px;
-    right: 0px;
-    width: 450px;
-    height: 150px;
+    display: inline-flex;
+    bottom: 10px;
+    right: 15px;
+    width: 15vw;
+    height: 40px;
+    text-align: center;
+    align-content: center;
+    align-items: center;
+    justify-content: center;
+    justify-items: center;
 }
 /*btn animation*/
 .btn-cam-action div{
     cursor: url('/resources/logos/cursor_pointer.png'), pointer;
-    position: absolute;
+    /*position: absolute;*/
     border: solid 0px black;
     width: 44px;
     height: 44px;
     background: #666;
     box-shadow: 2px 2px 24px #444;
     border-radius: 48px;
-    transform: translateY(40px);
+    transform: translateY(20px);
     transition-timing-function: ease-in-out;
-    bottom: 20px;
+    margin-bottom: 20px;
+    margin: 0 4%;
 }
 .btn-cam-action div.disabled {
     background: #d75555;
@@ -136,24 +231,29 @@ video#myCamVideo{
 .btn-cam-action div:hover{
     background: #407cf7;
     box-shadow: 4px 4px 48px #666;
-    transition: 280ms;
+    transition: 120ms;
 }
 .btn-micro{
+    pointer-events: auto;
     transition: all .3s;
-    right: 44px;
+    /*right: 44px;*/
 }
 .btn-video{
+    pointer-events: auto;
     transition: all .25s;
-    right: 134px;
+    /*right: 134px;*/
 }
 .btn-monitor{
+    pointer-events: auto;
     transition: all .2s;
-    right: 224px;
+    /*right: 224px;*/
 }
-/*.btn-call{
-    transition: all .1s;
-    left: 0px;
-}*/
+.btn-copy{
+    pointer-events: auto;
+    transition: all .3s;
+    right: 44px;
+    opacity: 1;
+}
 .btn-cam-action div img{
     height: 22px;
     width: 30px;
@@ -167,8 +267,8 @@ video#myCamVideo{
 .connecting-spinner {
       /*display: inline-block;*/
       position: absolute;
-      left: calc(50% - 68px);
-      top: calc(50% - 68px);
+      left: calc(50% - 62px);
+      top: calc(50% - 62px);
 
 
       width: 130px;
@@ -281,85 +381,12 @@ body {
         max-height: 25%;
     }
 
-    #cowebsite {
-        right: 0;
-        top: 0;
-        width: 50%;
-        height: 100vh;
-    }
-    #cowebsite.loading {
-        transform: translateX(90%);
-    }
-    #cowebsite.hidden {
-        transform: translateX(100%);
-    }
 
-    #cowebsite .close-btn{
-        position: absolute;
-        top: 10px;
-        right: -100px;
-        background: none;
-        border: none;
-        cursor: url('/resources/logos/cursor_pointer.png'), pointer;
-        animation: right .2s ease;
-    }
-    #cowebsite .close-btn img{
-        height: 15px;
-        right: 15px;
-    }
-    #cowebsite:hover .close-btn{
-        right: 10px;
-    }
-}
-@media (max-aspect-ratio: 1/1) {
-    .game-overlay {
-        flex-direction: column;
-    }
-
-    .sidebar {
-        flex-direction: row;
-        align-items: flex-end;
-    }
-
-    .sidebar > div {
-        max-width: 21%;
-    }
-
-    .sidebar > div:hover {
-        max-width: 25%;
-    }
-
-    #cowebsite {
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        height: 50%;
-    }
-    #cowebsite.loading {
-        transform: translateY(90%);
-    }
-    #cowebsite.hidden {
-        transform: translateY(100%);
-    }
 }
 
 #game {
     width: 100%;
     position: relative; /* Position relative is needed for the game-overlay. */
-}
-
-/* A potentially shared website could appear in an iframe in the cowebsite space. */
-#cowebsite {
-    position: fixed;
-    transition: transform 0.5s;
-}
-#cowebsite.loading {
-    background-color: gray;
-}
-
-#cowebsite > iframe {
-    width: 100%;
-    height: 100%;
 }
 
 .audioplayer:first-child  {
@@ -374,10 +401,14 @@ body {
     justify-content: center;
 }
 
+.audioplayer > div {
+    padding-right: 1.2rem;
+}
+
 #audioplayerctrl {
     position: fixed;
     top: 0;
-    right: 50%;
+    right: calc(50% - 120px);
     padding: 0.3rem 0.5rem;
     color: white;
     transition: transform 0.5s;
@@ -509,7 +540,16 @@ input[type=range]:focus::-ms-fill-upper {
     position: absolute;
     width: 100%;
     height: 100%;
+    pointer-events: none;
     /* TODO: DO WE NEED FLEX HERE???? WE WANT A SIDEBAR OF EXACTLY 25% (note: flex useful for direction!!!) */
+}
+
+.game-overlay + div {
+    pointer-events: none;
+}
+
+.game-overlay + div > div {
+    pointer-events: auto;
 }
 
 .game-overlay.active {
@@ -517,7 +557,7 @@ input[type=range]:focus::-ms-fill-upper {
 }
 
 .game-overlay video {
-    width: 100%
+    width: 100%;
 }
 
 .main-section {
@@ -533,6 +573,7 @@ input[type=range]:focus::-ms-fill-upper {
     flex-basis: 96%;
     transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s, flex-basis 0.2s;
     cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    pointer-events: auto;
     /*flex-shrink: 2;*/
 }
 
@@ -551,10 +592,15 @@ input[type=range]:focus::-ms-fill-upper {
     transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s, max-height 0.2s, max-width 0.2s;
     cursor: url('/resources/logos/cursor_pointer.png'), pointer;
     border-radius: 15px 15px 15px 15px;
+    pointer-events: auto;
 }
 
 .sidebar > div:hover {
     margin: 0%;
+}
+
+.sidebar > div video {
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
 }
 
 /* Let's make sure videos are vertically centered if they need to be cropped */
@@ -567,10 +613,9 @@ input[type=range]:focus::-ms-fill-upper {
 }
 
 .chat-mode {
-    display: flex;
+    display: grid;
     width: 100%;
 
-    flex-wrap: wrap;
     align-items: flex-start;
 
     padding: 1%;
@@ -586,24 +631,20 @@ input[type=range]:focus::-ms-fill-upper {
 .chat-mode > div:hover {
     margin: 0%;
 }
-.chat-mode.one-col > div {
-    flex-basis: 98%;
+.chat-mode.one-col {
+    grid-template-columns: repeat(1, 1fr);
 }
 
-.chat-mode.two-col > div {
-    flex-basis: 48%;
+.chat-mode.two-col {
+    grid-template-columns: repeat(2, 1fr);
 }
 
-.chat-mode.three-col > div {
-    flex-basis: 31.333333%;
+.chat-mode.three-col {
+    grid-template-columns: repeat(3, 1fr);
 }
 
-.chat-mode.four-col > div {
-    flex-basis: 23%;
-}
-
-.chat-mode > div:last-child {
-    flex-grow: 5;
+.chat-mode.four-col {
+    grid-template-columns: repeat(4, 1fr);
 }
 
 /*CONSOLE*/
@@ -805,7 +846,7 @@ input[type=range]:focus::-ms-fill-upper {
     right: 0;
 }
 .main-container .audio-playing img{
-    width: 30px;
+    /*width: 30px;*/
     border-radius: 50%;
     background-color: #ffda01;
     padding: 10px;
@@ -813,6 +854,7 @@ input[type=range]:focus::-ms-fill-upper {
 .main-container .audio-playing p{
     color: white;
     margin-left: 10px;
+    margin-top: 14px;
 }
 
 /* VIDEO QUALITY */
@@ -862,10 +904,10 @@ div.modal-report-user{
 
 .modal-report-user img{
     position: absolute;
-    height: 50px;
-    width: 50px;
+    height: 24px;
+    width: 24px;
     z-index: 999;
-    left: calc(50% - 25px);
+    left: calc(50% - 12px);
     top: 10px;
 }
 
@@ -1029,7 +1071,7 @@ div.modal-report-user{
     background-color: #2d2d2dba;
     right: 34px;
     margin: 0px;
-    padding: 6px 0px;
+    padding: 2px 0px;
     border-radius: 15px;
     border: none;
     color: white;
@@ -1044,7 +1086,7 @@ div.modal-report-user{
 
 .discussion .messages{
     position: absolute;
-    height: calc(100% - 360px);
+    height: calc(100% - 390px);
     overflow-x: hidden;
     overflow-y: auto;
     max-width: calc(100% - 40px);
@@ -1072,26 +1114,31 @@ div.modal-report-user{
 }
 
 .discussion .messages .message p.body{
+    color: white;
     font-size: 16px;
     overflow: hidden;
     white-space: pre-wrap;
     word-wrap: break-word;
 }
+.discussion .messages .message p a{
+    color: white;
+}
 
 .discussion .send-message{
     position: absolute;
     bottom: 45px;
-    width: 220px;
+    width: 200px;
     height: 26px;
+    margin-bottom: 10px;
 }
 
 .discussion .send-message input{
     position: absolute;
-    width: calc(100% - 10px);
-    height: 20px;
+    width: calc(100% - 20px);
+    height: 30px;
     background-color: #171717;
     color: white;
-    border-radius: 15px;
+    border-radius: 10px;
     border: none;
     padding: 6px;
 }
@@ -1120,16 +1167,59 @@ div.action{
     animation-iteration-count: infinite;
     animation-timing-function: ease-in-out;
 }
+div.action.info,
+div.action.warning,
+div.action.danger{
+    transition: all 1s ease;
+    animation: mymove 1s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+}
 div.action p.action-body{
+    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
     padding: 10px;
     background-color: #2d2d2dba;
     color: #fff;
-    font-size: 12px;
+    font-size: 14px;
+    font-weight: 500;
     text-align: center;
-    max-width: 150px;
-    margin-left: calc(50% - 75px);
+    max-width: 350px;
+    margin-left: calc(50% - 175px);
     border-radius: 15px;
 }
+div.action.warning p.action-body{
+    background-color: #ff9800eb;
+    color: #000;
+}
+div.action.danger p.action-body{
+    background-color: #da0000e3;
+    color: #000;
+}
+.popUpElement{
+    font-family: 'Press Start 2P';
+    text-align: left;
+    color: white;
+}
+.popUpElement div {
+    font-family: 'Press Start 2P';
+    font-size: 10px;
+    background-color: #727678;
+}
+
+.popUpElement button {
+    position: relative;
+    font-size: 10px;
+    border-image-repeat: revert;
+    margin-right: 5px;
+}
+
+.popUpElement .buttonContainer {
+    float: right;
+    background-color: inherit;
+
+}
+
+
 @keyframes mymove {
     0% {bottom: 40px;}
     50% {bottom: 30px;}

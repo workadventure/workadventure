@@ -36,6 +36,10 @@ message CharacterLayerMessage {
   string name = 2;
 }
 
+message CompanionMessage {
+  string name = 1;
+}
+
 /*********** CLIENT TO SERVER MESSAGES *************/
 
 message PingMessage {
@@ -141,6 +145,7 @@ message UserJoinedMessage {
   string name = 2;
   repeated CharacterLayerMessage characterLayers = 3;
   PositionMessage position = 4;
+  CompanionMessage companion = 5;
 }
 
 message UserLeftMessage {
@@ -168,6 +173,8 @@ message WebRtcStartMessage {
   int32 userId = 1;
   string name = 2;
   bool initiator = 3;
+  string webrtcUserName = 4;
+  string webrtcPassword = 5;
 }
 
 message WebRtcDisconnectMessage {
@@ -177,6 +184,8 @@ message WebRtcDisconnectMessage {
 message WebRtcSignalToClientMessage {
   int32 userId = 1;
   string signal = 2;
+  string webrtcUserName = 4;
+  string webrtcPassword = 5;
 }
 
 message TeleportMessageMessage{
@@ -189,6 +198,31 @@ message SendJitsiJwtMessage {
 }
 
 message SendUserMessage{
+  string type = 1;
+  string message = 2;
+}
+
+message WorldFullWarningMessage{
+}
+message WorldFullWarningToRoomMessage{
+    string roomId = 1;
+}
+message RefreshRoomPromptMessage{
+    string roomId = 1;
+}
+message RefreshRoomMessage{
+    string roomId = 1;
+    int32 versionNumber = 2;
+}
+
+message WorldFullMessage{
+}
+
+message WorldConnexionMessage{
+  string message = 2;
+}
+
+message BanUserMessage{
   string type = 1;
   string message = 2;
 }
@@ -207,6 +241,12 @@ message ServerToClientMessage {
     TeleportMessageMessage teleportMessageMessage = 10;
     SendJitsiJwtMessage sendJitsiJwtMessage = 11;
     SendUserMessage sendUserMessage = 12;
+    BanUserMessage banUserMessage = 13;
+    AdminRoomMessage adminRoomMessage = 14;
+    WorldFullWarningMessage worldFullWarningMessage = 15;
+    WorldFullMessage worldFullMessage = 16;
+    RefreshRoomMessage refreshRoomMessage = 17; 
+    WorldConnexionMessage worldConnexionMessage = 18;
   }
 }
 
@@ -220,6 +260,8 @@ message JoinRoomMessage {
   string userUuid = 4;
   string roomId = 5;
   repeated string tag = 6;
+  string IPAddress = 7;
+  CompanionMessage companion = 8;
 }
 
 message UserJoinedZoneMessage {
@@ -228,6 +270,7 @@ message UserJoinedZoneMessage {
   repeated CharacterLayerMessage characterLayers = 3;
   PositionMessage position = 4;
   Zone fromZone = 5;
+  CompanionMessage companion = 6;
 }
 
 message UserLeftZoneMessage {
@@ -272,6 +315,8 @@ message PusherToBackMessage {
     StopGlobalMessage stopGlobalMessage = 9;
     ReportPlayerMessage reportPlayerMessage = 10;
     QueryJitsiJwtMessage queryJitsiJwtMessage = 11;
+    SendUserMessage sendUserMessage = 12;
+    BanUserMessage banUserMessage = 13;
   }
 }
 
@@ -288,6 +333,7 @@ message SubToPusherMessage {
     UserLeftZoneMessage userLeftZoneMessage = 5;
     ItemEventMessage itemEventMessage = 6;
     SendUserMessage sendUserMessage = 7;
+    BanUserMessage banUserMessage = 8;
   }
 }
 
@@ -306,10 +352,20 @@ message ServerToAdminClientMessage {
   repeated SubToAdminPusherMessage payload = 2;
 }*/
 
+message UserJoinedRoomMessage {
+  string uuid = 1;
+  string ipAddress = 2;
+  string name = 3;
+}
+
+message UserLeftRoomMessage {
+  string uuid = 1;
+}
+
 message ServerToAdminClientMessage {
   oneof message {
-    string userUuidJoinedRoom = 1;
-    string userUuidLeftRoom = 2;
+    UserJoinedRoomMessage userJoinedRoom = 1;
+    UserLeftRoomMessage userLeftRoom = 2;
   }
 }
 
@@ -325,6 +381,13 @@ message AdminMessage {
   string message = 1;
   string recipientUuid = 2;
   string roomId = 3;
+  string type = 4;
+}
+
+// A message sent by an administrator to everyone in a specific room
+message AdminRoomMessage {
+  string message = 1;
+  string roomId = 2;
 }
 
 // A message sent by an administrator to absolutely everybody
@@ -335,6 +398,8 @@ message AdminGlobalMessage {
 message BanMessage {
   string recipientUuid = 1;
   string roomId = 2;
+  string type = 3;
+  string message = 4;
 }
 
 message EmptyMessage {
@@ -348,4 +413,7 @@ service RoomManager {
   rpc sendAdminMessage(AdminMessage) returns (EmptyMessage);
   rpc sendGlobalAdminMessage(AdminGlobalMessage) returns (EmptyMessage);
   rpc ban(BanMessage) returns (EmptyMessage);
+  rpc sendAdminMessageToRoom(AdminRoomMessage) returns (EmptyMessage);
+  rpc sendWorldFullWarningToRoom(WorldFullWarningToRoomMessage) returns (EmptyMessage);
+  rpc sendRefreshRoomPrompt(RefreshRoomPromptMessage) returns (EmptyMessage);
 }

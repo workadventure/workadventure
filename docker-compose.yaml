@@ -26,19 +26,26 @@ services:
       JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
       HOST: "0.0.0.0"
       NODE_ENV: development
-      API_URL: pusher.workadventure.localhost
-      UPLOADER_URL: uploader.workadventure.localhost
-      ADMIN_URL: admin.workadventure.localhost
-      STARTUP_COMMAND_1: yarn install
-      TURN_SERVER: "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443"
-      TURN_USER: workadventure
-      TURN_PASSWORD: WorkAdventure123
+      PUSHER_URL: //pusher.workadventure.localhost
+      UPLOADER_URL: //uploader.workadventure.localhost
+      ADMIN_URL: //workadventure.localhost
+      STARTUP_COMMAND_1: ./templater.sh
+      STARTUP_COMMAND_2: yarn install
+      STUN_SERVER: "stun:stun.l.google.com:19302"
+      TURN_SERVER: "turn:coturn.workadventure.localhost:3478,turns:coturn.workadventure.localhost:5349"
+      # Use TURN_USER/TURN_PASSWORD if your Coturn server is secured via hard coded credentials.
+      # Advice: you should instead use Coturn REST API along the TURN_STATIC_AUTH_SECRET in the Back container
+      TURN_USER: ""
+      TURN_PASSWORD: ""
+      START_ROOM_URL: "$START_ROOM_URL"
+      MAX_PER_GROUP: "$MAX_PER_GROUP"
+      MAX_USERNAME_LENGTH: "$MAX_USERNAME_LENGTH"
     command: yarn run start
     volumes:
       - ./front:/usr/src/app
     labels:
       - "traefik.http.routers.front.rule=Host(`play.workadventure.localhost`)"
-      - "traefik.http.routers.front.entryPoints=web,traefik"
+      - "traefik.http.routers.front.entryPoints=web"
       - "traefik.http.services.front.loadbalancer.server.port=8080"
       - "traefik.http.routers.front-ssl.rule=Host(`play.workadventure.localhost`)"
       - "traefik.http.routers.front-ssl.entryPoints=websecure"
@@ -48,10 +55,8 @@ services:
   pusher:
     image: thecodingmachine/nodejs:12
     command: yarn dev
-    #command: yarn run prod
-    #command: yarn run profile
     environment:
-      DEBUG: "*"
+      DEBUG: "socket:*"
       STARTUP_COMMAND_1: yarn install
       SECRET_JITSI_KEY: "$SECRET_JITSI_KEY"
       SECRET_KEY: yourSecretKey
@@ -106,6 +111,8 @@ services:
       ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
       JITSI_URL: $JITSI_URL
       JITSI_ISS: $JITSI_ISS
+      TURN_STATIC_AUTH_SECRET: SomeStaticAuthSecret
+      MAX_PER_GROUP: "MAX_PER_GROUP"
     volumes:
       - ./back:/usr/src/app
     labels:
@@ -135,23 +142,6 @@ services:
       - "traefik.http.routers.uploader-ssl.tls=true"
       - "traefik.http.routers.uploader-ssl.service=uploader"
 
-  website:
-    image: thecodingmachine/nodejs:12-apache
-    environment:
-      STARTUP_COMMAND_1: npm install
-      STARTUP_COMMAND_2: npm run watch &
-      APACHE_DOCUMENT_ROOT: dist/
-    volumes:
-      - ./website:/var/www/html
-    labels:
-      - "traefik.http.routers.website.rule=Host(`workadventure.localhost`)"
-      - "traefik.http.routers.website.entryPoints=web"
-      - "traefik.http.services.website.loadbalancer.server.port=80"
-      - "traefik.http.routers.website-ssl.rule=Host(`workadventure.localhost`)"
-      - "traefik.http.routers.website-ssl.entryPoints=websecure"
-      - "traefik.http.routers.website-ssl.tls=true"
-      - "traefik.http.routers.website-ssl.service=website"
-
   messages:
     #image: thecodingmachine/nodejs:14
     image: thecodingmachine/workadventure-back-base:latest
@@ -164,3 +154,28 @@ services:
       - ./back:/usr/src/back
       - ./front:/usr/src/front
       - ./pusher:/usr/src/pusher
+
+#  coturn:
+#    image: coturn/coturn:4.5.2
+#    command:
+#      - turnserver
+#      #- -c=/etc/coturn/turnserver.conf
+#      - --log-file=stdout
+#      - --external-ip=$$(detect-external-ip)
+#      - --listening-port=3478
+#      - --min-port=10000
+#      - --max-port=10010
+#      - --tls-listening-port=5349
+#      - --listening-ip=0.0.0.0
+#      - --realm=coturn.workadventure.localhost
+#      - --server-name=coturn.workadventure.localhost
+#      - --lt-cred-mech
+#      # Enable Coturn "REST API" to validate temporary passwords.
+#      #- --use-auth-secret
+#      #- --static-auth-secret=SomeStaticAuthSecret
+#      #- --userdb=/var/lib/turn/turndb
+#      - --user=workadventure:WorkAdventure123
+#      # use real-valid certificate/privatekey files
+#      #- --cert=/root/letsencrypt/fullchain.pem
+#      #- --pkey=/root/letsencrypt/privkey.pem
+#    network_mode: host

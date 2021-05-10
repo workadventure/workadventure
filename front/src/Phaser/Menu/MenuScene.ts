@@ -1,22 +1,22 @@
 import {LoginScene, LoginSceneName} from "../Login/LoginScene";
 import {SelectCharacterScene, SelectCharacterSceneName} from "../Login/SelectCharacterScene";
+import {SelectCompanionScene, SelectCompanionSceneName} from "../Login/SelectCompanionScene";
 import {gameManager} from "../Game/GameManager";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {mediaManager} from "../../WebRtc/MediaManager";
+import {gameReportKey, gameReportRessource, ReportMenu} from "./ReportMenu";
 import {connectionManager} from "../../Connexion/ConnectionManager";
-import {UserInputManager} from "../UserInput/UserInputManager";
-import {GameScene} from "../Game/GameScene";
+import {GameConnexionTypes} from "../../Url/UrlManager";
+import {WarningContainer, warningContainerHtml, warningContainerKey} from "../Components/WarningContainer";
+import {worldFullWarningStream} from "../../Connexion/WorldFullWarningStream";
 
 export const MenuSceneName = 'MenuScene';
 const gameMenuKey = 'gameMenu';
 const gameMenuIconKey = 'gameMenuIcon';
 const gameSettingsMenuKey = 'gameSettingsMenu';
-const gameLogin = 'gameLogin';
-const gameForgotPassword = 'gameForgotPassword';
-const gameRegister = 'gameRegister';
 const gameShare = 'gameShare';
 
-const closedSideMenuX = -200;
+const closedSideMenuX = -1000;
 const openedSideMenuX = 0;
 
 /**
@@ -25,17 +25,16 @@ const openedSideMenuX = 0;
 export class MenuScene extends Phaser.Scene {
     private menuElement!: Phaser.GameObjects.DOMElement;
     private gameQualityMenuElement!: Phaser.GameObjects.DOMElement;
-    private gameLoginElement!: Phaser.GameObjects.DOMElement;
-    private gameForgotPasswordElement!: Phaser.GameObjects.DOMElement;
-    private gameRegisterElement!: Phaser.GameObjects.DOMElement;
     private gameShareElement!: Phaser.GameObjects.DOMElement;
+    private gameReportElement!: ReportMenu;
     private sideMenuOpened = false;
     private settingsMenuOpened = false;
-    private gameLoginMenuOpened = false;
     private gameShareOpened = false;
     private gameQualityValue: number;
     private videoQualityValue: number;
     private menuButton!: Phaser.GameObjects.DOMElement;
+    private warningContainer: WarningContainer | null = null;
+    private warningContainerTimeout: NodeJS.Timeout | null = null;
 
     constructor() {
         super({key: MenuSceneName});
@@ -48,67 +47,23 @@ export class MenuScene extends Phaser.Scene {
         this.load.html(gameMenuKey, 'resources/html/gameMenu.html');
         this.load.html(gameMenuIconKey, 'resources/html/gameMenuIcon.html');
         this.load.html(gameSettingsMenuKey, 'resources/html/gameQualityMenu.html');
-        this.load.html(gameLogin, 'resources/html/gameLogin.html');
-        this.load.html(gameForgotPassword, 'resources/html/gameForgotPassword.html');
-        this.load.html(gameRegister, 'resources/html/gameRegister.html');
         this.load.html(gameShare, 'resources/html/gameShare.html');
+        this.load.html(gameReportKey, gameReportRessource);
+        this.load.html(warningContainerKey, warningContainerHtml);
     }
 
     create() {
         this.menuElement = this.add.dom(closedSideMenuX, 30).createFromCache(gameMenuKey);
         this.menuElement.setOrigin(0);
-        this.revealMenusAfterInit(this.menuElement, 'gameMenu');
+        MenuScene.revealMenusAfterInit(this.menuElement, 'gameMenu');
 
         const middleX = (window.innerWidth / 3) - 298;
         this.gameQualityMenuElement = this.add.dom(middleX, -400).createFromCache(gameSettingsMenuKey);
-        this.revealMenusAfterInit(this.gameQualityMenuElement, 'gameQuality');
+        MenuScene.revealMenusAfterInit(this.gameQualityMenuElement, 'gameQuality');
 
-        this.gameLoginElement = this.add.dom(middleX, -400).createFromCache(gameLogin);
-        this.revealMenusAfterInit(this.gameLoginElement, gameLogin);
-        this.gameLoginElement.addListener('click');
-        this.gameLoginElement.on('click',  (event:MouseEvent) => {
-            event.preventDefault();
-            if((event?.target as HTMLInputElement).id === 'gameLoginFormCancel') {
-                this.closeGameLogin();
-            }else if((event?.target as HTMLInputElement).id === 'gameLoginFormSubmit') {
-                this.login();
-            }else if((event?.target as HTMLInputElement).id === 'gameLoginFormForgotPassword') {
-                this.closeGameLogin();
-                this.openGameForgotPassword();
-            }else if((event?.target as HTMLInputElement).id === 'gameLoginFormRegister') {
-                this.closeGameLogin();
-                this.openGameRegister();
-            }
-        });
-
-        this.gameForgotPasswordElement = this.add.dom(middleX, -400).createFromCache(gameForgotPassword);
-        this.revealMenusAfterInit(this.gameForgotPasswordElement, gameForgotPassword);
-        this.gameForgotPasswordElement.addListener('click');
-        this.gameForgotPasswordElement.on('click',  (event:MouseEvent) => {
-            event.preventDefault();
-            if((event?.target as HTMLInputElement).id === 'gameLoginFormForgotPasswordSubmit') {
-                this.sendEmail();
-            }else if((event?.target as HTMLInputElement).id === 'gameLoginFormForgotPasswordCancel') {
-                this.closeGameForgotPassword();
-                this.openGameLogin();
-            }
-        });
-
-        this.gameRegisterElement = this.add.dom(middleX, -400).createFromCache(gameRegister);
-        this.revealMenusAfterInit(this.gameRegisterElement, gameRegister);
-        this.gameRegisterElement.addListener('click');
-        this.gameRegisterElement.on('click',  (event:MouseEvent) => {
-            event.preventDefault();
-            if((event?.target as HTMLInputElement).id === 'gameRegisterFormSubmit') {
-                this.register();
-            }else if((event?.target as HTMLInputElement).id === 'gameRegisterFormCancel') {
-                this.closeGameRegister();
-                this.openGameLogin();
-            }
-        });
 
         this.gameShareElement = this.add.dom(middleX, -400).createFromCache(gameShare);
-        this.revealMenusAfterInit(this.gameShareElement, gameShare);
+        MenuScene.revealMenusAfterInit(this.gameShareElement, gameShare);
         this.gameShareElement.addListener('click');
         this.gameShareElement.on('click',  (event:MouseEvent) => {
             event.preventDefault();
@@ -119,8 +74,15 @@ export class MenuScene extends Phaser.Scene {
             }
         });
 
-        this.initKeyBoard();
+        this.gameReportElement = new ReportMenu(this, connectionManager.getConnexionType === GameConnexionTypes.anonymous);
+        mediaManager.setShowReportModalCallBacks((userId, userName) => {
+            this.closeAll();
+            this.gameReportElement.open(parseInt(userId), userName);
+        });
 
+        this.input.keyboard.on('keyup-TAB', () => {
+            this.sideMenuOpened ? this.closeSideMenu() : this.openSideMenu();
+        });
         this.menuButton = this.add.dom(0, 0).createFromCache(gameMenuIconKey);
         this.menuButton.addListener('click');
         this.menuButton.on('click', () => {
@@ -129,19 +91,12 @@ export class MenuScene extends Phaser.Scene {
 
         this.menuElement.addListener('click');
         this.menuElement.on('click', this.onMenuClick.bind(this));
+
+        worldFullWarningStream.stream.subscribe(() => this.showWorldCapacityWarning());
     }
 
-    private initKeyBoard(){
-        this.input.keyboard.on('keydown-TAB', () => {
-            this.sideMenuOpened ? this.closeSideMenu() : this.openSideMenu();
-        });
-    }
-
-    private clearKeyBoard(){
-        this.input.keyboard.off('keydown-TAB');
-    }
-
-    private revealMenusAfterInit(menuElement: Phaser.GameObjects.DOMElement, rootDomId: string) {
+    //todo put this method in a parent menuElement class
+    static revealMenusAfterInit(menuElement: Phaser.GameObjects.DOMElement, rootDomId: string) {
         //Dom elements will appear inside the viewer screen when creating before being moved out of it, which create a flicker effect.
         //To prevent this, we put a 'hidden' attribute on the root element, we remove it only after the init is done.
         setTimeout(() => {
@@ -150,7 +105,12 @@ export class MenuScene extends Phaser.Scene {
     }
 
     public revealMenuIcon(): void {
-        (this.menuButton.getChildByID('menuIcon') as HTMLElement).hidden = false
+        //TODO fix me: add try catch because at the same time, 'this.menuButton' variable doesn't exist and there is error on 'getChildByID' function
+        try {
+            (this.menuButton.getChildByID('menuIcon') as HTMLElement).hidden = false;
+        } catch (err) {
+            console.error(err);
+        }
     }
 
     openSideMenu() {
@@ -158,10 +118,16 @@ export class MenuScene extends Phaser.Scene {
         this.closeAll();
         this.sideMenuOpened = true;
         this.menuButton.getChildByID('openMenuButton').innerHTML = 'X';
-        if (gameManager.getCurrentGameScene(this).connection && gameManager.getCurrentGameScene(this).connection.isAdmin()) {
+        const connection = gameManager.getCurrentGameScene(this).connection;
+        if (connection && connection.isAdmin()) {
             const adminSection = this.menuElement.getChildByID('adminConsoleSection') as HTMLElement;
             adminSection.hidden = false;
         }
+        //TODO bind with future metadata of card
+        //if (connectionManager.getConnexionType === GameConnexionTypes.anonymous){
+            const adminSection = this.menuElement.getChildByID('socialLinks') as HTMLElement;
+            adminSection.hidden = false;
+        //}
         this.tweens.add({
             targets: this.menuElement,
             x: openedSideMenuX,
@@ -170,10 +136,26 @@ export class MenuScene extends Phaser.Scene {
         });
     }
 
+    private showWorldCapacityWarning() {
+        if (!this.warningContainer) {
+            this.warningContainer = new WarningContainer(this);
+        }
+        if (this.warningContainerTimeout) {
+            clearTimeout(this.warningContainerTimeout);
+        }
+        this.warningContainerTimeout = setTimeout(() => {
+            this.warningContainer?.destroy();
+            this.warningContainer = null
+            this.warningContainerTimeout = null
+        }, 120000);
+
+    }
+
     private closeSideMenu(): void {
         if (!this.sideMenuOpened) return;
         this.sideMenuOpened = false;
         this.closeAll();
+        this.menuButton.getChildByID('openMenuButton').innerHTML = `<img src="/static/images/menu.svg">`;
         gameManager.getCurrentGameScene(this).ConsoleGlobalMessageManager.disabledMessageConsole();
         this.tweens.add({
             targets: this.menuElement,
@@ -185,6 +167,7 @@ export class MenuScene extends Phaser.Scene {
 
     private openGameSettingsMenu(): void {
         if (this.settingsMenuOpened) {
+            this.closeGameQualityMenu();
             return;
         }
         //close all
@@ -209,11 +192,11 @@ export class MenuScene extends Phaser.Scene {
             }
         });
 
-        let middleY = (window.innerHeight / 3) - (257);
+        let middleY = this.scale.height / 2 - 392/2;
         if(middleY < 0){
             middleY = 0;
         }
-        let middleX = (window.innerWidth / 3) - 298;
+        let middleX = this.scale.width / 2 - 457/2;
         if(middleX < 0){
             middleX = 0;
         }
@@ -239,72 +222,6 @@ export class MenuScene extends Phaser.Scene {
         });
     }
 
-    private openGameLogin(): void{
-        if (this.gameLoginMenuOpened) {
-            this.closeGameLogin();
-            return;
-        }
-        this.closeAll();
-        this.gameLoginMenuOpened = true;
-
-        let middleY = (window.innerHeight / 3) - (257);
-        if(middleY < 0){
-            middleY = 0;
-        }
-        let middleX = (window.innerWidth / 3) - 298;
-        if(middleX < 0){
-            middleX = 0;
-        }
-
-        this.tweens.add({
-            targets: this.gameLoginElement,
-            y: middleY,
-            x: middleX,
-            duration: 1000,
-            ease: 'Power3'
-        });
-
-        //clear / init  keyboard focus and blur
-        if(!gameManager.currentGameSceneName){
-            return;
-        }
-        const gameScene = this.scene.get(gameManager.currentGameSceneName);
-        const gameLoginEmail = this.gameLoginElement.getChildByID('gameLoginEmail');
-        (gameLoginEmail as HTMLDivElement).onfocus = () => {
-            this.clearKeyBoard();
-            (gameScene as GameScene).getInputManager.clearAllInputKeyboard();
-        }
-        (gameLoginEmail as HTMLDivElement).onblur = () => {
-            this.initKeyBoard();
-            (gameScene as GameScene).getInputManager.initKeyBoardEvent();
-        }
-
-        const gameLoginPassword = this.gameLoginElement.getChildByID('gameLoginPassword') as HTMLInputElement;
-        (gameLoginPassword as HTMLDivElement).onfocus = () => {
-            this.clearKeyBoard();
-            (gameScene as GameScene).getInputManager.clearAllInputKeyboard();
-        }
-        (gameLoginPassword as HTMLDivElement).onblur = () => {
-            this.initKeyBoard();
-            (gameScene as GameScene).getInputManager.initKeyBoardEvent();
-        }
-        gameLoginPassword.onkeypress = (event: KeyboardEvent) => {
-            if(event.code === 'Enter'){
-                event.stopPropagation();
-                this.login();
-            }
-        }
-    }
-
-    private closeGameLogin(): void{
-        this.gameLoginMenuOpened = false;
-        this.tweens.add({
-            targets: this.gameLoginElement,
-            y: -400,
-            duration: 1000,
-            ease: 'Power3'
-        });
-    }
 
     private openGameShare(): void{
         if (this.gameShareOpened) {
@@ -319,11 +236,11 @@ export class MenuScene extends Phaser.Scene {
 
         this.gameShareOpened = true;
 
-        let middleY = (window.innerHeight / 3) - (257);
+        let middleY = this.scale.height / 2 - 85;
         if(middleY < 0){
             middleY = 0;
         }
-        let middleX = (window.innerWidth / 3) - 298;
+        let middleX = this.scale.width / 2 - 200;
         if(middleX < 0){
             middleX = 0;
         }
@@ -349,172 +266,10 @@ export class MenuScene extends Phaser.Scene {
         });
     }
 
-    private login(): void{
-        let errorForm = false;
-        const gameLoginEmail = this.gameLoginElement.getChildByID('gameLoginEmail') as HTMLInputElement;
-        const gameLoginPassword = this.gameLoginElement.getChildByID('gameLoginPassword') as HTMLInputElement;
-        const gameLoginError = this.gameLoginElement.getChildByID('gameLoginError') as HTMLParagraphElement;
-
-        gameLoginError.innerText = '';
-        gameLoginError.style.display = 'none';
-
-        if (!gameLoginEmail.value || gameLoginEmail.value === '') {
-            gameLoginEmail.style.borderColor = 'red';
-            errorForm = true;
-        }else{
-            gameLoginEmail.style.borderColor = 'black';
-        }
-
-        if (!gameLoginPassword.value || gameLoginPassword.value === '') {
-            gameLoginPassword.style.borderColor = 'red';
-            errorForm = true;
-        }else{
-            gameLoginPassword.style.borderColor = 'black';
-        }
-
-        if(errorForm){return;}
-        connectionManager.userLogin(gameLoginEmail.value, gameLoginPassword.value).then(() => {
-            this.closeGameLogin();
-        }).catch((err) => {
-            gameLoginError.innerText = err.message;
-            gameLoginError.style.display = 'block';
-        });
-    }
-
-    private sendEmail(){
-        const gameForgotPasswordInfo = this.gameForgotPasswordElement.getChildByID('gameForgotPasswordInfo') as HTMLParagraphElement;
-        gameForgotPasswordInfo.style.display = 'none';
-        gameForgotPasswordInfo.innerText = '';
-
-        const gameForgotPasswordError = this.gameForgotPasswordElement.getChildByID('gameForgotPasswordError') as HTMLParagraphElement;
-        gameForgotPasswordError.style.display = 'none';
-        gameForgotPasswordError.innerText = '';
-
-        const gameLoginForgotPasswordEmail = this.gameForgotPasswordElement.getChildByID('gameLoginForgotPasswordEmail') as HTMLInputElement;
-        gameLoginForgotPasswordEmail.style.borderColor = 'black';
-        if(!gameLoginForgotPasswordEmail.value || gameLoginForgotPasswordEmail.value === ''){
-            gameForgotPasswordError.innerText = 'The email field is required.';
-            gameForgotPasswordError.style.display = 'block';
-            gameLoginForgotPasswordEmail.style.borderColor = 'red';
+    private onMenuClick(event:MouseEvent) {
+        if((event?.target as HTMLInputElement).classList.contains('not-button')){
             return;
         }
-        //TODO send email
-        connectionManager.passwordReset(gameLoginForgotPasswordEmail.value).then(() => {
-            gameForgotPasswordInfo.style.display = 'block';
-            gameForgotPasswordInfo.innerText = 'We have emailed your password reset link!';
-            gameLoginForgotPasswordEmail.value = '';
-            this.closeGameLogin();
-        }).catch((err) => {
-            gameForgotPasswordError.innerText = err.message;
-            gameForgotPasswordError.style.display = 'block';
-            gameLoginForgotPasswordEmail.value = '';
-        });
-    }
-
-    private register(){
-        const gameRegisterName = this.gameRegisterElement.getChildByID('gameRegisterName') as HTMLInputElement;
-        gameRegisterName.style.borderColor = 'black';
-        const gameRegisterEmail = this.gameRegisterElement.getChildByID('gameRegisterEmail') as HTMLInputElement;
-        gameRegisterEmail.style.borderColor = 'black';
-        const gameRegisterPassword = this.gameRegisterElement.getChildByID('gameRegisterPassword') as HTMLInputElement;
-        gameRegisterPassword.style.borderColor = 'black';
-        const gameRegisterConfirmPassword = this.gameRegisterElement.getChildByID('gameRegisterConfirmPassword') as HTMLInputElement;
-        gameRegisterConfirmPassword.style.borderColor = 'black';
-
-        let hasError = false;
-        if(!gameRegisterName.value || gameRegisterName.value === ''){
-            gameRegisterName.style.borderColor = 'red';
-            hasError = true;
-        }
-        if(!gameRegisterEmail.value || gameRegisterEmail.value === ''){
-            gameRegisterEmail.style.borderColor = 'red';
-            hasError = true;
-        }
-        if(!gameRegisterPassword.value || gameRegisterPassword.value === ''){
-            gameRegisterPassword.style.borderColor = 'red';
-            hasError = true;
-        }
-        if(
-            !gameRegisterConfirmPassword.value
-            || gameRegisterConfirmPassword.value === ''
-            || gameRegisterConfirmPassword.value !== gameRegisterPassword.value
-        ){
-            gameRegisterConfirmPassword.style.borderColor = 'red';
-            hasError = true;
-        }
-
-        const gameRegisterInfo = this.gameRegisterElement.getChildByID('gameRegisterInfo') as HTMLParagraphElement;
-        gameRegisterInfo.style.display = 'none';
-        gameRegisterInfo.innerText = '';
-
-        const gameRegisterError = this.gameRegisterElement.getChildByID('gameRegisterError') as HTMLParagraphElement;
-        gameRegisterError.style.display = 'none';
-        gameRegisterError.innerText = '';
-
-        if(hasError){return;}
-    }
-
-    private openGameForgotPassword(): void{
-        //close all
-        this.closeAll();
-
-        let middleY = (window.innerHeight / 3) - (257);
-        if(middleY < 0){
-            middleY = 0;
-        }
-        let middleX = (window.innerWidth / 3) - 298;
-        if(middleX < 0){
-            middleX = 0;
-        }
-        this.tweens.add({
-            targets: this.gameForgotPasswordElement,
-            y: middleY,
-            x: middleX,
-            duration: 1000,
-            ease: 'Power3'
-        });
-    }
-
-    private closeGameForgotPassword(): void{
-        this.tweens.add({
-            targets: this.gameForgotPasswordElement,
-            y: -400,
-            duration: 1000,
-            ease: 'Power3'
-        });
-    }
-
-    private openGameRegister(): void{
-        //close all
-        this.closeAll();
-
-        let middleY = (window.innerHeight / 3) - (257);
-        if(middleY < 0){
-            middleY = 0;
-        }
-        let middleX = (window.innerWidth / 3) - 298;
-        if(middleX < 0){
-            middleX = 0;
-        }
-        this.tweens.add({
-            targets: this.gameRegisterElement,
-            y: middleY,
-            x: middleX,
-            duration: 1000,
-            ease: 'Power3'
-        });
-    }
-
-    private closeGameRegister(): void{
-        this.tweens.add({
-            targets: this.gameRegisterElement,
-            y: -400,
-            duration: 1000,
-            ease: 'Power3'
-        });
-    }
-
-    private onMenuClick(event:MouseEvent) {
         event.preventDefault();
 
         switch ((event?.target as HTMLInputElement).id) {
@@ -529,6 +284,10 @@ export class MenuScene extends Phaser.Scene {
                 this.closeSideMenu();
                 gameManager.leaveGame(this, SelectCharacterSceneName, new SelectCharacterScene());
                 break;
+            case 'changeCompanionButton':
+                this.closeSideMenu();
+                gameManager.leaveGame(this, SelectCompanionSceneName, new SelectCompanionScene());
+                break;
             case 'closeButton':
                 this.closeSideMenu();
                 break;
@@ -538,11 +297,11 @@ export class MenuScene extends Phaser.Scene {
             case 'editGameSettingsButton':
                 this.openGameSettingsMenu();
                 break;
+            case 'toggleFullscreen':
+                this.toggleFullscreen();
+                break;
             case 'adminConsoleButton':
                 gameManager.getCurrentGameScene(this).ConsoleGlobalMessageManager.activeMessageConsole();
-                break;
-            case 'gameLoginMenu':
-                this.openGameLogin();
                 break;
         }
     }
@@ -569,16 +328,30 @@ export class MenuScene extends Phaser.Scene {
     }
 
     private gotToCreateMapPage() {
-        const sparkHost = 'https://'+window.location.host.replace('play.', '')+'/choose-map.html';
+        //const sparkHost = 'https://'+window.location.host.replace('play.', '')+'/choose-map.html';
+        //TODO fix me: this button can to send us on WorkAdventure BO.
+        const sparkHost = 'https://workadventu.re/getting-started';
         window.open(sparkHost, '_blank');
     }
 
     private closeAll(){
         this.closeGameQualityMenu();
-        this.closeGameForgotPassword();
-        this.closeGameLogin();
-        this.closeGameRegister();
         this.closeGameShare();
-        this.menuButton.getChildByID('openMenuButton').innerHTML = `<img src="/static/images/menu.svg">`;
+        this.gameReportElement.close();
+    }
+
+    private toggleFullscreen() {
+        const body = document.querySelector('body')
+        if (body) {
+            if (document.fullscreenElement ?? document.fullscreen) {
+                document.exitFullscreen()
+            } else {
+                body.requestFullscreen();
+            }
+        }
+    }
+
+    public isDirty(): boolean {
+        return false;
     }
 }

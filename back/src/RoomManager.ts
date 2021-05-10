@@ -2,25 +2,23 @@ import {IRoomManagerServer} from "./Messages/generated/messages_grpc_pb";
 import {
     AdminGlobalMessage,
     AdminMessage,
-    AdminPusherToBackMessage, BanMessage,
-    ClientToServerMessage, EmptyMessage,
+    AdminPusherToBackMessage,
+    AdminRoomMessage,
+    BanMessage,
+    EmptyMessage,
     ItemEventMessage,
     JoinRoomMessage,
     PlayGlobalMessage,
     PusherToBackMessage,
-    QueryJitsiJwtMessage,
-    ReportPlayerMessage,
-    RoomJoinedMessage,
+    QueryJitsiJwtMessage, RefreshRoomPromptMessage,
     ServerToAdminClientMessage,
     ServerToClientMessage,
     SilentMessage,
     UserMovesMessage,
-    ViewportMessage,
-    WebRtcSignalToServerMessage,
+    WebRtcSignalToServerMessage, WorldFullWarningToRoomMessage,
     ZoneMessage
 } from "./Messages/generated/messages_pb";
-import grpc, {sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream} from "grpc";
-import {Empty} from "google-protobuf/google/protobuf/empty_pb";
+import {sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream} from "grpc";
 import {socketManager} from "./Services/SocketManager";
 import {emitError} from "./Services/MessageHelpers";
 import {User, UserSocket} from "./Model/User";
@@ -45,8 +43,13 @@ const roomManager: IRoomManagerServer = {
                 if (room === null || user === null) {
                     if (message.hasJoinroommessage()) {
                         socketManager.handleJoinRoom(call, message.getJoinroommessage() as JoinRoomMessage).then(({room: gameRoom, user: myUser}) => {
-                            room = gameRoom;
-                            user = myUser;
+                            if (call.writable) {
+                                room = gameRoom;
+                                user = myUser;
+                            } else {
+                                //Connexion may have been closed before the init was finished, so we have to manually disconnect the user.
+                                socketManager.leaveRoom(gameRoom, myUser);
+                            }
                         });
                     } else {
                         throw new Error('The first message sent MUST be of type JoinRoomMessage');
@@ -54,12 +57,8 @@ const roomManager: IRoomManagerServer = {
                 } else {
                     if (message.hasJoinroommessage()) {
                         throw new Error('Cannot call JoinRoomMessage twice!');
-                    /*} else if (message.hasViewportmessage()) {
-                        socketManager.handleViewport(client, message.getViewportmessage() as ViewportMessage);*/
                     } else if (message.hasUsermovesmessage()) {
                         socketManager.handleUserMovesMessage(room, user, message.getUsermovesmessage() as UserMovesMessage);
-                        /*} else if (message.hasSetplayerdetailsmessage()) {
-                            socketManager.handleSetPlayerDetails(client, message.getSetplayerdetailsmessage() as SetPlayerDetailsMessage);*/
                     } else if (message.hasSilentmessage()) {
                         socketManager.handleSilentMessage(room, user, message.getSilentmessage() as SilentMessage);
                     } else if (message.hasItemeventmessage()) {
@@ -70,10 +69,18 @@ const roomManager: IRoomManagerServer = {
                         socketManager.emitScreenSharing(room, user, message.getWebrtcscreensharingsignaltoservermessage() as WebRtcSignalToServerMessage);
                     } else if (message.hasPlayglobalmessage()) {
                         socketManager.emitPlayGlobalMessage(room, message.getPlayglobalmessage() as PlayGlobalMessage);
-                    /*} else if (message.hasReportplayermessage()){
-                        socketManager.handleReportMessage(client, message.getReportplayermessage() as ReportPlayerMessage);*/
                     } else if (message.hasQueryjitsijwtmessage()){
                         socketManager.handleQueryJitsiJwtMessage(user, message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage);
+                    }else if (message.hasSendusermessage()) {
+                        const sendUserMessage = message.getSendusermessage();
+                        if(sendUserMessage !== undefined) {
+                            socketManager.handlerSendUserMessage(user, sendUserMessage);
+                        }
+                    }else if (message.hasBanusermessage()) {
+                        const banUserMessage = message.getBanusermessage();
+                        if(banUserMessage !== undefined) {
+                            socketManager.handlerBanUserMessage(room, user, banUserMessage);
+                        }
                     } else {
                         throw new Error('Unhandled message type');
                     }
@@ -112,10 +119,7 @@ const roomManager: IRoomManagerServer = {
             socketManager.removeZoneListener(call, zoneMessage.getRoomid(), zoneMessage.getX(), zoneMessage.getY());
             call.end();
         })
-
-        /*call.on('finish', () => {
-            debug('listenZone finish');
-        })*/
+        
         call.on('close', () => {
             debug('listenZone connection closed');
             socketManager.removeZoneListener(call, zoneMessage.getRoomid(), zoneMessage.getX(), zoneMessage.getY());
@@ -143,26 +147,6 @@ const roomManager: IRoomManagerServer = {
                     } else {
                         throw new Error('The first message sent MUST be of type JoinRoomMessage');
                     }
-                } else {
-                    /*if (message.hasJoinroommessage()) {
-                        throw new Error('Cannot call JoinRoomMessage twice!');
-                    } else if (message.hasUsermovesmessage()) {
-                        socketManager.handleUserMovesMessage(room, user, message.getUsermovesmessage() as UserMovesMessage);
-                    } else if (message.hasSilentmessage()) {
-                        socketManager.handleSilentMessage(room, user, message.getSilentmessage() as SilentMessage);
-                    } else if (message.hasItemeventmessage()) {
-                        socketManager.handleItemEvent(room, user, message.getItemeventmessage() as ItemEventMessage);
-                    } else if (message.hasWebrtcsignaltoservermessage()) {
-                        socketManager.emitVideo(room, user, message.getWebrtcsignaltoservermessage() as WebRtcSignalToServerMessage);
-                    } else if (message.hasWebrtcscreensharingsignaltoservermessage()) {
-                        socketManager.emitScreenSharing(room, user, message.getWebrtcscreensharingsignaltoservermessage() as WebRtcSignalToServerMessage);
-                    } else if (message.hasPlayglobalmessage()) {
-                        socketManager.emitPlayGlobalMessage(room, message.getPlayglobalmessage() as PlayGlobalMessage);
-                    } else if (message.hasQueryjitsijwtmessage()){
-                        socketManager.handleQueryJitsiJwtMessage(user, message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage);
-                    } else {
-                        throw new Error('Unhandled message type');
-                    }*/
                 }
             } catch (e) {
                 emitError(call, e);
@@ -196,9 +180,21 @@ const roomManager: IRoomManagerServer = {
         callback(null, new EmptyMessage());
     },
     ban(call: ServerUnaryCall<BanMessage>, callback: sendUnaryData<EmptyMessage>): void {
+        // FIXME Work in progress
+        socketManager.banUser(call.request.getRoomid(), call.request.getRecipientuuid(), call.request.getMessage());
 
-        socketManager.banUser(call.request.getRoomid(), call.request.getRecipientuuid());
-
+        callback(null, new EmptyMessage());
+    },
+    sendAdminMessageToRoom(call: ServerUnaryCall<AdminRoomMessage>, callback: sendUnaryData<EmptyMessage>): void {
+        socketManager.sendAdminRoomMessage(call.request.getRoomid(), call.request.getMessage());
+        callback(null, new EmptyMessage());
+    },
+    sendWorldFullWarningToRoom(call: ServerUnaryCall<WorldFullWarningToRoomMessage>, callback: sendUnaryData<EmptyMessage>): void {
+        socketManager.dispatchWorlFullWarning(call.request.getRoomid());
+        callback(null, new EmptyMessage());
+    },
+    sendRefreshRoomPrompt(call: ServerUnaryCall<RefreshRoomPromptMessage>, callback: sendUnaryData<EmptyMessage>): void {
+        socketManager.dispatchRoomRefresh(call.request.getRoomid());
         callback(null, new EmptyMessage());
     },
 };

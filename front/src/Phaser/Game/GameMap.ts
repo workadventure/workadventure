@@ -1,4 +1,5 @@
-import {ITiledMap} from "../Map/ITiledMap";
+import {ITiledMap, ITiledMapLayer} from "../Map/ITiledMap";
+import {LayersIterator} from "../Map/LayersIterator";
 
 export type PropertyChangeCallback = (newValue: string | number | boolean | undefined, oldValue: string | number | boolean | undefined, allProps: Map<string, string | boolean | number>) => void;
 
@@ -10,8 +11,10 @@ export class GameMap {
     private key: number|undefined;
     private lastProperties = new Map<string, string|boolean|number>();
     private callbacks = new Map<string, Array<PropertyChangeCallback>>();
+    public readonly layersIterator: LayersIterator;
 
     public constructor(private map: ITiledMap) {
+        this.layersIterator = new LayersIterator(map);
     }
 
     /**
@@ -29,6 +32,7 @@ export class GameMap {
 
         const newProps = this.getProperties(key);
         const oldProps = this.lastProperties;
+        this.lastProperties = newProps;
 
         // Let's compare the 2 maps:
         // First new properties vs oldProperties
@@ -45,14 +49,16 @@ export class GameMap {
                 this.trigger(oldPropName, oldPropValue, undefined, newProps);
             }
         }
+    }
 
-        this.lastProperties = newProps;
+    public getCurrentProperties(): Map<string, string|boolean|number> {
+        return this.lastProperties;
     }
 
     private getProperties(key: number): Map<string, string|boolean|number> {
         const properties = new Map<string, string|boolean|number>();
 
-        for (const layer of this.map.layers) {
+        for (const layer of this.layersIterator) {
             if (layer.type !== 'tilelayer') {
                 continue;
             }

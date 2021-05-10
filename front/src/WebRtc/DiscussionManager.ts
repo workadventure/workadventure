@@ -1,8 +1,9 @@
 import {HtmlUtils} from "./HtmlUtils";
-import {mediaManager, ReportCallback} from "./MediaManager";
+import {mediaManager, ReportCallback, ShowReportCallBack} from "./MediaManager";
 import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
 import {connectionManager} from "../Connexion/ConnectionManager";
 import {GameConnexionTypes} from "../Url/UrlManager";
+import {iframeListener} from "../Api/IframeListener";
 
 export type SendMessageCallback = (message:string) => void;
 
@@ -25,6 +26,14 @@ export class DiscussionManager {
     constructor() {
         this.mainContainer = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-container');
         this.createDiscussPart(''); //todo: why do we always use empty string?
+
+        iframeListener.chatStream.subscribe((chatEvent) => {
+            this.addMessage(chatEvent.author, chatEvent.message, false);
+            this.showDiscussion();
+        });
+        this.onSendMessageCallback('iframe_listener', (message) => {
+            iframeListener.sendUserInputChat(message);
+        })
     }
 
     private createDiscussPart(name: string) {
@@ -59,6 +68,16 @@ export class DiscussionManager {
         const sendDivMessage: HTMLDivElement = document.createElement('div');
         sendDivMessage.classList.add('send-message');
         const inputMessage: HTMLInputElement = document.createElement('input');
+        inputMessage.onfocus = () => {
+            if(this.userInputManager) {
+                this.userInputManager.disableControls();
+            }
+        }
+        inputMessage.onblur = () => {
+            if(this.userInputManager) {
+                this.userInputManager.restoreControls();
+            }
+        }
         inputMessage.type = "text";
         inputMessage.addEventListener('keyup', (event: KeyboardEvent) => {
             if (event.key === 'Enter') {
@@ -89,7 +108,7 @@ export class DiscussionManager {
         name: string|undefined,
         img?: string|undefined,
         isMe: boolean = false,
-        reportCallback?: ReportCallback
+        showReportCallBack?: ShowReportCallBack
     ) {
         const divParticipant: HTMLDivElement = document.createElement('div');
         divParticipant.classList.add('participant');
@@ -118,8 +137,8 @@ export class DiscussionManager {
             reportBanUserAction.classList.add('report-btn')
             reportBanUserAction.innerText = 'Report';
             reportBanUserAction.addEventListener('click', () => {
-                if(reportCallback) {
-                    mediaManager.showReportModal(`${userId}`, name ?? '', reportCallback);
+                if(showReportCallBack) {
+                    showReportCallBack(`${userId}`, name);
                 }else{
                     console.info('report feature is not activated!');
                 }
@@ -151,7 +170,7 @@ export class DiscussionManager {
         const pMessage: HTMLParagraphElement = document.createElement('p');
         const date = new Date();
         if(isMe){
-            name = 'Moi';
+            name = 'Me';
         }
         pMessage.innerHTML = `<span style="font-weight: bold">${name}</span>    
                     <span style="color:#bac2cc;display:inline-block;font-size:12px;">
@@ -160,11 +179,18 @@ export class DiscussionManager {
         divMessage.appendChild(pMessage);
 
         const userMessage: HTMLParagraphElement = document.createElement('p');
-        userMessage.innerText = message;
+        userMessage.innerHTML = HtmlUtils.urlify(message);
         userMessage.classList.add('body');
         divMessage.appendChild(userMessage);
-
         this.divMessages?.appendChild(divMessage);
+
+        //automatic scroll when there are new message
+        setTimeout(() => {
+            this.divMessages?.scroll({
+                top: this.divMessages?.scrollTop + divMessage.getBoundingClientRect().y,
+                behavior: 'smooth'
+            });
+        }, 200);
     }
 
     public removeParticipant(userId: number|string){
@@ -188,20 +214,14 @@ export class DiscussionManager {
 
     private showDiscussion(){
         this.activeDiscussion = true;
-        if(this.userInputManager) {
-            this.userInputManager.clearAllInputKeyboard();
-        }
         this.divDiscuss?.classList.add('active');
     }
 
     private hideDiscussion(){
         this.activeDiscussion = false;
-        if(this.userInputManager) {
-            this.userInputManager.initKeyBoardEvent();
-        }
         this.divDiscuss?.classList.remove('active');
     }
-    
+
     public setUserInputManager(userInputManager : UserInputManager){
         this.userInputManager = userInputManager;
     }

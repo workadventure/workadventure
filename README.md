@@ -1,12 +1,10 @@
-![](https://github.com/thecodingmachine/workadventure/workflows/Continuous%20Integration/badge.svg)
+![](https://github.com/thecodingmachine/workadventure/workflows/Continuous%20Integration/badge.svg) [![Discord](https://img.shields.io/discord/821338762134290432?label=Discord)](https://discord.gg/YGtngdh9gt)
 
 ![WorkAdventure landscape image](README-INTRO.jpg)
 
 Demo here : [https://workadventu.re/](https://workadventu.re/).
 
 # Work Adventure
-
-## Work in progress
 
 Work Adventure is a web-based collaborative workspace for small to medium teams (2-100 people) presented in the form of a
 16-bit video game.
@@ -15,25 +13,26 @@ In Work Adventure, you can move around your office and talk to your colleagues (
 triggered when you move next to a colleague).
 
 
-## Getting started
+## Setting up a development environment
 
 Install Docker.
 
 Run:
 
 ```
-docker-compose up
+docker-compose up -d
 ```
 
 The environment will start.
 
-You should now be able to browse to http://workadventure.localhost/ and see the application.
+You should now be able to browse to http://play.workadventure.localhost/ and see the application.
+You can view the dashboard at http://workadventure.localhost:8080/
 
 Note: on some OSes, you will need to add this line to your `/etc/hosts` file:
 
 **/etc/hosts**
 ```
-workadventure.localhost 127.0.0.1
+127.0.0.1 workadventure.localhost
 ```
 
 ### MacOS developers, your environment with Vagrant
@@ -101,5 +100,7 @@ Vagrant destroy
 * `Vagrant halt`: stop your VM Vagrant.
 * `Vagrant destroy`: delete your VM Vagrant.
 
-## Features developed
-You have more details of features developed in back [README.md](./back/README.md).
+## Setting up a production environment
+
+The way you set up your production environment will highly depend on your servers.
+We provide a production ready `docker-compose` file that you can use as a good starting point in the [contrib/docker](https://github.com/thecodingmachine/workadventure/tree/master/contrib/docker) directory.

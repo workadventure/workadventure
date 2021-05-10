@@ -32,26 +32,13 @@ class UrlManager {
         return match ? match [1] : null;
     }
 
-
-    //todo: simply use the roomId
-    //todo: test this with cypress
-    public editUrlForRoom(roomSlug: string, organizationSlug: string|null, worldSlug: string |null): string {
-        let  newUrl:string;
-        if (organizationSlug) {
-            newUrl = '/@/'+organizationSlug+'/'+worldSlug+'/'+roomSlug;
-        } else {
-            newUrl = '/_/global/'+roomSlug;
-        }
-        history.pushState({}, 'WorkAdventure', newUrl);
-        return newUrl;
-    }
-    
     public pushRoomIdToUrl(room:Room): void {
-        if (window.location.pathname === room.id) return; 
+        if (window.location.pathname === room.id) return;
         const hash = window.location.hash;
-        history.pushState({}, 'WorkAdventure', room.id+hash);
+        const search = room.search.toString();
+        history.pushState({}, 'WorkAdventure', room.id+(search?'?'+search:'')+hash);
     }
-    
+
     public getStartLayerNameFromUrl(): string|null {
         const hash = window.location.hash;
         return hash.length > 1 ? hash.substring(1) : null;

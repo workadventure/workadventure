@@ -1,8 +1,8 @@
-import {PlayerAnimationNames} from "../Phaser/Player/Animation";
+import {PlayerAnimationDirections} from "../Phaser/Player/Animation";
 import {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
 import {SignalData} from "simple-peer";
-import {BodyResourceDescriptionInterface} from "../Phaser/Entity/body_character";
 import {RoomConnection} from "./RoomConnection";
+import {BodyResourceDescriptionInterface} from "../Phaser/Entity/PlayerTextures";
 
 export enum EventMessage{
     CONNECT = "connect",
@@ -42,19 +42,12 @@ export interface PointInterface {
     moving: boolean;
 }
 
-export class Point implements PointInterface{
-    constructor(public x : number, public y : number, public direction : string = PlayerAnimationNames.WalkDown, public moving : boolean = false) {
-        if(x  === null || y === null){
-            throw Error("position x and y cannot be null");
-        }
-    }
-}
-
 export interface MessageUserPositionInterface {
     userId: number;
     name: string;
     characterLayers: BodyResourceDescriptionInterface[];
     position: PointInterface;
+    companion: string|null;
 }
 
 export interface MessageUserMovedInterface {
@@ -66,7 +59,8 @@ export interface MessageUserJoined {
     userId: number;
     name: string;
     characterLayers: BodyResourceDescriptionInterface[];
-    position: PointInterface
+    position: PointInterface;
+    companion: string|null;
 }
 
 export interface PositionInterface {
@@ -80,23 +74,15 @@ export interface GroupCreatedUpdatedMessageInterface {
     groupSize: number
 }
 
-export interface WebRtcStartMessageInterface {
-    roomId: string,
-    clients: UserSimplePeerInterface[]
-}
-
 export interface WebRtcDisconnectMessageInterface {
     userId: number
 }
 
-export interface WebRtcSignalSentMessageInterface {
-    receiverId: number,
-    signal: SignalData
-}
-
 export interface WebRtcSignalReceivedMessageInterface {
     userId: number,
-    signal: SignalData
+    signal: SignalData,
+    webRtcUser: string | undefined,
+    webRtcPassword: string | undefined
 }
 
 export interface StartMapInterface {
@@ -109,11 +95,6 @@ export interface ViewportInterface {
     top: number,
     right: number,
     bottom: number,
-}
-
-export interface BatchedMessageInterface {
-    event: string,
-    payload: unknown
 }
 
 export interface ItemEventMessageInterface {

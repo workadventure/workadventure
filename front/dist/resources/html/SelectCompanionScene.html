@@ -1,0 +1,134 @@
+<style>
+    *{
+        font-family: PixelFont-7,monospace!important;
+    }
+    #selectCompanionScene {
+        background: #0000;
+        /*border: 1px solid #ebeeee;*/
+        border-radius: 6px;
+        margin: 10px auto 0;
+        color: #ebeeee;
+        max-height: 40vh;
+        max-width: 300px;
+        width: 40vw;
+        overflow: hidden;
+    }
+    #selectCompanionScene h1 {
+        background-image: linear-gradient(top, #f1f3f3, #d4dae0);
+        border-bottom: 1px solid #a6abaf;
+        border-radius: 6px 6px 0 0;
+        box-sizing: border-box;
+        color: #727678;
+        display: block;
+        height: 43px;
+        padding-top: 10px;
+        margin: 0;
+        text-align: center;
+        text-shadow: 0 -1px 0 rgba(0,0,0,0.2), 0 1px 0 #fff;
+    }
+    #selectCompanionScene input {
+        font-size: 70%;
+        background: linear-gradient(top, #d6d7d7, #dee0e0);
+        border: 1px solid #a1a3a3;
+        border-radius: 4px;
+        box-shadow: 0 1px #fff;
+        box-sizing: border-box;
+        color: #696969;
+        height: 30px;
+        transition: box-shadow 0.3s;
+        width: 100%;
+        text-align: center;
+    }
+    #selectCompanionScene section {
+        margin: 10px;
+    }
+    #selectCompanionScene section.action {
+        text-align: center;
+        margin: 0;
+        margin-top: 20vh;
+    }
+    #selectCompanionScene button {
+        margin: 10px 4px;
+        background-color: black;;
+        color: #ebeeee;
+        border-radius: 7px;
+        padding-bottom: 4px;
+        width: 100px;
+    }
+    #selectCompanionScene button#selectCompanionSceneFormCancel {
+        background-color: #aca6a600;
+        color: #292929;
+    }
+    #selectCompanionScene section h6,
+    #selectCompanionScene section h5{
+        margin: 1px;
+    }
+    #selectCompanionScene section.text-center{
+        text-align: center;
+    }
+    #selectCompanionScene section a{
+        font-size: 14px;
+        text-decoration: underline;
+        color: #ebeeee;
+    }
+    #selectCompanionScene section a:hover{
+        font-weight: 700;
+    }
+    #selectCompanionScene section p{
+        text-align: left;
+        font-size: 8px;
+        margin: 10px 10px;
+    }
+    #selectCompanionScene section p.err{
+        color: red;
+        text-align: center;
+    }
+    #selectCompanionScene section p.info{
+        display: none;
+        text-align: center;
+    }
+    #selectCompanionScene section input#selectCompanionSceneLink{
+        background-color: #a1a3a3;
+    }
+    #selectCompanionScene section img{
+        width: 160px;
+        margin: 20px 0;
+    }
+    #selectCompanionScene section button.selectCharacterButton{
+        position: absolute;
+        top: 20vh;
+        margin: 0;
+        width: 25px;
+    }
+    #selectCompanionScene section button.selectCharacterButton#selectCharacterButtonLeft{
+        left: 1vw;
+    }
+    #selectCompanionScene section button.selectCharacterButton#selectCharacterButtonRight{
+        right: 1vw;
+    }
+    #selectCompanionScene section button#selectCompanionSceneFormCustomYourOwnSubmit{
+        font-size: 14px;
+        width: auto;
+        margin-top: -2px;
+        background-color: #ffd700;
+        color: black;
+    }
+    @media only screen and (max-width: 800px),
+            only screen and (max-height: 600px) {
+        #selectCompanionScene{
+            overflow-y: scroll;
+        }
+    }
+</style>
+
+<form id="selectCompanionScene" hidden>
+    <section class="text-center">
+        <h5>Select your WOKA</h5>
+        <button class="selectCharacterButton" id="selectCharacterButtonLeft"> < </button>
+        <button class="selectCharacterButton" id="selectCharacterButtonRight"> > </button>
+    </section>
+    <section class="action">
+        <a herf="#" id="selectCompanionSceneFormBack">No companion</a>
+        <button type="submit" id="selectCompanionSceneFormSubmit">Continue</button>
+    </section>
+</form>

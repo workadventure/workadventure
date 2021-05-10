@@ -1,18 +1,14 @@
 <style>
     *{
-        font-family: 'Open Sans', sans-serif;
-        cursor: url('/resources/logos/cursor_normal.png'), auto;
-    }
-    * a, button, select{
-        cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+        font-family: PixelFont-7,monospace!important;
     }
     #gameQuality {
         background: #eceeee;
         border: 1px solid #42464b;
         border-radius: 6px;
-        height: 257px;
         margin: 20px auto 0;
-        width: 298px;
+        width: 50vw;
+        max-width: 300px;
     }
     #gameQuality .cautiousText {
         font-size: 50%;
@@ -40,7 +36,7 @@
         color: #696969;
         height: 30px;
         transition: box-shadow 0.3s;
-        width: 240px;
+        width: 100%;
     }
     #gameQuality section {
         margin: 10px;
@@ -49,12 +45,11 @@
         text-align: center;
     }
     #gameQuality button {
-        margin-top: 10px;
+        margin: 10px;
         background-color: black;
         color: white;
         border-radius: 7px;
         padding-bottom: 4px;
-        width: 60px;
     }
     #gameQuality button#gameQualityFormCancel {
         background-color: #c7c7c700;
@@ -64,7 +59,7 @@
 
 <form id="gameQuality" hidden>
     <section>
-        <h3>Game quality</h3>
+        <h5>Game quality</h3>
         <p class="cautiousText">(Editing these settings will restart the game)</p>
         <select id="select-game-quality">
             <option value="120">High video quality (120 fps)</option>
@@ -74,7 +69,7 @@
         </select>
     </section>
     <section>
-        <h3>Video quality</h3>
+        <h5>Video quality</h3>
         <select id="select-video-quality">
             <option value="30">High video quality (30 fps)</option>
             <option value="20">Medium video quality (20 fps, recommended)</option>
