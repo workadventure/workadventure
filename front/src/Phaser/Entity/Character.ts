@@ -6,6 +6,8 @@ import Sprite = Phaser.GameObjects.Sprite;
 import {TextureError} from "../../Exception/TextureError";
 import {Companion} from "../Companion/Companion";
 import {getEmoteAnimName} from "../Game/EmoteManager";
+import {GameScene} from "../Game/GameScene";
+import {DEPTH_INGAME_TEXT_INDEX} from "../Game/DepthIndexes";
 
 const playerNameY = - 25;
 
@@ -16,6 +18,8 @@ interface AnimationData {
     frameModel: string; //todo use an enum
     frames : number[]
 }
+
+const interactiveRadius = 40;
 
 export abstract class Character extends Container {
     private bubble: SpeechBubble|null = null;
@@ -28,14 +32,16 @@ export abstract class Character extends Container {
     public companion?: Companion;
     private emote: Phaser.GameObjects.Sprite | null = null;
 
-    constructor(scene: Phaser.Scene,
+    constructor(scene: GameScene,
                 x: number,
                 y: number,
                 texturesPromise: Promise<string[]>,
                 name: string,
                 direction: PlayerAnimationDirections,
                 moving: boolean,
-                frame?: string | number
+                frame: string | number,
+                companion: string|null,
+                companionTexturePromise?: Promise<string>
     ) {
         super(scene, x, y/*, texture, frame*/);
         this.PlayerValue = name;
@@ -49,18 +55,17 @@ export abstract class Character extends Container {
             this.invisible = false
         })
 
-        /*this.teleportation = new Sprite(scene, -20, -10, 'teleportation', 3);
-        this.teleportation.setInteractive();
-        this.teleportation.visible = false;
-        this.teleportation.on('pointerup', () => {
-            this.report.visible = false;
-            this.teleportation.visible = false;
-        });
-        this.add(this.teleportation);*/
-
         this.playerName = new BitmapText(scene, 0,  playerNameY, 'main_font', name, 7);
-        this.playerName.setOrigin(0.5).setCenterAlign().setDepth(99999);
+        this.playerName.setOrigin(0.5).setCenterAlign().setDepth(DEPTH_INGAME_TEXT_INDEX);
         this.add(this.playerName);
+
+        if (this.isClickable()) {
+            this.setInteractive({
+                hitArea: new Phaser.Geom.Circle(0, 0, interactiveRadius),
+                hitAreaCallback: Phaser.Geom.Circle.Contains, //eslint-disable-line @typescript-eslint/unbound-method
+                useHandCursor: true,
+            });
+        }
 
         scene.add.existing(this);
 
@@ -73,6 +78,10 @@ export abstract class Character extends Container {
         this.setDepth(-1);
 
         this.playAnimation(direction, moving);
+        
+        if (typeof companion === 'string') {
+            this.addCompanion(companion, companionTexturePromise);
+        }
     }
 
     public addCompanion(name: string, texturePromise?: Promise<string>): void {
@@ -80,6 +89,8 @@ export abstract class Character extends Container {
             this.companion = new Companion(this.scene, this.x, this.y, name, texturePromise);
         }
     }
+    
+    public abstract isClickable(): boolean;
 
     public addTextures(textures: string[], frame?: string | number): void {
         for (const texture of textures) {
@@ -87,7 +98,6 @@ export abstract class Character extends Container {
                 throw new TextureError('texture not found');
             }
             const sprite = new Sprite(this.scene, 0, 0, texture, frame);
-            sprite.setInteractive({useHandCursor: true});
             this.add(sprite);
             this.getPlayerAnimations(texture).forEach(d => {
                 this.scene.anims.create({
@@ -234,18 +244,26 @@ export abstract class Character extends Container {
     }
     
     playEmote(emoteKey: string) {
-        if (this.emote) return;
+        this.cancelPreviousEmote();
         
         this.playerName.setVisible(false);
         this.emote = new Sprite(this.scene, 0,  -40, emoteKey, 1);
-        this.emote.setDepth(99999);
+        this.emote.setDepth(DEPTH_INGAME_TEXT_INDEX);
         this.add(this.emote);
         this.scene.sys.updateList.add(this.emote);
         this.emote.play(getEmoteAnimName(emoteKey));
-        this.emote.on(Phaser.Animations.Events.SPRITE_ANIMATION_COMPLETE, () => {
+        this.emote.on(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
             this.emote?.destroy();
             this.emote = null;
             this.playerName.setVisible(true);
         });
+    }
+
+    cancelPreviousEmote() {
+        if (!this.emote) return;
+
+        this.emote?.destroy();
+        this.emote = null;
+        this.playerName.setVisible(true);
     }
 }

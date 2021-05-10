@@ -2,17 +2,15 @@ import {PlayerAnimationDirections} from "./Animation";
 import type {GameScene} from "../Game/GameScene";
 import {UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
 import {Character} from "../Entity/Character";
+import {RadialMenu, RadialMenuClickEvent, RadialMenuItem} from "../Components/RadialMenu";
 
 export const hasMovedEventName = "hasMoved";
-export interface CurrentGamerInterface extends Character{
-    moveUser(delta: number) : void;
-    say(text : string) : void;
-    isMoving(): boolean;
-}
+export const requestEmoteEventName = "requestEmote";
 
-export class Player extends Character implements CurrentGamerInterface {
+export class Player extends Character {
     private previousDirection: string = PlayerAnimationDirections.Down;
     private wasMoving: boolean = false;
+    private emoteMenu: RadialMenu|null = null;
 
     constructor(
         Scene: GameScene,
@@ -26,14 +24,10 @@ export class Player extends Character implements CurrentGamerInterface {
         companion: string|null,
         companionTexturePromise?: Promise<string>
     ) {
-        super(Scene, x, y, texturesPromise, name, direction, moving, 1);
+        super(Scene, x, y, texturesPromise, name, direction, moving, 1, companion, companionTexturePromise);
 
         //the current player model should be push away by other players to prevent conflict
         this.getBody().setImmovable(false);
-
-        if (typeof companion === 'string') {
-            this.addCompanion(companion, companionTexturePromise);
-        }
     }
 
     moveUser(delta: number): void {
@@ -87,5 +81,34 @@ export class Player extends Character implements CurrentGamerInterface {
 
     public isMoving(): boolean {
         return this.wasMoving;
+    }
+
+    openOrCloseEmoteMenu(emotes:RadialMenuItem[]) {
+        if(this.emoteMenu) {
+            this.closeEmoteMenu();
+        } else {
+            this.openEmoteMenu(emotes);
+        }
+    }
+    
+    isClickable(): boolean {
+        return true;
+    }
+
+    openEmoteMenu(emotes:RadialMenuItem[]): void {
+        this.cancelPreviousEmote();
+        this.emoteMenu = new RadialMenu(this.scene, 0, 0, emotes)
+        this.emoteMenu.on(RadialMenuClickEvent, (item: RadialMenuItem) => {
+            this.closeEmoteMenu();
+            this.emit(requestEmoteEventName, item.name);
+            this.playEmote(item.name);
+        })
+        this.add(this.emoteMenu);
+    }
+    
+    closeEmoteMenu(): void {
+        if (!this.emoteMenu) return;
+        this.emoteMenu.destroy();
+        this.emoteMenu = null;
     }
 }

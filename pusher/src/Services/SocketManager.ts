@@ -74,6 +74,7 @@ export class SocketManager implements ZoneEventListener {
         client.adminConnection = adminRoomStream;
 
         adminRoomStream.on('data', (message: ServerToAdminClientMessage) => {
+            
             if (message.hasUserjoinedroom()) {
                 const userJoinedRoomMessage = message.getUserjoinedroom() as UserJoinedRoomMessage;
                 if (!client.disconnecting) {
@@ -331,6 +332,7 @@ export class SocketManager implements ZoneEventListener {
                     const room: PusherRoom | undefined = this.rooms.get(socket.roomId);
                     if (room) {
                         debug('Leaving room %s.', socket.roomId);
+                        
                         room.leave(socket);
                         if (room.isEmpty()) {
                             this.rooms.delete(socket.roomId);
