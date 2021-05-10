@@ -1,0 +1,95 @@
+<!doctype html>
+<html>
+    <head>
+    </head>
+    <body>
+        <label>Base test URL:</label>
+        <input id="baseurl" type="text" value="http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/" />
+        <table>
+            <tr>
+                <th>Result</th>
+                <th>Test</th>
+            </tr>
+            <tr>
+                <td>
+                    <input type="radio" name="test-jitsi-config"> Success <input type="radio" name="test-jitsi-config"> Failure <input type="radio" name="test-jitsi-config" checked> Pending
+                </td>
+                <td>
+                    <a href="#" class="testLink" data-testmap="jitsi_config.json" target="_blank">Testing Jitsi special config parameters</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="radio" name="test-jitsi-custom-url"> Success <input type="radio" name="test-jitsi-custom-url"> Failure <input type="radio" name="test-jitsi-custom-url" checked> Pending
+                </td>
+                <td>
+                    <a href="#" class="testLink" data-testmap="jitsi_custom_url.json" target="_blank">Testing jitsiUrl property</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="radio" name="test-iframe-api"> Success <input type="radio" name="test-iframe-api"> Failure <input type="radio" name="test-iframe-api" checked> Pending
+                </td>
+                <td>
+                    <a href="#" class="testLink" data-testmap="iframe_api.json" target="_blank">Testing scripting API with an iFrame</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="radio" name="test-scripting-api"> Success <input type="radio" name="test-scripting-api"> Failure <input type="radio" name="test-scripting-api" checked> Pending
+                </td>
+                <td>
+                    <a href="#" class="testLink" data-testmap="script_api.json" target="_blank">Testing scripting API with a script</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="radio" name="test-autoresize"> Success <input type="radio" name="test-autoresize"> Failure <input type="radio" name="test-autoresize" checked> Pending
+                </td>
+                <td>
+                    <a href="#" class="testLink" data-testmap="autoresize.json" target="_blank">Testing auto-zoom of viewport</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="radio" name="test-mouse-wheel"> Success <input type="radio" name="test-mouse-wheel"> Failure <input type="radio" name="test-mouse-wheel" checked> Pending
+                </td>
+                <td>
+                    <a href="#" class="testLink" data-testmap="mousewheel.json" target="_blank">Testing zoom via mouse wheel</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="radio" name="test-mobile"> Success <input type="radio" name="test-mobile"> Failure <input type="radio" name="test-mobile" checked> Pending
+                </td>
+                <td>
+                    <a href="#" class="testLink" data-testmap="mobile.json" target="_blank">Testing movement on mobile</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="radio" name="test-energy"> Success <input type="radio" name="test-energy"> Failure <input type="radio" name="test-energy" checked> Pending
+                </td>
+                <td>
+                    <a href="#" class="testLink" data-testmap="energy.json" target="_blank">Test energy consumption</a>
+                </td>
+            </tr>
+        </table>
+
+        <script>
+            const baseInput = document.getElementById('baseurl');
+            baseInput.addEventListener('change', init);
+
+            function init() {
+                console.log(baseInput.value);
+                for (const link of document.querySelectorAll('a.testLink')) {
+                    const url = baseInput.value + link.dataset.testmap;
+                    link.href = url;
+                }
+            }
+
+            init();
+        </script>
+
+    </body>
+</html>

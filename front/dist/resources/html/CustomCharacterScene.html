@@ -1,0 +1,160 @@
+<style>
+    *{
+        font-family: PixelFont-7,monospace!important;
+    }
+    #customizeScene {
+        background: #0000;
+        /*border: 1px solid #ebeeee;*/
+        border-radius: 6px;
+        margin: 10px auto 0;
+        color: #ebeeee;
+        width: 42vw;
+        height: 48vh;
+        /*max-width: 300px;
+        max-height: 48vh;*/
+        overflow: hidden;
+    }
+    #customizeScene h1 {
+        background-image: linear-gradient(top, #f1f3f3, #d4dae0);
+        border-bottom: 1px solid #a6abaf;
+        border-radius: 6px 6px 0 0;
+        box-sizing: border-box;
+        color: #727678;
+        display: block;
+        height: 43px;
+        padding-top: 10px;
+        margin: 0;
+        text-align: center;
+        text-shadow: 0 -1px 0 rgba(0,0,0,0.2), 0 1px 0 #fff;
+    }
+    #customizeScene input {
+        font-size: 70%;
+        background: linear-gradient(top, #d6d7d7, #dee0e0);
+        border: 1px solid #a1a3a3;
+        border-radius: 4px;
+        box-shadow: 0 1px #fff;
+        box-sizing: border-box;
+        color: #696969;
+        height: 30px;
+        transition: box-shadow 0.3s;
+        width: 100%;
+        text-align: center;
+    }
+    #customizeScene section {
+        margin: 10px;
+    }
+    #customizeScene section.action {
+        text-align: center;
+        position: sticky;
+        bottom: 0;
+        top: 100%;
+    }
+    #customizeScene section.action.action-move { 
+        top: 55%;
+    }
+    #customizeScene button {
+        margin: 2px 10px;
+        background-color: black;;
+        color: #ebeeee;
+        border-radius: 7px;
+        padding-bottom: 4px;
+    }
+    #customizeScene button#customizeSceneFormCancel {
+        background-color: #aca6a600;
+        color: #292929;
+    }
+    #customizeScene section h6,
+    #customizeScene section h5{
+        margin: 1px;
+    }
+    #customizeScene section.text-center{
+        text-align: center;
+    }
+    #customizeScene section a{
+        font-size: 14px;
+        text-decoration: underline;
+        color: #ebeeee;
+    }
+    #customizeScene section a:hover{
+        font-weight: 700;
+    }
+    #customizeScene section p{
+        text-align: left;
+        font-size: 8px;
+        margin: 10px 10px;
+    }
+    #customizeScene section p.err{
+        color: red;
+        text-align: center;
+    }
+    #customizeScene section p.info{
+        display: none;
+        text-align: center;
+    }
+    #customizeScene section input#customizeSceneLink{
+        background-color: #a1a3a3;
+    }
+    #customizeScene section button.customizeSceneButton{
+        position: absolute;
+        margin: 0;
+        top: -8vh;
+        font-size: 10px;
+        padding: 2px 4px;
+    }
+    #customizeScene section button.customizeSceneButton#customizeSceneButtonLeft{
+        left: 0vw;
+    }
+    #customizeScene section button.customizeSceneButton#customizeSceneButtonRight{
+        right: 0vw;
+    }
+    #customizeScene section button.customizeSceneButton#customizeSceneButtonUp{
+        left: calc(2vw + 40px);
+        transform: rotate(90deg);
+        margin-top: -20px;
+    }
+    #customizeScene section button.customizeSceneButton#customizeSceneButtonDown{
+        right: calc(2vw + 40px);
+        transform: rotate(90deg);
+        margin-top: 20px;
+    }
+    #customizeScene section.action img{
+        width: 8px;
+        height: 8px;
+    }
+    #customizeScene section.action a#customizeSceneFormBack img{
+        margin-top: -2px;
+    }
+    #customizeScene section.action button#customizeSceneFormSubmit img{
+        transform: rotate(180deg);
+    }
+    @media only screen and (max-width: 600px) {
+        #customizeScene {
+            max-width: 160px;
+            overflow-y: scroll;
+        }
+    }
+    @media only screen and (max-height: 400px) {
+        #customizeScene section.action {
+            top: 92%;
+        }
+        #customizeScene section.action.action-move { 
+            top: 80%;
+        }
+    }
+</style>
+
+<form id="customizeScene" hidden>
+    <section class="text-center">
+        <h5>Custom your WOKA</h3>
+    </section>
+    <section class="action action-move">
+        <button class="customizeSceneButton" id="customizeSceneButtonLeft"> < </button>
+        <button class="customizeSceneButton" id="customizeSceneButtonRight"> > </button>
+        <!--<button class="customizeSceneButton" id="customizeSceneButtonUp"> < </button>
+        <button class="customizeSceneButton" id="customizeSceneButtonDown"> > </button>-->
+    </section>
+    <section class="action">
+        <a type="submit" id="customizeSceneFormBack">Back <img src="resources/objects/arrow_up.png"/></a>
+        <button type="submit" id="customizeSceneFormSubmit">Next <img src="resources/objects/arrow_up.png"/></button>
+    </section>
+</form>

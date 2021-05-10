@@ -1,14 +1,15 @@
 import {gameManager} from "../Game/GameManager";
 import {TextField} from "../Components/TextField";
 import Image = Phaser.GameObjects.Image;
-import Rectangle = Phaser.GameObjects.Rectangle;
 import {mediaManager} from "../../WebRtc/MediaManager";
-import {RESOLUTION} from "../../Enum/EnvironmentVariable";
 import {SoundMeter} from "../Components/SoundMeter";
 import {SoundMeterSprite} from "../Components/SoundMeterSprite";
 import {HtmlUtils} from "../../WebRtc/HtmlUtils";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
+import Zone = Phaser.GameObjects.Zone;
+import { MenuScene } from "../Menu/MenuScene";
+import {ResizableScene} from "./ResizableScene";
 
 export const EnableCameraSceneName = "EnableCameraScene";
 enum LoginTextures {
@@ -19,12 +20,11 @@ enum LoginTextures {
     arrowUp = "arrow_up"
 }
 
+const enableCameraSceneKey = 'enableCameraScene';
 
-export class EnableCameraScene extends Phaser.Scene {
+export class EnableCameraScene extends ResizableScene {
     private textField!: TextField;
-    private pressReturnField!: TextField;
     private cameraNameField!: TextField;
-    private logo!: Image;
     private arrowLeft!: Image;
     private arrowRight!: Image;
     private arrowDown!: Image;
@@ -36,9 +36,11 @@ export class EnableCameraScene extends Phaser.Scene {
     private soundMeter: SoundMeter;
     private soundMeterSprite!: SoundMeterSprite;
     private microphoneNameField!: TextField;
-    private repositionCallback!: (this: Window, ev: UIEvent) => void;
 
-    private mobileTapRectangle!: Rectangle;
+    private enableCameraSceneElement!: Phaser.GameObjects.DOMElement;
+
+    private mobileTapZone!: Zone;
+
     constructor() {
         super({
             key: EnableCameraSceneName
@@ -47,8 +49,10 @@ export class EnableCameraScene extends Phaser.Scene {
     }
 
     preload() {
+
+        this.load.html(enableCameraSceneKey, 'resources/html/EnableCameraScene.html');
+
         this.load.image(LoginTextures.playButton, "resources/objects/play_button.png");
-        this.load.image(LoginTextures.icon, "resources/logos/tcm_full.png");
         this.load.image(LoginTextures.arrowRight, "resources/objects/arrow_right.png");
         this.load.image(LoginTextures.arrowUp, "resources/objects/arrow_up.png");
         // Note: arcade.png from the Phaser 3 examples at: https://github.com/photonstorm/phaser3-examples/tree/master/public/assets/fonts/bitmap
@@ -56,23 +60,30 @@ export class EnableCameraScene extends Phaser.Scene {
     }
 
     create() {
+
+        this.enableCameraSceneElement = this.add.dom(-1000, 0).createFromCache(enableCameraSceneKey);
+        this.centerXDomElement(this.enableCameraSceneElement, 300);
+
+        MenuScene.revealMenusAfterInit(this.enableCameraSceneElement, enableCameraSceneKey);
+
+        const continuingButton = this.enableCameraSceneElement.getChildByID('enableCameraSceneFormSubmit') as HTMLButtonElement;
+        continuingButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.login();
+        });
+
         if (touchScreenManager.supportTouchScreen) {
             new PinchManager(this);
         }
-        
-        this.textField = new TextField(this, this.game.renderer.width / 2, 20, 'Turn on your camera and microphone');
+        //this.scale.setZoom(ZOOM_LEVEL);
+        //Phaser.Display.Align.In.BottomCenter(this.pressReturnField, zone);
 
-        this.pressReturnField = new TextField(this, this.game.renderer.width / 2, this.game.renderer.height - 30, 'Touch here\n\n or \n\nPress enter to start');
+        /* FIX ME */
+        this.textField = new TextField(this, this.scale.width / 2, 20, '');
+
         // For mobile purposes - we need a big enough touchable area.
-        this.mobileTapRectangle = this.add
-          .rectangle(
-            this.game.renderer.width / 2,
-            this.game.renderer.height - 30,
-            200,
-            50,
-          )
-          .setInteractive()
-          .on("pointerdown", () => {
+        this.mobileTapZone = this.add.zone(this.scale.width / 2,this.scale.height - 30,200,50)
+          .setInteractive().on("pointerdown", () => {
             this.login();
           });
 
@@ -102,9 +113,6 @@ export class EnableCameraScene extends Phaser.Scene {
         this.arrowDown.setInteractive().on('pointerdown', this.nextMic.bind(this));
         this.add.existing(this.arrowDown);
 
-        this.logo = new Image(this, this.game.renderer.width - 30, this.game.renderer.height - 20, LoginTextures.icon);
-        this.add.existing(this.logo);
-
         this.input.keyboard.on('keyup-ENTER', () => {
             this.login();
         });
@@ -124,8 +132,7 @@ export class EnableCameraScene extends Phaser.Scene {
         this.soundMeterSprite.setVisible(false);
         this.add.existing(this.soundMeterSprite);
 
-        this.repositionCallback = this.reposition.bind(this);
-        window.addEventListener('resize', this.repositionCallback);
+        this.onResize();
     }
 
     private previousCam(): void {
@@ -203,10 +210,9 @@ export class EnableCameraScene extends Phaser.Scene {
             this.arrowUp.setVisible(this.microphoneSelected > 0);
 
         }
-        this.reposition();
     }
 
-    private reposition(): void {
+    public onResize(): void {
         let div = HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('myCamVideoSetup');
         let bounds = div.getBoundingClientRect();
         if (!div.srcObject) {
@@ -215,24 +221,22 @@ export class EnableCameraScene extends Phaser.Scene {
         }
 
         this.textField.x = this.game.renderer.width / 2;
-        this.mobileTapRectangle.x = this.game.renderer.width / 2;
+        this.mobileTapZone.x = this.game.renderer.width / 2;
         this.cameraNameField.x = this.game.renderer.width / 2;
         this.microphoneNameField.x = this.game.renderer.width / 2;
-        this.pressReturnField.x = this.game.renderer.width / 2;
-        this.pressReturnField.x = this.game.renderer.width / 2;
 
-        this.cameraNameField.y = bounds.top / RESOLUTION - 8;
+        this.cameraNameField.y = bounds.top / this.scale.zoom - 8;
 
         this.soundMeterSprite.x = this.game.renderer.width / 2 - this.soundMeterSprite.getWidth() / 2;
-        this.soundMeterSprite.y = bounds.bottom / RESOLUTION + 16;
+        this.soundMeterSprite.y = bounds.bottom / this.scale.zoom + 16;
 
         this.microphoneNameField.y = this.soundMeterSprite.y + 22;
 
-        this.arrowRight.x = bounds.right / RESOLUTION + 16;
-        this.arrowRight.y = (bounds.top + bounds.height / 2) / RESOLUTION;
+        this.arrowRight.x = bounds.right / this.scale.zoom + 16;
+        this.arrowRight.y = (bounds.top + bounds.height / 2) / this.scale.zoom;
 
-        this.arrowLeft.x = bounds.left / RESOLUTION - 16;
-        this.arrowLeft.y = (bounds.top + bounds.height / 2) / RESOLUTION;
+        this.arrowLeft.x = bounds.left / this.scale.zoom - 16;
+        this.arrowLeft.y = (bounds.top + bounds.height / 2) / this.scale.zoom;
 
         this.arrowDown.x = this.microphoneNameField.x + this.microphoneNameField.width / 2 + 16;
         this.arrowDown.y = this.microphoneNameField.y;
@@ -240,23 +244,22 @@ export class EnableCameraScene extends Phaser.Scene {
         this.arrowUp.x = this.microphoneNameField.x - this.microphoneNameField.width / 2 - 16;
         this.arrowUp.y = this.microphoneNameField.y;
 
-        this.pressReturnField.y = Math.max(this.game.renderer.height - 30, this.microphoneNameField.y + 20);
-        this.logo.x = this.game.renderer.width - 30;
-        this.logo.y = Math.max(this.game.renderer.height - 20, this.microphoneNameField.y + 30);
+        const actionBtn = document.querySelector<HTMLDivElement>('#enableCameraScene .action');
+        if (actionBtn !== null) {
+            actionBtn.style.top = (this.scale.height - 65) + 'px';
+        }
     }
 
     update(time: number, delta: number): void {
-        this.pressReturnField.setVisible(!!(Math.floor(time / 500) % 2));
-
         this.soundMeterSprite.setVolume(this.soundMeter.getVolume());
+        mediaManager.updateScene();
 
-        mediaManager.setLastUpdateScene();
+        this.centerXDomElement(this.enableCameraSceneElement, 300);
     }
 
     private login(): void {
         HtmlUtils.getElementByIdOrFail<HTMLDivElement>('webRtcSetup').style.display = 'none';
         this.soundMeter.stop();
-        window.removeEventListener('resize', this.repositionCallback);
 
         mediaManager.stopCamera();
         mediaManager.stopMicrophone();

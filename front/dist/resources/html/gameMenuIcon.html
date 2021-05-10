@@ -1,10 +1,12 @@
 <style>
+    *{
+        font-family: PixelFont-7,monospace!important;
+    }
     #menuIcon button {
         background-color: black;
         color: white;
         border-radius: 7px;
-        height: 28px;
-        width: 34px;
+        padding: 2px 8px;
     }
     #menuIcon button img{
         width: 14px;
@@ -13,6 +15,11 @@
     }
     #menuIcon section {
         margin: 10px;
+    }
+    @media only screen and (max-height: 700px) {
+        #menuIcon section {
+            margin: 2px;
+        }
     }
 </style>
 <main id="menuIcon" hidden>

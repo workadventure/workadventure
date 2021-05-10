@@ -1,7 +1,8 @@
 name: Cleanup images and environments
 
 on:
-  - delete
+  pull_request:
+    types: [ closed ]
 
 # Enables BuildKit
 env:
@@ -14,13 +15,12 @@ jobs:
 
     steps:
       # Create a slugified value of the branch
-      - uses: rlespinasse/github-slug-action@1.1.0
+      - uses: rlespinasse/github-slug-action@3.1.0
 
       - name: Cleanup
+        continue-on-error: true
         uses: thecodingmachine/deeployer-cleanup-action@master
         env:
           KUBE_CONFIG_FILE: ${{ secrets.KUBE_CONFIG_FILE }}
         with:
-# FIXME: we are not using ${{ env.GITHUB_REF_SLUG }} that resolves to master BUT! we are not using a slugified namespace
-# so complex namespace names will not be treated correctly
-          namespace: workadventure-${{ github.event.ref }}
+          namespace: workadventure-${{ env.GITHUB_HEAD_REF_SLUG }}

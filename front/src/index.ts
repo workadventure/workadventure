@@ -2,7 +2,7 @@ import 'phaser';
 import GameConfig = Phaser.Types.Core.GameConfig;
 import "../dist/resources/style/index.scss";
 
-import {DEBUG_MODE, RESOLUTION} from "./Enum/EnvironmentVariable";
+import {DEBUG_MODE, isMobile} from "./Enum/EnvironmentVariable";
 import {LoginScene} from "./Phaser/Login/LoginScene";
 import {ReconnectingScene} from "./Phaser/Reconnecting/ReconnectingScene";
 import {SelectCharacterScene} from "./Phaser/Login/SelectCharacterScene";
@@ -17,6 +17,10 @@ import {HelpCameraSettingsScene} from "./Phaser/Menu/HelpCameraSettingsScene";
 import {localUserStore} from "./Connexion/LocalUserStore";
 import {ErrorScene} from "./Phaser/Reconnecting/ErrorScene";
 import {iframeListener} from "./Api/IframeListener";
+import { SelectCharacterMobileScene } from './Phaser/Login/SelectCharacterMobileScene';
+import {HdpiManager} from "./Phaser/Services/HdpiManager";
+import {waScaleManager} from "./Phaser/Services/WaScaleManager";
+import {Game} from "./Phaser/Game/Game";
 
 const {width, height} = coWebsiteManager.getGameSize();
 
@@ -67,15 +71,31 @@ switch (phaserMode) {
         throw new Error('phaserMode parameter must be one of "auto", "canvas" or "webgl"');
 }
 
+const hdpiManager = new HdpiManager(640*480, 196*196);
+const { game: gameSize, real: realSize } = hdpiManager.getOptimalGameSize({width, height});
 
 const config: GameConfig = {
     type: mode,
     title: "WorkAdventure",
-    width: width / RESOLUTION,
-    height: height / RESOLUTION,
-    parent: "game",
-    scene: [EntryScene, LoginScene, SelectCharacterScene, SelectCompanionScene, EnableCameraScene, ReconnectingScene, ErrorScene, CustomizeScene, MenuScene, HelpCameraSettingsScene],
-    zoom: RESOLUTION,
+    scale: {
+        parent: "game",
+        width: gameSize.width,
+        height: gameSize.height,
+        zoom: realSize.width / gameSize.width,
+        autoRound: true,
+        resizeInterval: 999999999999
+    },
+    scene: [EntryScene,
+        LoginScene,
+        isMobile() ? SelectCharacterMobileScene : SelectCharacterScene,
+        SelectCompanionScene,
+        EnableCameraScene,
+        ReconnectingScene,
+        ErrorScene,
+        CustomizeScene,
+        MenuScene,
+        HelpCameraSettingsScene],
+    //resolution: window.devicePixelRatio / 2,
     fps: fps,
     dom: {
         createContainer: true
@@ -91,6 +111,8 @@ const config: GameConfig = {
             debug: DEBUG_MODE,
         }
     },
+    // Instruct systems with 2 GPU to choose the low power one. We don't need that extra power and we want to save battery
+    powerPreference: "low-power",
     callbacks: {
         postBoot: game => {
             // Commented out to try to fix MacOS bug
@@ -102,12 +124,15 @@ const config: GameConfig = {
     }
 };
 
-const game = new Phaser.Game(config);
+//const game = new Phaser.Game(config);
+const game = new Game(config);
+
+waScaleManager.setScaleManager(game.scale);
 
 window.addEventListener('resize', function (event) {
     coWebsiteManager.resetStyle();
-    const {width, height} = coWebsiteManager.getGameSize();
-    game.scale.resize(width / RESOLUTION, height / RESOLUTION);
+
+    waScaleManager.applyNewSize();
 
     // Let's trigger the onResize method of any active scene that is a ResizableScene
     for (const scene of game.scene.getScenes(true)) {
@@ -118,8 +143,7 @@ window.addEventListener('resize', function (event) {
 });
 
 coWebsiteManager.onResize.subscribe(() => {
-    const {width, height} = coWebsiteManager.getGameSize();
-    game.scale.resize(width / RESOLUTION, height / RESOLUTION);
+    waScaleManager.applyNewSize();
 });
 
 iframeListener.init();

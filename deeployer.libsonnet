@@ -1,8 +1,8 @@
 {
   local env = std.extVar("env"),
-  local namespace = env.GITHUB_REF_SLUG,
+  local namespace = env.DEPLOY_REF,
   local tag = namespace,
-  local url = if namespace == "master" then "workadventu.re" else namespace+".workadventure.test.thecodingmachine.com",
+  local url = if namespace == "master" then "workadventu.re" else namespace+".test.workadventu.re",
   // develop branch does not use admin because of issue with SSL certificate of admin as of now.
   local adminUrl = if namespace == "master" || namespace == "develop" || std.startsWith(namespace, "admin") then "https://"+url else null,
   "$schema": "https://raw.githubusercontent.com/thecodingmachine/deeployer/master/deeployer.schema.json",
