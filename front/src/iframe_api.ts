@@ -1,14 +1,14 @@
-import {ChatEvent, isChatEvent} from "./Api/Events/ChatEvent";
-import {isIframeEventWrapper} from "./Api/Events/IframeEvent";
-import {isUserInputChatEvent, UserInputChatEvent} from "./Api/Events/UserInputChatEvent";
-import {Subject} from "rxjs";
-import {EnterLeaveEvent, isEnterLeaveEvent} from "./Api/Events/EnterLeaveEvent";
-import {OpenPopupEvent} from "./Api/Events/OpenPopupEvent";
-import {isButtonClickedEvent} from "./Api/Events/ButtonClickedEvent";
-import {ClosePopupEvent} from "./Api/Events/ClosePopupEvent";
-import {OpenTabEvent} from "./Api/Events/OpenTabEvent";
-import {GoToPageEvent} from "./Api/Events/GoToPageEvent";
-import {OpenCoWebSiteEvent} from "./Api/Events/OpenCoWebSiteEvent";
+import { ChatEvent } from "./Api/Events/ChatEvent";
+import { isIframeResponseEventWrapper } from "./Api/Events/IframeEvent";
+import { isUserInputChatEvent, UserInputChatEvent } from "./Api/Events/UserInputChatEvent";
+import { Subject } from "rxjs";
+import { EnterLeaveEvent, isEnterLeaveEvent } from "./Api/Events/EnterLeaveEvent";
+import { OpenPopupEvent } from "./Api/Events/OpenPopupEvent";
+import { isButtonClickedEvent } from "./Api/Events/ButtonClickedEvent";
+import { ClosePopupEvent } from "./Api/Events/ClosePopupEvent";
+import { OpenTabEvent } from "./Api/Events/OpenTabEvent";
+import { GoToPageEvent } from "./Api/Events/GoToPageEvent";
+import { OpenCoWebSiteEvent } from "./Api/Events/OpenCoWebSiteEvent";
 import { isMenuItemClickedEvent } from './Api/Events/MenuItemClickedEvent';
 import { MenuItemRegisterEvent } from './Api/Events/MenuItemRegisterEvent';
 
@@ -22,10 +22,10 @@ interface WorkAdventureApi {
     goToPage(url : string): void;
     openCoWebSite(url : string): void;
     closeCoWebSite(): void;
-    disablePlayerControl() : void;
-    restorePlayerControl() : void;
-    displayBubble() : void;
-    removeBubble() : void;
+    disablePlayerControl(): void;
+    restorePlayerControl(): void;
+    displayBubble(): void;
+    removeBubble(): void;
     registerMenuCommand(commandDescriptor: string, callback: (commandDescriptor: string) => void): void
 }
 
@@ -53,7 +53,7 @@ interface ButtonDescriptor {
     /**
      * The type of the button. Can be one of "normal", "primary", "success", "warning", "error", "disabled"
      */
-    className?: "normal"|"primary"|"success"|"warning"|"error"|"disabled",
+    className?: "normal" | "primary" | "success" | "warning" | "error" | "disabled",
     /**
      * Callback called if the button is pressed
      */
@@ -91,38 +91,38 @@ window.WA = {
             } as ChatEvent
         }, '*');
     },
-    disablePlayerControl() : void {
-        window.parent.postMessage({'type' : 'disablePlayerControl'},'*');
+    disablePlayerControl(): void {
+        window.parent.postMessage({ 'type': 'disablePlayerControl' }, '*');
     },
 
-    restorePlayerControl() : void {
-        window.parent.postMessage({'type' : 'restorePlayerControl'},'*');
+    restorePlayerControl(): void {
+        window.parent.postMessage({ 'type': 'restorePlayerControl' }, '*');
     },
 
-    displayBubble() : void {
-        window.parent.postMessage({'type' : 'displayBubble'},'*');
+    displayBubble(): void {
+        window.parent.postMessage({ 'type': 'displayBubble' }, '*');
     },
 
-    removeBubble() : void {
-        window.parent.postMessage({'type' : 'removeBubble'},'*');
+    removeBubble(): void {
+        window.parent.postMessage({ 'type': 'removeBubble' }, '*');
     },
 
-    openTab(url : string) : void{
+    openTab(url: string): void {
         window.parent.postMessage({
-            "type" : 'openTab',
-            "data" : {
+            "type": 'openTab',
+            "data": {
                 url
             } as OpenTabEvent
-            },'*');
+        }, '*');
     },
 
-    goToPage(url : string) : void{
+    goToPage(url: string): void {
         window.parent.postMessage({
-            "type" : 'goToPage',
-            "data" : {
+            "type": 'goToPage',
+            "data": {
                 url
             } as GoToPageEvent
-            },'*');
+        }, '*');
     },
 
     openCoWebSite(url : string) : void{
@@ -131,13 +131,13 @@ window.WA = {
             "data" : {
                 url
             } as OpenCoWebSiteEvent
-            },'*');
+        }, '*');
     },
 
-    closeCoWebSite() : void{
+    closeCoWebSite(): void {
         window.parent.postMessage({
-            "type" : 'closeCoWebSite'
-            },'*');
+            "type": 'closeCoWebSite'
+        }, '*');
     },
 
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup {
@@ -218,9 +218,9 @@ window.addEventListener('message', message => {
 
     const payload = message.data;
 
-    console.log(payload);
+    console.debug(payload);
 
-    if (isIframeEventWrapper(payload)) {
+    if (isIframeResponseEventWrapper(payload)) {
         const payloadData = payload.data;
         if (payload.type === 'userInputChat' && isUserInputChatEvent(payloadData)) {
             userInputChatStream.next(payloadData);
@@ -232,7 +232,7 @@ window.addEventListener('message', message => {
             const callback = popupCallbacks.get(payloadData.popupId)?.get(payloadData.buttonId);
             const popup = popups.get(payloadData.popupId);
             if (popup === undefined) {
-                throw new Error('Could not find popup with ID "'+payloadData.popupId+'"');
+                throw new Error('Could not find popup with ID "' + payloadData.popupId + '"');
             }
             if (callback) {
                 callback(popup);
