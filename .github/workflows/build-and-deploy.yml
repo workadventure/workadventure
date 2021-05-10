@@ -2,7 +2,7 @@ name: Build, push and deploy Docker image
 
 on:
   push:
-    branch: [master]
+    branches: [master]
   release:
     types: [created]
   pull_request:
@@ -16,7 +16,7 @@ env:
 jobs:
 
   build-front:
-    if: ${{ github.event.release || github.event.push || contains(github.event.pull_request.labels.*.name, 'deploy') }}
+    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -36,11 +36,11 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-front
-          tags: ${{ github.event.pull_request && env.GITHUB_HEAD_REF_SLUG || github.event.release && env.GITHUB_REF_SLUG || 'master' }}
+          tags: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           add_git_labels: true
 
   build-back:
-    if: ${{ github.event.release || github.event.push || contains(github.event.pull_request.labels.*.name, 'deploy') }}
+    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -59,11 +59,11 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-back
-          tags: ${{ github.event.pull_request && env.GITHUB_HEAD_REF_SLUG || github.event.release && env.GITHUB_REF_SLUG || 'master' }}
+          tags: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           add_git_labels: true
 
   build-pusher:
-    if: ${{ github.event.release || github.event.push || contains(github.event.pull_request.labels.*.name, 'deploy') }}
+    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -82,11 +82,11 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-pusher
-          tags: ${{ github.event.pull_request && env.GITHUB_HEAD_REF_SLUG || github.event.release && env.GITHUB_REF_SLUG || 'master' }}
+          tags: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           add_git_labels: true
 
   build-uploader:
-    if: ${{ github.event.release || github.event.push || contains(github.event.pull_request.labels.*.name, 'deploy') }}
+    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -105,11 +105,11 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-uploader
-          tags: ${{ github.event.pull_request && env.GITHUB_HEAD_REF_SLUG || github.event.release && env.GITHUB_REF_SLUG || 'master' }}
+          tags: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           add_git_labels: true
 
   build-maps:
-    if: ${{ github.event.release || github.event.push || contains(github.event.pull_request.labels.*.name, 'deploy') }}
+    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -129,7 +129,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-maps
-          tags: ${{ github.event.pull_request && env.GITHUB_HEAD_REF_SLUG || github.event.release && env.GITHUB_REF_SLUG || 'master' }}
+          tags: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           add_git_labels: true
 
   deeploy:
@@ -140,7 +140,7 @@ jobs:
       - build-maps
       - build-uploader
     runs-on: ubuntu-latest
-    if: ${{ github.event.push || contains(github.event.pull_request.labels.*.name, 'deploy') }}
+    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
 
     steps:
       - name: Checkout
@@ -158,13 +158,13 @@ jobs:
           JITSI_URL: ${{ secrets.JITSI_URL }}
           SECRET_JITSI_KEY: ${{ secrets.SECRET_JITSI_KEY }}
           TURN_STATIC_AUTH_SECRET: ${{ secrets.TURN_STATIC_AUTH_SECRET }}
-          DEPLOY_REF: ${{ github.event.pull_request && env.GITHUB_HEAD_REF_SLUG || 'master' }}
+          DEPLOY_REF: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         with:
-          namespace: workadventure-${{ github.event.pull_request && env.GITHUB_HEAD_REF_SLUG || 'master' }}
+          namespace: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
 
       - name: Add a comment in PR
         uses: unsplash/comment-on-pr@v1.2.0
-        if: ${{ github.event.pull_request }}
+        if: ${{ github.event_name == 'pull_request' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
