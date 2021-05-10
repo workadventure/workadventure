@@ -9,6 +9,8 @@ import { ClosePopupEvent } from "./Api/Events/ClosePopupEvent";
 import { OpenTabEvent } from "./Api/Events/OpenTabEvent";
 import { GoToPageEvent } from "./Api/Events/GoToPageEvent";
 import { OpenCoWebSiteEvent } from "./Api/Events/OpenCoWebSiteEvent";
+import { isMessageReferenceEvent, removeTriggerMessage, triggerMessage, TriggerMessageEvent } from './Api/Events/TriggerMessageEvent';
+
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
@@ -24,6 +26,9 @@ interface WorkAdventureApi {
     restorePlayerControl(): void;
     displayBubble(): void;
     removeBubble(): void;
+
+    triggerMessage(message: string, callback: () => void): string
+    removeTriggerMessage(uuid: string): void
 }
 
 declare global {
@@ -74,7 +79,38 @@ class Popup {
     }
 }
 
+function uuidv4() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
+const callbacks: { [uuid: string]: (arg?: unknown) => void } = {}
+
 window.WA = {
+    removeTriggerMessage(uuid: string): void {
+        window.parent.postMessage({
+            type: removeTriggerMessage,
+            data: {
+                uuid: uuid
+            } as TriggerMessageEvent
+        }, "*")
+    },
+    triggerMessage(message: string, callback: () => void): string {
+        const uuid = uuidv4();
+        callbacks[uuid] = callback;
+        window.parent.postMessage({
+            type: triggerMessage,
+            data: {
+                message,
+                uuid: uuid
+            } as TriggerMessageEvent
+        }, "*")
+
+        return uuid
+    },
+
     /**
      * Send a message in the chat.
      * Only the local user will receive this message.
@@ -224,6 +260,8 @@ window.addEventListener('message', message => {
             if (callback) {
                 callback(popup);
             }
+        } else if (payload.type == "messageTriggered" && isMessageReferenceEvent(payloadData)) {
+            callbacks[payloadData.uuid]();
         }
 
     }

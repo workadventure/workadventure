@@ -8,6 +8,7 @@ import { GoToPageEvent } from './GoToPageEvent';
 import { OpenCoWebSiteEvent } from './OpenCoWebSiteEvent';
 import { OpenPopupEvent } from './OpenPopupEvent';
 import { OpenTabEvent } from './OpenTabEvent';
+import { MessageReferenceEvent, TriggerMessageEvent } from './TriggerMessageEvent';
 import { UserInputChatEvent } from './UserInputChatEvent';
 
 
@@ -29,6 +30,8 @@ export type IframeEventMap = {
     restorePlayerControl: null
     displayBubble: null
     removeBubble: null
+    triggerMessage: TriggerMessageEvent
+    removeTriggerMessage: MessageReferenceEvent
 }
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;
@@ -45,6 +48,8 @@ export interface IframeResponseEventMap {
     leaveEvent: EnterLeaveEvent
     buttonClickedEvent: ButtonClickedEvent
     // gameState: GameStateEvent
+
+    messageTriggered: MessageReferenceEvent
 }
 export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
     type: T;

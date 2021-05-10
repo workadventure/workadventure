@@ -784,8 +784,19 @@ export class GameScene extends DirtyScene implements CenterListener {
     }
 
     private listenToIframeEvents(): void {
-            this.iframeSubscriptionList = [];
-            this.iframeSubscriptionList.push(iframeListener.openPopupStream.subscribe((openPopupEvent) => {
+        this.iframeSubscriptionList = [];
+
+        this.iframeSubscriptionList.push(iframeListener.triggerMessageEvent.subscribe(message => {
+            layoutManager.addActionButton(message.uuid, message.message, () => {
+                iframeListener.sendMessageTriggeredEvent(message.uuid)
+            }, this.userInputManager);
+        }))
+
+        this.iframeSubscriptionList.push(iframeListener.removeTriggerMessageEvent.subscribe(message => {
+            layoutManager.removeActionButton(message.uuid, this.userInputManager);
+        }))
+
+        this.iframeSubscriptionList.push(iframeListener.openPopupStream.subscribe((openPopupEvent) => {
 
             let  objectLayerSquare : ITiledMapObject;
             const targetObjectData = this.getObjectLayerData(openPopupEvent.targetObject);
