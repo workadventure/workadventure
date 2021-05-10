@@ -877,19 +877,16 @@ ${escapedMessage}
         }));
 
         this.iframeSubscriptionList.push(iframeListener.showLayerStream.subscribe((layerEvent)=>{
-            console.log('showLayer 3');
             this.setLayerVisibility(layerEvent.name, true);
         }));
 
         this.iframeSubscriptionList.push(iframeListener.hideLayerStream.subscribe((layerEvent)=>{
-            console.log('hideLayer 3');
             this.setLayerVisibility(layerEvent.name, false);
         }));
 
     }
 
     private setLayerVisibility(layerName: string, visible: boolean): void {
-        console.log('visibility');
         const layer = this.Layers.find((layer) => layer.layer.name === layerName);
         if (layer === undefined) {
             console.warn('Could not find layer "' + layerName + '" when calling WA.hideLayer / WA.showLayer');
