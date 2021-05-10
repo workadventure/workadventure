@@ -1,5 +1,5 @@
 import { ChatEvent } from "./Api/Events/ChatEvent";
-import { isIframeResponseEventWrapper } from "./Api/Events/IframeEvent";
+import { IframeEvent, IframeEventMap, isIframeResponseEventWrapper } from "./Api/Events/IframeEvent";
 import { isUserInputChatEvent, UserInputChatEvent } from "./Api/Events/UserInputChatEvent";
 import { Subject } from "rxjs";
 import { EnterLeaveEvent, isEnterLeaveEvent } from "./Api/Events/EnterLeaveEvent";
@@ -10,6 +10,7 @@ import { OpenTabEvent } from "./Api/Events/OpenTabEvent";
 import { GoToPageEvent } from "./Api/Events/GoToPageEvent";
 import { OpenCoWebSiteEvent } from "./Api/Events/OpenCoWebSiteEvent";
 import { GameStateEvent, isGameStateEvent } from './Api/Events/ApiGameStateEvent';
+import { HasMovedEvent, HasMovedEventCallback, isHasMovedEvent } from './Api/Events/HasMovedEvent';
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
@@ -17,15 +18,17 @@ interface WorkAdventureApi {
     onEnterZone(name: string, callback: () => void): void;
     onLeaveZone(name: string, callback: () => void): void;
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup;
-    openTab(url : string): void;
-    goToPage(url : string): void;
-    openCoWebSite(url : string): void;
+    openTab(url: string): void;
+    goToPage(url: string): void;
+    openCoWebSite(url: string): void;
     closeCoWebSite(): void;
     disablePlayerControl(): void;
     restorePlayerControl(): void;
     displayBubble(): void;
     removeBubble(): void;
-    getGameState():Promise<unknown>
+    getGameState(): Promise<GameStateEvent>
+
+    onMoveEvent(callback: (moveEvent: HasMovedEvent) => void): void
 }
 
 declare global {
@@ -75,20 +78,44 @@ class Popup {
         }, '*');
     }
 }
+function uuidv4() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
+const stateResolvers: Array<(event: GameStateEvent) => void> = []
+
+const callbacks: { [type: string]: HasMovedEventCallback | ((arg?: HasMovedEvent | never) => void) } = {}
 
 
-const stateResolvers:Array<(event:GameStateEvent)=>void> =[]
+function postToParent(content: IframeEvent<keyof IframeEventMap>) {
+    window.parent.postMessage(content, "*")
+}
+let moveEventUuid: string | undefined;
 
 window.WA = {
 
+    onMoveEvent(callback: HasMovedEventCallback): void {
+        moveEventUuid = uuidv4();
+        callbacks[moveEventUuid] = callback;
+        postToParent({
+            type: "enableMoveEvents",
+            data: undefined
+        })
 
+        window.parent.postMessage({
+            type: "enable"
+        }, "*")
+    },
 
-    getGameState(){
-        return new Promise<GameStateEvent>((resolver,thrower)=>{
+    getGameState() {
+        return new Promise<GameStateEvent>((resolver, thrower) => {
             stateResolvers.push(resolver);
-            window.parent.postMessage({ 
-                type:"getState"
-            },"*")
+            window.parent.postMessage({
+                type: "getState"
+            }, "*")
         })
     },
 
@@ -140,10 +167,10 @@ window.WA = {
         }, '*');
     },
 
-    openCoWebSite(url : string) : void{
+    openCoWebSite(url: string): void {
         window.parent.postMessage({
-            "type" : 'openCoWebSite',
-            "data" : {
+            "type": 'openCoWebSite',
+            "data": {
                 url
             } as OpenCoWebSiteEvent
         }, '*');
@@ -242,10 +269,12 @@ window.addEventListener('message', message => {
             if (callback) {
                 callback(popup);
             }
-        }else if(payload.type=="gameState" && isGameStateEvent(payloadData)){
-            stateResolvers.forEach(resolver=>{
+        } else if (payload.type == "gameState" && isGameStateEvent(payloadData)) {
+            stateResolvers.forEach(resolver => {
                 resolver(payloadData);
             })
+        } else if (payload.type == "hasMovedEvent" && isHasMovedEvent(payloadData) && moveEventUuid) {
+            callbacks[moveEventUuid](payloadData)
         }
 
     }

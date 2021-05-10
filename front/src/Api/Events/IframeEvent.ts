@@ -1,11 +1,11 @@
 
-
 import { GameStateEvent } from './ApiGameStateEvent';
 import { ButtonClickedEvent } from './ButtonClickedEvent';
 import { ChatEvent } from './ChatEvent';
 import { ClosePopupEvent } from './ClosePopupEvent';
 import { EnterLeaveEvent } from './EnterLeaveEvent';
 import { GoToPageEvent } from './GoToPageEvent';
+import { HasMovedEvent } from './HasMovedEvent';
 import { OpenCoWebSiteEvent } from './OpenCoWebSiteEvent';
 import { OpenPopupEvent } from './OpenPopupEvent';
 import { OpenTabEvent } from './OpenTabEvent';
@@ -30,6 +30,7 @@ export type IframeEventMap = {
     restorePlayerControl: null
     displayBubble: null
     removeBubble: null
+    enableMoveEvents: undefined
 }
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;
@@ -46,6 +47,7 @@ export interface IframeResponseEventMap {
     leaveEvent: EnterLeaveEvent
     buttonClickedEvent: ButtonClickedEvent
     gameState: GameStateEvent
+    hasMovedEvent: HasMovedEvent
 }
 export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
     type: T;

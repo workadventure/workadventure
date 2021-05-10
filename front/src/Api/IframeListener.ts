@@ -14,6 +14,7 @@ import { IframeEventMap, IframeEvent, IframeResponseEvent, IframeResponseEventMa
 import { UserInputChatEvent } from "./Events/UserInputChatEvent";
 import { GameStateEvent } from './Events/ApiGameStateEvent';
 import { deepFreezeClone as deepFreezeClone } from '../utility';
+import { HasMovedEvent } from './Events/HasMovedEvent';
 
 
 /**
@@ -21,6 +22,7 @@ import { deepFreezeClone as deepFreezeClone } from '../utility';
  * Also allows to send messages to those iframes.
  */
 class IframeListener {
+
     private readonly _chatStream: Subject<ChatEvent> = new Subject();
     public readonly chatStream = this._chatStream.asObservable();
 
@@ -54,12 +56,13 @@ class IframeListener {
     private readonly _removeBubbleStream: Subject<void> = new Subject();
     public readonly removeBubbleStream = this._removeBubbleStream.asObservable();
 
-    
+
     private readonly _gameStateStream: Subject<void> = new Subject();
     public readonly gameStateStream = this._gameStateStream.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
+    private sendMoveEvents: boolean = false;
 
     init() {
         window.addEventListener("message", (message: TypedMessageEvent<IframeEvent<keyof IframeEventMap>>) => {
@@ -101,20 +104,18 @@ class IframeListener {
                 }
                 else if (payload.type === 'closeCoWebSite') {
                     scriptUtils.closeCoWebSite();
-                }
-                else if (payload.type === 'disablePlayerControl') {
+                } else if (payload.type === 'disablePlayerControl') {
                     this._disablePlayerControlStream.next();
-                }
-                else if (payload.type === 'restorePlayerControl') {
+                } else if (payload.type === 'restorePlayerControl') {
                     this._enablePlayerControlStream.next();
-                }
-                else if (payload.type === 'displayBubble') {
+                } else if (payload.type === 'displayBubble') {
                     this._displayBubbleStream.next();
-                }
-                else if (payload.type === 'removeBubble') {
+                } else if (payload.type === 'removeBubble') {
                     this._removeBubbleStream.next();
-                }else if(payload.type=="getState"){
+                } else if (payload.type == "getState") {
                     this._gameStateStream.next();
+                } else if (payload.type == "enableMoveEvents") {
+                    this.sendMoveEvents = true
                 }
             }
 
@@ -123,11 +124,11 @@ class IframeListener {
 
     }
 
-    
+
     sendFrozenGameStateEvent(gameStateEvent: GameStateEvent) {
         this.postMessage({
             'type': 'gameState',
-            'data': deepFreezeClone(gameStateEvent) 
+            'data': deepFreezeClone(gameStateEvent)
         });
     }
 
@@ -232,6 +233,15 @@ class IframeListener {
                 "name": name
             } as EnterLeaveEvent
         });
+    }
+
+    hasMovedEvent(event: HasMovedEvent) {
+        if (this.sendMoveEvents) {
+            this.postMessage({
+                'type': 'hasMovedEvent',
+                'data': event
+            });
+        }
     }
 
     sendButtonClickedEvent(popupId: number, buttonId: number): void {

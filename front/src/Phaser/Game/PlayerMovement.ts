@@ -1,6 +1,7 @@
-import {HasMovedEvent} from "./GameManager";
-import {MAX_EXTRAPOLATION_TIME} from "../../Enum/EnvironmentVariable";
-import {PositionInterface} from "../../Connexion/ConnexionModels";
+
+import { MAX_EXTRAPOLATION_TIME } from "../../Enum/EnvironmentVariable";
+import { PositionInterface } from "../../Connexion/ConnexionModels";
+import { HasMovedEvent } from '../../Api/Events/HasMovedEvent';
 
 export class PlayerMovement {
     public constructor(private startPosition: PositionInterface, private startTick: number, private endPosition: HasMovedEvent, private endTick: number) {
