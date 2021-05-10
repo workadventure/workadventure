@@ -109,15 +109,18 @@ export class HelpCameraSettingsScene extends DirtyScene {
 
     public onResize(ev: UIEvent): void {
         super.onResize(ev);
-        const middleX = this.getMiddleX();
-        const middleY = this.getMiddleY();
-        this.tweens.add({
-            targets: this.helpCameraSettingsElement,
-            x: middleX,
-            y: middleY,
-            duration: 1000,
-            ease: 'Power3'
-        });
+        if (this.helpCameraSettingsOpened) {
+            const middleX = this.getMiddleX();
+            const middleY = this.getMiddleY();
+            this.tweens.add({
+                targets: this.helpCameraSettingsElement,
+                x: middleX,
+                y: middleY,
+                duration: 1000,
+                ease: 'Power3'
+            });
+            this.dirty = true;
+        }
     }
 
     private getMiddleX() : number{
