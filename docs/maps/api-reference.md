@@ -247,20 +247,9 @@ These 2 methods can be used to show and hide a layer.
 Example :
 
 ```javascript
-<div>
-    <label for="show/hideBottom">See bottom : </label>
-    <input type="checkbox" id="show/hideBottom" name="visible" value="show" checked>
-</div>
-<script>
-    document.getElementById('show/hideLayer').onclick = () => {
-        if (document.getElementById('show/hideBottom').checked) {
-            WA.showLayer('bottom');
-        }
-        else {
-            WA.hideLayer('bottom');
-        }
-    }
-</script>
+WA.showLayer('bottom');
+//...
+WA.hideLayer('bottom');
 ```
 
 
