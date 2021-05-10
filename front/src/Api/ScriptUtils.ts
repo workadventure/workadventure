@@ -1,4 +1,4 @@
-import {coWebsiteManager} from "../WebRtc/CoWebsiteManager";
+import { coWebsiteManager } from "../WebRtc/CoWebsiteManager";
 import { OpenCoWebSiteOptionsEvent } from './Events/OpenCoWebSiteEvent';
 
 class ScriptUtils {
@@ -9,13 +9,13 @@ class ScriptUtils {
         window.open(url);
     }
 
-    public goToPage(url : string){
-         window.location.href = url;
+    public goToPage(url: string) {
+        window.location.href = url;
 
     }
 
     public openCoWebsite(url: string, base: string, scriptWindow: MessageEventSource | null, options?: OpenCoWebSiteOptionsEvent | undefined) {
-        const iframeWindow = coWebsiteManager.loadCoWebsite(url, base, undefined, undefined, options);
+        const iframeWindow = coWebsiteManager.loadCoWebsite(url, base, undefined, options?.allow, options);
         if (scriptWindow && iframeWindow) {
             const messgaeChannel = new MessageChannel()
             window.addEventListener("message", (event: MessageEvent) => {

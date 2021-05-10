@@ -4,7 +4,8 @@ import * as tg from "generic-type-guard";
 
 const isOptions = new tg.IsInterface().withOptionalProperties({
     asOverlay: tg.isBoolean,
-    passInputEvents: tg.isBoolean
+    passInputEvents: tg.isBoolean,
+    allow: tg.isString
 }).get();
 export type OpenCoWebSiteOptionsEvent = tg.GuardedType<typeof isOptions>;
 

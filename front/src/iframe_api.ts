@@ -8,7 +8,7 @@ import { isButtonClickedEvent } from "./Api/Events/ButtonClickedEvent";
 import { ClosePopupEvent } from "./Api/Events/ClosePopupEvent";
 import { OpenTabEvent } from "./Api/Events/OpenTabEvent";
 import { GoToPageEvent } from "./Api/Events/GoToPageEvent";
-import { OpenCoWebSiteEvent } from "./Api/Events/OpenCoWebSiteEvent";
+import { OpenCoWebSiteEvent, OpenCoWebSiteOptionsEvent } from "./Api/Events/OpenCoWebSiteEvent";
 import { LoadPageEvent } from './Api/Events/LoadPageEvent';
 import { isMenuItemClickedEvent } from './Api/Events/MenuItemClickedEvent';
 import { MenuItemRegisterEvent } from './Api/Events/MenuItemRegisterEvent';
@@ -24,7 +24,7 @@ interface WorkAdventureApi {
     openTab(url: string): void;
     goToPage(url: string): void;
     exitSceneTo(url: string): void;
-    openCoWebSite(url: string, options?: { asOverlay?: boolean, passInputEvents?: boolean }): void;
+    openCoWebSite(url: string, options?: OpenCoWebSiteOptionsEvent): void;
     closeCoWebSite(): void;
     disablePlayerControl(): void;
     restorePlayerControl(): void;
@@ -161,7 +161,7 @@ window.WA = {
         }, '*');
     },
 
-    openCoWebSite(url: string, options: { asOverlay?: boolean, passInputEvents?: boolean } = {}): void {
+    openCoWebSite(url: string, options: OpenCoWebSiteOptionsEvent = {}): void {
         window.parent.postMessage({
             "type": 'openCoWebSite',
             "data": {
