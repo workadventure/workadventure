@@ -92,6 +92,8 @@ import { PinchManager } from "../UserInput/PinchManager";
 import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
 import { MenuScene, MenuSceneName } from '../Menu/MenuScene';
 import { PlayerStateObject } from '../../Api/Events/ApiGameStateEvent';
+import { waScaleManager } from "../Services/WaScaleManager";
+import { HasMovedEvent } from '../../Api/Events/HasMovedEvent';
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null,
@@ -627,6 +629,9 @@ export class GameScene extends ResizableScene implements CenterListener {
 
             //listen event to share position of user
             this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this))
+            this.CurrentPlayer.on(hasMovedEventName, (event: HasMovedEvent) => {
+                iframeListener.hasMovedEvent(event)
+            })
             this.CurrentPlayer.on(hasMovedEventName, this.outlineItem.bind(this))
             this.CurrentPlayer.on(hasMovedEventName, (event: HasMovedEvent) => {
                 this.gameMap.setPosition(event.x, event.y);

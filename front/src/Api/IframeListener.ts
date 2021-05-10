@@ -19,6 +19,7 @@ import { isOpenTabEvent, OpenTabEvent } from "./Events/OpenTabEvent";
 import { isMessageReferenceEvent, isTriggerMessageEvent, MessageReferenceEvent, TriggerMessageEvent } from './Events/TriggerMessageEvent';
 import { UserInputChatEvent } from "./Events/UserInputChatEvent";
 import { scriptUtils } from "./ScriptUtils";
+import { HasMovedEvent } from './Events/HasMovedEvent';
 
 
 /**
@@ -82,6 +83,7 @@ class IframeListener {
 
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
+    private sendMoveEvents: boolean = false;
 
     init() {
         window.addEventListener("message", (message: TypedMessageEvent<IframeEvent<keyof IframeEventMap>>) => {
@@ -123,17 +125,13 @@ class IframeListener {
                 }
                 else if (payload.type === 'closeCoWebSite') {
                     scriptUtils.closeCoWebSite();
-                }
-                else if (payload.type === 'disablePlayerControl') {
+                } else if (payload.type === 'disablePlayerControl') {
                     this._disablePlayerControlStream.next();
-                }
-                else if (payload.type === 'restorePlayerControl') {
+                } else if (payload.type === 'restorePlayerControl') {
                     this._enablePlayerControlStream.next();
-                }
-                else if (payload.type === 'displayBubble') {
+                } else if (payload.type === 'displayBubble') {
                     this._displayBubbleStream.next();
-                }
-                else if (payload.type === 'removeBubble') {
+                } else if (payload.type === 'removeBubble') {
                     this._removeBubbleStream.next();
                 } else if (payload.type == "registerMenuCommand" && isMenuItemRegisterEvent(payload.data)) {
                     this._registerMenuCommandStream.next(payload.data.menutItem)
@@ -147,6 +145,8 @@ class IframeListener {
                     this._triggerMessageEvent.next(payload.data)
                 } else if (payload.type == "removeTriggerMessage" && isMessageReferenceEvent(payload.data)) {
                     this._removeTriggerMessageEvent.next(payload.data)
+                } else if (payload.type == "enableMoveEvents") {
+                    this.sendMoveEvents = true
                 }
             }
 
@@ -282,6 +282,15 @@ class IframeListener {
                 "name": name
             } as EnterLeaveEvent
         });
+    }
+
+    hasMovedEvent(event: HasMovedEvent) {
+        if (this.sendMoveEvents) {
+            this.postMessage({
+                'type': 'hasMovedEvent',
+                'data': event
+            });
+        }
     }
 
     sendButtonClickedEvent(popupId: number, buttonId: number): void {

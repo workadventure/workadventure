@@ -1,5 +1,5 @@
 import { ChatEvent } from "./Api/Events/ChatEvent";
-import { isIframeResponseEventWrapper } from "./Api/Events/IframeEvent";
+import { IframeEvent, IframeEventMap, isIframeResponseEventWrapper } from "./Api/Events/IframeEvent";
 import { isUserInputChatEvent, UserInputChatEvent } from "./Api/Events/UserInputChatEvent";
 import { Subject } from "rxjs";
 import { EnterLeaveEvent, isEnterLeaveEvent } from "./Api/Events/EnterLeaveEvent";
@@ -15,6 +15,7 @@ import { MenuItemRegisterEvent } from './Api/Events/MenuItemRegisterEvent';
 import { GameStateEvent, isGameStateEvent } from './Api/Events/ApiGameStateEvent';
 import { updateTile, UpdateTileEvent } from './Api/Events/ApiUpdateTileEvent';
 import { isMessageReferenceEvent, removeTriggerMessage, triggerMessage, TriggerMessageEvent } from './Api/Events/TriggerMessageEvent';
+import { HasMovedEvent, HasMovedEventCallback, isHasMovedEvent } from './Api/Events/HasMovedEvent';
 
 
 interface WorkAdventureApi {
@@ -34,6 +35,7 @@ interface WorkAdventureApi {
     removeBubble(): void;
     registerMenuCommand(commandDescriptor: string, callback: (commandDescriptor: string) => void): void
     getGameState(): Promise<GameStateEvent>
+    onMoveEvent(callback: (moveEvent: HasMovedEvent) => void): void
 
     updateTile(tileData: UpdateTileEvent): void
 
@@ -88,7 +90,6 @@ class Popup {
         }, '*');
     }
 }
-
 function uuidv4() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
         const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
@@ -96,9 +97,21 @@ function uuidv4() {
     });
 }
 
-const callbacks: { [uuid: string]: (arg?: unknown) => void } = {}
-
 const stateResolvers: Array<(event: GameStateEvent) => void> = []
+function uuidv4() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
+const callbacks: { [type: string]: HasMovedEventCallback | ((arg?: HasMovedEvent | never) => void) } = {}
+
+
+function postToParent(content: IframeEvent<keyof IframeEventMap>) {
+    window.parent.postMessage(content, "*")
+}
+let moveEventUuid: string | undefined;
 
 window.WA = {
     removeTriggerMessage(uuid: string): void {
@@ -122,7 +135,18 @@ window.WA = {
 
         return uuid
     },
+    onMoveEvent(callback: HasMovedEventCallback): void {
+        moveEventUuid = uuidv4();
+        callbacks[moveEventUuid] = callback;
+        postToParent({
+            type: "enableMoveEvents",
+            data: undefined
+        })
 
+        window.parent.postMessage({
+            type: "enable"
+        }, "*")
+    },
 
 
     updateTile(data: UpdateTileEvent) {
@@ -322,6 +346,8 @@ window.addEventListener('message', message => {
             })
         } else if (payload.type == "messageTriggered" && isMessageReferenceEvent(payloadData)) {
             callbacks[payloadData.uuid]();
+        } else if (payload.type == "hasMovedEvent" && isHasMovedEvent(payloadData) && moveEventUuid) {
+            callbacks[moveEventUuid](payloadData)
         }
     }
 

@@ -1,5 +1,4 @@
 
-
 import { GameStateEvent } from './ApiGameStateEvent';
 import { UpdateTileEvent } from './ApiUpdateTileEvent';
 import { ButtonClickedEvent } from './ButtonClickedEvent';
@@ -10,6 +9,7 @@ import { GoToPageEvent } from './GoToPageEvent';
 import { LoadPageEvent } from './LoadPageEvent';
 import { MenuItemClickedEvent } from './MenuItemClickedEvent';
 import { MenuItemRegisterEvent } from './MenuItemRegisterEvent';
+import { HasMovedEvent } from './HasMovedEvent';
 import { OpenCoWebSiteEvent } from './OpenCoWebSiteEvent';
 import { OpenPopupEvent } from './OpenPopupEvent';
 import { OpenTabEvent } from './OpenTabEvent';
@@ -34,6 +34,7 @@ export type IframeEventMap = {
     restorePlayerControl: null
     displayBubble: null
     removeBubble: null
+    enableMoveEvents: undefined
     registerMenuCommand: MenuItemRegisterEvent
     loadPage: LoadPageEvent
     triggerMessage: TriggerMessageEvent
@@ -57,6 +58,7 @@ export interface IframeResponseEventMap {
     gameState: GameStateEvent
 
     messageTriggered: MessageReferenceEvent
+    hasMovedEvent: HasMovedEvent
 }
 export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
     type: T;
