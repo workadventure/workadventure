@@ -2,9 +2,6 @@
 <html lang="en">
     <head>
         <script src="http://play.workadventure.localhost/iframe_api.js"></script>
-        <script>
-        console.log('script');
-        </script>
     </head>
     <body>
         <button id="sendchat">Send chat message</button>
@@ -22,17 +19,15 @@
             }));
         </script>
         <div>
-            <label for="visibilityLayer">Metadata Layer</label><input type="checkbox" id="visibilityLayer" name="visible" value="show">
+            <label for="visibilityLayer">Metadata Layer</label><input type="checkbox" id="visibilityLayer" name="visible" value="show" checked>
         </div>
         <script>
             document.getElementById('visibilityLayer').onclick = () => {
                 if (document.getElementById('visibilityLayer').checked) {
                     WA.showLayer('Metadata');
-                    console.log('show');
                 }
                 else {
                     WA.hideLayer('Metadata');
-                    console.log('hide');
                 }
             }
         </script>
