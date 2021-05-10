@@ -1,5 +1,11 @@
 ## Version 1.3.9 - in dev
 
+### BREAKING CHANGES
+
+- Scripting API:
+  - Changed function names: `restorePlayerControl` => `restorePlayerControls`, `disablePlayerControl` => `disablePlayerControls`.
+    Please keep in mind that the scripting API is still experimental. Some breaking changes can occur in it until we mark it as stable.
+
 ### Updates
 
 - Mobile support has been improved
@@ -7,6 +13,7 @@
     - Mouse wheel support to zoom in / out
     - Pinch support on mobile to zoom in / out
     - Improved virtual joystick size (adapts to the zoom level)
+  
 
 ### Bug Fixes
 

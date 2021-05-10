@@ -107,9 +107,11 @@ class IframeListener {
                 }
                 else if (payload.type === 'closeCoWebSite') {
                     scriptUtils.closeCoWebSite();
-                } else if (payload.type === 'disablePlayerControl') {
+                }
+                else if (payload.type === 'disablePlayerControls') {
                     this._disablePlayerControlStream.next();
-                } else if (payload.type === 'restorePlayerControl') {
+                }
+                else if (payload.type === 'restorePlayerControls') {
                     this._enablePlayerControlStream.next();
                 } else if (payload.type === 'displayBubble') {
                     this._displayBubbleStream.next();
