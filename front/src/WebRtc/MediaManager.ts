@@ -43,7 +43,8 @@ export class MediaManager {
     microphoneClose: HTMLImageElement;
     microphone: HTMLImageElement;
     webrtcInAudio: HTMLAudioElement;
-    mySoundMeterElement: HTMLDivElement;
+    //FIX ME SOUNDMETER: check stalability of sound meter calculation
+    //mySoundMeterElement: HTMLDivElement;
     private webrtcOutAudio: HTMLAudioElement;
     constraintsMedia : MediaStreamConstraints = {
         audio: audioConstraint,
@@ -71,9 +72,10 @@ export class MediaManager {
 
     private userInputManager?: UserInputManager;
 
-    private mySoundMeter?: SoundMeter|null;
+    //FIX ME SOUNDMETER: check stalability of sound meter calculation
+    /*private mySoundMeter?: SoundMeter|null;
     private soundMeters: Map<string, SoundMeter> = new Map<string, SoundMeter>();
-    private soundMeterElements: Map<string, HTMLDivElement> = new Map<string, HTMLDivElement>();
+    private soundMeterElements: Map<string, HTMLDivElement> = new Map<string, HTMLDivElement>();*/
 
     constructor() {
 
@@ -134,15 +136,17 @@ export class MediaManager {
 
         this.checkActiveUser(); //todo: desactivated in case of bug
 
-        this.mySoundMeterElement = (HtmlUtils.getElementByIdOrFail('mySoundMeter'));
+        //FIX ME SOUNDMETER: check stalability of sound meter calculation
+        /*this.mySoundMeterElement = (HtmlUtils.getElementByIdOrFail('mySoundMeter'));
         this.mySoundMeterElement.childNodes.forEach((value: ChildNode, index) => {
             this.mySoundMeterElement.children.item(index)?.classList.remove('active');
-        });
+        });*/
     }
 
     public updateScene(){
         this.lastUpdateScene = new Date();
-        this.updateSoudMeter();
+        //FIX ME SOUNDMETER: check stalability of sound meter calculation
+        //this.updateSoudMeter();
     }
 
     public blurCamera() {
@@ -457,12 +461,12 @@ export class MediaManager {
             this.localStream = stream;
             this.myCamVideo.srcObject = this.localStream;
 
-            //init sound meter
-            this.mySoundMeter = null;
+            //FIX ME SOUNDMETER: check stalability of sound meter calculation
+            /*this.mySoundMeter = null;
             if(this.constraintsMedia.audio){
                 this.mySoundMeter = new SoundMeter();
                 this.mySoundMeter.connectToSource(stream, new AudioContext());
-            }
+            }*/
             return stream;
         }).catch((err: Error) => {
             throw err;
@@ -489,7 +493,7 @@ export class MediaManager {
                 track.stop();
             }
         }
-        this.mySoundMeter?.stop();
+        //this.mySoundMeter?.stop();
     }
 
     setCamera(id: string): Promise<MediaStream> {
@@ -632,11 +636,12 @@ export class MediaManager {
         }
         remoteVideo.srcObject = stream;
 
+        //FIX ME SOUNDMETER: check stalability of sound meter calculation
         //sound metter
-        const soundMeter = new SoundMeter();
+        /*const soundMeter = new SoundMeter();
         soundMeter.connectToSource(stream, new AudioContext());
         this.soundMeters.set(userId, soundMeter);
-        this.soundMeterElements.set(userId, HtmlUtils.getElementByIdOrFail<HTMLImageElement>('soundMeter-'+userId));
+        this.soundMeterElements.set(userId, HtmlUtils.getElementByIdOrFail<HTMLImageElement>('soundMeter-'+userId));*/
     }
     addStreamRemoteScreenSharing(userId: string, stream : MediaStream){
         // In the case of screen sharing (going both ways), we may need to create the HTML element if it does not exist yet
@@ -652,9 +657,10 @@ export class MediaManager {
         layoutManager.remove(userId);
         this.remoteVideo.delete(userId);
 
-        this.soundMeters.get(userId)?.stop();
+        //FIX ME SOUNDMETER: check stalability of sound meter calculation
+        /*this.soundMeters.get(userId)?.stop();
         this.soundMeters.delete(userId);
-        this.soundMeterElements.delete(userId);
+        this.soundMeterElements.delete(userId);*/
 
         //permit to remove user in discussion part
         this.removeParticipant(userId);
@@ -807,7 +813,8 @@ export class MediaManager {
         }
     }
 
-    updateSoudMeter(){
+    //FIX ME SOUNDMETER: check stalability of sound meter calculation
+    /*updateSoudMeter(){
         try{
             const volume = parseInt(((this.mySoundMeter ? this.mySoundMeter.getVolume() : 0) / 10).toFixed(0));
             this.setVolumeSoundMeter(volume, this.mySoundMeterElement);
@@ -824,7 +831,7 @@ export class MediaManager {
         }catch(err){
             //console.error(err);
         }
-    }
+    }*/
 
     private setVolumeSoundMeter(volume: number, element: HTMLDivElement){
         if(volume <= 0 && !element.classList.contains('active')){
