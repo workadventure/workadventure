@@ -19,15 +19,15 @@
             }));
         </script>
         <div>
-            <label for="visibilityLayer">Metadata Layer</label><input type="checkbox" id="visibilityLayer" name="visible" value="show" checked>
+            <label for="show/hideLayer">Layer Name : </label><input type="checkbox" id="show/hideLayer" name="visible" value="show" checked>
         </div>
         <script>
-            document.getElementById('visibilityLayer').onclick = () => {
-                if (document.getElementById('visibilityLayer').checked) {
-                    WA.showLayer('Metadata');
+            document.getElementById('show/hideLayer').onclick = () => {
+                if (document.getElementById('show/hideLayer').checked) {
+                    WA.showLayer('LayerName');
                 }
                 else {
-                    WA.hideLayer('Metadata');
+                    WA.hideLayer('LayerName');
                 }
             }
         </script>
