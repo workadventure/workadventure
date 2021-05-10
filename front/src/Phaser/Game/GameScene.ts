@@ -904,19 +904,22 @@ ${escapedMessage}
 
 
         this.iframeSubscriptionList.push(iframeListener.updateTileEvent.subscribe(event => {
+
             for (const eventTile of event) {
                 const layer = this.Layers.find(layer => layer.layer.name == eventTile.layer)
                 if (layer) {
                     const tile = layer.getTileAt(eventTile.x, eventTile.y)
-                    if (typeof eventTile.tile == "string") {
-                        const tileIndex = this.getIndexForTileType(eventTile.tile);
-                        if (tileIndex) {
-                            tile.index = tileIndex
+                    if (tile) {
+                        if (typeof eventTile.tile == "string") {
+                            const tileIndex = this.getIndexForTileType(eventTile.tile);
+                            if (tileIndex) {
+                                tile.index = tileIndex
+                            } else {
+                                return
+                            }
                         } else {
-                            return
+                            tile.index = eventTile.tile
                         }
-                    } else {
-                        tile.index = eventTile.tile
                     }
                 }
             }
