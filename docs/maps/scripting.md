@@ -1,4 +1,4 @@
-{.alert.alert-danger}
+{.alert.alert-danger style="width:80%"}
 This feature is "_experimental_". We may apply changes in the near future to the way it works when we gather some feedback.
 
 {.section-title.accent.text-primary}
