@@ -13,6 +13,7 @@ import { MenuItemRegisterEvent } from './MenuItemRegisterEvent';
 import { OpenCoWebSiteEvent } from './OpenCoWebSiteEvent';
 import { OpenPopupEvent } from './OpenPopupEvent';
 import { OpenTabEvent } from './OpenTabEvent';
+import { MessageReferenceEvent, TriggerMessageEvent } from './TriggerMessageEvent';
 import { UserInputChatEvent } from './UserInputChatEvent';
 
 
@@ -35,6 +36,8 @@ export type IframeEventMap = {
     removeBubble: null
     registerMenuCommand: MenuItemRegisterEvent
     loadPage: LoadPageEvent
+    triggerMessage: TriggerMessageEvent
+    removeTriggerMessage: MessageReferenceEvent
 }
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;
@@ -52,6 +55,8 @@ export interface IframeResponseEventMap {
     leaveEvent: EnterLeaveEvent
     buttonClickedEvent: ButtonClickedEvent
     gameState: GameStateEvent
+
+    messageTriggered: MessageReferenceEvent
 }
 export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
     type: T;

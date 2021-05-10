@@ -14,6 +14,8 @@ import { isMenuItemClickedEvent } from './Api/Events/MenuItemClickedEvent';
 import { MenuItemRegisterEvent } from './Api/Events/MenuItemRegisterEvent';
 import { GameStateEvent, isGameStateEvent } from './Api/Events/ApiGameStateEvent';
 import { updateTile, UpdateTileEvent } from './Api/Events/ApiUpdateTileEvent';
+import { isMessageReferenceEvent, removeTriggerMessage, triggerMessage, TriggerMessageEvent } from './Api/Events/TriggerMessageEvent';
+
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
@@ -34,6 +36,9 @@ interface WorkAdventureApi {
     getGameState(): Promise<GameStateEvent>
 
     updateTile(tileData: UpdateTileEvent): void
+
+    triggerMessage(message: string, callback: () => void): string
+    removeTriggerMessage(uuid: string): void
 }
 
 declare global {
@@ -84,9 +89,41 @@ class Popup {
     }
 }
 
+function uuidv4() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
+const callbacks: { [uuid: string]: (arg?: unknown) => void } = {}
+
 const stateResolvers: Array<(event: GameStateEvent) => void> = []
 
 window.WA = {
+    removeTriggerMessage(uuid: string): void {
+        window.parent.postMessage({
+            type: removeTriggerMessage,
+            data: {
+                uuid: uuid
+            } as TriggerMessageEvent
+        }, "*")
+    },
+    triggerMessage(message: string, callback: () => void): string {
+        const uuid = uuidv4();
+        callbacks[uuid] = callback;
+        window.parent.postMessage({
+            type: triggerMessage,
+            data: {
+                message,
+                uuid: uuid
+            } as TriggerMessageEvent
+        }, "*")
+
+        return uuid
+    },
+
+
 
     updateTile(data: UpdateTileEvent) {
         window.parent.postMessage({
@@ -283,6 +320,8 @@ window.addEventListener('message', message => {
             stateResolvers.forEach(resolver => {
                 resolver(payloadData);
             })
+        } else if (payload.type == "messageTriggered" && isMessageReferenceEvent(payloadData)) {
+            callbacks[payloadData.uuid]();
         }
     }
 

@@ -16,6 +16,7 @@ import { isMenuItemRegisterEvent } from './Events/MenuItemRegisterEvent';
 import { isOpenCoWebsite, OpenCoWebSiteEvent } from "./Events/OpenCoWebSiteEvent";
 import { isOpenPopupEvent, OpenPopupEvent } from "./Events/OpenPopupEvent";
 import { isOpenTabEvent, OpenTabEvent } from "./Events/OpenTabEvent";
+import { isMessageReferenceEvent, isTriggerMessageEvent, MessageReferenceEvent, TriggerMessageEvent } from './Events/TriggerMessageEvent';
 import { UserInputChatEvent } from "./Events/UserInputChatEvent";
 import { scriptUtils } from "./ScriptUtils";
 
@@ -25,6 +26,7 @@ import { scriptUtils } from "./ScriptUtils";
  * Also allows to send messages to those iframes.
  */
 class IframeListener {
+
     private readonly _chatStream: Subject<ChatEvent> = new Subject();
     public readonly chatStream = this._chatStream.asObservable();
 
@@ -70,6 +72,13 @@ class IframeListener {
 
     private readonly _updateTileEvent: Subject<UpdateTileEvent> = new Subject();
     public readonly updateTileEvent = this._updateTileEvent.asObservable();
+
+
+    private readonly _triggerMessageEvent: Subject<TriggerMessageEvent> = new Subject();
+    public readonly triggerMessageEvent = this._triggerMessageEvent.asObservable();
+
+    private readonly _removeTriggerMessageEvent: Subject<MessageReferenceEvent> = new Subject();
+    public readonly removeTriggerMessageEvent = this._removeTriggerMessageEvent.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
@@ -134,6 +143,10 @@ class IframeListener {
                     this._gameStateStream.next();
                 } else if (payload.type == "updateTile" && isUpdateTileEvent(payload.data)) {
                     this._updateTileEvent.next(payload.data)
+                } else if (payload.type == "triggerMessage" && isTriggerMessageEvent(payload.data)) {
+                    this._triggerMessageEvent.next(payload.data)
+                } else if (payload.type == "removeTriggerMessage" && isMessageReferenceEvent(payload.data)) {
+                    this._removeTriggerMessageEvent.next(payload.data)
                 }
             }
 
@@ -224,6 +237,15 @@ class IframeListener {
         iframe.remove();
 
         this.scripts.delete(scriptUrl);
+    }
+
+    sendMessageTriggeredEvent(uuid: string) {
+        this.postMessage({
+            'type': 'messageTriggered',
+            'data': {
+                uuid,
+            } as MessageReferenceEvent
+        });
     }
 
     sendMenuClickedEvent(menuItem: string) {

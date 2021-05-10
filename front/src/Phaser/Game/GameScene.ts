@@ -784,6 +784,17 @@ export class GameScene extends ResizableScene implements CenterListener {
 
     private listenToIframeEvents(): void {
         this.iframeSubscriptionList = [];
+
+        this.iframeSubscriptionList.push(iframeListener.triggerMessageEvent.subscribe(message => {
+            layoutManager.addActionButton(message.uuid, message.message, () => {
+                iframeListener.sendMessageTriggeredEvent(message.uuid)
+            }, this.userInputManager);
+        }))
+
+        this.iframeSubscriptionList.push(iframeListener.removeTriggerMessageEvent.subscribe(message => {
+            layoutManager.removeActionButton(message.uuid, this.userInputManager);
+        }))
+
         this.iframeSubscriptionList.push(iframeListener.openPopupStream.subscribe((openPopupEvent) => {
 
             let objectLayerSquare: ITiledMapObject;
