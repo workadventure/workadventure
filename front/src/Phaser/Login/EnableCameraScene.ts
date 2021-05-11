@@ -252,7 +252,6 @@ export class EnableCameraScene extends ResizableScene {
 
     update(time: number, delta: number): void {
         this.soundMeterSprite.setVolume(this.soundMeter.getVolume());
-        mediaManager.updateScene();
 
         this.centerXDomElement(this.enableCameraSceneElement, 300);
     }
