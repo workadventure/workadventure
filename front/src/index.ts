@@ -21,6 +21,8 @@ import { SelectCharacterMobileScene } from './Phaser/Login/SelectCharacterMobile
 import {HdpiManager} from "./Phaser/Services/HdpiManager";
 import {waScaleManager} from "./Phaser/Services/WaScaleManager";
 import {Game} from "./Phaser/Game/Game";
+import App from './Components/App.svelte';
+import {HtmlUtils} from "./WebRtc/HtmlUtils";
 
 const {width, height} = coWebsiteManager.getGameSize();
 
@@ -147,3 +149,10 @@ coWebsiteManager.onResize.subscribe(() => {
 });
 
 iframeListener.init();
+
+const app = new App({
+    target: document.body,
+    props: { },
+})
+
+export default app

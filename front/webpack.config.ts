@@ -1,5 +1,7 @@
 import type {Configuration} from "webpack";
 import type WebpackDevServer from "webpack-dev-server";
+import SveltePreprocess from 'svelte-preprocess';
+import Autoprefixer from 'autoprefixer';
 
 const path = require('path');
 const webpack = require('webpack');
@@ -41,10 +43,54 @@ module.exports = {
                 test: /\.scss$/,
                 use: [MiniCssExtractPlugin.loader, 'css-loader?url=false', 'sass-loader'],
             },
+            {
+                test: /\.svelte$/,
+                exclude: /node_modules/,
+                use: {
+                    loader: 'svelte-loader',
+                    options: {
+                        compilerOptions: {
+                            // Dev mode must be enabled for HMR to work!
+                            dev: isDevelopment
+                        },
+                        emitCss: isProduction,
+                        hotReload: isDevelopment,
+                        hotOptions: {
+                            // List of options and defaults: https://www.npmjs.com/package/svelte-loader-hot#usage
+                            noPreserveState: false,
+                            optimistic: true,
+                        },
+                        preprocess: SveltePreprocess({
+                            scss: true,
+                            sass: true,
+                            postcss: {
+                                plugins: [
+                                    Autoprefixer
+                                ]
+                            }
+                        })
+                    }
+                }
+            },
+
+            // Required to prevent errors from Svelte on Webpack 5+, omit on Webpack 4
+            // See: https://github.com/sveltejs/svelte-loader#usage
+            {
+                test: /node_modules\/svelte\/.*\.mjs$/,
+                resolve: {
+                    fullySpecified: false
+                }
+            },
+
         ],
     },
     resolve: {
-        extensions: [ '.tsx', '.ts', '.js' ],
+        /*alias: {
+            // Note: Later in this config file, we'll automatically add paths from `tsconfig.compilerOptions.paths`
+            svelte: path.resolve('node_modules', 'svelte')
+        },*/
+        extensions: [ '.tsx', '.ts', '.js', '.svelte' ],
+        //mainFields: ['svelte', 'browser', 'module', 'main']
     },
     output: {
         filename: (pathData) => {
@@ -98,5 +144,13 @@ module.exports = {
             'MAX_PER_GROUP': 4
         })
     ],
+    stats: {
+        chunks: false,
+        chunkModules: false,
+        modules: false,
+        assets: true,
+        entrypoints: false,
+        errorDetails: false
+    }
 
 } as Configuration & WebpackDevServer.Configuration;
