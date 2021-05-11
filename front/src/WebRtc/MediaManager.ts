@@ -141,6 +141,9 @@ export class MediaManager {
         this.mySoundMeterElement.childNodes.forEach((value: ChildNode, index) => {
             this.mySoundMeterElement.children.item(index)?.classList.remove('active');
         });*/
+
+        //Check of ask notification navigator permission
+        this.getNotification();
     }
 
     public updateScene(){
@@ -790,9 +793,9 @@ export class MediaManager {
         this.setTimeOutlastUpdateScene = setTimeout(() => {
             const now = new Date();
             //if last update is more of 10 sec
-            if( (now.getTime() - this.lastUpdateScene.getTime()) > 10000) {
+            if( (now.getTime() - this.lastUpdateScene.getTime()) > 10000 && this.remoteVideo.size === 0) {
                 this.blurCamera();
-            }else{
+            }else if((now.getTime() - this.lastUpdateScene.getTime()) <= 10000){
                 this.focusCamera();
             }
             this.checkActiveUser();
@@ -853,6 +856,32 @@ export class MediaManager {
             }
             elementChildre.classList.add('active');
         });
+    }
+
+    public getNotification(){
+        //Get notification
+        if (window.Notification && Notification.permission !== "granted") {
+            Notification.requestPermission().catch((err) => {
+                console.error(`Notification permission error`, err);
+            });
+        }
+    }
+
+    public createNotification(userName: string){
+        if(this.focused){
+            return;
+        }
+        if (window.Notification && Notification.permission === "granted") {
+            const title = 'WorkAdventure';
+            const options = {
+                body: `Hi! ${userName} wants to discuss with you, don't be afraid!`,
+                icon: '/resources/logos/logo-WA-min.png',
+                image: '/resources/logos/logo-WA-min.png',
+                badge: '/resources/logos/logo-WA-min.png',
+            };
+            new Notification(title, options);
+            //new Notification(`Hi! ${userName} wants to discuss with you, don't be afraid!`);
+        }
     }
 }
 
