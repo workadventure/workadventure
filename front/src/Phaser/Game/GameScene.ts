@@ -186,6 +186,7 @@ export class GameScene extends DirtyScene implements CenterListener {
     private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string|undefined;
     private pinchManager: PinchManager|undefined;
+    private mapTransitioning: boolean = false; //used to prevent transitions happenning at the same time.
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
@@ -882,6 +883,8 @@ ${escapedMessage}
     }
 
     private onMapExit(exitKey: string) {
+        if (this.mapTransitioning) return;
+        this.mapTransitioning = true;
         const {roomId, hash} = Room.getIdFromIdentifier(exitKey, this.MapUrlFile, this.instance);
         if (!roomId) throw new Error('Could not find the room from its exit key: '+exitKey);
         urlManager.pushStartLayerNameToUrl(hash);
@@ -899,6 +902,7 @@ ${escapedMessage}
             this.initPositionFromLayerName(hash || defaultStartLayerName);
             this.CurrentPlayer.x = this.startX;
             this.CurrentPlayer.y = this.startY;
+            setTimeout(() => this.mapTransitioning = false, 500);
         }
     }
 
