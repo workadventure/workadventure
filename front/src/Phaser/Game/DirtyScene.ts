@@ -2,6 +2,7 @@ import {ResizableScene} from "../Login/ResizableScene";
 import GameObject = Phaser.GameObjects.GameObject;
 import Events = Phaser.Scenes.Events;
 import AnimationEvents = Phaser.Animations.Events;
+import StructEvents = Phaser.Structs.Events;
 
 /**
  * A scene that can track its dirty/pristine state.
@@ -23,12 +24,11 @@ export abstract class DirtyScene extends ResizableScene {
         }
         this.isAlreadyTracking = true;
         const trackAnimationFunction = this.trackAnimation.bind(this);
-        this.events.on(Events.ADDED_TO_SCENE, (gameObject: GameObject) => {
+        this.sys.updateList.on(StructEvents.PROCESS_QUEUE_ADD, (gameObject: GameObject) => {
             this.objectListChanged = true;
             gameObject.on(AnimationEvents.ANIMATION_UPDATE, trackAnimationFunction);
         });
-
-        this.events.on(Events.REMOVED_FROM_SCENE, (gameObject: GameObject) => {
+        this.sys.updateList.on(StructEvents.PROCESS_QUEUE_REMOVE, (gameObject: GameObject) => {
             this.objectListChanged = true;
             gameObject.removeListener(AnimationEvents.ANIMATION_UPDATE, trackAnimationFunction);
         });
