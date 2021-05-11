@@ -155,6 +155,13 @@ export class MediaManager {
         this.disableCamera();
     }
 
+    /**
+     * Returns the constraint that the user wants (independently of the visibility / jitsi state...)
+     */
+    public getConstraintRequestedByUser(): MediaStreamConstraints {
+        return this.previousConstraint ?? this.constraintsMedia;
+    }
+
     public focusCamera() {
         if(this.focused){
             return;
@@ -197,7 +204,7 @@ export class MediaManager {
         }
     }
 
-    public showGameOverlay(){
+    public showGameOverlay(): void {
         const gameOverlay = HtmlUtils.getElementByIdOrFail('game-overlay');
         gameOverlay.classList.add('active');
 
@@ -208,7 +215,7 @@ export class MediaManager {
         buttonCloseFrame.removeEventListener('click', functionTrigger);
     }
 
-    public hideGameOverlay(){
+    public hideGameOverlay(): void {
         const gameOverlay = HtmlUtils.getElementByIdOrFail('game-overlay');
         gameOverlay.classList.remove('active');
 
@@ -217,6 +224,11 @@ export class MediaManager {
             this.triggerCloseJitsiFrameButton();
         }
         buttonCloseFrame.addEventListener('click', functionTrigger);
+    }
+
+    public isGameOverlayVisible(): boolean {
+        const gameOverlay = HtmlUtils.getElementByIdOrFail('game-overlay');
+        return gameOverlay.classList.contains('active');
     }
 
     public updateCameraQuality(value: number) {
@@ -230,29 +242,32 @@ export class MediaManager {
         });
     }
 
-    public enableCamera() {
+    public async enableCamera() {
         this.constraintsMedia.video = videoConstraint;
 
-        this.getCamera().then((stream: MediaStream) => {
+        try {
+            const stream = await this.getCamera()
             //TODO show error message tooltip upper of camera button
             //TODO message : please check camera permission of your navigator
             if(stream.getVideoTracks().length === 0) {
-                throw Error('Video track is empty, please check camera permission of your navigator')
+                throw new Error('Video track is empty, please check camera permission of your navigator')
             }
             this.enableCameraStyle();
             this.triggerUpdatedLocalStreamCallbacks(stream);
-        }).catch((err) => {
+        } catch(err) {
             console.error(err);
             this.disableCameraStyle();
+            this.stopCamera();
 
             layoutManager.addInformation('warning', 'Camera access denied. Click here and check navigators permissions.', () => {
                 this.showHelpCameraSettingsCallBack();
             }, this.userInputManager);
-        });
+        }
     }
 
     public async disableCamera() {
         this.disableCameraStyle();
+        this.stopCamera();
 
         if (this.constraintsMedia.audio !== false) {
             const stream = await this.getCamera();
@@ -262,25 +277,27 @@ export class MediaManager {
         }
     }
 
-    public enableMicrophone() {
+    public async enableMicrophone() {
         this.constraintsMedia.audio = audioConstraint;
 
-        this.getCamera().then((stream) => {
+        try {
+            const stream = await this.getCamera();
+
             //TODO show error message tooltip upper of camera button
             //TODO message : please check microphone permission of your navigator
-            if(stream.getAudioTracks().length === 0) {
+            if (stream.getAudioTracks().length === 0) {
                 throw Error('Audio track is empty, please check microphone permission of your navigator')
             }
             this.enableMicrophoneStyle();
             this.triggerUpdatedLocalStreamCallbacks(stream);
-        }).catch((err) => {
+        } catch(err) {
             console.error(err);
             this.disableMicrophoneStyle();
 
             layoutManager.addInformation('warning', 'Microphone access denied. Click here and check navigators permissions.', () => {
                 this.showHelpCameraSettingsCallBack();
             }, this.userInputManager);
-        });
+        }
     }
 
     public async disableMicrophone() {
@@ -325,7 +342,6 @@ export class MediaManager {
         this.cinemaBtn.classList.add("disabled");
         this.constraintsMedia.video = false;
         this.myCamVideo.srcObject = null;
-        this.stopCamera();
     }
 
     private enableMicrophoneStyle(){
@@ -436,6 +452,8 @@ export class MediaManager {
         return this.getLocalStream().catch((err) => {
             console.info('Error get camera, trying with video option at null =>', err);
             this.disableCameraStyle();
+            this.stopCamera();
+
             return this.getLocalStream().then((stream : MediaStream) => {
                 this.hasCamera = false;
                 return stream;

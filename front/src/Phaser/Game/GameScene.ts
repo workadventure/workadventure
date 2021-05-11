@@ -1475,6 +1475,8 @@ ${escapedMessage}
         mediaManager.addTriggerCloseJitsiFrameButton('close-jisi',() => {
             this.stopJitsi();
         });
+
+        this.onVisibilityChange();
     }
 
     public stopJitsi(): void {
@@ -1483,6 +1485,7 @@ ${escapedMessage}
         mediaManager.showGameOverlay();
 
         mediaManager.removeTriggerCloseJitsiFrameButton('close-jisi');
+        this.onVisibilityChange();
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
@@ -1519,6 +1522,12 @@ ${escapedMessage}
     }
 
     private onVisibilityChange(): void {
+        // If the overlay is not displayed, we are in Jitsi. We don't need the webcam.
+        if (!mediaManager.isGameOverlayVisible()) {
+            mediaManager.blurCamera();
+            return;
+        }
+
         if (document.visibilityState === 'visible') {
             mediaManager.focusCamera();
         } else {
