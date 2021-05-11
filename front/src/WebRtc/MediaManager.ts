@@ -20,7 +20,7 @@ const audioConstraint: boolean|MediaTrackConstraints = {
     //TODO: make these values configurable in the game settings menu and store them in localstorage
     autoGainControl: false,
     echoCancellation: true,
-    noiseSuppression: false
+    noiseSuppression: true
 };
 
 export type UpdatedLocalStreamCallback = (media: MediaStream|null) => void;
