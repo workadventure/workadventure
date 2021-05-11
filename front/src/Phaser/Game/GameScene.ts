@@ -183,6 +183,7 @@ export class GameScene extends ResizableScene implements CenterListener {
     private messageSubscription: Subscription|null = null;
     private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string|undefined;
+    private onVisibilityChangeCallback: () => void;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
@@ -202,6 +203,7 @@ export class GameScene extends ResizableScene implements CenterListener {
         this.connectionAnswerPromise = new Promise<RoomJoinedMessageInterface>((resolve, reject): void => {
             this.connectionAnswerPromiseResolve = resolve;
         })
+        this.onVisibilityChangeCallback = this.onVisibilityChange.bind(this);
     }
 
     //hook preload scene
@@ -499,6 +501,8 @@ export class GameScene extends ResizableScene implements CenterListener {
         if (!this.room.isDisconnected()) {
             this.connect();
         }
+
+        document.addEventListener('visibilitychange', this.onVisibilityChangeCallback);
     }
 
     /**
@@ -620,6 +624,7 @@ export class GameScene extends ResizableScene implements CenterListener {
                         self.chatModeSprite.setVisible(false);
                         self.openChatIcon.setVisible(false);
                         audioManager.restoreVolume();
+                        self.onVisibilityChange();
                     }
                 }
             })
@@ -918,6 +923,8 @@ ${escapedMessage}
         for(const iframeEvents of this.iframeSubscriptionList){
             iframeEvents.unsubscribe();
         }
+
+        document.removeEventListener('visibilitychange', this.onVisibilityChangeCallback);
     }
 
     private removeAllRemotePlayers(): void {
@@ -1508,6 +1515,16 @@ ${escapedMessage}
                 subTitle: 'You cannot join the World. Try again later. \n\r \n\r Error: '+message+'.',
                 message: 'If you want more information, you may contact administrator or contact us at: workadventure@thecodingmachine.com'
             });
+        }
+    }
+
+    private onVisibilityChange(): void {
+        if (document.visibilityState === 'visible') {
+            mediaManager.focusCamera();
+        } else {
+            if (this.simplePeer.getNbConnections() === 0) {
+                mediaManager.blurCamera();
+            }
         }
     }
 }
