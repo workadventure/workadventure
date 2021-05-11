@@ -55,16 +55,13 @@ export class MediaManager {
     stopScreenSharingCallBacks : Set<StopScreenSharingCallback> = new Set<StopScreenSharingCallback>();
     showReportModalCallBacks : Set<ShowReportCallBack> = new Set<ShowReportCallBack>();
     helpCameraSettingsCallBacks : Set<HelpCameraSettingsCallBack> = new Set<HelpCameraSettingsCallBack>();
-    
+
     private microphoneBtn: HTMLDivElement;
     private cinemaBtn: HTMLDivElement;
     private monitorBtn: HTMLDivElement;
 
     private previousConstraint : MediaStreamConstraints;
     private focused : boolean = true;
-
-    private lastUpdateScene : Date = new Date();
-    private setTimeOutlastUpdateScene? : NodeJS.Timeout;
 
     private hasCamera = true;
 
@@ -134,8 +131,6 @@ export class MediaManager {
         this.previousConstraint = JSON.parse(JSON.stringify(this.constraintsMedia));
         this.pingCameraStatus();
 
-        this.checkActiveUser(); //todo: desactivated in case of bug
-
         //FIX ME SOUNDMETER: check stalability of sound meter calculation
         /*this.mySoundMeterElement = (HtmlUtils.getElementByIdOrFail('mySoundMeter'));
         this.mySoundMeterElement.childNodes.forEach((value: ChildNode, index) => {
@@ -147,7 +142,6 @@ export class MediaManager {
     }
 
     public updateScene(){
-        this.lastUpdateScene = new Date();
         //FIX ME SOUNDMETER: check stalability of sound meter calculation
         //this.updateSoudMeter();
     }
@@ -418,7 +412,7 @@ export class MediaManager {
     }
 
     private _startScreenCapture() {
-        if (navigator.getDisplayMedia) { 
+        if (navigator.getDisplayMedia) {
             return navigator.getDisplayMedia({video: true});
         } else if (navigator.mediaDevices.getDisplayMedia) {
             return navigator.mediaDevices.getDisplayMedia({video: true});
@@ -553,7 +547,7 @@ export class MediaManager {
         `;
 
         layoutManager.add(DivImportance.Normal, userId, html);
-        
+
         this.remoteVideo.set(userId, HtmlUtils.getElementByIdOrFail<HTMLVideoElement>(userId));
 
         //permit to create participant in discussion part
@@ -571,7 +565,7 @@ export class MediaManager {
             showReportUser();
         });
     }
-    
+
     addScreenSharingActiveVideo(userId: string, divImportance: DivImportance = DivImportance.Important){
 
         userId = this.getScreenSharingId(userId);
@@ -597,7 +591,7 @@ export class MediaManager {
         }
         element.classList.add('active') //todo: why does a method 'disable' add a class 'active'?
     }
-    
+
     enabledMicrophoneByUserId(userId: number){
         const element = document.getElementById(`microphone-${userId}`);
         if(!element){
@@ -605,7 +599,7 @@ export class MediaManager {
         }
         element.classList.remove('active') //todo: why does a method 'enable' remove a class 'active'?
     }
-    
+
     disabledVideoByUserId(userId: number) {
         let element = document.getElementById(`${userId}`);
         if (element) {
@@ -616,7 +610,7 @@ export class MediaManager {
             element.style.display = "block";
         }
     }
-    
+
     enabledVideoByUserId(userId: number){
         let element = document.getElementById(`${userId}`);
         if(element){
@@ -655,7 +649,7 @@ export class MediaManager {
 
         this.addStreamRemoteVideo(this.getScreenSharingId(userId), stream);
     }
-    
+
     removeActiveVideo(userId: string){
         layoutManager.remove(userId);
         this.remoteVideo.delete(userId);
@@ -671,7 +665,7 @@ export class MediaManager {
     removeActiveScreenSharingVideo(userId: string) {
         this.removeActiveVideo(this.getScreenSharingId(userId))
     }
-    
+
     playWebrtcOutSound(): void {
         this.webrtcOutAudio.play();
     }
@@ -717,7 +711,7 @@ export class MediaManager {
         const connnectingSpinnerDiv = element.getElementsByClassName('connecting-spinner').item(0) as HTMLDivElement|null;
         return connnectingSpinnerDiv;
     }
-    
+
     private getColorByString(str: String) : String|null {
         let hash = 0;
         if (str.length === 0) return null;
@@ -785,22 +779,6 @@ export class MediaManager {
         this.userInputManager = userInputManager;
         discussionManager.setUserInputManager(userInputManager);
     }
-    //check if user is active
-    private checkActiveUser(){
-        if(this.setTimeOutlastUpdateScene){
-            clearTimeout(this.setTimeOutlastUpdateScene);
-        }
-        this.setTimeOutlastUpdateScene = setTimeout(() => {
-            const now = new Date();
-            //if last update is more of 10 sec
-            if( (now.getTime() - this.lastUpdateScene.getTime()) > 10000 && this.remoteVideo.size === 0) {
-                this.blurCamera();
-            }else if((now.getTime() - this.lastUpdateScene.getTime()) <= 10000){
-                this.focusCamera();
-            }
-            this.checkActiveUser();
-        }, this.focused ? 10000 : 1000);
-    }
 
     public setShowReportModalCallBacks(callback: ShowReportCallBack){
         this.showReportModalCallBacks.add(callback);
@@ -821,7 +799,7 @@ export class MediaManager {
         try{
             const volume = parseInt(((this.mySoundMeter ? this.mySoundMeter.getVolume() : 0) / 10).toFixed(0));
             this.setVolumeSoundMeter(volume, this.mySoundMeterElement);
-            
+
             for(const indexUserId of this.soundMeters.keys()){
                 const soundMeter = this.soundMeters.get(indexUserId);
                 const soundMeterElement = this.soundMeterElements.get(indexUserId);
