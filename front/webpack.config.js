@@ -3,12 +3,17 @@ const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
+const mode = process.env.NODE_ENV ?? 'development';
+const isProduction = mode === 'production';
+const isDevelopment = !isProduction;
+
 module.exports = {
     entry: {
         'main': './src/index.ts',
         'iframe_api': './src/iframe_api.ts'
     },
-    devtool: 'inline-source-map',
+    mode: mode,
+    devtool: isDevelopment ? 'inline-source-map' : 'source-map',
     devServer: {
         contentBase: './dist',
         host: '0.0.0.0',
@@ -46,9 +51,9 @@ module.exports = {
         path: path.resolve(__dirname, 'dist'),
         publicPath: '/'
     },
-    externals:[
+    /*externals:[
         require('webpack-require-http')
-    ],
+    ],*/
     plugins: [
         new MiniCssExtractPlugin({filename: 'style.[contenthash].css'}),
         new HtmlWebpackPlugin(
@@ -81,7 +86,9 @@ module.exports = {
             'TURN_PASSWORD': null,
             'JITSI_URL': null,
             'JITSI_PRIVATE_MODE': null,
-            'START_ROOM_URL': null
+            'START_ROOM_URL': null,
+            'MAX_USERNAME_LENGTH': 8,
+            'MAX_PER_GROUP': 4
         })
     ],
 
