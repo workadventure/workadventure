@@ -151,7 +151,7 @@ coWebsiteManager.onResize.subscribe(() => {
 iframeListener.init();
 
 const app = new App({
-    target: document.body,
+    target: HtmlUtils.getElementByIdOrFail('svelte-overlay'),
     props: { },
 })
 

@@ -60,7 +60,8 @@ module.exports = {
                             noPreserveState: false,
                             optimistic: true,
                         },
-                        preprocess: SveltePreprocess({
+                        // FIXME: SveltePreprocess does not work here
+                        /*preprocess: SveltePreprocess({
                             scss: true,
                             sass: true,
                             postcss: {
@@ -68,7 +69,7 @@ module.exports = {
                                     Autoprefixer
                                 ]
                             }
-                        })
+                        })*/
                     }
                 }
             },

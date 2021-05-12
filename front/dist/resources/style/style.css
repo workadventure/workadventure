@@ -1225,3 +1225,11 @@ div.action.danger p.action-body{
     50% {bottom: 30px;}
     100% {bottom: 40px;}
 }
+
+
+#svelte-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
