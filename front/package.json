@@ -21,8 +21,7 @@
     "typescript": "^4.2.4",
     "webpack": "^5.37.0",
     "webpack-cli": "^4.7.0",
-    "webpack-dev-server": "^3.11.2",
-    "webpack-merge": "^5.7.3"
+    "webpack-dev-server": "^3.11.2"
   },
   "dependencies": {
     "@types/simple-peer": "^9.6.0",
@@ -40,7 +39,7 @@
   },
   "scripts": {
     "start": "webpack serve --open",
-    "build": "webpack --config webpack.prod.js",
+    "build": "NODE_ENV=production webpack",
     "test": "ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
     "lint": "node_modules/.bin/eslint src/ . --ext .ts",
     "fix": "node_modules/.bin/eslint --fix src/ . --ext .ts"

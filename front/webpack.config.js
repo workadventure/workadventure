@@ -3,12 +3,17 @@ const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
+const mode = process.env.NODE_ENV ?? 'development';
+const isProduction = mode === 'production';
+const isDevelopment = !isProduction;
+
 module.exports = {
     entry: {
         'main': './src/index.ts',
         'iframe_api': './src/iframe_api.ts'
     },
-    devtool: 'inline-source-map',
+    mode: mode,
+    devtool: isDevelopment ? 'inline-source-map' : 'source-map',
     devServer: {
         contentBase: './dist',
         host: '0.0.0.0',
