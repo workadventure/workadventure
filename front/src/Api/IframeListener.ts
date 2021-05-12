@@ -1,6 +1,5 @@
 import { Subject } from "rxjs";
 import { ChatEvent, isChatEvent } from "./Events/ChatEvent";
-import * as crypto from "crypto";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
 import { isOpenPopupEvent, OpenPopupEvent } from "./Events/OpenPopupEvent";
@@ -176,7 +175,7 @@ class IframeListener {
     }
 
     private getIFrameId(scriptUrl: string): string {
-        return 'script' + crypto.createHash('md5').update(scriptUrl).digest("hex");
+        return 'script' + btoa(scriptUrl);
     }
 
     unregisterScript(scriptUrl: string): void {
