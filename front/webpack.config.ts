@@ -44,7 +44,7 @@ module.exports = {
                 use: [MiniCssExtractPlugin.loader, 'css-loader?url=false', 'sass-loader'],
             },
             {
-                test: /\.svelte$/,
+                test: /\.(html|svelte)$/,
                 exclude: /node_modules/,
                 use: {
                     loader: 'svelte-loader',
@@ -85,12 +85,11 @@ module.exports = {
         ],
     },
     resolve: {
-        /*alias: {
-            // Note: Later in this config file, we'll automatically add paths from `tsconfig.compilerOptions.paths`
+        alias: {
             svelte: path.resolve('node_modules', 'svelte')
-        },*/
+        },
         extensions: [ '.tsx', '.ts', '.js', '.svelte' ],
-        //mainFields: ['svelte', 'browser', 'module', 'main']
+        mainFields: ['svelte', 'browser', 'module', 'main']
     },
     output: {
         filename: (pathData) => {
