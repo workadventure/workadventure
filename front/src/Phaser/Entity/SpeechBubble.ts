@@ -1,12 +1,12 @@
 import Scene = Phaser.Scene;
-import {Character} from "./Character";
+import type {Character} from "./Character";
 
 //todo: improve this WIP
 export class SpeechBubble {
     private bubble: Phaser.GameObjects.Graphics;
     private content: Phaser.GameObjects.Text;
 
-    
+
     constructor(scene: Scene, player: Character, text: string = "") {
 
         const bubbleHeight = 50;

@@ -1,18 +1,16 @@
 import {gameManager} from "../Game/GameManager";
-import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
 import {EnableCameraSceneName} from "./EnableCameraScene";
 import {CustomizeSceneName} from "./CustomizeScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {loadAllDefaultModels} from "../Entity/PlayerTexturesLoadingManager";
 import {addLoader} from "../Components/Loader";
-import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
+import type {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
 import {AbstractCharacterScene} from "./AbstractCharacterScene";
 import {areCharacterLayersValid} from "../../Connexion/LocalUser";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
 import {MenuScene} from "../Menu/MenuScene";
-import { SelectCharacterMobileScene } from "./SelectCharacterMobileScene";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";

@@ -1,5 +1,5 @@
 import {gameManager, HasMovedEvent} from "./GameManager";
-import {
+import type {
     GroupCreatedUpdatedMessageInterface,
     MessageUserJoined,
     MessageUserMovedInterface,
@@ -16,7 +16,7 @@ import {
     MAX_PER_GROUP,
     POSITION_DELAY,
 } from "../../Enum/EnvironmentVariable";
-import {
+import type {
     ITiledMap,
     ITiledMapLayer,
     ITiledMapLayerProperty,
@@ -25,7 +25,7 @@ import {
     ITiledMapTileLayer,
     ITiledTileSet
 } from "../Map/ITiledMap";
-import {AddPlayerInterface} from "./AddPlayerInterface";
+import type {AddPlayerInterface} from "./AddPlayerInterface";
 import {PlayerAnimationDirections} from "../Player/Animation";
 import {PlayerMovement} from "./PlayerMovement";
 import {PlayersPositionInterpolator} from "./PlayersPositionInterpolator";
@@ -49,13 +49,13 @@ import {
 import {GameMap} from "./GameMap";
 import {coWebsiteManager} from "../../WebRtc/CoWebsiteManager";
 import {mediaManager} from "../../WebRtc/MediaManager";
-import {ItemFactoryInterface} from "../Items/ItemFactoryInterface";
-import {ActionableItem} from "../Items/ActionableItem";
+import type {ItemFactoryInterface} from "../Items/ItemFactoryInterface";
+import type {ActionableItem} from "../Items/ActionableItem";
 import {UserInputManager} from "../UserInput/UserInputManager";
-import {UserMovedMessage} from "../../Messages/generated/messages_pb";
+import type {UserMovedMessage} from "../../Messages/generated/messages_pb";
 import {ProtobufClientUtils} from "../../Network/ProtobufClientUtils";
 import {connectionManager} from "../../Connexion/ConnectionManager";
-import {RoomConnection} from "../../Connexion/RoomConnection";
+import type {RoomConnection} from "../../Connexion/RoomConnection";
 import {GlobalMessageManager} from "../../Administration/GlobalMessageManager";
 import {userMessageManager} from "../../Administration/UserMessageManager";
 import {ConsoleGlobalMessageManager} from "../../Administration/ConsoleGlobalMessageManager";
@@ -80,7 +80,7 @@ import CanvasTexture = Phaser.Textures.CanvasTexture;
 import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import DOMElement = Phaser.GameObjects.DOMElement;
-import {Subscription} from "rxjs";
+import type {Subscription} from "rxjs";
 import {worldFullMessageStream} from "../../Connexion/WorldFullMessageStream";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
 import RenderTexture = Phaser.GameObjects.RenderTexture;

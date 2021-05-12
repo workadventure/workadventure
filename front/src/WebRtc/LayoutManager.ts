@@ -1,4 +1,4 @@
-import { UserInputManager } from "../Phaser/UserInput/UserInputManager";
+import type { UserInputManager } from "../Phaser/UserInput/UserInputManager";
 import {HtmlUtils} from "./HtmlUtils";
 
 export enum LayoutMode {
@@ -324,7 +324,7 @@ class LayoutManager {
     public addActionButton(id: string, text: string, callBack: Function, userInputManager: UserInputManager){
         //delete previous element
         this.removeActionButton(id, userInputManager);
-    
+
         //create div and text html component
         const p = document.createElement('p');
         p.classList.add('action-body');
