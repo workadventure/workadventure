@@ -20,9 +20,6 @@ import { isMessageReferenceEvent, isTriggerMessageEvent, MessageReferenceEvent, 
 import { UserInputChatEvent } from "./Events/UserInputChatEvent";
 import { scriptUtils } from "./ScriptUtils";
 import { HasMovedEvent } from './Events/HasMovedEvent';
-import { Math } from 'phaser';
-
-
 
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.

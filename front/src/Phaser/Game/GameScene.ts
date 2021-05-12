@@ -1,4 +1,4 @@
-import { gameManager, HasMovedEvent } from "./GameManager";
+import { gameManager } from "./GameManager";
 import {
     GroupCreatedUpdatedMessageInterface,
     MessageUserJoined,
@@ -92,7 +92,6 @@ import { PinchManager } from "../UserInput/PinchManager";
 import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
 import { MenuScene, MenuSceneName } from '../Menu/MenuScene';
 import { PlayerStateObject } from '../../Api/Events/ApiGameStateEvent';
-import { waScaleManager } from "../Services/WaScaleManager";
 import { HasMovedEvent } from '../../Api/Events/HasMovedEvent';
 
 export interface GameSceneInitInterface {

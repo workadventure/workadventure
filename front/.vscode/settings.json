@@ -1,0 +1,9 @@
+{
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true,
+        "source.organizeImports": false
+    },
+    "terminal.integrated.env.windows": {
+        "PUSHER_URL": "https://workadventure-pusher.brandad-systems.de"
+    },
+}

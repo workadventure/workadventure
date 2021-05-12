@@ -14,7 +14,7 @@ import { isMenuItemClickedEvent } from './Api/Events/MenuItemClickedEvent';
 import { MenuItemRegisterEvent } from './Api/Events/MenuItemRegisterEvent';
 import { GameStateEvent, isGameStateEvent } from './Api/Events/ApiGameStateEvent';
 import { updateTile, UpdateTileEvent } from './Api/Events/ApiUpdateTileEvent';
-import { isMessageReferenceEvent, removeTriggerMessage, triggerMessage, TriggerMessageEvent } from './Api/Events/TriggerMessageEvent';
+import { isMessageReferenceEvent, removeTriggerMessage, triggerMessage, TriggerMessageCallback, TriggerMessageEvent } from './Api/Events/TriggerMessageEvent';
 import { HasMovedEvent, HasMovedEventCallback, isHasMovedEvent } from './Api/Events/HasMovedEvent';
 
 
@@ -98,14 +98,7 @@ function uuidv4() {
 }
 
 const stateResolvers: Array<(event: GameStateEvent) => void> = []
-function uuidv4() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-        const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-}
-
-const callbacks: { [type: string]: HasMovedEventCallback | ((arg?: HasMovedEvent | never) => void) } = {}
+const callbacks: { [type: string]: HasMovedEventCallback | TriggerMessageCallback } = {}
 
 
 function postToParent(content: IframeEvent<keyof IframeEventMap>) {
@@ -345,7 +338,7 @@ window.addEventListener('message', message => {
                 resolver(payloadData);
             })
         } else if (payload.type == "messageTriggered" && isMessageReferenceEvent(payloadData)) {
-            callbacks[payloadData.uuid]();
+            (callbacks[payloadData.uuid] as TriggerMessageCallback)();
         } else if (payload.type == "hasMovedEvent" && isHasMovedEvent(payloadData) && moveEventUuid) {
             callbacks[moveEventUuid](payloadData)
         }

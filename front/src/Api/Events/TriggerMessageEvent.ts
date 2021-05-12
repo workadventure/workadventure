@@ -18,3 +18,5 @@ export const isMessageReferenceEvent =
     }).get();
 
 export type MessageReferenceEvent = tg.GuardedType<typeof isMessageReferenceEvent>;
+
+export type TriggerMessageCallback = () => void
