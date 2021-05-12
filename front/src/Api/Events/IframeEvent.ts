@@ -10,6 +10,7 @@ import { OpenPopupEvent } from './OpenPopupEvent';
 import { OpenTabEvent } from './OpenTabEvent';
 import { UserInputChatEvent } from './UserInputChatEvent';
 import { LayerEvent } from './LayerEvent';
+import { SetPropertyEvent } from "./setPropertyEvent";
 
 
 export interface TypedMessageEvent<T> extends MessageEvent {
@@ -32,6 +33,7 @@ export type IframeEventMap = {
     removeBubble: null
     showLayer: LayerEvent
     hideLayer: LayerEvent
+    setProperty: SetPropertyEvent
 }
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;

@@ -19,17 +19,20 @@
             }));
         </script>
         <div>
-            <label for="show/hideLayer">Layer Name : </label><input type="checkbox" id="show/hideLayer" name="visible" value="show" checked>
+            <label for="show/hideLayer">Metadata Layer : </label><input type="checkbox" id="show/hideLayer" name="visible" value="show" checked>
         </div>
         <script>
             document.getElementById('show/hideLayer').onclick = () => {
                 if (document.getElementById('show/hideLayer').checked) {
-                    WA.showLayer('LayerName');
+                    WA.showLayer('Metadata');
                 }
                 else {
-                    WA.hideLayer('LayerName');
+                    WA.hideLayer('Metadata');
                 }
             }
+        </script>
+        <script>
+            WA.setProperty('start', 'openWebsite', 'https://www.wikipedia.org/');
         </script>
     </body>
 </html>

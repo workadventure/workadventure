@@ -9,7 +9,8 @@ import { ClosePopupEvent } from "./Api/Events/ClosePopupEvent";
 import { OpenTabEvent } from "./Api/Events/OpenTabEvent";
 import { GoToPageEvent } from "./Api/Events/GoToPageEvent";
 import { OpenCoWebSiteEvent } from "./Api/Events/OpenCoWebSiteEvent";
-import {LayerEvent} from "./Api/Events/LayerEvent";
+import { LayerEvent } from "./Api/Events/LayerEvent";
+import { SetPropertyEvent } from "./Api/Events/setPropertyEvent";
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
@@ -27,6 +28,7 @@ interface WorkAdventureApi {
     removeBubble() : void;
     showLayer(layer: string) : void;
     hideLayer(layer: string) : void;
+    setProperty(layerName: string, propertyName: string, propertyValue: string | number | boolean | undefined): void;
 }
 
 declare global {
@@ -105,6 +107,16 @@ window.WA = {
             'data' : {
                 'name' : layer
             } as LayerEvent
+        }, '*');
+    },
+    setProperty(layerName: string, propertyName: string, propertyValue: string | number | boolean | undefined): void {
+        window.parent.postMessage({
+           'type' : 'setProperty',
+           'data' : {
+               'layerName' : layerName,
+               'propertyName' : propertyName,
+               'propertyValue' : propertyValue
+           } as SetPropertyEvent
         }, '*');
     },
     disablePlayerControls(): void {

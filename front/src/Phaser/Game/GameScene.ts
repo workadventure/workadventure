@@ -92,6 +92,7 @@ import {PinchManager} from "../UserInput/PinchManager";
 import {joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey} from "../Components/MobileJoystick";
 import {waScaleManager} from "../Services/WaScaleManager";
 import {LayerEvent} from "../../Api/Events/LayerEvent";
+import {SetPropertyEvent} from "../../Api/Events/setPropertyEvent";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -136,7 +137,6 @@ export class GameScene extends DirtyScene implements CenterListener {
     MapPlayers!: Phaser.Physics.Arcade.Group;
     MapPlayersByKey : Map<number, RemotePlayer> = new Map<number, RemotePlayer>();
     Map!: Phaser.Tilemaps.Tilemap;
-    Layers!: Array<Phaser.Tilemaps.TilemapLayer>;
     Objects!: Array<Phaser.Physics.Arcade.Sprite>;
     mapFile!: ITiledMap;
     groups: Map<number, Sprite>;
@@ -392,7 +392,6 @@ export class GameScene extends DirtyScene implements CenterListener {
 
         //initalise map
         this.Map = this.add.tilemap(this.MapUrlFile);
-        this.gameMap = new GameMap(this.mapFile);
         const mapDirUrl = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf('/'));
         this.mapFile.tilesets.forEach((tileset: ITiledTileSet) => {
             this.Terrains.push(this.Map.addTilesetImage(tileset.name, `${mapDirUrl}/${tileset.image}`, tileset.tilewidth, tileset.tileheight, tileset.margin, tileset.spacing/*, tileset.firstgid*/));
@@ -402,11 +401,9 @@ export class GameScene extends DirtyScene implements CenterListener {
         this.physics.world.setBounds(0, 0, this.Map.widthInPixels, this.Map.heightInPixels);
 
         //add layer on map
-        this.Layers = new Array<Phaser.Tilemaps.TilemapLayer>();
-        let depth = -2;
-        for (const layer of this.gameMap.layersIterator) {
+        this.gameMap = new GameMap(this.mapFile, this.Map, this.Terrains);
+        for (const layer of this.gameMap.flatLayers) {
             if (layer.type === 'tilelayer') {
-                this.addLayer(this.Map.createLayer(layer.name, this.Terrains, 0, 0).setDepth(depth));
 
                 const exitSceneUrl = this.getExitSceneUrl(layer);
                 if (exitSceneUrl !== undefined) {
@@ -417,9 +414,6 @@ export class GameScene extends DirtyScene implements CenterListener {
                     this.loadNextGame(exitUrl);
                 }
             }
-            if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
-                depth = 10000;
-            }
             if (layer.type === 'objectgroup') {
                 for (const object of layer.objects) {
                     if (object.text) {
@@ -427,9 +421,6 @@ export class GameScene extends DirtyScene implements CenterListener {
                     }
                 }
             }
-        }
-        if (depth === -2) {
-            throw new Error('Your map MUST contain a layer of type "objectgroup" whose name is "floorLayer" that represents the layer characters are drawn at. This layer cannot be contained in a group.');
         }
 
         this.initStartXAndStartY();
@@ -884,15 +875,38 @@ ${escapedMessage}
             this.setLayerVisibility(layerEvent.name, false);
         }));
 
+        this.iframeSubscriptionList.push(iframeListener.setPropertyStream.subscribe((setProperty) => {
+            this.setPropertyLayer(setProperty.layerName, setProperty.propertyName, setProperty.propertyValue);
+        }));
+
+    }
+
+    private setPropertyLayer(layerName: string, propertyName: string, propertyValue: string | number | boolean | undefined): void {
+        const layer = this.gameMap.findLayer(layerName);
+       if (layer === undefined) {
+            console.warn('Could not find layer "' + layerName + '" when calling setProperty');
+            return;
+        }
+       const property = (layer.properties as ITiledMapLayerProperty[])?.find((property) => property.name === propertyName);
+       if (property === undefined) {
+           layer.properties = [];
+           layer.properties.push({name : propertyName, type : typeof propertyValue, value : propertyValue});
+           return;
+        }
+        property.value = propertyValue;
     }
 
     private setLayerVisibility(layerName: string, visible: boolean): void {
-        const layer = this.Layers.find((layer) => layer.layer.name === layerName);
+        const layer = this.gameMap.findLayer(layerName);
         if (layer === undefined) {
             console.warn('Could not find layer "' + layerName + '" when calling WA.hideLayer / WA.showLayer');
             return;
         }
-        layer.setVisible(visible);
+        if(layer.type != "tilelayer"){
+            console.warn('The layer "' + layerName + '" is not a tilelayer. It can not be show/hide');
+            return;
+        }
+        layer.phaserLayer?.setVisible(visible);
         this.dirty = true;
     }
 
@@ -1001,7 +1015,7 @@ ${escapedMessage}
     }
 
     private initPositionFromLayerName(layerName: string) {
-        for (const layer of this.gameMap.layersIterator) {
+        for (const layer of this.gameMap.flatLayers) {
             if ((layerName === layer.name || layer.name.endsWith('/'+layerName)) && layer.type === 'tilelayer' && (layerName === defaultStartLayerName || this.isStartLayer(layer))) {
                 const startPosition = this.startUser(layer);
                 this.startX = startPosition.x + this.mapFile.tilewidth/2;
@@ -1091,27 +1105,29 @@ ${escapedMessage}
         this.updateCameraOffset();
     }
 
-    addLayer(Layer : Phaser.Tilemaps.TilemapLayer){
-        this.Layers.push(Layer);
-    }
-
     createCollisionWithPlayer() {
         this.physics.disableUpdate();
         //add collision layer
-        this.Layers.forEach((Layer: Phaser.Tilemaps.TilemapLayer) => {
-            this.physics.add.collider(this.CurrentPlayer, Layer, (object1: GameObject, object2: GameObject) => {
-                //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
-            });
-            Layer.setCollisionByProperty({collides: true});
-            if (DEBUG_MODE) {
-                //debug code to see the collision hitbox of the object in the top layer
-                Layer.renderDebug(this.add.graphics(), {
-                    tileColor: null, //non-colliding tiles
-                    collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles,
-                    faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Colliding face edges
+        for (const Layer of this.gameMap.flatLayers) {
+            if (Layer.type == "tilelayer") {
+                if (Layer.phaserLayer === undefined) {
+                    throw new Error('phaserLayer of layer "' + Layer.name + '" is undefined');
+                }
+                this.physics.add.collider(this.CurrentPlayer, Layer.phaserLayer, (object1: GameObject, object2: GameObject) => {
+                    //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
                 });
+                Layer.phaserLayer.setCollisionByProperty({collides: true});
+                if (DEBUG_MODE) {
+                    //debug code to see the collision hitbox of the object in the top layer
+                    Layer.phaserLayer.renderDebug(this.add.graphics(), {
+                        tileColor: null, //non-colliding tiles
+                        collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles,
+                        faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Colliding face edges
+                    });
+                }
+            //});
             }
-        });
+        }
     }
 
     createCurrentPlayer(){
