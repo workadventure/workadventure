@@ -27,11 +27,11 @@ import {
     SendJitsiJwtMessage,
     CharacterLayerMessage,
     PingMessage,
-    SendUserMessage, 
+    SendUserMessage,
     BanUserMessage
 } from "../Messages/generated/messages_pb"
 
-import {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
+import type {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
 import Direction = PositionMessage.Direction;
 import {ProtobufClientUtils} from "../Network/ProtobufClientUtils";
 import {
@@ -42,7 +42,7 @@ import {
     ViewportInterface, WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
-import {BodyResourceDescriptionInterface} from "../Phaser/Entity/PlayerTextures";
+import type {BodyResourceDescriptionInterface} from "../Phaser/Entity/PlayerTextures";
 import {adminMessagesService} from "./AdminMessagesService";
 import {worldFullMessageStream} from "./WorldFullMessageStream";
 import {worldFullWarningStream} from "./WorldFullWarningStream";
@@ -86,7 +86,7 @@ export class RoomConnection implements RoomConnection {
         url += '&bottom='+Math.floor(viewport.bottom);
         url += '&left='+Math.floor(viewport.left);
         url += '&right='+Math.floor(viewport.right);
-        
+
         if (typeof companion === 'string') {
             url += '&companion='+encodeURIComponent(companion);
         }

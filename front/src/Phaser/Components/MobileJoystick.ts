@@ -1,5 +1,4 @@
 import VirtualJoystick from 'phaser3-rex-plugins/plugins/virtualjoystick.js';
-import ScaleManager = Phaser.Scale.ScaleManager;
 import {waScaleManager} from "../Services/WaScaleManager";
 
 //the assets were found here: https://hannemann.itch.io/virtual-joystick-pack-free

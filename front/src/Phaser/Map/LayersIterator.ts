@@ -1,4 +1,4 @@
-import {ITiledMap, ITiledMapLayer} from "./ITiledMap";
+import type {ITiledMap, ITiledMapLayer} from "./ITiledMap";
 
 /**
  * Iterates over the layers of a map, flattening the grouped layers

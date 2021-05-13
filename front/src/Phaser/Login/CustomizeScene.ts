@@ -6,7 +6,7 @@ import Container = Phaser.GameObjects.Container;
 import {gameManager} from "../Game/GameManager";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {addLoader} from "../Components/Loader";
-import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
+import type {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
 import {AbstractCharacterScene} from "./AbstractCharacterScene";
 import {areCharacterLayersValid} from "../../Connexion/LocalUser";
 import { MenuScene } from "../Menu/MenuScene";

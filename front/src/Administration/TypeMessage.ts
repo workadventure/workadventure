@@ -1,4 +1,4 @@
-import {TypeMessageInterface} from "./UserMessageManager";
+import type {TypeMessageInterface} from "./UserMessageManager";
 import {HtmlUtils} from "../WebRtc/HtmlUtils";
 
 let modalTimeOut : NodeJS.Timeout;
