@@ -85,6 +85,8 @@ class IframeListener {
     private sendMoveEvents: boolean = false;
     private lastMoveTimestamp: number = 0
 
+    private lastMoveEvent: string | null = null
+
     init() {
         window.addEventListener("message", (message: TypedMessageEvent<IframeEvent<keyof IframeEventMap>>) => {
             // Do we trust the sender of this message?
@@ -286,7 +288,8 @@ class IframeListener {
 
     hasMovedEvent(event: HasMovedEvent) {
         if (this.sendMoveEvents) {
-            if (this.lastMoveTimestamp < Date.now() - 100) {
+            if (this.lastMoveTimestamp < Date.now() - 250 && this.lastMoveEvent != JSON.stringify(event)) {
+                this.lastMoveEvent = JSON.stringify(event)
                 this.lastMoveTimestamp = Date.now()
                 this.postMessage({
                     'type': 'hasMovedEvent',
