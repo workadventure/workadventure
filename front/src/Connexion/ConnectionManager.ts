@@ -1,11 +1,12 @@
 import Axios from "axios";
-import {PUSHER_URL, START_ROOM_URL} from "../Enum/EnvironmentVariable";
-import {RoomConnection} from "./RoomConnection";
+import { PUSHER_URL, START_ROOM_URL } from "../Enum/EnvironmentVariable";
+import { RoomConnection } from "./RoomConnection";
 import type {OnConnectInterface, PositionInterface, ViewportInterface} from "./ConnexionModels";
-import {GameConnexionTypes, urlManager} from "../Url/UrlManager";
-import {localUserStore} from "./LocalUserStore";
-import {LocalUser} from "./LocalUser";
-import {Room} from "./Room";
+import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
+import { localUserStore } from "./LocalUserStore";
+import { LocalUser } from "./LocalUser";
+import { Room } from "./Room";
+import { uuidv4 } from '../utility/uuid';
 
 
 class ConnectionManager {
@@ -62,7 +63,7 @@ class ConnectionManager {
             }
             let roomId: string
             if (connexionType === GameConnexionTypes.empty) {
-                roomId = START_ROOM_URL;
+                roomId = START_ROOM_URL.replace(new RegExp(':uuid', 'g'), () => uuidv4());
             } else {
                 roomId = window.location.pathname + window.location.search + window.location.hash;
             }
