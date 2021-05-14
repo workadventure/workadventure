@@ -339,8 +339,11 @@ window.addEventListener('message', message => {
             })
         } else if (payload.type == "messageTriggered" && isMessageReferenceEvent(payloadData)) {
             (callbacks[payloadData.uuid] as TriggerMessageCallback)();
-        } else if (payload.type == "hasMovedEvent" && isHasMovedEvent(payloadData) && moveEventUuid) {
-            callbacks[moveEventUuid](payloadData)
+        } else if (payload.type == "hasMovedEvent" && moveEventUuid && typeof payloadData == "string") {
+            const movedEvnt = JSON.parse(payloadData)
+            if (isHasMovedEvent(movedEvnt)) {
+                callbacks[moveEventUuid](movedEvnt)
+            }
         }
     }
 

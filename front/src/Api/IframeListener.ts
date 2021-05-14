@@ -288,12 +288,12 @@ class IframeListener {
 
     hasMovedEvent(event: HasMovedEvent) {
         if (this.sendMoveEvents) {
-            if (this.lastMoveTimestamp < Date.now() - 250 && this.lastMoveEvent != JSON.stringify(event)) {
+            if (this.lastMoveTimestamp < Date.now() - 100 && this.lastMoveEvent != JSON.stringify(event)) {
                 this.lastMoveEvent = JSON.stringify(event)
                 this.lastMoveTimestamp = Date.now()
                 this.postMessage({
                     'type': 'hasMovedEvent',
-                    'data': event
+                    'data': this.lastMoveEvent
                 });
             }
 

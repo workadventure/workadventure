@@ -58,7 +58,7 @@ export interface IframeResponseEventMap {
     gameState: GameStateEvent
 
     messageTriggered: MessageReferenceEvent
-    hasMovedEvent: HasMovedEvent
+    hasMovedEvent: string
 }
 export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
     type: T;
