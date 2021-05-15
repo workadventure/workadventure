@@ -1,6 +1,6 @@
 import {GameScene} from "./GameScene";
 import {connectionManager} from "../../Connexion/ConnectionManager";
-import {Room} from "../../Connexion/Room";
+import type {Room} from "../../Connexion/Room";
 import {MenuScene, MenuSceneName} from "../Menu/MenuScene";
 import {HelpCameraSettingsScene, HelpCameraSettingsSceneName} from "../Menu/HelpCameraSettingsScene";
 import {LoginSceneName} from "../Login/LoginScene";
@@ -24,7 +24,7 @@ export class GameManager {
     private companion: string|null;
     private startRoom!:Room;
     currentGameSceneName: string|null = null;
-    
+
     constructor() {
         this.playerName = localUserStore.getName();
         this.characterLayers = localUserStore.getCharacterLayers();
@@ -65,7 +65,7 @@ export class GameManager {
         return this.characterLayers;
     }
 
-    
+
     setCompanion(companion: string|null): void {
         this.companion = companion;
     }
@@ -91,7 +91,7 @@ export class GameManager {
         scenePlugin.launch(MenuSceneName);
         scenePlugin.launch(HelpCameraSettingsSceneName);//700
     }
-    
+
     public gameSceneIsCreated(scene: GameScene) {
         this.currentGameSceneName = scene.scene.key;
         const menuScene: MenuScene = scene.scene.get(MenuSceneName) as MenuScene;
@@ -125,7 +125,7 @@ export class GameManager {
             scene.scene.run(fallbackSceneName)
         }
     }
-    
+
     public getCurrentGameScene(scene: Phaser.Scene): GameScene {
         if (this.currentGameSceneName === null) throw 'No current scene id set!';
         return scene.scene.get(this.currentGameSceneName) as GameScene

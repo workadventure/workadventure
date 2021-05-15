@@ -1,9 +1,9 @@
 import * as Phaser from 'phaser';
 import {Scene} from "phaser";
 import Sprite = Phaser.GameObjects.Sprite;
-import {ITiledMapObject} from "../../Map/ITiledMap";
-import {ItemFactoryInterface} from "../ItemFactoryInterface";
-import {GameScene} from "../../Game/GameScene";
+import type {ITiledMapObject} from "../../Map/ITiledMap";
+import type {ItemFactoryInterface} from "../ItemFactoryInterface";
+import type {GameScene} from "../../Game/GameScene";
 import {ActionableItem} from "../ActionableItem";
 import * as tg from "generic-type-guard";
 

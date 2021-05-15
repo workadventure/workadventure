@@ -1,6 +1,5 @@
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
-import TextureManager = Phaser.Textures.TextureManager;
-import {CharacterTexture} from "../../Connexion/LocalUser";
+import type {CharacterTexture} from "../../Connexion/LocalUser";
 import {BodyResourceDescriptionInterface, LAYERS, PLAYER_RESOURCES} from "./PlayerTextures";
 
 

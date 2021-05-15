@@ -1,4 +1,4 @@
-import {
+import type {
     WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
 } from "../Connexion/ConnexionModels";
@@ -10,7 +10,7 @@ import {
 } from "./MediaManager";
 import {ScreenSharingPeer} from "./ScreenSharingPeer";
 import {MESSAGE_TYPE_BLOCKED, MESSAGE_TYPE_CONSTRAINT, MESSAGE_TYPE_MESSAGE, VideoPeer} from "./VideoPeer";
-import {RoomConnection} from "../Connexion/RoomConnection";
+import type {RoomConnection} from "../Connexion/RoomConnection";
 import {connectionManager} from "../Connexion/ConnectionManager";
 import {GameConnexionTypes} from "../Url/UrlManager";
 import {blackListManager} from "./BlackListManager";

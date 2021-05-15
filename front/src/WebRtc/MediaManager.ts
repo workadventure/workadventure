@@ -1,9 +1,9 @@
 import {DivImportance, layoutManager} from "./LayoutManager";
 import {HtmlUtils} from "./HtmlUtils";
 import {discussionManager, SendMessageCallback} from "./DiscussionManager";
-import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
+import type {UserInputManager} from "../Phaser/UserInput/UserInputManager";
 import {localUserStore} from "../Connexion/LocalUserStore";
-import {UserSimplePeerInterface} from "./SimplePeer";
+import type {UserSimplePeerInterface} from "./SimplePeer";
 import {SoundMeter} from "../Phaser/Components/SoundMeter";
 
 declare const navigator:any; // eslint-disable-line @typescript-eslint/no-explicit-any
