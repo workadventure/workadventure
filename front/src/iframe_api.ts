@@ -24,6 +24,8 @@ interface WorkAdventureApi {
     restorePlayerControls(): void;
     displayBubble(): void;
     removeBubble(): void;
+
+    onload(callback: () => void): void
 }
 
 declare global {
@@ -74,6 +76,13 @@ class Popup {
     }
 }
 
+const callbacks: {
+    onload?: () => void
+    [type: string]: HasMovedEventCallback | TriggerMessageCallback | undefined
+} = {}
+function postToParent(content: IframeEvent<keyof IframeEventMap>) {
+    window.parent.postMessage(content, "*")
+}
 window.WA = {
     /**
      * Send a message in the chat.
@@ -94,6 +103,10 @@ window.WA = {
 
     restorePlayerControls(): void {
         window.parent.postMessage({ 'type': 'restorePlayerControls' }, '*');
+    },
+
+    onload(callback: () => void) {
+        callbacks["onload"] = callback
     },
 
     displayBubble(): void {
@@ -224,6 +237,8 @@ window.addEventListener('message', message => {
             if (callback) {
                 callback(popup);
             }
+        } else if (payload.type == "listenersRegistered") {
+            (callbacks["onload"] as () => void)();
         }
 
     }

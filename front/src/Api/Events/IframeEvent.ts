@@ -45,6 +45,7 @@ export interface IframeResponseEventMap {
     leaveEvent: EnterLeaveEvent
     buttonClickedEvent: ButtonClickedEvent
     // gameState: GameStateEvent
+    listenersRegistered: undefined
 }
 export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
     type: T;
