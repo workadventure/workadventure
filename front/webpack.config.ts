@@ -1,5 +1,5 @@
-import {Configuration} from "webpack";
-import WebpackDevServer from "webpack-dev-server";
+import type { Configuration } from "webpack";
+import type WebpackDevServer from "webpack-dev-server";
 
 const path = require('path');
 const webpack = require('webpack');
@@ -43,13 +43,13 @@ module.exports = {
         ],
     },
     resolve: {
-        extensions: [ '.tsx', '.ts', '.js' ],
+        extensions: ['.tsx', '.ts', '.js'],
     },
     output: {
         filename: (pathData) => {
             // Add a content hash only for the main bundle.
             // We want the iframe_api.js file to keep its name as it will be referenced from outside iframes.
-            return pathData.chunk?.name === 'main' ? 'js/[name].[contenthash].js': '[name].js';
+            return pathData.chunk?.name === 'main' ? 'js/[name].[contenthash].js' : '[name].js';
         },
         path: path.resolve(__dirname, 'dist'),
         publicPath: '/'
@@ -58,7 +58,7 @@ module.exports = {
         require('webpack-require-http')
     ],*/
     plugins: [
-        new MiniCssExtractPlugin({filename: 'style.[contenthash].css'}),
+        new MiniCssExtractPlugin({ filename: 'style.[contenthash].css' }),
         new HtmlWebpackPlugin(
             {
                 template: './dist/index.tmpl.html.tmp',
