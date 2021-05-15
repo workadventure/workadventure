@@ -497,7 +497,7 @@ export class GameScene extends DirtyScene implements CenterListener {
         // From now, this game scene will be notified of reposition events
         layoutManager.setListener(this);
         this.triggerOnMapLayerPropertyChange();
-        this.listenToIframeEvents();
+        gameSceneIframeListeners.registerListeners(this);
 
 
         if (!this.room.isDisconnected()) {
@@ -784,11 +784,6 @@ export class GameScene extends DirtyScene implements CenterListener {
                 iframeListener.sendEnterEvent(newValue as string);
             }
         });
-    }
-
-    private listenToIframeEvents(): void {
-
-
     }
 
     private getMapDirUrl(): string {

@@ -1,14 +1,14 @@
-import type { ChatEvent } from "./Api/Events/ChatEvent";
-import { isIframeResponseEventWrapper } from "./Api/Events/IframeEvent";
-import { isUserInputChatEvent, UserInputChatEvent } from "./Api/Events/UserInputChatEvent";
 import { Subject } from "rxjs";
-import { EnterLeaveEvent, isEnterLeaveEvent } from "./Api/Events/EnterLeaveEvent";
-import type { OpenPopupEvent } from "./Api/Events/OpenPopupEvent";
 import { isButtonClickedEvent } from "./Api/Events/ButtonClickedEvent";
+import type { ChatEvent } from "./Api/Events/ChatEvent";
 import type { ClosePopupEvent } from "./Api/Events/ClosePopupEvent";
-import type { OpenTabEvent } from "./Api/Events/OpenTabEvent";
+import { EnterLeaveEvent, isEnterLeaveEvent } from "./Api/Events/EnterLeaveEvent";
 import type { GoToPageEvent } from "./Api/Events/GoToPageEvent";
+import { IframeEvent, IframeEventMap, isIframeResponseEventWrapper } from "./Api/Events/IframeEvent";
 import type { OpenCoWebSiteEvent } from "./Api/Events/OpenCoWebSiteEvent";
+import type { OpenPopupEvent } from "./Api/Events/OpenPopupEvent";
+import type { OpenTabEvent } from "./Api/Events/OpenTabEvent";
+import { isUserInputChatEvent, UserInputChatEvent } from "./Api/Events/UserInputChatEvent";
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
@@ -16,16 +16,16 @@ interface WorkAdventureApi {
     onEnterZone(name: string, callback: () => void): void;
     onLeaveZone(name: string, callback: () => void): void;
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup;
-    openTab(url : string): void;
-    goToPage(url : string): void;
-    openCoWebSite(url : string): void;
+    openTab(url: string): void;
+    goToPage(url: string): void;
+    openCoWebSite(url: string): void;
     closeCoWebSite(): void;
     disablePlayerControls(): void;
     restorePlayerControls(): void;
     displayBubble(): void;
     removeBubble(): void;
 
-    onload(callback: () => void): void
+    onListenersRegistered(callback: () => void): void
 }
 
 declare global {
@@ -78,8 +78,11 @@ class Popup {
 
 const callbacks: {
     onload?: () => void
-    [type: string]: HasMovedEventCallback | TriggerMessageCallback | undefined
+    [type: string]: (() => void) | undefined
 } = {}
+
+let registered = false
+
 function postToParent(content: IframeEvent<keyof IframeEventMap>) {
     window.parent.postMessage(content, "*")
 }
@@ -105,8 +108,11 @@ window.WA = {
         window.parent.postMessage({ 'type': 'restorePlayerControls' }, '*');
     },
 
-    onload(callback: () => void) {
+    onListenersRegistered(callback: () => void) {
         callbacks["onload"] = callback
+        if (registered) {
+            callback()
+        }
     },
 
     displayBubble(): void {
@@ -135,10 +141,10 @@ window.WA = {
         }, '*');
     },
 
-    openCoWebSite(url : string) : void{
+    openCoWebSite(url: string): void {
         window.parent.postMessage({
-            "type" : 'openCoWebSite',
-            "data" : {
+            "type": 'openCoWebSite',
+            "data": {
                 url
             } as OpenCoWebSiteEvent
         }, '*');
@@ -238,6 +244,7 @@ window.addEventListener('message', message => {
                 callback(popup);
             }
         } else if (payload.type == "listenersRegistered") {
+            registered = true;
             (callbacks["onload"] as () => void)();
         }
 
