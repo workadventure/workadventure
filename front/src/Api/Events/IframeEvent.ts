@@ -59,6 +59,7 @@ export interface IframeResponseEventMap {
 
     messageTriggered: MessageReferenceEvent
     hasMovedEvent: string
+    listenersRegistered: undefined
 }
 export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
     type: T;

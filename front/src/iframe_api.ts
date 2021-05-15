@@ -41,6 +41,8 @@ interface WorkAdventureApi {
 
     triggerMessage(message: string, callback: () => void): string
     removeTriggerMessage(uuid: string): void
+
+    onload(callback: () => void): void
 }
 
 declare global {
@@ -98,7 +100,10 @@ function uuidv4() {
 }
 
 const stateResolvers: Array<(event: GameStateEvent) => void> = []
-const callbacks: { [type: string]: HasMovedEventCallback | TriggerMessageCallback } = {}
+const callbacks: {
+    onload?: () => void
+    [type: string]: HasMovedEventCallback | TriggerMessageCallback | undefined
+} = {}
 
 
 function postToParent(content: IframeEvent<keyof IframeEventMap>) {
@@ -107,6 +112,7 @@ function postToParent(content: IframeEvent<keyof IframeEventMap>) {
 let moveEventUuid: string | undefined;
 
 window.WA = {
+
     removeTriggerMessage(uuid: string): void {
         window.parent.postMessage({
             type: removeTriggerMessage,
@@ -178,6 +184,10 @@ window.WA = {
 
     restorePlayerControl(): void {
         window.parent.postMessage({ 'type': 'restorePlayerControl' }, '*');
+    },
+
+    onload(callback: () => void) {
+        callbacks["onload"] = callback
     },
 
     displayBubble(): void {
@@ -342,8 +352,10 @@ window.addEventListener('message', message => {
         } else if (payload.type == "hasMovedEvent" && moveEventUuid && typeof payloadData == "string") {
             const movedEvnt = JSON.parse(payloadData)
             if (isHasMovedEvent(movedEvnt)) {
-                callbacks[moveEventUuid](movedEvnt)
+                callbacks[moveEventUuid]?.(movedEvnt)
             }
+        } else if (payload.type == "listenersRegistered") {
+            (callbacks["onload"] as () => void)();
         }
     }
 

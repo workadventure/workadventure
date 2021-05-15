@@ -75,14 +75,12 @@ import { addLoader } from "../Components/Loader";
 import { ErrorSceneName } from "../Reconnecting/ErrorScene";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { iframeListener } from "../../Api/IframeListener";
-import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
 import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import DOMElement = Phaser.GameObjects.DOMElement;
-import EVENT_TYPE = Phaser.Scenes.Events
 import { Subscription } from "rxjs";
 import { worldFullMessageStream } from "../../Connexion/WorldFullMessageStream";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
@@ -91,8 +89,8 @@ import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
 import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
 import { MenuScene, MenuSceneName } from '../Menu/MenuScene';
-import { PlayerStateObject } from '../../Api/Events/ApiGameStateEvent';
 import { HasMovedEvent } from '../../Api/Events/HasMovedEvent';
+import { gameSceneIframeListeners } from './GameSceneIframeListener';
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null,
@@ -157,7 +155,6 @@ export class GameScene extends ResizableScene implements CenterListener {
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
     private createPromise: Promise<void>;
     private createPromiseResolve!: (value?: void | PromiseLike<void>) => void;
-    private iframeSubscriptionList!: Array<Subscription>;
     MapUrlFile: string;
     RoomId: string;
     instance: string;
@@ -179,13 +176,13 @@ export class GameScene extends ResizableScene implements CenterListener {
     private outlinedItem: ActionableItem | null = null;
     public userInputManager!: UserInputManager;
     private isReconnecting: boolean | undefined = undefined;
-    private startLayerName!: string | null;
+    public startLayerName!: string | null;
     private openChatIcon!: OpenChatIcon;
-    private playerName!: string;
+    public playerName!: string;
     private characterLayers!: string[];
     private companion!: string | null;
     private messageSubscription: Subscription | null = null;
-    private popUpElements: Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
+    public popUpElements: Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string | undefined;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
@@ -787,191 +784,15 @@ export class GameScene extends ResizableScene implements CenterListener {
     }
 
     private listenToIframeEvents(): void {
-        this.iframeSubscriptionList = [];
-
-        this.iframeSubscriptionList.push(iframeListener.triggerMessageEvent.subscribe(message => {
-            layoutManager.addActionButton(message.uuid, message.message, () => {
-                iframeListener.sendMessageTriggeredEvent(message.uuid)
-            }, this.userInputManager);
-        }))
-
-        this.iframeSubscriptionList.push(iframeListener.removeTriggerMessageEvent.subscribe(message => {
-            layoutManager.removeActionButton(message.uuid, this.userInputManager);
-        }))
-
-        this.iframeSubscriptionList.push(iframeListener.openPopupStream.subscribe((openPopupEvent) => {
-
-            let objectLayerSquare: ITiledMapObject;
-            const targetObjectData = this.getObjectLayerData(openPopupEvent.targetObject);
-            if (targetObjectData !== undefined) {
-                objectLayerSquare = targetObjectData;
-            } else {
-                console.error("Error while opening a popup. Cannot find an object on the map with name '" + openPopupEvent.targetObject + "'. The first parameter of WA.openPopup() must be the name of a rectangle object in your map.");
-                return;
-            }
-            const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
-            let html = `<div id="container" hidden><div class="nes-container with-title is-centered">
-${escapedMessage}
- </div> `;
-            const buttonContainer = `<div class="buttonContainer"</div>`;
-            html += buttonContainer;
-            let id = 0;
-            for (const button of openPopupEvent.buttons) {
-                html += `<button type="button" class="nes-btn is-${HtmlUtils.escapeHtml(button.className ?? '')}" id="popup-${openPopupEvent.popupId}-${id}">${HtmlUtils.escapeHtml(button.label)}</button>`;
-                id++;
-            }
-            html += '</div>';
-            const domElement = this.add.dom(objectLayerSquare.x,
-                objectLayerSquare.y).createFromHTML(html);
-
-            const container: HTMLDivElement = domElement.getChildByID("container") as HTMLDivElement;
-            container.style.width = objectLayerSquare.width + "px";
-            domElement.scale = 0;
-            domElement.setClassName('popUpElement');
-
-            setTimeout(() => {
-                (container).hidden = false;
-            }, 100);
-
-            id = 0;
-            for (const button of openPopupEvent.buttons) {
-                const button = HtmlUtils.getElementByIdOrFail<HTMLButtonElement>(`popup-${openPopupEvent.popupId}-${id}`);
-                const btnId = id;
-                button.onclick = () => {
-                    iframeListener.sendButtonClickedEvent(openPopupEvent.popupId, btnId);
-                    button.disabled = true;
-                }
-                id++;
-            }
-            this.tweens.add({
-                targets: domElement,
-                scale: 1,
-                ease: "EaseOut",
-                duration: 400,
-            });
-
-            this.popUpElements.set(openPopupEvent.popupId, domElement);
-        }));
-
-        this.iframeSubscriptionList.push(iframeListener.closePopupStream.subscribe((closePopupEvent) => {
-            const popUpElement = this.popUpElements.get(closePopupEvent.popupId);
-            if (popUpElement === undefined) {
-                console.error('Could not close popup with ID ', closePopupEvent.popupId, '. Maybe it has already been closed?');
-            }
-
-            this.tweens.add({
-                targets: popUpElement,
-                scale: 0,
-                ease: "EaseOut",
-                duration: 400,
-                onComplete: () => {
-                    popUpElement?.destroy();
-                    this.popUpElements.delete(closePopupEvent.popupId);
-                },
-            });
-        }));
-
-        this.iframeSubscriptionList.push(iframeListener.disablePlayerControlStream.subscribe(() => {
-            this.userInputManager.disableControls();
-        }));
-
-        this.iframeSubscriptionList.push(iframeListener.enablePlayerControlStream.subscribe(() => {
-            this.userInputManager.restoreControls();
-        }));
-        this.iframeSubscriptionList.push(iframeListener.loadPageStream.subscribe((url: string) => {
-            this.loadNextGame(url).then(() => {
-                this.events.once(EVENT_TYPE.POST_UPDATE, () => {
-                    this.onMapExit(url);
-                })
-            })
-        }));
-        this.iframeSubscriptionList.push(iframeListener.gameStateStream.subscribe(() => {
-            const playerObject: PlayerStateObject = {
-                [this.playerName]: {
-                    position: {
-                        x: this.CurrentPlayer.x,
-                        y: this.CurrentPlayer.y
-                    },
-                    pusherId: this.connection?.getUserId()
-                }
-            }
-            for (const mapPlayer of this.MapPlayers.children.entries) {
-                const remotePlayer: RemotePlayer = mapPlayer as RemotePlayer;
-                playerObject[remotePlayer.PlayerValue] = {
-                    position: {
-                        x: remotePlayer.x,
-                        y: remotePlayer.y
-                    },
-                    pusherId: remotePlayer.userId
-
-                }
-            }
-            iframeListener.sendFrozenGameStateEvent({
-                mapUrl: this.MapUrlFile,
-                nickName: this.playerName,
-                startLayerName: this.startLayerName,
-                uuid: localUserStore.getLocalUser()?.uuid,
-                roomId: this.RoomId,
-                data: this.mapFile,
-                players: playerObject
-            })
-        }));
 
 
-        this.iframeSubscriptionList.push(iframeListener.updateTileEvent.subscribe(event => {
-
-            for (const eventTile of event) {
-                const layer = this.Layers.find(layer => layer.layer.name == eventTile.layer)
-                if (layer) {
-                    const tile = layer.getTileAt(eventTile.x, eventTile.y)
-                    if (tile) {
-                        if (typeof eventTile.tile == "string") {
-                            const tileIndex = this.getIndexForTileType(eventTile.tile);
-                            if (tileIndex) {
-                                tile.index = tileIndex
-                            } else {
-                                return
-                            }
-                        } else {
-                            tile.index = eventTile.tile
-                        }
-                    }
-                }
-            }
-            this.scene.scene.sys.game.events.emit("contextrestored")
-        }))
-
-        let scriptedBubbleSprite: Sprite;
-        this.iframeSubscriptionList.push(iframeListener.displayBubbleStream.subscribe(() => {
-            scriptedBubbleSprite = new Sprite(this, this.CurrentPlayer.x + 25, this.CurrentPlayer.y, 'circleSprite-white');
-            scriptedBubbleSprite.setDisplayOrigin(48, 48);
-            this.add.existing(scriptedBubbleSprite);
-        }));
-
-        this.iframeSubscriptionList.push(iframeListener.removeBubbleStream.subscribe(() => {
-            scriptedBubbleSprite.destroy();
-        }));
-
-    }
-
-    private getIndexForTileType(tileType: string): number | null {
-        for (const tileset of this.mapFile.tilesets) {
-            if (tileset.tiles) {
-                for (const tilesetTile of tileset.tiles) {
-                    if (tilesetTile.type == tileType) {
-                        return tileset.firstgid + tilesetTile.id
-                    }
-                }
-            }
-        }
-        return null
     }
 
     private getMapDirUrl(): string {
         return this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf('/'));
     }
 
-    private onMapExit(exitKey: string) {
+    public onMapExit(exitKey: string) {
         const { roomId, hash } = Room.getIdFromIdentifier(exitKey, this.MapUrlFile, this.instance);
         if (!roomId) throw new Error('Could not find the room from its exit key: ' + exitKey);
         urlManager.pushStartLayerNameToUrl(hash);
@@ -1011,9 +832,7 @@ ${escapedMessage}
         this.simplePeer?.unregister();
         this.messageSubscription?.unsubscribe();
 
-        for (const iframeEvents of this.iframeSubscriptionList) {
-            iframeEvents.unsubscribe();
-        }
+        gameSceneIframeListeners.unregisterListeners()
     }
 
     private removeAllRemotePlayers(): void {
@@ -1121,7 +940,7 @@ ${escapedMessage}
     }
 
     //todo: push that into the gameManager
-    private async loadNextGame(exitSceneIdentifier: string) {
+    public async loadNextGame(exitSceneIdentifier: string) {
         const { roomId, hash } = Room.getIdFromIdentifier(exitSceneIdentifier, this.MapUrlFile, this.instance);
         const room = new Room(roomId);
         await gameManager.loadMap(room, this.scene);
@@ -1508,19 +1327,7 @@ ${escapedMessage}
             bottom: camera.scrollY + camera.height,
         });
     }
-    private getObjectLayerData(objectName: string): ITiledMapObject | undefined {
-        for (const layer of this.mapFile.layers) {
-            if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
-                for (const object of layer.objects) {
-                    if (object.name === objectName) {
-                        return object;
-                    }
-                }
-            }
-        }
-        return undefined;
 
-    }
     private reposition(): void {
         this.presentationModeSprite.setY(this.game.renderer.height - 2);
         this.chatModeSprite.setY(this.game.renderer.height - 2);

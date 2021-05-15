@@ -165,6 +165,14 @@ class IframeListener {
         });
     }
 
+    sendListenersRegisteredEvent() {
+        this.postMessage({
+            type: "listenersRegistered",
+            data: undefined
+        })
+    }
+
+
     /**
      * Allows the passed iFrame to send/receive messages via the API.
      */
