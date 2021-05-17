@@ -1,5 +1,5 @@
-import {Configuration} from "webpack";
-import WebpackDevServer from "webpack-dev-server";
+import type {Configuration} from "webpack";
+import type WebpackDevServer from "webpack-dev-server";
 
 const path = require('path');
 const webpack = require('webpack');
