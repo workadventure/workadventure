@@ -5,6 +5,7 @@ const path = require('path');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const NodePolyfillPlugin = require("node-polyfill-webpack-plugin")
 
 const mode = process.env.NODE_ENV ?? 'development';
 const isProduction = mode === 'production';
@@ -77,6 +78,7 @@ module.exports = {
         new webpack.ProvidePlugin({
             Phaser: 'phaser'
         }),
+        new NodePolyfillPlugin(),
         new webpack.EnvironmentPlugin({
             'API_URL': null,
             'SKIP_RENDER_OPTIMIZATIONS': false,
