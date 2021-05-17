@@ -15,6 +15,7 @@
     "html-webpack-plugin": "^5.3.1",
     "jasmine": "^3.5.0",
     "mini-css-extract-plugin": "^1.6.0",
+    "node-polyfill-webpack-plugin": "^1.1.2",
     "sass": "^1.32.12",
     "sass-loader": "^11.1.0",
     "ts-loader": "^9.1.2",
