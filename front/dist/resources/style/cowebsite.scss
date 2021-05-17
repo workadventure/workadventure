@@ -4,7 +4,7 @@
   position: fixed;
   transition: transform 0.5s;
   background-color: white;
-  
+
   &.loading {
     background-color: gray;
   }
@@ -15,7 +15,7 @@
       height: 100%;
     }
   }
-  
+
   aside {
     background: gray;
     align-items: center;
@@ -32,7 +32,7 @@
     position: absolute;
     background: none;
     border: none;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('../logos/cursor_pointer.png'), pointer;
 
     img {
       height: 25px;

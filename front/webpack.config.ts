@@ -1,13 +1,21 @@
 import type {Configuration} from "webpack";
 import type WebpackDevServer from "webpack-dev-server";
-import SveltePreprocess from 'svelte-preprocess';
-import Autoprefixer from 'autoprefixer';
+//import SveltePreprocess from 'svelte-preprocess';
+//import Autoprefixer from 'autoprefixer';
+//import autoPreprocess from 'svelte-preprocess';
 
-const path = require('path');
-const webpack = require('webpack');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const NodePolyfillPlugin = require("node-polyfill-webpack-plugin")
+import path from 'path';
+import webpack from 'webpack';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import sveltePreprocess from 'svelte-preprocess';
+import NodePolyfillPlugin from 'node-polyfill-webpack-plugin';
+
+//const path = require('path');
+//const webpack = require('webpack');
+//const HtmlWebpackPlugin = require('html-webpack-plugin');
+//const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+//const sveltePreprocess = require('svelte-preprocess');
 
 const mode = process.env.NODE_ENV ?? 'development';
 const isProduction = mode === 'production';
@@ -41,7 +49,27 @@ module.exports = {
             },
             {
                 test: /\.scss$/,
-                use: [MiniCssExtractPlugin.loader, 'css-loader?url=false', 'sass-loader'],
+                use: [
+                    MiniCssExtractPlugin.loader, {
+                        loader: 'css-loader',
+                        /*options: {
+                            url: false,
+                            sourceMap: true
+                        }*/
+                    }, 'sass-loader'],
+            },
+            {
+                test: /\.css$/,
+                use: [
+                    MiniCssExtractPlugin.loader,
+                    {
+                        loader: 'css-loader',
+                        /*options: {
+                            url: false,
+                            sourceMap: true
+                        }*/
+                    }
+                ]
             },
             {
                 test: /\.(html|svelte)$/,
@@ -60,13 +88,19 @@ module.exports = {
                             noPreserveState: false,
                             optimistic: true,
                         },
+                        //preprocess: autoPreprocess({}),
+                        preprocess: sveltePreprocess({
+                            scss: true,
+                            sass: true,
+                        })
+
                         // FIXME: SveltePreprocess does not work here
                         /*preprocess: SveltePreprocess({
                             scss: true,
                             sass: true,
                             postcss: {
                                 plugins: [
-                                    Autoprefixer
+                                    //Autoprefixer
                                 ]
                             }
                         })*/
@@ -82,7 +116,10 @@ module.exports = {
                     fullySpecified: false
                 }
             },
-
+            {
+                test: /\.(ttf|eot|svg|png|gif|jpg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                type: 'asset/resource'
+            }
         ],
     },
     resolve: {
@@ -105,7 +142,8 @@ module.exports = {
         require('webpack-require-http')
     ],*/
     plugins: [
-        new MiniCssExtractPlugin({filename: 'style.[contenthash].css'}),
+        new webpack.HotModuleReplacementPlugin(),
+        new MiniCssExtractPlugin({filename: '[name].[contenthash].css'}),
         new HtmlWebpackPlugin(
             {
                 template: './dist/index.tmpl.html.tmp',
@@ -150,7 +188,7 @@ module.exports = {
         modules: false,
         assets: true,
         entrypoints: false,
-        errorDetails: false
+        errorDetails: false,
     }
 
 } as Configuration & WebpackDevServer.Configuration;
