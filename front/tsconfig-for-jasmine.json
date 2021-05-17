@@ -4,5 +4,6 @@
   "compilerOptions": {
     "module": "CommonJS",
     "lib": ["es2015","dom"],
-  }
+    "types": ["svelte", "node"]
+  },
 }
