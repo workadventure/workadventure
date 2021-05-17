@@ -1,21 +1,11 @@
 import type {Configuration} from "webpack";
 import type WebpackDevServer from "webpack-dev-server";
-//import SveltePreprocess from 'svelte-preprocess';
-//import Autoprefixer from 'autoprefixer';
-//import autoPreprocess from 'svelte-preprocess';
-
 import path from 'path';
 import webpack from 'webpack';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import sveltePreprocess from 'svelte-preprocess';
 import NodePolyfillPlugin from 'node-polyfill-webpack-plugin';
-
-//const path = require('path');
-//const webpack = require('webpack');
-//const HtmlWebpackPlugin = require('html-webpack-plugin');
-//const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-//const sveltePreprocess = require('svelte-preprocess');
 
 const mode = process.env.NODE_ENV ?? 'development';
 const isProduction = mode === 'production';
@@ -88,22 +78,10 @@ module.exports = {
                             noPreserveState: false,
                             optimistic: true,
                         },
-                        //preprocess: autoPreprocess({}),
                         preprocess: sveltePreprocess({
                             scss: true,
                             sass: true,
                         })
-
-                        // FIXME: SveltePreprocess does not work here
-                        /*preprocess: SveltePreprocess({
-                            scss: true,
-                            sass: true,
-                            postcss: {
-                                plugins: [
-                                    //Autoprefixer
-                                ]
-                            }
-                        })*/
                     }
                 }
             },
@@ -138,9 +116,6 @@ module.exports = {
         path: path.resolve(__dirname, 'dist'),
         publicPath: '/'
     },
-    /*externals:[
-        require('webpack-require-http')
-    ],*/
     plugins: [
         new webpack.HotModuleReplacementPlugin(),
         new MiniCssExtractPlugin({filename: '[name].[contenthash].css'}),
