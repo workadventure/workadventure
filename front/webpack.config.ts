@@ -39,25 +39,27 @@ module.exports = {
             },
             {
                 test: /\.scss$/,
+                exclude: /node_modules/,
                 use: [
                     MiniCssExtractPlugin.loader, {
                         loader: 'css-loader',
-                        /*options: {
-                            url: false,
+                        options: {
+                            //url: false,
                             sourceMap: true
-                        }*/
+                        }
                     }, 'sass-loader'],
             },
             {
                 test: /\.css$/,
+                exclude: /node_modules/,
                 use: [
                     MiniCssExtractPlugin.loader,
                     {
                         loader: 'css-loader',
-                        /*options: {
-                            url: false,
+                        options: {
+                            //url: false,
                             sourceMap: true
-                        }*/
+                        }
                     }
                 ]
             },
@@ -95,8 +97,9 @@ module.exports = {
                 }
             },
             {
-                test: /\.(ttf|eot|svg|png|gif|jpg)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
-                type: 'asset/resource'
+                test: /\.(ttf|eot|svg|png|gif|jpg)$/,
+                exclude: /node_modules/,
+                type: 'asset'
             }
         ],
     },
@@ -164,6 +167,6 @@ module.exports = {
         assets: true,
         entrypoints: false,
         errorDetails: false,
-    }
+    },
 
 } as Configuration & WebpackDevServer.Configuration;
