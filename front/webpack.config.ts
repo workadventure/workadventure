@@ -79,6 +79,8 @@ module.exports = {
         }),
         new webpack.EnvironmentPlugin({
             'API_URL': null,
+            'SKIP_RENDER_OPTIMIZATIONS': false,
+            'DISABLE_NOTIFICATIONS': false,
             'PUSHER_URL': undefined,
             'UPLOADER_URL': null,
             'ADMIN_URL': null,

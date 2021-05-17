@@ -33,6 +33,8 @@ services:
       STARTUP_COMMAND_1: ./templater.sh
       STARTUP_COMMAND_2: yarn install
       TURN_SERVER: "turn:localhost:3478,turns:localhost:5349"
+      DISABLE_NOTIFICATIONS: "$DISABLE_NOTIFICATIONS"
+      SKIP_RENDER_OPTIMIZATIONS: "$SKIP_RENDER_OPTIMIZATIONS"
       # Use TURN_USER/TURN_PASSWORD if your Coturn server is secured via hard coded credentials.
       # Advice: you should instead use Coturn REST API along the TURN_STATIC_AUTH_SECRET in the Back container
       TURN_USER: ""
