@@ -5,7 +5,7 @@
 </script>
 
 <div>
-    {#if $menuIconVisible}
+    <!-- {#if $menuIconVisible}
     <MenuIcon  />
-    {/if}
+    {/if} -->
 </div>
