@@ -252,4 +252,15 @@ WA.showLayer('bottom');
 WA.hideLayer('bottom');
 ```
 
+### Set/Create properties in a layer
+
+```
+WA.setProperty(layerName : string, propertyName : string, propertyValue : string | number | boolean | undefined) : void;
+```
+
+Set the value of the "propertyName" property of the layer "layerName" at "propertyValue". If the property doesn't exist, create the property "propertyName" and set the value of the property at "propertyValue".
+
+```javascript
+WA.setProperty('wikiLayer', 'openWebsite', 'https://www.wikipedia.org/');
+```
 
