@@ -5,6 +5,7 @@ import webpack from 'webpack';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import sveltePreprocess from 'svelte-preprocess';
+import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import NodePolyfillPlugin from 'node-polyfill-webpack-plugin';
 
 const mode = process.env.NODE_ENV ?? 'development';
@@ -34,8 +35,12 @@ module.exports = {
         rules: [
             {
                 test: /\.tsx?$/,
-                use: 'ts-loader',
+                //use: 'ts-loader',
                 exclude: /node_modules/,
+                loader: 'ts-loader',
+                options: {
+                    transpileOnly: true,
+                },
             },
             {
                 test: /\.scss$/,
@@ -121,6 +126,11 @@ module.exports = {
     },
     plugins: [
         new webpack.HotModuleReplacementPlugin(),
+        new ForkTsCheckerWebpackPlugin({
+            eslint: {
+                files: './src/**/*.ts'
+            }
+        }),
         new MiniCssExtractPlugin({filename: '[name].[contenthash].css'}),
         new HtmlWebpackPlugin(
             {
