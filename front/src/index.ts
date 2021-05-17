@@ -1,6 +1,6 @@
 import 'phaser';
 import GameConfig = Phaser.Types.Core.GameConfig;
-import "../dist/resources/style/index.scss";
+import "../style/index.scss";
 
 import {DEBUG_MODE, isMobile} from "./Enum/EnvironmentVariable";
 import {LoginScene} from "./Phaser/Login/LoginScene";
