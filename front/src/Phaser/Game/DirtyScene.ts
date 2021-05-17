@@ -3,6 +3,7 @@ import GameObject = Phaser.GameObjects.GameObject;
 import Events = Phaser.Scenes.Events;
 import AnimationEvents = Phaser.Animations.Events;
 import StructEvents = Phaser.Structs.Events;
+import {SKIP_RENDER_OPTIMIZATIONS} from "../../Enum/EnvironmentVariable";
 
 /**
  * A scene that can track its dirty/pristine state.
@@ -19,7 +20,7 @@ export abstract class DirtyScene extends ResizableScene {
      * Note: this does not work with animations from sprites inside containers.
      */
     protected trackDirtyAnims(): void {
-        if (this.isAlreadyTracking) {
+        if (this.isAlreadyTracking || SKIP_RENDER_OPTIMIZATIONS) {
             return;
         }
         this.isAlreadyTracking = true;

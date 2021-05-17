@@ -1,3 +1,5 @@
+import {SKIP_RENDER_OPTIMIZATIONS} from "../../Enum/EnvironmentVariable";
+
 const Events = Phaser.Core.Events;
 
 /**
@@ -35,7 +37,7 @@ export class Game extends Phaser.Game {
         eventEmitter.emit(Events.POST_STEP, time, delta);
 
         // This "if" is the changed introduced by the new "Game" class to avoid rendering unnecessarily.
-        if (this.isDirty()) {
+        if (SKIP_RENDER_OPTIMIZATIONS || this.isDirty()) {
             const renderer = this.renderer;
 
             //  Run the Pre-render (clearing the canvas, setting background colors, etc)

@@ -5,6 +5,7 @@ import type {UserInputManager} from "../Phaser/UserInput/UserInputManager";
 import {localUserStore} from "../Connexion/LocalUserStore";
 import type {UserSimplePeerInterface} from "./SimplePeer";
 import {SoundMeter} from "../Phaser/Components/SoundMeter";
+import {DISABLE_NOTIFICATIONS} from "../Enum/EnvironmentVariable";
 
 declare const navigator:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -856,7 +857,7 @@ export class MediaManager {
 
     public getNotification(){
         //Get notification
-        if (window.Notification && Notification.permission !== "granted") {
+        if (!DISABLE_NOTIFICATIONS && window.Notification && Notification.permission !== "granted") {
             Notification.requestPermission().catch((err) => {
                 console.error(`Notification permission error`, err);
             });
