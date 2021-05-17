@@ -160,13 +160,5 @@ module.exports = {
             'MAX_PER_GROUP': 4
         })
     ],
-    stats: {
-        chunks: false,
-        chunkModules: false,
-        modules: false,
-        assets: true,
-        entrypoints: false,
-        errorDetails: false,
-    },
 
 } as Configuration & WebpackDevServer.Configuration;
