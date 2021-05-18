@@ -1,6 +1,6 @@
 import 'phaser';
 import GameConfig = Phaser.Types.Core.GameConfig;
-import "../dist/resources/style/index.scss";
+import "../style/index.scss";
 
 import {DEBUG_MODE, isMobile} from "./Enum/EnvironmentVariable";
 import {LoginScene} from "./Phaser/Login/LoginScene";
@@ -21,6 +21,8 @@ import { SelectCharacterMobileScene } from './Phaser/Login/SelectCharacterMobile
 import {HdpiManager} from "./Phaser/Services/HdpiManager";
 import {waScaleManager} from "./Phaser/Services/WaScaleManager";
 import {Game} from "./Phaser/Game/Game";
+import App from './Components/App.svelte';
+import {HtmlUtils} from "./WebRtc/HtmlUtils";
 
 const {width, height} = coWebsiteManager.getGameSize();
 
@@ -140,3 +142,10 @@ coWebsiteManager.onResize.subscribe(() => {
 });
 
 iframeListener.init();
+
+const app = new App({
+    target: HtmlUtils.getElementByIdOrFail('svelte-overlay'),
+    props: { },
+})
+
+export default app

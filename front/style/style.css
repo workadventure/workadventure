@@ -1,9 +1,9 @@
 *{
     font-family: 'Open Sans', sans-serif;
-    cursor: url('/resources/logos/cursor_normal.png'), auto;
+    cursor: url('./images/cursor_normal.png'), auto;
 }
 * a, button, select{
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 body{
     overflow: hidden;
@@ -39,7 +39,7 @@ body .message-info.warning{
     position: relative;
     transition: all 0.2s ease;
     background-color: #00000099;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 .video-container i{
     position: absolute;
@@ -75,7 +75,7 @@ body .message-info.warning{
 
 .video-container button.report{
     display: block;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
     background: none;
     background-color: rgba(0, 0, 0, 0);
     border: none;
@@ -108,7 +108,7 @@ body .message-info.warning{
     left: 5px;
     margin: 0;
     padding: 0;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
     width: 25px;
     height: 25px;
 }
@@ -118,7 +118,7 @@ body .message-info.warning{
     left: 36px;
     color: white;
     font-size: 16px;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 .video-container img.active {
     display: block !important;
@@ -126,7 +126,7 @@ body .message-info.warning{
 
 .video-container video{
     height: 100%;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 
 .video-container video:focus{
@@ -206,7 +206,7 @@ video#myCamVideo{
 }
 /*btn animation*/
 .btn-cam-action div{
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
     /*position: absolute;*/
     border: solid 0px black;
     width: 44px;
@@ -260,7 +260,7 @@ video#myCamVideo{
     top: calc(48px - 37px);
     left: calc(48px - 41px);
     position: relative;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 
 /* Spinner */
@@ -572,7 +572,7 @@ input[type=range]:focus::-ms-fill-upper {
     margin: 2%;
     flex-basis: 96%;
     transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s, flex-basis 0.2s;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
     pointer-events: auto;
     /*flex-shrink: 2;*/
 }
@@ -590,7 +590,7 @@ input[type=range]:focus::-ms-fill-upper {
 .sidebar > div {
     margin: 2%;
     transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s, max-height 0.2s, max-width 0.2s;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
     border-radius: 15px 15px 15px 15px;
     pointer-events: auto;
 }
@@ -600,7 +600,7 @@ input[type=range]:focus::-ms-fill-upper {
 }
 
 .sidebar > div video {
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 
 /* Let's make sure videos are vertically centered if they need to be cropped */
@@ -625,7 +625,7 @@ input[type=range]:focus::-ms-fill-upper {
     margin: 1%;
     max-height: 96%;
     transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 
 .chat-mode > div:hover {
@@ -715,7 +715,7 @@ input[type=range]:focus::-ms-fill-upper {
     margin-top: 6px;
     width: 30px;
     height: 30px;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
     padding: 0 5px;
     transition: all .5s ease;
     transform: rotateY(0);
@@ -739,7 +739,7 @@ input[type=range]:focus::-ms-fill-upper {
 
 .main-console div.console:hover,
 .message-container div.clear:hover {
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
     top: calc(100% + 5px);
     transform: scale(1.2) translateY(3px);
 }
@@ -772,7 +772,7 @@ input[type=range]:focus::-ms-fill-upper {
     transition: all .2s ease;
 }
 .main-console .btn-action .btn:hover{
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
     background-color: #ffda01;
     color: black;
     border: 1px solid black;
@@ -787,7 +787,7 @@ input[type=range]:focus::-ms-fill-upper {
 
 .main-console .menu span {
     margin: 20px;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 
 .main-console .menu span.active {
@@ -821,10 +821,10 @@ input[type=range]:focus::-ms-fill-upper {
 }
 .main-console section div.upload label img{
     height: 150px;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 .main-console section div.upload label img{
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 
 
@@ -917,7 +917,7 @@ div.modal-report-user{
     right: 0;
     left: auto;
     top: 0;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
     width: 15px;
     height: 15px;
     margin: 10px;
@@ -936,7 +936,7 @@ div.modal-report-user{
     transition: all .2s ease;
 }
 .modal-report-user button:hover{
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
     background-color: #ffda01;
     color: black;
     border: 1px solid black;
@@ -979,7 +979,7 @@ div.modal-report-user{
 }
 .discussion .active-btn{
     display: none;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
     height: 50px;
     width: 50px;
     background-color: #2d2d2dba;
@@ -1008,7 +1008,7 @@ div.modal-report-user{
     right: 10px;
     background: none;
     border: none;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 .discussion .close-btn img{
     height: 15px;
@@ -1033,7 +1033,7 @@ div.modal-report-user{
     background-color: #ffffff69;
     padding: 5px;
     border-radius: 15px;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 
 .discussion .participants .participant:hover{
@@ -1066,7 +1066,7 @@ div.modal-report-user{
 }
 
 .discussion .participants .participant button.report-btn{
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
     position: absolute;
     background-color: #2d2d2dba;
     right: 34px;
@@ -1176,7 +1176,7 @@ div.action.danger{
     animation-timing-function: ease-in-out;
 }
 div.action p.action-body{
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
     padding: 10px;
     background-color: #2d2d2dba;
     color: #fff;
@@ -1224,4 +1224,12 @@ div.action.danger p.action-body{
     0% {bottom: 40px;}
     50% {bottom: 30px;}
     100% {bottom: 40px;}
+}
+
+
+#svelte-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
 }
