@@ -1,4 +1,4 @@
-import {ITiledMap, ITiledMapLayer, ITiledMapTileLayer} from "../Map/ITiledMap";
+import type {ITiledMap, ITiledMapLayer, ITiledMapTileLayer} from "../Map/ITiledMap";
 import { flattenGroupLayersMap } from "../Map/LayersFlattener";
 
 export type PropertyChangeCallback = (newValue: string | number | boolean | undefined, oldValue: string | number | boolean | undefined, allProps: Map<string, string | boolean | number>) => void;

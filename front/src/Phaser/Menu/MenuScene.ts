@@ -9,6 +9,7 @@ import {connectionManager} from "../../Connexion/ConnectionManager";
 import {GameConnexionTypes} from "../../Url/UrlManager";
 import {WarningContainer, warningContainerHtml, warningContainerKey} from "../Components/WarningContainer";
 import {worldFullWarningStream} from "../../Connexion/WorldFullWarningStream";
+import {menuIconVisible} from "../../Stores/MenuStore";
 
 export const MenuSceneName = 'MenuScene';
 const gameMenuKey = 'gameMenu';
@@ -53,6 +54,7 @@ export class MenuScene extends Phaser.Scene {
     }
 
     create() {
+        menuIconVisible.set(true);
         this.menuElement = this.add.dom(closedSideMenuX, 30).createFromCache(gameMenuKey);
         this.menuElement.setOrigin(0);
         MenuScene.revealMenusAfterInit(this.menuElement, 'gameMenu');

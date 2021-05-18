@@ -1,16 +1,16 @@
-import { ChatEvent } from "./Api/Events/ChatEvent";
+import type { ChatEvent } from "./Api/Events/ChatEvent";
 import { isIframeResponseEventWrapper } from "./Api/Events/IframeEvent";
 import { isUserInputChatEvent, UserInputChatEvent } from "./Api/Events/UserInputChatEvent";
 import { Subject } from "rxjs";
 import { EnterLeaveEvent, isEnterLeaveEvent } from "./Api/Events/EnterLeaveEvent";
-import { OpenPopupEvent } from "./Api/Events/OpenPopupEvent";
+import type { OpenPopupEvent } from "./Api/Events/OpenPopupEvent";
 import { isButtonClickedEvent } from "./Api/Events/ButtonClickedEvent";
-import { ClosePopupEvent } from "./Api/Events/ClosePopupEvent";
-import { OpenTabEvent } from "./Api/Events/OpenTabEvent";
-import { GoToPageEvent } from "./Api/Events/GoToPageEvent";
-import { OpenCoWebSiteEvent } from "./Api/Events/OpenCoWebSiteEvent";
-import { LayerEvent } from "./Api/Events/LayerEvent";
-import { SetPropertyEvent } from "./Api/Events/setPropertyEvent";
+import type { ClosePopupEvent } from "./Api/Events/ClosePopupEvent";
+import type { OpenTabEvent } from "./Api/Events/OpenTabEvent";
+import type { GoToPageEvent } from "./Api/Events/GoToPageEvent";
+import type { OpenCoWebSiteEvent } from "./Api/Events/OpenCoWebSiteEvent";
+import type { LayerEvent } from "./Api/Events/LayerEvent";
+import type { SetPropertyEvent } from "./Api/Events/setPropertyEvent";
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;

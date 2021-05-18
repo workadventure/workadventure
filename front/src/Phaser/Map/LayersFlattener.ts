@@ -1,10 +1,10 @@
-import {ITiledMap, ITiledMapLayer} from "./ITiledMap";
+import type {ITiledMap, ITiledMapLayer} from "./ITiledMap";
 
 /**
  * Flatten the grouped layers
  */
 export function flattenGroupLayersMap(map: ITiledMap) {
-    let flatLayers: ITiledMapLayer[] = [];
+    const flatLayers: ITiledMapLayer[] = [];
     flattenGroupLayers(map.layers, '', flatLayers);
     return flatLayers;
 }

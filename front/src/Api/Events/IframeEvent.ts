@@ -1,16 +1,16 @@
 
 
-import { ButtonClickedEvent } from './ButtonClickedEvent';
-import { ChatEvent } from './ChatEvent';
-import { ClosePopupEvent } from './ClosePopupEvent';
-import { EnterLeaveEvent } from './EnterLeaveEvent';
-import { GoToPageEvent } from './GoToPageEvent';
-import { OpenCoWebSiteEvent } from './OpenCoWebSiteEvent';
-import { OpenPopupEvent } from './OpenPopupEvent';
-import { OpenTabEvent } from './OpenTabEvent';
-import { UserInputChatEvent } from './UserInputChatEvent';
-import { LayerEvent } from './LayerEvent';
-import { SetPropertyEvent } from "./setPropertyEvent";
+import type { ButtonClickedEvent } from './ButtonClickedEvent';
+import type { ChatEvent } from './ChatEvent';
+import type { ClosePopupEvent } from './ClosePopupEvent';
+import type { EnterLeaveEvent } from './EnterLeaveEvent';
+import type { GoToPageEvent } from './GoToPageEvent';
+import type { OpenCoWebSiteEvent } from './OpenCoWebSiteEvent';
+import type { OpenPopupEvent } from './OpenPopupEvent';
+import type { OpenTabEvent } from './OpenTabEvent';
+import type { UserInputChatEvent } from './UserInputChatEvent';
+import type { LayerEvent } from './LayerEvent';
+import type { SetPropertyEvent } from "./setPropertyEvent";
 
 
 export interface TypedMessageEvent<T> extends MessageEvent {

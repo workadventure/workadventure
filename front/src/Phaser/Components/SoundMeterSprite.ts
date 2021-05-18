@@ -1,5 +1,5 @@
 import Container = Phaser.GameObjects.Container;
-import {Scene} from "phaser";
+import type {Scene} from "phaser";
 import GameObject = Phaser.GameObjects.GameObject;
 import Rectangle = Phaser.GameObjects.Rectangle;
 

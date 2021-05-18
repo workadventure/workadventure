@@ -1,6 +1,6 @@
 import 'phaser';
 import GameConfig = Phaser.Types.Core.GameConfig;
-import "../dist/resources/style/index.scss";
+import "../style/index.scss";
 
 import {DEBUG_MODE, isMobile} from "./Enum/EnvironmentVariable";
 import {LoginScene} from "./Phaser/Login/LoginScene";
@@ -21,6 +21,8 @@ import { SelectCharacterMobileScene } from './Phaser/Login/SelectCharacterMobile
 import {HdpiManager} from "./Phaser/Services/HdpiManager";
 import {waScaleManager} from "./Phaser/Services/WaScaleManager";
 import {Game} from "./Phaser/Game/Game";
+import App from './Components/App.svelte';
+import {HtmlUtils} from "./WebRtc/HtmlUtils";
 
 const {width, height} = coWebsiteManager.getGameSize();
 
@@ -127,19 +129,12 @@ const config: GameConfig = {
 //const game = new Phaser.Game(config);
 const game = new Game(config);
 
-waScaleManager.setScaleManager(game.scale);
+waScaleManager.setGame(game);
 
 window.addEventListener('resize', function (event) {
     coWebsiteManager.resetStyle();
 
     waScaleManager.applyNewSize();
-
-    // Let's trigger the onResize method of any active scene that is a ResizableScene
-    for (const scene of game.scene.getScenes(true)) {
-        if (scene instanceof ResizableScene) {
-            scene.onResize(event);
-        }
-    }
 });
 
 coWebsiteManager.onResize.subscribe(() => {
@@ -147,3 +142,10 @@ coWebsiteManager.onResize.subscribe(() => {
 });
 
 iframeListener.init();
+
+const app = new App({
+    target: HtmlUtils.getElementByIdOrFail('svelte-overlay'),
+    props: { },
+})
+
+export default app

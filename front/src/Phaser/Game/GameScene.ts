@@ -1,5 +1,5 @@
 import {gameManager, HasMovedEvent} from "./GameManager";
-import {
+import type {
     GroupCreatedUpdatedMessageInterface,
     MessageUserJoined,
     MessageUserMovedInterface,
@@ -16,7 +16,7 @@ import {
     MAX_PER_GROUP,
     POSITION_DELAY,
 } from "../../Enum/EnvironmentVariable";
-import {
+import type {
     ITiledMap,
     ITiledMapLayer,
     ITiledMapLayerProperty,
@@ -25,7 +25,7 @@ import {
     ITiledMapTileLayer,
     ITiledTileSet
 } from "../Map/ITiledMap";
-import {AddPlayerInterface} from "./AddPlayerInterface";
+import type {AddPlayerInterface} from "./AddPlayerInterface";
 import {PlayerAnimationDirections} from "../Player/Animation";
 import {PlayerMovement} from "./PlayerMovement";
 import {PlayersPositionInterpolator} from "./PlayersPositionInterpolator";
@@ -49,13 +49,13 @@ import {
 import {GameMap} from "./GameMap";
 import {coWebsiteManager} from "../../WebRtc/CoWebsiteManager";
 import {mediaManager} from "../../WebRtc/MediaManager";
-import {ItemFactoryInterface} from "../Items/ItemFactoryInterface";
-import {ActionableItem} from "../Items/ActionableItem";
+import type {ItemFactoryInterface} from "../Items/ItemFactoryInterface";
+import type {ActionableItem} from "../Items/ActionableItem";
 import {UserInputManager} from "../UserInput/UserInputManager";
-import {UserMovedMessage} from "../../Messages/generated/messages_pb";
+import type {UserMovedMessage} from "../../Messages/generated/messages_pb";
 import {ProtobufClientUtils} from "../../Network/ProtobufClientUtils";
 import {connectionManager} from "../../Connexion/ConnectionManager";
-import {RoomConnection} from "../../Connexion/RoomConnection";
+import type {RoomConnection} from "../../Connexion/RoomConnection";
 import {GlobalMessageManager} from "../../Administration/GlobalMessageManager";
 import {userMessageManager} from "../../Administration/UserMessageManager";
 import {ConsoleGlobalMessageManager} from "../../Administration/ConsoleGlobalMessageManager";
@@ -80,7 +80,7 @@ import CanvasTexture = Phaser.Textures.CanvasTexture;
 import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import DOMElement = Phaser.GameObjects.DOMElement;
-import {Subscription} from "rxjs";
+import type {Subscription} from "rxjs";
 import {worldFullMessageStream} from "../../Connexion/WorldFullMessageStream";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
 import RenderTexture = Phaser.GameObjects.RenderTexture;
@@ -152,7 +152,7 @@ export class GameScene extends DirtyScene implements CenterListener {
     private GlobalMessageManager!: GlobalMessageManager;
     public ConsoleGlobalMessageManager!: ConsoleGlobalMessageManager;
     private connectionAnswerPromise: Promise<RoomJoinedMessageInterface>;
-    private connectionAnswerPromiseResolve!: (value?: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>) => void;
+    private connectionAnswerPromiseResolve!: (value: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>) => void;
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
     private createPromise: Promise<void>;
     private createPromiseResolve!: (value?: void | PromiseLike<void>) => void;
@@ -187,6 +187,9 @@ export class GameScene extends DirtyScene implements CenterListener {
     private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string|undefined;
     private pinchManager: PinchManager|undefined;
+    private physicsEnabled: boolean = true;
+    private mapTransitioning: boolean = false; //used to prevent transitions happenning at the same time.
+    private onVisibilityChangeCallback: () => void;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
@@ -202,10 +205,11 @@ export class GameScene extends DirtyScene implements CenterListener {
 
         this.createPromise = new Promise<void>((resolve, reject): void => {
             this.createPromiseResolve = resolve;
-        })
+        });
         this.connectionAnswerPromise = new Promise<RoomJoinedMessageInterface>((resolve, reject): void => {
             this.connectionAnswerPromiseResolve = resolve;
         });
+        this.onVisibilityChangeCallback = this.onVisibilityChange.bind(this);
     }
 
     //hook preload scene
@@ -495,6 +499,8 @@ export class GameScene extends DirtyScene implements CenterListener {
         if (!this.room.isDisconnected()) {
             this.connect();
         }
+
+        document.addEventListener('visibilitychange', this.onVisibilityChangeCallback);
     }
 
     /**
@@ -616,6 +622,7 @@ export class GameScene extends DirtyScene implements CenterListener {
                         self.chatModeSprite.setVisible(false);
                         self.openChatIcon.setVisible(false);
                         audioManager.restoreVolume();
+                        self.onVisibilityChange();
                     }
                 }
             })
@@ -916,6 +923,8 @@ ${escapedMessage}
     }
 
     private onMapExit(exitKey: string) {
+        if (this.mapTransitioning) return;
+        this.mapTransitioning = true;
         const {roomId, hash} = Room.getIdFromIdentifier(exitKey, this.MapUrlFile, this.instance);
         if (!roomId) throw new Error('Could not find the room from its exit key: '+exitKey);
         urlManager.pushStartLayerNameToUrl(hash);
@@ -933,6 +942,7 @@ ${escapedMessage}
             this.initPositionFromLayerName(hash || defaultStartLayerName);
             this.CurrentPlayer.x = this.startX;
             this.CurrentPlayer.y = this.startY;
+            setTimeout(() => this.mapTransitioning = false, 500);
         }
     }
 
@@ -958,6 +968,8 @@ ${escapedMessage}
         for(const iframeEvents of this.iframeSubscriptionList){
             iframeEvents.unsubscribe();
         }
+
+        document.removeEventListener('visibilitychange', this.onVisibilityChangeCallback);
     }
 
     private removeAllRemotePlayers(): void {
@@ -1107,6 +1119,7 @@ ${escapedMessage}
 
     createCollisionWithPlayer() {
         this.physics.disableUpdate();
+        this.physicsEnabled = false;
         //add collision layer
         for (const Layer of this.gameMap.flatLayers) {
             if (Layer.type == "tilelayer") {
@@ -1251,11 +1264,14 @@ ${escapedMessage}
         this.CurrentPlayer.moveUser(delta);
         if (this.CurrentPlayer.isMoving()) {
             this.dirty = true;
-            this.physics.enableUpdate();
-        } else {
+            if (!this.physicsEnabled) {
+                this.physics.enableUpdate();
+                this.physicsEnabled = true;
+            }
+        } else if (this.physicsEnabled) {
             this.physics.disableUpdate();
+            this.physicsEnabled = false;
         }
-
 
         // Let's handle all events
         while (this.pendingEvents.length !== 0) {
@@ -1523,6 +1539,8 @@ ${escapedMessage}
         mediaManager.addTriggerCloseJitsiFrameButton('close-jisi',() => {
             this.stopJitsi();
         });
+
+        this.onVisibilityChange();
     }
 
     public stopJitsi(): void {
@@ -1531,6 +1549,7 @@ ${escapedMessage}
         mediaManager.showGameOverlay();
 
         mediaManager.removeTriggerCloseJitsiFrameButton('close-jisi');
+        this.onVisibilityChange();
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
@@ -1569,5 +1588,21 @@ ${escapedMessage}
     zoomByFactor(zoomFactor: number) {
         waScaleManager.zoomModifier *= zoomFactor;
         this.updateCameraOffset();
+    }
+
+    private onVisibilityChange(): void {
+        // If the overlay is not displayed, we are in Jitsi. We don't need the webcam.
+        if (!mediaManager.isGameOverlayVisible()) {
+            mediaManager.blurCamera();
+            return;
+        }
+
+        if (document.visibilityState === 'visible') {
+            mediaManager.focusCamera();
+        } else {
+            if (this.simplePeer.getNbConnections() === 0) {
+                mediaManager.blurCamera();
+            }
+        }
     }
 }

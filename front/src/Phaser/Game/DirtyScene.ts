@@ -2,6 +2,8 @@ import {ResizableScene} from "../Login/ResizableScene";
 import GameObject = Phaser.GameObjects.GameObject;
 import Events = Phaser.Scenes.Events;
 import AnimationEvents = Phaser.Animations.Events;
+import StructEvents = Phaser.Structs.Events;
+import {SKIP_RENDER_OPTIMIZATIONS} from "../../Enum/EnvironmentVariable";
 
 /**
  * A scene that can track its dirty/pristine state.
@@ -18,17 +20,16 @@ export abstract class DirtyScene extends ResizableScene {
      * Note: this does not work with animations from sprites inside containers.
      */
     protected trackDirtyAnims(): void {
-        if (this.isAlreadyTracking) {
+        if (this.isAlreadyTracking || SKIP_RENDER_OPTIMIZATIONS) {
             return;
         }
         this.isAlreadyTracking = true;
         const trackAnimationFunction = this.trackAnimation.bind(this);
-        this.events.on(Events.ADDED_TO_SCENE, (gameObject: GameObject) => {
+        this.sys.updateList.on(StructEvents.PROCESS_QUEUE_ADD, (gameObject: GameObject) => {
             this.objectListChanged = true;
             gameObject.on(AnimationEvents.ANIMATION_UPDATE, trackAnimationFunction);
         });
-
-        this.events.on(Events.REMOVED_FROM_SCENE, (gameObject: GameObject) => {
+        this.sys.updateList.on(StructEvents.PROCESS_QUEUE_REMOVE, (gameObject: GameObject) => {
             this.objectListChanged = true;
             gameObject.removeListener(AnimationEvents.ANIMATION_UPDATE, trackAnimationFunction);
         });
