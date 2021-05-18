@@ -9,8 +9,9 @@ import { ClosePopupEvent } from "./Api/Events/ClosePopupEvent";
 import { OpenTabEvent } from "./Api/Events/OpenTabEvent";
 import { GoToPageEvent } from "./Api/Events/GoToPageEvent";
 import { OpenCoWebSiteEvent } from "./Api/Events/OpenCoWebSiteEvent";
-import { GameStateEvent, isGameStateEvent } from './Api/Events/ApiGameStateEvent';
-import { HasMovedEvent, HasMovedEventCallback, isHasMovedEvent } from './Api/Events/HasMovedEvent';
+import { GameStateEvent, isGameStateEvent } from './Api/Events/GameStateEvent';
+import { HasPlayerMovedEvent, HasPlayerMovedEventCallback, isHasPlayerMovedEvent } from './Api/Events/HasPlayerMovedEvent';
+import { HasDataLayerChangedEvent, HasDataLayerChangedEventCallback, isHasDataLayerChangedEvent} from "./Api/Events/HasDataLayerChangedEvent";
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
@@ -26,9 +27,14 @@ interface WorkAdventureApi {
     restorePlayerControls(): void;
     displayBubble(): void;
     removeBubble(): void;
-    getGameState(): Promise<GameStateEvent>
+    getMapUrl(): Promise<string>;
+    getUuid(): Promise<string | undefined>;
+    getRoomId(): Promise<string>;
+    getStartLayerName(): Promise<string | null>;
 
-    onMoveEvent(callback: (moveEvent: HasMovedEvent) => void): void
+
+    onPlayerMove(callback: (playerMovedEvent: HasPlayerMovedEvent) => void): void
+    onDataLayerChange(callback: (dataLayerChangedEvent: HasDataLayerChangedEvent) => void): void
 }
 
 declare global {
@@ -84,41 +90,75 @@ function uuidv4() {
         return v.toString(16);
     });
 }
-
-const stateResolvers: Array<(event: GameStateEvent) => void> = []
-
-const callbacks: { [type: string]: HasMovedEventCallback | ((arg?: HasMovedEvent | never) => void) } = {}
-
-
-function postToParent(content: IframeEvent<keyof IframeEventMap>) {
-    window.parent.postMessage(content, "*")
-}
-let moveEventUuid: string | undefined;
-
-window.WA = {
-
-    onMoveEvent(callback: HasMovedEventCallback): void {
-        moveEventUuid = uuidv4();
-        callbacks[moveEventUuid] = callback;
-        postToParent({
-            type: "enableMoveEvents",
-            data: undefined
-        })
-
-        window.parent.postMessage({
-            type: "enable"
-        }, "*")
-    },
-
-    getGameState() {
+function getGameState(): Promise<GameStateEvent> {
+    if (immutableData) {
+        return Promise.resolve(immutableData);
+    }
+    else {
         return new Promise<GameStateEvent>((resolver, thrower) => {
             stateResolvers.push(resolver);
             window.parent.postMessage({
                 type: "getState"
             }, "*")
         })
+    }
+}
+
+const stateResolvers: Array<(event: GameStateEvent) => void> = []
+let immutableData: GameStateEvent;
+
+const callbackPlayerMoved: { [type: string]: HasPlayerMovedEventCallback | ((arg?: HasPlayerMovedEvent | never) => void) } = {}
+const callbackDataLayerChanged: { [type: string]: HasDataLayerChangedEventCallback | ((arg?: HasDataLayerChangedEvent | never) => void) } = {}
+
+
+function postToParent(content: IframeEvent<keyof IframeEventMap>) {
+    window.parent.postMessage(content, "*")
+}
+let playerUuid: string | undefined;
+
+window.WA = {
+
+    onPlayerMove(callback: HasPlayerMovedEventCallback): void {
+        playerUuid = uuidv4();
+        callbackPlayerMoved[playerUuid] = callback;
+        postToParent({
+            type: "onPlayerMove",
+            data: undefined
+        })
     },
 
+    onDataLayerChange(callback: HasDataLayerChangedEventCallback): void {
+        callbackDataLayerChanged['test'] = callback;
+        postToParent({
+            type : "onDataLayerChange",
+            data: undefined
+        })
+    },
+
+
+    getMapUrl() {
+      return getGameState().then((res) => {
+          return res.mapUrl;
+      })
+    },
+
+    getUuid() {
+        return getGameState().then((res) => {
+            return res.uuid;
+        })
+    },
+
+    getRoomId() {
+        return getGameState().then((res) => {
+            return res.roomId;
+        })
+    },
+
+    getStartLayerName() {
+        return getGameState().then((res) => {
+            return res.startLayerName;
+        })
+    },
 
     /**
      * Send a message in the chat.
@@ -273,8 +313,11 @@ window.addEventListener('message', message => {
             stateResolvers.forEach(resolver => {
                 resolver(payloadData);
             })
-        } else if (payload.type == "hasMovedEvent" && isHasMovedEvent(payloadData) && moveEventUuid) {
-            callbacks[moveEventUuid](payloadData)
+            immutableData = payloadData;
+        } else if (payload.type == "hasPlayerMoved" && isHasPlayerMovedEvent(payloadData) && playerUuid) {
+            callbackPlayerMoved[playerUuid](payloadData)
+        } else if (payload.type == "hasDataLayerChanged" && isHasDataLayerChangedEvent(payloadData)) {
+            callbackDataLayerChanged['test'](payloadData)
         }
 
     }

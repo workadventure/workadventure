@@ -90,9 +90,9 @@ import { TextUtils } from "../Components/TextUtils";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
 import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
-import { PlayerStateObject } from '../../Api/Events/ApiGameStateEvent';
+//import { PlayerStateObject } from '../../Api/Events/GameStateEvent';
 import { waScaleManager } from "../Services/WaScaleManager";
-import { HasMovedEvent } from '../../Api/Events/HasMovedEvent';
+import { HasPlayerMovedEvent } from '../../Api/Events/HasPlayerMovedEvent';
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null,
@@ -164,7 +164,7 @@ export class GameScene extends DirtyScene implements CenterListener {
 
     currentTick!: number;
     lastSentTick!: number; // The last tick at which a position was sent.
-    lastMoveEventSent: HasMovedEvent = {
+    lastMoveEventSent: HasPlayerMovedEvent = {
         direction: '',
         moving: false,
         x: -1000,
@@ -632,11 +632,11 @@ export class GameScene extends DirtyScene implements CenterListener {
 
             //listen event to share position of user
             this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this))
-            this.CurrentPlayer.on(hasMovedEventName, (event: HasMovedEvent) => {
-                iframeListener.hasMovedEvent(event)
+            this.CurrentPlayer.on(hasMovedEventName, (event: HasPlayerMovedEvent) => {
+                //iframeListener.hasMovedEvent(event)
             })
             this.CurrentPlayer.on(hasMovedEventName, this.outlineItem.bind(this))
-            this.CurrentPlayer.on(hasMovedEventName, (event: HasMovedEvent) => {
+            this.CurrentPlayer.on(hasMovedEventName, (event: HasPlayerMovedEvent) => {
                 this.gameMap.setPosition(event.x, event.y);
             })
 
@@ -870,7 +870,7 @@ ${escapedMessage}
             this.userInputManager.restoreControls();
         }));
         this.iframeSubscriptionList.push(iframeListener.gameStateStream.subscribe(() => {
-            const playerObject: PlayerStateObject = {
+            /*const playerObject: PlayerStateObject = {
                 [this.playerName]: {
                     position: {
                         x: this.CurrentPlayer.x,
@@ -889,15 +889,12 @@ ${escapedMessage}
                     pusherId: remotePlayer.userId
 
                 }
-            }
+            }*/
             iframeListener.sendFrozenGameStateEvent({
                 mapUrl: this.MapUrlFile,
-                nickName: this.playerName,
                 startLayerName: this.startLayerName,
                 uuid: localUserStore.getLocalUser()?.uuid,
                 roomId: this.RoomId,
-                data: this.mapFile,
-                players: playerObject
             })
         }));
 
@@ -1158,7 +1155,7 @@ ${escapedMessage}
         this.createCollisionWithPlayer();
     }
 
-    pushPlayerPosition(event: HasMovedEvent) {
+    pushPlayerPosition(event: HasPlayerMovedEvent) {
         if (this.lastMoveEventSent === event) {
             return;
         }
@@ -1188,7 +1185,7 @@ ${escapedMessage}
      * Finds the correct item to outline and outline it (if there is an item to be outlined)
      * @param event
      */
-    private outlineItem(event: HasMovedEvent): void {
+    private outlineItem(event: HasPlayerMovedEvent): void {
         let x = event.x;
         let y = event.y;
         switch (event.direction) {
@@ -1227,7 +1224,7 @@ ${escapedMessage}
         this.outlinedItem?.selectable();
     }
 
-    private doPushPlayerPosition(event: HasMovedEvent): void {
+    private doPushPlayerPosition(event: HasPlayerMovedEvent): void {
         this.lastMoveEventSent = event;
         this.lastSentTick = this.currentTick;
         const camera = this.cameras.main;
@@ -1237,6 +1234,7 @@ ${escapedMessage}
             right: camera.scrollX + camera.width,
             bottom: camera.scrollY + camera.height,
         });
+        iframeListener.hasPlayerMoved(event);
     }
 
     /**
@@ -1286,7 +1284,7 @@ ${escapedMessage}
         }
         // Let's move all users
         const updatedPlayersPositions = this.playersPositionInterpolator.getUpdatedPositions(time);
-        updatedPlayersPositions.forEach((moveEvent: HasMovedEvent, userId: number) => {
+        updatedPlayersPositions.forEach((moveEvent: HasPlayerMovedEvent, userId: number) => {
             this.dirty = true;
             const player: RemotePlayer | undefined = this.MapPlayersByKey.get(userId);
             if (player === undefined) {

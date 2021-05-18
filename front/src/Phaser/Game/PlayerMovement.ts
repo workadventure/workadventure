@@ -1,10 +1,10 @@
 
 import { MAX_EXTRAPOLATION_TIME } from "../../Enum/EnvironmentVariable";
 import { PositionInterface } from "../../Connexion/ConnexionModels";
-import { HasMovedEvent } from '../../Api/Events/HasMovedEvent';
+import { HasPlayerMovedEvent } from '../../Api/Events/HasPlayerMovedEvent';
 
 export class PlayerMovement {
-    public constructor(private startPosition: PositionInterface, private startTick: number, private endPosition: HasMovedEvent, private endTick: number) {
+    public constructor(private startPosition: PositionInterface, private startTick: number, private endPosition: HasPlayerMovedEvent, private endTick: number) {
     }
 
     public isOutdated(tick: number): boolean {
@@ -18,7 +18,7 @@ export class PlayerMovement {
         return tick > this.endTick + MAX_EXTRAPOLATION_TIME;
     }
 
-    public getPosition(tick: number): HasMovedEvent {
+    public getPosition(tick: number): HasPlayerMovedEvent {
         // Special case: end position reached and end position is not moving
         if (tick >= this.endTick && this.endPosition.moving === false) {
             //console.log('Movement finished ', this.endPosition)

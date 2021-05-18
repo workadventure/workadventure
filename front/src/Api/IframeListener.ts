@@ -12,10 +12,11 @@ import { GoToPageEvent, isGoToPageEvent } from "./Events/GoToPageEvent";
 import { isOpenCoWebsite, OpenCoWebSiteEvent } from "./Events/OpenCoWebSiteEvent";
 import { IframeEventMap, IframeEvent, IframeResponseEvent, IframeResponseEventMap, isIframeEventWrapper, TypedMessageEvent } from "./Events/IframeEvent";
 import { UserInputChatEvent } from "./Events/UserInputChatEvent";
-import { GameStateEvent } from './Events/ApiGameStateEvent';
+import { GameStateEvent } from './Events/GameStateEvent';
 import { deepFreezeClone as deepFreezeClone } from '../utility';
-import { HasMovedEvent } from './Events/HasMovedEvent';
+import { HasPlayerMovedEvent } from './Events/HasPlayerMovedEvent';
 import { Math } from 'phaser';
+import { HasDataLayerChangedEvent } from "./Events/HasDataLayerChangedEvent";
 
 
 
@@ -58,14 +59,14 @@ class IframeListener {
     private readonly _removeBubbleStream: Subject<void> = new Subject();
     public readonly removeBubbleStream = this._removeBubbleStream.asObservable();
 
-
     private readonly _gameStateStream: Subject<void> = new Subject();
     public readonly gameStateStream = this._gameStateStream.asObservable();
 
+
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
-    private sendMoveEvents: boolean = false;
-    private lastMoveTimestamp: number = 0
+    private sendPlayerMove: boolean = false;
+    private sendDataLayerChange: boolean = false;
 
     init() {
         window.addEventListener("message", (message: TypedMessageEvent<IframeEvent<keyof IframeEventMap>>) => {
@@ -119,8 +120,10 @@ class IframeListener {
                     this._removeBubbleStream.next();
                 } else if (payload.type == "getState") {
                     this._gameStateStream.next();
-                } else if (payload.type == "enableMoveEvents") {
-                    this.sendMoveEvents = true
+                } else if (payload.type == "onPlayerMove") {
+                    this.sendPlayerMove = true
+                } else if (payload.type == "onDataLayerChange") {
+                    this.sendDataLayerChange = true
                 }
             }
 
@@ -133,7 +136,7 @@ class IframeListener {
     sendFrozenGameStateEvent(gameStateEvent: GameStateEvent) {
         this.postMessage({
             'type': 'gameState',
-            'data': deepFreezeClone(gameStateEvent)
+            'data': gameStateEvent //deepFreezeClone(gameStateEvent)
         });
     }
 
@@ -240,16 +243,21 @@ class IframeListener {
         });
     }
 
-    hasMovedEvent(event: HasMovedEvent) {
-        if (this.sendMoveEvents) {
-            if (this.lastMoveTimestamp < Date.now() - 100) {
-                this.lastMoveTimestamp = Date.now()
-                this.postMessage({
-                    'type': 'hasMovedEvent',
-                    'data': event
-                });
-            }
+    hasPlayerMoved(event: HasPlayerMovedEvent) {
+        if (this.sendPlayerMove) {
+            this.postMessage({
+                'type': 'hasPlayerMoved',
+                'data': event
+            });
+        }
+    }
 
+    hasDataLayerChanged(event: HasDataLayerChangedEvent) {
+        if (this.sendDataLayerChange) {
+            this.postMessage({
+                'type' : 'hasDataLayerChanged',
+                'data' : event
+            });
         }
     }
 

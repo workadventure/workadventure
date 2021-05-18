@@ -1,15 +1,16 @@
 
-import { GameStateEvent } from './ApiGameStateEvent';
+import { GameStateEvent } from './GameStateEvent';
 import { ButtonClickedEvent } from './ButtonClickedEvent';
 import { ChatEvent } from './ChatEvent';
 import { ClosePopupEvent } from './ClosePopupEvent';
 import { EnterLeaveEvent } from './EnterLeaveEvent';
 import { GoToPageEvent } from './GoToPageEvent';
-import { HasMovedEvent } from './HasMovedEvent';
+import { HasPlayerMovedEvent } from './HasPlayerMovedEvent';
 import { OpenCoWebSiteEvent } from './OpenCoWebSiteEvent';
 import { OpenPopupEvent } from './OpenPopupEvent';
 import { OpenTabEvent } from './OpenTabEvent';
 import { UserInputChatEvent } from './UserInputChatEvent';
+import { HasDataLayerChangedEvent } from "./HasDataLayerChangedEvent";
 
 
 export interface TypedMessageEvent<T> extends MessageEvent {
@@ -30,7 +31,8 @@ export type IframeEventMap = {
     restorePlayerControls: null
     displayBubble: null
     removeBubble: null
-    enableMoveEvents: undefined
+    onPlayerMove: undefined
+    onDataLayerChange: undefined
 }
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;
@@ -47,7 +49,8 @@ export interface IframeResponseEventMap {
     leaveEvent: EnterLeaveEvent
     buttonClickedEvent: ButtonClickedEvent
     gameState: GameStateEvent
-    hasMovedEvent: HasMovedEvent
+    hasPlayerMoved: HasPlayerMovedEvent
+    hasDataLayerChanged: HasDataLayerChangedEvent
 }
 export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
     type: T;
