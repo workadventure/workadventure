@@ -5,6 +5,6 @@ export const isMenuItemClickedEvent =
         menuItem: tg.isString
     }).get();
 /**
- * A message sent from the game to the iFrame when a user enters or leaves a zone marked with the "zone" property.
+ * A message sent from the game to the iFrame when a menu item is clicked.
  */
 export type MenuItemClickedEvent = tg.GuardedType<typeof isMenuItemClickedEvent>;
