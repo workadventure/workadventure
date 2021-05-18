@@ -186,6 +186,7 @@ export class GameScene extends DirtyScene implements CenterListener {
     private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string|undefined;
     private pinchManager: PinchManager|undefined;
+    private physicsEnabled: boolean = true;
     private mapTransitioning: boolean = false; //used to prevent transitions happenning at the same time.
     private onVisibilityChangeCallback: () => void;
 
@@ -1042,10 +1043,10 @@ ${escapedMessage}
     }
 
     //todo: push that into the gameManager
-    private async loadNextGame(exitSceneIdentifier: string){
+    private loadNextGame(exitSceneIdentifier: string): void {
         const {roomId, hash} = Room.getIdFromIdentifier(exitSceneIdentifier, this.MapUrlFile, this.instance);
         const room = new Room(roomId);
-        await gameManager.loadMap(room, this.scene);
+        gameManager.loadMap(room, this.scene).catch(() => {});
     }
 
     private startUser(layer: ITiledMapTileLayer): PositionInterface {
@@ -1088,6 +1089,7 @@ ${escapedMessage}
 
     createCollisionWithPlayer() {
         this.physics.disableUpdate();
+        this.physicsEnabled = false;
         //add collision layer
         this.Layers.forEach((Layer: Phaser.Tilemaps.TilemapLayer) => {
             this.physics.add.collider(this.CurrentPlayer, Layer, (object1: GameObject, object2: GameObject) => {
@@ -1227,11 +1229,14 @@ ${escapedMessage}
         this.CurrentPlayer.moveUser(delta);
         if (this.CurrentPlayer.isMoving()) {
             this.dirty = true;
-            this.physics.enableUpdate();
-        } else {
+            if (!this.physicsEnabled) {
+                this.physics.enableUpdate();
+                this.physicsEnabled = true;
+            }
+        } else if (this.physicsEnabled) {
             this.physics.disableUpdate();
+            this.physicsEnabled = false;
         }
-
 
         // Let's handle all events
         while (this.pendingEvents.length !== 0) {
