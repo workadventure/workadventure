@@ -5,7 +5,7 @@ import { gameManager} from "../Game/GameManager";
 import { ResizableScene } from "./ResizableScene";
 import { EnableCameraSceneName } from "./EnableCameraScene";
 import { localUserStore } from "../../Connexion/LocalUserStore";
-import { CompanionResourceDescriptionInterface } from "../Companion/CompanionTextures";
+import type { CompanionResourceDescriptionInterface } from "../Companion/CompanionTextures";
 import { getAllCompanionResources } from "../Companion/CompanionTexturesLoadingManager";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";

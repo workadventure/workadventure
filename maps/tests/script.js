@@ -21,7 +21,7 @@ function launchTuto (){
                             callback: (popup1) => {
                                 WA.sendChatMessage("Hey you can talk here too ! ", 'WA Guide');
                                 popup1.close();
-                                WA.restorePlayerControl();
+                                WA.restorePlayerControls();
                             }
                         }
 
@@ -29,7 +29,7 @@ function launchTuto (){
                 }
             }
         ]);
-        WA.disablePlayerControl();
+        WA.disablePlayerControls();
 
 }
 WA.onChatMessage((message => {

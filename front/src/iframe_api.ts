@@ -1,16 +1,16 @@
-import { ChatEvent } from "./Api/Events/ChatEvent";
+import type { ChatEvent } from "./Api/Events/ChatEvent";
 import { isIframeResponseEventWrapper } from "./Api/Events/IframeEvent";
 import { isUserInputChatEvent, UserInputChatEvent } from "./Api/Events/UserInputChatEvent";
 import { Subject } from "rxjs";
 import { EnterLeaveEvent, isEnterLeaveEvent } from "./Api/Events/EnterLeaveEvent";
-import { OpenPopupEvent } from "./Api/Events/OpenPopupEvent";
+import type { OpenPopupEvent } from "./Api/Events/OpenPopupEvent";
 import { isButtonClickedEvent } from "./Api/Events/ButtonClickedEvent";
-import { ClosePopupEvent } from "./Api/Events/ClosePopupEvent";
-import { OpenTabEvent } from "./Api/Events/OpenTabEvent";
-import { GoToPageEvent } from "./Api/Events/GoToPageEvent";
-import { OpenCoWebSiteEvent } from "./Api/Events/OpenCoWebSiteEvent";
+import type { ClosePopupEvent } from "./Api/Events/ClosePopupEvent";
+import type { OpenTabEvent } from "./Api/Events/OpenTabEvent";
+import type { GoToPageEvent } from "./Api/Events/GoToPageEvent";
+import type { OpenCoWebSiteEvent } from "./Api/Events/OpenCoWebSiteEvent";
 import { isMenuItemClickedEvent } from './Api/Events/MenuItemClickedEvent';
-import { MenuItemRegisterEvent } from './Api/Events/MenuItemRegisterEvent';
+import type { MenuItemRegisterEvent } from './Api/Events/MenuItemRegisterEvent';
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
@@ -22,8 +22,8 @@ interface WorkAdventureApi {
     goToPage(url : string): void;
     openCoWebSite(url : string): void;
     closeCoWebSite(): void;
-    disablePlayerControl(): void;
-    restorePlayerControl(): void;
+    disablePlayerControls(): void;
+    restorePlayerControls(): void;
     displayBubble(): void;
     removeBubble(): void;
     registerMenuCommand(commandDescriptor: string, callback: (commandDescriptor: string) => void): void
@@ -91,12 +91,12 @@ window.WA = {
             } as ChatEvent
         }, '*');
     },
-    disablePlayerControl(): void {
-        window.parent.postMessage({ 'type': 'disablePlayerControl' }, '*');
+    disablePlayerControls(): void {
+        window.parent.postMessage({ 'type': 'disablePlayerControls' }, '*');
     },
 
-    restorePlayerControl(): void {
-        window.parent.postMessage({ 'type': 'restorePlayerControl' }, '*');
+    restorePlayerControls(): void {
+        window.parent.postMessage({ 'type': 'restorePlayerControls' }, '*');
     },
 
     displayBubble(): void {

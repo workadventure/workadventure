@@ -1,7 +1,7 @@
 import {HtmlUtils} from "../WebRtc/HtmlUtils";
-import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
-import {RoomConnection} from "../Connexion/RoomConnection";
-import {PlayGlobalMessageInterface} from "../Connexion/ConnexionModels";
+import type {UserInputManager} from "../Phaser/UserInput/UserInputManager";
+import type {RoomConnection} from "../Connexion/RoomConnection";
+import type {PlayGlobalMessageInterface} from "../Connexion/ConnexionModels";
 import {AdminMessageEventTypes} from "../Connexion/AdminMessagesService";
 
 export const CLASS_CONSOLE_MESSAGE = 'main-console';

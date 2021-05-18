@@ -10,9 +10,10 @@ interface jitsiConfigInterface {
 }
 
 const getDefaultConfig = () : jitsiConfigInterface => {
+    const constraints = mediaManager.getConstraintRequestedByUser();
     return {
-        startWithAudioMuted: !mediaManager.constraintsMedia.audio,
-        startWithVideoMuted: mediaManager.constraintsMedia.video === false,
+        startWithAudioMuted: !constraints.audio,
+        startWithVideoMuted: constraints.video === false,
         prejoinPageEnabled: false
     }
 }
@@ -71,7 +72,7 @@ class JitsiFactory {
     private jitsiApi: any; // eslint-disable-line @typescript-eslint/no-explicit-any
     private audioCallback = this.onAudioChange.bind(this);
     private videoCallback = this.onVideoChange.bind(this);
-    private previousConfigMeet? : jitsiConfigInterface;
+    private previousConfigMeet! : jitsiConfigInterface;
     private jitsiScriptLoaded: boolean = false;
 
     /**
@@ -136,32 +137,24 @@ class JitsiFactory {
 
         //restore previous config
         if(this.previousConfigMeet?.startWithAudioMuted){
-            mediaManager.disableMicrophone();
+            await mediaManager.disableMicrophone();
         }else{
-            mediaManager.enableMicrophone();
+            await mediaManager.enableMicrophone();
         }
 
         if(this.previousConfigMeet?.startWithVideoMuted){
-            mediaManager.disableCamera();
+            await mediaManager.disableCamera();
         }else{
-            mediaManager.enableCamera();
+            await mediaManager.enableCamera();
         }
     }
 
     private onAudioChange({muted}: {muted: boolean}): void {
-        if (muted && mediaManager.constraintsMedia.audio === true) {
-            mediaManager.disableMicrophone();
-        } else if(!muted && mediaManager.constraintsMedia.audio === false) {
-            mediaManager.enableMicrophone();
-        }
+        this.previousConfigMeet.startWithAudioMuted = muted;
     }
 
     private onVideoChange({muted}: {muted: boolean}): void {
-        if (muted && mediaManager.constraintsMedia.video !== false) {
-            mediaManager.disableCamera();
-        } else if(!muted && mediaManager.constraintsMedia.video === false) {
-            mediaManager.enableCamera();
-        }
+        this.previousConfigMeet.startWithVideoMuted = muted;
     }
 
     private async loadJitsiScript(domain: string): Promise<void> {

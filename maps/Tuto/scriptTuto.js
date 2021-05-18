@@ -25,7 +25,7 @@ function launchTuto (){
                                     label: "Got it!",
                                     className : "success",callback:(popup2 => {
                                         popup2.close();
-                                        WA.restorePlayerControl();
+                                        WA.restorePlayerControls();
                                     })
                                 }
                             ])
@@ -36,7 +36,7 @@ function launchTuto (){
             }
         }
     ]);
-    WA.disablePlayerControl();
+    WA.disablePlayerControls();
 
 }
 

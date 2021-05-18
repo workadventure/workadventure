@@ -1,6 +1,6 @@
 import {HtmlUtils} from "./HtmlUtils";
-import {mediaManager, ReportCallback, ShowReportCallBack} from "./MediaManager";
-import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
+import type {ShowReportCallBack} from "./MediaManager";
+import type {UserInputManager} from "../Phaser/UserInput/UserInputManager";
 import {connectionManager} from "../Connexion/ConnectionManager";
 import {GameConnexionTypes} from "../Url/UrlManager";
 import {iframeListener} from "../Api/IframeListener";
