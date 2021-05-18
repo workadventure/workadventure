@@ -6,6 +6,12 @@ import {localUserStore} from "../Connexion/LocalUserStore";
 import type {UserSimplePeerInterface} from "./SimplePeer";
 import {SoundMeter} from "../Phaser/Components/SoundMeter";
 import {DISABLE_NOTIFICATIONS} from "../Enum/EnvironmentVariable";
+import {
+    gameOverlayVisibilityStore,
+    mediaStreamConstraintsStore,
+    requestedCameraState,
+    requestedMicrophoneState
+} from "../Stores/MediaStore";
 
 declare const navigator:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -90,12 +96,14 @@ export class MediaManager {
             e.preventDefault();
             this.enableMicrophone();
             //update tracking
+            requestedMicrophoneState.enableMicrophone();
         });
         this.microphone = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('microphone');
         this.microphone.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
             this.disableMicrophone();
             //update tracking
+            requestedMicrophoneState.disableMicrophone();
         });
 
         this.cinemaBtn = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('btn-video');
@@ -105,12 +113,14 @@ export class MediaManager {
             e.preventDefault();
             this.enableCamera();
             //update tracking
+            requestedCameraState.enableWebcam();
         });
         this.cinema = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('cinema');
         this.cinema.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
             this.disableCamera();
             //update tracking
+            requestedCameraState.disableWebcam();
         });
 
         this.monitorBtn = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('btn-monitor');
@@ -214,6 +224,8 @@ export class MediaManager {
             this.triggerCloseJitsiFrameButton();
         }
         buttonCloseFrame.removeEventListener('click', functionTrigger);
+
+        gameOverlayVisibilityStore.showGameOverlay();
     }
 
     public hideGameOverlay(): void {
@@ -225,6 +237,8 @@ export class MediaManager {
             this.triggerCloseJitsiFrameButton();
         }
         buttonCloseFrame.addEventListener('click', functionTrigger);
+
+        gameOverlayVisibilityStore.hideGameOverlay();
     }
 
     public isGameOverlayVisible(): boolean {

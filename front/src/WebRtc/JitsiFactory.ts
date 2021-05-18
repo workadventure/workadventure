@@ -1,6 +1,7 @@
 import {JITSI_URL} from "../Enum/EnvironmentVariable";
 import {mediaManager} from "./MediaManager";
 import {coWebsiteManager} from "./CoWebsiteManager";
+import {requestedCameraState, requestedMicrophoneState} from "../Stores/MediaStore";
 declare const window:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 interface jitsiConfigInterface {
@@ -138,14 +139,18 @@ class JitsiFactory {
         //restore previous config
         if(this.previousConfigMeet?.startWithAudioMuted){
             await mediaManager.disableMicrophone();
+            requestedMicrophoneState.disableMicrophone();
         }else{
             await mediaManager.enableMicrophone();
+            requestedMicrophoneState.enableMicrophone();
         }
 
         if(this.previousConfigMeet?.startWithVideoMuted){
             await mediaManager.disableCamera();
+            requestedCameraState.disableWebcam();
         }else{
             await mediaManager.enableCamera();
+            requestedCameraState.enableWebcam();
         }
     }
 

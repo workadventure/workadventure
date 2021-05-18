@@ -92,6 +92,7 @@ import {PinchManager} from "../UserInput/PinchManager";
 import {joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey} from "../Components/MobileJoystick";
 import {DEPTH_OVERLAY_INDEX} from "./DepthIndexes";
 import {waScaleManager} from "../Services/WaScaleManager";
+import {peerStore} from "../../Stores/PeerStore";
 import {EmoteManager} from "./EmoteManager";
 
 export interface GameSceneInitInterface {
@@ -516,7 +517,7 @@ export class GameScene extends DirtyScene implements CenterListener {
         }
 
         document.addEventListener('visibilitychange', this.onVisibilityChangeCallback);
-        
+
         this.emoteManager = new EmoteManager(this);
     }
 
@@ -622,6 +623,7 @@ export class GameScene extends DirtyScene implements CenterListener {
 
             // When connection is performed, let's connect SimplePeer
             this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic, this.playerName);
+            peerStore.connectToSimplePeer(this.simplePeer);
             this.GlobalMessageManager = new GlobalMessageManager(this.connection);
             userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
