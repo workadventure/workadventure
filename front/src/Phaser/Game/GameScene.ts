@@ -1043,10 +1043,10 @@ ${escapedMessage}
     }
 
     //todo: push that into the gameManager
-    private async loadNextGame(exitSceneIdentifier: string){
+    private loadNextGame(exitSceneIdentifier: string): void {
         const {roomId, hash} = Room.getIdFromIdentifier(exitSceneIdentifier, this.MapUrlFile, this.instance);
         const room = new Room(roomId);
-        await gameManager.loadMap(room, this.scene);
+        gameManager.loadMap(room, this.scene).catch(() => {});
     }
 
     private startUser(layer: ITiledMapTileLayer): PositionInterface {
