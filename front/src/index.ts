@@ -127,19 +127,12 @@ const config: GameConfig = {
 //const game = new Phaser.Game(config);
 const game = new Game(config);
 
-waScaleManager.setScaleManager(game.scale);
+waScaleManager.setGame(game);
 
 window.addEventListener('resize', function (event) {
     coWebsiteManager.resetStyle();
 
     waScaleManager.applyNewSize();
-
-    // Let's trigger the onResize method of any active scene that is a ResizableScene
-    for (const scene of game.scene.getScenes(true)) {
-        if (scene instanceof ResizableScene) {
-            scene.onResize(event);
-        }
-    }
 });
 
 coWebsiteManager.onResize.subscribe(() => {

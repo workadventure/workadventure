@@ -1,18 +1,21 @@
 import {HdpiManager} from "./HdpiManager";
 import ScaleManager = Phaser.Scale.ScaleManager;
 import {coWebsiteManager} from "../../WebRtc/CoWebsiteManager";
+import type {Game} from "../Game/Game";
 
 
 class WaScaleManager {
     private hdpiManager: HdpiManager;
     private scaleManager!: ScaleManager;
+    private game!: Game;
 
     public constructor(private minGamePixelsNumber: number, private absoluteMinPixelNumber: number) {
         this.hdpiManager = new HdpiManager(minGamePixelsNumber, absoluteMinPixelNumber);
     }
 
-    public setScaleManager(scaleManager: ScaleManager) {
-        this.scaleManager = scaleManager;
+    public setGame(game: Game): void {
+        this.scaleManager = game.scale;
+        this.game = game;
     }
 
     public applyNewSize() {
@@ -32,6 +35,8 @@ class WaScaleManager {
         const style = this.scaleManager.canvas.style;
         style.width = Math.ceil(realSize.width / devicePixelRatio) + 'px';
         style.height = Math.ceil(realSize.height / devicePixelRatio) + 'px';
+
+        this.game.markDirty();
     }
 
     public get zoomModifier(): number {
@@ -42,6 +47,7 @@ class WaScaleManager {
         this.hdpiManager.zoomModifier = zoomModifier;
         this.applyNewSize();
     }
+
 }
 
 export const waScaleManager = new WaScaleManager(640*480, 196*196);
