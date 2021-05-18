@@ -8,12 +8,7 @@ import {SelectCharacterSceneName} from "../Login/SelectCharacterScene";
 import {EnableCameraSceneName} from "../Login/EnableCameraScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 
-export interface HasMovedEvent {
-    direction: string;
-    moving: boolean;
-    x: number;
-    y: number;
-}
+
 
 /**
  * This class should be responsible for any scene starting/stopping

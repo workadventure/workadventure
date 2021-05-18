@@ -1,24 +1,25 @@
 
-
+import type { GameStateEvent } from './GameStateEvent';
 import type { ButtonClickedEvent } from './ButtonClickedEvent';
 import type { ChatEvent } from './ChatEvent';
 import type { ClosePopupEvent } from './ClosePopupEvent';
 import type { EnterLeaveEvent } from './EnterLeaveEvent';
 import type { GoToPageEvent } from './GoToPageEvent';
+import type { HasPlayerMovedEvent } from './HasPlayerMovedEvent';
 import type { OpenCoWebSiteEvent } from './OpenCoWebSiteEvent';
 import type { OpenPopupEvent } from './OpenPopupEvent';
 import type { OpenTabEvent } from './OpenTabEvent';
 import type { UserInputChatEvent } from './UserInputChatEvent';
+import type { HasDataLayerChangedEvent } from "./HasDataLayerChangedEvent";
 import type { LayerEvent } from './LayerEvent';
 import type { SetPropertyEvent } from "./setPropertyEvent";
-
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T
 }
 
 export type IframeEventMap = {
-    //getState: GameStateEvent,
+    getState: GameStateEvent,
     // updateTile: UpdateTileEvent
     chat: ChatEvent,
     openPopup: OpenPopupEvent
@@ -31,6 +32,8 @@ export type IframeEventMap = {
     restorePlayerControls: null
     displayBubble: null
     removeBubble: null
+    onPlayerMove: undefined
+    onDataLayerChange: undefined
     showLayer: LayerEvent
     hideLayer: LayerEvent
     setProperty: SetPropertyEvent
@@ -49,7 +52,9 @@ export interface IframeResponseEventMap {
     enterEvent: EnterLeaveEvent
     leaveEvent: EnterLeaveEvent
     buttonClickedEvent: ButtonClickedEvent
-    // gameState: GameStateEvent
+    gameState: GameStateEvent
+    hasPlayerMoved: HasPlayerMovedEvent
+    hasDataLayerChanged: HasDataLayerChangedEvent
 }
 export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
     type: T;

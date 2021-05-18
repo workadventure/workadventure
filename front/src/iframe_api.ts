@@ -1,5 +1,5 @@
 import type { ChatEvent } from "./Api/Events/ChatEvent";
-import { isIframeResponseEventWrapper } from "./Api/Events/IframeEvent";
+import { IframeEvent, IframeEventMap, isIframeResponseEventWrapper } from "./Api/Events/IframeEvent";
 import { isUserInputChatEvent, UserInputChatEvent } from "./Api/Events/UserInputChatEvent";
 import { Subject } from "rxjs";
 import { EnterLeaveEvent, isEnterLeaveEvent } from "./Api/Events/EnterLeaveEvent";
@@ -11,6 +11,9 @@ import type { GoToPageEvent } from "./Api/Events/GoToPageEvent";
 import type { OpenCoWebSiteEvent } from "./Api/Events/OpenCoWebSiteEvent";
 import type { LayerEvent } from "./Api/Events/LayerEvent";
 import type { SetPropertyEvent } from "./Api/Events/setPropertyEvent";
+import { GameStateEvent, isGameStateEvent } from './Api/Events/GameStateEvent';
+import { HasPlayerMovedEvent, HasPlayerMovedEventCallback, isHasPlayerMovedEvent } from './Api/Events/HasPlayerMovedEvent';
+import { HasDataLayerChangedEvent, HasDataLayerChangedEventCallback, isHasDataLayerChangedEvent} from "./Api/Events/HasDataLayerChangedEvent";
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
@@ -18,9 +21,9 @@ interface WorkAdventureApi {
     onEnterZone(name: string, callback: () => void): void;
     onLeaveZone(name: string, callback: () => void): void;
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup;
-    openTab(url : string): void;
-    goToPage(url : string): void;
-    openCoWebSite(url : string): void;
+    openTab(url: string): void;
+    goToPage(url: string): void;
+    openCoWebSite(url: string): void;
     closeCoWebSite(): void;
     disablePlayerControls() : void;
     restorePlayerControls() : void;
@@ -29,6 +32,18 @@ interface WorkAdventureApi {
     showLayer(layer: string) : void;
     hideLayer(layer: string) : void;
     setProperty(layerName: string, propertyName: string, propertyValue: string | number | boolean | undefined): void;
+    disablePlayerControls(): void;
+    restorePlayerControls(): void;
+    displayBubble(): void;
+    removeBubble(): void;
+    getMapUrl(): Promise<string>;
+    getUuid(): Promise<string | undefined>;
+    getRoomId(): Promise<string>;
+    getStartLayerName(): Promise<string | null>;
+
+
+    onPlayerMove(callback: (playerMovedEvent: HasPlayerMovedEvent) => void): void
+    onDataLayerChange(callback: (dataLayerChangedEvent: HasDataLayerChangedEvent) => void): void
 }
 
 declare global {
@@ -78,8 +93,82 @@ class Popup {
         }, '*');
     }
 }
+function uuidv4() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+function getGameState(): Promise<GameStateEvent> {
+    if (immutableData) {
+        return Promise.resolve(immutableData);
+    }
+    else {
+        return new Promise<GameStateEvent>((resolver, thrower) => {
+            stateResolvers.push(resolver);
+            window.parent.postMessage({
+                type: "getState"
+            }, "*")
+        })
+    }
+}
+
+const stateResolvers: Array<(event: GameStateEvent) => void> = []
+let immutableData: GameStateEvent;
+
+const callbackPlayerMoved: { [type: string]: HasPlayerMovedEventCallback | ((arg?: HasPlayerMovedEvent | never) => void) } = {}
+const callbackDataLayerChanged: { [type: string]: HasDataLayerChangedEventCallback | ((arg?: HasDataLayerChangedEvent | never) => void) } = {}
+
+
+function postToParent(content: IframeEvent<keyof IframeEventMap>) {
+    window.parent.postMessage(content, "*")
+}
+let playerUuid: string | undefined;
 
 window.WA = {
+
+    onPlayerMove(callback: HasPlayerMovedEventCallback): void {
+        playerUuid = uuidv4();
+        callbackPlayerMoved[playerUuid] = callback;
+        postToParent({
+            type: "onPlayerMove",
+            data: undefined
+        })
+    },
+
+    onDataLayerChange(callback: HasDataLayerChangedEventCallback): void {
+        callbackDataLayerChanged['test'] = callback;
+        postToParent({
+            type : "onDataLayerChange",
+            data: undefined
+        })
+    },
+
+
+    getMapUrl() {
+      return getGameState().then((res) => {
+          return res.mapUrl;
+      })
+    },
+
+    getUuid() {
+        return getGameState().then((res) => {
+            return res.uuid;
+        })
+    },
+
+    getRoomId() {
+        return getGameState().then((res) => {
+            return res.roomId;
+        })
+    },
+
+    getStartLayerName() {
+        return getGameState().then((res) => {
+            return res.startLayerName;
+        })
+    },
+
     /**
      * Send a message in the chat.
      * Only the local user will receive this message.
@@ -153,10 +242,10 @@ window.WA = {
         }, '*');
     },
 
-    openCoWebSite(url : string) : void{
+    openCoWebSite(url: string): void {
         window.parent.postMessage({
-            "type" : 'openCoWebSite',
-            "data" : {
+            "type": 'openCoWebSite',
+            "data": {
                 url
             } as OpenCoWebSiteEvent
         }, '*');
@@ -255,6 +344,15 @@ window.addEventListener('message', message => {
             if (callback) {
                 callback(popup);
             }
+        } else if (payload.type == "gameState" && isGameStateEvent(payloadData)) {
+            stateResolvers.forEach(resolver => {
+                resolver(payloadData);
+            })
+            immutableData = payloadData;
+        } else if (payload.type == "hasPlayerMoved" && isHasPlayerMovedEvent(payloadData) && playerUuid) {
+            callbackPlayerMoved[playerUuid](payloadData)
+        } else if (payload.type == "hasDataLayerChanged" && isHasDataLayerChangedEvent(payloadData)) {
+            callbackDataLayerChanged['test'](payloadData)
         }
 
     }
