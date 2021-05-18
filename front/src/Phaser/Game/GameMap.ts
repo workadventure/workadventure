@@ -1,5 +1,7 @@
 import type {ITiledMap, ITiledMapLayer, ITiledMapTileLayer} from "../Map/ITiledMap";
 import { flattenGroupLayersMap } from "../Map/LayersFlattener";
+import {iframeListener} from "../../Api/IframeListener";
+import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 
 export type PropertyChangeCallback = (newValue: string | number | boolean | undefined, oldValue: string | number | boolean | undefined, allProps: Map<string, string | boolean | number>) => void;
 
@@ -12,13 +14,14 @@ export class GameMap {
     private lastProperties = new Map<string, string|boolean|number>();
     private callbacks = new Map<string, Array<PropertyChangeCallback>>();
     public readonly flatLayers: ITiledMapLayer[];
+    public readonly phaserLayers: TilemapLayer[] = [];
 
     public constructor(private map: ITiledMap, phaserMap: Phaser.Tilemaps.Tilemap, terrains: Array<Phaser.Tilemaps.Tileset>) {
         this.flatLayers = flattenGroupLayersMap(map);
         let depth = -2;
         for (const layer of this.flatLayers) {
             if(layer.type === 'tilelayer'){
-                layer.phaserLayer = phaserMap.createLayer(layer.name, terrains, 0, 0).setDepth(depth);
+                this.phaserLayers.push(phaserMap.createLayer(layer.name, terrains, 0, 0).setDepth(depth));
             }
             if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
                 depth = 10000;
@@ -89,6 +92,10 @@ export class GameMap {
         return properties;
     }
 
+    public getMap(): ITiledMap{
+        return this.map;
+    }
+
     private trigger(propName: string, oldValue: string | number | boolean | undefined, newValue: string | number | boolean | undefined, allProps: Map<string, string | boolean | number>) {
         const callbacksArray = this.callbacks.get(propName);
         if (callbacksArray !== undefined) {
@@ -123,6 +130,23 @@ export class GameMap {
         }
         if (found) {
             return this.flatLayers[i];
+        }
+        return undefined;
+    }
+
+    public findPhaserLayer(layerName: string): TilemapLayer | undefined {
+        let i = 0;
+        let found = false;
+        while (!found && i<this.flatLayers.length) {
+            if (this.flatLayers[i].name === layerName) {
+                found = true;
+            }
+            else {
+                i++;
+            }
+        }
+        if (found) {
+            return this.phaserLayers[i];
         }
         return undefined;
     }

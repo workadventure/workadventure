@@ -13,7 +13,7 @@ import type { LayerEvent } from "./Api/Events/LayerEvent";
 import type { SetPropertyEvent } from "./Api/Events/setPropertyEvent";
 import { GameStateEvent, isGameStateEvent } from './Api/Events/GameStateEvent';
 import { HasPlayerMovedEvent, HasPlayerMovedEventCallback, isHasPlayerMovedEvent } from './Api/Events/HasPlayerMovedEvent';
-import { HasDataLayerChangedEvent, HasDataLayerChangedEventCallback, isHasDataLayerChangedEvent} from "./Api/Events/HasDataLayerChangedEvent";
+import { DataLayerEvent, isDataLayerEvent } from "./Api/Events/DataLayerEvent";
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
@@ -40,10 +40,11 @@ interface WorkAdventureApi {
     getUuid(): Promise<string | undefined>;
     getRoomId(): Promise<string>;
     getStartLayerName(): Promise<string | null>;
+    getNickName(): Promise<string | null>;
 
 
     onPlayerMove(callback: (playerMovedEvent: HasPlayerMovedEvent) => void): void
-    onDataLayerChange(callback: (dataLayerChangedEvent: HasDataLayerChangedEvent) => void): void
+    getDataLayer(): Promise<DataLayerEvent>
 }
 
 declare global {
@@ -105,7 +106,7 @@ function getGameState(): Promise<GameStateEvent> {
     }
     else {
         return new Promise<GameStateEvent>((resolver, thrower) => {
-            stateResolvers.push(resolver);
+            gameStateResolver.push(resolver);
             window.parent.postMessage({
                 type: "getState"
             }, "*")
@@ -113,11 +114,11 @@ function getGameState(): Promise<GameStateEvent> {
     }
 }
 
-const stateResolvers: Array<(event: GameStateEvent) => void> = []
+const gameStateResolver: Array<(event: GameStateEvent) => void> = []
+const dataLayerResolver: Array<(event: DataLayerEvent) => void> = []
 let immutableData: GameStateEvent;
 
 const callbackPlayerMoved: { [type: string]: HasPlayerMovedEventCallback | ((arg?: HasPlayerMovedEvent | never) => void) } = {}
-const callbackDataLayerChanged: { [type: string]: HasDataLayerChangedEventCallback | ((arg?: HasDataLayerChangedEvent | never) => void) } = {}
 
 
 function postToParent(content: IframeEvent<keyof IframeEventMap>) {
@@ -136,14 +137,21 @@ window.WA = {
         })
     },
 
-    onDataLayerChange(callback: HasDataLayerChangedEventCallback): void {
-        callbackDataLayerChanged['test'] = callback;
-        postToParent({
-            type : "onDataLayerChange",
-            data: undefined
+    getDataLayer(): Promise<DataLayerEvent> {
+        return new Promise<DataLayerEvent>((resolver, thrower) => {
+            dataLayerResolver.push(resolver);
+            postToParent({
+                type: "getDataLayer",
+                data: undefined
+            })
         })
     },
 
+    getNickName() {
+      return getGameState().then((res) => {
+          return res.nickname;
+      })
+    },
 
     getMapUrl() {
       return getGameState().then((res) => {
@@ -345,14 +353,16 @@ window.addEventListener('message', message => {
                 callback(popup);
             }
         } else if (payload.type == "gameState" && isGameStateEvent(payloadData)) {
-            stateResolvers.forEach(resolver => {
+            gameStateResolver.forEach(resolver => {
                 resolver(payloadData);
             })
             immutableData = payloadData;
         } else if (payload.type == "hasPlayerMoved" && isHasPlayerMovedEvent(payloadData) && playerUuid) {
             callbackPlayerMoved[playerUuid](payloadData)
-        } else if (payload.type == "hasDataLayerChanged" && isHasDataLayerChangedEvent(payloadData)) {
-            callbackDataLayerChanged['test'](payloadData)
+        } else if (payload.type == "dataLayer" && isDataLayerEvent(payloadData)) {
+            dataLayerResolver.forEach(resolver => {
+                resolver(payloadData);
+            })
         }
 
     }

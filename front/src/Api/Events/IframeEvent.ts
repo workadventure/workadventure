@@ -10,7 +10,7 @@ import type { OpenCoWebSiteEvent } from './OpenCoWebSiteEvent';
 import type { OpenPopupEvent } from './OpenPopupEvent';
 import type { OpenTabEvent } from './OpenTabEvent';
 import type { UserInputChatEvent } from './UserInputChatEvent';
-import type { HasDataLayerChangedEvent } from "./HasDataLayerChangedEvent";
+import type { DataLayerEvent } from "./DataLayerEvent";
 import type { LayerEvent } from './LayerEvent';
 import type { SetPropertyEvent } from "./setPropertyEvent";
 
@@ -37,6 +37,7 @@ export type IframeEventMap = {
     showLayer: LayerEvent
     hideLayer: LayerEvent
     setProperty: SetPropertyEvent
+    getDataLayer: undefined
 }
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;
@@ -54,7 +55,7 @@ export interface IframeResponseEventMap {
     buttonClickedEvent: ButtonClickedEvent
     gameState: GameStateEvent
     hasPlayerMoved: HasPlayerMovedEvent
-    hasDataLayerChanged: HasDataLayerChangedEvent
+    dataLayer: DataLayerEvent
 }
 export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
     type: T;

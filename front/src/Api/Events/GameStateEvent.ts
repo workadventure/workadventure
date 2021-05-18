@@ -18,6 +18,7 @@ export const isGameStateEvent =
     new tg.IsInterface().withProperties({
         roomId: tg.isString,
         mapUrl: tg.isString,
+        nickname: tg.isUnion(tg.isString, tg.isNull),
         uuid: tg.isUnion(tg.isString, tg.isUndefined),
         startLayerName: tg.isUnion(tg.isString, tg.isNull)
     }).get();

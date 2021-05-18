@@ -1,4 +1,4 @@
-import {gameManager, HasMovedEvent} from "./GameManager";
+import {gameManager} from "./GameManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
     MessageUserJoined,
@@ -91,9 +91,7 @@ import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
 import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
 import { waScaleManager } from "../Services/WaScaleManager";
-import { HasPlayerMovedEvent } from '../../Api/Events/HasPlayerMovedEvent';
-import {LayerEvent} from "../../Api/Events/LayerEvent";
-import {SetPropertyEvent} from "../../Api/Events/setPropertyEve
+import type { HasPlayerMovedEvent } from '../../Api/Events/HasPlayerMovedEvent';
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null,
@@ -869,6 +867,7 @@ ${escapedMessage}
                 mapUrl: this.MapUrlFile,
                 startLayerName: this.startLayerName,
                 uuid: localUserStore.getLocalUser()?.uuid,
+                nickname: localUserStore.getName(),
                 roomId: this.RoomId,
             })
         }));
@@ -896,6 +895,10 @@ ${escapedMessage}
             this.setPropertyLayer(setProperty.layerName, setProperty.propertyName, setProperty.propertyValue);
         }));
 
+        this.iframeSubscriptionList.push(iframeListener.dataLayerChangeStream.subscribe(() => {
+            iframeListener.sendDataLayerEvent({data: this.gameMap.getMap()});
+        }))
+
     }
 
     private setPropertyLayer(layerName: string, propertyName: string, propertyValue: string | number | boolean | undefined): void {
@@ -909,21 +912,21 @@ ${escapedMessage}
            layer.properties = [];
            layer.properties.push({name : propertyName, type : typeof propertyValue, value : propertyValue});
            return;
-        }
-        property.value = propertyValue;
+       }
+       property.value = propertyValue;
     }
 
     private setLayerVisibility(layerName: string, visible: boolean): void {
-        const layer = this.gameMap.findLayer(layerName);
-        if (layer === undefined) {
+        const phaserlayer = this.gameMap.findPhaserLayer(layerName);
+        if (phaserlayer === undefined) {
             console.warn('Could not find layer "' + layerName + '" when calling WA.hideLayer / WA.showLayer');
             return;
         }
-        if(layer.type != "tilelayer"){
+        if(phaserlayer.type != "tilelayer"){
             console.warn('The layer "' + layerName + '" is not a tilelayer. It can not be show/hide');
             return;
         }
-        layer.phaserLayer?.setVisible(visible);
+        phaserlayer.setVisible(visible);
         this.dirty = true;
     }
 
@@ -1131,18 +1134,15 @@ ${escapedMessage}
         this.physics.disableUpdate();
         this.physicsEnabled = false;
         //add collision layer
-        for (const Layer of this.gameMap.flatLayers) {
-            if (Layer.type == "tilelayer") {
-                if (Layer.phaserLayer === undefined) {
-                    throw new Error('phaserLayer of layer "' + Layer.name + '" is undefined');
-                }
-                this.physics.add.collider(this.CurrentPlayer, Layer.phaserLayer, (object1: GameObject, object2: GameObject) => {
+        for (const phaserLayer of this.gameMap.phaserLayers) {
+            if (phaserLayer.type == "tilelayer") {
+                this.physics.add.collider(this.CurrentPlayer, phaserLayer, (object1: GameObject, object2: GameObject) => {
                     //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
                 });
-                Layer.phaserLayer.setCollisionByProperty({collides: true});
+                phaserLayer.setCollisionByProperty({collides: true});
                 if (DEBUG_MODE) {
                     //debug code to see the collision hitbox of the object in the top layer
-                    Layer.phaserLayer.renderDebug(this.add.graphics(), {
+                    phaserLayer.renderDebug(this.add.graphics(), {
                         tileColor: null, //non-colliding tiles
                         collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles,
                         faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Colliding face edges

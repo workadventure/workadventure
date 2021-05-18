@@ -14,9 +14,8 @@ function flattenGroupLayers(layers : ITiledMapLayer[], prefix : string, flatLaye
         if (layer.type === 'group') {
             flattenGroupLayers(layer.layers, prefix + layer.name + '/', flatLayers);
         } else {
-            const layerWithNewName = { ...layer };
-            layerWithNewName.name = prefix+layerWithNewName.name;
-            flatLayers.push(layerWithNewName);
+            layer.name = prefix+layer.name
+            flatLayers.push(layer);
         }
     }
 }
