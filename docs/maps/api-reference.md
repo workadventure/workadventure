@@ -260,7 +260,101 @@ WA.setProperty(layerName : string, propertyName : string, propertyValue : string
 
 Set the value of the "propertyName" property of the layer "layerName" at "propertyValue". If the property doesn't exist, create the property "propertyName" and set the value of the property at "propertyValue".
 
+Example : 
+
 ```javascript
 WA.setProperty('wikiLayer', 'openWebsite', 'https://www.wikipedia.org/');
 ```
+
+### Listen player movement 
+
+```
+onPlayerMove(callback: HasPlayerMovedEventCallback): void;
+```
+Listens to the movement of the current user and calls the callback. Send a event when current user stop moving, change direction and every 200ms when moving in the same direction.
+
+The event has the following attributes :
+*   **moving (boolean):**  **true** when the current player is moving, **false** otherwise.
+*   **direction (string):** **"right"** | **"left"** | **"down"** | **"top"** the direction where the current player is moving.
+*   **x (number):** coordinate X of the current player.
+*    **y (number):** coordinate Y of the current player.
+
+**callback:** the function that will be called when the current player is moving. It contains the event.
+
+Exemple :
+```javascript
+WA.onPlayerMove(console.log);
+```
+
+### Getting the map
+
+```
+getMap(): Promise<ITiledMap>
+```
+
+Return a promise of an ITiledMap that contains the JSON file of the map plus the property set by a script.
+
+Example : 
+```javascript
+WA.getMap().then((data) => console.log(data.layers));
+```
+
+### Getting the url of the JSON file map
+
+```
+getMapUrl(): Promise<string>
+```
+
+Return a promise of the url of the JSON file map.
+
+Example : 
+```javascript
+WA.getMapUrl().then((mapUrl) => {console.log(mapUrl)});
+```
+
+### Getting the roomID
+```
+getRoomId(): Promise<string>
+```
+Return a promise of the ID of the current room.
+
+Example : 
+```javascript
+WA.getRoomId().then((roomId) => console.log(roomId));
+```
+
+### Getting the UUID of the current user
+```
+getUuid(): Promise<string | undefined>
+```
+Return a promise of the ID of the current user.
+
+Example :
+```javascript
+WA.getUuid().then((uuid) => {console.log(uuid)});
+```
+
+### Getting the nickname of the current user
+```
+getNickName(): Promise<string | null>
+```
+Return a promise of the nickname of the current user.
+
+Example :
+```javascript
+WA.getNickName().then((nickname) => {console.log(nickname)});
+```
+
+### Getting the name of the layer where the current user started (if other than start)
+```
+getStartLayerName(): Promise<string | null>
+```
+Return a promise of the name of the layer where the current user started if the name is different than "start".
+
+Example :
+```javascript
+WA.getStartLayerName().then((starLayerName) => {console.log(starLayerName)});
+```
+
+
 

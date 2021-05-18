@@ -14,6 +14,7 @@ import type { SetPropertyEvent } from "./Api/Events/setPropertyEvent";
 import { GameStateEvent, isGameStateEvent } from './Api/Events/GameStateEvent';
 import { HasPlayerMovedEvent, HasPlayerMovedEventCallback, isHasPlayerMovedEvent } from './Api/Events/HasPlayerMovedEvent';
 import { DataLayerEvent, isDataLayerEvent } from "./Api/Events/DataLayerEvent";
+import type {ITiledMap} from "./Phaser/Map/ITiledMap";
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
@@ -44,7 +45,7 @@ interface WorkAdventureApi {
 
 
     onPlayerMove(callback: (playerMovedEvent: HasPlayerMovedEvent) => void): void
-    getDataLayer(): Promise<DataLayerEvent>
+    getMap(): Promise<ITiledMap>
 }
 
 declare global {
@@ -114,6 +115,16 @@ function getGameState(): Promise<GameStateEvent> {
     }
 }
 
+function getDataLayer(): Promise<DataLayerEvent> {
+    return new Promise<DataLayerEvent>((resolver, thrower) => {
+        dataLayerResolver.push(resolver);
+        postToParent({
+            type: "getDataLayer",
+            data: undefined
+        })
+    })
+}
+
 const gameStateResolver: Array<(event: GameStateEvent) => void> = []
 const dataLayerResolver: Array<(event: DataLayerEvent) => void> = []
 let immutableData: GameStateEvent;
@@ -137,41 +148,38 @@ window.WA = {
         })
     },
 
-    getDataLayer(): Promise<DataLayerEvent> {
-        return new Promise<DataLayerEvent>((resolver, thrower) => {
-            dataLayerResolver.push(resolver);
-            postToParent({
-                type: "getDataLayer",
-                data: undefined
-            })
+
+    getMap(): Promise<ITiledMap> {
+        return getDataLayer().then((res) => {
+            return res.data as ITiledMap;
         })
     },
 
-    getNickName() {
+    getNickName(): Promise<string | null> {
       return getGameState().then((res) => {
           return res.nickname;
       })
     },
 
-    getMapUrl() {
+    getMapUrl(): Promise<string> {
       return getGameState().then((res) => {
           return res.mapUrl;
       })
     },
 
-    getUuid() {
+    getUuid(): Promise<string | undefined> {
         return getGameState().then((res) => {
             return res.uuid;
         })
     },
 
-    getRoomId() {
+    getRoomId(): Promise<string> {
         return getGameState().then((res) => {
             return res.roomId;
         })
     },
 
-    getStartLayerName() {
+    getStartLayerName(): Promise<string | null> {
         return getGameState().then((res) => {
             return res.startLayerName;
         })
