@@ -1,8 +1,8 @@
-import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
+import type {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
 import {createLoadingPromise} from "../Entity/PlayerTexturesLoadingManager";
 import {emoteEventStream} from "../../Connexion/EmoteEventStream";
-import {GameScene} from "./GameScene";
-import {RadialMenuItem} from "../Components/RadialMenu";
+import type {GameScene} from "./GameScene";
+import type {RadialMenuItem} from "../Components/RadialMenu";
 
 enum RegisteredEmoteTypes {
     short = 1,
@@ -56,11 +56,11 @@ export class EmoteManager {
             if (this.scene.anims.exists(getEmoteAnimName(textureKey))) {
                 return Promise.resolve(textureKey);
             }
-            const frameConfig = emoteDescriptor.type === RegisteredEmoteTypes.short ? {frames: [0,1,2]} : {frames : [0,1,2,3,4,5,6,7]};
+            const frameConfig = emoteDescriptor.type === RegisteredEmoteTypes.short ? {frames: [0,1,2,2]} : {frames : [0,1,2,3,4,]};
             this.scene.anims.create({
                 key: getEmoteAnimName(textureKey),
                 frames: this.scene.anims.generateFrameNumbers(textureKey, frameConfig),
-                frameRate: 3,
+                frameRate: 5,
                 repeat: 2,
             });
             return textureKey;

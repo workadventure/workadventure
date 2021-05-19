@@ -11,6 +11,7 @@ export class Player extends Character {
     private previousDirection: string = PlayerAnimationDirections.Down;
     private wasMoving: boolean = false;
     private emoteMenu: RadialMenu|null = null;
+    private updateListener: () => void;
 
     constructor(
         Scene: GameScene,
@@ -28,6 +29,14 @@ export class Player extends Character {
 
         //the current player model should be push away by other players to prevent conflict
         this.getBody().setImmovable(false);
+
+        this.updateListener = () => {
+            if (this.emoteMenu) {
+                this.emoteMenu.x = this.x;
+                this.emoteMenu.y = this.y;
+            }
+        };
+        this.scene.events.addListener('postupdate', this.updateListener);
     }
 
     moveUser(delta: number): void {
@@ -97,18 +106,22 @@ export class Player extends Character {
 
     openEmoteMenu(emotes:RadialMenuItem[]): void {
         this.cancelPreviousEmote();
-        this.emoteMenu = new RadialMenu(this.scene, 0, 0, emotes)
+        this.emoteMenu = new RadialMenu(this.scene, this.x, this.y, emotes)
         this.emoteMenu.on(RadialMenuClickEvent, (item: RadialMenuItem) => {
             this.closeEmoteMenu();
             this.emit(requestEmoteEventName, item.name);
             this.playEmote(item.name);
-        })
-        this.add(this.emoteMenu);
+        });
     }
     
     closeEmoteMenu(): void {
         if (!this.emoteMenu) return;
         this.emoteMenu.destroy();
         this.emoteMenu = null;
+    }
+    
+    destroy() {
+        this.scene.events.removeListener('postupdate', this.updateListener);
+        super.destroy();
     }
 }

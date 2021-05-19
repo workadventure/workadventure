@@ -74,9 +74,6 @@ export class SocketManager {
         clientEventsEmitter.registerToClientLeave((clientUUid: string, roomId: string) => {
             gaugeManager.decNbClientPerRoomGauge(roomId);
         });
-
-
-        //zoneMessageStream.stream.subscribe(myMessage);
     }
 
     public async handleJoinRoom(socket: UserSocket, joinRoomMessage: JoinRoomMessage): Promise<{ room: GameRoom; user: User }> {

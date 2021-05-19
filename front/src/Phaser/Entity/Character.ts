@@ -6,8 +6,9 @@ import Sprite = Phaser.GameObjects.Sprite;
 import {TextureError} from "../../Exception/TextureError";
 import {Companion} from "../Companion/Companion";
 import {getEmoteAnimName} from "../Game/EmoteManager";
-import {GameScene} from "../Game/GameScene";
+import type {GameScene} from "../Game/GameScene";
 import {DEPTH_INGAME_TEXT_INDEX} from "../Game/DepthIndexes";
+import {waScaleManager} from "../Services/WaScaleManager";
 
 const playerNameY = - 25;
 
@@ -19,7 +20,7 @@ interface AnimationData {
     frames : number[]
 }
 
-const interactiveRadius = 40;
+const interactiveRadius = 35;
 
 export abstract class Character extends Container {
     private bubble: SpeechBubble|null = null;
@@ -247,8 +248,9 @@ export abstract class Character extends Container {
         this.cancelPreviousEmote();
         
         this.playerName.setVisible(false);
-        this.emote = new Sprite(this.scene, 0,  -40, emoteKey, 1);
+        this.emote = new Sprite(this.scene, 0,  -30 - waScaleManager.uiScalingFactor * 10, emoteKey, 1);
         this.emote.setDepth(DEPTH_INGAME_TEXT_INDEX);
+        this.emote.setScale(waScaleManager.uiScalingFactor)
         this.add(this.emote);
         this.scene.sys.updateList.add(this.emote);
         this.emote.play(getEmoteAnimName(emoteKey));

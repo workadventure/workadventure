@@ -1,5 +1,6 @@
 import Sprite = Phaser.GameObjects.Sprite;
 import {DEPTH_UI_INDEX} from "../Game/DepthIndexes";
+import {waScaleManager} from "../Services/WaScaleManager";
 
 export interface RadialMenuItem {
     sprite: string,
@@ -7,16 +8,21 @@ export interface RadialMenuItem {
     name: string,
 }
 
-const menuRadius = 80;
+const menuRadius = 60;
 export const RadialMenuClickEvent = 'radialClick';
 
 export class RadialMenu extends Phaser.GameObjects.Container {
+    private resizeCallback: OmitThisParameter<() => void>;
     
     constructor(scene: Phaser.Scene, x: number, y: number, private items: RadialMenuItem[]) {
         super(scene, x, y);
         this.setDepth(DEPTH_UI_INDEX)
         this.scene.add.existing(this);
         this.initItems();
+
+        this.resize();
+        this.resizeCallback = this.resize.bind(this);
+        this.scene.scale.on(Phaser.Scale.Events.RESIZE, this.resizeCallback);
     }
     
     private initItems() {
@@ -54,5 +60,13 @@ export class RadialMenu extends Phaser.GameObjects.Container {
         const angle = 2 * Math.PI * index / itemsNumber;
         Phaser.Actions.RotateAroundDistance([image], {x: 0, y: 0}, angle, menuRadius);
     }
-    
+
+    private resize() {
+        this.setScale(waScaleManager.uiScalingFactor);
+    }
+
+    public destroy() {
+        this.scene.scale.removeListener(Phaser.Scale.Events.RESIZE, this.resizeCallback);
+        super.destroy();
+    }
 }
