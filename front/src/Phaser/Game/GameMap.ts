@@ -137,8 +137,8 @@ export class GameMap {
     public findPhaserLayer(layerName: string): TilemapLayer | undefined {
         let i = 0;
         let found = false;
-        while (!found && i<this.flatLayers.length) {
-            if (this.flatLayers[i].name === layerName) {
+        while (!found && i<this.phaserLayers.length) {
+            if (this.phaserLayers[i].layer.name === layerName) {
                 found = true;
             }
             else {

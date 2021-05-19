@@ -90,8 +90,10 @@ import { TextUtils } from "../Components/TextUtils";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
 import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
-import { waScaleManager } from "../Services/WaScaleManager";
+import { MenuScene, MenuSceneName } from '../Menu/MenuScene';
+import {waScaleManager } from "../Services/WaScaleManager";
 import type { HasPlayerMovedEvent } from '../../Api/Events/HasPlayerMovedEvent';
+
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null,
@@ -884,10 +886,12 @@ ${escapedMessage}
         }));
 
         this.iframeSubscriptionList.push(iframeListener.showLayerStream.subscribe((layerEvent)=>{
+            console.log('show');
             this.setLayerVisibility(layerEvent.name, true);
         }));
 
         this.iframeSubscriptionList.push(iframeListener.hideLayerStream.subscribe((layerEvent)=>{
+            console.log('hide');
             this.setLayerVisibility(layerEvent.name, false);
         }));
 
@@ -917,16 +921,12 @@ ${escapedMessage}
     }
 
     private setLayerVisibility(layerName: string, visible: boolean): void {
-        const phaserlayer = this.gameMap.findPhaserLayer(layerName);
-        if (phaserlayer === undefined) {
+        const phaserLayer = this.gameMap.findPhaserLayer(layerName);
+        if (phaserLayer === undefined) {
             console.warn('Could not find layer "' + layerName + '" when calling WA.hideLayer / WA.showLayer');
             return;
         }
-        if(phaserlayer.type != "tilelayer"){
-            console.warn('The layer "' + layerName + '" is not a tilelayer. It can not be show/hide');
-            return;
-        }
-        phaserlayer.setVisible(visible);
+        phaserLayer.setVisible(visible);
         this.dirty = true;
     }
 
@@ -941,6 +941,8 @@ ${escapedMessage}
         const {roomId, hash} = Room.getIdFromIdentifier(exitKey, this.MapUrlFile, this.instance);
         if (!roomId) throw new Error('Could not find the room from its exit key: '+exitKey);
         urlManager.pushStartLayerNameToUrl(hash);
+        const menuScene: MenuScene = this.scene.get(MenuSceneName) as MenuScene
+        menuScene.reset()
         if (roomId !== this.scene.key) {
             if (this.scene.get(roomId) === null) {
                 console.error("next room not loaded", exitKey);

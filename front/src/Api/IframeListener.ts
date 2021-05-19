@@ -17,7 +17,8 @@ import type { GameStateEvent } from './Events/GameStateEvent';
 import type { HasPlayerMovedEvent } from './Events/HasPlayerMovedEvent';
 import { Math } from 'phaser';
 import type { DataLayerEvent } from "./Events/DataLayerEvent";
-
+import { isMenuItemRegisterEvent } from './Events/MenuItemRegisterEvent';
+import type { MenuItemClickedEvent } from './Events/MenuItemClickedEvent';
 
 
 /**
@@ -74,6 +75,8 @@ class IframeListener {
     private readonly _dataLayerChangeStream: Subject<void> = new Subject();
     public readonly dataLayerChangeStream = this._dataLayerChangeStream.asObservable();
 
+    private readonly _registerMenuCommandStream: Subject<string> = new Subject();
+    public readonly registerMenuCommandStream = this._registerMenuCommandStream.asObservable();
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
     private sendPlayerMove: boolean = false;
@@ -140,6 +143,8 @@ class IframeListener {
                     this.sendPlayerMove = true
                 } else if (payload.type == "getDataLayer") {
                     this._dataLayerChangeStream.next();
+                } else if (payload.type == "registerMenuCommand" && isMenuItemRegisterEvent(payload.data)) {
+                    this._registerMenuCommandStream.next(payload.data.menutItem)
                 }
             }
         }, false);
@@ -235,6 +240,15 @@ class IframeListener {
         iframe.remove();
 
         this.scripts.delete(scriptUrl);
+    }
+
+    sendMenuClickedEvent(menuItem: string) {
+        this.postMessage({
+            'type': 'menuItemClicked',
+            'data': {
+                menuItem: menuItem,
+            } as MenuItemClickedEvent
+        });
     }
 
     sendUserInputChat(message: string) {
