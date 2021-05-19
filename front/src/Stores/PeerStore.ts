@@ -17,12 +17,16 @@ function createPeerStore() {
             set(users);
             simplePeer.registerPeerConnectionListener({
                 onConnect(user: UserSimplePeerInterface) {
-                    users.set(user.userId, user);
-                    set(users);
+                    update(users => {
+                        users.set(user.userId, user);
+                        return users;
+                    });
                 },
                 onDisconnect(userId: number) {
-                    users.delete(userId);
-                    set(users);
+                    update(users => {
+                        users.delete(userId);
+                        return users;
+                    });
                 }
             })
         }

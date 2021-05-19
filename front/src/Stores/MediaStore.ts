@@ -1,4 +1,4 @@
-import {derived, Readable, readable, writable, Writable} from "svelte/store";
+import {derived, get, Readable, readable, writable, Writable} from "svelte/store";
 import {peerStore} from "./PeerStore";
 import {localUserStore} from "../Connexion/LocalUserStore";
 import {ITiledMapGroupLayer, ITiledMapObjectLayer, ITiledMapTileLayer} from "../Phaser/Map/ITiledMap";
@@ -77,6 +77,40 @@ export const gameOverlayVisibilityStore = createGameOverlayVisibilityStore();
 export const enableCameraSceneVisibilityStore = createEnableCameraSceneVisibilityStore();
 
 /**
+ * A store that contains "true" if the webcam should be stopped for privacy reasons - i.e. if the the user left the the page while not in a discussion.
+ */
+function createPrivacyShutdownStore() {
+    let privacyEnabled = false;
+
+    const { subscribe, set, update } = writable(privacyEnabled);
+
+    visibilityStore.subscribe((isVisible) => {
+        if (!isVisible && get(peerStore).size === 0) {
+            privacyEnabled = true;
+            set(true);
+        }
+        if (isVisible) {
+            privacyEnabled = false;
+            set(false);
+        }
+    });
+
+    peerStore.subscribe((peers) => {
+        if (peers.size === 0 && get(visibilityStore) === false) {
+            privacyEnabled = true;
+            set(true);
+        }
+    });
+
+
+    return {
+        subscribe,
+    };
+}
+
+export const privacyShutdownStore = createPrivacyShutdownStore();
+
+/**
  * A store that contains video constraints.
  */
 function createVideoConstraintStore() {
@@ -87,21 +121,19 @@ function createVideoConstraintStore() {
         facingMode: "user",
         resizeMode: 'crop-and-scale',
         aspectRatio: 1.777777778
-    } as boolean|MediaTrackConstraints);
-
-    let selectedDeviceId = null;
+    } as MediaTrackConstraints);
 
     return {
         subscribe,
         setDeviceId: (deviceId: string) => update((constraints) => {
-            selectedDeviceId = deviceId;
-
-            if (typeof(constraints) === 'boolean') {
-                constraints = {}
-            }
             constraints.deviceId = {
-                exact: selectedDeviceId
+                exact: deviceId
             };
+
+            return constraints;
+        }),
+        setFrameRate: (frameRate: number) => update((constraints) => {
+            constraints.frameRate = { ideal: frameRate };
 
             return constraints;
         })
@@ -145,6 +177,9 @@ export const audioConstraintStore = createAudioConstraintStore();
 
 let timeout: NodeJS.Timeout;
 
+let previousComputedVideoConstraint: boolean|MediaTrackConstraints = false;
+let previousComputedAudioConstraint: boolean|MediaTrackConstraints = false;
+
 /**
  * A store containing the media constraints we want to apply.
  */
@@ -152,24 +187,23 @@ export const mediaStreamConstraintsStore = derived(
     [
         requestedCameraState,
         requestedMicrophoneState,
-        visibilityStore,
         gameOverlayVisibilityStore,
-        peerStore,
         enableCameraSceneVisibilityStore,
         videoConstraintStore,
         audioConstraintStore,
+        privacyShutdownStore,
     ], (
         [
             $requestedCameraState,
             $requestedMicrophoneState,
-            $visibilityStore,
             $gameOverlayVisibilityStore,
-            $peerStore,
             $enableCameraSceneVisibilityStore,
             $videoConstraintStore,
             $audioConstraintStore,
+            $privacyShutdownStore,
         ], set
     ) => {
+
     let currentVideoConstraint: boolean|MediaTrackConstraints = $videoConstraintStore;
     let currentAudioConstraint: boolean|MediaTrackConstraints = $audioConstraintStore;
 
@@ -197,22 +231,35 @@ export const mediaStreamConstraintsStore = derived(
         currentAudioConstraint = false;
     }
 
-    // Disable webcam if the game is not visible and we are talking to noone.
-    if ($visibilityStore === false && $peerStore.size === 0) {
+    // Disable webcam for privacy reasons (the game is not visible and we were talking to noone)
+    if ($privacyShutdownStore === true) {
         currentVideoConstraint = false;
     }
 
-    if (timeout) {
-        clearTimeout(timeout);
-    }
+    // Let's make the changes only if the new value is different from the old one.
+    if (previousComputedVideoConstraint != currentVideoConstraint || previousComputedAudioConstraint != currentAudioConstraint) {
+        previousComputedVideoConstraint = currentVideoConstraint;
+        previousComputedAudioConstraint = currentAudioConstraint;
+        // Let's copy the objects.
+        if (typeof previousComputedVideoConstraint !== 'boolean') {
+            previousComputedVideoConstraint = {...previousComputedVideoConstraint};
+        }
+        if (typeof previousComputedAudioConstraint !== 'boolean') {
+            previousComputedAudioConstraint = {...previousComputedAudioConstraint};
+        }
 
-    // Let's wait a little bit to avoid sending too many constraint changes.
-    timeout = setTimeout(() => {
-        set({
-            video: currentVideoConstraint,
-            audio: currentAudioConstraint,
-        });
-    }, 100)
+        if (timeout) {
+            clearTimeout(timeout);
+        }
+
+        // Let's wait a little bit to avoid sending too many constraint changes.
+        timeout = setTimeout(() => {
+            set({
+                video: currentVideoConstraint,
+                audio: currentAudioConstraint,
+            });
+        }, 100);
+    }
 }, {
     video: false,
     audio: false
@@ -289,6 +336,7 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
     }
 
     if (constraints.audio === false && constraints.video === false) {
+        currentStream = null;
         set({
             type: 'success',
             stream: null,
@@ -299,6 +347,8 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
 
     (async () => {
         try {
+            stopMicrophone();
+            stopCamera();
             currentStream = await navigator.mediaDevices.getUserMedia(constraints);
             set({
                 type: 'success',
@@ -357,4 +407,11 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
             }*/
         }
     })();
+});
+
+/**
+ * A store containing the real active media constrained (not the one requested by the user, but the one we got from the system)
+ */
+export const obtainedMediaConstraintStore = derived(localStreamStore, ($localStreamStore) => {
+    return $localStreamStore.constraints;
 });

@@ -5,6 +5,8 @@ import type {RoomConnection} from "../Connexion/RoomConnection";
 import {blackListManager} from "./BlackListManager";
 import type {Subscription} from "rxjs";
 import type {UserSimplePeerInterface} from "./SimplePeer";
+import {get} from "svelte/store";
+import {obtainedMediaConstraintStore} from "../Stores/MediaStore";
 
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
@@ -191,7 +193,7 @@ export class VideoPeer extends Peer {
     private pushVideoToRemoteUser() {
         try {
             const localStream: MediaStream | null = mediaManager.localStream;
-            this.write(new Buffer(JSON.stringify({type: MESSAGE_TYPE_CONSTRAINT, ...mediaManager.constraintsMedia})));
+            this.write(new Buffer(JSON.stringify({type: MESSAGE_TYPE_CONSTRAINT, ...get(obtainedMediaConstraintStore)})));
 
             if(!localStream){
                 return;

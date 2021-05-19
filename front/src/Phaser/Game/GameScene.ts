@@ -190,7 +190,6 @@ export class GameScene extends DirtyScene implements CenterListener {
     private originalMapUrl: string|undefined;
     private pinchManager: PinchManager|undefined;
     private mapTransitioning: boolean = false; //used to prevent transitions happenning at the same time.
-    private onVisibilityChangeCallback: () => void;
     private emoteManager!: EmoteManager;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
@@ -211,7 +210,6 @@ export class GameScene extends DirtyScene implements CenterListener {
         this.connectionAnswerPromise = new Promise<RoomJoinedMessageInterface>((resolve, reject): void => {
             this.connectionAnswerPromiseResolve = resolve;
         });
-        this.onVisibilityChangeCallback = this.onVisibilityChange.bind(this);
     }
 
     //hook preload scene
@@ -516,8 +514,6 @@ export class GameScene extends DirtyScene implements CenterListener {
             this.connect();
         }
 
-        document.addEventListener('visibilitychange', this.onVisibilityChangeCallback);
-
         this.emoteManager = new EmoteManager(this);
     }
 
@@ -641,7 +637,6 @@ export class GameScene extends DirtyScene implements CenterListener {
                         self.chatModeSprite.setVisible(false);
                         self.openChatIcon.setVisible(false);
                         audioManager.restoreVolume();
-                        self.onVisibilityChange();
                     }
                 }
             })
@@ -946,8 +941,6 @@ ${escapedMessage}
         for(const iframeEvents of this.iframeSubscriptionList){
             iframeEvents.unsubscribe();
         }
-
-        document.removeEventListener('visibilitychange', this.onVisibilityChangeCallback);
     }
 
     private removeAllRemotePlayers(): void {
@@ -1507,8 +1500,6 @@ ${escapedMessage}
         mediaManager.addTriggerCloseJitsiFrameButton('close-jisi',() => {
             this.stopJitsi();
         });
-
-        this.onVisibilityChange();
     }
 
     public stopJitsi(): void {
@@ -1517,7 +1508,6 @@ ${escapedMessage}
         mediaManager.showGameOverlay();
 
         mediaManager.removeTriggerCloseJitsiFrameButton('close-jisi');
-        this.onVisibilityChange();
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
@@ -1556,21 +1546,5 @@ ${escapedMessage}
     zoomByFactor(zoomFactor: number) {
         waScaleManager.zoomModifier *= zoomFactor;
         this.updateCameraOffset();
-    }
-
-    private onVisibilityChange(): void {
-        // If the overlay is not displayed, we are in Jitsi. We don't need the webcam.
-        if (!mediaManager.isGameOverlayVisible()) {
-            mediaManager.blurCamera();
-            return;
-        }
-
-        if (document.visibilityState === 'visible') {
-            mediaManager.focusCamera();
-        } else {
-            if (this.simplePeer.getNbConnections() === 0) {
-                mediaManager.blurCamera();
-            }
-        }
     }
 }
