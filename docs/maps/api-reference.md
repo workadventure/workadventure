@@ -356,5 +356,17 @@ Example :
 WA.getStartLayerName().then((starLayerName) => {console.log(starLayerName)});
 ```
 
+### Add a custom menu
+```
+registerMenuCommand(commandDescriptor: string, callback: (commandDescriptor: string) => void)
+```
+Add a custom menu named "commandDescriptor" in the menu that call the callback when clicked.
 
-
+Example :
+```javascript
+let chatbotEnabled = false
+WA.registerMenuCommand('help', () => {
+    chatbotEnabled = true;
+    WA.onChatMessage ...
+});
+```

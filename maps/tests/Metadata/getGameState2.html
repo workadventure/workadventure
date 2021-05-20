@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <script src="http://play.workadventure.localhost/iframe_api.js"></script>
+    </head>
+    <body>
+    	<button id="getStartLayer">StartLayer</button>
+    	<div id="startLayer"></div>
+
+    	<button id="getMapUrl">MapUrl</button>
+    	<div id="mapUrl"></div>
+    	
+    	<button id="getMap">MAP</button>
+    	<div id="map"></div>
+    	
+    	<script>
+    		document.getElementById('getStartLayer').onclick = () => {
+                WA.getStartLayerName().then((res) => {
+                	const startLayerDiv = document.createElement('p');
+					startLayerDiv.innerText = res;
+					document.getElementById('startLayer').append(startLayerDiv);
+                });
+            }
+
+            document.getElementById('getMapUrl').onclick = () => {
+                WA.getMapUrl().then((res) => {
+                	const mapUrlDiv = document.createElement('p');
+					mapUrlDiv.innerText = res;
+					document.getElementById('mapUrl').append(mapUrlDiv);
+                });
+            }
+
+            document.getElementById('getMap').onclick = () => {
+                WA.getMap().then((res) => {
+                	console.log(res);
+                });
+            }
+    	</script>
+    </body>
+</html>

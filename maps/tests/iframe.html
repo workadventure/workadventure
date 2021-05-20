@@ -12,31 +12,11 @@
         </script>
         <div id="chatSent"></div>
         <script>
-            let chatbotEnabled=false
-            WA.registerMenuCommand('help', () => {
-                chatbotEnabled=true;
-                WA.sendChatMessage("Bonjour Monsieur/Madame, Comment puis-je vous aider ?", 'Mr Robot');
-                WA.onChatMessage((message => {
-                    const chatDiv = document.createElement('p');
-                    chatDiv.innerText = 'Vous avez tapé : ' + message;
-                    document.getElementById('chatSent').append(chatDiv);
-                    WA.sendChatMessage('Votre message : "' + message + '" a bien ete recu. Merci de bien vouloir patienter pendant son traitement.', 'Mr ROBOT');
-                }));
-            });
-        </script>
-        <div>
-            <label for="show/hideLayer">Metadata Layer : </label><input type="checkbox" id="show/hideLayer" name="visible" value="show" checked>
-        </div>
-        <script>
-            document.getElementById('show/hideLayer').onclick = () => {
-                if (document.getElementById('show/hideLayer').checked) {
-                    WA.showLayer('Metadata');
-                }
-                else {
-                    WA.hideLayer('Metadata');
-                }
-            }
-            WA.setProperty('start', 'openWebsite', 'https://www.wikipedia.org/');
+            WA.onChatMessage((message => {
+                const chatDiv = document.createElement('p');
+                chatDiv.innerText = message;
+                document.getElementById('chatSent').append(chatDiv);
+            }));
         </script>
     </body>
 </html>
