@@ -598,4 +598,11 @@ export class RoomConnection implements RoomConnection {
     public isAdmin(): boolean {
         return this.hasTag('admin');
     }
+
+    public getAllTag() : string[] {
+        this.tags.push('TEST');
+        this.tags.push('TEST 2');
+        this.tags.push('TEST 3');
+        return this.tags;
+    }
 }

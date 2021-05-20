@@ -15,6 +15,7 @@ import type { UserInputChatEvent } from './UserInputChatEvent';
 import type { DataLayerEvent } from "./DataLayerEvent";
 import type { LayerEvent } from './LayerEvent';
 import type { SetPropertyEvent } from "./setPropertyEvent";
+import type { TagEvent } from "./TagEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T
@@ -36,11 +37,11 @@ export type IframeEventMap = {
     displayBubble: null
     removeBubble: null
     onPlayerMove: undefined
-    onDataLayerChange: undefined
     showLayer: LayerEvent
     hideLayer: LayerEvent
     setProperty: SetPropertyEvent
     getDataLayer: undefined
+    getTag: undefined
 }
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;
@@ -60,6 +61,7 @@ export interface IframeResponseEventMap {
     hasPlayerMoved: HasPlayerMovedEvent
     dataLayer: DataLayerEvent
     menuItemClicked: MenuItemClickedEvent
+    tagList: TagEvent
 }
 export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
     type: T;

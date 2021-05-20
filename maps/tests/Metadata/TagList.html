@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <script src="http://play.workadventure.localhost/iframe_api.js"></script>
+    </head>
+    <body>
+        <button id="getTagList">Get Tag List</button>
+        <script>
+            document.getElementById('getTagList').onclick = () => {
+                WA.getTagUser().then((res) => {
+                    const tagListDiv = document.createElement('p');
+                    tagListDiv.innerText = res;
+                    document.getElementById('tagList').append(tagListDiv);
+                })
+            }
+        </script>
+        <div id="tagList"></div>
+    </body>
+</html>

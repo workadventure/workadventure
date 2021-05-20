@@ -19,6 +19,7 @@ import { Math } from 'phaser';
 import type { DataLayerEvent } from "./Events/DataLayerEvent";
 import { isMenuItemRegisterEvent } from './Events/MenuItemRegisterEvent';
 import type { MenuItemClickedEvent } from './Events/MenuItemClickedEvent';
+import type { TagEvent } from "./Events/TagEvent";
 
 
 /**
@@ -77,6 +78,10 @@ class IframeListener {
 
     private readonly _registerMenuCommandStream: Subject<string> = new Subject();
     public readonly registerMenuCommandStream = this._registerMenuCommandStream.asObservable();
+
+    private readonly _tagListStream: Subject<string> = new Subject();
+    public readonly tagListStream = this._tagListStream.asObservable();
+
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
     private sendPlayerMove: boolean = false;
@@ -145,10 +150,19 @@ class IframeListener {
                     this._dataLayerChangeStream.next();
                 } else if (payload.type == "registerMenuCommand" && isMenuItemRegisterEvent(payload.data)) {
                     this._registerMenuCommandStream.next(payload.data.menutItem)
+                } else if (payload.type == "getTag") {
+                    this._tagListStream.next();
                 }
             }
         }, false);
 
+    }
+
+    sendUserTagList(tagList: TagEvent){
+        this.postMessage({
+            'type' : 'tagList',
+            'data' : tagList
+        })
     }
 
     sendDataLayerEvent(dataLayerEvent: DataLayerEvent) {

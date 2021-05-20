@@ -903,6 +903,13 @@ ${escapedMessage}
             iframeListener.sendDataLayerEvent({data: this.gameMap.getMap()});
         }))
 
+        this.iframeSubscriptionList.push(iframeListener.tagListStream.subscribe(()=> {
+            if (this.connection === undefined) {
+                return;
+            }
+            iframeListener.sendUserTagList({list: this.connection.getAllTag()});
+        }))
+
     }
 
     private setPropertyLayer(layerName: string, propertyName: string, propertyValue: string | number | boolean | undefined): void {

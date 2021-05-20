@@ -370,3 +370,18 @@ WA.registerMenuCommand('help', () => {
     WA.onChatMessage ...
 });
 ```
+
+### Getting the list of tags of the current user
+```
+getTagUser(): Promise<string[]>
+```
+
+Return the list of all the tags that has the current user. If the current user has no tag, return an empty list. If there is no connection with the room, return nothing.
+
+Example : 
+```javascript
+WA.getTagUser().then((tagList) => {
+    ...
+});
+```
+

@@ -17,6 +17,7 @@ import { DataLayerEvent, isDataLayerEvent } from "./Api/Events/DataLayerEvent";
 import type { ITiledMap } from "./Phaser/Map/ITiledMap";
 import type { MenuItemRegisterEvent } from "./Api/Events/MenuItemRegisterEvent";
 import { isMenuItemClickedEvent } from "./Api/Events/MenuItemClickedEvent";
+import {TagEvent, isTagEvent} from "./Api/Events/TagEvent";
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
@@ -45,10 +46,10 @@ interface WorkAdventureApi {
     getRoomId(): Promise<string>;
     getStartLayerName(): Promise<string | null>;
     getNickName(): Promise<string | null>;
-
+    getTagUser(): Promise<string[]>;
+    getMap(): Promise<ITiledMap>
 
     onPlayerMove(callback: (playerMovedEvent: HasPlayerMovedEvent) => void): void
-    getMap(): Promise<ITiledMap>
 }
 
 declare global {
@@ -128,8 +129,19 @@ function getDataLayer(): Promise<DataLayerEvent> {
     })
 }
 
+function getTag(): Promise<TagEvent> {
+    return new Promise<TagEvent>((resolver, thrower) => {
+        tagResolver.push((resolver));
+        postToParent({
+            type: "getTag",
+            data: undefined
+        })
+    })
+}
+
 const gameStateResolver: Array<(event: GameStateEvent) => void> = []
 const dataLayerResolver: Array<(event: DataLayerEvent) => void> = []
+const tagResolver: Array<(event : TagEvent) => void> = []
 let immutableData: GameStateEvent;
 
 const callbackPlayerMoved: { [type: string]: HasPlayerMovedEventCallback | ((arg?: HasPlayerMovedEvent | never) => void) } = {}
@@ -151,6 +163,11 @@ window.WA = {
         })
     },
 
+    getTagUser(): Promise<string[]> {
+        return getTag().then((res) => {
+            return res.list;
+        })
+    },
 
     getMap(): Promise<ITiledMap> {
         return getDataLayer().then((res) => {
@@ -388,6 +405,12 @@ window.addEventListener('message', message => {
             const callback = menuCallbacks.get(payload.data.menuItem);
             if (callback) {
                 callback(payload.data.menuItem)
+            }
+        } else {
+            if (payload.type == "tagList" && isTagEvent(payloadData)) {
+                tagResolver.forEach(resolver => {
+                    resolver(payloadData);
+                })
             }
         }
     }
