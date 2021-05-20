@@ -143,6 +143,11 @@ body .message-info.warning{
     bottom: 30px;
     border-radius: 15px 15px 15px 15px;
     max-height: 20%;
+    transition: right 350ms;
+}
+
+#div-myCamVideo.hide {
+    right: -20vw;
 }
 
 video#myCamVideo{
@@ -216,7 +221,6 @@ video#myCamVideo{
     border-radius: 48px;
     transform: translateY(20px);
     transition-timing-function: ease-in-out;
-    margin-bottom: 20px;
     margin: 0 4%;
 }
 .btn-cam-action div.disabled {

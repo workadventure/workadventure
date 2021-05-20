@@ -2,6 +2,8 @@ import {derived, get, Readable, readable, writable, Writable} from "svelte/store
 import {peerStore} from "./PeerStore";
 import {localUserStore} from "../Connexion/LocalUserStore";
 import {ITiledMapGroupLayer, ITiledMapObjectLayer, ITiledMapTileLayer} from "../Phaser/Map/ITiledMap";
+import {userMovingStore} from "./GameStore";
+import {HtmlUtils} from "../WebRtc/HtmlUtils";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -110,6 +112,108 @@ function createPrivacyShutdownStore() {
 
 export const privacyShutdownStore = createPrivacyShutdownStore();
 
+
+/**
+ * A store containing whether the webcam was enabled in the last 10 seconds
+ */
+const enabledWebCam10secondsAgoStore = readable(false, function start(set) {
+    let timeout: NodeJS.Timeout|null = null;
+
+    const unsubscribe = requestedCameraState.subscribe((enabled) => {
+        if (enabled === true) {
+            if (timeout) {
+                clearTimeout(timeout);
+            }
+            timeout = setTimeout(() => {
+                set(false);
+            }, 10000);
+            set(true);
+        } else {
+            set(false);
+        }
+    })
+
+    return function stop() {
+        unsubscribe();
+    };
+});
+
+/**
+ * A store containing whether the webcam was enabled in the last 5 seconds
+ */
+const userMoved5SecondsAgoStore = readable(false, function start(set) {
+    let timeout: NodeJS.Timeout|null = null;
+
+    const unsubscribe = userMovingStore.subscribe((moving) => {
+        if (moving === true) {
+            if (timeout) {
+                clearTimeout(timeout);
+            }
+            set(true);
+        } else {
+            timeout = setTimeout(() => {
+                set(false);
+            }, 5000);
+
+        }
+    })
+
+    return function stop() {
+        unsubscribe();
+    };
+});
+
+
+/**
+ * A store containing whether the current page is visible or not.
+ */
+const mouseInBottomRight = readable(false, function start(set) {
+    let lastInBottomRight = false;
+    const gameDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('game');
+
+    const detectInBottomRight = (event: MouseEvent) => {
+        // TODO: not relative to window but to canvas!!!
+        // use phaser?
+        const rect = gameDiv.getBoundingClientRect();
+        const inBottomRight = event.x - rect.left > rect.width * 3 / 4 && event.y - rect.top > rect.height * 3 / 4;
+        if (inBottomRight !== lastInBottomRight) {
+            lastInBottomRight = inBottomRight;
+            set(inBottomRight);
+        }
+    };
+
+    document.addEventListener('mousemove', detectInBottomRight);
+
+    return function stop() {
+        document.removeEventListener('mousemove', detectInBottomRight);
+    }
+    /*const mouseEnter = () => {
+        set(true);
+        console.log('enter')
+    }
+    const mouseLeave = () => set(false);
+    const bottomLeftZone = HtmlUtils.getElementByIdOrFail('bottom-left-zone');
+
+    bottomLeftZone.addEventListener('mouseenter', mouseEnter);
+    bottomLeftZone.addEventListener('mouseleave', mouseLeave);
+
+    return function stop() {
+        bottomLeftZone.removeEventListener('mouseenter', mouseEnter);
+        bottomLeftZone.removeEventListener('mouseleave', mouseLeave);
+    };*/
+});
+
+/**
+ * A store that contains "true" if the webcam should be stopped for energy efficiency reason - i.e. we are not moving and not in a conversation.
+ */
+export const cameraEnergySavingStore = derived([userMoved5SecondsAgoStore, peerStore, enabledWebCam10secondsAgoStore, mouseInBottomRight], ([$userMoved5SecondsAgoStore,$peerStore, $enabledWebCam10secondsAgoStore, $mouseInBottomRight]) => {
+
+    // TODO: enable when mouse is hovering near the webcam
+    // TODO: add animation to show/hide webcam
+
+    return !$mouseInBottomRight && !$userMoved5SecondsAgoStore && $peerStore.size === 0 && !$enabledWebCam10secondsAgoStore;
+});
+
 /**
  * A store that contains video constraints.
  */
@@ -192,6 +296,7 @@ export const mediaStreamConstraintsStore = derived(
         videoConstraintStore,
         audioConstraintStore,
         privacyShutdownStore,
+        cameraEnergySavingStore,
     ], (
         [
             $requestedCameraState,
@@ -201,6 +306,7 @@ export const mediaStreamConstraintsStore = derived(
             $videoConstraintStore,
             $audioConstraintStore,
             $privacyShutdownStore,
+            $cameraEnergySavingStore,
         ], set
     ) => {
 
@@ -234,6 +340,12 @@ export const mediaStreamConstraintsStore = derived(
     // Disable webcam for privacy reasons (the game is not visible and we were talking to noone)
     if ($privacyShutdownStore === true) {
         currentVideoConstraint = false;
+    }
+
+    // Disable webcam for energy reasons (the user is not moving and we are talking to noone)
+    if ($cameraEnergySavingStore === true) {
+        currentVideoConstraint = false;
+        currentAudioConstraint = false;
     }
 
     // Let's make the changes only if the new value is different from the old one.
@@ -415,3 +527,4 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
 export const obtainedMediaConstraintStore = derived(localStreamStore, ($localStreamStore) => {
     return $localStreamStore.constraints;
 });
+

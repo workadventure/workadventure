@@ -2,6 +2,7 @@ import {PlayerAnimationDirections} from "./Animation";
 import type {GameScene} from "../Game/GameScene";
 import {UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
 import {Character} from "../Entity/Character";
+import {userMovingStore} from "../../Stores/GameStore";
 import {RadialMenu, RadialMenuClickEvent, RadialMenuItem} from "../Components/RadialMenu";
 
 export const hasMovedEventName = "hasMoved";
@@ -86,6 +87,7 @@ export class Player extends Character {
             this.previousDirection = direction;
         }
         this.wasMoving = moving;
+        userMovingStore.set(moving);
     }
 
     public isMoving(): boolean {
@@ -99,7 +101,7 @@ export class Player extends Character {
             this.openEmoteMenu(emotes);
         }
     }
-    
+
     isClickable(): boolean {
         return true;
     }
@@ -113,13 +115,13 @@ export class Player extends Character {
             this.playEmote(item.name);
         });
     }
-    
+
     closeEmoteMenu(): void {
         if (!this.emoteMenu) return;
         this.emoteMenu.destroy();
         this.emoteMenu = null;
     }
-    
+
     destroy() {
         this.scene.events.removeListener('postupdate', this.updateListener);
         super.destroy();

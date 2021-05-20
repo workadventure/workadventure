@@ -142,21 +142,36 @@ export class MediaManager {
             }
 
             if (result.constraints.video !== false) {
-                this.enableCameraStyle();
+                HtmlUtils.getElementByIdOrFail('div-myCamVideo').classList.remove('hide');
             } else {
-                this.disableCameraStyle();
-            }
+                HtmlUtils.getElementByIdOrFail('div-myCamVideo').classList.add('hide');
+            }/*
             if (result.constraints.audio !== false) {
                 this.enableMicrophoneStyle();
             } else {
                 this.disableMicrophoneStyle();
-            }
+            }*/
 
             this.localStream = result.stream;
             this.myCamVideo.srcObject = this.localStream;
 
             // TODO: migrate all listeners to the store directly.
             this.triggerUpdatedLocalStreamCallbacks(result.stream);
+        });
+
+        requestedCameraState.subscribe((enabled) => {
+            if (enabled) {
+                this.enableCameraStyle();
+            } else {
+                this.disableCameraStyle();
+            }
+        });
+        requestedMicrophoneState.subscribe((enabled) => {
+            if (enabled) {
+                this.enableMicrophoneStyle();
+            } else {
+                this.disableMicrophoneStyle();
+            }
         });
     }
 
