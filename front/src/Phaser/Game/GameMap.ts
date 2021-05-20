@@ -1,6 +1,5 @@
 import type {ITiledMap, ITiledMapLayer, ITiledMapTileLayer} from "../Map/ITiledMap";
 import { flattenGroupLayersMap } from "../Map/LayersFlattener";
-import {iframeListener} from "../../Api/IframeListener";
 import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 
 export type PropertyChangeCallback = (newValue: string | number | boolean | undefined, oldValue: string | number | boolean | undefined, allProps: Map<string, string | boolean | number>) => void;
@@ -149,6 +148,13 @@ export class GameMap {
             return this.phaserLayers[i];
         }
         return undefined;
+    }
+
+    public addTerrain(terrain : Phaser.Tilemaps.Tileset): void {
+        console.log('Add');
+        for (const phaserLayer of this.phaserLayers) {
+            phaserLayer.tileset.push(terrain);
+        }
     }
 
 }

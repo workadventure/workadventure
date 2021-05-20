@@ -20,6 +20,7 @@ import type { DataLayerEvent } from "./Events/DataLayerEvent";
 import { isMenuItemRegisterEvent } from './Events/MenuItemRegisterEvent';
 import type { MenuItemClickedEvent } from './Events/MenuItemClickedEvent';
 import type { TagEvent } from "./Events/TagEvent";
+import { isTilesetEvent, TilesetEvent } from "./Events/TilesetEvent";
 
 
 /**
@@ -79,8 +80,11 @@ class IframeListener {
     private readonly _registerMenuCommandStream: Subject<string> = new Subject();
     public readonly registerMenuCommandStream = this._registerMenuCommandStream.asObservable();
 
-    private readonly _tagListStream: Subject<string> = new Subject();
+    private readonly _tagListStream: Subject<void> = new Subject();
     public readonly tagListStream = this._tagListStream.asObservable();
+
+    private readonly _tilesetLoaderStream: Subject<TilesetEvent> =  new Subject();
+    public readonly tilesetLoaderStream = this._tilesetLoaderStream.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
@@ -152,6 +156,8 @@ class IframeListener {
                     this._registerMenuCommandStream.next(payload.data.menutItem)
                 } else if (payload.type == "getTag") {
                     this._tagListStream.next();
+                } else if (payload.type == "tilsetEvent" && isTilesetEvent(payload.data)) {
+                    this._tilesetLoaderStream.next(payload.data);
                 }
             }
         }, false);

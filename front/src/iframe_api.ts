@@ -18,6 +18,7 @@ import type { ITiledMap } from "./Phaser/Map/ITiledMap";
 import type { MenuItemRegisterEvent } from "./Api/Events/MenuItemRegisterEvent";
 import { isMenuItemClickedEvent } from "./Api/Events/MenuItemClickedEvent";
 import {TagEvent, isTagEvent} from "./Api/Events/TagEvent";
+import type { TilesetEvent } from "./Api/Events/TilesetEvent";
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
@@ -48,6 +49,7 @@ interface WorkAdventureApi {
     getNickName(): Promise<string | null>;
     getTagUser(): Promise<string[]>;
     getMap(): Promise<ITiledMap>
+    loadTileset(name: string, imgUrl : string, tilewidth : number, tileheight : number, margin : number, spacing : number): void;
 
     onPlayerMove(callback: (playerMovedEvent: HasPlayerMovedEvent) => void): void
 }
@@ -160,6 +162,20 @@ window.WA = {
         postToParent({
             type: "onPlayerMove",
             data: undefined
+        })
+    },
+
+    loadTileset(name: string, imgUrl : string, tilewidth : number, tileheight : number, margin : number, spacing : number): void {
+        postToParent({
+            type: "tilsetEvent",
+            data: {
+                name: name,
+                imgUrl: imgUrl,
+                tilewidth: tilewidth,
+                tileheight: tileheight,
+                margin: margin,
+                spacing: spacing
+            } as TilesetEvent
         })
     },
 
