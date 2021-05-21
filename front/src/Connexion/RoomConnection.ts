@@ -149,7 +149,7 @@ export class RoomConnection implements RoomConnection {
                         payload = subMessage.getItemeventmessage();
                     } else if (subMessage.hasEmoteeventmessage()) {
                         const emoteMessage = subMessage.getEmoteeventmessage() as EmoteEventMessage;
-                        emoteEventStream.onMessage(emoteMessage.getActoruserid(), emoteMessage.getEmote());
+                        emoteEventStream.fire(emoteMessage.getActoruserid(), emoteMessage.getEmote());
                     } else {
                         throw new Error('Unexpected batch message type');
                     }

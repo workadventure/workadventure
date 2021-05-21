@@ -68,6 +68,7 @@ export class SocketManager {
     private rooms: Map<string, GameRoom> = new Map<string, GameRoom>();
 
     constructor() {
+        
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
             gaugeManager.incNbClientPerRoomGauge(roomId);
         });

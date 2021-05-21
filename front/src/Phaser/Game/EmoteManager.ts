@@ -1,38 +1,30 @@
 import type {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
-import {createLoadingPromise} from "../Entity/PlayerTexturesLoadingManager";
 import {emoteEventStream} from "../../Connexion/EmoteEventStream";
 import type {GameScene} from "./GameScene";
 import type {RadialMenuItem} from "../Components/RadialMenu";
+import LoaderPlugin = Phaser.Loader.LoaderPlugin;
+import type {Subscription} from "rxjs";
 
-enum RegisteredEmoteTypes {
-    short = 1,
-    long = 2,
-}
 
 interface RegisteredEmote extends BodyResourceDescriptionInterface {
     name: string;
     img: string;
-    type: RegisteredEmoteTypes
 }
 
-//the last 3 emotes are courtesy of @tabascoeye
 export const emotes: {[key: string]: RegisteredEmote} = {
-    'emote-exclamation': {name: 'emote-exclamation', img: 'resources/emotes/pipo-popupemotes001.png', type: RegisteredEmoteTypes.short, },
-    'emote-interrogation': {name: 'emote-interrogation', img: 'resources/emotes/pipo-popupemotes002.png', type: RegisteredEmoteTypes.short},
-    'emote-sleep': {name: 'emote-sleep', img: 'resources/emotes/pipo-popupemotes021.png', type: RegisteredEmoteTypes.short},
-    'emote-clap': {name: 'emote-clap', img: 'resources/emotes/taba-clap-emote.png', type: RegisteredEmoteTypes.short},
-    'emote-thumbsdown': {name: 'emote-thumbsdown', img: 'resources/emotes/taba-thumbsdown-emote.png', type: RegisteredEmoteTypes.long},
-    'emote-thumbsup': {name: 'emote-thumbsup', img: 'resources/emotes/taba-thumbsup-emote.png', type: RegisteredEmoteTypes.long},
+    'emote-heart': {name: 'emote-heart', img: 'resources/emotes/heart-emote.png'},
+    'emote-clap': {name: 'emote-clap', img: 'resources/emotes/clap-emote.png'},
+    'emote-hand': {name: 'emote-hand', img: 'resources/emotes/hand-emote.png'},
+    'emote-thanks': {name: 'emote-thanks', img: 'resources/emotes/thanks-emote.png'},
+    'emote-thumb-up': {name: 'emote-thumb-up', img: 'resources/emotes/thumb-up-emote.png'},
+    'emote-thumb-down': {name: 'emote-thumb-down', img: 'resources/emotes/thumb-down-emote.png'},
 };
 
-export const getEmoteAnimName = (emoteKey: string): string => {
-    return 'anim-'+emoteKey;
-}
-
 export class EmoteManager {
+    private subscription: Subscription;
     
     constructor(private scene: GameScene) {
-        emoteEventStream.stream.subscribe((event) => {
+        this.subscription = emoteEventStream.stream.subscribe((event) => {
             const actor = this.scene.MapPlayersByKey.get(event.userId);
             if (actor) {
                 this.lazyLoadEmoteTexture(event.emoteName).then(emoteKey => {
@@ -41,45 +33,41 @@ export class EmoteManager {
             }
         })
     }
+    createLoadingPromise(loadPlugin: LoaderPlugin, playerResourceDescriptor: BodyResourceDescriptionInterface) {
+        return new Promise<string>((res) => {
+            if (loadPlugin.textureManager.exists(playerResourceDescriptor.name)) {
+                return res(playerResourceDescriptor.name);
+            }
+            loadPlugin.image(playerResourceDescriptor.name, playerResourceDescriptor.img);
+            loadPlugin.once('filecomplete-image-' + playerResourceDescriptor.name, () => res(playerResourceDescriptor.name));
+        });
+    }
     
     lazyLoadEmoteTexture(textureKey: string): Promise<string> {
         const emoteDescriptor = emotes[textureKey];
         if (emoteDescriptor === undefined) {
             throw 'Emote not found!';
         }
-        const loadPromise = createLoadingPromise(this.scene.load, emoteDescriptor, {
-            frameWidth: 32,
-            frameHeight: 32,
-        });
+        const loadPromise = this.createLoadingPromise(this.scene.load, emoteDescriptor);
         this.scene.load.start();
-        return loadPromise.then(() => {
-            if (this.scene.anims.exists(getEmoteAnimName(textureKey))) {
-                return Promise.resolve(textureKey);
-            }
-            const frameConfig = emoteDescriptor.type === RegisteredEmoteTypes.short ? {frames: [0,1,2,2]} : {frames : [0,1,2,3,4,]};
-            this.scene.anims.create({
-                key: getEmoteAnimName(textureKey),
-                frames: this.scene.anims.generateFrameNumbers(textureKey, frameConfig),
-                frameRate: 5,
-                repeat: 2,
-            });
-            return textureKey;
-        });
+        return loadPromise
     }
     
     getMenuImages(): Promise<RadialMenuItem[]> {
         const promises = [];
         for (const key in emotes) {
             const promise = this.lazyLoadEmoteTexture(key).then((textureKey) => {
-                const emoteDescriptor = emotes[textureKey];
                 return {
-                    sprite: textureKey,
+                    image: textureKey,
                     name: textureKey,
-                    frame: emoteDescriptor.type === RegisteredEmoteTypes.short ? 1 : 4,
                 }
             });
             promises.push(promise);
         }
         return Promise.all(promises);
+    }
+    
+    destroy() {
+        this.subscription.unsubscribe();
     }
 }

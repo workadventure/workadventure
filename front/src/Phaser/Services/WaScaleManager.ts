@@ -54,7 +54,7 @@ class WaScaleManager {
      * This is used to scale back the ui components to counter-act the zoom.
      */
     public get uiScalingFactor(): number {
-        return this.actualZoom > 1 ? 1 : 2;
+        return this.actualZoom > 1 ? 1 : 1.2;
     }
 
 }

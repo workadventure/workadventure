@@ -11,7 +11,7 @@ class EmoteEventStream {
     public stream = this._stream.asObservable();
 
 
-    onMessage(userId: number, emoteName:string) {
+    fire(userId: number, emoteName:string) {
         this._stream.next({userId, emoteName});
     }
 }

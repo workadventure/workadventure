@@ -5,7 +5,6 @@ import Container = Phaser.GameObjects.Container;
 import Sprite = Phaser.GameObjects.Sprite;
 import {TextureError} from "../../Exception/TextureError";
 import {Companion} from "../Companion/Companion";
-import {getEmoteAnimName} from "../Game/EmoteManager";
 import type {GameScene} from "../Game/GameScene";
 import {DEPTH_INGAME_TEXT_INDEX} from "../Game/DepthIndexes";
 import {waScaleManager} from "../Services/WaScaleManager";
@@ -32,6 +31,7 @@ export abstract class Character extends Container {
     private invisible: boolean;
     public companion?: Companion;
     private emote: Phaser.GameObjects.Sprite | null = null;
+    private emoteTween: Phaser.Tweens.Tween|null = null;
 
     constructor(scene: GameScene,
                 x: number,
@@ -246,24 +246,76 @@ export abstract class Character extends Container {
     
     playEmote(emoteKey: string) {
         this.cancelPreviousEmote();
+
+        const scalingFactor = waScaleManager.uiScalingFactor * 0.05;
+        const emoteY = -30 - scalingFactor * 10;
         
         this.playerName.setVisible(false);
-        this.emote = new Sprite(this.scene, 0,  -30 - waScaleManager.uiScalingFactor * 10, emoteKey, 1);
-        this.emote.setDepth(DEPTH_INGAME_TEXT_INDEX);
-        this.emote.setScale(waScaleManager.uiScalingFactor)
+        this.emote = new Sprite(this.scene, 0,  0, emoteKey);
+        this.emote.setAlpha(0);
+        this.emote.setScale(0.1 * scalingFactor);
         this.add(this.emote);
         this.scene.sys.updateList.add(this.emote);
-        this.emote.play(getEmoteAnimName(emoteKey));
-        this.emote.on(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
-            this.emote?.destroy();
-            this.emote = null;
-            this.playerName.setVisible(true);
+        
+        this.createStartTransition(scalingFactor, emoteY);
+    }
+
+    private createStartTransition(scalingFactor: number, emoteY: number) {
+        this.emoteTween = this.scene.tweens.add({
+            targets: this.emote,
+            props: {
+                scale: scalingFactor,
+                alpha: 1,
+                y: emoteY,
+            },
+            ease: 'Power2',
+            duration: 500,
+            onComplete: () => {
+                this.startPulseTransition(emoteY, scalingFactor);
+            }
+        });
+    }
+
+    private startPulseTransition(emoteY: number, scalingFactor: number) {
+        this.emoteTween = this.scene.tweens.add({
+            targets: this.emote,
+            props: {
+                y: emoteY * 1.3,
+                scale: scalingFactor * 1.1
+            },
+            duration: 250,
+            yoyo: true,
+            repeat: 1,
+            completeDelay: 200,
+            onComplete: () => {
+                this.startExitTransition(emoteY);
+            }
+        });
+    }
+
+    private startExitTransition(emoteY: number) {
+        this.emoteTween = this.scene.tweens.add({
+            targets: this.emote,
+            props: {
+                alpha: 0,
+                y: 2 * emoteY,
+            },
+            ease: 'Power2',
+            duration: 500,
+            onComplete: () => {
+                this.destroyEmote();
+            }
         });
     }
 
     cancelPreviousEmote() {
         if (!this.emote) return;
 
+        this.emoteTween?.remove();
+        this.destroyEmote()
+    }
+
+    private destroyEmote() {
         this.emote?.destroy();
         this.emote = null;
         this.playerName.setVisible(true);

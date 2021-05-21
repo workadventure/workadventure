@@ -3,12 +3,10 @@ import {DEPTH_UI_INDEX} from "../Game/DepthIndexes";
 import {waScaleManager} from "../Services/WaScaleManager";
 
 export interface RadialMenuItem {
-    sprite: string,
-    frame: number,
+    image: string,
     name: string,
 }
 
-const menuRadius = 60;
 export const RadialMenuClickEvent = 'radialClick';
 
 export class RadialMenu extends Phaser.GameObjects.Container {
@@ -27,24 +25,26 @@ export class RadialMenu extends Phaser.GameObjects.Container {
     
     private initItems() {
         const itemsNumber = this.items.length;
-        this.items.forEach((item, index) => this.createRadialElement(item, index, itemsNumber))
+        const menuRadius = 70 + (waScaleManager.uiScalingFactor - 1) * 20;
+        this.items.forEach((item, index) => this.createRadialElement(item, index, itemsNumber, menuRadius))
     }
     
-    private createRadialElement(item: RadialMenuItem, index: number, itemsNumber: number) {
-        const image = new Sprite(this.scene, 0,  menuRadius, item.sprite, item.frame);
+    private createRadialElement(item: RadialMenuItem, index: number, itemsNumber: number, menuRadius: number) {
+        const image = new Sprite(this.scene, 0,  menuRadius, item.image);
         this.add(image);
         this.scene.sys.updateList.add(image);
-        image.setDepth(DEPTH_UI_INDEX)
+        const scalingFactor = waScaleManager.uiScalingFactor * 0.075;
+        image.setScale(scalingFactor)
         image.setInteractive({
-            hitArea: new Phaser.Geom.Circle(0, 0, 25),
-            hitAreaCallback: Phaser.Geom.Circle.Contains, //eslint-disable-line @typescript-eslint/unbound-method
             useHandCursor: true,
         });
         image.on('pointerdown', () => this.emit(RadialMenuClickEvent, item));
         image.on('pointerover', () => {
             this.scene.tweens.add({
                 targets: image,
-                scale: 2,
+                props: {
+                    scale: 2 * scalingFactor,
+                },
                 duration: 500,
                 ease: 'Power3',
             })
@@ -52,7 +52,9 @@ export class RadialMenu extends Phaser.GameObjects.Container {
         image.on('pointerout', () => {
             this.scene.tweens.add({
                 targets: image,
-                scale: 1,
+                props: {
+                    scale: scalingFactor,
+                },
                 duration: 500,
                 ease: 'Power3',
             })
