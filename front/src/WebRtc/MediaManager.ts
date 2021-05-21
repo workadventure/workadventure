@@ -12,7 +12,11 @@ import {
     requestedCameraState,
     requestedMicrophoneState
 } from "../Stores/MediaStore";
-import {requestedScreenSharingState, screenSharingLocalStreamStore} from "../Stores/ScreenSharingStore";
+import {
+    requestedScreenSharingState,
+    screenSharingAvailableStore,
+    screenSharingLocalStreamStore
+} from "../Stores/ScreenSharingStore";
 
 declare const navigator:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -210,6 +214,14 @@ export class MediaManager {
                 //screenSharingStream = null;
             }
 
+        });
+
+        screenSharingAvailableStore.subscribe((available) => {
+            if (available) {
+                document.querySelector('.btn-monitor')?.classList.remove('hide');
+            } else {
+                document.querySelector('.btn-monitor')?.classList.add('hide');
+            }
         });
     }
 

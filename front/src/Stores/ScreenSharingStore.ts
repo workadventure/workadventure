@@ -178,3 +178,15 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
         }
     })();
 });
+
+/**
+ * A store containing whether the screen sharing button should be displayed or hidden.
+ */
+export const screenSharingAvailableStore = derived(peerStore, ($peerStore, set) => {
+    if (!navigator.getDisplayMedia && !navigator.mediaDevices.getDisplayMedia) {
+        set(false);
+        return;
+    }
+
+    set($peerStore.size !== 0);
+});

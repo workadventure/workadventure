@@ -201,12 +201,12 @@ video#myCamVideo{
     display: inline-flex;
     bottom: 10px;
     right: 15px;
-    width: 15vw;
+    width: 180px;
     height: 40px;
     text-align: center;
     align-content: center;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-end;
     justify-items: center;
 }
 /*btn animation*/
@@ -251,6 +251,9 @@ video#myCamVideo{
     pointer-events: auto;
     transition: all .2s;
     /*right: 224px;*/
+}
+.btn-monitor.hide {
+    transform: translateY(60px);
 }
 .btn-copy{
     pointer-events: auto;
