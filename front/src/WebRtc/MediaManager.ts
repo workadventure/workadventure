@@ -12,6 +12,7 @@ import {
     requestedCameraState,
     requestedMicrophoneState
 } from "../Stores/MediaStore";
+import {requestedScreenSharingState, screenSharingLocalStreamStore} from "../Stores/ScreenSharingStore";
 
 declare const navigator:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -112,13 +113,15 @@ export class MediaManager {
         this.monitorClose.style.display = "block";
         this.monitorClose.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
-            this.enableScreenSharing();
+            //this.enableScreenSharing();
+            requestedScreenSharingState.enableScreenSharing();
         });
         this.monitor = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('monitor');
         this.monitor.style.display = "none";
         this.monitor.addEventListener('click', (e: MouseEvent) => {
             e.preventDefault();
-            this.disableScreenSharing();
+            //this.disableScreenSharing();
+            requestedScreenSharingState.disableScreenSharing();
         });
 
         this.pingCameraStatus();
@@ -172,6 +175,41 @@ export class MediaManager {
             } else {
                 this.disableMicrophoneStyle();
             }
+        });
+        //let screenSharingStream : MediaStream|null;
+        screenSharingLocalStreamStore.subscribe((result) => {
+            if (result.type === 'error') {
+                console.error(result.error);
+                layoutManager.addInformation('warning', 'Screen sharing denied. Click here and check navigators permissions.', () => {
+                    this.showHelpCameraSettingsCallBack();
+                }, this.userInputManager);
+                return;
+            }
+
+            if (result.stream !== null) {
+                this.enableScreenSharingStyle();
+                mediaManager.localScreenCapture = result.stream;
+
+                // TODO: migrate this out of MediaManager
+                this.triggerStartedScreenSharingCallbacks(result.stream);
+
+                //screenSharingStream = result.stream;
+
+                this.addScreenSharingActiveVideo('me', DivImportance.Normal);
+                HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('screen-sharing-me').srcObject = result.stream;
+            } else {
+                this.disableScreenSharingStyle();
+                this.removeActiveScreenSharingVideo('me');
+
+                // FIXME: we need the old stream that is being stopped!
+                if (this.localScreenCapture) {
+                    this.triggerStoppedScreenSharingCallbacks(this.localScreenCapture);
+                    this.localScreenCapture = null;
+                }
+
+                //screenSharingStream = null;
+            }
+
         });
     }
 
@@ -264,109 +302,16 @@ export class MediaManager {
         this.microphoneBtn.classList.add("disabled");
     }
 
-    private enableScreenSharing() {
-        this.getScreenMedia().then((stream) => {
-            this.triggerStartedScreenSharingCallbacks(stream);
-            this.monitorClose.style.display = "none";
-            this.monitor.style.display = "block";
-            this.monitorBtn.classList.add("enabled");
-        }, () => {
-            this.monitorClose.style.display = "block";
-            this.monitor.style.display = "none";
-            this.monitorBtn.classList.remove("enabled");
-
-            layoutManager.addInformation('warning', 'Screen sharing access denied. Click here and check navigators permissions.', () => {
-                this.showHelpCameraSettingsCallBack();
-            }, this.userInputManager);
-        });
-
+    private enableScreenSharingStyle(){
+        this.monitorClose.style.display = "none";
+        this.monitor.style.display = "block";
+        this.monitorBtn.classList.add("enabled");
     }
 
-    private disableScreenSharing() {
+    private disableScreenSharingStyle(){
         this.monitorClose.style.display = "block";
         this.monitor.style.display = "none";
         this.monitorBtn.classList.remove("enabled");
-        this.removeActiveScreenSharingVideo('me');
-        this.localScreenCapture?.getTracks().forEach((track: MediaStreamTrack) => {
-            track.stop();
-        });
-        if (this.localScreenCapture === null) {
-            console.warn('Weird: trying to remove a screen sharing that is not enabled');
-            return;
-        }
-        const localScreenCapture = this.localScreenCapture;
-        //this.getCamera().then((stream) => {
-            this.triggerStoppedScreenSharingCallbacks(localScreenCapture);
-        /*}).catch((err) => { //catch error get camera
-            console.error(err);
-            this.triggerStoppedScreenSharingCallbacks(localScreenCapture);
-        });*/
-        this.localScreenCapture = null;
-    }
-
-    //get screen
-    getScreenMedia() : Promise<MediaStream>{
-        try {
-            return this._startScreenCapture()
-                .then((stream: MediaStream) => {
-                    this.localScreenCapture = stream;
-
-                    // If stream ends (for instance if user clicks the stop screen sharing button in the browser), let's close the view
-                    for (const track of stream.getTracks()) {
-                        track.onended = () => {
-                            this.disableScreenSharing();
-                        };
-                    }
-
-                    this.addScreenSharingActiveVideo('me', DivImportance.Normal);
-                    HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('screen-sharing-me').srcObject = stream;
-
-                    return stream;
-                })
-                .catch((err: unknown) => {
-                    console.error("Error => getScreenMedia => ", err);
-                    throw err;
-                });
-        }catch (err) {
-            return new Promise((resolve, reject) => { // eslint-disable-line no-unused-vars
-                reject(err);
-            });
-        }
-    }
-
-    private _startScreenCapture() {
-        if (navigator.getDisplayMedia) {
-            return navigator.getDisplayMedia({video: true});
-        } else if (navigator.mediaDevices.getDisplayMedia) {
-            return navigator.mediaDevices.getDisplayMedia({video: true});
-        } else {
-            return new Promise((resolve, reject) => { // eslint-disable-line no-unused-vars
-                reject("error sharing screen");
-            });
-        }
-    }
-
-    /**
-     * Stops the camera from filming
-     */
-    public stopCamera(): void {
-        if (this.localStream) {
-            for (const track of this.localStream.getVideoTracks()) {
-                track.stop();
-            }
-        }
-    }
-
-    /**
-     * Stops the microphone from listening
-     */
-    public stopMicrophone(): void {
-        if (this.localStream) {
-            for (const track of this.localStream.getAudioTracks()) {
-                track.stop();
-            }
-        }
-        //this.mySoundMeter?.stop();
     }
 
     addActiveVideo(user: UserSimplePeerInterface, userName: string = ""){
