@@ -21,7 +21,6 @@ import { isMenuItemRegisterEvent } from './Events/MenuItemRegisterEvent';
 import type { MenuItemClickedEvent } from './Events/MenuItemClickedEvent';
 import type { TagEvent } from "./Events/TagEvent";
 import { isTilesetEvent, TilesetEvent } from "./Events/TilesetEvent";
-import { isUpdateTileEvent, UpdateTileEvent } from './Events/UpdateTileEvent';
 
 
 /**
@@ -35,6 +34,12 @@ class IframeListener {
 
     private readonly _openPopupStream: Subject<OpenPopupEvent> = new Subject();
     public readonly openPopupStream = this._openPopupStream.asObservable();
+
+    private readonly _openTabStream: Subject<OpenTabEvent> = new Subject();
+    public readonly openTabStream = this._openTabStream.asObservable();
+
+    private readonly _goToPageStream: Subject<GoToPageEvent> = new Subject();
+    public readonly goToPageStream = this._goToPageStream.asObservable();
 
     private readonly _openCoWebSiteStream: Subject<OpenCoWebSiteEvent> = new Subject();
     public readonly openCoWebSiteStream = this._openCoWebSiteStream.asObservable();
@@ -80,9 +85,6 @@ class IframeListener {
 
     private readonly _tilesetLoaderStream: Subject<TilesetEvent> =  new Subject();
     public readonly tilesetLoaderStream = this._tilesetLoaderStream.asObservable();
-
-    private readonly _updateTileStream: Subject<UpdateTileEvent> = new Subject();
-    public readonly updateTileStream = this._updateTileStream.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
@@ -154,10 +156,8 @@ class IframeListener {
                     this._registerMenuCommandStream.next(payload.data.menutItem)
                 } else if (payload.type == "getTag") {
                     this._tagListStream.next();
-                } else if (payload.type == "tilesetEvent" && isTilesetEvent(payload.data)) {
+                } else if (payload.type == "tilsetEvent" && isTilesetEvent(payload.data)) {
                     this._tilesetLoaderStream.next(payload.data);
-                } else if (payload.type == "updateTileEvent" && isUpdateTileEvent(payload.data)) {
-                    this._updateTileStream.next(payload.data)
                 }
             }
         }, false);

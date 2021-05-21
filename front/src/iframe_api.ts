@@ -26,6 +26,8 @@ interface WorkAdventureApi {
     onEnterZone(name: string, callback: () => void): void;
     onLeaveZone(name: string, callback: () => void): void;
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup;
+    openTab(url: string): void;
+    goToPage(url: string): void;
     openCoWebSite(url: string): void;
     closeCoWebSite(): void;
     disablePlayerControls() : void;
@@ -165,7 +167,7 @@ window.WA = {
 
     loadTileset(name: string, imgUrl : string, tilewidth : number, tileheight : number, margin : number, spacing : number): void {
         postToParent({
-            type: "updateTileEvent",
+            type: "tilsetEvent",
             data: {
                 name: name,
                 imgUrl: imgUrl,
@@ -272,6 +274,24 @@ window.WA = {
 
     removeBubble(): void {
         window.parent.postMessage({ 'type': 'removeBubble' }, '*');
+    },
+
+    openTab(url: string): void {
+        window.parent.postMessage({
+            "type": 'openTab',
+            "data": {
+                url
+            } as OpenTabEvent
+        }, '*');
+    },
+
+    goToPage(url: string): void {
+        window.parent.postMessage({
+            "type": 'goToPage',
+            "data": {
+                url
+            } as GoToPageEvent
+        }, '*');
     },
 
     openCoWebSite(url: string): void {

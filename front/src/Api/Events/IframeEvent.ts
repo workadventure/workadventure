@@ -17,7 +17,6 @@ import type { LayerEvent } from './LayerEvent';
 import type { SetPropertyEvent } from "./setPropertyEvent";
 import type { TagEvent } from "./TagEvent";
 import type { TilesetEvent } from "./TilesetEvent";
-import type { UpdateTileEvent } from "./UpdateTileEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T
@@ -44,8 +43,7 @@ export type IframeEventMap = {
     setProperty: SetPropertyEvent
     getDataLayer: undefined
     getTag: undefined
-    tilesetEvent: TilesetEvent
-    updateTileEvent: UpdateTileEvent
+    tilsetEvent: TilesetEvent
 }
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;
