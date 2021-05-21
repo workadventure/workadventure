@@ -36,6 +36,10 @@ message CharacterLayerMessage {
   string name = 2;
 }
 
+message CompanionMessage {
+  string name = 1;
+}
+
 /*********** CLIENT TO SERVER MESSAGES *************/
 
 message PingMessage {
@@ -141,6 +145,7 @@ message UserJoinedMessage {
   string name = 2;
   repeated CharacterLayerMessage characterLayers = 3;
   PositionMessage position = 4;
+  CompanionMessage companion = 5;
 }
 
 message UserLeftMessage {
@@ -213,6 +218,10 @@ message RefreshRoomMessage{
 message WorldFullMessage{
 }
 
+message WorldConnexionMessage{
+  string message = 2;
+}
+
 message BanUserMessage{
   string type = 1;
   string message = 2;
@@ -237,6 +246,7 @@ message ServerToClientMessage {
     WorldFullWarningMessage worldFullWarningMessage = 15;
     WorldFullMessage worldFullMessage = 16;
     RefreshRoomMessage refreshRoomMessage = 17; 
+    WorldConnexionMessage worldConnexionMessage = 18;
   }
 }
 
@@ -251,6 +261,7 @@ message JoinRoomMessage {
   string roomId = 5;
   repeated string tag = 6;
   string IPAddress = 7;
+  CompanionMessage companion = 8;
 }
 
 message UserJoinedZoneMessage {
@@ -259,6 +270,7 @@ message UserJoinedZoneMessage {
   repeated CharacterLayerMessage characterLayers = 3;
   PositionMessage position = 4;
   Zone fromZone = 5;
+  CompanionMessage companion = 6;
 }
 
 message UserLeftZoneMessage {

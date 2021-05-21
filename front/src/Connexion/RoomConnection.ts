@@ -27,10 +27,11 @@ import {
     SendJitsiJwtMessage,
     CharacterLayerMessage,
     PingMessage,
-    SendUserMessage, BanUserMessage
+    SendUserMessage,
+    BanUserMessage
 } from "../Messages/generated/messages_pb"
 
-import {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
+import type {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
 import Direction = PositionMessage.Direction;
 import {ProtobufClientUtils} from "../Network/ProtobufClientUtils";
 import {
@@ -41,7 +42,7 @@ import {
     ViewportInterface, WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
-import {BodyResourceDescriptionInterface} from "../Phaser/Entity/PlayerTextures";
+import type {BodyResourceDescriptionInterface} from "../Phaser/Entity/PlayerTextures";
 import {adminMessagesService} from "./AdminMessagesService";
 import {worldFullMessageStream} from "./WorldFullMessageStream";
 import {worldFullWarningStream} from "./WorldFullWarningStream";
@@ -66,7 +67,7 @@ export class RoomConnection implements RoomConnection {
      * @param token A JWT token containing the UUID of the user
      * @param roomId The ID of the room in the form "_/[instance]/[map_url]" or "@/[org]/[event]/[map]"
      */
-    public constructor(token: string|null, roomId: string, name: string, characterLayers: string[], position: PositionInterface, viewport: ViewportInterface) {
+    public constructor(token: string|null, roomId: string, name: string, characterLayers: string[], position: PositionInterface, viewport: ViewportInterface, companion: string|null) {
         let url = new URL(PUSHER_URL, window.location.toString()).toString();
         url = url.replace('http://', 'ws://').replace('https://', 'wss://');
         if (!url.endsWith('/')) {
@@ -85,6 +86,10 @@ export class RoomConnection implements RoomConnection {
         url += '&bottom='+Math.floor(viewport.bottom);
         url += '&left='+Math.floor(viewport.left);
         url += '&right='+Math.floor(viewport.right);
+
+        if (typeof companion === 'string') {
+            url += '&companion='+encodeURIComponent(companion);
+        }
 
         if (RoomConnection.websocketFactory) {
             this.socket = RoomConnection.websocketFactory(url);
@@ -165,7 +170,10 @@ export class RoomConnection implements RoomConnection {
             } else if (message.hasWorldfullmessage()) {
                 worldFullMessageStream.onMessage();
                 this.closed = true;
-            } else if (message.hasWebrtcsignaltoclientmessage()) {
+            } else if (message.hasWorldconnexionmessage()) {
+                worldFullMessageStream.onMessage(message.getWorldconnexionmessage()?.getMessage());
+                this.closed = true;
+            }else if (message.hasWebrtcsignaltoclientmessage()) {
                 this.dispatch(EventMessage.WEBRTC_SIGNAL, message.getWebrtcsignaltoclientmessage());
             } else if (message.hasWebrtcscreensharingsignaltoclientmessage()) {
                 this.dispatch(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, message.getWebrtcscreensharingsignaltoclientmessage());
@@ -184,7 +192,7 @@ export class RoomConnection implements RoomConnection {
             } else if (message.hasSendusermessage()) {
                 adminMessagesService.onSendusermessage(message.getSendusermessage() as SendUserMessage);
             } else if (message.hasBanusermessage()) {
-                adminMessagesService.onSendusermessage(message.getSendusermessage() as BanUserMessage);
+                adminMessagesService.onSendusermessage(message.getBanusermessage() as BanUserMessage);
             } else if (message.hasWorldfullwarningmessage()) {
                 worldFullWarningStream.onMessage();
             } else if (message.hasRefreshroommessage()) {
@@ -322,11 +330,14 @@ export class RoomConnection implements RoomConnection {
             }
         })
 
+        const companion = message.getCompanion();
+
         return {
             userId: message.getUserid(),
             name: message.getName(),
             characterLayers,
-            position: ProtobufClientUtils.toPointInterface(position)
+            position: ProtobufClientUtils.toPointInterface(position),
+            companion: companion ? companion.getName() : null
         }
     }
 

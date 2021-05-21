@@ -1,9 +1,9 @@
-import * as SimplePeerNamespace from "simple-peer";
+import type * as SimplePeerNamespace from "simple-peer";
 import {mediaManager} from "./MediaManager";
 import {STUN_SERVER, TURN_SERVER, TURN_USER, TURN_PASSWORD} from "../Enum/EnvironmentVariable";
-import {RoomConnection} from "../Connexion/RoomConnection";
+import type {RoomConnection} from "../Connexion/RoomConnection";
 import {MESSAGE_TYPE_CONSTRAINT} from "./VideoPeer";
-import {UserSimplePeerInterface} from "./SimplePeer";
+import type {UserSimplePeerInterface} from "./SimplePeer";
 
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
@@ -22,7 +22,7 @@ export class ScreenSharingPeer extends Peer {
     constructor(user: UserSimplePeerInterface, initiator: boolean, private connection: RoomConnection) {
         super({
             initiator: initiator ? initiator : false,
-            reconnectTimer: 10000,
+            //reconnectTimer: 10000,
             config: {
                 iceServers: [
                     {

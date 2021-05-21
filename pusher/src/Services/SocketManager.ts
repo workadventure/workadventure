@@ -20,6 +20,7 @@ import {
     CharacterLayerMessage,
     PusherToBackMessage,
     WorldFullMessage,
+    WorldConnexionMessage,
     AdminPusherToBackMessage,
     ServerToAdminClientMessage,
     UserJoinedRoomMessage, UserLeftRoomMessage, AdminMessage, BanMessage, RefreshRoomMessage
@@ -153,6 +154,8 @@ export class SocketManager implements ZoneEventListener {
             joinRoomMessage.setName(client.name);
             joinRoomMessage.setPositionmessage(ProtobufUtils.toPositionMessage(client.position));
             joinRoomMessage.setTagList(client.tags);
+            joinRoomMessage.setCompanion(client.companion);
+
             for (const characterLayer of client.characterLayers) {
                 const characterLayerMessage = new CharacterLayerMessage();
                 characterLayerMessage.setName(characterLayer.name);
@@ -362,6 +365,10 @@ export class SocketManager implements ZoneEventListener {
     }
 
     emitPlayGlobalMessage(client: ExSocketInterface, playglobalmessage: PlayGlobalMessage) {
+        if (!client.tags.includes('admin')) {
+            //In case of xss injection, we just kill the connection.
+            throw 'Client is not an admin!'; 
+        }
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setPlayglobalmessage(playglobalmessage);
 
@@ -550,6 +557,16 @@ export class SocketManager implements ZoneEventListener {
 
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setWorldfullmessage(errorMessage);
+
+        client.send(serverToClientMessage.serializeBinary().buffer, true);
+    }
+
+    public emitConnexionErrorMessage(client: WebSocket, message: string) {
+        const errorMessage = new WorldConnexionMessage();
+        errorMessage.setMessage(message);
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setWorldconnexionmessage(errorMessage);
 
         client.send(serverToClientMessage.serializeBinary().buffer, true);
     }

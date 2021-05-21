@@ -3,8 +3,8 @@ console.log('SCRIPT LAUNCHED');
 var isFirstTimeTuto = false;
 var textFirstPopup = 'Hey ! This is how to open start a discussion with someone ! You can be 4 max in a booble';
 var textSecondPopup = 'You can also use the chat to communicate ! ';
-var targetObjectTutoBubble ='tutoBobble';
-var targetObjectTutoChat ='tutoChat';
+var targetObjectTutoBubble ='myPopup1';
+var targetObjectTutoChat ='myPopup2';
 var popUpExplanation = undefined;
 function launchTuto (){
         WA.openPopup(targetObjectTutoBubble, textFirstPopup, [
@@ -21,7 +21,7 @@ function launchTuto (){
                             callback: (popup1) => {
                                 WA.sendChatMessage("Hey you can talk here too ! ", 'WA Guide');
                                 popup1.close();
-                                WA.restorePlayerControl();
+                                WA.restorePlayerControls();
                             }
                         }
 
@@ -29,7 +29,7 @@ function launchTuto (){
                 }
             }
         ]);
-        WA.disablePlayerControl();
+        WA.disablePlayerControls();
 
 }
 WA.onChatMessage((message => {

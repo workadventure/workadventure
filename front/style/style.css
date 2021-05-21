@@ -1,9 +1,9 @@
 *{
     font-family: 'Open Sans', sans-serif;
-    cursor: url('/resources/logos/cursor_normal.png'), auto;
+    cursor: url('./images/cursor_normal.png'), auto;
 }
 * a, button, select{
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 body{
     overflow: hidden;
@@ -39,27 +39,28 @@ body .message-info.warning{
     position: relative;
     transition: all 0.2s ease;
     background-color: #00000099;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 .video-container i{
     position: absolute;
     width: 100px;
-    height: 65px;
+    height: 100px;
     left: calc(50% - 50px);
     top: calc(50% - 50px);
     background-color: black;
     border-radius: 50%;
     text-align: center;
-    padding-top: 35px;
+    padding-top: 32px;
     font-size: 28px;
     color: white;
+    overflow: hidden;
 }
 
 .video-container img{
     position: absolute;
     display: none;
-    width: 25px;
-    height: 25px;
+    width: 40px;
+    height: 40px;
     left: 5px;
     bottom: 5px;
     padding: 10px;
@@ -74,7 +75,7 @@ body .message-info.warning{
 
 .video-container button.report{
     display: block;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
     background: none;
     background-color: rgba(0, 0, 0, 0);
     border: none;
@@ -97,7 +98,7 @@ body .message-info.warning{
 }
 
 .video-container button.report:hover {
-    width: 150px;
+    width: 160px;
 }
 
 .video-container button.report img{
@@ -107,15 +108,17 @@ body .message-info.warning{
     left: 5px;
     margin: 0;
     padding: 0;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
+    width: 25px;
+    height: 25px;
 }
 .video-container button.report span{
     position: absolute;
-    bottom: 8px;
+    bottom: 6px;
     left: 36px;
     color: white;
     font-size: 16px;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 .video-container img.active {
     display: block !important;
@@ -123,6 +126,7 @@ body .message-info.warning{
 
 .video-container video{
     height: 100%;
+    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 
 .video-container video:focus{
@@ -138,6 +142,7 @@ body .message-info.warning{
     right: 15px;
     bottom: 30px;
     border-radius: 15px 15px 15px 15px;
+    max-height: 20%;
 }
 
 video#myCamVideo{
@@ -149,18 +154,60 @@ video#myCamVideo{
     /*height: 113px;*/
 }
 
+.sound-progress{
+    display: none;
+    position: absolute;
+    right: 14px;
+    top: calc(50% - 5px);
+}
+.sound-progress.active{
+    display: table-column;
+}
+.sound-progress span{
+    position: absolute;
+    color: black;
+    background-color: #00000020;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+}
+.sound-progress span.active{
+    background-color: #00c3ff66
+}
+.sound-progress span:nth-child(1){
+    top: calc(50% + 20px);
+}
+.sound-progress span:nth-child(2){
+    top: calc(50% + 10px);
+}
+.sound-progress span:nth-child(3){
+    top: calc(50% - 0px);
+}
+.sound-progress span:nth-child(4){
+    top: calc(50% - 10px);
+}
+.sound-progress span:nth-child(5){
+    top: calc(50% - 20px);
+}
 
 .btn-cam-action {
+    pointer-events: all;
     position: absolute;
-    bottom: 0px;
-    right: 0px;
-    width: 450px;
-    height: 150px;
+    display: inline-flex;
+    bottom: 10px;
+    right: 15px;
+    width: 15vw;
+    height: 40px;
+    text-align: center;
+    align-content: center;
+    align-items: center;
+    justify-content: center;
+    justify-items: center;
 }
 /*btn animation*/
 .btn-cam-action div{
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
-    position: absolute;
+    cursor: url('./images/cursor_pointer.png'), pointer;
+    /*position: absolute;*/
     border: solid 0px black;
     width: 44px;
     height: 44px;
@@ -169,7 +216,8 @@ video#myCamVideo{
     border-radius: 48px;
     transform: translateY(20px);
     transition-timing-function: ease-in-out;
-    bottom: 20px;
+    margin-bottom: 20px;
+    margin: 0 4%;
 }
 .btn-cam-action div.disabled {
     background: #d75555;
@@ -186,33 +234,41 @@ video#myCamVideo{
     transition: 120ms;
 }
 .btn-micro{
+    pointer-events: auto;
     transition: all .3s;
-    right: 44px;
+    /*right: 44px;*/
 }
 .btn-video{
+    pointer-events: auto;
     transition: all .25s;
-    right: 134px;
+    /*right: 134px;*/
 }
 .btn-monitor{
+    pointer-events: auto;
     transition: all .2s;
-    right: 224px;
+    /*right: 224px;*/
 }
-
+.btn-copy{
+    pointer-events: auto;
+    transition: all .3s;
+    right: 44px;
+    opacity: 1;
+}
 .btn-cam-action div img{
     height: 22px;
     width: 30px;
     top: calc(48px - 37px);
     left: calc(48px - 41px);
     position: relative;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 
 /* Spinner */
 .connecting-spinner {
       /*display: inline-block;*/
       position: absolute;
-      left: calc(50% - 68px);
-      top: calc(50% - 68px);
+      left: calc(50% - 62px);
+      top: calc(50% - 62px);
 
 
       width: 130px;
@@ -325,25 +381,7 @@ body {
         max-height: 25%;
     }
 
-    
-}
-@media (max-aspect-ratio: 1/1) {
-    .game-overlay {
-        flex-direction: column;
-    }
 
-    .sidebar {
-        flex-direction: row;
-        align-items: flex-end;
-    }
-
-    .sidebar > div {
-        max-width: 21%;
-    }
-
-    .sidebar > div:hover {
-        max-width: 25%;
-    }
 }
 
 #game {
@@ -502,7 +540,16 @@ input[type=range]:focus::-ms-fill-upper {
     position: absolute;
     width: 100%;
     height: 100%;
+    pointer-events: none;
     /* TODO: DO WE NEED FLEX HERE???? WE WANT A SIDEBAR OF EXACTLY 25% (note: flex useful for direction!!!) */
+}
+
+.game-overlay + div {
+    pointer-events: none;
+}
+
+.game-overlay + div > div {
+    pointer-events: auto;
 }
 
 .game-overlay.active {
@@ -510,7 +557,7 @@ input[type=range]:focus::-ms-fill-upper {
 }
 
 .game-overlay video {
-    width: 100%
+    width: 100%;
 }
 
 .main-section {
@@ -525,7 +572,8 @@ input[type=range]:focus::-ms-fill-upper {
     margin: 2%;
     flex-basis: 96%;
     transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s, flex-basis 0.2s;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
+    pointer-events: auto;
     /*flex-shrink: 2;*/
 }
 
@@ -542,12 +590,17 @@ input[type=range]:focus::-ms-fill-upper {
 .sidebar > div {
     margin: 2%;
     transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s, max-height 0.2s, max-width 0.2s;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
     border-radius: 15px 15px 15px 15px;
+    pointer-events: auto;
 }
 
 .sidebar > div:hover {
     margin: 0%;
+}
+
+.sidebar > div video {
+    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 
 /* Let's make sure videos are vertically centered if they need to be cropped */
@@ -572,7 +625,7 @@ input[type=range]:focus::-ms-fill-upper {
     margin: 1%;
     max-height: 96%;
     transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 
 .chat-mode > div:hover {
@@ -662,7 +715,7 @@ input[type=range]:focus::-ms-fill-upper {
     margin-top: 6px;
     width: 30px;
     height: 30px;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
     padding: 0 5px;
     transition: all .5s ease;
     transform: rotateY(0);
@@ -686,7 +739,7 @@ input[type=range]:focus::-ms-fill-upper {
 
 .main-console div.console:hover,
 .message-container div.clear:hover {
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
     top: calc(100% + 5px);
     transform: scale(1.2) translateY(3px);
 }
@@ -719,7 +772,7 @@ input[type=range]:focus::-ms-fill-upper {
     transition: all .2s ease;
 }
 .main-console .btn-action .btn:hover{
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
     background-color: #ffda01;
     color: black;
     border: 1px solid black;
@@ -734,7 +787,7 @@ input[type=range]:focus::-ms-fill-upper {
 
 .main-console .menu span {
     margin: 20px;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 
 .main-console .menu span.active {
@@ -768,10 +821,10 @@ input[type=range]:focus::-ms-fill-upper {
 }
 .main-console section div.upload label img{
     height: 150px;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 .main-console section div.upload label img{
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 
 
@@ -793,7 +846,7 @@ input[type=range]:focus::-ms-fill-upper {
     right: 0;
 }
 .main-container .audio-playing img{
-    width: 30px;
+    /*width: 30px;*/
     border-radius: 50%;
     background-color: #ffda01;
     padding: 10px;
@@ -801,6 +854,7 @@ input[type=range]:focus::-ms-fill-upper {
 .main-container .audio-playing p{
     color: white;
     margin-left: 10px;
+    margin-top: 14px;
 }
 
 /* VIDEO QUALITY */
@@ -850,10 +904,10 @@ div.modal-report-user{
 
 .modal-report-user img{
     position: absolute;
-    height: 50px;
-    width: 50px;
+    height: 24px;
+    width: 24px;
     z-index: 999;
-    left: calc(50% - 25px);
+    left: calc(50% - 12px);
     top: 10px;
 }
 
@@ -863,7 +917,7 @@ div.modal-report-user{
     right: 0;
     left: auto;
     top: 0;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
     width: 15px;
     height: 15px;
     margin: 10px;
@@ -882,7 +936,7 @@ div.modal-report-user{
     transition: all .2s ease;
 }
 .modal-report-user button:hover{
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
     background-color: #ffda01;
     color: black;
     border: 1px solid black;
@@ -925,7 +979,7 @@ div.modal-report-user{
 }
 .discussion .active-btn{
     display: none;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
     height: 50px;
     width: 50px;
     background-color: #2d2d2dba;
@@ -954,7 +1008,7 @@ div.modal-report-user{
     right: 10px;
     background: none;
     border: none;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 .discussion .close-btn img{
     height: 15px;
@@ -979,7 +1033,7 @@ div.modal-report-user{
     background-color: #ffffff69;
     padding: 5px;
     border-radius: 15px;
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 
 .discussion .participants .participant:hover{
@@ -1012,12 +1066,12 @@ div.modal-report-user{
 }
 
 .discussion .participants .participant button.report-btn{
-    cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    cursor: url('./images/cursor_pointer.png'), pointer;
     position: absolute;
     background-color: #2d2d2dba;
     right: 34px;
     margin: 0px;
-    padding: 6px 0px;
+    padding: 2px 0px;
     border-radius: 15px;
     border: none;
     color: white;
@@ -1032,7 +1086,7 @@ div.modal-report-user{
 
 .discussion .messages{
     position: absolute;
-    height: calc(100% - 360px);
+    height: calc(100% - 390px);
     overflow-x: hidden;
     overflow-y: auto;
     max-width: calc(100% - 40px);
@@ -1073,18 +1127,18 @@ div.modal-report-user{
 .discussion .send-message{
     position: absolute;
     bottom: 45px;
-    width: 220px;
+    width: 200px;
     height: 26px;
     margin-bottom: 10px;
 }
 
 .discussion .send-message input{
     position: absolute;
-    width: calc(100% - 10px);
-    height: 20px;
+    width: calc(100% - 20px);
+    height: 30px;
     background-color: #171717;
     color: white;
-    border-radius: 15px;
+    border-radius: 10px;
     border: none;
     padding: 6px;
 }
@@ -1113,15 +1167,33 @@ div.action{
     animation-iteration-count: infinite;
     animation-timing-function: ease-in-out;
 }
+div.action.info,
+div.action.warning,
+div.action.danger{
+    transition: all 1s ease;
+    animation: mymove 1s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+}
 div.action p.action-body{
+    cursor: url('./images/cursor_pointer.png'), pointer;
     padding: 10px;
     background-color: #2d2d2dba;
     color: #fff;
-    font-size: 12px;
+    font-size: 14px;
+    font-weight: 500;
     text-align: center;
-    max-width: 150px;
-    margin-left: calc(50% - 75px);
+    max-width: 350px;
+    margin-left: calc(50% - 175px);
     border-radius: 15px;
+}
+div.action.warning p.action-body{
+    background-color: #ff9800eb;
+    color: #000;
+}
+div.action.danger p.action-body{
+    background-color: #da0000e3;
+    color: #000;
 }
 .popUpElement{
     font-family: 'Press Start 2P';
@@ -1152,4 +1224,12 @@ div.action p.action-body{
     0% {bottom: 40px;}
     50% {bottom: 30px;}
     100% {bottom: 40px;}
+}
+
+
+#svelte-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
 }

@@ -1,4 +1,4 @@
-import {
+import type {
     WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
 } from "../Connexion/ConnexionModels";
@@ -10,7 +10,7 @@ import {
 } from "./MediaManager";
 import {ScreenSharingPeer} from "./ScreenSharingPeer";
 import {MESSAGE_TYPE_BLOCKED, MESSAGE_TYPE_CONSTRAINT, MESSAGE_TYPE_MESSAGE, VideoPeer} from "./VideoPeer";
-import {RoomConnection} from "../Connexion/RoomConnection";
+import type {RoomConnection} from "../Connexion/RoomConnection";
 import {connectionManager} from "../Connexion/ConnectionManager";
 import {GameConnexionTypes} from "../Url/UrlManager";
 import {blackListManager} from "./BlackListManager";
@@ -82,15 +82,11 @@ export class SimplePeer {
         });
 
         mediaManager.showGameOverlay();
-        mediaManager.getCamera().then(() => {
-
+        mediaManager.getCamera().finally(() => {
             //receive message start
             this.Connection.receiveWebrtcStart((message: UserSimplePeerInterface) => {
                 this.receiveWebrtcStart(message);
             });
-
-        }).catch((err) => {
-            console.error("err", err);
         });
 
         this.Connection.disconnectMessage((data: WebRtcDisconnectMessageInterface): void => {
@@ -162,6 +158,11 @@ export class SimplePeer {
                 this.sendLocalScreenSharingStreamToUser(user.userId);
             }
         });
+
+        //Create a notification for first user in circle discussion
+        if(this.PeerConnectionArray.size === 0){
+            mediaManager.createNotification(user.name??'');
+        }
         this.PeerConnectionArray.set(user.userId, peer);
 
         for (const peerConnectionListener of this.peerConnectionListeners) {

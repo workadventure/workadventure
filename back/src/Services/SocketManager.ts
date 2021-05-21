@@ -296,6 +296,7 @@ export class SocketManager {
             userJoinedZoneMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
             userJoinedZoneMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
             userJoinedZoneMessage.setFromzone(this.toProtoZone(fromZone));
+            userJoinedZoneMessage.setCompanion(thing.companion);
 
             const subMessage = new SubToPusherMessage();
             subMessage.setUserjoinedzonemessage(userJoinedZoneMessage);
@@ -509,19 +510,6 @@ export class SocketManager {
         return this.rooms;
     }
 
-    /**
-     *
-     * @param token
-     */
-    /*searchClientByUuid(uuid: string): ExSocketInterface | null {
-        for(const socket of this.sockets.values()){
-            if(socket.userUuid === uuid){
-                return socket;
-            }
-        }
-        return null;
-    }*/
-
 
     public handleQueryJitsiJwtMessage(user: User, queryJitsiJwtMessage: QueryJitsiJwtMessage) {
         const room = queryJitsiJwtMessage.getJitsiroom();
@@ -605,6 +593,7 @@ export class SocketManager {
                 userJoinedMessage.setName(thing.name);
                 userJoinedMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
                 userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
+                userJoinedMessage.setCompanion(thing.companion);
 
                 const subMessage = new SubToPusherMessage();
                 subMessage.setUserjoinedzonemessage(userJoinedMessage);

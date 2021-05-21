@@ -17,14 +17,12 @@ export class SoundMeter {
     }
 
     private init(context: AudioContext) {
-        if (this.context === undefined) {
-            this.context = context;
-            this.analyser = this.context.createAnalyser();
+        this.context = context;
+        this.analyser = this.context.createAnalyser();
 
-            this.analyser.fftSize = 2048;
-            const bufferLength = this.analyser.fftSize;
-            this.dataArray = new Uint8Array(bufferLength);
-        }
+        this.analyser.fftSize = 2048;
+        const bufferLength = this.analyser.fftSize;
+        this.dataArray = new Uint8Array(bufferLength);
     }
 
     public connectToSource(stream: MediaStream, context: AudioContext): void

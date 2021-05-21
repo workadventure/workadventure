@@ -4,7 +4,7 @@ import {Zone} from "_Model/Zone";
 import {Movable} from "_Model/Movable";
 import {PositionNotifier} from "_Model/PositionNotifier";
 import {ServerDuplexStream} from "grpc";
-import {BatchMessage, PusherToBackMessage, ServerToClientMessage, SubMessage} from "../Messages/generated/messages_pb";
+import {BatchMessage, CompanionMessage, PusherToBackMessage, ServerToClientMessage, SubMessage} from "../Messages/generated/messages_pb";
 import {CharacterLayer} from "_Model/Websocket/CharacterLayer";
 
 export type UserSocket = ServerDuplexStream<PusherToBackMessage, ServerToClientMessage>;
@@ -23,7 +23,8 @@ export class User implements Movable {
         public readonly socket: UserSocket,
         public readonly tags: string[],
         public readonly name: string,
-        public readonly characterLayers: CharacterLayer[]
+        public readonly characterLayers: CharacterLayer[],
+        public readonly companion?: CompanionMessage
     ) {
         this.listenedZones = new Set<Zone>();
 

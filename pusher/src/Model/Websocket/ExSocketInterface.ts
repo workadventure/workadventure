@@ -3,6 +3,7 @@ import {Identificable} from "./Identificable";
 import {ViewportInterface} from "_Model/Websocket/ViewportMessage";
 import {
     BatchMessage,
+    CompanionMessage,
     PusherToBackMessage,
     ServerToClientMessage,
     SubMessage
@@ -29,6 +30,7 @@ export interface ExSocketInterface extends WebSocket, Identificable {
     characterLayers: CharacterLayer[];
     position: PointInterface;
     viewport: ViewportInterface;
+    companion?: CompanionMessage;
     /**
      * Pushes an event that will be sent in the next batch of events
      */

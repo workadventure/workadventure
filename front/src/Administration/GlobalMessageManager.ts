@@ -1,8 +1,8 @@
 import {HtmlUtils} from "./../WebRtc/HtmlUtils";
 import {AUDIO_TYPE, MESSAGE_TYPE} from "./ConsoleGlobalMessageManager";
 import {PUSHER_URL, UPLOADER_URL} from "../Enum/EnvironmentVariable";
-import {RoomConnection} from "../Connexion/RoomConnection";
-import {PlayGlobalMessageInterface} from "../Connexion/ConnexionModels";
+import type {RoomConnection} from "../Connexion/RoomConnection";
+import type {PlayGlobalMessageInterface} from "../Connexion/ConnexionModels";
 
 export class GlobalMessageManager {
 

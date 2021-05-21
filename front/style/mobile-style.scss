@@ -1,0 +1,49 @@
+@media screen and (max-width: 700px),
+        screen and (max-height: 700px){
+  video#myCamVideo {
+    width: 150px;
+  }
+
+  .sidebar {
+    width: 20%;
+    min-width: 200px;
+    position: absolute;
+    display: block;
+    right: 0;
+    height: 80%;
+
+    &> div {
+      max-height: 120px;
+      min-width: 200px;
+    }
+
+    .video-container{
+      min-width: 200px;
+    }
+  }
+
+  .btn-cam-action {
+    min-width: 150px;
+
+    &:hover{
+      transform: translateY(20px);
+    }
+    div {
+      margin: 0 1%;
+      &:hover {
+        background-color: #666;
+      }
+      margin-bottom: 30px;
+    }
+  }
+
+  .main-section {
+    position: absolute;
+    width: 100%;
+    min-width: 400px;
+
+    & > div {
+      z-index: 2;
+    }
+  }
+}

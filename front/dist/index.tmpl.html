@@ -38,6 +38,8 @@
         <div class="main-container" id="main-container">
             <!-- Create the editor container -->
             <div id="game" class="game">
+                <div id="svelte-overlay">
+                </div>
                 <div id="game-overlay" class="game-overlay">
                     <div id="main-section" class="main-section">
                     </div>
@@ -48,20 +50,27 @@
                     <div id="activeCam" class="activeCam">
                         <div id="div-myCamVideo" class="video-container">
                             <video id="myCamVideo" autoplay muted></video>
+                            <div id="mySoundMeter" class="sound-progress">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
                         </div>
                     </div>
                     <div class="btn-cam-action">
-                        <div id="btn-micro" class="btn-micro">
-                            <img id="microphone" src="resources/logos/microphone.svg">
-                            <img id="microphone-close" src="resources/logos/microphone-close.svg">
+                        <div id="btn-monitor" class="btn-monitor">
+                            <img id="monitor" src="resources/logos/monitor.svg">
+                            <img id="monitor-close" src="resources/logos/monitor-close.svg">
                         </div>
                         <div id="btn-video" class="btn-video">
                             <img id="cinema" src="resources/logos/cinema.svg">
                             <img id="cinema-close" src="resources/logos/cinema-close.svg">
                         </div>
-                        <div id="btn-monitor" class="btn-monitor">
-                            <img id="monitor" src="resources/logos/monitor.svg">
-                            <img id="monitor-close" src="resources/logos/monitor-close.svg">
+                        <div id="btn-micro" class="btn-micro">
+                            <img id="microphone" src="resources/logos/microphone.svg">
+                            <img id="microphone-close" src="resources/logos/microphone-close.svg">
                         </div>
                     </div>
 

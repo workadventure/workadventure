@@ -74,7 +74,7 @@ class CoWebsiteManager {
 
     private initResizeListeners() {
         const movecallback = (event:MouseEvent) => {
-            this.verticalMode ? this.height -= event.movementY / this.getDevicePixelRatio() : this.width -= event.movementX / this.getDevicePixelRatio();
+            this.verticalMode ? this.height += event.movementY / this.getDevicePixelRatio() : this.width -= event.movementX / this.getDevicePixelRatio();
             this.fire();
         }
 
@@ -137,14 +137,14 @@ class CoWebsiteManager {
         if (allowPolicy) {
             iframe.allow = allowPolicy;
         }
-        const onloadPromise = new Promise((resolve) => {
+        const onloadPromise = new Promise<void>((resolve) => {
             iframe.onload = () => resolve();
         });
         if (allowApi) {
             iframeListener.registerIframe(iframe);
         }
         this.cowebsiteMainDom.appendChild(iframe);
-        const onTimeoutPromise = new Promise((resolve) => {
+        const onTimeoutPromise = new Promise<void>((resolve) => {
             setTimeout(() => resolve(), 2000);
         });
         this.currentOperationPromise = this.currentOperationPromise.then(() =>Promise.race([onloadPromise, onTimeoutPromise])).then(() => {

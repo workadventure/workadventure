@@ -1,0 +1,13 @@
+{
+  "name": "@workadventure/iframe-api-typings",
+  "version": "VERSION_PLACEHOLDER",
+  "description": "Typescript typings for WorkAdventure iFrame API",
+  "main": "iframe_api.js",
+  "types": "iframe_api.d.ts",
+  "repository": "https://github.com/thecodingmachine/workadventure/",
+  "author": "David Négrier <d.negrier@thecodingmachine.com>",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
+}

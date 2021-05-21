@@ -1,23 +1,17 @@
 import {gameManager} from "../Game/GameManager";
-import {TextField} from "../Components/TextField";
-import {TextInput} from "../Components/TextInput";
-import Image = Phaser.GameObjects.Image;
 import {SelectCharacterSceneName} from "./SelectCharacterScene";
 import {ResizableScene} from "./ResizableScene";
+import { localUserStore } from "../../Connexion/LocalUserStore";
+import {MenuScene} from "../Menu/MenuScene";
+import { isUserNameValid } from "../../Connexion/LocalUser";
 
-//todo: put this constants in a dedicated file
 export const LoginSceneName = "LoginScene";
-enum LoginTextures {
-    icon = "icon",
-    mainFont = "main_font"
-}
+
+const loginSceneKey = 'loginScene';
 
 export class LoginScene extends ResizableScene {
-    private nameInput!: TextInput;
-    private textField!: TextField;
-    private infoTextField!: TextField;
-    private pressReturnField!: TextField;
-    private logo!: Image;
+
+    private loginSceneElement!: Phaser.GameObjects.DOMElement;
     private name: string = '';
 
     constructor() {
@@ -28,58 +22,65 @@ export class LoginScene extends ResizableScene {
     }
 
     preload() {
-        //this.load.image(LoginTextures.playButton, "resources/objects/play_button.png");
-        this.load.image(LoginTextures.icon, "resources/logos/tcm_full.png");
-        // Note: arcade.png from the Phaser 3 examples at: https://github.com/photonstorm/phaser3-examples/tree/master/public/assets/fonts/bitmap
-        this.load.bitmapFont(LoginTextures.mainFont, 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
+        this.load.html(loginSceneKey, 'resources/html/loginScene.html');
     }
 
     create() {
+        this.loginSceneElement = this.add.dom(-1000, 0).createFromCache(loginSceneKey);
+        this.centerXDomElement(this.loginSceneElement, 200);
+        MenuScene.revealMenusAfterInit(this.loginSceneElement, loginSceneKey);
 
-        this.textField = new TextField(this, this.game.renderer.width / 2, 50, 'Enter your name:');
-        this.nameInput = new TextInput(this, this.game.renderer.width / 2, 70, 8, this.name,(text: string) => {
-            this.name = text;
-        });
-
-        this.pressReturnField = new TextField(this, this.game.renderer.width / 2, 130, 'Press enter to start');
-
-        this.logo = new Image(this, this.game.renderer.width - 30, this.game.renderer.height - 20, LoginTextures.icon);
-        this.add.existing(this.logo);
-
-        const infoText = "Commands: \n - Arrows or Z,Q,S,D to move\n - SHIFT to run";
-        this.infoTextField = new TextField(this, 10, this.game.renderer.height - 35, infoText, false);
-
-        this.input.keyboard.on('keyup-ENTER', () => {
-            if (this.name === '') {
-                return
+        const pErrorElement = this.loginSceneElement.getChildByID('errorLoginScene') as HTMLInputElement;
+        const inputElement = this.loginSceneElement.getChildByID('loginSceneName') as HTMLInputElement;
+        inputElement.value = localUserStore.getName() ?? '';
+        inputElement.focus();
+        inputElement.addEventListener('keypress', (event: KeyboardEvent) => {
+            if(inputElement.value.length > 7){
+                event.preventDefault();
+                return;
             }
-            this.login(this.name);
+            pErrorElement.innerHTML = '';
+            if(inputElement.value && !isUserNameValid(inputElement.value)){
+                pErrorElement.innerHTML = 'Invalid user name: only letters and numbers are allowed. No spaces.';
+            }
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                this.login(inputElement);
+                return;
+            }
+        });
+
+        const continuingButton = this.loginSceneElement.getChildByID('loginSceneFormSubmit') as HTMLButtonElement;
+        continuingButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.login(inputElement);
         });
     }
 
-    update(time: number, delta: number): void {
-        if (this.name == '') {
-            this.pressReturnField?.setVisible(false);
-        } else {
-            this.pressReturnField?.setVisible(!!(Math.floor(time / 500) % 2));
+    private login(inputElement: HTMLInputElement): void {
+        const pErrorElement = this.loginSceneElement.getChildByID('errorLoginScene') as HTMLInputElement;
+        this.name = inputElement.value;
+        if (this.name === '') {
+            pErrorElement.innerHTML = 'The name is empty';
+            return
         }
-    }
-
-    private login(name: string): void {
-        gameManager.setPlayerName(name);
+        if(!isUserNameValid(this.name)){
+            pErrorElement.innerHTML = 'Invalid user name: only letters and numbers are allowed. No spaces.';
+            return
+        }
+        if (this.name === '') return
+        gameManager.setPlayerName(this.name);
 
         this.scene.stop(LoginSceneName)
         gameManager.tryResumingGame(this, SelectCharacterSceneName);
         this.scene.remove(LoginSceneName)
     }
 
-    public onResize(ev: UIEvent): void {
-        this.textField.x = this.game.renderer.width / 2;
-        this.nameInput.setX(this.game.renderer.width / 2 - 64);
-        this.pressReturnField.x = this.game.renderer.width / 2;
-        this.logo.x = this.game.renderer.width - 30;
-        this.logo.y = this.game.renderer.height - 20;
-        this.infoTextField.y = this.game.renderer.height - 35;
+    update(time: number, delta: number): void {
+
     }
 
+    public onResize(ev: UIEvent): void {
+        this.centerXDomElement(this.loginSceneElement, 200);
+    }
 }

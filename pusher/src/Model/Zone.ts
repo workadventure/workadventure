@@ -5,7 +5,8 @@ import {
     CharacterLayerMessage, GroupLeftZoneMessage, GroupUpdateMessage, GroupUpdateZoneMessage,
     PointMessage, PositionMessage, UserJoinedMessage,
     UserJoinedZoneMessage, UserLeftZoneMessage, UserMovedMessage,
-    ZoneMessage
+    ZoneMessage,
+    CompanionMessage
 } from "../Messages/generated/messages_pb";
 import * as messages_pb from "../Messages/generated/messages_pb";
 import {ClientReadableStream} from "grpc";
@@ -30,7 +31,7 @@ export type MovesCallback = (thing: Movable, position: PositionInterface, listen
 export type LeavesCallback = (thing: Movable, listener: User) => void;*/
 
 export class UserDescriptor {
-    private constructor(public readonly userId: number, private name: string, private characterLayers: CharacterLayerMessage[], private position: PositionMessage) {
+    private constructor(public readonly userId: number, private name: string, private characterLayers: CharacterLayerMessage[], private position: PositionMessage, private companion?: CompanionMessage) {
         if (!Number.isInteger(this.userId)) {
             throw new Error('UserDescriptor.userId is not an integer: '+this.userId);
         }
@@ -41,7 +42,7 @@ export class UserDescriptor {
         if (position === undefined) {
             throw new Error('Missing position');
         }
-        return new UserDescriptor(message.getUserid(), message.getName(), message.getCharacterlayersList(), position);
+        return new UserDescriptor(message.getUserid(), message.getName(), message.getCharacterlayersList(), position, message.getCompanion());
     }
 
     public update(userMovedMessage: UserMovedMessage) {
@@ -59,6 +60,7 @@ export class UserDescriptor {
         userJoinedMessage.setName(this.name);
         userJoinedMessage.setCharacterlayersList(this.characterLayers);
         userJoinedMessage.setPosition(this.position);
+        userJoinedMessage.setCompanion(this.companion)
 
         return userJoinedMessage;
     }

@@ -24,7 +24,7 @@
                 {
                  "name":"exitUrl",
                  "type":"string",
-                 "value":"\/@\/tcm\/workadventure\/floor0"
+                 "value":"\/@\/tcm\/workadventure\/wa-village"
                 }],
          "type":"tilelayer",
          "visible":true,
@@ -260,15 +260,15 @@
          "name":"floorLayer",
          "objects":[
                 {
-                 "height":199.667,
+                 "height":140,
                  "id":1,
                  "name":"Tutobubble",
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":245.667,
-                 "x":1170,
-                 "y":350
+                 "width":185,
+                 "x":1022,
+                 "y":308
                 }, 
                 {
                  "height":86.9996666666667,
@@ -277,9 +277,9 @@
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":245.667,
-                 "x":1171,
-                 "y":412
+                 "width":187,
+                 "x":1019,
+                 "y":361
                 }, 
                 {
                  "height":84.6667,
@@ -288,9 +288,9 @@
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":210.667,
-                 "x":1030.5,
-                 "y":318.66665
+                 "width":184.5,
+                 "x":1023,
+                 "y":319
                 }, 
                 {
                  "height":99.6667,
@@ -299,9 +299,9 @@
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":210.667,
-                 "x":1174,
-                 "y":400
+                 "width":185,
+                 "x":1021,
+                 "y":348
                 }],
          "opacity":1,
          "type":"objectgroup",
