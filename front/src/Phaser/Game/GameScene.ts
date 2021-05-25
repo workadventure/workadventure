@@ -910,12 +910,12 @@ ${escapedMessage}
             iframeListener.sendUserTagList({list: this.connection.getAllTag()});
         }))
 
-/*        this.iframeSubscriptionList.push(iframeListener.tilesetLoaderStream.subscribe((tileset) => {
+        this.iframeSubscriptionList.push(iframeListener.tilesetLoaderStream.subscribe((tileset) => {
             //this.load.tilemapTiledJSON('logo', tileset.imgUrl);
             this.load.image('logo', tileset.imgUrl);
             this.Terrains.push(this.Map.addTilesetImage(tileset.name, tileset.imgUrl, tileset.tilewidth, tileset.tileheight, tileset.margin, tileset.spacing));
             this.gameMap.addTerrain(this.Terrains[this.Terrains.length - 1]);
-        }))*/
+        }))
 
     }
 
