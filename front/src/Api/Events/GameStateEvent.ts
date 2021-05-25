@@ -10,6 +10,6 @@ export const isGameStateEvent =
             tags : tg.isArray(tg.isString),
     }).get();
 /**
- * A message sent from the game to the iFrame when the gameState is got by the script
+ * A message sent from the game to the iFrame when the gameState is received by the script
  */
 export type GameStateEvent = tg.GuardedType<typeof isGameStateEvent>;

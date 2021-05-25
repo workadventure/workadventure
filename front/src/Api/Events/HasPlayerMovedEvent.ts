@@ -11,7 +11,7 @@ export const isHasPlayerMovedEvent =
     }).get();
 
 /**
- * A message sent from the game to the iFrame when the player move after the iFrame send a message to the game that it want to listen to the position of the player
+ * A message sent from the game to the iFrame to notify a movement from the current player.
  */
 export type HasPlayerMovedEvent = tg.GuardedType<typeof isHasPlayerMovedEvent>;
 

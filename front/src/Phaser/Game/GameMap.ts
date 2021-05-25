@@ -117,41 +117,14 @@ export class GameMap {
     }
 
     public findLayer(layerName: string): ITiledMapLayer | undefined {
-        let i = 0;
-        let found = false;
-        while (!found && i<this.flatLayers.length) {
-            if (this.flatLayers[i].name === layerName) {
-               found = true;
-            }
-            else {
-                i++;
-            }
-        }
-        if (found) {
-            return this.flatLayers[i];
-        }
-        return undefined;
+    return this.flatLayers.find((layer) => layer.name = layerName);
     }
 
     public findPhaserLayer(layerName: string): TilemapLayer | undefined {
-        let i = 0;
-        let found = false;
-        while (!found && i<this.phaserLayers.length) {
-            if (this.phaserLayers[i].layer.name === layerName) {
-                found = true;
-            }
-            else {
-                i++;
-            }
-        }
-        if (found) {
-            return this.phaserLayers[i];
-        }
-        return undefined;
+    return this.phaserLayers.find((layer) => layer.layer.name = layerName);
     }
 
     public addTerrain(terrain : Phaser.Tilemaps.Tileset): void {
-        console.log('Add');
         for (const phaserLayer of this.phaserLayers) {
             phaserLayer.tileset.push(terrain);
         }
