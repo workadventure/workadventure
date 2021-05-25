@@ -1,5 +1,5 @@
 import { ChatEvent } from "./Api/Events/ChatEvent";
-import { IframeEvent, IframeEventMap, isIframeResponseEventWrapper } from "./Api/Events/IframeEvent";
+import { IframeEvent, IframeEventMap, IframeResponseEventMap, isIframeResponseEventWrapper } from "./Api/Events/IframeEvent";
 import { isUserInputChatEvent, UserInputChatEvent } from "./Api/Events/UserInputChatEvent";
 import { Subject } from "rxjs";
 import { EnterLeaveEvent, isEnterLeaveEvent } from "./Api/Events/EnterLeaveEvent";
@@ -17,10 +17,24 @@ import { updateTile, UpdateTileEvent } from './Api/Events/ApiUpdateTileEvent';
 import { isMessageReferenceEvent, removeTriggerMessage, triggerMessage, TriggerMessageCallback, TriggerMessageEvent } from './Api/Events/TriggerMessageEvent';
 import { HasMovedEvent, HasMovedEventCallback, isHasMovedEvent } from './Api/Events/HasMovedEvent';
 
+export const registeredCallbacks: { [K in keyof IframeResponseEventMap]?: {
+    typeChecker: Function
+    callback: Function
+} } = {}
 
-interface WorkAdventureApi {
-    sendChatMessage(message: string, author: string): void;
-    onChatMessage(callback: (message: string) => void): void;
+const importType = Promise.all([
+    import("./Api/iframe/chatmessage"),
+    import("./Api/iframe/zone-events")
+])
+type UnPromise<P> = P extends Promise<infer T> ? T : P
+
+type WorkadventureCommandClasses = UnPromise<typeof importType>[number]["commands"];
+type KeysOfUnion<T> = T extends T ? keyof T : never
+type ObjectWithKeyOfUnion<O, Key> = O extends O ? (Key extends keyof O ? O[Key] : never) : never
+
+type WorkAdventureApiFiles = { [Key in KeysOfUnion<WorkadventureCommandClasses>]: ObjectWithKeyOfUnion<WorkadventureCommandClasses, Key> };
+
+export interface WorkAdventureApi extends WorkAdventureApiFiles {
     onEnterZone(name: string, callback: () => void): void;
     onLeaveZone(name: string, callback: () => void): void;
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup;
@@ -45,10 +59,15 @@ interface WorkAdventureApi {
     onload(callback: () => void): void
 }
 
-declare global {
-    // eslint-disable-next-line no-var
-    var WA: WorkAdventureApi
 
+
+
+declare global {
+
+    interface Window {
+        WA: WorkAdventureApi
+    }
+    let WA: WorkAdventureApi
 }
 
 type ChatMessageCallback = (message: string) => void;
@@ -112,7 +131,6 @@ function postToParent(content: IframeEvent<keyof IframeEventMap>) {
 let moveEventUuid: string | undefined;
 
 window.WA = {
-
     removeTriggerMessage(uuid: string): void {
         window.parent.postMessage({
             type: removeTriggerMessage,
@@ -164,20 +182,20 @@ window.WA = {
         })
     },
 
-
-    /**
-     * Send a message in the chat.
-     * Only the local user will receive this message.
-     */
-    sendChatMessage(message: string, author: string) {
-        window.parent.postMessage({
-            'type': 'chat',
-            'data': {
-                'message': message,
-                'author': author
-            } as ChatEvent
-        }, '*');
-    },
+    /*
+        /**
+         * Send a message in the chat.
+         * Only the local user will receive this message.
+         *
+        sendChatMessage(message: string, author: string) {
+            window.parent.postMessage({
+                'type': 'chat',
+                'data': {
+                    'message': message,
+                    'author': author
+                } as ChatEvent
+            }, '*');
+        },*/
     disablePlayerControl(): void {
         window.parent.postMessage({ 'type': 'disablePlayerControl' }, '*');
     },
@@ -286,14 +304,7 @@ window.WA = {
             } as MenuItemRegisterEvent
         }, '*');
     },
-    /**
-     * Listen to messages sent by the local user, in the chat.
-     */
-    onChatMessage(callback: ChatMessageCallback): void {
-        userInputChatStream.subscribe((userInputChatEvent) => {
-            callback(userInputChatEvent.message);
-        });
-    },
+    ...({} as WorkAdventureApiFiles),
     onEnterZone(name: string, callback: () => void): void {
         let subject = enterStreams.get(name);
         if (subject === undefined) {
@@ -310,6 +321,7 @@ window.WA = {
         }
         subject.subscribe(callback);
     },
+
 }
 
 window.addEventListener('message', message => {
@@ -323,6 +335,12 @@ window.addEventListener('message', message => {
 
     if (isIframeResponseEventWrapper(payload)) {
         const payloadData = payload.data;
+
+        if (registeredCallbacks[payload.type] && registeredCallbacks[payload.type]?.typeChecker(payloadData)) {
+            registeredCallbacks[payload.type]?.callback(payloadData)
+            return
+        }
+
         if (payload.type === 'userInputChat' && isUserInputChatEvent(payloadData)) {
             userInputChatStream.next(payloadData);
         } else if (payload.type === 'enterEvent' && isEnterLeaveEvent(payloadData)) {

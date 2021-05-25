@@ -17,7 +17,6 @@ class ScriptUtils {
     public openCoWebsite(url: string, base: string, scriptWindow: MessageEventSource | null, options?: OpenCoWebSiteOptionsEvent | undefined) {
         const iframeWindow = coWebsiteManager.loadCoWebsite(url, base, undefined, options?.allow, options);
         if (scriptWindow && iframeWindow) {
-            const messgaeChannel = new MessageChannel()
             window.addEventListener("message", (event: MessageEvent) => {
                 if (event.source === scriptWindow) {
                     iframeWindow.postMessage(event.data, "*")
