@@ -258,7 +258,7 @@ WA.hideLayer('bottom');
 WA.setProperty(layerName : string, propertyName : string, propertyValue : string | number | boolean | undefined) : void;
 ```
 
-Set the value of the "propertyName" property of the layer "layerName" at "propertyValue". If the property doesn't exist, create the property "propertyName" and set the value of the property at "propertyValue".
+Set the value of the `propertyName` property of the layer `layerName` at `propertyValue`. If the property doesn't exist, create the property `propertyName` and set the value of the property at `propertyValue`.
 
 Example : 
 
@@ -266,12 +266,12 @@ Example :
 WA.setProperty('wikiLayer', 'openWebsite', 'https://www.wikipedia.org/');
 ```
 
-### Listen player movement 
+### Listen to player movement 
 
 ```
 onPlayerMove(callback: HasPlayerMovedEventCallback): void;
 ```
-Listens to the movement of the current user and calls the callback. Send a event when current user stop moving, change direction and every 200ms when moving in the same direction.
+Listens to the movement of the current user and calls the callback. Sends an event when the user stops moving, changes direction and every 200ms when moving in the same direction.
 
 The event has the following attributes :
 *   **moving (boolean):**  **true** when the current player is moving, **false** otherwise.
@@ -281,7 +281,7 @@ The event has the following attributes :
 
 **callback:** the function that will be called when the current player is moving. It contains the event.
 
-Exemple :
+Example :
 ```javascript
 WA.onPlayerMove(console.log);
 ```
@@ -292,7 +292,7 @@ WA.onPlayerMove(console.log);
 getMap(): Promise<ITiledMap>
 ```
 
-Return a promise of an ITiledMap that contains the JSON file of the map plus the property set by a script.
+Returns a promise that resolves to the JSON file of the map. Please note that if you modified the map (for instance by calling `WA.setProperty`, the data returned by `getMap` will contain those changes.
 
 Example : 
 ```javascript
@@ -360,23 +360,20 @@ WA.getStartLayerName().then((starLayerName) => {console.log(starLayerName)});
 ```
 registerMenuCommand(commandDescriptor: string, callback: (commandDescriptor: string) => void)
 ```
-Add a custom menu named "commandDescriptor" in the menu that call the callback when clicked.
+Add a custom menu item containing the text `commandDescriptor`. A click on the menu will trigger the `callback`.
 
 Example :
 ```javascript
-let chatbotEnabled = false
-WA.registerMenuCommand('help', () => {
-    chatbotEnabled = true;
-    WA.onChatMessage ...
+WA.registerMenuCommand('About', () => {
+    console.log("The About menu was clicked");
 });
-```
 
 ### Getting the list of tags of the current user
 ```
 getTagUser(): Promise<string[]>
 ```
 
-Return the list of all the tags that has the current user. If the current user has no tag, return an empty list. If there is no connection with the room, return nothing.
+Returns the tags of the current user. If the current user has no tag, returns an empty list.
 
 Example : 
 ```javascript
@@ -384,4 +381,3 @@ WA.getTagUser().then((tagList) => {
     ...
 });
 ```
-
