@@ -169,9 +169,9 @@ export class RoomConnection implements RoomConnection {
             } else if (message.hasWorldfullmessage()) {
                 worldFullMessageStream.onMessage();
                 this.closed = true;
-                // // } else if (message.hasWorldconnexionmessage()) {
-                //     worldFullMessageStream.onMessage(message.getWorldconnexionmessage()?.getMessage());
-                //      this.closed = true;
+                } else if (message.hasWorldconnexionmessage()) {
+                     worldFullMessageStream.onMessage(message.getWorldconnexionmessage()?.getMessage());
+                     this.closed = true;
             } else if (message.hasWebrtcsignaltoclientmessage()) {
                 this.dispatch(EventMessage.WEBRTC_SIGNAL, message.getWebrtcsignaltoclientmessage());
             } else if (message.hasWebrtcscreensharingsignaltoclientmessage()) {
@@ -600,9 +600,6 @@ export class RoomConnection implements RoomConnection {
     }
 
     public getAllTag() : string[] {
-        this.tags.push('TEST');
-        this.tags.push('TEST 2');
-        this.tags.push('TEST 3');
         return this.tags;
     }
 }

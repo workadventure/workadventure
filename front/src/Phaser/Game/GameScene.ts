@@ -864,15 +864,6 @@ ${escapedMessage}
         this.iframeSubscriptionList.push(iframeListener.enablePlayerControlStream.subscribe(() => {
             this.userInputManager.restoreControls();
         }));
-        this.iframeSubscriptionList.push(iframeListener.gameStateStream.subscribe(() => {
-            iframeListener.sendFrozenGameStateEvent({
-                mapUrl: this.MapUrlFile,
-                startLayerName: this.startLayerName,
-                uuid: localUserStore.getLocalUser()?.uuid,
-                nickname: localUserStore.getName(),
-                roomId: this.RoomId,
-            })
-        }));
 
         let scriptedBubbleSprite: Sprite;
         this.iframeSubscriptionList.push(iframeListener.displayBubbleStream.subscribe(() => {
@@ -886,12 +877,10 @@ ${escapedMessage}
         }));
 
         this.iframeSubscriptionList.push(iframeListener.showLayerStream.subscribe((layerEvent)=>{
-            console.log('show');
             this.setLayerVisibility(layerEvent.name, true);
         }));
 
         this.iframeSubscriptionList.push(iframeListener.hideLayerStream.subscribe((layerEvent)=>{
-            console.log('hide');
             this.setLayerVisibility(layerEvent.name, false);
         }));
 
@@ -903,12 +892,16 @@ ${escapedMessage}
             iframeListener.sendDataLayerEvent({data: this.gameMap.getMap()});
         }))
 
-        this.iframeSubscriptionList.push(iframeListener.tagListStream.subscribe(()=> {
-            if (this.connection === undefined) {
-                return;
-            }
-            iframeListener.sendUserTagList({list: this.connection.getAllTag()});
-        }))
+        this.iframeSubscriptionList.push(iframeListener.gameStateStream.subscribe(() => {
+            iframeListener.sendFrozenGameStateEvent({
+                mapUrl: this.MapUrlFile,
+                startLayerName: this.startLayerName,
+                uuid: localUserStore.getLocalUser()?.uuid,
+                nickname: localUserStore.getName(),
+                roomId: this.RoomId,
+                tags: this.connection ? this.connection.getAllTag() : []
+            })
+        }));
 
 /*        this.iframeSubscriptionList.push(iframeListener.tilesetLoaderStream.subscribe((tileset) => {
             //this.load.tilemapTiledJSON('logo', tileset.imgUrl);

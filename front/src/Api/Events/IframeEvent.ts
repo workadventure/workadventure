@@ -15,8 +15,6 @@ import type { UserInputChatEvent } from './UserInputChatEvent';
 import type { DataLayerEvent } from "./DataLayerEvent";
 import type { LayerEvent } from './LayerEvent';
 import type { SetPropertyEvent } from "./setPropertyEvent";
-import type { TagEvent } from "./TagEvent";
-import type { TilesetEvent } from "./TilesetEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T
@@ -24,7 +22,6 @@ export interface TypedMessageEvent<T> extends MessageEvent {
 
 export type IframeEventMap = {
     getState: GameStateEvent,
-    // updateTile: UpdateTileEvent
     registerMenuCommand: MenuItemRegisterEvent
     chat: ChatEvent,
     openPopup: OpenPopupEvent
@@ -42,7 +39,6 @@ export type IframeEventMap = {
     hideLayer: LayerEvent
     setProperty: SetPropertyEvent
     getDataLayer: undefined
-    getTag: undefined
     //tilsetEvent: TilesetEvent
 }
 export interface IframeEvent<T extends keyof IframeEventMap> {
@@ -63,7 +59,6 @@ export interface IframeResponseEventMap {
     hasPlayerMoved: HasPlayerMovedEvent
     dataLayer: DataLayerEvent
     menuItemClicked: MenuItemClickedEvent
-    tagList: TagEvent
 }
 export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
     type: T;

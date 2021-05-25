@@ -17,8 +17,6 @@ import { DataLayerEvent, isDataLayerEvent } from "./Api/Events/DataLayerEvent";
 import type { ITiledMap } from "./Phaser/Map/ITiledMap";
 import type { MenuItemRegisterEvent } from "./Api/Events/MenuItemRegisterEvent";
 import { isMenuItemClickedEvent } from "./Api/Events/MenuItemClickedEvent";
-import {TagEvent, isTagEvent} from "./Api/Events/TagEvent";
-import type { TilesetEvent } from "./Api/Events/TilesetEvent";
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
@@ -42,16 +40,24 @@ interface WorkAdventureApi {
     displayBubble(): void;
     removeBubble(): void;
     registerMenuCommand(commandDescriptor: string, callback: (commandDescriptor: string) => void): void
-    getMapUrl(): Promise<string>;
-    getUuid(): Promise<string | undefined>;
-    getRoomId(): Promise<string>;
-    getStartLayerName(): Promise<string | null>;
-    getNickName(): Promise<string | null>;
-    getTagUser(): Promise<string[]>;
-    getMap(): Promise<ITiledMap>
+    getCurrentUser(): Promise<User>
+    getCurrentRoom(): Promise<Room>
     //loadTileset(name: string, imgUrl : string, tilewidth : number, tileheight : number, margin : number, spacing : number): void;
 
     onPlayerMove(callback: (playerMovedEvent: HasPlayerMovedEvent) => void): void
+}
+
+interface User {
+    id: string | undefined
+    nickName: string | null
+    tags: string[]
+}
+
+interface Room {
+    id: string
+    mapUrl: string
+    map: ITiledMap
+    startLayer: string | null
 }
 
 declare global {
@@ -101,12 +107,14 @@ class Popup {
         }, '*');
     }
 }
-function uuidv4() {
+
+/*function uuidv4() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
         const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
         return v.toString(16);
     });
-}
+}*/
+
 function getGameState(): Promise<GameStateEvent> {
     if (immutableData) {
         return Promise.resolve(immutableData);
@@ -131,34 +139,21 @@ function getDataLayer(): Promise<DataLayerEvent> {
     })
 }
 
-function getTag(): Promise<TagEvent> {
-    return new Promise<TagEvent>((resolver, thrower) => {
-        tagResolver.push((resolver));
-        postToParent({
-            type: "getTag",
-            data: undefined
-        })
-    })
-}
-
 const gameStateResolver: Array<(event: GameStateEvent) => void> = []
 const dataLayerResolver: Array<(event: DataLayerEvent) => void> = []
-const tagResolver: Array<(event : TagEvent) => void> = []
 let immutableData: GameStateEvent;
 
-const callbackPlayerMoved: { [type: string]: HasPlayerMovedEventCallback | ((arg?: HasPlayerMovedEvent | never) => void) } = {}
-
+//const callbackPlayerMoved: { [type: string]: HasPlayerMovedEventCallback | ((arg?: HasPlayerMovedEvent | never) => void) } = {}
+const callbackPlayerMoved: Array<(event: HasPlayerMovedEvent) => void> = []
 
 function postToParent(content: IframeEvent<keyof IframeEventMap>) {
     window.parent.postMessage(content, "*")
 }
-let playerUuid: string | undefined;
 
 window.WA = {
 
     onPlayerMove(callback: HasPlayerMovedEventCallback): void {
-        playerUuid = uuidv4();
-        callbackPlayerMoved[playerUuid] = callback;
+        callbackPlayerMoved.push(callback);
         postToParent({
             type: "onPlayerMove",
             data: undefined
@@ -179,45 +174,17 @@ window.WA = {
         })
     },*/
 
-    getTagUser(): Promise<string[]> {
-        return getTag().then((res) => {
-            return res.list;
+    getCurrentUser(): Promise<User> {
+        return getGameState().then((gameState) => {
+            return {id: gameState.uuid, nickName: gameState.nickname, tags: gameState.tags};
         })
     },
 
-    getMap(): Promise<ITiledMap> {
-        return getDataLayer().then((res) => {
-            return res.data as ITiledMap;
-        })
-    },
-
-    getNickName(): Promise<string | null> {
-      return getGameState().then((res) => {
-          return res.nickname;
-      })
-    },
-
-    getMapUrl(): Promise<string> {
-      return getGameState().then((res) => {
-          return res.mapUrl;
-      })
-    },
-
-    getUuid(): Promise<string | undefined> {
-        return getGameState().then((res) => {
-            return res.uuid;
-        })
-    },
-
-    getRoomId(): Promise<string> {
-        return getGameState().then((res) => {
-            return res.roomId;
-        })
-    },
-
-    getStartLayerName(): Promise<string | null> {
-        return getGameState().then((res) => {
-            return res.startLayerName;
+    getCurrentRoom(): Promise<Room> {
+        return getGameState().then((gameState) => {
+            return getDataLayer().then((mapJson) => {
+                return {id: gameState.roomId, map: mapJson.data as ITiledMap, mapUrl: gameState.mapUrl, startLayer: gameState.startLayerName};
+            })
         })
     },
 
@@ -411,22 +378,18 @@ window.addEventListener('message', message => {
                 resolver(payloadData);
             })
             immutableData = payloadData;
-        } else if (payload.type == "hasPlayerMoved" && isHasPlayerMovedEvent(payloadData) && playerUuid) {
-            callbackPlayerMoved[playerUuid](payloadData)
+        } else if (payload.type == "hasPlayerMoved" && isHasPlayerMovedEvent(payloadData)) {
+            callbackPlayerMoved.forEach(callback => {
+                callback(payloadData);
+            })
         } else if (payload.type == "dataLayer" && isDataLayerEvent(payloadData)) {
             dataLayerResolver.forEach(resolver => {
                 resolver(payloadData);
             })
-        } else if (payload.type == "menuItemClicked" && isMenuItemClickedEvent(payload.data)) {
-            const callback = menuCallbacks.get(payload.data.menuItem);
+        } else if (payload.type == "menuItemClicked" && isMenuItemClickedEvent(payloadData)) {
+            const callback = menuCallbacks.get(payloadData.menuItem);
             if (callback) {
-                callback(payload.data.menuItem)
-            }
-        } else {
-            if (payload.type == "tagList" && isTagEvent(payloadData)) {
-                tagResolver.forEach(resolver => {
-                    resolver(payloadData);
-                })
+                callback(payloadData.menuItem)
             }
         }
     }

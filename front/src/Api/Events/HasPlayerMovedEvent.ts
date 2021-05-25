@@ -4,7 +4,7 @@ import * as tg from "generic-type-guard";
 
 export const isHasPlayerMovedEvent =
     new tg.IsInterface().withProperties({
-        direction: tg.isString,
+        direction: tg.isElementOf('right', 'left', 'up', 'down'),
         moving: tg.isBoolean,
         x: tg.isNumber,
         y: tg.isNumber
