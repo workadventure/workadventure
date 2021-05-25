@@ -21,8 +21,6 @@ import { isMenuItemRegisterEvent } from './Events/MenuItemRegisterEvent';
 import type { MenuItemClickedEvent } from './Events/MenuItemClickedEvent';
 import type { TagEvent } from "./Events/TagEvent";
 import { isTilesetEvent, TilesetEvent } from "./Events/TilesetEvent";
-import { isLoadPageEvent } from './Events/LoadPageEvent';
-import { isChangeTileEvent, ChangeTileEvent } from './Events/ChangeTileEvent';
 
 
 /**
@@ -87,9 +85,6 @@ class IframeListener {
 
     private readonly _tilesetLoaderStream: Subject<TilesetEvent> =  new Subject();
     public readonly tilesetLoaderStream = this._tilesetLoaderStream.asObservable();
-
-    private readonly _updateTileEvent: Subject<ChangeTileEvent> = new Subject();
-    public readonly updateTileEvent = this._updateTileEvent.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
@@ -163,10 +158,6 @@ class IframeListener {
                     this._tagListStream.next();
                 } else if (payload.type == "tilsetEvent" && isTilesetEvent(payload.data)) {
                     this._tilesetLoaderStream.next(payload.data);
-                } else if (payload.type === 'loadPage' && isLoadPageEvent(payload.data)) {
-                    this._loadPageStream.next(payload.data.url);
-                } else if (payload.type == "updateTile" && isChangeTileEvent(payload.data)) {
-                    this._updateTileEvent.next(payload.data)
                 }
             }
         }, false);
