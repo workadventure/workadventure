@@ -4,12 +4,14 @@
     "sourceMap": true,
     "moduleResolution": "node",
     "module": "CommonJS",
-    "target": "ES2015",
+    "target": "ES2017",
     "declaration": false,
     "downlevelIteration": true,
     "jsx": "react",
     "allowJs": true,
     "esModuleInterop": true,
+
+    "importsNotUsedAsValues": "error",
 
     "strict": true,                        /* Enable all strict type-checking options. */
     "noImplicitAny": true,                 /* Raise error on expressions and declarations with an implied 'any' type. */

@@ -1,18 +1,17 @@
 import { Subject } from "rxjs";
 import { ChatEvent, isChatEvent } from "./Events/ChatEvent";
-import * as crypto from "crypto";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
-import { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
+import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
 import { isOpenPopupEvent, OpenPopupEvent } from "./Events/OpenPopupEvent";
 import { isOpenTabEvent, OpenTabEvent } from "./Events/OpenTabEvent";
-import { ButtonClickedEvent } from "./Events/ButtonClickedEvent";
+import type { ButtonClickedEvent } from "./Events/ButtonClickedEvent";
 import { ClosePopupEvent, isClosePopupEvent } from "./Events/ClosePopupEvent";
 import { scriptUtils } from "./ScriptUtils";
 import { GoToPageEvent, isGoToPageEvent } from "./Events/GoToPageEvent";
 import { isOpenCoWebsite, OpenCoWebSiteEvent } from "./Events/OpenCoWebSiteEvent";
 import { IframeEventMap, IframeEvent, IframeResponseEvent, IframeResponseEventMap, isIframeEventWrapper, TypedMessageEvent } from "./Events/IframeEvent";
 import { isMessageReferenceEvent, isTriggerMessageEvent, MessageReferenceEvent, TriggerMessageEvent } from './Events/TriggerMessageEvent';
-import { UserInputChatEvent } from "./Events/UserInputChatEvent";
+import type { UserInputChatEvent } from "./Events/UserInputChatEvent";
 
 
 /**
@@ -105,10 +104,10 @@ class IframeListener {
                 else if (payload.type === 'closeCoWebSite') {
                     scriptUtils.closeCoWebSite();
                 }
-                else if (payload.type === 'disablePlayerControl') {
+                else if (payload.type === 'disablePlayerControls') {
                     this._disablePlayerControlStream.next();
                 }
-                else if (payload.type === 'restorePlayerControl') {
+                else if (payload.type === 'restorePlayerControls') {
                     this._enablePlayerControlStream.next();
                 }
                 else if (payload.type === 'displayBubble') {
@@ -189,7 +188,7 @@ class IframeListener {
     }
 
     private getIFrameId(scriptUrl: string): string {
-        return 'script' + crypto.createHash('md5').update(scriptUrl).digest("hex");
+        return 'script' + btoa(scriptUrl);
     }
 
     unregisterScript(scriptUrl: string): void {

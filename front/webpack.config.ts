@@ -1,14 +1,22 @@
+import {Configuration} from "webpack";
+import WebpackDevServer from "webpack-dev-server";
+
 const path = require('path');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+
+const mode = process.env.NODE_ENV ?? 'development';
+const isProduction = mode === 'production';
+const isDevelopment = !isProduction;
 
 module.exports = {
     entry: {
         'main': './src/index.ts',
         'iframe_api': './src/iframe_api.ts'
     },
-    devtool: 'inline-source-map',
+    mode: mode,
+    devtool: isDevelopment ? 'inline-source-map' : 'source-map',
     devServer: {
         contentBase: './dist',
         host: '0.0.0.0',
@@ -41,14 +49,14 @@ module.exports = {
         filename: (pathData) => {
             // Add a content hash only for the main bundle.
             // We want the iframe_api.js file to keep its name as it will be referenced from outside iframes.
-            return pathData.chunk.name === 'main' ? 'js/[name].[contenthash].js': '[name].js';
+            return pathData.chunk?.name === 'main' ? 'js/[name].[contenthash].js': '[name].js';
         },
         path: path.resolve(__dirname, 'dist'),
         publicPath: '/'
     },
-    externals:[
+    /*externals:[
         require('webpack-require-http')
-    ],
+    ],*/
     plugins: [
         new MiniCssExtractPlugin({filename: 'style.[contenthash].css'}),
         new HtmlWebpackPlugin(
@@ -81,8 +89,10 @@ module.exports = {
             'TURN_PASSWORD': null,
             'JITSI_URL': null,
             'JITSI_PRIVATE_MODE': null,
-            'START_ROOM_URL': null
+            'START_ROOM_URL': null,
+            'MAX_USERNAME_LENGTH': 8,
+            'MAX_PER_GROUP': 4
         })
     ],
 
-};
+} as Configuration & WebpackDevServer.Configuration;

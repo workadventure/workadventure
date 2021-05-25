@@ -4,7 +4,7 @@
  */
 import Sprite = Phaser.GameObjects.Sprite;
 import {OutlinePipeline} from "../Shaders/OutlinePipeline";
-import {GameScene} from "../Game/GameScene";
+import type {GameScene} from "../Game/GameScene";
 
 type EventCallback = (state: unknown, parameters: unknown) => void;
 

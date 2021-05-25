@@ -49,7 +49,7 @@ jobs:
       - name: "Build"
         run: yarn run build
         env:
-          API_URL: "localhost:8080"
+          PUSHER_URL: "//localhost:8080"
         working-directory: "front"
 
       - name: "Lint"

@@ -1,4 +1,4 @@
-import {ITiledMap, ITiledMapLayer} from "../Map/ITiledMap";
+import type {ITiledMap, ITiledMapLayer} from "../Map/ITiledMap";
 import {LayersIterator} from "../Map/LayersIterator";
 
 export type PropertyChangeCallback = (newValue: string | number | boolean | undefined, oldValue: string | number | boolean | undefined, allProps: Map<string, string | boolean | number>) => void;

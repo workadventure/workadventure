@@ -1,5 +1,5 @@
 import {PlayerAnimationDirections} from "./Animation";
-import {GameScene} from "../Game/GameScene";
+import type {GameScene} from "../Game/GameScene";
 import {UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
 import {Character} from "../Entity/Character";
 

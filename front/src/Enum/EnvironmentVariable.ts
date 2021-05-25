@@ -1,7 +1,6 @@
 const DEBUG_MODE: boolean = process.env.DEBUG_MODE == "true";
 const START_ROOM_URL : string = process.env.START_ROOM_URL || '/_/global/maps.workadventure.localhost/Floor0/floor0.json';
-// For compatibility reasons with older versions, API_URL is the old host name of PUSHER_URL
-const PUSHER_URL = process.env.PUSHER_URL || (process.env.API_URL ? '//'+process.env.API_URL : "//pusher.workadventure.localhost");
+const PUSHER_URL = process.env.PUSHER_URL || '//pusher.workadventure.localhost';
 const UPLOADER_URL = process.env.UPLOADER_URL || '//uploader.workadventure.localhost';
 const ADMIN_URL = process.env.ADMIN_URL || "//workadventure.localhost";
 const STUN_SERVER: string = process.env.STUN_SERVER || "stun:stun.l.google.com:19302";
