@@ -13,7 +13,7 @@ import { scriptUtils } from "./ScriptUtils";
 import { GoToPageEvent, isGoToPageEvent } from "./Events/GoToPageEvent";
 import { isOpenCoWebsite, OpenCoWebSiteEvent } from "./Events/OpenCoWebSiteEvent";
 import { isLoadPageEvent } from './Events/LoadPageEvent';
-import { isUpdateTileEvent, UpdateTileEvent } from './Events/ApiUpdateTileEvent';
+import { isChangeTileEvent, ChangeTileEvent } from './Events/ChangeTileEvent';
 
 
 /**
@@ -58,7 +58,7 @@ class IframeListener {
     private readonly _removeBubbleStream: Subject<void> = new Subject();
     public readonly removeBubbleStream = this._removeBubbleStream.asObservable();
 
-    private readonly _updateTileEvent: Subject<UpdateTileEvent> = new Subject();
+    private readonly _updateTileEvent: Subject<ChangeTileEvent> = new Subject();
     public readonly updateTileEvent = this._updateTileEvent.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
@@ -114,7 +114,7 @@ class IframeListener {
                     this._removeBubbleStream.next();
                 } else if (payload.type === 'loadPage' && isLoadPageEvent(payload.data)) {
                     this._loadPageStream.next(payload.data.url);
-                } else if (payload.type == "updateTile" && isUpdateTileEvent(payload.data)) {
+                } else if (payload.type == "updateTile" && isChangeTileEvent(payload.data)) {
                     this._updateTileEvent.next(payload.data)
                 }
             }

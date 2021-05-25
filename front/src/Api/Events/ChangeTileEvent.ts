@@ -1,9 +1,7 @@
-
 import * as tg from "generic-type-guard";
-export const updateTile = "updateTile"
 
 
-export const isUpdateTileEvent = tg.isArray(
+export const isChangeTileEvent = tg.isArray(
     new tg.IsInterface().withProperties({
         x: tg.isNumber,
         y: tg.isNumber,
@@ -14,4 +12,4 @@ export const isUpdateTileEvent = tg.isArray(
 /**
  * A message sent from the game to the iFrame when a user enters or leaves a zone marked with the "zone" property.
  */
-export type UpdateTileEvent = tg.GuardedType<typeof isUpdateTileEvent>;
+export type ChangeTileEvent = tg.GuardedType<typeof isChangeTileEvent>;
