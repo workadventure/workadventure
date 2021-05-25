@@ -43,7 +43,7 @@ export type IframeEventMap = {
     setProperty: SetPropertyEvent
     getDataLayer: undefined
     getTag: undefined
-    tilsetEvent: TilesetEvent
+    //tilsetEvent: TilesetEvent
 }
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;

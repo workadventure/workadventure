@@ -49,7 +49,7 @@ interface WorkAdventureApi {
     getNickName(): Promise<string | null>;
     getTagUser(): Promise<string[]>;
     getMap(): Promise<ITiledMap>
-    loadTileset(name: string, imgUrl : string, tilewidth : number, tileheight : number, margin : number, spacing : number): void;
+    //loadTileset(name: string, imgUrl : string, tilewidth : number, tileheight : number, margin : number, spacing : number): void;
 
     onPlayerMove(callback: (playerMovedEvent: HasPlayerMovedEvent) => void): void
 }
@@ -165,7 +165,7 @@ window.WA = {
         })
     },
 
-    loadTileset(name: string, imgUrl : string, tilewidth : number, tileheight : number, margin : number, spacing : number): void {
+/*    loadTileset(name: string, imgUrl : string, tilewidth : number, tileheight : number, margin : number, spacing : number): void {
         postToParent({
             type: "tilsetEvent",
             data: {
@@ -177,7 +177,7 @@ window.WA = {
                 spacing: spacing
             } as TilesetEvent
         })
-    },
+    },*/
 
     getTagUser(): Promise<string[]> {
         return getTag().then((res) => {
