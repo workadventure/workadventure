@@ -1,0 +1,5 @@
+/*This file is a workaround to allow phaser to load directly this font */
+@font-face {
+    font-family: "Press Start 2P";
+    src: url("/fonts/press-start-2p-latin-400-normal.woff2") format('woff2');
+}

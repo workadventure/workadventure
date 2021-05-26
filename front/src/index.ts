@@ -9,7 +9,7 @@ import {SelectCharacterScene} from "./Phaser/Login/SelectCharacterScene";
 import {SelectCompanionScene} from "./Phaser/Login/SelectCompanionScene";
 import {EnableCameraScene} from "./Phaser/Login/EnableCameraScene";
 import {CustomizeScene} from "./Phaser/Login/CustomizeScene";
-import {ResizableScene} from "./Phaser/Login/ResizableScene";
+import WebFontLoaderPlugin from 'phaser3-rex-plugins/plugins/webfontloader-plugin.js';
 import {EntryScene} from "./Phaser/Login/EntryScene";
 import {coWebsiteManager} from "./WebRtc/CoWebsiteManager";
 import {MenuScene} from "./Phaser/Menu/MenuScene";
@@ -106,6 +106,13 @@ const config: GameConfig = {
         pixelArt: true,
         roundPixels: true,
         antialias: false
+    },
+    plugins: {
+        global: [{
+            key: 'rexWebFontLoader',
+            plugin: WebFontLoaderPlugin,
+            start: true
+        }]
     },
     physics: {
         default: "arcade",
