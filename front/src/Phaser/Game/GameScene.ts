@@ -186,7 +186,6 @@ export class GameScene extends DirtyScene implements CenterListener {
     private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string|undefined;
     private pinchManager: PinchManager|undefined;
-    private physicsEnabled: boolean = true;
     private mapTransitioning: boolean = false; //used to prevent transitions happenning at the same time.
     private onVisibilityChangeCallback: () => void;
 
@@ -1088,8 +1087,6 @@ ${escapedMessage}
     }
 
     createCollisionWithPlayer() {
-        this.physics.disableUpdate();
-        this.physicsEnabled = false;
         //add collision layer
         this.Layers.forEach((Layer: Phaser.Tilemaps.TilemapLayer) => {
             this.physics.add.collider(this.CurrentPlayer, Layer, (object1: GameObject, object2: GameObject) => {
@@ -1223,20 +1220,7 @@ ${escapedMessage}
         this.dirty = false;
         mediaManager.updateScene();
         this.currentTick = time;
-        if (this.CurrentPlayer.isMoving()) {
-            this.dirty = true;
-        }
         this.CurrentPlayer.moveUser(delta);
-        if (this.CurrentPlayer.isMoving()) {
-            this.dirty = true;
-            if (!this.physicsEnabled) {
-                this.physics.enableUpdate();
-                this.physicsEnabled = true;
-            }
-        } else if (this.physicsEnabled) {
-            this.physics.disableUpdate();
-            this.physicsEnabled = false;
-        }
 
         // Let's handle all events
         while (this.pendingEvents.length !== 0) {
