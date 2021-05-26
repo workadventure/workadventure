@@ -1,15 +1,15 @@
-import type { ChatEvent } from "./Api/Events/ChatEvent";
-import { isIframeResponseEventWrapper } from "./Api/Events/IframeEvent";
-import { isUserInputChatEvent, UserInputChatEvent } from "./Api/Events/UserInputChatEvent";
 import { Subject } from "rxjs";
-import { EnterLeaveEvent, isEnterLeaveEvent } from "./Api/Events/EnterLeaveEvent";
-import type { OpenPopupEvent } from "./Api/Events/OpenPopupEvent";
 import { isButtonClickedEvent } from "./Api/Events/ButtonClickedEvent";
+import type { ChatEvent } from "./Api/Events/ChatEvent";
 import type { ClosePopupEvent } from "./Api/Events/ClosePopupEvent";
-import type { OpenTabEvent } from "./Api/Events/OpenTabEvent";
+import { EnterLeaveEvent, isEnterLeaveEvent } from "./Api/Events/EnterLeaveEvent";
 import type { GoToPageEvent } from "./Api/Events/GoToPageEvent";
+import { isIframeResponseEventWrapper } from "./Api/Events/IframeEvent";
 import type { OpenCoWebSiteEvent } from "./Api/Events/OpenCoWebSiteEvent";
+import type { OpenPopupEvent } from "./Api/Events/OpenPopupEvent";
+import type { OpenTabEvent } from "./Api/Events/OpenTabEvent";
 import { isMessageReferenceEvent, removeTriggerMessage, triggerMessage, TriggerMessageEvent } from './Api/Events/TriggerMessageEvent';
+import { isUserInputChatEvent, UserInputChatEvent } from "./Api/Events/UserInputChatEvent";
 
 
 interface WorkAdventureApi {
@@ -18,17 +18,18 @@ interface WorkAdventureApi {
     onEnterZone(name: string, callback: () => void): void;
     onLeaveZone(name: string, callback: () => void): void;
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup;
-    openTab(url : string): void;
-    goToPage(url : string): void;
-    openCoWebSite(url : string): void;
+    openTab(url: string): void;
+    goToPage(url: string): void;
+    openCoWebSite(url: string): void;
     closeCoWebSite(): void;
     disablePlayerControls(): void;
     restorePlayerControls(): void;
     displayBubble(): void;
     removeBubble(): void;
 
-    triggerMessage(message: string, callback: () => void): string
-    removeTriggerMessage(uuid: string): void
+    triggerMessage(message: string, callback: () => void): {
+        remove(): void
+    }
 }
 
 declare global {
@@ -89,15 +90,9 @@ function uuidv4() {
 const callbacks: { [uuid: string]: (arg?: unknown) => void } = {}
 
 window.WA = {
-    removeTriggerMessage(uuid: string): void {
-        window.parent.postMessage({
-            type: removeTriggerMessage,
-            data: {
-                uuid: uuid
-            } as TriggerMessageEvent
-        }, "*")
-    },
-    triggerMessage(message: string, callback: () => void): string {
+    triggerMessage(message: string, callback: () => void): {
+        remove(): void
+    } {
         const uuid = uuidv4();
         callbacks[uuid] = callback;
         window.parent.postMessage({
@@ -108,7 +103,16 @@ window.WA = {
             } as TriggerMessageEvent
         }, "*")
 
-        return uuid
+        return {
+            remove: () => {
+                window.parent.postMessage({
+                    type: removeTriggerMessage,
+                    data: {
+                        uuid: uuid
+                    } as TriggerMessageEvent
+                }, "*")
+            }
+        }
     },
 
     /**
@@ -158,10 +162,10 @@ window.WA = {
         }, '*');
     },
 
-    openCoWebSite(url : string) : void{
+    openCoWebSite(url: string): void {
         window.parent.postMessage({
-            "type" : 'openCoWebSite',
-            "data" : {
+            "type": 'openCoWebSite',
+            "data": {
                 url
             } as OpenCoWebSiteEvent
         }, '*');
