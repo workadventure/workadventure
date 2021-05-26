@@ -9,7 +9,7 @@ import type {
     PositionInterface,
     RoomJoinedMessageInterface
 } from "../../Connexion/ConnexionModels";
-import {CurrentGamerInterface, hasMovedEventName, Player} from "../Player/Player";
+import {hasMovedEventName, Player, requestEmoteEventName} from "../Player/Player";
 import {
     DEBUG_MODE,
     JITSI_PRIVATE_MODE,
@@ -90,7 +90,9 @@ import {TextUtils} from "../Components/TextUtils";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
 import {joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey} from "../Components/MobileJoystick";
+import {DEPTH_OVERLAY_INDEX} from "./DepthIndexes";
 import {waScaleManager} from "../Services/WaScaleManager";
+import {EmoteManager} from "./EmoteManager";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -131,7 +133,7 @@ const defaultStartLayerName = 'start';
 
 export class GameScene extends DirtyScene implements CenterListener {
     Terrains : Array<Phaser.Tilemaps.Tileset>;
-    CurrentPlayer!: CurrentGamerInterface;
+    CurrentPlayer!: Player;
     MapPlayers!: Phaser.Physics.Arcade.Group;
     MapPlayersByKey : Map<number, RemotePlayer> = new Map<number, RemotePlayer>();
     Map!: Phaser.Tilemaps.Tilemap;
@@ -189,6 +191,7 @@ export class GameScene extends DirtyScene implements CenterListener {
     private physicsEnabled: boolean = true;
     private mapTransitioning: boolean = false; //used to prevent transitions happenning at the same time.
     private onVisibilityChangeCallback: () => void;
+    private emoteManager!: EmoteManager;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
@@ -226,6 +229,11 @@ export class GameScene extends DirtyScene implements CenterListener {
             this.load.image(joystickBaseKey, joystickBaseImg);
             this.load.image(joystickThumbKey, joystickThumbImg);
         }
+        //todo: in an emote manager.
+        this.load.spritesheet('emote-music', 'resources/emotes/pipo-popupemotes005.png', {
+            frameHeight: 32,
+            frameWidth: 32,
+        });
         this.load.on(FILE_LOAD_ERROR, (file: {src: string}) => {
             // If we happen to be in HTTP and we are trying to load a URL in HTTPS only... (this happens only in dev environments)
             if (window.location.protocol === 'http:' && file.src === this.MapUrlFile && file.src.startsWith('http:') && this.originalMapUrl === undefined) {
@@ -421,7 +429,7 @@ export class GameScene extends DirtyScene implements CenterListener {
                 }
             }
             if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
-                depth = 10000;
+                depth = DEPTH_OVERLAY_INDEX;
             }
             if (layer.type === 'objectgroup') {
                 for (const object of layer.objects) {
@@ -509,6 +517,8 @@ export class GameScene extends DirtyScene implements CenterListener {
         }
 
         document.addEventListener('visibilitychange', this.onVisibilityChangeCallback);
+        
+        this.emoteManager = new EmoteManager(this);
     }
 
     /**
@@ -930,6 +940,7 @@ ${escapedMessage}
         this.messageSubscription?.unsubscribe();
         this.userInputManager.destroy();
         this.pinchManager?.destroy();
+        this.emoteManager.destroy();
 
         for(const iframeEvents of this.iframeSubscriptionList){
             iframeEvents.unsubscribe();
@@ -1123,6 +1134,12 @@ ${escapedMessage}
                 this.companion,
                 this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
+            this.CurrentPlayer.on('pointerdown', () => {
+                this.emoteManager.getMenuImages().then((emoteMenuElements) => this.CurrentPlayer.openOrCloseEmoteMenu(emoteMenuElements))
+            })
+            this.CurrentPlayer.on(requestEmoteEventName, (emoteKey: string) => {
+                this.connection?.emitEmoteEvent(emoteKey);
+            })
         }catch (err){
             if(err instanceof TextureError) {
                 gameManager.leaveGame(this, SelectCharacterSceneName, new SelectCharacterScene());
