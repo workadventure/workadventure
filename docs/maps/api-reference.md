@@ -235,3 +235,24 @@ mySound.play(config);
 // ...
 mySound.stop();
 ```
+
+
+### Awaiting User Confirmation (with space bar)
+
+```
+
+triggerMessage(message: string): TriggerMessage
+
+```
+
+Opens the webpage at "url" in your browser, in a new tab.
+
+Example:
+
+```javascript
+const triggerMessage = WA.triggerMessage("press 'space' to confirm");
+setTimeout(()=>{
+	//too late
+	triggerMessage.remove();
+},1000)
+```
