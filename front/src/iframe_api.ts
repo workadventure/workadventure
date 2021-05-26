@@ -17,6 +17,10 @@ import { DataLayerEvent, isDataLayerEvent } from "./Api/Events/DataLayerEvent";
 import type { ITiledMap } from "./Phaser/Map/ITiledMap";
 import type { MenuItemRegisterEvent } from "./Api/Events/MenuItemRegisterEvent";
 import { isMenuItemClickedEvent } from "./Api/Events/MenuItemClickedEvent";
+import type {PlaySoundEvent} from "./Api/Events/PlaySoundEvent";
+import type  {StopSoundEvent} from "./Api/Events/StopSoundEvent";
+import type {LoadSoundEvent} from "./Api/Events/LoadSoundEvent";
+import SoundConfig = Phaser.Types.Sound.SoundConfig;
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
@@ -39,6 +43,7 @@ interface WorkAdventureApi {
     restorePlayerControls(): void;
     displayBubble(): void;
     removeBubble(): void;
+    loadSound(url : string): Sound;
     registerMenuCommand(commandDescriptor: string, callback: (commandDescriptor: string) => void): void
     getCurrentUser(): Promise<User>
     getCurrentRoom(): Promise<Room>
@@ -91,7 +96,7 @@ interface ButtonDescriptor {
     callback: ButtonClickedCallback,
 }
 
-class Popup {
+export class Popup {
     constructor(private id: number) {
     }
 
@@ -108,12 +113,40 @@ class Popup {
     }
 }
 
-/*function uuidv4() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-        const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-}*/
+export class Sound {
+    constructor(private url: string) {
+        window.parent.postMessage({
+            "type" : 'loadSound',
+            "data": {
+                url: this.url,
+            } as LoadSoundEvent
+
+        },'*');
+    }
+
+    public play(config : SoundConfig) {
+        window.parent.postMessage({
+            "type" : 'playSound',
+            "data": {
+                url: this.url,
+                config
+            } as PlaySoundEvent
+
+        },'*');
+        return this.url;
+    }
+    public stop() {
+        window.parent.postMessage({
+            "type" : 'stopSound',
+            "data": {
+                url: this.url,
+            } as StopSoundEvent
+
+        },'*');
+        return this.url;
+    }
+
+}
 
 function getGameState(): Promise<GameStateEvent> {
     if (immutableData) {
@@ -256,7 +289,11 @@ window.WA = {
         }, '*');
     },
 
-    goToPage(url: string): void {
+    loadSound(url: string) : Sound {
+        return new Sound(url);
+    },
+
+    goToPage(url : string) : void{
         window.parent.postMessage({
             "type": 'goToPage',
             "data": {

@@ -13,6 +13,7 @@ import {menuIconVisible} from "../../Stores/MenuStore";
 import { HtmlUtils } from '../../WebRtc/HtmlUtils';
 import { iframeListener } from '../../Api/IframeListener';
 import { Subscription } from 'rxjs';
+import { videoConstraintStore } from "../../Stores/MediaStore";
 
 export const MenuSceneName = 'MenuScene';
 const gameMenuKey = 'gameMenu';
@@ -356,7 +357,7 @@ export class MenuScene extends Phaser.Scene {
         if (valueVideo !== this.videoQualityValue) {
             this.videoQualityValue = valueVideo;
             localUserStore.setVideoQualityValue(valueVideo);
-            mediaManager.updateCameraQuality(valueVideo);
+            videoConstraintStore.setFrameRate(valueVideo);
         }
         this.closeGameQualityMenu();
     }

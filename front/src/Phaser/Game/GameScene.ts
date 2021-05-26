@@ -52,6 +52,7 @@ import { mediaManager } from "../../WebRtc/MediaManager";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import type { ActionableItem } from "../Items/ActionableItem";
 import { UserInputManager } from "../UserInput/UserInputManager";
+import {soundManager} from "./SoundManager";
 import type { UserMovedMessage } from "../../Messages/generated/messages_pb";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { connectionManager } from "../../Connexion/ConnectionManager";
@@ -92,7 +93,8 @@ import { PinchManager } from "../UserInput/PinchManager";
 import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
 import { DEPTH_OVERLAY_INDEX } from "./DepthIndexes";
 import { waScaleManager } from "../Services/WaScaleManager";
-import { EmoteManager } from "./EmoteManager";
+import { peerStore} from "../../Stores/PeerStore";
+import {EmoteManager } from "./EmoteManager";
 import type { HasPlayerMovedEvent } from '../../Api/Events/HasPlayerMovedEvent';
 import { MenuScene, MenuSceneName } from '../Menu/MenuScene';
 
@@ -189,9 +191,7 @@ export class GameScene extends DirtyScene implements CenterListener {
     private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string | undefined;
     private pinchManager: PinchManager | undefined;
-    private physicsEnabled: boolean = true;
     private mapTransitioning: boolean = false; //used to prevent transitions happenning at the same time.
-    private onVisibilityChangeCallback: () => void;
     private emoteManager!: EmoteManager;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
@@ -212,7 +212,6 @@ export class GameScene extends DirtyScene implements CenterListener {
         this.connectionAnswerPromise = new Promise<RoomJoinedMessageInterface>((resolve, reject): void => {
             this.connectionAnswerPromiseResolve = resolve;
         });
-        this.onVisibilityChangeCallback = this.onVisibilityChange.bind(this);
     }
 
     //hook preload scene
@@ -507,8 +506,6 @@ export class GameScene extends DirtyScene implements CenterListener {
         if (!this.room.isDisconnected()) {
             this.connect();
         }
-        console.log('display');
-        document.addEventListener('visibilitychange', this.onVisibilityChangeCallback);
 
         this.emoteManager = new EmoteManager(this);
     }
@@ -615,6 +612,7 @@ export class GameScene extends DirtyScene implements CenterListener {
 
             // When connection is performed, let's connect SimplePeer
             this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic, this.playerName);
+            peerStore.connectToSimplePeer(this.simplePeer);
             this.GlobalMessageManager = new GlobalMessageManager(this.connection);
             userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
@@ -632,7 +630,6 @@ export class GameScene extends DirtyScene implements CenterListener {
                         self.chatModeSprite.setVisible(false);
                         self.openChatIcon.setVisible(false);
                         audioManager.restoreVolume();
-                        self.onVisibilityChange();
                     }
                 }
             })
@@ -870,6 +867,24 @@ ${escapedMessage}
             this.userInputManager.disableControls();
         }));
 
+        this.iframeSubscriptionList.push(iframeListener.playSoundStream.subscribe((playSoundEvent)=>
+       {
+           const url = new URL(playSoundEvent.url, this.MapUrlFile);
+           soundManager.playSound(this.load,this.sound,url.toString(),playSoundEvent.config);
+       }))
+
+        this.iframeSubscriptionList.push(iframeListener.stopSoundStream.subscribe((stopSoundEvent)=>
+        {
+            const url = new URL(stopSoundEvent.url, this.MapUrlFile);
+            soundManager.stopSound(this.sound,url.toString());
+        }))
+
+        this.iframeSubscriptionList.push(iframeListener.loadSoundStream.subscribe((loadSoundEvent)=>
+        {
+            const url = new URL(loadSoundEvent.url, this.MapUrlFile);
+            soundManager.loadSound(this.load,this.sound,url.toString());
+        }))
+
         this.iframeSubscriptionList.push(iframeListener.enablePlayerControlStream.subscribe(() => {
             this.userInputManager.restoreControls();
         }));
@@ -1000,8 +1015,6 @@ ${escapedMessage}
         for (const iframeEvents of this.iframeSubscriptionList) {
             iframeEvents.unsubscribe();
         }
-
-        document.removeEventListener('visibilitychange', this.onVisibilityChangeCallback);
     }
 
     private removeAllRemotePlayers(): void {
@@ -1150,8 +1163,6 @@ ${escapedMessage}
     }
 
     createCollisionWithPlayer() {
-        this.physics.disableUpdate();
-        this.physicsEnabled = false;
         //add collision layer
         for (const phaserLayer of this.gameMap.phaserLayers) {
             if (phaserLayer.type == "tilelayer") {
@@ -1294,20 +1305,7 @@ ${escapedMessage}
     update(time: number, delta: number): void {
         mediaManager.updateScene();
         this.currentTick = time;
-        if (this.CurrentPlayer.isMoving()) {
-            this.dirty = true;
-        }
         this.CurrentPlayer.moveUser(delta);
-        if (this.CurrentPlayer.isMoving()) {
-            this.dirty = true;
-            if (!this.physicsEnabled) {
-                this.physics.enableUpdate();
-                this.physicsEnabled = true;
-            }
-        } else if (this.physicsEnabled) {
-            this.physics.disableUpdate();
-            this.physicsEnabled = false;
-        }
 
         // Let's handle all events
         while (this.pendingEvents.length !== 0) {
@@ -1575,8 +1573,6 @@ ${escapedMessage}
         mediaManager.addTriggerCloseJitsiFrameButton('close-jisi', () => {
             this.stopJitsi();
         });
-
-        this.onVisibilityChange();
     }
 
     public stopJitsi(): void {
@@ -1585,7 +1581,6 @@ ${escapedMessage}
         mediaManager.showGameOverlay();
 
         mediaManager.removeTriggerCloseJitsiFrameButton('close-jisi');
-        this.onVisibilityChange();
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
@@ -1624,21 +1619,5 @@ ${escapedMessage}
     zoomByFactor(zoomFactor: number) {
         waScaleManager.zoomModifier *= zoomFactor;
         this.updateCameraOffset();
-    }
-
-    private onVisibilityChange(): void {
-        // If the overlay is not displayed, we are in Jitsi. We don't need the webcam.
-        if (!mediaManager.isGameOverlayVisible()) {
-            mediaManager.blurCamera();
-            return;
-        }
-
-        if (document.visibilityState === 'visible') {
-            mediaManager.focusCamera();
-        } else {
-            if (this.simplePeer.getNbConnections() === 0) {
-                mediaManager.blurCamera();
-            }
-        }
     }
 }
