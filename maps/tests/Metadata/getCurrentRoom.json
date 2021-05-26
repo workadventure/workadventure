@@ -1,7 +1,32 @@
 { "compressionlevel":-1,
+ "editorsettings":
+    {
+     "export":
+        {
+         "target":"."
+        }
+    },
  "height":10,
  "infinite":false,
  "layers":[
+        {
+         "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 92, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         "height":10,
+         "id":10,
+         "name":"HereYouAppered",
+         "opacity":1,
+         "properties":[
+                {
+                 "name":"startLayer",
+                 "type":"bool",
+                 "value":true
+                }],
+         "type":"tilelayer",
+         "visible":true,
+         "width":10,
+         "x":0,
+         "y":0
+        }, 
         {
          "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 52, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
          "height":10,
@@ -27,25 +52,60 @@
          "y":0
         }, 
         {
+         "data":[0, 0, 0, 0, 0, 0, 128, 128, 128, 128, 0, 0, 0, 0, 0, 0, 128, 128, 128, 128, 0, 0, 0, 0, 0, 0, 128, 128, 128, 128, 0, 0, 0, 0, 0, 0, 128, 128, 128, 128, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         "height":10,
+         "id":4,
+         "name":"metadata",
+         "opacity":1,
+         "properties":[
+                {
+                 "name":"openWebsite",
+                 "type":"string",
+                 "value":"getCurrentRoom.html"
+                }, 
+                {
+                 "name":"openWebsiteAllowApi",
+                 "type":"bool",
+                 "value":true
+                }],
+         "type":"tilelayer",
+         "visible":true,
+         "width":10,
+         "x":0,
+         "y":0
+        }, 
+        {
          "draworder":"topdown",
          "id":5,
          "name":"floorLayer",
-         "objects":[],
+         "objects":[
+                {
+                 "height":191.607568521364,
+                 "id":1,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "fontfamily":"Sans Serif",
+                     "pixelsize":9,
+                     "text":"Test : \nWalk on the grass and open the console.\n\nResult : \nYou should see a console.log() of the following attributes : \n\t- id : ID of the current room\n\t- map : data of the JSON file of the map\n\t- mapUrl : url of the JSON file of the map\n\t- startLayer : Name of the layer where the current user started (HereYouAppered)\n\n\n",
+                     "wrap":true
+                    },
+                 "type":"",
+                 "visible":true,
+                 "width":305.097705765524,
+                 "x":14.750638909983,
+                 "y":128.564783835666
+                }],
          "opacity":1,
          "type":"objectgroup",
          "visible":true,
          "x":0,
          "y":0
         }],
- "nextlayerid":10,
+ "nextlayerid":11,
  "nextobjectid":2,
  "orientation":"orthogonal",
- "properties":[
-        {
-         "name":"script",
-         "type":"string",
-         "value":"script.js"
-        }],
  "renderorder":"right-down",
  "tiledversion":"1.4.3",
  "tileheight":32,

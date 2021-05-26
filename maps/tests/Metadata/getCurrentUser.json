@@ -22,10 +22,10 @@
          "y":0
         }, 
         {
-         "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 109, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         "data":[33, 34, 34, 34, 34, 34, 34, 34, 34, 35, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 49, 50, 50, 50, 50, 50, 50, 50, 50, 51],
          "height":10,
-         "id":9,
-         "name":"HereYouAppear",
+         "id":2,
+         "name":"bottom",
          "opacity":1,
          "type":"tilelayer",
          "visible":true,
@@ -34,11 +34,17 @@
          "y":0
         }, 
         {
-         "data":[33, 34, 34, 34, 34, 34, 34, 34, 34, 35, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 49, 50, 50, 50, 50, 50, 50, 50, 50, 51],
+         "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 101, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
          "height":10,
-         "id":2,
-         "name":"bottom",
+         "id":9,
+         "name":"exit",
          "opacity":1,
+         "properties":[
+                {
+                 "name":"exitUrl",
+                 "type":"string",
+                 "value":"getCurrentRoom.json#HereYouAppered"
+                }],
          "type":"tilelayer",
          "visible":true,
          "width":10,
@@ -55,7 +61,7 @@
                 {
                  "name":"openWebsite",
                  "type":"string",
-                 "value":"getGameState2.html"
+                 "value":"getCurrentUser.html"
                 }, 
                 {
                  "name":"openWebsiteAllowApi",
@@ -74,7 +80,7 @@
          "name":"floorLayer",
          "objects":[
                 {
-                 "height":200.31900227817,
+                 "height":151.839293303871,
                  "id":1,
                  "name":"",
                  "rotation":0,
@@ -82,14 +88,14 @@
                     {
                      "fontfamily":"Sans Serif",
                      "pixelsize":9,
-                     "text":"Start the test : \nWalk on the grass, an iframe open.\n\nTest : \nClick on the 'startLayer' button.\nResult : \nThe name of the layer where you start appears. (only work when the start layer is not 'start')\n\nTest : \nClick on the 'mapUrl' button.\nResult : \nThe url of the JSON file of the map is displayed in the console.log().\n\nTest : \nClick on the 'Map' button.\nResult : \nThe JSON file map appears.\n\n\n",
+                     "text":"Test : \nWalk on the grass, open the console.\n\nResut : \nYou should see a console.log() of the following attributes :\n\t- id : ID of the current user\n\t- nickName : Name of the current user\n\t- tags : List of tags of the current user\n\nFinally : \nWalk on the red tile and continue the test in an another room.",
                      "wrap":true
                     },
                  "type":"",
                  "visible":true,
                  "width":305.097705765524,
                  "x":14.750638909983,
-                 "y":119.85335007886
+                 "y":159.621625296353
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -264,6 +270,23 @@
          "spacing":0,
          "tilecount":72,
          "tileheight":32,
+         "tiles":[
+                {
+                 "animation":[
+                        {
+                         "duration":100,
+                         "tileid":9
+                        }, 
+                        {
+                         "duration":100,
+                         "tileid":64
+                        }, 
+                        {
+                         "duration":100,
+                         "tileid":55
+                        }],
+                 "id":0
+                }],
          "tilewidth":32
         }],
  "tilewidth":32,
