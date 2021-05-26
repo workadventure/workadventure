@@ -10,6 +10,14 @@ import {PinchManager} from "../UserInput/PinchManager";
 import Zone = Phaser.GameObjects.Zone;
 import { MenuScene } from "../Menu/MenuScene";
 import {ResizableScene} from "./ResizableScene";
+import {
+    audioConstraintStore,
+    enableCameraSceneVisibilityStore,
+    localStreamStore,
+    mediaStreamConstraintsStore,
+    videoConstraintStore
+} from "../../Stores/MediaStore";
+import type {Unsubscriber} from "svelte/store";
 
 export const EnableCameraSceneName = "EnableCameraScene";
 enum LoginTextures {
@@ -40,6 +48,7 @@ export class EnableCameraScene extends ResizableScene {
     private enableCameraSceneElement!: Phaser.GameObjects.DOMElement;
 
     private mobileTapZone!: Zone;
+    private localStreamStoreUnsubscriber!: Unsubscriber;
 
     constructor() {
         super({
@@ -119,9 +128,20 @@ export class EnableCameraScene extends ResizableScene {
 
         HtmlUtils.getElementByIdOrFail<HTMLDivElement>('webRtcSetup').classList.add('active');
 
-        const mediaPromise = mediaManager.getCamera();
+        this.localStreamStoreUnsubscriber = localStreamStore.subscribe((result) => {
+            if (result.type === 'error') {
+                // TODO: proper handling of the error
+                throw result.error;
+            }
+
+            this.getDevices();
+            if (result.stream !== null) {
+                this.setupStream(result.stream);
+            }
+        });
+        /*const mediaPromise = mediaManager.getCamera();
         mediaPromise.then(this.getDevices.bind(this));
-        mediaPromise.then(this.setupStream.bind(this));
+        mediaPromise.then(this.setupStream.bind(this));*/
 
         this.input.keyboard.on('keydown-RIGHT', this.nextCam.bind(this));
         this.input.keyboard.on('keydown-LEFT', this.previousCam.bind(this));
@@ -133,6 +153,8 @@ export class EnableCameraScene extends ResizableScene {
         this.add.existing(this.soundMeterSprite);
 
         this.onResize();
+
+        enableCameraSceneVisibilityStore.showEnableCameraScene();
     }
 
     private previousCam(): void {
@@ -140,7 +162,9 @@ export class EnableCameraScene extends ResizableScene {
             return;
         }
         this.cameraSelected--;
-        mediaManager.setCamera(this.camerasList[this.cameraSelected].deviceId).then(this.setupStream.bind(this));
+        videoConstraintStore.setDeviceId(this.camerasList[this.cameraSelected].deviceId);
+
+        //mediaManager.setCamera(this.camerasList[this.cameraSelected].deviceId).then(this.setupStream.bind(this));
     }
 
     private nextCam(): void {
@@ -148,8 +172,10 @@ export class EnableCameraScene extends ResizableScene {
             return;
         }
         this.cameraSelected++;
+        videoConstraintStore.setDeviceId(this.camerasList[this.cameraSelected].deviceId);
+
         // TODO: the change of camera should be OBSERVED (reactive)
-        mediaManager.setCamera(this.camerasList[this.cameraSelected].deviceId).then(this.setupStream.bind(this));
+        //mediaManager.setCamera(this.camerasList[this.cameraSelected].deviceId).then(this.setupStream.bind(this));
     }
 
     private previousMic(): void {
@@ -157,7 +183,8 @@ export class EnableCameraScene extends ResizableScene {
             return;
         }
         this.microphoneSelected--;
-        mediaManager.setMicrophone(this.microphonesList[this.microphoneSelected].deviceId).then(this.setupStream.bind(this));
+        audioConstraintStore.setDeviceId(this.microphonesList[this.microphoneSelected].deviceId);
+        //mediaManager.setMicrophone(this.microphonesList[this.microphoneSelected].deviceId).then(this.setupStream.bind(this));
     }
 
     private nextMic(): void {
@@ -165,8 +192,9 @@ export class EnableCameraScene extends ResizableScene {
             return;
         }
         this.microphoneSelected++;
+        audioConstraintStore.setDeviceId(this.microphonesList[this.microphoneSelected].deviceId);
         // TODO: the change of camera should be OBSERVED (reactive)
-        mediaManager.setMicrophone(this.microphonesList[this.microphoneSelected].deviceId).then(this.setupStream.bind(this));
+        //mediaManager.setMicrophone(this.microphonesList[this.microphoneSelected].deviceId).then(this.setupStream.bind(this));
     }
 
     /**
@@ -260,15 +288,20 @@ export class EnableCameraScene extends ResizableScene {
         HtmlUtils.getElementByIdOrFail<HTMLDivElement>('webRtcSetup').style.display = 'none';
         this.soundMeter.stop();
 
-        mediaManager.stopCamera();
-        mediaManager.stopMicrophone();
+        enableCameraSceneVisibilityStore.hideEnableCameraScene();
+        this.localStreamStoreUnsubscriber();
+        //mediaManager.stopCamera();
+        //mediaManager.stopMicrophone();
 
-        this.scene.sleep(EnableCameraSceneName)
+        this.scene.sleep(EnableCameraSceneName);
         gameManager.goToStartingMap(this.scene);
     }
 
     private async getDevices() {
+        // TODO: switch this in a store.
         const mediaDeviceInfos = await navigator.mediaDevices.enumerateDevices();
+        this.microphonesList = [];
+        this.camerasList = [];
         for (const mediaDeviceInfo of mediaDeviceInfos) {
             if (mediaDeviceInfo.kind === 'audioinput') {
                 this.microphonesList.push(mediaDeviceInfo);

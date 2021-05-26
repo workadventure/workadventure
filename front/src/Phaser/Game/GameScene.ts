@@ -9,7 +9,7 @@ import type {
     PositionInterface,
     RoomJoinedMessageInterface
 } from "../../Connexion/ConnexionModels";
-import {CurrentGamerInterface, hasMovedEventName, Player} from "../Player/Player";
+import {hasMovedEventName, Player, requestEmoteEventName} from "../Player/Player";
 import {
     DEBUG_MODE,
     JITSI_PRIVATE_MODE,
@@ -91,7 +91,10 @@ import {TextUtils} from "../Components/TextUtils";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
 import {joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey} from "../Components/MobileJoystick";
+import {DEPTH_OVERLAY_INDEX} from "./DepthIndexes";
 import {waScaleManager} from "../Services/WaScaleManager";
+import {peerStore} from "../../Stores/PeerStore";
+import {EmoteManager} from "./EmoteManager";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -132,7 +135,7 @@ const defaultStartLayerName = 'start';
 
 export class GameScene extends DirtyScene implements CenterListener {
     Terrains : Array<Phaser.Tilemaps.Tileset>;
-    CurrentPlayer!: CurrentGamerInterface;
+    CurrentPlayer!: Player;
     MapPlayers!: Phaser.Physics.Arcade.Group;
     MapPlayersByKey : Map<number, RemotePlayer> = new Map<number, RemotePlayer>();
     Map!: Phaser.Tilemaps.Tilemap;
@@ -187,9 +190,8 @@ export class GameScene extends DirtyScene implements CenterListener {
     private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string|undefined;
     private pinchManager: PinchManager|undefined;
-    private physicsEnabled: boolean = true;
     private mapTransitioning: boolean = false; //used to prevent transitions happenning at the same time.
-    private onVisibilityChangeCallback: () => void;
+    private emoteManager!: EmoteManager;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
@@ -209,7 +211,6 @@ export class GameScene extends DirtyScene implements CenterListener {
         this.connectionAnswerPromise = new Promise<RoomJoinedMessageInterface>((resolve, reject): void => {
             this.connectionAnswerPromiseResolve = resolve;
         });
-        this.onVisibilityChangeCallback = this.onVisibilityChange.bind(this);
     }
 
     //hook preload scene
@@ -227,6 +228,11 @@ export class GameScene extends DirtyScene implements CenterListener {
             this.load.image(joystickBaseKey, joystickBaseImg);
             this.load.image(joystickThumbKey, joystickThumbImg);
         }
+        //todo: in an emote manager.
+        this.load.spritesheet('emote-music', 'resources/emotes/pipo-popupemotes005.png', {
+            frameHeight: 32,
+            frameWidth: 32,
+        });
         this.load.on(FILE_LOAD_ERROR, (file: {src: string}) => {
             // If we happen to be in HTTP and we are trying to load a URL in HTTPS only... (this happens only in dev environments)
             if (window.location.protocol === 'http:' && file.src === this.MapUrlFile && file.src.startsWith('http:') && this.originalMapUrl === undefined) {
@@ -422,7 +428,7 @@ export class GameScene extends DirtyScene implements CenterListener {
                 }
             }
             if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
-                depth = 10000;
+                depth = DEPTH_OVERLAY_INDEX;
             }
             if (layer.type === 'objectgroup') {
                 for (const object of layer.objects) {
@@ -509,7 +515,7 @@ export class GameScene extends DirtyScene implements CenterListener {
             this.connect();
         }
 
-        document.addEventListener('visibilitychange', this.onVisibilityChangeCallback);
+        this.emoteManager = new EmoteManager(this);
     }
 
     /**
@@ -614,6 +620,7 @@ export class GameScene extends DirtyScene implements CenterListener {
 
             // When connection is performed, let's connect SimplePeer
             this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic, this.playerName);
+            peerStore.connectToSimplePeer(this.simplePeer);
             this.GlobalMessageManager = new GlobalMessageManager(this.connection);
             userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
@@ -631,7 +638,6 @@ export class GameScene extends DirtyScene implements CenterListener {
                         self.chatModeSprite.setVisible(false);
                         self.openChatIcon.setVisible(false);
                         audioManager.restoreVolume();
-                        self.onVisibilityChange();
                     }
                 }
             })
@@ -950,12 +956,11 @@ ${escapedMessage}
         this.messageSubscription?.unsubscribe();
         this.userInputManager.destroy();
         this.pinchManager?.destroy();
+        this.emoteManager.destroy();
 
         for(const iframeEvents of this.iframeSubscriptionList){
             iframeEvents.unsubscribe();
         }
-
-        document.removeEventListener('visibilitychange', this.onVisibilityChangeCallback);
     }
 
     private removeAllRemotePlayers(): void {
@@ -1108,8 +1113,6 @@ ${escapedMessage}
     }
 
     createCollisionWithPlayer() {
-        this.physics.disableUpdate();
-        this.physicsEnabled = false;
         //add collision layer
         this.Layers.forEach((Layer: Phaser.Tilemaps.TilemapLayer) => {
             this.physics.add.collider(this.CurrentPlayer, Layer, (object1: GameObject, object2: GameObject) => {
@@ -1143,6 +1146,12 @@ ${escapedMessage}
                 this.companion,
                 this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
+            this.CurrentPlayer.on('pointerdown', () => {
+                this.emoteManager.getMenuImages().then((emoteMenuElements) => this.CurrentPlayer.openOrCloseEmoteMenu(emoteMenuElements))
+            })
+            this.CurrentPlayer.on(requestEmoteEventName, (emoteKey: string) => {
+                this.connection?.emitEmoteEvent(emoteKey);
+            })
         }catch (err){
             if(err instanceof TextureError) {
                 gameManager.leaveGame(this, SelectCharacterSceneName, new SelectCharacterScene());
@@ -1243,20 +1252,7 @@ ${escapedMessage}
         this.dirty = false;
         mediaManager.updateScene();
         this.currentTick = time;
-        if (this.CurrentPlayer.isMoving()) {
-            this.dirty = true;
-        }
         this.CurrentPlayer.moveUser(delta);
-        if (this.CurrentPlayer.isMoving()) {
-            this.dirty = true;
-            if (!this.physicsEnabled) {
-                this.physics.enableUpdate();
-                this.physicsEnabled = true;
-            }
-        } else if (this.physicsEnabled) {
-            this.physics.disableUpdate();
-            this.physicsEnabled = false;
-        }
 
         // Let's handle all events
         while (this.pendingEvents.length !== 0) {
@@ -1524,8 +1520,6 @@ ${escapedMessage}
         mediaManager.addTriggerCloseJitsiFrameButton('close-jisi',() => {
             this.stopJitsi();
         });
-
-        this.onVisibilityChange();
     }
 
     public stopJitsi(): void {
@@ -1534,7 +1528,6 @@ ${escapedMessage}
         mediaManager.showGameOverlay();
 
         mediaManager.removeTriggerCloseJitsiFrameButton('close-jisi');
-        this.onVisibilityChange();
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
@@ -1573,21 +1566,5 @@ ${escapedMessage}
     zoomByFactor(zoomFactor: number) {
         waScaleManager.zoomModifier *= zoomFactor;
         this.updateCameraOffset();
-    }
-
-    private onVisibilityChange(): void {
-        // If the overlay is not displayed, we are in Jitsi. We don't need the webcam.
-        if (!mediaManager.isGameOverlayVisible()) {
-            mediaManager.blurCamera();
-            return;
-        }
-
-        if (document.visibilityState === 'visible') {
-            mediaManager.focusCamera();
-        } else {
-            if (this.simplePeer.getNbConnections() === 0) {
-                mediaManager.blurCamera();
-            }
-        }
     }
 }

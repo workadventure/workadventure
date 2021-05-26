@@ -2,6 +2,8 @@ import {mediaManager} from "../../WebRtc/MediaManager";
 import {HtmlUtils} from "../../WebRtc/HtmlUtils";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {DirtyScene} from "../Game/DirtyScene";
+import {get} from "svelte/store";
+import {requestedCameraState, requestedMicrophoneState} from "../../Stores/MediaStore";
 
 export const HelpCameraSettingsSceneName = 'HelpCameraSettingsScene';
 const helpCameraSettings = 'helpCameraSettings';
@@ -41,7 +43,7 @@ export class HelpCameraSettingsScene extends DirtyScene {
             }
         });
 
-        if(!localUserStore.getHelpCameraSettingsShown() && (!mediaManager.constraintsMedia.audio || !mediaManager.constraintsMedia.video)){
+        if(!localUserStore.getHelpCameraSettingsShown() && (!get(requestedMicrophoneState) || !get(requestedCameraState))){
             this.openHelpCameraSettingsOpened();
             localUserStore.setHelpCameraSettingsShown();
         }
