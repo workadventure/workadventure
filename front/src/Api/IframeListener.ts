@@ -1,3 +1,4 @@
+
 import { Subject } from "rxjs";
 import { ChatEvent, isChatEvent } from "./Events/ChatEvent";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
@@ -11,8 +12,9 @@ import { GoToPageEvent, isGoToPageEvent } from "./Events/GoToPageEvent";
 import { isOpenCoWebsite, OpenCoWebSiteEvent } from "./Events/OpenCoWebSiteEvent";
 import { IframeEventMap, IframeEvent, IframeResponseEvent, IframeResponseEventMap, isIframeEventWrapper, TypedMessageEvent } from "./Events/IframeEvent";
 import type { UserInputChatEvent } from "./Events/UserInputChatEvent";
-
-
+import {isPlaySoundEvent, PlaySoundEvent} from "./Events/PlaySoundEvent";
+import {isStopSoundEvent, StopSoundEvent} from "./Events/StopSoundEvent";
+import {isLoadSoundEvent, LoadSoundEvent} from "./Events/LoadSoundEvent";
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.
  * Also allows to send messages to those iframes.
@@ -51,6 +53,15 @@ class IframeListener {
     private readonly _removeBubbleStream: Subject<void> = new Subject();
     public readonly removeBubbleStream = this._removeBubbleStream.asObservable();
 
+    private readonly _playSoundStream: Subject<PlaySoundEvent> = new Subject();
+    public readonly playSoundStream = this._playSoundStream.asObservable();
+
+    private readonly _stopSoundStream: Subject<StopSoundEvent> = new Subject();
+    public readonly stopSoundStream = this._stopSoundStream.asObservable();
+
+    private readonly _loadSoundStream: Subject<LoadSoundEvent> = new Subject();
+    public readonly loadSoundStream = this._loadSoundStream.asObservable();
+
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
 
@@ -85,6 +96,15 @@ class IframeListener {
                 else if (payload.type === 'goToPage' && isGoToPageEvent(payload.data)) {
                     scriptUtils.goToPage(payload.data.url);
                 }
+                else if (payload.type === 'playSound' && isPlaySoundEvent(payload.data)) {
+                    this._playSoundStream.next(payload.data);
+                }
+                else if (payload.type === 'stopSound' && isStopSoundEvent(payload.data)) {
+                    this._stopSoundStream.next(payload.data);
+                }
+                else if (payload.type === 'loadSound' && isLoadSoundEvent(payload.data)) {
+                    this._loadSoundStream.next(payload.data);
+                }
                 else if (payload.type === 'openCoWebSite' && isOpenCoWebsite(payload.data)) {
                     const scriptUrl = [...this.scripts.keys()].find(key => {
                         return this.scripts.get(key)?.contentWindow == message.source
@@ -92,9 +112,11 @@ class IframeListener {
 
                     scriptUtils.openCoWebsite(payload.data.url, scriptUrl || foundSrc);
                 }
+
                 else if (payload.type === 'closeCoWebSite') {
                     scriptUtils.closeCoWebSite();
                 }
+
                 else if (payload.type === 'disablePlayerControls') {
                     this._disablePlayerControlStream.next();
                 }
