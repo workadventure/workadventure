@@ -1,6 +1,7 @@
 import type {ITiledMap, ITiledMapLayer, ITiledMapTileLayer} from "../Map/ITiledMap";
 import { flattenGroupLayersMap } from "../Map/LayersFlattener";
 import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
+import {DEPTH_OVERLAY_INDEX} from "./DepthIndexes";
 
 export type PropertyChangeCallback = (newValue: string | number | boolean | undefined, oldValue: string | number | boolean | undefined, allProps: Map<string, string | boolean | number>) => void;
 
@@ -23,7 +24,7 @@ export class GameMap {
                 this.phaserLayers.push(phaserMap.createLayer(layer.name, terrains, 0, 0).setDepth(depth));
             }
             if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
-                depth = 10000;
+                depth = DEPTH_OVERLAY_INDEX;
             }
         }
     }
