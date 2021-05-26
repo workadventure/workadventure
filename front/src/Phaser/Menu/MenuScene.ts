@@ -10,6 +10,7 @@ import {GameConnexionTypes} from "../../Url/UrlManager";
 import {WarningContainer, warningContainerHtml, warningContainerKey} from "../Components/WarningContainer";
 import {worldFullWarningStream} from "../../Connexion/WorldFullWarningStream";
 import {menuIconVisible} from "../../Stores/MenuStore";
+import {videoConstraintStore} from "../../Stores/MediaStore";
 
 export const MenuSceneName = 'MenuScene';
 const gameMenuKey = 'gameMenu';
@@ -324,7 +325,7 @@ export class MenuScene extends Phaser.Scene {
         if (valueVideo !== this.videoQualityValue) {
             this.videoQualityValue = valueVideo;
             localUserStore.setVideoQualityValue(valueVideo);
-            mediaManager.updateCameraQuality(valueVideo);
+            videoConstraintStore.setFrameRate(valueVideo);
         }
         this.closeGameQualityMenu();
     }

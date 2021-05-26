@@ -14,6 +14,8 @@ import type {RoomConnection} from "../Connexion/RoomConnection";
 import {connectionManager} from "../Connexion/ConnectionManager";
 import {GameConnexionTypes} from "../Url/UrlManager";
 import {blackListManager} from "./BlackListManager";
+import {get} from "svelte/store";
+import {localStreamStore, obtainedMediaConstraintStore} from "../Stores/MediaStore";
 
 export interface UserSimplePeerInterface{
     userId: number;
@@ -82,11 +84,10 @@ export class SimplePeer {
         });
 
         mediaManager.showGameOverlay();
-        mediaManager.getCamera().finally(() => {
-            //receive message start
-            this.Connection.receiveWebrtcStart((message: UserSimplePeerInterface) => {
-                this.receiveWebrtcStart(message);
-            });
+
+        //receive message start
+        this.Connection.receiveWebrtcStart((message: UserSimplePeerInterface) => {
+            this.receiveWebrtcStart(message);
         });
 
         this.Connection.disconnectMessage((data: WebRtcDisconnectMessageInterface): void => {
@@ -344,8 +345,15 @@ export class SimplePeer {
             if (!PeerConnection) {
                 throw new Error('While adding media, cannot find user with ID ' + userId);
             }
-            const localStream: MediaStream | null = mediaManager.localStream;
-            PeerConnection.write(new Buffer(JSON.stringify({type: MESSAGE_TYPE_CONSTRAINT, ...mediaManager.constraintsMedia})));
+
+            const result = get(localStreamStore);
+
+            PeerConnection.write(new Buffer(JSON.stringify({type: MESSAGE_TYPE_CONSTRAINT, ...result.constraints})));
+
+            if (result.type === 'error') {
+                return;
+            }
+            const localStream: MediaStream | null = result.stream;
 
             if(!localStream){
                 return;
