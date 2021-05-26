@@ -165,15 +165,13 @@ const userMoved5SecondsAgoStore = readable(false, function start(set) {
 
 
 /**
- * A store containing whether the current page is visible or not.
+ * A store containing whether the mouse is getting close the bottom right corner.
  */
 const mouseInBottomRight = readable(false, function start(set) {
     let lastInBottomRight = false;
     const gameDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('game');
 
     const detectInBottomRight = (event: MouseEvent) => {
-        // TODO: not relative to window but to canvas!!!
-        // use phaser?
         const rect = gameDiv.getBoundingClientRect();
         const inBottomRight = event.x - rect.left > rect.width * 3 / 4 && event.y - rect.top > rect.height * 3 / 4;
         if (inBottomRight !== lastInBottomRight) {
@@ -187,30 +185,12 @@ const mouseInBottomRight = readable(false, function start(set) {
     return function stop() {
         document.removeEventListener('mousemove', detectInBottomRight);
     }
-    /*const mouseEnter = () => {
-        set(true);
-        console.log('enter')
-    }
-    const mouseLeave = () => set(false);
-    const bottomLeftZone = HtmlUtils.getElementByIdOrFail('bottom-left-zone');
-
-    bottomLeftZone.addEventListener('mouseenter', mouseEnter);
-    bottomLeftZone.addEventListener('mouseleave', mouseLeave);
-
-    return function stop() {
-        bottomLeftZone.removeEventListener('mouseenter', mouseEnter);
-        bottomLeftZone.removeEventListener('mouseleave', mouseLeave);
-    };*/
 });
 
 /**
  * A store that contains "true" if the webcam should be stopped for energy efficiency reason - i.e. we are not moving and not in a conversation.
  */
 export const cameraEnergySavingStore = derived([userMoved5SecondsAgoStore, peerStore, enabledWebCam10secondsAgoStore, mouseInBottomRight], ([$userMoved5SecondsAgoStore,$peerStore, $enabledWebCam10secondsAgoStore, $mouseInBottomRight]) => {
-
-    // TODO: enable when mouse is hovering near the webcam
-    // TODO: add animation to show/hide webcam
-
     return !$mouseInBottomRight && !$userMoved5SecondsAgoStore && $peerStore.size === 0 && !$enabledWebCam10secondsAgoStore;
 });
 
