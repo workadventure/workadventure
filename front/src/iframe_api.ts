@@ -81,7 +81,6 @@ export class Popup {
 
 export class Sound {
     constructor(private url: string) {
-        // TODO: send a "loadSound" event
         window.parent.postMessage({
             "type" : 'loadSound',
             "data": {
@@ -153,18 +152,6 @@ window.WA = {
             } as OpenTabEvent
         }, '*');
     },
-
-    /*playSound(url: string, config : SoundConfig) : string{
-        window.parent.postMessage({
-            "type" : 'playSound',
-            "data": {
-                url,
-                config
-            } as PlaySoundEvent
-
-        },'*');
-        return url;
-    },*/
 
     loadSound(url: string) : Sound {
         return new Sound(url);

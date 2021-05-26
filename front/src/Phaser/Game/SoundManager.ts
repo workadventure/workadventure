@@ -31,7 +31,6 @@ class SoundManager {
     }
 
     public stopSound(soundManager : BaseSoundManager,soundUrl : string){
-        console.log("stop "+ soundManager.get(soundUrl).key);
         soundManager.get(soundUrl).stop();
     }
 }
