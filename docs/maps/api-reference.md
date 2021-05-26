@@ -236,8 +236,7 @@ mySound.play(config);
 mySound.stop();
 ```
 
-### Show / Hide a layer 
-
+### Show / Hide a layer
 ```
 WA.showLayer(layerName : string): void
 WA.hideLayer(layerName : string) : void
@@ -245,7 +244,6 @@ WA.hideLayer(layerName : string) : void
 These 2 methods can be used to show and hide a layer.
 
 Example :
-
 ```javascript
 WA.showLayer('bottom');
 //...
@@ -260,8 +258,7 @@ WA.setProperty(layerName : string, propertyName : string, propertyValue : string
 
 Set the value of the `propertyName` property of the layer `layerName` at `propertyValue`. If the property doesn't exist, create the property `propertyName` and set the value of the property at `propertyValue`.
 
-Example : 
-
+Example :
 ```javascript
 WA.setProperty('wikiLayer', 'openWebsite', 'https://www.wikipedia.org/');
 ```
@@ -286,74 +283,42 @@ Example :
 WA.onPlayerMove(console.log);
 ```
 
-### Getting the map
-
+### Getting informations on the current user
 ```
-getMap(): Promise<ITiledMap>
+getCurrentUser(): Promise<User>
 ```
-
-Returns a promise that resolves to the JSON file of the map. Please note that if you modified the map (for instance by calling `WA.setProperty`, the data returned by `getMap` will contain those changes.
-
-Example : 
-```javascript
-WA.getMap().then((data) => console.log(data.layers));
-```
-
-### Getting the url of the JSON file map
-
-```
-getMapUrl(): Promise<string>
-```
-
-Return a promise of the url of the JSON file map.
+Return a promise that resolves to a `User` object with the following attributes :
+* **id (string) :** ID of the current user
+* **nickName (string) :** name displayed above the current user
+* **tags (string[]) :** list of all the tags of the current user
 
 Example : 
 ```javascript
-WA.getMapUrl().then((mapUrl) => {console.log(mapUrl)});
+WA.getCurrentUser().then((user) => {
+    if (user.nickName === 'ABC') {
+        console.log(user.tags);
+    }
+})
 ```
 
-### Getting the roomID
+### Getting informations on the current room
 ```
-getRoomId(): Promise<string>
+getCurrentRoom(): Promise<Room>
 ```
-Return a promise of the ID of the current room.
+Return a promise that resolves to a `Room` object with the following attributes : 
+* **id (string) :** ID of the current room
+* **map (ITiledMap) :** contains the JSON map file with the properties that were setted by the script if `setProperty` was called.
+* **mapUrl (string) :** Url of the JSON map file
+* **startLayer (string | null) :** Name of the layer where the current user started, only if different from `start` layer
 
 Example : 
 ```javascript
-WA.getRoomId().then((roomId) => console.log(roomId));
-```
-
-### Getting the UUID of the current user
-```
-getUuid(): Promise<string | undefined>
-```
-Return a promise of the ID of the current user.
-
-Example :
-```javascript
-WA.getUuid().then((uuid) => {console.log(uuid)});
-```
-
-### Getting the nickname of the current user
-```
-getNickName(): Promise<string | null>
-```
-Return a promise of the nickname of the current user.
-
-Example :
-```javascript
-WA.getNickName().then((nickname) => {console.log(nickname)});
-```
-
-### Getting the name of the layer where the current user started (if other than start)
-```
-getStartLayerName(): Promise<string | null>
-```
-Return a promise of the name of the layer where the current user started if the name is different than "start".
-
-Example :
-```javascript
-WA.getStartLayerName().then((starLayerName) => {console.log(starLayerName)});
+WA.getCurrentRoom((room) => {
+    if (room.id === '42') {
+        console.log(room.map);
+        window.open(room.mapUrl, '_blank');
+    }
+})
 ```
 
 ### Add a custom menu
@@ -367,17 +332,21 @@ Example :
 WA.registerMenuCommand('About', () => {
     console.log("The About menu was clicked");
 });
-
-### Getting the list of tags of the current user
-```
-getTagUser(): Promise<string[]>
 ```
 
-Returns the tags of the current user. If the current user has no tag, returns an empty list.
+
+### Working with group layers
+If you use group layers in your map, to reference a layer in a group you will need to use a `/` to join layer names together.
 
 Example : 
-```javascript
-WA.getTagUser().then((tagList) => {
-    ...
-});
-```
+<div class="row">
+    <div class="col">
+        <img src="https://workadventu.re/img/docs/groupLayer.png" class="figure-img img-fluid rounded" alt="" />
+    </div>
+</div>
+
+The name of the layers of this map are : 
+* `entries/start`
+* `bottom/ground/under`
+* `bottom/build/carpet`
+* `wall`

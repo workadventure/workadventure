@@ -201,6 +201,7 @@ window.WA = {
             } as ChatEvent
         }, '*');
     },
+
     showLayer(layer: string) : void {
       window.parent.postMessage({
           'type' : 'showLayer',
@@ -209,6 +210,7 @@ window.WA = {
           } as LayerEvent
       }, '*');
     },
+
     hideLayer(layer: string) : void {
         window.parent.postMessage({
             'type' : 'hideLayer',
@@ -217,6 +219,7 @@ window.WA = {
             } as LayerEvent
         }, '*');
     },
+
     setProperty(layerName: string, propertyName: string, propertyValue: string | number | boolean | undefined): void {
         window.parent.postMessage({
            'type' : 'setProperty',
@@ -227,6 +230,7 @@ window.WA = {
            } as SetPropertyEvent
         }, '*');
     },
+
     disablePlayerControls(): void {
         window.parent.postMessage({ 'type': 'disablePlayerControls' }, '*');
     },
