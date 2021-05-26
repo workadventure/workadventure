@@ -255,6 +255,9 @@ video#myCamVideo{
 .btn-monitor.hide {
     transform: translateY(60px);
 }
+.btn-cam-action:hover .btn-monitor.hide{
+    transform: translateY(60px);
+}
 .btn-copy{
     pointer-events: auto;
     transition: all .3s;
