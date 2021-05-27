@@ -1,10 +1,24 @@
 import { ChatEvent } from '../Events/ChatEvent'
 import { isUserInputChatEvent, UserInputChatEvent } from '../Events/UserInputChatEvent'
-import { registerWorkadventureCommand, registerWorkadvntureCallback, sendToWorkadventure } from "./iframe-registration"
+import { } from "./iframe-registration"
+import { apiCallback, IframeApiContribution, sendToWorkadventure } from './IframeApiContribution'
 
-let chatMessageCallback: (event: string) => void | undefined
 
-class WorkadvntureChatCommands {
+class WorkadvntureChatCommands extends IframeApiContribution<WorkadvntureChatCommands> {
+    readonly subObjectIdentifier = 'chat'
+
+    readonly addMethodsAtRoot = true
+
+    chatMessageCallback?: (event: string) => void
+
+    callbacks = [apiCallback({
+        callback: (event: UserInputChatEvent) => {
+            this.chatMessageCallback?.(event.message)
+        },
+        type: "userInputChat",
+        typeChecker: isUserInputChatEvent
+    })]
+
 
     sendChatMessage(message: string, author: string) {
         sendToWorkadventure({
@@ -20,16 +34,8 @@ class WorkadvntureChatCommands {
      * Listen to messages sent by the local user, in the chat.
      */
     onChatMessage(callback: (message: string) => void) {
-        chatMessageCallback = callback
+        this.chatMessageCallback = callback
     }
 }
 
-export const commands = registerWorkadventureCommand(new WorkadvntureChatCommands())
-export const callbacks = registerWorkadvntureCallback([{
-    callback: (event: UserInputChatEvent) => {
-        chatMessageCallback?.(event.message)
-    },
-    type: "userInputChat",
-    typeChecker: isUserInputChatEvent
-}])
-
+export default new WorkadvntureChatCommands()
