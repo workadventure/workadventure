@@ -1,6 +1,8 @@
 import {JITSI_URL} from "../Enum/EnvironmentVariable";
 import {mediaManager} from "./MediaManager";
 import {coWebsiteManager} from "./CoWebsiteManager";
+import {requestedCameraState, requestedMicrophoneState} from "../Stores/MediaStore";
+import {get} from "svelte/store";
 declare const window:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 interface jitsiConfigInterface {
@@ -10,10 +12,9 @@ interface jitsiConfigInterface {
 }
 
 const getDefaultConfig = () : jitsiConfigInterface => {
-    const constraints = mediaManager.getConstraintRequestedByUser();
     return {
-        startWithAudioMuted: !constraints.audio,
-        startWithVideoMuted: constraints.video === false,
+        startWithAudioMuted: !get(requestedMicrophoneState),
+        startWithVideoMuted: !get(requestedCameraState),
         prejoinPageEnabled: false
     }
 }
@@ -72,7 +73,6 @@ class JitsiFactory {
     private jitsiApi: any; // eslint-disable-line @typescript-eslint/no-explicit-any
     private audioCallback = this.onAudioChange.bind(this);
     private videoCallback = this.onVideoChange.bind(this);
-    private previousConfigMeet! : jitsiConfigInterface;
     private jitsiScriptLoaded: boolean = false;
 
     /**
@@ -83,9 +83,6 @@ class JitsiFactory {
     }
 
     public start(roomName: string, playerName:string, jwt?: string, config?: object, interfaceConfig?: object, jitsiUrl?: string): void {
-        //save previous config
-        this.previousConfigMeet = getDefaultConfig();
-
         coWebsiteManager.insertCoWebsite((async cowebsiteDiv => {
             // Jitsi meet external API maintains some data in local storage
             // which is sent via the appData URL parameter when joining a
@@ -134,27 +131,22 @@ class JitsiFactory {
         this.jitsiApi.removeListener('audioMuteStatusChanged', this.audioCallback);
         this.jitsiApi.removeListener('videoMuteStatusChanged', this.videoCallback);
         this.jitsiApi?.dispose();
-
-        //restore previous config
-        if(this.previousConfigMeet?.startWithAudioMuted){
-            await mediaManager.disableMicrophone();
-        }else{
-            await mediaManager.enableMicrophone();
-        }
-
-        if(this.previousConfigMeet?.startWithVideoMuted){
-            await mediaManager.disableCamera();
-        }else{
-            await mediaManager.enableCamera();
-        }
     }
 
     private onAudioChange({muted}: {muted: boolean}): void {
-        this.previousConfigMeet.startWithAudioMuted = muted;
+        if (muted) {
+            requestedMicrophoneState.disableMicrophone();
+        } else {
+            requestedMicrophoneState.enableMicrophone();
+        }
     }
 
     private onVideoChange({muted}: {muted: boolean}): void {
-        this.previousConfigMeet.startWithVideoMuted = muted;
+        if (muted) {
+            requestedCameraState.disableWebcam();
+        } else {
+            requestedCameraState.enableWebcam();
+        }
     }
 
     private async loadJitsiScript(domain: string): Promise<void> {

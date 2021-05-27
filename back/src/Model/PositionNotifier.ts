@@ -8,10 +8,12 @@
  * The PositionNotifier is important for performance. It allows us to send the position of players only to a restricted
  * number of players around the current player.
  */
-import {EntersCallback, LeavesCallback, MovesCallback, Zone} from "./Zone";
+import {EmoteCallback, EntersCallback, LeavesCallback, MovesCallback, Zone} from "./Zone";
 import {Movable} from "_Model/Movable";
 import {PositionInterface} from "_Model/PositionInterface";
 import {ZoneSocket} from "../RoomManager";
+import {User} from "_Model/User";
+import {EmoteEventMessage} from "../Messages/generated/messages_pb";
 
 interface ZoneDescriptor {
     i: number;
@@ -24,7 +26,7 @@ export class PositionNotifier {
 
     private zones: Zone[][] = [];
 
-    constructor(private zoneWidth: number, private zoneHeight: number, private onUserEnters: EntersCallback, private onUserMoves: MovesCallback, private onUserLeaves: LeavesCallback) {
+    constructor(private zoneWidth: number, private zoneHeight: number, private onUserEnters: EntersCallback, private onUserMoves: MovesCallback, private onUserLeaves: LeavesCallback, private onEmote: EmoteCallback) {
     }
 
     private getZoneDescriptorFromCoordinates(x: number, y: number): ZoneDescriptor {
@@ -77,7 +79,7 @@ export class PositionNotifier {
 
         let zone = this.zones[j][i];
         if (zone === undefined) {
-            zone = new Zone(this.onUserEnters, this.onUserMoves, this.onUserLeaves, i, j);
+            zone = new Zone(this.onUserEnters, this.onUserMoves, this.onUserLeaves, this.onEmote, i, j);
             this.zones[j][i] = zone;
         }
         return zone;
@@ -92,5 +94,12 @@ export class PositionNotifier {
     public removeZoneListener(call: ZoneSocket, x: number, y: number): void {
         const zone = this.getZone(x, y);
         zone.removeListener(call);
+    }
+
+    public emitEmoteEvent(user: User, emoteEventMessage: EmoteEventMessage) {
+        const zoneDesc = this.getZoneDescriptorFromCoordinates(user.getPosition().x, user.getPosition().y);
+        const zone = this.getZone(zoneDesc.i, zoneDesc.j);
+        zone.emitEmoteEvent(emoteEventMessage);
+        
     }
 }

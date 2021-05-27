@@ -173,7 +173,7 @@ export class UserInputManager {
     }
 
     destroy(): void {
-        this.joystick.destroy();
+        this.joystick?.destroy();
     }
 
     private initMouseWheel() {

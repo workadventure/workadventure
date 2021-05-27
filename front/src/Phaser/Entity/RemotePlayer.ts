@@ -21,14 +21,10 @@ export class RemotePlayer extends Character {
         companion: string|null,
         companionTexturePromise?: Promise<string>
     ) {
-        super(Scene, x, y, texturesPromise, name, direction, moving, 1);
-
+        super(Scene, x, y, texturesPromise, name, direction, moving, 1, companion, companionTexturePromise);
+        
         //set data
         this.userId = userId;
-
-        if (typeof companion === 'string') {
-            this.addCompanion(companion, companionTexturePromise);
-        }
     }
 
     updatePosition(position: PointInterface): void {
@@ -41,5 +37,9 @@ export class RemotePlayer extends Character {
         if (this.companion) {
             this.companion.setTarget(position.x, position.y, position.direction as PlayerAnimationDirections);
         }
+    }
+
+    isClickable(): boolean {
+        return false; //todo: make remote players clickable if they are logged in.
     }
 }
