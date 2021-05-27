@@ -3,21 +3,19 @@ import {PositionInterface} from "_Model/PositionInterface";
 import {Movable} from "./Movable";
 import {Group} from "./Group";
 import {ZoneSocket} from "../RoomManager";
+import {EmoteEventMessage} from "../Messages/generated/messages_pb";
 
 export type EntersCallback = (thing: Movable, fromZone: Zone|null, listener: ZoneSocket) => void;
 export type MovesCallback = (thing: Movable, position: PositionInterface, listener: ZoneSocket) => void;
 export type LeavesCallback = (thing: Movable, newZone: Zone|null, listener: ZoneSocket) => void;
+export type EmoteCallback = (emoteEventMessage: EmoteEventMessage, listener: ZoneSocket) => void;
 
 export class Zone {
     private things: Set<Movable> = new Set<Movable>();
     private listeners: Set<ZoneSocket> = new Set<ZoneSocket>();
-
-    /**
-     * @param x For debugging purpose only
-     * @param y For debugging purpose only
-     */
-    constructor(private onEnters: EntersCallback, private onMoves: MovesCallback, private onLeaves: LeavesCallback, public readonly x: number, public readonly y: number) {
-    }
+    
+    
+    constructor(private onEnters: EntersCallback, private onMoves: MovesCallback, private onLeaves: LeavesCallback, private onEmote: EmoteCallback, public readonly x: number, public readonly y: number) { }
 
     /**
      * A user/thing leaves the zone
@@ -41,9 +39,7 @@ export class Zone {
      */
     private notifyLeft(thing: Movable, newZone: Zone|null) {
         for (const listener of this.listeners) {
-            //if (listener !== thing && (newZone === null || !listener.listenedZones.has(newZone))) {
-                this.onLeaves(thing, newZone, listener);
-            //}
+            this.onLeaves(thing, newZone, listener);
         }
     }
 
@@ -57,15 +53,6 @@ export class Zone {
      */
     private notifyEnter(thing: Movable, oldZone: Zone|null, position: PositionInterface) {
         for (const listener of this.listeners) {
-
-            /*if (listener === thing) {
-                continue;
-            }
-            if (oldZone === null || !listener.listenedZones.has(oldZone)) {
-                this.onEnters(thing, listener);
-            } else {
-                this.onMoves(thing, position, listener);
-            }*/
             this.onEnters(thing, oldZone, listener);
         }
     }
@@ -85,28 +72,6 @@ export class Zone {
         }
     }
 
-    /*public startListening(listener: User): void {
-        for (const thing of this.things) {
-            if (thing !== listener) {
-                this.onEnters(thing, listener);
-            }
-        }
-
-        this.listeners.add(listener);
-        listener.listenedZones.add(this);
-    }
-
-    public stopListening(listener: User): void {
-        for (const thing of this.things) {
-            if (thing !== listener) {
-                this.onLeaves(thing, listener);
-            }
-        }
-
-        this.listeners.delete(listener);
-        listener.listenedZones.delete(this);
-    }*/
-
     public getThings(): Set<Movable> {
         return this.things;
     }
@@ -118,5 +83,12 @@ export class Zone {
 
     public removeListener(socket: ZoneSocket): void {
         this.listeners.delete(socket);
+    }
+
+    public emitEmoteEvent(emoteEventMessage: EmoteEventMessage) {
+        for (const listener of this.listeners) {
+            this.onEmote(emoteEventMessage, listener);
+        }
+        
     }
 }

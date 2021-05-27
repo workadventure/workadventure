@@ -1,9 +1,13 @@
 {
+//  "include": ["src/**/*", "webpack.config.ts"],
+
+  "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist/",
     "sourceMap": true,
     "moduleResolution": "node",
-    "module": "CommonJS",
+    //"module": "CommonJS",
+    "module": "ESNext",
     "target": "ES2017",
     "declaration": false,
     "downlevelIteration": true,

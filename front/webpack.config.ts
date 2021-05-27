@@ -1,10 +1,12 @@
-import {Configuration} from "webpack";
-import WebpackDevServer from "webpack-dev-server";
-
-const path = require('path');
-const webpack = require('webpack');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+import type {Configuration} from "webpack";
+import type WebpackDevServer from "webpack-dev-server";
+import path from 'path';
+import webpack from 'webpack';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import sveltePreprocess from 'svelte-preprocess';
+import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
+import NodePolyfillPlugin from 'node-polyfill-webpack-plugin';
 
 const mode = process.env.NODE_ENV ?? 'development';
 const isProduction = mode === 'production';
@@ -33,17 +35,85 @@ module.exports = {
         rules: [
             {
                 test: /\.tsx?$/,
-                use: 'ts-loader',
+                //use: 'ts-loader',
                 exclude: /node_modules/,
+                loader: 'ts-loader',
+                options: {
+                    transpileOnly: true,
+                },
             },
             {
                 test: /\.scss$/,
-                use: [MiniCssExtractPlugin.loader, 'css-loader?url=false', 'sass-loader'],
+                exclude: /node_modules/,
+                use: [
+                    MiniCssExtractPlugin.loader, {
+                        loader: 'css-loader',
+                        options: {
+                            //url: false,
+                            sourceMap: true
+                        }
+                    }, 'sass-loader'],
             },
+            {
+                test: /\.css$/,
+                exclude: /node_modules/,
+                use: [
+                    MiniCssExtractPlugin.loader,
+                    {
+                        loader: 'css-loader',
+                        options: {
+                            //url: false,
+                            sourceMap: true
+                        }
+                    }
+                ]
+            },
+            {
+                test: /\.(html|svelte)$/,
+                exclude: /node_modules/,
+                use: {
+                    loader: 'svelte-loader',
+                    options: {
+                        compilerOptions: {
+                            // Dev mode must be enabled for HMR to work!
+                            dev: isDevelopment
+                        },
+                        emitCss: isProduction,
+                        hotReload: isDevelopment,
+                        hotOptions: {
+                            // List of options and defaults: https://www.npmjs.com/package/svelte-loader-hot#usage
+                            noPreserveState: false,
+                            optimistic: true,
+                        },
+                        preprocess: sveltePreprocess({
+                            scss: true,
+                            sass: true,
+                        })
+                    }
+                }
+            },
+
+            // Required to prevent errors from Svelte on Webpack 5+, omit on Webpack 4
+            // See: https://github.com/sveltejs/svelte-loader#usage
+            {
+                test: /node_modules\/svelte\/.*\.mjs$/,
+                resolve: {
+                    fullySpecified: false
+                }
+            },
+            {
+                test: /\.(ttf|eot|svg|png|gif|jpg)$/,
+                exclude: /node_modules/,
+                type: 'asset'
+            }
         ],
     },
     resolve: {
-        extensions: [ '.tsx', '.ts', '.js' ],
+        alias: {
+            svelte: path.resolve('node_modules', 'svelte')
+        },
+        extensions: [ '.tsx', '.ts', '.js', '.svelte' ],
+        mainFields: ['svelte', 'browser', 'module', 'main']
     },
     output: {
         filename: (pathData) => {
@@ -54,11 +124,14 @@ module.exports = {
         path: path.resolve(__dirname, 'dist'),
         publicPath: '/'
     },
-    /*externals:[
-        require('webpack-require-http')
-    ],*/
     plugins: [
-        new MiniCssExtractPlugin({filename: 'style.[contenthash].css'}),
+        new webpack.HotModuleReplacementPlugin(),
+        new ForkTsCheckerWebpackPlugin({
+            eslint: {
+                files: './src/**/*.ts'
+            }
+        }),
+        new MiniCssExtractPlugin({filename: '[name].[contenthash].css'}),
         new HtmlWebpackPlugin(
             {
                 template: './dist/index.tmpl.html.tmp',
@@ -77,8 +150,11 @@ module.exports = {
         new webpack.ProvidePlugin({
             Phaser: 'phaser'
         }),
+        new NodePolyfillPlugin(),
         new webpack.EnvironmentPlugin({
             'API_URL': null,
+            'SKIP_RENDER_OPTIMIZATIONS': false,
+            'DISABLE_NOTIFICATIONS': false,
             'PUSHER_URL': undefined,
             'UPLOADER_URL': null,
             'ADMIN_URL': null,

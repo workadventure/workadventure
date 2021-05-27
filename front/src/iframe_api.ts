@@ -2,6 +2,7 @@ import { Subject } from "rxjs";
 import type { GoToPageEvent } from "./Api/Events/GoToPageEvent";
 import { IframeResponseEventMap, isIframeResponseEventWrapper } from "./Api/Events/IframeEvent";
 import type { OpenCoWebSiteEvent } from "./Api/Events/OpenCoWebSiteEvent";
+
 import type { OpenTabEvent } from "./Api/Events/OpenTabEvent";
 import { isUserInputChatEvent, UserInputChatEvent } from "./Api/Events/UserInputChatEvent";
 
@@ -30,6 +31,11 @@ type ObjectOfKey<Key extends ApiKeys, O = WorkadventureCommandClasses> = O exten
 
 type ShouldAddAttribute<Key extends ApiKeys> = ObjectWithKeyOfUnion<Key>;
 
+import type {PlaySoundEvent} from "./Api/Events/PlaySoundEvent";
+import type  {StopSoundEvent} from "./Api/Events/StopSoundEvent";
+import type {LoadSoundEvent} from "./Api/Events/LoadSoundEvent";
+import SoundConfig = Phaser.Types.Sound.SoundConfig;
+
 type WorkadventureFunctions = { [K in ApiKeys]: ObjectWithKeyOfUnion<K> extends Function ? K : never }[ApiKeys]
 
 type WorkadventureFunctionsFilteredByRoot = { [K in WorkadventureFunctions]: ObjectOfKey<K>["addMethodsAtRoot"] extends true ? K : never }[WorkadventureFunctions]
@@ -55,6 +61,7 @@ export interface WorkAdventureApi extends WorkAdventureApiFiles {
     restorePlayerControls(): void;
     displayBubble(): void;
     removeBubble(): void;
+    loadSound(url : string): Sound;
 }
 
 
@@ -70,9 +77,40 @@ declare global {
 
 const userInputChatStream: Subject<UserInputChatEvent> = new Subject();
 
+export class Sound {
+    constructor(private url: string) {
+        window.parent.postMessage({
+            "type" : 'loadSound',
+            "data": {
+                url: this.url,
+            } as LoadSoundEvent
 
+        },'*');
+    }
 
+    public play(config : SoundConfig) {
+        window.parent.postMessage({
+            "type" : 'playSound',
+            "data": {
+                url: this.url,
+                config
+            } as PlaySoundEvent
 
+        },'*');
+        return this.url;
+    }
+    public stop() {
+        window.parent.postMessage({
+            "type" : 'stopSound',
+            "data": {
+                url: this.url,
+            } as StopSoundEvent
+
+        },'*');
+        return this.url;
+    }
+
+}
 
 window.WA = {
     disablePlayerControls(): void {
@@ -100,7 +138,11 @@ window.WA = {
         }, '*');
     },
 
-    goToPage(url: string): void {
+    loadSound(url: string) : Sound {
+        return new Sound(url);
+    },
+
+    goToPage(url : string) : void{
         window.parent.postMessage({
             "type": 'goToPage',
             "data": {
