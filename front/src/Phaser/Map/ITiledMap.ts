@@ -170,12 +170,17 @@ export interface ITiledTileSet {
     tilewidth: number;
     transparentcolor: string;
     terrains: ITiledMapTerrain[];
-    tiles: {[key: string]: { terrain: number[] }};
+    tiles: Array<ITile>;
 
     /**
      * Refers to external tileset file (should be JSON)
      */
     source: string;
+}
+
+export interface ITile {
+    id: number,
+    type?: string
 }
 
 export interface ITiledMapTerrain {

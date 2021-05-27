@@ -15,8 +15,9 @@ import type { UserInputChatEvent } from './UserInputChatEvent';
 import type { DataLayerEvent } from "./DataLayerEvent";
 import type { LayerEvent } from './LayerEvent';
 import type { SetPropertyEvent } from "./setPropertyEvent";
-import type {LoadSoundEvent} from "./LoadSoundEvent";
-import type {PlaySoundEvent} from "./PlaySoundEvent";
+import type { LoadSoundEvent } from "./LoadSoundEvent";
+import type { PlaySoundEvent } from "./PlaySoundEvent";
+import type { ChangeTileEvent } from "./ChangeTileEvent";
 
 
 export interface TypedMessageEvent<T> extends MessageEvent {
@@ -46,6 +47,7 @@ export type IframeEventMap = {
     loadSound: LoadSoundEvent
     playSound: PlaySoundEvent
     stopSound: null
+    changeTile: ChangeTileEvent
 }
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;

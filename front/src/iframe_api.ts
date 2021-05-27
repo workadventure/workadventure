@@ -17,9 +17,9 @@ import { DataLayerEvent, isDataLayerEvent } from "./Api/Events/DataLayerEvent";
 import type { ITiledMap } from "./Phaser/Map/ITiledMap";
 import type { MenuItemRegisterEvent } from "./Api/Events/MenuItemRegisterEvent";
 import { isMenuItemClickedEvent } from "./Api/Events/MenuItemClickedEvent";
-import type {PlaySoundEvent} from "./Api/Events/PlaySoundEvent";
-import type  {StopSoundEvent} from "./Api/Events/StopSoundEvent";
-import type {LoadSoundEvent} from "./Api/Events/LoadSoundEvent";
+import type { PlaySoundEvent } from "./Api/Events/PlaySoundEvent";
+import type  {StopSoundEvent } from "./Api/Events/StopSoundEvent";
+import type { LoadSoundEvent } from "./Api/Events/LoadSoundEvent";
 import SoundConfig = Phaser.Types.Sound.SoundConfig;
 
 interface WorkAdventureApi {

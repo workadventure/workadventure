@@ -24,6 +24,7 @@ import type { MenuItemClickedEvent } from './Events/MenuItemClickedEvent';
 import { isPlaySoundEvent, PlaySoundEvent } from "./Events/PlaySoundEvent";
 import { isStopSoundEvent, StopSoundEvent } from "./Events/StopSoundEvent";
 import { isLoadSoundEvent, LoadSoundEvent } from "./Events/LoadSoundEvent";
+import { isChangeTileEvent, ChangeTileEvent } from './Events/ChangeTileEvent';
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.
  * Also allows to send messages to those iframes.
@@ -92,6 +93,9 @@ class IframeListener {
 
     private readonly _loadSoundStream: Subject<LoadSoundEvent> = new Subject();
     public readonly loadSoundStream = this._loadSoundStream.asObservable();
+
+    private readonly _changeTileStream: Subject<ChangeTileEvent> = new Subject();
+    public readonly changeTileStream = this._changeTileStream.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
@@ -172,8 +176,8 @@ class IframeListener {
                     this._dataLayerChangeStream.next();
                 } else if (payload.type == "registerMenuCommand" && isMenuItemRegisterEvent(payload.data)) {
                     this._registerMenuCommandStream.next(payload.data.menutItem)
-/*              } else if (payload.type == "tilsetEvent" && isTilesetEvent(payload.data)) {
-                    this._tilesetLoaderStream.next(payload.data);*/
+                } else if (payload.type == "changeTile" && isChangeTileEvent(payload.data)) {
+                    this._changeTileStream.next(payload.data);
                 }
             }
         }, false);

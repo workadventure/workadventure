@@ -81,20 +81,21 @@ import CanvasTexture = Phaser.Textures.CanvasTexture;
 import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import DOMElement = Phaser.GameObjects.DOMElement;
+import EVENT_TYPE = Phaser.Scenes.Events
 import type { Subscription } from "rxjs";
 import { worldFullMessageStream } from "../../Connexion/WorldFullMessageStream";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
 import RenderTexture = Phaser.GameObjects.RenderTexture;
 import Tilemap = Phaser.Tilemaps.Tilemap;
-import { DirtyScene } from "./DirtyScene";
-import { TextUtils } from "../Components/TextUtils";
-import { touchScreenManager } from "../../Touch/TouchScreenManager";
-import { PinchManager } from "../UserInput/PinchManager";
-import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
-import { DEPTH_OVERLAY_INDEX } from "./DepthIndexes";
-import { waScaleManager } from "../Services/WaScaleManager";
-import { peerStore} from "../../Stores/PeerStore";
-import {EmoteManager } from "./EmoteManager";
+import {DirtyScene} from "./DirtyScene";
+import {TextUtils} from "../Components/TextUtils";
+import {touchScreenManager} from "../../Touch/TouchScreenManager";
+import {PinchManager} from "../UserInput/PinchManager";
+import {joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey} from "../Components/MobileJoystick";
+import {DEPTH_OVERLAY_INDEX} from "./DepthIndexes";
+import {waScaleManager} from "../Services/WaScaleManager";
+import {peerStore} from "../../Stores/PeerStore";
+import {EmoteManager} from "./EmoteManager";
 import type { HasPlayerMovedEvent } from '../../Api/Events/HasPlayerMovedEvent';
 import { MenuScene, MenuSceneName } from '../Menu/MenuScene';
 
@@ -188,7 +189,7 @@ export class GameScene extends DirtyScene implements CenterListener {
     private characterLayers!: string[];
     private companion!: string | null;
     private messageSubscription: Subscription | null = null;
-    private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
+    private popUpElements: Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string | undefined;
     private pinchManager: PinchManager | undefined;
     private mapTransitioning: boolean = false; //used to prevent transitions happenning at the same time.
@@ -885,9 +886,37 @@ ${escapedMessage}
             soundManager.loadSound(this.load,this.sound,url.toString());
         }))
 
-        this.iframeSubscriptionList.push(iframeListener.enablePlayerControlStream.subscribe(() => {
+       this.iframeSubscriptionList.push(iframeListener.enablePlayerControlStream.subscribe(()=>{
             this.userInputManager.restoreControls();
-        }));
+        }))
+
+/*        this.iframeSubscriptionList.push(iframeListener.loadPageStream.subscribe((url: string) => {
+            this.loadNextGame(url).then(() => {
+                this.events.once(EVENT_TYPE.POST_UPDATE, () => {
+                    this.onMapExit(url);
+                })
+            })
+        }))*/
+
+        this.iframeSubscriptionList.push(iframeListener.updateTileEvent.subscribe(event => {
+            for (const eventTile of event) {
+                const layer = this.gameMap.findPhaserLayer(eventTile.layer);
+                if (layer) {
+                    const tile = layer.getTileAt(eventTile.x, eventTile.y)
+                    if (typeof eventTile.tile == "string") {
+                        const tileIndex = this.getIndexForTileType(eventTile.tile);
+                        if (tileIndex) {
+                            tile.index = tileIndex
+                        } else {
+                            return
+                        }
+                    } else {
+                        tile.index = eventTile.tile
+                    }
+                }
+            }
+            this.scene.scene.sys.game.events.emit("contextrestored")
+        }))
 
         let scriptedBubbleSprite: Sprite;
         this.iframeSubscriptionList.push(iframeListener.displayBubbleStream.subscribe(() => {
@@ -961,6 +990,18 @@ ${escapedMessage}
         this.dirty = true;
     }
 
+    private getIndexForTileType(tileType: string): number | null {
+            for (const tileset of this.mapFile.tilesets) {
+                if (tileset.tiles) {
+                    for (const tilesetTile of tileset.tiles) {
+                        if (tilesetTile.type == tileType) {
+                            return tileset.firstgid + tilesetTile.id
+                        }
+                    }
+                }
+            }
+            return null
+        }
 
     private getMapDirUrl(): string {
         return this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf('/'));
@@ -969,8 +1010,8 @@ ${escapedMessage}
     private onMapExit(exitKey: string) {
         if (this.mapTransitioning) return;
         this.mapTransitioning = true;
-        const {roomId, hash} = Room.getIdFromIdentifier(exitKey, this.MapUrlFile, this.instance);
-        if (!roomId) throw new Error('Could not find the room from its exit key: '+exitKey);
+        const { roomId, hash } = Room.getIdFromIdentifier(exitKey, this.MapUrlFile, this.instance);
+        if (!roomId) throw new Error('Could not find the room from its exit key: ' + exitKey);
         urlManager.pushStartLayerNameToUrl(hash);
         const menuScene: MenuScene = this.scene.get(MenuSceneName) as MenuScene
         menuScene.reset()
