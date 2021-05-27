@@ -923,7 +923,7 @@ ${escapedMessage}
                 uuid: localUserStore.getLocalUser()?.uuid,
                 nickname: localUserStore.getName(),
                 roomId: this.RoomId,
-                tags: this.connection ? this.connection.getAllTag() : []
+                tags: this.connection ? this.connection.getAllTags() : []
             })
         }));
 
