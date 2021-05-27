@@ -1,8 +1,7 @@
-import type { IframeEvent, IframeEventMap, IframeResponseEventMap } from '../Events/IframeEvent';
 import type * as tg from "generic-type-guard";
+import type { IframeEvent, IframeEventMap, IframeResponseEventMap } from '../Events/IframeEvent';
 
 
-export type PossibleSubobjects = "zone" | "chat" | "ui"
 
 export function sendToWorkadventure(content: IframeEvent<keyof IframeEventMap>) {
     window.parent.postMessage(content, "*")
@@ -21,7 +20,7 @@ export interface IframeCallbackContribution<Guard extends tg.TypeGuard<unknown>,
     callback: (payloadData: T) => void
 }
 
-
+export type PossibleSubobjects = "zone" | "chat" | "ui" | "nav" | "sound" | "cowebsite" | "player"
 /**
  * !! be aware that the implemented attributes (addMethodsAtRoot and subObjectIdentifier) must be readonly
  * 
