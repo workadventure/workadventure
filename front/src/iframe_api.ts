@@ -11,7 +11,9 @@ const importType = Promise.all([
     import("./Api/iframe/Sound"),
     import("./Api/iframe/zone-events"),
     import("./Api/iframe/Navigation"),
-    import("./Api/iframe/CoWebsite")
+    import("./Api/iframe/CoWebsite"),
+    import("./Api/iframe/Player"),
+    import("./Api/iframe/Bubble")
 ])
 
 
@@ -46,10 +48,7 @@ type WorkAdventureApiFiles = {
 } & SubObjectTypes
 
 export interface WorkAdventureApi extends WorkAdventureApiFiles {
-    disablePlayerControls(): void;
-    restorePlayerControls(): void;
-    displayBubble(): void;
-    removeBubble(): void;
+
 }
 
 declare global {
@@ -62,17 +61,6 @@ declare global {
 
 
 window.WA = {
-   
-
-    displayBubble(): void {
-        window.parent.postMessage({ 'type': 'displayBubble' }, '*');
-    },
-
-    removeBubble(): void {
-        window.parent.postMessage({ 'type': 'removeBubble' }, '*');
-    },
-
-
     ...({} as WorkAdventureApiFiles),
 }
 

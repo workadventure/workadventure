@@ -20,7 +20,7 @@ export interface IframeCallbackContribution<Guard extends tg.TypeGuard<unknown>,
     callback: (payloadData: T) => void
 }
 
-export type PossibleSubobjects = "zone" | "chat" | "ui" | "nav" | "sound" | "cowebsite" | "player"
+export type PossibleSubobjects = "zone" | "chat" | "ui" | "nav" | "sound" | "cowebsite" | "player" | "bubble"
 /**
  * !! be aware that the implemented attributes (addMethodsAtRoot and subObjectIdentifier) must be readonly
  * 
