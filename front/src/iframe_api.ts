@@ -3,9 +3,8 @@ import { IframeEvent, IframeEventMap, IframeResponseEventMap, isIframeResponseEv
 import { isUserInputChatEvent, UserInputChatEvent } from "./Api/Events/UserInputChatEvent";
 import { Subject } from "rxjs";
 import { EnterLeaveEvent, isEnterLeaveEvent } from "./Api/Events/EnterLeaveEvent";
-import { OpenPopupEvent } from "./Api/Events/OpenPopupEvent";
+
 import { isButtonClickedEvent } from "./Api/Events/ButtonClickedEvent";
-import { ClosePopupEvent } from "./Api/Events/ClosePopupEvent";
 import { OpenTabEvent } from "./Api/Events/OpenTabEvent";
 import { GoToPageEvent } from "./Api/Events/GoToPageEvent";
 import { OpenCoWebSiteEvent, OpenCoWebSiteOptionsEvent } from "./Api/Events/OpenCoWebSiteEvent";
@@ -21,23 +20,43 @@ export const registeredCallbacks: { [K in keyof IframeResponseEventMap]?: {
     typeChecker: Function
     callback: Function
 } } = {}
-
 const importType = Promise.all([
+    import("./Api/iframe/popup"),
     import("./Api/iframe/chatmessage"),
     import("./Api/iframe/zone-events")
 ])
-type UnPromise<P> = P extends Promise<infer T> ? T : P
 
-type WorkadventureCommandClasses = UnPromise<typeof importType>[number]["commands"];
+type PromiseReturnType<P> = P extends Promise<infer T> ? T : P
+
+type WorkadventureCommandClasses = PromiseReturnType<typeof importType>[number]["default"];
+
 type KeysOfUnion<T> = T extends T ? keyof T : never
-type ObjectWithKeyOfUnion<O, Key> = O extends O ? (Key extends keyof O ? O[Key] : never) : never
 
-type WorkAdventureApiFiles = { [Key in KeysOfUnion<WorkadventureCommandClasses>]: ObjectWithKeyOfUnion<WorkadventureCommandClasses, Key> };
+type ObjectWithKeyOfUnion<Key, O = WorkadventureCommandClasses> = O extends O ? (Key extends keyof O ? O[Key] : never) : never
+
+type ApiKeys = KeysOfUnion<WorkadventureCommandClasses>;
+
+type ObjectOfKey<Key extends ApiKeys, O = WorkadventureCommandClasses> = O extends O ? (Key extends keyof O ? O : never) : never
+
+type ShouldAddAttribute<Key extends ApiKeys> = ObjectWithKeyOfUnion<Key>;
+
+type WorkadventureFunctions = { [K in ApiKeys]: ObjectWithKeyOfUnion<K> extends Function ? K : never }[ApiKeys]
+
+type WorkadventureFunctionsFilteredByRoot = { [K in WorkadventureFunctions]: ObjectOfKey<K>["addMethodsAtRoot"] extends true ? K : never }[WorkadventureFunctions]
+
+
+type JustMethodKeys<T> = ({ [P in keyof T]: T[P] extends Function ? P : never })[keyof T];
+type JustMethods<T> = Pick<T, JustMethodKeys<T>>;
+
+type SubObjectTypes = {
+    [importCl in WorkadventureCommandClasses as importCl["subObjectIdentifier"]]: JustMethods<importCl>;
+};
+
+type WorkAdventureApiFiles = {
+    [Key in WorkadventureFunctionsFilteredByRoot]: ShouldAddAttribute<Key>
+} & SubObjectTypes
 
 export interface WorkAdventureApi extends WorkAdventureApiFiles {
-    onEnterZone(name: string, callback: () => void): void;
-    onLeaveZone(name: string, callback: () => void): void;
-    openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup;
     openTab(url: string): void;
     goToPage(url: string): void;
     exitSceneTo(url: string): void;
@@ -70,47 +89,11 @@ declare global {
     let WA: WorkAdventureApi
 }
 
-type ChatMessageCallback = (message: string) => void;
-type ButtonClickedCallback = (popup: Popup) => void;
-
 const userInputChatStream: Subject<UserInputChatEvent> = new Subject();
-const enterStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
-const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
-const popups: Map<number, Popup> = new Map<number, Popup>();
-const popupCallbacks: Map<number, Map<number, ButtonClickedCallback>> = new Map<number, Map<number, ButtonClickedCallback>>();
+
 const menuCallbacks: Map<string, (command: string) => void> = new Map()
-let popupId = 0;
-interface ButtonDescriptor {
-    /**
-     * The label of the button
-     */
-    label: string,
-    /**
-     * The type of the button. Can be one of "normal", "primary", "success", "warning", "error", "disabled"
-     */
-    className?: "normal" | "primary" | "success" | "warning" | "error" | "disabled",
-    /**
-     * Callback called if the button is pressed
-     */
-    callback: ButtonClickedCallback,
-}
 
-class Popup {
-    constructor(private id: number) {
-    }
 
-    /**
-     * Closes the popup
-     */
-    public close(): void {
-        window.parent.postMessage({
-            'type': 'closePopup',
-            'data': {
-                'popupId': this.id,
-            } as ClosePopupEvent
-        }, '*');
-    }
-}
 function uuidv4() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
         const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
@@ -259,42 +242,6 @@ window.WA = {
         }, '*');
     },
 
-    openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup {
-        popupId++;
-        const popup = new Popup(popupId);
-        const btnMap = new Map<number, () => void>();
-        popupCallbacks.set(popupId, btnMap);
-        let id = 0;
-        for (const button of buttons) {
-            const callback = button.callback;
-            if (callback) {
-                btnMap.set(id, () => {
-                    callback(popup);
-                });
-            }
-            id++;
-        }
-
-
-        window.parent.postMessage({
-            'type': 'openPopup',
-            'data': {
-                popupId,
-                targetObject,
-                message,
-                buttons: buttons.map((button) => {
-                    return {
-                        label: button.label,
-                        className: button.className
-                    };
-                })
-            } as OpenPopupEvent
-        }, '*');
-
-        popups.set(popupId, popup)
-        return popup;
-    },
-
     registerMenuCommand(commandDescriptor: string, callback: (commandDescriptor: string) => void) {
         menuCallbacks.set(commandDescriptor, callback);
         window.parent.postMessage({
@@ -305,23 +252,6 @@ window.WA = {
         }, '*');
     },
     ...({} as WorkAdventureApiFiles),
-    onEnterZone(name: string, callback: () => void): void {
-        let subject = enterStreams.get(name);
-        if (subject === undefined) {
-            subject = new Subject<EnterLeaveEvent>();
-            enterStreams.set(name, subject);
-        }
-        subject.subscribe(callback);
-    },
-    onLeaveZone(name: string, callback: () => void): void {
-        let subject = leaveStreams.get(name);
-        if (subject === undefined) {
-            subject = new Subject<EnterLeaveEvent>();
-            leaveStreams.set(name, subject);
-        }
-        subject.subscribe(callback);
-    },
-
 }
 
 window.addEventListener('message', message => {
@@ -343,19 +273,6 @@ window.addEventListener('message', message => {
 
         if (payload.type === 'userInputChat' && isUserInputChatEvent(payloadData)) {
             userInputChatStream.next(payloadData);
-        } else if (payload.type === 'enterEvent' && isEnterLeaveEvent(payloadData)) {
-            enterStreams.get(payloadData.name)?.next();
-        } else if (payload.type === 'leaveEvent' && isEnterLeaveEvent(payloadData)) {
-            leaveStreams.get(payloadData.name)?.next();
-        } else if (payload.type === 'buttonClickedEvent' && isButtonClickedEvent(payloadData)) {
-            const callback = popupCallbacks.get(payloadData.popupId)?.get(payloadData.buttonId);
-            const popup = popups.get(payloadData.popupId);
-            if (popup === undefined) {
-                throw new Error('Could not find popup with ID "' + payloadData.popupId + '"');
-            }
-            if (callback) {
-                callback(popup);
-            }
         } else if (payload.type == "menuItemClicked" && isMenuItemClickedEvent(payload.data)) {
             const callback = menuCallbacks.get(payload.data.menuItem);
             if (callback) {

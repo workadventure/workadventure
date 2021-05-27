@@ -1,6 +1,6 @@
 import { IframeEvent, IframeEventMap, IframeResponseEventMap } from '../Events/IframeEvent';
 import { registeredCallbacks, WorkAdventureApi } from "../../iframe_api"
-export function registerWorkadventureCommand<T>(commnds: T): T {
+/*export function registerWorkadventureCommand<T>(commnds: T): T {
     const commandPrototype = Object.getPrototypeOf(commnds);
     const commandClassPropertyNames = Object.getOwnPropertyNames(commandPrototype).filter(name => name !== "constructor");
     for (const key of commandClassPropertyNames) {
@@ -8,7 +8,7 @@ export function registerWorkadventureCommand<T>(commnds: T): T {
     }
     return commnds
 }
-
+*/
 
 export function registerWorkadvntureCallback<T extends Function>(callbacks: Array<{
     type: keyof IframeResponseEventMap,
@@ -25,6 +25,3 @@ export function registerWorkadvntureCallback<T extends Function>(callbacks: Arra
 }
 
 
-export function sendToWorkadventure(content: IframeEvent<keyof IframeEventMap>) {
-    window.parent.postMessage(content, "*")
-}
