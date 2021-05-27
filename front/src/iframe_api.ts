@@ -8,8 +8,6 @@ import type { PlaySoundEvent } from "./Api/Events/PlaySoundEvent";
 import type { StopSoundEvent } from "./Api/Events/StopSoundEvent";
 import { isUserInputChatEvent, UserInputChatEvent } from "./Api/Events/UserInputChatEvent";
 import SoundConfig = Phaser.Types.Sound.SoundConfig;
-
-
 export const registeredCallbacks: { [K in keyof IframeResponseEventMap]?: {
     typeChecker: Function
     callback: Function
@@ -34,7 +32,6 @@ type ApiKeys = KeysOfUnion<WorkadventureCommandClasses>;
 type ObjectOfKey<Key extends ApiKeys, O = WorkadventureCommandClasses> = O extends O ? (Key extends keyof O ? O : never) : never
 
 type ShouldAddAttribute<Key extends ApiKeys> = ObjectWithKeyOfUnion<Key>;
-
 
 type WorkadventureFunctions = { [K in ApiKeys]: ObjectWithKeyOfUnion<K> extends Function ? K : never }[ApiKeys]
 
