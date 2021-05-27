@@ -1,4 +1,5 @@
 import type * as tg from "generic-type-guard";
+import { registeredCallbacks } from '../../iframe_api';
 import type { IframeEvent, IframeEventMap, IframeResponseEventMap } from '../Events/IframeEvent';
 
 
@@ -9,7 +10,10 @@ export function sendToWorkadventure(content: IframeEvent<keyof IframeEventMap>) 
 type GuardedType<Guard extends tg.TypeGuard<unknown>> = Guard extends tg.TypeGuard<infer T> ? T : never
 
 export function apiCallback<T extends tg.TypeGuard<unknown>>(callbackData: IframeCallbackContribution<T>) {
-
+    registeredCallbacks[callbackData.type] = {
+        typeChecker: callbackData.typeChecker,
+        callback: callbackData.callback
+    }
     return callbackData
 }
 
