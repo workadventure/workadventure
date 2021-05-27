@@ -43,13 +43,10 @@ type SubObjectTypes = {
     [importCl in WorkadventureCommandClasses as importCl["subObjectIdentifier"]]: JustMethods<importCl>;
 };
 
-type WorkAdventureApiFiles = {
+type WorkAdventureApi = {
     [Key in WorkadventureFunctionsFilteredByRoot]: ShouldAddAttribute<Key>
 } & SubObjectTypes
 
-export interface WorkAdventureApi extends WorkAdventureApiFiles {
-
-}
 
 declare global {
 
@@ -59,10 +56,30 @@ declare global {
     let WA: WorkAdventureApi
 }
 
+async function populateWa(): Promise<void> {
+    const wa: Partial<WorkAdventureApi> = {}
+    for (const apiImport of await importType) {
+        const classInstance = apiImport.default
+        const commandPrototype = Object.getPrototypeOf(classInstance);
+        const commandClassPropertyNames = Object.getOwnPropertyNames(commandPrototype).filter(name => name !== "constructor");
+        const importObject: Partial<WorkAdventureApi> = {}
+        for (const prop of commandClassPropertyNames) {
+            const apiImportKey = prop as keyof typeof classInstance;
+            if (typeof classInstance[apiImportKey] === "function") {
+                importObject[apiImportKey as keyof WorkAdventureApi] = commandPrototype[apiImportKey] as never
+            }
+        }
+        wa[classInstance.subObjectIdentifier] = importObject as never
+        if (classInstance.addMethodsAtRoot) {
+            Object.assign(wa, importObject)
+        }
+    }
 
-window.WA = {
-    ...({} as WorkAdventureApiFiles),
+    window.WA = Object.assign({}, wa) as WorkAdventureApi
 }
+
+
+populateWa()
 
 window.addEventListener('message', message => {
     if (message.source !== window.parent) {
