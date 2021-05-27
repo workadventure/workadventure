@@ -1,7 +1,7 @@
 import { isButtonClickedEvent } from '../Events/ButtonClickedEvent';
-import { ClosePopupEvent } from '../Events/ClosePopupEvent';
-import { apiCallback, IframeApiContribution, IframeCallbackContribution, sendToWorkadventure } from './IframeApiContribution';
-import zoneCommands from "./zone-events"
+import type { ClosePopupEvent } from '../Events/ClosePopupEvent';
+import { apiCallback, IframeApiContribution, sendToWorkadventure } from './IframeApiContribution';
+import zoneCommands from "./zone-events";
 class Popup {
     constructor(private id: number) {
     }

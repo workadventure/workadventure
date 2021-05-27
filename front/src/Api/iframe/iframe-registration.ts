@@ -1,5 +1,5 @@
-import { IframeEvent, IframeEventMap, IframeResponseEventMap } from '../Events/IframeEvent';
-import { registeredCallbacks, WorkAdventureApi } from "../../iframe_api"
+import { registeredCallbacks } from "../../iframe_api";
+import type { IframeResponseEventMap } from '../Events/IframeEvent';
 /*export function registerWorkadventureCommand<T>(commnds: T): T {
     const commandPrototype = Object.getPrototypeOf(commnds);
     const commandClassPropertyNames = Object.getOwnPropertyNames(commandPrototype).filter(name => name !== "constructor");

@@ -1,4 +1,4 @@
-import { ChatEvent } from '../Events/ChatEvent'
+import type { ChatEvent } from '../Events/ChatEvent'
 import { isUserInputChatEvent, UserInputChatEvent } from '../Events/UserInputChatEvent'
 import { } from "./iframe-registration"
 import { apiCallback, IframeApiContribution, sendToWorkadventure } from './IframeApiContribution'
