@@ -34,7 +34,7 @@ export interface ITiledMap {
 export interface ITiledMapLayerProperty {
     name: string;
     type: string;
-    value: string|boolean|number|undefined;
+    value: string | boolean | number | undefined;
 }
 
 /*export interface ITiledMapLayerBooleanProperty {
@@ -63,7 +63,7 @@ export interface ITiledMapGroupLayer {
 
 export interface ITiledMapTileLayer {
     id?: number,
-    data: number[]|string;
+    data: number[] | string;
     height: number;
     name: string;
     opacity: number;
@@ -114,7 +114,7 @@ export interface ITiledMapObject {
     gid: number;
     height: number;
     name: string;
-    properties: {[key: string]: string};
+    properties: { [key: string]: string };
     rotation: number;
     type: string;
     visible: boolean;
@@ -130,12 +130,12 @@ export interface ITiledMapObject {
     /**
      * Polygon points
      */
-    polygon: {x: number, y: number}[];
+    polygon: { x: number, y: number }[];
 
     /**
      * Polyline points
      */
-    polyline: {x: number, y: number}[];
+    polyline: { x: number, y: number }[];
 
     text?: ITiledText
 }
@@ -149,7 +149,7 @@ export interface ITiledText {
     underline?: boolean,
     italic?: boolean,
     strikeout?: boolean,
-    halign?: "center"|"right"|"justify"|"left"
+    halign?: "center" | "right" | "justify" | "left"
 }
 
 export interface ITiledTileSet {
@@ -160,19 +160,24 @@ export interface ITiledTileSet {
     imagewidth: number;
     margin: number;
     name: string;
-    properties: {[key: string]: string};
+    properties: { [key: string]: string };
     spacing: number;
     tilecount: number;
     tileheight: number;
     tilewidth: number;
     transparentcolor: string;
     terrains: ITiledMapTerrain[];
-    tiles: {[key: string]: { terrain: number[] }};
+    tiles: Array<ITile>;
 
     /**
      * Refers to external tileset file (should be JSON)
      */
     source: string;
+}
+
+export interface ITile {
+    id: number,
+    type?: string
 }
 
 export interface ITiledMapTerrain {

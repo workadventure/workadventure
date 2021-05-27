@@ -12,9 +12,12 @@ import { GoToPageEvent, isGoToPageEvent } from "./Events/GoToPageEvent";
 import { isOpenCoWebsite, OpenCoWebSiteEvent } from "./Events/OpenCoWebSiteEvent";
 import { IframeEventMap, IframeEvent, IframeResponseEvent, IframeResponseEventMap, isIframeEventWrapper, TypedMessageEvent } from "./Events/IframeEvent";
 import type { UserInputChatEvent } from "./Events/UserInputChatEvent";
-import {isPlaySoundEvent, PlaySoundEvent} from "./Events/PlaySoundEvent";
-import {isStopSoundEvent, StopSoundEvent} from "./Events/StopSoundEvent";
-import {isLoadSoundEvent, LoadSoundEvent} from "./Events/LoadSoundEvent";
+import { isPlaySoundEvent, PlaySoundEvent } from "./Events/PlaySoundEvent";
+import { isStopSoundEvent, StopSoundEvent } from "./Events/StopSoundEvent";
+import { isLoadSoundEvent, LoadSoundEvent } from "./Events/LoadSoundEvent";
+import { isLoadPageEvent } from './Events/LoadPageEvent';
+import { isUpdateTileEvent, UpdateTileEvent } from './Events/ApiUpdateTileEvent';
+
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.
  * Also allows to send messages to those iframes.
@@ -31,6 +34,9 @@ class IframeListener {
 
     private readonly _goToPageStream: Subject<GoToPageEvent> = new Subject();
     public readonly goToPageStream = this._goToPageStream.asObservable();
+
+    private readonly _loadPageStream: Subject<string> = new Subject();
+    public readonly loadPageStream = this._loadPageStream.asObservable();
 
     private readonly _openCoWebSiteStream: Subject<OpenCoWebSiteEvent> = new Subject();
     public readonly openCoWebSiteStream = this._openCoWebSiteStream.asObservable();
@@ -61,6 +67,9 @@ class IframeListener {
 
     private readonly _loadSoundStream: Subject<LoadSoundEvent> = new Subject();
     public readonly loadSoundStream = this._loadSoundStream.asObservable();
+
+    private readonly _updateTileEvent: Subject<UpdateTileEvent> = new Subject();
+    public readonly updateTileEvent = this._updateTileEvent.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
@@ -128,6 +137,10 @@ class IframeListener {
                 }
                 else if (payload.type === 'removeBubble') {
                     this._removeBubbleStream.next();
+                } else if (payload.type === 'loadPage' && isLoadPageEvent(payload.data)) {
+                    this._loadPageStream.next(payload.data.url);
+                } else if (payload.type == "updateTile" && isUpdateTileEvent(payload.data)) {
+                    this._updateTileEvent.next(payload.data)
                 }
             }
 
