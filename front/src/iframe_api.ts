@@ -44,9 +44,10 @@ interface WorkAdventureApi {
     displayBubble(): void;
     removeBubble(): void;
     loadSound(url : string): Sound;
-    registerMenuCommand(commandDescriptor: string, callback: (commandDescriptor: string) => void): void
-    getCurrentUser(): Promise<User>
-    getCurrentRoom(): Promise<Room>
+    registerMenuCommand(commandDescriptor: string, callback: (commandDescriptor: string) => void): void;
+    getCurrentUser(): Promise<User>;
+    getCurrentRoom(): Promise<Room>;
+    changeTile(tiles: TileDescriptor[]): void;
     //loadTileset(name: string, imgUrl : string, tilewidth : number, tileheight : number, margin : number, spacing : number): void;
 
     onPlayerMove(callback: (playerMovedEvent: HasPlayerMovedEvent) => void): void
@@ -63,6 +64,13 @@ interface Room {
     mapUrl: string
     map: ITiledMap
     startLayer: string | null
+}
+
+interface TileDescriptor {
+    x: number
+    y: number
+    tile: number | string
+    layer: string
 }
 
 declare global {
@@ -218,6 +226,13 @@ window.WA = {
             return getDataLayer().then((mapJson) => {
                 return {id: gameState.roomId, map: mapJson.data as ITiledMap, mapUrl: gameState.mapUrl, startLayer: gameState.startLayerName};
             })
+        })
+    },
+
+    changeTile(tiles: TileDescriptor[]) {
+        postToParent({
+            type: 'changeTile',
+            data: tiles
         })
     },
 

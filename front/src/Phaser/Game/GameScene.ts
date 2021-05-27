@@ -890,19 +890,12 @@ ${escapedMessage}
             this.userInputManager.restoreControls();
         }))
 
-/*        this.iframeSubscriptionList.push(iframeListener.loadPageStream.subscribe((url: string) => {
-            this.loadNextGame(url).then(() => {
-                this.events.once(EVENT_TYPE.POST_UPDATE, () => {
-                    this.onMapExit(url);
-                })
-            })
-        }))*/
-
-        this.iframeSubscriptionList.push(iframeListener.updateTileEvent.subscribe(event => {
+        this.iframeSubscriptionList.push(iframeListener.changeTileStream.subscribe(event => {
             for (const eventTile of event) {
                 const layer = this.gameMap.findPhaserLayer(eventTile.layer);
                 if (layer) {
-                    const tile = layer.getTileAt(eventTile.x, eventTile.y)
+                    console.log('layer : ', layer);
+                    const tile = layer.getTileAt(eventTile.x, eventTile.y, true)
                     if (typeof eventTile.tile == "string") {
                         const tileIndex = this.getIndexForTileType(eventTile.tile);
                         if (tileIndex) {
@@ -911,11 +904,11 @@ ${escapedMessage}
                             return
                         }
                     } else {
-                        tile.index = eventTile.tile
+                        tile.index = eventTile.tile //+ firsrtgid du layer
                     }
                 }
             }
-            this.scene.scene.sys.game.events.emit("contextrestored")
+            //this.dirty = true;
         }))
 
         let scriptedBubbleSprite: Sprite;
