@@ -1,5 +1,5 @@
-import { Direction } from "../../types";
-import {GameScene} from "../Game/GameScene";
+import type { Direction } from "../../types";
+import type {GameScene} from "../Game/GameScene";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {MobileJoystick} from "../Components/MobileJoystick";
 
@@ -173,7 +173,7 @@ export class UserInputManager {
     }
 
     destroy(): void {
-        this.joystick.destroy();
+        this.joystick?.destroy();
     }
 
     private initMouseWheel() {

@@ -2,6 +2,8 @@ import {mediaManager} from "../../WebRtc/MediaManager";
 import {HtmlUtils} from "../../WebRtc/HtmlUtils";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {DirtyScene} from "../Game/DirtyScene";
+import {get} from "svelte/store";
+import {requestedCameraState, requestedMicrophoneState} from "../../Stores/MediaStore";
 
 export const HelpCameraSettingsSceneName = 'HelpCameraSettingsScene';
 const helpCameraSettings = 'helpCameraSettings';
@@ -41,7 +43,7 @@ export class HelpCameraSettingsScene extends DirtyScene {
             }
         });
 
-        if(!localUserStore.getHelpCameraSettingsShown() && (!mediaManager.constraintsMedia.audio || !mediaManager.constraintsMedia.video)){
+        if(!localUserStore.getHelpCameraSettingsShown() && (!get(requestedMicrophoneState) || !get(requestedCameraState))){
             this.openHelpCameraSettingsOpened();
             localUserStore.setHelpCameraSettingsShown();
         }
@@ -109,15 +111,18 @@ export class HelpCameraSettingsScene extends DirtyScene {
 
     public onResize(ev: UIEvent): void {
         super.onResize(ev);
-        const middleX = this.getMiddleX();
-        const middleY = this.getMiddleY();
-        this.tweens.add({
-            targets: this.helpCameraSettingsElement,
-            x: middleX,
-            y: middleY,
-            duration: 1000,
-            ease: 'Power3'
-        });
+        if (this.helpCameraSettingsOpened) {
+            const middleX = this.getMiddleX();
+            const middleY = this.getMiddleY();
+            this.tweens.add({
+                targets: this.helpCameraSettingsElement,
+                x: middleX,
+                y: middleY,
+                duration: 1000,
+                ease: 'Power3'
+            });
+            this.dirty = true;
+        }
     }
 
     private getMiddleX() : number{

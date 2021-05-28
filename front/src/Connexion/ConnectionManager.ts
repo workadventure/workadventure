@@ -1,7 +1,7 @@
 import Axios from "axios";
 import {PUSHER_URL, START_ROOM_URL} from "../Enum/EnvironmentVariable";
 import {RoomConnection} from "./RoomConnection";
-import {OnConnectInterface, PositionInterface, ViewportInterface} from "./ConnexionModels";
+import type {OnConnectInterface, PositionInterface, ViewportInterface} from "./ConnexionModels";
 import {GameConnexionTypes, urlManager} from "../Url/UrlManager";
 import {localUserStore} from "./LocalUserStore";
 import {LocalUser} from "./LocalUser";

@@ -1,10 +1,12 @@
-import * as SimplePeerNamespace from "simple-peer";
+import type * as SimplePeerNamespace from "simple-peer";
 import {mediaManager} from "./MediaManager";
 import {STUN_SERVER, TURN_PASSWORD, TURN_SERVER, TURN_USER} from "../Enum/EnvironmentVariable";
-import {RoomConnection} from "../Connexion/RoomConnection";
+import type {RoomConnection} from "../Connexion/RoomConnection";
 import {blackListManager} from "./BlackListManager";
-import {Subscription} from "rxjs";
-import {UserSimplePeerInterface} from "./SimplePeer";
+import type {Subscription} from "rxjs";
+import type {UserSimplePeerInterface} from "./SimplePeer";
+import {get} from "svelte/store";
+import {obtainedMediaConstraintStore} from "../Stores/MediaStore";
 
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
@@ -191,7 +193,7 @@ export class VideoPeer extends Peer {
     private pushVideoToRemoteUser() {
         try {
             const localStream: MediaStream | null = mediaManager.localStream;
-            this.write(new Buffer(JSON.stringify({type: MESSAGE_TYPE_CONSTRAINT, ...mediaManager.constraintsMedia})));
+            this.write(new Buffer(JSON.stringify({type: MESSAGE_TYPE_CONSTRAINT, ...get(obtainedMediaConstraintStore)})));
 
             if(!localStream){
                 return;

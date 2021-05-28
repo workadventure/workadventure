@@ -1,4 +1,4 @@
-import {Room} from "../Connexion/Room";
+import type {Room} from "../Connexion/Room";
 
 export enum GameConnexionTypes {
     anonymous=1,

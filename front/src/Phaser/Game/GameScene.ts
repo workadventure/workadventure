@@ -1,5 +1,5 @@
 import {gameManager, HasMovedEvent} from "./GameManager";
-import {
+import type {
     GroupCreatedUpdatedMessageInterface,
     MessageUserJoined,
     MessageUserMovedInterface,
@@ -9,14 +9,14 @@ import {
     PositionInterface,
     RoomJoinedMessageInterface
 } from "../../Connexion/ConnexionModels";
-import {CurrentGamerInterface, hasMovedEventName, Player} from "../Player/Player";
+import {hasMovedEventName, Player, requestEmoteEventName} from "../Player/Player";
 import {
     DEBUG_MODE,
     JITSI_PRIVATE_MODE,
     MAX_PER_GROUP,
     POSITION_DELAY,
 } from "../../Enum/EnvironmentVariable";
-import {
+import type {
     ITiledMap,
     ITiledMapLayer,
     ITiledMapLayerProperty,
@@ -25,7 +25,7 @@ import {
     ITiledMapTileLayer,
     ITiledTileSet
 } from "../Map/ITiledMap";
-import {AddPlayerInterface} from "./AddPlayerInterface";
+import type {AddPlayerInterface} from "./AddPlayerInterface";
 import {PlayerAnimationDirections} from "../Player/Animation";
 import {PlayerMovement} from "./PlayerMovement";
 import {PlayersPositionInterpolator} from "./PlayersPositionInterpolator";
@@ -49,13 +49,14 @@ import {
 import {GameMap} from "./GameMap";
 import {coWebsiteManager} from "../../WebRtc/CoWebsiteManager";
 import {mediaManager} from "../../WebRtc/MediaManager";
-import {ItemFactoryInterface} from "../Items/ItemFactoryInterface";
-import {ActionableItem} from "../Items/ActionableItem";
+import type {ItemFactoryInterface} from "../Items/ItemFactoryInterface";
+import type {ActionableItem} from "../Items/ActionableItem";
 import {UserInputManager} from "../UserInput/UserInputManager";
-import {UserMovedMessage} from "../../Messages/generated/messages_pb";
+import {soundManager} from "./SoundManager";
+import type {UserMovedMessage} from "../../Messages/generated/messages_pb";
 import {ProtobufClientUtils} from "../../Network/ProtobufClientUtils";
 import {connectionManager} from "../../Connexion/ConnectionManager";
-import {RoomConnection} from "../../Connexion/RoomConnection";
+import type {RoomConnection} from "../../Connexion/RoomConnection";
 import {GlobalMessageManager} from "../../Administration/GlobalMessageManager";
 import {userMessageManager} from "../../Administration/UserMessageManager";
 import {ConsoleGlobalMessageManager} from "../../Administration/ConsoleGlobalMessageManager";
@@ -80,7 +81,7 @@ import CanvasTexture = Phaser.Textures.CanvasTexture;
 import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import DOMElement = Phaser.GameObjects.DOMElement;
-import {Subscription} from "rxjs";
+import type {Subscription} from "rxjs";
 import {worldFullMessageStream} from "../../Connexion/WorldFullMessageStream";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
 import RenderTexture = Phaser.GameObjects.RenderTexture;
@@ -91,7 +92,10 @@ import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
 import {joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey} from "../Components/MobileJoystick";
 import { MenuScene, MenuSceneName } from '../Menu/MenuScene';
+import {DEPTH_OVERLAY_INDEX} from "./DepthIndexes";
 import {waScaleManager} from "../Services/WaScaleManager";
+import {peerStore} from "../../Stores/PeerStore";
+import {EmoteManager} from "./EmoteManager";
 
 
 export interface GameSceneInitInterface {
@@ -133,7 +137,7 @@ const defaultStartLayerName = 'start';
 
 export class GameScene extends DirtyScene implements CenterListener {
     Terrains : Array<Phaser.Tilemaps.Tileset>;
-    CurrentPlayer!: CurrentGamerInterface;
+    CurrentPlayer!: Player;
     MapPlayers!: Phaser.Physics.Arcade.Group;
     MapPlayersByKey : Map<number, RemotePlayer> = new Map<number, RemotePlayer>();
     Map!: Phaser.Tilemaps.Tilemap;
@@ -153,7 +157,7 @@ export class GameScene extends DirtyScene implements CenterListener {
     private GlobalMessageManager!: GlobalMessageManager;
     public ConsoleGlobalMessageManager!: ConsoleGlobalMessageManager;
     private connectionAnswerPromise: Promise<RoomJoinedMessageInterface>;
-    private connectionAnswerPromiseResolve!: (value?: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>) => void;
+    private connectionAnswerPromiseResolve!: (value: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>) => void;
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
     private createPromise: Promise<void>;
     private createPromiseResolve!: (value?: void | PromiseLike<void>) => void;
@@ -188,6 +192,8 @@ export class GameScene extends DirtyScene implements CenterListener {
     private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string|undefined;
     private pinchManager: PinchManager|undefined;
+    private mapTransitioning: boolean = false; //used to prevent transitions happenning at the same time.
+    private emoteManager!: EmoteManager;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
@@ -203,7 +209,7 @@ export class GameScene extends DirtyScene implements CenterListener {
 
         this.createPromise = new Promise<void>((resolve, reject): void => {
             this.createPromiseResolve = resolve;
-        })
+        });
         this.connectionAnswerPromise = new Promise<RoomJoinedMessageInterface>((resolve, reject): void => {
             this.connectionAnswerPromiseResolve = resolve;
         });
@@ -224,6 +230,11 @@ export class GameScene extends DirtyScene implements CenterListener {
             this.load.image(joystickBaseKey, joystickBaseImg);
             this.load.image(joystickThumbKey, joystickThumbImg);
         }
+        //todo: in an emote manager.
+        this.load.spritesheet('emote-music', 'resources/emotes/pipo-popupemotes005.png', {
+            frameHeight: 32,
+            frameWidth: 32,
+        });
         this.load.on(FILE_LOAD_ERROR, (file: {src: string}) => {
             // If we happen to be in HTTP and we are trying to load a URL in HTTPS only... (this happens only in dev environments)
             if (window.location.protocol === 'http:' && file.src === this.MapUrlFile && file.src.startsWith('http:') && this.originalMapUrl === undefined) {
@@ -419,7 +430,7 @@ export class GameScene extends DirtyScene implements CenterListener {
                 }
             }
             if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
-                depth = 10000;
+                depth = DEPTH_OVERLAY_INDEX;
             }
             if (layer.type === 'objectgroup') {
                 for (const object of layer.objects) {
@@ -505,6 +516,8 @@ export class GameScene extends DirtyScene implements CenterListener {
         if (!this.room.isDisconnected()) {
             this.connect();
         }
+
+        this.emoteManager = new EmoteManager(this);
     }
 
     /**
@@ -609,6 +622,7 @@ export class GameScene extends DirtyScene implements CenterListener {
 
             // When connection is performed, let's connect SimplePeer
             this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic, this.playerName);
+            peerStore.connectToSimplePeer(this.simplePeer);
             this.GlobalMessageManager = new GlobalMessageManager(this.connection);
             userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
@@ -863,9 +877,28 @@ ${escapedMessage}
             this.userInputManager.disableControls();
         }));
 
+       this.iframeSubscriptionList.push(iframeListener.playSoundStream.subscribe((playSoundEvent)=>
+       {
+           const url = new URL(playSoundEvent.url, this.MapUrlFile);
+           soundManager.playSound(this.load,this.sound,url.toString(),playSoundEvent.config);
+       }))
+
+        this.iframeSubscriptionList.push(iframeListener.stopSoundStream.subscribe((stopSoundEvent)=>
+        {
+            const url = new URL(stopSoundEvent.url, this.MapUrlFile);
+            soundManager.stopSound(this.sound,url.toString());
+        }))
+
+        this.iframeSubscriptionList.push(iframeListener.loadSoundStream.subscribe((loadSoundEvent)=>
+        {
+            const url = new URL(loadSoundEvent.url, this.MapUrlFile);
+            soundManager.loadSound(this.load,this.sound,url.toString());
+        }))
+
        this.iframeSubscriptionList.push(iframeListener.enablePlayerControlStream.subscribe(()=>{
             this.userInputManager.restoreControls();
         }));
+
         let scriptedBubbleSprite : Sprite;
        this.iframeSubscriptionList.push(iframeListener.displayBubbleStream.subscribe(()=>{
             scriptedBubbleSprite = new Sprite(this,this.CurrentPlayer.x + 25,this.CurrentPlayer.y,'circleSprite-white');
@@ -884,6 +917,8 @@ ${escapedMessage}
     }
 
     private onMapExit(exitKey: string) {
+        if (this.mapTransitioning) return;
+        this.mapTransitioning = true;
         const {roomId, hash} = Room.getIdFromIdentifier(exitKey, this.MapUrlFile, this.instance);
         if (!roomId) throw new Error('Could not find the room from its exit key: '+exitKey);
         urlManager.pushStartLayerNameToUrl(hash);
@@ -903,6 +938,7 @@ ${escapedMessage}
             this.initPositionFromLayerName(hash || defaultStartLayerName);
             this.CurrentPlayer.x = this.startX;
             this.CurrentPlayer.y = this.startY;
+            setTimeout(() => this.mapTransitioning = false, 500);
         }
     }
 
@@ -924,6 +960,7 @@ ${escapedMessage}
         this.messageSubscription?.unsubscribe();
         this.userInputManager.destroy();
         this.pinchManager?.destroy();
+        this.emoteManager.destroy();
 
         for(const iframeEvents of this.iframeSubscriptionList){
             iframeEvents.unsubscribe();
@@ -1035,10 +1072,10 @@ ${escapedMessage}
     }
 
     //todo: push that into the gameManager
-    private async loadNextGame(exitSceneIdentifier: string){
+    private loadNextGame(exitSceneIdentifier: string): void {
         const {roomId, hash} = Room.getIdFromIdentifier(exitSceneIdentifier, this.MapUrlFile, this.instance);
         const room = new Room(roomId);
-        await gameManager.loadMap(room, this.scene);
+        gameManager.loadMap(room, this.scene).catch(() => {});
     }
 
     private startUser(layer: ITiledMapTileLayer): PositionInterface {
@@ -1080,7 +1117,6 @@ ${escapedMessage}
     }
 
     createCollisionWithPlayer() {
-        this.physics.disableUpdate();
         //add collision layer
         this.Layers.forEach((Layer: Phaser.Tilemaps.TilemapLayer) => {
             this.physics.add.collider(this.CurrentPlayer, Layer, (object1: GameObject, object2: GameObject) => {
@@ -1114,6 +1150,12 @@ ${escapedMessage}
                 this.companion,
                 this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
+            this.CurrentPlayer.on('pointerdown', () => {
+                this.emoteManager.getMenuImages().then((emoteMenuElements) => this.CurrentPlayer.openOrCloseEmoteMenu(emoteMenuElements))
+            })
+            this.CurrentPlayer.on(requestEmoteEventName, (emoteKey: string) => {
+                this.connection?.emitEmoteEvent(emoteKey);
+            })
         }catch (err){
             if(err instanceof TextureError) {
                 gameManager.leaveGame(this, SelectCharacterSceneName, new SelectCharacterScene());
@@ -1214,17 +1256,7 @@ ${escapedMessage}
         this.dirty = false;
         mediaManager.updateScene();
         this.currentTick = time;
-        if (this.CurrentPlayer.isMoving()) {
-            this.dirty = true;
-        }
         this.CurrentPlayer.moveUser(delta);
-        if (this.CurrentPlayer.isMoving()) {
-            this.dirty = true;
-            this.physics.enableUpdate();
-        } else {
-            this.physics.disableUpdate();
-        }
-
 
         // Let's handle all events
         while (this.pendingEvents.length !== 0) {
