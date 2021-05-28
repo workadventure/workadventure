@@ -1,7 +1,7 @@
 import type { WorkadventureImport } from './iframe_api';
 
 type PromiseReturnType<P> = P extends Promise<infer T> ? T : P;
-type WorkadventureCommandClasses = PromiseReturnType<WorkadventureImport>[number]["default"];
+type WorkadventureCommandClasses = PromiseReturnType<WorkadventureImport>[number];
 type KeysOfUnion<T> = T extends T ? keyof T : never;
 type ObjectWithKeyOfUnion<Key, O = WorkadventureCommandClasses> = O extends O ? (Key extends keyof O ? O[Key] : never) : never;
 type ApiKeys = KeysOfUnion<WorkadventureCommandClasses>;

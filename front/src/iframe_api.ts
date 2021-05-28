@@ -1,22 +1,23 @@
 import { IframeResponseEvent, IframeResponseEventMap, isIframeResponseEventWrapper, TypedMessageEvent } from "./Api/Events/IframeEvent";
+import Bubble from "./Api/iframe/Bubble";
+import chatmessage from "./Api/iframe/chatmessage";
+import CoWebsite from "./Api/iframe/CoWebsite";
 import type { IframeCallback } from './Api/iframe/IframeApiContribution';
+import Navigation from "./Api/iframe/Navigation";
+import Player from "./Api/iframe/Player";
+import popupApi from "./Api/iframe/popup";
+import Sound from "./Api/iframe/Sound";
+import zoneRvents from "./Api/iframe/zone-events";
 import type { WorkAdventureApi } from './iframe_api.d';
-
 
 export const registeredCallbacks: { [K in keyof IframeResponseEventMap]?: IframeCallback<K> } = {}
 
-const importType = Promise.all([
-    import("./Api/iframe/popup"),
-    import("./Api/iframe/chatmessage"),
-    import("./Api/iframe/Sound"),
-    import("./Api/iframe/zone-events"),
-    import("./Api/iframe/Navigation"),
-    import("./Api/iframe/CoWebsite"),
-    import("./Api/iframe/Player"),
-    import("./Api/iframe/Bubble")
-])
+const apis = [
+    popupApi, Navigation, Player, Bubble,
+    chatmessage, Sound, zoneRvents, CoWebsite
+]
 
-export type WorkadventureImport = typeof importType
+export type WorkadventureImport = typeof apis
 
 declare global {
 
@@ -26,30 +27,24 @@ declare global {
     let WA: WorkAdventureApi
 }
 
-async function populateWa(): Promise<void> {
-    const wa: Partial<WorkAdventureApi> = {}
-    for (const apiImport of await importType) {
-        const classInstance = apiImport.default
-        const commandPrototype = Object.getPrototypeOf(classInstance);
-        const commandClassPropertyNames = Object.getOwnPropertyNames(commandPrototype).filter(name => name !== "constructor");
-        const importObject: Partial<WorkAdventureApi> = {}
-        for (const prop of commandClassPropertyNames) {
-            const apiImportKey = prop as keyof typeof classInstance;
-            if (typeof classInstance[apiImportKey] === "function") {
-                importObject[apiImportKey as keyof WorkAdventureApi] = commandPrototype[apiImportKey] as never
-            }
-        }
-        wa[classInstance.subObjectIdentifier] = importObject as never
-        if (classInstance.addMethodsAtRoot) {
-            Object.assign(wa, importObject)
+const wa: Partial<WorkAdventureApi> = {}
+for (const apiImport of apis) {
+    const commandPrototype = Object.getPrototypeOf(apiImport);
+    const commandClassPropertyNames = Object.getOwnPropertyNames(commandPrototype).filter(name => name !== "constructor");
+    const importObject: Partial<WorkAdventureApi> = {}
+    for (const prop of commandClassPropertyNames) {
+        const apiImportKey = prop as keyof typeof apiImport;
+        if (typeof apiImport[apiImportKey] === "function") {
+            importObject[apiImportKey as keyof WorkAdventureApi] = commandPrototype[apiImportKey] as never
         }
     }
-
-    window.WA = Object.assign({}, wa) as WorkAdventureApi
+    wa[apiImport.subObjectIdentifier] = importObject as never
+    if (apiImport.addMethodsAtRoot) {
+        Object.assign(wa, importObject)
+    }
 }
 
-
-populateWa()
+window.WA = Object.assign({}, wa) as WorkAdventureApi
 
 window.addEventListener('message', <T extends keyof IframeResponseEventMap>(message: TypedMessageEvent<IframeResponseEvent<T>>) => {
     if (message.source !== window.parent) {
