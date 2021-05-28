@@ -46,13 +46,6 @@ export class MediaManager {
     localStream: MediaStream|null = null;
     localScreenCapture: MediaStream|null = null;
     private remoteVideo: Map<string, HTMLVideoElement> = new Map<string, HTMLVideoElement>();
-    myCamVideo: HTMLVideoElement;
-    cinemaClose: HTMLImageElement;
-    cinema: HTMLImageElement;
-    monitorClose: HTMLImageElement;
-    monitor: HTMLImageElement;
-    microphoneClose: HTMLImageElement;
-    microphone: HTMLImageElement;
     webrtcInAudio: HTMLAudioElement;
     //FIX ME SOUNDMETER: check stalability of sound meter calculation
     //mySoundMeterElement: HTMLDivElement;
@@ -62,10 +55,6 @@ export class MediaManager {
     stopScreenSharingCallBacks : Set<StopScreenSharingCallback> = new Set<StopScreenSharingCallback>();
     showReportModalCallBacks : Set<ShowReportCallBack> = new Set<ShowReportCallBack>();
     helpCameraSettingsCallBacks : Set<HelpCameraSettingsCallBack> = new Set<HelpCameraSettingsCallBack>();
-
-    private microphoneBtn: HTMLDivElement;
-    private cinemaBtn: HTMLDivElement;
-    private monitorBtn: HTMLDivElement;
 
     private focused : boolean = true;
 
@@ -80,53 +69,10 @@ export class MediaManager {
 
     constructor() {
 
-        this.myCamVideo = HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('myCamVideo');
         this.webrtcInAudio = HtmlUtils.getElementByIdOrFail<HTMLAudioElement>('audio-webrtc-in');
         this.webrtcOutAudio = HtmlUtils.getElementByIdOrFail<HTMLAudioElement>('audio-webrtc-out');
         this.webrtcInAudio.volume = 0.2;
         this.webrtcOutAudio.volume = 0.2;
-
-        this.microphoneBtn = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('btn-micro');
-        this.microphoneClose = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('microphone-close');
-        this.microphoneClose.style.display = "none";
-        this.microphoneClose.addEventListener('click', (e: MouseEvent) => {
-            e.preventDefault();
-            requestedMicrophoneState.enableMicrophone();
-        });
-        this.microphone = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('microphone');
-        this.microphone.addEventListener('click', (e: MouseEvent) => {
-            e.preventDefault();
-            requestedMicrophoneState.disableMicrophone();
-        });
-
-        this.cinemaBtn = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('btn-video');
-        this.cinemaClose = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('cinema-close');
-        this.cinemaClose.style.display = "none";
-        this.cinemaClose.addEventListener('click', (e: MouseEvent) => {
-            e.preventDefault();
-            requestedCameraState.enableWebcam();
-        });
-        this.cinema = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('cinema');
-        this.cinema.addEventListener('click', (e: MouseEvent) => {
-            e.preventDefault();
-            requestedCameraState.disableWebcam();
-        });
-
-        this.monitorBtn = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('btn-monitor');
-        this.monitorClose = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('monitor-close');
-        this.monitorClose.style.display = "block";
-        this.monitorClose.addEventListener('click', (e: MouseEvent) => {
-            e.preventDefault();
-            //this.enableScreenSharing();
-            requestedScreenSharingState.enableScreenSharing();
-        });
-        this.monitor = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('monitor');
-        this.monitor.style.display = "none";
-        this.monitor.addEventListener('click', (e: MouseEvent) => {
-            e.preventDefault();
-            //this.disableScreenSharing();
-            requestedScreenSharingState.disableScreenSharing();
-        });
 
         this.pingCameraStatus();
 
@@ -148,11 +94,11 @@ export class MediaManager {
                 return;
             }
 
-            if (result.constraints.video !== false) {
+            /*if (result.constraints.video !== false) {
                 HtmlUtils.getElementByIdOrFail('div-myCamVideo').classList.remove('hide');
             } else {
                 HtmlUtils.getElementByIdOrFail('div-myCamVideo').classList.add('hide');
-            }/*
+            }
             if (result.constraints.audio !== false) {
                 this.enableMicrophoneStyle();
             } else {
@@ -160,13 +106,13 @@ export class MediaManager {
             }*/
 
             this.localStream = result.stream;
-            this.myCamVideo.srcObject = this.localStream;
+            //this.myCamVideo.srcObject = this.localStream;
 
             // TODO: migrate all listeners to the store directly.
             this.triggerUpdatedLocalStreamCallbacks(result.stream);
         });
 
-        requestedCameraState.subscribe((enabled) => {
+        /*requestedCameraState.subscribe((enabled) => {
             if (enabled) {
                 this.enableCameraStyle();
             } else {
@@ -179,7 +125,7 @@ export class MediaManager {
             } else {
                 this.disableMicrophoneStyle();
             }
-        });
+        });*/
         //let screenSharingStream : MediaStream|null;
         screenSharingLocalStreamStore.subscribe((result) => {
             if (result.type === 'error') {
@@ -191,7 +137,7 @@ export class MediaManager {
             }
 
             if (result.stream !== null) {
-                this.enableScreenSharingStyle();
+                //this.enableScreenSharingStyle();
                 mediaManager.localScreenCapture = result.stream;
 
                 // TODO: migrate this out of MediaManager
@@ -202,7 +148,7 @@ export class MediaManager {
                 this.addScreenSharingActiveVideo('me', DivImportance.Normal);
                 HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('screen-sharing-me').srcObject = result.stream;
             } else {
-                this.disableScreenSharingStyle();
+                //this.disableScreenSharingStyle();
                 this.removeActiveScreenSharingVideo('me');
 
                 // FIXME: we need the old stream that is being stopped!
@@ -216,13 +162,13 @@ export class MediaManager {
 
         });
 
-        screenSharingAvailableStore.subscribe((available) => {
+        /*screenSharingAvailableStore.subscribe((available) => {
             if (available) {
                 document.querySelector('.btn-monitor')?.classList.remove('hide');
             } else {
                 document.querySelector('.btn-monitor')?.classList.add('hide');
             }
-        });
+        });*/
     }
 
     public updateScene(){
@@ -290,7 +236,7 @@ export class MediaManager {
         gameOverlayVisibilityStore.hideGameOverlay();
     }
 
-    private enableCameraStyle(){
+    /*private enableCameraStyle(){
         this.cinemaClose.style.display = "none";
         this.cinemaBtn.classList.remove("disabled");
         this.cinema.style.display = "block";
@@ -324,7 +270,7 @@ export class MediaManager {
         this.monitorClose.style.display = "block";
         this.monitor.style.display = "none";
         this.monitorBtn.classList.remove("enabled");
-    }
+    }*/
 
     addActiveVideo(user: UserSimplePeerInterface, userName: string = ""){
         this.webrtcInAudio.play();
