@@ -9,12 +9,12 @@ import type { ClosePopupEvent } from "./Api/Events/ClosePopupEvent";
 import type { OpenTabEvent } from "./Api/Events/OpenTabEvent";
 import type { GoToPageEvent } from "./Api/Events/GoToPageEvent";
 import type { OpenCoWebSiteEvent } from "./Api/Events/OpenCoWebSiteEvent";
+import { isMenuItemClickedEvent } from './Api/Events/MenuItemClickedEvent';
+import type { MenuItemRegisterEvent } from './Api/Events/MenuItemRegisterEvent';
 import type {PlaySoundEvent} from "./Api/Events/PlaySoundEvent";
 import type  {StopSoundEvent} from "./Api/Events/StopSoundEvent";
 import type {LoadSoundEvent} from "./Api/Events/LoadSoundEvent";
 import SoundConfig = Phaser.Types.Sound.SoundConfig;
-import { isMenuItemClickedEvent } from './Api/Events/MenuItemClickedEvent';
-import { MenuItemRegisterEvent } from './Api/Events/MenuItemRegisterEvent';
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;

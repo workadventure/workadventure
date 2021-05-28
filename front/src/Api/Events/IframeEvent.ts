@@ -5,14 +5,12 @@ import type { ChatEvent } from './ChatEvent';
 import type { ClosePopupEvent } from './ClosePopupEvent';
 import type { EnterLeaveEvent } from './EnterLeaveEvent';
 import type { GoToPageEvent } from './GoToPageEvent';
-import { MenuItemClickedEvent } from './MenuItemClickedEvent';
-import { MenuItemRegisterEvent } from './MenuItemRegisterEvent';
+import type { MenuItemClickedEvent } from './MenuItemClickedEvent';
+import type { MenuItemRegisterEvent } from './MenuItemRegisterEvent';
 import type { OpenCoWebSiteEvent } from './OpenCoWebSiteEvent';
 import type { OpenPopupEvent } from './OpenPopupEvent';
 import type { OpenTabEvent } from './OpenTabEvent';
 import type { UserInputChatEvent } from './UserInputChatEvent';
-import { OpenTabEvent } from './OpenTabEvent';
-import { UserInputChatEvent } from './UserInputChatEvent';
 import type {LoadSoundEvent} from "./LoadSoundEvent";
 import type {PlaySoundEvent} from "./PlaySoundEvent";
 

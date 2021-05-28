@@ -13,7 +13,7 @@ import { isOpenCoWebsite, OpenCoWebSiteEvent } from "./Events/OpenCoWebSiteEvent
 import { IframeEventMap, IframeEvent, IframeResponseEvent, IframeResponseEventMap, isIframeEventWrapper, TypedMessageEvent } from "./Events/IframeEvent";
 import type { UserInputChatEvent } from "./Events/UserInputChatEvent";
 import { isMenuItemRegisterEvent } from './Events/MenuItemRegisterEvent';
-import { MenuItemClickedEvent } from './Events/MenuItemClickedEvent';
+import type { MenuItemClickedEvent } from './Events/MenuItemClickedEvent';
 
 
 import {isPlaySoundEvent, PlaySoundEvent} from "./Events/PlaySoundEvent";
