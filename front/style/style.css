@@ -212,7 +212,9 @@ video#myCamVideo{
 /*btn animation*/
 .btn-cam-action div{
     cursor: url('./images/cursor_pointer.png'), pointer;
-    /*position: absolute;*/
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border: solid 0px black;
     width: 44px;
     height: 44px;
@@ -267,8 +269,6 @@ video#myCamVideo{
 .btn-cam-action div img{
     height: 22px;
     width: 30px;
-    top: calc(48px - 37px);
-    left: calc(48px - 41px);
     position: relative;
     cursor: url('./images/cursor_pointer.png'), pointer;
 }
