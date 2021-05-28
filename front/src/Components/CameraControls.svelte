@@ -35,7 +35,7 @@
 </script>
 
 <div class="btn-cam-action">
-    <div class="btn-monitor" on:click={screenSharingClick} class:hide={$screenSharingAvailableStore}>
+    <div class="btn-monitor" on:click={screenSharingClick} class:hide={!$screenSharingAvailableStore}>
         {#if $requestedScreenSharingState}
             <img src={monitorImg} alt="Start screen sharing">
         {:else}
