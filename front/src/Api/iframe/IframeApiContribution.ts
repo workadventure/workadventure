@@ -9,19 +9,26 @@ export function sendToWorkadventure(content: IframeEvent<keyof IframeEventMap>) 
 }
 type GuardedType<Guard extends tg.TypeGuard<unknown>> = Guard extends tg.TypeGuard<infer T> ? T : never
 
-export function apiCallback<T extends tg.TypeGuard<unknown>>(callbackData: IframeCallbackContribution<T>) {
-    registeredCallbacks[callbackData.type] = {
+export function apiCallback<T extends keyof IframeResponseEventMap>(callbackData: IframeCallbackContribution<T>): IframeCallbackContribution<keyof IframeResponseEventMap> {
+    const iframeCallback = {
         typeChecker: callbackData.typeChecker,
         callback: callbackData.callback
-    }
-    return callbackData
+    } as IframeCallback<T>;
+
+    const newCallback = { [callbackData.type]: iframeCallback };
+    Object.assign(registeredCallbacks, newCallback)
+    return callbackData as unknown as IframeCallbackContribution<keyof IframeResponseEventMap>;
 }
 
-export interface IframeCallbackContribution<Guard extends tg.TypeGuard<unknown>, T = GuardedType<Guard>> {
+export interface IframeCallback<Key extends keyof IframeResponseEventMap, T = IframeResponseEventMap[Key], Guard = tg.TypeGuard<T>> {
 
-    type: keyof IframeResponseEventMap,
     typeChecker: Guard,
     callback: (payloadData: T) => void
+}
+
+export interface IframeCallbackContribution<Key extends keyof IframeResponseEventMap> extends IframeCallback<Key> {
+
+    type: Key
 }
 
 export type PossibleSubobjects = "zone" | "chat" | "ui" | "nav" | "sound" | "cowebsite" | "player" | "bubble"
@@ -32,9 +39,7 @@ export type PossibleSubobjects = "zone" | "chat" | "ui" | "nav" | "sound" | "cow
  */
 
 export abstract class IframeApiContribution<T extends {
-    // i think this is specific enough
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    callbacks: Array<IframeCallbackContribution<tg.TypeGuard<any>>>,
+    callbacks: Array<IframeCallbackContribution<keyof IframeResponseEventMap>>,
     readonly subObjectIdentifier: PossibleSubobjects,
     readonly addMethodsAtRoot: boolean | undefined
 }> {

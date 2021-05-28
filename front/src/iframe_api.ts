@@ -1,10 +1,9 @@
-import { IframeResponseEventMap, isIframeResponseEventWrapper } from "./Api/Events/IframeEvent";
+import { IframeResponseEvent, IframeResponseEventMap, isIframeResponseEventWrapper, TypedMessageEvent } from "./Api/Events/IframeEvent";
+import type { IframeCallback } from './Api/iframe/IframeApiContribution';
 import type { WorkAdventureApi } from './iframe_api.d';
 
-export const registeredCallbacks: { [K in keyof IframeResponseEventMap]?: {
-    typeChecker: Function
-    callback: Function
-} } = {}
+
+export const registeredCallbacks: { [K in keyof IframeResponseEventMap]?: IframeCallback<K> } = {}
 
 const importType = Promise.all([
     import("./Api/iframe/popup"),
@@ -52,7 +51,7 @@ async function populateWa(): Promise<void> {
 
 populateWa()
 
-window.addEventListener('message', message => {
+window.addEventListener('message', <T extends keyof IframeResponseEventMap>(message: TypedMessageEvent<IframeResponseEvent<T>>) => {
     if (message.source !== window.parent) {
         return; // Skip message in this event listener
     }
@@ -62,9 +61,9 @@ window.addEventListener('message', message => {
     if (isIframeResponseEventWrapper(payload)) {
         const payloadData = payload.data;
 
-        if (registeredCallbacks[payload.type] && registeredCallbacks[payload.type]?.typeChecker(payloadData)) {
-            registeredCallbacks[payload.type]?.callback(payloadData)
-            return
+        const callback = registeredCallbacks[payload.type] as IframeCallback<T> | undefined
+        if (callback?.typeChecker(payloadData)) {
+            callback?.callback(payloadData)
         }
     }
 
