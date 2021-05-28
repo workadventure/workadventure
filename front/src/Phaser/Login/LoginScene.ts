@@ -41,7 +41,7 @@ export class LoginScene extends ResizableScene {
             }
             pErrorElement.innerHTML = '';
             if(inputElement.value && !isUserNameValid(inputElement.value)){
-                pErrorElement.innerHTML = 'Invalid user name: only letters and numbers are allowed. No spaces.';
+                pErrorElement.innerHTML = 'Invalid user name: No spaces are allowed.';
             }
             if (event.key === 'Enter') {
                 event.preventDefault();
