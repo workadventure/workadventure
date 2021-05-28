@@ -47,12 +47,12 @@ export class MediaManager {
     localScreenCapture: MediaStream|null = null;
     private remoteVideo: Map<string, HTMLVideoElement> = new Map<string, HTMLVideoElement>();
     myCamVideo: HTMLVideoElement;
-    cinemaClose: HTMLImageElement;
+    /*cinemaClose: HTMLImageElement;
     cinema: HTMLImageElement;
     monitorClose: HTMLImageElement;
     monitor: HTMLImageElement;
     microphoneClose: HTMLImageElement;
-    microphone: HTMLImageElement;
+    microphone: HTMLImageElement;*/
     webrtcInAudio: HTMLAudioElement;
     //FIX ME SOUNDMETER: check stalability of sound meter calculation
     //mySoundMeterElement: HTMLDivElement;
@@ -63,9 +63,9 @@ export class MediaManager {
     showReportModalCallBacks : Set<ShowReportCallBack> = new Set<ShowReportCallBack>();
     helpCameraSettingsCallBacks : Set<HelpCameraSettingsCallBack> = new Set<HelpCameraSettingsCallBack>();
 
-    private microphoneBtn: HTMLDivElement;
+/*    private microphoneBtn: HTMLDivElement;
     private cinemaBtn: HTMLDivElement;
-    private monitorBtn: HTMLDivElement;
+    private monitorBtn: HTMLDivElement;*/
 
     private focused : boolean = true;
 
@@ -86,7 +86,7 @@ export class MediaManager {
         this.webrtcInAudio.volume = 0.2;
         this.webrtcOutAudio.volume = 0.2;
 
-        this.microphoneBtn = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('btn-micro');
+        /*this.microphoneBtn = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('btn-micro');
         this.microphoneClose = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('microphone-close');
         this.microphoneClose.style.display = "none";
         this.microphoneClose.addEventListener('click', (e: MouseEvent) => {
@@ -126,7 +126,7 @@ export class MediaManager {
             e.preventDefault();
             //this.disableScreenSharing();
             requestedScreenSharingState.disableScreenSharing();
-        });
+        });*/
 
         this.pingCameraStatus();
 
@@ -166,7 +166,7 @@ export class MediaManager {
             this.triggerUpdatedLocalStreamCallbacks(result.stream);
         });
 
-        requestedCameraState.subscribe((enabled) => {
+        /*requestedCameraState.subscribe((enabled) => {
             if (enabled) {
                 this.enableCameraStyle();
             } else {
@@ -179,7 +179,7 @@ export class MediaManager {
             } else {
                 this.disableMicrophoneStyle();
             }
-        });
+        });*/
         //let screenSharingStream : MediaStream|null;
         screenSharingLocalStreamStore.subscribe((result) => {
             if (result.type === 'error') {
@@ -191,7 +191,7 @@ export class MediaManager {
             }
 
             if (result.stream !== null) {
-                this.enableScreenSharingStyle();
+                //this.enableScreenSharingStyle();
                 mediaManager.localScreenCapture = result.stream;
 
                 // TODO: migrate this out of MediaManager
@@ -202,7 +202,7 @@ export class MediaManager {
                 this.addScreenSharingActiveVideo('me', DivImportance.Normal);
                 HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('screen-sharing-me').srcObject = result.stream;
             } else {
-                this.disableScreenSharingStyle();
+                //this.disableScreenSharingStyle();
                 this.removeActiveScreenSharingVideo('me');
 
                 // FIXME: we need the old stream that is being stopped!
@@ -216,13 +216,13 @@ export class MediaManager {
 
         });
 
-        screenSharingAvailableStore.subscribe((available) => {
+        /*screenSharingAvailableStore.subscribe((available) => {
             if (available) {
                 document.querySelector('.btn-monitor')?.classList.remove('hide');
             } else {
                 document.querySelector('.btn-monitor')?.classList.add('hide');
             }
-        });
+        });*/
     }
 
     public updateScene(){
@@ -290,7 +290,7 @@ export class MediaManager {
         gameOverlayVisibilityStore.hideGameOverlay();
     }
 
-    private enableCameraStyle(){
+    /*private enableCameraStyle(){
         this.cinemaClose.style.display = "none";
         this.cinemaBtn.classList.remove("disabled");
         this.cinema.style.display = "block";
@@ -324,7 +324,7 @@ export class MediaManager {
         this.monitorClose.style.display = "block";
         this.monitor.style.display = "none";
         this.monitorBtn.classList.remove("enabled");
-    }
+    }*/
 
     addActiveVideo(user: UserSimplePeerInterface, userName: string = ""){
         this.webrtcInAudio.play();
