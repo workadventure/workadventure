@@ -1,7 +1,7 @@
-import type {ITiledMap, ITiledMapLayer, ITiledMapTileLayer} from "../Map/ITiledMap";
+import type { ITiledMap, ITiledMapLayer } from "../Map/ITiledMap";
 import { flattenGroupLayersMap } from "../Map/LayersFlattener";
 import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
-import {DEPTH_OVERLAY_INDEX} from "./DepthIndexes";
+import { DEPTH_OVERLAY_INDEX } from "./DepthIndexes";
 
 export type PropertyChangeCallback = (newValue: string | number | boolean | undefined, oldValue: string | number | boolean | undefined, allProps: Map<string, string | boolean | number>) => void;
 
@@ -118,11 +118,11 @@ export class GameMap {
     }
 
     public findLayer(layerName: string): ITiledMapLayer | undefined {
-    return this.flatLayers.find((layer) => layer.name = layerName);
+        return this.flatLayers.find((layer) => layer.name === layerName);
     }
 
     public findPhaserLayer(layerName: string): TilemapLayer | undefined {
-    return this.phaserLayers.find((layer) => layer.layer.name = layerName);
+        return this.phaserLayers.find((layer) => layer.layer.name === layerName);
     }
 
     public addTerrain(terrain : Phaser.Tilemaps.Tileset): void {

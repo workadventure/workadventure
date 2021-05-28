@@ -17,9 +17,9 @@ import { DataLayerEvent, isDataLayerEvent } from "./Api/Events/DataLayerEvent";
 import type { ITiledMap } from "./Phaser/Map/ITiledMap";
 import type { MenuItemRegisterEvent } from "./Api/Events/MenuItemRegisterEvent";
 import { isMenuItemClickedEvent } from "./Api/Events/MenuItemClickedEvent";
-import type {PlaySoundEvent} from "./Api/Events/PlaySoundEvent";
-import type  {StopSoundEvent} from "./Api/Events/StopSoundEvent";
-import type {LoadSoundEvent} from "./Api/Events/LoadSoundEvent";
+import type { PlaySoundEvent } from "./Api/Events/PlaySoundEvent";
+import type  { StopSoundEvent } from "./Api/Events/StopSoundEvent";
+import type { LoadSoundEvent } from "./Api/Events/LoadSoundEvent";
 import SoundConfig = Phaser.Types.Sound.SoundConfig;
 
 interface WorkAdventureApi {
@@ -47,8 +47,6 @@ interface WorkAdventureApi {
     registerMenuCommand(commandDescriptor: string, callback: (commandDescriptor: string) => void): void
     getCurrentUser(): Promise<User>
     getCurrentRoom(): Promise<Room>
-    //loadTileset(name: string, imgUrl : string, tilewidth : number, tileheight : number, margin : number, spacing : number): void;
-
     onPlayerMove(callback: (playerMovedEvent: HasPlayerMovedEvent) => void): void
 }
 
@@ -176,7 +174,6 @@ const gameStateResolver: Array<(event: GameStateEvent) => void> = []
 const dataLayerResolver: Array<(event: DataLayerEvent) => void> = []
 let immutableData: GameStateEvent;
 
-//const callbackPlayerMoved: { [type: string]: HasPlayerMovedEventCallback | ((arg?: HasPlayerMovedEvent | never) => void) } = {}
 const callbackPlayerMoved: Array<(event: HasPlayerMovedEvent) => void> = []
 
 function postToParent(content: IframeEvent<keyof IframeEventMap>) {
@@ -192,20 +189,6 @@ window.WA = {
             data: undefined
         })
     },
-
-/*    loadTileset(name: string, imgUrl : string, tilewidth : number, tileheight : number, margin : number, spacing : number): void {
-        postToParent({
-            type: "tilsetEvent",
-            data: {
-                name: name,
-                imgUrl: imgUrl,
-                tilewidth: tilewidth,
-                tileheight: tileheight,
-                margin: margin,
-                spacing: spacing
-            } as TilesetEvent
-        })
-    },*/
 
     getCurrentUser(): Promise<User> {
         return getGameState().then((gameState) => {
@@ -353,7 +336,7 @@ window.WA = {
         return popup;
     },
 
-    registerMenuCommand(commandDescriptor: string, callback: (commandDescriptor: string) => void) {
+    registerMenuCommand(commandDescriptor: string, callback: (commandDescriptor: string) => void): void {
         menuCallbacks.set(commandDescriptor, callback);
         window.parent.postMessage({
             'type': 'registerMenuCommand',

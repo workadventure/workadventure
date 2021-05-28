@@ -19,6 +19,13 @@
   - Improved virtual joystick size (adapts to the zoom level)
 - New scripting API features:
   - Use `WA.loadSound(): Sound` to load / play / stop a sound
+  - Use `WA.showLayer(): void` to show a layer
+  - Use `WA.hideLayer(): void` to hide a layer
+  - Use `WA.setProperty() : void` to add or change existing property of a layer
+  - Use `WA.onPlayerMove(): void` to track the movement of the current player
+  - Use `WA.getCurrentUser(): Promise<User>` to get the ID, name and tags of the current player
+  - Use `WA.getCurrentRoom(): Promise<Room>` to get the ID, JSON map file, url of the map of the current room and the layer where the current player started
+  - Use `WA.registerMenuCommand(): void` to add a custom menu
 
 ### Bug Fixes
 

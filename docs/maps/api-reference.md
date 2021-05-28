@@ -323,7 +323,7 @@ WA.getCurrentRoom((room) => {
 
 ### Add a custom menu
 ```
-registerMenuCommand(commandDescriptor: string, callback: (commandDescriptor: string) => void)
+registerMenuCommand(commandDescriptor: string, callback: (commandDescriptor: string) => void): void
 ```
 Add a custom menu item containing the text `commandDescriptor`. A click on the menu will trigger the `callback`.
 

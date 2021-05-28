@@ -49,7 +49,10 @@ export class MenuScene extends Phaser.Scene {
 
         this.subscriptions.add(iframeListener.registerMenuCommandStream.subscribe(menuCommand => {
             this.addMenuOption(menuCommand);
+        }))
 
+        this.subscriptions.add(iframeListener.unregisterMenuCommandStream.subscribe(menuCommand => {
+            this.destroyMenu(menuCommand);
         }))
     }
 
@@ -384,6 +387,10 @@ export class MenuScene extends Phaser.Scene {
                 body.requestFullscreen();
             }
         }
+    }
+
+    public destroyMenu(menu: string) {
+        this.menuElement.getChildByID(menu).remove();
     }
 
     public isDirty(): boolean {

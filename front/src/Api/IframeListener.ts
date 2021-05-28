@@ -20,7 +20,6 @@ import { Math } from 'phaser';
 import type { DataLayerEvent } from "./Events/DataLayerEvent";
 import { isMenuItemRegisterEvent } from './Events/MenuItemRegisterEvent';
 import type { MenuItemClickedEvent } from './Events/MenuItemClickedEvent';
-//import { isTilesetEvent, TilesetEvent } from "./Events/TilesetEvent";
 import { isPlaySoundEvent, PlaySoundEvent } from "./Events/PlaySoundEvent";
 import { isStopSoundEvent, StopSoundEvent } from "./Events/StopSoundEvent";
 import { isLoadSoundEvent, LoadSoundEvent } from "./Events/LoadSoundEvent";
@@ -81,8 +80,8 @@ class IframeListener {
     private readonly _registerMenuCommandStream: Subject<string> = new Subject();
     public readonly registerMenuCommandStream = this._registerMenuCommandStream.asObservable();
 
-/*    private readonly _tilesetLoaderStream: Subject<TilesetEvent> =  new Subject();
-    public readonly tilesetLoaderStream = this._tilesetLoaderStream.asObservable();*/
+    private readonly _unregisterMenuCommandStream: Subject<string> = new Subject();
+    public readonly unregisterMenuCommandStream = this._unregisterMenuCommandStream.asObservable();
 
     private readonly _playSoundStream: Subject<PlaySoundEvent> = new Subject();
     public readonly playSoundStream = this._playSoundStream.asObservable();
@@ -94,6 +93,7 @@ class IframeListener {
     public readonly loadSoundStream = this._loadSoundStream.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
+    private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
     private sendPlayerMove: boolean = false;
 
@@ -103,7 +103,8 @@ class IframeListener {
             // Let's only accept messages from the iframe that are allowed.
             // Note: maybe we could restrict on the domain too for additional security (in case the iframe goes to another domain).
             let foundSrc: string | null = null;
-            for (const iframe of this.iframes) {
+            let iframe: HTMLIFrameElement;
+            for (iframe of this.iframes) {
                 if (iframe.contentWindow === message.source) {
                     foundSrc = iframe.src;
                     break;
@@ -171,9 +172,12 @@ class IframeListener {
                 } else if (payload.type == "getDataLayer") {
                     this._dataLayerChangeStream.next();
                 } else if (payload.type == "registerMenuCommand" && isMenuItemRegisterEvent(payload.data)) {
+                    const data = payload.data.menutItem;
+                    // @ts-ignore
+                    this.iframeCloseCallbacks.get(iframe).push(() => {
+                        this._unregisterMenuCommandStream.next(data);
+                    })
                     this._registerMenuCommandStream.next(payload.data.menutItem)
-/*              } else if (payload.type == "tilsetEvent" && isTilesetEvent(payload.data)) {
-                    this._tilesetLoaderStream.next(payload.data);*/
                 }
             }
         }, false);
@@ -200,9 +204,13 @@ class IframeListener {
      */
     registerIframe(iframe: HTMLIFrameElement): void {
         this.iframes.add(iframe);
+        this.iframeCloseCallbacks.set(iframe, []);
     }
 
     unregisterIframe(iframe: HTMLIFrameElement): void {
+        this.iframeCloseCallbacks.get(iframe)?.forEach(callback => {
+            callback();
+        });
         this.iframes.delete(iframe);
     }
 
