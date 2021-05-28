@@ -133,11 +133,11 @@ body .message-info.warning{
     outline: none;
 }
 
-.video-container#div-myCamVideo{
+.video-container.div-myCamVideo{
     border: none;
 }
 
-#div-myCamVideo {
+.div-myCamVideo {
     position: absolute;
     right: 15px;
     bottom: 30px;
@@ -146,11 +146,11 @@ body .message-info.warning{
     transition: right 350ms;
 }
 
-#div-myCamVideo.hide {
+.div-myCamVideo.hide {
     right: -20vw;
 }
 
-video#myCamVideo{
+video.myCamVideo{
     width: 15vw;
     -webkit-transform: scaleX(-1);
     transform: scaleX(-1);
