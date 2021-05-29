@@ -8,32 +8,10 @@ import {SoundMeter} from "../Phaser/Components/SoundMeter";
 import {DISABLE_NOTIFICATIONS} from "../Enum/EnvironmentVariable";
 import {
     gameOverlayVisibilityStore, localStreamStore,
-    mediaStreamConstraintsStore,
-    requestedCameraState,
-    requestedMicrophoneState
 } from "../Stores/MediaStore";
 import {
-    requestedScreenSharingState,
-    screenSharingAvailableStore,
     screenSharingLocalStreamStore
 } from "../Stores/ScreenSharingStore";
-
-declare const navigator:any; // eslint-disable-line @typescript-eslint/no-explicit-any
-
-const videoConstraint: boolean|MediaTrackConstraints = {
-    width: { min: 640, ideal: 1280, max: 1920 },
-    height: { min: 400, ideal: 720 },
-    frameRate: { ideal: localUserStore.getVideoQualityValue() },
-    facingMode: "user",
-    resizeMode: 'crop-and-scale',
-    aspectRatio: 1.777777778
-};
-const audioConstraint: boolean|MediaTrackConstraints = {
-    //TODO: make these values configurable in the game settings menu and store them in localstorage
-    autoGainControl: false,
-    echoCancellation: true,
-    noiseSuppression: true
-};
 
 export type UpdatedLocalStreamCallback = (media: MediaStream|null) => void;
 export type StartScreenSharingCallback = (media: MediaStream) => void;
@@ -43,7 +21,6 @@ export type ShowReportCallBack = (userId: string, userName: string|undefined) =>
 export type HelpCameraSettingsCallBack = () => void;
 
 export class MediaManager {
-    localStream: MediaStream|null = null;
     private remoteVideo: Map<string, HTMLVideoElement> = new Map<string, HTMLVideoElement>();
     webrtcInAudio: HTMLAudioElement;
     //FIX ME SOUNDMETER: check stalability of sound meter calculation
@@ -91,24 +68,8 @@ export class MediaManager {
                 }, this.userInputManager);
                 return;
             }
-
-            /*if (result.constraints.video !== false) {
-                HtmlUtils.getElementByIdOrFail('div-myCamVideo').classList.remove('hide');
-            } else {
-                HtmlUtils.getElementByIdOrFail('div-myCamVideo').classList.add('hide');
-            }
-            if (result.constraints.audio !== false) {
-                this.enableMicrophoneStyle();
-            } else {
-                this.disableMicrophoneStyle();
-            }*/
-
-            this.localStream = result.stream;
-            //this.myCamVideo.srcObject = this.localStream;
-
         });
 
-        //let screenSharingStream : MediaStream|null;
         screenSharingLocalStreamStore.subscribe((result) => {
             if (result.type === 'error') {
                 console.error(result.error);
@@ -119,14 +80,10 @@ export class MediaManager {
             }
 
             if (result.stream !== null) {
-                //screenSharingStream = result.stream;
-
                 this.addScreenSharingActiveVideo('me', DivImportance.Normal);
                 HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('screen-sharing-me').srcObject = result.stream;
             } else {
                 this.removeActiveScreenSharingVideo('me');
-
-                //screenSharingStream = null;
             }
 
         });

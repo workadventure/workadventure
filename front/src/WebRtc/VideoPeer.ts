@@ -27,7 +27,7 @@ export class VideoPeer extends Peer {
     private onBlockSubscribe: Subscription;
     private onUnBlockSubscribe: Subscription;
 
-    constructor(public user: UserSimplePeerInterface, initiator: boolean, private connection: RoomConnection) {
+    constructor(public user: UserSimplePeerInterface, initiator: boolean, private connection: RoomConnection, localStream: MediaStream | null) {
         super({
             initiator: initiator ? initiator : false,
             //reconnectTimer: 10000,
@@ -107,7 +107,7 @@ export class VideoPeer extends Peer {
             this._onFinish();
         });
 
-        this.pushVideoToRemoteUser();
+        this.pushVideoToRemoteUser(localStream);
         this.onBlockSubscribe = blackListManager.onBlockStream.subscribe((userId) => {
             if (userId === this.userId) {
                 this.toggleRemoteStream(false);
@@ -190,9 +190,8 @@ export class VideoPeer extends Peer {
         }
     }
 
-    private pushVideoToRemoteUser() {
+    private pushVideoToRemoteUser(localStream: MediaStream | null) {
         try {
-            const localStream: MediaStream | null = mediaManager.localStream;
             this.write(new Buffer(JSON.stringify({type: MESSAGE_TYPE_CONSTRAINT, ...get(obtainedMediaConstraintStore)})));
 
             if(!localStream){
