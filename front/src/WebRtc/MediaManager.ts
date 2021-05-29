@@ -44,13 +44,11 @@ export type HelpCameraSettingsCallBack = () => void;
 
 export class MediaManager {
     localStream: MediaStream|null = null;
-    localScreenCapture: MediaStream|null = null;
     private remoteVideo: Map<string, HTMLVideoElement> = new Map<string, HTMLVideoElement>();
     webrtcInAudio: HTMLAudioElement;
     //FIX ME SOUNDMETER: check stalability of sound meter calculation
     //mySoundMeterElement: HTMLDivElement;
     private webrtcOutAudio: HTMLAudioElement;
-    updatedLocalStreamCallBacks : Set<UpdatedLocalStreamCallback> = new Set<UpdatedLocalStreamCallback>();
     startScreenSharingCallBacks : Set<StartScreenSharingCallback> = new Set<StartScreenSharingCallback>();
     stopScreenSharingCallBacks : Set<StopScreenSharingCallback> = new Set<StopScreenSharingCallback>();
     showReportModalCallBacks : Set<ShowReportCallBack> = new Set<ShowReportCallBack>();
@@ -108,24 +106,8 @@ export class MediaManager {
             this.localStream = result.stream;
             //this.myCamVideo.srcObject = this.localStream;
 
-            // TODO: migrate all listeners to the store directly.
-            this.triggerUpdatedLocalStreamCallbacks(result.stream);
         });
 
-        /*requestedCameraState.subscribe((enabled) => {
-            if (enabled) {
-                this.enableCameraStyle();
-            } else {
-                this.disableCameraStyle();
-            }
-        });
-        requestedMicrophoneState.subscribe((enabled) => {
-            if (enabled) {
-                this.enableMicrophoneStyle();
-            } else {
-                this.disableMicrophoneStyle();
-            }
-        });*/
         //let screenSharingStream : MediaStream|null;
         screenSharingLocalStreamStore.subscribe((result) => {
             if (result.type === 'error') {
@@ -137,25 +119,12 @@ export class MediaManager {
             }
 
             if (result.stream !== null) {
-                //this.enableScreenSharingStyle();
-                mediaManager.localScreenCapture = result.stream;
-
-                // TODO: migrate this out of MediaManager
-                this.triggerStartedScreenSharingCallbacks(result.stream);
-
                 //screenSharingStream = result.stream;
 
                 this.addScreenSharingActiveVideo('me', DivImportance.Normal);
                 HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('screen-sharing-me').srcObject = result.stream;
             } else {
-                //this.disableScreenSharingStyle();
                 this.removeActiveScreenSharingVideo('me');
-
-                // FIXME: we need the old stream that is being stopped!
-                if (this.localScreenCapture) {
-                    this.triggerStoppedScreenSharingCallbacks(this.localScreenCapture);
-                    this.localScreenCapture = null;
-                }
 
                 //screenSharingStream = null;
             }
@@ -174,40 +143,6 @@ export class MediaManager {
     public updateScene(){
         //FIX ME SOUNDMETER: check stability of sound meter calculation
         //this.updateSoudMeter();
-    }
-
-    public onUpdateLocalStream(callback: UpdatedLocalStreamCallback): void {
-        this.updatedLocalStreamCallBacks.add(callback);
-    }
-
-    public onStartScreenSharing(callback: StartScreenSharingCallback): void {
-        this.startScreenSharingCallBacks.add(callback);
-    }
-
-    public onStopScreenSharing(callback: StopScreenSharingCallback): void {
-        this.stopScreenSharingCallBacks.add(callback);
-    }
-
-    removeUpdateLocalStreamEventListener(callback: UpdatedLocalStreamCallback): void {
-        this.updatedLocalStreamCallBacks.delete(callback);
-    }
-
-    private triggerUpdatedLocalStreamCallbacks(stream: MediaStream|null): void {
-        for (const callback of this.updatedLocalStreamCallBacks) {
-            callback(stream);
-        }
-    }
-
-    private triggerStartedScreenSharingCallbacks(stream: MediaStream): void {
-        for (const callback of this.startScreenSharingCallBacks) {
-            callback(stream);
-        }
-    }
-
-    private triggerStoppedScreenSharingCallbacks(stream: MediaStream): void {
-        for (const callback of this.stopScreenSharingCallBacks) {
-            callback(stream);
-        }
     }
 
     public showGameOverlay(): void {
@@ -235,42 +170,6 @@ export class MediaManager {
 
         gameOverlayVisibilityStore.hideGameOverlay();
     }
-
-    /*private enableCameraStyle(){
-        this.cinemaClose.style.display = "none";
-        this.cinemaBtn.classList.remove("disabled");
-        this.cinema.style.display = "block";
-    }
-
-    private disableCameraStyle(){
-        this.cinemaClose.style.display = "block";
-        this.cinema.style.display = "none";
-        this.cinemaBtn.classList.add("disabled");
-    }
-
-    private enableMicrophoneStyle(){
-        this.microphoneClose.style.display = "none";
-        this.microphone.style.display = "block";
-        this.microphoneBtn.classList.remove("disabled");
-    }
-
-    private disableMicrophoneStyle(){
-        this.microphoneClose.style.display = "block";
-        this.microphone.style.display = "none";
-        this.microphoneBtn.classList.add("disabled");
-    }
-
-    private enableScreenSharingStyle(){
-        this.monitorClose.style.display = "none";
-        this.monitor.style.display = "block";
-        this.monitorBtn.classList.add("enabled");
-    }
-
-    private disableScreenSharingStyle(){
-        this.monitorClose.style.display = "block";
-        this.monitor.style.display = "none";
-        this.monitorBtn.classList.remove("enabled");
-    }*/
 
     addActiveVideo(user: UserSimplePeerInterface, userName: string = ""){
         this.webrtcInAudio.play();
