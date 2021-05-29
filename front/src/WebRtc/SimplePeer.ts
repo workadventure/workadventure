@@ -128,13 +128,19 @@ export class SimplePeer {
         if(!user.initiator){
             return;
         }
-        this.createPeerConnection(user);
+        const streamResult = get(localStreamStore);
+        let stream : MediaStream | null = null;
+        if (streamResult.type === 'success' && streamResult.stream) {
+            stream = streamResult.stream;
+        }
+
+        this.createPeerConnection(user, stream);
     }
 
     /**
      * create peer connection to bind users
      */
-    private createPeerConnection(user : UserSimplePeerInterface) : VideoPeer | null {
+    private createPeerConnection(user : UserSimplePeerInterface, localStream: MediaStream | null) : VideoPeer | null {
         const peerConnection = this.PeerConnectionArray.get(user.userId)
         if (peerConnection) {
             if (peerConnection.destroyed) {
@@ -144,11 +150,11 @@ export class SimplePeer {
                 if (!peerConnexionDeleted) {
                     throw 'Error to delete peer connection';
                 }
-                this.createPeerConnection(user);
+                //return this.createPeerConnection(user, localStream);
             } else {
                 peerConnection.toClose = false;
+                return null;
             }
-            return null;
         }
 
         let name = user.name;
@@ -166,7 +172,7 @@ export class SimplePeer {
         this.lastWebrtcUserName = user.webRtcUser;
         this.lastWebrtcPassword = user.webRtcPassword;
 
-        const peer = new VideoPeer(user, user.initiator ? user.initiator : false, this.Connection);
+        const peer = new VideoPeer(user, user.initiator ? user.initiator : false, this.Connection, localStream);
 
         //permit to send message
         mediaManager.addSendMessageCallback(user.userId,(message: string) => {
@@ -208,7 +214,7 @@ export class SimplePeer {
                 if(!peerConnexionDeleted){
                     throw 'Error to delete peer connection';
                 }
-                this.createPeerConnection(user);
+                this.createPeerConnection(user, stream);
             }else {
                 peerConnection.toClose = false;
             }
@@ -327,7 +333,13 @@ export class SimplePeer {
         try {
             //if offer type, create peer connection
             if(data.signal.type === "offer"){
-                this.createPeerConnection(data);
+                const streamResult = get(localStreamStore);
+                let stream : MediaStream | null = null;
+                if (streamResult.type === 'success' && streamResult.stream) {
+                    stream = streamResult.stream;
+                }
+
+                this.createPeerConnection(data, stream);
             }
             const peer = this.PeerConnectionArray.get(data.userId);
             if (peer !== undefined) {
