@@ -4,7 +4,7 @@ import {RoomConnection} from "./RoomConnection";
 import type {OnConnectInterface, PositionInterface, ViewportInterface} from "./ConnexionModels";
 import {GameConnexionTypes, urlManager} from "../Url/UrlManager";
 import {localUserStore} from "./LocalUserStore";
-import {LocalUser} from "./LocalUser";
+import {CharacterTexture, LocalUser} from "./LocalUser";
 import {Room} from "./Room";
 
 
@@ -107,7 +107,14 @@ class ConnectionManager {
         if(!anonymousTokenIsValid){
             this.localUser = new LocalUser(data.userUuid, data.authToken, (data.textures ? data.textures : []));
         }else{
-            this.localUser.textures = (data.textures ? data.textures : []);
+            // If user reload web page, textures must not clear. Else the user loose texture with register link
+            // Keep previous texture
+            let textures: CharacterTexture[] = [];
+            if(this.localUser.textures){
+                textures = this.localUser.textures;
+            }
+            textures.concat((data.textures ? data.textures : []));
+            this.localUser.textures = textures;
         }
 
         if (!isBenchmark) { // In benchmark, we don't have a local storage.
