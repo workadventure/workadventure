@@ -110,24 +110,36 @@ export class AuthenticateController extends BaseController {
     private anonymLogin(){
         this.App.options("/anonymLogin", (res: HttpResponse, req: HttpRequest) => {
             this.addCorsHeaders(res);
-
             res.end();
         });
 
         this.App.post("/anonymLogin", (res: HttpResponse, req: HttpRequest) => {
+            (async () => {                
+                res.onAborted(() => {
+                    console.warn('Login request was aborted');
+                })
 
-            res.onAborted(() => {
-                console.warn('Login request was aborted');
-            })
+                //get map room detail
+                const params = await res.json();
+                let mapDetails = {};
+                if(params.organizationSlug && params.worldSlug && params.roomSlug){
+                    try{
+                        mapDetails = await adminApi.fetchMapDetails(params.organizationSlug, params.worldSlug, params.roomSlug);
+                    }catch(err){
+                        console.error(err);
+                    }
+                }
 
-            const userUuid = v4();
-            const authToken = jwtTokenManager.createJWTToken(userUuid);
-            res.writeStatus("200 OK");
-            this.addCorsHeaders(res);
-            res.end(JSON.stringify({
-                authToken,
-                userUuid,
-            }));
+                const userUuid = v4();
+                const authToken = jwtTokenManager.createJWTToken(userUuid);
+                res.writeStatus("200 OK");
+                this.addCorsHeaders(res);
+                res.end(JSON.stringify({
+                    ...mapDetails,
+                    authToken,
+                    userUuid,
+                }));
+            })();
         });
     }
 }

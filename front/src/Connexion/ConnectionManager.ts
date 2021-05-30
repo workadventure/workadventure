@@ -46,26 +46,44 @@ class ConnectionManager {
             urlManager.pushRoomIdToUrl(room);
             return Promise.resolve(room);
         } else if (connexionType === GameConnexionTypes.organization || connexionType === GameConnexionTypes.anonymous || connexionType === GameConnexionTypes.empty) {
-            const localUser = localUserStore.getLocalUser();
-
-            if (localUser && localUser.jwtToken && localUser.uuid && localUser.textures) {
-                this.localUser = localUser;
-                try {
-                    await this.verifyToken(localUser.jwtToken);
-                } catch(e) {
-                    // If the token is invalid, let's generate an anonymous one.
-                    console.error('JWT token invalid. Did it expire? Login anonymously instead.');
-                    await this.anonymousLogin();
-                }
-            } else {
-                await this.anonymousLogin();
-            }
             let roomId: string
             if (connexionType === GameConnexionTypes.empty) {
                 roomId = START_ROOM_URL;
             } else {
                 roomId = window.location.pathname + window.location.search + window.location.hash;
             }
+
+            let anonymousTokenIsValid = false;
+            const localUser = localUserStore.getLocalUser();
+            if (localUser && localUser.jwtToken && localUser.uuid && localUser.textures) {
+                this.localUser = localUser;
+                try {
+                    await this.verifyToken(localUser.jwtToken);
+                    anonymousTokenIsValid = true;
+                } catch(e) {
+                    // If the token is invalid, let's generate an anonymous one.
+                    console.error('JWT token invalid. Did it expire? Login anonymously instead.');
+                }
+            }
+
+            let organizationSlug, worldSlug, roomSlug = null;
+            if(connexionType === GameConnexionTypes.organization){
+                const tab = /\/@\/(.+)\/(.+)\/(.+)/.exec(roomId);
+                if(tab){
+                    organizationSlug = tab[1];
+                    worldSlug = tab[2];
+                    roomSlug = tab[3];
+                }
+            }
+            
+            await this.anonymousLogin(
+                false, 
+                organizationSlug, 
+                worldSlug, 
+                roomSlug,
+                anonymousTokenIsValid
+            );
+
             return Promise.resolve(new Room(roomId));
         }
 
@@ -76,9 +94,22 @@ class ConnectionManager {
         await Axios.get(`${PUSHER_URL}/verify`, {params: {token}});
     }
 
-    public async anonymousLogin(isBenchmark: boolean = false): Promise<void> {
-        const data = await Axios.post(`${PUSHER_URL}/anonymLogin`).then(res => res.data);
-        this.localUser = new LocalUser(data.userUuid, data.authToken, []);
+    public async anonymousLogin(
+            isBenchmark: boolean = false, 
+            organizationSlug: string|null = null,
+            worldSlug: string|null = null,
+            roomSlug: string|null = null,
+            anonymousTokenIsValid: boolean = false
+        ): Promise<void> {
+        const data = await Axios.post(`${PUSHER_URL}/anonymLogin`, {organizationSlug, worldSlug, roomSlug}).then(res => res.data);
+
+        //if token anonyme user verified, just update texture of map details
+        if(!anonymousTokenIsValid){
+            this.localUser = new LocalUser(data.userUuid, data.authToken, (data.textures ? data.textures : []));
+        }else{
+            this.localUser.textures = (data.textures ? data.textures : []);
+        }
+
         if (!isBenchmark) { // In benchmark, we don't have a local storage.
             localUserStore.saveUser(this.localUser);
         }
