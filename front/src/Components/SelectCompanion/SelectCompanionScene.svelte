@@ -41,9 +41,6 @@
     pointer-events: auto;
     color: #ebeeee;
   }
-  .selectCompanionScene button {
-    font-family: "Press Start 2P";
-  }
   .selectCompanionScene section {
     margin: 10px;
   }

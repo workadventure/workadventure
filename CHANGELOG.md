@@ -22,6 +22,10 @@
   - Mouse wheel support to zoom in / out
   - Pinch support on mobile to zoom in / out
   - Improved virtual joystick size (adapts to the zoom level)
+- Redesigned intermediate scenes
+  - Redesigned Select Companion scene
+  - Redesigned Enter Your Name scene
+    - Added a new `DISPLAY_TERMS_OF_USE` environment variable to trigger the display of terms of use  
 - New scripting API features:
   - Use `WA.loadSound(): Sound` to load / play / stop a sound
 
