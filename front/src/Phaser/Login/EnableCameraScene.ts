@@ -12,8 +12,8 @@ import { MenuScene } from "../Menu/MenuScene";
 import {ResizableScene} from "./ResizableScene";
 import {
     audioConstraintStore,
-    enableCameraSceneVisibilityStore,
     localStreamStore,
+    enableCameraSceneVisibilityStore,
     mediaStreamConstraintsStore,
     videoConstraintStore
 } from "../../Stores/MediaStore";
@@ -27,8 +27,6 @@ enum LoginTextures {
     arrowRight = "arrow_right",
     arrowUp = "arrow_up"
 }
-
-const enableCameraSceneKey = 'enableCameraScene';
 
 export class EnableCameraScene extends ResizableScene {
     private textField!: TextField;
@@ -45,8 +43,6 @@ export class EnableCameraScene extends ResizableScene {
     private soundMeterSprite!: SoundMeterSprite;
     private microphoneNameField!: TextField;
 
-    private enableCameraSceneElement!: Phaser.GameObjects.DOMElement;
-
     private mobileTapZone!: Zone;
     private localStreamStoreUnsubscriber!: Unsubscriber;
 
@@ -58,9 +54,6 @@ export class EnableCameraScene extends ResizableScene {
     }
 
     preload() {
-
-        this.load.html(enableCameraSceneKey, 'resources/html/EnableCameraScene.html');
-
         this.load.image(LoginTextures.playButton, "resources/objects/play_button.png");
         this.load.image(LoginTextures.arrowRight, "resources/objects/arrow_right.png");
         this.load.image(LoginTextures.arrowUp, "resources/objects/arrow_up.png");
@@ -69,18 +62,6 @@ export class EnableCameraScene extends ResizableScene {
     }
 
     create() {
-
-        this.enableCameraSceneElement = this.add.dom(-1000, 0).createFromCache(enableCameraSceneKey);
-        this.centerXDomElement(this.enableCameraSceneElement, 300);
-
-        MenuScene.revealMenusAfterInit(this.enableCameraSceneElement, enableCameraSceneKey);
-
-        const continuingButton = this.enableCameraSceneElement.getChildByID('enableCameraSceneFormSubmit') as HTMLButtonElement;
-        continuingButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.login();
-        });
-
         if (touchScreenManager.supportTouchScreen) {
             new PinchManager(this);
         }
@@ -272,19 +253,17 @@ export class EnableCameraScene extends ResizableScene {
         this.arrowUp.x = this.microphoneNameField.x - this.microphoneNameField.width / 2 - 16;
         this.arrowUp.y = this.microphoneNameField.y;
 
-        const actionBtn = document.querySelector<HTMLDivElement>('#enableCameraScene .action');
+        /*const actionBtn = document.querySelector<HTMLDivElement>('#enableCameraScene .action');
         if (actionBtn !== null) {
             actionBtn.style.top = (this.scale.height - 65) + 'px';
-        }
+        }*/
     }
 
     update(time: number, delta: number): void {
         this.soundMeterSprite.setVolume(this.soundMeter.getVolume());
-
-        this.centerXDomElement(this.enableCameraSceneElement, 300);
     }
 
-    private login(): void {
+    public login(): void {
         HtmlUtils.getElementByIdOrFail<HTMLDivElement>('webRtcSetup').style.display = 'none';
         this.soundMeter.stop();
 
