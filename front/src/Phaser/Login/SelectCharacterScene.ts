@@ -51,7 +51,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     create() {
 
         this.selectCharacterSceneElement = this.add.dom(-1000, 0).createFromCache(selectCharacterKey);
-        this.centerXDomElement(this.selectCharacterSceneElement, 150);
+        this.centerXDomElement(this.selectCharacterSceneElement, 300);
         MenuScene.revealMenusAfterInit(this.selectCharacterSceneElement, selectCharacterKey);
 
         this.selectCharacterSceneElement.addListener('click');
@@ -211,7 +211,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
         const {playerX, playerY, playerScale, playserOpactity, playerVisible} = this.defineSetupPlayer(numero);
         player.setBounce(0.2);
-        player.setCollideWorldBounds(true);
+        player.setCollideWorldBounds(false);
         player.setVisible( playerVisible );
         player.setScale(playerScale, playerScale);
         player.setAlpha(playserOpactity);
@@ -240,10 +240,10 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     update(time: number, delta: number): void {
     }
 
-    public onResize(ev: UIEvent): void {
+    public onResize(): void {
         //move position of user
         this.moveUser();
 
-        this.centerXDomElement(this.selectCharacterSceneElement, 150);
+        this.centerXDomElement(this.selectCharacterSceneElement, 300);
     }
 }

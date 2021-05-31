@@ -80,7 +80,7 @@ export class LoginScene extends ResizableScene {
 
     }
 
-    public onResize(ev: UIEvent): void {
+    public onResize(): void {
         this.centerXDomElement(this.loginSceneElement, 200);
     }
 }

@@ -109,8 +109,10 @@ export class HelpCameraSettingsScene extends DirtyScene {
         this.dirty = false;
     }
 
-    public onResize(ev: UIEvent): void {
-        super.onResize(ev);
+    public onResize(): void {
+        super.onResize(
+
+        );
         if (this.helpCameraSettingsOpened) {
             const middleX = this.getMiddleX();
             const middleY = this.getMiddleY();

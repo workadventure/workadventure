@@ -52,7 +52,7 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     create() {
         this.customizeSceneElement = this.add.dom(-1000, 0).createFromCache(customizeSceneKey);
-        this.centerXDomElement(this.customizeSceneElement, 150);
+        this.centerXDomElement(this.customizeSceneElement, 350);
         MenuScene.revealMenusAfterInit(this.customizeSceneElement, customizeSceneKey);
 
         this.customizeSceneElement.addListener('click');
@@ -270,7 +270,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.Rectangle.x = this.cameras.main.worldView.x + this.cameras.main.width / 2;
         this.Rectangle.y = this.cameras.main.worldView.y + this.cameras.main.height / 3;
 
-        this.centerXDomElement(this.customizeSceneElement, 150);
+        this.centerXDomElement(this.customizeSceneElement, 350);
      }
 
     private nextSceneToCamera(){
