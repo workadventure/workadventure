@@ -11,6 +11,8 @@ import {AbstractCharacterScene} from "./AbstractCharacterScene";
 import {areCharacterLayersValid} from "../../Connexion/LocalUser";
 import { MenuScene } from "../Menu/MenuScene";
 import { SelectCharacterSceneName } from "./SelectCharacterScene";
+import {customCharacterSceneVisibleStore} from "../../Stores/CustomCharacterStore";
+import {selectCharacterSceneVisibleStore} from "../../Stores/SelectCharacterStore";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -22,7 +24,7 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     private selectedLayers: number[] = [0];
     private containersRow: Container[][] = [];
-    private activeRow:number = 0;
+    public activeRow:number = 0;
     private layers: BodyResourceDescriptionInterface[][] = [];
 
     private customizeSceneElement!: Phaser.GameObjects.DOMElement;
@@ -51,35 +53,9 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     create() {
-        this.customizeSceneElement = this.add.dom(-1000, 0).createFromCache(customizeSceneKey);
-        this.centerXDomElement(this.customizeSceneElement, 350);
-        MenuScene.revealMenusAfterInit(this.customizeSceneElement, customizeSceneKey);
+        customCharacterSceneVisibleStore.set(true);
 
-        this.customizeSceneElement.addListener('click');
-        this.customizeSceneElement.on('click',  (event:MouseEvent) => {
-            event.preventDefault();
-            if((event?.target as HTMLInputElement).id === 'customizeSceneButtonLeft') {
-                this.moveCursorHorizontally(-1);
-            }else if((event?.target as HTMLInputElement).id === 'customizeSceneButtonRight') {
-                this.moveCursorHorizontally(1);
-            }else if((event?.target as HTMLInputElement).id === 'customizeSceneButtonDown') {
-                this.moveCursorVertically(1);
-            }else if((event?.target as HTMLInputElement).id === 'customizeSceneButtonUp') {
-                this.moveCursorVertically(-1);
-            }else if((event?.target as HTMLInputElement).id === 'customizeSceneFormBack') {
-                if(this.activeRow > 0){
-                    this.moveCursorVertically(-1);
-                }else{
-                    this.backToPreviousScene();
-                }
-            }else if((event?.target as HTMLButtonElement).id === 'customizeSceneFormSubmit') {
-                if(this.activeRow < 5){
-                    this.moveCursorVertically(1);
-                }else{
-                    this.nextSceneToCamera();
-                }
-            }
-        });
+        this.events.addListener('wake', () => { customCharacterSceneVisibleStore.set(true); });
 
         this.Rectangle = this.add.rectangle(this.cameras.main.worldView.x + this.cameras.main.width / 2, this.cameras.main.worldView.y + this.cameras.main.height / 3, 32, 33)
         this.Rectangle.setStrokeStyle(2, 0xFFFFFF);
@@ -116,7 +92,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.onResize();
     }
 
-    private moveCursorHorizontally(index: number): void {
+    public moveCursorHorizontally(index: number): void {
         this.selectedLayers[this.activeRow] += index;
         if (this.selectedLayers[this.activeRow] < 0) {
             this.selectedLayers[this.activeRow] = 0
@@ -128,27 +104,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.saveInLocalStorage();
     }
 
-    private moveCursorVertically(index:number): void {
-
-        if(index === -1 && this.activeRow === 5){
-            const button = this.customizeSceneElement.getChildByID('customizeSceneFormSubmit') as HTMLButtonElement;
-            button.innerHTML = `Next <img src="resources/objects/arrow_up.png"/>`;
-        }
-
-        if(index === 1 && this.activeRow === 4){
-            const button = this.customizeSceneElement.getChildByID('customizeSceneFormSubmit') as HTMLButtonElement;
-            button.innerText = 'Finish';
-        }
-
-        if(index === -1 && this.activeRow === 1){
-            const button = this.customizeSceneElement.getChildByID('customizeSceneFormBack') as HTMLButtonElement;
-            button.innerText = `Return`;
-        }
-
-        if(index === 1 && this.activeRow === 0){
-            const button = this.customizeSceneElement.getChildByID('customizeSceneFormBack') as HTMLButtonElement;
-            button.innerHTML = `Back <img src="resources/objects/arrow_up.png"/>`;
-        }
+    public moveCursorVertically(index:number): void {
 
         this.activeRow += index;
         if (this.activeRow < 0) {
@@ -269,8 +225,6 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         this.Rectangle.x = this.cameras.main.worldView.x + this.cameras.main.width / 2;
         this.Rectangle.y = this.cameras.main.worldView.y + this.cameras.main.height / 3;
-
-        this.centerXDomElement(this.customizeSceneElement, 350);
      }
 
     private nextSceneToCamera(){
@@ -290,10 +244,13 @@ export class CustomizeScene extends AbstractCharacterScene {
             this.scene.sleep(CustomizeSceneName);
             this.scene.remove(SelectCharacterSceneName);
             gameManager.tryResumingGame(this, EnableCameraSceneName);
+            customCharacterSceneVisibleStore.set(false);
     }
 
     private backToPreviousScene(){
         this.scene.sleep(CustomizeSceneName);
         this.scene.run(SelectCharacterSceneName);
+        customCharacterSceneVisibleStore.set(false);
+        selectCharacterSceneVisibleStore.set(true);
     }
 }

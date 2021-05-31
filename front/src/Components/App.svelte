@@ -6,15 +6,27 @@
     import MyCamera from "./MyCamera.svelte";
     import SelectCompanionScene from "./SelectCompanion/SelectCompanionScene.svelte";
     import {selectCompanionSceneVisibleStore} from "../Stores/SelectCompanionStore";
+    import {selectCharacterSceneVisibleStore} from "../Stores/SelectCharacterStore";
+    import SelectCharacterScene from "./selectCharacter/SelectCharacterScene.svelte";
+    import {customCharacterSceneVisibleStore} from "../Stores/CustomCharacterStore";
+
     import {Game} from "../Phaser/Game/Game";
+    import CustomCharacterScene from "./CustomCharacterScene/CustomCharacterScene.svelte";
+
 
     export let game: Game;
 
 </script>
 
 <div>
+    {#if $selectCharacterSceneVisibleStore}
+        <SelectCharacterScene game={ game }></SelectCharacterScene>
+    {/if}
+    {#if $customCharacterSceneVisibleStore}
+        <CustomCharacterScene game={ game }></CustomCharacterScene>
+    {/if}
     {#if $selectCompanionSceneVisibleStore}
-        <SelectCompanionScene game={game}></SelectCompanionScene>
+        <SelectCompanionScene game={ game }></SelectCompanionScene>
     {/if}
     <!-- {#if $menuIconVisible}
     <MenuIcon  />
