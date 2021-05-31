@@ -119,23 +119,11 @@ export class AuthenticateController extends BaseController {
                     console.warn('Login request was aborted');
                 })
 
-                //get map room detail
-                const params = await res.json();
-                let mapDetails = {};
-                if(params.organizationSlug && params.worldSlug && params.roomSlug){
-                    try{
-                        mapDetails = await adminApi.fetchMapDetails(params.organizationSlug, params.worldSlug, params.roomSlug);
-                    }catch(err){
-                        console.error(err);
-                    }
-                }
-
                 const userUuid = v4();
                 const authToken = jwtTokenManager.createJWTToken(userUuid);
                 res.writeStatus("200 OK");
                 this.addCorsHeaders(res);
                 res.end(JSON.stringify({
-                    ...mapDetails,
                     authToken,
                     userUuid,
                 }));

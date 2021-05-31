@@ -27,6 +27,8 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     private customizeSceneElement!: Phaser.GameObjects.DOMElement;
 
+    protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
+
     constructor() {
         super({
             key: CustomizeSceneName
@@ -36,7 +38,6 @@ export class CustomizeScene extends AbstractCharacterScene {
     preload() {
         this.load.html(customizeSceneKey, 'resources/html/CustomCharacterScene.html');
 
-        this.layers = loadAllLayers(this.load);
         this.loadCustomSceneSelectCharacters().then((bodyResourceDescriptions) => {
             bodyResourceDescriptions.forEach((bodyResourceDescription) => {
                 if(bodyResourceDescription.level == undefined || bodyResourceDescription.level < 0 || bodyResourceDescription.level > 5 ){
@@ -44,7 +45,12 @@ export class CustomizeScene extends AbstractCharacterScene {
                 }
                 this.layers[bodyResourceDescription.level].unshift(bodyResourceDescription);
             });
+            this.lazyloadingAttempt = true;
         });
+
+        this.layers = loadAllLayers(this.load);
+        this.lazyloadingAttempt = false;
+
 
         //this function must stay at the end of preload function
         addLoader(this);
@@ -262,6 +268,10 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     update(time: number, delta: number): void {
 
+        if(this.lazyloadingAttempt){
+            this.moveLayers();
+            this.lazyloadingAttempt = false;
+        }
     }
 
      public onResize(): void {

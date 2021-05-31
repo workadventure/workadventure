@@ -28,6 +28,8 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     protected selectCharacterSceneElement!: Phaser.GameObjects.DOMElement;
     protected currentSelectUser = 0;
 
+    protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
+
     constructor() {
         super({
             key: SelectCharacterSceneName,
@@ -41,8 +43,10 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             bodyResourceDescriptions.forEach((bodyResourceDescription) => {
                 this.playerModels.push(bodyResourceDescription);
             });
-        })
+            this.lazyloadingAttempt = true;
+        });
         this.playerModels = loadAllDefaultModels(this.load);
+        this.lazyloadingAttempt = false;
 
         //this function must stay at the end of preload function
         addLoader(this);
@@ -238,6 +242,10 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     update(time: number, delta: number): void {
+        if(this.lazyloadingAttempt){
+            this.createCurrentPlayer();
+            this.lazyloadingAttempt = false;
+        }
     }
 
     public onResize(ev: UIEvent): void {
