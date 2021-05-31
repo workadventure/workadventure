@@ -102,9 +102,17 @@ module.exports = {
                 }
             },
             {
-                test: /\.(ttf|eot|svg|png|gif|jpg)$/,
+                test: /\.(eot|svg|png|gif|jpg)$/,
                 exclude: /node_modules/,
                 type: 'asset'
+            },
+            {
+                test: /\.(woff(2)?|ttf)$/,
+                type: 'asset',
+                generator: {
+                    filename: 'fonts/[name][ext]'
+                }
+
             }
         ],
     },

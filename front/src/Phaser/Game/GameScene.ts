@@ -279,6 +279,14 @@ export class GameScene extends DirtyScene implements CenterListener {
 
         this.load.spritesheet('layout_modes', 'resources/objects/layout_modes.png', {frameWidth: 32, frameHeight: 32});
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
+        //eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (this.load as any).rexWebFont({ 
+            custom: {
+                families: ['Press Start 2P'],
+                urls: ['/resources/fonts/fonts.css'],
+                testString: 'abcdefg'
+            },
+        });
 
         //this function must stay at the end of preload function
         addLoader(this);

@@ -133,11 +133,11 @@ body .message-info.warning{
     outline: none;
 }
 
-.video-container#div-myCamVideo{
+.video-container.div-myCamVideo{
     border: none;
 }
 
-#div-myCamVideo {
+.div-myCamVideo {
     position: absolute;
     right: 15px;
     bottom: 30px;
@@ -146,11 +146,11 @@ body .message-info.warning{
     transition: right 350ms;
 }
 
-#div-myCamVideo.hide {
+.div-myCamVideo.hide {
     right: -20vw;
 }
 
-video#myCamVideo{
+video.myCamVideo{
     width: 15vw;
     -webkit-transform: scaleX(-1);
     transform: scaleX(-1);
@@ -212,7 +212,9 @@ video#myCamVideo{
 /*btn animation*/
 .btn-cam-action div{
     cursor: url('./images/cursor_pointer.png'), pointer;
-    /*position: absolute;*/
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border: solid 0px black;
     width: 44px;
     height: 44px;
@@ -267,8 +269,6 @@ video#myCamVideo{
 .btn-cam-action div img{
     height: 22px;
     width: 30px;
-    top: calc(48px - 37px);
-    left: calc(48px - 41px);
     position: relative;
     cursor: url('./images/cursor_pointer.png'), pointer;
 }

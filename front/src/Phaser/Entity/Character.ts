@@ -1,6 +1,6 @@
 import {PlayerAnimationDirections, PlayerAnimationTypes} from "../Player/Animation";
 import {SpeechBubble} from "./SpeechBubble";
-import BitmapText = Phaser.GameObjects.BitmapText;
+import Text = Phaser.GameObjects.Text;
 import Container = Phaser.GameObjects.Container;
 import Sprite = Phaser.GameObjects.Sprite;
 import {TextureError} from "../../Exception/TextureError";
@@ -23,7 +23,7 @@ const interactiveRadius = 35;
 
 export abstract class Character extends Container {
     private bubble: SpeechBubble|null = null;
-    private readonly playerName: BitmapText;
+    private readonly playerName: Text;
     public PlayerValue: string;
     public sprites: Map<string, Sprite>;
     private lastDirection: PlayerAnimationDirections = PlayerAnimationDirections.Down;
@@ -55,9 +55,9 @@ export abstract class Character extends Container {
             this.addTextures(textures, frame);
             this.invisible = false
         })
-
-        this.playerName = new BitmapText(scene, 0,  playerNameY, 'main_font', name, 7);
-        this.playerName.setOrigin(0.5).setCenterAlign().setDepth(DEPTH_INGAME_TEXT_INDEX);
+        
+        this.playerName = new Text(scene, 0,  playerNameY, name, {fontFamily: '"Press Start 2P"', fontSize: '8px', strokeThickness: 2, stroke: "gray"});
+        this.playerName.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
         this.add(this.playerName);
 
         if (this.isClickable()) {
