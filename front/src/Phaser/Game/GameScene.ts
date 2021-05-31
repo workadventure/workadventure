@@ -966,6 +966,8 @@ ${escapedMessage}
         this.pinchManager?.destroy();
         this.emoteManager.destroy();
 
+        mediaManager.hideGameOverlay();
+
         for(const iframeEvents of this.iframeSubscriptionList){
             iframeEvents.unsubscribe();
         }

@@ -4,14 +4,22 @@
     import {gameOverlayVisibilityStore} from "../Stores/MediaStore";
     import CameraControls from "./CameraControls.svelte";
     import MyCamera from "./MyCamera.svelte";
+    import SelectCompanionScene from "./SelectCompanion/SelectCompanionScene.svelte";
+    import {selectCompanionSceneVisibleStore} from "../Stores/SelectCompanionStore";
+    import {Game} from "../Phaser/Game/Game";
+
+    export let game: Game;
 
 </script>
 
 <div>
-    {#if $gameOverlayVisibilityStore}
+    {#if $selectCompanionSceneVisibleStore}
+        <SelectCompanionScene game={game}></SelectCompanionScene>
+    {/if}
     <!-- {#if $menuIconVisible}
     <MenuIcon  />
     {/if} -->
+    {#if $gameOverlayVisibilityStore}
         <MyCamera></MyCamera>
         <CameraControls></CameraControls>
     {/if}

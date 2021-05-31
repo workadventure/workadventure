@@ -263,7 +263,7 @@ export class SimplePeer {
 
             const userIndex = this.Users.findIndex(user => user.userId === userId);
             if(userIndex < 0){
-                throw 'Couln\'t delete user';
+                throw 'Couldn\'t delete user';
             } else {
                 this.Users.splice(userIndex, 1);
             }

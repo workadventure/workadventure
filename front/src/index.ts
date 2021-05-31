@@ -152,7 +152,9 @@ iframeListener.init();
 
 const app = new App({
     target: HtmlUtils.getElementByIdOrFail('svelte-overlay'),
-    props: { },
+    props: {
+        game: game
+    },
 })
 
 export default app
