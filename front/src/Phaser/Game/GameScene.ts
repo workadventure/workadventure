@@ -1452,8 +1452,8 @@ ${escapedMessage}
         this.connection?.emitActionableEvent(itemId, eventName, state, parameters);
     }
 
-    public onResize(ev: UIEvent): void {
-        super.onResize(ev);
+    public onResize(): void {
+        super.onResize();
         this.reposition();
 
         // Send new viewport to server

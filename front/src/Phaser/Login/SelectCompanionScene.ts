@@ -43,7 +43,7 @@ export class SelectCompanionScene extends ResizableScene {
     create() {
 
         this.selectCompanionSceneElement = this.add.dom(-1000, 0).createFromCache(selectCompanionSceneKey);
-        this.centerXDomElement(this.selectCompanionSceneElement, 150);
+        this.centerXDomElement(this.selectCompanionSceneElement, 300);
         MenuScene.revealMenusAfterInit(this.selectCompanionSceneElement, selectCompanionSceneKey);
 
         this.selectCompanionSceneElement.addListener('click');
@@ -126,10 +126,10 @@ export class SelectCompanionScene extends ResizableScene {
         this.selectedCompanion = this.companions[this.currentCompanion];
     }
 
-    public onResize(ev: UIEvent): void {
+    public onResize(): void {
         this.moveCompanion();
 
-        this.centerXDomElement(this.selectCompanionSceneElement, 150);
+        this.centerXDomElement(this.selectCompanionSceneElement, 300);
     }
 
     private updateSelectedCompanion(): void {
