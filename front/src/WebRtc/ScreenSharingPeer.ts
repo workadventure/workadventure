@@ -60,6 +60,7 @@ export class ScreenSharingPeer extends Peer {
             const message = JSON.parse(chunk.toString('utf8'));
             if (message.streamEnded !== true) {
                 console.error('Unexpected message on screen sharing peer connection');
+                return;
             }
             mediaManager.removeActiveScreenSharingVideo("" + this.userId);
         });

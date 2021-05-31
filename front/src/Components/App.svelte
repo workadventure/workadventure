@@ -7,12 +7,17 @@
     import SelectCompanionScene from "./SelectCompanion/SelectCompanionScene.svelte";
     import {selectCompanionSceneVisibleStore} from "../Stores/SelectCompanionStore";
     import {Game} from "../Phaser/Game/Game";
+    import LoginScene from "./Login/LoginScene.svelte";
+    import {loginSceneVisibleStore} from "../Stores/LoginSceneStore";
 
     export let game: Game;
 
 </script>
 
 <div>
+    {#if $loginSceneVisibleStore}
+        <LoginScene game={game}></LoginScene>
+    {/if}
     {#if $selectCompanionSceneVisibleStore}
         <SelectCompanionScene game={game}></SelectCompanionScene>
     {/if}
