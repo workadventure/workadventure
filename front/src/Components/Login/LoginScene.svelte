@@ -37,7 +37,7 @@
     {/if}
     </section>
 
-    {#if !DISPLAY_TERMS_OF_USE}
+    {#if DISPLAY_TERMS_OF_USE}
     <section class="terms-and-conditions">
         <p>By continuing, you are agreeing our <a href="https://workadventu.re/terms-of-use" target="_blank">terms of use</a>, <a href="https://workadventu.re/privacy-policy" target="_blank">privacy policy</a> and <a href="https://workadventu.re/cookie-policy" target="_blank">cookie policy</a>.</p>
     </section>
