@@ -63,7 +63,7 @@ export class MediaManager {
         localStreamStore.subscribe((result) => {
             if (result.type === 'error') {
                 console.error(result.error);
-                layoutManager.addInformation('warning', 'Camera access denied. Click here and check navigators permissions.', () => {
+                layoutManager.addInformation('warning', 'Camera access denied. Click here and check your browser permissions.', () => {
                     this.showHelpCameraSettingsCallBack();
                 }, this.userInputManager);
                 return;
@@ -73,7 +73,7 @@ export class MediaManager {
         screenSharingLocalStreamStore.subscribe((result) => {
             if (result.type === 'error') {
                 console.error(result.error);
-                layoutManager.addInformation('warning', 'Screen sharing denied. Click here and check navigators permissions.', () => {
+                layoutManager.addInformation('warning', 'Screen sharing denied. Click here and check your browser permissions.', () => {
                     this.showHelpCameraSettingsCallBack();
                 }, this.userInputManager);
                 return;
