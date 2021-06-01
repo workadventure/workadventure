@@ -107,8 +107,6 @@ export class EnableCameraScene extends ResizableScene {
             this.login();
         });
 
-        HtmlUtils.getElementByIdOrFail<HTMLDivElement>('webRtcSetup').classList.add('active');
-
         this.localStreamStoreUnsubscriber = localStreamStore.subscribe((result) => {
             if (result.type === 'error') {
                 // TODO: we could handle the error in a specific way on the EnableCameraScene page.
@@ -135,9 +133,12 @@ export class EnableCameraScene extends ResizableScene {
         this.soundMeterSprite.setVisible(false);
         this.add.existing(this.soundMeterSprite);
 
-        this.onResize();
-
         enableCameraSceneVisibilityStore.showEnableCameraScene();
+
+        setTimeout(() => {
+            this.onResize();
+        }, 100);
+
     }
 
     private previousCam(): void {
@@ -184,12 +185,6 @@ export class EnableCameraScene extends ResizableScene {
      * Function called each time a camera is changed
      */
     private setupStream(stream: MediaStream): void {
-        const img = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('webRtcSetupNoVideo');
-        img.style.display = 'none';
-
-        const div = HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('myCamVideoSetup');
-        div.srcObject = stream;
-
         this.soundMeter.connectToSource(stream, new window.AudioContext());
         this.soundMeterSprite.setVisible(true);
 

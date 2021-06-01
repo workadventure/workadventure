@@ -1,6 +1,8 @@
 <script lang="typescript">
     import {Game} from "../../Phaser/Game/Game";
     import {EnableCameraScene} from "../../Phaser/Login/EnableCameraScene";
+    import {localStreamStore} from "../../Stores/MediaStore";
+    import {onDestroy} from "svelte";
 
     export let game: Game;
 
@@ -10,12 +12,40 @@
         enableCameraScene.login();
     }
 
+    function srcObject(node, stream) {
+        node.srcObject = stream;
+        return {
+            update(newStream) {
+                if (node.srcObject != newStream) {
+                    node.srcObject = newStream
+                }
+            }
+        }
+    }
+
+    let stream : MediaStream|null;
+
+    const unsubscribe = localStreamStore.subscribe(value => {
+        if (value.type === 'success') {
+            stream = value.stream;
+        } else {
+            stream = null;
+        }
+    });
+
+    onDestroy(unsubscribe);
+
 </script>
 
 <form class="enableCameraScene" on:submit|preventDefault={submit}>
     <section class="title text-center">
         <h2>Turn on your camera and microphone</h2>
     </section>
+    <div id="webRtcSetup" class="webrtcsetup">
+        <img class="background-img" src="resources/logos/cinema-close.svg" alt="" class:hide={$localStreamStore.stream}>
+        <video id="myCamVideoSetup" use:srcObject={$localStreamStore.stream} autoplay muted></video>
+    </div>
+
     <!--<section class="text-center">
         <video id="myCamVideoSetup" autoplay muted></video>
     </section>
@@ -71,6 +101,42 @@
       button.letsgo {
         font-size: 200%;
       }
+
+      .webrtcsetup{
+        position: absolute;
+        top: 140px;
+        left: 0;
+        right: 0;
+
+        margin-left: auto;
+        margin-right: auto;
+        height: 50%;
+        width: 50%;
+        border: white 6px solid;
+
+        img.background-img {
+          position: relative;
+          display: block;
+          width: 40%;
+          height: 60%;
+          margin-left: auto;
+          margin-right: auto;
+          top: 50%;
+          transform: translateY(-50%);
+        }
+
+        img.hide {
+          display: none;
+        }
+      }
+      #myCamVideoSetup {
+          width: 100%;
+          height: 100%;
+          -webkit-transform: scaleX(-1);
+          transform: scaleX(-1);
+      }
+
+
     }
 </style>
 

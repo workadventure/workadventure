@@ -331,39 +331,6 @@ video.myCamVideo{
     }
 }
 
-.webrtcsetup{
-    display: none;
-    position: absolute;
-    top: 140px;
-    left: 0;
-    right: 0;
-    margin-left: auto;
-    margin-right: auto;
-    height: 50%;
-    width: 50%;
-    border: white 6px solid;
-}
-.webrtcsetup .background-img {
-    position: relative;
-    display: block;
-    width: 40%;
-    height: 60%;
-    margin-left: auto;
-    margin-right: auto;
-    top: 50%;
-    transform: translateY(-50%);
-}
-#myCamVideoSetup {
-    width: 100%;
-    height: 100%;
-    -webkit-transform: scaleX(-1);
-    transform: scaleX(-1);
-}
-.webrtcsetup.active{
-    display: block;
-}
-
-
 /* New layout */
 body {
     margin: 0;
