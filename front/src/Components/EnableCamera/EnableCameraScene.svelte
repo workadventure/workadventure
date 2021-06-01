@@ -1,7 +1,6 @@
 <script lang="typescript">
     import {Game} from "../../Phaser/Game/Game";
     import {EnableCameraSceneName} from "../../Phaser/Login/EnableCameraScene";
-    import {localStreamStore} from "../../Stores/MediaStore";
     import {
         audioConstraintStore,
         cameraListStore,
