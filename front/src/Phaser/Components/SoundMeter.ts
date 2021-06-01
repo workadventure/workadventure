@@ -27,6 +27,10 @@ export class SoundMeter {
 
     public connectToSource(stream: MediaStream, context: AudioContext): void
     {
+        if (this.source !== undefined) {
+            this.stop();
+        }
+
         this.init(context);
 
         this.source = this.context?.createMediaStreamSource(stream);

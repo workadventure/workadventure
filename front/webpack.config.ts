@@ -89,7 +89,15 @@ module.exports = {
                         preprocess: sveltePreprocess({
                             scss: true,
                             sass: true,
-                        })
+                        }),
+                        onwarn: function (warning: { code: string }, handleWarning: (warning: { code: string }) => void) {
+                            // See https://github.com/sveltejs/svelte/issues/4946#issuecomment-662168782
+
+                            if (warning.code === 'a11y-no-onchange') { return }
+
+                            // process as usual
+                            handleWarning(warning);
+                        }
                     }
                 }
             },
