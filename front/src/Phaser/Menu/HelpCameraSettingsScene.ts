@@ -47,10 +47,6 @@ export class HelpCameraSettingsScene extends DirtyScene {
             this.openHelpCameraSettingsOpened();
             localUserStore.setHelpCameraSettingsShown();
         }
-
-        mediaManager.setHelpCameraSettingsCallBack(() => {
-            this.openHelpCameraSettingsOpened();
-        });
     }
 
     private openHelpCameraSettingsOpened(): void{
