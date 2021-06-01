@@ -15,6 +15,8 @@
     import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
 
     import {Game} from "../Phaser/Game/Game";
+    import {helpCameraSettingsVisibleStore} from "../Stores/HelpCameraSettingsStore";
+    import HelpCameraSettingsPopup from "./HelpCameraSettings/HelpCameraSettingsPopup.svelte";
 
     export let game: Game;
 </script>
@@ -31,6 +33,9 @@
     {/if}
     {#if $selectCompanionSceneVisibleStore}
         <SelectCompanionScene game={ game }></SelectCompanionScene>
+    {/if}
+    {#if $helpCameraSettingsVisibleStore}
+        <HelpCameraSettingsPopup game={ game }></HelpCameraSettingsPopup>
     {/if}
     {#if $enableCameraSceneVisibilityStore}
         <EnableCameraScene game={game}></EnableCameraScene>

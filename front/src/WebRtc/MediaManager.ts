@@ -12,6 +12,7 @@ import {
 import {
     screenSharingLocalStreamStore
 } from "../Stores/ScreenSharingStore";
+import {helpCameraSettingsVisibleStore} from "../Stores/HelpCameraSettingsStore";
 
 export type UpdatedLocalStreamCallback = (media: MediaStream|null) => void;
 export type StartScreenSharingCallback = (media: MediaStream) => void;
@@ -29,7 +30,6 @@ export class MediaManager {
     startScreenSharingCallBacks : Set<StartScreenSharingCallback> = new Set<StartScreenSharingCallback>();
     stopScreenSharingCallBacks : Set<StopScreenSharingCallback> = new Set<StopScreenSharingCallback>();
     showReportModalCallBacks : Set<ShowReportCallBack> = new Set<ShowReportCallBack>();
-    helpCameraSettingsCallBacks : Set<HelpCameraSettingsCallBack> = new Set<HelpCameraSettingsCallBack>();
 
     private focused : boolean = true;
 
@@ -64,7 +64,7 @@ export class MediaManager {
             if (result.type === 'error') {
                 console.error(result.error);
                 layoutManager.addInformation('warning', 'Camera access denied. Click here and check your browser permissions.', () => {
-                    this.showHelpCameraSettingsCallBack();
+                    helpCameraSettingsVisibleStore.set(true);
                 }, this.userInputManager);
                 return;
             }
@@ -74,7 +74,7 @@ export class MediaManager {
             if (result.type === 'error') {
                 console.error(result.error);
                 layoutManager.addInformation('warning', 'Screen sharing denied. Click here and check your browser permissions.', () => {
-                    this.showHelpCameraSettingsCallBack();
+                    helpCameraSettingsVisibleStore.set(true);
                 }, this.userInputManager);
                 return;
             }
@@ -393,16 +393,6 @@ export class MediaManager {
 
     public setShowReportModalCallBacks(callback: ShowReportCallBack){
         this.showReportModalCallBacks.add(callback);
-    }
-
-    public setHelpCameraSettingsCallBack(callback: HelpCameraSettingsCallBack){
-        this.helpCameraSettingsCallBacks.add(callback);
-    }
-
-    private showHelpCameraSettingsCallBack(){
-        for(const callBack of this.helpCameraSettingsCallBacks){
-            callBack();
-        }
     }
 
     //FIX ME SOUNDMETER: check stalability of sound meter calculation

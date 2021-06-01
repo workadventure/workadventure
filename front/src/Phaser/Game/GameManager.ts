@@ -7,6 +7,9 @@ import {LoginSceneName} from "../Login/LoginScene";
 import {SelectCharacterSceneName} from "../Login/SelectCharacterScene";
 import {EnableCameraSceneName} from "../Login/EnableCameraScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
+import {get} from "svelte/store";
+import {requestedCameraState, requestedMicrophoneState} from "../../Stores/MediaStore";
+import {helpCameraSettingsVisibleStore} from "../../Stores/HelpCameraSettingsStore";
 
 export interface HasMovedEvent {
     direction: string;
@@ -89,7 +92,12 @@ export class GameManager {
         console.log('starting '+ (this.currentGameSceneName || this.startRoom.id))
         scenePlugin.start(this.currentGameSceneName || this.startRoom.id);
         scenePlugin.launch(MenuSceneName);
-        scenePlugin.launch(HelpCameraSettingsSceneName);//700
+        //scenePlugin.launch(HelpCameraSettingsSceneName);//700
+
+        if(!localUserStore.getHelpCameraSettingsShown() && (!get(requestedMicrophoneState) || !get(requestedCameraState))){
+            helpCameraSettingsVisibleStore.set(true);
+            localUserStore.setHelpCameraSettingsShown();
+        }
     }
 
     public gameSceneIsCreated(scene: GameScene) {
