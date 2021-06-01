@@ -38,7 +38,7 @@
 </form>
 
 
-<style>
+<style lang="scss">
     .helpCameraSettings {
         pointer-events: auto;
         background: #eceeee;
@@ -47,24 +47,26 @@
         margin-top: 10vh;
         max-height: 80vh;
         max-width: 80vw;
-        overflow: hidden;
+        overflow: auto;
         text-align: center;
-    }
-    .helpCameraSettings h2{
-        font-family: 'Press Start 2P';
-    }
-    .helpCameraSettings section {
-        margin: 10px;
-    }
-    .helpCameraSettings section p{
-        margin: 20px;
-        font-family: 'Press Start 2P';
-    }
-    .helpCameraSettings section p.err{
-        color: #ff0000;
-    }
-    .helpCameraSettings section img {
-        max-width: 500px;
-        width: 100%;
+
+        h2 {
+            font-family: 'Press Start 2P';
+        }
+
+        section {
+            p {
+                margin: 15px;
+                font-family: 'Press Start 2P';
+
+                & .err {
+                    color: #ff0000;
+                }
+            }
+            img {
+                max-width: 500px;
+                width: 100%;
+            }
+        }
     }
 </style>

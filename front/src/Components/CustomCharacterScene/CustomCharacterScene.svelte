@@ -1,10 +1,10 @@
 <script lang="typescript">
     import { Game } from "../../Phaser/Game/Game";
-    import { CustomizeScene } from "../../Phaser/Login/CustomizeScene";
+    import { CustomizeSceneName } from "../../Phaser/Login/CustomizeScene";
 
     export let game: Game;
 
-    const customCharacterScene = game.scene.scenes.find((scene) => scene instanceof CustomizeScene);
+    const customCharacterScene = game.scene.getScene(CustomizeSceneName);
     let activeRow = customCharacterScene.activeRow;
 
     function selectLeft() {
@@ -64,37 +64,46 @@
     font-family: "Press Start 2P";
     pointer-events: auto;
     color: #ebeeee;
-  }
-  .customCharacterScene button {
-    font-family: "Press Start 2P";
-  }
-  .customCharacterScene section {
-    margin: 10px;
-  }
-  .customCharacterScene section.action {
-    text-align: center;
-    margin-top: 55vh;
-  }
-  .customCharacterScene section h2 {
-    font-family: "Press Start 2P";
-    margin: 1px;
-  }
-  .customCharacterScene section.text-center{
-    text-align: center;
-  }
-  .customCharacterScene section button.customCharacterSceneButton{
-    position: absolute;
-    top: 33vh;
-    margin: 0;
-  }
-  .customCharacterScene section button.customCharacterSceneFormBack{
-    color: #292929;
-  }
-  .customCharacterScene button.customCharacterSceneButtonLeft{
-    left: 33vw;
-  }
-  .customCharacterScene button.customCharacterSceneButtonRight{
-    right: 33vw;
+
+    section {
+      margin: 10px;
+
+      &.action {
+        text-align: center;
+        margin-top: 55vh;
+      }
+
+      h2 {
+        font-family: "Press Start 2P";
+        margin: 1px;
+      }
+
+      &.text-center {
+        text-align: center;
+      }
+
+      button.customCharacterSceneButton {
+        position: absolute;
+        top: 33vh;
+        margin: 0;
+      }
+
+      button.customCharacterSceneFormBack {
+        color: #292929;
+      }
+    }
+
+    button {
+      font-family: "Press Start 2P";
+
+      &.customCharacterSceneButtonLeft {
+        left: 33vw;
+      }
+
+      &.customCharacterSceneButtonRight {
+        right: 33vw;
+      }
+    }
   }
 
   @media only screen and (max-width: 800px) {

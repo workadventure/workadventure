@@ -1,10 +1,10 @@
 <script lang="typescript">
     import {Game} from "../../Phaser/Game/Game";
-    import {SelectCompanionScene} from "../../Phaser/Login/SelectCompanionScene";
+    import {SelectCompanionSceneName} from "../../Phaser/Login/SelectCompanionScene";
 
     export let game: Game;
 
-    const selectCompanionScene = game.scene.scenes.find((scene) => scene instanceof SelectCompanionScene);
+    const selectCompanionScene = game.scene.getScene(SelectCompanionSceneName);
 
     function selectLeft() {
         selectCompanionScene.moveToLeft();
@@ -40,31 +40,38 @@
     font-family: "Press Start 2P";
     pointer-events: auto;
     color: #ebeeee;
-  }
-  .selectCompanionScene section {
-    margin: 10px;
-  }
-  .selectCompanionScene section.action {
-    text-align: center;
-    margin-top: 55vh;
-  }
-  .selectCompanionScene section h2 {
-    font-family: "Press Start 2P";
-    margin: 1px;
-  }
-  .selectCompanionScene section.text-center{
-    text-align: center;
-  }
-  .selectCompanionScene section button.selectCharacterButton{
-    position: absolute;
-    top: 33vh;
-    margin: 0;
-  }
-  .selectCompanionScene button.selectCharacterButtonLeft{
-    left: 33vw;
-  }
-  .selectCompanionScene button.selectCharacterButtonRight{
-    right: 33vw;
+
+    section {
+      margin: 10px;
+
+      &.action {
+        text-align: center;
+        margin-top: 55vh;
+      }
+
+      h2 {
+        font-family: "Press Start 2P";
+        margin: 1px;
+      }
+
+      &.text-center {
+        text-align: center;
+      }
+
+      button.selectCharacterButton {
+        position: absolute;
+        top: 33vh;
+        margin: 0;
+      }
+    }
+
+    button.selectCharacterButtonLeft {
+      left: 33vw;
+    }
+
+    button.selectCharacterButtonRight {
+      right: 33vw;
+    }
   }
 
   @media only screen and (max-width: 800px) {

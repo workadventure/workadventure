@@ -1,10 +1,10 @@
 <script lang="typescript">
     import { Game } from "../../Phaser/Game/Game";
-    import { SelectCharacterScene } from "../../Phaser/Login/SelectCharacterScene";
+    import { SelectCharacterSceneName } from "../../Phaser/Login/SelectCharacterScene";
 
     export let game: Game;
 
-    const selectCharacterScene = game.scene.scenes.find((scene) => scene instanceof SelectCharacterScene);
+    const selectCharacterScene = game.scene.getScene(SelectCharacterSceneName);
 
     function selectLeft() {
         selectCharacterScene.moveToLeft();
@@ -41,34 +41,42 @@
     font-family: "Press Start 2P";
     pointer-events: auto;
     color: #ebeeee;
-  }
-  .selectCharacterScene button {
-    font-family: "Press Start 2P";
-  }
-  .selectCharacterScene section {
-    margin: 10px;
-  }
-  .selectCharacterScene section.action {
-    text-align: center;
-    margin-top: 55vh;
-  }
-  .selectCharacterScene section h2 {
-    font-family: "Press Start 2P";
-    margin: 1px;
-  }
-  .selectCharacterScene section.text-center{
-    text-align: center;
-  }
-  .selectCharacterScene section button.selectCharacterButton{
-    position: absolute;
-    top: 33vh;
-    margin: 0;
-  }
-  .selectCharacterScene button.selectCharacterButtonLeft{
-    left: 33vw;
-  }
-  .selectCharacterScene button.selectCharacterButtonRight{
-    right: 33vw;
+
+    section {
+      margin: 10px;
+
+      &.action {
+        text-align: center;
+        margin-top: 55vh;
+      }
+
+      h2 {
+        font-family: "Press Start 2P";
+        margin: 1px;
+      }
+
+      &.text-center {
+        text-align: center;
+      }
+
+      button.selectCharacterButton {
+        position: absolute;
+        top: 33vh;
+        margin: 0;
+      }
+    }
+
+    button {
+      font-family: "Press Start 2P";
+
+      &.selectCharacterButtonLeft {
+        left: 33vw;
+      }
+
+      &.selectCharacterButtonRight {
+        right: 33vw;
+      }
+    }
   }
 
   @media only screen and (max-width: 800px) {

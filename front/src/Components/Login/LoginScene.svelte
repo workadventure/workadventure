@@ -1,6 +1,6 @@
 <script lang="typescript">
     import {Game} from "../../Phaser/Game/Game";
-    import {LoginScene} from "../../Phaser/Login/LoginScene";
+    import {LoginSceneName} from "../../Phaser/Login/LoginScene";
     import {DISPLAY_TERMS_OF_USE, MAX_USERNAME_LENGTH} from "../../Enum/EnvironmentVariable";
     import logoImg from "../images/logo.png";
     import {gameManager} from "../../Phaser/Game/GameManager";
@@ -8,7 +8,7 @@
 
     export let game: Game;
 
-    const loginScene = game.scene.scenes.find((scene) => scene instanceof LoginScene);
+    const loginScene = game.scene.getScene(LoginSceneName);
 
     let name = gameManager.getPlayerName() || '';
     let startValidating = false;
@@ -49,7 +49,6 @@
 
 <style lang="scss">
   .loginScene {
-    font-family: "Press Start 2P";
     pointer-events: auto;
     margin: 20px auto 0;
     width: 90%;
@@ -69,52 +68,56 @@
       max-width: 400px;
     }
 
-    section.error-section {
-      min-height: 2rem;
-      margin: 0;
+    p.err {
+      color: #ce372b;
+      text-align: center;
+    }
+
+    section {
+      margin: 10px;
+
+      &.error-section {
+        min-height: 2rem;
+        margin: 0;
+
+        p {
+          margin: 0;
+        }
+      }
+
+      &.action {
+        text-align: center;
+        margin-top: 20px;
+      }
+
+      h2 {
+        font-family: "Press Start 2P";
+        margin: 1px;
+      }
+
+      &.text-center {
+        text-align: center;
+      }
+
+      a {
+        text-decoration: underline;
+        color: #ebeeee;
+      }
+
+      a:hover {
+        font-weight: 700;
+      }
 
       p {
-        margin: 0;
+        text-align: left;
+        margin: 10px 10px;
+      }
+
+      img {
+        width: 100%;
+        margin: 20px 0;
       }
     }
-  }
-
-  .loginScene section {
-    margin: 10px;
-  }
-  .loginScene section.action{
-    text-align: center;
-    margin-top: 20px;
-  }
-  .loginScene section h2{
-    font-family: "Press Start 2P";
-    margin: 1px;
-  }
-  .loginScene section.text-center{
-    text-align: center;
-  }
-  .loginScene section a{
-    text-decoration: underline;
-    color: #ebeeee;
-  }
-  .loginScene section a:hover{
-    font-weight: 700;
-  }
-  .loginScene section p{
-    text-align: left;
-    margin: 10px 10px;
-  }
-  .loginScene p.err{
-    color: #ce372b;
-    text-align: center;
-  }
-  /*.loginScene section p.info{
-    display: none;
-    text-align: center;
-  }*/
-  .loginScene section img{
-    width: 100%;
-    margin: 20px 0;
   }
 
 </style>

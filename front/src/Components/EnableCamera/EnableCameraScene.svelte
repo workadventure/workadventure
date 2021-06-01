@@ -1,12 +1,12 @@
 <script lang="typescript">
     import {Game} from "../../Phaser/Game/Game";
-    import {EnableCameraScene} from "../../Phaser/Login/EnableCameraScene";
+    import {EnableCameraSceneName} from "../../Phaser/Login/EnableCameraScene";
     import {localStreamStore} from "../../Stores/MediaStore";
     import {onDestroy} from "svelte";
 
     export let game: Game;
 
-    const enableCameraScene = game.scene.scenes.find((scene) => scene instanceof EnableCameraScene);
+    const enableCameraScene = game.scene.getScene(EnableCameraSceneName);
 
     function submit() {
         enableCameraScene.login();
