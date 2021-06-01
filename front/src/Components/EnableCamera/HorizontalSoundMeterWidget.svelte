@@ -39,7 +39,6 @@
 
 
     function color(i: number, volume: number) {
-        console.log(i, volume)
         const red = 255 * i / NB_BARS;
         const green = 255 * (1 - i / NB_BARS);
 
