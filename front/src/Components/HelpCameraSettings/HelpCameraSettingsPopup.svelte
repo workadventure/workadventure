@@ -47,7 +47,7 @@
         margin-top: 10vh;
         max-height: 80vh;
         max-width: 80vw;
-        overflow: auto;
+        overflow: hidden;
         text-align: center;
     }
     .helpCameraSettings h2{
