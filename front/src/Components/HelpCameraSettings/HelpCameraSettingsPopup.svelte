@@ -3,6 +3,7 @@
     import firefoxImg from "./images/help-setting-camera-permission-firefox.png";
     import chromeImg from "./images/help-setting-camera-permission-chrome.png";
 
+    let isAndroid = window.navigator.userAgent.includes('Android');
     let isFirefox = window.navigator.userAgent.includes('Firefox');
     let isChrome = window.navigator.userAgent.includes('Chrome');
 
@@ -16,115 +17,54 @@
 
 </script>
 
-<form class="helpCameraSettings nes-container with-title">
-    <p class="title">Camera/Microphone access needed</p>
-    <section class="text-center">
-        <h5>Camera/Microphone access needed</h5>
-        <p class="err" id="permissionError">Permission denied</p>
-        <p class="info">You must allow camera and microphone access in your browser.</p>
-        <ul>
-            <li>Please click on the lock or camera symbol on the side of the URL in the address bar. Here you can grant "always allow" access to your input devices.</li>
-            <li>Please ensure that you have a camera AND microphone plugged into your computer.</li>
-        </ul>
-        <p class="info">Once you've followed these steps, please refresh this page.</p>
-        <p>If you prefer to continue without allowing camera and microphone access, click on Continue</p>
+<form class="helpCameraSettings nes-container" on:submit|preventDefault={close}>
+    <section>
+        <h2>Camera/Microphone access needed</h2>
+        <p class="err">Permission denied</p>
+        <p>You must allow camera and microphone access in your browser.</p>
         <p>
             {#if isFirefox }
-            <img src={firefoxImg} alt="" />
-            {:else if isChrome }
-            <img src={chromeImg} alt="" />
+                <p class="err">Please click the "Remember this decision" checkbox, if you don't want Firefox to keep asking you the authorization.</p>
+                <img src={firefoxImg} alt="" />
+            {:else if isChrome && !isAndroid }
+                <img src={chromeImg} alt="" />
             {/if}
         </p>
     </section>
-    <!--<section class="text-center">
-        <p>If your problem persist, please contact us: <a id="mailto" href="mailto:workadventure@thecodingmachine.com?subject=Support camera and microphone settings" target="_blank"> workadventure@thecodingmachine.com</a>.</p>
-    </section>-->
-    <section class="action">
-        <a href="#" id="helpCameraSettingsFormRefresh" on:click={refresh}>Refresh</a>
-        <button type="submit" id="helpCameraSettingsFormContinue" on:click={close}>Continue</button>
+    <section>
+        <button class="helpCameraSettingsFormRefresh nes-btn" on:click|preventDefault={refresh}>Refresh</button>
+        <button type="submit" class="helpCameraSettingsFormContinue nes-btn is-primary" on:click|preventDefault={close}>Continue without webcam</button>
     </section>
 </form>
 
 
 <style>
     .helpCameraSettings {
-        /*background: #eceeee;
-        border: 1px solid #42464b;
-        border-radius: 6px;
-        margin: 25px auto 0;
-        width: 400px;
-        max-height: calc(48vh - 50px);
-        max-width: 48vw;
-        overflow: hidden;
-        overflow-y: scroll;*/
-    }
-    .helpCameraSettings h1 {
-        background-image: linear-gradient(top, #f1f3f3, #d4dae0);
-        border-bottom: 1px solid #a6abaf;
-        border-radius: 6px 6px 0 0;
-        box-sizing: border-box;
-        color: #727678;
-        display: block;
-        height: 43px;
-        padding-top: 10px;
-        margin: 0;
+        pointer-events: auto;
+        background: #eceeee;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 10vh;
+        max-height: 80vh;
+        max-width: 80vw;
+        overflow: auto;
         text-align: center;
-        text-shadow: 0 -1px 0 rgba(0,0,0,0.2), 0 1px 0 #fff;
+    }
+    .helpCameraSettings h2{
+        font-family: 'Press Start 2P';
     }
     .helpCameraSettings section {
         margin: 10px;
     }
-    .helpCameraSettings section.action{
-        text-align: center;
-        margin: 0;
-    }
-    .helpCameraSettings button {
-        margin: 10px 4px;
-        background-color: black;
-        color: white;
-        border-radius: 7px;
-        padding-bottom: 4px;
-    }
-    .helpCameraSettings button.helpCameraSettingsFormCancel {
-        background-color: #c7c7c700;
-        color: #292929;
-    }
-    .helpCameraSettings section a{
-        font-size: 12px;
-        text-decoration: underline;
-        color: black;
-    }
-    .helpCameraSettings section h5{
-        margin: 1px;
-    }
-    .helpCameraSettings section.text-center{
-        text-align: center;
-    }
     .helpCameraSettings section p{
-        font-size: 8px;
-        margin: 0px 20px;
-    }
-    .helpCameraSettings section p a{
-        font-size: 8px;
+        margin: 20px;
+        font-family: 'Press Start 2P';
     }
     .helpCameraSettings section p.err{
         color: #ff0000;
     }
-    .helpCameraSettings section ul{
-        margin: 6px;
-    }
-    .helpCameraSettings section li{
-        text-align: left;
-        font-size: 8px;
-    }
     .helpCameraSettings section img {
-        width: 200px;
-        margin-top: 10px;
-    }
-    @media only screen and (max-width: 800px),
-    only screen and (max-height: 600px) {
-        .helpCameraSettings{
-            overflow-y: scroll;
-        }
+        max-width: 500px;
+        width: 100%;
     }
 </style>
