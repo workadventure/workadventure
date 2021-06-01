@@ -3,6 +3,8 @@ import type {PointInterface} from "../../Connexion/ConnexionModels";
 import {Character} from "../Entity/Character";
 import type {PlayerAnimationDirections} from "../Player/Animation";
 
+export const playerClickedEvent = 'playerClickedEvent';
+
 /**
  * Class representing the sprite of a remote player (a player that plays on another computer)
  */
@@ -25,6 +27,10 @@ export class RemotePlayer extends Character {
         
         //set data
         this.userId = userId;
+        
+        this.on('pointerdown', () => {
+            this.emit(playerClickedEvent, this.userId);
+        })
     }
 
     updatePosition(position: PointInterface): void {
@@ -40,6 +46,6 @@ export class RemotePlayer extends Character {
     }
 
     isClickable(): boolean {
-        return false; //todo: make remote players clickable if they are logged in.
+        return true; //todo: make remote players clickable if they are logged in.
     }
 }

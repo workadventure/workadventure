@@ -75,6 +75,14 @@ message EmoteEventMessage {
     string emote = 2;
 }
 
+message RequestVisitCardMessage {
+    int32 targetUserId = 1;
+}
+
+message VisitCardMessage {
+    string url = 1;
+}
+
 message QueryJitsiJwtMessage {
   string jitsiRoom = 1;
   string tag = 2; // FIXME: rather than reading the tag from the query, we should read it from the current map!
@@ -94,6 +102,7 @@ message ClientToServerMessage {
     ReportPlayerMessage reportPlayerMessage = 11;
     QueryJitsiJwtMessage queryJitsiJwtMessage = 12;
     EmotePromptMessage emotePromptMessage = 13;
+    RequestVisitCardMessage requestVisitCardMessage = 14;
   }
 }
 
@@ -259,6 +268,7 @@ message ServerToClientMessage {
     RefreshRoomMessage refreshRoomMessage = 17; 
     WorldConnexionMessage worldConnexionMessage = 18;
     EmoteEventMessage emoteEventMessage = 19;
+    VisitCardMessage visitCardMessage = 20;
   }
 }
 
@@ -330,6 +340,7 @@ message PusherToBackMessage {
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
     EmotePromptMessage emotePromptMessage = 14;
+    RequestVisitCardMessage requestVisitCardMessage = 15;
   }
 }
 

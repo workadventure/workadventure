@@ -13,7 +13,12 @@ import {
     PlayGlobalMessage,
     ReportPlayerMessage,
     EmoteEventMessage,
-    QueryJitsiJwtMessage, SendUserMessage, ServerToClientMessage, CompanionMessage, EmotePromptMessage
+    QueryJitsiJwtMessage,
+    SendUserMessage,
+    ServerToClientMessage,
+    CompanionMessage,
+    EmotePromptMessage,
+    RequestVisitCardMessage
 } from "../Messages/generated/messages_pb";
 import {UserMovesMessage} from "../Messages/generated/messages_pb";
 import {TemplatedApp} from "uWebSockets.js"
@@ -333,6 +338,9 @@ export class IoSocketController {
                     socketManager.handleQueryJitsiJwtMessage(client, message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage);
                 } else if (message.hasEmotepromptmessage()){
                     socketManager.handleEmotePromptMessage(client, message.getEmotepromptmessage() as EmotePromptMessage);
+                } else if (message.hasRequestvisitcardmessage()) {
+                    
+                    socketManager.handleRequestVisitCardMessage(client, message.getRequestvisitcardmessage() as RequestVisitCardMessage);
                 }
 
                     /* Ok is false if backpressure was built up, wait for drain */

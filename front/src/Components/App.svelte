@@ -13,6 +13,8 @@
     import LoginScene from "./Login/LoginScene.svelte";
     import {loginSceneVisibleStore} from "../Stores/LoginSceneStore";
     import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
+    import VisitCard from "./VisitCard/VisitCard.svelte";
+    import {requestVisitCardsStore} from "../Stores/GameStore";
 
     import {Game} from "../Phaser/Game/Game";
     import {helpCameraSettingsVisibleStore} from "../Stores/HelpCameraSettingsStore";
@@ -72,5 +74,8 @@
         <div>
             <HelpCameraSettingsPopup game={ game }></HelpCameraSettingsPopup>
         </div>
+    {/if}
+    {#if $requestVisitCardsStore}
+        <VisitCard visitCardUrl={$requestVisitCardsStore}></VisitCard>
     {/if}
 </div>

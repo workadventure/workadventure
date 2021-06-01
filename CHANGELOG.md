@@ -16,6 +16,11 @@
   - We now create a GameObject.Text instead of GameObject.BitmapText
   - now use the 'Press Start 2P' font family and added an outline
   - As a result, we can now allow non-standard letters like french accents or chinese characters!
+  
+- Added the contact card feature. (@Kharhamel)
+  - Click on another player to see its contact info.
+  - Premium-only feature unfortunately. I need to find a way to make it available for all.
+  - If no contact data is found (either because the user is anonymous or because no admin backend), display an error card.
 
 - Mobile support has been improved
   - WorkAdventure automatically sets the zoom level based on the viewport size to ensure a sensible size of the map is visible, whatever the viewport used

@@ -27,7 +27,7 @@ import {
     WorldFullWarningMessage,
     UserLeftZoneMessage,
     EmoteEventMessage,
-    BanUserMessage, RefreshRoomMessage, EmotePromptMessage,
+    BanUserMessage, RefreshRoomMessage, EmotePromptMessage, RequestVisitCardMessage, VisitCardMessage,
 } from "../Messages/generated/messages_pb";
 import {User, UserSocket} from "../Model/User";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
@@ -51,6 +51,7 @@ import {Zone} from "_Model/Zone";
 import Debug from "debug";
 import {Admin} from "_Model/Admin";
 import crypto from "crypto";
+import {adminApi} from "./AdminApi";
 
 
 const debug = Debug('sockermanager');
@@ -768,6 +769,21 @@ export class SocketManager {
         emoteEventMessage.setEmote(emotePromptMessage.getEmote());
         emoteEventMessage.setActoruserid(user.id);
         room.emitEmoteEvent(user, emoteEventMessage);
+    }
+
+    async handleRequestVisitCardMessage(room: GameRoom, user: User, requestvisitcardmessage: RequestVisitCardMessage): Promise<void> {
+        const targetUser = room.getUserById(requestvisitcardmessage.getTargetuserid());
+        if (!targetUser) {
+            throw 'Could not find user for id '+requestvisitcardmessage.getTargetuserid();
+        }
+        const url = await adminApi.fetchVisitCardUrl(targetUser.uuid);
+        
+        const visitCardMessage = new VisitCardMessage();
+        visitCardMessage.setUrl(url);
+        const clientMessage = new ServerToClientMessage();
+        clientMessage.setVisitcardmessage(visitCardMessage);
+        
+        user.socket.write(clientMessage);
     }
 }
 
