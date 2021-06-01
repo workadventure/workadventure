@@ -111,8 +111,10 @@ export class EnableCameraScene extends ResizableScene {
 
         this.localStreamStoreUnsubscriber = localStreamStore.subscribe((result) => {
             if (result.type === 'error') {
-                // TODO: proper handling of the error
-                throw result.error;
+                // TODO: we could handle the error in a specific way on the EnableCameraScene page.
+                // TODO: we could handle the error in a specific way on the EnableCameraScene page.
+                return;
+                //throw result.error;
             }
 
             this.getDevices();
