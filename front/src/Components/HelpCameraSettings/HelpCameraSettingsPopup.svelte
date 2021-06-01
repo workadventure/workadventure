@@ -1,4 +1,5 @@
 <script lang="typescript">
+    import { fly } from 'svelte/transition';
     import {helpCameraSettingsVisibleStore} from "../../Stores/HelpCameraSettingsStore";
     import firefoxImg from "./images/help-setting-camera-permission-firefox.png";
     import chromeImg from "./images/help-setting-camera-permission-chrome.png";
@@ -17,7 +18,7 @@
 
 </script>
 
-<form class="helpCameraSettings nes-container" on:submit|preventDefault={close}>
+<form class="helpCameraSettings nes-container" on:submit|preventDefault={close} transition:fly="{{ y: -900, duration: 500 }}">
     <section>
         <h2>Camera / Microphone access needed</h2>
         <p class="err">Permission denied</p>
