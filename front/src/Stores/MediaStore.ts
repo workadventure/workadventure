@@ -508,3 +508,47 @@ export const obtainedMediaConstraintStore = derived(localStreamStore, ($localStr
     return $localStreamStore.constraints;
 });
 
+/**
+ * Device list
+ */
+export const deviceListStore = readable<MediaDeviceInfo[]>([], function start(set) {
+    let deviceListCanBeQueried = false;
+
+    const queryDeviceList = () => {
+        // Note: so far, we are ignoring any failures.
+        navigator.mediaDevices.enumerateDevices().then((mediaDeviceInfos) => {
+            set(mediaDeviceInfos);
+        }).catch((e) => {
+            console.error(e);
+            throw e;
+        });
+    };
+
+    const unsubscribe = localStreamStore.subscribe((streamResult) => {
+        if (streamResult.type === "success" && streamResult.stream !== null) {
+            if (deviceListCanBeQueried === false) {
+                queryDeviceList();
+                deviceListCanBeQueried = true;
+            }
+        }
+    });
+
+    if (navigator.mediaDevices) {
+        navigator.mediaDevices.addEventListener('devicechange', queryDeviceList);
+    }
+
+    return function stop() {
+        unsubscribe();
+        if (navigator.mediaDevices) {
+            navigator.mediaDevices.removeEventListener('devicechange', queryDeviceList);
+        }
+    };
+});
+
+export const cameraListStore = derived(deviceListStore, ($deviceListStore) => {
+    return $deviceListStore.filter(device => device.kind === 'videoinput');
+});
+
+export const microphoneListStore = derived(deviceListStore, ($deviceListStore) => {
+    return $deviceListStore.filter(device => device.kind === 'audioinput');
+});

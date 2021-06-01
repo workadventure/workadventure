@@ -19,7 +19,7 @@
 
 <form class="helpCameraSettings nes-container" on:submit|preventDefault={close}>
     <section>
-        <h2>Camera/Microphone access needed</h2>
+        <h2>Camera / Microphone access needed</h2>
         <p class="err">Permission denied</p>
         <p>You must allow camera and microphone access in your browser.</p>
         <p>
