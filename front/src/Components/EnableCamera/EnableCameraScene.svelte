@@ -132,11 +132,13 @@
 
 <style lang="scss">
     .enableCameraScene {
+      position: absolute;
+      width: 100vw;
+      height: 100vh;
       pointer-events: auto;
       /*background: #000000;*/
       margin: 20px auto 0;
       color: #ebeeee;
-      height: 100vh;
       overflow: auto;
       /*max-height: 48vh;
       width: 42vw;

@@ -21,7 +21,7 @@
     export let game: Game;
 </script>
 
-<div>
+<div class="absolute-overlay">
     {#if $loginSceneVisibleStore}
         <LoginScene game={game}></LoginScene>
     {/if}
@@ -34,9 +34,6 @@
     {#if $selectCompanionSceneVisibleStore}
         <SelectCompanionScene game={ game }></SelectCompanionScene>
     {/if}
-    {#if $helpCameraSettingsVisibleStore}
-        <HelpCameraSettingsPopup game={ game }></HelpCameraSettingsPopup>
-    {/if}
     {#if $enableCameraSceneVisibilityStore}
         <EnableCameraScene game={game}></EnableCameraScene>
     {/if}
@@ -47,4 +44,19 @@
         <MyCamera></MyCamera>
         <CameraControls></CameraControls>
     {/if}
+    {#if $helpCameraSettingsVisibleStore}
+        <HelpCameraSettingsPopup game={ game }></HelpCameraSettingsPopup>
+    {/if}
 </div>
+
+<style lang="scss">
+  .absolute-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+
+    > & {
+      position: relative;
+    }
+  }
+</style>
