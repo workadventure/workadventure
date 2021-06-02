@@ -21,6 +21,11 @@
     export let game: Game;
 </script>
 
+<div>
+{#if $gameOverlayVisibilityStore}
+    <MyCamera></MyCamera>
+    <CameraControls></CameraControls>
+{/if}
 <div class="absolute-overlay">
     {#if $loginSceneVisibleStore}
         <LoginScene game={game}></LoginScene>
@@ -40,12 +45,8 @@
     <!-- {#if $menuIconVisible}
     <MenuIcon  />
     {/if} -->
-    {#if $gameOverlayVisibilityStore}
-        <MyCamera></MyCamera>
-        <CameraControls></CameraControls>
-    {/if}
     {#if $helpCameraSettingsVisibleStore}
         <HelpCameraSettingsPopup game={ game }></HelpCameraSettingsPopup>
     {/if}
 </div>
-
+</div>
