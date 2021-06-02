@@ -38,7 +38,6 @@
     display: inline-flex;
 
     img {
-      /*width: 30px;*/
       border-radius: 50%;
       background-color: #ffda01;
       padding: 10px;
