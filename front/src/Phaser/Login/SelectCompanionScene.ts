@@ -11,6 +11,8 @@ import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
 import { MenuScene } from "../Menu/MenuScene";
 import {selectCompanionSceneVisibleStore} from "../../Stores/SelectCompanionStore";
+import {waScaleManager} from "../Services/WaScaleManager";
+import {isMobile} from "../../Enum/EnvironmentVariable";
 
 export const SelectCompanionSceneName = "SelectCompanionScene";
 
@@ -18,6 +20,7 @@ export class SelectCompanionScene extends ResizableScene {
     private selectedCompanion!: Phaser.Physics.Arcade.Sprite;
     private companions: Array<Phaser.Physics.Arcade.Sprite> = new Array<Phaser.Physics.Arcade.Sprite>();
     private companionModels: Array<CompanionResourceDescriptionInterface> = [];
+    private saveZoom: number = 0;
 
     private currentCompanion = 0;
 
@@ -39,6 +42,9 @@ export class SelectCompanionScene extends ResizableScene {
     create() {
 
         selectCompanionSceneVisibleStore.set(true);
+
+        waScaleManager.saveZoom();
+        waScaleManager.zoomModifier = isMobile() ? 2 : 1;
 
         if (touchScreenManager.supportTouchScreen) {
             new PinchManager(this);
@@ -79,6 +85,7 @@ export class SelectCompanionScene extends ResizableScene {
     public closeScene(){
         // next scene
         this.scene.stop(SelectCompanionSceneName);
+        waScaleManager.restoreZoom();
         gameManager.tryResumingGame(this, EnableCameraSceneName);
         this.scene.remove(SelectCompanionSceneName);
         selectCompanionSceneVisibleStore.set(false);

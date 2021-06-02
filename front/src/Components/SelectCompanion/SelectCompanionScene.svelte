@@ -75,11 +75,11 @@
   }
 
   @media only screen and (max-width: 800px) {
-    .selectCompanionScene button.selectCharacterButtonLeft{
-      left: 10vw;
+    form.selectCompanionScene button.selectCharacterButtonLeft{
+      left: 5vw;
     }
-    .selectCompanionScene button.selectCharacterButtonRight{
-      right: 10vw;
+    form.selectCompanionScene button.selectCharacterButtonRight{
+      right: 5vw;
     }
   }
 
