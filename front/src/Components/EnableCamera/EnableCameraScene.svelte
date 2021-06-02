@@ -11,6 +11,8 @@
     import {onDestroy} from "svelte";
     import HorizontalSoundMeterWidget from "./HorizontalSoundMeterWidget.svelte";
     import cinemaCloseImg from "../images/cinema-close.svg";
+    import cinemaImg from "../images/cinema.svg";
+    import microphoneImg from "../images/microphone.svg";
 
     export let game: Game;
     let selectedCamera : string|null = null;
@@ -86,27 +88,33 @@
     <section class="selectWebcamForm">
 
         {#if $cameraListStore.length > 1 }
-        <div class="nes-select">
-            <select bind:value={selectedCamera} on:change={selectCamera}>
-                {#each $cameraListStore as camera}
-                    <option value={camera.deviceId}>
-                        {normalizeDeviceName(camera.label)}
-                    </option>
-                {/each}
-            </select>
-        </div>
+            <div class="control-group">
+                <img src={cinemaImg} alt="Camera" />
+                <div class="nes-select">
+                    <select bind:value={selectedCamera} on:change={selectCamera}>
+                        {#each $cameraListStore as camera}
+                            <option value={camera.deviceId}>
+                                {normalizeDeviceName(camera.label)}
+                            </option>
+                        {/each}
+                    </select>
+                </div>
+            </div>
         {/if}
 
         {#if $microphoneListStore.length > 1 }
-        <div class="nes-select">
-            <select bind:value={selectedMicrophone} on:change={selectMicrophone}>
-                {#each $microphoneListStore as microphone}
-                    <option value={microphone.deviceId}>
-                        {normalizeDeviceName(microphone.label)}
-                    </option>
-                {/each}
-            </select>
-        </div>
+            <div class="control-group">
+                <img src={microphoneImg} alt="Microphone" />
+                <div class="nes-select">
+                    <select bind:value={selectedMicrophone} on:change={selectMicrophone}>
+                        {#each $microphoneListStore as microphone}
+                            <option value={microphone.deviceId}>
+                                {normalizeDeviceName(microphone.label)}
+                            </option>
+                        {/each}
+                    </select>
+                </div>
+            </div>
         {/if}
 
     </section>
@@ -188,6 +196,16 @@
 
       button.letsgo {
         font-size: 200%;
+      }
+
+      .control-group {
+        display: flex;
+        flex-direction: row;
+
+        img {
+          width: 30px;
+          margin-right: 10px;
+        }
       }
 
       .webrtcsetup{
