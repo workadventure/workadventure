@@ -13,6 +13,7 @@ import {PinchManager} from "../UserInput/PinchManager";
 import {MenuScene} from "../Menu/MenuScene";
 import {selectCharacterSceneVisibleStore} from "../../Stores/SelectCharacterStore";
 import {customCharacterSceneVisibleStore} from "../../Stores/CustomCharacterStore";
+import {waScaleManager} from "../Services/WaScaleManager";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
@@ -58,6 +59,9 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             new PinchManager(this);
         }
 
+        waScaleManager.saveZoom();
+        waScaleManager.zoomModifier = 1;
+
         const rectangleXStart = this.game.renderer.width / 2 - (this.nbCharactersPerRow / 2) * 32 + 16;
         this.selectedRectangle = this.add.rectangle(rectangleXStart, 90, 32, 32).setStrokeStyle(2, 0xFFFFFF);
         this.selectedRectangle.setDepth(2);
@@ -91,6 +95,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             return;
         }
         this.scene.stop(SelectCharacterSceneName);
+        waScaleManager.restoreZoom();
         gameManager.setCharacterLayers([this.selectedPlayer.texture.key]);
         gameManager.tryResumingGame(this, EnableCameraSceneName);
         this.players = [];
@@ -102,7 +107,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             return;
         }
         this.scene.sleep(SelectCharacterSceneName);
-        this.scene.run(CustomizeSceneName);
+        this.scene.run(CustomizeSceneName, {from: 'SelectCharacter'});
         selectCharacterSceneVisibleStore.set(false);
     }
 
@@ -221,9 +226,6 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         player.play(this.playerModels[this.currentSelectUser].name);
         this.selectedPlayer = player;
         localUserStore.setPlayerCharacterIndex(this.currentSelectUser);
-    }
-
-    update(time: number, delta: number): void {
     }
 
     public onResize(): void {

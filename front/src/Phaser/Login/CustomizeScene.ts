@@ -13,6 +13,8 @@ import { MenuScene } from "../Menu/MenuScene";
 import { SelectCharacterSceneName } from "./SelectCharacterScene";
 import {customCharacterSceneVisibleStore} from "../../Stores/CustomCharacterStore";
 import {selectCharacterSceneVisibleStore} from "../../Stores/SelectCharacterStore";
+import {waScaleManager} from "../Services/WaScaleManager";
+import {isMobile} from "../../Enum/EnvironmentVariable";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -52,10 +54,15 @@ export class CustomizeScene extends AbstractCharacterScene {
         addLoader(this);
     }
 
-    create() {
+    create(data: { from: string; }) {
         customCharacterSceneVisibleStore.set(true);
-
         this.events.addListener('wake', () => { customCharacterSceneVisibleStore.set(true); });
+
+        if (data.from === 'NoScene') {
+            //Save the zoom level only if the previous scene didn't already save it
+            waScaleManager.saveZoom();
+        }
+        waScaleManager.zoomModifier = isMobile() ? 2 : 1;
 
         this.Rectangle = this.add.rectangle(this.cameras.main.worldView.x + this.cameras.main.width / 2, this.cameras.main.worldView.y + this.cameras.main.height / 3, 32, 33)
         this.Rectangle.setStrokeStyle(2, 0xFFFFFF);
@@ -216,10 +223,6 @@ export class CustomizeScene extends AbstractCharacterScene {
         }
     }
 
-    update(time: number, delta: number): void {
-
-    }
-
      public onResize(): void {
         this.moveLayers();
 
@@ -242,6 +245,7 @@ export class CustomizeScene extends AbstractCharacterScene {
 
             gameManager.setCharacterLayers(layers);
             this.scene.sleep(CustomizeSceneName);
+            waScaleManager.restoreZoom();
             gameManager.tryResumingGame(this, EnableCameraSceneName);
             customCharacterSceneVisibleStore.set(false);
     }

@@ -10,6 +10,7 @@ class WaScaleManager {
     private scaleManager!: ScaleManager;
     private game!: Game;
     private actualZoom: number = 1;
+    private _saveZoom: number = 1;
 
     public constructor(private minGamePixelsNumber: number, private absoluteMinPixelNumber: number) {
         this.hdpiManager = new HdpiManager(minGamePixelsNumber, absoluteMinPixelNumber);
@@ -54,6 +55,15 @@ class WaScaleManager {
 
     public set zoomModifier(zoomModifier: number) {
         this.hdpiManager.zoomModifier = zoomModifier;
+        this.applyNewSize();
+    }
+
+    public saveZoom(): void {
+        this._saveZoom = this.hdpiManager.zoomModifier;
+    }
+
+    public restoreZoom(): void{
+        this.hdpiManager.zoomModifier = this._saveZoom;
         this.applyNewSize();
     }
 
