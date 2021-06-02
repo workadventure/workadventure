@@ -77,10 +77,13 @@
     <section class="text-center">
         <h2>Turn on your camera and microphone</h2>
     </section>
-    <div id="webRtcSetup" class="webrtcsetup">
-        <img class="background-img" src={cinemaCloseImg} alt="" class:hide={$localStreamStore.stream}>
-        <video id="myCamVideoSetup" use:srcObject={$localStreamStore.stream} autoplay muted  class:hide={!$localStreamStore.stream}></video>
-    </div>
+        {#if $localStreamStore.stream}
+            <video class="myCamVideoSetup" use:srcObject={$localStreamStore.stream} autoplay muted></video>
+        {:else }
+            <div class="webrtcsetup">
+                <img class="background-img" src={cinemaCloseImg} alt="">
+            </div>
+        {/if}
     <HorizontalSoundMeterWidget stream={stream}></HorizontalSoundMeterWidget>
 
     <section class="selectWebcamForm">
@@ -110,21 +113,6 @@
         {/if}
 
     </section>
-
-
-    <!--<section class="text-center">
-        <video id="myCamVideoSetup" autoplay muted></video>
-    </section>
-    <section class="text-center">
-        <h5>Select your camera</h3>
-        <select id="camera">
-        </select>
-    </section>
-    <section class="text-center">
-        <h5>Select your michrophone</h3>
-        <select id="michrophone">
-        </select>
-    </section>-->
     <section class="action">
         <button type="submit" class="nes-btn is-primary letsgo" >Let's go!</button>
     </section>
@@ -132,23 +120,10 @@
 
 <style lang="scss">
     .enableCameraScene {
-      position: absolute;
-      width: 100vw;
-      height: 100vh;
       pointer-events: auto;
-      /*background: #000000;*/
       margin: 20px auto 0;
       color: #ebeeee;
       overflow: auto;
-      /*max-height: 48vh;
-      width: 42vw;
-      max-width: 300px;*/
-
-      /*section.title {
-        position: absolute;
-        top: 1vh;
-        width: 100%;
-      }*/
 
       section.selectWebcamForm {
         margin-top: 3vh;
@@ -172,8 +147,6 @@
       section.action{
         text-align: center;
         margin: 0;
-        /*position: absolute;
-        top: 85vh;*/
         width: 100%;
       }
 
@@ -191,10 +164,6 @@
       }
 
       .webrtcsetup{
-        /*position: absolute;
-        top: 140px;
-        left: 0;
-        right: 0;*/
         margin-top: 2vh;
         margin-left: auto;
         margin-right: auto;
@@ -207,23 +176,21 @@
         justify-content: center;
 
         img.background-img {
-          /*position: relative;*/
-          /*display: block;*/
           width: 40%;
-          /*height: 60%;*/
-          /*top: 50%;*/
-          /*transform: translateY(-50%);*/
-        }
-
-        .hide {
-          display: none;
         }
       }
-      #myCamVideoSetup {
-          width: 100%;
-          height: 100%;
-          -webkit-transform: scaleX(-1);
-          transform: scaleX(-1);
+      .myCamVideoSetup {
+        margin-top: 2vh;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50vw;
+        border: white 6px solid;
+        -webkit-transform: scaleX(-1);
+        transform: scaleX(-1);
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
 

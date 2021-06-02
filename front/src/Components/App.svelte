@@ -22,31 +22,31 @@
 </script>
 
 <div>
-{#if $gameOverlayVisibilityStore}
-    <MyCamera></MyCamera>
-    <CameraControls></CameraControls>
-{/if}
-<div class="absolute-overlay">
-    {#if $loginSceneVisibleStore}
-        <LoginScene game={game}></LoginScene>
+    {#if $gameOverlayVisibilityStore}
+        <MyCamera></MyCamera>
+        <CameraControls></CameraControls>
     {/if}
-    {#if $selectCharacterSceneVisibleStore}
-        <SelectCharacterScene game={ game }></SelectCharacterScene>
-    {/if}
-    {#if $customCharacterSceneVisibleStore}
-        <CustomCharacterScene game={ game }></CustomCharacterScene>
-    {/if}
-    {#if $selectCompanionSceneVisibleStore}
-        <SelectCompanionScene game={ game }></SelectCompanionScene>
-    {/if}
-    {#if $enableCameraSceneVisibilityStore}
-        <EnableCameraScene game={game}></EnableCameraScene>
-    {/if}
-    <!-- {#if $menuIconVisible}
-    <MenuIcon  />
-    {/if} -->
-    {#if $helpCameraSettingsVisibleStore}
-        <HelpCameraSettingsPopup game={ game }></HelpCameraSettingsPopup>
-    {/if}
-</div>
+    <div class="absolute-overlay">
+        {#if $loginSceneVisibleStore}
+            <LoginScene game={game}></LoginScene>
+        {/if}
+        {#if $selectCharacterSceneVisibleStore}
+            <SelectCharacterScene game={ game }></SelectCharacterScene>
+        {/if}
+        {#if $customCharacterSceneVisibleStore}
+            <CustomCharacterScene game={ game }></CustomCharacterScene>
+        {/if}
+        {#if $selectCompanionSceneVisibleStore}
+            <SelectCompanionScene game={ game }></SelectCompanionScene>
+        {/if}
+        {#if $enableCameraSceneVisibilityStore}
+            <EnableCameraScene game={game}></EnableCameraScene>
+        {/if}
+        <!-- {#if $menuIconVisible}
+        <MenuIcon  />
+        {/if} -->
+        {#if $helpCameraSettingsVisibleStore}
+            <HelpCameraSettingsPopup game={ game }></HelpCameraSettingsPopup>
+        {/if}
+    </div>
 </div>
