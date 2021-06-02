@@ -1,0 +1,53 @@
+<script lang="ts">
+    import megaphoneImg from "./images/megaphone.svg";
+    import {soundPlayingStore} from "../../Stores/SoundPlayingStore";
+    import {afterUpdate, onMount} from "svelte";
+
+    export let url: string;
+    let audio: HTMLAudioElement;
+
+    function soundEnded() {
+        soundPlayingStore.soundEnded();
+    }
+
+    afterUpdate(() => {
+        audio.play();
+    });
+</script>
+
+<div class="audio-playing">
+    <img src={megaphoneImg} alt="Audio playing" />
+    <p>Audio message</p>
+    <audio bind:this={audio} src={url} on:ended={soundEnded} >
+        <track kind="captions">
+    </audio>
+</div>
+
+<style lang="scss">
+  /*audio html when audio message playing*/
+ .audio-playing {
+    position: absolute;
+    width: 200px;
+    height: 54px;
+    /*right: -210px;*/
+    right: 0;
+    top: 40px;
+    transition: all 0.1s ease-out;
+    background-color: black;
+    border-radius: 30px 0 0 30px;
+    display: inline-flex;
+
+    img {
+      /*width: 30px;*/
+      border-radius: 50%;
+      background-color: #ffda01;
+      padding: 10px;
+    }
+
+    p {
+      color: white;
+      margin-left: 10px;
+      margin-top: 14px;
+    }
+  }
+</style>

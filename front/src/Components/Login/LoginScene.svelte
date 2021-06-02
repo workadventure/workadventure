@@ -30,7 +30,7 @@
     <section class="text-center">
         <h2>Enter your name</h2>
     </section>
-    <input type="text" name="loginSceneName" class="nes-input is-dark" maxlength={MAX_USERNAME_LENGTH} bind:value={name} on:keypress={() => {startValidating = true}} class:is-error={name.trim() === '' && startValidating} />
+    <input type="text" name="loginSceneName" class="nes-input is-dark" autofocus maxlength={MAX_USERNAME_LENGTH} bind:value={name} on:keypress={() => {startValidating = true}} class:is-error={name.trim() === '' && startValidating} />
     <section class="error-section">
     {#if name.trim() === '' && startValidating }
         <p class="err">The name is empty</p>

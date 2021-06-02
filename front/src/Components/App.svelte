@@ -17,6 +17,8 @@
     import {Game} from "../Phaser/Game/Game";
     import {helpCameraSettingsVisibleStore} from "../Stores/HelpCameraSettingsStore";
     import HelpCameraSettingsPopup from "./HelpCameraSettings/HelpCameraSettingsPopup.svelte";
+    import AudioPlaying from "./UI/AudioPlaying.svelte";
+    import {soundPlayingStore} from "../Stores/SoundPlayingStore";
 
     export let game: Game;
 </script>
@@ -46,6 +48,11 @@
         <div class="scrollable">
             <EnableCameraScene game={game}></EnableCameraScene>
         </div>
+    {/if}
+    {#if $soundPlayingStore}
+    <div>
+        <AudioPlaying url={$soundPlayingStore} />
+    </div>
     {/if}
 
     <!--

@@ -17,7 +17,9 @@ class SoundManager {
                 return res(sound);
             }
             loadPlugin.audio(soundUrl, soundUrl);
-            loadPlugin.once('filecomplete-audio-' + soundUrl, () => res(soundManager.add(soundUrl)));
+            loadPlugin.once('filecomplete-audio-' + soundUrl, () => {
+                res(soundManager.add(soundUrl));
+            });
             loadPlugin.start();
         });
         this.soundPromises.set(soundUrl,soundPromise);
