@@ -131,7 +131,6 @@
       pointer-events: auto;
       margin: 20px auto 0;
       color: #ebeeee;
-      overflow: auto;
 
       section.selectWebcamForm {
         margin-top: 3vh;

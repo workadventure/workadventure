@@ -1222,7 +1222,12 @@ div.action.danger p.action-body{
             position: absolute;
             width: 100%;
             height: 100%;
-            overflow: auto;
+        }
+
+        & > div.scrollable {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            pointer-events: auto;
         }
     }
 }
