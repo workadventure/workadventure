@@ -80,11 +80,11 @@
   }
 
   @media only screen and (max-width: 800px) {
-    .selectCharacterScene button.selectCharacterButtonLeft{
-      left: 10vw;
+    form.selectCharacterScene button.selectCharacterButtonLeft{
+      left: 5vw;
     }
-    .selectCharacterScene button.selectCharacterButtonRight{
-      right: 10vw;
+    form.selectCharacterScene button.selectCharacterButtonRight{
+      right: 5vw;
     }
   }
 

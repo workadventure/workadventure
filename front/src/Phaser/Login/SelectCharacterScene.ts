@@ -52,6 +52,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
     create() {
         selectCharacterSceneVisibleStore.set(true);
+        this.events.addListener('wake', () => {selectCharacterSceneVisibleStore.set(true);});
 
         if (touchScreenManager.supportTouchScreen) {
             new PinchManager(this);
@@ -63,7 +64,6 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
         /*create user*/
         this.createCurrentPlayer();
-        const playerNumber = localUserStore.getPlayerCharacterIndex();
 
         this.input.keyboard.on('keyup-ENTER', () => {
             return this.nextSceneToCameraScene();
@@ -93,7 +93,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.scene.stop(SelectCharacterSceneName);
         gameManager.setCharacterLayers([this.selectedPlayer.texture.key]);
         gameManager.tryResumingGame(this, EnableCameraSceneName);
-        this.scene.remove(SelectCharacterSceneName);
+        this.players = [];
         selectCharacterSceneVisibleStore.set(false);
     }
 
@@ -128,7 +128,6 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             });
             this.players.push(player);
         }
-
         this.selectedPlayer = this.players[this.currentSelectUser];
         this.selectedPlayer.play(this.playerModels[this.currentSelectUser].name);
     }
