@@ -151,6 +151,7 @@ body .message-info.warning{
 }
 
 video.myCamVideo{
+    max-height: 20vh;
     width: 15vw;
     -webkit-transform: scaleX(-1);
     transform: scaleX(-1);
@@ -1221,6 +1222,7 @@ div.action.danger p.action-body{
             position: absolute;
             width: 100%;
             height: 100%;
+            overflow: auto;
         }
     }
 }
