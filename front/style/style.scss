@@ -135,6 +135,7 @@ body .message-info.warning{
 
 .video-container.div-myCamVideo{
     border: none;
+    background-color: transparent;
 }
 
 .div-myCamVideo {
@@ -151,6 +152,7 @@ body .message-info.warning{
 }
 
 video.myCamVideo{
+    background-color: #00000099;
     max-height: 20vh;
     width: 15vw;
     -webkit-transform: scaleX(-1);
