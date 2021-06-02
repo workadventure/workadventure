@@ -1,11 +1,9 @@
 import { SelectCharacterScene } from "./SelectCharacterScene";
-import {waScaleManager} from "../Services/WaScaleManager";
 
 export class SelectCharacterMobileScene extends SelectCharacterScene {
 
     create(){
         super.create();
-        waScaleManager.zoomModifier = 2;
         this.onResize();
         this.selectedRectangle.destroy();
     }

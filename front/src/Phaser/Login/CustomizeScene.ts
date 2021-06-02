@@ -29,8 +29,6 @@ export class CustomizeScene extends AbstractCharacterScene {
     public activeRow:number = 0;
     private layers: BodyResourceDescriptionInterface[][] = [];
 
-    private customizeSceneElement!: Phaser.GameObjects.DOMElement;
-
     constructor() {
         super({
             key: CustomizeSceneName
@@ -54,15 +52,16 @@ export class CustomizeScene extends AbstractCharacterScene {
         addLoader(this);
     }
 
-    create(data: { from: string; }) {
+    create() {
         customCharacterSceneVisibleStore.set(true);
-        this.events.addListener('wake', () => { customCharacterSceneVisibleStore.set(true); });
-
-        if (data.from === 'NoScene') {
-            //Save the zoom level only if the previous scene didn't already save it
+        this.events.addListener('wake', () => {
             waScaleManager.saveZoom();
-        }
-        waScaleManager.zoomModifier = isMobile() ? 2 : 1;
+            waScaleManager.zoomModifier = isMobile() ? 3 : 1;
+            customCharacterSceneVisibleStore.set(true);
+        });
+
+        waScaleManager.saveZoom();
+        waScaleManager.zoomModifier = isMobile() ? 3 : 1;
 
         this.Rectangle = this.add.rectangle(this.cameras.main.worldView.x + this.cameras.main.width / 2, this.cameras.main.worldView.y + this.cameras.main.height / 3, 32, 33)
         this.Rectangle.setStrokeStyle(2, 0xFFFFFF);
@@ -246,12 +245,14 @@ export class CustomizeScene extends AbstractCharacterScene {
             gameManager.setCharacterLayers(layers);
             this.scene.sleep(CustomizeSceneName);
             waScaleManager.restoreZoom();
+            this.events.removeListener('wake');
             gameManager.tryResumingGame(this, EnableCameraSceneName);
             customCharacterSceneVisibleStore.set(false);
     }
 
     private backToPreviousScene(){
         this.scene.sleep(CustomizeSceneName);
+        waScaleManager.restoreZoom();
         this.scene.run(SelectCharacterSceneName);
         customCharacterSceneVisibleStore.set(false);
     }

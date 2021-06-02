@@ -14,6 +14,7 @@ import {MenuScene} from "../Menu/MenuScene";
 import {selectCharacterSceneVisibleStore} from "../../Stores/SelectCharacterStore";
 import {customCharacterSceneVisibleStore} from "../../Stores/CustomCharacterStore";
 import {waScaleManager} from "../Services/WaScaleManager";
+import {isMobile} from "../../Enum/EnvironmentVariable";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
@@ -30,6 +31,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
     protected selectCharacterSceneElement!: Phaser.GameObjects.DOMElement;
     protected currentSelectUser = 0;
+    protected pointerClicked: boolean = false;
 
     constructor() {
         super({
@@ -53,14 +55,18 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
     create() {
         selectCharacterSceneVisibleStore.set(true);
-        this.events.addListener('wake', () => {selectCharacterSceneVisibleStore.set(true);});
+        this.events.addListener('wake', () => {
+            waScaleManager.saveZoom();
+            waScaleManager.zoomModifier = isMobile() ? 2 : 1;
+            selectCharacterSceneVisibleStore.set(true);
+        });
 
         if (touchScreenManager.supportTouchScreen) {
             new PinchManager(this);
         }
 
         waScaleManager.saveZoom();
-        waScaleManager.zoomModifier = 1;
+        waScaleManager.zoomModifier = isMobile() ? 2 : 1;
 
         const rectangleXStart = this.game.renderer.width / 2 - (this.nbCharactersPerRow / 2) * 32 + 16;
         this.selectedRectangle = this.add.rectangle(rectangleXStart, 90, 32, 32).setStrokeStyle(2, 0xFFFFFF);
@@ -100,6 +106,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         gameManager.tryResumingGame(this, EnableCameraSceneName);
         this.players = [];
         selectCharacterSceneVisibleStore.set(false);
+        this.events.removeListener('wake');
     }
 
     protected nextSceneToCustomizeScene(): void {
@@ -107,7 +114,8 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             return;
         }
         this.scene.sleep(SelectCharacterSceneName);
-        this.scene.run(CustomizeSceneName, {from: 'SelectCharacter'});
+        waScaleManager.restoreZoom();
+        this.scene.run(CustomizeSceneName);
         selectCharacterSceneVisibleStore.set(false);
     }
 
@@ -125,11 +133,13 @@ export class SelectCharacterScene extends AbstractCharacterScene {
                 repeat: -1
             });
             player.setInteractive().on("pointerdown", () => {
-                if(this.currentSelectUser === i){
+                if (this.pointerClicked || this.currentSelectUser === i) {
                     return;
                 }
+                this.pointerClicked = true;
                 this.currentSelectUser = i;
                 this.moveUser();
+                setTimeout(() => {this.pointerClicked = false;}, 100);
             });
             this.players.push(player);
         }
