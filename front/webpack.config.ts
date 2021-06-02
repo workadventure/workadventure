@@ -94,6 +94,7 @@ module.exports = {
                             // See https://github.com/sveltejs/svelte/issues/4946#issuecomment-662168782
 
                             if (warning.code === 'a11y-no-onchange') { return }
+                            if (warning.code === 'a11y-autofocus') { return }
 
                             // process as usual
                             handleWarning(warning);
