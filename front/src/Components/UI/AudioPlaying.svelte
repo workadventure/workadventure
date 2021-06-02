@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { fly } from 'svelte/transition';
     import megaphoneImg from "./images/megaphone.svg";
     import {soundPlayingStore} from "../../Stores/SoundPlayingStore";
     import {afterUpdate, onMount} from "svelte";
@@ -15,7 +16,7 @@
     });
 </script>
 
-<div class="audio-playing">
+<div class="audio-playing" transition:fly="{{ x: 210, duration: 500 }}">
     <img src={megaphoneImg} alt="Audio playing" />
     <p>Audio message</p>
     <audio bind:this={audio} src={url} on:ended={soundEnded} >
@@ -29,7 +30,6 @@
     position: absolute;
     width: 200px;
     height: 54px;
-    /*right: -210px;*/
     right: 0;
     top: 40px;
     transition: all 0.1s ease-out;
