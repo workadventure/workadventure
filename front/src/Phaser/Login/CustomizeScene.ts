@@ -242,7 +242,6 @@ export class CustomizeScene extends AbstractCharacterScene {
 
             gameManager.setCharacterLayers(layers);
             this.scene.sleep(CustomizeSceneName);
-            this.scene.remove(SelectCharacterSceneName);
             gameManager.tryResumingGame(this, EnableCameraSceneName);
             customCharacterSceneVisibleStore.set(false);
     }
@@ -251,6 +250,5 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.scene.sleep(CustomizeSceneName);
         this.scene.run(SelectCharacterSceneName);
         customCharacterSceneVisibleStore.set(false);
-        selectCharacterSceneVisibleStore.set(true);
     }
 }

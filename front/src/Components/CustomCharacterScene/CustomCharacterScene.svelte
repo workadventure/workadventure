@@ -107,11 +107,11 @@
   }
 
   @media only screen and (max-width: 800px) {
-    .customCharacterScene button.customCharacterSceneButtonLeft{
-      left: 10vw;
+    form.customCharacterScene button.customCharacterSceneButtonLeft{
+      left: 5vw;
     }
-    .customCharacterScene button.customCharacterSceneButtonRight{
-      right: 10vw;
+    form.customCharacterScene button.customCharacterSceneButtonRight{
+      right: 5vw;
     }
   }
 
