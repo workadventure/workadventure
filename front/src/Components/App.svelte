@@ -23,7 +23,7 @@
 
 <div>
     {#if $loginSceneVisibleStore}
-        <div>
+        <div class="scrollable">
             <LoginScene game={game}></LoginScene>
         </div>
     {/if}
@@ -43,7 +43,7 @@
         </div>
     {/if}
     {#if $enableCameraSceneVisibilityStore}
-        <div>
+        <div class="scrollable">
             <EnableCameraScene game={game}></EnableCameraScene>
         </div>
     {/if}
