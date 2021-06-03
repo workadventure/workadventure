@@ -4,6 +4,8 @@ import {localUserStore} from "../Connexion/LocalUserStore";
 import {ITiledMapGroupLayer, ITiledMapObjectLayer, ITiledMapTileLayer} from "../Phaser/Map/ITiledMap";
 import {userMovingStore} from "./GameStore";
 import {HtmlUtils} from "../WebRtc/HtmlUtils";
+import {BrowserTooOldError} from "./Errors/BrowserTooOldError";
+import {errorStore} from "./ErrorStore";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -423,7 +425,7 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
             //throw new Error('Unable to access your camera or microphone. Your browser is too old.');
             set({
                 type: 'error',
-                error: new Error('Unable to access your camera or microphone. Your browser is too old. Please consider upgrading your browser or try using a recent version of Chrome.'),
+                error: new BrowserTooOldError(),
                 constraints
             });
             return;
@@ -592,5 +594,13 @@ microphoneListStore.subscribe((devices) => {
     // @ts-ignore
     if (!devices.find(device => device.deviceId === constraints.deviceId.exact)) {
         audioConstraintStore.setDeviceId(undefined);
+    }
+});
+
+localStreamStore.subscribe(streamResult => {
+    if (streamResult.type === 'error') {
+        if (streamResult.error.name === BrowserTooOldError.NAME) {
+            errorStore.addErrorMessage(streamResult.error);
+        }
     }
 });
