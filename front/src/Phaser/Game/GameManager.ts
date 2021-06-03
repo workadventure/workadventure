@@ -78,11 +78,11 @@ export class GameManager {
 
     public async loadMap(room: Room, scenePlugin: Phaser.Scenes.ScenePlugin): Promise<void> {
         const roomID = room.id;
-        const mapUrl = await room.getMapUrl();
+        const mapDetail = await room.getMapDetail();
 
         const gameIndex = scenePlugin.getIndex(roomID);
         if(gameIndex === -1){
-            const game : Phaser.Scene = new GameScene(room, mapUrl);
+            const game : Phaser.Scene = new GameScene(room, mapDetail.mapUrl);
             scenePlugin.add(roomID, game, false);
         }
     }
