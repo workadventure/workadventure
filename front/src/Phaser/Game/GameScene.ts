@@ -228,11 +228,6 @@ export class GameScene extends DirtyScene implements CenterListener {
             this.load.image(joystickBaseKey, joystickBaseImg);
             this.load.image(joystickThumbKey, joystickThumbImg);
         }
-        //todo: in an emote manager.
-        this.load.spritesheet('emote-music', 'resources/emotes/pipo-popupemotes005.png', {
-            frameHeight: 32,
-            frameWidth: 32,
-        });
         this.load.on(FILE_LOAD_ERROR, (file: {src: string}) => {
             // If we happen to be in HTTP and we are trying to load a URL in HTTPS only... (this happens only in dev environments)
             if (window.location.protocol === 'http:' && file.src === this.MapUrlFile && file.src.startsWith('http:') && this.originalMapUrl === undefined) {
@@ -1156,7 +1151,10 @@ ${escapedMessage}
                 this.companion,
                 this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
-            this.CurrentPlayer.on('pointerdown', () => {
+            this.CurrentPlayer.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+                if (pointer.wasTouch && (pointer.event as TouchEvent).touches.length > 1) {
+                    return; //we don't want the menu to open when pinching on a touch screen.
+                }
                 this.emoteManager.getMenuImages().then((emoteMenuElements) => this.CurrentPlayer.openOrCloseEmoteMenu(emoteMenuElements))
             })
             this.CurrentPlayer.on(requestEmoteEventName, (emoteKey: string) => {
