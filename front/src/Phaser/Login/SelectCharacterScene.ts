@@ -244,7 +244,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
     update(time: number, delta: number): void {
         if(this.lazyloadingAttempt){
-            this.createCurrentPlayer();
+            this.moveUser();
             this.lazyloadingAttempt = false;
         }
     }
