@@ -10,9 +10,11 @@
 
     let timeout;
     const soundMeter = new SoundMeter();
+    let display = false;
 
     $: {
         if (stream && stream.getAudioTracks().length > 0) {
+            display = true;
             soundMeter.connectToSource(stream, new AudioContext());
 
             if (timeout) {
@@ -28,6 +30,8 @@
                 }
             }, 100);
 
+        } else {
+            display = false;
         }
     }
 
@@ -40,7 +44,7 @@
 </script>
 
 
-<div class="sound-progress" class:active={stream?.getAudioTracks().length > 0}>
+<div class="sound-progress" class:active={display}>
     <span class:active={volume > 1}></span>
     <span class:active={volume > 2}></span>
     <span class:active={volume > 3}></span>

@@ -440,10 +440,30 @@ export class MediaManager {
     public getNotification(){
         //Get notification
         if (!DISABLE_NOTIFICATIONS && window.Notification && Notification.permission !== "granted") {
-            Notification.requestPermission().catch((err) => {
-                console.error(`Notification permission error`, err);
-            });
+            if (this.checkNotificationPromise()) {
+                Notification.requestPermission().catch((err) => {
+                    console.error(`Notification permission error`, err);
+                });
+            } else {
+                Notification.requestPermission();
+            }
         }
+    }
+
+    /**
+     * Return true if the browser supports the modern version of the Notification API (which is Promise based) or false
+     * if we are on Safari...
+     *
+     * See https://developer.mozilla.org/en-US/docs/Web/API/Notifications_API/Using_the_Notifications_API
+     */
+    private checkNotificationPromise(): boolean {
+        try {
+            Notification.requestPermission().then();
+        } catch(e) {
+            return false;
+        }
+
+        return true;
     }
 
     public createNotification(userName: string){
