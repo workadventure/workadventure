@@ -13,7 +13,6 @@ import WebFontLoaderPlugin from 'phaser3-rex-plugins/plugins/webfontloader-plugi
 import {EntryScene} from "./Phaser/Login/EntryScene";
 import {coWebsiteManager} from "./WebRtc/CoWebsiteManager";
 import {MenuScene} from "./Phaser/Menu/MenuScene";
-import {HelpCameraSettingsScene} from "./Phaser/Menu/HelpCameraSettingsScene";
 import {localUserStore} from "./Connexion/LocalUserStore";
 import {ErrorScene} from "./Phaser/Reconnecting/ErrorScene";
 import {iframeListener} from "./Api/IframeListener";
@@ -96,7 +95,7 @@ const config: GameConfig = {
         ErrorScene,
         CustomizeScene,
         MenuScene,
-        HelpCameraSettingsScene],
+    ],
     //resolution: window.devicePixelRatio / 2,
     fps: fps,
     dom: {
@@ -152,7 +151,9 @@ iframeListener.init();
 
 const app = new App({
     target: HtmlUtils.getElementByIdOrFail('svelte-overlay'),
-    props: { },
+    props: {
+        game: game
+    },
 })
 
 export default app

@@ -1,29 +1,42 @@
 <script lang="typescript">
+    import { AudioContext } from 'standardized-audio-context';
     import {SoundMeter} from "../Phaser/Components/SoundMeter";
     import {onDestroy} from "svelte";
 
-    export let stream: MediaStream;
+    export let stream: MediaStream|null;
     let volume = 0;
 
-    console.log('stream', stream);
+    const NB_BARS = 5;
 
-    if (stream.getAudioTracks().length > 0) {
-        const soundMeter = new SoundMeter();
-        soundMeter.connectToSource(stream, new AudioContext());
+    let timeout;
+    const soundMeter = new SoundMeter();
 
-        const timeout = setInterval(() => {
-            try{
-                volume = parseInt((soundMeter.getVolume() / 10).toFixed(0));
-                console.log(volume);
-            }catch(err){
+    $: {
+        if (stream && stream.getAudioTracks().length > 0) {
+            soundMeter.connectToSource(stream, new AudioContext());
 
+            if (timeout) {
+                clearInterval(timeout);
             }
-        }, 100);
 
-        onDestroy(() => {
-            clearInterval(timeout);
-        })
+            timeout = setInterval(() => {
+                try{
+                    volume = parseInt((soundMeter.getVolume() / 100 * NB_BARS).toFixed(0));
+                    //console.log(volume);
+                }catch(err){
+
+                }
+            }, 100);
+
+        }
     }
+
+    onDestroy(() => {
+        soundMeter.stop();
+        if (timeout) {
+            clearInterval(timeout);
+        }
+    })
 </script>
 
 

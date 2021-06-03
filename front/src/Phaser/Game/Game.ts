@@ -21,14 +21,22 @@ export class Game extends Phaser.Game {
     constructor(GameConfig: Phaser.Types.Core.GameConfig) {
         super(GameConfig);
 
-        window.addEventListener('resize', (event) => {
+        this.scale.on(Phaser.Scale.Events.RESIZE, () => {
+            for (const scene of this.scene.getScenes(true)) {
+                if (scene instanceof ResizableScene) {
+                    scene.onResize();
+                }
+            }
+        })
+
+        /*window.addEventListener('resize', (event) => {
             // Let's trigger the onResize method of any active scene that is a ResizableScene
             for (const scene of this.scene.getScenes(true)) {
                 if (scene instanceof ResizableScene) {
                     scene.onResize(event);
                 }
             }
-        });
+        });*/
     }
 
     public step(time: number, delta: number)

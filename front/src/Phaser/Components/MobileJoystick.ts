@@ -28,13 +28,13 @@ export class MobileJoystick extends VirtualJoystick {
         this.visible = false;
         this.enable = false;
 
-        this.scene.input.on('pointerdown', (pointer: { x: number; y: number; wasTouch: boolean; event: TouchEvent }) => {
+        this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
             if (!pointer.wasTouch) {
                 return;
             }
 
             // Let's only display the joystick if there is one finger on the screen
-            if (pointer.event.touches.length === 1) {
+            if ((pointer.event as TouchEvent).touches.length === 1) {
                 this.x = pointer.x;
                 this.y = pointer.y;
                 this.visible = true;
