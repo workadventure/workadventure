@@ -19,6 +19,8 @@
     let selectedMicrophone : string|null = null;
 
     const enableCameraScene = game.scene.getScene(EnableCameraSceneName);
+    var video = document.getElementById("myCamVideoSetup");
+    video.setAttribute("playsinline", 'true');
 
     function submit() {
         enableCameraScene.login();
