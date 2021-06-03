@@ -422,7 +422,6 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
             });
             return;
         } else {
-            //throw new Error('Unable to access your camera or microphone. Your browser is too old.');
             set({
                 type: 'error',
                 error: new BrowserTooOldError(),
