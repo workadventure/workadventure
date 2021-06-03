@@ -246,7 +246,6 @@ export class SimplePeer {
      * This is triggered twice. Once by the server, and once by a remote client disconnecting
      */
     private closeConnection(userId : number) {
-        mediaManager.playWebrtcOutSound();
         try {
             const peer = this.PeerConnectionArray.get(userId);
             if (peer === undefined) {
