@@ -10,9 +10,11 @@
 
     let timeout;
     const soundMeter = new SoundMeter();
+    let display = false;
 
     $: {
         if (stream && stream.getAudioTracks().length > 0) {
+            display = true;
             soundMeter.connectToSource(stream, new AudioContext());
 
             if (timeout) {
@@ -28,6 +30,8 @@
                 }
             }, 100);
 
+        } else {
+            display = false;
         }
     }
 
@@ -53,7 +57,7 @@
 </script>
 
 
-<div class="horizontal-sound-meter" class:active={stream?.getAudioTracks().length > 0}>
+<div class="horizontal-sound-meter" class:active={display}>
     {#each [...Array(NB_BARS).keys()] as i}
         <div style={color(i, volume)}></div>
     {/each}
