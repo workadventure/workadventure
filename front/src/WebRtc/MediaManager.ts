@@ -5,6 +5,7 @@ import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
 import {localUserStore} from "../Connexion/LocalUserStore";
 import {UserSimplePeerInterface} from "./SimplePeer";
 import {SoundMeter} from "../Phaser/Components/SoundMeter";
+import {cowebsiteCloseButtonId} from "./CoWebsiteManager";
 
 declare const navigator:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -208,22 +209,28 @@ export class MediaManager {
         const gameOverlay = HtmlUtils.getElementByIdOrFail('game-overlay');
         gameOverlay.classList.add('active');
 
-        const buttonCloseFrame = HtmlUtils.getElementByIdOrFail('cowebsite-close');
+        const buttonCloseFrame = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);
         const functionTrigger = () => {
             this.triggerCloseJitsiFrameButton();
         }
-        buttonCloseFrame.removeEventListener('click', functionTrigger);
+        buttonCloseFrame.removeEventListener('click', () => {
+            buttonCloseFrame.blur();
+            functionTrigger();
+        });
     }
 
     public hideGameOverlay(): void {
         const gameOverlay = HtmlUtils.getElementByIdOrFail('game-overlay');
         gameOverlay.classList.remove('active');
 
-        const buttonCloseFrame = HtmlUtils.getElementByIdOrFail('cowebsite-close');
+        const buttonCloseFrame = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);
         const functionTrigger = () => {
             this.triggerCloseJitsiFrameButton();
         }
-        buttonCloseFrame.addEventListener('click', functionTrigger);
+        buttonCloseFrame.addEventListener('click', () => {
+            buttonCloseFrame.blur();
+            functionTrigger();
+        });
     }
 
     public isGameOverlayVisible(): boolean {
