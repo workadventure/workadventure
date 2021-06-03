@@ -1,7 +1,6 @@
 import { isButtonClickedEvent } from '../Events/ButtonClickedEvent';
 import type { ClosePopupEvent } from '../Events/ClosePopupEvent';
 import { apiCallback, IframeApiContribution, sendToWorkadventure } from './IframeApiContribution';
-import zoneCommands from "./zone-events";
 class Popup {
     constructor(private id: number) {
     }
@@ -102,47 +101,6 @@ class PopupApiContribution extends IframeApiContribution<PopupApiContribution> {
         popups.set(popupId, popup)
         return popup;
     }
-
-
-
-    popupInZone(options: ZonedPopupOptions) {
-        const objectLayerName = options.objectLayerName || options.zone
-
-        let lastOpened = 0;
-
-        let popup: Popup | undefined;
-        zoneCommands.onEnterZone(options.zone, () => {
-            if (options.delay) {
-                if (lastOpened + options.delay > Date.now()) {
-                    return;
-                }
-            }
-            lastOpened = Date.now();
-            popup = this.openPopup(objectLayerName, options.popupText, options.popupOptions.map(option => {
-                const callback = option.callback;
-                const popupOptions = {
-                    ...option,
-                    className: option.className || 'normal',
-                    callback: () => {
-                        if (callback && popup) {
-                            callback(popup);
-                        }
-                        popup?.close();
-                        popup = undefined;
-                    }
-                };
-
-                return popupOptions;
-            }));
-        });
-        zoneCommands.onLeaveZone(options.zone, () => {
-            if (popup) {
-                popup.close();
-                popup = undefined;
-            }
-        });
-    }
-
 }
 
 export default new PopupApiContribution()
