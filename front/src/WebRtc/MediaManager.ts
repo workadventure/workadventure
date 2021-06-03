@@ -21,6 +21,8 @@ export type ReportCallback = (message: string) => void;
 export type ShowReportCallBack = (userId: string, userName: string|undefined) => void;
 export type HelpCameraSettingsCallBack = () => void;
 
+import {cowebsiteCloseButtonId} from "./CoWebsiteManager";
+
 export class MediaManager {
     private remoteVideo: Map<string, HTMLVideoElement> = new Map<string, HTMLVideoElement>();
     //FIX ME SOUNDMETER: check stalability of sound meter calculation
@@ -99,11 +101,14 @@ export class MediaManager {
         const gameOverlay = HtmlUtils.getElementByIdOrFail('game-overlay');
         gameOverlay.classList.add('active');
 
-        const buttonCloseFrame = HtmlUtils.getElementByIdOrFail('cowebsite-close');
+        const buttonCloseFrame = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);
         const functionTrigger = () => {
             this.triggerCloseJitsiFrameButton();
         }
-        buttonCloseFrame.removeEventListener('click', functionTrigger);
+        buttonCloseFrame.removeEventListener('click', () => {
+            buttonCloseFrame.blur();
+            functionTrigger();
+        });
 
         gameOverlayVisibilityStore.showGameOverlay();
     }
@@ -112,11 +117,14 @@ export class MediaManager {
         const gameOverlay = HtmlUtils.getElementByIdOrFail('game-overlay');
         gameOverlay.classList.remove('active');
 
-        const buttonCloseFrame = HtmlUtils.getElementByIdOrFail('cowebsite-close');
+        const buttonCloseFrame = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);
         const functionTrigger = () => {
             this.triggerCloseJitsiFrameButton();
         }
-        buttonCloseFrame.addEventListener('click', functionTrigger);
+        buttonCloseFrame.addEventListener('click', () => {
+            buttonCloseFrame.blur();
+            functionTrigger();
+        });
 
         gameOverlayVisibilityStore.hideGameOverlay();
     }
