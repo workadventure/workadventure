@@ -1,6 +1,6 @@
 <script lang="typescript">
     import {Game} from "../../Phaser/Game/Game";
-    import {EnableCameraSceneName} from "../../Phaser/Login/EnableCameraScene";
+    import {EnableCameraScene, EnableCameraSceneName} from "../../Phaser/Login/EnableCameraScene";
     import {
         audioConstraintStore,
         cameraListStore,
@@ -18,9 +18,7 @@
     let selectedCamera : string|null = null;
     let selectedMicrophone : string|null = null;
 
-    const enableCameraScene = game.scene.getScene(EnableCameraSceneName);
-    var video = document.getElementById("myCamVideoSetup");
-    video.setAttribute("playsinline", 'true');
+    const enableCameraScene = game.scene.getScene(EnableCameraSceneName) as EnableCameraScene;
 
     function submit() {
         enableCameraScene.login();
@@ -82,7 +80,7 @@
         <h2>Turn on your camera and microphone</h2>
     </section>
         {#if $localStreamStore.stream}
-            <video class="myCamVideoSetup" use:srcObject={$localStreamStore.stream} autoplay muted></video>
+            <video class="myCamVideoSetup" use:srcObject={$localStreamStore.stream} autoplay muted playsinline></video>
         {:else }
             <div class="webrtcsetup">
                 <img class="background-img" src={cinemaCloseImg} alt="">
