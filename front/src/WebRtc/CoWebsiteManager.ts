@@ -11,7 +11,7 @@ enum iframeStates {
 const cowebsiteDivId = 'cowebsite'; // the id of the whole container.
 const cowebsiteMainDomId = 'cowebsite-main'; // the id of the parent div of the iframe.
 const cowebsiteAsideDomId = 'cowebsite-aside'; // the id of the parent div of the iframe.
-const cowebsiteCloseButtonId = 'cowebsite-close';
+export const cowebsiteCloseButtonId = 'cowebsite-close';
 const cowebsiteFullScreenButtonId = 'cowebsite-fullscreen';
 const cowebsiteOpenFullScreenImageId = 'cowebsite-fullscreen-open';
 const cowebsiteCloseFullScreenImageId = 'cowebsite-fullscreen-close';
@@ -64,10 +64,15 @@ class CoWebsiteManager {
 
         this.initResizeListeners();
 
-        HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId).addEventListener('click', () => {
+        const buttonCloseFrame = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);
+        buttonCloseFrame.addEventListener('click', () => {
+            buttonCloseFrame.blur();
             this.closeCoWebsite();
         });
-        HtmlUtils.getElementByIdOrFail(cowebsiteFullScreenButtonId).addEventListener('click', () => {
+
+        const buttonFullScreenFrame = HtmlUtils.getElementByIdOrFail(cowebsiteFullScreenButtonId);
+        buttonFullScreenFrame.addEventListener('click', () => {
+            buttonFullScreenFrame.blur();
             this.fullscreen();
         });
     }
@@ -152,7 +157,10 @@ class CoWebsiteManager {
             setTimeout(() => {
                 this.fire();
             }, animationTime)
-        }).catch(() => this.closeCoWebsite());
+        }).catch((err) => {
+            console.error('Error loadCoWebsite => ', err);
+            this.closeCoWebsite()
+        });
     }
 
     /**
@@ -166,7 +174,10 @@ class CoWebsiteManager {
             setTimeout(() => {
                 this.fire();
             }, animationTime);
-        }).catch(() => this.closeCoWebsite());
+        }).catch((err) => {
+            console.error('Error insertCoWebsite => ', err);
+            this.closeCoWebsite();
+        });
     }
 
     public closeCoWebsite(): Promise<void> {
