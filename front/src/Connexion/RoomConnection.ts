@@ -30,7 +30,7 @@ import {
     EmoteEventMessage,
     EmotePromptMessage,
     SendUserMessage,
-    BanUserMessage
+    BanUserMessage, RequestVisitCardMessage
 } from "../Messages/generated/messages_pb"
 
 import type {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
@@ -50,6 +50,7 @@ import {worldFullMessageStream} from "./WorldFullMessageStream";
 import {worldFullWarningStream} from "./WorldFullWarningStream";
 import {connectionManager} from "./ConnectionManager";
 import {emoteEventStream} from "./EmoteEventStream";
+import {requestVisitCardsStore} from "../Stores/GameStore";
 
 const manualPingDelay = 20000;
 
@@ -203,6 +204,8 @@ export class RoomConnection implements RoomConnection {
                 adminMessagesService.onSendusermessage(message.getBanusermessage() as BanUserMessage);
             } else if (message.hasWorldfullwarningmessage()) {
                 worldFullWarningStream.onMessage();
+            } else if (message.hasVisitcardmessage()) {
+                requestVisitCardsStore.set(message?.getVisitcardmessage()?.getUrl() as unknown as string);
             } else if (message.hasRefreshroommessage()) {
                 //todo: implement a way to notify the user the room was refreshed.
             } else {
@@ -614,6 +617,16 @@ export class RoomConnection implements RoomConnection {
 
         const clientToServerMessage = new ClientToServerMessage();
         clientToServerMessage.setEmotepromptmessage(emoteMessage);
+
+        this.socket.send(clientToServerMessage.serializeBinary().buffer);
+    }
+    
+    public requestVisitCardUrl(targetUserId: number): void {
+        const message = new RequestVisitCardMessage();
+        message.setTargetuserid(targetUserId);
+
+        const clientToServerMessage = new ClientToServerMessage();
+        clientToServerMessage.setRequestvisitcardmessage(message);
 
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
