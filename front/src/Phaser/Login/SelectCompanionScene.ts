@@ -23,6 +23,7 @@ export class SelectCompanionScene extends ResizableScene {
     private saveZoom: number = 0;
 
     private currentCompanion = 0;
+    private pointerClicked: boolean = false;
 
     constructor() {
         super({
@@ -105,8 +106,13 @@ export class SelectCompanionScene extends ResizableScene {
             });
 
             companion.setInteractive().on("pointerdown", () => {
+                if (this.pointerClicked) {
+                    return;
+                }
+                this.pointerClicked = true;
                 this.currentCompanion = i;
                 this.moveCompanion();
+                setTimeout(() => {this.pointerClicked = false;}, 250)
             });
 
             this.companions.push(companion);
