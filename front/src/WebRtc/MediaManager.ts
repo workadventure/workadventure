@@ -23,10 +23,8 @@ export type HelpCameraSettingsCallBack = () => void;
 
 export class MediaManager {
     private remoteVideo: Map<string, HTMLVideoElement> = new Map<string, HTMLVideoElement>();
-    webrtcInAudio: HTMLAudioElement;
     //FIX ME SOUNDMETER: check stalability of sound meter calculation
     //mySoundMeterElement: HTMLDivElement;
-    private webrtcOutAudio: HTMLAudioElement;
     startScreenSharingCallBacks : Set<StartScreenSharingCallback> = new Set<StartScreenSharingCallback>();
     stopScreenSharingCallBacks : Set<StopScreenSharingCallback> = new Set<StopScreenSharingCallback>();
     showReportModalCallBacks : Set<ShowReportCallBack> = new Set<ShowReportCallBack>();
@@ -43,11 +41,6 @@ export class MediaManager {
     private soundMeterElements: Map<string, HTMLDivElement> = new Map<string, HTMLDivElement>();*/
 
     constructor() {
-
-        this.webrtcInAudio = HtmlUtils.getElementByIdOrFail<HTMLAudioElement>('audio-webrtc-in');
-        this.webrtcOutAudio = HtmlUtils.getElementByIdOrFail<HTMLAudioElement>('audio-webrtc-out');
-        this.webrtcInAudio.volume = 0.2;
-        this.webrtcOutAudio.volume = 0.2;
 
         this.pingCameraStatus();
 
@@ -129,11 +122,6 @@ export class MediaManager {
     }
 
     addActiveVideo(user: UserSimplePeerInterface, userName: string = ""){
-        try {
-            this.webrtcInAudio.play();
-        } catch(e) {
-            console.error(e);
-        }
         const userId = ''+user.userId
 
         userName = userName.toUpperCase();
@@ -279,14 +267,6 @@ export class MediaManager {
     }
     removeActiveScreenSharingVideo(userId: string) {
         this.removeActiveVideo(this.getScreenSharingId(userId))
-    }
-
-    playWebrtcOutSound(): void {
-        try {
-            this.webrtcOutAudio.play();
-        } catch(e) {
-            console.error(e);
-        }
     }
 
     isConnecting(userId: string): void {
