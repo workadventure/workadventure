@@ -143,7 +143,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
                 this.pointerClicked = true;
                 this.currentSelectUser = i;
                 this.moveUser();
-                setTimeout(() => {this.pointerClicked = false;}, 100);
+                setTimeout(() => {this.pointerClicked = false;}, 250);
             });
             this.players.push(player);
         }
@@ -244,7 +244,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
     update(time: number, delta: number): void {
         if(this.lazyloadingAttempt){
-            this.createCurrentPlayer();
+            this.moveUser();
             this.lazyloadingAttempt = false;
         }
     }
