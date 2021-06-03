@@ -38,7 +38,7 @@
 
 <div>
     <div class="video-container div-myCamVideo" class:hide={!$localStreamStore.constraints.video}>
-        <video class="myCamVideo" use:srcObject={$localStreamStore.stream} autoplay muted></video>
+        <video class="myCamVideo" use:srcObject={$localStreamStore.stream} autoplay muted playsinline></video>
         <!-- {#if stream}
         <SoundMeterWidget stream={stream}></SoundMeterWidget>
         {/if} -->
