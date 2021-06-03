@@ -418,6 +418,7 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                 error: new Error('Unable to access your camera or microphone. You need to use a HTTPS connection.'),
                 constraints
             });
+            return;
         } else {
             //throw new Error('Unable to access your camera or microphone. Your browser is too old.');
             set({
@@ -425,6 +426,7 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                 error: new Error('Unable to access your camera or microphone. Your browser is too old.'),
                 constraints
             });
+            return;
         }
     }
 
