@@ -129,7 +129,11 @@ export class MediaManager {
     }
 
     addActiveVideo(user: UserSimplePeerInterface, userName: string = ""){
-        this.webrtcInAudio.play();
+        try {
+            this.webrtcInAudio.play();
+        } catch(e) {
+            console.error(e);
+        }
         const userId = ''+user.userId
 
         userName = userName.toUpperCase();
@@ -278,7 +282,11 @@ export class MediaManager {
     }
 
     playWebrtcOutSound(): void {
-        this.webrtcOutAudio.play();
+        try {
+            this.webrtcOutAudio.play();
+        } catch(e) {
+            console.error(e);
+        }
     }
 
     isConnecting(userId: string): void {
