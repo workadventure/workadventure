@@ -209,10 +209,14 @@ function createVideoConstraintStore() {
 
     return {
         subscribe,
-        setDeviceId: (deviceId: string) => update((constraints) => {
-            constraints.deviceId = {
-                exact: deviceId
-            };
+        setDeviceId: (deviceId: string|undefined) => update((constraints) => {
+            if (deviceId !== undefined) {
+                constraints.deviceId = {
+                    exact: deviceId
+                };
+            } else {
+                delete constraints.deviceId;
+            }
 
             return constraints;
         }),
@@ -241,15 +245,19 @@ function createAudioConstraintStore() {
 
     return {
         subscribe,
-        setDeviceId: (deviceId: string) => update((constraints) => {
+        setDeviceId: (deviceId: string|undefined) => update((constraints) => {
             selectedDeviceId = deviceId;
 
             if (typeof(constraints) === 'boolean') {
                 constraints = {}
             }
-            constraints.deviceId = {
-                exact: selectedDeviceId
-            };
+            if (deviceId !== undefined) {
+                constraints.deviceId = {
+                    exact: selectedDeviceId
+                };
+            } else {
+                delete constraints.deviceId;
+            }
 
             return constraints;
         })
@@ -508,3 +516,79 @@ export const obtainedMediaConstraintStore = derived(localStreamStore, ($localStr
     return $localStreamStore.constraints;
 });
 
+/**
+ * Device list
+ */
+export const deviceListStore = readable<MediaDeviceInfo[]>([], function start(set) {
+    let deviceListCanBeQueried = false;
+
+    const queryDeviceList = () => {
+        // Note: so far, we are ignoring any failures.
+        navigator.mediaDevices.enumerateDevices().then((mediaDeviceInfos) => {
+            set(mediaDeviceInfos);
+        }).catch((e) => {
+            console.error(e);
+            throw e;
+        });
+    };
+
+    const unsubscribe = localStreamStore.subscribe((streamResult) => {
+        if (streamResult.type === "success" && streamResult.stream !== null) {
+            if (deviceListCanBeQueried === false) {
+                queryDeviceList();
+                deviceListCanBeQueried = true;
+            }
+        }
+    });
+
+    if (navigator.mediaDevices) {
+        navigator.mediaDevices.addEventListener('devicechange', queryDeviceList);
+    }
+
+    return function stop() {
+        unsubscribe();
+        if (navigator.mediaDevices) {
+            navigator.mediaDevices.removeEventListener('devicechange', queryDeviceList);
+        }
+    };
+});
+
+export const cameraListStore = derived(deviceListStore, ($deviceListStore) => {
+    return $deviceListStore.filter(device => device.kind === 'videoinput');
+});
+
+export const microphoneListStore = derived(deviceListStore, ($deviceListStore) => {
+    return $deviceListStore.filter(device => device.kind === 'audioinput');
+});
+
+// TODO: detect the new webcam and automatically switch on it.
+cameraListStore.subscribe((devices) => {
+    // If the selected camera is unplugged, let's remove the constraint on deviceId
+    const constraints = get(videoConstraintStore);
+    if (!constraints.deviceId) {
+        return;
+    }
+
+    // If we cannot find the device ID, let's remove it.
+    // @ts-ignore
+    if (!devices.find(device => device.deviceId === constraints.deviceId.exact)) {
+        videoConstraintStore.setDeviceId(undefined);
+    }
+});
+
+microphoneListStore.subscribe((devices) => {
+    // If the selected camera is unplugged, let's remove the constraint on deviceId
+    const constraints = get(audioConstraintStore);
+    if (typeof constraints === 'boolean') {
+        return;
+    }
+    if (!constraints.deviceId) {
+        return;
+    }
+
+    // If we cannot find the device ID, let's remove it.
+    // @ts-ignore
+    if (!devices.find(device => device.deviceId === constraints.deviceId.exact)) {
+        audioConstraintStore.setDeviceId(undefined);
+    }
+});

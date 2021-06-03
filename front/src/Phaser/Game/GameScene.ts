@@ -280,7 +280,7 @@ export class GameScene extends DirtyScene implements CenterListener {
         this.load.spritesheet('layout_modes', 'resources/objects/layout_modes.png', {frameWidth: 32, frameHeight: 32});
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
         //eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (this.load as any).rexWebFont({ 
+        (this.load as any).rexWebFont({
             custom: {
                 families: ['Press Start 2P'],
                 urls: ['/resources/fonts/fonts.css'],
@@ -966,6 +966,8 @@ ${escapedMessage}
         this.pinchManager?.destroy();
         this.emoteManager.destroy();
 
+        mediaManager.hideGameOverlay();
+
         for(const iframeEvents of this.iframeSubscriptionList){
             iframeEvents.unsubscribe();
         }
@@ -1460,8 +1462,8 @@ ${escapedMessage}
         this.connection?.emitActionableEvent(itemId, eventName, state, parameters);
     }
 
-    public onResize(ev: UIEvent): void {
-        super.onResize(ev);
+    public onResize(): void {
+        super.onResize();
         this.reposition();
 
         // Send new viewport to server
