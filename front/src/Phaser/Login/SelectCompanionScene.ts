@@ -24,6 +24,7 @@ export class SelectCompanionScene extends ResizableScene {
 
     private currentCompanion = 0;
     private pointerClicked: boolean = false;
+    private pointerTimer: number = 0;
 
     constructor() {
         super({
@@ -73,7 +74,10 @@ export class SelectCompanionScene extends ResizableScene {
     }
 
     update(time: number, delta: number): void {
-
+        this.pointerTimer -= delta;
+        if (this.pointerTimer <= 0) {
+            this.pointerClicked = false;
+        }
     }
 
     public selectCompanion(): void {
@@ -110,9 +114,9 @@ export class SelectCompanionScene extends ResizableScene {
                     return;
                 }
                 this.pointerClicked = true;
+                this.pointerTimer = 250;
                 this.currentCompanion = i;
                 this.moveCompanion();
-                setTimeout(() => {this.pointerClicked = false;}, 250)
             });
 
             this.companions.push(companion);
