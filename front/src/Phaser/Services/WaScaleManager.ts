@@ -60,7 +60,6 @@ class WaScaleManager {
 
     public saveZoom(): void {
         this._saveZoom = this.hdpiManager.zoomModifier;
-        console.log(this._saveZoom);
     }
 
     public restoreZoom(): void{
