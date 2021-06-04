@@ -12,6 +12,7 @@ export abstract class DirtyScene extends ResizableScene {
     private isAlreadyTracking: boolean = false;
     protected dirty:boolean = true;
     private objectListChanged:boolean = true;
+    private physicsEnabled: boolean = false;
 
     /**
      * Track all objects added to the scene and adds a callback each time an animation is added.
@@ -37,6 +38,27 @@ export abstract class DirtyScene extends ResizableScene {
         this.events.on(Events.RENDER, () => {
             this.objectListChanged = false;
         });
+
+        this.physics.disableUpdate();
+        this.events.on(Events.POST_UPDATE, () => {
+            let objectMoving = false;
+            for (const body of this.physics.world.bodies.entries) {
+                if (body.velocity.x !== 0 || body.velocity.y !== 0) {
+                    this.objectListChanged = true;
+                    objectMoving = true;
+                    if (!this.physicsEnabled) {
+                        this.physics.enableUpdate();
+                        this.physicsEnabled = true;
+                    }
+                    break;
+                }
+            }
+            if (!objectMoving && this.physicsEnabled) {
+                this.physics.disableUpdate();
+                this.physicsEnabled = false;
+            }
+        });
+
     }
 
     private trackAnimation(): void {
@@ -47,7 +69,7 @@ export abstract class DirtyScene extends ResizableScene {
         return this.dirty || this.objectListChanged;
     }
 
-    public onResize(ev: UIEvent): void {
+    public onResize(): void {
         this.objectListChanged = true;
     }
 }

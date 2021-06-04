@@ -66,6 +66,23 @@ message ReportPlayerMessage {
   string reportComment = 2;
 }
 
+message EmotePromptMessage {
+    string emote = 2;
+}
+
+message EmoteEventMessage {
+    int32 actorUserId = 1;
+    string emote = 2;
+}
+
+message RequestVisitCardMessage {
+    int32 targetUserId = 1;
+}
+
+message VisitCardMessage {
+    string url = 1;
+}
+
 message QueryJitsiJwtMessage {
   string jitsiRoom = 1;
   string tag = 2; // FIXME: rather than reading the tag from the query, we should read it from the current map!
@@ -84,6 +101,8 @@ message ClientToServerMessage {
     StopGlobalMessage stopGlobalMessage = 10;
     ReportPlayerMessage reportPlayerMessage = 11;
     QueryJitsiJwtMessage queryJitsiJwtMessage = 12;
+    EmotePromptMessage emotePromptMessage = 13;
+    RequestVisitCardMessage requestVisitCardMessage = 14;
   }
 }
 
@@ -122,6 +141,7 @@ message SubMessage {
     UserJoinedMessage userJoinedMessage = 4;
     UserLeftMessage userLeftMessage = 5;
     ItemEventMessage itemEventMessage = 6;
+    EmoteEventMessage emoteEventMessage = 7;
   }
 }
 
@@ -247,6 +267,8 @@ message ServerToClientMessage {
     WorldFullMessage worldFullMessage = 16;
     RefreshRoomMessage refreshRoomMessage = 17; 
     WorldConnexionMessage worldConnexionMessage = 18;
+    EmoteEventMessage emoteEventMessage = 19;
+    VisitCardMessage visitCardMessage = 20;
   }
 }
 
@@ -317,6 +339,8 @@ message PusherToBackMessage {
     QueryJitsiJwtMessage queryJitsiJwtMessage = 11;
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
+    EmotePromptMessage emotePromptMessage = 14;
+    RequestVisitCardMessage requestVisitCardMessage = 15;
   }
 }
 
@@ -334,6 +358,7 @@ message SubToPusherMessage {
     ItemEventMessage itemEventMessage = 6;
     SendUserMessage sendUserMessage = 7;
     BanUserMessage banUserMessage = 8;
+    EmoteEventMessage emoteEventMessage = 9;
   }
 }
 

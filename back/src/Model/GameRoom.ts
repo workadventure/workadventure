@@ -2,12 +2,12 @@ import {PointInterface} from "./Websocket/PointInterface";
 import {Group} from "./Group";
 import {User, UserSocket} from "./User";
 import {PositionInterface} from "_Model/PositionInterface";
-import {EntersCallback, LeavesCallback, MovesCallback} from "_Model/Zone";
+import {EmoteCallback, EntersCallback, LeavesCallback, MovesCallback} from "_Model/Zone";
 import {PositionNotifier} from "./PositionNotifier";
 import {Movable} from "_Model/Movable";
 import {extractDataFromPrivateRoomId, extractRoomSlugPublicRoomId, isRoomAnonymous} from "./RoomIdentifier";
 import {arrayIntersect} from "../Services/ArrayHelper";
-import {JoinRoomMessage} from "../Messages/generated/messages_pb";
+import {EmoteEventMessage, JoinRoomMessage} from "../Messages/generated/messages_pb";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
 import {ZoneSocket} from "src/RoomManager";
 import {Admin} from "../Model/Admin";
@@ -51,8 +51,9 @@ export class GameRoom {
                 groupRadius: number,
                 onEnters: EntersCallback,
                 onMoves: MovesCallback,
-                onLeaves: LeavesCallback)
-    {
+                onLeaves: LeavesCallback,
+                onEmote: EmoteCallback,
+    ) {
         this.roomId = roomId;
 
         if (isRoomAnonymous(roomId)) {
@@ -74,7 +75,7 @@ export class GameRoom {
         this.minDistance = minDistance;
         this.groupRadius = groupRadius;
         // A zone is 10 sprites wide.
-        this.positionNotifier = new PositionNotifier(320, 320, onEnters, onMoves, onLeaves);
+        this.positionNotifier = new PositionNotifier(320, 320, onEnters, onMoves, onLeaves, onEmote);
     }
 
     public getGroups(): Group[] {
@@ -88,7 +89,10 @@ export class GameRoom {
     public getUserByUuid(uuid: string): User|undefined {
         return this.usersByUuid.get(uuid);
     }
-
+    public getUserById(id: number): User|undefined {
+        return this.users.get(id);
+    }
+    
     public join(socket : UserSocket, joinRoomMessage: JoinRoomMessage): User {
         const positionMessage = joinRoomMessage.getPositionmessage();
         if (positionMessage === undefined) {
@@ -324,5 +328,9 @@ export class GameRoom {
     public incrementVersion(): number {
         this.versionNumber++
         return this.versionNumber;
+    }
+
+    public emitEmoteEvent(user: User, emoteEventMessage: EmoteEventMessage) {
+        this.positionNotifier.emitEmoteEvent(user, emoteEventMessage);
     }
 }

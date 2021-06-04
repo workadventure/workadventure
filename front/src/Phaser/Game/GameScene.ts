@@ -9,7 +9,7 @@ import type {
     PositionInterface,
     RoomJoinedMessageInterface
 } from "../../Connexion/ConnexionModels";
-import {CurrentGamerInterface, hasMovedEventName, Player} from "../Player/Player";
+import {hasMovedEventName, Player, requestEmoteEventName} from "../Player/Player";
 import {
     DEBUG_MODE,
     JITSI_PRIVATE_MODE,
@@ -29,7 +29,7 @@ import type {AddPlayerInterface} from "./AddPlayerInterface";
 import {PlayerAnimationDirections} from "../Player/Animation";
 import {PlayerMovement} from "./PlayerMovement";
 import {PlayersPositionInterpolator} from "./PlayersPositionInterpolator";
-import {RemotePlayer} from "../Entity/RemotePlayer";
+import {playerClickedEvent, RemotePlayer} from "../Entity/RemotePlayer";
 import {Queue} from 'queue-typescript';
 import {SimplePeer, UserSimplePeerInterface} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
@@ -52,6 +52,7 @@ import {mediaManager} from "../../WebRtc/MediaManager";
 import type {ItemFactoryInterface} from "../Items/ItemFactoryInterface";
 import type {ActionableItem} from "../Items/ActionableItem";
 import {UserInputManager} from "../UserInput/UserInputManager";
+import {soundManager} from "./SoundManager";
 import type {UserMovedMessage} from "../../Messages/generated/messages_pb";
 import {ProtobufClientUtils} from "../../Network/ProtobufClientUtils";
 import {connectionManager} from "../../Connexion/ConnectionManager";
@@ -90,7 +91,10 @@ import {TextUtils} from "../Components/TextUtils";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
 import {joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey} from "../Components/MobileJoystick";
+import {DEPTH_OVERLAY_INDEX} from "./DepthIndexes";
 import {waScaleManager} from "../Services/WaScaleManager";
+import {peerStore} from "../../Stores/PeerStore";
+import {EmoteManager} from "./EmoteManager";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -131,7 +135,7 @@ const defaultStartLayerName = 'start';
 
 export class GameScene extends DirtyScene implements CenterListener {
     Terrains : Array<Phaser.Tilemaps.Tileset>;
-    CurrentPlayer!: CurrentGamerInterface;
+    CurrentPlayer!: Player;
     MapPlayers!: Phaser.Physics.Arcade.Group;
     MapPlayersByKey : Map<number, RemotePlayer> = new Map<number, RemotePlayer>();
     Map!: Phaser.Tilemaps.Tilemap;
@@ -156,6 +160,7 @@ export class GameScene extends DirtyScene implements CenterListener {
     private createPromise: Promise<void>;
     private createPromiseResolve!: (value?: void | PromiseLike<void>) => void;
     private iframeSubscriptionList! : Array<Subscription>;
+    private peerStoreUnsubscribe!: () => void;
     MapUrlFile: string;
     RoomId: string;
     instance: string;
@@ -186,9 +191,8 @@ export class GameScene extends DirtyScene implements CenterListener {
     private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string|undefined;
     private pinchManager: PinchManager|undefined;
-    private physicsEnabled: boolean = true;
     private mapTransitioning: boolean = false; //used to prevent transitions happenning at the same time.
-    private onVisibilityChangeCallback: () => void;
+    private emoteManager!: EmoteManager;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
@@ -208,7 +212,6 @@ export class GameScene extends DirtyScene implements CenterListener {
         this.connectionAnswerPromise = new Promise<RoomJoinedMessageInterface>((resolve, reject): void => {
             this.connectionAnswerPromiseResolve = resolve;
         });
-        this.onVisibilityChangeCallback = this.onVisibilityChange.bind(this);
     }
 
     //hook preload scene
@@ -226,6 +229,11 @@ export class GameScene extends DirtyScene implements CenterListener {
             this.load.image(joystickBaseKey, joystickBaseImg);
             this.load.image(joystickThumbKey, joystickThumbImg);
         }
+        this.load.audio('audio-webrtc-in', '/resources/objects/webrtc-in.mp3');
+        this.load.audio('audio-webrtc-out', '/resources/objects/webrtc-out.mp3');
+        //this.load.audio('audio-report-message', '/resources/objects/report-message.mp3');
+        this.sound.pauseOnBlur = false;
+
         this.load.on(FILE_LOAD_ERROR, (file: {src: string}) => {
             // If we happen to be in HTTP and we are trying to load a URL in HTTPS only... (this happens only in dev environments)
             if (window.location.protocol === 'http:' && file.src === this.MapUrlFile && file.src.startsWith('http:') && this.originalMapUrl === undefined) {
@@ -272,6 +280,14 @@ export class GameScene extends DirtyScene implements CenterListener {
 
         this.load.spritesheet('layout_modes', 'resources/objects/layout_modes.png', {frameWidth: 32, frameHeight: 32});
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
+        //eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (this.load as any).rexWebFont({
+            custom: {
+                families: ['Press Start 2P'],
+                urls: ['/resources/fonts/fonts.css'],
+                testString: 'abcdefg'
+            },
+        });
 
         //this function must stay at the end of preload function
         addLoader(this);
@@ -421,7 +437,7 @@ export class GameScene extends DirtyScene implements CenterListener {
                 }
             }
             if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
-                depth = 10000;
+                depth = DEPTH_OVERLAY_INDEX;
             }
             if (layer.type === 'objectgroup') {
                 for (const object of layer.objects) {
@@ -508,7 +524,22 @@ export class GameScene extends DirtyScene implements CenterListener {
             this.connect();
         }
 
-        document.addEventListener('visibilitychange', this.onVisibilityChangeCallback);
+        this.emoteManager = new EmoteManager(this);
+
+        let oldPeerNumber = 0;
+        this.peerStoreUnsubscribe = peerStore.subscribe((peers) => {
+            const newPeerNumber = peers.size;
+            if (newPeerNumber > oldPeerNumber) {
+                this.sound.play('audio-webrtc-in', {
+                    volume: 0.2
+                });
+            } else if (newPeerNumber < oldPeerNumber) {
+                this.sound.play('audio-webrtc-out', {
+                    volume: 0.2
+                });
+            }
+            oldPeerNumber = newPeerNumber;
+        });
     }
 
     /**
@@ -613,6 +644,7 @@ export class GameScene extends DirtyScene implements CenterListener {
 
             // When connection is performed, let's connect SimplePeer
             this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic, this.playerName);
+            peerStore.connectToSimplePeer(this.simplePeer);
             this.GlobalMessageManager = new GlobalMessageManager(this.connection);
             userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
@@ -630,7 +662,6 @@ export class GameScene extends DirtyScene implements CenterListener {
                         self.chatModeSprite.setVisible(false);
                         self.openChatIcon.setVisible(false);
                         audioManager.restoreVolume();
-                        self.onVisibilityChange();
                     }
                 }
             })
@@ -868,9 +899,28 @@ ${escapedMessage}
             this.userInputManager.disableControls();
         }));
 
+       this.iframeSubscriptionList.push(iframeListener.playSoundStream.subscribe((playSoundEvent)=>
+       {
+           const url = new URL(playSoundEvent.url, this.MapUrlFile);
+           soundManager.playSound(this.load,this.sound,url.toString(),playSoundEvent.config);
+       }))
+
+        this.iframeSubscriptionList.push(iframeListener.stopSoundStream.subscribe((stopSoundEvent)=>
+        {
+            const url = new URL(stopSoundEvent.url, this.MapUrlFile);
+            soundManager.stopSound(this.sound,url.toString());
+        }))
+
+        this.iframeSubscriptionList.push(iframeListener.loadSoundStream.subscribe((loadSoundEvent)=>
+        {
+            const url = new URL(loadSoundEvent.url, this.MapUrlFile);
+            soundManager.loadSound(this.load,this.sound,url.toString());
+        }))
+
        this.iframeSubscriptionList.push(iframeListener.enablePlayerControlStream.subscribe(()=>{
             this.userInputManager.restoreControls();
         }));
+
         let scriptedBubbleSprite : Sprite;
        this.iframeSubscriptionList.push(iframeListener.displayBubbleStream.subscribe(()=>{
             scriptedBubbleSprite = new Sprite(this,this.CurrentPlayer.x + 25,this.CurrentPlayer.y,'circleSprite-white');
@@ -930,12 +980,14 @@ ${escapedMessage}
         this.messageSubscription?.unsubscribe();
         this.userInputManager.destroy();
         this.pinchManager?.destroy();
+        this.emoteManager.destroy();
+        this.peerStoreUnsubscribe();
+
+        mediaManager.hideGameOverlay();
 
         for(const iframeEvents of this.iframeSubscriptionList){
             iframeEvents.unsubscribe();
         }
-
-        document.removeEventListener('visibilitychange', this.onVisibilityChangeCallback);
     }
 
     private removeAllRemotePlayers(): void {
@@ -1088,8 +1140,6 @@ ${escapedMessage}
     }
 
     createCollisionWithPlayer() {
-        this.physics.disableUpdate();
-        this.physicsEnabled = false;
         //add collision layer
         this.Layers.forEach((Layer: Phaser.Tilemaps.TilemapLayer) => {
             this.physics.add.collider(this.CurrentPlayer, Layer, (object1: GameObject, object2: GameObject) => {
@@ -1123,6 +1173,15 @@ ${escapedMessage}
                 this.companion,
                 this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
+            this.CurrentPlayer.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+                if (pointer.wasTouch && (pointer.event as TouchEvent).touches.length > 1) {
+                    return; //we don't want the menu to open when pinching on a touch screen.
+                }
+                this.emoteManager.getMenuImages().then((emoteMenuElements) => this.CurrentPlayer.openOrCloseEmoteMenu(emoteMenuElements))
+            })
+            this.CurrentPlayer.on(requestEmoteEventName, (emoteKey: string) => {
+                this.connection?.emitEmoteEvent(emoteKey);
+            })
         }catch (err){
             if(err instanceof TextureError) {
                 gameManager.leaveGame(this, SelectCharacterSceneName, new SelectCharacterScene());
@@ -1223,20 +1282,7 @@ ${escapedMessage}
         this.dirty = false;
         mediaManager.updateScene();
         this.currentTick = time;
-        if (this.CurrentPlayer.isMoving()) {
-            this.dirty = true;
-        }
         this.CurrentPlayer.moveUser(delta);
-        if (this.CurrentPlayer.isMoving()) {
-            this.dirty = true;
-            if (!this.physicsEnabled) {
-                this.physics.enableUpdate();
-                this.physicsEnabled = true;
-            }
-        } else if (this.physicsEnabled) {
-            this.physics.disableUpdate();
-            this.physicsEnabled = false;
-        }
 
         // Let's handle all events
         while (this.pendingEvents.length !== 0) {
@@ -1333,6 +1379,9 @@ ${escapedMessage}
             addPlayerData.companion,
             addPlayerData.companion !== null ? lazyLoadCompanionResource(this.load, addPlayerData.companion) : undefined
         );
+        player.on(playerClickedEvent, (userID:number) => {
+            this.connection?.requestVisitCardUrl(userID);
+        })
         this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);
         player.updatePosition(addPlayerData.position);
@@ -1436,8 +1485,8 @@ ${escapedMessage}
         this.connection?.emitActionableEvent(itemId, eventName, state, parameters);
     }
 
-    public onResize(ev: UIEvent): void {
-        super.onResize(ev);
+    public onResize(): void {
+        super.onResize();
         this.reposition();
 
         // Send new viewport to server
@@ -1504,8 +1553,6 @@ ${escapedMessage}
         mediaManager.addTriggerCloseJitsiFrameButton('close-jisi',() => {
             this.stopJitsi();
         });
-
-        this.onVisibilityChange();
     }
 
     public stopJitsi(): void {
@@ -1514,7 +1561,6 @@ ${escapedMessage}
         mediaManager.showGameOverlay();
 
         mediaManager.removeTriggerCloseJitsiFrameButton('close-jisi');
-        this.onVisibilityChange();
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
@@ -1553,21 +1599,5 @@ ${escapedMessage}
     zoomByFactor(zoomFactor: number) {
         waScaleManager.zoomModifier *= zoomFactor;
         this.updateCameraOffset();
-    }
-
-    private onVisibilityChange(): void {
-        // If the overlay is not displayed, we are in Jitsi. We don't need the webcam.
-        if (!mediaManager.isGameOverlayVisible()) {
-            mediaManager.blurCamera();
-            return;
-        }
-
-        if (document.visibilityState === 'visible') {
-            mediaManager.focusCamera();
-        } else {
-            if (this.simplePeer.getNbConnections() === 0) {
-                mediaManager.blurCamera();
-            }
-        }
     }
 }

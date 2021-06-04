@@ -133,19 +133,27 @@ body .message-info.warning{
     outline: none;
 }
 
-.video-container#div-myCamVideo{
+.video-container.div-myCamVideo{
     border: none;
+    background-color: transparent;
 }
 
-#div-myCamVideo {
+.div-myCamVideo {
     position: absolute;
     right: 15px;
     bottom: 30px;
     border-radius: 15px 15px 15px 15px;
     max-height: 20%;
+    transition: right 350ms;
 }
 
-video#myCamVideo{
+.div-myCamVideo.hide {
+    right: -20vw;
+}
+
+video.myCamVideo{
+    background-color: #00000099;
+    max-height: 20vh;
     width: 15vw;
     -webkit-transform: scaleX(-1);
     transform: scaleX(-1);
@@ -196,18 +204,20 @@ video#myCamVideo{
     display: inline-flex;
     bottom: 10px;
     right: 15px;
-    width: 15vw;
+    width: 180px;
     height: 40px;
     text-align: center;
     align-content: center;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-end;
     justify-items: center;
 }
 /*btn animation*/
 .btn-cam-action div{
     cursor: url('./images/cursor_pointer.png'), pointer;
-    /*position: absolute;*/
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border: solid 0px black;
     width: 44px;
     height: 44px;
@@ -216,7 +226,6 @@ video#myCamVideo{
     border-radius: 48px;
     transform: translateY(20px);
     transition-timing-function: ease-in-out;
-    margin-bottom: 20px;
     margin: 0 4%;
 }
 .btn-cam-action div.disabled {
@@ -248,6 +257,12 @@ video#myCamVideo{
     transition: all .2s;
     /*right: 224px;*/
 }
+.btn-monitor.hide {
+    transform: translateY(60px);
+}
+.btn-cam-action:hover .btn-monitor.hide{
+    transform: translateY(60px);
+}
 .btn-copy{
     pointer-events: auto;
     transition: all .3s;
@@ -257,8 +272,6 @@ video#myCamVideo{
 .btn-cam-action div img{
     height: 22px;
     width: 30px;
-    top: calc(48px - 37px);
-    left: calc(48px - 41px);
     position: relative;
     cursor: url('./images/cursor_pointer.png'), pointer;
 }
@@ -320,37 +333,6 @@ video#myCamVideo{
         opacity: 0;
     }
 }
-
-.webrtcsetup{
-    display: none;
-    position: absolute;
-    top: 140px;
-    left: 0;
-    right: 0;
-    margin-left: auto;
-    margin-right: auto;
-    height: 50%;
-    width: 50%;
-    border: white 6px solid;
-}
-.webrtcsetup .background-img {
-    position: relative;
-    display: block;
-    width: 40%;
-    height: 60%;
-    margin-left: auto;
-    margin-right: auto;
-    top: 50%;
-    transform: translateY(-50%);
-}
-#myCamVideoSetup {
-    width: 100%;
-    height: 100%;
-}
-.webrtcsetup.active{
-    display: block;
-}
-
 
 /* New layout */
 body {
@@ -828,35 +810,6 @@ input[type=range]:focus::-ms-fill-upper {
 }
 
 
-
-/*audio html when audio message playing*/
-.main-container .audio-playing {
-    position: absolute;
-    width: 200px;
-    height: 54px;
-    right: -210px;
-    top: 40px;
-    transition: all 0.1s ease-out;
-    background-color: black;
-    border-radius: 30px 0 0 30px;
-    display: inline-flex;
-}
-
-.main-container .audio-playing.active{
-    right: 0;
-}
-.main-container .audio-playing img{
-    /*width: 30px;*/
-    border-radius: 50%;
-    background-color: #ffda01;
-    padding: 10px;
-}
-.main-container .audio-playing p{
-    color: white;
-    margin-left: 10px;
-    margin-top: 14px;
-}
-
 /* VIDEO QUALITY */
 .main-console div.setting h1{
     color: white;
@@ -1232,4 +1185,22 @@ div.action.danger p.action-body{
     width: 100%;
     height: 100%;
     pointer-events: none;
+
+    & > div {
+        position: relative;
+        width: 100%;
+        height: 100%;
+
+        & > div {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        & > div.scrollable {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            pointer-events: auto;
+        }
+    }
 }

@@ -12,7 +12,13 @@ import {
     WebRtcSignalToServerMessage,
     PlayGlobalMessage,
     ReportPlayerMessage,
-    QueryJitsiJwtMessage, SendUserMessage, ServerToClientMessage, CompanionMessage
+    EmoteEventMessage,
+    QueryJitsiJwtMessage,
+    SendUserMessage,
+    ServerToClientMessage,
+    CompanionMessage,
+    EmotePromptMessage,
+    RequestVisitCardMessage
 } from "../Messages/generated/messages_pb";
 import {UserMovesMessage} from "../Messages/generated/messages_pb";
 import {TemplatedApp} from "uWebSockets.js"
@@ -182,7 +188,7 @@ export class IoSocketController {
                                         // If we get an HTTP 404, the token is invalid. Let's perform an anonymous login!
                                         console.warn('Cannot find user with uuid "'+userUuid+'". Performing an anonymous login instead.');
                                     } else if(err?.response?.status == 403) {
-                                        // If we get an HTTP 404, the world is full. We need to broadcast a special error to the client.
+                                        // If we get an HTTP 403, the world is full. We need to broadcast a special error to the client.
                                         // we finish immediately the upgrade then we will close the socket as soon as it starts opening.
                                         return res.upgrade({
                                             rejected: true,
@@ -330,6 +336,11 @@ export class IoSocketController {
                     socketManager.handleReportMessage(client, message.getReportplayermessage() as ReportPlayerMessage);
                 } else if (message.hasQueryjitsijwtmessage()){
                     socketManager.handleQueryJitsiJwtMessage(client, message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage);
+                } else if (message.hasEmotepromptmessage()){
+                    socketManager.handleEmotePromptMessage(client, message.getEmotepromptmessage() as EmotePromptMessage);
+                } else if (message.hasRequestvisitcardmessage()) {
+                    
+                    socketManager.handleRequestVisitCardMessage(client, message.getRequestvisitcardmessage() as RequestVisitCardMessage);
                 }
 
                     /* Ok is false if backpressure was built up, wait for drain */

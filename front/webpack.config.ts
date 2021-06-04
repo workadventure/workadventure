@@ -7,6 +7,7 @@ import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import sveltePreprocess from 'svelte-preprocess';
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import NodePolyfillPlugin from 'node-polyfill-webpack-plugin';
+import {DISPLAY_TERMS_OF_USE} from "./src/Enum/EnvironmentVariable";
 
 const mode = process.env.NODE_ENV ?? 'development';
 const isProduction = mode === 'production';
@@ -88,7 +89,16 @@ module.exports = {
                         preprocess: sveltePreprocess({
                             scss: true,
                             sass: true,
-                        })
+                        }),
+                        onwarn: function (warning: { code: string }, handleWarning: (warning: { code: string }) => void) {
+                            // See https://github.com/sveltejs/svelte/issues/4946#issuecomment-662168782
+
+                            if (warning.code === 'a11y-no-onchange') { return }
+                            if (warning.code === 'a11y-autofocus') { return }
+
+                            // process as usual
+                            handleWarning(warning);
+                        }
                     }
                 }
             },
@@ -102,9 +112,17 @@ module.exports = {
                 }
             },
             {
-                test: /\.(ttf|eot|svg|png|gif|jpg)$/,
+                test: /\.(eot|svg|png|gif|jpg)$/,
                 exclude: /node_modules/,
                 type: 'asset'
+            },
+            {
+                test: /\.(woff(2)?|ttf)$/,
+                type: 'asset',
+                generator: {
+                    filename: 'fonts/[name][ext]'
+                }
+
             }
         ],
     },
@@ -167,7 +185,8 @@ module.exports = {
             'JITSI_PRIVATE_MODE': null,
             'START_ROOM_URL': null,
             'MAX_USERNAME_LENGTH': 8,
-            'MAX_PER_GROUP': 4
+            'MAX_PER_GROUP': 4,
+            'DISPLAY_TERMS_OF_USE': false,
         })
     ],
 

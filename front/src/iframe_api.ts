@@ -9,6 +9,10 @@ import type { ClosePopupEvent } from "./Api/Events/ClosePopupEvent";
 import type { OpenTabEvent } from "./Api/Events/OpenTabEvent";
 import type { GoToPageEvent } from "./Api/Events/GoToPageEvent";
 import type { OpenCoWebSiteEvent } from "./Api/Events/OpenCoWebSiteEvent";
+import type {PlaySoundEvent} from "./Api/Events/PlaySoundEvent";
+import type  {StopSoundEvent} from "./Api/Events/StopSoundEvent";
+import type {LoadSoundEvent} from "./Api/Events/LoadSoundEvent";
+import SoundConfig = Phaser.Types.Sound.SoundConfig;
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
@@ -24,6 +28,7 @@ interface WorkAdventureApi {
     restorePlayerControls(): void;
     displayBubble(): void;
     removeBubble(): void;
+    loadSound(url : string): Sound;
 }
 
 declare global {
@@ -57,7 +62,7 @@ interface ButtonDescriptor {
     callback: ButtonClickedCallback,
 }
 
-class Popup {
+export class Popup {
     constructor(private id: number) {
     }
 
@@ -72,6 +77,41 @@ class Popup {
             } as ClosePopupEvent
         }, '*');
     }
+}
+
+export class Sound {
+    constructor(private url: string) {
+        window.parent.postMessage({
+            "type" : 'loadSound',
+            "data": {
+                url: this.url,
+            } as LoadSoundEvent
+
+        },'*');
+    }
+
+    public play(config : SoundConfig) {
+        window.parent.postMessage({
+            "type" : 'playSound',
+            "data": {
+                url: this.url,
+                config
+            } as PlaySoundEvent
+
+        },'*');
+        return this.url;
+    }
+    public stop() {
+        window.parent.postMessage({
+            "type" : 'stopSound',
+            "data": {
+                url: this.url,
+            } as StopSoundEvent
+
+        },'*');
+        return this.url;
+    }
+
 }
 
 window.WA = {
@@ -113,7 +153,11 @@ window.WA = {
         }, '*');
     },
 
-    goToPage(url: string): void {
+    loadSound(url: string) : Sound {
+        return new Sound(url);
+    },
+
+    goToPage(url : string) : void{
         window.parent.postMessage({
             "type": 'goToPage',
             "data": {

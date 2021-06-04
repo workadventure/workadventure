@@ -11,6 +11,10 @@ import {AbstractCharacterScene} from "./AbstractCharacterScene";
 import {areCharacterLayersValid} from "../../Connexion/LocalUser";
 import { MenuScene } from "../Menu/MenuScene";
 import { SelectCharacterSceneName } from "./SelectCharacterScene";
+import {customCharacterSceneVisibleStore} from "../../Stores/CustomCharacterStore";
+import {selectCharacterSceneVisibleStore} from "../../Stores/SelectCharacterStore";
+import {waScaleManager} from "../Services/WaScaleManager";
+import {isMobile} from "../../Enum/EnvironmentVariable";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -22,10 +26,10 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     private selectedLayers: number[] = [0];
     private containersRow: Container[][] = [];
-    private activeRow:number = 0;
+    public activeRow:number = 0;
     private layers: BodyResourceDescriptionInterface[][] = [];
 
-    private customizeSceneElement!: Phaser.GameObjects.DOMElement;
+    protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
 
     constructor() {
         super({
@@ -36,7 +40,6 @@ export class CustomizeScene extends AbstractCharacterScene {
     preload() {
         this.load.html(customizeSceneKey, 'resources/html/CustomCharacterScene.html');
 
-        this.layers = loadAllLayers(this.load);
         this.loadCustomSceneSelectCharacters().then((bodyResourceDescriptions) => {
             bodyResourceDescriptions.forEach((bodyResourceDescription) => {
                 if(bodyResourceDescription.level == undefined || bodyResourceDescription.level < 0 || bodyResourceDescription.level > 5 ){
@@ -44,42 +47,27 @@ export class CustomizeScene extends AbstractCharacterScene {
                 }
                 this.layers[bodyResourceDescription.level].unshift(bodyResourceDescription);
             });
+            this.lazyloadingAttempt = true;
         });
+
+        this.layers = loadAllLayers(this.load);
+        this.lazyloadingAttempt = false;
+
 
         //this function must stay at the end of preload function
         addLoader(this);
     }
 
     create() {
-        this.customizeSceneElement = this.add.dom(-1000, 0).createFromCache(customizeSceneKey);
-        this.centerXDomElement(this.customizeSceneElement, 150);
-        MenuScene.revealMenusAfterInit(this.customizeSceneElement, customizeSceneKey);
-
-        this.customizeSceneElement.addListener('click');
-        this.customizeSceneElement.on('click',  (event:MouseEvent) => {
-            event.preventDefault();
-            if((event?.target as HTMLInputElement).id === 'customizeSceneButtonLeft') {
-                this.moveCursorHorizontally(-1);
-            }else if((event?.target as HTMLInputElement).id === 'customizeSceneButtonRight') {
-                this.moveCursorHorizontally(1);
-            }else if((event?.target as HTMLInputElement).id === 'customizeSceneButtonDown') {
-                this.moveCursorVertically(1);
-            }else if((event?.target as HTMLInputElement).id === 'customizeSceneButtonUp') {
-                this.moveCursorVertically(-1);
-            }else if((event?.target as HTMLInputElement).id === 'customizeSceneFormBack') {
-                if(this.activeRow > 0){
-                    this.moveCursorVertically(-1);
-                }else{
-                    this.backToPreviousScene();
-                }
-            }else if((event?.target as HTMLButtonElement).id === 'customizeSceneFormSubmit') {
-                if(this.activeRow < 5){
-                    this.moveCursorVertically(1);
-                }else{
-                    this.nextSceneToCamera();
-                }
-            }
+        customCharacterSceneVisibleStore.set(true);
+        this.events.addListener('wake', () => {
+            waScaleManager.saveZoom();
+            waScaleManager.zoomModifier = isMobile() ? 3 : 1;
+            customCharacterSceneVisibleStore.set(true);
         });
+
+        waScaleManager.saveZoom();
+        waScaleManager.zoomModifier = isMobile() ? 3 : 1;
 
         this.Rectangle = this.add.rectangle(this.cameras.main.worldView.x + this.cameras.main.width / 2, this.cameras.main.worldView.y + this.cameras.main.height / 3, 32, 33)
         this.Rectangle.setStrokeStyle(2, 0xFFFFFF);
@@ -116,7 +104,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.onResize();
     }
 
-    private moveCursorHorizontally(index: number): void {
+    public moveCursorHorizontally(index: number): void {
         this.selectedLayers[this.activeRow] += index;
         if (this.selectedLayers[this.activeRow] < 0) {
             this.selectedLayers[this.activeRow] = 0
@@ -128,27 +116,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.saveInLocalStorage();
     }
 
-    private moveCursorVertically(index:number): void {
-
-        if(index === -1 && this.activeRow === 5){
-            const button = this.customizeSceneElement.getChildByID('customizeSceneFormSubmit') as HTMLButtonElement;
-            button.innerHTML = `Next <img src="resources/objects/arrow_up.png"/>`;
-        }
-
-        if(index === 1 && this.activeRow === 4){
-            const button = this.customizeSceneElement.getChildByID('customizeSceneFormSubmit') as HTMLButtonElement;
-            button.innerText = 'Finish';
-        }
-
-        if(index === -1 && this.activeRow === 1){
-            const button = this.customizeSceneElement.getChildByID('customizeSceneFormBack') as HTMLButtonElement;
-            button.innerText = `Return`;
-        }
-
-        if(index === 1 && this.activeRow === 0){
-            const button = this.customizeSceneElement.getChildByID('customizeSceneFormBack') as HTMLButtonElement;
-            button.innerHTML = `Back <img src="resources/objects/arrow_up.png"/>`;
-        }
+    public moveCursorVertically(index:number): void {
 
         this.activeRow += index;
         if (this.activeRow < 0) {
@@ -262,6 +230,10 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     update(time: number, delta: number): void {
 
+        if(this.lazyloadingAttempt){
+            this.moveLayers();
+            this.lazyloadingAttempt = false;
+        }
     }
 
      public onResize(): void {
@@ -269,8 +241,6 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         this.Rectangle.x = this.cameras.main.worldView.x + this.cameras.main.width / 2;
         this.Rectangle.y = this.cameras.main.worldView.y + this.cameras.main.height / 3;
-
-        this.centerXDomElement(this.customizeSceneElement, 150);
      }
 
     private nextSceneToCamera(){
@@ -288,12 +258,16 @@ export class CustomizeScene extends AbstractCharacterScene {
 
             gameManager.setCharacterLayers(layers);
             this.scene.sleep(CustomizeSceneName);
-            this.scene.remove(SelectCharacterSceneName);
+            waScaleManager.restoreZoom();
+            this.events.removeListener('wake');
             gameManager.tryResumingGame(this, EnableCameraSceneName);
+            customCharacterSceneVisibleStore.set(false);
     }
 
     private backToPreviousScene(){
         this.scene.sleep(CustomizeSceneName);
+        waScaleManager.restoreZoom();
         this.scene.run(SelectCharacterSceneName);
+        customCharacterSceneVisibleStore.set(false);
     }
 }
