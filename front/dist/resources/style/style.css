@@ -381,7 +381,7 @@ body {
         max-height: 25%;
     }
 
-    
+
 }
 
 #game {
@@ -1112,6 +1112,10 @@ div.modal-report-user{
     word-wrap: break-word;
 }
 .discussion .messages .message p a{
+    color: white;
+}
+
+.discussion .messages .message p a:visited{
     color: white;
 }
 
