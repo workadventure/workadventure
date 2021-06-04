@@ -236,6 +236,9 @@ export class CustomizeScene extends AbstractCharacterScene {
         }
     }
 
+
+
+
      public onResize(): void {
         this.moveLayers();
 
