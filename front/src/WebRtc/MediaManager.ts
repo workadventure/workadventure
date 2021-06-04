@@ -65,6 +65,7 @@ export class MediaManager {
             }
         });
 
+        let isScreenSharing = false;
         screenSharingLocalStreamStore.subscribe((result) => {
             if (result.type === 'error') {
                 console.error(result.error);
@@ -75,10 +76,14 @@ export class MediaManager {
             }
 
             if (result.stream !== null) {
+                isScreenSharing = true;
                 this.addScreenSharingActiveVideo('me', DivImportance.Normal);
                 HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('screen-sharing-me').srcObject = result.stream;
             } else {
-                this.removeActiveScreenSharingVideo('me');
+                if (isScreenSharing) {
+                    isScreenSharing = false;
+                    this.removeActiveScreenSharingVideo('me');
+                }
             }
 
         });
