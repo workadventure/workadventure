@@ -10,7 +10,13 @@ function createErrorStore() {
         subscribe,
         addErrorMessage: (e: string|Error): void => {
             update((messages) => {
-                messages.push(e.toString());
+                let message: string;
+                if (e instanceof Error) {
+                    message = e.message;
+                } else {
+                    message = e;
+                }
+                messages.push(message);
                 return messages;
             });
         },
