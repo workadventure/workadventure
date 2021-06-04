@@ -65,6 +65,7 @@ export class MediaManager {
             }
         });
 
+        let isScreenSharing = false;
         screenSharingLocalStreamStore.subscribe((result) => {
             if (result.type === 'error') {
                 console.error(result.error);
@@ -75,10 +76,14 @@ export class MediaManager {
             }
 
             if (result.stream !== null) {
+                isScreenSharing = true;
                 this.addScreenSharingActiveVideo('me', DivImportance.Normal);
                 HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('screen-sharing-me').srcObject = result.stream;
             } else {
-                this.removeActiveScreenSharingVideo('me');
+                if (isScreenSharing) {
+                    isScreenSharing = false;
+                    this.removeActiveScreenSharingVideo('me');
+                }
             }
 
         });
@@ -145,7 +150,7 @@ export class MediaManager {
                     <img title="report this user" src="resources/logos/report.svg">
                     <span>Report/Block</span>
                 </button>
-                <video id="${userId}" autoplay></video>
+                <video id="${userId}" autoplay playsinline></video>
                 <img src="resources/logos/blockSign.svg" id="blocking-${userId}" class="block-logo">
                 <div id="soundMeter-${userId}" class="sound-progress">
                     <span></span>
@@ -182,7 +187,7 @@ export class MediaManager {
         userId = this.getScreenSharingId(userId);
         const html = `
             <div id="div-${userId}" class="video-container">
-                <video id="${userId}" autoplay></video>
+                <video id="${userId}" autoplay playsinline></video>
             </div>
         `;
 

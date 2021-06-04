@@ -8,7 +8,7 @@ function close(): boolean {
 
 </script>
 
-<dialog class="error-dialog nes-dialog is-dark is-rounded" id="dialog-dark-rounded" open>
+<div class="error-div nes-container is-dark is-rounded" open>
     <p class="nes-text is-error title">Error</p>
     <div class="body">
     {#each $errorStore as error}
@@ -18,12 +18,16 @@ function close(): boolean {
     <div class="button-bar">
         <button class="nes-btn is-error" on:click={close}>Close</button>
     </div>
-</dialog>
+</div>
 
 <style lang="scss">
-    dialog.error-dialog {
+    div.error-div {
       pointer-events: auto;
-      top: 10%;
+      margin-top: 10vh;
+      margin-right: auto;
+      margin-left: auto;
+      width: max-content;
+      max-width: 80vw;
 
       .button-bar {
         text-align: center;

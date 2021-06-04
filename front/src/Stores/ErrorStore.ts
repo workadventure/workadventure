@@ -9,8 +9,18 @@ function createErrorStore() {
     return {
         subscribe,
         addErrorMessage: (e: string|Error): void => {
-            update((messages) => {
-                messages.push(e.toString());
+            update((messages: string[]) => {
+                let message: string;
+                if (e instanceof Error) {
+                    message = e.message;
+                } else {
+                    message = e;
+                }
+
+                if (!messages.includes(message)) {
+                    messages.push(message);
+                }
+
                 return messages;
             });
         },
