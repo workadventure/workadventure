@@ -1,14 +1,18 @@
-import {ChatEvent, isChatEvent} from "./Api/Events/ChatEvent";
-import {isIframeEventWrapper} from "./Api/Events/IframeEvent";
-import {isUserInputChatEvent, UserInputChatEvent} from "./Api/Events/UserInputChatEvent";
-import {Subject} from "rxjs";
-import {EnterLeaveEvent, isEnterLeaveEvent} from "./Api/Events/EnterLeaveEvent";
-import {OpenPopupEvent} from "./Api/Events/OpenPopupEvent";
-import {isButtonClickedEvent} from "./Api/Events/ButtonClickedEvent";
-import {ClosePopupEvent} from "./Api/Events/ClosePopupEvent";
-import {OpenTabEvent} from "./Api/Events/OpenTabEvent";
-import {GoToPageEvent} from "./Api/Events/GoToPageEvent";
-import {OpenCoWebSiteEvent} from "./Api/Events/OpenCoWebSiteEvent";
+import type { ChatEvent } from "./Api/Events/ChatEvent";
+import { isIframeResponseEventWrapper } from "./Api/Events/IframeEvent";
+import { isUserInputChatEvent, UserInputChatEvent } from "./Api/Events/UserInputChatEvent";
+import { Subject } from "rxjs";
+import { EnterLeaveEvent, isEnterLeaveEvent } from "./Api/Events/EnterLeaveEvent";
+import type { OpenPopupEvent } from "./Api/Events/OpenPopupEvent";
+import { isButtonClickedEvent } from "./Api/Events/ButtonClickedEvent";
+import type { ClosePopupEvent } from "./Api/Events/ClosePopupEvent";
+import type { OpenTabEvent } from "./Api/Events/OpenTabEvent";
+import type { GoToPageEvent } from "./Api/Events/GoToPageEvent";
+import type { OpenCoWebSiteEvent } from "./Api/Events/OpenCoWebSiteEvent";
+import type {PlaySoundEvent} from "./Api/Events/PlaySoundEvent";
+import type  {StopSoundEvent} from "./Api/Events/StopSoundEvent";
+import type {LoadSoundEvent} from "./Api/Events/LoadSoundEvent";
+import SoundConfig = Phaser.Types.Sound.SoundConfig;
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
@@ -20,10 +24,11 @@ interface WorkAdventureApi {
     goToPage(url : string): void;
     openCoWebSite(url : string): void;
     closeCoWebSite(): void;
-    disablePlayerControl() : void;
-    restorePlayerControl() : void;
-    displayBubble() : void;
-    removeBubble() : void;
+    disablePlayerControls(): void;
+    restorePlayerControls(): void;
+    displayBubble(): void;
+    removeBubble(): void;
+    loadSound(url : string): Sound;
 }
 
 declare global {
@@ -50,14 +55,14 @@ interface ButtonDescriptor {
     /**
      * The type of the button. Can be one of "normal", "primary", "success", "warning", "error", "disabled"
      */
-    className?: "normal"|"primary"|"success"|"warning"|"error"|"disabled",
+    className?: "normal" | "primary" | "success" | "warning" | "error" | "disabled",
     /**
      * Callback called if the button is pressed
      */
     callback: ButtonClickedCallback,
 }
 
-class Popup {
+export class Popup {
     constructor(private id: number) {
     }
 
@@ -74,6 +79,41 @@ class Popup {
     }
 }
 
+export class Sound {
+    constructor(private url: string) {
+        window.parent.postMessage({
+            "type" : 'loadSound',
+            "data": {
+                url: this.url,
+            } as LoadSoundEvent
+
+        },'*');
+    }
+
+    public play(config : SoundConfig) {
+        window.parent.postMessage({
+            "type" : 'playSound',
+            "data": {
+                url: this.url,
+                config
+            } as PlaySoundEvent
+
+        },'*');
+        return this.url;
+    }
+    public stop() {
+        window.parent.postMessage({
+            "type" : 'stopSound',
+            "data": {
+                url: this.url,
+            } as StopSoundEvent
+
+        },'*');
+        return this.url;
+    }
+
+}
+
 window.WA = {
     /**
      * Send a message in the chat.
@@ -88,38 +128,42 @@ window.WA = {
             } as ChatEvent
         }, '*');
     },
-    disablePlayerControl() : void {
-        window.parent.postMessage({'type' : 'disablePlayerControl'},'*');
+    disablePlayerControls(): void {
+        window.parent.postMessage({ 'type': 'disablePlayerControls' }, '*');
     },
 
-    restorePlayerControl() : void {
-        window.parent.postMessage({'type' : 'restorePlayerControl'},'*');
+    restorePlayerControls(): void {
+        window.parent.postMessage({ 'type': 'restorePlayerControls' }, '*');
     },
 
-    displayBubble() : void {
-        window.parent.postMessage({'type' : 'displayBubble'},'*');
+    displayBubble(): void {
+        window.parent.postMessage({ 'type': 'displayBubble' }, '*');
     },
 
-    removeBubble() : void {
-        window.parent.postMessage({'type' : 'removeBubble'},'*');
+    removeBubble(): void {
+        window.parent.postMessage({ 'type': 'removeBubble' }, '*');
     },
 
-    openTab(url : string) : void{
+    openTab(url: string): void {
         window.parent.postMessage({
-            "type" : 'openTab',
-            "data" : {
+            "type": 'openTab',
+            "data": {
                 url
             } as OpenTabEvent
-            },'*');
+        }, '*');
+    },
+
+    loadSound(url: string) : Sound {
+        return new Sound(url);
     },
 
     goToPage(url : string) : void{
         window.parent.postMessage({
-            "type" : 'goToPage',
-            "data" : {
+            "type": 'goToPage',
+            "data": {
                 url
             } as GoToPageEvent
-            },'*');
+        }, '*');
     },
 
     openCoWebSite(url : string) : void{
@@ -128,13 +172,13 @@ window.WA = {
             "data" : {
                 url
             } as OpenCoWebSiteEvent
-            },'*');
+        }, '*');
     },
 
-    closeCoWebSite() : void{
+    closeCoWebSite(): void {
         window.parent.postMessage({
-            "type" : 'closeCoWebSite'
-            },'*');
+            "type": 'closeCoWebSite'
+        }, '*');
     },
 
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup {
@@ -205,9 +249,9 @@ window.addEventListener('message', message => {
 
     const payload = message.data;
 
-    console.log(payload);
+    console.debug(payload);
 
-    if (isIframeEventWrapper(payload)) {
+    if (isIframeResponseEventWrapper(payload)) {
         const payloadData = payload.data;
         if (payload.type === 'userInputChat' && isUserInputChatEvent(payloadData)) {
             userInputChatStream.next(payloadData);
@@ -219,7 +263,7 @@ window.addEventListener('message', message => {
             const callback = popupCallbacks.get(payloadData.popupId)?.get(payloadData.buttonId);
             const popup = popups.get(payloadData.popupId);
             if (popup === undefined) {
-                throw new Error('Could not find popup with ID "'+payloadData.popupId+'"');
+                throw new Error('Could not find popup with ID "' + payloadData.popupId + '"');
             }
             if (callback) {
                 callback(popup);

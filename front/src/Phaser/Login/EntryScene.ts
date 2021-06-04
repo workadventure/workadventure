@@ -2,6 +2,7 @@ import {gameManager} from "../Game/GameManager";
 import {Scene} from "phaser";
 import {ErrorScene} from "../Reconnecting/ErrorScene";
 import {WAError} from "../Reconnecting/WAError";
+import {waScaleManager} from "../Services/WaScaleManager";
 
 export const EntrySceneName = "EntryScene";
 
@@ -17,7 +18,11 @@ export class EntryScene extends Scene {
     }
 
     create() {
+
         gameManager.init(this.scene).then((nextSceneName) => {
+            // Let's rescale before starting the game
+            // We can do it at this stage.
+            waScaleManager.applyNewSize();
             this.scene.start(nextSceneName);
         }).catch((err) => {
             if (err.response && err.response.status == 404) {

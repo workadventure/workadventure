@@ -1,66 +1,53 @@
-import {gameManager} from "../Game/GameManager";
-import {TextField} from "../Components/TextField";
-import Image = Phaser.GameObjects.Image;
-import Rectangle = Phaser.GameObjects.Rectangle;
-import {EnableCameraSceneName} from "./EnableCameraScene";
-import {CustomizeSceneName} from "./CustomizeScene";
-import {localUserStore} from "../../Connexion/LocalUserStore";
-import {loadAllDefaultModels} from "../Entity/PlayerTexturesLoadingManager";
-import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
-import {AbstractCharacterScene} from "./AbstractCharacterScene";
-import {areCharacterLayersValid} from "../../Connexion/LocalUser";
-import {touchScreenManager} from "../../Touch/TouchScreenManager";
-import {PinchManager} from "../UserInput/PinchManager";
-import {MenuScene} from "../Menu/MenuScene";
-import { SelectCharacterScene, SelectCharacterSceneName } from "./SelectCharacterScene";
+import { SelectCharacterScene } from "./SelectCharacterScene";
 
 export class SelectCharacterMobileScene extends SelectCharacterScene {
 
     create(){
         super.create();
+        this.onResize();
         this.selectedRectangle.destroy();
     }
-    
-    protected defineSetupPlayer(numero: number){
+
+    protected defineSetupPlayer(num: number){
         const deltaX = 30;
         const deltaY = 2;
         let [playerX, playerY] = this.getCharacterPosition();
         let playerVisible = true;
         let playerScale = 1.5;
-        let playserOpactity = 1;
+        let playerOpacity = 1;
 
-        if( this.currentSelectUser !== numero ){
+        if( this.currentSelectUser !== num ){
             playerVisible = false;
         }
-        if( numero === (this.currentSelectUser + 1) ){
+        if( num === (this.currentSelectUser + 1) ){
             playerY -= deltaY;
             playerX += deltaX;
             playerScale = 0.8;
-            playserOpactity = 0.6;
+            playerOpacity = 0.6;
             playerVisible = true;
         }
-        if( numero === (this.currentSelectUser + 2) ){
+        if( num === (this.currentSelectUser + 2) ){
             playerY -= deltaY;
             playerX += (deltaX * 2);
             playerScale = 0.8;
-            playserOpactity = 0.6;
+            playerOpacity = 0.6;
             playerVisible = true;
         }
-        if( numero === (this.currentSelectUser - 1) ){
+        if( num === (this.currentSelectUser - 1) ){
             playerY -= deltaY;
             playerX -= deltaX;
             playerScale = 0.8;
-            playserOpactity = 0.6;
+            playerOpacity = 0.6;
             playerVisible = true;
         }
-        if( numero === (this.currentSelectUser - 2) ){
+        if( num === (this.currentSelectUser - 2) ){
             playerY -= deltaY;
             playerX -= (deltaX * 2);
             playerScale = 0.8;
-            playserOpactity = 0.6;
+            playerOpacity = 0.6;
             playerVisible = true;
         }
-        return {playerX, playerY, playerScale, playserOpactity, playerVisible}
+        return {playerX, playerY, playerScale, playerOpacity, playerVisible}
     }
 
         /**

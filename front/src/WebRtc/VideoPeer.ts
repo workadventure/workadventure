@@ -1,10 +1,12 @@
-import * as SimplePeerNamespace from "simple-peer";
+import type * as SimplePeerNamespace from "simple-peer";
 import {mediaManager} from "./MediaManager";
 import {STUN_SERVER, TURN_PASSWORD, TURN_SERVER, TURN_USER} from "../Enum/EnvironmentVariable";
-import {RoomConnection} from "../Connexion/RoomConnection";
+import type {RoomConnection} from "../Connexion/RoomConnection";
 import {blackListManager} from "./BlackListManager";
-import {Subscription} from "rxjs";
-import {UserSimplePeerInterface} from "./SimplePeer";
+import type {Subscription} from "rxjs";
+import type {UserSimplePeerInterface} from "./SimplePeer";
+import {get} from "svelte/store";
+import {obtainedMediaConstraintStore} from "../Stores/MediaStore";
 
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
@@ -25,10 +27,10 @@ export class VideoPeer extends Peer {
     private onBlockSubscribe: Subscription;
     private onUnBlockSubscribe: Subscription;
 
-    constructor(public user: UserSimplePeerInterface, initiator: boolean, private connection: RoomConnection) {
+    constructor(public user: UserSimplePeerInterface, initiator: boolean, private connection: RoomConnection, localStream: MediaStream | null) {
         super({
             initiator: initiator ? initiator : false,
-            reconnectTimer: 10000,
+            //reconnectTimer: 10000,
             config: {
                 iceServers: [
                     {
@@ -105,7 +107,7 @@ export class VideoPeer extends Peer {
             this._onFinish();
         });
 
-        this.pushVideoToRemoteUser();
+        this.pushVideoToRemoteUser(localStream);
         this.onBlockSubscribe = blackListManager.onBlockStream.subscribe((userId) => {
             if (userId === this.userId) {
                 this.toggleRemoteStream(false);
@@ -188,10 +190,9 @@ export class VideoPeer extends Peer {
         }
     }
 
-    private pushVideoToRemoteUser() {
+    private pushVideoToRemoteUser(localStream: MediaStream | null) {
         try {
-            const localStream: MediaStream | null = mediaManager.localStream;
-            this.write(new Buffer(JSON.stringify({type: MESSAGE_TYPE_CONSTRAINT, ...mediaManager.constraintsMedia})));
+            this.write(new Buffer(JSON.stringify({type: MESSAGE_TYPE_CONSTRAINT, ...get(obtainedMediaConstraintStore)})));
 
             if(!localStream){
                 return;

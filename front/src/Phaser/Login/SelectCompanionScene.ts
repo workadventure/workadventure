@@ -5,23 +5,23 @@ import { gameManager} from "../Game/GameManager";
 import { ResizableScene } from "./ResizableScene";
 import { EnableCameraSceneName } from "./EnableCameraScene";
 import { localUserStore } from "../../Connexion/LocalUserStore";
-import { CompanionResourceDescriptionInterface } from "../Companion/CompanionTextures";
+import type { CompanionResourceDescriptionInterface } from "../Companion/CompanionTextures";
 import { getAllCompanionResources } from "../Companion/CompanionTexturesLoadingManager";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
 import { MenuScene } from "../Menu/MenuScene";
-import { RESOLUTION } from "../../Enum/EnvironmentVariable";
+import {selectCompanionSceneVisibleStore} from "../../Stores/SelectCompanionStore";
+import {waScaleManager} from "../Services/WaScaleManager";
+import {isMobile} from "../../Enum/EnvironmentVariable";
 
 export const SelectCompanionSceneName = "SelectCompanionScene";
-
-const selectCompanionSceneKey = 'selectCompanionScene';
 
 export class SelectCompanionScene extends ResizableScene {
     private selectedCompanion!: Phaser.Physics.Arcade.Sprite;
     private companions: Array<Phaser.Physics.Arcade.Sprite> = new Array<Phaser.Physics.Arcade.Sprite>();
     private companionModels: Array<CompanionResourceDescriptionInterface> = [];
+    private saveZoom: number = 0;
 
-    private selectCompanionSceneElement!: Phaser.GameObjects.DOMElement;
     private currentCompanion = 0;
 
     constructor() {
@@ -31,8 +31,6 @@ export class SelectCompanionScene extends ResizableScene {
     }
 
     preload() {
-        this.load.html(selectCompanionSceneKey, 'resources/html/SelectCompanionScene.html');
-
         getAllCompanionResources(this.load).forEach(model => {
             this.companionModels.push(model);
         });
@@ -43,30 +41,17 @@ export class SelectCompanionScene extends ResizableScene {
 
     create() {
 
-        const middleX = this.getMiddleX();
-        this.selectCompanionSceneElement = this.add.dom(middleX, 0).createFromCache(selectCompanionSceneKey);
-        MenuScene.revealMenusAfterInit(this.selectCompanionSceneElement, selectCompanionSceneKey);
+        selectCompanionSceneVisibleStore.set(true);
 
-        this.selectCompanionSceneElement.addListener('click');
-        this.selectCompanionSceneElement.on('click',  (event:MouseEvent) => {
-            event.preventDefault();
-            if((event?.target as HTMLInputElement).id === 'selectCharacterButtonLeft') {
-                this.moveToLeft();
-            }else if((event?.target as HTMLInputElement).id === 'selectCharacterButtonRight') {
-                this.moveToRight();
-            }else if((event?.target as HTMLInputElement).id === 'selectCompanionSceneFormSubmit') {
-                this.nextScene();
-            }else if((event?.target as HTMLInputElement).id === 'selectCompanionSceneFormBack') {
-                this._nextScene();
-            }
-        });
+        waScaleManager.saveZoom();
+        waScaleManager.zoomModifier = isMobile() ? 2 : 1;
 
         if (touchScreenManager.supportTouchScreen) {
             new PinchManager(this);
         }
 
         // input events
-        this.input.keyboard.on('keyup-ENTER', this.nextScene.bind(this));
+        this.input.keyboard.on('keyup-ENTER', this.selectCompanion.bind(this));
 
         this.input.keyboard.on('keydown-RIGHT', this.moveToRight.bind(this));
         this.input.keyboard.on('keydown-LEFT', this.moveToLeft.bind(this));
@@ -87,27 +72,23 @@ export class SelectCompanionScene extends ResizableScene {
     }
 
     update(time: number, delta: number): void {
-        const middleX = this.getMiddleX();
-        this.tweens.add({
-            targets: this.selectCompanionSceneElement,
-            x: middleX,
-            duration: 1000,
-            ease: 'Power3'
-        });
+
     }
 
-    private nextScene(): void {
+    public selectCompanion(): void {
         localUserStore.setCompanion(this.companionModels[this.currentCompanion].name);
         gameManager.setCompanion(this.companionModels[this.currentCompanion].name);
 
-        this._nextScene();
+        this.closeScene();
     }
 
-    private _nextScene(){
+    public closeScene(){
         // next scene
         this.scene.stop(SelectCompanionSceneName);
+        waScaleManager.restoreZoom();
         gameManager.tryResumingGame(this, EnableCameraSceneName);
         this.scene.remove(SelectCompanionSceneName);
+        selectCompanionSceneVisibleStore.set(false);
     }
 
     private createCurrentCompanion(): void {
@@ -133,16 +114,8 @@ export class SelectCompanionScene extends ResizableScene {
         this.selectedCompanion = this.companions[this.currentCompanion];
     }
 
-    public onResize(ev: UIEvent): void {
+    public onResize(): void {
         this.moveCompanion();
-
-        const middleX = this.getMiddleX();
-        this.tweens.add({
-            targets: this.selectCompanionSceneElement,
-            x: middleX,
-            duration: 1000,
-            ease: 'Power3'
-        });
     }
 
     private updateSelectedCompanion(): void {
@@ -160,15 +133,7 @@ export class SelectCompanionScene extends ResizableScene {
         this.updateSelectedCompanion();
     }
 
-    private moveToLeft(){
-        if(this.currentCompanion === 0){
-            return;
-        }
-        this.currentCompanion -= 1;
-        this.moveCompanion();
-    }
-
-    private moveToRight(){
+    public moveToRight(){
         if(this.currentCompanion === (this.companions.length - 1)){
             return;
         }
@@ -176,38 +141,46 @@ export class SelectCompanionScene extends ResizableScene {
         this.moveCompanion();
     }
 
-    private defineSetupCompanion(numero: number){
+    public moveToLeft(){
+        if(this.currentCompanion === 0){
+            return;
+        }
+        this.currentCompanion -= 1;
+        this.moveCompanion();
+    }
+
+    private defineSetupCompanion(num: number){
         const deltaX = 30;
         const deltaY = 2;
         let [companionX, companionY] = this.getCompanionPosition();
         let companionVisible = true;
         let companionScale = 1.5;
         let companionOpactity = 1;
-        if( this.currentCompanion !== numero ){
+        if( this.currentCompanion !== num ){
             companionVisible = false;
         }
-        if( numero === (this.currentCompanion + 1) ){
+        if( num === (this.currentCompanion + 1) ){
             companionY -= deltaY;
             companionX += deltaX;
             companionScale = 0.8;
             companionOpactity = 0.6;
             companionVisible = true;
         }
-        if( numero === (this.currentCompanion + 2) ){
+        if( num === (this.currentCompanion + 2) ){
             companionY -= deltaY;
             companionX += (deltaX * 2);
             companionScale = 0.8;
             companionOpactity = 0.6;
             companionVisible = true;
         }
-        if( numero === (this.currentCompanion - 1) ){
+        if( num === (this.currentCompanion - 1) ){
             companionY -= deltaY;
             companionX -= deltaX;
             companionScale = 0.8;
             companionOpactity = 0.6;
             companionVisible = true;
         }
-        if( numero === (this.currentCompanion - 2) ){
+        if( num === (this.currentCompanion - 2) ){
             companionY -= deltaY;
             companionX -= (deltaX * 2);
             companionScale = 0.8;
@@ -237,16 +210,5 @@ export class SelectCompanionScene extends ResizableScene {
         companion.setAlpha(companionOpactity);
         companion.setX(companionX);
         companion.setY(companionY);
-    }
-
-    private getMiddleX() : number{
-        return (this.game.renderer.width / RESOLUTION) -
-        (
-            this.selectCompanionSceneElement
-            && this.selectCompanionSceneElement.node
-            && this.selectCompanionSceneElement.node.getBoundingClientRect().width > 0
-            ? (this.selectCompanionSceneElement.node.getBoundingClientRect().width / (2*RESOLUTION))
-            : 150
-        );
     }
 }

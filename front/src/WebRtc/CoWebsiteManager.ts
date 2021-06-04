@@ -32,7 +32,7 @@ class CoWebsiteManager {
     private resizing: boolean = false;
     private cowebsiteMainDom: HTMLDivElement;
     private cowebsiteAsideDom: HTMLDivElement;
-    
+
     get width(): number {
         return this.cowebsiteDiv.clientWidth;
     }
@@ -142,14 +142,14 @@ class CoWebsiteManager {
         if (allowPolicy) {
             iframe.allow = allowPolicy;
         }
-        const onloadPromise = new Promise((resolve) => {
+        const onloadPromise = new Promise<void>((resolve) => {
             iframe.onload = () => resolve();
         });
         if (allowApi) {
             iframeListener.registerIframe(iframe);
         }
         this.cowebsiteMainDom.appendChild(iframe);
-        const onTimeoutPromise = new Promise((resolve) => {
+        const onTimeoutPromise = new Promise<void>((resolve) => {
             setTimeout(() => resolve(), 2000);
         });
         this.currentOperationPromise = this.currentOperationPromise.then(() =>Promise.race([onloadPromise, onTimeoutPromise])).then(() => {

@@ -5,12 +5,13 @@ import {
     AdminPusherToBackMessage,
     AdminRoomMessage,
     BanMessage,
+    EmotePromptMessage,
     EmptyMessage,
     ItemEventMessage,
     JoinRoomMessage,
     PlayGlobalMessage,
     PusherToBackMessage,
-    QueryJitsiJwtMessage, RefreshRoomPromptMessage,
+    QueryJitsiJwtMessage, RefreshRoomPromptMessage, RequestVisitCardMessage,
     ServerToAdminClientMessage,
     ServerToClientMessage,
     SilentMessage,
@@ -71,6 +72,10 @@ const roomManager: IRoomManagerServer = {
                         socketManager.emitPlayGlobalMessage(room, message.getPlayglobalmessage() as PlayGlobalMessage);
                     } else if (message.hasQueryjitsijwtmessage()){
                         socketManager.handleQueryJitsiJwtMessage(user, message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage);
+                    } else if (message.hasEmotepromptmessage()){
+                        socketManager.handleEmoteEventMessage(room, user, message.getEmotepromptmessage() as EmotePromptMessage);
+                    } else if (message.hasRequestvisitcardmessage()) {
+                        socketManager.handleRequestVisitCardMessage(room, user, message.getRequestvisitcardmessage() as RequestVisitCardMessage);
                     }else if (message.hasSendusermessage()) {
                         const sendUserMessage = message.getSendusermessage();
                         if(sendUserMessage !== undefined) {

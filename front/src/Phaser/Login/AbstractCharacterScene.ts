@@ -1,8 +1,8 @@
 import {ResizableScene} from "./ResizableScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
-import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
+import type {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
 import {loadCustomTexture} from "../Entity/PlayerTexturesLoadingManager";
-import {CharacterTexture} from "../../Connexion/LocalUser";
+import type {CharacterTexture} from "../../Connexion/LocalUser";
 
 export abstract class AbstractCharacterScene extends ResizableScene {
 

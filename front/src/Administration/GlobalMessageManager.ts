@@ -1,8 +1,10 @@
 import {HtmlUtils} from "./../WebRtc/HtmlUtils";
 import {AUDIO_TYPE, MESSAGE_TYPE} from "./ConsoleGlobalMessageManager";
 import {PUSHER_URL, UPLOADER_URL} from "../Enum/EnvironmentVariable";
-import {RoomConnection} from "../Connexion/RoomConnection";
-import {PlayGlobalMessageInterface} from "../Connexion/ConnexionModels";
+import type {RoomConnection} from "../Connexion/RoomConnection";
+import type {PlayGlobalMessageInterface} from "../Connexion/ConnexionModels";
+import {soundPlayingStore} from "../Stores/SoundPlayingStore";
+import {soundManager} from "../Phaser/Game/SoundManager";
 
 export class GlobalMessageManager {
 
@@ -43,45 +45,8 @@ export class GlobalMessageManager {
         }
     }
 
-    private playAudioMessage(messageId : string, urlMessage: string){
-        //delete previous elements
-        const previousDivAudio = document.getElementsByClassName('audio-playing');
-        for(let i = 0; i < previousDivAudio.length; i++){
-            previousDivAudio[i].remove();
-        }
-
-        //create new element
-        const divAudio : HTMLDivElement = document.createElement('div');
-        divAudio.id = `audio-playing-${messageId}`;
-        divAudio.classList.add('audio-playing');
-        const imgAudio : HTMLImageElement = document.createElement('img');
-        imgAudio.src = '/resources/logos/megaphone.svg';
-        const pAudio : HTMLParagraphElement = document.createElement('p');
-        pAudio.textContent = 'Message audio'
-        divAudio.appendChild(imgAudio);
-        divAudio.appendChild(pAudio);
-
-        const mainSectionDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('main-container');
-        mainSectionDiv.appendChild(divAudio);
-
-        const messageAudio : HTMLAudioElement = document.createElement('audio');
-        messageAudio.id = this.getHtmlMessageId(messageId);
-        messageAudio.autoplay = true;
-        messageAudio.style.display = 'none';
-        messageAudio.onended = () => {
-            divAudio.classList.remove('active');
-            messageAudio.remove();
-            setTimeout(() => {
-                divAudio.remove();
-            }, 1000);
-        }
-        messageAudio.onplay = () => {
-            divAudio.classList.add('active');
-        }
-        const messageAudioSource : HTMLSourceElement = document.createElement('source');
-        messageAudioSource.src = `${UPLOADER_URL}${urlMessage}`;
-        messageAudio.appendChild(messageAudioSource);
-        mainSectionDiv.appendChild(messageAudio);
+    private playAudioMessage(messageId : string, urlMessage: string) {
+        soundPlayingStore.playSound(UPLOADER_URL + urlMessage);
     }
 
     private playTextMessage(messageId : string, htmlMessage: string){

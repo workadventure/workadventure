@@ -1,7 +1,5 @@
-import {ITiledMapObject} from "../Map/ITiledMap";
-import Text = Phaser.GameObjects.Text;
-import {GameScene} from "../Game/GameScene";
-import TextStyle = Phaser.GameObjects.TextStyle;
+import type {ITiledMapObject} from "../Map/ITiledMap";
+import type {GameScene} from "../Game/GameScene";
 
 export class TextUtils {
     public static createTextFromITiledMapObject(scene: GameScene, object: ITiledMapObject): void {

@@ -26,7 +26,8 @@ import {
     GroupLeftZoneMessage,
     WorldFullWarningMessage,
     UserLeftZoneMessage,
-    BanUserMessage, RefreshRoomMessage,
+    EmoteEventMessage,
+    BanUserMessage, RefreshRoomMessage, EmotePromptMessage, RequestVisitCardMessage, VisitCardMessage,
 } from "../Messages/generated/messages_pb";
 import {User, UserSocket} from "../Model/User";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
@@ -50,6 +51,7 @@ import {Zone} from "_Model/Zone";
 import Debug from "debug";
 import {Admin} from "_Model/Admin";
 import crypto from "crypto";
+import {adminApi} from "./AdminApi";
 
 
 const debug = Debug('sockermanager');
@@ -67,6 +69,7 @@ export class SocketManager {
     private rooms: Map<string, GameRoom> = new Map<string, GameRoom>();
 
     constructor() {
+        
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
             gaugeManager.incNbClientPerRoomGauge(roomId);
         });
@@ -263,7 +266,8 @@ export class SocketManager {
                 GROUP_RADIUS,
                 (thing: Movable, fromZone: Zone|null, listener: ZoneSocket) => this.onZoneEnter(thing, fromZone, listener),
                 (thing: Movable, position:PositionInterface, listener: ZoneSocket) => this.onClientMove(thing, position, listener),
-                (thing: Movable, newZone: Zone|null, listener: ZoneSocket) => this.onClientLeave(thing, newZone, listener)
+                (thing: Movable, newZone: Zone|null, listener: ZoneSocket) => this.onClientLeave(thing, newZone, listener),
+                (emoteEventMessage:EmoteEventMessage, listener: ZoneSocket) => this.onEmote(emoteEventMessage, listener),
             );
             gaugeManager.incNbRoomGauge();
             this.rooms.set(roomId, world);
@@ -337,6 +341,14 @@ export class SocketManager {
         } else {
             console.error('Unexpected type for Movable.');
         }
+    }
+
+
+    private onEmote(emoteEventMessage: EmoteEventMessage, client: ZoneSocket) {
+        const subMessage = new SubToPusherMessage();
+        subMessage.setEmoteeventmessage(emoteEventMessage);
+
+        emitZoneMessage(subMessage, client);
     }
 
     private emitCreateUpdateGroupEvent(client: ZoneSocket, fromZone: Zone|null, group: Group): void {
@@ -750,6 +762,28 @@ export class SocketManager {
 
             recipient.socket.write(clientMessage);
         });
+    }
+
+    handleEmoteEventMessage(room: GameRoom, user: User, emotePromptMessage: EmotePromptMessage) {
+        const emoteEventMessage = new EmoteEventMessage();
+        emoteEventMessage.setEmote(emotePromptMessage.getEmote());
+        emoteEventMessage.setActoruserid(user.id);
+        room.emitEmoteEvent(user, emoteEventMessage);
+    }
+
+    async handleRequestVisitCardMessage(room: GameRoom, user: User, requestvisitcardmessage: RequestVisitCardMessage): Promise<void> {
+        const targetUser = room.getUserById(requestvisitcardmessage.getTargetuserid());
+        if (!targetUser) {
+            throw 'Could not find user for id '+requestvisitcardmessage.getTargetuserid();
+        }
+        const url = await adminApi.fetchVisitCardUrl(targetUser.uuid);
+        
+        const visitCardMessage = new VisitCardMessage();
+        visitCardMessage.setUrl(url);
+        const clientMessage = new ServerToClientMessage();
+        clientMessage.setVisitcardmessage(visitCardMessage);
+        
+        user.socket.write(clientMessage);
     }
 }
 

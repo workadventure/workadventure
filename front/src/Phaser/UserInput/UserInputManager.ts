@@ -1,5 +1,5 @@
-import { Direction } from "../../types";
-import {GameScene} from "../Game/GameScene";
+import type { Direction } from "../../types";
+import type {GameScene} from "../Game/GameScene";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {MobileJoystick} from "../Components/MobileJoystick";
 
@@ -54,11 +54,12 @@ export class UserInputManager {
         this.Scene = Scene;
         this.isInputDisabled = false;
         this.initKeyBoardEvent();
+        this.initMouseWheel();
         if (touchScreenManager.supportTouchScreen) {
             this.initVirtualJoystick();
         }
     }
-    
+
     initVirtualJoystick() {
         this.joystick = new MobileJoystick(this.Scene);
         this.joystick.on("update", () => {
@@ -169,5 +170,15 @@ export class UserInputManager {
     }
     removeSpaceEventListner(callback : Function){
         this.Scene.input.keyboard.removeListener('keyup-SPACE', callback);
+    }
+
+    destroy(): void {
+        this.joystick?.destroy();
+    }
+
+    private initMouseWheel() {
+        this.Scene.input.on('wheel', (pointer: unknown, gameObjects: unknown, deltaX: number, deltaY: number, deltaZ: number) => {
+            this.Scene.zoomByFactor(1 - deltaY / 53 * 0.1);
+        });
     }
 }
