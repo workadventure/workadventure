@@ -14,14 +14,15 @@
     pointer-events: all;
     margin-left: auto;
     margin-right: auto;
-    width: 515px;
+    width: 530px;
     margin-top: 200px;
+    max-width: 100vw;
     
     .defaultCard {
       border-radius: 5px;
       border: 2px black solid;
       background-color: whitesmoke;
-      width: 500px;
+      width: 530px;
       
       header {
         padding: 5px;
@@ -30,7 +31,7 @@
 
     iframe {
       border: 0;
-      width: 515px;
+      width: 530px;
       height: 270px;
       overflow: hidden;
     }
@@ -60,5 +61,4 @@
     <div class="buttonContainer">
         <button class="nes-btn is-popUpElement" on:click={closeCard}>Close</button>
     </div>
-        
 </section>
