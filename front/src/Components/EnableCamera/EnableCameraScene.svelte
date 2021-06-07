@@ -92,7 +92,7 @@
 
         {#if $cameraListStore.length > 1 }
             <div class="control-group">
-                <img src={cinemaImg} alt="Camera" />
+                <!--<img src={cinemaImg} alt="Camera" />-->
                 <div class="nes-select">
                     <select bind:value={selectedCamera} on:change={selectCamera}>
                         {#each $cameraListStore as camera}
@@ -134,7 +134,7 @@
 
       section.selectWebcamForm {
         margin-top: 3vh;
-/*        margin-bottom: 3vh;*/
+        margin-bottom: 3vh;
         min-height: 10vh;
         width: 50vw;
         margin-left: auto;
@@ -142,8 +142,8 @@
 
         select {
           font-family: "Press Start 2P";
-          margin-top: 1vh;
-          margin-bottom: 1vh;
+/*          margin-top: 1vh;
+          margin-bottom: 1vh;*/
 
           option {
             font-family: "Press Start 2P";
@@ -158,7 +158,6 @@
       }
 
       h2{
-        color: pink;
         font-family: "Press Start 2P";
         margin: 1px;
       }
