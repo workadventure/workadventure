@@ -136,7 +136,7 @@
         margin-top: 3vh;
         margin-bottom: 3vh;
         min-height: 10vh;
-        width: 50%;
+        width: 50vw;
         margin-left: auto;
         margin-right: auto;
 
