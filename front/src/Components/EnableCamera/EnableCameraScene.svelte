@@ -90,7 +90,7 @@
 
     <section class="selectWebcamForm">
 
-        {#if $cameraListStore.length > 1 }
+        <!--{#if $cameraListStore.length > 1 }-->
             <div class="control-group">
                 <img src={cinemaImg} alt="Camera" />
                 <div class="nes-select">
@@ -103,9 +103,9 @@
                     </select>
                 </div>
             </div>
-        {/if}
+<!--        {/if}
 
-        {#if $microphoneListStore.length > 1 }
+        {#if $microphoneListStore.length > 1 }-->
             <div class="control-group">
                 <img src={microphoneImg} alt="Microphone" />
                 <div class="nes-select">
@@ -118,7 +118,7 @@
                     </select>
                 </div>
             </div>
-        {/if}
+        <!--{/if}-->
 
     </section>
     <section class="action">
@@ -144,12 +144,12 @@
           font-family: "Press Start 2P";
           margin-top: 1vh;
           margin-bottom: 1vh;
+        }
 
-          option {
+        option {
             font-family: "Press Start 2P";
           }
         }
-      }
 
       section.action{
         text-align: center;
@@ -219,14 +219,16 @@
 
       .enableCameraScene .control-group .nes-select {
         font-size: 80%;
-        width: 50%
+      }
+
+      .enableCameraScene .control-group {
+        max-height: 60px;
+        margin-top: 10px;
       }
 
       .enableCameraScene button.letsgo {
         font-size: 160%;
       }
     }
-
-
 </style>
 
