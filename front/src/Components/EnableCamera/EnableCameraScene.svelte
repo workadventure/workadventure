@@ -134,7 +134,7 @@
 
       section.selectWebcamForm {
         margin-top: 3vh;
-        margin-bottom: 3vh;
+/*        margin-bottom: 3vh;*/
         min-height: 10vh;
         width: 50vw;
         margin-left: auto;
@@ -158,6 +158,7 @@
       }
 
       h2{
+        color: pink;
         font-family: "Press Start 2P";
         margin: 1px;
       }
@@ -176,7 +177,7 @@
 
         img {
           width: 30px;
-          margin-right: 10px;
+          margin-right: 5px;
         }
       }
 
