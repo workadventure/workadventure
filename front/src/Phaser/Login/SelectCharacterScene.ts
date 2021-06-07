@@ -144,6 +144,9 @@ export class SelectCharacterScene extends AbstractCharacterScene {
                 if (this.currentSelectUser === i) {
                     return;
                 }
+                //To not trigger two time the pointerdown events :
+                // We set a boolean to true so that pointerdown events does nothing when the boolean is true
+                // We set a timer that we decrease in update function to not trigger the pointerdown events twice
                 this.pointerClicked = true;
                 this.pointerTimer = 250;
                 this.currentSelectUser = i;
@@ -247,6 +250,8 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     update(time: number, delta: number): void {
+        // pointerTimer is set to 250 when pointerdown events is trigger
+        // After 250ms, pointerClicked is set to false and the pointerdown events can be trigger again
         this.pointerTimer -= delta;
         if (this.pointerTimer <= 0) {
             this.pointerClicked = false;
