@@ -213,13 +213,22 @@
     }
 
     @media only screen and (max-width: 800px) {
-      * {
+      .enableCameraScene h2 {
         font-size: 80%;
       }
-        .enableCameraScene .control-group img {
-          width: 15px;
-          margin-right: 5px;
-        }
+
+      .enableCameraScene .control-group select {
+        font-size: 80%;
+      }
+
+      .enableCameraScene button.letsgo {
+        font-size: 160%;
+      }
+
+      .enableCameraScene .control-group img {
+        width: 1vw;
+        margin-right: 0px;
+      }
     }
 
 
