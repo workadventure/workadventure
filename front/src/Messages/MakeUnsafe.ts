@@ -1,19 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import type {UnsafeString} from "./UnsafeString";
 
-type ReplaceReturnType<T extends (...a: any) => string> = (...a: Parameters<T>) => UnsafeString;
+type ReplaceReturnType<T extends (...args: unknown[]) => unknown> = (...a: Parameters<T>) => MakeUnsafe<ReturnType<T>>;
 
-/**
- * Builds a new type where every function that returns a "string" will return a "UnsafeString" instead.
- * This is useful to force developers into checking that a string was indeed sanitized before using it.
- */
-export type MakeUnsafe<T> = {
-    [P in keyof T]: T[P] extends (...a: any) => string
-        ? ReplaceReturnType<T[P]>
-        : T[P] extends (...a: any) => any
-            ? (...a: Parameters<T[P]>) => ReturnType<T[P]>
-            : T[P] extends object
-                ? MakeUnsafe<T[P]>
-                : T[P];
-}
+type Primitives = undefined | null | boolean | number
+
+export type MakeUnsafe<T> = T extends Primitives ? T : T extends String
+    ? UnsafeString
+    : (T extends Array<infer SubType>
+        ? Array<MakeUnsafe<SubType>>
+        : (T extends (...args: unknown[]) => unknown
+            ? ReplaceReturnType<T>
+            : {
+                [P in keyof T]: MakeUnsafe<T[P]>
+            }))
