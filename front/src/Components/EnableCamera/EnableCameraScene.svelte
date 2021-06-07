@@ -219,7 +219,7 @@
 
       .enableCameraScene .control-group .nes-select {
         font-size: 80%;
-        width: calc(100% - 50px);
+        width: 50%
       }
 
       .enableCameraScene button.letsgo {
