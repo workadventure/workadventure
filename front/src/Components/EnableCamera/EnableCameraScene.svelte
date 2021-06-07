@@ -92,7 +92,7 @@
 
         {#if $cameraListStore.length > 1 }
             <div class="control-group">
-                <!--<img src={cinemaImg} alt="Camera" />-->
+                <img src={cinemaImg} alt="Camera" />
                 <div class="nes-select">
                     <select bind:value={selectedCamera} on:change={selectCamera}>
                         {#each $cameraListStore as camera}
@@ -142,8 +142,8 @@
 
         select {
           font-family: "Press Start 2P";
-/*          margin-top: 1vh;
-          margin-bottom: 1vh;*/
+          margin-top: 1vh;
+          margin-bottom: 1vh;
 
           option {
             font-family: "Press Start 2P";
@@ -176,7 +176,7 @@
 
         img {
           width: 30px;
-          margin-right: 5px;
+          margin-right: 10px;
         }
       }
 
@@ -210,8 +210,18 @@
         align-items: center;
         justify-content: center;
       }
-
-
     }
+
+    @media only screen and (max-width: 800px) {
+      * {
+        font-size: 80%;
+      }
+        .enableCameraScene .control-group img {
+          width: 15px;
+          margin-right: 5px;
+        }
+    }
+
+
 </style>
 
