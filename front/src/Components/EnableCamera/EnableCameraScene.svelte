@@ -217,17 +217,13 @@
         font-size: 80%;
       }
 
-      .enableCameraScene .control-group select {
+      .enableCameraScene .control-group .nes-select {
         font-size: 80%;
+        width: calc(100% - 50px);
       }
 
       .enableCameraScene button.letsgo {
         font-size: 160%;
-      }
-
-      .enableCameraScene .control-group img {
-        width: 1vw;
-        margin-right: 0px;
       }
     }
 
