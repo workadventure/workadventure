@@ -2,6 +2,7 @@ import type {GameScene} from "../Game/GameScene";
 import type {PointInterface} from "../../Connexion/ConnexionModels";
 import {Character} from "../Entity/Character";
 import type {PlayerAnimationDirections} from "../Player/Animation";
+import {DISABLE_VISIT_CARD_FEATURE} from "../../Enum/EnvironmentVariable";
 
 export const playerClickedEvent = 'playerClickedEvent';
 
@@ -46,6 +47,6 @@ export class RemotePlayer extends Character {
     }
 
     isClickable(): boolean {
-        return true; //todo: make remote players clickable if they are logged in.
+        return !DISABLE_VISIT_CARD_FEATURE; //todo: make remote players clickable if they are logged in.
     }
 }
