@@ -33,6 +33,9 @@ export class EnableCameraScene extends ResizableScene {
         });
 
         enableCameraSceneVisibilityStore.showEnableCameraScene();
+
+        console.log('TEST');
+        console.error('TEST !!!!!');
     }
 
     public onResize(): void {
