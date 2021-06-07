@@ -51,6 +51,7 @@ import {worldFullWarningStream} from "./WorldFullWarningStream";
 import {connectionManager} from "./ConnectionManager";
 import {emoteEventStream} from "./EmoteEventStream";
 import {requestVisitCardsStore} from "../Stores/GameStore";
+import type {MakeUnsafe} from "../Messages/MakeUnsafe";
 
 const manualPingDelay = 20000;
 
@@ -370,13 +371,13 @@ export class RoomConnection implements RoomConnection {
     }
 
     public onUserLeft(callback: (userId: number) => void): void {
-        this.onMessage(EventMessage.USER_LEFT, (message: UserLeftMessage) => {
+        this.onMessage(EventMessage.USER_LEFT, (message: MakeUnsafe<UserLeftMessage>) => {
             callback(message.getUserid());
         });
     }
 
     public onGroupUpdatedOrCreated(callback: (groupCreateUpdateMessage: GroupCreatedUpdatedMessageInterface) => void): void {
-        this.onMessage(EventMessage.GROUP_CREATE_UPDATE, (message: GroupUpdateMessage) => {
+        this.onMessage(EventMessage.GROUP_CREATE_UPDATE, (message: MakeUnsafe<GroupUpdateMessage>) => {
             callback(this.toGroupCreatedUpdatedMessage(message));
         });
     }
@@ -395,13 +396,13 @@ export class RoomConnection implements RoomConnection {
     }
 
     public onGroupDeleted(callback: (groupId: number) => void): void {
-        this.onMessage(EventMessage.GROUP_DELETE, (message: GroupDeleteMessage) => {
+        this.onMessage(EventMessage.GROUP_DELETE, (message: MakeUnsafe<GroupDeleteMessage>) => {
             callback(message.getGroupid());
         });
     }
 
     public onConnectingError(callback: (event: CloseEvent) => void): void {
-        this.onMessage(EventMessage.CONNECTING_ERROR, (event: CloseEvent) => {
+        this.onMessage(EventMessage.CONNECTING_ERROR, (event: MakeUnsafe<CloseEvent>) => {
             callback(event);
         });
     }
@@ -445,7 +446,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     public receiveWebrtcStart(callback: (message: UserSimplePeerInterface) => void) {
-        this.onMessage(EventMessage.WEBRTC_START, (message: WebRtcStartMessage) => {
+        this.onMessage(EventMessage.WEBRTC_START, (message: MakeUnsafe<WebRtcStartMessage>) => {
             callback({
                 userId: message.getUserid(),
                 name: message.getName(),
@@ -457,7 +458,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     public receiveWebrtcSignal(callback: (message: WebRtcSignalReceivedMessageInterface) => void) {
-        this.onMessage(EventMessage.WEBRTC_SIGNAL, (message: WebRtcSignalToClientMessage) => {
+        this.onMessage(EventMessage.WEBRTC_SIGNAL, (message: MakeUnsafe<WebRtcSignalToClientMessage>) => {
             callback({
                 userId: message.getUserid(),
                 signal: JSON.parse(message.getSignal()),
@@ -468,7 +469,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     public receiveWebrtcScreenSharingSignal(callback: (message: WebRtcSignalReceivedMessageInterface) => void) {
-        this.onMessage(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, (message: WebRtcSignalToClientMessage) => {
+        this.onMessage(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, (message: MakeUnsafe<WebRtcSignalToClientMessage>) => {
             callback({
                 userId: message.getUserid(),
                 signal: JSON.parse(message.getSignal()),
@@ -498,7 +499,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     disconnectMessage(callback: (message: WebRtcDisconnectMessageInterface) => void): void {
-        this.onMessage(EventMessage.WEBRTC_DISCONNECT, (message: WebRtcDisconnectMessage) => {
+        this.onMessage(EventMessage.WEBRTC_DISCONNECT, (message: MakeUnsafe<WebRtcDisconnectMessage>) => {
             callback({
                 userId: message.getUserid()
             });
@@ -519,7 +520,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     onActionableEvent(callback: (message: ItemEventMessageInterface) => void): void {
-        this.onMessage(EventMessage.ITEM_EVENT, (message: ItemEventMessage) => {
+        this.onMessage(EventMessage.ITEM_EVENT, (message: MakeUnsafe<ItemEventMessage>) => {
             callback({
                 itemId: message.getItemid(),
                 event: message.getEvent(),
@@ -540,7 +541,7 @@ export class RoomConnection implements RoomConnection {
 
 
     public receivePlayGlobalMessage(callback: (message: PlayGlobalMessageInterface) => void) {
-        return this.onMessage(EventMessage.PLAY_GLOBAL_MESSAGE, (message: PlayGlobalMessage) => {
+        return this.onMessage(EventMessage.PLAY_GLOBAL_MESSAGE, (message: MakeUnsafe<PlayGlobalMessage>) => {
             callback({
                 id: message.getId(),
                 type: message.getType(),
@@ -550,13 +551,13 @@ export class RoomConnection implements RoomConnection {
     }
 
     public receiveStopGlobalMessage(callback: (messageId: string) => void) {
-        return this.onMessage(EventMessage.STOP_GLOBAL_MESSAGE, (message: StopGlobalMessage) => {
+        return this.onMessage(EventMessage.STOP_GLOBAL_MESSAGE, (message: MakeUnsafe<StopGlobalMessage>) => {
             callback(message.getId());
         });
     }
 
     public receiveTeleportMessage(callback: (messageId: string) => void) {
-        return this.onMessage(EventMessage.TELEPORT, (message: TeleportMessageMessage) => {
+        return this.onMessage(EventMessage.TELEPORT, (message: MakeUnsafe<TeleportMessageMessage>) => {
             callback(message.getMap());
         });
     }
@@ -620,7 +621,7 @@ export class RoomConnection implements RoomConnection {
 
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
-    
+
     public requestVisitCardUrl(targetUserId: number): void {
         const message = new RequestVisitCardMessage();
         message.setTargetuserid(targetUserId);
