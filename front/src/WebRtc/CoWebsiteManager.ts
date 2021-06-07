@@ -1,6 +1,7 @@
 import {HtmlUtils} from "./HtmlUtils";
 import {Subject} from "rxjs";
 import {iframeListener} from "../Api/IframeListener";
+import {touchScreenManager} from "../Touch/TouchScreenManager";
 
 enum iframeStates {
     closed = 1,
@@ -17,6 +18,11 @@ const cowebsiteOpenFullScreenImageId = 'cowebsite-fullscreen-open';
 const cowebsiteCloseFullScreenImageId = 'cowebsite-fullscreen-close';
 const animationTime = 500; //time used by the css transitions, in ms.
 
+interface TouchMoveCoordinates {
+    x: number;
+    y: number;
+}
+
 class CoWebsiteManager {
 
     private opened: iframeStates = iframeStates.closed;
@@ -32,6 +38,7 @@ class CoWebsiteManager {
     private resizing: boolean = false;
     private cowebsiteMainDom: HTMLDivElement;
     private cowebsiteAsideDom: HTMLDivElement;
+    private previousTouchMoveCoordinates: TouchMoveCoordinates|null = null; //only use on touchscreens to track touch movement
 
     get width(): number {
         return this.cowebsiteDiv.clientWidth;
@@ -62,7 +69,10 @@ class CoWebsiteManager {
         this.cowebsiteMainDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteMainDomId);
         this.cowebsiteAsideDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteAsideDomId);
 
-        this.initResizeListeners();
+        if (touchScreenManager.supportTouchScreen) {
+            this.initResizeListeners(true);
+        }
+        this.initResizeListeners(false);
 
         const buttonCloseFrame = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);
         buttonCloseFrame.addEventListener('click', () => {
@@ -77,22 +87,43 @@ class CoWebsiteManager {
         });
     }
 
-    private initResizeListeners() {
-        const movecallback = (event:MouseEvent) => {
-            this.verticalMode ? this.height += event.movementY / this.getDevicePixelRatio() : this.width -= event.movementX / this.getDevicePixelRatio();
+    private initResizeListeners(touchMode:boolean) {
+        const movecallback = (event:MouseEvent|TouchEvent) => {
+            let x, y;
+            if (event.type === 'mousemove') {
+                x = (event as MouseEvent).movementX / this.getDevicePixelRatio();
+                y = (event as MouseEvent).movementY / this.getDevicePixelRatio();
+            } else {
+                const touchEvent = (event as TouchEvent).touches[0];
+                const last = {x: touchEvent.pageX, y: touchEvent.pageY};
+                const previous = this.previousTouchMoveCoordinates as TouchMoveCoordinates;
+                this.previousTouchMoveCoordinates = last;
+                x = last.x - previous.x;
+                y = last.y - previous.y;
+            }
+            
+            
+            this.verticalMode ? this.height += y : this.width -= x;
             this.fire();
         }
 
-        this.cowebsiteAsideDom.addEventListener('mousedown', (event) => {
+        this.cowebsiteAsideDom.addEventListener( touchMode ? 'touchstart' : 'mousedown', (event) => {
             this.resizing = true;
             this.getIframeDom().style.display = 'none';
+            if (touchMode) {
+                const touchEvent = (event as TouchEvent).touches[0];
+                this.previousTouchMoveCoordinates = {x: touchEvent.pageX, y: touchEvent.pageY};
+            }
 
-            document.addEventListener('mousemove', movecallback);
+            document.addEventListener(touchMode ? 'touchmove' : 'mousemove', movecallback);
         });
 
-        document.addEventListener('mouseup', (event) => {
+        document.addEventListener(touchMode ? 'touchend' : 'mouseup', (event) => {
             if (!this.resizing) return;
-            document.removeEventListener('mousemove', movecallback);
+            if (touchMode) {
+                this.previousTouchMoveCoordinates = null;
+            }
+            document.removeEventListener(touchMode ? 'touchmove' : 'mousemove', movecallback);
             this.getIframeDom().style.display = 'block';
             this.resizing = false;
         });
