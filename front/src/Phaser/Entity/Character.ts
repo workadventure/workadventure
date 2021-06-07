@@ -261,7 +261,7 @@ export abstract class Character extends Container {
     }
 
     private createStartTransition(scalingFactor: number, emoteY: number) {
-        this.emoteTween = this.scene.tweens.add({
+        this.emoteTween = this.scene?.tweens.add({
             targets: this.emote,
             props: {
                 scale: scalingFactor,
@@ -277,7 +277,7 @@ export abstract class Character extends Container {
     }
 
     private startPulseTransition(emoteY: number, scalingFactor: number) {
-        this.emoteTween = this.scene.tweens.add({
+        this.emoteTween = this.scene?.tweens.add({
             targets: this.emote,
             props: {
                 y: emoteY * 1.3,
@@ -294,7 +294,7 @@ export abstract class Character extends Container {
     }
 
     private startExitTransition(emoteY: number) {
-        this.emoteTween = this.scene.tweens.add({
+        this.emoteTween = this.scene?.tweens.add({
             targets: this.emote,
             props: {
                 alpha: 0,
