@@ -90,7 +90,7 @@
 
     <section class="selectWebcamForm">
 
-        <!--{#if $cameraListStore.length > 1 }-->
+        {#if $cameraListStore.length > 1 }
             <div class="control-group">
                 <img src={cinemaImg} alt="Camera" />
                 <div class="nes-select is-dark">
@@ -103,9 +103,9 @@
                     </select>
                 </div>
             </div>
-<!--        {/if}
+        {/if}
 
-        {#if $microphoneListStore.length > 1 }-->
+        {#if $microphoneListStore.length > 1 }
             <div class="control-group">
                 <img src={microphoneImg} alt="Microphone" />
                 <div class="nes-select is-dark">
@@ -118,7 +118,7 @@
                     </select>
                 </div>
             </div>
-        <!--{/if}-->
+        {/if}
 
     </section>
     <section class="action">
@@ -218,11 +218,9 @@
       .enableCameraScene h2 {
         font-size: 80%;
       }
-
       .enableCameraScene .control-group .nes-select {
         font-size: 80%;
       }
-
       .enableCameraScene button.letsgo {
         font-size: 160%;
       }
