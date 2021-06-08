@@ -108,6 +108,7 @@ export class GameRoom {
             this.positionNotifier,
             socket,
             joinRoomMessage.getTagList(),
+            joinRoomMessage.getVisitcardurl(),
             joinRoomMessage.getName(),
             ProtobufUtils.toCharacterLayerObjects(joinRoomMessage.getCharacterlayerList()),
             joinRoomMessage.getCompanion()

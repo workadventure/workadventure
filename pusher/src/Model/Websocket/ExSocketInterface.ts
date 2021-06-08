@@ -40,6 +40,7 @@ export interface ExSocketInterface extends WebSocket, Identificable {
     disconnecting: boolean,
     messages: unknown,
     tags: string[],
+    visitCardUrl: string|null,
     textures: CharacterTexture[],
     backConnection: BackConnection,
     listenedZones: Set<Zone>;
