@@ -173,6 +173,8 @@
       .control-group {
         display: flex;
         flex-direction: row;
+        max-height: 60px;
+        margin-top: 10px;
 
         img {
           width: 30px;
@@ -219,11 +221,6 @@
 
       .enableCameraScene .control-group .nes-select {
         font-size: 80%;
-      }
-
-      .enableCameraScene .control-group {
-        max-height: 60px;
-        margin-top: 10px;
       }
 
       .enableCameraScene button.letsgo {
