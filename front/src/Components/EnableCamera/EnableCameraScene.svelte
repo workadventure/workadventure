@@ -93,7 +93,7 @@
         <!--{#if $cameraListStore.length > 1 }-->
             <div class="control-group">
                 <img src={cinemaImg} alt="Camera" />
-                <div class="nes-select">
+                <div class="nes-select is-dark">
                     <select bind:value={selectedCamera} on:change={selectCamera}>
                         {#each $cameraListStore as camera}
                             <option value={camera.deviceId}>
