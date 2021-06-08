@@ -10,7 +10,6 @@ const TURN_USER: string = process.env.TURN_USER || '';
 const TURN_PASSWORD: string = process.env.TURN_PASSWORD || '';
 const JITSI_URL : string|undefined = (process.env.JITSI_URL === '') ? undefined : process.env.JITSI_URL;
 const JITSI_PRIVATE_MODE : boolean = process.env.JITSI_PRIVATE_MODE == "true";
-export const DISABLE_VISIT_CARD_FEATURE : boolean = process.env.DISABLE_VISIT_CARD_FEATURE == "true";
 const POSITION_DELAY = 200; // Wait 200ms between sending position events
 const MAX_EXTRAPOLATION_TIME = 100; // Extrapolate a maximum of 250ms if no new movement is sent by the player
 export const MAX_USERNAME_LENGTH = parseInt(process.env.MAX_USERNAME_LENGTH || '') || 8;

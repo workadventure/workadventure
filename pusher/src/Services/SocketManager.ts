@@ -30,7 +30,6 @@ import {
     BanMessage,
     RefreshRoomMessage,
     EmotePromptMessage,
-    RequestVisitCardMessage
 } from "../Messages/generated/messages_pb";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
 import {JITSI_ISS, SECRET_JITSI_KEY} from "../Enum/EnvironmentVariable";
@@ -162,6 +161,9 @@ export class SocketManager implements ZoneEventListener {
             joinRoomMessage.setName(client.name);
             joinRoomMessage.setPositionmessage(ProtobufUtils.toPositionMessage(client.position));
             joinRoomMessage.setTagList(client.tags);
+            if (client.visitCardUrl) {
+                joinRoomMessage.setVisitcardurl(client.visitCardUrl);
+            }
             joinRoomMessage.setCompanion(client.companion);
 
             for (const characterLayer of client.characterLayers) {
@@ -601,13 +603,6 @@ export class SocketManager implements ZoneEventListener {
     handleEmotePromptMessage(client: ExSocketInterface, emoteEventmessage: EmotePromptMessage) {
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setEmotepromptmessage(emoteEventmessage);
-
-        client.backConnection.write(pusherToBackMessage);
-    }
-
-    handleRequestVisitCardMessage(client: ExSocketInterface, requestVisitCardMessage: RequestVisitCardMessage) {
-        const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setRequestvisitcardmessage(requestVisitCardMessage);
 
         client.backConnection.write(pusherToBackMessage);
     }

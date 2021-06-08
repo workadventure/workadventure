@@ -44,20 +44,7 @@
 
 
 <section class="visitCard" transition:fly="{{ y: -200, duration: 1000 }}">
-    {#if visitCardUrl === 'INVALID'}
-        <div class="defaultCard">
-            <header>
-                <h2>Sorry</h2>
-                <p style="font-style: italic;">This user doesn't have a contact card.</p>
-            </header>
-
-            <main style="padding: 5px; background-color: gray">
-                <p>Maybe he is offline, or this feature is deactivated.</p>
-            </main>
-        </div>
-    {:else}
-        <iframe title="visitCardTitle" src={visitCardUrl}></iframe>
-    {/if}
+    <iframe title="visitCardTitle" src={visitCardUrl}></iframe>
     <div class="buttonContainer">
         <button class="nes-btn is-popUpElement" on:click={closeCard}>Close</button>
     </div>
