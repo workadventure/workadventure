@@ -70,15 +70,23 @@ class IframeListener {
             // Do we trust the sender of this message?
             // Let's only accept messages from the iframe that are allowed.
             // Note: maybe we could restrict on the domain too for additional security (in case the iframe goes to another domain).
-            let foundSrc: string | null = null;
-            for (const iframe of this.iframes) {
-                if (iframe.contentWindow === message.source) {
-                    foundSrc = iframe.src;
-                    break;
+            let foundSrc: string | undefined;
+
+            foundSrc = [...this.scripts.keys()].find(key => {
+                return this.scripts.get(key)?.contentWindow == message.source
+            });
+
+            if (foundSrc === undefined) {
+                for (const iframe of this.iframes) {
+                    if (iframe.contentWindow === message.source) {
+                        foundSrc = iframe.src;
+                        break;
+                    }
                 }
-            }
-            if (!foundSrc) {
-                return;
+
+                if (foundSrc === undefined) {
+                    return;
+                }
             }
 
             const payload = message.data;
@@ -106,11 +114,7 @@ class IframeListener {
                     this._loadSoundStream.next(payload.data);
                 }
                 else if (payload.type === 'openCoWebSite' && isOpenCoWebsite(payload.data)) {
-                    const scriptUrl = [...this.scripts.keys()].find(key => {
-                        return this.scripts.get(key)?.contentWindow == message.source
-                    })
-
-                    scriptUtils.openCoWebsite(payload.data.url, scriptUrl || foundSrc);
+                    scriptUtils.openCoWebsite(payload.data.url, foundSrc);
                 }
 
                 else if (payload.type === 'closeCoWebSite') {
