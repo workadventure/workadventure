@@ -61,8 +61,8 @@
     onDestroy(unsubscribe);
 
     function normalizeDeviceName(label: string): string {
-        // remove text in parenthesis
-        return label.replace(/\([^()]*\)/g, '').trim();
+        // remove IDs (that can appear in Chrome, like: "HD Pro Webcam (4df7:4eda)"
+        return label.replace(/(\([[0-9a-f]{4}:[0-9a-f]{4}\))/g, '').trim();
     }
 
     function selectCamera() {
