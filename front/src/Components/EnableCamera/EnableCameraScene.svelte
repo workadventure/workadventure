@@ -108,7 +108,7 @@
         {#if $microphoneListStore.length > 1 }-->
             <div class="control-group">
                 <img src={microphoneImg} alt="Microphone" />
-                <div class="nes-select">
+                <div class="nes-select is-dark">
                     <select bind:value={selectedMicrophone} on:change={selectMicrophone}>
                         {#each $microphoneListStore as microphone}
                             <option value={microphone.deviceId}>
