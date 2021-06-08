@@ -32,6 +32,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     protected selectCharacterSceneElement!: Phaser.GameObjects.DOMElement;
     protected currentSelectUser = 0;
     protected pointerClicked: boolean = false;
+    protected pointerTimer: number = 0;
 
     protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
 
@@ -137,13 +138,19 @@ export class SelectCharacterScene extends AbstractCharacterScene {
                 repeat: -1
             });
             player.setInteractive().on("pointerdown", () => {
-                if (this.pointerClicked || this.currentSelectUser === i) {
+                if (this.pointerClicked) {
                     return;
                 }
+                if (this.currentSelectUser === i) {
+                    return;
+                }
+                //To not trigger two time the pointerdown events :
+                // We set a boolean to true so that pointerdown events does nothing when the boolean is true
+                // We set a timer that we decrease in update function to not trigger the pointerdown events twice
                 this.pointerClicked = true;
+                this.pointerTimer = 250;
                 this.currentSelectUser = i;
                 this.moveUser();
-                setTimeout(() => {this.pointerClicked = false;}, 100);
             });
             this.players.push(player);
         }
@@ -243,6 +250,13 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     update(time: number, delta: number): void {
+        // pointerTimer is set to 250 when pointerdown events is trigger
+        // After 250ms, pointerClicked is set to false and the pointerdown events can be trigger again
+        this.pointerTimer -= delta;
+        if (this.pointerTimer <= 0) {
+            this.pointerClicked = false;
+        }
+
         if(this.lazyloadingAttempt){
             this.moveUser();
             this.lazyloadingAttempt = false;
