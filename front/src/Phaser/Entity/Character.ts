@@ -41,6 +41,7 @@ export abstract class Character extends Container {
                 direction: PlayerAnimationDirections,
                 moving: boolean,
                 frame: string | number,
+                isClickable: boolean,
                 companion: string|null,
                 companionTexturePromise?: Promise<string>
     ) {
@@ -60,7 +61,7 @@ export abstract class Character extends Container {
         this.playerName.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
         this.add(this.playerName);
 
-        if (this.isClickable()) {
+        if (isClickable) {
             this.setInteractive({
                 hitArea: new Phaser.Geom.Circle(0, 0, interactiveRadius),
                 hitAreaCallback: Phaser.Geom.Circle.Contains, //eslint-disable-line @typescript-eslint/unbound-method
@@ -90,8 +91,6 @@ export abstract class Character extends Container {
             this.companion = new Companion(this.scene, this.x, this.y, name, texturePromise);
         }
     }
-    
-    public abstract isClickable(): boolean;
 
     public addTextures(textures: string[], frame?: string | number): void {
         for (const texture of textures) {
@@ -261,7 +260,7 @@ export abstract class Character extends Container {
     }
 
     private createStartTransition(scalingFactor: number, emoteY: number) {
-        this.emoteTween = this.scene.tweens.add({
+        this.emoteTween = this.scene?.tweens.add({
             targets: this.emote,
             props: {
                 scale: scalingFactor,
@@ -277,7 +276,7 @@ export abstract class Character extends Container {
     }
 
     private startPulseTransition(emoteY: number, scalingFactor: number) {
-        this.emoteTween = this.scene.tweens.add({
+        this.emoteTween = this.scene?.tweens.add({
             targets: this.emote,
             props: {
                 y: emoteY * 1.3,
@@ -294,7 +293,7 @@ export abstract class Character extends Container {
     }
 
     private startExitTransition(emoteY: number) {
-        this.emoteTween = this.scene.tweens.add({
+        this.emoteTween = this.scene?.tweens.add({
             targets: this.emote,
             props: {
                 alpha: 0,

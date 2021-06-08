@@ -23,6 +23,8 @@ export class SelectCompanionScene extends ResizableScene {
     private saveZoom: number = 0;
 
     private currentCompanion = 0;
+    private pointerClicked: boolean = false;
+    private pointerTimer: number = 0;
 
     constructor() {
         super({
@@ -72,7 +74,12 @@ export class SelectCompanionScene extends ResizableScene {
     }
 
     update(time: number, delta: number): void {
-
+        // pointerTimer is set to 250 when pointerdown events is trigger
+        // After 250ms, pointerClicked is set to false and the pointerdown events can be trigger again
+        this.pointerTimer -= delta;
+        if (this.pointerTimer <= 0) {
+            this.pointerClicked = false;
+        }
     }
 
     public selectCompanion(): void {
@@ -105,6 +112,14 @@ export class SelectCompanionScene extends ResizableScene {
             });
 
             companion.setInteractive().on("pointerdown", () => {
+                if (this.pointerClicked) {
+                    return;
+                }
+                //To not trigger two time the pointerdown events :
+                // We set a boolean to true so that pointerdown events does nothing when the boolean is true
+                // We set a timer that we decrease in update function to not trigger the pointerdown events twice
+                this.pointerClicked = true;
+                this.pointerTimer = 250;
                 this.currentCompanion = i;
                 this.moveCompanion();
             });

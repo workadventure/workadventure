@@ -1,10 +1,6 @@
 import "jasmine";
-import {GameRoom, ConnectCallback, DisconnectCallback } from "_Model/GameRoom";
-import {Point} from "../src/Model/Websocket/MessageUserPosition";
-import { Group } from "../src/Model/Group";
 import {PositionNotifier} from "../src/Model/PositionNotifier";
 import {User, UserSocket} from "../src/Model/User";
-import {PointInterface} from "../src/Model/Websocket/PointInterface";
 import {Zone} from "_Model/Zone";
 import {Movable} from "_Model/Movable";
 import {PositionInterface} from "_Model/PositionInterface";
@@ -30,14 +26,14 @@ describe("PositionNotifier", () => {
             y: 500,
             moving: false,
             direction: 'down'
-        }, false, positionNotifier, {} as UserSocket, [], 'foo', []);
+        }, false, positionNotifier, {} as UserSocket, [], null, 'foo', []);
 
         const user2 = new User(2, 'test', '10.0.0.2', {
             x: -9999,
             y: -9999,
             moving: false,
             direction: 'down'
-        }, false, positionNotifier, {} as UserSocket, [], 'foo', []);
+        }, false, positionNotifier, {} as UserSocket, [], null, 'foo', []);
 
         positionNotifier.addZoneListener({} as ZoneSocket, 0, 0);
         positionNotifier.addZoneListener({} as ZoneSocket, 0, 1);
@@ -105,14 +101,14 @@ describe("PositionNotifier", () => {
             y: 500,
             moving: false,
             direction: 'down'
-        }, false, positionNotifier, {} as UserSocket, [], 'foo', []);
+        }, false, positionNotifier, {} as UserSocket, [], null, 'foo', []);
 
         const user2 = new User(2, 'test', '10.0.0.2', {
             x: 0,
             y: 0,
             moving: false,
             direction: 'down'
-        }, false, positionNotifier, {} as UserSocket, [], 'foo', []);
+        }, false, positionNotifier, {} as UserSocket, [], null, 'foo', []);
 
         const listener = {} as ZoneSocket;
         positionNotifier.addZoneListener(listener, 0, 0);

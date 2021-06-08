@@ -21,7 +21,6 @@ import type {
     ITiledMapLayer,
     ITiledMapLayerProperty,
     ITiledMapObject,
-    ITiledText,
     ITiledMapTileLayer,
     ITiledTileSet
 } from "../Map/ITiledMap";
@@ -29,7 +28,7 @@ import type {AddPlayerInterface} from "./AddPlayerInterface";
 import {PlayerAnimationDirections} from "../Player/Animation";
 import {PlayerMovement} from "./PlayerMovement";
 import {PlayersPositionInterpolator} from "./PlayersPositionInterpolator";
-import {playerClickedEvent, RemotePlayer} from "../Entity/RemotePlayer";
+import {RemotePlayer} from "../Entity/RemotePlayer";
 import {Queue} from 'queue-typescript';
 import {SimplePeer, UserSimplePeerInterface} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
@@ -572,6 +571,7 @@ export class GameScene extends DirtyScene implements CenterListener {
                     characterLayers: message.characterLayers,
                     name: message.name,
                     position: message.position,
+                    visitCardUrl: message.visitCardUrl,
                     companion: message.companion
                 }
                 this.addPlayer(userMessage);
@@ -1376,12 +1376,10 @@ ${escapedMessage}
             texturesPromise,
             addPlayerData.position.direction as PlayerAnimationDirections,
             addPlayerData.position.moving,
+            addPlayerData.visitCardUrl,
             addPlayerData.companion,
             addPlayerData.companion !== null ? lazyLoadCompanionResource(this.load, addPlayerData.companion) : undefined
         );
-        player.on(playerClickedEvent, (userID:number) => {
-            this.connection?.requestVisitCardUrl(userID);
-        })
         this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);
         player.updatePosition(addPlayerData.position);
