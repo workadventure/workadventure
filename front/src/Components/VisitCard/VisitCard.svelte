@@ -17,17 +17,6 @@
     width: 530px;
     margin-top: 200px;
     max-width: 100vw;
-    
-    .defaultCard {
-      border-radius: 5px;
-      border: 2px black solid;
-      background-color: whitesmoke;
-      width: 530px;
-      
-      header {
-        padding: 5px;
-      }
-    }
 
     iframe {
       border: 0;

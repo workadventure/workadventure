@@ -39,6 +39,14 @@ class WaScaleManager {
         const style = this.scaleManager.canvas.style;
         style.width = Math.ceil(realSize.width / devicePixelRatio) + 'px';
         style.height = Math.ceil(realSize.height / devicePixelRatio) + 'px';
+
+        // Resize the game element at the same size at the canvas
+        const gameStyle = document.getElementById('game')?.style;
+        if (gameStyle != undefined) {
+            gameStyle.height = style.height;
+            gameStyle.width = style.width;
+        }
+
         // Note: onResize will be called twice (once here and once is Game.ts), but we have no better way.
         for (const scene of this.game.scene.getScenes(true)) {
             if (scene instanceof ResizableScene) {
