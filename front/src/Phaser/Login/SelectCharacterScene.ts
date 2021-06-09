@@ -124,9 +124,14 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         selectCharacterSceneVisibleStore.set(false);
     }
 
-    createCurrentPlayer(): void {
+    createCurrentPlayer(): void {        
         for (let i = 0; i <this.playerModels.length; i++) {
             const playerResource = this.playerModels[i];
+
+            //check already exist texture
+            if(this.players.find((c) => c.texture.key === playerResource.name)){
+                continue;
+            }
 
             const [middleX, middleY] = this.getCharacterPosition();
             const player = this.physics.add.sprite(middleX, middleY, playerResource.name, 0);
@@ -258,6 +263,8 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         }
 
         if(this.lazyloadingAttempt){
+            //re-render players list
+            this.createCurrentPlayer();
             this.moveUser();
             this.lazyloadingAttempt = false;
         }
