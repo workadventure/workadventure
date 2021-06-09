@@ -589,7 +589,6 @@ input[type=range]:focus::-ms-fill-upper {
 /* Let's make sure videos are vertically centered if they need to be cropped */
 .media-container {
     display: flex;
-    justify-content: center;
     flex-direction: column;
     overflow: hidden;
     border-radius: 15px;
