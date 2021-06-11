@@ -1,16 +1,10 @@
 import {derived, get, Readable, readable, writable, Writable} from "svelte/store";
 import {peerStore} from "./PeerStore";
-import {localUserStore} from "../Connexion/LocalUserStore";
-import {ITiledMapGroupLayer, ITiledMapObjectLayer, ITiledMapTileLayer} from "../Phaser/Map/ITiledMap";
-import {userMovingStore} from "./GameStore";
-import {HtmlUtils} from "../WebRtc/HtmlUtils";
-import {
-    audioConstraintStore, cameraEnergySavingStore,
-    enableCameraSceneVisibilityStore,
-    gameOverlayVisibilityStore, LocalStreamStoreValue, privacyShutdownStore,
-    requestedCameraState,
-    requestedMicrophoneState, videoConstraintStore
+import type {
+    LocalStreamStoreValue,
 } from "./MediaStore";
+import {DivImportance} from "../WebRtc/LayoutManager";
+import {gameOverlayVisibilityStore} from "./GameOverlayStoreVisibility";
 
 declare const navigator:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -191,3 +185,35 @@ export const screenSharingAvailableStore = derived(peerStore, ($peerStore, set) 
 
     set($peerStore.size !== 0);
 });
+
+export interface ScreenSharingLocalMedia {
+    uniqueId: string;
+    importanceStore: Writable<DivImportance>;
+    stream: MediaStream|null;
+    //subscribe(this: void, run: Subscriber<ScreenSharingLocalMedia>, invalidate?: (value?: ScreenSharingLocalMedia) => void): Unsubscriber;
+}
+
+/**
+ * The representation of the screen sharing stream.
+ */
+export const screenSharingLocalMedia = readable<ScreenSharingLocalMedia|null>(null, function start(set) {
+
+    const localMedia: ScreenSharingLocalMedia = {
+        uniqueId: "localScreenSharingStream",
+        importanceStore: writable(DivImportance.Normal),
+        stream: null
+    }
+
+    const unsubscribe = screenSharingLocalStreamStore.subscribe((screenSharingLocalStream) => {
+        if (screenSharingLocalStream.type === "success") {
+            localMedia.stream = screenSharingLocalStream.stream;
+        } else {
+            localMedia.stream = null;
+        }
+        set(localMedia);
+    });
+
+    return function stop() {
+        unsubscribe();
+    };
+})

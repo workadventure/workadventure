@@ -30,7 +30,7 @@ import {PlayerMovement} from "./PlayerMovement";
 import {PlayersPositionInterpolator} from "./PlayersPositionInterpolator";
 import {RemotePlayer} from "../Entity/RemotePlayer";
 import {Queue} from 'queue-typescript';
-import {SimplePeer, UserSimplePeerInterface} from "../../WebRtc/SimplePeer";
+import {SimplePeer} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
 import {lazyLoadPlayerCharacterTextures, loadCustomTexture} from "../Entity/PlayerTexturesLoadingManager";
 import {
@@ -93,7 +93,7 @@ import {PinchManager} from "../UserInput/PinchManager";
 import {joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey} from "../Components/MobileJoystick";
 import {DEPTH_OVERLAY_INDEX} from "./DepthIndexes";
 import {waScaleManager} from "../Services/WaScaleManager";
-import {peerStore} from "../../Stores/PeerStore";
+import {peerStore, screenSharingPeerStore} from "../../Stores/PeerStore";
 import {EmoteManager} from "./EmoteManager";
 
 export interface GameSceneInitInterface {
@@ -646,12 +646,13 @@ export class GameScene extends DirtyScene implements CenterListener {
             // When connection is performed, let's connect SimplePeer
             this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic, this.playerName);
             peerStore.connectToSimplePeer(this.simplePeer);
+            screenSharingPeerStore.connectToSimplePeer(this.simplePeer);
             this.GlobalMessageManager = new GlobalMessageManager(this.connection);
             userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
             const self = this;
             this.simplePeer.registerPeerConnectionListener({
-                onConnect(user: UserSimplePeerInterface) {
+                onConnect(peer) {
                     self.presentationModeSprite.setVisible(true);
                     self.chatModeSprite.setVisible(true);
                     self.openChatIcon.setVisible(true);

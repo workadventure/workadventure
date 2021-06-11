@@ -5,8 +5,9 @@ import type {RoomConnection} from "../Connexion/RoomConnection";
 import {blackListManager} from "./BlackListManager";
 import type {Subscription} from "rxjs";
 import type {UserSimplePeerInterface} from "./SimplePeer";
-import {get} from "svelte/store";
+import {get, readable, Readable, writable, Writable} from "svelte/store";
 import {obtainedMediaConstraintStore} from "../Stores/MediaStore";
+import {DivImportance} from "./LayoutManager";
 
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
@@ -22,12 +23,16 @@ export class VideoPeer extends Peer {
     public _connected: boolean = false;
     private remoteStream!: MediaStream;
     private blocked: boolean = false;
-    private userId: number;
-    private userName: string;
+    public readonly userId: number;
+    public readonly uniqueId: string;
     private onBlockSubscribe: Subscription;
     private onUnBlockSubscribe: Subscription;
+    public readonly streamStore: Readable<MediaStream | null>;
+    public readonly importanceStore: Writable<DivImportance>;
+    public readonly statusStore: Readable<"connecting" | "connected" | "error" | "closed">;
+    public readonly constraintsStore: Readable<MediaStreamConstraints|null>;
 
-    constructor(public user: UserSimplePeerInterface, initiator: boolean, private connection: RoomConnection, localStream: MediaStream | null) {
+    constructor(public user: UserSimplePeerInterface, initiator: boolean, public readonly userName: string, private connection: RoomConnection, localStream: MediaStream | null) {
         super({
             initiator: initiator ? initiator : false,
             //reconnectTimer: 10000,
@@ -46,7 +51,70 @@ export class VideoPeer extends Peer {
         });
 
         this.userId = user.userId;
-        this.userName = user.name || '';
+        this.uniqueId = 'video_'+this.userId;
+
+        this.streamStore = readable<MediaStream|null>(null, (set) => {
+            const onStream = (stream: MediaStream|null) => {
+                set(stream);
+            };
+            const onData = (chunk: Buffer) => {
+                this.on('data',  (chunk: Buffer) => {
+                    const message = JSON.parse(chunk.toString('utf8'));
+                    if (message.type === MESSAGE_TYPE_CONSTRAINT) {
+                        if (!message.video) {
+                            set(null);
+                        }
+                    }
+                });
+            }
+
+            this.on('stream', onStream);
+            this.on('data', onData);
+
+            return () => {
+                this.off('stream', onStream);
+                this.off('data', onData);
+            };
+        });
+
+        this.constraintsStore = readable<MediaStreamConstraints|null>(null, (set) => {
+            const onData = (chunk: Buffer) => {
+                const message = JSON.parse(chunk.toString('utf8'));
+                if(message.type === MESSAGE_TYPE_CONSTRAINT) {
+                    set(message);
+                }
+            }
+
+            this.on('data', onData);
+
+            return () => {
+                this.off('data', onData);
+            };
+        });
+
+        this.importanceStore = writable(DivImportance.Normal);
+
+        this.statusStore = readable<"connecting" | "connected" | "error" | "closed">("connecting", (set) => {
+            const onConnect = () => {
+                set('connected');
+            };
+            const onError = () => {
+                set('error');
+            };
+            const onClose = () => {
+                set('closed');
+            };
+
+            this.on('connect', onConnect);
+            this.on('error', onError);
+            this.on('close', onClose);
+
+            return () => {
+                this.off('connect', onConnect);
+                this.off('error', onError);
+                this.off('close', onClose);
+            };
+        });
 
         //start listen signal for the peer connection
         this.on('signal', (data: unknown) => {
@@ -152,7 +220,7 @@ export class VideoPeer extends Peer {
             if (blackListManager.isBlackListed(this.userId) || this.blocked) {
                 this.toggleRemoteStream(false);
             }
-            mediaManager.addStreamRemoteVideo("" + this.userId, stream);
+            //mediaManager.addStreamRemoteVideo("" + this.userId, stream);
         }catch (err){
             console.error(err);
         }

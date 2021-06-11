@@ -28,8 +28,10 @@ export interface UserSimplePeerInterface{
     webRtcPassword?: string|undefined;
 }
 
+export type RemotePeer = VideoPeer | ScreenSharingPeer;
+
 export interface PeerConnectionListener {
-    onConnect(user: UserSimplePeerInterface): void;
+    onConnect(user: RemotePeer): void;
 
     onDisconnect(userId: number): void;
 }
@@ -159,20 +161,17 @@ export class SimplePeer {
 
         let name = user.name;
         if (!name) {
-            const userSearch = this.Users.find((userSearch: UserSimplePeerInterface) => userSearch.userId === user.userId);
-            if (userSearch) {
-                name = userSearch.name;
-            }
+            name = this.getName(user.userId);
         }
 
         mediaManager.removeActiveVideo("" + user.userId);
 
-        mediaManager.addActiveVideo(user, name);
+        //mediaManager.addActiveVideo(user, name);
 
         this.lastWebrtcUserName = user.webRtcUser;
         this.lastWebrtcPassword = user.webRtcPassword;
 
-        const peer = new VideoPeer(user, user.initiator ? user.initiator : false, this.Connection, localStream);
+        const peer = new VideoPeer(user, user.initiator ? user.initiator : false, name, this.Connection, localStream);
 
         //permit to send message
         mediaManager.addSendMessageCallback(user.userId,(message: string) => {
@@ -196,9 +195,18 @@ export class SimplePeer {
         this.PeerConnectionArray.set(user.userId, peer);
 
         for (const peerConnectionListener of this.peerConnectionListeners) {
-            peerConnectionListener.onConnect(user);
+            peerConnectionListener.onConnect(peer);
         }
         return peer;
+    }
+
+    private getName(userId: number): string {
+        const userSearch = this.Users.find((userSearch: UserSimplePeerInterface) => userSearch.userId === userId);
+        if (userSearch) {
+            return userSearch.name || '';
+        } else {
+            return '';
+        }
     }
 
     /**
@@ -222,10 +230,10 @@ export class SimplePeer {
         }
 
         // We should display the screen sharing ONLY if we are not initiator
-        if (!user.initiator) {
+/*        if (!user.initiator) {
             mediaManager.removeActiveScreenSharingVideo("" + user.userId);
             mediaManager.addScreenSharingActiveVideo("" + user.userId);
-        }
+        }*/
 
         // Enrich the user with last known credentials (if they are not set in the user object, which happens when a user triggers the screen sharing)
         if (user.webRtcUser === undefined) {
@@ -233,11 +241,13 @@ export class SimplePeer {
             user.webRtcPassword = this.lastWebrtcPassword;
         }
 
-        const peer = new ScreenSharingPeer(user, user.initiator ? user.initiator : false, this.Connection, stream);
+        const name = this.getName(user.userId);
+
+        const peer = new ScreenSharingPeer(user, user.initiator ? user.initiator : false, name, this.Connection, stream);
         this.PeerScreenSharingConnectionArray.set(user.userId, peer);
 
         for (const peerConnectionListener of this.peerConnectionListeners) {
-            peerConnectionListener.onConnect(user);
+            peerConnectionListener.onConnect(peer);
         }
         return peer;
     }
@@ -288,7 +298,7 @@ export class SimplePeer {
      */
     private closeScreenSharingConnection(userId : number) {
         try {
-            mediaManager.removeActiveScreenSharingVideo("" + userId);
+            //mediaManager.removeActiveScreenSharingVideo("" + userId);
             const peer = this.PeerScreenSharingConnectionArray.get(userId);
             if (peer === undefined) {
                 console.warn("closeScreenSharingConnection => Tried to close connection for user "+userId+" but could not find user")

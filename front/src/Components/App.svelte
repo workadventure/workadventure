@@ -1,5 +1,5 @@
 <script lang="typescript">
-    import {enableCameraSceneVisibilityStore, gameOverlayVisibilityStore} from "../Stores/MediaStore";
+    import {enableCameraSceneVisibilityStore} from "../Stores/MediaStore";
     import CameraControls from "./CameraControls.svelte";
     import MyCamera from "./MyCamera.svelte";
     import SelectCompanionScene from "./SelectCompanion/SelectCompanionScene.svelte";
@@ -21,8 +21,11 @@
     import AudioPlaying from "./UI/AudioPlaying.svelte";
     import {soundPlayingStore} from "../Stores/SoundPlayingStore";
     import ErrorDialog from "./UI/ErrorDialog.svelte";
+    import VideoOverlay from "./Video/VideoOverlay.svelte";
+    import {gameOverlayVisibilityStore} from "../Stores/GameOverlayStoreVisibility";
 
     export let game: Game;
+
 </script>
 
 <div>
@@ -66,6 +69,7 @@
     -->
     {#if $gameOverlayVisibilityStore}
         <div>
+            <VideoOverlay></VideoOverlay>
             <MyCamera></MyCamera>
             <CameraControls></CameraControls>
         </div>
