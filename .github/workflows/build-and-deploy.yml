@@ -155,7 +155,7 @@ jobs:
           CERTS_PRIVATE_KEY: ${{ secrets.CERTS_PRIVATE_KEY }}
 
       - name: Download certificate
-        run: mkdir secrets && scp -i secret.key ubuntu@cert.workadventu.re:./config/live/workadventu.re/* secrets/
+        run: mkdir secrets && scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i secret.key ubuntu@cert.workadventu.re:./config/live/workadventu.re/* secrets/
 
       - name: Install certificates in namespace
         uses: steebchen/kubectl@v1.0.0
