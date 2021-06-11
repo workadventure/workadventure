@@ -165,6 +165,14 @@ jobs:
           args: create namespace workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         continue-on-error: true
 
+      - name: Delete old certificates in namespace
+        uses: steebchen/kubectl@v1.0.0
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
+        with:
+          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} delete secret certificate-tls
+        continue-on-error: true
+
       - name: Install certificates in namespace
         uses: steebchen/kubectl@v1.0.0
         env:
