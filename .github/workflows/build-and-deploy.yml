@@ -149,6 +149,21 @@ jobs:
       # Create a slugified value of the branch
       - uses: rlespinasse/github-slug-action@3.1.0
 
+      - name: Write certificate
+        run: echo "${CERTS_PRIVATE_KEY}" > secret.key
+        env:
+          CERTS_PRIVATE_KEY: ${{ secrets.CERTS_PRIVATE_KEY }}
+
+      - name: Download certificate
+        run: mkdir secrets && scp -i secret.key ubuntu@cert.workadventu.re:./config/live/workadventu.re/* secrets/
+
+      - name: Install certificates in namespace
+        uses: steebchen/kubectl@v1.0.0
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE }}
+        with:
+          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} create secret tls certificate-tls --key="secrets/privkey.pem" --cert="secrets/fullchain.pem"
+
       - name: Deploy
         uses: thecodingmachine/deeployer-action@master
         env:
