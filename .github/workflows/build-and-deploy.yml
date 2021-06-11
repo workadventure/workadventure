@@ -150,12 +150,12 @@ jobs:
       - uses: rlespinasse/github-slug-action@3.1.0
 
       - name: Write certificate
-        run: echo "${CERTS_PRIVATE_KEY}" > secret.key
+        run: echo "${CERTS_PRIVATE_KEY}" > secret.key && chmod 0600 secret.key
         env:
           CERTS_PRIVATE_KEY: ${{ secrets.CERTS_PRIVATE_KEY }}
 
       - name: Download certificate
-        run: mkdir secrets && scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i secret.key ubuntu@cert.workadventu.re:./config/live/workadventu.re/* secrets/ && chmod 0600 secrets/*
+        run: mkdir secrets && scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i secret.key ubuntu@cert.workadventu.re:./config/live/workadventu.re/* secrets/*
 
       - name: Install certificates in namespace
         uses: steebchen/kubectl@v1.0.0
