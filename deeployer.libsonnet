@@ -135,6 +135,14 @@
                   }
                 }
               }
+            },
+            ingress+: {
+              spec+: {
+                tls+: [{
+                  hosts: ["api2-"+url],
+                  secretName: "certificate-tls"
+                }]
+              }
             }
           },
           pusher+: {
@@ -149,8 +157,46 @@
                   }
                 }
               }
-            }
-          }
+            },
+            ingress+: {
+              spec+: {
+                tls+: [{
+                  hosts: ["pusher-"+url],
+                  secretName: "certificate-tls"
+                }]
+              }
+             }
+          },
+          front+: {
+            ingress+: {
+              spec+: {
+                tls+: [{
+                  hosts: ["play-"+url],
+                  secretName: "certificate-tls"
+                }]
+              }
+             }
+          },
+          uploader+: {
+            ingress+: {
+              spec+: {
+                tls+: [{
+                  hosts: ["uploader-"+url],
+                  secretName: "certificate-tls"
+                }]
+              }
+             }
+          },
+          maps+: {
+            ingress+: {
+              spec+: {
+                tls+: [{
+                  hosts: ["maps-"+url],
+                  secretName: "certificate-tls"
+                }]
+              }
+             }
+          },
         }
   }
 }

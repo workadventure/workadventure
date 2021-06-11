@@ -160,7 +160,7 @@ jobs:
       - name: Install certificates in namespace
         uses: steebchen/kubectl@v1.0.0
         env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE }}
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
         with:
           args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} create secret tls certificate-tls --key="secrets/privkey.pem" --cert="secrets/fullchain.pem"
 
