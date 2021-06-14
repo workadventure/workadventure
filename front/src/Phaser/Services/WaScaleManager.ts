@@ -3,7 +3,6 @@ import ScaleManager = Phaser.Scale.ScaleManager;
 import {coWebsiteManager} from "../../WebRtc/CoWebsiteManager";
 import type {Game} from "../Game/Game";
 import {ResizableScene} from "../Login/ResizableScene";
-import * as Phaser from "phaser";
 
 
 class WaScaleManager {
