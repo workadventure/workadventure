@@ -4,7 +4,6 @@ import {coWebsiteManager} from "../../WebRtc/CoWebsiteManager";
 import type {Game} from "../Game/Game";
 import {ResizableScene} from "../Login/ResizableScene";
 import {HtmlUtils} from "../../WebRtc/HtmlUtils";
-import {INPUT_CONSOLE_MESSAGE} from "../../Administration/ConsoleGlobalMessageManager";
 
 
 class WaScaleManager {
