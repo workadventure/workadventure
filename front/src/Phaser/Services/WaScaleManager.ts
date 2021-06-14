@@ -44,8 +44,8 @@ class WaScaleManager {
 
         // Resize the game element at the same size at the canvas
         const gameStyle = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('game').style;
-        gameStyle.height = style.height;
         gameStyle.width = style.width;
+        gameStyle.height = style.height;
 
         // Note: onResize will be called twice (once here and once is Game.ts), but we have no better way.
         for (const scene of this.game.scene.getScenes(true)) {
