@@ -169,6 +169,7 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
             return;
         } catch (e) {
             currentStream = null;
+            requestedScreenSharingState.disableScreenSharing();
             console.info("Error. Unable to share screen.", e);
             set({
                 type: 'error',
