@@ -56,7 +56,7 @@ export abstract class Character extends Container {
             this.addTextures(textures, frame);
             this.invisible = false
         })
-        
+
         this.playerName = new Text(scene, 0,  playerNameY, name, {fontFamily: '"Press Start 2P"', fontSize: '8px', strokeThickness: 2, stroke: "gray"});
         this.playerName.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
         this.add(this.playerName);
@@ -80,7 +80,7 @@ export abstract class Character extends Container {
         this.setDepth(-1);
 
         this.playAnimation(direction, moving);
-        
+
         if (typeof companion === 'string') {
             this.addCompanion(companion, companionTexturePromise);
         }
@@ -94,7 +94,7 @@ export abstract class Character extends Container {
 
     public addTextures(textures: string[], frame?: string | number): void {
         for (const texture of textures) {
-            if(!this.scene.textures.exists(texture)){
+            if(this.scene && !this.scene.textures.exists(texture)){
                 throw new TextureError('texture not found');
             }
             const sprite = new Sprite(this.scene, 0, 0, texture, frame);
@@ -239,23 +239,23 @@ export abstract class Character extends Container {
                 this.scene.sys.updateList.remove(sprite);
             }
         }
-        this.list.forEach(objectContaining => objectContaining.destroy()) 
+        this.list.forEach(objectContaining => objectContaining.destroy())
         super.destroy();
     }
-    
+
     playEmote(emoteKey: string) {
         this.cancelPreviousEmote();
 
         const scalingFactor = waScaleManager.uiScalingFactor * 0.05;
         const emoteY = -30 - scalingFactor * 10;
-        
+
         this.playerName.setVisible(false);
         this.emote = new Sprite(this.scene, 0,  0, emoteKey);
         this.emote.setAlpha(0);
         this.emote.setScale(0.1 * scalingFactor);
         this.add(this.emote);
         this.scene.sys.updateList.add(this.emote);
-        
+
         this.createStartTransition(scalingFactor, emoteY);
     }
 
