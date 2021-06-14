@@ -4,12 +4,14 @@
     import microphoneCloseImg from "../images/microphone-close.svg";
     import reportImg from "./images/report.svg";
     import blockSignImg from "./images/blockSign.svg";
+    import {DivImportance} from "../../WebRtc/LayoutManager";
 
     export let peer: VideoPeer;
     let streamStore = peer.streamStore;
     let name = peer.userName;
     let statusStore = peer.statusStore;
     let constraintStore = peer.constraintsStore;
+    let importanceStore = peer.importanceStore;
 
     constraintStore.subscribe((vl) => console.log('CONS', vl));
 
@@ -40,6 +42,7 @@
             }
         }
     }
+
 </script>
 
 <div class="video-container">
@@ -59,7 +62,7 @@
         <img alt="Report this user" src={reportImg}>
         <span>Report/Block</span>
     </button>
-    <video use:srcObject={$streamStore} autoplay playsinline></video>
+    <video use:srcObject={$streamStore} autoplay playsinline on:click={() => peer.importanceStore.toggle()}></video>
     <img src={blockSignImg} class="block-logo" alt="Block">
     {#if $constraintStore && $constraintStore.audio !== false}
         <SoundMeterWidget stream={$streamStore}></SoundMeterWidget>

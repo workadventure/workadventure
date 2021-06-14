@@ -45,7 +45,7 @@
     {#if $streamStore === null}
         <i style="background-color: {getColorByString(name)};">{name}</i>
     {/if}
-    <video use:srcObject={$streamStore} autoplay playsinline></video>
+    <video use:srcObject={$streamStore} autoplay playsinline on:click={() => peer.importanceStore.toggle()}></video>
 </div>
 
 <style lang="scss">

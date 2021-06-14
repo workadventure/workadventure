@@ -5,6 +5,7 @@ import type {
 } from "./MediaStore";
 import {DivImportance} from "../WebRtc/LayoutManager";
 import {gameOverlayVisibilityStore} from "./GameOverlayStoreVisibility";
+import {createImportanceStore, ImportanceStore} from "./ImportanceStore";
 
 declare const navigator:any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -188,7 +189,7 @@ export const screenSharingAvailableStore = derived(peerStore, ($peerStore, set) 
 
 export interface ScreenSharingLocalMedia {
     uniqueId: string;
-    importanceStore: Writable<DivImportance>;
+    importanceStore: ImportanceStore;
     stream: MediaStream|null;
     //subscribe(this: void, run: Subscriber<ScreenSharingLocalMedia>, invalidate?: (value?: ScreenSharingLocalMedia) => void): Unsubscriber;
 }
@@ -200,7 +201,7 @@ export const screenSharingLocalMedia = readable<ScreenSharingLocalMedia|null>(nu
 
     const localMedia: ScreenSharingLocalMedia = {
         uniqueId: "localScreenSharingStream",
-        importanceStore: writable(DivImportance.Normal),
+        importanceStore: createImportanceStore(DivImportance.Normal),
         stream: null
     }
 

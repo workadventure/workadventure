@@ -15,6 +15,6 @@
     {:else if peer instanceof ScreenSharingPeer}
         <ScreenSharingMedia peer={peer}/>
     {:else}
-        <LocalStreamMedia stream={peer.stream}/>
+        <LocalStreamMedia peer={peer}/>
     {/if}
 </div>

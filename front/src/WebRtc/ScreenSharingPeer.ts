@@ -6,6 +6,8 @@ import {MESSAGE_TYPE_CONSTRAINT} from "./VideoPeer";
 import type {UserSimplePeerInterface} from "./SimplePeer";
 import {Readable, readable, writable, Writable} from "svelte/store";
 import {DivImportance} from "./LayoutManager";
+import type {ImportanceStore} from "../Stores/ImportanceStore";
+import {createImportanceStore} from "../Stores/ImportanceStore";
 
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
@@ -22,7 +24,7 @@ export class ScreenSharingPeer extends Peer {
     public readonly userId: number;
     public readonly uniqueId: string;
     public readonly streamStore: Readable<MediaStream | null>;
-    public readonly importanceStore: Writable<DivImportance>;
+    public readonly importanceStore: ImportanceStore;
     public readonly statusStore: Readable<"connecting" | "connected" | "error" | "closed">;
 
     constructor(user: UserSimplePeerInterface, initiator: boolean, public readonly userName: string, private connection: RoomConnection, stream: MediaStream | null) {
@@ -71,7 +73,7 @@ export class ScreenSharingPeer extends Peer {
             };
         });
 
-        this.importanceStore = writable(DivImportance.Important);
+        this.importanceStore = createImportanceStore(DivImportance.Important);
 
         this.statusStore = readable<"connecting" | "connected" | "error" | "closed">("connecting", (set) => {
             const onConnect = () => {
