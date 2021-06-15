@@ -111,7 +111,15 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.onResize();
     }
 
-    public doMoveCursorHorizontally(index: number): void {
+    public moveCursorHorizontally(index: number): void {
+        this.moveHorizontally = index;
+    }
+
+    public moveCursorVertically(index: number): void {
+        this.moveVertically = index;
+    }
+
+    private doMoveCursorHorizontally(index: number): void {
         this.selectedLayers[this.activeRow] += index;
         if (this.selectedLayers[this.activeRow] < 0) {
             this.selectedLayers[this.activeRow] = 0
@@ -123,7 +131,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.saveInLocalStorage();
     }
 
-    public doMoveCursorVertically(index:number): void {
+    private doMoveCursorVertically(index:number): void {
 
         this.activeRow += index;
         if (this.activeRow < 0) {
