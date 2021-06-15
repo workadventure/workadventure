@@ -17,20 +17,13 @@ import {helpCameraSettingsVisibleStore} from "../Stores/HelpCameraSettingsStore"
 export type UpdatedLocalStreamCallback = (media: MediaStream|null) => void;
 export type StartScreenSharingCallback = (media: MediaStream) => void;
 export type StopScreenSharingCallback = (media: MediaStream) => void;
-export type ReportCallback = (message: string) => void;
-export type ShowReportCallBack = (userId: string, userName: string|undefined) => void;
-export type HelpCameraSettingsCallBack = () => void;
 
 import {cowebsiteCloseButtonId} from "./CoWebsiteManager";
 import {gameOverlayVisibilityStore} from "../Stores/GameOverlayStoreVisibility";
 
 export class MediaManager {
-    private remoteVideo: Map<string, HTMLVideoElement> = new Map<string, HTMLVideoElement>();
-    //FIX ME SOUNDMETER: check stalability of sound meter calculation
-    //mySoundMeterElement: HTMLDivElement;
     startScreenSharingCallBacks : Set<StartScreenSharingCallback> = new Set<StartScreenSharingCallback>();
     stopScreenSharingCallBacks : Set<StopScreenSharingCallback> = new Set<StopScreenSharingCallback>();
-    showReportModalCallBacks : Set<ShowReportCallBack> = new Set<ShowReportCallBack>();
 
     private focused : boolean = true;
 
@@ -75,32 +68,7 @@ export class MediaManager {
                 }, this.userInputManager);
                 return;
             }
-
-            /*if (result.stream !== null) {
-                isScreenSharing = true;
-                this.addScreenSharingActiveVideo('me', DivImportance.Normal);
-                HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('screen-sharing-me').srcObject = result.stream;
-            } else {
-                if (isScreenSharing) {
-                    isScreenSharing = false;
-                    this.removeActiveScreenSharingVideo('me');
-                }
-            }*/
-
         });
-
-        /*screenSharingAvailableStore.subscribe((available) => {
-            if (available) {
-                document.querySelector('.btn-monitor')?.classList.remove('hide');
-            } else {
-                document.querySelector('.btn-monitor')?.classList.add('hide');
-            }
-        });*/
-    }
-
-    public updateScene(){
-        //FIX ME SOUNDMETER: check stability of sound meter calculation
-        //this.updateSoudMeter();
     }
 
     public showGameOverlay(): void {
@@ -134,68 +102,6 @@ export class MediaManager {
 
         gameOverlayVisibilityStore.hideGameOverlay();
     }
-
-    /*addActiveVideo(user: UserSimplePeerInterface, userName: string = ""){
-        const userId = ''+user.userId
-
-        userName = userName.toUpperCase();
-        const color = this.getColorByString(userName);
-
-        const html =  `
-            <div id="div-${userId}" class="video-container">
-                <div class="connecting-spinner"></div>
-                <div class="rtc-error" style="display: none"></div>
-                <i id="name-${userId}" style="background-color: ${color};">${userName}</i>
-                <img id="microphone-${userId}" title="mute" src="resources/logos/microphone-close.svg">
-                <button id="report-${userId}" class="report">
-                    <img title="report this user" src="resources/logos/report.svg">
-                    <span>Report/Block</span>
-                </button>
-                <video id="${userId}" autoplay playsinline></video>
-                <img src="resources/logos/blockSign.svg" id="blocking-${userId}" class="block-logo">
-                <div id="soundMeter-${userId}" class="sound-progress">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-            </div>
-        `;
-
-        layoutManager.add(DivImportance.Normal, userId, html);
-
-        this.remoteVideo.set(userId, HtmlUtils.getElementByIdOrFail<HTMLVideoElement>(userId));
-
-        //permit to create participant in discussion part
-        const showReportUser = () => {
-            for(const callBack of this.showReportModalCallBacks){
-                callBack(userId, userName);
-            }
-        };
-        this.addNewParticipant(userId, userName, undefined, showReportUser);
-
-        const reportBanUserActionEl: HTMLImageElement = HtmlUtils.getElementByIdOrFail<HTMLImageElement>(`report-${userId}`);
-        reportBanUserActionEl.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            showReportUser();
-        });
-    }
-
-    addScreenSharingActiveVideo(userId: string, divImportance: DivImportance = DivImportance.Important){
-
-        userId = this.getScreenSharingId(userId);
-        const html = `
-            <div id="div-${userId}" class="video-container">
-                <video id="${userId}" autoplay playsinline></video>
-            </div>
-        `;
-
-        layoutManager.add(divImportance, userId, html);
-
-        this.remoteVideo.set(userId, HtmlUtils.getElementByIdOrFail<HTMLVideoElement>(userId));
-    }*/
 
     private getScreenSharingId(userId: string): string {
         return `screen-sharing-${userId}`;
@@ -243,33 +149,6 @@ export class MediaManager {
         const blockLogoElement = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('blocking-'+userId);
         show ? blockLogoElement.classList.add('active') : blockLogoElement.classList.remove('active');
     }
-    /*addStreamRemoteVideo(userId: string, stream : MediaStream): void {
-        const remoteVideo = this.remoteVideo.get(userId);
-        if (remoteVideo === undefined) {
-            throw `Unable to find video for ${userId}`;
-        }
-        remoteVideo.srcObject = stream;
-    }
-    addStreamRemoteScreenSharing(userId: string, stream : MediaStream){
-        // In the case of screen sharing (going both ways), we may need to create the HTML element if it does not exist yet
-        const remoteVideo = this.remoteVideo.get(this.getScreenSharingId(userId));
-        if (remoteVideo === undefined) {
-            this.addScreenSharingActiveVideo(userId);
-        }
-
-        this.addStreamRemoteVideo(this.getScreenSharingId(userId), stream);
-    }*/
-
-    removeActiveVideo(userId: string){
-        //layoutManager.remove(userId);
-        //this.remoteVideo.delete(userId);
-
-        //permit to remove user in discussion part
-        this.removeParticipant(userId);
-    }
-    /*removeActiveScreenSharingVideo(userId: string) {
-        this.removeActiveVideo(this.getScreenSharingId(userId))
-    }*/
 
     isConnecting(userId: string): void {
         const connectingSpinnerDiv = this.getSpinner(userId);
@@ -328,13 +207,6 @@ export class MediaManager {
         return color;
     }
 
-    public addNewParticipant(userId: number|string, name: string|undefined, img?: string, showReportUserCallBack?: ShowReportCallBack){
-        discussionManager.addParticipant(userId, name, img, false, showReportUserCallBack);
-    }
-
-    public removeParticipant(userId: number|string){
-        discussionManager.removeParticipant(userId);
-    }
     public addTriggerCloseJitsiFrameButton(id: String, Function: Function){
         this.triggerCloseJistiFrame.set(id, Function);
     }
@@ -379,52 +251,6 @@ export class MediaManager {
     public setUserInputManager(userInputManager : UserInputManager){
         this.userInputManager = userInputManager;
         discussionManager.setUserInputManager(userInputManager);
-    }
-
-    public setShowReportModalCallBacks(callback: ShowReportCallBack){
-        this.showReportModalCallBacks.add(callback);
-    }
-
-    //FIX ME SOUNDMETER: check stalability of sound meter calculation
-    /*updateSoudMeter(){
-        try{
-            const volume = parseInt(((this.mySoundMeter ? this.mySoundMeter.getVolume() : 0) / 10).toFixed(0));
-            this.setVolumeSoundMeter(volume, this.mySoundMeterElement);
-
-            for(const indexUserId of this.soundMeters.keys()){
-                const soundMeter = this.soundMeters.get(indexUserId);
-                const soundMeterElement = this.soundMeterElements.get(indexUserId);
-                if(!soundMeter || !soundMeterElement){
-                    return;
-                }
-                const volumeByUser = parseInt((soundMeter.getVolume() / 10).toFixed(0));
-                this.setVolumeSoundMeter(volumeByUser, soundMeterElement);
-            }
-        }catch(err){
-            //console.error(err);
-        }
-    }*/
-
-    private setVolumeSoundMeter(volume: number, element: HTMLDivElement){
-        if(volume <= 0 && !element.classList.contains('active')){
-            return;
-        }
-        element.classList.remove('active');
-        if(volume <= 0){
-            return;
-        }
-        element.classList.add('active');
-        element.childNodes.forEach((value: ChildNode, index) => {
-            const elementChildre = element.children.item(index);
-            if(!elementChildre){
-                return;
-            }
-            elementChildre.classList.remove('active');
-            if((index +1) > volume){
-                return;
-            }
-            elementChildre.classList.add('active');
-        });
     }
 
     public getNotification(){

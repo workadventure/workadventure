@@ -1290,7 +1290,6 @@ ${escapedMessage}
      */
     update(time: number, delta: number) : void {
         this.dirty = false;
-        mediaManager.updateScene();
         this.currentTick = time;
         this.CurrentPlayer.moveUser(delta);
 

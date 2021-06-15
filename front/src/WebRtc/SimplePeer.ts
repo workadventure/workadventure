@@ -19,6 +19,7 @@ import {localStreamStore, LocalStreamStoreValue, obtainedMediaConstraintStore} f
 import {screenSharingLocalStreamStore} from "../Stores/ScreenSharingStore";
 import {DivImportance, layoutManager} from "./LayoutManager";
 import {HtmlUtils} from "./HtmlUtils";
+import {discussionManager} from "./DiscussionManager";
 
 export interface UserSimplePeerInterface{
     userId: number;
@@ -164,7 +165,7 @@ export class SimplePeer {
             name = this.getName(user.userId);
         }
 
-        mediaManager.removeActiveVideo("" + user.userId);
+        discussionManager.removeParticipant(user.userId);
 
         //mediaManager.addActiveVideo(user, name);
 

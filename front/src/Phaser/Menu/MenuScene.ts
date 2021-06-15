@@ -79,10 +79,6 @@ export class MenuScene extends Phaser.Scene {
         });
 
         this.gameReportElement = new ReportMenu(this, connectionManager.getConnexionType === GameConnexionTypes.anonymous);
-        mediaManager.setShowReportModalCallBacks((userId, userName) => {
-            this.closeAll();
-            this.gameReportElement.open(parseInt(userId), userName);
-        });
         showReportScreenStore.subscribe((user) => {
             this.closeAll();
             if (user !== null) {

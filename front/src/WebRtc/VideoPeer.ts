@@ -8,6 +8,7 @@ import type {UserSimplePeerInterface} from "./SimplePeer";
 import {get, readable, Readable} from "svelte/store";
 import {obtainedMediaConstraintStore} from "../Stores/MediaStore";
 import {DivImportance} from "./LayoutManager";
+import {discussionManager} from "./DiscussionManager";
 
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
@@ -234,7 +235,7 @@ export class VideoPeer extends Peer {
             }
             this.onBlockSubscribe.unsubscribe();
             this.onUnBlockSubscribe.unsubscribe();
-            mediaManager.removeActiveVideo("" + this.userId);
+            discussionManager.removeParticipant(this.userId);
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
             super.destroy(error);
