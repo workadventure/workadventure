@@ -2,25 +2,19 @@ import {EnableCameraSceneName} from "./EnableCameraScene";
 import Rectangle = Phaser.GameObjects.Rectangle;
 import {loadAllLayers} from "../Entity/PlayerTexturesLoadingManager";
 import Sprite = Phaser.GameObjects.Sprite;
-import Container = Phaser.GameObjects.Container;
 import {gameManager} from "../Game/GameManager";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {addLoader} from "../Components/Loader";
 import type {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
 import {AbstractCharacterScene} from "./AbstractCharacterScene";
 import {areCharacterLayersValid} from "../../Connexion/LocalUser";
-import { MenuScene } from "../Menu/MenuScene";
 import { SelectCharacterSceneName } from "./SelectCharacterScene";
 import {customCharacterSceneVisibleStore} from "../../Stores/CustomCharacterStore";
-import {selectCharacterSceneVisibleStore} from "../../Stores/SelectCharacterStore";
 import {waScaleManager} from "../Services/WaScaleManager";
 import {isMobile} from "../../Enum/EnvironmentVariable";
 import {CustomizedCharacter} from "../Entity/CustomizedCharacter";
 
 export const CustomizeSceneName = "CustomizeScene";
-
-export const CustomizeSceneKey = "CustomizeScene";
-const customizeSceneKey = 'customizeScene';
 
 export class CustomizeScene extends AbstractCharacterScene {
     private Rectangle!: Rectangle;
@@ -42,7 +36,6 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     preload() {
-        this.load.html(customizeSceneKey, 'resources/html/CustomCharacterScene.html');
 
         this.loadCustomSceneSelectCharacters().then((bodyResourceDescriptions) => {
             bodyResourceDescriptions.forEach((bodyResourceDescription) => {
