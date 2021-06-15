@@ -1,3 +1,8 @@
+import {SKIP_RENDER_OPTIMIZATIONS} from "../../Enum/EnvironmentVariable";
+import {coWebsiteManager} from "../../WebRtc/CoWebsiteManager";
+import {waScaleManager} from "../Services/WaScaleManager";
+import {ResizableScene} from "../Login/ResizableScene";
+
 const Events = Phaser.Core.Events;
 
 /**
@@ -5,8 +10,35 @@ const Events = Phaser.Core.Events;
  * It comes with an optimization to skip rendering.
  *
  * Beware, the "step" function might vary in future versions of Phaser.
+ *
+ * It also automatically calls "onResize" on any scenes extending ResizableScene.
  */
 export class Game extends Phaser.Game {
+
+    private _isDirty = false;
+
+
+    constructor(GameConfig: Phaser.Types.Core.GameConfig) {
+        super(GameConfig);
+
+        this.scale.on(Phaser.Scale.Events.RESIZE, () => {
+            for (const scene of this.scene.getScenes(true)) {
+                if (scene instanceof ResizableScene) {
+                    scene.onResize();
+                }
+            }
+        })
+
+        /*window.addEventListener('resize', (event) => {
+            // Let's trigger the onResize method of any active scene that is a ResizableScene
+            for (const scene of this.scene.getScenes(true)) {
+                if (scene instanceof ResizableScene) {
+                    scene.onResize(event);
+                }
+            }
+        });*/
+    }
+
     public step(time: number, delta: number)
     {
         // @ts-ignore
@@ -35,7 +67,7 @@ export class Game extends Phaser.Game {
         eventEmitter.emit(Events.POST_STEP, time, delta);
 
         // This "if" is the changed introduced by the new "Game" class to avoid rendering unnecessarily.
-        if (this.isDirty()) {
+        if (SKIP_RENDER_OPTIMIZATIONS || this.isDirty()) {
             const renderer = this.renderer;
 
             //  Run the Pre-render (clearing the canvas, setting background colors, etc)
@@ -62,6 +94,11 @@ export class Game extends Phaser.Game {
     }
 
     private isDirty(): boolean {
+        if (this._isDirty) {
+            this._isDirty = false;
+            return true;
+        }
+
         //  Loop through the scenes in forward order
         for (let i = 0; i < this.scene.scenes.length; i++)
         {
@@ -84,5 +121,12 @@ export class Game extends Phaser.Game {
         }
 
         return false;
+    }
+
+    /**
+     * Marks the game as needing to be redrawn.
+     */
+    public markDirty(): void {
+        this._isDirty = true;
     }
 }

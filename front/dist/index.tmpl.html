@@ -29,7 +29,6 @@
 
 
         <base href="/">
-        <link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet">
         <link href="https://unpkg.com/nes.css@2.3.0/css/nes.min.css" rel="stylesheet" />
 
         <title>WorkAdventure</title>
@@ -38,6 +37,8 @@
         <div class="main-container" id="main-container">
             <!-- Create the editor container -->
             <div id="game" class="game">
+                <div id="svelte-overlay">
+                </div>
                 <div id="game-overlay" class="game-overlay">
                     <div id="main-section" class="main-section">
                     </div>
@@ -45,33 +46,6 @@
                     </aside>
                     <div id="chat-mode" class="chat-mode three-col" style="display: none;">
                     </div>
-                    <div id="activeCam" class="activeCam">
-                        <div id="div-myCamVideo" class="video-container">
-                            <video id="myCamVideo" autoplay muted></video>
-                            <div id="mySoundMeter" class="sound-progress">
-                                <span></span>
-                                <span></span>
-                                <span></span>
-                                <span></span>
-                                <span></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="btn-cam-action">
-                        <div id="btn-monitor" class="btn-monitor">
-                            <img id="monitor" src="resources/logos/monitor.svg">
-                            <img id="monitor-close" src="resources/logos/monitor-close.svg">
-                        </div>
-                        <div id="btn-video" class="btn-video">
-                            <img id="cinema" src="resources/logos/cinema.svg">
-                            <img id="cinema-close" src="resources/logos/cinema-close.svg">
-                        </div>
-                        <div id="btn-micro" class="btn-micro">
-                            <img id="microphone" src="resources/logos/microphone.svg">
-                            <img id="microphone-close" src="resources/logos/microphone-close.svg">
-                        </div>
-                    </div>
-
                 </div>
             </div>
             <div id="cowebsite" class="cowebsite hidden">
@@ -106,30 +80,17 @@
                     </div>
                 </div>
                 <div class="audioplayer">
-                    <label id="label-audioplayer_decrease_while_talking" for="audiooplayer_decrease_while_talking" title="decrease background volume by 50% when entering conversations">
+                    <label id="label-audioplayer_decrease_while_talking" for="audioplayer_decrease_while_talking" title="decrease background volume by 50% when entering conversations">
                         reduce in conversations
                         <input type="checkbox" id="audioplayer_decrease_while_talking" checked />
                     </label>
                     <div id="audioplayer" style="visibility: hidden"></div>
                 </div>
             </div>
-            <div class="audio-playing">
-                <img src="/resources/logos/megaphone.svg" />
-            </div>
         </div>
 
         <div id="activeScreenSharing" class="active-screen-sharing active">
         </div>
-        <div id="webRtcSetup" class="webrtcsetup">
-            <img id="webRtcSetupNoVideo" class="background-img" src="resources/logos/cinema-close.svg">
-            <video id="myCamVideoSetup" autoplay muted></video>
-        </div>
-        <audio id="audio-webrtc-in">
-            <source src="/resources/objects/webrtc-in.mp3" type="audio/mp3">
-        </audio>
-        <audio id="audio-webrtc-out">
-            <source src="/resources/objects/webrtc-out.mp3" type="audio/mp3">
-        </audio>
         <audio id="report-message">
             <source src="/resources/objects/report-message.mp3" type="audio/mp3">
         </audio>

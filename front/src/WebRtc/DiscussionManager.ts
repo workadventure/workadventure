@@ -1,6 +1,6 @@
 import {HtmlUtils} from "./HtmlUtils";
-import {mediaManager, ReportCallback, ShowReportCallBack} from "./MediaManager";
-import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
+import type {ShowReportCallBack} from "./MediaManager";
+import type {UserInputManager} from "../Phaser/UserInput/UserInputManager";
 import {connectionManager} from "../Connexion/ConnectionManager";
 import {GameConnexionTypes} from "../Url/UrlManager";
 import {iframeListener} from "../Api/IframeListener";
@@ -171,6 +171,8 @@ export class DiscussionManager {
         const date = new Date();
         if(isMe){
             name = 'Me';
+        } else {
+            name = HtmlUtils.escapeHtml(name);
         }
         pMessage.innerHTML = `<span style="font-weight: bold">${name}</span>    
                     <span style="color:#bac2cc;display:inline-block;font-size:12px;">

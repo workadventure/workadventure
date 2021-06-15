@@ -1,18 +1,20 @@
 import {gameManager} from "../Game/GameManager";
-import Image = Phaser.GameObjects.Image;
 import Rectangle = Phaser.GameObjects.Rectangle;
 import {EnableCameraSceneName} from "./EnableCameraScene";
 import {CustomizeSceneName} from "./CustomizeScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {loadAllDefaultModels} from "../Entity/PlayerTexturesLoadingManager";
 import {addLoader} from "../Components/Loader";
-import {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
+import type {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
 import {AbstractCharacterScene} from "./AbstractCharacterScene";
 import {areCharacterLayersValid} from "../../Connexion/LocalUser";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
 import {MenuScene} from "../Menu/MenuScene";
-import { SelectCharacterMobileScene } from "./SelectCharacterMobileScene";
+import {selectCharacterSceneVisibleStore} from "../../Stores/SelectCharacterStore";
+import {customCharacterSceneVisibleStore} from "../../Stores/CustomCharacterStore";
+import {waScaleManager} from "../Services/WaScaleManager";
+import {isMobile} from "../../Enum/EnvironmentVariable";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
@@ -29,6 +31,10 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
     protected selectCharacterSceneElement!: Phaser.GameObjects.DOMElement;
     protected currentSelectUser = 0;
+    protected pointerClicked: boolean = false;
+    protected pointerTimer: number = 0;
+
+    protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
 
     constructor() {
         super({
@@ -43,36 +49,29 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             bodyResourceDescriptions.forEach((bodyResourceDescription) => {
                 this.playerModels.push(bodyResourceDescription);
             });
-        })
+            this.lazyloadingAttempt = true;
+        });
         this.playerModels = loadAllDefaultModels(this.load);
+        this.lazyloadingAttempt = false;
 
         //this function must stay at the end of preload function
         addLoader(this);
     }
 
     create() {
-
-        this.selectCharacterSceneElement = this.add.dom(-1000, 0).createFromCache(selectCharacterKey);
-        this.centerXDomElement(this.selectCharacterSceneElement, 150);
-        MenuScene.revealMenusAfterInit(this.selectCharacterSceneElement, selectCharacterKey);
-
-        this.selectCharacterSceneElement.addListener('click');
-        this.selectCharacterSceneElement.on('click',  (event:MouseEvent) => {
-            event.preventDefault();
-            if((event?.target as HTMLInputElement).id === 'selectCharacterButtonLeft') {
-                this.moveToLeft();
-            }else if((event?.target as HTMLInputElement).id === 'selectCharacterButtonRight') {
-                this.moveToRight();
-            }else if((event?.target as HTMLInputElement).id === 'selectCharacterSceneFormSubmit') {
-                this.nextSceneToCameraScene();
-            }else if((event?.target as HTMLInputElement).id === 'selectCharacterSceneFormCustomYourOwnSubmit') {
-                this.nextSceneToCustomizeScene();
-            }
+        selectCharacterSceneVisibleStore.set(true);
+        this.events.addListener('wake', () => {
+            waScaleManager.saveZoom();
+            waScaleManager.zoomModifier = isMobile() ? 2 : 1;
+            selectCharacterSceneVisibleStore.set(true);
         });
 
         if (touchScreenManager.supportTouchScreen) {
             new PinchManager(this);
         }
+
+        waScaleManager.saveZoom();
+        waScaleManager.zoomModifier = isMobile() ? 2 : 1;
 
         const rectangleXStart = this.game.renderer.width / 2 - (this.nbCharactersPerRow / 2) * 32 + 16;
         this.selectedRectangle = this.add.rectangle(rectangleXStart, 90, 32, 32).setStrokeStyle(2, 0xFFFFFF);
@@ -80,7 +79,6 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
         /*create user*/
         this.createCurrentPlayer();
-        const playerNumber = localUserStore.getPlayerCharacterIndex();
 
         this.input.keyboard.on('keyup-ENTER', () => {
             return this.nextSceneToCameraScene();
@@ -108,9 +106,12 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             return;
         }
         this.scene.stop(SelectCharacterSceneName);
+        waScaleManager.restoreZoom();
         gameManager.setCharacterLayers([this.selectedPlayer.texture.key]);
         gameManager.tryResumingGame(this, EnableCameraSceneName);
-        this.scene.remove(SelectCharacterSceneName);
+        this.players = [];
+        selectCharacterSceneVisibleStore.set(false);
+        this.events.removeListener('wake');
     }
 
     protected nextSceneToCustomizeScene(): void {
@@ -118,12 +119,19 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             return;
         }
         this.scene.sleep(SelectCharacterSceneName);
+        waScaleManager.restoreZoom();
         this.scene.run(CustomizeSceneName);
+        selectCharacterSceneVisibleStore.set(false);
     }
 
-    createCurrentPlayer(): void {
+    createCurrentPlayer(): void {        
         for (let i = 0; i <this.playerModels.length; i++) {
             const playerResource = this.playerModels[i];
+
+            //check already exist texture
+            if(this.players.find((c) => c.texture.key === playerResource.name)){
+                continue;
+            }
 
             const [middleX, middleY] = this.getCharacterPosition();
             const player = this.physics.add.sprite(middleX, middleY, playerResource.name, 0);
@@ -135,15 +143,22 @@ export class SelectCharacterScene extends AbstractCharacterScene {
                 repeat: -1
             });
             player.setInteractive().on("pointerdown", () => {
-                if(this.currentSelectUser === i){
+                if (this.pointerClicked) {
                     return;
                 }
+                if (this.currentSelectUser === i) {
+                    return;
+                }
+                //To not trigger two time the pointerdown events :
+                // We set a boolean to true so that pointerdown events does nothing when the boolean is true
+                // We set a timer that we decrease in update function to not trigger the pointerdown events twice
+                this.pointerClicked = true;
+                this.pointerTimer = 250;
                 this.currentSelectUser = i;
                 this.moveUser();
             });
             this.players.push(player);
         }
-
         this.selectedPlayer = this.players[this.currentSelectUser];
         this.selectedPlayer.play(this.playerModels[this.currentSelectUser].name);
     }
@@ -188,35 +203,35 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.moveUser();
     }
 
-    protected defineSetupPlayer(numero: number){
+    protected defineSetupPlayer(num: number){
         const deltaX = 32;
         const deltaY = 32;
         let [playerX, playerY] = this.getCharacterPosition(); // player X and player y are middle of the
 
-        playerX = ( (playerX - (deltaX * 2.5)) + ((deltaX) * (numero % this.nbCharactersPerRow)) ); // calcul position on line users
-        playerY = ( (playerY - (deltaY * 2)) + ((deltaY) * ( Math.floor(numero / this.nbCharactersPerRow) )) ); // calcul position on column users
+        playerX = ( (playerX - (deltaX * 2.5)) + ((deltaX) * (num % this.nbCharactersPerRow)) ); // calcul position on line users
+        playerY = ( (playerY - (deltaY * 2)) + ((deltaY) * ( Math.floor(num / this.nbCharactersPerRow) )) ); // calcul position on column users
 
         const playerVisible = true;
         const playerScale = 1;
-        const playserOpactity = 1;
+        const playerOpacity = 1;
 
         // if selected
-        if( numero === this.currentSelectUser ){
+        if( num === this.currentSelectUser ){
             this.selectedRectangle.setX(playerX);
             this.selectedRectangle.setY(playerY);
         }
 
-        return {playerX, playerY, playerScale, playserOpactity, playerVisible}
+        return {playerX, playerY, playerScale, playerOpacity, playerVisible}
     }
 
-    protected setUpPlayer(player: Phaser.Physics.Arcade.Sprite, numero: number){
+    protected setUpPlayer(player: Phaser.Physics.Arcade.Sprite, num: number){
 
-        const {playerX, playerY, playerScale, playserOpactity, playerVisible} = this.defineSetupPlayer(numero);
+        const {playerX, playerY, playerScale, playerOpacity, playerVisible} = this.defineSetupPlayer(num);
         player.setBounce(0.2);
-        player.setCollideWorldBounds(true);
+        player.setCollideWorldBounds(false);
         player.setVisible( playerVisible );
         player.setScale(playerScale, playerScale);
-        player.setAlpha(playserOpactity);
+        player.setAlpha(playerOpacity);
         player.setX(playerX);
         player.setY(playerY);
     }
@@ -240,12 +255,23 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     update(time: number, delta: number): void {
+        // pointerTimer is set to 250 when pointerdown events is trigger
+        // After 250ms, pointerClicked is set to false and the pointerdown events can be trigger again
+        this.pointerTimer -= delta;
+        if (this.pointerTimer <= 0) {
+            this.pointerClicked = false;
+        }
+
+        if(this.lazyloadingAttempt){
+            //re-render players list
+            this.createCurrentPlayer();
+            this.moveUser();
+            this.lazyloadingAttempt = false;
+        }
     }
 
-    public onResize(ev: UIEvent): void {
+    public onResize(): void {
         //move position of user
         this.moveUser();
-
-        this.centerXDomElement(this.selectCharacterSceneElement, 150);
     }
 }

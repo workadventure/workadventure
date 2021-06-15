@@ -36,6 +36,7 @@ export interface CharacterTexture {
 export interface FetchMemberDataByUuidResponse {
     uuid: string;
     tags: string[];
+    visitCardUrl: string|null;
     textures: CharacterTexture[];
     messages: unknown[];
     anonymous?: boolean;

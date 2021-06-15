@@ -66,6 +66,15 @@ message ReportPlayerMessage {
   string reportComment = 2;
 }
 
+message EmotePromptMessage {
+    string emote = 2;
+}
+
+message EmoteEventMessage {
+    int32 actorUserId = 1;
+    string emote = 2;
+}
+
 message QueryJitsiJwtMessage {
   string jitsiRoom = 1;
   string tag = 2; // FIXME: rather than reading the tag from the query, we should read it from the current map!
@@ -84,6 +93,7 @@ message ClientToServerMessage {
     StopGlobalMessage stopGlobalMessage = 10;
     ReportPlayerMessage reportPlayerMessage = 11;
     QueryJitsiJwtMessage queryJitsiJwtMessage = 12;
+    EmotePromptMessage emotePromptMessage = 13;
   }
 }
 
@@ -122,6 +132,7 @@ message SubMessage {
     UserJoinedMessage userJoinedMessage = 4;
     UserLeftMessage userLeftMessage = 5;
     ItemEventMessage itemEventMessage = 6;
+    EmoteEventMessage emoteEventMessage = 7;
   }
 }
 
@@ -146,6 +157,7 @@ message UserJoinedMessage {
   repeated CharacterLayerMessage characterLayers = 3;
   PositionMessage position = 4;
   CompanionMessage companion = 5;
+  string visitCardUrl = 6;
 }
 
 message UserLeftMessage {
@@ -247,6 +259,7 @@ message ServerToClientMessage {
     WorldFullMessage worldFullMessage = 16;
     RefreshRoomMessage refreshRoomMessage = 17; 
     WorldConnexionMessage worldConnexionMessage = 18;
+    EmoteEventMessage emoteEventMessage = 19;
   }
 }
 
@@ -262,6 +275,7 @@ message JoinRoomMessage {
   repeated string tag = 6;
   string IPAddress = 7;
   CompanionMessage companion = 8;
+  string visitCardUrl = 9;
 }
 
 message UserJoinedZoneMessage {
@@ -271,6 +285,7 @@ message UserJoinedZoneMessage {
   PositionMessage position = 4;
   Zone fromZone = 5;
   CompanionMessage companion = 6;
+  string visitCardUrl = 7;
 }
 
 message UserLeftZoneMessage {
@@ -317,6 +332,7 @@ message PusherToBackMessage {
     QueryJitsiJwtMessage queryJitsiJwtMessage = 11;
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
+    EmotePromptMessage emotePromptMessage = 14;
   }
 }
 
@@ -334,6 +350,7 @@ message SubToPusherMessage {
     ItemEventMessage itemEventMessage = 6;
     SendUserMessage sendUserMessage = 7;
     BanUserMessage banUserMessage = 8;
+    EmoteEventMessage emoteEventMessage = 9;
   }
 }
 

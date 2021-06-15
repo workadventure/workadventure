@@ -1,0 +1,1208 @@
+*{
+    font-family: 'Open Sans', sans-serif;
+    cursor: url('./images/cursor_normal.png'), auto;
+}
+* a, button, select{
+    cursor: url('./images/cursor_pointer.png'), pointer;
+}
+body{
+    overflow: hidden;
+}
+body button:focus,
+body img:focus,
+body input:focus {
+    outline: -webkit-focus-ring-color auto 0;
+}
+body .message-info{
+    width: 20%;
+    height: auto;
+    min-height: 30px;
+    position: absolute;
+    top: 5px;
+    left: 40%;
+    padding-top: 10px;
+    text-align: center;
+}
+body .message-info.error{
+    background: red;
+}
+body .message-info.success{
+    background: green;
+}
+body .message-info.info{
+    background: dodgerblue;
+}
+body .message-info.warning{
+    background: #ffa500d6;
+}
+.video-container{
+    position: relative;
+    transition: all 0.2s ease;
+    background-color: #00000099;
+    cursor: url('./images/cursor_pointer.png'), pointer;
+}
+.video-container i{
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    left: calc(50% - 50px);
+    top: calc(50% - 50px);
+    background-color: black;
+    border-radius: 50%;
+    text-align: center;
+    padding-top: 32px;
+    font-size: 28px;
+    color: white;
+    overflow: hidden;
+}
+
+.video-container img{
+    position: absolute;
+    display: none;
+    width: 40px;
+    height: 40px;
+    left: 5px;
+    bottom: 5px;
+    padding: 10px;
+    z-index: 2;
+}
+.video-container img.block-logo {
+    left: 30%;
+    bottom: 15%;
+    width: 150px;
+    height: 150px;
+}
+
+.video-container button.report{
+    display: block;
+    cursor: url('./images/cursor_pointer.png'), pointer;
+    background: none;
+    background-color: rgba(0, 0, 0, 0);
+    border: none;
+    background-color: black;
+    border-radius: 15px;
+    position: absolute;
+    width: 0px;
+    height: 35px;
+    right: 5px;
+    bottom: 5px;
+    padding: 0px;
+    overflow: hidden;
+    z-index: 2;
+    transition: all .5s ease;
+}
+
+.video-container:hover button.report{
+    width: 35px;
+    padding: 10px;
+}
+
+.video-container button.report:hover {
+    width: 160px;
+}
+
+.video-container button.report img{
+    position: absolute;
+    display: block;
+    bottom: 5px;
+    left: 5px;
+    margin: 0;
+    padding: 0;
+    cursor: url('./images/cursor_pointer.png'), pointer;
+    width: 25px;
+    height: 25px;
+}
+.video-container button.report span{
+    position: absolute;
+    bottom: 6px;
+    left: 36px;
+    color: white;
+    font-size: 16px;
+    cursor: url('./images/cursor_pointer.png'), pointer;
+}
+.video-container img.active {
+    display: block !important;
+}
+
+.video-container video{
+    height: 100%;
+    cursor: url('./images/cursor_pointer.png'), pointer;
+}
+
+.video-container video:focus{
+    outline: none;
+}
+
+.video-container.div-myCamVideo{
+    border: none;
+    background-color: transparent;
+}
+
+.div-myCamVideo {
+    position: absolute;
+    right: 15px;
+    bottom: 30px;
+    border-radius: 15px 15px 15px 15px;
+    max-height: 20%;
+    transition: right 350ms;
+}
+
+.div-myCamVideo.hide {
+    right: -20vw;
+}
+
+video.myCamVideo{
+    background-color: #00000099;
+    max-height: 20vh;
+    width: 15vw;
+    -webkit-transform: scaleX(-1);
+    transform: scaleX(-1);
+    border-radius: 15px 15px 15px 15px;
+    /*width: 200px;*/
+    /*height: 113px;*/
+}
+
+.sound-progress{
+    display: none;
+    position: absolute;
+    right: 14px;
+    top: calc(50% - 5px);
+}
+.sound-progress.active{
+    display: table-column;
+}
+.sound-progress span{
+    position: absolute;
+    color: black;
+    background-color: #00000020;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+}
+.sound-progress span.active{
+    background-color: #00c3ff66
+}
+.sound-progress span:nth-child(1){
+    top: calc(50% + 20px);
+}
+.sound-progress span:nth-child(2){
+    top: calc(50% + 10px);
+}
+.sound-progress span:nth-child(3){
+    top: calc(50% - 0px);
+}
+.sound-progress span:nth-child(4){
+    top: calc(50% - 10px);
+}
+.sound-progress span:nth-child(5){
+    top: calc(50% - 20px);
+}
+
+.btn-cam-action {
+    pointer-events: all;
+    position: absolute;
+    display: inline-flex;
+    bottom: 10px;
+    right: 15px;
+    width: 180px;
+    height: 40px;
+    text-align: center;
+    align-content: center;
+    align-items: center;
+    justify-content: flex-end;
+    justify-items: center;
+}
+/*btn animation*/
+.btn-cam-action div{
+    cursor: url('./images/cursor_pointer.png'), pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: solid 0px black;
+    width: 44px;
+    height: 44px;
+    background: #666;
+    box-shadow: 2px 2px 24px #444;
+    border-radius: 48px;
+    transform: translateY(20px);
+    transition-timing-function: ease-in-out;
+    margin: 0 4%;
+}
+.btn-cam-action div.disabled {
+    background: #d75555;
+}
+.btn-cam-action div.enabled {
+    background: #73c973;
+}
+.btn-cam-action:hover div{
+    transform: translateY(0);
+}
+.btn-cam-action div:hover{
+    background: #407cf7;
+    box-shadow: 4px 4px 48px #666;
+    transition: 120ms;
+}
+.btn-micro{
+    pointer-events: auto;
+    transition: all .3s;
+    /*right: 44px;*/
+}
+.btn-video{
+    pointer-events: auto;
+    transition: all .25s;
+    /*right: 134px;*/
+}
+.btn-monitor{
+    pointer-events: auto;
+    transition: all .2s;
+    /*right: 224px;*/
+}
+.btn-monitor.hide {
+    transform: translateY(60px);
+}
+.btn-cam-action:hover .btn-monitor.hide{
+    transform: translateY(60px);
+}
+.btn-copy{
+    pointer-events: auto;
+    transition: all .3s;
+    right: 44px;
+    opacity: 1;
+}
+.btn-cam-action div img{
+    height: 22px;
+    width: 30px;
+    position: relative;
+    cursor: url('./images/cursor_pointer.png'), pointer;
+}
+
+/* Spinner */
+.connecting-spinner {
+      /*display: inline-block;*/
+      position: absolute;
+      left: calc(50% - 62px);
+      top: calc(50% - 62px);
+
+
+      width: 130px;
+      height: 130px;
+  }
+.connecting-spinner:after {
+    content: " ";
+    display: block;
+    width: 108px;
+    height: 108px;
+    margin: 8px;
+    border-radius: 50%;
+    border: 6px solid #fff;
+    border-color: #fff transparent #fff transparent;
+    animation: connecting-spinner 1.2s linear infinite;
+}
+@keyframes connecting-spinner {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+
+.rtc-error {
+    position: absolute;
+    left: calc(50% - 68px);
+    top: calc(50% - 68px);
+
+
+    width: 130px;
+    height: 130px;
+}
+.rtc-error:after {
+    content: " ";
+    display: block;
+    width: 108px;
+    height: 108px;
+    margin: 8px;
+    border-radius: 50%;
+    border: 6px solid #f00;
+    animation: blinker 1s linear infinite;
+}
+
+@keyframes blinker {
+    50% {
+        opacity: 0;
+    }
+}
+
+/* New layout */
+body {
+    margin: 0;
+    height: 100%;
+    width: 100%;
+}
+.main-container {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+}
+
+@media (min-aspect-ratio: 1/1) {
+    .game-overlay {
+        flex-direction: row;
+    }
+
+    .sidebar {
+        flex-direction: column;
+    }
+
+    .sidebar > div {
+        max-height: 21%;
+    }
+
+    .sidebar > div:hover {
+        max-height: 25%;
+    }
+
+
+}
+
+#game {
+    position: relative; /* Position relative is needed for the game-overlay. */
+}
+
+.audioplayer:first-child  {
+    display: grid;
+    grid: 2rem / 4rem 10rem;
+}
+
+.audioplayer > button, .audioplayer > div, .audioplayer > label {
+    background-color: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.audioplayer > div {
+    padding-right: 1.2rem;
+}
+
+#audioplayerctrl {
+    position: fixed;
+    top: 0;
+    right: calc(50% - 120px);
+    padding: 0.3rem 0.5rem;
+    color: white;
+    transition: transform 0.5s;
+}
+
+#audioplayer_mute {
+    max-width: 5rem;
+    border: none;
+}
+#audioplayer_mute:focus, #audioplayer_mute:active {
+    outline: none;
+}
+#audioplayer_mute > svg {
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+#audioplayer_volume_icon_playing.muted {
+    visibility: hidden;
+    display: none;
+}
+#audioplayerctrl > #audioplayer_volume {
+    width: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+/*
+ * sollte eigentlich in den aspect-ratio teil ..
+ */
+#audioplayerctrl.loading {
+    transform: translateY(-90%);
+}
+#audioplayerctrl.hidden {
+    transform: translateY(-100%);
+}
+
+/*
+ * Style Input Range
+ * https://www.cssportal.com/style-input-range/
+ */
+input[type=range] {
+    height: 28px;
+    -webkit-appearance: none;
+    margin: 10px 0;
+    width: 100%;
+    background-color: transparent;
+}
+input[type=range]:focus {
+    outline: none;
+}
+input[type=range]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 5px;
+    animate: 0.2s;
+    box-shadow: 1px 1px 1px #000000;
+    background: #FFFFFF;
+    border-radius: 5px;
+    border: 1px solid #000000;
+}
+input[type=range]::-webkit-slider-thumb {
+    box-shadow: 1px 1px 1px #000000;
+    border: 1px solid #000000;
+    height: 20px;
+    width: 10px;
+    border-radius: 5px;
+    background: #FFFFFF;
+    -webkit-appearance: none;
+    margin-top: -8.5px;
+}
+input[type=range]:focus::-webkit-slider-runnable-track {
+    background: #FFFFFF;
+}
+input[type=range]::-moz-range-track {
+    width: 100%;
+    height: 5px;
+    animate: 0.2s;
+    box-shadow: 1px 1px 1px #000000;
+    background: #FFFFFF;
+    border-radius: 5px;
+    border: 1px solid #000000;
+}
+input[type=range]::-moz-range-thumb {
+    box-shadow: 1px 1px 1px #000000;
+    border: 1px solid #000000;
+    height: 20px;
+    width: 10px;
+    border-radius: 5px;
+    background: #FFFFFF;
+}
+input[type=range]::-ms-track {
+    width: 100%;
+    height: 5px;
+    animate: 0.2s;
+    background: transparent;
+    border-color: transparent;
+    color: transparent;
+}
+input[type=range]::-ms-fill-lower {
+    background: #FFFFFF;
+    border: 1px solid #000000;
+    border-radius: 10px;
+    box-shadow: 1px 1px 1px #000000;
+}
+input[type=range]::-ms-fill-upper {
+    background: #FFFFFF;
+    border: 1px solid #000000;
+    border-radius: 10px;
+    box-shadow: 1px 1px 1px #000000;
+}
+input[type=range]::-ms-thumb {
+    margin-top: 1px;
+    box-shadow: 1px 1px 1px #000000;
+    border: 1px solid #000000;
+    height: 20px;
+    width: 10px;
+    border-radius: 5px;
+    background: #FFFFFF;
+}
+input[type=range]:focus::-ms-fill-lower {
+    background: #FFFFFF;
+}
+input[type=range]:focus::-ms-fill-upper {
+    background: #FFFFFF;
+}
+
+
+.game-overlay {
+    display: none;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    /* TODO: DO WE NEED FLEX HERE???? WE WANT A SIDEBAR OF EXACTLY 25% (note: flex useful for direction!!!) */
+}
+
+.game-overlay + div {
+    pointer-events: none;
+}
+
+.game-overlay + div > div {
+    pointer-events: auto;
+}
+
+.game-overlay.active {
+    display: flex;
+}
+
+.game-overlay video {
+    width: 100%;
+}
+
+.main-section {
+    flex: 0 0 75%;
+    display: flex;
+    justify-content: start;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.main-section > div {
+    margin: 2%;
+    flex-basis: 96%;
+    transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s, flex-basis 0.2s;
+    cursor: url('./images/cursor_pointer.png'), pointer;
+    pointer-events: auto;
+    /*flex-shrink: 2;*/
+}
+
+.main-section > div:hover {
+    margin: 0%;
+    flex-basis: 100%;
+}
+
+.sidebar {
+    flex: 0 0 25%;
+    display: flex;
+}
+
+.sidebar > div {
+    margin: 2%;
+    transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s, max-height 0.2s, max-width 0.2s;
+    cursor: url('./images/cursor_pointer.png'), pointer;
+    border-radius: 15px 15px 15px 15px;
+    pointer-events: auto;
+}
+
+.sidebar > div:hover {
+    margin: 0%;
+}
+
+.sidebar > div video {
+    cursor: url('./images/cursor_pointer.png'), pointer;
+}
+
+/* Let's make sure videos are vertically centered if they need to be cropped */
+.media-container {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 15px;
+}
+
+.chat-mode {
+    display: grid;
+    width: 100%;
+
+    align-items: flex-start;
+
+    padding: 1%;
+}
+
+.chat-mode > div {
+    margin: 1%;
+    max-height: 96%;
+    transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s;
+    cursor: url('./images/cursor_pointer.png'), pointer;
+}
+
+.chat-mode > div:hover {
+    margin: 0%;
+}
+.chat-mode.one-col {
+    grid-template-columns: repeat(1, 1fr);
+}
+
+.chat-mode.two-col {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.chat-mode.three-col {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.chat-mode.four-col {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+/*CONSOLE*/
+
+.message-container,
+.main-console{
+    position: absolute;
+    width: 80%;
+    height: 80%;
+    min-height: 200px;
+    max-height: 80%;
+    top: -80%;
+    /*left: 10%;*/
+    left: 250px;
+    background: #333333;
+    z-index: 200;
+    transition: all 0.1s ease-out;
+    border-radius: 0 0 15px 15px;
+}
+
+.message-container{
+    height: auto;
+    border-radius: 0 0 10px 10px;
+    color: white;
+    top: 0;
+}
+
+.message-container .content-message{
+    position: relative;
+    padding: 20px;
+    margin: 20px;
+    overflow: scroll;
+    max-height: 400px;
+}
+
+.main-console div.console,
+.message-container div.clear {
+    position: absolute;
+    color: white;
+    z-index: 200;
+    transition: all 0.1s ease-out;
+    top: calc(100% + 2px);
+    width: 200px;
+    height: 40px;
+    background-color: #2d2d2dba;
+    left: calc(50% - 100px);
+    border-radius: 15px 15px 15px 15px;
+    text-align: center;
+}
+
+.main-console div.message,
+.main-console div.setting{
+    display: none;
+}
+
+.main-console div.message.active,
+.main-console div.setting.active{
+    display: block;
+}
+
+.message-container div.clear{
+    width: 100px;
+    left: calc(50% - 50px);
+}
+
+.main-console div.console img,
+.message-container div.clear img{
+    margin-top: 6px;
+    width: 30px;
+    height: 30px;
+    cursor: url('./images/cursor_pointer.png'), pointer;
+    padding: 0 5px;
+    transition: all .5s ease;
+    transform: rotateY(0);
+    opacity: 0.5;
+}
+.main-console div.console img:hover,
+.message-container div.clear img:hover{
+    opacity: 1;
+}
+
+.main-console div.console img.active,
+.message-container div.clear img{
+    transform: rotateY(3.142rad);
+    opacity: 1;
+}
+
+.main-console div.console p,
+.message-container div.clear p{
+    margin-top: 12px;
+}
+
+.main-console div.console:hover,
+.message-container div.clear:hover {
+    cursor: url('./images/cursor_pointer.png'), pointer;
+    top: calc(100% + 5px);
+    transform: scale(1.2) translateY(3px);
+}
+
+.main-console #input-send-text{
+    min-height: 200px;
+}
+
+.main-console #input-send-text .ql-editor{
+    color: white;
+    min-height: 200px;
+    max-height: 300px;
+}
+
+.main-console .ql-toolbar{
+    background: white;
+}
+
+.main-console .btn-action{
+    margin: 10px;
+    text-align: center;
+}
+
+.main-console .btn-action .btn{
+    border: 1px solid black;
+    background-color: #00000000;
+    color: #ffda01;
+    border-radius: 15px;
+    padding: 10px 30px;
+    transition: all .2s ease;
+}
+.main-console .btn-action .btn:hover{
+    cursor: url('./images/cursor_pointer.png'), pointer;
+    background-color: #ffda01;
+    color: black;
+    border: 1px solid black;
+    transform: scale(1.1);
+}
+
+.main-console .menu {
+    padding: 20px;
+    color: #ffffffa6;
+    text-align: center;
+}
+
+.main-console .menu span {
+    margin: 20px;
+    cursor: url('./images/cursor_pointer.png'), pointer;
+}
+
+.main-console .menu span.active {
+    color: white;
+    border-bottom: solid 1px white;
+}
+
+.main-console section{
+    text-align: center;
+    display: none;
+}
+
+.main-console section.active{
+    display: block;
+}
+
+.main-console section div.upload{
+    text-align: center;
+    border: solid 1px #ffda01;
+    height: 150px;
+    margin: 10px 200px;
+    padding: 20px;
+    min-height: 200px;
+}
+
+.main-console section div.upload label{
+    color: #ffda01;
+}
+.main-console section div.upload input{
+    display: none;
+}
+.main-console section div.upload label img{
+    height: 150px;
+    cursor: url('./images/cursor_pointer.png'), pointer;
+}
+.main-console section div.upload label img{
+    cursor: url('./images/cursor_pointer.png'), pointer;
+}
+
+
+/* VIDEO QUALITY */
+.main-console div.setting h1{
+    color: white;
+}
+.main-console div.setting select{
+    background: black;
+    color: white;
+    min-width: 280px;
+    text-align: center;
+    min-height: 40px;
+    padding: 10px;
+    border-radius: 15px;
+}
+.main-console div.setting select:focus{
+    border: solid 1px white;
+    outline: none;
+}
+.main-console div.setting.active section{
+    display: block;
+}
+
+
+/*REPORT input*/
+div.modal-report-user{
+    position: absolute;
+    width: 800px;
+    height: 600px;
+    left: calc(50% - 400px);
+    top: 100px;
+    background-color: #000000ad;
+    border-radius: 15px;
+}
+
+.modal-report-user textarea{
+    position: absolute;
+    height: 200px;
+    z-index: 999;
+    top: 200px;
+    background-color: #000000;
+    color: white;
+    width: calc(100% - 60px);
+    margin: 30px;
+    border-radius: 15px;
+}
+
+.modal-report-user img{
+    position: absolute;
+    height: 24px;
+    width: 24px;
+    z-index: 999;
+    left: calc(50% - 12px);
+    top: 10px;
+}
+
+.modal-report-user img#cancel-report-user{
+    position: absolute;
+    z-index: 999;
+    right: 0;
+    left: auto;
+    top: 0;
+    cursor: url('./images/cursor_pointer.png'), pointer;
+    width: 15px;
+    height: 15px;
+    margin: 10px;
+}
+
+.modal-report-user button{
+    position: absolute;
+    top: 450px;
+    left: calc(50% - 50px);
+    width: 100px;
+    border: 1px solid black;
+    background-color: #00000000;
+    color: #ffda01;
+    border-radius: 15px;
+    padding: 10px 30px;
+    transition: all .2s ease;
+}
+.modal-report-user button:hover{
+    cursor: url('./images/cursor_pointer.png'), pointer;
+    background-color: #ffda01;
+    color: black;
+    border: 1px solid black;
+    transform: scale(1.1);
+}
+
+.modal-report-user p#title-report-user{
+    font-size: 30px;
+    color: white;
+    position: absolute;
+    top: 30px;
+    width: 100%;
+    text-align: center;
+}
+
+.modal-report-user p#body-report-user{
+    font-size: 24px;
+    color: white;
+    position: absolute;
+    top: 70px;
+    width: 100%;
+    text-align: left;
+    padding: 30px;
+    max-width: calc(800px - 60px); /* size of modal - padding*/
+}
+
+/*MESSAGE*/
+.discussion{
+    position: fixed;
+    left: -300px;
+    top: 0px;
+    width: 220px;
+    height: 100%;
+    background-color: #333333;
+    padding: 20px;
+    transition: all 0.5s ease;
+}
+.discussion.active{
+    left: 0;
+}
+.discussion .active-btn{
+    display: none;
+    cursor: url('./images/cursor_pointer.png'), pointer;
+    height: 50px;
+    width: 50px;
+    background-color: #2d2d2dba;
+    position: absolute;
+    top: calc(50% - 25px);
+    margin-left: 315px;
+    border-radius: 50%;
+    border: none;
+    transition: all 0.5s ease;
+}
+.discussion .active-btn.active{
+    display: block;
+}
+.discussion .active-btn:hover {
+    transform: scale(1.1) rotateY(3.142rad);
+}
+.discussion .active-btn img{
+    width: 26px;
+    height: 26px;
+    margin: 13px 5px;
+}
+
+.discussion .close-btn{
+    position: absolute;
+    top: 0;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: url('./images/cursor_pointer.png'), pointer;
+}
+.discussion .close-btn img{
+    height: 15px;
+    right: 15px;
+}
+
+.discussion p{
+    color: white;
+    font-size: 22px;
+    padding-left: 10px;
+    margin: 0;
+}
+
+.discussion .participants{
+    height: 200px;
+    margin: 10px 0;
+}
+
+.discussion .participants .participant{
+    display: flex;
+    margin: 5px 10px;
+    background-color: #ffffff69;
+    padding: 5px;
+    border-radius: 15px;
+    cursor: url('./images/cursor_pointer.png'), pointer;
+}
+
+.discussion .participants .participant:hover{
+    background-color: #ffffff;
+}
+.discussion .participants .participant:hover p{
+    color: black;
+}
+
+.discussion .participants .participant:before {
+    content: '';
+    height: 10px;
+    width: 10px;
+    background-color: #1e7e34;
+    position: absolute;
+    margin-left: 18px;
+    border-radius: 50%;
+    margin-top: 18px;
+}
+
+.discussion .participants .participant img{
+    width: 26px;
+    height: 26px;
+}
+
+.discussion .participants .participant p{
+    font-size: 16px;
+    margin-left: 10px;
+    margin-top: 2px;
+}
+
+.discussion .participants .participant button.report-btn{
+    cursor: url('./images/cursor_pointer.png'), pointer;
+    position: absolute;
+    background-color: #2d2d2dba;
+    right: 34px;
+    margin: 0px;
+    padding: 2px 0px;
+    border-radius: 15px;
+    border: none;
+    color: white;
+    width: 0px;
+    overflow: hidden;
+    transition: all .5s ease;
+}
+
+.discussion .participants .participant:hover button.report-btn{
+    width: 70px;
+}
+
+.discussion .messages{
+    position: absolute;
+    height: calc(100% - 390px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-width: calc(100% - 40px);
+    width: calc(100% - 40px);
+}
+
+.discussion .messages h2{
+    color: white;
+}
+
+.discussion .messages .message{
+    margin: 5px;
+    float: right;
+    text-align: right;
+    width: 100%;
+}
+
+.discussion .messages .message.me{
+    float: left;
+    text-align: left;
+}
+
+.discussion .messages .message p{
+    font-size: 12px;
+}
+
+.discussion .messages .message p.body{
+    color: white;
+    font-size: 16px;
+    overflow: hidden;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+.discussion .messages .message p a{
+    color: white;
+}
+
+.discussion .messages .message p a:visited{
+    color: white;
+}
+
+.discussion .send-message{
+    position: absolute;
+    bottom: 45px;
+    width: 200px;
+    height: 26px;
+    margin-bottom: 10px;
+}
+
+.discussion .send-message input{
+    position: absolute;
+    width: calc(100% - 20px);
+    height: 30px;
+    background-color: #171717;
+    color: white;
+    border-radius: 10px;
+    border: none;
+    padding: 6px;
+}
+
+.discussion .send-message img{
+    position: absolute;
+    margin-right: 10px;
+    width: 20px;
+    height: 20px;
+    background-color: #ffffff69;
+}
+.discussion .send-message img:hover{
+    background-color: #ffffff;
+}
+
+
+/** Action button **/
+div.action{
+    position: absolute;
+    width: 100%;
+    height: auto;
+    text-align: center;
+    bottom: 40px;
+    transition: all .5s ease;
+    animation: mymove .5s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+}
+div.action.info,
+div.action.warning,
+div.action.danger{
+    transition: all 1s ease;
+    animation: mymove 1s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+}
+div.action p.action-body{
+    cursor: url('./images/cursor_pointer.png'), pointer;
+    padding: 10px;
+    background-color: #2d2d2dba;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+    max-width: 350px;
+    margin-left: calc(50% - 175px);
+    border-radius: 15px;
+}
+div.action.warning p.action-body{
+    background-color: #ff9800eb;
+    color: #000;
+}
+div.action.danger p.action-body{
+    background-color: #da0000e3;
+    color: #000;
+}
+.popUpElement{
+    font-family: 'Press Start 2P';
+    text-align: left;
+    color: white;
+}
+.popUpElement div {
+    font-family: 'Press Start 2P';
+    font-size: 10px;
+    background-color: #727678;
+}
+
+.popUpElement button {
+    position: relative;
+    font-size: 10px;
+    border-image-repeat: revert;
+    margin-right: 5px;
+}
+
+.popUpElement .buttonContainer {
+    float: right;
+    background-color: inherit;
+
+}
+
+
+@keyframes mymove {
+    0% {bottom: 40px;}
+    50% {bottom: 30px;}
+    100% {bottom: 40px;}
+}
+
+
+#svelte-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+
+    & > div {
+        position: relative;
+        width: 100%;
+        height: 100%;
+
+        & > div {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        & > div.scrollable {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            pointer-events: auto;
+        }
+    }
+}

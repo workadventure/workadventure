@@ -1,6 +1,6 @@
 import VirtualJoystick from 'phaser3-rex-plugins/plugins/virtualjoystick.js';
-import ScaleManager = Phaser.Scale.ScaleManager;
 import {waScaleManager} from "../Services/WaScaleManager";
+import {DEPTH_INGAME_TEXT_INDEX} from "../Game/DepthIndexes";
 
 //the assets were found here: https://hannemann.itch.io/virtual-joystick-pack-free
 export const joystickBaseKey = 'joystickBase';
@@ -20,21 +20,21 @@ export class MobileJoystick extends VirtualJoystick {
             x: -1000,
             y: -1000,
             radius: radius * window.devicePixelRatio,
-            base: scene.add.image(0, 0, joystickBaseKey).setDisplaySize(baseSize * window.devicePixelRatio, baseSize * window.devicePixelRatio).setDepth(99999),
-            thumb: scene.add.image(0, 0, joystickThumbKey).setDisplaySize(thumbSize * window.devicePixelRatio, thumbSize * window.devicePixelRatio).setDepth(99999),
+            base: scene.add.image(0, 0, joystickBaseKey).setDisplaySize(baseSize * window.devicePixelRatio, baseSize * window.devicePixelRatio).setDepth(DEPTH_INGAME_TEXT_INDEX),
+            thumb: scene.add.image(0, 0, joystickThumbKey).setDisplaySize(thumbSize * window.devicePixelRatio, thumbSize * window.devicePixelRatio).setDepth(DEPTH_INGAME_TEXT_INDEX),
             enable: true,
             dir: "8dir",
         });
         this.visible = false;
         this.enable = false;
 
-        this.scene.input.on('pointerdown', (pointer: { x: number; y: number; wasTouch: boolean; event: TouchEvent }) => {
+        this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
             if (!pointer.wasTouch) {
                 return;
             }
 
             // Let's only display the joystick if there is one finger on the screen
-            if (pointer.event.touches.length === 1) {
+            if ((pointer.event as TouchEvent).touches.length === 1) {
                 this.x = pointer.x;
                 this.y = pointer.y;
                 this.visible = true;

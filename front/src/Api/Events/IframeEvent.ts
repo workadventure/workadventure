@@ -1,15 +1,17 @@
 
 
-import { ButtonClickedEvent } from './ButtonClickedEvent';
-import { ChatEvent } from './ChatEvent';
-import { ClosePopupEvent } from './ClosePopupEvent';
-import { EnterLeaveEvent } from './EnterLeaveEvent';
-import { GoToPageEvent } from './GoToPageEvent';
-import { LoadPageEvent } from './LoadPageEvent';
-import { OpenCoWebSiteEvent } from './OpenCoWebSiteEvent';
-import { OpenPopupEvent } from './OpenPopupEvent';
-import { OpenTabEvent } from './OpenTabEvent';
-import { UserInputChatEvent } from './UserInputChatEvent';
+import type { ButtonClickedEvent } from './ButtonClickedEvent';
+import type { ChatEvent } from './ChatEvent';
+import type { ClosePopupEvent } from './ClosePopupEvent';
+import type { EnterLeaveEvent } from './EnterLeaveEvent';
+import type { GoToPageEvent } from './GoToPageEvent';
+import type { LoadPageEvent } from './LoadPageEvent';
+import type { OpenCoWebSiteEvent } from './OpenCoWebSiteEvent';
+import type { OpenPopupEvent } from './OpenPopupEvent';
+import type { OpenTabEvent } from './OpenTabEvent';
+import type { UserInputChatEvent } from './UserInputChatEvent';
+import type { LoadSoundEvent} from "./LoadSoundEvent";
+import type {PlaySoundEvent} from "./PlaySoundEvent";
 
 
 export interface TypedMessageEvent<T> extends MessageEvent {
@@ -27,10 +29,13 @@ export type IframeEventMap = {
     goToPage: GoToPageEvent
     openCoWebSite: OpenCoWebSiteEvent
     closeCoWebSite: null
-    disablePlayerControl: null
-    restorePlayerControl: null
+    disablePlayerControls: null
+    restorePlayerControls: null
     displayBubble: null
     removeBubble: null
+    loadSound: LoadSoundEvent
+    playSound: PlaySoundEvent
+    stopSound: null
 }
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;
