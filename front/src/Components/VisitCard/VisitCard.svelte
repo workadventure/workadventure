@@ -2,24 +2,24 @@
     import { fly } from 'svelte/transition';
     import {requestVisitCardsStore} from "../../Stores/GameStore";
     import {onMount} from "svelte";
-    
+
     export let visitCardUrl: string;
     let w = '500px';
     let h = '250px';
     let hidden = true;
     let cvIframe;
-    
+
     function closeCard() {
         requestVisitCardsStore.set(null);
     }
-    
+
     function handleIframeMessage(message:any) {
         if (message.data.type === 'cvIframeSize') {
             w = (message.data.data.w) + 'px';
             h = (message.data.data.h) + 'px';
         }
     }
-    
+
     onMount(() => {
         cvIframe.onload = () => hidden = false
         cvIframe.onerror = () => hidden = false
@@ -42,7 +42,7 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
   }
-  
+
   .visitCard {
     pointer-events: all;
     margin-left: auto;
@@ -54,7 +54,7 @@
       border: 0;
       max-width: 80vw;
       overflow: hidden;
-      
+
       &.hidden {
         visibility: hidden;
         position: absolute;
@@ -78,7 +78,7 @@
             <button class="nes-btn is-popUpElement" on:click={closeCard}>Close</button>
         </div>
     {/if}
-    
+
 </section>
 
 <svelte:window on:message={handleIframeMessage}/>

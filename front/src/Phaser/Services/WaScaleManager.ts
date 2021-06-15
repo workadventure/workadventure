@@ -3,6 +3,7 @@ import ScaleManager = Phaser.Scale.ScaleManager;
 import {coWebsiteManager} from "../../WebRtc/CoWebsiteManager";
 import type {Game} from "../Game/Game";
 import {ResizableScene} from "../Login/ResizableScene";
+import {HtmlUtils} from "../../WebRtc/HtmlUtils";
 
 
 class WaScaleManager {
@@ -39,6 +40,12 @@ class WaScaleManager {
         const style = this.scaleManager.canvas.style;
         style.width = Math.ceil(realSize.width / devicePixelRatio) + 'px';
         style.height = Math.ceil(realSize.height / devicePixelRatio) + 'px';
+
+        // Resize the game element at the same size at the canvas
+        const gameStyle = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('game').style;
+        gameStyle.width = style.width;
+        gameStyle.height = style.height;
+
         // Note: onResize will be called twice (once here and once in Game.ts), but we have no better way.
         for (const scene of this.game.scene.getScenes(true)) {
             if (scene instanceof ResizableScene) {

@@ -10,16 +10,12 @@ import {AbstractCharacterScene} from "./AbstractCharacterScene";
 import {areCharacterLayersValid} from "../../Connexion/LocalUser";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {PinchManager} from "../UserInput/PinchManager";
-import {MenuScene} from "../Menu/MenuScene";
 import {selectCharacterSceneVisibleStore} from "../../Stores/SelectCharacterStore";
-import {customCharacterSceneVisibleStore} from "../../Stores/CustomCharacterStore";
 import {waScaleManager} from "../Services/WaScaleManager";
 import {isMobile} from "../../Enum/EnvironmentVariable";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
-
-const selectCharacterKey = 'selectCharacterScene';
 
 export class SelectCharacterScene extends AbstractCharacterScene {
     protected readonly nbCharactersPerRow = 6;
@@ -29,7 +25,6 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
     protected selectedRectangle!: Rectangle;
 
-    protected selectCharacterSceneElement!: Phaser.GameObjects.DOMElement;
     protected currentSelectUser = 0;
     protected pointerClicked: boolean = false;
     protected pointerTimer: number = 0;
@@ -43,7 +38,6 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     preload() {
-        this.load.html(selectCharacterKey, 'resources/html/selectCharacterScene.html');
 
         this.loadSelectSceneCharacters().then((bodyResourceDescriptions) => {
             bodyResourceDescriptions.forEach((bodyResourceDescription) => {
