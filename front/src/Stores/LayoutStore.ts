@@ -1,16 +1,17 @@
-import {derived, get, writable} from "svelte/store";
+import {derived, get, Readable, writable} from "svelte/store";
 import {ScreenSharingLocalMedia, screenSharingLocalMedia} from "./ScreenSharingStore";
 import { peerStore, screenSharingStreamStore} from "./PeerStore";
 import type {RemotePeer} from "../WebRtc/SimplePeer";
+import {LayoutMode} from "../WebRtc/LayoutManager";
 
 export type DisplayableMedia = RemotePeer | ScreenSharingLocalMedia;
+
+export const layoutModeStore = writable<LayoutMode>(LayoutMode.Presentation);
 
 /**
  * A store that contains the layout of the streams
  */
-function createLayoutStore() {
-
-    let unsubscribes: (()=>void)[] = [];
+function createLayoutStore(): Readable<Map<string, DisplayableMedia>> {
 
     return derived([
         screenSharingStreamStore,
@@ -21,10 +22,6 @@ function createLayoutStore() {
             $peerStore,
             $screenSharingLocalMedia,
         ], set) => {
-        for (const unsubscribe of unsubscribes) {
-            unsubscribe();
-        }
-        unsubscribes = [];
 
         const peers = new Map<string, DisplayableMedia>();
 

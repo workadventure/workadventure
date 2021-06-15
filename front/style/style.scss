@@ -211,7 +211,7 @@ video.myCamVideo{
     display: inline-flex;
     bottom: 10px;
     right: 15px;
-    width: 180px;
+    width: 240px;
     height: 40px;
     text-align: center;
     align-content: center;
@@ -268,6 +268,16 @@ video.myCamVideo{
     transform: translateY(60px);
 }
 .btn-cam-action:hover .btn-monitor.hide{
+    transform: translateY(60px);
+}
+.btn-layout{
+    pointer-events: auto;
+    transition: all .15s;
+}
+.btn-layout.hide {
+    transform: translateY(60px);
+}
+.btn-cam-action:hover .btn-layout.hide{
     transform: translateY(60px);
 }
 .btn-copy{

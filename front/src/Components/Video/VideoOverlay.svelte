@@ -1,31 +1,17 @@
 <script lang="ts">
-    import {screenSharingStreamStore} from "../../Stores/PeerStore";
-    import {DivImportance} from "../../WebRtc/LayoutManager";
-    import Peer from "./Peer.svelte";
-    import {layoutStore} from "../../Stores/LayoutStore";
-    import {videoFocusStore} from "../../Stores/VideoFocusStore";
+    import {LayoutMode} from "../../WebRtc/LayoutManager";
+    import {layoutModeStore} from "../../Stores/LayoutStore";
+    import PresentationLayout from "./PresentationLayout.svelte";
+    import ChatLayout from "./ChatLayout.svelte";
 
 </script>
 
 <div class="video-overlay">
-    <div class="main-section">
-        {#each [...$layoutStore.values()] as peer (peer.uniqueId)}
-            {#if $videoFocusStore && peer === $videoFocusStore }
-                <Peer peer={peer}></Peer>
-            {/if}
-        {/each}
-    </div>
-    <aside class="sidebar">
-        {#each [...$layoutStore.values()] as peer (peer.uniqueId)}
-            {#if peer !== $videoFocusStore }
-                <Peer peer={peer}></Peer>
-            {/if}
-        {/each}
-    </aside>
-    <div class="chat-mode three-col" style="display: none;">
-    </div>
-
-
+    {#if $layoutModeStore === LayoutMode.Presentation }
+        <PresentationLayout />
+    {:else }
+        <ChatLayout />
+    {/if}
 </div>
 
 <style lang="scss">
