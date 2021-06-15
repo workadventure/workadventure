@@ -46,10 +46,11 @@ class WaScaleManager {
         gameStyle.width = style.width;
         gameStyle.height = style.height;
 
-        // Note: onResize will be called twice (once here and once is Game.ts), but we have no better way.
+        // Note: onResize will be called twice (once here and once in Game.ts), but we have no better way.
         for (const scene of this.game.scene.getScenes(true)) {
             if (scene instanceof ResizableScene) {
-                scene.onResize();
+                // We are delaying the call to the "render" event because otherwise, the "camera" coordinates are not correctly updated.
+                scene.events.once(Phaser.Scenes.Events.RENDER, () => scene.onResize());
             }
         }
 
