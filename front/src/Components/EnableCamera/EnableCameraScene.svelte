@@ -1,5 +1,5 @@
 <script lang="typescript">
-    import {Game} from "../../Phaser/Game/Game";
+    import type {Game} from "../../Phaser/Game/Game";
     import {EnableCameraScene, EnableCameraSceneName} from "../../Phaser/Login/EnableCameraScene";
     import {
         audioConstraintStore,
@@ -15,8 +15,8 @@
     import microphoneImg from "../images/microphone.svg";
 
     export let game: Game;
-    let selectedCamera : string|null = null;
-    let selectedMicrophone : string|null = null;
+    let selectedCamera : string|undefined = undefined;
+    let selectedMicrophone : string|undefined = undefined;
 
     const enableCameraScene = game.scene.getScene(EnableCameraSceneName) as EnableCameraScene;
 
@@ -24,10 +24,10 @@
         enableCameraScene.login();
     }
 
-    function srcObject(node, stream) {
+    function srcObject(node: HTMLVideoElement, stream: MediaStream) {
         node.srcObject = stream;
         return {
-            update(newStream) {
+            update(newStream: MediaStream) {
                 if (node.srcObject != newStream) {
                     node.srcObject = newStream
                 }
@@ -53,8 +53,8 @@
             }
         } else {
             stream = null;
-            selectedCamera = null;
-            selectedMicrophone = null;
+            selectedCamera = undefined;
+            selectedMicrophone = undefined;
         }
     });
 
@@ -79,7 +79,7 @@
     <section class="text-center">
         <h2>Turn on your camera and microphone</h2>
     </section>
-        {#if $localStreamStore.stream}
+        {#if $localStreamStore.type === 'success' && $localStreamStore.stream}
             <video class="myCamVideoSetup" use:srcObject={$localStreamStore.stream} autoplay muted playsinline></video>
         {:else }
             <div class="webrtcsetup">

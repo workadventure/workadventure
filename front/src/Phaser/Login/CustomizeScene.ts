@@ -263,7 +263,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.Rectangle.y = this.cameras.main.worldView.y + this.cameras.main.height / 3;
      }
 
-    private nextSceneToCamera(){
+    public nextSceneToCamera(){
         const layers: string[] = [];
             let i = 0;
             for (const layerItem of this.selectedLayers) {
@@ -284,7 +284,7 @@ export class CustomizeScene extends AbstractCharacterScene {
             customCharacterSceneVisibleStore.set(false);
     }
 
-    private backToPreviousScene(){
+    public backToPreviousScene(){
         this.scene.sleep(CustomizeSceneName);
         waScaleManager.restoreZoom();
         this.scene.run(SelectCharacterSceneName);
