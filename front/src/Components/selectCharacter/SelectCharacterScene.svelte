@@ -1,10 +1,10 @@
 <script lang="typescript">
-    import { Game } from "../../Phaser/Game/Game";
-    import { SelectCharacterSceneName } from "../../Phaser/Login/SelectCharacterScene";
+    import type { Game } from "../../Phaser/Game/Game";
+    import {SelectCharacterScene, SelectCharacterSceneName} from "../../Phaser/Login/SelectCharacterScene";
 
     export let game: Game;
 
-    const selectCharacterScene = game.scene.getScene(SelectCharacterSceneName);
+    const selectCharacterScene = game.scene.getScene(SelectCharacterSceneName) as SelectCharacterScene;
 
     function selectLeft() {
         selectCharacterScene.moveToLeft();

@@ -1,10 +1,10 @@
 <script lang="typescript">
-    import { Game } from "../../Phaser/Game/Game";
-    import { CustomizeSceneName } from "../../Phaser/Login/CustomizeScene";
+    import type { Game } from "../../Phaser/Game/Game";
+    import {CustomizeScene, CustomizeSceneName} from "../../Phaser/Login/CustomizeScene";
 
     export let game: Game;
 
-    const customCharacterScene = game.scene.getScene(CustomizeSceneName);
+    const customCharacterScene = game.scene.getScene(CustomizeSceneName) as CustomizeScene;
     let activeRow = customCharacterScene.activeRow;
 
     function selectLeft() {

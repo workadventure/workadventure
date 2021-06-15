@@ -7,7 +7,7 @@
     let w = '500px';
     let h = '250px';
     let hidden = true;
-    let cvIframe;
+    let cvIframe: HTMLIFrameElement;
 
     function closeCard() {
         requestVisitCardsStore.set(null);
