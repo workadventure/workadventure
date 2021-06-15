@@ -6,6 +6,9 @@
     import blockSignImg from "./images/blockSign.svg";
     import {DivImportance} from "../../WebRtc/LayoutManager";
     import {videoFocusStore} from "../../Stores/VideoFocusStore";
+    import {EnableCameraScene, EnableCameraSceneName} from "../../Phaser/Login/EnableCameraScene";
+    import {MenuScene, MenuSceneName} from "../../Phaser/Menu/MenuScene";
+    import {showReportScreenStore} from "../../Stores/ShowReportScreenStore";
 
     export let peer: VideoPeer;
     let streamStore = peer.streamStore;
@@ -43,6 +46,11 @@
         }
     }
 
+    function openReport(peer: VideoPeer): void {
+        console.log('OPENING REPORT');
+        showReportScreenStore.set({ userId:peer.userId, userName: peer.userName });
+    }
+
 </script>
 
 <div class="video-container">
@@ -58,12 +66,12 @@
     {#if $constraintStore && $constraintStore.audio === false}
         <img src={microphoneCloseImg} alt="Muted">
     {/if}
-    <button class="report">
+    <button class="report" on:click={() => openReport(peer)}>
         <img alt="Report this user" src={reportImg}>
         <span>Report/Block</span>
     </button>
     <video use:srcObject={$streamStore} autoplay playsinline on:click={() => videoFocusStore.toggleFocus(peer)}></video>
-    <img src={blockSignImg} class="block-logo" alt="Block">
+    <img src={blockSignImg} class="block-logo" alt="Block" />
     {#if $constraintStore && $constraintStore.audio !== false}
         <SoundMeterWidget stream={$streamStore}></SoundMeterWidget>
     {/if}

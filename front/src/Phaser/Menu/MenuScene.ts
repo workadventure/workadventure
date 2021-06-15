@@ -11,6 +11,7 @@ import {WarningContainer, warningContainerHtml, warningContainerKey} from "../Co
 import {worldFullWarningStream} from "../../Connexion/WorldFullWarningStream";
 import {menuIconVisible} from "../../Stores/MenuStore";
 import {videoConstraintStore} from "../../Stores/MediaStore";
+import {showReportScreenStore} from "../../Stores/ShowReportScreenStore";
 
 export const MenuSceneName = 'MenuScene';
 const gameMenuKey = 'gameMenu';
@@ -82,6 +83,12 @@ export class MenuScene extends Phaser.Scene {
             this.closeAll();
             this.gameReportElement.open(parseInt(userId), userName);
         });
+        showReportScreenStore.subscribe((user) => {
+            this.closeAll();
+            if (user !== null) {
+                this.gameReportElement.open(user.userId, user.userName);
+            }
+        });
 
         this.input.keyboard.on('keyup-TAB', () => {
             this.sideMenuOpened ? this.closeSideMenu() : this.openSideMenu();
@@ -96,6 +103,10 @@ export class MenuScene extends Phaser.Scene {
         this.menuElement.on('click', this.onMenuClick.bind(this));
 
         worldFullWarningStream.stream.subscribe(() => this.showWorldCapacityWarning());
+    }
+
+    public openReport(userId: number, userName: string): void {
+        this.gameReportElement.open(userId, userName);
     }
 
     //todo put this method in a parent menuElement class
