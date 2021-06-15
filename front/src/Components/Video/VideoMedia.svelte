@@ -5,13 +5,13 @@
     import reportImg from "./images/report.svg";
     import blockSignImg from "./images/blockSign.svg";
     import {DivImportance} from "../../WebRtc/LayoutManager";
+    import {videoFocusStore} from "../../Stores/VideoFocusStore";
 
     export let peer: VideoPeer;
     let streamStore = peer.streamStore;
     let name = peer.userName;
     let statusStore = peer.statusStore;
     let constraintStore = peer.constraintsStore;
-    let importanceStore = peer.importanceStore;
 
     constraintStore.subscribe((vl) => console.log('CONS', vl));
 
@@ -62,17 +62,10 @@
         <img alt="Report this user" src={reportImg}>
         <span>Report/Block</span>
     </button>
-    <video use:srcObject={$streamStore} autoplay playsinline on:click={() => peer.importanceStore.toggle()}></video>
+    <video use:srcObject={$streamStore} autoplay playsinline on:click={() => videoFocusStore.toggleFocus(peer)}></video>
     <img src={blockSignImg} class="block-logo" alt="Block">
     {#if $constraintStore && $constraintStore.audio !== false}
         <SoundMeterWidget stream={$streamStore}></SoundMeterWidget>
     {/if}
 </div>
 
-<style lang="scss">
-  .video-container {
-      video {
-        width: 100%;
-      }
-  }
-</style>

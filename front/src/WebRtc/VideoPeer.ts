@@ -5,11 +5,9 @@ import type {RoomConnection} from "../Connexion/RoomConnection";
 import {blackListManager} from "./BlackListManager";
 import type {Subscription} from "rxjs";
 import type {UserSimplePeerInterface} from "./SimplePeer";
-import {get, readable, Readable, writable, Writable} from "svelte/store";
+import {get, readable, Readable} from "svelte/store";
 import {obtainedMediaConstraintStore} from "../Stores/MediaStore";
 import {DivImportance} from "./LayoutManager";
-import type {ImportanceStore} from "../Stores/ImportanceStore";
-import {createImportanceStore} from "../Stores/ImportanceStore";
 
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
@@ -30,7 +28,6 @@ export class VideoPeer extends Peer {
     private onBlockSubscribe: Subscription;
     private onUnBlockSubscribe: Subscription;
     public readonly streamStore: Readable<MediaStream | null>;
-    public readonly importanceStore: ImportanceStore;
     public readonly statusStore: Readable<"connecting" | "connected" | "error" | "closed">;
     public readonly constraintsStore: Readable<MediaStreamConstraints|null>;
 
@@ -93,8 +90,6 @@ export class VideoPeer extends Peer {
                 this.off('data', onData);
             };
         });
-
-        this.importanceStore = createImportanceStore(DivImportance.Normal);
 
         this.statusStore = readable<"connecting" | "connected" | "error" | "closed">("connecting", (set) => {
             const onConnect = () => {

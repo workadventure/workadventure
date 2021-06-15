@@ -95,6 +95,7 @@ import {DEPTH_OVERLAY_INDEX} from "./DepthIndexes";
 import {waScaleManager} from "../Services/WaScaleManager";
 import {peerStore, screenSharingPeerStore} from "../../Stores/PeerStore";
 import {EmoteManager} from "./EmoteManager";
+import {videoFocusStore} from "../../Stores/VideoFocusStore";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -647,6 +648,7 @@ export class GameScene extends DirtyScene implements CenterListener {
             this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic, this.playerName);
             peerStore.connectToSimplePeer(this.simplePeer);
             screenSharingPeerStore.connectToSimplePeer(this.simplePeer);
+            videoFocusStore.connectToSimplePeer(this.simplePeer);
             this.GlobalMessageManager = new GlobalMessageManager(this.connection);
             userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 

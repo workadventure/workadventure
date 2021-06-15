@@ -1,5 +1,6 @@
 <script lang="typescript">
     import {ScreenSharingLocalMedia} from "../../Stores/ScreenSharingStore";
+    import {videoFocusStore} from "../../Stores/VideoFocusStore";
 
     function srcObject(node, stream) {
         node.srcObject = stream;
@@ -18,6 +19,6 @@
 </script>
 
 
-<div class="video-container {cssClass}" class:hide={!stream}>
-    <video class="myCamVideo" use:srcObject={stream} autoplay muted playsinline  on:click={() => peer.importanceStore.toggle()}></video>
+<div class="video-container {cssClass ? cssClass : ''}" class:hide={!stream}>
+    <video use:srcObject={stream} autoplay muted playsinline  on:click={() => videoFocusStore.toggleFocus(peer)}></video>
 </div>

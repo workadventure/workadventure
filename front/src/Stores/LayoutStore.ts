@@ -1,6 +1,5 @@
-import {derived, get} from "svelte/store";
+import {derived, get, writable} from "svelte/store";
 import {ScreenSharingLocalMedia, screenSharingLocalMedia} from "./ScreenSharingStore";
-import {DivImportance} from "../WebRtc/LayoutManager";
 import { peerStore, screenSharingStreamStore} from "./PeerStore";
 import type {RemotePeer} from "../WebRtc/SimplePeer";
 
@@ -27,26 +26,15 @@ function createLayoutStore() {
         }
         unsubscribes = [];
 
-        const peers = new Map<DivImportance, Map<string, DisplayableMedia>>();
-        peers.set(DivImportance.Normal, new Map<string, DisplayableMedia>());
-        peers.set(DivImportance.Important, new Map<string, DisplayableMedia>());
+        const peers = new Map<string, DisplayableMedia>();
 
         const addPeer = (peer: DisplayableMedia) => {
-            const importance = get(peer.importanceStore);
-
-            peers.get(importance)?.set(peer.uniqueId, peer);
-
-            unsubscribes.push(peer.importanceStore.subscribe((importance) => {
-                peers.forEach((category) => {
-                    category.delete(peer.uniqueId);
-                });
-                peers.get(importance)?.set(peer.uniqueId, peer);
-                set(peers);
-            }));
+            peers.set(peer.uniqueId, peer);
         };
 
         $screenSharingStreamStore.forEach(addPeer);
         $peerStore.forEach(addPeer);
+
         if ($screenSharingLocalMedia?.stream) {
             addPeer($screenSharingLocalMedia);
         }

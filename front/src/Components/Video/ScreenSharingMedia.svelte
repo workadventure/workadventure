@@ -1,5 +1,6 @@
 <script lang="ts">
     import {ScreenSharingPeer} from "../../WebRtc/ScreenSharingPeer";
+    import {videoFocusStore} from "../../Stores/VideoFocusStore";
 
     export let peer: ScreenSharingPeer;
     let streamStore = peer.streamStore;
@@ -45,7 +46,7 @@
     {#if $streamStore === null}
         <i style="background-color: {getColorByString(name)};">{name}</i>
     {/if}
-    <video use:srcObject={$streamStore} autoplay playsinline on:click={() => peer.importanceStore.toggle()}></video>
+    <video use:srcObject={$streamStore} autoplay playsinline on:click={() => videoFocusStore.toggleFocus(peer)}></video>
 </div>
 
 <style lang="scss">
