@@ -202,6 +202,7 @@ global urls: "/_/global/domain/path/map.json[#start-layer-name]"
 Example:
 
 ```javascript
+WA.goToRoom("/@/tcm/workadventure/floor0")  // workadventure urls
 WA.goToRoom('../otherMap/map.json');
 WA.goToRoom("/_/global/<path to global map>.json#start-layer-2")
 ```
