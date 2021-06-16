@@ -9,10 +9,11 @@ import type { ClosePopupEvent } from "./Api/Events/ClosePopupEvent";
 import type { OpenTabEvent } from "./Api/Events/OpenTabEvent";
 import type { GoToPageEvent } from "./Api/Events/GoToPageEvent";
 import type { OpenCoWebSiteEvent } from "./Api/Events/OpenCoWebSiteEvent";
-import type {PlaySoundEvent} from "./Api/Events/PlaySoundEvent";
-import type  {StopSoundEvent} from "./Api/Events/StopSoundEvent";
-import type {LoadSoundEvent} from "./Api/Events/LoadSoundEvent";
+import type { PlaySoundEvent } from "./Api/Events/PlaySoundEvent";
+import type { StopSoundEvent } from "./Api/Events/StopSoundEvent";
+import type { LoadSoundEvent } from "./Api/Events/LoadSoundEvent";
 import SoundConfig = Phaser.Types.Sound.SoundConfig;
+import type { LoadPageEvent } from './Api/Events/LoadPageEvent';
 
 interface WorkAdventureApi {
     sendChatMessage(message: string, author: string): void;
@@ -20,9 +21,10 @@ interface WorkAdventureApi {
     onEnterZone(name: string, callback: () => void): void;
     onLeaveZone(name: string, callback: () => void): void;
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup;
-    openTab(url : string): void;
-    goToPage(url : string): void;
-    openCoWebSite(url : string): void;
+    openTab(url: string): void;
+    goToPage(url: string): void;
+    goToRoom(url: string): void;
+    openCoWebSite(url: string): void;
     closeCoWebSite(): void;
     disablePlayerControls(): void;
     restorePlayerControls(): void;
@@ -164,6 +166,15 @@ window.WA = {
                 url
             } as GoToPageEvent
         }, '*');
+    },
+
+    goToRoom(url: string): void {
+        window.parent.postMessage({
+            "type" : 'loadPage',
+            "data" : {
+                url
+            } as LoadPageEvent
+            },'*');
     },
 
     openCoWebSite(url : string) : void{
