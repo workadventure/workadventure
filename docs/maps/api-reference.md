@@ -239,7 +239,7 @@ mySound.stop();
 
 ### register additional menu entries
 
-adds an additional Entry to the main menu
+adds an additional Entry to the main menu , these exist until the map is unloaded
 
 
 ```typescript
