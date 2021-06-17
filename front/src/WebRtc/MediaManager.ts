@@ -8,32 +8,11 @@ import {SoundMeter} from "../Phaser/Components/SoundMeter";
 import {DISABLE_NOTIFICATIONS} from "../Enum/EnvironmentVariable";
 import {
     gameOverlayVisibilityStore, localStreamStore,
-    mediaStreamConstraintsStore,
-    requestedCameraState,
-    requestedMicrophoneState
 } from "../Stores/MediaStore";
 import {
-    requestedScreenSharingState,
-    screenSharingAvailableStore,
     screenSharingLocalStreamStore
 } from "../Stores/ScreenSharingStore";
-
-declare const navigator:any; // eslint-disable-line @typescript-eslint/no-explicit-any
-
-const videoConstraint: boolean|MediaTrackConstraints = {
-    width: { min: 640, ideal: 1280, max: 1920 },
-    height: { min: 400, ideal: 720 },
-    frameRate: { ideal: localUserStore.getVideoQualityValue() },
-    facingMode: "user",
-    resizeMode: 'crop-and-scale',
-    aspectRatio: 1.777777778
-};
-const audioConstraint: boolean|MediaTrackConstraints = {
-    //TODO: make these values configurable in the game settings menu and store them in localstorage
-    autoGainControl: false,
-    echoCancellation: true,
-    noiseSuppression: true
-};
+import {helpCameraSettingsVisibleStore} from "../Stores/HelpCameraSettingsStore";
 
 export type UpdatedLocalStreamCallback = (media: MediaStream|null) => void;
 export type StartScreenSharingCallback = (media: MediaStream) => void;
@@ -42,30 +21,15 @@ export type ReportCallback = (message: string) => void;
 export type ShowReportCallBack = (userId: string, userName: string|undefined) => void;
 export type HelpCameraSettingsCallBack = () => void;
 
+import {cowebsiteCloseButtonId} from "./CoWebsiteManager";
+
 export class MediaManager {
-    localStream: MediaStream|null = null;
-    localScreenCapture: MediaStream|null = null;
     private remoteVideo: Map<string, HTMLVideoElement> = new Map<string, HTMLVideoElement>();
-    myCamVideo: HTMLVideoElement;
-    cinemaClose: HTMLImageElement;
-    cinema: HTMLImageElement;
-    monitorClose: HTMLImageElement;
-    monitor: HTMLImageElement;
-    microphoneClose: HTMLImageElement;
-    microphone: HTMLImageElement;
-    webrtcInAudio: HTMLAudioElement;
     //FIX ME SOUNDMETER: check stalability of sound meter calculation
     //mySoundMeterElement: HTMLDivElement;
-    private webrtcOutAudio: HTMLAudioElement;
-    updatedLocalStreamCallBacks : Set<UpdatedLocalStreamCallback> = new Set<UpdatedLocalStreamCallback>();
     startScreenSharingCallBacks : Set<StartScreenSharingCallback> = new Set<StartScreenSharingCallback>();
     stopScreenSharingCallBacks : Set<StopScreenSharingCallback> = new Set<StopScreenSharingCallback>();
     showReportModalCallBacks : Set<ShowReportCallBack> = new Set<ShowReportCallBack>();
-    helpCameraSettingsCallBacks : Set<HelpCameraSettingsCallBack> = new Set<HelpCameraSettingsCallBack>();
-
-    private microphoneBtn: HTMLDivElement;
-    private cinemaBtn: HTMLDivElement;
-    private monitorBtn: HTMLDivElement;
 
     private focused : boolean = true;
 
@@ -79,54 +43,6 @@ export class MediaManager {
     private soundMeterElements: Map<string, HTMLDivElement> = new Map<string, HTMLDivElement>();*/
 
     constructor() {
-
-        this.myCamVideo = HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('myCamVideo');
-        this.webrtcInAudio = HtmlUtils.getElementByIdOrFail<HTMLAudioElement>('audio-webrtc-in');
-        this.webrtcOutAudio = HtmlUtils.getElementByIdOrFail<HTMLAudioElement>('audio-webrtc-out');
-        this.webrtcInAudio.volume = 0.2;
-        this.webrtcOutAudio.volume = 0.2;
-
-        this.microphoneBtn = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('btn-micro');
-        this.microphoneClose = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('microphone-close');
-        this.microphoneClose.style.display = "none";
-        this.microphoneClose.addEventListener('click', (e: MouseEvent) => {
-            e.preventDefault();
-            requestedMicrophoneState.enableMicrophone();
-        });
-        this.microphone = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('microphone');
-        this.microphone.addEventListener('click', (e: MouseEvent) => {
-            e.preventDefault();
-            requestedMicrophoneState.disableMicrophone();
-        });
-
-        this.cinemaBtn = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('btn-video');
-        this.cinemaClose = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('cinema-close');
-        this.cinemaClose.style.display = "none";
-        this.cinemaClose.addEventListener('click', (e: MouseEvent) => {
-            e.preventDefault();
-            requestedCameraState.enableWebcam();
-        });
-        this.cinema = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('cinema');
-        this.cinema.addEventListener('click', (e: MouseEvent) => {
-            e.preventDefault();
-            requestedCameraState.disableWebcam();
-        });
-
-        this.monitorBtn = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('btn-monitor');
-        this.monitorClose = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('monitor-close');
-        this.monitorClose.style.display = "block";
-        this.monitorClose.addEventListener('click', (e: MouseEvent) => {
-            e.preventDefault();
-            //this.enableScreenSharing();
-            requestedScreenSharingState.enableScreenSharing();
-        });
-        this.monitor = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('monitor');
-        this.monitor.style.display = "none";
-        this.monitor.addEventListener('click', (e: MouseEvent) => {
-            e.preventDefault();
-            //this.disableScreenSharing();
-            requestedScreenSharingState.disableScreenSharing();
-        });
 
         this.pingCameraStatus();
 
@@ -142,87 +58,43 @@ export class MediaManager {
         localStreamStore.subscribe((result) => {
             if (result.type === 'error') {
                 console.error(result.error);
-                layoutManager.addInformation('warning', 'Camera access denied. Click here and check navigators permissions.', () => {
-                    this.showHelpCameraSettingsCallBack();
+                layoutManager.addInformation('warning', 'Camera access denied. Click here and check your browser permissions.', () => {
+                    helpCameraSettingsVisibleStore.set(true);
                 }, this.userInputManager);
                 return;
             }
-
-            if (result.constraints.video !== false) {
-                HtmlUtils.getElementByIdOrFail('div-myCamVideo').classList.remove('hide');
-            } else {
-                HtmlUtils.getElementByIdOrFail('div-myCamVideo').classList.add('hide');
-            }/*
-            if (result.constraints.audio !== false) {
-                this.enableMicrophoneStyle();
-            } else {
-                this.disableMicrophoneStyle();
-            }*/
-
-            this.localStream = result.stream;
-            this.myCamVideo.srcObject = this.localStream;
-
-            // TODO: migrate all listeners to the store directly.
-            this.triggerUpdatedLocalStreamCallbacks(result.stream);
         });
 
-        requestedCameraState.subscribe((enabled) => {
-            if (enabled) {
-                this.enableCameraStyle();
-            } else {
-                this.disableCameraStyle();
-            }
-        });
-        requestedMicrophoneState.subscribe((enabled) => {
-            if (enabled) {
-                this.enableMicrophoneStyle();
-            } else {
-                this.disableMicrophoneStyle();
-            }
-        });
-        //let screenSharingStream : MediaStream|null;
+        let isScreenSharing = false;
         screenSharingLocalStreamStore.subscribe((result) => {
             if (result.type === 'error') {
                 console.error(result.error);
-                layoutManager.addInformation('warning', 'Screen sharing denied. Click here and check navigators permissions.', () => {
-                    this.showHelpCameraSettingsCallBack();
+                layoutManager.addInformation('warning', 'Screen sharing denied. Click here and check your browser permissions.', () => {
+                    helpCameraSettingsVisibleStore.set(true);
                 }, this.userInputManager);
                 return;
             }
 
             if (result.stream !== null) {
-                this.enableScreenSharingStyle();
-                mediaManager.localScreenCapture = result.stream;
-
-                // TODO: migrate this out of MediaManager
-                this.triggerStartedScreenSharingCallbacks(result.stream);
-
-                //screenSharingStream = result.stream;
-
+                isScreenSharing = true;
                 this.addScreenSharingActiveVideo('me', DivImportance.Normal);
                 HtmlUtils.getElementByIdOrFail<HTMLVideoElement>('screen-sharing-me').srcObject = result.stream;
             } else {
-                this.disableScreenSharingStyle();
-                this.removeActiveScreenSharingVideo('me');
-
-                // FIXME: we need the old stream that is being stopped!
-                if (this.localScreenCapture) {
-                    this.triggerStoppedScreenSharingCallbacks(this.localScreenCapture);
-                    this.localScreenCapture = null;
+                if (isScreenSharing) {
+                    isScreenSharing = false;
+                    this.removeActiveScreenSharingVideo('me');
                 }
-
-                //screenSharingStream = null;
             }
 
         });
 
-        screenSharingAvailableStore.subscribe((available) => {
+        /*screenSharingAvailableStore.subscribe((available) => {
             if (available) {
                 document.querySelector('.btn-monitor')?.classList.remove('hide');
             } else {
                 document.querySelector('.btn-monitor')?.classList.add('hide');
             }
-        });
+        });*/
     }
 
     public updateScene(){
@@ -230,49 +102,18 @@ export class MediaManager {
         //this.updateSoudMeter();
     }
 
-    public onUpdateLocalStream(callback: UpdatedLocalStreamCallback): void {
-        this.updatedLocalStreamCallBacks.add(callback);
-    }
-
-    public onStartScreenSharing(callback: StartScreenSharingCallback): void {
-        this.startScreenSharingCallBacks.add(callback);
-    }
-
-    public onStopScreenSharing(callback: StopScreenSharingCallback): void {
-        this.stopScreenSharingCallBacks.add(callback);
-    }
-
-    removeUpdateLocalStreamEventListener(callback: UpdatedLocalStreamCallback): void {
-        this.updatedLocalStreamCallBacks.delete(callback);
-    }
-
-    private triggerUpdatedLocalStreamCallbacks(stream: MediaStream|null): void {
-        for (const callback of this.updatedLocalStreamCallBacks) {
-            callback(stream);
-        }
-    }
-
-    private triggerStartedScreenSharingCallbacks(stream: MediaStream): void {
-        for (const callback of this.startScreenSharingCallBacks) {
-            callback(stream);
-        }
-    }
-
-    private triggerStoppedScreenSharingCallbacks(stream: MediaStream): void {
-        for (const callback of this.stopScreenSharingCallBacks) {
-            callback(stream);
-        }
-    }
-
     public showGameOverlay(): void {
         const gameOverlay = HtmlUtils.getElementByIdOrFail('game-overlay');
         gameOverlay.classList.add('active');
 
-        const buttonCloseFrame = HtmlUtils.getElementByIdOrFail('cowebsite-close');
+        const buttonCloseFrame = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);
         const functionTrigger = () => {
             this.triggerCloseJitsiFrameButton();
         }
-        buttonCloseFrame.removeEventListener('click', functionTrigger);
+        buttonCloseFrame.removeEventListener('click', () => {
+            buttonCloseFrame.blur();
+            functionTrigger();
+        });
 
         gameOverlayVisibilityStore.showGameOverlay();
     }
@@ -281,53 +122,19 @@ export class MediaManager {
         const gameOverlay = HtmlUtils.getElementByIdOrFail('game-overlay');
         gameOverlay.classList.remove('active');
 
-        const buttonCloseFrame = HtmlUtils.getElementByIdOrFail('cowebsite-close');
+        const buttonCloseFrame = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);
         const functionTrigger = () => {
             this.triggerCloseJitsiFrameButton();
         }
-        buttonCloseFrame.addEventListener('click', functionTrigger);
+        buttonCloseFrame.addEventListener('click', () => {
+            buttonCloseFrame.blur();
+            functionTrigger();
+        });
 
         gameOverlayVisibilityStore.hideGameOverlay();
     }
 
-    private enableCameraStyle(){
-        this.cinemaClose.style.display = "none";
-        this.cinemaBtn.classList.remove("disabled");
-        this.cinema.style.display = "block";
-    }
-
-    private disableCameraStyle(){
-        this.cinemaClose.style.display = "block";
-        this.cinema.style.display = "none";
-        this.cinemaBtn.classList.add("disabled");
-    }
-
-    private enableMicrophoneStyle(){
-        this.microphoneClose.style.display = "none";
-        this.microphone.style.display = "block";
-        this.microphoneBtn.classList.remove("disabled");
-    }
-
-    private disableMicrophoneStyle(){
-        this.microphoneClose.style.display = "block";
-        this.microphone.style.display = "none";
-        this.microphoneBtn.classList.add("disabled");
-    }
-
-    private enableScreenSharingStyle(){
-        this.monitorClose.style.display = "none";
-        this.monitor.style.display = "block";
-        this.monitorBtn.classList.add("enabled");
-    }
-
-    private disableScreenSharingStyle(){
-        this.monitorClose.style.display = "block";
-        this.monitor.style.display = "none";
-        this.monitorBtn.classList.remove("enabled");
-    }
-
     addActiveVideo(user: UserSimplePeerInterface, userName: string = ""){
-        this.webrtcInAudio.play();
         const userId = ''+user.userId
 
         userName = userName.toUpperCase();
@@ -343,7 +150,7 @@ export class MediaManager {
                     <img title="report this user" src="resources/logos/report.svg">
                     <span>Report/Block</span>
                 </button>
-                <video id="${userId}" autoplay></video>
+                <video id="${userId}" autoplay playsinline></video>
                 <img src="resources/logos/blockSign.svg" id="blocking-${userId}" class="block-logo">
                 <div id="soundMeter-${userId}" class="sound-progress">
                     <span></span>
@@ -380,7 +187,7 @@ export class MediaManager {
         userId = this.getScreenSharingId(userId);
         const html = `
             <div id="div-${userId}" class="video-container">
-                <video id="${userId}" autoplay></video>
+                <video id="${userId}" autoplay playsinline></video>
             </div>
         `;
 
@@ -473,10 +280,6 @@ export class MediaManager {
     }
     removeActiveScreenSharingVideo(userId: string) {
         this.removeActiveVideo(this.getScreenSharingId(userId))
-    }
-
-    playWebrtcOutSound(): void {
-        this.webrtcOutAudio.play();
     }
 
     isConnecting(userId: string): void {
@@ -593,16 +396,6 @@ export class MediaManager {
         this.showReportModalCallBacks.add(callback);
     }
 
-    public setHelpCameraSettingsCallBack(callback: HelpCameraSettingsCallBack){
-        this.helpCameraSettingsCallBacks.add(callback);
-    }
-
-    private showHelpCameraSettingsCallBack(){
-        for(const callBack of this.helpCameraSettingsCallBacks){
-            callBack();
-        }
-    }
-
     //FIX ME SOUNDMETER: check stalability of sound meter calculation
     /*updateSoudMeter(){
         try{
@@ -648,10 +441,30 @@ export class MediaManager {
     public getNotification(){
         //Get notification
         if (!DISABLE_NOTIFICATIONS && window.Notification && Notification.permission !== "granted") {
-            Notification.requestPermission().catch((err) => {
-                console.error(`Notification permission error`, err);
-            });
+            if (this.checkNotificationPromise()) {
+                Notification.requestPermission().catch((err) => {
+                    console.error(`Notification permission error`, err);
+                });
+            } else {
+                Notification.requestPermission();
+            }
         }
+    }
+
+    /**
+     * Return true if the browser supports the modern version of the Notification API (which is Promise based) or false
+     * if we are on Safari...
+     *
+     * See https://developer.mozilla.org/en-US/docs/Web/API/Notifications_API/Using_the_Notifications_API
+     */
+    private checkNotificationPromise(): boolean {
+        try {
+            Notification.requestPermission().then();
+        } catch(e) {
+            return false;
+        }
+
+        return true;
     }
 
     public createNotification(userName: string){

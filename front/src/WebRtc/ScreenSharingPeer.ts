@@ -19,7 +19,7 @@ export class ScreenSharingPeer extends Peer {
     public _connected: boolean = false;
     private userId: number;
 
-    constructor(user: UserSimplePeerInterface, initiator: boolean, private connection: RoomConnection) {
+    constructor(user: UserSimplePeerInterface, initiator: boolean, private connection: RoomConnection, stream: MediaStream | null) {
         super({
             initiator: initiator ? initiator : false,
             //reconnectTimer: 10000,
@@ -60,6 +60,7 @@ export class ScreenSharingPeer extends Peer {
             const message = JSON.parse(chunk.toString('utf8'));
             if (message.streamEnded !== true) {
                 console.error('Unexpected message on screen sharing peer connection');
+                return;
             }
             mediaManager.removeActiveScreenSharingVideo("" + this.userId);
         });
@@ -81,7 +82,9 @@ export class ScreenSharingPeer extends Peer {
             this._onFinish();
         });
 
-        this.pushScreenSharingToRemoteUser();
+        if (stream) {
+            this.addStream(stream);
+        }
     }
 
     private sendWebrtcScreenSharingSignal(data: unknown) {
@@ -139,16 +142,6 @@ export class ScreenSharingPeer extends Peer {
         } else {
             this.once('connect', destroySoon);
         }
-    }
-
-    private pushScreenSharingToRemoteUser() {
-        const localScreenCapture: MediaStream | null = mediaManager.localScreenCapture;
-        if(!localScreenCapture){
-            return;
-        }
-
-        this.addStream(localScreenCapture);
-        return;
     }
 
     public stopPushingScreenSharingToRemoteUser(stream: MediaStream) {
