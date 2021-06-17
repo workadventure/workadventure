@@ -31,20 +31,7 @@ export class MediaManager {
 
     private userInputManager?: UserInputManager;
 
-    //FIX ME SOUNDMETER: check stalability of sound meter calculation
-    /*private mySoundMeter?: SoundMeter|null;
-    private soundMeters: Map<string, SoundMeter> = new Map<string, SoundMeter>();
-    private soundMeterElements: Map<string, HTMLDivElement> = new Map<string, HTMLDivElement>();*/
-
     constructor() {
-
-        this.pingCameraStatus();
-
-        //FIX ME SOUNDMETER: check stability of sound meter calculation
-        /*this.mySoundMeterElement = (HtmlUtils.getElementByIdOrFail('mySoundMeter'));
-        this.mySoundMeterElement.childNodes.forEach((value: ChildNode, index) => {
-            this.mySoundMeterElement.children.item(index)?.classList.remove('active');
-        });*/
 
         //Check of ask notification navigator permission
         this.getNotification();
@@ -59,7 +46,6 @@ export class MediaManager {
             }
         });
 
-        //let isScreenSharing = false;
         screenSharingLocalStreamStore.subscribe((result) => {
             if (result.type === 'error') {
                 console.error(result.error);
@@ -150,22 +136,6 @@ export class MediaManager {
         show ? blockLogoElement.classList.add('active') : blockLogoElement.classList.remove('active');
     }
 
-    isConnecting(userId: string): void {
-        const connectingSpinnerDiv = this.getSpinner(userId);
-        if (connectingSpinnerDiv === null) {
-            return;
-        }
-        connectingSpinnerDiv.style.display = 'block';
-    }
-
-    isConnected(userId: string): void {
-        const connectingSpinnerDiv = this.getSpinner(userId);
-        if (connectingSpinnerDiv === null) {
-            return;
-        }
-        connectingSpinnerDiv.style.display = 'none';
-    }
-
     isError(userId: string): void {
         console.info("isError", `div-${userId}`);
         const element = document.getElementById(`div-${userId}`);
@@ -188,23 +158,8 @@ export class MediaManager {
         if(!element){
             return null;
         }
-        const connnectingSpinnerDiv = element.getElementsByClassName('connecting-spinner').item(0) as HTMLDivElement|null;
-        return connnectingSpinnerDiv;
-    }
-
-    private getColorByString(str: String) : String|null {
-        let hash = 0;
-        if (str.length === 0) return null;
-        for (let i = 0; i < str.length; i++) {
-            hash = str.charCodeAt(i) + ((hash << 5) - hash);
-            hash = hash & hash;
-        }
-        let color = '#';
-        for (let i = 0; i < 3; i++) {
-            const value = (hash >> (i * 8)) & 255;
-            color += ('00' + value.toString(16)).substr(-2);
-        }
-        return color;
+        const connectingSpinnerDiv = element.getElementsByClassName('connecting-spinner').item(0) as HTMLDivElement|null;
+        return connectingSpinnerDiv;
     }
 
     public addTriggerCloseJitsiFrameButton(id: String, Function: Function){
@@ -220,16 +175,6 @@ export class MediaManager {
             callback();
         }
     }
-    /**
-     * For some reasons, the microphone muted icon or the stream is not always up to date.
-     * Here, every 30 seconds, we are "reseting" the streams and sending again the constraints to the other peers via the data channel again (see SimplePeer::pushVideoToRemoteUser)
-    **/
-    private pingCameraStatus(){
-        /*setInterval(() => {
-            console.log('ping camera status');
-            this.triggerUpdatedLocalStreamCallbacks(this.localStream);
-        }, 30000);*/
-    }
 
     public addNewMessage(name: string, message: string, isMe: boolean = false){
         discussionManager.addMessage(name, message, isMe);
@@ -242,10 +187,6 @@ export class MediaManager {
 
     public addSendMessageCallback(userId: string|number, callback: SendMessageCallback){
         discussionManager.onSendMessageCallback(userId, callback);
-    }
-
-    get activatedDiscussion(){
-        return discussionManager.activatedDiscussion;
     }
 
     public setUserInputManager(userInputManager : UserInputManager){

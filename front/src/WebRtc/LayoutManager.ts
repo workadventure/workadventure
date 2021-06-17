@@ -15,14 +15,6 @@ export enum DivImportance {
     Normal = "Normal",
 }
 
-/**
- * Classes implementing this interface can be notified when the center of the screen (the player position) should be
- * changed.
- */
-export interface CenterListener {
-    onCenterChange(): void;
-}
-
 export const ON_ACTION_TRIGGER_BUTTON = 'onaction';
 
 export const TRIGGER_WEBSITE_PROPERTIES = 'openWebsiteTrigger';

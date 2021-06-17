@@ -34,10 +34,8 @@ import {SimplePeer} from "../../WebRtc/SimplePeer";
 import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
 import {lazyLoadPlayerCharacterTextures, loadCustomTexture} from "../Entity/PlayerTexturesLoadingManager";
 import {
-    CenterListener,
     JITSI_MESSAGE_PROPERTIES,
     layoutManager,
-    LayoutMode,
     ON_ACTION_TRIGGER_BUTTON,
     TRIGGER_JITSI_PROPERTIES,
     TRIGGER_WEBSITE_PROPERTIES,
@@ -135,7 +133,7 @@ interface DeleteGroupEventInterface {
 
 const defaultStartLayerName = 'start';
 
-export class GameScene extends DirtyScene /*implements CenterListener*/ {
+export class GameScene extends DirtyScene {
     Terrains : Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer!: Player;
     MapPlayers!: Phaser.Physics.Arcade.Group;
@@ -1117,7 +1115,6 @@ ${escapedMessage}
     initCamera() {
         this.cameras.main.setBounds(0,0, this.Map.widthInPixels, this.Map.heightInPixels);
         this.cameras.main.startFollow(this.CurrentPlayer, true);
-        //this.updateCameraOffset();
         biggestAvailableArrayStore.recompute();
     }
 
@@ -1498,7 +1495,6 @@ ${escapedMessage}
         this.openChatIcon.setY(this.game.renderer.height - 2);
 
         // Recompute camera offset if needed
-        //this.updateCameraOffset();
         biggestAvailableArrayStore.recompute();
     }
 
@@ -1515,10 +1511,6 @@ ${escapedMessage}
 
         this.cameras.main.setFollowOffset((xCenter - game.offsetWidth/2) * window.devicePixelRatio / this.scale.zoom , (yCenter - game.offsetHeight/2) * window.devicePixelRatio / this.scale.zoom);
     }
-
-    /*public onCenterChange(): void {
-        this.updateCameraOffset();
-    }*/
 
     public startJitsi(roomName: string, jwt?: string): void {
         const allProps = this.gameMap.getCurrentProperties();
@@ -1579,7 +1571,6 @@ ${escapedMessage}
 
     zoomByFactor(zoomFactor: number) {
         waScaleManager.zoomModifier *= zoomFactor;
-        //this.updateCameraOffset();
         biggestAvailableArrayStore.recompute();
     }
 }

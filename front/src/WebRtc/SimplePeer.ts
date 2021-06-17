@@ -6,19 +6,14 @@ import {
     mediaManager,
     StartScreenSharingCallback,
     StopScreenSharingCallback,
-    UpdatedLocalStreamCallback
 } from "./MediaManager";
 import {ScreenSharingPeer} from "./ScreenSharingPeer";
 import {MESSAGE_TYPE_BLOCKED, MESSAGE_TYPE_CONSTRAINT, MESSAGE_TYPE_MESSAGE, VideoPeer} from "./VideoPeer";
 import type {RoomConnection} from "../Connexion/RoomConnection";
-import {connectionManager} from "../Connexion/ConnectionManager";
-import {GameConnexionTypes} from "../Url/UrlManager";
 import {blackListManager} from "./BlackListManager";
 import {get} from "svelte/store";
 import {localStreamStore, LocalStreamStoreValue, obtainedMediaConstraintStore} from "../Stores/MediaStore";
 import {screenSharingLocalStreamStore} from "../Stores/ScreenSharingStore";
-import {DivImportance, layoutManager} from "./LayoutManager";
-import {HtmlUtils} from "./HtmlUtils";
 import {discussionManager} from "./DiscussionManager";
 
 export interface UserSimplePeerInterface{
@@ -127,7 +122,6 @@ export class SimplePeer {
         // This would be symmetrical to the way we handle disconnection.
 
         //start connection
-        //console.log('receiveWebrtcStart. Initiator: ', user.initiator)
         if(!user.initiator){
             return;
         }
@@ -229,12 +223,6 @@ export class SimplePeer {
             }
             return null;
         }
-
-        // We should display the screen sharing ONLY if we are not initiator
-/*        if (!user.initiator) {
-            mediaManager.removeActiveScreenSharingVideo("" + user.userId);
-            mediaManager.addScreenSharingActiveVideo("" + user.userId);
-        }*/
 
         // Enrich the user with last known credentials (if they are not set in the user object, which happens when a user triggers the screen sharing)
         if (user.webRtcUser === undefined) {

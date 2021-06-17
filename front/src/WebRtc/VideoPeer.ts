@@ -135,8 +135,6 @@ export class VideoPeer extends Peer {
 
         this.on('connect', () => {
             this._connected = true;
-            mediaManager.isConnected("" + this.userId);
-            console.info(`connect => ${this.userId}`);
         });
 
         this.on('data',  (chunk: Buffer) => {
