@@ -7,6 +7,8 @@
     import cinemaCloseImg from "./images/cinema-close.svg";
     import microphoneImg from "./images/microphone.svg";
     import microphoneCloseImg from "./images/microphone-close.svg";
+    import layoutPresentationImg from "./images/layout-presentation.svg";
+    import layoutChatImg from "./images/layout-chat.svg";
     import {layoutModeStore} from "../Stores/LayoutStore";
     import {LayoutMode} from "../WebRtc/LayoutManager";
     import {peerStore} from "../Stores/PeerStore";
@@ -48,9 +50,9 @@
     <div class="btn-cam-action">
         <div class="btn-layout" on:click={switchLayoutMode} class:hide={$peerStore.size === 0}>
             {#if $layoutModeStore === LayoutMode.Presentation }
-                <img src={monitorImg} alt="Switch to mosaic mode">
+                <img src={layoutPresentationImg} style="padding: 2px" alt="Switch to mosaic mode">
             {:else}
-                <img src={monitorCloseImg} alt="Switch to presentation mode">
+                <img src={layoutChatImg} style="padding: 2px" alt="Switch to presentation mode">
             {/if}
         </div>
         <div class="btn-monitor" on:click={screenSharingClick} class:hide={!$screenSharingAvailableStore} class:enabled={$requestedScreenSharingState}>
