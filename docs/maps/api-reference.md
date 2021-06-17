@@ -1,40 +1,8 @@
 {.section-title.accent.text-primary}
 # API Reference
 
-### Sending a message in the chat
-
-```
-sendChatMessage(message: string, author: string): void
-```
-
-Sends a message in the chat. The message is only visible in the browser of the current user.
-
-*   **message**: the message to be displayed in the chat
-*   **author**: the name displayed for the author of the message. It does not have to be a real user.
-
-Example:
-
-```javascript
-WA.sendChatMessage('Hello world', 'Mr Robot');
-```
-
-### Listening to messages from the chat
-
-```javascript
-onChatMessage(callback: (message: string) => void): void
-```
-
-Listens to messages typed by the current user and calls the callback. Messages from other users in the chat cannot be listened to.
-
-*   **callback**: the function that will be called when a message is received. It contains the message typed by the user.
-
-Example:
-
-```javascript
-WA.onChatMessage((message => {
-    console.log('The user typed a message', message);
-}));
-```
+- [Navigation functions](api-nav.md)
+- [Chat functions](api-chat.md)
 
 ### Detecting when the user enters/leaves a zone
 
@@ -157,71 +125,6 @@ WA.onEnterZone('myZone', () => {
         }
     }]);
 });
-```
-
-### Opening a web page in a new tab
-
-```
-openTab(url: string): void
-```
-
-Opens the webpage at "url" in your browser, in a new tab.
-
-Example:
-
-```javascript
-WA.openTab('https://www.wikipedia.org/');
-```
-
-### Opening a web page in the current tab
-
-```
-goToPage(url: string): void
-```
-
-Opens the webpage at "url" in your browser in place of WorkAdventure. WorkAdventure will be completely unloaded.
-
-Example:
-
-```javascript
-WA.goToPage('https://www.wikipedia.org/');
-```
-
-### Going to a different map from the script
-
-```
-
-goToRoom(url: string): void
-```
-
-Load the map at url without unloading workadventure
-
-relative urls: "../subFolder/map.json[#start-layer-name]"
-global urls: "/_/global/domain/path/map.json[#start-layer-name]"
-
-Example:
-
-```javascript
-WA.goToRoom("/@/tcm/workadventure/floor0")  // workadventure urls
-WA.goToRoom('../otherMap/map.json');
-WA.goToRoom("/_/global/<path to global map>.json#start-layer-2")
-```
-
-### Opening/closing a web page in an iFrame
-
-```
-openCoWebSite(url: string): void
-closeCoWebSite(): void
-```
-
-Opens the webpage at "url" in an iFrame (on the right side of the screen) or close that iFrame.
-
-Example:
-
-```javascript
-WA.openCoWebSite('https://www.wikipedia.org/');
-// ...
-WA.closeCoWebSite();
 ```
 
 ### Load a sound from an url
