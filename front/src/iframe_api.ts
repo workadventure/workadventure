@@ -9,6 +9,7 @@ import popupApi from "./Api/iframe/popup";
 import Sound from "./Api/iframe/Sound";
 import zoneRvents from "./Api/iframe/zone-events";
 import type { WorkAdventureApi } from './iframe_api.d';
+import type { LoadPageEvent } from './Api/Events/LoadPageEvent';
 
 export const registeredCallbacks: { [K in keyof IframeResponseEventMap]?: IframeCallback<K> } = {}
 
