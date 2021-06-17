@@ -1,9 +1,7 @@
 import type { GoToPageEvent } from '../Events/GoToPageEvent';
 import type { OpenTabEvent } from '../Events/OpenTabEvent';
 import { IframeApiContribution, sendToWorkadventure } from './IframeApiContribution';
-import {LoadPageEvent} from "../Events/LoadPageEvent";
 
-import type { LoadPageEvent } from '../Events/LoadPageEvent';
 
 class WorkadventureNavigationCommands extends IframeApiContribution<WorkadventureNavigationCommands> {
 
@@ -32,16 +30,12 @@ class WorkadventureNavigationCommands extends IframeApiContribution<Workadventur
     }
 
     goToRoom(url: string): void {
-        window.parent.postMessage({
-            "type" : 'loadPage',
-            "data" : {
+        sendToWorkadventure({
+            "type": 'loadPage',
+            "data": {
                 url
-            } as LoadPageEvent
-<<<<<<< Updated upstream
-        },'*');
-=======
-            },'*');
->>>>>>> Stashed changes
+            }
+        });
     }
 }
 
