@@ -187,6 +187,26 @@ Example:
 WA.goToPage('https://www.wikipedia.org/');
 ```
 
+### Going to a different map from the script
+
+```
+
+goToRoom(url: string): void
+```
+
+Load the map at url without unloading workadventure
+
+relative urls: "../subFolder/map.json[#start-layer-name]"
+global urls: "/_/global/domain/path/map.json[#start-layer-name]"
+
+Example:
+
+```javascript
+WA.goToRoom("/@/tcm/workadventure/floor0")  // workadventure urls
+WA.goToRoom('../otherMap/map.json');
+WA.goToRoom("/_/global/<path to global map>.json#start-layer-2")
+```
+
 ### Opening/closing a web page in an iFrame
 
 ```

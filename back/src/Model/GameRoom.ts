@@ -89,7 +89,10 @@ export class GameRoom {
     public getUserByUuid(uuid: string): User|undefined {
         return this.usersByUuid.get(uuid);
     }
-
+    public getUserById(id: number): User|undefined {
+        return this.users.get(id);
+    }
+    
     public join(socket : UserSocket, joinRoomMessage: JoinRoomMessage): User {
         const positionMessage = joinRoomMessage.getPositionmessage();
         if (positionMessage === undefined) {
@@ -105,6 +108,7 @@ export class GameRoom {
             this.positionNotifier,
             socket,
             joinRoomMessage.getTagList(),
+            joinRoomMessage.getVisitcardurl(),
             joinRoomMessage.getName(),
             ProtobufUtils.toCharacterLayerObjects(joinRoomMessage.getCharacterlayerList()),
             joinRoomMessage.getCompanion()

@@ -21,7 +21,6 @@ import type {
     ITiledMapLayer,
     ITiledMapLayerProperty,
     ITiledMapObject,
-    ITiledText,
     ITiledMapTileLayer,
     ITiledTileSet
 } from "../Map/ITiledMap";
@@ -81,6 +80,7 @@ import CanvasTexture = Phaser.Textures.CanvasTexture;
 import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import DOMElement = Phaser.GameObjects.DOMElement;
+import EVENT_TYPE =Phaser.Scenes.Events
 import type {Subscription} from "rxjs";
 import {worldFullMessageStream} from "../../Connexion/WorldFullMessageStream";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
@@ -160,6 +160,7 @@ export class GameScene extends DirtyScene implements CenterListener {
     private createPromise: Promise<void>;
     private createPromiseResolve!: (value?: void | PromiseLike<void>) => void;
     private iframeSubscriptionList! : Array<Subscription>;
+    private peerStoreUnsubscribe!: () => void;
     MapUrlFile: string;
     RoomId: string;
     instance: string;
@@ -228,11 +229,11 @@ export class GameScene extends DirtyScene implements CenterListener {
             this.load.image(joystickBaseKey, joystickBaseImg);
             this.load.image(joystickThumbKey, joystickThumbImg);
         }
-        //todo: in an emote manager.
-        this.load.spritesheet('emote-music', 'resources/emotes/pipo-popupemotes005.png', {
-            frameHeight: 32,
-            frameWidth: 32,
-        });
+        this.load.audio('audio-webrtc-in', '/resources/objects/webrtc-in.mp3');
+        this.load.audio('audio-webrtc-out', '/resources/objects/webrtc-out.mp3');
+        //this.load.audio('audio-report-message', '/resources/objects/report-message.mp3');
+        this.sound.pauseOnBlur = false;
+
         this.load.on(FILE_LOAD_ERROR, (file: {src: string}) => {
             // If we happen to be in HTTP and we are trying to load a URL in HTTPS only... (this happens only in dev environments)
             if (window.location.protocol === 'http:' && file.src === this.MapUrlFile && file.src.startsWith('http:') && this.originalMapUrl === undefined) {
@@ -279,6 +280,14 @@ export class GameScene extends DirtyScene implements CenterListener {
 
         this.load.spritesheet('layout_modes', 'resources/objects/layout_modes.png', {frameWidth: 32, frameHeight: 32});
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
+        //eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (this.load as any).rexWebFont({
+            custom: {
+                families: ['Press Start 2P'],
+                urls: ['/resources/fonts/fonts.css'],
+                testString: 'abcdefg'
+            },
+        });
 
         //this function must stay at the end of preload function
         addLoader(this);
@@ -516,6 +525,21 @@ export class GameScene extends DirtyScene implements CenterListener {
         }
 
         this.emoteManager = new EmoteManager(this);
+
+        let oldPeerNumber = 0;
+        this.peerStoreUnsubscribe = peerStore.subscribe((peers) => {
+            const newPeerNumber = peers.size;
+            if (newPeerNumber > oldPeerNumber) {
+                this.sound.play('audio-webrtc-in', {
+                    volume: 0.2
+                });
+            } else if (newPeerNumber < oldPeerNumber) {
+                this.sound.play('audio-webrtc-out', {
+                    volume: 0.2
+                });
+            }
+            oldPeerNumber = newPeerNumber;
+        });
     }
 
     /**
@@ -548,6 +572,7 @@ export class GameScene extends DirtyScene implements CenterListener {
                     characterLayers: message.characterLayers,
                     name: message.name,
                     position: message.position,
+                    visitCardUrl: message.visitCardUrl,
                     companion: message.companion
                 }
                 this.addPlayer(userMessage);
@@ -896,7 +921,13 @@ ${escapedMessage}
        this.iframeSubscriptionList.push(iframeListener.enablePlayerControlStream.subscribe(()=>{
             this.userInputManager.restoreControls();
         }));
-
+        this.iframeSubscriptionList.push(iframeListener.loadPageStream.subscribe((url:string)=>{
+            this.loadNextGame(url).then(()=>{
+                this.events.once(EVENT_TYPE.POST_UPDATE,()=>{
+                    this.onMapExit(url);
+                })
+            })
+        }));
         let scriptedBubbleSprite : Sprite;
        this.iframeSubscriptionList.push(iframeListener.displayBubbleStream.subscribe(()=>{
             scriptedBubbleSprite = new Sprite(this,this.CurrentPlayer.x + 25,this.CurrentPlayer.y,'circleSprite-white');
@@ -957,6 +988,9 @@ ${escapedMessage}
         this.userInputManager.destroy();
         this.pinchManager?.destroy();
         this.emoteManager.destroy();
+        this.peerStoreUnsubscribe();
+
+        mediaManager.hideGameOverlay();
 
         for(const iframeEvents of this.iframeSubscriptionList){
             iframeEvents.unsubscribe();
@@ -1068,10 +1102,10 @@ ${escapedMessage}
     }
 
     //todo: push that into the gameManager
-    private loadNextGame(exitSceneIdentifier: string): void {
+    private loadNextGame(exitSceneIdentifier: string): Promise<void> {
         const {roomId, hash} = Room.getIdFromIdentifier(exitSceneIdentifier, this.MapUrlFile, this.instance);
         const room = new Room(roomId);
-        gameManager.loadMap(room, this.scene).catch(() => {});
+        return gameManager.loadMap(room, this.scene).catch(() => {});
     }
 
     private startUser(layer: ITiledMapTileLayer): PositionInterface {
@@ -1146,7 +1180,10 @@ ${escapedMessage}
                 this.companion,
                 this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
-            this.CurrentPlayer.on('pointerdown', () => {
+            this.CurrentPlayer.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+                if (pointer.wasTouch && (pointer.event as TouchEvent).touches.length > 1) {
+                    return; //we don't want the menu to open when pinching on a touch screen.
+                }
                 this.emoteManager.getMenuImages().then((emoteMenuElements) => this.CurrentPlayer.openOrCloseEmoteMenu(emoteMenuElements))
             })
             this.CurrentPlayer.on(requestEmoteEventName, (emoteKey: string) => {
@@ -1346,6 +1383,7 @@ ${escapedMessage}
             texturesPromise,
             addPlayerData.position.direction as PlayerAnimationDirections,
             addPlayerData.position.moving,
+            addPlayerData.visitCardUrl,
             addPlayerData.companion,
             addPlayerData.companion !== null ? lazyLoadCompanionResource(this.load, addPlayerData.companion) : undefined
         );
@@ -1452,8 +1490,8 @@ ${escapedMessage}
         this.connection?.emitActionableEvent(itemId, eventName, state, parameters);
     }
 
-    public onResize(ev: UIEvent): void {
-        super.onResize(ev);
+    public onResize(): void {
+        super.onResize();
         this.reposition();
 
         // Send new viewport to server

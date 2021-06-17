@@ -110,12 +110,10 @@ export class AuthenticateController extends BaseController {
     private anonymLogin(){
         this.App.options("/anonymLogin", (res: HttpResponse, req: HttpRequest) => {
             this.addCorsHeaders(res);
-
             res.end();
         });
 
-        this.App.post("/anonymLogin", (res: HttpResponse, req: HttpRequest) => {
-
+        this.App.post("/anonymLogin", (res: HttpResponse, req: HttpRequest) => {           
             res.onAborted(() => {
                 console.warn('Login request was aborted');
             })

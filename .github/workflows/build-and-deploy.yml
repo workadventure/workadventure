@@ -2,7 +2,7 @@ name: Build, push and deploy Docker image
 
 on:
   push:
-    branches: [master]
+    branches: [master, develop]
   release:
     types: [created]
   pull_request:
@@ -149,6 +149,37 @@ jobs:
       # Create a slugified value of the branch
       - uses: rlespinasse/github-slug-action@3.1.0
 
+      - name: Write certificate
+        run: echo "${CERTS_PRIVATE_KEY}" > secret.key && chmod 0600 secret.key
+        env:
+          CERTS_PRIVATE_KEY: ${{ secrets.CERTS_PRIVATE_KEY }}
+
+      - name: Download certificate
+        run: mkdir secrets && scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i secret.key ubuntu@cert.workadventu.re:./config/live/workadventu.re/* secrets/
+
+      - name: Create namespace
+        uses: steebchen/kubectl@v1.0.0
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
+        with:
+          args: create namespace workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+        continue-on-error: true
+
+      - name: Delete old certificates in namespace
+        uses: steebchen/kubectl@v1.0.0
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
+        with:
+          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} delete secret certificate-tls
+        continue-on-error: true
+
+      - name: Install certificates in namespace
+        uses: steebchen/kubectl@v1.0.0
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
+        with:
+          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} create secret tls certificate-tls --key="secrets/privkey.pem" --cert="secrets/fullchain.pem"
+
       - name: Deploy
         uses: thecodingmachine/deeployer-action@master
         env:
@@ -168,4 +199,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          msg: Environment deployed at https://play.${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re
+          msg: Environment deployed at https://play-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re

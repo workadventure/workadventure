@@ -299,6 +299,9 @@ export class SocketManager {
             userJoinedZoneMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
             userJoinedZoneMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
             userJoinedZoneMessage.setFromzone(this.toProtoZone(fromZone));
+            if (thing.visitCardUrl) {
+                userJoinedZoneMessage.setVisitcardurl(thing.visitCardUrl);
+            }
             userJoinedZoneMessage.setCompanion(thing.companion);
 
             const subMessage = new SubToPusherMessage();
@@ -604,6 +607,9 @@ export class SocketManager {
                 userJoinedMessage.setName(thing.name);
                 userJoinedMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
                 userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
+                if (thing.visitCardUrl) {
+                    userJoinedMessage.setVisitcardurl(thing.visitCardUrl);
+                }
                 userJoinedMessage.setCompanion(thing.companion);
 
                 const subMessage = new SubToPusherMessage();

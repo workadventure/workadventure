@@ -2,30 +2,32 @@ import {EnableCameraSceneName} from "./EnableCameraScene";
 import Rectangle = Phaser.GameObjects.Rectangle;
 import {loadAllLayers} from "../Entity/PlayerTexturesLoadingManager";
 import Sprite = Phaser.GameObjects.Sprite;
-import Container = Phaser.GameObjects.Container;
 import {gameManager} from "../Game/GameManager";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {addLoader} from "../Components/Loader";
 import type {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
 import {AbstractCharacterScene} from "./AbstractCharacterScene";
 import {areCharacterLayersValid} from "../../Connexion/LocalUser";
-import { MenuScene } from "../Menu/MenuScene";
 import { SelectCharacterSceneName } from "./SelectCharacterScene";
+import {customCharacterSceneVisibleStore} from "../../Stores/CustomCharacterStore";
+import {waScaleManager} from "../Services/WaScaleManager";
+import {isMobile} from "../../Enum/EnvironmentVariable";
+import {CustomizedCharacter} from "../Entity/CustomizedCharacter";
 
 export const CustomizeSceneName = "CustomizeScene";
-
-export const CustomizeSceneKey = "CustomizeScene";
-const customizeSceneKey = 'customizeScene';
 
 export class CustomizeScene extends AbstractCharacterScene {
     private Rectangle!: Rectangle;
 
     private selectedLayers: number[] = [0];
-    private containersRow: Container[][] = [];
-    private activeRow:number = 0;
+    private containersRow: CustomizedCharacter[][] = [];
+    public activeRow:number = 0;
     private layers: BodyResourceDescriptionInterface[][] = [];
 
-    private customizeSceneElement!: Phaser.GameObjects.DOMElement;
+    protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
+
+    private moveHorizontally: number = 0;
+    private moveVertically: number = 0;
 
     constructor() {
         super({
@@ -34,9 +36,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     preload() {
-        this.load.html(customizeSceneKey, 'resources/html/CustomCharacterScene.html');
 
-        this.layers = loadAllLayers(this.load);
         this.loadCustomSceneSelectCharacters().then((bodyResourceDescriptions) => {
             bodyResourceDescriptions.forEach((bodyResourceDescription) => {
                 if(bodyResourceDescription.level == undefined || bodyResourceDescription.level < 0 || bodyResourceDescription.level > 5 ){
@@ -44,42 +44,27 @@ export class CustomizeScene extends AbstractCharacterScene {
                 }
                 this.layers[bodyResourceDescription.level].unshift(bodyResourceDescription);
             });
+            this.lazyloadingAttempt = true;
         });
+
+        this.layers = loadAllLayers(this.load);
+        this.lazyloadingAttempt = false;
+
 
         //this function must stay at the end of preload function
         addLoader(this);
     }
 
     create() {
-        this.customizeSceneElement = this.add.dom(-1000, 0).createFromCache(customizeSceneKey);
-        this.centerXDomElement(this.customizeSceneElement, 150);
-        MenuScene.revealMenusAfterInit(this.customizeSceneElement, customizeSceneKey);
-
-        this.customizeSceneElement.addListener('click');
-        this.customizeSceneElement.on('click',  (event:MouseEvent) => {
-            event.preventDefault();
-            if((event?.target as HTMLInputElement).id === 'customizeSceneButtonLeft') {
-                this.moveCursorHorizontally(-1);
-            }else if((event?.target as HTMLInputElement).id === 'customizeSceneButtonRight') {
-                this.moveCursorHorizontally(1);
-            }else if((event?.target as HTMLInputElement).id === 'customizeSceneButtonDown') {
-                this.moveCursorVertically(1);
-            }else if((event?.target as HTMLInputElement).id === 'customizeSceneButtonUp') {
-                this.moveCursorVertically(-1);
-            }else if((event?.target as HTMLInputElement).id === 'customizeSceneFormBack') {
-                if(this.activeRow > 0){
-                    this.moveCursorVertically(-1);
-                }else{
-                    this.backToPreviousScene();
-                }
-            }else if((event?.target as HTMLButtonElement).id === 'customizeSceneFormSubmit') {
-                if(this.activeRow < 5){
-                    this.moveCursorVertically(1);
-                }else{
-                    this.nextSceneToCamera();
-                }
-            }
+        customCharacterSceneVisibleStore.set(true);
+        this.events.addListener('wake', () => {
+            waScaleManager.saveZoom();
+            waScaleManager.zoomModifier = isMobile() ? 3 : 1;
+            customCharacterSceneVisibleStore.set(true);
         });
+
+        waScaleManager.saveZoom();
+        waScaleManager.zoomModifier = isMobile() ? 3 : 1;
 
         this.Rectangle = this.add.rectangle(this.cameras.main.worldView.x + this.cameras.main.width / 2, this.cameras.main.worldView.y + this.cameras.main.height / 3, 32, 33)
         this.Rectangle.setStrokeStyle(2, 0xFFFFFF);
@@ -100,10 +85,13 @@ export class CustomizeScene extends AbstractCharacterScene {
             this.backToPreviousScene();
         });
 
-        this.input.keyboard.on('keyup-RIGHT', () => this.moveCursorHorizontally(1));
-        this.input.keyboard.on('keyup-LEFT', () => this.moveCursorHorizontally(-1));
-        this.input.keyboard.on('keyup-DOWN', () => this.moveCursorVertically(1));
-        this.input.keyboard.on('keyup-UP', () => this.moveCursorVertically(-1));
+        // Note: the key bindings are not directly put on the moveCursorVertically or moveCursorHorizontally methods
+        // because if 2 such events are fired close to one another, it makes the whole application crawl to a halt (for a reason I cannot
+        // explain, the list of sprites managed by the update list become immense
+        this.input.keyboard.on('keyup-RIGHT', () => this.moveHorizontally = 1);
+        this.input.keyboard.on('keyup-LEFT', () => this.moveHorizontally = -1);
+        this.input.keyboard.on('keyup-DOWN', () => this.moveVertically = 1);
+        this.input.keyboard.on('keyup-UP', () => this.moveVertically = -1);
 
         const customCursorPosition = localUserStore.getCustomCursorPosition();
         if (customCursorPosition) {
@@ -116,7 +104,15 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.onResize();
     }
 
-    private moveCursorHorizontally(index: number): void {
+    public moveCursorHorizontally(index: number): void {
+        this.moveHorizontally = index;
+    }
+
+    public moveCursorVertically(index: number): void {
+        this.moveVertically = index;
+    }
+
+    private doMoveCursorHorizontally(index: number): void {
         this.selectedLayers[this.activeRow] += index;
         if (this.selectedLayers[this.activeRow] < 0) {
             this.selectedLayers[this.activeRow] = 0
@@ -128,27 +124,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.saveInLocalStorage();
     }
 
-    private moveCursorVertically(index:number): void {
-
-        if(index === -1 && this.activeRow === 5){
-            const button = this.customizeSceneElement.getChildByID('customizeSceneFormSubmit') as HTMLButtonElement;
-            button.innerHTML = `Next <img src="resources/objects/arrow_up.png"/>`;
-        }
-
-        if(index === 1 && this.activeRow === 4){
-            const button = this.customizeSceneElement.getChildByID('customizeSceneFormSubmit') as HTMLButtonElement;
-            button.innerText = 'Finish';
-        }
-
-        if(index === -1 && this.activeRow === 1){
-            const button = this.customizeSceneElement.getChildByID('customizeSceneFormBack') as HTMLButtonElement;
-            button.innerText = `Return`;
-        }
-
-        if(index === 1 && this.activeRow === 0){
-            const button = this.customizeSceneElement.getChildByID('customizeSceneFormBack') as HTMLButtonElement;
-            button.innerHTML = `Back <img src="resources/objects/arrow_up.png"/>`;
-        }
+    private doMoveCursorVertically(index:number): void {
 
         this.activeRow += index;
         if (this.activeRow < 0) {
@@ -197,20 +173,20 @@ export class CustomizeScene extends AbstractCharacterScene {
      * @param selectedItem, The number of the item select (0 for black body...)
      */
     private generateCharacter(x: number, y: number, layerNumber: number, selectedItem: number) {
-        return new Container(this, x, y,this.getContainerChildren(layerNumber,selectedItem));
+        return new CustomizedCharacter(this, x, y, this.getContainerChildren(layerNumber,selectedItem));
     }
 
-    private getContainerChildren(layerNumber: number, selectedItem: number): Array<Sprite> {
-        const children: Array<Sprite> = new Array<Sprite>();
+    private getContainerChildren(layerNumber: number, selectedItem: number): Array<string> {
+        const children: Array<string> = new Array<string>();
         for (let j = 0; j <= layerNumber; j++) {
             if (j === layerNumber) {
-                children.push(this.generateLayers(0, 0, this.layers[j][selectedItem].name));
+                children.push(this.layers[j][selectedItem].name);
             } else {
                 const layer = this.selectedLayers[j];
                 if (layer === undefined) {
                     continue;
                 }
-                children.push(this.generateLayers(0, 0, this.layers[j][layer].name));
+                children.push(this.layers[j][layer].name);
             }
          }
         return children;
@@ -247,33 +223,47 @@ export class CustomizeScene extends AbstractCharacterScene {
      * @return a new sprite
      */
     private generateLayers(x: number, y: number, name: string): Sprite {
-        return new Sprite(this, x, y, name);
+        //return new Sprite(this, x, y, name);
+        return this.add.sprite(0, 0, name);
     }
 
     private updateSelectedLayer() {
         for(let i = 0; i < this.containersRow.length; i++){
             for(let j = 0; j < this.containersRow[i].length; j++){
-               const children = this.getContainerChildren(i, j);
-               this.containersRow[i][j].removeAll(true);
-                this.containersRow[i][j].add(children);
+                const children = this.getContainerChildren(i, j);
+                this.containersRow[i][j].updateSprites(children);
             }
         }
     }
 
     update(time: number, delta: number): void {
 
+        if(this.lazyloadingAttempt){
+            this.moveLayers();
+            this.lazyloadingAttempt = false;
+        }
+
+        if (this.moveHorizontally !== 0) {
+            this.doMoveCursorHorizontally(this.moveHorizontally);
+            this.moveHorizontally = 0;
+        }
+        if (this.moveVertically !== 0) {
+            this.doMoveCursorVertically(this.moveVertically);
+            this.moveVertically = 0;
+        }
     }
+
+
+
 
      public onResize(): void {
         this.moveLayers();
 
         this.Rectangle.x = this.cameras.main.worldView.x + this.cameras.main.width / 2;
         this.Rectangle.y = this.cameras.main.worldView.y + this.cameras.main.height / 3;
-
-        this.centerXDomElement(this.customizeSceneElement, 150);
      }
 
-    private nextSceneToCamera(){
+    public nextSceneToCamera(){
         const layers: string[] = [];
             let i = 0;
             for (const layerItem of this.selectedLayers) {
@@ -288,12 +278,16 @@ export class CustomizeScene extends AbstractCharacterScene {
 
             gameManager.setCharacterLayers(layers);
             this.scene.sleep(CustomizeSceneName);
-            this.scene.remove(SelectCharacterSceneName);
+            waScaleManager.restoreZoom();
+            this.events.removeListener('wake');
             gameManager.tryResumingGame(this, EnableCameraSceneName);
+            customCharacterSceneVisibleStore.set(false);
     }
 
-    private backToPreviousScene(){
+    public backToPreviousScene(){
         this.scene.sleep(CustomizeSceneName);
+        waScaleManager.restoreZoom();
         this.scene.run(SelectCharacterSceneName);
+        customCharacterSceneVisibleStore.set(false);
     }
 }

@@ -133,11 +133,12 @@ body .message-info.warning{
     outline: none;
 }
 
-.video-container#div-myCamVideo{
+.video-container.div-myCamVideo{
     border: none;
+    background-color: transparent;
 }
 
-#div-myCamVideo {
+.div-myCamVideo {
     position: absolute;
     right: 15px;
     bottom: 30px;
@@ -146,11 +147,13 @@ body .message-info.warning{
     transition: right 350ms;
 }
 
-#div-myCamVideo.hide {
+.div-myCamVideo.hide {
     right: -20vw;
 }
 
-video#myCamVideo{
+video.myCamVideo{
+    background-color: #00000099;
+    max-height: 20vh;
     width: 15vw;
     -webkit-transform: scaleX(-1);
     transform: scaleX(-1);
@@ -212,7 +215,9 @@ video#myCamVideo{
 /*btn animation*/
 .btn-cam-action div{
     cursor: url('./images/cursor_pointer.png'), pointer;
-    /*position: absolute;*/
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border: solid 0px black;
     width: 44px;
     height: 44px;
@@ -267,8 +272,6 @@ video#myCamVideo{
 .btn-cam-action div img{
     height: 22px;
     width: 30px;
-    top: calc(48px - 37px);
-    left: calc(48px - 41px);
     position: relative;
     cursor: url('./images/cursor_pointer.png'), pointer;
 }
@@ -331,48 +334,15 @@ video#myCamVideo{
     }
 }
 
-.webrtcsetup{
-    display: none;
-    position: absolute;
-    top: 140px;
-    left: 0;
-    right: 0;
-    margin-left: auto;
-    margin-right: auto;
-    height: 50%;
-    width: 50%;
-    border: white 6px solid;
-}
-.webrtcsetup .background-img {
-    position: relative;
-    display: block;
-    width: 40%;
-    height: 60%;
-    margin-left: auto;
-    margin-right: auto;
-    top: 50%;
-    transform: translateY(-50%);
-}
-#myCamVideoSetup {
-    width: 100%;
-    height: 100%;
-    -webkit-transform: scaleX(-1);
-    transform: scaleX(-1);
-}
-.webrtcsetup.active{
-    display: block;
-}
-
-
 /* New layout */
 body {
     margin: 0;
-    height: 100vh;
-    width: 100vw;
+    height: 100%;
+    width: 100%;
 }
 .main-container {
-    height: 100vh;
-    width: 100vw;
+    height: 100%;
+    width: 100%;
     position: absolute;
 }
 
@@ -397,7 +367,6 @@ body {
 }
 
 #game {
-    width: 100%;
     position: relative; /* Position relative is needed for the game-overlay. */
 }
 
@@ -618,7 +587,6 @@ input[type=range]:focus::-ms-fill-upper {
 /* Let's make sure videos are vertically centered if they need to be cropped */
 .media-container {
     display: flex;
-    justify-content: center;
     flex-direction: column;
     overflow: hidden;
     border-radius: 15px;
@@ -839,35 +807,6 @@ input[type=range]:focus::-ms-fill-upper {
     cursor: url('./images/cursor_pointer.png'), pointer;
 }
 
-
-
-/*audio html when audio message playing*/
-.main-container .audio-playing {
-    position: absolute;
-    width: 200px;
-    height: 54px;
-    right: -210px;
-    top: 40px;
-    transition: all 0.1s ease-out;
-    background-color: black;
-    border-radius: 30px 0 0 30px;
-    display: inline-flex;
-}
-
-.main-container .audio-playing.active{
-    right: 0;
-}
-.main-container .audio-playing img{
-    /*width: 30px;*/
-    border-radius: 50%;
-    background-color: #ffda01;
-    padding: 10px;
-}
-.main-container .audio-playing p{
-    color: white;
-    margin-left: 10px;
-    margin-top: 14px;
-}
 
 /* VIDEO QUALITY */
 .main-console div.setting h1{
@@ -1136,6 +1075,10 @@ div.modal-report-user{
     color: white;
 }
 
+.discussion .messages .message p a:visited{
+    color: white;
+}
+
 .discussion .send-message{
     position: absolute;
     bottom: 45px;
@@ -1244,4 +1187,22 @@ div.action.danger p.action-body{
     width: 100%;
     height: 100%;
     pointer-events: none;
+
+    & > div {
+        position: relative;
+        width: 100%;
+        height: 100%;
+
+        & > div {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        & > div.scrollable {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            pointer-events: auto;
+        }
+    }
 }

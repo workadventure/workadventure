@@ -171,6 +171,8 @@ export class DiscussionManager {
         const date = new Date();
         if(isMe){
             name = 'Me';
+        } else {
+            name = HtmlUtils.escapeHtml(name);
         }
         pMessage.innerHTML = `<span style="font-weight: bold">${name}</span>    
                     <span style="color:#bac2cc;display:inline-block;font-size:12px;">
