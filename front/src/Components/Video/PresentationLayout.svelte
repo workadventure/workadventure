@@ -2,6 +2,12 @@
     import Peer from "./Peer.svelte";
     import {layoutStore} from "../../Stores/LayoutStore";
     import {videoFocusStore} from "../../Stores/VideoFocusStore";
+    import {afterUpdate} from "svelte";
+    import {biggestAvailableArrayStore} from "../../Stores/BiggestAvailableArrayStore";
+
+    afterUpdate(() => {
+        biggestAvailableArrayStore.recompute();
+    })
 </script>
 
 <div class="main-section">

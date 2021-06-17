@@ -1,13 +1,10 @@
 <script lang="ts">
-    import {VideoPeer} from "../../WebRtc/VideoPeer";
+    import type {VideoPeer} from "../../WebRtc/VideoPeer";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import microphoneCloseImg from "../images/microphone-close.svg";
     import reportImg from "./images/report.svg";
     import blockSignImg from "./images/blockSign.svg";
-    import {DivImportance} from "../../WebRtc/LayoutManager";
     import {videoFocusStore} from "../../Stores/VideoFocusStore";
-    import {EnableCameraScene, EnableCameraSceneName} from "../../Phaser/Login/EnableCameraScene";
-    import {MenuScene, MenuSceneName} from "../../Phaser/Menu/MenuScene";
     import {showReportScreenStore} from "../../Stores/ShowReportScreenStore";
 
     export let peer: VideoPeer;
@@ -15,8 +12,6 @@
     let name = peer.userName;
     let statusStore = peer.statusStore;
     let constraintStore = peer.constraintsStore;
-
-    constraintStore.subscribe((vl) => console.log('CONS', vl));
 
     function getColorByString(str: string) : string|null {
         let hash = 0;
@@ -35,10 +30,10 @@
         return color;
     }
 
-    function srcObject(node, stream) {
+    function srcObject(node: HTMLVideoElement, stream: MediaStream) {
         node.srcObject = stream;
         return {
-            update(newStream) {
+            update(newStream: MediaStream) {
                 if (node.srcObject != newStream) {
                     node.srcObject = newStream
                 }
@@ -47,7 +42,6 @@
     }
 
     function openReport(peer: VideoPeer): void {
-        console.log('OPENING REPORT');
         showReportScreenStore.set({ userId:peer.userId, userName: peer.userName });
     }
 
@@ -70,7 +64,9 @@
         <img alt="Report this user" src={reportImg}>
         <span>Report/Block</span>
     </button>
+    {#if $streamStore }
     <video use:srcObject={$streamStore} autoplay playsinline on:click={() => videoFocusStore.toggleFocus(peer)}></video>
+    {/if}
     <img src={blockSignImg} class="block-logo" alt="Block" />
     {#if $constraintStore && $constraintStore.audio !== false}
         <SoundMeterWidget stream={$streamStore}></SoundMeterWidget>

@@ -34,6 +34,8 @@ export const JITSI_MESSAGE_PROPERTIES = 'jitsiTriggerMessage';
 export const AUDIO_VOLUME_PROPERTY = 'audioVolume';
 export const AUDIO_LOOP_PROPERTY = 'audioLoop';
 
+export type Box = {xStart: number, yStart: number, xEnd: number, yEnd: number};
+
 /**
  * This class is in charge of the video-conference layout.
  * It receives positioning requests for videos and does its best to place them on the screen depending on the active layout mode.
@@ -52,38 +54,6 @@ class LayoutManager {
         this.listener = centerListener;
     }
 
-    public add(importance: DivImportance, userId: string, html: string): void {
-        const div = document.createElement('div');
-        div.innerHTML = html;
-        div.id = "user-"+userId;
-        div.className = "media-container"
-        div.onclick = () => {
-            const parentId = div.parentElement?.id;
-            if (parentId === 'sidebar' || parentId === 'chat-mode') {
-                this.focusOn(userId);
-            } else {
-                this.removeFocusOn(userId);
-            }
-        }
-
-        if (importance === DivImportance.Important) {
-            this.importantDivs.set(userId, div);
-
-            // If this is the first video with high importance, let's switch mode automatically.
-            if (this.importantDivs.size === 1 && this.mode === LayoutMode.VideoChat) {
-                this.switchLayoutMode(LayoutMode.Presentation);
-            }
-        } else if (importance === DivImportance.Normal) {
-            this.normalDivs.set(userId, div);
-        } else {
-            throw new Error('Unexpected importance');
-        }
-
-        this.positionDiv(div, importance);
-        this.adjustVideoChatClass();
-        this.listener?.onCenterChange();
-    }
-
     private positionDiv(elem: HTMLDivElement, importance: DivImportance): void {
         if (this.mode === LayoutMode.VideoChat) {
             const chatModeDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('chat-mode');
@@ -97,48 +67,6 @@ class LayoutManager {
                 sideBarDiv.appendChild(elem);
             }
         }
-    }
-
-    /**
-     * Put the screen in presentation mode and move elem in presentation mode (and all other videos in normal mode)
-     */
-    private focusOn(userId: string): void {
-        const focusedDiv = this.getDivByUserId(userId);
-        for (const [importantUserId, importantDiv] of this.importantDivs.entries()) {
-            //this.positionDiv(importantDiv, DivImportance.Normal);
-            this.importantDivs.delete(importantUserId);
-            this.normalDivs.set(importantUserId, importantDiv);
-        }
-        this.normalDivs.delete(userId);
-        this.importantDivs.set(userId, focusedDiv);
-        //this.positionDiv(focusedDiv, DivImportance.Important);
-        this.switchLayoutMode(LayoutMode.Presentation);
-    }
-
-    /**
-     * Removes userId from presentation mode
-     */
-    private removeFocusOn(userId: string): void {
-        const importantDiv = this.importantDivs.get(userId);
-        if (importantDiv === undefined) {
-            throw new Error('Div with user id "'+userId+'" is not in important mode');
-        }
-        this.normalDivs.set(userId, importantDiv);
-        this.importantDivs.delete(userId);
-
-        this.positionDiv(importantDiv, DivImportance.Normal);
-    }
-
-    private getDivByUserId(userId: string): HTMLDivElement {
-        let div = this.importantDivs.get(userId);
-        if (div !== undefined) {
-            return div;
-        }
-        div = this.normalDivs.get(userId);
-        if (div !== undefined) {
-            return div;
-        }
-        throw new Error('Could not find media with user id '+userId);
     }
 
     /**
@@ -218,7 +146,7 @@ class LayoutManager {
     /**
      * Tries to find the biggest available box of remaining space (this is a space where we can center the character)
      */
-    public findBiggestAvailableArray(): {xStart: number, yStart: number, xEnd: number, yEnd: number} {
+    public findBiggestAvailableArray(): Box {
         const game = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>('#game canvas');
         if (this.mode === LayoutMode.VideoChat) {
             const children = document.querySelectorAll<HTMLDivElement>('div.chat-mode > div');

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {ScreenSharingPeer} from "../../WebRtc/ScreenSharingPeer";
+    import type {ScreenSharingPeer} from "../../WebRtc/ScreenSharingPeer";
     import {videoFocusStore} from "../../Stores/VideoFocusStore";
 
     export let peer: ScreenSharingPeer;
@@ -7,10 +7,10 @@
     let name = peer.userName;
     let statusStore = peer.statusStore;
 
-    function srcObject(node, stream) {
+    function srcObject(node: HTMLVideoElement, stream: MediaStream) {
         node.srcObject = stream;
         return {
-            update(newStream) {
+            update(newStream: MediaStream) {
                 if (node.srcObject != newStream) {
                     node.srcObject = newStream
                 }
@@ -45,8 +45,9 @@
     {/if}
     {#if $streamStore === null}
         <i style="background-color: {getColorByString(name)};">{name}</i>
+    {:else}
+        <video use:srcObject={$streamStore} autoplay playsinline on:click={() => videoFocusStore.toggleFocus(peer)}></video>
     {/if}
-    <video use:srcObject={$streamStore} autoplay playsinline on:click={() => videoFocusStore.toggleFocus(peer)}></video>
 </div>
 
 <style lang="scss">

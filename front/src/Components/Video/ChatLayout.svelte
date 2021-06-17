@@ -1,7 +1,8 @@
 <script lang="ts">
     import Peer from "./Peer.svelte";
     import {layoutStore} from "../../Stores/LayoutStore";
-    import {onDestroy} from "svelte";
+    import {afterUpdate, onDestroy} from "svelte";
+    import {biggestAvailableArrayStore} from "../../Stores/BiggestAvailableArrayStore";
 
     let cssClass = 'one-col';
 
@@ -21,6 +22,10 @@
     onDestroy(() => {
         unsubscribe();
     });
+
+    afterUpdate(() => {
+        biggestAvailableArrayStore.recompute();
+    })
 </script>
 
 <div class="chat-mode {cssClass}">

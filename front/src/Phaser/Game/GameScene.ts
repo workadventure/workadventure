@@ -96,6 +96,7 @@ import {waScaleManager} from "../Services/WaScaleManager";
 import {peerStore, screenSharingPeerStore} from "../../Stores/PeerStore";
 import {EmoteManager} from "./EmoteManager";
 import {videoFocusStore} from "../../Stores/VideoFocusStore";
+import {biggestAvailableArrayStore} from "../../Stores/BiggestAvailableArrayStore";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -134,7 +135,7 @@ interface DeleteGroupEventInterface {
 
 const defaultStartLayerName = 'start';
 
-export class GameScene extends DirtyScene implements CenterListener {
+export class GameScene extends DirtyScene /*implements CenterListener*/ {
     Terrains : Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer!: Player;
     MapPlayers!: Phaser.Physics.Arcade.Group;
@@ -516,7 +517,9 @@ export class GameScene extends DirtyScene implements CenterListener {
         this.reposition();
 
         // From now, this game scene will be notified of reposition events
-        layoutManager.setListener(this);
+        //layoutManager.setListener(this);
+        biggestAvailableArrayStore.subscribe((box) => this.updateCameraOffset());
+
         this.triggerOnMapLayerPropertyChange();
         this.listenToIframeEvents();
 
@@ -1142,7 +1145,8 @@ ${escapedMessage}
     initCamera() {
         this.cameras.main.setBounds(0,0, this.Map.widthInPixels, this.Map.heightInPixels);
         this.cameras.main.startFollow(this.CurrentPlayer, true);
-        this.updateCameraOffset();
+        //this.updateCameraOffset();
+        biggestAvailableArrayStore.recompute();
     }
 
     addLayer(Layer : Phaser.Tilemaps.TilemapLayer){
@@ -1524,7 +1528,8 @@ ${escapedMessage}
         this.openChatIcon.setY(this.game.renderer.height - 2);
 
         // Recompute camera offset if needed
-        this.updateCameraOffset();
+        //this.updateCameraOffset();
+        biggestAvailableArrayStore.recompute();
     }
 
     /**
@@ -1542,9 +1547,9 @@ ${escapedMessage}
         this.cameras.main.setFollowOffset((xCenter - game.offsetWidth/2) * window.devicePixelRatio / this.scale.zoom , (yCenter - game.offsetHeight/2) * window.devicePixelRatio / this.scale.zoom);
     }
 
-    public onCenterChange(): void {
+    /*public onCenterChange(): void {
         this.updateCameraOffset();
-    }
+    }*/
 
     public startJitsi(roomName: string, jwt?: string): void {
         const allProps = this.gameMap.getCurrentProperties();
@@ -1605,6 +1610,7 @@ ${escapedMessage}
 
     zoomByFactor(zoomFactor: number) {
         waScaleManager.zoomModifier *= zoomFactor;
-        this.updateCameraOffset();
+        //this.updateCameraOffset();
+        biggestAvailableArrayStore.recompute();
     }
 }

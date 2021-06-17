@@ -4,7 +4,7 @@
     import ScreenSharingMedia from "./ScreenSharingMedia.svelte";
     import {ScreenSharingPeer} from "../../WebRtc/ScreenSharingPeer";
     import LocalStreamMedia from "./LocalStreamMedia.svelte";
-    import {DisplayableMedia} from "../../Stores/LayoutStore";
+    import type {DisplayableMedia} from "../../Stores/LayoutStore";
 
     export let peer: DisplayableMedia;
 </script>
@@ -15,6 +15,6 @@
     {:else if peer instanceof ScreenSharingPeer}
         <ScreenSharingMedia peer={peer}/>
     {:else}
-        <LocalStreamMedia peer={peer}/>
+        <LocalStreamMedia peer={peer} cssClass=""/>
     {/if}
 </div>
