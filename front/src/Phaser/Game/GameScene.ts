@@ -43,7 +43,7 @@ import {
     TRIGGER_WEBSITE_PROPERTIES,
     WEBSITE_MESSAGE_PROPERTIES,
     AUDIO_VOLUME_PROPERTY,
-    AUDIO_LOOP_PROPERTY
+    AUDIO_LOOP_PROPERTY, Box
 } from "../../WebRtc/LayoutManager";
 import {GameMap} from "./GameMap";
 import {coWebsiteManager} from "../../WebRtc/CoWebsiteManager";
@@ -176,8 +176,6 @@ export class GameScene extends DirtyScene /*implements CenterListener*/ {
         y: -1000
     }
 
-    private presentationModeSprite!: Sprite;
-    private chatModeSprite!: Sprite;
     private gameMap!: GameMap;
     private actionableItems: Map<number, ActionableItem> = new Map<number, ActionableItem>();
     // The item that can be selected by pressing the space key.
@@ -280,7 +278,6 @@ export class GameScene extends DirtyScene /*implements CenterListener*/ {
             this.onMapLoad(data);
         }
 
-        this.load.spritesheet('layout_modes', 'resources/objects/layout_modes.png', {frameWidth: 32, frameHeight: 32});
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
         //eslint-disable-next-line @typescript-eslint/no-explicit-any
         (this.load as any).rexWebFont({
@@ -502,10 +499,6 @@ export class GameScene extends DirtyScene /*implements CenterListener*/ {
             this.outlinedItem?.activate();
         });
 
-        this.presentationModeSprite = new PresentationModeIcon(this, 36, this.game.renderer.height - 2);
-        this.presentationModeSprite.on('pointerup', this.switchLayoutMode.bind(this));
-        this.chatModeSprite = new ChatModeIcon(this, 70, this.game.renderer.height - 2);
-        this.chatModeSprite.on('pointerup', this.switchLayoutMode.bind(this));
         this.openChatIcon = new OpenChatIcon(this, 2, this.game.renderer.height - 2)
 
         // FIXME: change this to use the UserInputManager class for input
@@ -518,7 +511,7 @@ export class GameScene extends DirtyScene /*implements CenterListener*/ {
 
         // From now, this game scene will be notified of reposition events
         //layoutManager.setListener(this);
-        biggestAvailableArrayStore.subscribe((box) => this.updateCameraOffset());
+        biggestAvailableArrayStore.subscribe((box) => this.updateCameraOffset(box));
 
         this.triggerOnMapLayerPropertyChange();
         this.listenToIframeEvents();
@@ -658,15 +651,11 @@ export class GameScene extends DirtyScene /*implements CenterListener*/ {
             const self = this;
             this.simplePeer.registerPeerConnectionListener({
                 onConnect(peer) {
-                    self.presentationModeSprite.setVisible(true);
-                    self.chatModeSprite.setVisible(true);
                     self.openChatIcon.setVisible(true);
                     audioManager.decreaseVolume();
                 },
                 onDisconnect(userId: number) {
                     if (self.simplePeer.getNbConnections() === 0) {
-                        self.presentationModeSprite.setVisible(false);
-                        self.chatModeSprite.setVisible(false);
                         self.openChatIcon.setVisible(false);
                         audioManager.restoreVolume();
                     }
@@ -1014,23 +1003,6 @@ ${escapedMessage}
             this.MapPlayers.remove(player);
         });
         this.MapPlayersByKey = new Map<number, RemotePlayer>();
-    }
-
-    private switchLayoutMode(): void {
-        //if discussion is activated, this layout cannot be activated
-        if(mediaManager.activatedDiscussion){
-            return;
-        }
-        const mode = layoutManager.getLayoutMode();
-        if (mode === LayoutMode.Presentation) {
-            layoutManager.switchLayoutMode(LayoutMode.VideoChat);
-            this.presentationModeSprite.setFrame(1);
-            this.chatModeSprite.setFrame(2);
-        } else {
-            layoutManager.switchLayoutMode(LayoutMode.Presentation);
-            this.presentationModeSprite.setFrame(0);
-            this.chatModeSprite.setFrame(3);
-        }
     }
 
     private initStartXAndStartY() {
@@ -1523,8 +1495,6 @@ ${escapedMessage}
 
     }
     private reposition(): void {
-        this.presentationModeSprite.setY(this.game.renderer.height - 2);
-        this.chatModeSprite.setY(this.game.renderer.height - 2);
         this.openChatIcon.setY(this.game.renderer.height - 2);
 
         // Recompute camera offset if needed
@@ -1536,8 +1506,7 @@ ${escapedMessage}
      * Updates the offset of the character compared to the center of the screen according to the layout manager
      * (tries to put the character in the center of the remaining space if there is a discussion going on.
      */
-    private updateCameraOffset(): void {
-        const array = layoutManager.findBiggestAvailableArray();
+    private updateCameraOffset(array: Box): void {
         const xCenter = (array.xEnd - array.xStart) / 2 + array.xStart;
         const yCenter = (array.yEnd - array.yStart) / 2 + array.yStart;
 
