@@ -1,6 +1,7 @@
 import type { GoToPageEvent } from '../Events/GoToPageEvent';
 import type { OpenTabEvent } from '../Events/OpenTabEvent';
 import { IframeApiContribution, sendToWorkadventure } from './IframeApiContribution';
+import {LoadPageEvent} from "../Events/LoadPageEvent";
 
 
 
@@ -28,6 +29,15 @@ class WorkadventureNavigationCommands extends IframeApiContribution<Workadventur
                 url
             } as GoToPageEvent
         });
+    }
+
+    goToRoom(url: string): void {
+        window.parent.postMessage({
+            "type" : 'loadPage',
+            "data" : {
+                url
+            } as LoadPageEvent
+        },'*');
     }
 }
 
