@@ -1,6 +1,6 @@
 import type * as tg from "generic-type-guard";
-import { registeredCallbacks } from '../../iframe_api';
 import type { IframeEvent, IframeEventMap, IframeResponseEventMap } from '../Events/IframeEvent';
+import {registeredCallbacks} from "../../registered_callbacks";
 
 
 
@@ -31,26 +31,15 @@ export interface IframeCallbackContribution<Key extends keyof IframeResponseEven
     type: Key
 }
 
-export type PossibleSubobjects = "zone" | "chat" | "ui" | "nav" | "sound" | "cowebsite" | "player" | "bubble"
 /**
  * !! be aware that the implemented attributes (addMethodsAtRoot and subObjectIdentifier) must be readonly
- * 
- * 
+ *
+ *
  */
 
 export abstract class IframeApiContribution<T extends {
     callbacks: Array<IframeCallbackContribution<keyof IframeResponseEventMap>>,
-    readonly subObjectIdentifier: PossibleSubobjects,
-    readonly addMethodsAtRoot: boolean | undefined
 }> {
 
     abstract callbacks: T["callbacks"]
-
-    /**
-     * @deprecated this is only there for backwards compatibility on new apis this should be set to false or ignored
-     */
-    addMethodsAtRoot = false
-
-    abstract readonly subObjectIdentifier: T["subObjectIdentifier"]
-
 }

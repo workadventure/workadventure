@@ -1,13 +1,10 @@
 import type { GoToPageEvent } from '../Events/GoToPageEvent';
 import type { OpenTabEvent } from '../Events/OpenTabEvent';
 import { IframeApiContribution, sendToWorkadventure } from './IframeApiContribution';
+import type {OpenCoWebSiteEvent} from "../Events/OpenCoWebSiteEvent";
 
 
 class WorkadventureNavigationCommands extends IframeApiContribution<WorkadventureNavigationCommands> {
-
-    readonly subObjectIdentifier = "nav"
-
-    readonly addMethodsAtRoot = true
     callbacks = []
 
 
@@ -35,6 +32,22 @@ class WorkadventureNavigationCommands extends IframeApiContribution<Workadventur
             "data": {
                 url
             }
+        });
+    }
+
+    openCoWebSite(url: string): void {
+        sendToWorkadventure({
+            "type": 'openCoWebSite',
+            "data": {
+                url
+            } as OpenCoWebSiteEvent
+        });
+    }
+
+    closeCoWebSite(): void {
+        sendToWorkadventure({
+            "type": 'closeCoWebSite',
+            data: null
         });
     }
 }

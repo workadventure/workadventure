@@ -1,7 +1,7 @@
 import { isButtonClickedEvent } from '../Events/ButtonClickedEvent';
 import type { ClosePopupEvent } from '../Events/ClosePopupEvent';
 import { apiCallback, IframeApiContribution, sendToWorkadventure } from './IframeApiContribution';
-class Popup {
+export class Popup {
     constructor(private id: number) {
     }
 
@@ -19,7 +19,7 @@ class Popup {
 }
 
 type ButtonClickedCallback = (popup: Popup) => void;
-interface ButtonDescriptor {
+export interface ButtonDescriptor {
     /**
      * The label of the button
      */
@@ -46,7 +46,7 @@ interface ZonedPopupOptions {
 }
 
 
-class PopupApiContribution extends IframeApiContribution<PopupApiContribution> {
+class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventureUiCommands> {
 
     readonly subObjectIdentifier = "ui"
 
@@ -101,6 +101,14 @@ class PopupApiContribution extends IframeApiContribution<PopupApiContribution> {
         popups.set(popupId, popup)
         return popup;
     }
+
+    displayBubble(): void {
+        window.parent.postMessage({ 'type': 'displayBubble' }, '*');
+    }
+
+    removeBubble(): void {
+        window.parent.postMessage({ 'type': 'removeBubble' }, '*');
+    }
 }
 
-export default new PopupApiContribution()
+export default new WorkAdventureUiCommands()

@@ -3,11 +3,7 @@ import { isUserInputChatEvent, UserInputChatEvent } from '../Events/UserInputCha
 import { apiCallback, IframeApiContribution, sendToWorkadventure } from './IframeApiContribution'
 
 
-class WorkadvntureChatCommands extends IframeApiContribution<WorkadvntureChatCommands> {
-    readonly subObjectIdentifier = 'chat'
-
-    readonly addMethodsAtRoot = true
-
+class WorkadventureChatCommands extends IframeApiContribution<WorkadventureChatCommands> {
     chatMessageCallback?: (event: string) => void
 
     callbacks = [apiCallback({
@@ -37,4 +33,4 @@ class WorkadvntureChatCommands extends IframeApiContribution<WorkadvntureChatCom
     }
 }
 
-export default new WorkadvntureChatCommands()
+export default new WorkadventureChatCommands()

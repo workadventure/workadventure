@@ -6,11 +6,7 @@ import { apiCallback as apiCallback, IframeApiContribution } from './IframeApiCo
 const enterStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
 const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
 
-class WorkadventureZoneCommands extends IframeApiContribution<WorkadventureZoneCommands> {
-
-    readonly subObjectIdentifier = "zone"
-
-    readonly addMethodsAtRoot = true
+class WorkadventureRoomCommands extends IframeApiContribution<WorkadventureRoomCommands> {
     callbacks = [
         apiCallback({
             callback: (payloadData: EnterLeaveEvent) => {
@@ -51,4 +47,4 @@ class WorkadventureZoneCommands extends IframeApiContribution<WorkadventureZoneC
 }
 
 
-export default new WorkadventureZoneCommands();
+export default new WorkadventureRoomCommands();

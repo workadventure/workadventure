@@ -1,10 +1,6 @@
 import { IframeApiContribution, sendToWorkadventure } from './IframeApiContribution';
 
-class WorkadventureNavigationCommands extends IframeApiContribution<WorkadventureNavigationCommands> {
-
-    readonly subObjectIdentifier = "player"
-
-    readonly addMethodsAtRoot = true
+class WorkadventureControlsCommands extends IframeApiContribution<WorkadventureControlsCommands> {
     callbacks = []
 
     disablePlayerControls(): void {
@@ -14,9 +10,7 @@ class WorkadventureNavigationCommands extends IframeApiContribution<Workadventur
     restorePlayerControls(): void {
         sendToWorkadventure({ 'type': 'restorePlayerControls', data: null });
     }
-
-
 }
 
 
-export default new WorkadventureNavigationCommands();
+export default new WorkadventureControlsCommands();
