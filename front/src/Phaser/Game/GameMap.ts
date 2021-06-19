@@ -81,15 +81,19 @@ export class GameMap {
         const properties = new Map<string, string | boolean | number>();
 
         for (const layer of this.layersIterator) {
-
-            let tileIndex: number | undefined = undefined;
             if (layer.type !== 'tilelayer') {
                 continue;
             }
-            const tiles = layer.data as number[];
-            if (tiles[key] == 0) {
-                continue;
+
+            let tileIndex: number | undefined = undefined;
+            if (layer.data) {
+                const tiles = layer.data as number[];
+                if (tiles[key] == 0) {
+                    continue;
+                }
+                tileIndex = tiles[key]
             }
+
             // There is a tile in this layer, let's embed the properties
             if (layer.properties !== undefined) {
                 for (const layerProperty of layer.properties) {
@@ -104,15 +108,13 @@ export class GameMap {
                 const tileset = this.map.tilesets.find(tileset => tileset.firstgid + tileset.tilecount > (tileIndex as number))
                 if (tileset) {
                     const tileProperties = this.tileSetPropertyMap[tileset?.firstgid][tileIndex - tileset.firstgid]
-                    if (tileProperties) {
-                        for (const property of tileProperties) {
-                            if (property.value) {
-                                properties.set(property.name, property.value)
-                            } else if (properties.has(property.name)) {
-                                properties.delete(property.name)
-                            }
+                    tileProperties?.forEach(property => {
+                        if (property.value) {
+                            properties.set(property.name, property.value)
+                        } else if (properties.has(property.name)) {
+                            properties.delete(property.name)
                         }
-                    }
+                    })
                 }
 
             }
