@@ -1,6 +1,3 @@
-import type {ITiledMap, ITiledMapLayer} from "../Map/ITiledMap";
-import {LayersIterator} from "../Map/LayersIterator";
-import { CustomVector, Vector2 } from '../../utility/vector';
 import type { ITiledMap, ITiledMapLayerProperty } from "../Map/ITiledMap";
 import { LayersIterator } from "../Map/LayersIterator";
 
@@ -11,8 +8,8 @@ export type PropertyChangeCallback = (newValue: string | number | boolean | unde
  * It is used to handle layer properties.
  */
 export class GameMap {
-    private key: number|undefined;
-    private lastProperties = new Map<string, string|boolean|number>();
+    private key: number | undefined;
+    private lastProperties = new Map<string, string | boolean | number>();
     private callbacks = new Map<string, Array<PropertyChangeCallback>>();
 
     /**
@@ -79,12 +76,12 @@ export class GameMap {
         }
     }
 
-    public getCurrentProperties(): Map<string, string|boolean|number> {
+    public getCurrentProperties(): Map<string, string | boolean | number> {
         return this.lastProperties;
     }
 
-    private getProperties(key: number): Map<string, string|boolean|number> {
-        const properties = new Map<string, string|boolean|number>();
+    private getProperties(key: number): Map<string, string | boolean | number> {
+        const properties = new Map<string, string | boolean | number>();
 
         for (const layer of this.layersIterator) {
 
@@ -95,7 +92,6 @@ export class GameMap {
             const tiles = layer.data as number[];
             if (tiles[key] == 0) {
                 continue;
-                tileIndex = tiles[key]
             }
             // There is a tile in this layer, let's embed the properties
             if (layer.properties !== undefined) {
