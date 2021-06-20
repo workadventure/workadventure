@@ -12,7 +12,7 @@ export class GameMap {
     private lastProperties = new Map<string, string | boolean | number>();
     private callbacks = new Map<string, Array<PropertyChangeCallback>>();
 
-    private tileSetPropertyMap: { [tilset_firstgid: number]: { [tile_id: number]: Array<ITiledMapLayerProperty> } } = {}
+    private tileSetPropertyMap: { [tile_index: number]: Array<ITiledMapLayerProperty> } = {}
     public readonly layersIterator: LayersIterator;
 
     public exitUrls: Array<string> = []
@@ -21,12 +21,9 @@ export class GameMap {
         this.layersIterator = new LayersIterator(map);
 
         for (const tileset of map.tilesets) {
-            if (!this.tileSetPropertyMap[tileset.firstgid]) {
-                this.tileSetPropertyMap[tileset.firstgid] = {}
-            }
             tileset?.tiles?.forEach(tile => {
                 if (tile.properties) {
-                    this.tileSetPropertyMap[tileset.firstgid][tile.id] = tile.properties
+                    this.tileSetPropertyMap[tileset.firstgid + tile.id] = tile.properties
                     tile.properties.forEach(prop => {
                         if (prop.name == "exitUrl" && typeof prop.value == "string") {
                             this.exitUrls.push(prop.value);
@@ -105,18 +102,13 @@ export class GameMap {
             }
 
             if (tileIndex) {
-                const tileset = this.map.tilesets.find(tileset => tileset.firstgid + tileset.tilecount > (tileIndex as number))
-                if (tileset) {
-                    const tileProperties = this.tileSetPropertyMap[tileset?.firstgid][tileIndex - tileset.firstgid]
-                    tileProperties?.forEach(property => {
-                        if (property.value) {
-                            properties.set(property.name, property.value)
-                        } else if (properties.has(property.name)) {
-                            properties.delete(property.name)
-                        }
-                    })
-                }
-
+                this.tileSetPropertyMap[tileIndex]?.forEach(property => {
+                    if (property.value) {
+                        properties.set(property.name, property.value)
+                    } else if (properties.has(property.name)) {
+                        properties.delete(property.name)
+                    }
+                })
             }
         }
 
