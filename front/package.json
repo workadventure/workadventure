@@ -53,13 +53,14 @@
     "standardized-audio-context": "^25.2.4"
   },
   "scripts": {
-    "start": "run-p serve svelte-check-watch",
+    "start": "run-p templater serve svelte-check-watch",
+    "templater": "cross-env ./templater.sh",
     "serve": "cross-env TS_NODE_PROJECT=\"tsconfig-for-webpack.json\" webpack serve --open",
     "build": "cross-env TS_NODE_PROJECT=\"tsconfig-for-webpack.json\" NODE_ENV=production webpack",
     "test": "TS_NODE_PROJECT=\"tsconfig-for-jasmine.json\" ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
     "lint": "node_modules/.bin/eslint src/ . --ext .ts",
     "fix": "node_modules/.bin/eslint --fix src/ . --ext .ts",
     "svelte-check-watch": "svelte-check --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore\" --watch",
-    "svelte-check":       "svelte-check --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore\""
+    "svelte-check": "svelte-check --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore\""
   }
 }
