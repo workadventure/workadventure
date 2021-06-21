@@ -9,10 +9,12 @@ import chat from "./Api/iframe/chat";
 import type {IframeCallback} from './Api/iframe/IframeApiContribution';
 import nav from "./Api/iframe/nav";
 import controls from "./Api/iframe/controls";
-import ui, {ButtonDescriptor, Popup} from "./Api/iframe/ui";
-import sound, {Sound} from "./Api/iframe/sound";
+import ui from "./Api/iframe/ui";
+import sound from "./Api/iframe/sound";
 import room from "./Api/iframe/room";
-
+import type {ButtonDescriptor} from "./Api/iframe/Ui/ButtonDescriptor";
+import type {Popup} from "./Api/iframe/Ui/Popup";
+import type {Sound} from "./Api/iframe/Sound/Sound";
 
 const wa = {
     ui,
