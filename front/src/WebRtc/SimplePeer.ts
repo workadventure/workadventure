@@ -161,8 +161,6 @@ export class SimplePeer {
 
         discussionManager.removeParticipant(user.userId);
 
-        //mediaManager.addActiveVideo(user, name);
-
         this.lastWebrtcUserName = user.webRtcUser;
         this.lastWebrtcPassword = user.webRtcPassword;
 

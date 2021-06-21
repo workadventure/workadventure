@@ -216,7 +216,6 @@ export class VideoPeer extends Peer {
             if (blackListManager.isBlackListed(this.userId) || this.blocked) {
                 this.toggleRemoteStream(false);
             }
-            //mediaManager.addStreamRemoteVideo("" + this.userId, stream);
         }catch (err){
             console.error(err);
         }
