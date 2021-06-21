@@ -59,9 +59,11 @@ export const lazyLoadPlayerCharacterTextures = (loadPlugin: LoaderPlugin, textur
     } else {
         returnPromise = Promise.resolve(texturekeys);
     }
+
+    //If the loading fail, we render the default model instead.
     return returnPromise.then((keys) => keys.map((key) => {
         return typeof key !== 'string' ? key.name : key;
-    }))
+    })).catch(() => lazyLoadPlayerCharacterTextures(loadPlugin, ["color_22", "eyes_23"]));
 }
 
 export const getRessourceDescriptor = (textureKey: string|BodyResourceDescriptionInterface): BodyResourceDescriptionInterface => {
@@ -80,11 +82,25 @@ export const getRessourceDescriptor = (textureKey: string|BodyResourceDescriptio
 }
 
 export const createLoadingPromise = (loadPlugin: LoaderPlugin, playerResourceDescriptor: BodyResourceDescriptionInterface, frameConfig: FrameConfig) => {
-    return new Promise<BodyResourceDescriptionInterface>((res) => {
+    return new Promise<BodyResourceDescriptionInterface>((res, rej) => {
+        console.log('count', loadPlugin.listenerCount('loaderror'));
         if (loadPlugin.textureManager.exists(playerResourceDescriptor.name)) {
             return res(playerResourceDescriptor);
         }
         loadPlugin.spritesheet(playerResourceDescriptor.name, playerResourceDescriptor.img, frameConfig);
-        loadPlugin.once('filecomplete-spritesheet-' + playerResourceDescriptor.name, () => res(playerResourceDescriptor));
+        const errorCallback = (file: {src: string}) => {
+            if (file.src !== playerResourceDescriptor.img) return;
+            console.error('failed loading player ressource: ', playerResourceDescriptor)
+            rej(playerResourceDescriptor);
+            loadPlugin.off('filecomplete-spritesheet-' + playerResourceDescriptor.name, successCallback);
+            loadPlugin.off('loaderror', errorCallback);
+        }
+        const successCallback = () => {
+            loadPlugin.off('loaderror', errorCallback);
+            res(playerResourceDescriptor);
+        }
+
+        loadPlugin.once('filecomplete-spritesheet-' + playerResourceDescriptor.name, successCallback);
+        loadPlugin.on('loaderror', errorCallback);
     });
 }

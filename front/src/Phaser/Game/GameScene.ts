@@ -192,6 +192,7 @@ export class GameScene extends DirtyScene implements CenterListener {
     private pinchManager: PinchManager|undefined;
     private mapTransitioning: boolean = false; //used to prevent transitions happenning at the same time.
     private emoteManager!: EmoteManager;
+    private preloading: boolean = true;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
         super({
@@ -259,11 +260,15 @@ export class GameScene extends DirtyScene implements CenterListener {
                 return;
             }
 
-            this.scene.start(ErrorSceneName, {
-                title: 'Network error',
-                subTitle: 'An error occurred while loading resource:',
-                message: this.originalMapUrl ?? file.src
-            });
+            //once preloading is over, we don't want loading errors to crash the game, so we need to disable this behavior after preloading.
+            console.error('Error when loading: ', file);
+            if (this.preloading) {
+                this.scene.start(ErrorSceneName, {
+                    title: 'Network error',
+                    subTitle: 'An error occurred while loading resource:',
+                    message: this.originalMapUrl ?? file.src
+                });
+            }
         });
         this.load.on('filecomplete-tilemapJSON-'+this.MapUrlFile, (key: string, type: string, data: unknown) => {
             this.onMapLoad(data);
@@ -388,6 +393,7 @@ export class GameScene extends DirtyScene implements CenterListener {
 
     //hook create scene
     create(): void {
+        this.preloading = false;
         this.trackDirtyAnims();
 
         gameManager.gameSceneIsCreated(this);
