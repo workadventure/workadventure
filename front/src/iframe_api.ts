@@ -1,3 +1,4 @@
+import { registeredCallbacks } from "./Api/iframe/registeredCallbacks";
 import {
     IframeResponseEvent,
     IframeResponseEventMap,
@@ -5,17 +6,15 @@ import {
     TypedMessageEvent
 } from "./Api/Events/IframeEvent";
 import chat from "./Api/iframe/chat";
-import controls from "./Api/iframe/controls";
 import type { IframeCallback } from './Api/iframe/IframeApiContribution';
 import nav from "./Api/iframe/nav";
-import { registeredCallbacks } from "./Api/iframe/registeredCallbacks";
-import room from "./Api/iframe/room";
-import sound from "./Api/iframe/sound";
-import type { Sound } from "./Api/iframe/Sound/Sound";
+import controls from "./Api/iframe/controls";
 import ui from "./Api/iframe/ui";
+import sound from "./Api/iframe/sound";
+import room from "./Api/iframe/room";
 import type { ButtonDescriptor } from "./Api/iframe/Ui/ButtonDescriptor";
 import type { Popup } from "./Api/iframe/Ui/Popup";
-
+import type { Sound } from "./Api/iframe/Sound/Sound";
 
 const wa = {
     ui,
