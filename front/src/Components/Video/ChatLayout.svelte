@@ -2,7 +2,7 @@
     import Peer from "./Peer.svelte";
     import {layoutStore} from "../../Stores/LayoutStore";
     import {afterUpdate, onDestroy} from "svelte";
-    import {biggestAvailableArrayStore} from "../../Stores/BiggestAvailableArrayStore";
+    import {biggestAvailableAreaStore} from "../../Stores/BiggestAvailableAreaStore";
 
     let cssClass = 'one-col';
 
@@ -24,7 +24,7 @@
     });
 
     afterUpdate(() => {
-        biggestAvailableArrayStore.recompute();
+        biggestAvailableAreaStore.recompute();
     })
 </script>
 

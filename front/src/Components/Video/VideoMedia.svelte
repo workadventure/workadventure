@@ -6,40 +6,13 @@
     import blockSignImg from "./images/blockSign.svg";
     import {videoFocusStore} from "../../Stores/VideoFocusStore";
     import {showReportScreenStore} from "../../Stores/ShowReportScreenStore";
+    import {getColorByString, srcObject} from "./utils";
 
     export let peer: VideoPeer;
     let streamStore = peer.streamStore;
     let name = peer.userName;
     let statusStore = peer.statusStore;
     let constraintStore = peer.constraintsStore;
-
-    function getColorByString(str: string) : string|null {
-        let hash = 0;
-        if (str.length === 0) {
-            return null;
-        }
-        for (let i = 0; i < str.length; i++) {
-            hash = str.charCodeAt(i) + ((hash << 5) - hash);
-            hash = hash & hash;
-        }
-        let color = '#';
-        for (let i = 0; i < 3; i++) {
-            const value = (hash >> (i * 8)) & 255;
-            color += ('00' + value.toString(16)).substr(-2);
-        }
-        return color;
-    }
-
-    function srcObject(node: HTMLVideoElement, stream: MediaStream) {
-        node.srcObject = stream;
-        return {
-            update(newStream: MediaStream) {
-                if (node.srcObject != newStream) {
-                    node.srcObject = newStream
-                }
-            }
-        }
-    }
 
     function openReport(peer: VideoPeer): void {
         showReportScreenStore.set({ userId:peer.userId, userName: peer.userName });

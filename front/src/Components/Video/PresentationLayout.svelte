@@ -3,10 +3,10 @@
     import {layoutStore} from "../../Stores/LayoutStore";
     import {videoFocusStore} from "../../Stores/VideoFocusStore";
     import {afterUpdate} from "svelte";
-    import {biggestAvailableArrayStore} from "../../Stores/BiggestAvailableArrayStore";
+    import {biggestAvailableAreaStore} from "../../Stores/BiggestAvailableAreaStore";
 
     afterUpdate(() => {
-        biggestAvailableArrayStore.recompute();
+        biggestAvailableAreaStore.recompute();
     })
 </script>
 

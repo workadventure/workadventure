@@ -94,7 +94,7 @@ import {waScaleManager} from "../Services/WaScaleManager";
 import {peerStore, screenSharingPeerStore} from "../../Stores/PeerStore";
 import {EmoteManager} from "./EmoteManager";
 import {videoFocusStore} from "../../Stores/VideoFocusStore";
-import {biggestAvailableArrayStore} from "../../Stores/BiggestAvailableArrayStore";
+import {biggestAvailableAreaStore} from "../../Stores/BiggestAvailableAreaStore";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -508,8 +508,7 @@ export class GameScene extends DirtyScene {
         this.reposition();
 
         // From now, this game scene will be notified of reposition events
-        //layoutManager.setListener(this);
-        biggestAvailableArrayStore.subscribe((box) => this.updateCameraOffset(box));
+        biggestAvailableAreaStore.subscribe((box) => this.updateCameraOffset(box));
 
         this.triggerOnMapLayerPropertyChange();
         this.listenToIframeEvents();
@@ -1115,7 +1114,7 @@ ${escapedMessage}
     initCamera() {
         this.cameras.main.setBounds(0,0, this.Map.widthInPixels, this.Map.heightInPixels);
         this.cameras.main.startFollow(this.CurrentPlayer, true);
-        biggestAvailableArrayStore.recompute();
+        biggestAvailableAreaStore.recompute();
     }
 
     addLayer(Layer : Phaser.Tilemaps.TilemapLayer){
@@ -1495,7 +1494,7 @@ ${escapedMessage}
         this.openChatIcon.setY(this.game.renderer.height - 2);
 
         // Recompute camera offset if needed
-        biggestAvailableArrayStore.recompute();
+        biggestAvailableAreaStore.recompute();
     }
 
     /**
@@ -1571,6 +1570,6 @@ ${escapedMessage}
 
     zoomByFactor(zoomFactor: number) {
         waScaleManager.zoomModifier *= zoomFactor;
-        biggestAvailableArrayStore.recompute();
+        biggestAvailableAreaStore.recompute();
     }
 }

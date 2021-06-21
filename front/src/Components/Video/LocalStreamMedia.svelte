@@ -1,17 +1,7 @@
 <script lang="typescript">
     import type {ScreenSharingLocalMedia} from "../../Stores/ScreenSharingStore";
     import {videoFocusStore} from "../../Stores/VideoFocusStore";
-
-    function srcObject(node: HTMLVideoElement, stream: MediaStream) {
-        node.srcObject = stream;
-        return {
-            update(newStream: MediaStream) {
-                if (node.srcObject != newStream) {
-                    node.srcObject = newStream
-                }
-            }
-        }
-    }
+    import {srcObject} from "./utils";
 
     export let peer : ScreenSharingLocalMedia;
     let stream = peer.stream;

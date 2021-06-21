@@ -1,16 +1,13 @@
-import {derived, get, Readable, writable} from "svelte/store";
+import {get, writable} from "svelte/store";
 import type {Box} from "../WebRtc/LayoutManager";
 import {HtmlUtils} from "../WebRtc/HtmlUtils";
 import {LayoutMode} from "../WebRtc/LayoutManager";
 import {layoutModeStore} from "./LayoutStore";
-import {VideoPeer} from "../WebRtc/VideoPeer";
-import {RemotePeer, SimplePeer} from "../WebRtc/SimplePeer";
-import {ScreenSharingPeer} from "../WebRtc/ScreenSharingPeer";
 
 /**
  * Tries to find the biggest available box of remaining space (this is a space where we can center the character)
  */
-function findBiggestAvailableArray(): Box {
+function findBiggestAvailableArea(): Box {
     const game = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>('#game canvas');
     if (get(layoutModeStore) === LayoutMode.VideoChat) {
         const children = document.querySelectorAll<HTMLDivElement>('div.chat-mode > div');
@@ -45,7 +42,6 @@ function findBiggestAvailableArray(): Box {
             }
         }
         if (area1 <= area2) {
-            console.log('lastDiv', lastDiv.offsetTop, lastDiv.offsetHeight);
             return {
                 xStart: 0,
                 yStart: lastDiv.offsetTop + lastDiv.offsetHeight,
@@ -53,7 +49,6 @@ function findBiggestAvailableArray(): Box {
                 yEnd: game.offsetHeight
             }
         } else {
-            console.log('lastDiv', lastDiv.offsetTop);
             return {
                 xStart: lastDiv.offsetLeft + lastDiv.offsetWidth,
                 yStart: lastDiv.offsetTop,
@@ -117,16 +112,16 @@ function findBiggestAvailableArray(): Box {
 /**
  * A store that contains the list of (video) peers we are connected to.
  */
-function createBiggestAvailableArrayStore() {
+function createBiggestAvailableAreaStore() {
 
-    const { subscribe, set, update } = writable<Box>({xStart:0, yStart: 0, xEnd: 1, yEnd: 1});
+    const { subscribe, set } = writable<Box>({xStart:0, yStart: 0, xEnd: 1, yEnd: 1});
 
     return {
         subscribe,
         recompute: () => {
-            set(findBiggestAvailableArray());
+            set(findBiggestAvailableArea());
         }
     };
 }
 
-export const biggestAvailableArrayStore = createBiggestAvailableArrayStore();
+export const biggestAvailableAreaStore = createBiggestAvailableAreaStore();

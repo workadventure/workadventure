@@ -101,10 +101,6 @@ export class MenuScene extends Phaser.Scene {
         worldFullWarningStream.stream.subscribe(() => this.showWorldCapacityWarning());
     }
 
-    public openReport(userId: number, userName: string): void {
-        this.gameReportElement.open(userId, userName);
-    }
-
     //todo put this method in a parent menuElement class
     static revealMenusAfterInit(menuElement: Phaser.GameObjects.DOMElement, rootDomId: string) {
         //Dom elements will appear inside the viewer screen when creating before being moved out of it, which create a flicker effect.
