@@ -1,4 +1,3 @@
-import {registeredCallbacks} from "./Api/iframe/registeredCallbacks";
 import {
     IframeResponseEvent,
     IframeResponseEventMap,
@@ -6,15 +5,17 @@ import {
     TypedMessageEvent
 } from "./Api/Events/IframeEvent";
 import chat from "./Api/iframe/chat";
-import type {IframeCallback} from './Api/iframe/IframeApiContribution';
-import nav from "./Api/iframe/nav";
 import controls from "./Api/iframe/controls";
-import ui from "./Api/iframe/ui";
-import sound from "./Api/iframe/sound";
+import type { IframeCallback } from './Api/iframe/IframeApiContribution';
+import nav from "./Api/iframe/nav";
+import { registeredCallbacks } from "./Api/iframe/registeredCallbacks";
 import room from "./Api/iframe/room";
-import type {ButtonDescriptor} from "./Api/iframe/Ui/ButtonDescriptor";
-import type {Popup} from "./Api/iframe/Ui/Popup";
-import type {Sound} from "./Api/iframe/Sound/Sound";
+import sound from "./Api/iframe/sound";
+import type { Sound } from "./Api/iframe/Sound/Sound";
+import ui from "./Api/iframe/ui";
+import type { ButtonDescriptor } from "./Api/iframe/Ui/ButtonDescriptor";
+import type { Popup } from "./Api/iframe/Ui/Popup";
+
 
 const wa = {
     ui,
@@ -77,7 +78,7 @@ const wa = {
     /**
      * @deprecated Use WA.sound.loadSound instead
      */
-    loadSound(url: string) : Sound {
+    loadSound(url: string): Sound {
         console.warn('Method WA.loadSound is deprecated. Please use WA.sound.loadSound instead');
         return sound.loadSound(url);
     },
@@ -85,7 +86,7 @@ const wa = {
     /**
      * @deprecated Use WA.nav.goToPage instead
      */
-    goToPage(url : string) : void {
+    goToPage(url: string): void {
         console.warn('Method WA.goToPage is deprecated. Please use WA.nav.goToPage instead');
         nav.goToPage(url);
     },
@@ -101,7 +102,7 @@ const wa = {
     /**
      * @deprecated Use WA.nav.openCoWebSite instead
      */
-    openCoWebSite(url : string) : void{
+    openCoWebSite(url: string): void {
         console.warn('Method WA.openCoWebSite is deprecated. Please use WA.nav.openCoWebSite instead');
         nav.openCoWebSite(url);
     },

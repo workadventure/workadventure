@@ -1,6 +1,6 @@
 import { Subscription } from 'rxjs';
-import { sendMenuClickedEvent } from '../../Api/Events/ui/MenuItemClickedEvent';
 import { registerMenuCommandStream } from '../../Api/Events/ui/MenuItemRegisterEvent';
+import { sendMenuClickedEvent } from '../../Api/iframe/Ui/MenuItem';
 import { connectionManager } from "../../Connexion/ConnectionManager";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { worldFullWarningStream } from "../../Connexion/WorldFullWarningStream";

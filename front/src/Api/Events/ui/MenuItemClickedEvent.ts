@@ -1,5 +1,4 @@
 import * as tg from "generic-type-guard";
-import { iframeListener } from '../../IframeListener';
 
 export const isMenuItemClickedEvent =
     new tg.IsInterface().withProperties({
@@ -11,11 +10,3 @@ export const isMenuItemClickedEvent =
 export type MenuItemClickedEvent = tg.GuardedType<typeof isMenuItemClickedEvent>;
 
 
-export function sendMenuClickedEvent(menuItem: string) {
-    iframeListener.postMessage({
-        'type': 'menuItemClicked',
-        'data': {
-            menuItem: menuItem,
-        } as MenuItemClickedEvent
-    });
-}
