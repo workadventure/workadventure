@@ -2,13 +2,15 @@ import type { ChatEvent } from '../Events/ChatEvent'
 import { isUserInputChatEvent, UserInputChatEvent } from '../Events/UserInputChatEvent'
 import { IframeApiContribution, sendToWorkadventure } from './IframeApiContribution'
 import { apiCallback } from "./registeredCallbacks";
+import {Subject} from "rxjs";
+
+const chatStream = new Subject<string>();
 
 class WorkadventureChatCommands extends IframeApiContribution<WorkadventureChatCommands> {
-    chatMessageCallback?: (event: string) => void
 
     callbacks = [apiCallback({
         callback: (event: UserInputChatEvent) => {
-            this.chatMessageCallback?.(event.message)
+            chatStream.next(event.message);
         },
         type: "userInputChat",
         typeChecker: isUserInputChatEvent
@@ -29,7 +31,7 @@ class WorkadventureChatCommands extends IframeApiContribution<WorkadventureChatC
      * Listen to messages sent by the local user, in the chat.
      */
     onChatMessage(callback: (message: string) => void) {
-        this.chatMessageCallback = callback
+        chatStream.subscribe(callback);
     }
 }
 
