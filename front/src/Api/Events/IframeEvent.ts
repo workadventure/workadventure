@@ -6,12 +6,14 @@ import type { ClosePopupEvent } from './ClosePopupEvent';
 import type { EnterLeaveEvent } from './EnterLeaveEvent';
 import type { GoToPageEvent } from './GoToPageEvent';
 import type { LoadPageEvent } from './LoadPageEvent';
+import type { LoadSoundEvent } from "./LoadSoundEvent";
 import type { OpenCoWebSiteEvent } from './OpenCoWebSiteEvent';
 import type { OpenPopupEvent } from './OpenPopupEvent';
 import type { OpenTabEvent } from './OpenTabEvent';
+import type { PlaySoundEvent } from "./PlaySoundEvent";
+import type { MenuItemClickedEvent } from './ui/MenuItemClickedEvent';
+import type { MenuItemRegisterEvent } from './ui/MenuItemRegisterEvent';
 import type { UserInputChatEvent } from './UserInputChatEvent';
-import type { LoadSoundEvent} from "./LoadSoundEvent";
-import type {PlaySoundEvent} from "./PlaySoundEvent";
 
 
 export interface TypedMessageEvent<T> extends MessageEvent {
@@ -36,6 +38,7 @@ export type IframeEventMap = {
     loadSound: LoadSoundEvent
     playSound: PlaySoundEvent
     stopSound: null,
+    registerMenuCommand: MenuItemRegisterEvent
 }
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;
@@ -52,6 +55,7 @@ export interface IframeResponseEventMap {
     leaveEvent: EnterLeaveEvent
     buttonClickedEvent: ButtonClickedEvent
     // gameState: GameStateEvent
+    menuItemClicked: MenuItemClickedEvent
 }
 export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
     type: T;

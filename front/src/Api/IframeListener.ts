@@ -1,21 +1,22 @@
 
 import { Subject } from "rxjs";
-import { ChatEvent, isChatEvent } from "./Events/ChatEvent";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
+import type { ButtonClickedEvent } from "./Events/ButtonClickedEvent";
+import { ChatEvent, isChatEvent } from "./Events/ChatEvent";
+import { ClosePopupEvent, isClosePopupEvent } from "./Events/ClosePopupEvent";
 import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
+import { GoToPageEvent, isGoToPageEvent } from "./Events/GoToPageEvent";
+import { IframeEvent, IframeEventMap, IframeResponseEvent, IframeResponseEventMap, isIframeEventWrapper, TypedMessageEvent } from "./Events/IframeEvent";
+import { isLoadPageEvent } from './Events/LoadPageEvent';
+import { isLoadSoundEvent, LoadSoundEvent } from "./Events/LoadSoundEvent";
+import { isOpenCoWebsite, OpenCoWebSiteEvent } from "./Events/OpenCoWebSiteEvent";
 import { isOpenPopupEvent, OpenPopupEvent } from "./Events/OpenPopupEvent";
 import { isOpenTabEvent, OpenTabEvent } from "./Events/OpenTabEvent";
-import type { ButtonClickedEvent } from "./Events/ButtonClickedEvent";
-import { ClosePopupEvent, isClosePopupEvent } from "./Events/ClosePopupEvent";
-import { scriptUtils } from "./ScriptUtils";
-import { GoToPageEvent, isGoToPageEvent } from "./Events/GoToPageEvent";
-import { isOpenCoWebsite, OpenCoWebSiteEvent } from "./Events/OpenCoWebSiteEvent";
-import { IframeEventMap, IframeEvent, IframeResponseEvent, IframeResponseEventMap, isIframeEventWrapper, TypedMessageEvent } from "./Events/IframeEvent";
+import { isPlaySoundEvent, PlaySoundEvent } from "./Events/PlaySoundEvent";
+import { isStopSoundEvent, StopSoundEvent } from "./Events/StopSoundEvent";
+import { handleMenuItemRegistrationEvent, isMenuItemRegisterIframeEvent } from './Events/ui/MenuItemRegisterEvent';
 import type { UserInputChatEvent } from "./Events/UserInputChatEvent";
-import { isLoadPageEvent } from './Events/LoadPageEvent';
-import {isPlaySoundEvent, PlaySoundEvent} from "./Events/PlaySoundEvent";
-import {isStopSoundEvent, StopSoundEvent} from "./Events/StopSoundEvent";
-import {isLoadSoundEvent, LoadSoundEvent} from "./Events/LoadSoundEvent";
+import { scriptUtils } from "./ScriptUtils";
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.
  * Also allows to send messages to those iframes.
@@ -33,7 +34,7 @@ class IframeListener {
     private readonly _goToPageStream: Subject<GoToPageEvent> = new Subject();
     public readonly goToPageStream = this._goToPageStream.asObservable();
 
-    
+
     private readonly _loadPageStream: Subject<string> = new Subject();
     public readonly loadPageStream = this._loadPageStream.asObservable();
 
@@ -137,9 +138,11 @@ class IframeListener {
                 }
                 else if (payload.type === 'removeBubble') {
                     this._removeBubbleStream.next();
-                }else if (payload.type === 'loadPage' && isLoadPageEvent(payload.data)){
+                } else if (payload.type === 'loadPage' && isLoadPageEvent(payload.data)) {
                     this._loadPageStream.next(payload.data.url);
-                }
+                } else if (isMenuItemRegisterIframeEvent(payload)) [
+                    handleMenuItemRegistrationEvent(payload.data)
+                ]
             }
 
 
@@ -263,7 +266,7 @@ class IframeListener {
     /**
      * Sends the message... to all allowed iframes.
      */
-    private postMessage(message: IframeResponseEvent<keyof IframeResponseEventMap>) {
+    public postMessage(message: IframeResponseEvent<keyof IframeResponseEventMap>) {
         for (const iframe of this.iframes) {
             iframe.contentWindow?.postMessage(message, '*');
         }
