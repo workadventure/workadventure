@@ -1,9 +1,9 @@
 <script lang="ts">
-    import Peer from "./Peer.svelte";
-    import {layoutStore} from "../../Stores/LayoutStore";
+    import {streamableCollectionStore} from "../../Stores/StreamableCollectionStore";
     import {videoFocusStore} from "../../Stores/VideoFocusStore";
     import {afterUpdate} from "svelte";
     import {biggestAvailableAreaStore} from "../../Stores/BiggestAvailableAreaStore";
+    import MediaBox from "./MediaBox.svelte";
 
     afterUpdate(() => {
         biggestAvailableAreaStore.recompute();
@@ -11,16 +11,14 @@
 </script>
 
 <div class="main-section">
-    {#each [...$layoutStore.values()] as peer (peer.uniqueId)}
-        {#if $videoFocusStore && peer === $videoFocusStore }
-            <Peer peer={peer}></Peer>
-        {/if}
-    {/each}
+    {#if $videoFocusStore }
+        <MediaBox streamable={$videoFocusStore}></MediaBox>
+    {/if}
 </div>
 <aside class="sidebar">
-    {#each [...$layoutStore.values()] as peer (peer.uniqueId)}
+    {#each [...$streamableCollectionStore.values()] as peer (peer.uniqueId)}
         {#if peer !== $videoFocusStore }
-            <Peer peer={peer}></Peer>
+            <MediaBox streamable={peer}></MediaBox>
         {/if}
     {/each}
 </aside>

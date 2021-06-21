@@ -2,19 +2,19 @@ import {writable} from "svelte/store";
 import type {RemotePeer, SimplePeer} from "../WebRtc/SimplePeer";
 import {VideoPeer} from "../WebRtc/VideoPeer";
 import {ScreenSharingPeer} from "../WebRtc/ScreenSharingPeer";
-import type {DisplayableMedia} from "./LayoutStore";
+import type {Streamable} from "./StreamableCollectionStore";
 
 /**
  * A store that contains the peer / media that has currently the "importance" focus.
  */
 function createVideoFocusStore() {
-    const { subscribe, set, update } = writable<DisplayableMedia | null>(null);
+    const { subscribe, set, update } = writable<Streamable | null>(null);
 
-    let focusedMedia: DisplayableMedia | null = null;
+    let focusedMedia: Streamable | null = null;
 
     return {
         subscribe,
-        focus: (media: DisplayableMedia) => {
+        focus: (media: Streamable) => {
             focusedMedia = media;
             set(media);
         },
@@ -22,7 +22,7 @@ function createVideoFocusStore() {
             focusedMedia = null;
             set(null);
         },
-        toggleFocus: (media: DisplayableMedia) => {
+        toggleFocus: (media: Streamable) => {
             if (media !== focusedMedia) {
                 focusedMedia = media;
             } else {

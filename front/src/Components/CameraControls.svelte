@@ -9,7 +9,7 @@
     import microphoneCloseImg from "./images/microphone-close.svg";
     import layoutPresentationImg from "./images/layout-presentation.svg";
     import layoutChatImg from "./images/layout-chat.svg";
-    import {layoutModeStore} from "../Stores/LayoutStore";
+    import {layoutModeStore} from "../Stores/StreamableCollectionStore";
     import {LayoutMode} from "../WebRtc/LayoutManager";
     import {peerStore} from "../Stores/PeerStore";
 

@@ -1,6 +1,6 @@
 <script lang="ts">
     import {LayoutMode} from "../../WebRtc/LayoutManager";
-    import {layoutModeStore} from "../../Stores/LayoutStore";
+    import {layoutModeStore} from "../../Stores/StreamableCollectionStore";
     import PresentationLayout from "./PresentationLayout.svelte";
     import ChatLayout from "./ChatLayout.svelte";
 

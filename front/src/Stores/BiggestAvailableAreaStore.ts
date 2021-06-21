@@ -2,7 +2,7 @@ import {get, writable} from "svelte/store";
 import type {Box} from "../WebRtc/LayoutManager";
 import {HtmlUtils} from "../WebRtc/HtmlUtils";
 import {LayoutMode} from "../WebRtc/LayoutManager";
-import {layoutModeStore} from "./LayoutStore";
+import {layoutModeStore} from "./StreamableCollectionStore";
 
 /**
  * Tries to find the biggest available box of remaining space (this is a space where we can center the character)

@@ -24,14 +24,12 @@ function createPeerStore() {
                             return users;
                         });
                     }
-                    console.log('CONNECT VIDEO', peers);
                 },
                 onDisconnect(userId: number) {
                     update(users => {
                         users.delete(userId);
                         return users;
                     });
-                    console.log('DISCONNECT VIDEO', peers);
                 }
             })
         }

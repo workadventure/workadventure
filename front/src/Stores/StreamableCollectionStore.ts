@@ -4,14 +4,14 @@ import { peerStore, screenSharingStreamStore} from "./PeerStore";
 import type {RemotePeer} from "../WebRtc/SimplePeer";
 import {LayoutMode} from "../WebRtc/LayoutManager";
 
-export type DisplayableMedia = RemotePeer | ScreenSharingLocalMedia;
+export type Streamable = RemotePeer | ScreenSharingLocalMedia;
 
 export const layoutModeStore = writable<LayoutMode>(LayoutMode.Presentation);
 
 /**
- * A store that contains the layout of the streams
+ * A store that contains everything that can produce a stream (so the peers + the local screen sharing stream)
  */
-function createLayoutStore(): Readable<Map<string, DisplayableMedia>> {
+function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
 
     return derived([
         screenSharingStreamStore,
@@ -23,9 +23,9 @@ function createLayoutStore(): Readable<Map<string, DisplayableMedia>> {
             $screenSharingLocalMedia,
         ], set) => {
 
-        const peers = new Map<string, DisplayableMedia>();
+        const peers = new Map<string, Streamable>();
 
-        const addPeer = (peer: DisplayableMedia) => {
+        const addPeer = (peer: Streamable) => {
             peers.set(peer.uniqueId, peer);
         };
 
@@ -40,4 +40,4 @@ function createLayoutStore(): Readable<Map<string, DisplayableMedia>> {
     });
 }
 
-export const layoutStore = createLayoutStore();
+export const streamableCollectionStore = createStreamableCollectionStore();

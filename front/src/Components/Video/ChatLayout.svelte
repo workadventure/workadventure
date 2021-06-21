@@ -1,12 +1,12 @@
 <script lang="ts">
-    import Peer from "./Peer.svelte";
-    import {layoutStore} from "../../Stores/LayoutStore";
+    import {streamableCollectionStore} from "../../Stores/StreamableCollectionStore";
     import {afterUpdate, onDestroy} from "svelte";
     import {biggestAvailableAreaStore} from "../../Stores/BiggestAvailableAreaStore";
+    import MediaBox from "./MediaBox.svelte";
 
     let cssClass = 'one-col';
 
-    const unsubscribe = layoutStore.subscribe((displayableMedias) => {
+    const unsubscribe = streamableCollectionStore.subscribe((displayableMedias) => {
         const nbUsers = displayableMedias.size;
         if (nbUsers <= 1) {
             cssClass = 'one-col';
@@ -29,7 +29,7 @@
 </script>
 
 <div class="chat-mode {cssClass}">
-    {#each [...$layoutStore.values()] as peer (peer.uniqueId)}
-        <Peer peer={peer}></Peer>
+    {#each [...$streamableCollectionStore.values()] as peer (peer.uniqueId)}
+        <MediaBox streamable={peer}></MediaBox>
     {/each}
 </div>
