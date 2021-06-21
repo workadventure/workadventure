@@ -60,6 +60,6 @@
     "lint": "node_modules/.bin/eslint src/ . --ext .ts",
     "fix": "node_modules/.bin/eslint --fix src/ . --ext .ts",
     "svelte-check-watch": "svelte-check --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore\" --watch",
-    "svelte-check":       "svelte-check --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore\""
+    "svelte-check": "svelte-check --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore\""
   }
 }

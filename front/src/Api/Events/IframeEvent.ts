@@ -35,7 +35,7 @@ export type IframeEventMap = {
     removeBubble: null
     loadSound: LoadSoundEvent
     playSound: PlaySoundEvent
-    stopSound: null
+    stopSound: null,
 }
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;
