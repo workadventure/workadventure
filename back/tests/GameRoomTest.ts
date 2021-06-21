@@ -5,6 +5,7 @@ import {Group} from "../src/Model/Group";
 import {User, UserSocket} from "_Model/User";
 import {JoinRoomMessage, PositionMessage} from "../src/Messages/generated/messages_pb";
 import Direction = PositionMessage.Direction;
+import {EmoteCallback} from "_Model/Zone";
 
 function createMockUser(userId: number): User {
     return {
@@ -26,11 +27,14 @@ function createJoinRoomMessage(uuid: string, x: number, y: number): JoinRoomMess
     positionMessage.setMoving(false);
     const joinRoomMessage = new JoinRoomMessage();
     joinRoomMessage.setUseruuid('1');
+    joinRoomMessage.setIpaddress('10.0.0.2');
     joinRoomMessage.setName('foo');
     joinRoomMessage.setRoomid('_/global/test.json');
     joinRoomMessage.setPositionmessage(positionMessage);
     return joinRoomMessage;
 }
+
+const emote: EmoteCallback = (emoteEventMessage, listener): void => {}
 
 describe("GameRoom", () => {
     it("should connect user1 and user2", () => {
@@ -42,7 +46,8 @@ describe("GameRoom", () => {
 
         }
 
-        const world = new GameRoom('_/global/test.json', connect, disconnect, 160, 160, () => {}, () => {}, () => {});
+
+        const world = new GameRoom('_/global/test.json', connect, disconnect, 160, 160, () => {}, () => {}, () => {}, emote);
 
 
 
@@ -71,7 +76,7 @@ describe("GameRoom", () => {
 
         }
 
-        const world = new GameRoom('_/global/test.json', connect, disconnect, 160, 160, () => {}, () => {}, () => {});
+        const world = new GameRoom('_/global/test.json', connect, disconnect, 160, 160, () => {}, () => {}, () => {}, emote);
 
         const user1 = world.join(createMockUserSocket(), createJoinRoomMessage('1', 100, 100));
 
@@ -100,7 +105,7 @@ describe("GameRoom", () => {
             disconnectCallNumber++;
         }
 
-        const world = new GameRoom('_/global/test.json', connect, disconnect, 160, 160, () => {}, () => {}, () => {});
+        const world = new GameRoom('_/global/test.json', connect, disconnect, 160, 160, () => {}, () => {}, () => {}, emote);
 
         const user1 = world.join(createMockUserSocket(), createJoinRoomMessage('1', 100, 100));
 

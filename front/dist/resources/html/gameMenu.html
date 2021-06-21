@@ -1,10 +1,6 @@
 <style>
-    *{
-        font-family: 'Open Sans', sans-serif;
-        cursor: url('/resources/logos/cursor_normal.png'), auto;
-    }
-    * a, button, select{
-        cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    #gameMenu main{
+        margin-top: 15px;
     }
     #gameMenu button {
         background-color: black;
@@ -14,6 +10,29 @@
     }
     #gameMenu section {
         margin: 10px;
+    }
+    section#socialLinks{
+        position: absolute;
+        margin-bottom: 0;
+    }
+    section#socialLinks img{
+        width: 32px;
+        cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    }
+    @media only screen and (max-height: 700px) {
+        #gameMenu main {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            margin-top: 0;
+        }
+        #gameMenu section{
+            margin: 2px;
+        }
+        section#socialLinks{
+            position: relative;
+        }
     }
 </style>
 
@@ -30,13 +49,23 @@
             <button id="changeSkinButton">Edit skin</button>
         </section>
         <section>
+            <button id="changeCompanionButton">Edit companion</button>
+        </section>
+        <section>
             <button id="editGameSettingsButton">Settings</button>
+        </section>
+        <section>
+            <button id="toggleFullscreen">Toggle fullscreen</button>
         </section>
         <section>
             <button id="sparkButton">Create map</button>
         </section>
         <section id="adminConsoleSection" hidden>
             <button id="adminConsoleButton">Admin console</button>
+        </section>
+        <section id="socialLinks" hidden>
+            <a class="not-button" href="https://www.facebook.com/workadventure.WA" target="_blank"><img class="not-button" src="/resources/objects/facebook-icon.png"/></a>
+            <a class="not-button" href="https://twitter.com/Workadventure_" target="_blank"><img class="not-button" src="/resources/objects/twitter-icon.png"/></a>
         </section>
     </main>
 </div>

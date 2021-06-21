@@ -1,27 +1,27 @@
 import 'phaser';
 import GameConfig = Phaser.Types.Core.GameConfig;
-import {DEBUG_MODE, JITSI_URL, RESOLUTION} from "./Enum/EnvironmentVariable";
-import {cypressAsserter} from "./Cypress/CypressAsserter";
+import "../style/index.scss";
+
+import {DEBUG_MODE, isMobile} from "./Enum/EnvironmentVariable";
 import {LoginScene} from "./Phaser/Login/LoginScene";
 import {ReconnectingScene} from "./Phaser/Reconnecting/ReconnectingScene";
 import {SelectCharacterScene} from "./Phaser/Login/SelectCharacterScene";
+import {SelectCompanionScene} from "./Phaser/Login/SelectCompanionScene";
 import {EnableCameraScene} from "./Phaser/Login/EnableCameraScene";
-import {FourOFourScene} from "./Phaser/Reconnecting/FourOFourScene";
-import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
-import {OutlinePipeline} from "./Phaser/Shaders/OutlinePipeline";
 import {CustomizeScene} from "./Phaser/Login/CustomizeScene";
-import {ResizableScene} from "./Phaser/Login/ResizableScene";
+import WebFontLoaderPlugin from 'phaser3-rex-plugins/plugins/webfontloader-plugin.js';
 import {EntryScene} from "./Phaser/Login/EntryScene";
 import {coWebsiteManager} from "./WebRtc/CoWebsiteManager";
 import {MenuScene} from "./Phaser/Menu/MenuScene";
 import {localUserStore} from "./Connexion/LocalUserStore";
-
-// Load Jitsi if the environment variable is set.
-if (JITSI_URL) {
-    const jitsiScript = document.createElement('script');
-    jitsiScript.src = 'https://' + JITSI_URL + '/external_api.js';
-    document.head.appendChild(jitsiScript);
-}
+import {ErrorScene} from "./Phaser/Reconnecting/ErrorScene";
+import {iframeListener} from "./Api/IframeListener";
+import { SelectCharacterMobileScene } from './Phaser/Login/SelectCharacterMobileScene';
+import {HdpiManager} from "./Phaser/Services/HdpiManager";
+import {waScaleManager} from "./Phaser/Services/WaScaleManager";
+import {Game} from "./Phaser/Game/Game";
+import App from './Components/App.svelte';
+import {HtmlUtils} from "./WebRtc/HtmlUtils";
 
 const {width, height} = coWebsiteManager.getGameSize();
 
@@ -38,7 +38,7 @@ const fps : Phaser.Types.Core.FPSConfig = {
     /**
      * Use setTimeout instead of requestAnimationFrame to run the game loop.
      */
-    forceSetTimeOut: true,
+    forceSetTimeOut: false,
     /**
      * Calculate the average frame delta from this many consecutive frame intervals.
      */
@@ -53,17 +53,65 @@ const fps : Phaser.Types.Core.FPSConfig = {
     smoothStep: false
 }
 
+// the ?phaserMode=canvas parameter can be used to force Canvas usage
+const params = new URLSearchParams(document.location.search.substring(1));
+const phaserMode = params.get("phaserMode");
+let mode: number;
+switch (phaserMode) {
+    case 'auto':
+    case null:
+        mode = Phaser.AUTO;
+        break;
+    case 'canvas':
+        mode = Phaser.CANVAS;
+        break;
+    case 'webgl':
+        mode = Phaser.WEBGL;
+        break;
+    default:
+        throw new Error('phaserMode parameter must be one of "auto", "canvas" or "webgl"');
+}
+
+const hdpiManager = new HdpiManager(640*480, 196*196);
+const { game: gameSize, real: realSize } = hdpiManager.getOptimalGameSize({width, height});
+
 const config: GameConfig = {
-    type: Phaser.AUTO,
+    type: mode,
     title: "WorkAdventure",
-    width: width / RESOLUTION,
-    height: height / RESOLUTION,
-    parent: "game",
-    scene: [EntryScene, LoginScene, SelectCharacterScene, EnableCameraScene, ReconnectingScene, FourOFourScene, CustomizeScene, MenuScene],
-    zoom: RESOLUTION,
+    scale: {
+        parent: "game",
+        width: gameSize.width,
+        height: gameSize.height,
+        zoom: realSize.width / gameSize.width,
+        autoRound: true,
+        resizeInterval: 999999999999
+    },
+    scene: [EntryScene,
+        LoginScene,
+        isMobile() ? SelectCharacterMobileScene : SelectCharacterScene,
+        SelectCompanionScene,
+        EnableCameraScene,
+        ReconnectingScene,
+        ErrorScene,
+        CustomizeScene,
+        MenuScene,
+    ],
+    //resolution: window.devicePixelRatio / 2,
     fps: fps,
     dom: {
         createContainer: true
+    },
+    render: {
+        pixelArt: true,
+        roundPixels: true,
+        antialias: false
+    },
+    plugins: {
+        global: [{
+            key: 'rexWebFontLoader',
+            plugin: WebFontLoaderPlugin,
+            start: true
+        }]
     },
     physics: {
         default: "arcade",
@@ -71,32 +119,41 @@ const config: GameConfig = {
             debug: DEBUG_MODE,
         }
     },
+    // Instruct systems with 2 GPU to choose the low power one. We don't need that extra power and we want to save battery
+    powerPreference: "low-power",
     callbacks: {
         postBoot: game => {
-            // FIXME: we should fore WebGL in the config.
-            const renderer = game.renderer as WebGLRenderer;
-            renderer.pipelines.add(OutlinePipeline.KEY, new OutlinePipeline(game));
+            // Commented out to try to fix MacOS bug
+            /*const renderer = game.renderer;
+            if (renderer instanceof WebGLRenderer) {
+                renderer.pipelines.add(OutlinePipeline.KEY, new OutlinePipeline(game));
+            }*/
         }
     }
 };
 
-cypressAsserter.gameStarted();
+//const game = new Phaser.Game(config);
+const game = new Game(config);
 
-const game = new Phaser.Game(config);
+waScaleManager.setGame(game);
 
 window.addEventListener('resize', function (event) {
-    const {width, height} = coWebsiteManager.getGameSize();
-    game.scale.resize(width / RESOLUTION, height / RESOLUTION);
+    coWebsiteManager.resetStyle();
 
-    // Let's trigger the onResize method of any active scene that is a ResizableScene
-    for (const scene of game.scene.getScenes(true)) {
-        if (scene instanceof ResizableScene) {
-            scene.onResize(event);
-        }
-    }
+    waScaleManager.applyNewSize();
 });
 
-coWebsiteManager.onStateChange(() => {
-    const {width, height} = coWebsiteManager.getGameSize();
-    game.scale.resize(width / RESOLUTION, height / RESOLUTION);
+coWebsiteManager.onResize.subscribe(() => {
+    waScaleManager.applyNewSize();
 });
+
+iframeListener.init();
+
+const app = new App({
+    target: HtmlUtils.getElementByIdOrFail('svelte-overlay'),
+    props: {
+        game: game
+    },
+})
+
+export default app

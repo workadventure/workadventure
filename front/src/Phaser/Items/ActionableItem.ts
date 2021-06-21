@@ -4,7 +4,7 @@
  */
 import Sprite = Phaser.GameObjects.Sprite;
 import {OutlinePipeline} from "../Shaders/OutlinePipeline";
-import {GameScene} from "../Game/GameScene";
+import type {GameScene} from "../Game/GameScene";
 
 type EventCallback = (state: unknown, parameters: unknown) => void;
 
@@ -42,8 +42,11 @@ export class ActionableItem {
             return;
         }
         this.isSelectable = true;
-        this.sprite.setPipeline(OutlinePipeline.KEY);
-        this.sprite.pipeline.set2f('uTextureSize', this.sprite.texture.getSourceImage().width, this.sprite.texture.getSourceImage().height);
+        if (this.sprite.pipeline) {
+            // Commented out to try to fix MacOS issue
+            /*this.sprite.setPipeline(OutlinePipeline.KEY);
+            this.sprite.pipeline.set2f('uTextureSize', this.sprite.texture.getSourceImage().width, this.sprite.texture.getSourceImage().height);*/
+        }
     }
 
     /**
@@ -54,7 +57,8 @@ export class ActionableItem {
             return;
         }
         this.isSelectable = false;
-        this.sprite.resetPipeline();
+        // Commented out to try to fix MacOS issue
+        //this.sprite.resetPipeline();
     }
 
     /**

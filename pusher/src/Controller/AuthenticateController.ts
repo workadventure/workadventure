@@ -56,14 +56,12 @@ export class AuthenticateController extends BaseController {
                         worldSlug,
                         roomSlug,
                         mapUrlStart,
+                        organizationMemberToken,
                         textures
                     }));
 
                 } catch (e) {
-                    console.error("An error happened", e)
-                    res.writeStatus(e.status || "500 Internal Server Error");
-                    this.addCorsHeaders(res);
-                    res.end('An error happened');
+                    this.errorToResponse(e, res);
                 }
 
 
@@ -112,12 +110,10 @@ export class AuthenticateController extends BaseController {
     private anonymLogin(){
         this.App.options("/anonymLogin", (res: HttpResponse, req: HttpRequest) => {
             this.addCorsHeaders(res);
-
             res.end();
         });
 
-        this.App.post("/anonymLogin", (res: HttpResponse, req: HttpRequest) => {
-
+        this.App.post("/anonymLogin", (res: HttpResponse, req: HttpRequest) => {           
             res.onAborted(() => {
                 console.warn('Login request was aborted');
             })

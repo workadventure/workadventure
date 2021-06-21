@@ -1,9 +1,16 @@
 import {LoginScene, LoginSceneName} from "../Login/LoginScene";
 import {SelectCharacterScene, SelectCharacterSceneName} from "../Login/SelectCharacterScene";
+import {SelectCompanionScene, SelectCompanionSceneName} from "../Login/SelectCompanionScene";
 import {gameManager} from "../Game/GameManager";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {mediaManager} from "../../WebRtc/MediaManager";
-import {coWebsiteManager} from "../../WebRtc/CoWebsiteManager";
+import {gameReportKey, gameReportRessource, ReportMenu} from "./ReportMenu";
+import {connectionManager} from "../../Connexion/ConnectionManager";
+import {GameConnexionTypes} from "../../Url/UrlManager";
+import {WarningContainer, warningContainerHtml, warningContainerKey} from "../Components/WarningContainer";
+import {worldFullWarningStream} from "../../Connexion/WorldFullWarningStream";
+import {menuIconVisible} from "../../Stores/MenuStore";
+import {videoConstraintStore} from "../../Stores/MediaStore";
 
 export const MenuSceneName = 'MenuScene';
 const gameMenuKey = 'gameMenu';
@@ -11,7 +18,7 @@ const gameMenuIconKey = 'gameMenuIcon';
 const gameSettingsMenuKey = 'gameSettingsMenu';
 const gameShare = 'gameShare';
 
-const closedSideMenuX = -200;
+const closedSideMenuX = -1000;
 const openedSideMenuX = 0;
 
 /**
@@ -21,12 +28,15 @@ export class MenuScene extends Phaser.Scene {
     private menuElement!: Phaser.GameObjects.DOMElement;
     private gameQualityMenuElement!: Phaser.GameObjects.DOMElement;
     private gameShareElement!: Phaser.GameObjects.DOMElement;
+    private gameReportElement!: ReportMenu;
     private sideMenuOpened = false;
     private settingsMenuOpened = false;
     private gameShareOpened = false;
     private gameQualityValue: number;
     private videoQualityValue: number;
     private menuButton!: Phaser.GameObjects.DOMElement;
+    private warningContainer: WarningContainer | null = null;
+    private warningContainerTimeout: NodeJS.Timeout | null = null;
 
     constructor() {
         super({key: MenuSceneName});
@@ -40,20 +50,23 @@ export class MenuScene extends Phaser.Scene {
         this.load.html(gameMenuIconKey, 'resources/html/gameMenuIcon.html');
         this.load.html(gameSettingsMenuKey, 'resources/html/gameQualityMenu.html');
         this.load.html(gameShare, 'resources/html/gameShare.html');
+        this.load.html(gameReportKey, gameReportRessource);
+        this.load.html(warningContainerKey, warningContainerHtml);
     }
 
     create() {
+        menuIconVisible.set(true);
         this.menuElement = this.add.dom(closedSideMenuX, 30).createFromCache(gameMenuKey);
         this.menuElement.setOrigin(0);
-        this.revealMenusAfterInit(this.menuElement, 'gameMenu');
+        MenuScene.revealMenusAfterInit(this.menuElement, 'gameMenu');
 
         const middleX = (window.innerWidth / 3) - 298;
         this.gameQualityMenuElement = this.add.dom(middleX, -400).createFromCache(gameSettingsMenuKey);
-        this.revealMenusAfterInit(this.gameQualityMenuElement, 'gameQuality');
+        MenuScene.revealMenusAfterInit(this.gameQualityMenuElement, 'gameQuality');
 
 
         this.gameShareElement = this.add.dom(middleX, -400).createFromCache(gameShare);
-        this.revealMenusAfterInit(this.gameShareElement, gameShare);
+        MenuScene.revealMenusAfterInit(this.gameShareElement, gameShare);
         this.gameShareElement.addListener('click');
         this.gameShareElement.on('click',  (event:MouseEvent) => {
             event.preventDefault();
@@ -62,6 +75,12 @@ export class MenuScene extends Phaser.Scene {
             }else if((event?.target as HTMLInputElement).id === 'gameShareFormCancel') {
                 this.closeGameShare();
             }
+        });
+
+        this.gameReportElement = new ReportMenu(this, connectionManager.getConnexionType === GameConnexionTypes.anonymous);
+        mediaManager.setShowReportModalCallBacks((userId, userName) => {
+            this.closeAll();
+            this.gameReportElement.open(parseInt(userId), userName);
         });
 
         this.input.keyboard.on('keyup-TAB', () => {
@@ -75,9 +94,12 @@ export class MenuScene extends Phaser.Scene {
 
         this.menuElement.addListener('click');
         this.menuElement.on('click', this.onMenuClick.bind(this));
+
+        worldFullWarningStream.stream.subscribe(() => this.showWorldCapacityWarning());
     }
 
-    private revealMenusAfterInit(menuElement: Phaser.GameObjects.DOMElement, rootDomId: string) {
+    //todo put this method in a parent menuElement class
+    static revealMenusAfterInit(menuElement: Phaser.GameObjects.DOMElement, rootDomId: string) {
         //Dom elements will appear inside the viewer screen when creating before being moved out of it, which create a flicker effect.
         //To prevent this, we put a 'hidden' attribute on the root element, we remove it only after the init is done.
         setTimeout(() => {
@@ -86,7 +108,12 @@ export class MenuScene extends Phaser.Scene {
     }
 
     public revealMenuIcon(): void {
-        (this.menuButton.getChildByID('menuIcon') as HTMLElement).hidden = false
+        //TODO fix me: add try catch because at the same time, 'this.menuButton' variable doesn't exist and there is error on 'getChildByID' function
+        try {
+            (this.menuButton.getChildByID('menuIcon') as HTMLElement).hidden = false;
+        } catch (err) {
+            console.error(err);
+        }
     }
 
     openSideMenu() {
@@ -94,10 +121,16 @@ export class MenuScene extends Phaser.Scene {
         this.closeAll();
         this.sideMenuOpened = true;
         this.menuButton.getChildByID('openMenuButton').innerHTML = 'X';
-        if (gameManager.getCurrentGameScene(this).connection && gameManager.getCurrentGameScene(this).connection.isAdmin()) {
+        const connection = gameManager.getCurrentGameScene(this).connection;
+        if (connection && connection.isAdmin()) {
             const adminSection = this.menuElement.getChildByID('adminConsoleSection') as HTMLElement;
             adminSection.hidden = false;
         }
+        //TODO bind with future metadata of card
+        //if (connectionManager.getConnexionType === GameConnexionTypes.anonymous){
+            const adminSection = this.menuElement.getChildByID('socialLinks') as HTMLElement;
+            adminSection.hidden = false;
+        //}
         this.tweens.add({
             targets: this.menuElement,
             x: openedSideMenuX,
@@ -106,10 +139,26 @@ export class MenuScene extends Phaser.Scene {
         });
     }
 
+    private showWorldCapacityWarning() {
+        if (!this.warningContainer) {
+            this.warningContainer = new WarningContainer(this);
+        }
+        if (this.warningContainerTimeout) {
+            clearTimeout(this.warningContainerTimeout);
+        }
+        this.warningContainerTimeout = setTimeout(() => {
+            this.warningContainer?.destroy();
+            this.warningContainer = null
+            this.warningContainerTimeout = null
+        }, 120000);
+
+    }
+
     private closeSideMenu(): void {
         if (!this.sideMenuOpened) return;
         this.sideMenuOpened = false;
         this.closeAll();
+        this.menuButton.getChildByID('openMenuButton').innerHTML = `<img src="/static/images/menu.svg">`;
         gameManager.getCurrentGameScene(this).ConsoleGlobalMessageManager.disabledMessageConsole();
         this.tweens.add({
             targets: this.menuElement,
@@ -121,6 +170,7 @@ export class MenuScene extends Phaser.Scene {
 
     private openGameSettingsMenu(): void {
         if (this.settingsMenuOpened) {
+            this.closeGameQualityMenu();
             return;
         }
         //close all
@@ -145,11 +195,11 @@ export class MenuScene extends Phaser.Scene {
             }
         });
 
-        let middleY = (window.innerHeight / 3) - (257);
+        let middleY = this.scale.height / 2 - 392/2;
         if(middleY < 0){
             middleY = 0;
         }
-        let middleX = (window.innerWidth / 3) - 298;
+        let middleX = this.scale.width / 2 - 457/2;
         if(middleX < 0){
             middleX = 0;
         }
@@ -189,11 +239,11 @@ export class MenuScene extends Phaser.Scene {
 
         this.gameShareOpened = true;
 
-        let middleY = (window.innerHeight / 3) - (257);
+        let middleY = this.scale.height / 2 - 85;
         if(middleY < 0){
             middleY = 0;
         }
-        let middleX = (window.innerWidth / 3) - 298;
+        let middleX = this.scale.width / 2 - 200;
         if(middleX < 0){
             middleX = 0;
         }
@@ -220,6 +270,9 @@ export class MenuScene extends Phaser.Scene {
     }
 
     private onMenuClick(event:MouseEvent) {
+        if((event?.target as HTMLInputElement).classList.contains('not-button')){
+            return;
+        }
         event.preventDefault();
 
         switch ((event?.target as HTMLInputElement).id) {
@@ -234,6 +287,10 @@ export class MenuScene extends Phaser.Scene {
                 this.closeSideMenu();
                 gameManager.leaveGame(this, SelectCharacterSceneName, new SelectCharacterScene());
                 break;
+            case 'changeCompanionButton':
+                this.closeSideMenu();
+                gameManager.leaveGame(this, SelectCompanionSceneName, new SelectCompanionScene());
+                break;
             case 'closeButton':
                 this.closeSideMenu();
                 break;
@@ -242,6 +299,9 @@ export class MenuScene extends Phaser.Scene {
                 break;
             case 'editGameSettingsButton':
                 this.openGameSettingsMenu();
+                break;
+            case 'toggleFullscreen':
+                this.toggleFullscreen();
                 break;
             case 'adminConsoleButton':
                 gameManager.getCurrentGameScene(this).ConsoleGlobalMessageManager.activeMessageConsole();
@@ -265,19 +325,36 @@ export class MenuScene extends Phaser.Scene {
         if (valueVideo !== this.videoQualityValue) {
             this.videoQualityValue = valueVideo;
             localUserStore.setVideoQualityValue(valueVideo);
-            mediaManager.updateCameraQuality(valueVideo);
+            videoConstraintStore.setFrameRate(valueVideo);
         }
         this.closeGameQualityMenu();
     }
 
     private gotToCreateMapPage() {
-        const sparkHost = 'https://'+window.location.host.replace('play.', '')+'/choose-map.html';
+        //const sparkHost = 'https://'+window.location.host.replace('play.', '')+'/choose-map.html';
+        //TODO fix me: this button can to send us on WorkAdventure BO.
+        const sparkHost = 'https://workadventu.re/getting-started';
         window.open(sparkHost, '_blank');
     }
 
     private closeAll(){
         this.closeGameQualityMenu();
         this.closeGameShare();
-        this.menuButton.getChildByID('openMenuButton').innerHTML = `<img src="/static/images/menu.svg">`;
+        this.gameReportElement.close();
+    }
+
+    private toggleFullscreen() {
+        const body = document.querySelector('body')
+        if (body) {
+            if (document.fullscreenElement ?? document.fullscreen) {
+                document.exitFullscreen()
+            } else {
+                body.requestFullscreen();
+            }
+        }
+    }
+
+    public isDirty(): boolean {
+        return false;
     }
 }

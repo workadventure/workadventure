@@ -5,13 +5,12 @@ import {
     CharacterLayerMessage, GroupLeftZoneMessage, GroupUpdateMessage, GroupUpdateZoneMessage,
     PointMessage, PositionMessage, UserJoinedMessage,
     UserJoinedZoneMessage, UserLeftZoneMessage, UserMovedMessage,
-    ZoneMessage
+    ZoneMessage,
+    EmoteEventMessage,
+    CompanionMessage
 } from "../Messages/generated/messages_pb";
-import * as messages_pb from "../Messages/generated/messages_pb";
 import {ClientReadableStream} from "grpc";
 import {PositionDispatcher} from "_Model/PositionDispatcher";
-import {socketManager} from "../Services/SocketManager";
-import {ProtobufUtils} from "_Model/Websocket/ProtobufUtils";
 import Debug from "debug";
 
 const debug = Debug("zone");
@@ -23,6 +22,7 @@ export interface ZoneEventListener {
     onGroupEnters(group: GroupDescriptor, listener: ExSocketInterface): void;
     onGroupMoves(group: GroupDescriptor, listener: ExSocketInterface): void;
     onGroupLeaves(groupId: number, listener: ExSocketInterface): void;
+    onEmote(emoteMessage: EmoteEventMessage, listener: ExSocketInterface): void;
 }
 
 /*export type EntersCallback = (thing: Movable, listener: User) => void;
@@ -30,7 +30,7 @@ export type MovesCallback = (thing: Movable, position: PositionInterface, listen
 export type LeavesCallback = (thing: Movable, listener: User) => void;*/
 
 export class UserDescriptor {
-    private constructor(public readonly userId: number, private name: string, private characterLayers: CharacterLayerMessage[], private position: PositionMessage) {
+    private constructor(public readonly userId: number, private name: string, private characterLayers: CharacterLayerMessage[], private position: PositionMessage, private visitCardUrl: string | null, private companion?: CompanionMessage) {
         if (!Number.isInteger(this.userId)) {
             throw new Error('UserDescriptor.userId is not an integer: '+this.userId);
         }
@@ -41,7 +41,7 @@ export class UserDescriptor {
         if (position === undefined) {
             throw new Error('Missing position');
         }
-        return new UserDescriptor(message.getUserid(), message.getName(), message.getCharacterlayersList(), position);
+        return new UserDescriptor(message.getUserid(), message.getName(), message.getCharacterlayersList(), position, message.getVisitcardurl(),  message.getCompanion());
     }
 
     public update(userMovedMessage: UserMovedMessage) {
@@ -59,6 +59,10 @@ export class UserDescriptor {
         userJoinedMessage.setName(this.name);
         userJoinedMessage.setCharacterlayersList(this.characterLayers);
         userJoinedMessage.setPosition(this.position);
+        if (this.visitCardUrl) {
+            userJoinedMessage.setVisitcardurl(this.visitCardUrl);
+        }
+        userJoinedMessage.setCompanion(this.companion);
 
         return userJoinedMessage;
     }
@@ -182,6 +186,9 @@ export class Zone {
                     userDescriptor.update(userMovedMessage);
 
                     this.notifyUserMove(userDescriptor);
+                } else if(message.hasEmoteeventmessage()) {
+                    const emoteEventMessage = message.getEmoteeventmessage() as EmoteEventMessage;
+                    this.notifyEmote(emoteEventMessage);
                 } else {
                     throw new Error('Unexpected message');
                 }
@@ -257,6 +264,15 @@ export class Zone {
             } else {
                 // Do not send a signal. The move event will be triggered when joining the new room.
             }
+        }
+    }
+
+    private notifyEmote(emoteMessage: EmoteEventMessage) {
+        for (const listener of this.listeners) {
+            if (listener.userId === emoteMessage.getActoruserid()) {
+                continue;
+            }
+            this.socketListener.onEmote(emoteMessage, listener);
         }
     }
 

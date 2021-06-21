@@ -1,12 +1,12 @@
 import Scene = Phaser.Scene;
-import {Character} from "./Character";
+import type {Character} from "./Character";
 
 //todo: improve this WIP
 export class SpeechBubble {
     private bubble: Phaser.GameObjects.Graphics;
     private content: Phaser.GameObjects.Text;
 
-    
+
     constructor(scene: Scene, player: Character, text: string = "") {
 
         const bubbleHeight = 50;
@@ -14,7 +14,7 @@ export class SpeechBubble {
         const bubbleWidth = bubblePadding * 2 + text.length * 10;
         const arrowHeight = bubbleHeight / 4;
 
-        this.bubble = scene.add.graphics({ x: player.x + 16, y: player.y - 80 });
+        this.bubble = scene.add.graphics({ x: 16, y: -80 });
         player.add(this.bubble);
 
         //  Bubble shadow

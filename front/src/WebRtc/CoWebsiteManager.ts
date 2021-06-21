@@ -1,6 +1,7 @@
 import {HtmlUtils} from "./HtmlUtils";
-
-export type CoWebsiteStateChangedCallback = () => void;
+import {Subject} from "rxjs";
+import {iframeListener} from "../Api/IframeListener";
+import {touchScreenManager} from "../Touch/TouchScreenManager";
 
 enum iframeStates {
     closed = 1,
@@ -8,29 +9,137 @@ enum iframeStates {
     opened,
 }
 
-const cowebsiteDivId = "cowebsite"; // the id of the parent div of the iframe.
+const cowebsiteDivId = 'cowebsite'; // the id of the whole container.
+const cowebsiteMainDomId = 'cowebsite-main'; // the id of the parent div of the iframe.
+const cowebsiteAsideDomId = 'cowebsite-aside'; // the id of the parent div of the iframe.
+export const cowebsiteCloseButtonId = 'cowebsite-close';
+const cowebsiteFullScreenButtonId = 'cowebsite-fullscreen';
+const cowebsiteOpenFullScreenImageId = 'cowebsite-fullscreen-open';
+const cowebsiteCloseFullScreenImageId = 'cowebsite-fullscreen-close';
 const animationTime = 500; //time used by the css transitions, in ms.
 
-class CoWebsiteManager {
-    
-    private opened: iframeStates = iframeStates.closed; 
+interface TouchMoveCoordinates {
+    x: number;
+    y: number;
+}
 
-    private observers = new Array<CoWebsiteStateChangedCallback>();
+class CoWebsiteManager {
+
+    private opened: iframeStates = iframeStates.closed;
+
+    private _onResize: Subject<void> = new Subject();
+    public onResize = this._onResize.asObservable();
     /**
      * Quickly going in and out of an iframe trigger can create conflicts between the iframe states.
      * So we use this promise to queue up every cowebsite state transition
      */
     private currentOperationPromise: Promise<void> = Promise.resolve();
-    private cowebsiteDiv: HTMLDivElement; 
-    
+    private cowebsiteDiv: HTMLDivElement;
+    private resizing: boolean = false;
+    private cowebsiteMainDom: HTMLDivElement;
+    private cowebsiteAsideDom: HTMLDivElement;
+    private previousTouchMoveCoordinates: TouchMoveCoordinates|null = null; //only use on touchscreens to track touch movement
+
+    get width(): number {
+        return this.cowebsiteDiv.clientWidth;
+    }
+
+    set width(width: number) {
+        this.cowebsiteDiv.style.width = width+'px';
+    }
+
+    get height(): number {
+        return this.cowebsiteDiv.clientHeight;
+    }
+
+    set height(height: number) {
+        this.cowebsiteDiv.style.height = height+'px';
+    }
+
+    get verticalMode(): boolean {
+        return window.innerWidth < window.innerHeight;
+    }
+
+    get isFullScreen(): boolean {
+        return this.verticalMode ? this.height === window.innerHeight : this.width === window.innerWidth;
+    }
+
     constructor() {
         this.cowebsiteDiv = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteDivId);
+        this.cowebsiteMainDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteMainDomId);
+        this.cowebsiteAsideDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteAsideDomId);
+
+        if (touchScreenManager.supportTouchScreen) {
+            this.initResizeListeners(true);
+        }
+        this.initResizeListeners(false);
+
+        const buttonCloseFrame = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);
+        buttonCloseFrame.addEventListener('click', () => {
+            buttonCloseFrame.blur();
+            this.closeCoWebsite();
+        });
+
+        const buttonFullScreenFrame = HtmlUtils.getElementByIdOrFail(cowebsiteFullScreenButtonId);
+        buttonFullScreenFrame.addEventListener('click', () => {
+            buttonFullScreenFrame.blur();
+            this.fullscreen();
+        });
     }
-    
+
+    private initResizeListeners(touchMode:boolean) {
+        const movecallback = (event:MouseEvent|TouchEvent) => {
+            let x, y;
+            if (event.type === 'mousemove') {
+                x = (event as MouseEvent).movementX / this.getDevicePixelRatio();
+                y = (event as MouseEvent).movementY / this.getDevicePixelRatio();
+            } else {
+                const touchEvent = (event as TouchEvent).touches[0];
+                const last = {x: touchEvent.pageX, y: touchEvent.pageY};
+                const previous = this.previousTouchMoveCoordinates as TouchMoveCoordinates;
+                this.previousTouchMoveCoordinates = last;
+                x = last.x - previous.x;
+                y = last.y - previous.y;
+            }
+            
+            
+            this.verticalMode ? this.height += y : this.width -= x;
+            this.fire();
+        }
+
+        this.cowebsiteAsideDom.addEventListener( touchMode ? 'touchstart' : 'mousedown', (event) => {
+            this.resizing = true;
+            this.getIframeDom().style.display = 'none';
+            if (touchMode) {
+                const touchEvent = (event as TouchEvent).touches[0];
+                this.previousTouchMoveCoordinates = {x: touchEvent.pageX, y: touchEvent.pageY};
+            }
+
+            document.addEventListener(touchMode ? 'touchmove' : 'mousemove', movecallback);
+        });
+
+        document.addEventListener(touchMode ? 'touchend' : 'mouseup', (event) => {
+            if (!this.resizing) return;
+            if (touchMode) {
+                this.previousTouchMoveCoordinates = null;
+            }
+            document.removeEventListener(touchMode ? 'touchmove' : 'mousemove', movecallback);
+            this.getIframeDom().style.display = 'block';
+            this.resizing = false;
+        });
+    }
+
+    private getDevicePixelRatio(): number {
+        //on chrome engines, movementX and movementY return global screens coordinates while other browser return pixels
+        //so on chrome-based browser we need to adjust using 'devicePixelRatio'
+        return window.navigator.userAgent.includes('Firefox') ? 1 : window.devicePixelRatio;
+    }
+
     private close(): void {
         this.cowebsiteDiv.classList.remove('loaded'); //edit the css class to trigger the transition
         this.cowebsiteDiv.classList.add('hidden');
         this.opened = iframeStates.closed;
+        this.resetStyle();
     }
     private load(): void {
         this.cowebsiteDiv.classList.remove('hidden'); //edit the css class to trigger the transition
@@ -40,27 +149,38 @@ class CoWebsiteManager {
     private open(): void {
         this.cowebsiteDiv.classList.remove('loading', 'hidden'); //edit the css class to trigger the transition
         this.opened = iframeStates.opened;
+        this.resetStyle();
     }
 
-    public loadCoWebsite(url: string): void {
+    public resetStyle() {
+        this.cowebsiteDiv.style.width = '';
+        this.cowebsiteDiv.style.height = '';
+    }
+
+    private getIframeDom(): HTMLIFrameElement {
+        const iframe = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteDivId).querySelector('iframe');
+        if (!iframe) throw new Error('Could not find iframe!');
+        return iframe;
+    }
+
+    public loadCoWebsite(url: string, base: string, allowApi?: boolean, allowPolicy?: string): void {
         this.load();
-        this.cowebsiteDiv.innerHTML = `<button class="close-btn" id="cowebsite-close">
-                    <img src="resources/logos/close.svg">
-                </button>`;
-        setTimeout(() => {
-            HtmlUtils.getElementByIdOrFail('cowebsite-close').addEventListener('click', () => {
-                this.closeCoWebsite();
-            });
-        }, 100);
+        this.cowebsiteMainDom.innerHTML = ``;
 
         const iframe = document.createElement('iframe');
         iframe.id = 'cowebsite-iframe';
-        iframe.src = url;
-        const onloadPromise = new Promise((resolve) => {
+        iframe.src = (new URL(url, base)).toString();
+        if (allowPolicy) {
+            iframe.allow = allowPolicy;
+        }
+        const onloadPromise = new Promise<void>((resolve) => {
             iframe.onload = () => resolve();
         });
-        this.cowebsiteDiv.appendChild(iframe);
-        const onTimeoutPromise = new Promise((resolve) => {
+        if (allowApi) {
+            iframeListener.registerIframe(iframe);
+        }
+        this.cowebsiteMainDom.appendChild(iframe);
+        const onTimeoutPromise = new Promise<void>((resolve) => {
             setTimeout(() => resolve(), 2000);
         });
         this.currentOperationPromise = this.currentOperationPromise.then(() =>Promise.race([onloadPromise, onTimeoutPromise])).then(() => {
@@ -68,7 +188,10 @@ class CoWebsiteManager {
             setTimeout(() => {
                 this.fire();
             }, animationTime)
-        }).catch(() => this.closeCoWebsite());
+        }).catch((err) => {
+            console.error('Error loadCoWebsite => ', err);
+            this.closeCoWebsite()
+        });
     }
 
     /**
@@ -76,12 +199,16 @@ class CoWebsiteManager {
      */
     public insertCoWebsite(callback: (cowebsite: HTMLDivElement) => Promise<void>): void {
         this.load();
-        this.currentOperationPromise = this.currentOperationPromise.then(() => callback(this.cowebsiteDiv)).then(() => {
+        this.cowebsiteMainDom.innerHTML = ``;
+        this.currentOperationPromise = this.currentOperationPromise.then(() => callback(this.cowebsiteMainDom)).then(() => {
             this.open();
             setTimeout(() => {
                 this.fire();
             }, animationTime);
-        }).catch(() => this.closeCoWebsite());
+        }).catch((err) => {
+            console.error('Error insertCoWebsite => ', err);
+            this.closeCoWebsite();
+        });
     }
 
     public closeCoWebsite(): Promise<void> {
@@ -89,10 +216,12 @@ class CoWebsiteManager {
             if(this.opened === iframeStates.closed) resolve(); //this method may be called twice, in case of iframe error for example
             this.close();
             this.fire();
+            const iframe = this.cowebsiteDiv.querySelector('iframe');
+            if (iframe) {
+                iframeListener.unregisterIframe(iframe);
+            }
             setTimeout(() => {
-                this.cowebsiteDiv.innerHTML = `<button class="close-btn" id="cowebsite-close">
-                    <img src="resources/logos/close.svg">
-                </button>`;
+                this.cowebsiteMainDom.innerHTML = ``;
                 resolve();
             }, animationTime)
         }));
@@ -106,27 +235,35 @@ class CoWebsiteManager {
                 height: window.innerHeight
             }
         }
-        if (window.innerWidth >= window.innerHeight) {
+        if (!this.verticalMode) {
             return {
-                width: window.innerWidth / 2,
+                width: window.innerWidth - this.width,
                 height: window.innerHeight
             }
         } else {
             return {
                 width: window.innerWidth,
-                height: window.innerHeight / 2
+                height: window.innerHeight - this.height,
             }
         }
     }
 
-    //todo: is it still useful to allow any kind of observers? 
-    public onStateChange(observer: CoWebsiteStateChangedCallback) {
-        this.observers.push(observer);
+    private fire(): void {
+        this._onResize.next();
     }
 
-    private fire(): void {
-        for (const callback of this.observers) {
-            callback();
+    private fullscreen(): void {
+        if (this.isFullScreen) {
+            this.resetStyle();
+            this.fire();
+            //we don't trigger a resize of the phaser game since it won't be visible anyway.
+            HtmlUtils.getElementByIdOrFail(cowebsiteOpenFullScreenImageId).style.display = 'inline';
+            HtmlUtils.getElementByIdOrFail(cowebsiteCloseFullScreenImageId).style.display = 'none';
+        } else {
+            this.verticalMode ? this.height = window.innerHeight : this.width = window.innerWidth;
+            //we don't trigger a resize of the phaser game since it won't be visible anyway.
+            HtmlUtils.getElementByIdOrFail(cowebsiteOpenFullScreenImageId).style.display = 'none';
+            HtmlUtils.getElementByIdOrFail(cowebsiteCloseFullScreenImageId).style.display = 'inline';
         }
     }
 }

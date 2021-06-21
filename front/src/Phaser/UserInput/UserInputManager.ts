@@ -1,4 +1,7 @@
-import {GameScene} from "../Game/GameScene";
+import type { Direction } from "../../types";
+import type {GameScene} from "../Game/GameScene";
+import {touchScreenManager} from "../../Touch/TouchScreenManager";
+import {MobileJoystick} from "../Components/MobileJoystick";
 
 interface UserInputManagerDatum {
     keyInstance: Phaser.Input.Keyboard.Key;
@@ -13,17 +16,25 @@ export enum UserInputEvent {
     SpeedUp,
     Interact,
     Shout,
+    JoystickMove,
 }
 
-//we cannot the map structure so we have to create a replacment
+
+//we cannot use a map structure so we have to create a replacment
 export class ActiveEventList {
-    private KeysCode : Map<UserInputEvent, boolean> = new Map<UserInputEvent, boolean>();
+    private eventMap : Map<UserInputEvent, boolean> = new Map<UserInputEvent, boolean>();
 
     get(event: UserInputEvent): boolean {
-        return this.KeysCode.get(event) || false;
+        return this.eventMap.get(event) || false;
     }
     set(event: UserInputEvent, value: boolean): void {
-        this.KeysCode.set(event, value);
+        this.eventMap.set(event, value);
+    }
+    forEach(callback: (value: boolean, key: UserInputEvent) => void): void {
+        this.eventMap.forEach(callback);
+    }
+    any(): boolean {
+        return Array.from(this.eventMap.values()).reduce((accu, curr) => accu || curr, false);
     }
 }
 
@@ -31,10 +42,48 @@ export class ActiveEventList {
 export class UserInputManager {
     private KeysCode!: UserInputManagerDatum[];
     private Scene: GameScene;
+    private isInputDisabled : boolean;
 
-    constructor(Scene : GameScene) {
+    private joystick!: MobileJoystick;
+    private joystickEvents = new ActiveEventList();
+    private joystickForceThreshold = 60;
+    private joystickForceAccuX = 0;
+    private joystickForceAccuY = 0;
+
+    constructor(Scene: GameScene) {
         this.Scene = Scene;
+        this.isInputDisabled = false;
         this.initKeyBoardEvent();
+        this.initMouseWheel();
+        if (touchScreenManager.supportTouchScreen) {
+            this.initVirtualJoystick();
+        }
+    }
+
+    initVirtualJoystick() {
+        this.joystick = new MobileJoystick(this.Scene);
+        this.joystick.on("update", () => {
+            this.joystickForceAccuX = this.joystick.forceX ? this.joystickForceAccuX : 0;
+            this.joystickForceAccuY = this.joystick.forceY ? this.joystickForceAccuY : 0;
+            const cursorKeys = this.joystick.createCursorKeys();
+            for (const name in cursorKeys) {
+                const key = cursorKeys[name as Direction];
+                switch (name) {
+                    case "up":
+                        this.joystickEvents.set(UserInputEvent.MoveUp, key.isDown);
+                        break;
+                    case "left":
+                        this.joystickEvents.set(UserInputEvent.MoveLeft, key.isDown);
+                        break;
+                    case "down":
+                        this.joystickEvents.set(UserInputEvent.MoveDown, key.isDown);
+                        break;
+                    case "right":
+                        this.joystickEvents.set(UserInputEvent.MoveRight, key.isDown);
+                        break;
+                }
+            }
+        });
     }
 
     initKeyBoardEvent(){
@@ -59,14 +108,50 @@ export class UserInputManager {
         ];
     }
 
-    clearAllInputKeyboard(){
-        this.Scene.input.keyboard.removeAllKeys();
+    clearAllListeners(){
+        this.Scene.input.keyboard.removeAllListeners();
     }
 
+    //todo: should we also disable the joystick?
+    disableControls(){
+        this.Scene.input.keyboard.removeAllKeys();
+        this.isInputDisabled = true;
+    }
+
+    restoreControls(){
+        this.initKeyBoardEvent();
+        this.isInputDisabled = false;
+    }
     getEventListForGameTick(): ActiveEventList {
         const eventsMap = new ActiveEventList();
+        if (this.isInputDisabled) {
+            return eventsMap;
+        }
+        this.joystickEvents.forEach((value, key) => {
+            if (value) {
+                switch (key) {
+                case UserInputEvent.MoveUp:
+                case UserInputEvent.MoveDown:
+                    this.joystickForceAccuY += this.joystick.forceY;
+                    if (Math.abs(this.joystickForceAccuY) > this.joystickForceThreshold) {
+                        eventsMap.set(key, value);
+                        this.joystickForceAccuY = 0;
+                    }
+                    break;
+                case UserInputEvent.MoveLeft:
+                case UserInputEvent.MoveRight:
+                    this.joystickForceAccuX += this.joystick.forceX;
+                    if (Math.abs(this.joystickForceAccuX) > this.joystickForceThreshold) {
+                        eventsMap.set(key, value);
+                        this.joystickForceAccuX = 0;
+                    }
+                    break;
+                }
+            }
+        });
+        eventsMap.set(UserInputEvent.JoystickMove, this.joystickEvents.any());
         this.KeysCode.forEach(d => {
-            if (d. keyInstance.isDown) {
+            if (d.keyInstance.isDown) {
                 eventsMap.set(d.event, true);
             }
         });
@@ -85,5 +170,15 @@ export class UserInputManager {
     }
     removeSpaceEventListner(callback : Function){
         this.Scene.input.keyboard.removeListener('keyup-SPACE', callback);
+    }
+
+    destroy(): void {
+        this.joystick?.destroy();
+    }
+
+    private initMouseWheel() {
+        this.Scene.input.on('wheel', (pointer: unknown, gameObjects: unknown, deltaX: number, deltaY: number, deltaZ: number) => {
+            this.Scene.zoomByFactor(1 - deltaY / 53 * 0.1);
+        });
     }
 }
