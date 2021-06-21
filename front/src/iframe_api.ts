@@ -1,4 +1,4 @@
-import {registeredCallbacks} from "./registered_callbacks";
+import {registeredCallbacks} from "./Api/iframe/registeredCallbacks";
 import {
     IframeResponseEvent,
     IframeResponseEventMap,
@@ -29,14 +29,14 @@ const wa = {
      * @deprecated Use WA.chat.sendChatMessage instead
      */
     sendChatMessage(message: string, author: string): void {
-        console.log('Method WA.sendChatMessage is deprecated. Please use WA.chat.sendChatMessage instead');
+        console.warn('Method WA.sendChatMessage is deprecated. Please use WA.chat.sendChatMessage instead');
         chat.sendChatMessage(message, author);
     },
     /**
      * @deprecated Use WA.chat.disablePlayerControls instead
      */
     disablePlayerControls(): void {
-        console.log('Method WA.disablePlayerControls is deprecated. Please use WA.controls.disablePlayerControls instead');
+        console.warn('Method WA.disablePlayerControls is deprecated. Please use WA.controls.disablePlayerControls instead');
         controls.disablePlayerControls();
     },
 
@@ -44,7 +44,7 @@ const wa = {
      * @deprecated Use WA.controls.restorePlayerControls instead
      */
     restorePlayerControls(): void {
-        console.log('Method WA.restorePlayerControls is deprecated. Please use WA.controls.restorePlayerControls instead');
+        console.warn('Method WA.restorePlayerControls is deprecated. Please use WA.controls.restorePlayerControls instead');
         controls.restorePlayerControls();
     },
 
@@ -52,7 +52,7 @@ const wa = {
      * @deprecated Use WA.ui.displayBubble instead
      */
     displayBubble(): void {
-        console.log('Method WA.displayBubble is deprecated. Please use WA.ui.displayBubble instead');
+        console.warn('Method WA.displayBubble is deprecated. Please use WA.ui.displayBubble instead');
         ui.displayBubble();
     },
 
@@ -60,7 +60,7 @@ const wa = {
      * @deprecated Use WA.ui.removeBubble instead
      */
     removeBubble(): void {
-        console.log('Method WA.removeBubble is deprecated. Please use WA.ui.removeBubble instead');
+        console.warn('Method WA.removeBubble is deprecated. Please use WA.ui.removeBubble instead');
         ui.removeBubble();
     },
 
@@ -68,7 +68,7 @@ const wa = {
      * @deprecated Use WA.nav.openTab instead
      */
     openTab(url: string): void {
-        console.log('Method WA.openTab is deprecated. Please use WA.nav.openTab instead');
+        console.warn('Method WA.openTab is deprecated. Please use WA.nav.openTab instead');
         nav.openTab(url);
     },
 
@@ -76,7 +76,7 @@ const wa = {
      * @deprecated Use WA.sound.loadSound instead
      */
     loadSound(url: string) : Sound {
-        console.log('Method WA.loadSound is deprecated. Please use WA.sound.loadSound instead');
+        console.warn('Method WA.loadSound is deprecated. Please use WA.sound.loadSound instead');
         return sound.loadSound(url);
     },
 
@@ -84,7 +84,7 @@ const wa = {
      * @deprecated Use WA.nav.goToPage instead
      */
     goToPage(url : string) : void {
-        console.log('Method WA.goToPage is deprecated. Please use WA.nav.goToPage instead');
+        console.warn('Method WA.goToPage is deprecated. Please use WA.nav.goToPage instead');
         nav.goToPage(url);
     },
 
@@ -92,7 +92,7 @@ const wa = {
      * @deprecated Use WA.nav.goToRoom instead
      */
     goToRoom(url: string): void {
-        console.log('Method WA.goToRoom is deprecated. Please use WA.nav.goToRoom instead');
+        console.warn('Method WA.goToRoom is deprecated. Please use WA.nav.goToRoom instead');
         nav.goToRoom(url);
     },
 
@@ -100,7 +100,7 @@ const wa = {
      * @deprecated Use WA.nav.openCoWebSite instead
      */
     openCoWebSite(url : string) : void{
-        console.log('Method WA.openCoWebSite is deprecated. Please use WA.nav.openCoWebSite instead');
+        console.warn('Method WA.openCoWebSite is deprecated. Please use WA.nav.openCoWebSite instead');
         nav.openCoWebSite(url);
     },
 
@@ -108,7 +108,7 @@ const wa = {
      * @deprecated Use WA.nav.closeCoWebSite instead
      */
     closeCoWebSite(): void {
-        console.log('Method WA.closeCoWebSite is deprecated. Please use WA.nav.closeCoWebSite instead');
+        console.warn('Method WA.closeCoWebSite is deprecated. Please use WA.nav.closeCoWebSite instead');
         nav.closeCoWebSite();
     },
 
@@ -116,28 +116,28 @@ const wa = {
      * @deprecated Use WA.controls.restorePlayerControls instead
      */
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup {
-        console.log('Method WA.openPopup is deprecated. Please use WA.ui.openPopup instead');
+        console.warn('Method WA.openPopup is deprecated. Please use WA.ui.openPopup instead');
         return ui.openPopup(targetObject, message, buttons);
     },
     /**
      * @deprecated Use WA.chat.onChatMessage instead
      */
     onChatMessage(callback: (message: string) => void): void {
-        console.log('Method WA.onChatMessage is deprecated. Please use WA.chat.onChatMessage instead');
+        console.warn('Method WA.onChatMessage is deprecated. Please use WA.chat.onChatMessage instead');
         chat.onChatMessage(callback);
     },
     /**
      * @deprecated Use WA.room.onEnterZone instead
      */
     onEnterZone(name: string, callback: () => void): void {
-        console.log('Method WA.onEnterZone is deprecated. Please use WA.room.onEnterZone instead');
+        console.warn('Method WA.onEnterZone is deprecated. Please use WA.room.onEnterZone instead');
         room.onEnterZone(name, callback);
     },
     /**
      * @deprecated Use WA.room.onLeaveZone instead
      */
     onLeaveZone(name: string, callback: () => void): void {
-        console.log('Method WA.onLeaveZone is deprecated. Please use WA.room.onLeaveZone instead');
+        console.warn('Method WA.onLeaveZone is deprecated. Please use WA.room.onLeaveZone instead');
         room.onLeaveZone(name, callback);
     },
 };

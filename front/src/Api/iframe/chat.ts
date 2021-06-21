@@ -1,7 +1,7 @@
 import type { ChatEvent } from '../Events/ChatEvent'
 import { isUserInputChatEvent, UserInputChatEvent } from '../Events/UserInputChatEvent'
-import { apiCallback, IframeApiContribution, sendToWorkadventure } from './IframeApiContribution'
-
+import { IframeApiContribution, sendToWorkadventure } from './IframeApiContribution'
+import { apiCallback } from "./registeredCallbacks";
 
 class WorkadventureChatCommands extends IframeApiContribution<WorkadventureChatCommands> {
     chatMessageCallback?: (event: string) => void

@@ -1,6 +1,8 @@
 import { isButtonClickedEvent } from '../Events/ButtonClickedEvent';
 import type { ClosePopupEvent } from '../Events/ClosePopupEvent';
-import { apiCallback, IframeApiContribution, sendToWorkadventure } from './IframeApiContribution';
+import { IframeApiContribution, sendToWorkadventure } from './IframeApiContribution';
+import { apiCallback } from "./registeredCallbacks";
+
 export class Popup {
     constructor(private id: number) {
     }
@@ -9,12 +11,12 @@ export class Popup {
      * Closes the popup
      */
     public close(): void {
-        window.parent.postMessage({
+        sendToWorkadventure({
             'type': 'closePopup',
             'data': {
                 'popupId': this.id,
             } as ClosePopupEvent
-        }, '*');
+        });
     }
 }
 
@@ -103,12 +105,12 @@ class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventureUiComma
     }
 
     displayBubble(): void {
-        window.parent.postMessage({ 'type': 'displayBubble' }, '*');
+        sendToWorkadventure({ 'type': 'displayBubble', data: null });
     }
 
     removeBubble(): void {
-        window.parent.postMessage({ 'type': 'removeBubble' }, '*');
+        sendToWorkadventure({ 'type': 'removeBubble', data: null });
     }
 }
 
-export default new WorkAdventureUiCommands()
+export default new WorkAdventureUiCommands();

@@ -1,7 +1,7 @@
 import { Subject } from "rxjs";
 import { EnterLeaveEvent, isEnterLeaveEvent } from '../Events/EnterLeaveEvent';
-import { apiCallback as apiCallback, IframeApiContribution } from './IframeApiContribution';
-
+import { IframeApiContribution } from './IframeApiContribution';
+import { apiCallback } from "./registeredCallbacks";
 
 const enterStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
 const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
