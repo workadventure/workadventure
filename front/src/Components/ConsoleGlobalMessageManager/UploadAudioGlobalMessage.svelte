@@ -6,7 +6,7 @@
     import {AdminMessageEventTypes} from "../../Connexion/AdminMessagesService";
     import type {PlayGlobalMessageInterface} from "../../Connexion/ConnexionModels";
     import uploadFile from "../images/music-file.svg";
-    import type {GameScene} from "../../Phaser/Game/GameScene";
+    import {LoginSceneName} from "../../Phaser/Login/LoginScene";
 
     interface EventTargetFiles extends EventTarget {
         files: Array<File>;
@@ -15,10 +15,7 @@
     export let game: Game;
     export let gameManager: GameManager;
 
-    let gameScene: GameScene;
-    if (gameManager.currentGameSceneName) {
-        gameScene = gameManager.getCurrentGameScene(game.scene.getScene(gameManager.currentGameSceneName));
-    }
+    let gameScene = gameManager.getCurrentGameScene(game.scene.getScene(LoginSceneName));
     let fileinput: HTMLInputElement;
     let filename: string;
     let filesize: string;
@@ -29,24 +26,24 @@
 
     async function SendAudioMessage() {
         const inputAudio = HtmlUtils.getElementByIdOrFail<HTMLInputElement>("input-send-audio");
-            const selectedFile = inputAudio.files ? inputAudio.files[0] : null;
-            if (!selectedFile) {
-                errorfile = true;
-                throw 'no file selected';
-            }
+        const selectedFile = inputAudio.files ? inputAudio.files[0] : null;
+        if (!selectedFile) {
+            errorfile = true;
+            throw 'no file selected';
+        }
 
-            const fd = new FormData();
-            fd.append('file', selectedFile);
-            const res = await gameScene.connection.uploadAudio(fd);
+        const fd = new FormData();
+        fd.append('file', selectedFile);
+        const res = await gameScene.connection.uploadAudio(fd);
 
-            const GlobalMessage: PlayGlobalMessageInterface = {
+        const GlobalMessage: PlayGlobalMessageInterface = {
             id: (res as { id: string }).id,
             message: (res as { path: string }).path,
             type: AUDIO_TYPE
         }
-            inputAudio.value = '';
-            gameScene.connection.emitGlobalMessage(GlobalMessage);
-            disableConsole();
+        inputAudio.value = '';
+        gameScene.connection.emitGlobalMessage(GlobalMessage);
+        disableConsole();
     }
 
     function inputAudioFile(event: Event) {

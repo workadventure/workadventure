@@ -7,6 +7,7 @@
     import {AdminMessageEventTypes} from "../../Connexion/AdminMessagesService";
     import type {GameScene} from "../../Phaser/Game/GameScene";
     import type {Quill} from "quill";
+    import {LoginSceneName} from "../../Phaser/Login/LoginScene";
 
     //toolbar
     export const toolbarOptions = [
@@ -35,10 +36,7 @@
     export let game: Game;
     export let gameManager: GameManager;
 
-    let gameScene: GameScene;
-    if (gameManager.currentGameSceneName) {
-        gameScene = gameManager.getCurrentGameScene(game.scene.getScene(gameManager.currentGameSceneName));
-    }
+    let gameScene = gameManager.getCurrentGameScene(game.scene.getScene(LoginSceneName));
     let quill: Quill;
     let INPUT_CONSOLE_MESSAGE: HTMLDivElement;
 
