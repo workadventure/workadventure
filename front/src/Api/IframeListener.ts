@@ -1,21 +1,36 @@
-
-import { Subject } from "rxjs";
-import { ChatEvent, isChatEvent } from "./Events/ChatEvent";
-import { HtmlUtils } from "../WebRtc/HtmlUtils";
-import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
-import { isOpenPopupEvent, OpenPopupEvent } from "./Events/OpenPopupEvent";
-import { isOpenTabEvent, OpenTabEvent } from "./Events/OpenTabEvent";
-import type { ButtonClickedEvent } from "./Events/ButtonClickedEvent";
-import { ClosePopupEvent, isClosePopupEvent } from "./Events/ClosePopupEvent";
-import { scriptUtils } from "./ScriptUtils";
-import { GoToPageEvent, isGoToPageEvent } from "./Events/GoToPageEvent";
-import { isOpenCoWebsite, OpenCoWebSiteEvent } from "./Events/OpenCoWebSiteEvent";
-import { IframeEventMap, IframeEvent, IframeResponseEvent, IframeResponseEventMap, isIframeEventWrapper, TypedMessageEvent } from "./Events/IframeEvent";
-import type { UserInputChatEvent } from "./Events/UserInputChatEvent";
-import { isLoadPageEvent } from './Events/LoadPageEvent';
+import {Subject} from "rxjs";
+import {ChatEvent, isChatEvent} from "./Events/ChatEvent";
+import {HtmlUtils} from "../WebRtc/HtmlUtils";
+import type {EnterLeaveEvent} from "./Events/EnterLeaveEvent";
+import {isOpenPopupEvent, OpenPopupEvent} from "./Events/OpenPopupEvent";
+import {isOpenTabEvent, OpenTabEvent} from "./Events/OpenTabEvent";
+import type {ButtonClickedEvent} from "./Events/ButtonClickedEvent";
+import {ClosePopupEvent, isClosePopupEvent} from "./Events/ClosePopupEvent";
+import {scriptUtils} from "./ScriptUtils";
+import {GoToPageEvent, isGoToPageEvent} from "./Events/GoToPageEvent";
+import {isOpenCoWebsite, OpenCoWebSiteEvent} from "./Events/OpenCoWebSiteEvent";
+import {
+    IframeEvent,
+    IframeEventMap,
+    IframeResponseEvent,
+    IframeResponseEventMap,
+    isIframeEventWrapper,
+    TypedMessageEvent
+} from "./Events/IframeEvent";
+import type {UserInputChatEvent} from "./Events/UserInputChatEvent";
+//import { isLoadPageEvent } from './Events/LoadPageEvent';
 import {isPlaySoundEvent, PlaySoundEvent} from "./Events/PlaySoundEvent";
 import {isStopSoundEvent, StopSoundEvent} from "./Events/StopSoundEvent";
 import {isLoadSoundEvent, LoadSoundEvent} from "./Events/LoadSoundEvent";
+import {isSetPropertyEvent, SetPropertyEvent} from "./Events/setPropertyEvent";
+import {isLayerEvent, LayerEvent} from "./Events/LayerEvent";
+import {isMenuItemRegisterEvent} from "./Events/MenuItemRegisterEvent";
+import type {DataLayerEvent} from "./Events/DataLayerEvent";
+import type {GameStateEvent} from "./Events/GameStateEvent";
+import type {MenuItemClickedEvent} from "./Events/MenuItemClickedEvent";
+import type {HasPlayerMovedEvent} from "./Events/HasPlayerMovedEvent";
+import {isLoadPageEvent} from "./Events/LoadPageEvent";
+
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.
  * Also allows to send messages to those iframes.
@@ -33,6 +48,9 @@ class IframeListener {
 
     private readonly _goToPageStream: Subject<GoToPageEvent> = new Subject();
     public readonly goToPageStream = this._goToPageStream.asObservable();
+
+    private readonly _loadPageStream: Subject<string> = new Subject();
+    public readonly loadPageStream = this._loadPageStream.asObservable();
 
     private readonly _openCoWebSiteStream: Subject<OpenCoWebSiteEvent> = new Subject();
     public readonly openCoWebSiteStream = this._openCoWebSiteStream.asObservable();
@@ -135,6 +153,9 @@ class IframeListener {
                 else if (payload.type === 'goToPage' && isGoToPageEvent(payload.data)) {
                     scriptUtils.goToPage(payload.data.url);
                 }
+                else if (payload.type === 'loadPage' && isLoadPageEvent(payload.data)) {
+                    this._loadPageStream.next(payload.data.url);
+                }
                 else if (payload.type === 'playSound' && isPlaySoundEvent(payload.data)) {
                     this._playSoundStream.next(payload.data);
                 }
@@ -216,7 +237,7 @@ class IframeListener {
         if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
             // Using external iframe mode (
             const iframe = document.createElement('iframe');
-            iframe.id = this.getIFrameId(scriptUrl);
+            iframe.id = IframeListener.getIFrameId(scriptUrl);
             iframe.style.display = 'none';
             iframe.src = '/iframe.html?script=' + encodeURIComponent(scriptUrl);
 
@@ -231,24 +252,23 @@ class IframeListener {
         } else {
             // production code
             const iframe = document.createElement('iframe');
-            iframe.id = this.getIFrameId(scriptUrl);
+            iframe.id = IframeListener.getIFrameId(scriptUrl);
             iframe.style.display = 'none';
 
             // We are putting a sandbox on this script because it will run in the same domain as the main website.
             iframe.sandbox.add('allow-scripts');
             iframe.sandbox.add('allow-top-navigation-by-user-activation');
 
-            const html = '<!doctype html>\n' +
+            //iframe.src = "data:text/html;charset=utf-8," + escape(html);
+            iframe.srcdoc = '<!doctype html>\n' +
                 '\n' +
                 '<html lang="en">\n' +
                 '<head>\n' +
                 '<script src="' + window.location.protocol + '//' + window.location.host + '/iframe_api.js" ></script>\n' +
                 '<script src="' + scriptUrl + '" ></script>\n' +
+                '<title></title>\n' +
                 '</head>\n' +
                 '</html>\n';
-
-            //iframe.src = "data:text/html;charset=utf-8," + escape(html);
-            iframe.srcdoc = html;
 
             document.body.prepend(iframe);
 
@@ -259,12 +279,12 @@ class IframeListener {
 
     }
 
-    private getIFrameId(scriptUrl: string): string {
+    private static getIFrameId(scriptUrl: string): string {
         return 'script' + btoa(scriptUrl);
     }
 
     unregisterScript(scriptUrl: string): void {
-        const iFrameId = this.getIFrameId(scriptUrl);
+        const iFrameId = IframeListener.getIFrameId(scriptUrl);
         const iframe = HtmlUtils.getElementByIdOrFail<HTMLIFrameElement>(iFrameId);
         if (!iframe) {
             throw new Error('Unknown iframe for script "' + scriptUrl + '"');

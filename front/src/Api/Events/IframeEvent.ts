@@ -15,6 +15,8 @@ import type { LayerEvent } from './LayerEvent';
 import type { SetPropertyEvent } from "./setPropertyEvent";
 import type { LoadSoundEvent } from "./LoadSoundEvent";
 import type { PlaySoundEvent } from "./PlaySoundEvent";
+import type { MenuItemClickedEvent } from "./MenuItemClickedEvent";
+import type { HasPlayerMovedEvent } from "./HasPlayerMovedEvent";
 
 
 export interface TypedMessageEvent<T> extends MessageEvent {
@@ -44,6 +46,8 @@ export type IframeEventMap = {
     loadSound: LoadSoundEvent
     playSound: PlaySoundEvent
     stopSound: null,
+    getState: undefined,
+    registerMenuCommand: undefined
 }
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;

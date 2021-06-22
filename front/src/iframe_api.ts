@@ -15,7 +15,10 @@ import room from "./Api/iframe/room";
 import type {ButtonDescriptor} from "./Api/iframe/Ui/ButtonDescriptor";
 import type {Popup} from "./Api/iframe/Ui/Popup";
 import type {Sound} from "./Api/iframe/Sound/Sound";
+import type {MenuItemRegisterEvent} from "./Api/Events/MenuItemRegisterEvent";
 
+
+const menuCallbacks: Map<string, (command: string) => void> = new Map()
 const wa = {
     ui,
     nav,
@@ -100,7 +103,8 @@ const wa = {
 
     /**
      * @deprecated Use WA.nav.openCoWebSite instead
-     */openCoWebSite(url: string): void {
+     */
+    openCoWebSite(url: string): void {
         console.warn('Method WA.openCoWebSite is deprecated. Please use WA.nav.openCoWebSite instead');
         nav.openCoWebSite(url);
     },

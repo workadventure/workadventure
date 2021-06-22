@@ -2,6 +2,7 @@ import type { GoToPageEvent } from '../Events/GoToPageEvent';
 import type { OpenTabEvent } from '../Events/OpenTabEvent';
 import { IframeApiContribution, sendToWorkadventure } from './IframeApiContribution';
 import type {OpenCoWebSiteEvent} from "../Events/OpenCoWebSiteEvent";
+import type {LoadPageEvent} from "../Events/LoadPageEvent";
 
 
 class WorkadventureNavigationCommands extends IframeApiContribution<WorkadventureNavigationCommands> {
@@ -31,7 +32,7 @@ class WorkadventureNavigationCommands extends IframeApiContribution<Workadventur
             "type": 'loadPage',
             "data": {
                 url
-            }
+            } as LoadPageEvent
         });
     }
 
