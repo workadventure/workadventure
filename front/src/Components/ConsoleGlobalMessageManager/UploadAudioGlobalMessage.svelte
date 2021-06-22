@@ -37,7 +37,7 @@
 
         const fd = new FormData();
         fd.append('file', selectedFile);
-        const res = await gameScene.connection.uploadAudio(fd);
+        const res = await gameScene.connection?.uploadAudio(fd);
 
         const GlobalMessage: PlayGlobalMessageInterface = {
             id: (res as { id: string }).id,
@@ -45,7 +45,7 @@
             type: AUDIO_TYPE
         }
         inputAudio.value = '';
-        gameScene.connection.emitGlobalMessage(GlobalMessage);
+        gameScene.connection?.emitGlobalMessage(GlobalMessage);
         disableConsole();
     }
 

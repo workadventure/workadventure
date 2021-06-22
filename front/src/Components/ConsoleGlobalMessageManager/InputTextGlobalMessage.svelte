@@ -80,7 +80,7 @@
         };
 
         quill.deleteText(0, quill.getLength());
-        gameScene.connection.emitGlobalMessage(GlobalMessage);
+        gameScene.connection?.emitGlobalMessage(GlobalMessage);
         disableConsole();
     }
 </script>
