@@ -96,6 +96,7 @@ class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventureUiComma
     triggerMessage(message: string, callback: () => void): TriggerMessage {
         const triggerMessage = new TriggerMessage(message, callback);
         triggerMessages.set(triggerMessage.uuid, triggerMessage)
+        triggerMessage.create()
         return triggerMessage
     }
 }

@@ -16,7 +16,7 @@ import { isLoadPageEvent } from './Events/LoadPageEvent';
 import { isPlaySoundEvent, PlaySoundEvent } from "./Events/PlaySoundEvent";
 import { isStopSoundEvent, StopSoundEvent } from "./Events/StopSoundEvent";
 import { isLoadSoundEvent, LoadSoundEvent } from "./Events/LoadSoundEvent";
-import { isTriggerMessageHandlerEvent, triggerMessageEventHandler } from './Events/TriggerMessageEvent';
+import { isTriggerMessageHandlerEvent, triggerMessageEventHandler } from './Events/TriggerMessageHandler';
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.
  * Also allows to send messages to those iframes.

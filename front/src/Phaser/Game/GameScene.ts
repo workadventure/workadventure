@@ -96,7 +96,7 @@ import { peerStore } from "../../Stores/PeerStore";
 import { EmoteManager } from "./EmoteManager";
 
 import AnimatedTiles from "phaser-animated-tiles";
-import { removeTriggerMessageEvent, sendMessageTriggeredEvent, triggerMessageEvent } from '../../Api/Events/TriggerMessageEvent';
+import { removeTriggerMessageEvent, sendMessageTriggeredEvent, triggerMessageEvent } from '../../Api/Events/TriggerMessageHandler';
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null,
