@@ -1,8 +1,9 @@
 import * as tg from "generic-type-guard";
 import { Subject } from 'rxjs';
 import { iframeListener } from '../IframeListener';
-export const triggerMessage = "triggerMessage"
 
+export const triggerMessage = "triggerMessage"
+export const removeTriggerMessage = "removeTriggerMessage"
 
 export const isTriggerMessageEvent = new tg.IsInterface().withProperties({
     message: tg.isString,
@@ -13,11 +14,8 @@ const isTriggerMessageEventObject = new tg.IsInterface().withProperties({
     type: tg.isSingletonString(triggerMessage),
     data: isTriggerMessageEvent
 }).get()
-
-
 export type TriggerMessageEvent = tg.GuardedType<typeof isTriggerMessageEvent>;
 
-export const removeTriggerMessage = "removeTriggerMessage"
 
 export const isMessageReferenceEvent =
     new tg.IsInterface().withProperties({
@@ -27,9 +25,10 @@ const isTriggerMessageRemoveEventObject = new tg.IsInterface().withProperties({
     type: tg.isSingletonString(removeTriggerMessage),
     data: isMessageReferenceEvent
 }).get()
-
-
 export type MessageReferenceEvent = tg.GuardedType<typeof isMessageReferenceEvent>;
+
+
+
 
 
 const _triggerMessageEvent: Subject<TriggerMessageEvent> = new Subject();
@@ -38,8 +37,6 @@ const _removeTriggerMessageEvent: Subject<MessageReferenceEvent> = new Subject()
 export const triggerMessageEvent = _triggerMessageEvent.asObservable();
 
 export const removeTriggerMessageEvent = _removeTriggerMessageEvent.asObservable();
-
-
 
 
 export const isTriggerMessageHandlerEvent = tg.isUnion(isTriggerMessageEventObject, isTriggerMessageRemoveEventObject)

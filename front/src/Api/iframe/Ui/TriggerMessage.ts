@@ -1,4 +1,5 @@
 import { removeTriggerMessage, triggerMessage, TriggerMessageEvent } from '../../Events/TriggerMessageEvent';
+import { sendToWorkadventure } from '../IframeApiContribution';
 function uuidv4() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
         const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
@@ -14,23 +15,23 @@ export class TriggerMessage {
     }
 
     create(): this {
-        window.parent.postMessage({
+        sendToWorkadventure({
             type: triggerMessage,
             data: {
                 message: this.message,
                 uuid: this.uuid
             } as TriggerMessageEvent
-        }, "*")
+        })
         return this
     }
 
     remove() {
-        window.parent.postMessage({
+        sendToWorkadventure({
             type: removeTriggerMessage,
             data: {
                 uuid: this.uuid
             } as TriggerMessageEvent
-        }, "*")
+        })
     }
 
     trigger() {
