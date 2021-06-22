@@ -8,7 +8,7 @@
 
     const NB_BARS = 20;
 
-    let timeout;
+    let timeout: ReturnType<typeof setTimeout>;
     const soundMeter = new SoundMeter();
     let display = false;
 

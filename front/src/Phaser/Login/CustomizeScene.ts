@@ -2,25 +2,19 @@ import {EnableCameraSceneName} from "./EnableCameraScene";
 import Rectangle = Phaser.GameObjects.Rectangle;
 import {loadAllLayers} from "../Entity/PlayerTexturesLoadingManager";
 import Sprite = Phaser.GameObjects.Sprite;
-import Container = Phaser.GameObjects.Container;
 import {gameManager} from "../Game/GameManager";
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {addLoader} from "../Components/Loader";
 import type {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
 import {AbstractCharacterScene} from "./AbstractCharacterScene";
 import {areCharacterLayersValid} from "../../Connexion/LocalUser";
-import { MenuScene } from "../Menu/MenuScene";
 import { SelectCharacterSceneName } from "./SelectCharacterScene";
 import {customCharacterSceneVisibleStore} from "../../Stores/CustomCharacterStore";
-import {selectCharacterSceneVisibleStore} from "../../Stores/SelectCharacterStore";
 import {waScaleManager} from "../Services/WaScaleManager";
 import {isMobile} from "../../Enum/EnvironmentVariable";
 import {CustomizedCharacter} from "../Entity/CustomizedCharacter";
 
 export const CustomizeSceneName = "CustomizeScene";
-
-export const CustomizeSceneKey = "CustomizeScene";
-const customizeSceneKey = 'customizeScene';
 
 export class CustomizeScene extends AbstractCharacterScene {
     private Rectangle!: Rectangle;
@@ -42,7 +36,6 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     preload() {
-        this.load.html(customizeSceneKey, 'resources/html/CustomCharacterScene.html');
 
         this.loadCustomSceneSelectCharacters().then((bodyResourceDescriptions) => {
             bodyResourceDescriptions.forEach((bodyResourceDescription) => {
@@ -111,7 +104,15 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.onResize();
     }
 
-    public doMoveCursorHorizontally(index: number): void {
+    public moveCursorHorizontally(index: number): void {
+        this.moveHorizontally = index;
+    }
+
+    public moveCursorVertically(index: number): void {
+        this.moveVertically = index;
+    }
+
+    private doMoveCursorHorizontally(index: number): void {
         this.selectedLayers[this.activeRow] += index;
         if (this.selectedLayers[this.activeRow] < 0) {
             this.selectedLayers[this.activeRow] = 0
@@ -123,7 +124,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.saveInLocalStorage();
     }
 
-    public doMoveCursorVertically(index:number): void {
+    private doMoveCursorVertically(index:number): void {
 
         this.activeRow += index;
         if (this.activeRow < 0) {
@@ -262,7 +263,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.Rectangle.y = this.cameras.main.worldView.y + this.cameras.main.height / 3;
      }
 
-    private nextSceneToCamera(){
+    public nextSceneToCamera(){
         const layers: string[] = [];
             let i = 0;
             for (const layerItem of this.selectedLayers) {
@@ -283,7 +284,7 @@ export class CustomizeScene extends AbstractCharacterScene {
             customCharacterSceneVisibleStore.set(false);
     }
 
-    private backToPreviousScene(){
+    public backToPreviousScene(){
         this.scene.sleep(CustomizeSceneName);
         waScaleManager.restoreZoom();
         this.scene.run(SelectCharacterSceneName);

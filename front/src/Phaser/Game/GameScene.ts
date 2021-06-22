@@ -79,6 +79,7 @@ import CanvasTexture = Phaser.Textures.CanvasTexture;
 import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import DOMElement = Phaser.GameObjects.DOMElement;
+import EVENT_TYPE =Phaser.Scenes.Events
 import type {Subscription} from "rxjs";
 import {worldFullMessageStream} from "../../Connexion/WorldFullMessageStream";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
@@ -917,7 +918,13 @@ ${escapedMessage}
        this.iframeSubscriptionList.push(iframeListener.enablePlayerControlStream.subscribe(()=>{
             this.userInputManager.restoreControls();
         }));
-
+        this.iframeSubscriptionList.push(iframeListener.loadPageStream.subscribe((url:string)=>{
+            this.loadNextGame(url).then(()=>{
+                this.events.once(EVENT_TYPE.POST_UPDATE,()=>{
+                    this.onMapExit(url);
+                })
+            })
+        }));
         let scriptedBubbleSprite : Sprite;
        this.iframeSubscriptionList.push(iframeListener.displayBubbleStream.subscribe(()=>{
             scriptedBubbleSprite = new Sprite(this,this.CurrentPlayer.x + 25,this.CurrentPlayer.y,'circleSprite-white');
@@ -1092,10 +1099,10 @@ ${escapedMessage}
     }
 
     //todo: push that into the gameManager
-    private loadNextGame(exitSceneIdentifier: string): void {
+    private loadNextGame(exitSceneIdentifier: string): Promise<void> {
         const {roomId, hash} = Room.getIdFromIdentifier(exitSceneIdentifier, this.MapUrlFile, this.instance);
         const room = new Room(roomId);
-        gameManager.loadMap(room, this.scene).catch(() => {});
+        return gameManager.loadMap(room, this.scene).catch(() => {});
     }
 
     private startUser(layer: ITiledMapTileLayer): PositionInterface {
