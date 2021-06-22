@@ -98,6 +98,8 @@ import {EmoteManager } from "./EmoteManager";
 import type { HasPlayerMovedEvent } from '../../Api/Events/HasPlayerMovedEvent';
 import { MenuScene, MenuSceneName } from '../Menu/MenuScene';
 
+import AnimatedTiles from "phaser-animated-tiles";
+
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null,
     reconnecting: boolean
@@ -143,6 +145,7 @@ export class GameScene extends DirtyScene implements CenterListener {
     Map!: Phaser.Tilemaps.Tilemap;
     Objects!: Array<Phaser.Physics.Arcade.Sprite>;
     mapFile!: ITiledMap;
+    animatedTiles!: AnimatedTiles;
     groups: Map<number, Sprite>;
     startX!: number;
     startY!: number;
@@ -267,6 +270,7 @@ export class GameScene extends DirtyScene implements CenterListener {
                 message: this.originalMapUrl ?? file.src
             });
         });
+        this.load.scenePlugin('AnimatedTiles', AnimatedTiles, 'animatedTiles', 'animatedTiles');
         this.load.on('filecomplete-tilemapJSON-' + this.MapUrlFile, (key: string, type: string, data: unknown) => {
             this.onMapLoad(data);
         });
@@ -465,6 +469,9 @@ export class GameScene extends DirtyScene implements CenterListener {
         this.removeAllRemotePlayers(); //cleanup the list  of remote players in case the scene was rebooted
 
         this.initCamera();
+
+        this.animatedTiles.init(this.Map);
+        this.events.on('tileanimationupdate', () => this.dirty = true);
 
         this.initCirclesCanvas();
 

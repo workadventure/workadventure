@@ -1,5 +1,5 @@
 {.section-title.accent.text-primary}
-# API Room functions Reference
+# API UI functions Reference
 
 ### Opening a popup
 
