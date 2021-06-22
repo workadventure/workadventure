@@ -124,6 +124,6 @@
 
   .section-input-send-audio div.input-send-audio img{
     height: 150px;
-    cursor: url('style/images/cursor_pointer.png'), pointer;
+    cursor: url('../../../style/images/cursor_pointer.png'), pointer;
   }
 </style>
