@@ -479,6 +479,8 @@ export class GameScene extends DirtyScene implements CenterListener {
         this.initCamera();
 
         this.animatedTiles.init(this.Map);
+        this.events.on('tileanimationupdate', () => this.dirty = true);
+
         this.initCirclesCanvas();
 
         // Let's pause the scene if the connection is not established yet
