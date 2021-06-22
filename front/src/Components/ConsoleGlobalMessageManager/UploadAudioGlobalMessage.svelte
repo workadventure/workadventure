@@ -1,11 +1,12 @@
 <script lang="ts">
     import {HtmlUtils} from "../../WebRtc/HtmlUtils";
     import type {Game} from "../../Phaser/Game/Game";
-    import {GameManager} from "../../Phaser/Game/GameManager";
+    import type {GameManager} from "../../Phaser/Game/GameManager";
     import {ConsoleGlobalMessageManagerFocusStore, ConsoleGlobalMessageManagerVisibleStore} from "../../Stores/ConsoleGlobalMessageManagerStore";
     import {AdminMessageEventTypes} from "../../Connexion/AdminMessagesService";
     import type {PlayGlobalMessageInterface} from "../../Connexion/ConnexionModels";
     import uploadFile from "../images/music-file.svg";
+    import type {GameScene} from "../../Phaser/Game/GameScene";
 
     interface EventTargetFiles extends EventTarget {
         files: Array<File>;
@@ -14,11 +15,11 @@
     export let game: Game;
     export let gameManager: GameManager;
 
-    let gameScene;
+    let gameScene: GameScene;
     if (gameManager.currentGameSceneName) {
         gameScene = gameManager.getCurrentGameScene(game.scene.getScene(gameManager.currentGameSceneName));
     }
-    let fileinput;
+    let fileinput: HTMLInputElement;
     let filename: string;
     let filesize: string;
     let errorfile: boolean;

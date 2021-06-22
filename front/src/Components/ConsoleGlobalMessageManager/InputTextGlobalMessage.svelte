@@ -2,9 +2,11 @@
     import {ConsoleGlobalMessageManagerFocusStore, ConsoleGlobalMessageManagerVisibleStore } from "../../Stores/ConsoleGlobalMessageManagerStore";
     import {onMount} from "svelte";
     import type {Game} from "../../Phaser/Game/Game";
-    import {GameManager} from "../../Phaser/Game/GameManager";
+    import type {GameManager} from "../../Phaser/Game/GameManager";
     import type {PlayGlobalMessageInterface} from "../../Connexion/ConnexionModels";
     import {AdminMessageEventTypes} from "../../Connexion/AdminMessagesService";
+    import type {GameScene} from "../../Phaser/Game/GameScene";
+    import type {Quill} from "quill";
 
     //toolbar
     export const toolbarOptions = [
@@ -33,12 +35,12 @@
     export let game: Game;
     export let gameManager: GameManager;
 
-    let gameScene;
+    let gameScene: GameScene;
     if (gameManager.currentGameSceneName) {
         gameScene = gameManager.getCurrentGameScene(game.scene.getScene(gameManager.currentGameSceneName));
     }
-    let quill;
-    let INPUT_CONSOLE_MESSAGE;
+    let quill: Quill;
+    let INPUT_CONSOLE_MESSAGE: HTMLDivElement;
 
     const MESSAGE_TYPE = AdminMessageEventTypes.admin;
 
