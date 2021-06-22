@@ -1,5 +1,5 @@
 import { writable } from "svelte/store";
 
-export const ConsoleGlobalMessageManagerVisibleStore = writable(false);
+export const consoleGlobalMessageManagerVisibleStore = writable(false);
 
-export const ConsoleGlobalMessageManagerFocusStore = writable(false);
+export const consoleGlobalMessageManagerFocusStore = writable(false);

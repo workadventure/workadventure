@@ -11,7 +11,7 @@ import {WarningContainer, warningContainerHtml, warningContainerKey} from "../Co
 import {worldFullWarningStream} from "../../Connexion/WorldFullWarningStream";
 import {menuIconVisible} from "../../Stores/MenuStore";
 import {videoConstraintStore} from "../../Stores/MediaStore";
-import {ConsoleGlobalMessageManagerVisibleStore} from "../../Stores/ConsoleGlobalMessageManagerStore";
+import {consoleGlobalMessageManagerVisibleStore} from "../../Stores/ConsoleGlobalMessageManagerStore";
 import {get} from "svelte/store";
 
 export const MenuSceneName = 'MenuScene';
@@ -161,7 +161,7 @@ export class MenuScene extends Phaser.Scene {
         this.sideMenuOpened = false;
         this.closeAll();
         this.menuButton.getChildByID('openMenuButton').innerHTML = `<img src="/static/images/menu.svg">`;
-        ConsoleGlobalMessageManagerVisibleStore.set(false);
+        consoleGlobalMessageManagerVisibleStore.set(false);
         this.tweens.add({
             targets: this.menuElement,
             x: closedSideMenuX,
@@ -306,10 +306,10 @@ export class MenuScene extends Phaser.Scene {
                 this.toggleFullscreen();
                 break;
             case 'adminConsoleButton':
-                if (get(ConsoleGlobalMessageManagerVisibleStore)) {
-                    ConsoleGlobalMessageManagerVisibleStore.set(false);
+                if (get(consoleGlobalMessageManagerVisibleStore)) {
+                    consoleGlobalMessageManagerVisibleStore.set(false);
                 } else {
-                    ConsoleGlobalMessageManagerVisibleStore.set(true);
+                    consoleGlobalMessageManagerVisibleStore.set(true);
                 }
                 break;
         }

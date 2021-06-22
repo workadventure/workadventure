@@ -2,7 +2,7 @@
     import {HtmlUtils} from "../../WebRtc/HtmlUtils";
     import type {Game} from "../../Phaser/Game/Game";
     import type {GameManager} from "../../Phaser/Game/GameManager";
-    import {ConsoleGlobalMessageManagerFocusStore, ConsoleGlobalMessageManagerVisibleStore} from "../../Stores/ConsoleGlobalMessageManagerStore";
+    import {consoleGlobalMessageManagerFocusStore, consoleGlobalMessageManagerVisibleStore} from "../../Stores/ConsoleGlobalMessageManagerStore";
     import {AdminMessageEventTypes} from "../../Connexion/AdminMessagesService";
     import type {PlayGlobalMessageInterface} from "../../Connexion/ConnexionModels";
     import uploadFile from "../images/music-file.svg";
@@ -78,8 +78,8 @@
     }
 
     function disableConsole() {
-        ConsoleGlobalMessageManagerVisibleStore.set(false);
-        ConsoleGlobalMessageManagerFocusStore.set(false);
+        consoleGlobalMessageManagerVisibleStore.set(false);
+        consoleGlobalMessageManagerFocusStore.set(false);
     }
 </script>
 

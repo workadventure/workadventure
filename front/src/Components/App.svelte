@@ -21,7 +21,7 @@
     import AudioPlaying from "./UI/AudioPlaying.svelte";
     import {soundPlayingStore} from "../Stores/SoundPlayingStore";
     import ErrorDialog from "./UI/ErrorDialog.svelte";
-    import {ConsoleGlobalMessageManagerVisibleStore} from "../Stores/ConsoleGlobalMessageManagerStore";
+    import {consoleGlobalMessageManagerVisibleStore} from "../Stores/ConsoleGlobalMessageManagerStore";
     import ConsoleGlobalMessageManager from "./ConsoleGlobalMessageManager/ConsoleGlobalMessageManager.svelte";
 
     export let game: Game;
@@ -72,7 +72,7 @@
             <CameraControls></CameraControls>
         </div>
     {/if}
-    {#if $ConsoleGlobalMessageManagerVisibleStore}
+    {#if $consoleGlobalMessageManagerVisibleStore}
         <div>
             <ConsoleGlobalMessageManager game={game}></ConsoleGlobalMessageManager>
         </div>

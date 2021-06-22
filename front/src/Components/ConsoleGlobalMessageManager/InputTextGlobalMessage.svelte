@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {ConsoleGlobalMessageManagerFocusStore, ConsoleGlobalMessageManagerVisibleStore } from "../../Stores/ConsoleGlobalMessageManagerStore";
+    import {consoleGlobalMessageManagerFocusStore, consoleGlobalMessageManagerVisibleStore } from "../../Stores/ConsoleGlobalMessageManagerStore";
     import {onMount} from "svelte";
     import type {Game} from "../../Phaser/Game/Game";
     import type {GameManager} from "../../Phaser/Game/GameManager";
@@ -56,15 +56,15 @@
 
         quill.on('selection-change', function (range, oldRange) {
             if (range === null && oldRange !== null) {
-                ConsoleGlobalMessageManagerFocusStore.set(false);
+                consoleGlobalMessageManagerFocusStore.set(false);
             } else if (range !== null && oldRange === null)
-                ConsoleGlobalMessageManagerFocusStore.set(true);
+                consoleGlobalMessageManagerFocusStore.set(true);
         });
     });
 
     function disableConsole() {
-        ConsoleGlobalMessageManagerVisibleStore.set(false);
-        ConsoleGlobalMessageManagerFocusStore.set(false);
+        consoleGlobalMessageManagerVisibleStore.set(false);
+        consoleGlobalMessageManagerFocusStore.set(false);
     }
 
     function SendTextMessage() {
