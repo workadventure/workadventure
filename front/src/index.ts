@@ -9,11 +9,10 @@ import {SelectCharacterScene} from "./Phaser/Login/SelectCharacterScene";
 import {SelectCompanionScene} from "./Phaser/Login/SelectCompanionScene";
 import {EnableCameraScene} from "./Phaser/Login/EnableCameraScene";
 import {CustomizeScene} from "./Phaser/Login/CustomizeScene";
-import {ResizableScene} from "./Phaser/Login/ResizableScene";
+import WebFontLoaderPlugin from 'phaser3-rex-plugins/plugins/webfontloader-plugin.js';
 import {EntryScene} from "./Phaser/Login/EntryScene";
 import {coWebsiteManager} from "./WebRtc/CoWebsiteManager";
 import {MenuScene} from "./Phaser/Menu/MenuScene";
-import {HelpCameraSettingsScene} from "./Phaser/Menu/HelpCameraSettingsScene";
 import {localUserStore} from "./Connexion/LocalUserStore";
 import {ErrorScene} from "./Phaser/Reconnecting/ErrorScene";
 import {iframeListener} from "./Api/IframeListener";
@@ -96,7 +95,7 @@ const config: GameConfig = {
         ErrorScene,
         CustomizeScene,
         MenuScene,
-        HelpCameraSettingsScene],
+    ],
     //resolution: window.devicePixelRatio / 2,
     fps: fps,
     dom: {
@@ -106,6 +105,13 @@ const config: GameConfig = {
         pixelArt: true,
         roundPixels: true,
         antialias: false
+    },
+    plugins: {
+        global: [{
+            key: 'rexWebFontLoader',
+            plugin: WebFontLoaderPlugin,
+            start: true
+        }]
     },
     physics: {
         default: "arcade",
@@ -145,7 +151,9 @@ iframeListener.init();
 
 const app = new App({
     target: HtmlUtils.getElementByIdOrFail('svelte-overlay'),
-    props: { },
+    props: {
+        game: game
+    },
 })
 
 export default app

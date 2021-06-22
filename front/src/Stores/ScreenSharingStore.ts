@@ -126,7 +126,7 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
     let currentStreamPromise: Promise<MediaStream>;
     if (navigator.getDisplayMedia) {
         currentStreamPromise = navigator.getDisplayMedia({constraints});
-    } else if (navigator.mediaDevices.getDisplayMedia) {
+    } else if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
         currentStreamPromise = navigator.mediaDevices.getDisplayMedia({constraints});
     } else {
         stopScreenSharing();
@@ -169,6 +169,7 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
             return;
         } catch (e) {
             currentStream = null;
+            requestedScreenSharingState.disableScreenSharing();
             console.info("Error. Unable to share screen.", e);
             set({
                 type: 'error',
@@ -183,7 +184,7 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
  * A store containing whether the screen sharing button should be displayed or hidden.
  */
 export const screenSharingAvailableStore = derived(peerStore, ($peerStore, set) => {
-    if (!navigator.getDisplayMedia && !navigator.mediaDevices.getDisplayMedia) {
+    if (!navigator.getDisplayMedia && (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia)) {
         set(false);
         return;
     }

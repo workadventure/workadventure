@@ -26,7 +26,7 @@ export class Player extends Character {
         companion: string|null,
         companionTexturePromise?: Promise<string>
     ) {
-        super(Scene, x, y, texturesPromise, name, direction, moving, 1, companion, companionTexturePromise);
+        super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companion, companionTexturePromise);
 
         //the current player model should be push away by other players to prevent conflict
         this.getBody().setImmovable(false);
@@ -100,10 +100,6 @@ export class Player extends Character {
         } else {
             this.openEmoteMenu(emotes);
         }
-    }
-
-    isClickable(): boolean {
-        return true;
     }
 
     openEmoteMenu(emotes:RadialMenuItem[]): void {

@@ -12,17 +12,10 @@ import { GoToPageEvent, isGoToPageEvent } from "./Events/GoToPageEvent";
 import { isOpenCoWebsite, OpenCoWebSiteEvent } from "./Events/OpenCoWebSiteEvent";
 import { IframeEventMap, IframeEvent, IframeResponseEvent, IframeResponseEventMap, isIframeEventWrapper, TypedMessageEvent } from "./Events/IframeEvent";
 import type { UserInputChatEvent } from "./Events/UserInputChatEvent";
-import { isLayerEvent, LayerEvent } from "./Events/LayerEvent";
-import { isSetPropertyEvent, SetPropertyEvent} from "./Events/setPropertyEvent";
-import type { GameStateEvent } from './Events/GameStateEvent';
-import type { HasPlayerMovedEvent } from './Events/HasPlayerMovedEvent';
-import { Math } from 'phaser';
-import type { DataLayerEvent } from "./Events/DataLayerEvent";
-import { isMenuItemRegisterEvent } from './Events/MenuItemRegisterEvent';
-import type { MenuItemClickedEvent } from './Events/MenuItemClickedEvent';
-import { isPlaySoundEvent, PlaySoundEvent } from "./Events/PlaySoundEvent";
-import { isStopSoundEvent, StopSoundEvent } from "./Events/StopSoundEvent";
-import { isLoadSoundEvent, LoadSoundEvent } from "./Events/LoadSoundEvent";
+import { isLoadPageEvent } from './Events/LoadPageEvent';
+import {isPlaySoundEvent, PlaySoundEvent} from "./Events/PlaySoundEvent";
+import {isStopSoundEvent, StopSoundEvent} from "./Events/StopSoundEvent";
+import {isLoadSoundEvent, LoadSoundEvent} from "./Events/LoadSoundEvent";
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.
  * Also allows to send messages to those iframes.
@@ -102,16 +95,23 @@ class IframeListener {
             // Do we trust the sender of this message?
             // Let's only accept messages from the iframe that are allowed.
             // Note: maybe we could restrict on the domain too for additional security (in case the iframe goes to another domain).
-            let foundSrc: string | null = null;
-            let iframe: HTMLIFrameElement;
+            let foundSrc: string | undefined;
+
+            foundSrc = [...this.scripts.keys()].find(key => {
+                return this.scripts.get(key)?.contentWindow == message.source
+            });
+
+            if (foundSrc === undefined) {
+                let iframe: HTMLIFrameElement;
             for (iframe of this.iframes) {
                 if (iframe.contentWindow === message.source) {
                     foundSrc = iframe.src;
-                    break;
+                    break;}
                 }
-            }
-            if (!foundSrc) {
-                return;
+
+                if (foundSrc === undefined) {
+                    return;
+                }
             }
 
             const payload = message.data;
@@ -145,11 +145,7 @@ class IframeListener {
                     this._loadSoundStream.next(payload.data);
                 }
                 else if (payload.type === 'openCoWebSite' && isOpenCoWebsite(payload.data)) {
-                    const scriptUrl = [...this.scripts.keys()].find(key => {
-                        return this.scripts.get(key)?.contentWindow == message.source
-                    })
-
-                    scriptUtils.openCoWebsite(payload.data.url, scriptUrl || foundSrc);
+                    scriptUtils.openCoWebsite(payload.data.url, foundSrc);
                 }
 
                 else if (payload.type === 'closeCoWebSite') {

@@ -5,9 +5,7 @@ import type { ChatEvent } from './ChatEvent';
 import type { ClosePopupEvent } from './ClosePopupEvent';
 import type { EnterLeaveEvent } from './EnterLeaveEvent';
 import type { GoToPageEvent } from './GoToPageEvent';
-import type { MenuItemClickedEvent } from './MenuItemClickedEvent';
-import type { MenuItemRegisterEvent } from './MenuItemRegisterEvent';
-import type { HasPlayerMovedEvent } from './HasPlayerMovedEvent';
+import type { LoadPageEvent } from './LoadPageEvent';
 import type { OpenCoWebSiteEvent } from './OpenCoWebSiteEvent';
 import type { OpenPopupEvent } from './OpenPopupEvent';
 import type { OpenTabEvent } from './OpenTabEvent';
@@ -24,8 +22,9 @@ export interface TypedMessageEvent<T> extends MessageEvent {
 }
 
 export type IframeEventMap = {
-    getState: GameStateEvent,
-    registerMenuCommand: MenuItemRegisterEvent
+    //getState: GameStateEvent,
+    // updateTile: UpdateTileEvent
+    loadPage: LoadPageEvent
     chat: ChatEvent,
     openPopup: OpenPopupEvent
     closePopup: ClosePopupEvent
@@ -44,7 +43,7 @@ export type IframeEventMap = {
     getDataLayer: undefined
     loadSound: LoadSoundEvent
     playSound: PlaySoundEvent
-    stopSound: null
+    stopSound: null,
 }
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;

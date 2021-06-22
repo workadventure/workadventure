@@ -1,10 +1,17 @@
 import Axios from "axios";
 import {PUSHER_URL} from "../Enum/EnvironmentVariable";
+import type {CharacterTexture} from "./LocalUser";
+
+export class MapDetail{
+    constructor(public readonly mapUrl: string, public readonly textures : CharacterTexture[]|undefined) {
+    }
+}
 
 export class Room {
     public readonly id: string;
     public readonly isPublic: boolean;
     private mapUrl: string|undefined;
+    private textures: CharacterTexture[]|undefined;
     private instance: string|undefined;
     private _search: URLSearchParams;
 
@@ -50,10 +57,10 @@ export class Room {
         return {roomId, hash}
     }
 
-    public async getMapUrl(): Promise<string> {
-        return new Promise<string>((resolve, reject) => {
-            if (this.mapUrl !== undefined) {
-                resolve(this.mapUrl);
+    public async getMapDetail(): Promise<MapDetail> {
+        return new Promise<MapDetail>((resolve, reject) => {
+            if (this.mapUrl !== undefined && this.textures != undefined) {
+                resolve(new MapDetail(this.mapUrl, this.textures));
                 return;
             }
 
@@ -61,7 +68,7 @@ export class Room {
                 const match = /_\/[^/]+\/(.+)/.exec(this.id);
                 if (!match) throw new Error('Could not extract url from "'+this.id+'"');
                 this.mapUrl = window.location.protocol+'//'+match[1];
-                resolve(this.mapUrl);
+                resolve(new MapDetail(this.mapUrl, this.textures));
                 return;
             } else {
                 // We have a private ID, we need to query the map URL from the server.
@@ -71,7 +78,7 @@ export class Room {
                     params: urlParts
                 }).then(({data}) => {
                     console.log('Map ', this.id, ' resolves to URL ', data.mapUrl);
-                    resolve(data.mapUrl);
+                    resolve(data);
                     return;
                 }).catch((reason) => {
                     reject(reason);

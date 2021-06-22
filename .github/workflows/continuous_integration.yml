@@ -52,6 +52,10 @@ jobs:
           PUSHER_URL: "//localhost:8080"
         working-directory: "front"
 
+      - name: "Svelte check"
+        run: yarn run svelte-check
+        working-directory: "front"
+
       - name: "Lint"
         run: yarn run lint
         working-directory: "front"

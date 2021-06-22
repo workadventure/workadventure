@@ -2,11 +2,13 @@ import {GameScene} from "./GameScene";
 import {connectionManager} from "../../Connexion/ConnectionManager";
 import type {Room} from "../../Connexion/Room";
 import {MenuScene, MenuSceneName} from "../Menu/MenuScene";
-import {HelpCameraSettingsScene, HelpCameraSettingsSceneName} from "../Menu/HelpCameraSettingsScene";
 import {LoginSceneName} from "../Login/LoginScene";
 import {SelectCharacterSceneName} from "../Login/SelectCharacterScene";
 import {EnableCameraSceneName} from "../Login/EnableCameraScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
+import {get} from "svelte/store";
+import {requestedCameraState, requestedMicrophoneState} from "../../Stores/MediaStore";
+import {helpCameraSettingsVisibleStore} from "../../Stores/HelpCameraSettingsStore";
 
 
 
@@ -71,11 +73,11 @@ export class GameManager {
 
     public async loadMap(room: Room, scenePlugin: Phaser.Scenes.ScenePlugin): Promise<void> {
         const roomID = room.id;
-        const mapUrl = await room.getMapUrl();
+        const mapDetail = await room.getMapDetail();
 
         const gameIndex = scenePlugin.getIndex(roomID);
         if(gameIndex === -1){
-            const game : Phaser.Scene = new GameScene(room, mapUrl);
+            const game : Phaser.Scene = new GameScene(room, mapDetail.mapUrl);
             scenePlugin.add(roomID, game, false);
         }
     }
@@ -84,7 +86,11 @@ export class GameManager {
         console.log('starting '+ (this.currentGameSceneName || this.startRoom.id))
         scenePlugin.start(this.currentGameSceneName || this.startRoom.id);
         scenePlugin.launch(MenuSceneName);
-        scenePlugin.launch(HelpCameraSettingsSceneName);//700
+
+        if(!localUserStore.getHelpCameraSettingsShown() && (!get(requestedMicrophoneState) || !get(requestedCameraState))){
+            helpCameraSettingsVisibleStore.set(true);
+            localUserStore.setHelpCameraSettingsShown();
+        }
     }
 
     public gameSceneIsCreated(scene: GameScene) {

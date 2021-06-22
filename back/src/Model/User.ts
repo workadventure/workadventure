@@ -22,6 +22,7 @@ export class User implements Movable {
         private positionNotifier: PositionNotifier,
         public readonly socket: UserSocket,
         public readonly tags: string[],
+        public readonly visitCardUrl: string|null,
         public readonly name: string,
         public readonly characterLayers: CharacterLayer[],
         public readonly companion?: CompanionMessage

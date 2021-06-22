@@ -70,7 +70,7 @@ export abstract class DirtyScene extends ResizableScene {
         return this.dirty || this.objectListChanged;
     }
 
-    public onResize(ev: UIEvent): void {
+    public onResize(): void {
         this.objectListChanged = true;
     }
 }
