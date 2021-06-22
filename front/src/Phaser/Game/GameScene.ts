@@ -58,7 +58,6 @@ import {connectionManager} from "../../Connexion/ConnectionManager";
 import type {RoomConnection} from "../../Connexion/RoomConnection";
 import {GlobalMessageManager} from "../../Administration/GlobalMessageManager";
 import {userMessageManager} from "../../Administration/UserMessageManager";
-import {ConsoleGlobalMessageManager} from "../../Administration/ConsoleGlobalMessageManager";
 import {ResizableScene} from "../Login/ResizableScene";
 import {Room} from "../../Connexion/Room";
 import {jitsiFactory} from "../../WebRtc/JitsiFactory";
@@ -156,7 +155,6 @@ export class GameScene extends DirtyScene implements CenterListener {
     public connection: RoomConnection|undefined;
     private simplePeer!: SimplePeer;
     private GlobalMessageManager!: GlobalMessageManager;
-    public ConsoleGlobalMessageManager!: ConsoleGlobalMessageManager;
     private connectionAnswerPromise: Promise<RoomJoinedMessageInterface>;
     private connectionAnswerPromiseResolve!: (value: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>) => void;
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
@@ -684,7 +682,6 @@ export class GameScene extends DirtyScene implements CenterListener {
             //this.initUsersPosition(roomJoinedMessage.users);
             this.connectionAnswerPromiseResolve(onConnect.room);
             // Analyze tags to find if we are admin. If yes, show console.
-            this.ConsoleGlobalMessageManager = new ConsoleGlobalMessageManager(this.connection, this.userInputManager, this.connection.isAdmin());
 
 
             this.scene.wake();
