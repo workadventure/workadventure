@@ -4,6 +4,7 @@ import Events = Phaser.Scenes.Events;
 import AnimationEvents = Phaser.Animations.Events;
 import StructEvents = Phaser.Structs.Events;
 import {SKIP_RENDER_OPTIMIZATIONS} from "../../Enum/EnvironmentVariable";
+import Phaser from "phaser";
 
 /**
  * A scene that can track its dirty/pristine state.
@@ -67,6 +68,10 @@ export abstract class DirtyScene extends ResizableScene {
 
     public isDirty(): boolean {
         return this.dirty || this.objectListChanged;
+    }
+
+    public markDirty(): void {
+        this.events.once(Phaser.Scenes.Events.POST_UPDATE, () => this.dirty = true);
     }
 
     public onResize(): void {
