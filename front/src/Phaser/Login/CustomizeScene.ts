@@ -9,10 +9,11 @@ import type {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
 import {AbstractCharacterScene} from "./AbstractCharacterScene";
 import {areCharacterLayersValid} from "../../Connexion/LocalUser";
 import { SelectCharacterSceneName } from "./SelectCharacterScene";
-import {customCharacterSceneVisibleStore} from "../../Stores/CustomCharacterStore";
+import {activeRowStore, customCharacterSceneVisibleStore} from "../../Stores/CustomCharacterStore";
 import {waScaleManager} from "../Services/WaScaleManager";
 import {isMobile} from "../../Enum/EnvironmentVariable";
 import {CustomizedCharacter} from "../Entity/CustomizedCharacter";
+import {get} from "svelte/store";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -21,7 +22,6 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     private selectedLayers: number[] = [0];
     private containersRow: CustomizedCharacter[][] = [];
-    public activeRow:number = 0;
     private layers: BodyResourceDescriptionInterface[][] = [];
 
     protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
@@ -95,7 +95,7 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         const customCursorPosition = localUserStore.getCustomCursorPosition();
         if (customCursorPosition) {
-            this.activeRow = customCursorPosition.activeRow;
+            activeRowStore.set(customCursorPosition.activeRow);
             this.selectedLayers = customCursorPosition.selectedLayers;
             this.moveLayers();
             this.updateSelectedLayer();
@@ -113,11 +113,11 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     private doMoveCursorHorizontally(index: number): void {
-        this.selectedLayers[this.activeRow] += index;
-        if (this.selectedLayers[this.activeRow] < 0) {
-            this.selectedLayers[this.activeRow] = 0
-        } else if(this.selectedLayers[this.activeRow] > this.layers[this.activeRow].length - 1) {
-            this.selectedLayers[this.activeRow] = this.layers[this.activeRow].length - 1
+        this.selectedLayers[get(activeRowStore)] += index;
+        if (this.selectedLayers[get(activeRowStore)] < 0) {
+            this.selectedLayers[get(activeRowStore)] = 0
+        } else if(this.selectedLayers[get(activeRowStore)] > this.layers[get(activeRowStore)].length - 1) {
+            this.selectedLayers[get(activeRowStore)] = this.layers[get(activeRowStore)].length - 1
         }
         this.moveLayers();
         this.updateSelectedLayer();
@@ -126,18 +126,18 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     private doMoveCursorVertically(index:number): void {
 
-        this.activeRow += index;
-        if (this.activeRow < 0) {
-            this.activeRow = 0
-        } else if (this.activeRow > this.layers.length - 1) {
-            this.activeRow = this.layers.length - 1
+        activeRowStore.set(get(activeRowStore) + index);
+        if (get(activeRowStore) < 0) {
+            activeRowStore.set(0);
+        } else if (get(activeRowStore) > this.layers.length - 1) {
+            activeRowStore.set(this.layers.length - 1);
         }
         this.moveLayers();
         this.saveInLocalStorage();
     }
 
     private saveInLocalStorage() {
-        localUserStore.setCustomCursorPosition(this.activeRow, this.selectedLayers);
+        localUserStore.setCustomCursorPosition(get(activeRowStore), this.selectedLayers);
     }
 
     /**
@@ -207,9 +207,9 @@ export class CustomizeScene extends AbstractCharacterScene {
                         selectedX = 0;
                     }
                     this.containersRow[i][j].x = screenCenterX + (j - selectedX) * 40;
-                    this.containersRow[i][j].y = screenCenterY + (i - this.activeRow) * 40;
+                    this.containersRow[i][j].y = screenCenterY + (i - get(activeRowStore)) * 40;
                     const alpha1 = Math.abs(selectedX - j)*47*2/screenWidth;
-                    const alpha2 = Math.abs(this.activeRow - i)*49*2/screenHeight;
+                    const alpha2 = Math.abs(get(activeRowStore) - i)*49*2/screenHeight;
                     this.containersRow[i][j].setAlpha((1 -alpha1)*(1 - alpha2));
             }
 
