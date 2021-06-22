@@ -3,8 +3,8 @@
  * It has coordinates and an "activation radius"
  */
 import Sprite = Phaser.GameObjects.Sprite;
-import {OutlinePipeline} from "../Shaders/OutlinePipeline";
 import type {GameScene} from "../Game/GameScene";
+import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 
 type EventCallback = (state: unknown, parameters: unknown) => void;
 
@@ -42,11 +42,11 @@ export class ActionableItem {
             return;
         }
         this.isSelectable = true;
-        if (this.sprite.pipeline) {
-            // Commented out to try to fix MacOS issue
-            /*this.sprite.setPipeline(OutlinePipeline.KEY);
-            this.sprite.pipeline.set2f('uTextureSize', this.sprite.texture.getSourceImage().width, this.sprite.texture.getSourceImage().height);*/
-        }
+
+        this.getOutlinePlugin()?.add(this.sprite, {
+            thickness: 2,
+            outlineColor: 0xffff00
+        });
     }
 
     /**
@@ -57,8 +57,11 @@ export class ActionableItem {
             return;
         }
         this.isSelectable = false;
-        // Commented out to try to fix MacOS issue
-        //this.sprite.resetPipeline();
+        this.getOutlinePlugin()?.remove(this.sprite);
+    }
+
+    private getOutlinePlugin(): OutlinePipelinePlugin|undefined {
+        return this.sprite.scene.plugins.get('rexOutlinePipeline') as unknown as OutlinePipelinePlugin|undefined;
     }
 
     /**
