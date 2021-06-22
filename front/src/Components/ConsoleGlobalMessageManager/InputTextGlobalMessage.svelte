@@ -1,7 +1,7 @@
 <script lang="ts">
     import {ConsoleGlobalMessageManagerFocusStore, ConsoleGlobalMessageManagerVisibleStore } from "../../Stores/ConsoleGlobalMessageManagerStore";
     import {onMount} from "svelte";
-    import {Game} from "../../Phaser/Game/Game";
+    import type {Game} from "../../Phaser/Game/Game";
     import {GameManager} from "../../Phaser/Game/GameManager";
     import type {PlayGlobalMessageInterface} from "../../Connexion/ConnexionModels";
     import {AdminMessageEventTypes} from "../../Connexion/AdminMessagesService";
@@ -33,10 +33,12 @@
     export let game: Game;
     export let gameManager: GameManager;
 
-
-    let gameScene = game.scene.getScene(gameManager.currentGameSceneName);
+    let gameScene;
+    if (gameManager.currentGameSceneName) {
+        gameScene = gameManager.getCurrentGameScene(game.scene.getScene(gameManager.currentGameSceneName));
+    }
     let quill;
-    let INPUT_CONSOLE_MESSAGE = 'quill';
+    let INPUT_CONSOLE_MESSAGE;
 
     const MESSAGE_TYPE = AdminMessageEventTypes.admin;
 
@@ -53,7 +55,7 @@
             },
         });
 
-        quill.on('selection-change', function (range, oldRange, source) {
+        quill.on('selection-change', function (range, oldRange) {
             if (range === null && oldRange !== null) {
                 ConsoleGlobalMessageManagerFocusStore.set(false);
             } else if (range !== null && oldRange === null)
@@ -67,17 +69,15 @@
     }
 
     function SendTextMessage() {
-        const elements = document.getElementsByClassName('ql-editor');
-        const quillEditor = elements.item(0);
-        if (!quillEditor) {
-            throw "Error get quill node";
-        }
+        const text = quill.getText(0, quill.getLength());
+
         const GlobalMessage: PlayGlobalMessageInterface = {
             id: "1", // FIXME: use another ID?
-            message: quillEditor.innerHTML,
+            message: text,
             type: MESSAGE_TYPE
         };
-        quillEditor.innerHTML = '';
+
+        quill.deleteText(0, quill.getLength());
         gameScene.connection.emitGlobalMessage(GlobalMessage);
         disableConsole();
     }

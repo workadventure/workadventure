@@ -1,6 +1,6 @@
 <script lang="ts">
     import {HtmlUtils} from "../../WebRtc/HtmlUtils";
-    import {Game} from "../../Phaser/Game/Game";
+    import type {Game} from "../../Phaser/Game/Game";
     import {GameManager} from "../../Phaser/Game/GameManager";
     import {ConsoleGlobalMessageManagerFocusStore, ConsoleGlobalMessageManagerVisibleStore} from "../../Stores/ConsoleGlobalMessageManagerStore";
     import {AdminMessageEventTypes} from "../../Connexion/AdminMessagesService";
@@ -14,21 +14,25 @@
     export let game: Game;
     export let gameManager: GameManager;
 
-    let gameScene = game.scene.getScene(gameManager.currentGameSceneName);
+    let gameScene;
+    if (gameManager.currentGameSceneName) {
+        gameScene = gameManager.getCurrentGameScene(game.scene.getScene(gameManager.currentGameSceneName));
+    }
     let fileinput;
     let filename: string;
     let filesize: string;
+    let errorfile: boolean;
 
-    const UPLOAD_CONSOLE_MESSAGE = 'input-upload-music';
     const AUDIO_TYPE = AdminMessageEventTypes.audio;
 
 
     async function SendAudioMessage() {
-        const inputAudio = HtmlUtils.getElementByIdOrFail<HTMLInputElement>(UPLOAD_CONSOLE_MESSAGE);
+        const inputAudio = HtmlUtils.getElementByIdOrFail<HTMLInputElement>("input-send-audio");
             const selectedFile = inputAudio.files ? inputAudio.files[0] : null;
             if (!selectedFile) {
-            throw 'no file selected';
-        }
+                errorfile = true;
+                throw 'no file selected';
+            }
 
             const fd = new FormData();
             fd.append('file', selectedFile);
@@ -45,7 +49,6 @@
     }
 
     function inputAudioFile(event: Event) {
-        console.log('Input');
         const eventTarget : EventTargetFiles = (event.target as EventTargetFiles);
         if(!eventTarget || !eventTarget.files || eventTarget.files.length === 0){
             return;
@@ -58,6 +61,7 @@
 
         filename = file.name;
         filesize = getFileSize(file.size);
+        errorfile = false;
     }
 
     function getFileSize(number: number) {
@@ -85,9 +89,41 @@
         {#if filename != undefined}
             <label for="input-send-audio">{filename} : {filesize}</label>
         {/if}
+        {#if errorfile}
+            <p class="err">No file selected. You need to upload a file before sending it.</p>
+        {/if}
         <input type="file" id="input-send-audio" bind:this={fileinput} on:change={(e) => {inputAudioFile(e)}}>
     </div>
     <div class="btn-action">
         <button class="nes-btn is-primary" on:click|preventDefault={SendAudioMessage}>Send</button>
     </div>
 </section>
+
+<style lang="scss">
+  //UploadAudioGlobalMessage
+  .section-input-send-audio {
+    margin: 10px;
+  }
+
+  .section-input-send-audio .input-send-audio {
+    text-align: center;
+  }
+
+  .section-input-send-audio #input-send-audio{
+    display: none;
+  }
+
+  .section-input-send-audio div.input-send-audio label{
+    color: white;
+  }
+
+  .section-input-send-audio div.input-send-audio p.err {
+    color: #ce372b;
+    text-align: center;
+  }
+
+  .section-input-send-audio div.input-send-audio img{
+    height: 150px;
+    cursor: url('style/images/cursor_pointer.png'), pointer;
+  }
+</style>

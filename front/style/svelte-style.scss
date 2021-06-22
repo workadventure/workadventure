@@ -57,26 +57,4 @@ div.main-console.nes-container {
   .section-input-send-text .ql-toolbar{
     background: white;
   }
-
-//UploadAudioGlobalMessage
-  .section-input-send-audio {
-    margin: 10px;
-  }
-
-  .section-input-send-audio .input-send-audio {
-    text-align: center;
-  }
-
-  .section-input-send-audio #input-send-audio{
-    display: none;
-  }
-
-  .section-input-send-audio div.input-send-audio label{
-    color: white;
-  }
-
-  .section-input-send-audio div.input-send-audio img{
-    height: 150px;
-    cursor: url('./images/cursor_pointer.png'), pointer;
-  }
 }

@@ -2,7 +2,7 @@
     import InputTextGlobalMessage from "./InputTextGlobalMessage.svelte";
     import UploadAudioGlobalMessage from "./UploadAudioGlobalMessage.svelte";
     import {gameManager} from "../../Phaser/Game/GameManager";
-    import {Game} from "../../Phaser/Game/Game";
+    import type {Game} from "../../Phaser/Game/Game";
 
     export let game: Game;
     let inputSendTextActive = true;
