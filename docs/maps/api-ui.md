@@ -65,3 +65,22 @@ WA.room.onLeaveZone('myZone', () => {
     helloWorldPopup.close();
 });
 ```
+
+
+### Awaiting User Confirmation (with space bar)
+
+```typescript
+triggerMessage(message: string): TriggerMessage
+```
+
+Opens the webpage at "url" in your browser, in a new tab.
+
+Example:
+
+```javascript
+const triggerMessage = WA.ui.triggerMessage("press 'space' to confirm");
+setTimeout(()=>{
+	// later
+	triggerMessage.remove();
+},1000)
+```

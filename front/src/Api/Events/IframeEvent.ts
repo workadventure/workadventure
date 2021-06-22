@@ -10,8 +10,9 @@ import type { OpenCoWebSiteEvent } from './OpenCoWebSiteEvent';
 import type { OpenPopupEvent } from './OpenPopupEvent';
 import type { OpenTabEvent } from './OpenTabEvent';
 import type { UserInputChatEvent } from './UserInputChatEvent';
-import type { LoadSoundEvent} from "./LoadSoundEvent";
-import type {PlaySoundEvent} from "./PlaySoundEvent";
+import type { LoadSoundEvent } from "./LoadSoundEvent";
+import type { MessageReferenceEvent, TriggerMessageEvent } from './TriggerMessageEvent';
+import type { PlaySoundEvent } from "./PlaySoundEvent";
 
 
 export interface TypedMessageEvent<T> extends MessageEvent {
@@ -36,6 +37,8 @@ export type IframeEventMap = {
     loadSound: LoadSoundEvent
     playSound: PlaySoundEvent
     stopSound: null,
+    triggerMessage: TriggerMessageEvent
+    removeTriggerMessage: MessageReferenceEvent
 }
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;
@@ -51,6 +54,8 @@ export interface IframeResponseEventMap {
     enterEvent: EnterLeaveEvent
     leaveEvent: EnterLeaveEvent
     buttonClickedEvent: ButtonClickedEvent
+
+    messageTriggered: MessageReferenceEvent
     // gameState: GameStateEvent
 }
 export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
