@@ -4,7 +4,6 @@ import Events = Phaser.Scenes.Events;
 import AnimationEvents = Phaser.Animations.Events;
 import StructEvents = Phaser.Structs.Events;
 import {SKIP_RENDER_OPTIMIZATIONS} from "../../Enum/EnvironmentVariable";
-import Phaser from "phaser";
 
 /**
  * A scene that can track its dirty/pristine state.
