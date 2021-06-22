@@ -25,6 +25,9 @@
 
 
     async function SendAudioMessage() {
+        if (gameScene == undefined) {
+            return;
+        }
         const inputAudio = HtmlUtils.getElementByIdOrFail<HTMLInputElement>("input-send-audio");
         const selectedFile = inputAudio.files ? inputAudio.files[0] : null;
         if (!selectedFile) {

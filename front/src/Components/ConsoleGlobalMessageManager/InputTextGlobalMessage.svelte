@@ -5,7 +5,6 @@
     import type {GameManager} from "../../Phaser/Game/GameManager";
     import type {PlayGlobalMessageInterface} from "../../Connexion/ConnexionModels";
     import {AdminMessageEventTypes} from "../../Connexion/AdminMessagesService";
-    import type {GameScene} from "../../Phaser/Game/GameScene";
     import type {Quill} from "quill";
     import {LoginSceneName} from "../../Phaser/Login/LoginScene";
 
@@ -69,6 +68,9 @@
     }
 
     function SendTextMessage() {
+        if (gameScene == undefined) {
+            return;
+        }
         const text = quill.getText(0, quill.getLength());
 
         const GlobalMessage: PlayGlobalMessageInterface = {
