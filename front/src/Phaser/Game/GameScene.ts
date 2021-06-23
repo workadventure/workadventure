@@ -945,7 +945,7 @@ ${escapedMessage}
         }))
 
         this.iframeSubscriptionList.push(iframeListener.gameStateStream.subscribe(() => {
-            iframeListener.sendFrozenGameStateEvent({
+            iframeListener.sendGameStateEvent({
                 mapUrl: this.MapUrlFile,
                 startLayerName: this.startLayerName,
                 uuid: localUserStore.getLocalUser()?.uuid,

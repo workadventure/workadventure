@@ -6,6 +6,14 @@
 - Enabled outlines on actionable item again (they were disabled when migrating to Phaser 3.50) #1218
 - Enabled outlines on player names (when the mouse hovers on a player you can interact with) #1219
 - Migrated the admin console to Svelte, and redesigned the console #1211
+- New scripting API features :
+  - Use `WA.room.showLayer(): void` to show a layer
+  - Use `WA.room.hideLayer(): void` to hide a layer
+  - Use `WA.room.setProperty() : void` to add or change existing property of a layer
+  - Use `WA.player.onPlayerMove(): void` to track the movement of the current player
+  - Use `WA.room.getCurrentUser(): Promise<User>` to get the ID, name and tags of the current player
+  - Use `WA.room.getCurrentRoom(): Promise<Room>` to get the ID, JSON map file, url of the map of the current room and the layer where the current player started
+  - Use `WA.ui.registerMenuCommand(): void` to add a custom menu
 
 ## Version 1.4.1
 
@@ -48,13 +56,7 @@
     - Added a new `DISPLAY_TERMS_OF_USE` environment variable to trigger the display of terms of use  
 - New scripting API features:
   - Use `WA.loadSound(): Sound` to load / play / stop a sound
-  - Use `WA.showLayer(): void` to show a layer
-  - Use `WA.hideLayer(): void` to hide a layer
-  - Use `WA.setProperty() : void` to add or change existing property of a layer
-  - Use `WA.onPlayerMove(): void` to track the movement of the current player
-  - Use `WA.getCurrentUser(): Promise<User>` to get the ID, name and tags of the current player
-  - Use `WA.getCurrentRoom(): Promise<Room>` to get the ID, JSON map file, url of the map of the current room and the layer where the current player started
-  - Use `WA.registerMenuCommand(): void` to add a custom menu
+
 
 ### Bug Fixes
 

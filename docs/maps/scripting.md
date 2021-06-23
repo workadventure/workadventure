@@ -101,7 +101,7 @@ You can now start by testing this with a simple message sent to the chat.
 ```html
 ...
 <script>
-WA.sendChatMessage('Hello world', 'Mr Robot');
+WA.chat.sendChatMessage('Hello world', 'Mr Robot');
 </script>
 ...
 ```

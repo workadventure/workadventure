@@ -12,6 +12,7 @@ import controls from "./Api/iframe/controls";
 import ui from "./Api/iframe/ui";
 import sound from "./Api/iframe/sound";
 import room from "./Api/iframe/room";
+import player from "./Api/iframe/player";
 import type { ButtonDescriptor } from "./Api/iframe/Ui/ButtonDescriptor";
 import type { Popup } from "./Api/iframe/Ui/Popup";
 import type { Sound } from "./Api/iframe/Sound/Sound";
@@ -23,6 +24,7 @@ const wa = {
     chat,
     sound,
     room,
+    player,
 
     // All methods below are deprecated and should not be used anymore.
     // They are kept here for backward compatibility.

@@ -1,10 +1,54 @@
 import { Subject } from "rxjs";
 import { EnterLeaveEvent, isEnterLeaveEvent } from '../Events/EnterLeaveEvent';
-import { IframeApiContribution } from './IframeApiContribution';
+import {IframeApiContribution, sendToWorkadventure} from './IframeApiContribution';
 import { apiCallback } from "./registeredCallbacks";
+import type {LayerEvent} from "../Events/LayerEvent";
+import type {SetPropertyEvent} from "../Events/setPropertyEvent";
+import type {GameStateEvent} from "../Events/GameStateEvent";
+import type {ITiledMap} from "../../Phaser/Map/ITiledMap";
+import type {DataLayerEvent} from "../Events/DataLayerEvent";
+import {isGameStateEvent} from "../Events/GameStateEvent";
+import {isDataLayerEvent} from "../Events/DataLayerEvent";
 
 const enterStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
 const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
+const dataLayerResolver = new Subject<DataLayerEvent>();
+const stateResolvers = new Subject<GameStateEvent>();
+
+let immutableData: GameStateEvent;
+
+interface Room {
+    id: string,
+    mapUrl: string,
+    map: ITiledMap,
+    startLayer: string | null
+}
+
+interface User {
+    id: string | undefined,
+    nickName: string | null,
+    tags: string[]
+}
+
+
+function getGameState(): Promise<GameStateEvent> {
+    if (immutableData) {
+        return Promise.resolve(immutableData);
+    }
+    else {
+        return new Promise<GameStateEvent>((resolver, thrower) => {
+            stateResolvers.subscribe(resolver);
+            sendToWorkadventure({type: "getState", data: null});
+        })
+    }
+}
+
+function getDataLayer(): Promise<DataLayerEvent> {
+    return new Promise<DataLayerEvent>((resolver, thrower) => {
+        dataLayerResolver.subscribe(resolver);
+        sendToWorkadventure({type: "getDataLayer", data: null})
+    })
+}
 
 class WorkadventureRoomCommands extends IframeApiContribution<WorkadventureRoomCommands> {
     callbacks = [
@@ -21,8 +65,21 @@ class WorkadventureRoomCommands extends IframeApiContribution<WorkadventureRoomC
             callback: (payloadData) => {
                 leaveStreams.get(payloadData.name)?.next();
             }
-        })
-
+        }),
+        apiCallback({
+            type: "gameState",
+            typeChecker: isGameStateEvent,
+            callback: (payloadData) => {
+                stateResolvers.next(payloadData);
+            }
+        }),
+        apiCallback({
+            type: "dataLayer",
+            typeChecker: isDataLayerEvent,
+            callback: (payloadData) => {
+                dataLayerResolver.next(payloadData);
+            }
+        }),
     ]
 
 
@@ -42,6 +99,34 @@ class WorkadventureRoomCommands extends IframeApiContribution<WorkadventureRoomC
             leaveStreams.set(name, subject);
         }
         subject.subscribe(callback);
+    }
+    showLayer(layerName: string): void {
+        sendToWorkadventure({type: 'showLayer', data: {'name': layerName} as LayerEvent});
+    }
+    hideLayer(layerName: string): void {
+        sendToWorkadventure({type: 'hideLayer', data: {'name': layerName} as LayerEvent});
+    }
+    setProperty(layerName: string, propertyName: string, propertyValue: string | number | boolean | undefined): void {
+        sendToWorkadventure({
+            type: 'setProperty',
+            data: {
+                'layerName': layerName,
+                'propertyName': propertyName,
+                'propertyValue': propertyValue,
+            } as SetPropertyEvent
+        })
+    }
+    getCurrentRoom(): Promise<Room> {
+        return getGameState().then((gameState) => {
+          return getDataLayer().then((mapJson) => {
+              return {id: gameState.roomId, map: mapJson.data as ITiledMap, mapUrl: gameState.mapUrl, startLayer: gameState.startLayerName};
+          })
+        })
+    }
+    getCurrentUser(): Promise<User> {
+        return getGameState().then((gameState) => {
+            return {id: gameState.uuid, nickName: gameState.nickname, tags: gameState.tags};
+        })
     }
 
 }

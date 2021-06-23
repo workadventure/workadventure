@@ -66,16 +66,15 @@ WA.room.onLeaveZone('myZone', () => {
 });
 ```
 
-### register additional menu entries
-
-adds an additional Entry to the main menu , these exist until the map is unloaded
-
+### Add custom menu
 
 ```typescript
 WA.ui.registerMenuCommand(menuCommand: string, callback: (menuCommand: string) => void): void
 ```
-Example:
+Add a custom menu item containing the text `commandDescriptor` in the main menu. A click on the menu will trigger the `callback`.
+Custom menu exist only until the map is unloaded, or you leave the iframe zone of the script.
 
+Example:
 
 ```javascript
 

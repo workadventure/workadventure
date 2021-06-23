@@ -204,7 +204,7 @@ class IframeListener {
     }
 
 
-    sendFrozenGameStateEvent(gameStateEvent: GameStateEvent) {
+    sendGameStateEvent(gameStateEvent: GameStateEvent) {
         this.postMessage({
             'type': 'gameState',
             'data': gameStateEvent
