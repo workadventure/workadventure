@@ -1,15 +1,31 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
+
+#process id list
+pids=""
 (
 cd front || exit
 yarn run precommit
 )
+pids+=" $!"
 (
 cd pusher || exit
 yarn run precommit
 )
+pids+=" $!"
 (
 cd back || exit
 yarn run precommit
 )
+pids+=" $!"
+
+for p in $pids; do
+        
+        if wait $p; then
+            echo "Process $p success"
+        else
+            echo "Process $p fail" 
+            exit 1
+        fi
+done

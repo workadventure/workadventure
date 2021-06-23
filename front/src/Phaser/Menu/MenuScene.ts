@@ -19,7 +19,6 @@ import { sendMenuClickedEvent } from '../../Api/iframe/Ui/MenuItem';
 import { consoleGlobalMessageManagerVisibleStore } from '../../Stores/ConsoleGlobalMessageManagerStore';
 import { get } from 'svelte/store';
 
-
 export const MenuSceneName = 'MenuScene';
 const gameMenuKey = 'gameMenu';
 const gameMenuIconKey = 'gameMenuIcon';
