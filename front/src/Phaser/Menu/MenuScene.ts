@@ -10,7 +10,12 @@ import {GameConnexionTypes} from "../../Url/UrlManager";
 import {WarningContainer, warningContainerHtml, warningContainerKey} from "../Components/WarningContainer";
 import {worldFullWarningStream} from "../../Connexion/WorldFullWarningStream";
 import {menuIconVisible} from "../../Stores/MenuStore";
-import {videoConstraintStore} from "../../Stores/MediaStore";
+import { HtmlUtils } from '../../WebRtc/HtmlUtils';
+import { iframeListener } from '../../Api/IframeListener';
+import { Subscription } from 'rxjs';
+import { videoConstraintStore } from "../../Stores/MediaStore";
+import {registerMenuCommandStream} from "../../Api/Events/ui/MenuItemRegisterEvent";
+import {sendMenuClickedEvent} from "../../Api/iframe/Ui/MenuItem";
 import {consoleGlobalMessageManagerVisibleStore} from "../../Stores/ConsoleGlobalMessageManagerStore";
 import {get} from "svelte/store";
 
@@ -39,15 +44,41 @@ export class MenuScene extends Phaser.Scene {
     private menuButton!: Phaser.GameObjects.DOMElement;
     private warningContainer: WarningContainer | null = null;
     private warningContainerTimeout: NodeJS.Timeout | null = null;
-
+    private subscriptions = new Subscription()
     constructor() {
-        super({key: MenuSceneName});
+        super({ key: MenuSceneName });
 
         this.gameQualityValue = localUserStore.getGameQualityValue();
         this.videoQualityValue = localUserStore.getVideoQualityValue();
+
+        this.subscriptions.add(registerMenuCommandStream.subscribe(menuCommand => {
+            this.addMenuOption(menuCommand);
+        }))
+
+        this.subscriptions.add(iframeListener.unregisterMenuCommandStream.subscribe(menuCommand => {
+            this.destroyMenu(menuCommand);
+        }))
     }
 
-    preload () {
+    reset() {
+        const addedMenuItems = [...this.menuElement.node.querySelectorAll(".fromApi")];
+        for (let index = addedMenuItems.length - 1; index >= 0; index--) {
+            addedMenuItems[index].remove()
+        }
+    }
+
+    public addMenuOption(menuText: string) {
+        const wrappingSection = document.createElement("section")
+        const escapedHtml = HtmlUtils.escapeHtml(menuText);
+        wrappingSection.innerHTML = `<button class="fromApi" id="${escapedHtml}">${escapedHtml}</button>`
+        const menuItemContainer = this.menuElement.node.querySelector("#gameMenu main");
+        if (menuItemContainer) {
+            menuItemContainer.querySelector(`#${escapedHtml}.fromApi`)?.remove()
+            menuItemContainer.insertBefore(wrappingSection, menuItemContainer.querySelector("#socialLinks"))
+        }
+    }
+
+    preload() {
         this.load.html(gameMenuKey, 'resources/html/gameMenu.html');
         this.load.html(gameMenuIconKey, 'resources/html/gameMenuIcon.html');
         this.load.html(gameSettingsMenuKey, 'resources/html/gameQualityMenu.html');
@@ -70,11 +101,11 @@ export class MenuScene extends Phaser.Scene {
         this.gameShareElement = this.add.dom(middleX, -400).createFromCache(gameShare);
         MenuScene.revealMenusAfterInit(this.gameShareElement, gameShare);
         this.gameShareElement.addListener('click');
-        this.gameShareElement.on('click',  (event:MouseEvent) => {
+        this.gameShareElement.on('click', (event: MouseEvent) => {
             event.preventDefault();
-            if((event?.target as HTMLInputElement).id === 'gameShareFormSubmit') {
+            if ((event?.target as HTMLInputElement).id === 'gameShareFormSubmit') {
                 this.copyLink();
-            }else if((event?.target as HTMLInputElement).id === 'gameShareFormCancel') {
+            } else if ((event?.target as HTMLInputElement).id === 'gameShareFormCancel') {
                 this.closeGameShare();
             }
         });
@@ -130,8 +161,8 @@ export class MenuScene extends Phaser.Scene {
         }
         //TODO bind with future metadata of card
         //if (connectionManager.getConnexionType === GameConnexionTypes.anonymous){
-            const adminSection = this.menuElement.getChildByID('socialLinks') as HTMLElement;
-            adminSection.hidden = false;
+        const adminSection = this.menuElement.getChildByID('socialLinks') as HTMLElement;
+        adminSection.hidden = false;
         //}
         this.tweens.add({
             targets: this.menuElement,
@@ -181,28 +212,28 @@ export class MenuScene extends Phaser.Scene {
         this.settingsMenuOpened = true;
 
         const gameQualitySelect = this.gameQualityMenuElement.getChildByID('select-game-quality') as HTMLInputElement;
-        gameQualitySelect.value = ''+this.gameQualityValue;
+        gameQualitySelect.value = '' + this.gameQualityValue;
         const videoQualitySelect = this.gameQualityMenuElement.getChildByID('select-video-quality') as HTMLInputElement;
-        videoQualitySelect.value = ''+this.videoQualityValue;
+        videoQualitySelect.value = '' + this.videoQualityValue;
 
         this.gameQualityMenuElement.addListener('click');
-        this.gameQualityMenuElement.on('click',  (event:MouseEvent) => {
+        this.gameQualityMenuElement.on('click', (event: MouseEvent) => {
             event.preventDefault();
             if ((event?.target as HTMLInputElement).id === 'gameQualityFormSubmit') {
                 const gameQualitySelect = this.gameQualityMenuElement.getChildByID('select-game-quality') as HTMLInputElement;
                 const videoQualitySelect = this.gameQualityMenuElement.getChildByID('select-video-quality') as HTMLInputElement;
                 this.saveSetting(parseInt(gameQualitySelect.value), parseInt(videoQualitySelect.value));
-            } else if((event?.target as HTMLInputElement).id === 'gameQualityFormCancel') {
+            } else if ((event?.target as HTMLInputElement).id === 'gameQualityFormCancel') {
                 this.closeGameQualityMenu();
             }
         });
 
-        let middleY = this.scale.height / 2 - 392/2;
-        if(middleY < 0){
+        let middleY = this.scale.height / 2 - 392 / 2;
+        if (middleY < 0) {
             middleY = 0;
         }
-        let middleX = this.scale.width / 2 - 457/2;
-        if(middleX < 0){
+        let middleX = this.scale.width / 2 - 457 / 2;
+        if (middleX < 0) {
             middleX = 0;
         }
         this.tweens.add({
@@ -228,7 +259,7 @@ export class MenuScene extends Phaser.Scene {
     }
 
 
-    private openGameShare(): void{
+    private openGameShare(): void {
         if (this.gameShareOpened) {
             this.closeGameShare();
             return;
@@ -242,11 +273,11 @@ export class MenuScene extends Phaser.Scene {
         this.gameShareOpened = true;
 
         let middleY = this.scale.height / 2 - 85;
-        if(middleY < 0){
+        if (middleY < 0) {
             middleY = 0;
         }
         let middleX = this.scale.width / 2 - 200;
-        if(middleX < 0){
+        if (middleX < 0) {
             middleX = 0;
         }
         this.tweens.add({
@@ -258,7 +289,7 @@ export class MenuScene extends Phaser.Scene {
         });
     }
 
-    private closeGameShare(): void{
+    private closeGameShare(): void {
         const gameShareInfo = this.gameShareElement.getChildByID('gameShareInfo') as HTMLParagraphElement;
         gameShareInfo.innerText = '';
         gameShareInfo.style.display = 'none';
@@ -271,11 +302,17 @@ export class MenuScene extends Phaser.Scene {
         });
     }
 
-    private onMenuClick(event:MouseEvent) {
-        if((event?.target as HTMLInputElement).classList.contains('not-button')){
+    private onMenuClick(event: MouseEvent) {
+        const htmlMenuItem = (event?.target as HTMLInputElement);
+        if (htmlMenuItem.classList.contains('not-button')) {
             return;
         }
         event.preventDefault();
+
+        if (htmlMenuItem.classList.contains("fromApi")) {
+            sendMenuClickedEvent(htmlMenuItem.id)
+            return
+        }
 
         switch ((event?.target as HTMLInputElement).id) {
             case 'changeNameButton':
@@ -322,7 +359,7 @@ export class MenuScene extends Phaser.Scene {
         gameShareInfo.style.display = 'block';
     }
 
-    private saveSetting(valueGame: number, valueVideo: number){
+    private saveSetting(valueGame: number, valueVideo: number) {
         if (valueGame !== this.gameQualityValue) {
             this.gameQualityValue = valueGame;
             localUserStore.setGameQualityValue(valueGame);
@@ -343,7 +380,7 @@ export class MenuScene extends Phaser.Scene {
         window.open(sparkHost, '_blank');
     }
 
-    private closeAll(){
+    private closeAll() {
         this.closeGameQualityMenu();
         this.closeGameShare();
         this.gameReportElement.close();
@@ -358,6 +395,10 @@ export class MenuScene extends Phaser.Scene {
                 body.requestFullscreen();
             }
         }
+    }
+
+    public destroyMenu(menu: string) {
+        this.menuElement.getChildByID(menu).remove();
     }
 
     public isDirty(): boolean {

@@ -1,5 +1,7 @@
-import type { ITiledMap, ITiledMapLayerProperty } from "../Map/ITiledMap";
-import { LayersIterator } from "../Map/LayersIterator";
+import type {ITiledMap, ITiledMapLayer, ITiledMapLayerProperty} from "../Map/ITiledMap";
+import { flattenGroupLayersMap } from "../Map/LayersFlattener";
+import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
+import { DEPTH_OVERLAY_INDEX } from "./DepthIndexes";
 
 export type PropertyChangeCallback = (newValue: string | number | boolean | undefined, oldValue: string | number | boolean | undefined, allProps: Map<string, string | boolean | number>) => void;
 
@@ -13,13 +15,22 @@ export class GameMap {
     private callbacks = new Map<string, Array<PropertyChangeCallback>>();
 
     private tileSetPropertyMap: { [tile_index: number]: Array<ITiledMapLayerProperty> } = {}
-    public readonly layersIterator: LayersIterator;
+    public readonly flatLayers: ITiledMapLayer[];
+    public readonly phaserLayers: TilemapLayer[] = [];
 
     public exitUrls: Array<string> = []
 
-    public constructor(private map: ITiledMap) {
-        this.layersIterator = new LayersIterator(map);
-
+    public constructor(private map: ITiledMap, phaserMap: Phaser.Tilemaps.Tilemap, terrains: Array<Phaser.Tilemaps.Tileset>) {
+        this.flatLayers = flattenGroupLayersMap(map);
+        let depth = -2;
+        for (const layer of this.flatLayers) {
+            if(layer.type === 'tilelayer'){
+                this.phaserLayers.push(phaserMap.createLayer(layer.name, terrains, 0, 0).setDepth(depth));
+            }
+            if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
+                depth = DEPTH_OVERLAY_INDEX;
+            }
+        }
         for (const tileset of map.tilesets) {
             tileset?.tiles?.forEach(tile => {
                 if (tile.properties) {
@@ -77,7 +88,7 @@ export class GameMap {
     private getProperties(key: number): Map<string, string | boolean | number> {
         const properties = new Map<string, string | boolean | number>();
 
-        for (const layer of this.layersIterator) {
+        for (const layer of this.flatLayers) {
             if (layer.type !== 'tilelayer') {
                 continue;
             }
@@ -115,6 +126,10 @@ export class GameMap {
         return properties;
     }
 
+    public getMap(): ITiledMap{
+        return this.map;
+    }
+
     private trigger(propName: string, oldValue: string | number | boolean | undefined, newValue: string | number | boolean | undefined, allProps: Map<string, string | boolean | number>) {
         const callbacksArray = this.callbacks.get(propName);
         if (callbacksArray !== undefined) {
@@ -135,4 +150,19 @@ export class GameMap {
         }
         callbacksArray.push(callback);
     }
+
+    public findLayer(layerName: string): ITiledMapLayer | undefined {
+        return this.flatLayers.find((layer) => layer.name === layerName);
+    }
+
+    public findPhaserLayer(layerName: string): TilemapLayer | undefined {
+        return this.phaserLayers.find((layer) => layer.layer.name === layerName);
+    }
+
+    public addTerrain(terrain : Phaser.Tilemaps.Tileset): void {
+        for (const phaserLayer of this.phaserLayers) {
+            phaserLayer.tileset.push(terrain);
+        }
+    }
+
 }

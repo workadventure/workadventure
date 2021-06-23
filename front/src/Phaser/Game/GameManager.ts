@@ -10,12 +10,7 @@ import {get} from "svelte/store";
 import {requestedCameraState, requestedMicrophoneState} from "../../Stores/MediaStore";
 import {helpCameraSettingsVisibleStore} from "../../Stores/HelpCameraSettingsStore";
 
-export interface HasMovedEvent {
-    direction: string;
-    moving: boolean;
-    x: number;
-    y: number;
-}
+
 
 /**
  * This class should be responsible for any scene starting/stopping

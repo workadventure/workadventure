@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <script src="http://play.workadventure.localhost/iframe_api.js"></script>
+    </head>
+    <body>
+    	<script>
+    		WA.room.getCurrentUser().then((user) => {
+                console.log('id : ', user.id);
+                console.log('nickName : ', user.nickName);
+                console.log('tags : ', user.tags);
+            })
+    	</script>
+    </body>
+</html>

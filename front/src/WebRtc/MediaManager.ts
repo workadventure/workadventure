@@ -1,11 +1,11 @@
-import {DivImportance, layoutManager} from "./LayoutManager";
-import {HtmlUtils} from "./HtmlUtils";
-import {discussionManager, SendMessageCallback} from "./DiscussionManager";
-import type {UserInputManager} from "../Phaser/UserInput/UserInputManager";
-import {localUserStore} from "../Connexion/LocalUserStore";
-import type {UserSimplePeerInterface} from "./SimplePeer";
-import {SoundMeter} from "../Phaser/Components/SoundMeter";
-import {DISABLE_NOTIFICATIONS} from "../Enum/EnvironmentVariable";
+import { DivImportance, layoutManager } from "./LayoutManager";
+import { HtmlUtils } from "./HtmlUtils";
+import { discussionManager, SendMessageCallback } from "./DiscussionManager";
+import type { UserInputManager } from "../Phaser/UserInput/UserInputManager";
+import { localUserStore } from "../Connexion/LocalUserStore";
+import type { UserSimplePeerInterface } from "./SimplePeer";
+import { SoundMeter } from "../Phaser/Components/SoundMeter";
+import { DISABLE_NOTIFICATIONS } from "../Enum/EnvironmentVariable";
 import {
     gameOverlayVisibilityStore, localStreamStore,
 } from "../Stores/MediaStore";
@@ -14,11 +14,11 @@ import {
 } from "../Stores/ScreenSharingStore";
 import {helpCameraSettingsVisibleStore} from "../Stores/HelpCameraSettingsStore";
 
-export type UpdatedLocalStreamCallback = (media: MediaStream|null) => void;
+export type UpdatedLocalStreamCallback = (media: MediaStream | null) => void;
 export type StartScreenSharingCallback = (media: MediaStream) => void;
 export type StopScreenSharingCallback = (media: MediaStream) => void;
 export type ReportCallback = (message: string) => void;
-export type ShowReportCallBack = (userId: string, userName: string|undefined) => void;
+export type ShowReportCallBack = (userId: string, userName: string | undefined) => void;
 export type HelpCameraSettingsCallBack = () => void;
 
 import {cowebsiteCloseButtonId} from "./CoWebsiteManager";
@@ -27,13 +27,16 @@ export class MediaManager {
     private remoteVideo: Map<string, HTMLVideoElement> = new Map<string, HTMLVideoElement>();
     //FIX ME SOUNDMETER: check stalability of sound meter calculation
     //mySoundMeterElement: HTMLDivElement;
-    startScreenSharingCallBacks : Set<StartScreenSharingCallback> = new Set<StartScreenSharingCallback>();
-    stopScreenSharingCallBacks : Set<StopScreenSharingCallback> = new Set<StopScreenSharingCallback>();
-    showReportModalCallBacks : Set<ShowReportCallBack> = new Set<ShowReportCallBack>();
 
-    private focused : boolean = true;
+    startScreenSharingCallBacks: Set<StartScreenSharingCallback> = new Set<StartScreenSharingCallback>();
+    stopScreenSharingCallBacks: Set<StopScreenSharingCallback> = new Set<StopScreenSharingCallback>();
+    showReportModalCallBacks: Set<ShowReportCallBack> = new Set<ShowReportCallBack>();
 
-    private triggerCloseJistiFrame : Map<String, Function> = new Map<String, Function>();
+
+
+    private focused: boolean = true;
+
+    private triggerCloseJistiFrame: Map<String, Function> = new Map<String, Function>();
 
     private userInputManager?: UserInputManager;
 
@@ -134,13 +137,16 @@ export class MediaManager {
         gameOverlayVisibilityStore.hideGameOverlay();
     }
 
-    addActiveVideo(user: UserSimplePeerInterface, userName: string = ""){
-        const userId = ''+user.userId
+
+
+    addActiveVideo(user: UserSimplePeerInterface, userName: string = "") {
+
+        const userId = '' + user.userId
 
         userName = userName.toUpperCase();
         const color = this.getColorByString(userName);
 
-        const html =  `
+        const html = `
             <div id="div-${userId}" class="video-container">
                 <div class="connecting-spinner"></div>
                 <div class="rtc-error" style="display: none"></div>
@@ -168,7 +174,7 @@ export class MediaManager {
 
         //permit to create participant in discussion part
         const showReportUser = () => {
-            for(const callBack of this.showReportModalCallBacks){
+            for (const callBack of this.showReportModalCallBacks) {
                 callBack(userId, userName);
             }
         };
@@ -200,17 +206,17 @@ export class MediaManager {
         return `screen-sharing-${userId}`;
     }
 
-    disabledMicrophoneByUserId(userId: number){
+    disabledMicrophoneByUserId(userId: number) {
         const element = document.getElementById(`microphone-${userId}`);
-        if(!element){
+        if (!element) {
             return;
         }
         element.classList.add('active') //todo: why does a method 'disable' add a class 'active'?
     }
 
-    enabledMicrophoneByUserId(userId: number){
+    enabledMicrophoneByUserId(userId: number) {
         const element = document.getElementById(`microphone-${userId}`);
-        if(!element){
+        if (!element) {
             return;
         }
         element.classList.remove('active') //todo: why does a method 'enable' remove a class 'active'?
@@ -227,22 +233,22 @@ export class MediaManager {
         }
     }
 
-    enabledVideoByUserId(userId: number){
+    enabledVideoByUserId(userId: number) {
         let element = document.getElementById(`${userId}`);
-        if(element){
+        if (element) {
             element.style.opacity = "1";
         }
         element = document.getElementById(`name-${userId}`);
-        if(element){
+        if (element) {
             element.style.display = "none";
         }
     }
 
     toggleBlockLogo(userId: number, show: boolean): void {
-        const blockLogoElement = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('blocking-'+userId);
+        const blockLogoElement = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('blocking-' + userId);
         show ? blockLogoElement.classList.add('active') : blockLogoElement.classList.remove('active');
     }
-    addStreamRemoteVideo(userId: string, stream : MediaStream): void {
+    addStreamRemoteVideo(userId: string, stream: MediaStream): void {
         const remoteVideo = this.remoteVideo.get(userId);
         if (remoteVideo === undefined) {
             throw `Unable to find video for ${userId}`;
@@ -256,7 +262,7 @@ export class MediaManager {
         this.soundMeters.set(userId, soundMeter);
         this.soundMeterElements.set(userId, HtmlUtils.getElementByIdOrFail<HTMLImageElement>('soundMeter-'+userId));*/
     }
-    addStreamRemoteScreenSharing(userId: string, stream : MediaStream){
+    addStreamRemoteScreenSharing(userId: string, stream: MediaStream) {
         // In the case of screen sharing (going both ways), we may need to create the HTML element if it does not exist yet
         const remoteVideo = this.remoteVideo.get(this.getScreenSharingId(userId));
         if (remoteVideo === undefined) {
@@ -266,7 +272,7 @@ export class MediaManager {
         this.addStreamRemoteVideo(this.getScreenSharingId(userId), stream);
     }
 
-    removeActiveVideo(userId: string){
+    removeActiveVideo(userId: string) {
         layoutManager.remove(userId);
         this.remoteVideo.delete(userId);
 
@@ -301,10 +307,10 @@ export class MediaManager {
     isError(userId: string): void {
         console.info("isError", `div-${userId}`);
         const element = document.getElementById(`div-${userId}`);
-        if(!element){
+        if (!element) {
             return;
         }
-        const errorDiv = element.getElementsByClassName('rtc-error').item(0) as HTMLDivElement|null;
+        const errorDiv = element.getElementsByClassName('rtc-error').item(0) as HTMLDivElement | null;
         if (errorDiv === null) {
             return;
         }
@@ -315,16 +321,16 @@ export class MediaManager {
     }
 
 
-    private getSpinner(userId: string): HTMLDivElement|null {
+    private getSpinner(userId: string): HTMLDivElement | null {
         const element = document.getElementById(`div-${userId}`);
-        if(!element){
+        if (!element) {
             return null;
         }
-        const connnectingSpinnerDiv = element.getElementsByClassName('connecting-spinner').item(0) as HTMLDivElement|null;
+        const connnectingSpinnerDiv = element.getElementsByClassName('connecting-spinner').item(0) as HTMLDivElement | null;
         return connnectingSpinnerDiv;
     }
 
-    private getColorByString(str: String) : String|null {
+    private getColorByString(str: String): String | null {
         let hash = 0;
         if (str.length === 0) return null;
         for (let i = 0; i < str.length; i++) {
@@ -339,18 +345,18 @@ export class MediaManager {
         return color;
     }
 
-    public addNewParticipant(userId: number|string, name: string|undefined, img?: string, showReportUserCallBack?: ShowReportCallBack){
+    public addNewParticipant(userId: number | string, name: string | undefined, img?: string, showReportUserCallBack?: ShowReportCallBack) {
         discussionManager.addParticipant(userId, name, img, false, showReportUserCallBack);
     }
 
-    public removeParticipant(userId: number|string){
+    public removeParticipant(userId: number | string) {
         discussionManager.removeParticipant(userId);
     }
-    public addTriggerCloseJitsiFrameButton(id: String, Function: Function){
+    public addTriggerCloseJitsiFrameButton(id: String, Function: Function) {
         this.triggerCloseJistiFrame.set(id, Function);
     }
 
-    public removeTriggerCloseJitsiFrameButton(id: String){
+    public removeTriggerCloseJitsiFrameButton(id: String) {
         this.triggerCloseJistiFrame.delete(id);
     }
 
@@ -363,36 +369,36 @@ export class MediaManager {
      * For some reasons, the microphone muted icon or the stream is not always up to date.
      * Here, every 30 seconds, we are "reseting" the streams and sending again the constraints to the other peers via the data channel again (see SimplePeer::pushVideoToRemoteUser)
     **/
-    private pingCameraStatus(){
+    private pingCameraStatus() {
         /*setInterval(() => {
             console.log('ping camera status');
             this.triggerUpdatedLocalStreamCallbacks(this.localStream);
         }, 30000);*/
     }
 
-    public addNewMessage(name: string, message: string, isMe: boolean = false){
+    public addNewMessage(name: string, message: string, isMe: boolean = false) {
         discussionManager.addMessage(name, message, isMe);
 
         //when there are new message, show discussion
-        if(!discussionManager.activatedDiscussion) {
+        if (!discussionManager.activatedDiscussion) {
             discussionManager.showDiscussionPart();
         }
     }
 
-    public addSendMessageCallback(userId: string|number, callback: SendMessageCallback){
+    public addSendMessageCallback(userId: string | number, callback: SendMessageCallback) {
         discussionManager.onSendMessageCallback(userId, callback);
     }
 
-    get activatedDiscussion(){
+    get activatedDiscussion() {
         return discussionManager.activatedDiscussion;
     }
 
-    public setUserInputManager(userInputManager : UserInputManager){
+    public setUserInputManager(userInputManager: UserInputManager) {
         this.userInputManager = userInputManager;
         discussionManager.setUserInputManager(userInputManager);
     }
 
-    public setShowReportModalCallBacks(callback: ShowReportCallBack){
+    public setShowReportModalCallBacks(callback: ShowReportCallBack) {
         this.showReportModalCallBacks.add(callback);
     }
 
@@ -405,36 +411,36 @@ export class MediaManager {
             for(const indexUserId of this.soundMeters.keys()){
                 const soundMeter = this.soundMeters.get(indexUserId);
                 const soundMeterElement = this.soundMeterElements.get(indexUserId);
-                if(!soundMeter || !soundMeterElement){
+                if (!soundMeter || !soundMeterElement) {
                     return;
                 }
                 const volumeByUser = parseInt((soundMeter.getVolume() / 10).toFixed(0));
                 this.setVolumeSoundMeter(volumeByUser, soundMeterElement);
             }
-        }catch(err){
+        } catch (err) {
             //console.error(err);
         }
     }*/
 
-    private setVolumeSoundMeter(volume: number, element: HTMLDivElement){
-        if(volume <= 0 && !element.classList.contains('active')){
+    private setVolumeSoundMeter(volume: number, element: HTMLDivElement) {
+        if (volume <= 0 && !element.classList.contains('active')) {
             return;
         }
         element.classList.remove('active');
-        if(volume <= 0){
+        if (volume <= 0) {
             return;
         }
         element.classList.add('active');
         element.childNodes.forEach((value: ChildNode, index) => {
-            const elementChildre = element.children.item(index);
-            if(!elementChildre){
+            const elementChildren = element.children.item(index);
+            if (!elementChildren) {
                 return;
             }
-            elementChildre.classList.remove('active');
-            if((index +1) > volume){
+            elementChildren.classList.remove('active');
+            if ((index + 1) > volume) {
                 return;
             }
-            elementChildre.classList.add('active');
+            elementChildren.classList.add('active');
         });
     }
 
