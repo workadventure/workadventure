@@ -1,4 +1,9 @@
-import {gameManager} from "./GameManager";
+import { Queue } from 'queue-typescript';
+import type { Subscription } from "rxjs";
+import { GlobalMessageManager } from "../../Administration/GlobalMessageManager";
+import { userMessageManager } from "../../Administration/UserMessageManager";
+import { iframeListener } from "../../Api/IframeListener";
+import { connectionManager } from "../../Connexion/ConnectionManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
     MessageUserJoined,
@@ -9,72 +14,73 @@ import type {
     PositionInterface,
     RoomJoinedMessageInterface
 } from "../../Connexion/ConnexionModels";
-import {  hasMovedEventName, Player , requestEmoteEventName} from "../Player/Player";
+import { localUserStore } from "../../Connexion/LocalUserStore";
+import { Room } from "../../Connexion/Room";
+import type { RoomConnection } from "../../Connexion/RoomConnection";
+import { worldFullMessageStream } from "../../Connexion/WorldFullMessageStream";
 import {
     DEBUG_MODE,
     JITSI_PRIVATE_MODE,
     MAX_PER_GROUP,
-    POSITION_DELAY,
+    POSITION_DELAY
 } from "../../Enum/EnvironmentVariable";
-import type {
-    ITiledMap,
-    ITiledMapLayer,
-    ITiledMapLayerProperty,
-    ITiledMapObject,
-    ITiledText,
-    ITiledMapTileLayer,
-    ITiledTileSet
-} from "../Map/ITiledMap";
-import type { AddPlayerInterface } from "./AddPlayerInterface";
-import { PlayerAnimationDirections } from "../Player/Animation";
-import { PlayerMovement } from "./PlayerMovement";
-import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
-import { RemotePlayer } from "../Entity/RemotePlayer";
-import { Queue } from 'queue-typescript';
-import { SimplePeer, UserSimplePeerInterface } from "../../WebRtc/SimplePeer";
-import { ReconnectingSceneName } from "../Reconnecting/ReconnectingScene";
-import { lazyLoadPlayerCharacterTextures, loadCustomTexture } from "../Entity/PlayerTexturesLoadingManager";
+import { TextureError } from "../../Exception/TextureError";
+import type { UserMovedMessage } from "../../Messages/generated/messages_pb";
+import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
+import { peerStore } from "../../Stores/PeerStore";
+import { touchScreenManager } from "../../Touch/TouchScreenManager";
+import { urlManager } from "../../Url/UrlManager";
+import { audioManager } from "../../WebRtc/AudioManager";
+import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
+import { HtmlUtils } from "../../WebRtc/HtmlUtils";
+import { jitsiFactory } from "../../WebRtc/JitsiFactory";
 import {
-    CenterListener,
+    AUDIO_LOOP_PROPERTY, AUDIO_VOLUME_PROPERTY, CenterListener,
     JITSI_MESSAGE_PROPERTIES,
     layoutManager,
     LayoutMode,
     ON_ACTION_TRIGGER_BUTTON,
     TRIGGER_JITSI_PROPERTIES,
     TRIGGER_WEBSITE_PROPERTIES,
-    WEBSITE_MESSAGE_PROPERTIES,
-    AUDIO_VOLUME_PROPERTY,
-    AUDIO_LOOP_PROPERTY
+    WEBSITE_MESSAGE_PROPERTIES
 } from "../../WebRtc/LayoutManager";
-import { GameMap } from "./GameMap";
-import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { mediaManager } from "../../WebRtc/MediaManager";
-import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
-import type { ActionableItem } from "../Items/ActionableItem";
-import { UserInputManager } from "../UserInput/UserInputManager";
-import {soundManager} from "./SoundManager";
-import type { UserMovedMessage } from "../../Messages/generated/messages_pb";
-import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
-import { connectionManager } from "../../Connexion/ConnectionManager";
-import type { RoomConnection } from "../../Connexion/RoomConnection";
-import { GlobalMessageManager } from "../../Administration/GlobalMessageManager";
-import { userMessageManager } from "../../Administration/UserMessageManager";
-import { ConsoleGlobalMessageManager } from "../../Administration/ConsoleGlobalMessageManager";
-import { ResizableScene } from "../Login/ResizableScene";
-import { Room } from "../../Connexion/Room";
-import { jitsiFactory } from "../../WebRtc/JitsiFactory";
-import { urlManager } from "../../Url/UrlManager";
-import { audioManager } from "../../WebRtc/AudioManager";
-import { PresentationModeIcon } from "../Components/PresentationModeIcon";
+import { SimplePeer, UserSimplePeerInterface } from "../../WebRtc/SimplePeer";
+import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
 import { ChatModeIcon } from "../Components/ChatModeIcon";
-import { OpenChatIcon, openChatIconName } from "../Components/OpenChatIcon";
-import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
-import { TextureError } from "../../Exception/TextureError";
 import { addLoader } from "../Components/Loader";
+import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
+import { OpenChatIcon, openChatIconName } from "../Components/OpenChatIcon";
+import { PresentationModeIcon } from "../Components/PresentationModeIcon";
+import { TextUtils } from "../Components/TextUtils";
+import { lazyLoadPlayerCharacterTextures, loadCustomTexture } from "../Entity/PlayerTexturesLoadingManager";
+import { RemotePlayer } from "../Entity/RemotePlayer";
+import type { ActionableItem } from "../Items/ActionableItem";
+import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
+import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
+import type {
+    ITiledMap,
+    ITiledMapLayer,
+    ITiledMapLayerProperty,
+    ITiledMapObject,
+    ITiledMapTileLayer,
+    ITiledTileSet } from "../Map/ITiledMap";
+import { MenuScene, MenuSceneName } from '../Menu/MenuScene';
+import { PlayerAnimationDirections } from "../Player/Animation";
+import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
 import { ErrorSceneName } from "../Reconnecting/ErrorScene";
-import { localUserStore } from "../../Connexion/LocalUserStore";
-import { iframeListener } from "../../Api/IframeListener";
-import { HtmlUtils } from "../../WebRtc/HtmlUtils";
+import { ReconnectingSceneName } from "../Reconnecting/ReconnectingScene";
+import { waScaleManager } from "../Services/WaScaleManager";
+import { PinchManager } from "../UserInput/PinchManager";
+import { UserInputManager } from "../UserInput/UserInputManager";
+import type { AddPlayerInterface } from "./AddPlayerInterface";
+import { DEPTH_OVERLAY_INDEX } from "./DepthIndexes";
+import { DirtyScene } from "./DirtyScene";
+import { EmoteManager } from "./EmoteManager";
+import { gameManager } from "./GameManager";
+import { GameMap } from "./GameMap";
+import { PlayerMovement } from "./PlayerMovement";
+import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
@@ -82,22 +88,12 @@ import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import DOMElement = Phaser.GameObjects.DOMElement;
 import EVENT_TYPE = Phaser.Scenes.Events
-import type { Subscription } from "rxjs";
-import { worldFullMessageStream } from "../../Connexion/WorldFullMessageStream";
-import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
 import RenderTexture = Phaser.GameObjects.RenderTexture;
 import Tilemap = Phaser.Tilemaps.Tilemap;
-import {DirtyScene} from "./DirtyScene";
-import {TextUtils} from "../Components/TextUtils";
-import {touchScreenManager} from "../../Touch/TouchScreenManager";
-import {PinchManager} from "../UserInput/PinchManager";
-import {joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey} from "../Components/MobileJoystick";
-import {DEPTH_OVERLAY_INDEX} from "./DepthIndexes";
-import {waScaleManager} from "../Services/WaScaleManager";
-import {peerStore} from "../../Stores/PeerStore";
-import {EmoteManager} from "./EmoteManager";
 import type { HasPlayerMovedEvent } from '../../Api/Events/HasPlayerMovedEvent';
-import { MenuScene, MenuSceneName } from '../Menu/MenuScene';
+
+import AnimatedTiles from "phaser-animated-tiles";
+import {soundManager} from "./SoundManager";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null,
@@ -144,6 +140,7 @@ export class GameScene extends DirtyScene implements CenterListener {
     Map!: Phaser.Tilemaps.Tilemap;
     Objects!: Array<Phaser.Physics.Arcade.Sprite>;
     mapFile!: ITiledMap;
+    animatedTiles!: AnimatedTiles;
     groups: Map<number, Sprite>;
     startX!: number;
     startY!: number;
@@ -155,13 +152,13 @@ export class GameScene extends DirtyScene implements CenterListener {
     public connection: RoomConnection | undefined;
     private simplePeer!: SimplePeer;
     private GlobalMessageManager!: GlobalMessageManager;
-    public ConsoleGlobalMessageManager!: ConsoleGlobalMessageManager;
     private connectionAnswerPromise: Promise<RoomJoinedMessageInterface>;
     private connectionAnswerPromiseResolve!: (value: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>) => void;
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
     private createPromise: Promise<void>;
     private createPromiseResolve!: (value?: void | PromiseLike<void>) => void;
     private iframeSubscriptionList!: Array<Subscription>;
+    private peerStoreUnsubscribe!: () => void;
     MapUrlFile: string;
     RoomId: string;
     instance: string;
@@ -230,11 +227,11 @@ export class GameScene extends DirtyScene implements CenterListener {
             this.load.image(joystickBaseKey, joystickBaseImg);
             this.load.image(joystickThumbKey, joystickThumbImg);
         }
-        //todo: in an emote manager.
-        this.load.spritesheet('emote-music', 'resources/emotes/pipo-popupemotes005.png', {
-            frameHeight: 32,
-            frameWidth: 32,
-        });
+        this.load.audio('audio-webrtc-in', '/resources/objects/webrtc-in.mp3');
+        this.load.audio('audio-webrtc-out', '/resources/objects/webrtc-out.mp3');
+        //this.load.audio('audio-report-message', '/resources/objects/report-message.mp3');
+        this.sound.pauseOnBlur = false;
+
         this.load.on(FILE_LOAD_ERROR, (file: { src: string }) => {
             // If we happen to be in HTTP and we are trying to load a URL in HTTPS only... (this happens only in dev environments)
             if (window.location.protocol === 'http:' && file.src === this.MapUrlFile && file.src.startsWith('http:') && this.originalMapUrl === undefined) {
@@ -267,6 +264,7 @@ export class GameScene extends DirtyScene implements CenterListener {
                 message: this.originalMapUrl ?? file.src
             });
         });
+        this.load.scenePlugin('AnimatedTiles', AnimatedTiles, 'animatedTiles', 'animatedTiles');
         this.load.on('filecomplete-tilemapJSON-' + this.MapUrlFile, (key: string, type: string, data: unknown) => {
             this.onMapLoad(data);
         });
@@ -281,6 +279,14 @@ export class GameScene extends DirtyScene implements CenterListener {
 
         this.load.spritesheet('layout_modes', 'resources/objects/layout_modes.png', { frameWidth: 32, frameHeight: 32 });
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
+        //eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (this.load as any).rexWebFont({
+            custom: {
+                families: ['Press Start 2P'],
+                urls: ['/resources/fonts/fonts.css'],
+                testString: 'abcdefg'
+            },
+        });
 
         //this function must stay at the end of preload function
         addLoader(this);
@@ -435,6 +441,10 @@ export class GameScene extends DirtyScene implements CenterListener {
             }
         }
 
+        this.gameMap.exitUrls.forEach(exitUrl => {
+            this.loadNextGame(exitUrl)
+        })
+
         this.initStartXAndStartY();
 
         //add entities
@@ -457,6 +467,9 @@ export class GameScene extends DirtyScene implements CenterListener {
         this.removeAllRemotePlayers(); //cleanup the list  of remote players in case the scene was rebooted
 
         this.initCamera();
+
+        this.animatedTiles.init(this.Map);
+        this.events.on('tileanimationupdate', () => this.dirty = true);
 
         this.initCirclesCanvas();
 
@@ -509,6 +522,21 @@ export class GameScene extends DirtyScene implements CenterListener {
         }
 
         this.emoteManager = new EmoteManager(this);
+
+        let oldPeerNumber = 0;
+        this.peerStoreUnsubscribe = peerStore.subscribe((peers) => {
+            const newPeerNumber = peers.size;
+            if (newPeerNumber > oldPeerNumber) {
+                this.sound.play('audio-webrtc-in', {
+                    volume: 0.2
+                });
+            } else if (newPeerNumber < oldPeerNumber) {
+                this.sound.play('audio-webrtc-out', {
+                    volume: 0.2
+                });
+            }
+            oldPeerNumber = newPeerNumber;
+        });
     }
 
     /**
@@ -541,6 +569,7 @@ export class GameScene extends DirtyScene implements CenterListener {
                     characterLayers: message.characterLayers,
                     name: message.name,
                     position: message.position,
+                    visitCardUrl: message.visitCardUrl,
                     companion: message.companion
                 }
                 this.addPlayer(userMessage);
@@ -645,7 +674,6 @@ export class GameScene extends DirtyScene implements CenterListener {
             //this.initUsersPosition(roomJoinedMessage.users);
             this.connectionAnswerPromiseResolve(onConnect.room);
             // Analyze tags to find if we are admin. If yes, show console.
-            this.ConsoleGlobalMessageManager = new ConsoleGlobalMessageManager(this.connection, this.userInputManager, this.connection.isAdmin());
 
 
             this.scene.wake();
@@ -868,49 +896,31 @@ ${escapedMessage}
             this.userInputManager.disableControls();
         }));
 
-        this.iframeSubscriptionList.push(iframeListener.playSoundStream.subscribe((playSoundEvent)=>
-       {
-           const url = new URL(playSoundEvent.url, this.MapUrlFile);
-           soundManager.playSound(this.load,this.sound,url.toString(),playSoundEvent.config);
-       }))
-
-        this.iframeSubscriptionList.push(iframeListener.stopSoundStream.subscribe((stopSoundEvent)=>
-        {
-            const url = new URL(stopSoundEvent.url, this.MapUrlFile);
-            soundManager.stopSound(this.sound,url.toString());
+        this.iframeSubscriptionList.push(iframeListener.playSoundStream.subscribe((playSoundEvent) => {
+            const url = new URL(playSoundEvent.url, this.MapUrlFile);
+            soundManager.playSound(this.load, this.sound, url.toString(), playSoundEvent.config);
         }))
 
-        this.iframeSubscriptionList.push(iframeListener.loadSoundStream.subscribe((loadSoundEvent)=>
-        {
+        this.iframeSubscriptionList.push(iframeListener.stopSoundStream.subscribe((stopSoundEvent) => {
+            const url = new URL(stopSoundEvent.url, this.MapUrlFile);
+            soundManager.stopSound(this.sound, url.toString());
+        }))
+
+        this.iframeSubscriptionList.push(iframeListener.loadSoundStream.subscribe((loadSoundEvent) => {
             const url = new URL(loadSoundEvent.url, this.MapUrlFile);
-            soundManager.loadSound(this.load,this.sound,url.toString());
+            soundManager.loadSound(this.load, this.sound, url.toString());
         }))
 
        this.iframeSubscriptionList.push(iframeListener.enablePlayerControlStream.subscribe(()=>{
             this.userInputManager.restoreControls();
-        }))
-
-        this.iframeSubscriptionList.push(iframeListener.changeTileStream.subscribe(event => {
-            for (const eventTile of event) {
-                const layer = this.gameMap.findPhaserLayer(eventTile.layer);
-                if (layer) {
-                    console.log('layer : ', layer);
-                    const tile = layer.getTileAt(eventTile.x, eventTile.y, true)
-                    if (typeof eventTile.tile == "string") {
-                        const tileIndex = this.getIndexForTileType(eventTile.tile);
-                        if (tileIndex) {
-                            tile.index = tileIndex
-                        } else {
-                            return
-                        }
-                    } else {
-                        tile.index = eventTile.tile //+ firsrtgid du layer
-                    }
-                }
-            }
-            //this.dirty = true;
-        }))
-
+        }));
+        this.iframeSubscriptionList.push(iframeListener.loadPageStream.subscribe((url: string) => {
+            this.loadNextGame(url).then(() => {
+                this.events.once(EVENT_TYPE.POST_UPDATE, () => {
+                    this.onMapExit(url);
+                })
+            })
+        }));
         let scriptedBubbleSprite: Sprite;
         this.iframeSubscriptionList.push(iframeListener.displayBubbleStream.subscribe(() => {
             scriptedBubbleSprite = new Sprite(this, this.CurrentPlayer.x + 25, this.CurrentPlayer.y, 'circleSprite-white');
@@ -939,22 +949,15 @@ ${escapedMessage}
         }))
 
         this.iframeSubscriptionList.push(iframeListener.gameStateStream.subscribe(() => {
-            iframeListener.sendFrozenGameStateEvent({
+            iframeListener.sendGameStateEvent({
                 mapUrl: this.MapUrlFile,
                 startLayerName: this.startLayerName,
                 uuid: localUserStore.getLocalUser()?.uuid,
                 nickname: localUserStore.getName(),
                 roomId: this.RoomId,
-                tags: this.connection ? this.connection.getAllTag() : []
+                tags: this.connection ? this.connection.getAllTags() : []
             })
         }));
-
-/*        this.iframeSubscriptionList.push(iframeListener.tilesetLoaderStream.subscribe((tileset) => {
-            //this.load.tilemapTiledJSON('logo', tileset.imgUrl);
-            this.load.image('logo', tileset.imgUrl);
-            this.Terrains.push(this.Map.addTilesetImage(tileset.name, tileset.imgUrl, tileset.tilewidth, tileset.tileheight, tileset.margin, tileset.spacing));
-            this.gameMap.addTerrain(this.Terrains[this.Terrains.length - 1]);
-        }))*/
 
     }
 
@@ -1045,6 +1048,9 @@ ${escapedMessage}
         this.userInputManager.destroy();
         this.pinchManager?.destroy();
         this.emoteManager.destroy();
+        this.peerStoreUnsubscribe();
+
+        mediaManager.hideGameOverlay();
 
         for (const iframeEvents of this.iframeSubscriptionList) {
             iframeEvents.unsubscribe();
@@ -1156,10 +1162,10 @@ ${escapedMessage}
     }
 
     //todo: push that into the gameManager
-    private loadNextGame(exitSceneIdentifier: string) : void{
+    private loadNextGame(exitSceneIdentifier: string) : Promise<void>{
         const { roomId, hash } = Room.getIdFromIdentifier(exitSceneIdentifier, this.MapUrlFile, this.instance);
         const room = new Room(roomId);
-        gameManager.loadMap(room, this.scene).catch(() => {});
+        return gameManager.loadMap(room, this.scene).catch(() => { });
     }
 
     private startUser(layer: ITiledMapTileLayer): PositionInterface {
@@ -1233,7 +1239,10 @@ ${escapedMessage}
                 this.companion,
                 this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
-            this.CurrentPlayer.on('pointerdown', () => {
+            this.CurrentPlayer.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+                if (pointer.wasTouch && (pointer.event as TouchEvent).touches.length > 1) {
+                    return; //we don't want the menu to open when pinching on a touch screen.
+                }
                 this.emoteManager.getMenuImages().then((emoteMenuElements) => this.CurrentPlayer.openOrCloseEmoteMenu(emoteMenuElements))
             })
             this.CurrentPlayer.on(requestEmoteEventName, (emoteKey: string) => {
@@ -1433,6 +1442,7 @@ ${escapedMessage}
             texturesPromise,
             addPlayerData.position.direction as PlayerAnimationDirections,
             addPlayerData.position.moving,
+            addPlayerData.visitCardUrl,
             addPlayerData.companion,
             addPlayerData.companion !== null ? lazyLoadCompanionResource(this.load, addPlayerData.companion) : undefined
         );
@@ -1539,8 +1549,8 @@ ${escapedMessage}
         this.connection?.emitActionableEvent(itemId, eventName, state, parameters);
     }
 
-    public onResize(ev: UIEvent): void {
-        super.onResize(ev);
+    public onResize(): void {
+        super.onResize();
         this.reposition();
 
         // Send new viewport to server

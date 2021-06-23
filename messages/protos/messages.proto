@@ -157,6 +157,7 @@ message UserJoinedMessage {
   repeated CharacterLayerMessage characterLayers = 3;
   PositionMessage position = 4;
   CompanionMessage companion = 5;
+  string visitCardUrl = 6;
 }
 
 message UserLeftMessage {
@@ -274,6 +275,7 @@ message JoinRoomMessage {
   repeated string tag = 6;
   string IPAddress = 7;
   CompanionMessage companion = 8;
+  string visitCardUrl = 9;
 }
 
 message UserJoinedZoneMessage {
@@ -283,6 +285,7 @@ message UserJoinedZoneMessage {
   PositionMessage position = 4;
   Zone fromZone = 5;
   CompanionMessage companion = 6;
+  string visitCardUrl = 7;
 }
 
 message UserLeftZoneMessage {

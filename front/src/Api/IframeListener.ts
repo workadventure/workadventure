@@ -1,30 +1,36 @@
+import {Subject} from "rxjs";
+import {ChatEvent, isChatEvent} from "./Events/ChatEvent";
+import {HtmlUtils} from "../WebRtc/HtmlUtils";
+import type {EnterLeaveEvent} from "./Events/EnterLeaveEvent";
+import {isOpenPopupEvent, OpenPopupEvent} from "./Events/OpenPopupEvent";
+import {isOpenTabEvent, OpenTabEvent} from "./Events/OpenTabEvent";
+import type {ButtonClickedEvent} from "./Events/ButtonClickedEvent";
+import {ClosePopupEvent, isClosePopupEvent} from "./Events/ClosePopupEvent";
+import {scriptUtils} from "./ScriptUtils";
+import {GoToPageEvent, isGoToPageEvent} from "./Events/GoToPageEvent";
+import {isOpenCoWebsite, OpenCoWebSiteEvent} from "./Events/OpenCoWebSiteEvent";
+import {
+    IframeEvent,
+    IframeEventMap,
+    IframeResponseEvent,
+    IframeResponseEventMap,
+    isIframeEventWrapper,
+    TypedMessageEvent
+} from "./Events/IframeEvent";
+import type {UserInputChatEvent} from "./Events/UserInputChatEvent";
+import {isPlaySoundEvent, PlaySoundEvent} from "./Events/PlaySoundEvent";
+import {isStopSoundEvent, StopSoundEvent} from "./Events/StopSoundEvent";
+import {isLoadSoundEvent, LoadSoundEvent} from "./Events/LoadSoundEvent";
+import {isSetPropertyEvent, SetPropertyEvent} from "./Events/setPropertyEvent";
+import {isLayerEvent, LayerEvent} from "./Events/LayerEvent";
+import {isMenuItemRegisterEvent,} from "./Events/ui/MenuItemRegisterEvent";
+import type {DataLayerEvent} from "./Events/DataLayerEvent";
+import type {GameStateEvent} from "./Events/GameStateEvent";
+import type {HasPlayerMovedEvent} from "./Events/HasPlayerMovedEvent";
+import {isLoadPageEvent} from "./Events/LoadPageEvent";
+import {handleMenuItemRegistrationEvent, isMenuItemRegisterIframeEvent} from "./Events/ui/MenuItemRegisterEvent";
+import {ChangeTileEvent, isChangeTileEvent} from "./Events/ChangeTileEvent";
 
-import { Subject } from "rxjs";
-import { ChatEvent, isChatEvent } from "./Events/ChatEvent";
-import { HtmlUtils } from "../WebRtc/HtmlUtils";
-import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
-import { isOpenPopupEvent, OpenPopupEvent } from "./Events/OpenPopupEvent";
-import { isOpenTabEvent, OpenTabEvent } from "./Events/OpenTabEvent";
-import type { ButtonClickedEvent } from "./Events/ButtonClickedEvent";
-import { ClosePopupEvent, isClosePopupEvent } from "./Events/ClosePopupEvent";
-import { scriptUtils } from "./ScriptUtils";
-import { GoToPageEvent, isGoToPageEvent } from "./Events/GoToPageEvent";
-import { isOpenCoWebsite, OpenCoWebSiteEvent } from "./Events/OpenCoWebSiteEvent";
-import { IframeEventMap, IframeEvent, IframeResponseEvent, IframeResponseEventMap, isIframeEventWrapper, TypedMessageEvent } from "./Events/IframeEvent";
-import type { UserInputChatEvent } from "./Events/UserInputChatEvent";
-import { isLayerEvent, LayerEvent } from "./Events/LayerEvent";
-import { isSetPropertyEvent, SetPropertyEvent} from "./Events/setPropertyEvent";
-import type { GameStateEvent } from './Events/GameStateEvent';
-import type { HasPlayerMovedEvent } from './Events/HasPlayerMovedEvent';
-import { Math } from 'phaser';
-import type { DataLayerEvent } from "./Events/DataLayerEvent";
-import { isMenuItemRegisterEvent } from './Events/MenuItemRegisterEvent';
-import type { MenuItemClickedEvent } from './Events/MenuItemClickedEvent';
-//import { isTilesetEvent, TilesetEvent } from "./Events/TilesetEvent";
-import { isPlaySoundEvent, PlaySoundEvent } from "./Events/PlaySoundEvent";
-import { isStopSoundEvent, StopSoundEvent } from "./Events/StopSoundEvent";
-import { isLoadSoundEvent, LoadSoundEvent } from "./Events/LoadSoundEvent";
-import { isChangeTileEvent, ChangeTileEvent } from './Events/ChangeTileEvent';
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.
  * Also allows to send messages to those iframes.
@@ -42,6 +48,9 @@ class IframeListener {
 
     private readonly _goToPageStream: Subject<GoToPageEvent> = new Subject();
     public readonly goToPageStream = this._goToPageStream.asObservable();
+
+    private readonly _loadPageStream: Subject<string> = new Subject();
+    public readonly loadPageStream = this._loadPageStream.asObservable();
 
     private readonly _openCoWebSiteStream: Subject<OpenCoWebSiteEvent> = new Subject();
     public readonly openCoWebSiteStream = this._openCoWebSiteStream.asObservable();
@@ -82,8 +91,8 @@ class IframeListener {
     private readonly _registerMenuCommandStream: Subject<string> = new Subject();
     public readonly registerMenuCommandStream = this._registerMenuCommandStream.asObservable();
 
-/*    private readonly _tilesetLoaderStream: Subject<TilesetEvent> =  new Subject();
-    public readonly tilesetLoaderStream = this._tilesetLoaderStream.asObservable();*/
+    private readonly _unregisterMenuCommandStream: Subject<string> = new Subject();
+    public readonly unregisterMenuCommandStream = this._unregisterMenuCommandStream.asObservable();
 
     private readonly _playSoundStream: Subject<PlaySoundEvent> = new Subject();
     public readonly playSoundStream = this._playSoundStream.asObservable();
@@ -98,6 +107,7 @@ class IframeListener {
     public readonly changeTileStream = this._changeTileStream.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
+    private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
     private sendPlayerMove: boolean = false;
 
@@ -106,14 +116,17 @@ class IframeListener {
             // Do we trust the sender of this message?
             // Let's only accept messages from the iframe that are allowed.
             // Note: maybe we could restrict on the domain too for additional security (in case the iframe goes to another domain).
-            let foundSrc: string | null = null;
-            for (const iframe of this.iframes) {
+            let foundSrc: string | undefined;
+
+            let iframe: HTMLIFrameElement;
+            for (iframe of this.iframes) {
                 if (iframe.contentWindow === message.source) {
                     foundSrc = iframe.src;
                     break;
                 }
             }
-            if (!foundSrc) {
+
+            if (foundSrc === undefined) {
                 return;
             }
 
@@ -138,6 +151,9 @@ class IframeListener {
                 else if (payload.type === 'goToPage' && isGoToPageEvent(payload.data)) {
                     scriptUtils.goToPage(payload.data.url);
                 }
+                else if (payload.type === 'loadPage' && isLoadPageEvent(payload.data)) {
+                    this._loadPageStream.next(payload.data.url);
+                }
                 else if (payload.type === 'playSound' && isPlaySoundEvent(payload.data)) {
                     this._playSoundStream.next(payload.data);
                 }
@@ -148,11 +164,7 @@ class IframeListener {
                     this._loadSoundStream.next(payload.data);
                 }
                 else if (payload.type === 'openCoWebSite' && isOpenCoWebsite(payload.data)) {
-                    const scriptUrl = [...this.scripts.keys()].find(key => {
-                        return this.scripts.get(key)?.contentWindow == message.source
-                    })
-
-                    scriptUtils.openCoWebsite(payload.data.url, scriptUrl || foundSrc);
+                    scriptUtils.openCoWebsite(payload.data.url, foundSrc);
                 }
 
                 else if (payload.type === 'closeCoWebSite') {
@@ -174,6 +186,13 @@ class IframeListener {
                     this.sendPlayerMove = true
                 } else if (payload.type == "getDataLayer") {
                     this._dataLayerChangeStream.next();
+                } else if (isMenuItemRegisterIframeEvent(payload)) {
+                    const data = payload.data.menutItem;
+                    // @ts-ignore
+                    this.iframeCloseCallbacks.get(iframe).push(() => {
+                        this._unregisterMenuCommandStream.next(data);
+                    })
+                    handleMenuItemRegistrationEvent(payload.data)
                 } else if (payload.type == "registerMenuCommand" && isMenuItemRegisterEvent(payload.data)) {
                     this._registerMenuCommandStream.next(payload.data.menutItem)
                 } else if (payload.type == "changeTile" && isChangeTileEvent(payload.data)) {
@@ -192,7 +211,7 @@ class IframeListener {
     }
 
 
-    sendFrozenGameStateEvent(gameStateEvent: GameStateEvent) {
+    sendGameStateEvent(gameStateEvent: GameStateEvent) {
         this.postMessage({
             'type': 'gameState',
             'data': gameStateEvent
@@ -204,9 +223,13 @@ class IframeListener {
      */
     registerIframe(iframe: HTMLIFrameElement): void {
         this.iframes.add(iframe);
+        this.iframeCloseCallbacks.set(iframe, []);
     }
 
     unregisterIframe(iframe: HTMLIFrameElement): void {
+        this.iframeCloseCallbacks.get(iframe)?.forEach(callback => {
+            callback();
+        });
         this.iframes.delete(iframe);
     }
 
@@ -216,7 +239,7 @@ class IframeListener {
         if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
             // Using external iframe mode (
             const iframe = document.createElement('iframe');
-            iframe.id = this.getIFrameId(scriptUrl);
+            iframe.id = IframeListener.getIFrameId(scriptUrl);
             iframe.style.display = 'none';
             iframe.src = '/iframe.html?script=' + encodeURIComponent(scriptUrl);
 
@@ -231,24 +254,23 @@ class IframeListener {
         } else {
             // production code
             const iframe = document.createElement('iframe');
-            iframe.id = this.getIFrameId(scriptUrl);
+            iframe.id = IframeListener.getIFrameId(scriptUrl);
             iframe.style.display = 'none';
 
             // We are putting a sandbox on this script because it will run in the same domain as the main website.
             iframe.sandbox.add('allow-scripts');
             iframe.sandbox.add('allow-top-navigation-by-user-activation');
 
-            const html = '<!doctype html>\n' +
+            //iframe.src = "data:text/html;charset=utf-8," + escape(html);
+            iframe.srcdoc = '<!doctype html>\n' +
                 '\n' +
                 '<html lang="en">\n' +
                 '<head>\n' +
                 '<script src="' + window.location.protocol + '//' + window.location.host + '/iframe_api.js" ></script>\n' +
                 '<script src="' + scriptUrl + '" ></script>\n' +
+                '<title></title>\n' +
                 '</head>\n' +
                 '</html>\n';
-
-            //iframe.src = "data:text/html;charset=utf-8," + escape(html);
-            iframe.srcdoc = html;
 
             document.body.prepend(iframe);
 
@@ -259,12 +281,12 @@ class IframeListener {
 
     }
 
-    private getIFrameId(scriptUrl: string): string {
+    private static getIFrameId(scriptUrl: string): string {
         return 'script' + btoa(scriptUrl);
     }
 
     unregisterScript(scriptUrl: string): void {
-        const iFrameId = this.getIFrameId(scriptUrl);
+        const iFrameId = IframeListener.getIFrameId(scriptUrl);
         const iframe = HtmlUtils.getElementByIdOrFail<HTMLIFrameElement>(iFrameId);
         if (!iframe) {
             throw new Error('Unknown iframe for script "' + scriptUrl + '"');
@@ -273,15 +295,6 @@ class IframeListener {
         iframe.remove();
 
         this.scripts.delete(scriptUrl);
-    }
-
-    sendMenuClickedEvent(menuItem: string) {
-        this.postMessage({
-            'type': 'menuItemClicked',
-            'data': {
-                menuItem: menuItem,
-            } as MenuItemClickedEvent
-        });
     }
 
     sendUserInputChat(message: string) {
@@ -333,7 +346,7 @@ class IframeListener {
     /**
      * Sends the message... to all allowed iframes.
      */
-    private postMessage(message: IframeResponseEvent<keyof IframeResponseEventMap>) {
+    public postMessage(message: IframeResponseEvent<keyof IframeResponseEventMap>) {
         for (const iframe of this.iframes) {
             iframe.contentWindow?.postMessage(message, '*');
         }

@@ -30,7 +30,7 @@ export type MovesCallback = (thing: Movable, position: PositionInterface, listen
 export type LeavesCallback = (thing: Movable, listener: User) => void;*/
 
 export class UserDescriptor {
-    private constructor(public readonly userId: number, private name: string, private characterLayers: CharacterLayerMessage[], private position: PositionMessage, private companion?: CompanionMessage) {
+    private constructor(public readonly userId: number, private name: string, private characterLayers: CharacterLayerMessage[], private position: PositionMessage, private visitCardUrl: string | null, private companion?: CompanionMessage) {
         if (!Number.isInteger(this.userId)) {
             throw new Error('UserDescriptor.userId is not an integer: '+this.userId);
         }
@@ -41,7 +41,7 @@ export class UserDescriptor {
         if (position === undefined) {
             throw new Error('Missing position');
         }
-        return new UserDescriptor(message.getUserid(), message.getName(), message.getCharacterlayersList(), position, message.getCompanion());
+        return new UserDescriptor(message.getUserid(), message.getName(), message.getCharacterlayersList(), position, message.getVisitcardurl(),  message.getCompanion());
     }
 
     public update(userMovedMessage: UserMovedMessage) {
@@ -59,7 +59,10 @@ export class UserDescriptor {
         userJoinedMessage.setName(this.name);
         userJoinedMessage.setCharacterlayersList(this.characterLayers);
         userJoinedMessage.setPosition(this.position);
-        userJoinedMessage.setCompanion(this.companion)
+        if (this.visitCardUrl) {
+            userJoinedMessage.setVisitcardurl(this.visitCardUrl);
+        }
+        userJoinedMessage.setCompanion(this.companion);
 
         return userJoinedMessage;
     }

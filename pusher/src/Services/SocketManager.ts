@@ -24,7 +24,12 @@ import {
     AdminPusherToBackMessage,
     ServerToAdminClientMessage,
     EmoteEventMessage,
-    UserJoinedRoomMessage, UserLeftRoomMessage, AdminMessage, BanMessage, RefreshRoomMessage, EmotePromptMessage
+    UserJoinedRoomMessage,
+    UserLeftRoomMessage,
+    AdminMessage,
+    BanMessage,
+    RefreshRoomMessage,
+    EmotePromptMessage,
 } from "../Messages/generated/messages_pb";
 import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
 import {JITSI_ISS, SECRET_JITSI_KEY} from "../Enum/EnvironmentVariable";
@@ -156,6 +161,9 @@ export class SocketManager implements ZoneEventListener {
             joinRoomMessage.setName(client.name);
             joinRoomMessage.setPositionmessage(ProtobufUtils.toPositionMessage(client.position));
             joinRoomMessage.setTagList(client.tags);
+            if (client.visitCardUrl) {
+                joinRoomMessage.setVisitcardurl(client.visitCardUrl);
+            }
             joinRoomMessage.setCompanion(client.companion);
 
             for (const characterLayer of client.characterLayers) {
@@ -294,6 +302,7 @@ export class SocketManager implements ZoneEventListener {
                 throw 'reported socket user not found';
             }
             //TODO report user on admin application
+            //todo: move to back because this fail if the reported player is in another pusher. 
             await adminApi.reportPlayer(reportedSocket.userUuid, reportPlayerMessage.getReportcomment(),  client.userUuid, client.roomId.split('/')[2])
         } catch (e) {
             console.error('An error occurred on "handleReportMessage"');

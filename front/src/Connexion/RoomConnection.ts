@@ -30,7 +30,7 @@ import {
     EmoteEventMessage,
     EmotePromptMessage,
     SendUserMessage,
-    BanUserMessage
+    BanUserMessage,
 } from "../Messages/generated/messages_pb"
 
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
@@ -177,9 +177,9 @@ export class RoomConnection implements RoomConnection {
             } else if (message.hasWorldfullmessage()) {
                 worldFullMessageStream.onMessage();
                 this.closed = true;
-                } else if (message.hasWorldconnexionmessage()) {
-                     worldFullMessageStream.onMessage(message.getWorldconnexionmessage()?.getMessage());
-                     this.closed = true;
+            } else if (message.hasWorldconnexionmessage()) {
+                worldFullMessageStream.onMessage(message.getWorldconnexionmessage()?.getMessage());
+                this.closed = true;
             } else if (message.hasWebrtcsignaltoclientmessage()) {
                 this.dispatch(EventMessage.WEBRTC_SIGNAL, message.getWebrtcsignaltoclientmessage());
             } else if (message.hasWebrtcscreensharingsignaltoclientmessage()) {
@@ -343,6 +343,7 @@ export class RoomConnection implements RoomConnection {
             userId: message.getUserid(),
             name: message.getName(),
             characterLayers,
+            visitCardUrl: message.getVisitcardurl(),
             position: ProtobufClientUtils.toPointInterface(position),
             companion: companion ? companion.getName() : null
         }
@@ -617,7 +618,7 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 
-    public getAllTag() : string[] {
+    public getAllTags() : string[] {
         return this.tags;
     }
 }

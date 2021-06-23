@@ -5,9 +5,7 @@ import type { ChatEvent } from './ChatEvent';
 import type { ClosePopupEvent } from './ClosePopupEvent';
 import type { EnterLeaveEvent } from './EnterLeaveEvent';
 import type { GoToPageEvent } from './GoToPageEvent';
-import type { MenuItemClickedEvent } from './MenuItemClickedEvent';
-import type { MenuItemRegisterEvent } from './MenuItemRegisterEvent';
-import type { HasPlayerMovedEvent } from './HasPlayerMovedEvent';
+import type { LoadPageEvent } from './LoadPageEvent';
 import type { OpenCoWebSiteEvent } from './OpenCoWebSiteEvent';
 import type { OpenPopupEvent } from './OpenPopupEvent';
 import type { OpenTabEvent } from './OpenTabEvent';
@@ -17,16 +15,18 @@ import type { LayerEvent } from './LayerEvent';
 import type { SetPropertyEvent } from "./setPropertyEvent";
 import type { LoadSoundEvent } from "./LoadSoundEvent";
 import type { PlaySoundEvent } from "./PlaySoundEvent";
+import type { MenuItemClickedEvent } from "./ui/MenuItemClickedEvent";
+import type { MenuItemRegisterEvent } from './ui/MenuItemRegisterEvent';
+import type { HasPlayerMovedEvent } from "./HasPlayerMovedEvent";
 import type { ChangeTileEvent } from "./ChangeTileEvent";
-
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T
 }
 
 export type IframeEventMap = {
-    getState: GameStateEvent,
-    registerMenuCommand: MenuItemRegisterEvent
+    //getState: GameStateEvent,
+    loadPage: LoadPageEvent
     chat: ChatEvent,
     openPopup: OpenPopupEvent
     closePopup: ClosePopupEvent
@@ -43,11 +43,12 @@ export type IframeEventMap = {
     hideLayer: LayerEvent
     setProperty: SetPropertyEvent
     getDataLayer: undefined
-    //tilsetEvent: TilesetEvent
     loadSound: LoadSoundEvent
     playSound: PlaySoundEvent
     stopSound: null
     changeTile: ChangeTileEvent
+    getState: undefined,
+    registerMenuCommand: MenuItemRegisterEvent
 }
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;

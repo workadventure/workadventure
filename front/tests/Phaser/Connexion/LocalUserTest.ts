@@ -19,8 +19,14 @@ describe("isUserNameValid()", () => {
     it("should not validate spaces", () => {
         expect(isUserNameValid(' ')).toBe(false);
     });
-    it("should not validate special characters", () => {
-        expect(isUserNameValid('a&-')).toBe(false);
+    it("should validate special characters", () => {
+        expect(isUserNameValid('%&-')).toBe(true);
+    });
+    it("should validate accents", () => {
+        expect(isUserNameValid('éàëè')).toBe(true);
+    });
+    it("should validate chinese characters", () => {
+        expect(isUserNameValid('中文鍵盤')).toBe(true);
     });
 });
 
