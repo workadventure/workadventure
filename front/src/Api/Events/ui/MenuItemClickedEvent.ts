@@ -8,3 +8,5 @@ export const isMenuItemClickedEvent =
  * A message sent from the game to the iFrame when a menu item is clicked.
  */
 export type MenuItemClickedEvent = tg.GuardedType<typeof isMenuItemClickedEvent>;
+
+

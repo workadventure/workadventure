@@ -1,4 +1,4 @@
-import {registeredCallbacks} from "./Api/iframe/registeredCallbacks";
+import { registeredCallbacks } from "./Api/iframe/registeredCallbacks";
 import {
     IframeResponseEvent,
     IframeResponseEventMap,
@@ -6,19 +6,16 @@ import {
     TypedMessageEvent
 } from "./Api/Events/IframeEvent";
 import chat from "./Api/iframe/chat";
-import type {IframeCallback} from './Api/iframe/IframeApiContribution';
+import type { IframeCallback } from './Api/iframe/IframeApiContribution';
 import nav from "./Api/iframe/nav";
 import controls from "./Api/iframe/controls";
 import ui from "./Api/iframe/ui";
 import sound from "./Api/iframe/sound";
 import room from "./Api/iframe/room";
-import type {ButtonDescriptor} from "./Api/iframe/Ui/ButtonDescriptor";
-import type {Popup} from "./Api/iframe/Ui/Popup";
-import type {Sound} from "./Api/iframe/Sound/Sound";
-import type {MenuItemRegisterEvent} from "./Api/Events/MenuItemRegisterEvent";
+import type { ButtonDescriptor } from "./Api/iframe/Ui/ButtonDescriptor";
+import type { Popup } from "./Api/iframe/Ui/Popup";
+import type { Sound } from "./Api/iframe/Sound/Sound";
 
-
-const menuCallbacks: Map<string, (command: string) => void> = new Map()
 const wa = {
     ui,
     nav,
@@ -80,7 +77,7 @@ const wa = {
     /**
      * @deprecated Use WA.sound.loadSound instead
      */
-    loadSound(url: string) : Sound {
+    loadSound(url: string): Sound {
         console.warn('Method WA.loadSound is deprecated. Please use WA.sound.loadSound instead');
         return sound.loadSound(url);
     },
@@ -88,7 +85,7 @@ const wa = {
     /**
      * @deprecated Use WA.nav.goToPage instead
      */
-    goToPage(url : string) : void {
+    goToPage(url: string): void {
         console.warn('Method WA.goToPage is deprecated. Please use WA.nav.goToPage instead');
         nav.goToPage(url);
     },
@@ -123,16 +120,6 @@ const wa = {
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup {
         console.warn('Method WA.openPopup is deprecated. Please use WA.ui.openPopup instead');
         return ui.openPopup(targetObject, message, buttons);
-    },
-
-    registerMenuCommand(commandDescriptor: string, callback: (commandDescriptor: string) => void): void {
-        menuCallbacks.set(commandDescriptor, callback);
-        window.parent.postMessage({
-            'type': 'registerMenuCommand',
-            'data': {
-                menutItem: commandDescriptor
-            } as MenuItemRegisterEvent
-        }, '*');
     },
     /**
      * @deprecated Use WA.chat.onChatMessage instead

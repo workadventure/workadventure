@@ -1,4 +1,10 @@
-import {gameManager, HasMovedEvent} from "./GameManager";
+import { Queue } from 'queue-typescript';
+import type { Subscription } from "rxjs";
+import { ConsoleGlobalMessageManager } from "../../Administration/ConsoleGlobalMessageManager";
+import { GlobalMessageManager } from "../../Administration/GlobalMessageManager";
+import { userMessageManager } from "../../Administration/UserMessageManager";
+import { iframeListener } from "../../Api/IframeListener";
+import { connectionManager } from "../../Connexion/ConnectionManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
     MessageUserJoined,
@@ -9,94 +15,84 @@ import type {
     PositionInterface,
     RoomJoinedMessageInterface
 } from "../../Connexion/ConnexionModels";
-import {hasMovedEventName, Player, requestEmoteEventName} from "../Player/Player";
+import { localUserStore } from "../../Connexion/LocalUserStore";
+import { Room } from "../../Connexion/Room";
+import type { RoomConnection } from "../../Connexion/RoomConnection";
+import { worldFullMessageStream } from "../../Connexion/WorldFullMessageStream";
 import {
     DEBUG_MODE,
     JITSI_PRIVATE_MODE,
     MAX_PER_GROUP,
-    POSITION_DELAY,
+    POSITION_DELAY
 } from "../../Enum/EnvironmentVariable";
-import type {
-    ITiledMap,
-    ITiledMapLayer,
-    ITiledMapLayerProperty,
-    ITiledMapObject,
-    ITiledMapTileLayer,
-    ITiledTileSet
-} from "../Map/ITiledMap";
-import type { AddPlayerInterface } from "./AddPlayerInterface";
-import { PlayerAnimationDirections } from "../Player/Animation";
-import { PlayerMovement } from "./PlayerMovement";
-import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
-import { RemotePlayer } from "../Entity/RemotePlayer";
-import { Queue } from 'queue-typescript';
-import { SimplePeer, UserSimplePeerInterface } from "../../WebRtc/SimplePeer";
-import { ReconnectingSceneName } from "../Reconnecting/ReconnectingScene";
-import { lazyLoadPlayerCharacterTextures, loadCustomTexture } from "../Entity/PlayerTexturesLoadingManager";
+import { TextureError } from "../../Exception/TextureError";
+import type { UserMovedMessage } from "../../Messages/generated/messages_pb";
+import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
+import { peerStore } from "../../Stores/PeerStore";
+import { touchScreenManager } from "../../Touch/TouchScreenManager";
+import { urlManager } from "../../Url/UrlManager";
+import { audioManager } from "../../WebRtc/AudioManager";
+import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
+import { HtmlUtils } from "../../WebRtc/HtmlUtils";
+import { jitsiFactory } from "../../WebRtc/JitsiFactory";
 import {
-    CenterListener,
+    AUDIO_LOOP_PROPERTY, AUDIO_VOLUME_PROPERTY, CenterListener,
     JITSI_MESSAGE_PROPERTIES,
     layoutManager,
     LayoutMode,
     ON_ACTION_TRIGGER_BUTTON,
     TRIGGER_JITSI_PROPERTIES,
     TRIGGER_WEBSITE_PROPERTIES,
-    WEBSITE_MESSAGE_PROPERTIES,
-    AUDIO_VOLUME_PROPERTY,
-    AUDIO_LOOP_PROPERTY
+    WEBSITE_MESSAGE_PROPERTIES
 } from "../../WebRtc/LayoutManager";
-import { GameMap } from "./GameMap";
-import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { mediaManager } from "../../WebRtc/MediaManager";
-import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
-import type { ActionableItem } from "../Items/ActionableItem";
-import { UserInputManager } from "../UserInput/UserInputManager";
-import {soundManager} from "./SoundManager";
-import type { UserMovedMessage } from "../../Messages/generated/messages_pb";
-import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
-import { connectionManager } from "../../Connexion/ConnectionManager";
-import type { RoomConnection } from "../../Connexion/RoomConnection";
-import { GlobalMessageManager } from "../../Administration/GlobalMessageManager";
-import { userMessageManager } from "../../Administration/UserMessageManager";
-import { ConsoleGlobalMessageManager } from "../../Administration/ConsoleGlobalMessageManager";
-import { ResizableScene } from "../Login/ResizableScene";
-import { Room } from "../../Connexion/Room";
-import { jitsiFactory } from "../../WebRtc/JitsiFactory";
-import { urlManager } from "../../Url/UrlManager";
-import { audioManager } from "../../WebRtc/AudioManager";
-import { PresentationModeIcon } from "../Components/PresentationModeIcon";
+import { SimplePeer, UserSimplePeerInterface } from "../../WebRtc/SimplePeer";
+import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
 import { ChatModeIcon } from "../Components/ChatModeIcon";
-import { OpenChatIcon, openChatIconName } from "../Components/OpenChatIcon";
-import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
-import { TextureError } from "../../Exception/TextureError";
 import { addLoader } from "../Components/Loader";
+import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
+import { OpenChatIcon, openChatIconName } from "../Components/OpenChatIcon";
+import { PresentationModeIcon } from "../Components/PresentationModeIcon";
+import { TextUtils } from "../Components/TextUtils";
+import { lazyLoadPlayerCharacterTextures, loadCustomTexture } from "../Entity/PlayerTexturesLoadingManager";
+import { RemotePlayer } from "../Entity/RemotePlayer";
+import type { ActionableItem } from "../Items/ActionableItem";
+import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
+import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
+import type {
+    ITiledMap,
+    ITiledMapLayer,
+    ITiledMapLayerProperty,
+    ITiledMapObject,
+    ITiledMapTileLayer,
+    ITiledTileSet } from "../Map/ITiledMap";
+import { MenuScene, MenuSceneName } from '../Menu/MenuScene';
+import { PlayerAnimationDirections } from "../Player/Animation";
+import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
 import { ErrorSceneName } from "../Reconnecting/ErrorScene";
-import { localUserStore } from "../../Connexion/LocalUserStore";
-import { iframeListener } from "../../Api/IframeListener";
-import { HtmlUtils } from "../../WebRtc/HtmlUtils";
+import { ReconnectingSceneName } from "../Reconnecting/ReconnectingScene";
+import { waScaleManager } from "../Services/WaScaleManager";
+import { PinchManager } from "../UserInput/PinchManager";
+import { UserInputManager } from "../UserInput/UserInputManager";
+import type { AddPlayerInterface } from "./AddPlayerInterface";
+import { DEPTH_OVERLAY_INDEX } from "./DepthIndexes";
+import { DirtyScene } from "./DirtyScene";
+import { EmoteManager } from "./EmoteManager";
+import { gameManager } from "./GameManager";
+import { GameMap } from "./GameMap";
+import { PlayerMovement } from "./PlayerMovement";
+import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
+import { soundManager } from "./SoundManager";
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
 import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import DOMElement = Phaser.GameObjects.DOMElement;
-import EVENT_TYPE =Phaser.Scenes.Events
-import type {Subscription} from "rxjs";
-import {worldFullMessageStream} from "../../Connexion/WorldFullMessageStream";
-import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
+import EVENT_TYPE = Phaser.Scenes.Events
 import RenderTexture = Phaser.GameObjects.RenderTexture;
 import Tilemap = Phaser.Tilemaps.Tilemap;
-import { DirtyScene } from "./DirtyScene";
-import { TextUtils } from "../Components/TextUtils";
-import { touchScreenManager } from "../../Touch/TouchScreenManager";
-import { PinchManager } from "../UserInput/PinchManager";
-import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
-import { DEPTH_OVERLAY_INDEX } from "./DepthIndexes";
-import { waScaleManager } from "../Services/WaScaleManager";
-import { peerStore} from "../../Stores/PeerStore";
-import {EmoteManager } from "./EmoteManager";
 import type { HasPlayerMovedEvent } from '../../Api/Events/HasPlayerMovedEvent';
-import { MenuScene, MenuSceneName } from '../Menu/MenuScene';
 
 import AnimatedTiles from "phaser-animated-tiles";
 
@@ -192,7 +188,7 @@ export class GameScene extends DirtyScene implements CenterListener {
     private characterLayers!: string[];
     private companion!: string | null;
     private messageSubscription: Subscription | null = null;
-    private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
+    private popUpElements: Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string | undefined;
     private pinchManager: PinchManager | undefined;
     private mapTransitioning: boolean = false; //used to prevent transitions happenning at the same time.
@@ -899,37 +895,34 @@ ${escapedMessage}
             this.userInputManager.disableControls();
         }));
 
-        this.iframeSubscriptionList.push(iframeListener.playSoundStream.subscribe((playSoundEvent)=>
-       {
-           const url = new URL(playSoundEvent.url, this.MapUrlFile);
-           soundManager.playSound(this.load,this.sound,url.toString(),playSoundEvent.config);
-       }))
-
-        this.iframeSubscriptionList.push(iframeListener.stopSoundStream.subscribe((stopSoundEvent)=>
-        {
-            const url = new URL(stopSoundEvent.url, this.MapUrlFile);
-            soundManager.stopSound(this.sound,url.toString());
+        this.iframeSubscriptionList.push(iframeListener.playSoundStream.subscribe((playSoundEvent) => {
+            const url = new URL(playSoundEvent.url, this.MapUrlFile);
+            soundManager.playSound(this.load, this.sound, url.toString(), playSoundEvent.config);
         }))
 
-        this.iframeSubscriptionList.push(iframeListener.loadSoundStream.subscribe((loadSoundEvent)=>
-        {
+        this.iframeSubscriptionList.push(iframeListener.stopSoundStream.subscribe((stopSoundEvent) => {
+            const url = new URL(stopSoundEvent.url, this.MapUrlFile);
+            soundManager.stopSound(this.sound, url.toString());
+        }))
+
+        this.iframeSubscriptionList.push(iframeListener.loadSoundStream.subscribe((loadSoundEvent) => {
             const url = new URL(loadSoundEvent.url, this.MapUrlFile);
-            soundManager.loadSound(this.load,this.sound,url.toString());
+            soundManager.loadSound(this.load, this.sound, url.toString());
         }))
 
         this.iframeSubscriptionList.push(iframeListener.enablePlayerControlStream.subscribe(() => {
             this.userInputManager.restoreControls();
         }));
-        this.iframeSubscriptionList.push(iframeListener.loadPageStream.subscribe((url:string)=>{
-            this.loadNextGame(url).then(()=>{
-                this.events.once(EVENT_TYPE.POST_UPDATE,()=>{
+        this.iframeSubscriptionList.push(iframeListener.loadPageStream.subscribe((url: string) => {
+            this.loadNextGame(url).then(() => {
+                this.events.once(EVENT_TYPE.POST_UPDATE, () => {
                     this.onMapExit(url);
                 })
             })
         }));
-        let scriptedBubbleSprite : Sprite;
-       this.iframeSubscriptionList.push(iframeListener.displayBubbleStream.subscribe(()=>{
-            scriptedBubbleSprite = new Sprite(this,this.CurrentPlayer.x + 25,this.CurrentPlayer.y,'circleSprite-white');
+        let scriptedBubbleSprite: Sprite;
+        this.iframeSubscriptionList.push(iframeListener.displayBubbleStream.subscribe(() => {
+            scriptedBubbleSprite = new Sprite(this, this.CurrentPlayer.x + 25, this.CurrentPlayer.y, 'circleSprite-white');
             scriptedBubbleSprite.setDisplayOrigin(48, 48);
             this.add.existing(scriptedBubbleSprite);
         }));
@@ -1000,8 +993,8 @@ ${escapedMessage}
     private onMapExit(exitKey: string) {
         if (this.mapTransitioning) return;
         this.mapTransitioning = true;
-        const {roomId, hash} = Room.getIdFromIdentifier(exitKey, this.MapUrlFile, this.instance);
-        if (!roomId) throw new Error('Could not find the room from its exit key: '+exitKey);
+        const { roomId, hash } = Room.getIdFromIdentifier(exitKey, this.MapUrlFile, this.instance);
+        if (!roomId) throw new Error('Could not find the room from its exit key: ' + exitKey);
         urlManager.pushStartLayerNameToUrl(hash);
         const menuScene: MenuScene = this.scene.get(MenuSceneName) as MenuScene
         menuScene.reset()
@@ -1159,7 +1152,7 @@ ${escapedMessage}
     private loadNextGame(exitSceneIdentifier: string) : Promise<void>{
         const { roomId, hash } = Room.getIdFromIdentifier(exitSceneIdentifier, this.MapUrlFile, this.instance);
         const room = new Room(roomId);
-        return gameManager.loadMap(room, this.scene).catch(() => {});
+        return gameManager.loadMap(room, this.scene).catch(() => { });
     }
 
     private startUser(layer: ITiledMapTileLayer): PositionInterface {

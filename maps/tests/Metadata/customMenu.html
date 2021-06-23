@@ -5,11 +5,9 @@
     </head>
     <body>
     	<script>
-            let chatbotEnabled = false;
-            WA.registerMenuCommand('help', () => {
-                chatbotEnabled = true;
-                WA.sendChatMessage("HELP", 'Mr Robot');
-            });
+            WA.ui.registerMenuCommand("test", () => {
+                WA.chat.sendChatMessage("test clicked", "menu cmd")
+            })
         </script>
     </body>
 </html>

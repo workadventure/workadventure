@@ -24,12 +24,12 @@ import {isStopSoundEvent, StopSoundEvent} from "./Events/StopSoundEvent";
 import {isLoadSoundEvent, LoadSoundEvent} from "./Events/LoadSoundEvent";
 import {isSetPropertyEvent, SetPropertyEvent} from "./Events/setPropertyEvent";
 import {isLayerEvent, LayerEvent} from "./Events/LayerEvent";
-import {isMenuItemRegisterEvent} from "./Events/MenuItemRegisterEvent";
+import {isMenuItemRegisterEvent,} from "./Events/ui/MenuItemRegisterEvent";
 import type {DataLayerEvent} from "./Events/DataLayerEvent";
 import type {GameStateEvent} from "./Events/GameStateEvent";
-import type {MenuItemClickedEvent} from "./Events/MenuItemClickedEvent";
 import type {HasPlayerMovedEvent} from "./Events/HasPlayerMovedEvent";
 import {isLoadPageEvent} from "./Events/LoadPageEvent";
+import {handleMenuItemRegistrationEvent, isMenuItemRegisterIframeEvent} from "./Events/ui/MenuItemRegisterEvent";
 
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.
@@ -115,21 +115,16 @@ class IframeListener {
             // Note: maybe we could restrict on the domain too for additional security (in case the iframe goes to another domain).
             let foundSrc: string | undefined;
 
-            foundSrc = [...this.scripts.keys()].find(key => {
-                return this.scripts.get(key)?.contentWindow == message.source
-            });
-
-            if (foundSrc === undefined) {
-                let iframe: HTMLIFrameElement;
+            let iframe: HTMLIFrameElement;
             for (iframe of this.iframes) {
                 if (iframe.contentWindow === message.source) {
                     foundSrc = iframe.src;
-                    break;}
+                    break;
                 }
+            }
 
-                if (foundSrc === undefined) {
-                    return;
-                }
+            if (foundSrc === undefined) {
+                return;
             }
 
             const payload = message.data;
@@ -188,13 +183,13 @@ class IframeListener {
                     this.sendPlayerMove = true
                 } else if (payload.type == "getDataLayer") {
                     this._dataLayerChangeStream.next();
-                } else if (payload.type == "registerMenuCommand" && isMenuItemRegisterEvent(payload.data)) {
+                } else if (isMenuItemRegisterIframeEvent(payload)) {
                     const data = payload.data.menutItem;
                     // @ts-ignore
                     this.iframeCloseCallbacks.get(iframe).push(() => {
                         this._unregisterMenuCommandStream.next(data);
                     })
-                    this._registerMenuCommandStream.next(payload.data.menutItem)
+                    handleMenuItemRegistrationEvent(payload.data)
                 }
             }
         }, false);
@@ -295,15 +290,6 @@ class IframeListener {
         this.scripts.delete(scriptUrl);
     }
 
-    sendMenuClickedEvent(menuItem: string) {
-        this.postMessage({
-            'type': 'menuItemClicked',
-            'data': {
-                menuItem: menuItem,
-            } as MenuItemClickedEvent
-        });
-    }
-
     sendUserInputChat(message: string) {
         this.postMessage({
             'type': 'userInputChat',
@@ -353,7 +339,7 @@ class IframeListener {
     /**
      * Sends the message... to all allowed iframes.
      */
-    private postMessage(message: IframeResponseEvent<keyof IframeResponseEventMap>) {
+    public postMessage(message: IframeResponseEvent<keyof IframeResponseEventMap>) {
         for (const iframe of this.iframes) {
             iframe.contentWindow?.postMessage(message, '*');
         }
