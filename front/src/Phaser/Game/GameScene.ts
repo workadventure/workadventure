@@ -58,7 +58,6 @@ import {connectionManager} from "../../Connexion/ConnectionManager";
 import type {RoomConnection} from "../../Connexion/RoomConnection";
 import {GlobalMessageManager} from "../../Administration/GlobalMessageManager";
 import {userMessageManager} from "../../Administration/UserMessageManager";
-import {ConsoleGlobalMessageManager} from "../../Administration/ConsoleGlobalMessageManager";
 import {ResizableScene} from "../Login/ResizableScene";
 import {Room} from "../../Connexion/Room";
 import {jitsiFactory} from "../../WebRtc/JitsiFactory";
@@ -95,6 +94,8 @@ import {DEPTH_OVERLAY_INDEX} from "./DepthIndexes";
 import {waScaleManager} from "../Services/WaScaleManager";
 import {peerStore} from "../../Stores/PeerStore";
 import {EmoteManager} from "./EmoteManager";
+
+import AnimatedTiles from "phaser-animated-tiles";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface|null,
@@ -142,6 +143,7 @@ export class GameScene extends DirtyScene implements CenterListener {
     Layers!: Array<Phaser.Tilemaps.TilemapLayer>;
     Objects!: Array<Phaser.Physics.Arcade.Sprite>;
     mapFile!: ITiledMap;
+    animatedTiles!: AnimatedTiles;
     groups: Map<number, Sprite>;
     startX!: number;
     startY!: number;
@@ -153,7 +155,6 @@ export class GameScene extends DirtyScene implements CenterListener {
     public connection: RoomConnection|undefined;
     private simplePeer!: SimplePeer;
     private GlobalMessageManager!: GlobalMessageManager;
-    public ConsoleGlobalMessageManager!: ConsoleGlobalMessageManager;
     private connectionAnswerPromise: Promise<RoomJoinedMessageInterface>;
     private connectionAnswerPromiseResolve!: (value: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>) => void;
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
@@ -266,6 +267,7 @@ export class GameScene extends DirtyScene implements CenterListener {
                 message: this.originalMapUrl ?? file.src
             });
         });
+        this.load.scenePlugin('AnimatedTiles', AnimatedTiles, 'animatedTiles', 'animatedTiles');
         this.load.on('filecomplete-tilemapJSON-'+this.MapUrlFile, (key: string, type: string, data: unknown) => {
             this.onMapLoad(data);
         });
@@ -479,6 +481,9 @@ export class GameScene extends DirtyScene implements CenterListener {
 
         this.initCamera();
 
+        this.animatedTiles.init(this.Map);
+        this.events.on('tileanimationupdate', () => this.dirty = true);
+
         this.initCirclesCanvas();
 
         // Let's pause the scene if the connection is not established yet
@@ -682,7 +687,6 @@ export class GameScene extends DirtyScene implements CenterListener {
             //this.initUsersPosition(roomJoinedMessage.users);
             this.connectionAnswerPromiseResolve(onConnect.room);
             // Analyze tags to find if we are admin. If yes, show console.
-            this.ConsoleGlobalMessageManager = new ConsoleGlobalMessageManager(this.connection, this.userInputManager, this.connection.isAdmin());
 
 
             this.scene.wake();

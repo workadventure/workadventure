@@ -1,10 +1,10 @@
 import {HtmlUtils} from "./../WebRtc/HtmlUtils";
-import {AUDIO_TYPE, MESSAGE_TYPE} from "./ConsoleGlobalMessageManager";
 import {PUSHER_URL, UPLOADER_URL} from "../Enum/EnvironmentVariable";
 import type {RoomConnection} from "../Connexion/RoomConnection";
 import type {PlayGlobalMessageInterface} from "../Connexion/ConnexionModels";
 import {soundPlayingStore} from "../Stores/SoundPlayingStore";
 import {soundManager} from "../Phaser/Game/SoundManager";
+import {AdminMessageEventTypes} from "../Connexion/AdminMessagesService";
 
 export class GlobalMessageManager {
 
@@ -36,11 +36,11 @@ export class GlobalMessageManager {
             previousMessage.remove();
         }
 
-        if(AUDIO_TYPE === message.type){
+        if(AdminMessageEventTypes.audio === message.type){
             this.playAudioMessage(message.id, message.message);
         }
 
-        if(MESSAGE_TYPE === message.type){
+        if(AdminMessageEventTypes.admin === message.type){
             this.playTextMessage(message.id, message.message);
         }
     }
