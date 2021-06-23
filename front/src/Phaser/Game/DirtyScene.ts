@@ -70,6 +70,10 @@ export abstract class DirtyScene extends ResizableScene {
         return this.dirty || this.objectListChanged;
     }
 
+    public markDirty(): void {
+        this.events.once(Phaser.Scenes.Events.POST_UPDATE, () => this.dirty = true);
+    }
+
     public onResize(): void {
         this.objectListChanged = true;
     }

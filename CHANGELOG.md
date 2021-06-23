@@ -1,4 +1,19 @@
-## Version 1.3.9 - in dev
+## Version 1.4.x-dev
+
+### Updates
+
+- Added the ability to have animated tiles in maps #1216 #1217
+- Enabled outlines on actionable item again (they were disabled when migrating to Phaser 3.50) #1218
+- Enabled outlines on player names (when the mouse hovers on a player you can interact with) #1219
+- Migrated the admin console to Svelte, and redesigned the console #1211
+
+## Version 1.4.1
+
+### Bugfixes
+
+- Loading errors after the preload stage should not crash the game anymore
+
+## Version 1.4.0
 
 ### BREAKING CHANGES
 

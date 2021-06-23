@@ -16,6 +16,8 @@ import { Subscription } from 'rxjs';
 import { videoConstraintStore } from "../../Stores/MediaStore";
 import {registerMenuCommandStream} from "../../Api/Events/ui/MenuItemRegisterEvent";
 import {sendMenuClickedEvent} from "../../Api/iframe/Ui/MenuItem";
+import {consoleGlobalMessageManagerVisibleStore} from "../../Stores/ConsoleGlobalMessageManagerStore";
+import {get} from "svelte/store";
 
 export const MenuSceneName = 'MenuScene';
 const gameMenuKey = 'gameMenu';
@@ -190,7 +192,7 @@ export class MenuScene extends Phaser.Scene {
         this.sideMenuOpened = false;
         this.closeAll();
         this.menuButton.getChildByID('openMenuButton').innerHTML = `<img src="/static/images/menu.svg">`;
-        gameManager.getCurrentGameScene(this).ConsoleGlobalMessageManager.disabledMessageConsole();
+        consoleGlobalMessageManagerVisibleStore.set(false);
         this.tweens.add({
             targets: this.menuElement,
             x: closedSideMenuX,
@@ -341,7 +343,11 @@ export class MenuScene extends Phaser.Scene {
                 this.toggleFullscreen();
                 break;
             case 'adminConsoleButton':
-                gameManager.getCurrentGameScene(this).ConsoleGlobalMessageManager.activeMessageConsole();
+                if (get(consoleGlobalMessageManagerVisibleStore)) {
+                    consoleGlobalMessageManagerVisibleStore.set(false);
+                } else {
+                    consoleGlobalMessageManagerVisibleStore.set(true);
+                }
                 break;
         }
     }

@@ -8,6 +8,7 @@ import {Companion} from "../Companion/Companion";
 import type {GameScene} from "../Game/GameScene";
 import {DEPTH_INGAME_TEXT_INDEX} from "../Game/DepthIndexes";
 import {waScaleManager} from "../Services/WaScaleManager";
+import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 
 const playerNameY = - 25;
 
@@ -32,6 +33,7 @@ export abstract class Character extends Container {
     public companion?: Companion;
     private emote: Phaser.GameObjects.Sprite | null = null;
     private emoteTween: Phaser.Tweens.Tween|null = null;
+    scene: GameScene;
 
     constructor(scene: GameScene,
                 x: number,
@@ -46,6 +48,7 @@ export abstract class Character extends Container {
                 companionTexturePromise?: Promise<string>
     ) {
         super(scene, x, y/*, texture, frame*/);
+        this.scene = scene;
         this.PlayerValue = name;
         this.invisible = true
 
@@ -67,6 +70,19 @@ export abstract class Character extends Container {
                 hitAreaCallback: Phaser.Geom.Circle.Contains, //eslint-disable-line @typescript-eslint/unbound-method
                 useHandCursor: true,
             });
+
+            this.on('pointerover',() => {
+                this.getOutlinePlugin()?.add(this.playerName, {
+                    thickness: 2,
+                    outlineColor: 0xffff00
+                });
+                this.scene.markDirty();
+            });
+            this.on('pointerout',() => {
+                this.getOutlinePlugin()?.remove(this.playerName);
+                this.scene.markDirty();
+            })
+
         }
 
         scene.add.existing(this);
@@ -84,6 +100,10 @@ export abstract class Character extends Container {
         if (typeof companion === 'string') {
             this.addCompanion(companion, companionTexturePromise);
         }
+    }
+
+    private getOutlinePlugin(): OutlinePipelinePlugin|undefined {
+        return this.scene.plugins.get('rexOutlinePipeline') as unknown as OutlinePipelinePlugin|undefined;
     }
 
     public addCompanion(name: string, texturePromise?: Promise<string>): void {

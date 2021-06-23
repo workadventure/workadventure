@@ -1,6 +1,5 @@
 import { Queue } from 'queue-typescript';
 import type { Subscription } from "rxjs";
-import { ConsoleGlobalMessageManager } from "../../Administration/ConsoleGlobalMessageManager";
 import { GlobalMessageManager } from "../../Administration/GlobalMessageManager";
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { iframeListener } from "../../Api/IframeListener";
@@ -82,7 +81,6 @@ import { gameManager } from "./GameManager";
 import { GameMap } from "./GameMap";
 import { PlayerMovement } from "./PlayerMovement";
 import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
-import { soundManager } from "./SoundManager";
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
@@ -95,6 +93,7 @@ import Tilemap = Phaser.Tilemaps.Tilemap;
 import type { HasPlayerMovedEvent } from '../../Api/Events/HasPlayerMovedEvent';
 
 import AnimatedTiles from "phaser-animated-tiles";
+import {soundManager} from "./SoundManager";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null,
@@ -153,7 +152,6 @@ export class GameScene extends DirtyScene implements CenterListener {
     public connection: RoomConnection | undefined;
     private simplePeer!: SimplePeer;
     private GlobalMessageManager!: GlobalMessageManager;
-    public ConsoleGlobalMessageManager!: ConsoleGlobalMessageManager;
     private connectionAnswerPromise: Promise<RoomJoinedMessageInterface>;
     private connectionAnswerPromiseResolve!: (value: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>) => void;
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
@@ -672,7 +670,6 @@ export class GameScene extends DirtyScene implements CenterListener {
             //this.initUsersPosition(roomJoinedMessage.users);
             this.connectionAnswerPromiseResolve(onConnect.room);
             // Analyze tags to find if we are admin. If yes, show console.
-            this.ConsoleGlobalMessageManager = new ConsoleGlobalMessageManager(this.connection, this.userInputManager, this.connection.isAdmin());
 
 
             this.scene.wake();
