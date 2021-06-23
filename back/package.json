@@ -11,7 +11,9 @@
     "profile": "tsc && node --prof ./dist/server.js",
     "test": "ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
     "lint": "node_modules/.bin/eslint src/ . --ext .ts",
-    "fix": "node_modules/.bin/eslint --fix src/ . --ext .ts"
+    "fix": "node_modules/.bin/eslint --fix src/ . --ext .ts",
+    "pretty": "yarn prettier --write src/",
+    "pretty-check": "yarn prettier --check src/"
   },
   "repository": {
     "type": "git",
@@ -66,6 +68,7 @@
     "@typescript-eslint/parser": "^2.26.0",
     "eslint": "^6.8.0",
     "jasmine": "^3.5.0",
+    "prettier": "^2.3.1",
     "ts-node-dev": "^1.0.0-pre.44",
     "typescript": "^3.8.3"
   }
