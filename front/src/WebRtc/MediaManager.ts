@@ -432,15 +432,15 @@ export class MediaManager {
         }
         element.classList.add('active');
         element.childNodes.forEach((value: ChildNode, index) => {
-            const elementChildre = element.children.item(index);
-            if (!elementChildre) {
+            const elementChildren = element.children.item(index);
+            if (!elementChildren) {
                 return;
             }
-            elementChildre.classList.remove('active');
+            elementChildren.classList.remove('active');
             if ((index + 1) > volume) {
                 return;
             }
-            elementChildre.classList.add('active');
+            elementChildren.classList.add('active');
         });
     }
 

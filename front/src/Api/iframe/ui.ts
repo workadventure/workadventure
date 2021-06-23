@@ -90,7 +90,7 @@ class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventureUiComma
             'type': 'registerMenuCommand',
             'data': {
                 menutItem: commandDescriptor
-            } as MenuItemRegisterEvent
+            }
         });
     }
 

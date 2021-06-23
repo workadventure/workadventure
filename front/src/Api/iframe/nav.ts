@@ -14,7 +14,7 @@ class WorkadventureNavigationCommands extends IframeApiContribution<Workadventur
             "type": 'openTab',
             "data": {
                 url
-            } as OpenTabEvent
+            }
         });
     }
 
@@ -23,7 +23,7 @@ class WorkadventureNavigationCommands extends IframeApiContribution<Workadventur
             "type": 'goToPage',
             "data": {
                 url
-            } as GoToPageEvent
+            }
         });
     }
 
@@ -32,7 +32,7 @@ class WorkadventureNavigationCommands extends IframeApiContribution<Workadventur
             "type": 'loadPage',
             "data": {
                 url
-            } as LoadPageEvent
+            }
         });
     }
 
@@ -41,7 +41,7 @@ class WorkadventureNavigationCommands extends IframeApiContribution<Workadventur
             "type": 'openCoWebSite',
             "data": {
                 url
-            } as OpenCoWebSiteEvent
+            }
         });
     }
 
