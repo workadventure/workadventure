@@ -6,12 +6,21 @@ function uuidv4() {
         return v.toString(16);
     });
 }
-export class TriggerMessage {
 
+export let triggerMessageInstance: TriggerMessage | undefined = undefined
+
+
+
+export class TriggerMessage {
     uuid: string
 
     constructor(private message: string, private callback: () => void) {
         this.uuid = uuidv4()
+        if (triggerMessageInstance) {
+            triggerMessageInstance.remove();
+        }
+        triggerMessageInstance = this;
+        this.create();
     }
 
     create(): this {
@@ -32,6 +41,7 @@ export class TriggerMessage {
                 uuid: this.uuid
             } as TriggerMessageEvent
         })
+        triggerMessageInstance = undefined
     }
 
     trigger() {

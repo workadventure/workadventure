@@ -4,14 +4,12 @@ import { IframeApiContribution, sendToWorkadventure } from './IframeApiContribut
 import { apiCallback } from "./registeredCallbacks";
 import { Popup } from "./Ui/Popup";
 import type { ButtonClickedCallback, ButtonDescriptor } from "./Ui/ButtonDescriptor";
-import { TriggerMessage } from './Ui/TriggerMessage';
+import { TriggerMessage, triggerMessageInstance } from './Ui/TriggerMessage';
 import { isMessageReferenceEvent } from '../Events/TriggerMessageEvent';
 
 let popupId = 0;
 const popups: Map<number, Popup> = new Map<number, Popup>();
 const popupCallbacks: Map<number, Map<number, ButtonClickedCallback>> = new Map<number, Map<number, ButtonClickedCallback>>();
-
-const triggerMessages: Map<string, TriggerMessage> = new Map<string, TriggerMessage>();
 
 interface ZonedPopupOptions {
     zone: string
@@ -43,7 +41,7 @@ class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventureUiComma
             type: "messageTriggered",
             typeChecker: isMessageReferenceEvent,
             callback: event => {
-                triggerMessages.get(event.uuid)?.trigger();
+                triggerMessageInstance?.trigger();
             }
         })
     ];
@@ -94,10 +92,7 @@ class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventureUiComma
 
 
     triggerMessage(message: string, callback: () => void): TriggerMessage {
-        const triggerMessage = new TriggerMessage(message, callback);
-        triggerMessages.set(triggerMessage.uuid, triggerMessage)
-        triggerMessage.create()
-        return triggerMessage
+        return new TriggerMessage(message, callback);
     }
 }
 
