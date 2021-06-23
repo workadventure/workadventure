@@ -64,7 +64,9 @@
     "fix": "node_modules/.bin/eslint --fix src/ . --ext .ts",
     "precommit": "lint-staged",
     "svelte-check-watch": "svelte-check --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore\" --watch",
-    "svelte-check": "svelte-check --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore\""
+    "svelte-check": "svelte-check --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore\"",
+    "pretty": "yarn prettier --write src/",
+    "pretty-check": "yarn prettier --check src/"
   },
   "lint-staged": {
     "*.ts": [
