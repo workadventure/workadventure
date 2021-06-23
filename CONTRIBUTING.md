@@ -46,6 +46,15 @@ $ yarn run install
 $ yarn run prepare
 ```
 
+If you don't have the precommit hook installed (or if you committed code before installing the precommit hook), you will need 
+to run code linting manually:
+
+```console
+$ docker-compose exec front yarn run pretty
+$ docker-compose exec pusher yarn run pretty
+$ docker-compose exec back yarn run pretty
+```
+
 ### Providing tests
 
 WorkAdventure is based on a video game engine (Phaser), and video games are not the easiest programs to unit test.
