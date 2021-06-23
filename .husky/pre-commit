@@ -4,6 +4,11 @@
 echo "starting processes"
 (
     echo "linting frontend"
+    echo "if the following script blocks your commit run the following script (sometimes multiple times if there are new changes)"
+    echo "---------------------------------------------------"
+    echo "| ./node_modules/.bin/eslint <path to file> --fix |"
+    echo "---------------------------------------------------"
+
     cd front || exit
     if [ -d "node_modules" ];then
        yarn install
