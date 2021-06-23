@@ -19,7 +19,7 @@ cd back || exit
 yarn run precommit
 )
 pids+=" $!"
-echo "$pids"
+echo "pids: $pids"
 for p in $pids; do
         
         if wait $p; then
