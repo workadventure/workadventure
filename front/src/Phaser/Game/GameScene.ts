@@ -449,6 +449,11 @@ export class GameScene extends DirtyScene implements CenterListener {
                 }
             }
         }
+
+        this.gameMap.exitUrls.forEach(exitUrl => {
+            this.loadNextGame(exitUrl)
+        })
+
         if (depth === -2) {
             throw new Error('Your map MUST contain a layer of type "objectgroup" whose name is "floorLayer" that represents the layer characters are drawn at. This layer cannot be contained in a group.');
         }

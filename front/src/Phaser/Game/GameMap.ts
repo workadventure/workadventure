@@ -1,5 +1,5 @@
-import type {ITiledMap, ITiledMapLayer} from "../Map/ITiledMap";
-import {LayersIterator} from "../Map/LayersIterator";
+import type { ITiledMap, ITiledMapLayerProperty } from "../Map/ITiledMap";
+import { LayersIterator } from "../Map/LayersIterator";
 
 export type PropertyChangeCallback = (newValue: string | number | boolean | undefined, oldValue: string | number | boolean | undefined, allProps: Map<string, string | boolean | number>) => void;
 
@@ -8,14 +8,33 @@ export type PropertyChangeCallback = (newValue: string | number | boolean | unde
  * It is used to handle layer properties.
  */
 export class GameMap {
-    private key: number|undefined;
-    private lastProperties = new Map<string, string|boolean|number>();
+    private key: number | undefined;
+    private lastProperties = new Map<string, string | boolean | number>();
     private callbacks = new Map<string, Array<PropertyChangeCallback>>();
+
+    private tileSetPropertyMap: { [tile_index: number]: Array<ITiledMapLayerProperty> } = {}
     public readonly layersIterator: LayersIterator;
+
+    public exitUrls: Array<string> = []
 
     public constructor(private map: ITiledMap) {
         this.layersIterator = new LayersIterator(map);
+
+        for (const tileset of map.tilesets) {
+            tileset?.tiles?.forEach(tile => {
+                if (tile.properties) {
+                    this.tileSetPropertyMap[tileset.firstgid + tile.id] = tile.properties
+                    tile.properties.forEach(prop => {
+                        if (prop.name == "exitUrl" && typeof prop.value == "string") {
+                            this.exitUrls.push(prop.value);
+                        }
+                    })
+                }
+            })
+        }
     }
+
+
 
     /**
      * Sets the position of the current player (in pixels)
@@ -51,21 +70,27 @@ export class GameMap {
         }
     }
 
-    public getCurrentProperties(): Map<string, string|boolean|number> {
+    public getCurrentProperties(): Map<string, string | boolean | number> {
         return this.lastProperties;
     }
 
-    private getProperties(key: number): Map<string, string|boolean|number> {
-        const properties = new Map<string, string|boolean|number>();
+    private getProperties(key: number): Map<string, string | boolean | number> {
+        const properties = new Map<string, string | boolean | number>();
 
         for (const layer of this.layersIterator) {
             if (layer.type !== 'tilelayer') {
                 continue;
             }
-            const tiles = layer.data as number[];
-            if (tiles[key] == 0) {
-                continue;
+
+            let tileIndex: number | undefined = undefined;
+            if (layer.data) {
+                const tiles = layer.data as number[];
+                if (tiles[key] == 0) {
+                    continue;
+                }
+                tileIndex = tiles[key]
             }
+
             // There is a tile in this layer, let's embed the properties
             if (layer.properties !== undefined) {
                 for (const layerProperty of layer.properties) {
@@ -74,6 +99,16 @@ export class GameMap {
                     }
                     properties.set(layerProperty.name, layerProperty.value);
                 }
+            }
+
+            if (tileIndex) {
+                this.tileSetPropertyMap[tileIndex]?.forEach(property => {
+                    if (property.value) {
+                        properties.set(property.name, property.value)
+                    } else if (properties.has(property.name)) {
+                        properties.delete(property.name)
+                    }
+                })
             }
         }
 

@@ -6,6 +6,7 @@
 - Enabled outlines on actionable item again (they were disabled when migrating to Phaser 3.50) #1218
 - Enabled outlines on player names (when the mouse hovers on a player you can interact with) #1219
 - Migrated the admin console to Svelte, and redesigned the console #1211
+- Layer properties (like `exitUrl`, `silent`, etc...) can now also used in tile properties #1210 (@jonnytest1)
 
 ## Version 1.4.1
 
