@@ -64,7 +64,8 @@ import type {
     ITiledMapLayerProperty,
     ITiledMapObject,
     ITiledMapTileLayer,
-    ITiledTileSet } from "../Map/ITiledMap";
+    ITiledTileSet
+} from "../Map/ITiledMap";
 import { MenuScene, MenuSceneName } from '../Menu/MenuScene';
 import { PlayerAnimationDirections } from "../Player/Animation";
 import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
@@ -93,7 +94,8 @@ import Tilemap = Phaser.Tilemaps.Tilemap;
 import type { HasPlayerMovedEvent } from '../../Api/Events/HasPlayerMovedEvent';
 
 import AnimatedTiles from "phaser-animated-tiles";
-import {soundManager} from "./SoundManager";
+import { soundManager } from "./SoundManager";
+import { removeTriggerMessageEvent, sendMessageTriggeredEvent, triggerMessageEvent } from '../../Api/Events/ui/TriggerMessageEventHandler';
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null,
@@ -932,11 +934,11 @@ ${escapedMessage}
             scriptedBubbleSprite.destroy();
         }));
 
-        this.iframeSubscriptionList.push(iframeListener.showLayerStream.subscribe((layerEvent)=>{
+        this.iframeSubscriptionList.push(iframeListener.showLayerStream.subscribe((layerEvent) => {
             this.setLayerVisibility(layerEvent.name, true);
         }));
 
-        this.iframeSubscriptionList.push(iframeListener.hideLayerStream.subscribe((layerEvent)=>{
+        this.iframeSubscriptionList.push(iframeListener.hideLayerStream.subscribe((layerEvent) => {
             this.setLayerVisibility(layerEvent.name, false);
         }));
 
@@ -945,7 +947,7 @@ ${escapedMessage}
         }));
 
         this.iframeSubscriptionList.push(iframeListener.dataLayerChangeStream.subscribe(() => {
-            iframeListener.sendDataLayerEvent({data: this.gameMap.getMap()});
+            iframeListener.sendDataLayerEvent({ data: this.gameMap.getMap() });
         }))
 
         this.iframeSubscriptionList.push(iframeListener.gameStateStream.subscribe(() => {
@@ -959,21 +961,33 @@ ${escapedMessage}
             })
         }));
 
+
+        this.iframeSubscriptionList.push(triggerMessageEvent.subscribe(message => {
+            layoutManager.addActionButton(message.uuid, message.message, () => {
+                sendMessageTriggeredEvent(message.uuid)
+                layoutManager.removeActionButton(message.uuid, this.userInputManager);
+            }, this.userInputManager);
+        }))
+
+        this.iframeSubscriptionList.push(removeTriggerMessageEvent.subscribe(message => {
+            layoutManager.removeActionButton(message.uuid, this.userInputManager);
+        }))
+
     }
 
     private setPropertyLayer(layerName: string, propertyName: string, propertyValue: string | number | boolean | undefined): void {
         const layer = this.gameMap.findLayer(layerName);
-       if (layer === undefined) {
+        if (layer === undefined) {
             console.warn('Could not find layer "' + layerName + '" when calling setProperty');
             return;
         }
-       const property = (layer.properties as ITiledMapLayerProperty[])?.find((property) => property.name === propertyName);
-       if (property === undefined) {
-           layer.properties = [];
-           layer.properties.push({name : propertyName, type : typeof propertyValue, value : propertyValue});
-           return;
-       }
-       property.value = propertyValue;
+        const property = (layer.properties as ITiledMapLayerProperty[])?.find((property) => property.name === propertyName);
+        if (property === undefined) {
+            layer.properties = [];
+            layer.properties.push({ name: propertyName, type: typeof propertyValue, value: propertyValue });
+            return;
+        }
+        property.value = propertyValue;
     }
 
     private setLayerVisibility(layerName: string, visible: boolean): void {
@@ -1150,7 +1164,7 @@ ${escapedMessage}
     }
 
     //todo: push that into the gameManager
-    private loadNextGame(exitSceneIdentifier: string) : Promise<void>{
+    private loadNextGame(exitSceneIdentifier: string): Promise<void> {
         const { roomId, hash } = Room.getIdFromIdentifier(exitSceneIdentifier, this.MapUrlFile, this.instance);
         const room = new Room(roomId);
         return gameManager.loadMap(room, this.scene).catch(() => { });
@@ -1197,7 +1211,7 @@ ${escapedMessage}
                 this.physics.add.collider(this.CurrentPlayer, phaserLayer, (object1: GameObject, object2: GameObject) => {
                     //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
                 });
-                phaserLayer.setCollisionByProperty({collides: true});
+                phaserLayer.setCollisionByProperty({ collides: true });
                 if (DEBUG_MODE) {
                     //debug code to see the collision hitbox of the object in the top layer
                     phaserLayer.renderDebug(this.add.graphics(), {
@@ -1206,7 +1220,7 @@ ${escapedMessage}
                         faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Colliding face edges
                     });
                 }
-            //});
+                //});
             }
         }
     }

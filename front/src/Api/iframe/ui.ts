@@ -1,10 +1,11 @@
 import { isButtonClickedEvent } from '../Events/ButtonClickedEvent';
 import { isMenuItemClickedEvent } from '../Events/ui/MenuItemClickedEvent';
-import type { MenuItemRegisterEvent } from '../Events/ui/MenuItemRegisterEvent';
+import { isMessageReferenceEvent } from '../Events/ui/TriggerMessageEvent';
 import { IframeApiContribution, sendToWorkadventure } from './IframeApiContribution';
 import { apiCallback } from "./registeredCallbacks";
 import type { ButtonClickedCallback, ButtonDescriptor } from "./Ui/ButtonDescriptor";
 import { Popup } from "./Ui/Popup";
+import { TriggerMessage, triggerMessageInstance } from './Ui/TriggerMessage';
 
 let popupId = 0;
 const popups: Map<number, Popup> = new Map<number, Popup>();
@@ -12,41 +13,41 @@ const popupCallbacks: Map<number, Map<number, ButtonClickedCallback>> = new Map<
 
 const menuCallbacks: Map<string, (command: string) => void> = new Map()
 
-interface ZonedPopupOptions {
-    zone: string
-    objectLayerName?: string,
-    popupText: string,
-    delay?: number
-    popupOptions: Array<ButtonDescriptor>
-}
-
-
 class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventureUiCommands> {
 
-    callbacks = [apiCallback({
-        type: "buttonClickedEvent",
-        typeChecker: isButtonClickedEvent,
-        callback: (payloadData) => {
-            const callback = popupCallbacks.get(payloadData.popupId)?.get(payloadData.buttonId);
-            const popup = popups.get(payloadData.popupId);
-            if (popup === undefined) {
-                throw new Error('Could not find popup with ID "' + payloadData.popupId + '"');
+    callbacks = [
+        apiCallback({
+            type: "buttonClickedEvent",
+            typeChecker: isButtonClickedEvent,
+            callback: (payloadData) => {
+                const callback = popupCallbacks.get(payloadData.popupId)?.get(payloadData.buttonId);
+                const popup = popups.get(payloadData.popupId);
+                if (popup === undefined) {
+                    throw new Error('Could not find popup with ID "' + payloadData.popupId + '"');
+                }
+                if (callback) {
+                    callback(popup);
+                }
             }
-            if (callback) {
-                callback(popup);
+        }),
+        apiCallback({
+            type: "menuItemClicked",
+            typeChecker: isMenuItemClickedEvent,
+            callback: event => {
+                const callback = menuCallbacks.get(event.menuItem);
+                if (callback) {
+                    callback(event.menuItem)
+                }
             }
-        }
-    }),
-    apiCallback({
-        type: "menuItemClicked",
-        typeChecker: isMenuItemClickedEvent,
-        callback: event => {
-            const callback = menuCallbacks.get(event.menuItem);
-            if (callback) {
-                callback(event.menuItem)
+        }),
+        apiCallback({
+            type: "messageTriggered",
+            typeChecker: isMessageReferenceEvent,
+            callback: event => {
+                triggerMessageInstance?.trigger();
             }
-        }
-    })];
+        })
+    ];
 
 
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup {
@@ -100,6 +101,9 @@ class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventureUiComma
 
     removeBubble(): void {
         sendToWorkadventure({ 'type': 'removeBubble', data: null });
+    }
+    triggerMessage(message: string, callback: () => void): TriggerMessage {
+        return new TriggerMessage(message, callback);
     }
 }
 

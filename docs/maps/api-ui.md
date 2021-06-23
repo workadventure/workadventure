@@ -87,3 +87,23 @@ WA.ui.registerMenuCommand("test", () => {
 <div class="col">
     <img src="https://workadventu.re/img/docs/menu-command.png" class="figure-img img-fluid rounded" alt="" />
 </div>
+
+
+
+### Awaiting User Confirmation (with space bar)
+
+```typescript
+triggerMessage(message: string): TriggerMessage
+```
+
+Displays a message at the bottom of the screen (that will disappear when space bar is pressed).
+
+Example:
+
+```javascript
+const triggerMessage = WA.ui.triggerMessage("press 'space' to confirm");
+setTimeout(()=>{
+	// later
+	triggerMessage.remove();
+},1000)
+```

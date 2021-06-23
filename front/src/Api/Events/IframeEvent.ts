@@ -18,6 +18,7 @@ import type { PlaySoundEvent } from "./PlaySoundEvent";
 import type { MenuItemClickedEvent } from "./ui/MenuItemClickedEvent";
 import type { MenuItemRegisterEvent } from './ui/MenuItemRegisterEvent';
 import type { HasPlayerMovedEvent } from "./HasPlayerMovedEvent";
+import type { MessageReferenceEvent, TriggerMessageEvent } from '../iframe/TriggerMessageEvent';
 
 
 export interface TypedMessageEvent<T> extends MessageEvent {
@@ -49,6 +50,9 @@ export type IframeEventMap = {
     stopSound: null,
     getState: undefined,
     registerMenuCommand: MenuItemRegisterEvent
+
+    triggerMessage: TriggerMessageEvent
+    removeTriggerMessage: MessageReferenceEvent
 }
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;
@@ -68,6 +72,7 @@ export interface IframeResponseEventMap {
     hasPlayerMoved: HasPlayerMovedEvent
     dataLayer: DataLayerEvent
     menuItemClicked: MenuItemClickedEvent
+    messageTriggered: MessageReferenceEvent
 }
 export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
     type: T;

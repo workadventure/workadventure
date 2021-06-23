@@ -1,14 +1,14 @@
-import {Subject} from "rxjs";
-import {ChatEvent, isChatEvent} from "./Events/ChatEvent";
-import {HtmlUtils} from "../WebRtc/HtmlUtils";
-import type {EnterLeaveEvent} from "./Events/EnterLeaveEvent";
-import {isOpenPopupEvent, OpenPopupEvent} from "./Events/OpenPopupEvent";
-import {isOpenTabEvent, OpenTabEvent} from "./Events/OpenTabEvent";
-import type {ButtonClickedEvent} from "./Events/ButtonClickedEvent";
-import {ClosePopupEvent, isClosePopupEvent} from "./Events/ClosePopupEvent";
-import {scriptUtils} from "./ScriptUtils";
-import {GoToPageEvent, isGoToPageEvent} from "./Events/GoToPageEvent";
-import {isOpenCoWebsite, OpenCoWebSiteEvent} from "./Events/OpenCoWebSiteEvent";
+import { Subject } from "rxjs";
+import { ChatEvent, isChatEvent } from "./Events/ChatEvent";
+import { HtmlUtils } from "../WebRtc/HtmlUtils";
+import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
+import { isOpenPopupEvent, OpenPopupEvent } from "./Events/OpenPopupEvent";
+import { isOpenTabEvent, OpenTabEvent } from "./Events/OpenTabEvent";
+import type { ButtonClickedEvent } from "./Events/ButtonClickedEvent";
+import { ClosePopupEvent, isClosePopupEvent } from "./Events/ClosePopupEvent";
+import { scriptUtils } from "./ScriptUtils";
+import { GoToPageEvent, isGoToPageEvent } from "./Events/GoToPageEvent";
+import { isOpenCoWebsite, OpenCoWebSiteEvent } from "./Events/OpenCoWebSiteEvent";
 import {
     IframeEvent,
     IframeEventMap,
@@ -17,19 +17,20 @@ import {
     isIframeEventWrapper,
     TypedMessageEvent
 } from "./Events/IframeEvent";
-import type {UserInputChatEvent} from "./Events/UserInputChatEvent";
+import type { UserInputChatEvent } from "./Events/UserInputChatEvent";
 //import { isLoadPageEvent } from './Events/LoadPageEvent';
-import {isPlaySoundEvent, PlaySoundEvent} from "./Events/PlaySoundEvent";
-import {isStopSoundEvent, StopSoundEvent} from "./Events/StopSoundEvent";
-import {isLoadSoundEvent, LoadSoundEvent} from "./Events/LoadSoundEvent";
-import {isSetPropertyEvent, SetPropertyEvent} from "./Events/setPropertyEvent";
-import {isLayerEvent, LayerEvent} from "./Events/LayerEvent";
-import {isMenuItemRegisterEvent,} from "./Events/ui/MenuItemRegisterEvent";
-import type {DataLayerEvent} from "./Events/DataLayerEvent";
-import type {GameStateEvent} from "./Events/GameStateEvent";
-import type {HasPlayerMovedEvent} from "./Events/HasPlayerMovedEvent";
-import {isLoadPageEvent} from "./Events/LoadPageEvent";
-import {handleMenuItemRegistrationEvent, isMenuItemRegisterIframeEvent} from "./Events/ui/MenuItemRegisterEvent";
+import { isPlaySoundEvent, PlaySoundEvent } from "./Events/PlaySoundEvent";
+import { isStopSoundEvent, StopSoundEvent } from "./Events/StopSoundEvent";
+import { isLoadSoundEvent, LoadSoundEvent } from "./Events/LoadSoundEvent";
+import { isSetPropertyEvent, SetPropertyEvent } from "./Events/setPropertyEvent";
+import { isLayerEvent, LayerEvent } from "./Events/LayerEvent";
+import { isMenuItemRegisterEvent, } from "./Events/ui/MenuItemRegisterEvent";
+import type { DataLayerEvent } from "./Events/DataLayerEvent";
+import type { GameStateEvent } from "./Events/GameStateEvent";
+import type { HasPlayerMovedEvent } from "./Events/HasPlayerMovedEvent";
+import { isLoadPageEvent } from "./Events/LoadPageEvent";
+import { handleMenuItemRegistrationEvent, isMenuItemRegisterIframeEvent } from "./Events/ui/MenuItemRegisterEvent";
+import { isTriggerMessageHandlerEvent, triggerMessageEventHandler } from './Events/ui/TriggerMessageEventHandler';
 
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.
@@ -190,6 +191,8 @@ class IframeListener {
                         this._unregisterMenuCommandStream.next(data);
                     })
                     handleMenuItemRegistrationEvent(payload.data)
+                } else if (isTriggerMessageHandlerEvent(payload)) {
+                    triggerMessageEventHandler(payload)
                 }
             }
         }, false);
@@ -198,8 +201,8 @@ class IframeListener {
 
     sendDataLayerEvent(dataLayerEvent: DataLayerEvent) {
         this.postMessage({
-            'type' : 'dataLayer',
-            'data' : dataLayerEvent
+            'type': 'dataLayer',
+            'data': dataLayerEvent
         })
     }
 
