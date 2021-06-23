@@ -46,6 +46,9 @@ export class Room {
             roomId = roomId.substring(1); //remove the leading slash
             hash = absoluteExitSceneUrl.hash;
             hash = hash.substring(1); //remove the leading diese
+            if (!hash.length) {
+                hash = null
+            }
         } else { //absolute room Id
             const parts = identifier.split('#');
             roomId = parts[0];
