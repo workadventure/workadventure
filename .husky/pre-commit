@@ -1,31 +1,31 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-
-#process id list
-pids=""
+echo "starting processes"
 (
-cd front || exit
-yarn run precommit
+    echo "linting frontend"
+    cd front || exit
+    if [ -d "node_modules" ];then
+       yarn install
+    fi
+    echo "running precommit"
+    yarn run precommit
+    echo "response: $?"
 )
-pids+=" $!"
 (
-cd pusher || exit
-yarn run precommit
+    echo "linting pusher"
+    cd pusher || exit
+    if [ -d "node_modules" ];then
+       yarn install
+    fi
+    yarn run precommit
+    
 )
-pids+=" $!"
 (
-cd back || exit
-yarn run precommit
+    echo "linting backend"
+    cd back || exit
+    if [ -d "node_modules" ];then
+       yarn install
+    fi
+    yarn run precommit
 )
-pids+=" $!"
-echo "pids: $pids"
-for p in $pids; do
-        
-        if wait $p; then
-            echo "Process $p success"
-        else
-            echo "Process $p fail" 
-            exit 1
-        fi
-done

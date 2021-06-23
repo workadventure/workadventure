@@ -67,6 +67,7 @@
         "lint": "node_modules/.bin/eslint src/ . --ext .ts",
         "fix": "node_modules/.bin/eslint --fix src/ . --ext .ts",
         "precommit": "lint-staged",
+        "preinstall": "cd .. && npm install",
         "svelte-check-watch": "svelte-check --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore\" --watch",
         "svelte-check": "svelte-check --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore\"",
         "pretty": "yarn prettier --write 'src/**/*.{ts,tsx}'",
@@ -75,7 +76,7 @@
     "lint-staged": {
         "*.ts": [
             "prettier --write",
-            "eslint --fix"
+            "eslint --fix --quiet"
         ]
     }
 }
