@@ -13,8 +13,8 @@
     "lint": "DEBUG= node_modules/.bin/eslint src/ . --ext .ts",
     "fix": "DEBUG= node_modules/.bin/eslint --fix src/ . --ext .ts",
     "precommit": "lint-staged",
-    "pretty": "yarn prettier --write src/",
-    "pretty-check": "yarn prettier --check src/"
+    "pretty": "yarn prettier --write 'src/**/*.{ts,tsx}'",
+    "pretty-check": "yarn prettier --check 'src/**/*.{ts,tsx}'"
   },
   "repository": {
     "type": "git",

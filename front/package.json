@@ -66,8 +66,8 @@
     "precommit": "lint-staged",
     "svelte-check-watch": "svelte-check --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore\" --watch",
     "svelte-check": "svelte-check --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore\"",
-    "pretty": "yarn prettier --write src/",
-    "pretty-check": "yarn prettier --check src/"
+    "pretty": "yarn prettier --write 'src/**/*.{ts,tsx}'",
+    "pretty-check": "yarn prettier --check 'src/**/*.{ts,tsx}'"
   },
   "lint-staged": {
     "*.ts": [
