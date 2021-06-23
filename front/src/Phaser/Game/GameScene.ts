@@ -441,6 +441,10 @@ export class GameScene extends DirtyScene implements CenterListener {
             }
         }
 
+        this.gameMap.exitUrls.forEach(exitUrl => {
+            this.loadNextGame(exitUrl)
+        })
+
         this.initStartXAndStartY();
 
         //add entities
