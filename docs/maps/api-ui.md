@@ -73,7 +73,7 @@ WA.room.onLeaveZone('myZone', () => {
 triggerMessage(message: string): TriggerMessage
 ```
 
-Opens the webpage at "url" in your browser, in a new tab.
+Displays a message at the bottom of the screen (that will disappear when space bar is pressed).
 
 Example:
 
