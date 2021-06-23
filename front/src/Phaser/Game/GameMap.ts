@@ -35,6 +35,13 @@ export class GameMap {
     }
 
 
+    public getPropertiesForIndex(index: number): Array<ITiledMapLayerProperty> {
+        if (this.tileSetPropertyMap[index]) {
+            return this.tileSetPropertyMap[index]
+        }
+        return []
+    }
+
 
     /**
      * Sets the position of the current player (in pixels)
