@@ -27,7 +27,6 @@ import {
 import { TextureError } from "../../Exception/TextureError";
 import type { UserMovedMessage } from "../../Messages/generated/messages_pb";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
-import { peerStore } from "../../Stores/PeerStore";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { urlManager } from "../../Url/UrlManager";
 import { audioManager } from "../../WebRtc/AudioManager";
@@ -35,10 +34,10 @@ import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import { jitsiFactory } from "../../WebRtc/JitsiFactory";
 import {
-    AUDIO_LOOP_PROPERTY, AUDIO_VOLUME_PROPERTY, CenterListener,
+    AUDIO_LOOP_PROPERTY, AUDIO_VOLUME_PROPERTY,
+    Box,
     JITSI_MESSAGE_PROPERTIES,
     layoutManager,
-    LayoutMode,
     ON_ACTION_TRIGGER_BUTTON,
     TRIGGER_JITSI_PROPERTIES,
     TRIGGER_WEBSITE_PROPERTIES,
@@ -94,6 +93,9 @@ import type { HasPlayerMovedEvent } from '../../Api/Events/HasPlayerMovedEvent';
 
 import AnimatedTiles from "phaser-animated-tiles";
 import {soundManager} from "./SoundManager";
+import {peerStore, screenSharingPeerStore} from "../../Stores/PeerStore";
+import {videoFocusStore} from "../../Stores/VideoFocusStore";
+import {biggestAvailableAreaStore} from "../../Stores/BiggestAvailableAreaStore";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null,
@@ -132,7 +134,7 @@ interface DeleteGroupEventInterface {
 
 const defaultStartLayerName = 'start';
 
-export class GameScene extends DirtyScene implements CenterListener {
+export class GameScene extends DirtyScene {
     Terrains: Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer!: Player;
     MapPlayers!: Phaser.Physics.Arcade.Group;
@@ -172,8 +174,6 @@ export class GameScene extends DirtyScene implements CenterListener {
         y: -1000
     }
 
-    private presentationModeSprite!: Sprite;
-    private chatModeSprite!: Sprite;
     private gameMap!: GameMap;
     private actionableItems: Map<number, ActionableItem> = new Map<number, ActionableItem>();
     // The item that can be selected by pressing the space key.
@@ -277,7 +277,6 @@ export class GameScene extends DirtyScene implements CenterListener {
             this.onMapLoad(data);
         }
 
-        this.load.spritesheet('layout_modes', 'resources/objects/layout_modes.png', { frameWidth: 32, frameHeight: 32 });
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
         //eslint-disable-next-line @typescript-eslint/no-explicit-any
         (this.load as any).rexWebFont({
@@ -497,10 +496,6 @@ export class GameScene extends DirtyScene implements CenterListener {
             this.outlinedItem?.activate();
         });
 
-        this.presentationModeSprite = new PresentationModeIcon(this, 36, this.game.renderer.height - 2);
-        this.presentationModeSprite.on('pointerup', this.switchLayoutMode.bind(this));
-        this.chatModeSprite = new ChatModeIcon(this, 70, this.game.renderer.height - 2);
-        this.chatModeSprite.on('pointerup', this.switchLayoutMode.bind(this));
         this.openChatIcon = new OpenChatIcon(this, 2, this.game.renderer.height - 2)
 
         // FIXME: change this to use the UserInputManager class for input
@@ -512,7 +507,8 @@ export class GameScene extends DirtyScene implements CenterListener {
         this.reposition();
 
         // From now, this game scene will be notified of reposition events
-        layoutManager.setListener(this);
+        biggestAvailableAreaStore.subscribe((box) => this.updateCameraOffset(box));
+
         this.triggerOnMapLayerPropertyChange();
         this.listenToIframeEvents();
 
@@ -643,21 +639,19 @@ export class GameScene extends DirtyScene implements CenterListener {
             // When connection is performed, let's connect SimplePeer
             this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic, this.playerName);
             peerStore.connectToSimplePeer(this.simplePeer);
+            screenSharingPeerStore.connectToSimplePeer(this.simplePeer);
+            videoFocusStore.connectToSimplePeer(this.simplePeer);
             this.GlobalMessageManager = new GlobalMessageManager(this.connection);
             userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
             const self = this;
             this.simplePeer.registerPeerConnectionListener({
-                onConnect(user: UserSimplePeerInterface) {
-                    self.presentationModeSprite.setVisible(true);
-                    self.chatModeSprite.setVisible(true);
+                onConnect(peer) {
                     self.openChatIcon.setVisible(true);
                     audioManager.decreaseVolume();
                 },
                 onDisconnect(userId: number) {
                     if (self.simplePeer.getNbConnections() === 0) {
-                        self.presentationModeSprite.setVisible(false);
-                        self.chatModeSprite.setVisible(false);
                         self.openChatIcon.setVisible(false);
                         audioManager.restoreVolume();
                     }
@@ -1058,23 +1052,6 @@ ${escapedMessage}
         this.MapPlayersByKey = new Map<number, RemotePlayer>();
     }
 
-    private switchLayoutMode(): void {
-        //if discussion is activated, this layout cannot be activated
-        if (mediaManager.activatedDiscussion) {
-            return;
-        }
-        const mode = layoutManager.getLayoutMode();
-        if (mode === LayoutMode.Presentation) {
-            layoutManager.switchLayoutMode(LayoutMode.VideoChat);
-            this.presentationModeSprite.setFrame(1);
-            this.chatModeSprite.setFrame(2);
-        } else {
-            layoutManager.switchLayoutMode(LayoutMode.Presentation);
-            this.presentationModeSprite.setFrame(0);
-            this.chatModeSprite.setFrame(3);
-        }
-    }
-
     private initStartXAndStartY() {
         // If there is an init position passed
         if (this.initPosition !== null) {
@@ -1187,7 +1164,7 @@ ${escapedMessage}
     initCamera() {
         this.cameras.main.setBounds(0, 0, this.Map.widthInPixels, this.Map.heightInPixels);
         this.cameras.main.startFollow(this.CurrentPlayer, true);
-        this.updateCameraOffset();
+        biggestAvailableAreaStore.recompute();
     }
 
     createCollisionWithPlayer() {
@@ -1334,7 +1311,7 @@ ${escapedMessage}
      * @param delta The delta time in ms since the last frame. This is a smoothed and capped value based on the FPS rate.
      */
     update(time: number, delta: number): void {
-        mediaManager.updateScene();
+        this.dirty = false;
         this.currentTick = time;
         this.CurrentPlayer.moveUser(delta);
 
@@ -1564,20 +1541,17 @@ ${escapedMessage}
 
     }
     private reposition(): void {
-        this.presentationModeSprite.setY(this.game.renderer.height - 2);
-        this.chatModeSprite.setY(this.game.renderer.height - 2);
         this.openChatIcon.setY(this.game.renderer.height - 2);
 
         // Recompute camera offset if needed
-        this.updateCameraOffset();
+        biggestAvailableAreaStore.recompute();
     }
 
     /**
      * Updates the offset of the character compared to the center of the screen according to the layout manager
      * (tries to put the character in the center of the remaining space if there is a discussion going on.
      */
-    private updateCameraOffset(): void {
-        const array = layoutManager.findBiggestAvailableArray();
+    private updateCameraOffset(array: Box): void {
         const xCenter = (array.xEnd - array.xStart) / 2 + array.xStart;
         const yCenter = (array.yEnd - array.yStart) / 2 + array.yStart;
 
@@ -1585,10 +1559,6 @@ ${escapedMessage}
         // Let's put this in Game coordinates by applying the zoom level:
 
         this.cameras.main.setFollowOffset((xCenter - game.offsetWidth / 2) * window.devicePixelRatio / this.scale.zoom, (yCenter - game.offsetHeight / 2) * window.devicePixelRatio / this.scale.zoom);
-    }
-
-    public onCenterChange(): void {
-        this.updateCameraOffset();
     }
 
     public startJitsi(roomName: string, jwt?: string): void {
@@ -1650,6 +1620,6 @@ ${escapedMessage}
 
     zoomByFactor(zoomFactor: number) {
         waScaleManager.zoomModifier *= zoomFactor;
-        this.updateCameraOffset();
+        biggestAvailableAreaStore.recompute();
     }
 }

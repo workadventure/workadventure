@@ -3,17 +3,17 @@ import {SelectCharacterScene, SelectCharacterSceneName} from "../Login/SelectCha
 import {SelectCompanionScene, SelectCompanionSceneName} from "../Login/SelectCompanionScene";
 import {gameManager} from "../Game/GameManager";
 import {localUserStore} from "../../Connexion/LocalUserStore";
-import {mediaManager} from "../../WebRtc/MediaManager";
 import {gameReportKey, gameReportRessource, ReportMenu} from "./ReportMenu";
 import {connectionManager} from "../../Connexion/ConnectionManager";
 import {GameConnexionTypes} from "../../Url/UrlManager";
 import {WarningContainer, warningContainerHtml, warningContainerKey} from "../Components/WarningContainer";
 import {worldFullWarningStream} from "../../Connexion/WorldFullWarningStream";
 import {menuIconVisible} from "../../Stores/MenuStore";
+import {videoConstraintStore} from "../../Stores/MediaStore";
+import {showReportScreenStore} from "../../Stores/ShowReportScreenStore";
 import { HtmlUtils } from '../../WebRtc/HtmlUtils';
 import { iframeListener } from '../../Api/IframeListener';
 import { Subscription } from 'rxjs';
-import { videoConstraintStore } from "../../Stores/MediaStore";
 import {registerMenuCommandStream} from "../../Api/Events/ui/MenuItemRegisterEvent";
 import {sendMenuClickedEvent} from "../../Api/iframe/Ui/MenuItem";
 import {consoleGlobalMessageManagerVisibleStore} from "../../Stores/ConsoleGlobalMessageManagerStore";
@@ -111,9 +111,11 @@ export class MenuScene extends Phaser.Scene {
         });
 
         this.gameReportElement = new ReportMenu(this, connectionManager.getConnexionType === GameConnexionTypes.anonymous);
-        mediaManager.setShowReportModalCallBacks((userId, userName) => {
+        showReportScreenStore.subscribe((user) => {
             this.closeAll();
-            this.gameReportElement.open(parseInt(userId), userName);
+            if (user !== null) {
+                this.gameReportElement.open(user.userId, user.userName);
+            }
         });
 
         this.input.keyboard.on('keyup-TAB', () => {
