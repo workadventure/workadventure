@@ -1,13 +1,16 @@
 import { isButtonClickedEvent } from '../Events/ButtonClickedEvent';
-import type { ClosePopupEvent } from '../Events/ClosePopupEvent';
+import { isMenuItemClickedEvent } from '../Events/ui/MenuItemClickedEvent';
+import type { MenuItemRegisterEvent } from '../Events/ui/MenuItemRegisterEvent';
 import { IframeApiContribution, sendToWorkadventure } from './IframeApiContribution';
 import { apiCallback } from "./registeredCallbacks";
-import {Popup} from "./Ui/Popup";
-import type {ButtonClickedCallback, ButtonDescriptor} from "./Ui/ButtonDescriptor";
+import type { ButtonClickedCallback, ButtonDescriptor } from "./Ui/ButtonDescriptor";
+import { Popup } from "./Ui/Popup";
 
 let popupId = 0;
 const popups: Map<number, Popup> = new Map<number, Popup>();
 const popupCallbacks: Map<number, Map<number, ButtonClickedCallback>> = new Map<number, Map<number, ButtonClickedCallback>>();
+
+const menuCallbacks: Map<string, (command: string) => void> = new Map()
 
 interface ZonedPopupOptions {
     zone: string
@@ -31,6 +34,16 @@ class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventureUiComma
             }
             if (callback) {
                 callback(popup);
+            }
+        }
+    }),
+    apiCallback({
+        type: "menuItemClicked",
+        typeChecker: isMenuItemClickedEvent,
+        callback: event => {
+            const callback = menuCallbacks.get(event.menuItem);
+            if (callback) {
+                callback(event.menuItem)
             }
         }
     })];
@@ -69,6 +82,16 @@ class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventureUiComma
 
         popups.set(popupId, popup)
         return popup;
+    }
+
+    registerMenuCommand(commandDescriptor: string, callback: (commandDescriptor: string) => void) {
+        menuCallbacks.set(commandDescriptor, callback);
+        sendToWorkadventure({
+            'type': 'registerMenuCommand',
+            'data': {
+                menutItem: commandDescriptor
+            }
+        });
     }
 
     displayBubble(): void {

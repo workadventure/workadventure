@@ -1,4 +1,4 @@
 export interface CharacterLayer {
-    name: string,
-    url: string|undefined
+    name: string;
+    url: string | undefined;
 }

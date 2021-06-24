@@ -644,17 +644,15 @@ input[type=range]:focus::-ms-fill-upper {
     grid-template-columns: repeat(4, 1fr);
 }
 
-/*CONSOLE*/
-
-.message-container,
-.main-console{
+/*GLOBAL MESSAGE*/
+.message-container {
     position: absolute;
     width: 80%;
     height: 80%;
     min-height: 200px;
     max-height: 80%;
     top: -80%;
-    /*left: 10%;*/
+    //left: 10%;
     left: 250px;
     background: #333333;
     z-index: 200;
@@ -677,7 +675,6 @@ input[type=range]:focus::-ms-fill-upper {
     max-height: 400px;
 }
 
-.main-console div.console,
 .message-container div.clear {
     position: absolute;
     color: white;
@@ -692,22 +689,11 @@ input[type=range]:focus::-ms-fill-upper {
     text-align: center;
 }
 
-.main-console div.message,
-.main-console div.setting{
-    display: none;
-}
-
-.main-console div.message.active,
-.main-console div.setting.active{
-    display: block;
-}
-
 .message-container div.clear{
     width: 100px;
     left: calc(50% - 50px);
 }
 
-.main-console div.console img,
 .message-container div.clear img{
     margin-top: 6px;
     width: 30px;
@@ -718,110 +704,24 @@ input[type=range]:focus::-ms-fill-upper {
     transform: rotateY(0);
     opacity: 0.5;
 }
-.main-console div.console img:hover,
+
 .message-container div.clear img:hover{
     opacity: 1;
 }
 
-.main-console div.console img.active,
 .message-container div.clear img{
     transform: rotateY(3.142rad);
     opacity: 1;
 }
 
-.main-console div.console p,
 .message-container div.clear p{
     margin-top: 12px;
 }
 
-.main-console div.console:hover,
 .message-container div.clear:hover {
     cursor: url('./images/cursor_pointer.png'), pointer;
     top: calc(100% + 5px);
     transform: scale(1.2) translateY(3px);
-}
-
-.main-console #input-send-text{
-    min-height: 200px;
-}
-
-.main-console #input-send-text .ql-editor{
-    color: white;
-    min-height: 200px;
-    max-height: 300px;
-}
-
-.main-console .ql-toolbar{
-    background: white;
-}
-
-.main-console .btn-action{
-    margin: 10px;
-    text-align: center;
-}
-
-.main-console .btn-action .btn{
-    border: 1px solid black;
-    background-color: #00000000;
-    color: #ffda01;
-    border-radius: 15px;
-    padding: 10px 30px;
-    transition: all .2s ease;
-}
-.main-console .btn-action .btn:hover{
-    cursor: url('./images/cursor_pointer.png'), pointer;
-    background-color: #ffda01;
-    color: black;
-    border: 1px solid black;
-    transform: scale(1.1);
-}
-
-.main-console .menu {
-    padding: 20px;
-    color: #ffffffa6;
-    text-align: center;
-}
-
-.main-console .menu span {
-    margin: 20px;
-    cursor: url('./images/cursor_pointer.png'), pointer;
-}
-
-.main-console .menu span.active {
-    color: white;
-    border-bottom: solid 1px white;
-}
-
-.main-console section{
-    text-align: center;
-    display: none;
-}
-
-.main-console section.active{
-    display: block;
-}
-
-.main-console section div.upload{
-    text-align: center;
-    border: solid 1px #ffda01;
-    height: 150px;
-    margin: 10px 200px;
-    padding: 20px;
-    min-height: 200px;
-}
-
-.main-console section div.upload label{
-    color: #ffda01;
-}
-.main-console section div.upload input{
-    display: none;
-}
-.main-console section div.upload label img{
-    height: 150px;
-    cursor: url('./images/cursor_pointer.png'), pointer;
-}
-.main-console section div.upload label img{
-    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 
 

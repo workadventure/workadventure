@@ -1,4 +1,4 @@
-import {Counter, Gauge} from "prom-client";
+import { Counter, Gauge } from "prom-client";
 
 //this class should manage all the custom metrics used by prometheus
 class GaugeManager {
@@ -10,29 +10,29 @@ class GaugeManager {
 
     constructor() {
         this.nbRoomsGauge = new Gauge({
-            name: 'workadventure_nb_rooms',
-            help: 'Number of active rooms'
+            name: "workadventure_nb_rooms",
+            help: "Number of active rooms",
         });
         this.nbClientsGauge = new Gauge({
-            name: 'workadventure_nb_sockets',
-            help: 'Number of connected sockets',
-            labelNames: [ ]
+            name: "workadventure_nb_sockets",
+            help: "Number of connected sockets",
+            labelNames: [],
         });
         this.nbClientsPerRoomGauge = new Gauge({
-            name: 'workadventure_nb_clients_per_room',
-            help: 'Number of clients per room',
-            labelNames: [ 'room' ]
+            name: "workadventure_nb_clients_per_room",
+            help: "Number of clients per room",
+            labelNames: ["room"],
         });
 
         this.nbGroupsPerRoomCounter = new Counter({
-            name: 'workadventure_counter_groups_per_room',
-            help: 'Counter of groups per room',
-            labelNames: [ 'room' ]
+            name: "workadventure_counter_groups_per_room",
+            help: "Counter of groups per room",
+            labelNames: ["room"],
         });
         this.nbGroupsPerRoomGauge = new Gauge({
-            name: 'workadventure_nb_groups_per_room',
-            help: 'Number of groups per room',
-            labelNames: [ 'room' ]
+            name: "workadventure_nb_groups_per_room",
+            help: "Number of groups per room",
+            labelNames: ["room"],
         });
     }
 
@@ -54,12 +54,12 @@ class GaugeManager {
     }
 
     incNbGroupsPerRoomGauge(roomId: string): void {
-        this.nbGroupsPerRoomCounter.inc({ room: roomId })
-        this.nbGroupsPerRoomGauge.inc({ room: roomId })
+        this.nbGroupsPerRoomCounter.inc({ room: roomId });
+        this.nbGroupsPerRoomGauge.inc({ room: roomId });
     }
-    
+
     decNbGroupsPerRoomGauge(roomId: string): void {
-        this.nbGroupsPerRoomGauge.dec({ room: roomId })
+        this.nbGroupsPerRoomGauge.dec({ room: roomId });
     }
 }
 

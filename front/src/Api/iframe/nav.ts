@@ -2,6 +2,7 @@ import type { GoToPageEvent } from '../Events/GoToPageEvent';
 import type { OpenTabEvent } from '../Events/OpenTabEvent';
 import { IframeApiContribution, sendToWorkadventure } from './IframeApiContribution';
 import type {OpenCoWebSiteEvent} from "../Events/OpenCoWebSiteEvent";
+import type {LoadPageEvent} from "../Events/LoadPageEvent";
 
 
 class WorkadventureNavigationCommands extends IframeApiContribution<WorkadventureNavigationCommands> {
@@ -13,7 +14,7 @@ class WorkadventureNavigationCommands extends IframeApiContribution<Workadventur
             "type": 'openTab',
             "data": {
                 url
-            } as OpenTabEvent
+            }
         });
     }
 
@@ -22,7 +23,7 @@ class WorkadventureNavigationCommands extends IframeApiContribution<Workadventur
             "type": 'goToPage',
             "data": {
                 url
-            } as GoToPageEvent
+            }
         });
     }
 
@@ -40,7 +41,7 @@ class WorkadventureNavigationCommands extends IframeApiContribution<Workadventur
             "type": 'openCoWebSite',
             "data": {
                 url
-            } as OpenCoWebSiteEvent
+            }
         });
     }
 

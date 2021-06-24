@@ -64,6 +64,11 @@ jobs:
         run: yarn test
         working-directory: "front"
 
+ # We will enable prettier checks on front in a few month, when most PRs without prettier have been merged
+ #     - name: "Prettier"
+ #       run: yarn run pretty-check
+ #       working-directory: "front"
+
   continuous-integration-pusher:
     name: "Continuous Integration Pusher"
 
@@ -107,6 +112,10 @@ jobs:
         run: yarn test
         working-directory: "pusher"
 
+      - name: "Prettier"
+        run: yarn run pretty-check
+        working-directory: "pusher"
+
   continuous-integration-back:
     name: "Continuous Integration Back"
 
@@ -148,5 +157,9 @@ jobs:
 
       - name: "Jasmine"
         run: yarn test
+        working-directory: "back"
+
+      - name: "Prettier"
+        run: yarn run pretty-check
         working-directory: "back"
 

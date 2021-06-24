@@ -23,6 +23,8 @@
     import ErrorDialog from "./UI/ErrorDialog.svelte";
     import VideoOverlay from "./Video/VideoOverlay.svelte";
     import {gameOverlayVisibilityStore} from "../Stores/GameOverlayStoreVisibility";
+    import {consoleGlobalMessageManagerVisibleStore} from "../Stores/ConsoleGlobalMessageManagerStore";
+    import ConsoleGlobalMessageManager from "./ConsoleGlobalMessageManager/ConsoleGlobalMessageManager.svelte";
 
     export let game: Game;
 
@@ -72,6 +74,11 @@
             <VideoOverlay></VideoOverlay>
             <MyCamera></MyCamera>
             <CameraControls></CameraControls>
+        </div>
+    {/if}
+    {#if $consoleGlobalMessageManagerVisibleStore}
+        <div>
+            <ConsoleGlobalMessageManager game={game}></ConsoleGlobalMessageManager>
         </div>
     {/if}
     {#if $helpCameraSettingsVisibleStore}

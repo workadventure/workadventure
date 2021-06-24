@@ -23,7 +23,7 @@ class WorkadventureChatCommands extends IframeApiContribution<WorkadventureChatC
             data: {
                 'message': message,
                 'author': author
-            } as ChatEvent
+            }
         })
     }
 

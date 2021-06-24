@@ -1,11 +1,11 @@
-import {DivImportance, layoutManager} from "./LayoutManager";
-import {HtmlUtils} from "./HtmlUtils";
-import {discussionManager, SendMessageCallback} from "./DiscussionManager";
-import type {UserInputManager} from "../Phaser/UserInput/UserInputManager";
-import {localUserStore} from "../Connexion/LocalUserStore";
-import type {UserSimplePeerInterface} from "./SimplePeer";
-import {SoundMeter} from "../Phaser/Components/SoundMeter";
-import {DISABLE_NOTIFICATIONS} from "../Enum/EnvironmentVariable";
+import { DivImportance, layoutManager } from "./LayoutManager";
+import { HtmlUtils } from "./HtmlUtils";
+import { discussionManager, SendMessageCallback } from "./DiscussionManager";
+import type { UserInputManager } from "../Phaser/UserInput/UserInputManager";
+import { localUserStore } from "../Connexion/LocalUserStore";
+import type { UserSimplePeerInterface } from "./SimplePeer";
+import { SoundMeter } from "../Phaser/Components/SoundMeter";
+import { DISABLE_NOTIFICATIONS } from "../Enum/EnvironmentVariable";
 import {
     localStreamStore,
 } from "../Stores/MediaStore";
@@ -14,7 +14,7 @@ import {
 } from "../Stores/ScreenSharingStore";
 import {helpCameraSettingsVisibleStore} from "../Stores/HelpCameraSettingsStore";
 
-export type UpdatedLocalStreamCallback = (media: MediaStream|null) => void;
+export type UpdatedLocalStreamCallback = (media: MediaStream | null) => void;
 export type StartScreenSharingCallback = (media: MediaStream) => void;
 export type StopScreenSharingCallback = (media: MediaStream) => void;
 
@@ -25,9 +25,11 @@ export class MediaManager {
     startScreenSharingCallBacks : Set<StartScreenSharingCallback> = new Set<StartScreenSharingCallback>();
     stopScreenSharingCallBacks : Set<StopScreenSharingCallback> = new Set<StopScreenSharingCallback>();
 
-    private focused : boolean = true;
 
-    private triggerCloseJistiFrame : Map<String, Function> = new Map<String, Function>();
+
+    private focused: boolean = true;
+
+    private triggerCloseJistiFrame: Map<String, Function> = new Map<String, Function>();
 
     private userInputManager?: UserInputManager;
 
@@ -93,17 +95,17 @@ export class MediaManager {
         return `screen-sharing-${userId}`;
     }
 
-    disabledMicrophoneByUserId(userId: number){
+    disabledMicrophoneByUserId(userId: number) {
         const element = document.getElementById(`microphone-${userId}`);
-        if(!element){
+        if (!element) {
             return;
         }
         element.classList.add('active') //todo: why does a method 'disable' add a class 'active'?
     }
 
-    enabledMicrophoneByUserId(userId: number){
+    enabledMicrophoneByUserId(userId: number) {
         const element = document.getElementById(`microphone-${userId}`);
-        if(!element){
+        if (!element) {
             return;
         }
         element.classList.remove('active') //todo: why does a method 'enable' remove a class 'active'?
@@ -120,29 +122,29 @@ export class MediaManager {
         }
     }
 
-    enabledVideoByUserId(userId: number){
+    enabledVideoByUserId(userId: number) {
         let element = document.getElementById(`${userId}`);
-        if(element){
+        if (element) {
             element.style.opacity = "1";
         }
         element = document.getElementById(`name-${userId}`);
-        if(element){
+        if (element) {
             element.style.display = "none";
         }
     }
 
     toggleBlockLogo(userId: number, show: boolean): void {
-        const blockLogoElement = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('blocking-'+userId);
+        const blockLogoElement = HtmlUtils.getElementByIdOrFail<HTMLImageElement>('blocking-' + userId);
         show ? blockLogoElement.classList.add('active') : blockLogoElement.classList.remove('active');
     }
 
     isError(userId: string): void {
         console.info("isError", `div-${userId}`);
         const element = document.getElementById(`div-${userId}`);
-        if(!element){
+        if (!element) {
             return;
         }
-        const errorDiv = element.getElementsByClassName('rtc-error').item(0) as HTMLDivElement|null;
+        const errorDiv = element.getElementsByClassName('rtc-error').item(0) as HTMLDivElement | null;
         if (errorDiv === null) {
             return;
         }
@@ -153,9 +155,9 @@ export class MediaManager {
     }
 
 
-    private getSpinner(userId: string): HTMLDivElement|null {
+    private getSpinner(userId: string): HTMLDivElement | null {
         const element = document.getElementById(`div-${userId}`);
-        if(!element){
+        if (!element) {
             return null;
         }
         const connectingSpinnerDiv = element.getElementsByClassName('connecting-spinner').item(0) as HTMLDivElement|null;
@@ -166,7 +168,7 @@ export class MediaManager {
         this.triggerCloseJistiFrame.set(id, Function);
     }
 
-    public removeTriggerCloseJitsiFrameButton(id: String){
+    public removeTriggerCloseJitsiFrameButton(id: String) {
         this.triggerCloseJistiFrame.delete(id);
     }
 
@@ -176,16 +178,16 @@ export class MediaManager {
         }
     }
 
-    public addNewMessage(name: string, message: string, isMe: boolean = false){
+    public addNewMessage(name: string, message: string, isMe: boolean = false) {
         discussionManager.addMessage(name, message, isMe);
 
         //when there are new message, show discussion
-        if(!discussionManager.activatedDiscussion) {
+        if (!discussionManager.activatedDiscussion) {
             discussionManager.showDiscussionPart();
         }
     }
 
-    public addSendMessageCallback(userId: string|number, callback: SendMessageCallback){
+    public addSendMessageCallback(userId: string | number, callback: SendMessageCallback) {
         discussionManager.onSendMessageCallback(userId, callback);
     }
 
