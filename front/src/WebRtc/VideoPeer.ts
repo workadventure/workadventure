@@ -12,6 +12,8 @@ import {discussionManager} from "./DiscussionManager";
 
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
 
+export type PeerStatus = "connecting" | "connected" | "error" | "closed";
+
 export const MESSAGE_TYPE_CONSTRAINT = 'constraint';
 export const MESSAGE_TYPE_MESSAGE = 'message';
 export const MESSAGE_TYPE_BLOCKED = 'blocked';
@@ -29,7 +31,7 @@ export class VideoPeer extends Peer {
     private onBlockSubscribe: Subscription;
     private onUnBlockSubscribe: Subscription;
     public readonly streamStore: Readable<MediaStream | null>;
-    public readonly statusStore: Readable<"connecting" | "connected" | "error" | "closed">;
+    public readonly statusStore: Readable<PeerStatus>;
     public readonly constraintsStore: Readable<MediaStreamConstraints|null>;
 
     constructor(public user: UserSimplePeerInterface, initiator: boolean, public readonly userName: string, private connection: RoomConnection, localStream: MediaStream | null) {
@@ -92,7 +94,7 @@ export class VideoPeer extends Peer {
             };
         });
 
-        this.statusStore = readable<"connecting" | "connected" | "error" | "closed">("connecting", (set) => {
+        this.statusStore = readable<PeerStatus>("connecting", (set) => {
             const onConnect = () => {
                 set('connected');
             };

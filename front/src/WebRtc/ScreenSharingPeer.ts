@@ -2,7 +2,7 @@ import type * as SimplePeerNamespace from "simple-peer";
 import {mediaManager} from "./MediaManager";
 import {STUN_SERVER, TURN_PASSWORD, TURN_SERVER, TURN_USER} from "../Enum/EnvironmentVariable";
 import type {RoomConnection} from "../Connexion/RoomConnection";
-import {MESSAGE_TYPE_CONSTRAINT} from "./VideoPeer";
+import {MESSAGE_TYPE_CONSTRAINT, PeerStatus} from "./VideoPeer";
 import type {UserSimplePeerInterface} from "./SimplePeer";
 import {Readable, readable, writable, Writable} from "svelte/store";
 import {videoFocusStore} from "../Stores/VideoFocusStore";
@@ -22,7 +22,7 @@ export class ScreenSharingPeer extends Peer {
     public readonly userId: number;
     public readonly uniqueId: string;
     public readonly streamStore: Readable<MediaStream | null>;
-    public readonly statusStore: Readable<"connecting" | "connected" | "error" | "closed">;
+    public readonly statusStore: Readable<PeerStatus>;
 
     constructor(user: UserSimplePeerInterface, initiator: boolean, public readonly userName: string, private connection: RoomConnection, stream: MediaStream | null) {
         super({
@@ -71,7 +71,7 @@ export class ScreenSharingPeer extends Peer {
             };
         });
 
-        this.statusStore = readable<"connecting" | "connected" | "error" | "closed">("connecting", (set) => {
+        this.statusStore = readable<PeerStatus>("connecting", (set) => {
             const onConnect = () => {
                 set('connected');
             };
