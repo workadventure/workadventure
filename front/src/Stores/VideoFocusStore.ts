@@ -28,7 +28,6 @@ function createVideoFocusStore() {
             } else {
                 focusedMedia = null;
             }
-            console.log('MEDIA', focusedMedia)
             set(focusedMedia);
         },
         connectToSimplePeer: (simplePeer: SimplePeer) => {

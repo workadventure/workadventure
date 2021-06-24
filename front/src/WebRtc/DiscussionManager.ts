@@ -108,7 +108,6 @@ export class DiscussionManager {
         name: string|undefined,
         img?: string|undefined,
         isMe: boolean = false,
-        //showReportCallBack?: ShowReportCallBack
     ) {
         const divParticipant: HTMLDivElement = document.createElement('div');
         divParticipant.classList.add('participant');
