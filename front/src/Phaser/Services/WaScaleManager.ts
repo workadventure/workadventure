@@ -3,6 +3,7 @@ import ScaleManager = Phaser.Scale.ScaleManager;
 import {coWebsiteManager} from "../../WebRtc/CoWebsiteManager";
 import type {Game} from "../Game/Game";
 import {ResizableScene} from "../Login/ResizableScene";
+import {HtmlUtils} from "../../WebRtc/HtmlUtils";
 
 
 class WaScaleManager {
@@ -39,10 +40,17 @@ class WaScaleManager {
         const style = this.scaleManager.canvas.style;
         style.width = Math.ceil(realSize.width / devicePixelRatio) + 'px';
         style.height = Math.ceil(realSize.height / devicePixelRatio) + 'px';
-        // Note: onResize will be called twice (once here and once is Game.ts), but we have no better way.
+
+        // Resize the game element at the same size at the canvas
+        const gameStyle = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('game').style;
+        gameStyle.width = style.width;
+        gameStyle.height = style.height;
+
+        // Note: onResize will be called twice (once here and once in Game.ts), but we have no better way.
         for (const scene of this.game.scene.getScenes(true)) {
             if (scene instanceof ResizableScene) {
-                scene.onResize();
+                // We are delaying the call to the "render" event because otherwise, the "camera" coordinates are not correctly updated.
+                scene.events.once(Phaser.Scenes.Events.RENDER, () => scene.onResize());
             }
         }
 
@@ -60,7 +68,6 @@ class WaScaleManager {
 
     public saveZoom(): void {
         this._saveZoom = this.hdpiManager.zoomModifier;
-        console.log(this._saveZoom);
     }
 
     public restoreZoom(): void{

@@ -8,6 +8,7 @@ import {Companion} from "../Companion/Companion";
 import type {GameScene} from "../Game/GameScene";
 import {DEPTH_INGAME_TEXT_INDEX} from "../Game/DepthIndexes";
 import {waScaleManager} from "../Services/WaScaleManager";
+import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 
 const playerNameY = - 25;
 
@@ -32,6 +33,7 @@ export abstract class Character extends Container {
     public companion?: Companion;
     private emote: Phaser.GameObjects.Sprite | null = null;
     private emoteTween: Phaser.Tweens.Tween|null = null;
+    scene: GameScene;
 
     constructor(scene: GameScene,
                 x: number,
@@ -41,10 +43,12 @@ export abstract class Character extends Container {
                 direction: PlayerAnimationDirections,
                 moving: boolean,
                 frame: string | number,
+                isClickable: boolean,
                 companion: string|null,
                 companionTexturePromise?: Promise<string>
     ) {
         super(scene, x, y/*, texture, frame*/);
+        this.scene = scene;
         this.PlayerValue = name;
         this.invisible = true
 
@@ -55,17 +59,30 @@ export abstract class Character extends Container {
             this.addTextures(textures, frame);
             this.invisible = false
         })
-        
+
         this.playerName = new Text(scene, 0,  playerNameY, name, {fontFamily: '"Press Start 2P"', fontSize: '8px', strokeThickness: 2, stroke: "gray"});
         this.playerName.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
         this.add(this.playerName);
 
-        if (this.isClickable()) {
+        if (isClickable) {
             this.setInteractive({
                 hitArea: new Phaser.Geom.Circle(0, 0, interactiveRadius),
                 hitAreaCallback: Phaser.Geom.Circle.Contains, //eslint-disable-line @typescript-eslint/unbound-method
                 useHandCursor: true,
             });
+
+            this.on('pointerover',() => {
+                this.getOutlinePlugin()?.add(this.playerName, {
+                    thickness: 2,
+                    outlineColor: 0xffff00
+                });
+                this.scene.markDirty();
+            });
+            this.on('pointerout',() => {
+                this.getOutlinePlugin()?.remove(this.playerName);
+                this.scene.markDirty();
+            })
+
         }
 
         scene.add.existing(this);
@@ -79,10 +96,14 @@ export abstract class Character extends Container {
         this.setDepth(-1);
 
         this.playAnimation(direction, moving);
-        
+
         if (typeof companion === 'string') {
             this.addCompanion(companion, companionTexturePromise);
         }
+    }
+
+    private getOutlinePlugin(): OutlinePipelinePlugin|undefined {
+        return this.scene.plugins.get('rexOutlinePipeline') as unknown as OutlinePipelinePlugin|undefined;
     }
 
     public addCompanion(name: string, texturePromise?: Promise<string>): void {
@@ -90,12 +111,10 @@ export abstract class Character extends Container {
             this.companion = new Companion(this.scene, this.x, this.y, name, texturePromise);
         }
     }
-    
-    public abstract isClickable(): boolean;
 
     public addTextures(textures: string[], frame?: string | number): void {
         for (const texture of textures) {
-            if(!this.scene.textures.exists(texture)){
+            if(this.scene && !this.scene.textures.exists(texture)){
                 throw new TextureError('texture not found');
             }
             const sprite = new Sprite(this.scene, 0, 0, texture, frame);
@@ -240,28 +259,28 @@ export abstract class Character extends Container {
                 this.scene.sys.updateList.remove(sprite);
             }
         }
-        this.list.forEach(objectContaining => objectContaining.destroy()) 
+        this.list.forEach(objectContaining => objectContaining.destroy())
         super.destroy();
     }
-    
+
     playEmote(emoteKey: string) {
         this.cancelPreviousEmote();
 
         const scalingFactor = waScaleManager.uiScalingFactor * 0.05;
         const emoteY = -30 - scalingFactor * 10;
-        
+
         this.playerName.setVisible(false);
         this.emote = new Sprite(this.scene, 0,  0, emoteKey);
         this.emote.setAlpha(0);
         this.emote.setScale(0.1 * scalingFactor);
         this.add(this.emote);
         this.scene.sys.updateList.add(this.emote);
-        
+
         this.createStartTransition(scalingFactor, emoteY);
     }
 
     private createStartTransition(scalingFactor: number, emoteY: number) {
-        this.emoteTween = this.scene.tweens.add({
+        this.emoteTween = this.scene?.tweens.add({
             targets: this.emote,
             props: {
                 scale: scalingFactor,
@@ -277,7 +296,7 @@ export abstract class Character extends Container {
     }
 
     private startPulseTransition(emoteY: number, scalingFactor: number) {
-        this.emoteTween = this.scene.tweens.add({
+        this.emoteTween = this.scene?.tweens.add({
             targets: this.emote,
             props: {
                 y: emoteY * 1.3,
@@ -294,7 +313,7 @@ export abstract class Character extends Container {
     }
 
     private startExitTransition(emoteY: number) {
-        this.emoteTween = this.scene.tweens.add({
+        this.emoteTween = this.scene?.tweens.add({
             targets: this.emote,
             props: {
                 alpha: 0,

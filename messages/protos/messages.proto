@@ -75,14 +75,6 @@ message EmoteEventMessage {
     string emote = 2;
 }
 
-message RequestVisitCardMessage {
-    int32 targetUserId = 1;
-}
-
-message VisitCardMessage {
-    string url = 1;
-}
-
 message QueryJitsiJwtMessage {
   string jitsiRoom = 1;
   string tag = 2; // FIXME: rather than reading the tag from the query, we should read it from the current map!
@@ -102,7 +94,6 @@ message ClientToServerMessage {
     ReportPlayerMessage reportPlayerMessage = 11;
     QueryJitsiJwtMessage queryJitsiJwtMessage = 12;
     EmotePromptMessage emotePromptMessage = 13;
-    RequestVisitCardMessage requestVisitCardMessage = 14;
   }
 }
 
@@ -166,6 +157,7 @@ message UserJoinedMessage {
   repeated CharacterLayerMessage characterLayers = 3;
   PositionMessage position = 4;
   CompanionMessage companion = 5;
+  string visitCardUrl = 6;
 }
 
 message UserLeftMessage {
@@ -268,7 +260,6 @@ message ServerToClientMessage {
     RefreshRoomMessage refreshRoomMessage = 17; 
     WorldConnexionMessage worldConnexionMessage = 18;
     EmoteEventMessage emoteEventMessage = 19;
-    VisitCardMessage visitCardMessage = 20;
   }
 }
 
@@ -284,6 +275,7 @@ message JoinRoomMessage {
   repeated string tag = 6;
   string IPAddress = 7;
   CompanionMessage companion = 8;
+  string visitCardUrl = 9;
 }
 
 message UserJoinedZoneMessage {
@@ -293,6 +285,7 @@ message UserJoinedZoneMessage {
   PositionMessage position = 4;
   Zone fromZone = 5;
   CompanionMessage companion = 6;
+  string visitCardUrl = 7;
 }
 
 message UserLeftZoneMessage {
@@ -340,7 +333,6 @@ message PusherToBackMessage {
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
     EmotePromptMessage emotePromptMessage = 14;
-    RequestVisitCardMessage requestVisitCardMessage = 15;
   }
 }
 

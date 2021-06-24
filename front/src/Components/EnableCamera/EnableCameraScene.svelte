@@ -1,5 +1,5 @@
 <script lang="typescript">
-    import {Game} from "../../Phaser/Game/Game";
+    import type {Game} from "../../Phaser/Game/Game";
     import {EnableCameraScene, EnableCameraSceneName} from "../../Phaser/Login/EnableCameraScene";
     import {
         audioConstraintStore,
@@ -15,8 +15,8 @@
     import microphoneImg from "../images/microphone.svg";
 
     export let game: Game;
-    let selectedCamera : string|null = null;
-    let selectedMicrophone : string|null = null;
+    let selectedCamera : string|undefined = undefined;
+    let selectedMicrophone : string|undefined = undefined;
 
     const enableCameraScene = game.scene.getScene(EnableCameraSceneName) as EnableCameraScene;
 
@@ -24,10 +24,10 @@
         enableCameraScene.login();
     }
 
-    function srcObject(node, stream) {
+    function srcObject(node: HTMLVideoElement, stream: MediaStream) {
         node.srcObject = stream;
         return {
-            update(newStream) {
+            update(newStream: MediaStream) {
                 if (node.srcObject != newStream) {
                     node.srcObject = newStream
                 }
@@ -53,16 +53,16 @@
             }
         } else {
             stream = null;
-            selectedCamera = null;
-            selectedMicrophone = null;
+            selectedCamera = undefined;
+            selectedMicrophone = undefined;
         }
     });
 
     onDestroy(unsubscribe);
 
     function normalizeDeviceName(label: string): string {
-        // remove text in parenthesis
-        return label.replace(/\([^()]*\)/g, '').trim();
+        // remove IDs (that can appear in Chrome, like: "HD Pro Webcam (4df7:4eda)"
+        return label.replace(/(\([[0-9a-f]{4}:[0-9a-f]{4}\))/g, '').trim();
     }
 
     function selectCamera() {
@@ -79,7 +79,7 @@
     <section class="text-center">
         <h2>Turn on your camera and microphone</h2>
     </section>
-        {#if $localStreamStore.stream}
+        {#if $localStreamStore.type === 'success' && $localStreamStore.stream}
             <video class="myCamVideoSetup" use:srcObject={$localStreamStore.stream} autoplay muted playsinline></video>
         {:else }
             <div class="webrtcsetup">
@@ -93,7 +93,7 @@
         {#if $cameraListStore.length > 1 }
             <div class="control-group">
                 <img src={cinemaImg} alt="Camera" />
-                <div class="nes-select">
+                <div class="nes-select is-dark">
                     <select bind:value={selectedCamera} on:change={selectCamera}>
                         {#each $cameraListStore as camera}
                             <option value={camera.deviceId}>
@@ -108,7 +108,7 @@
         {#if $microphoneListStore.length > 1 }
             <div class="control-group">
                 <img src={microphoneImg} alt="Microphone" />
-                <div class="nes-select">
+                <div class="nes-select is-dark">
                     <select bind:value={selectedMicrophone} on:change={selectMicrophone}>
                         {#each $microphoneListStore as microphone}
                             <option value={microphone.deviceId}>
@@ -136,7 +136,7 @@
         margin-top: 3vh;
         margin-bottom: 3vh;
         min-height: 10vh;
-        width: 50%;
+        width: 50vw;
         margin-left: auto;
         margin-right: auto;
 
@@ -144,12 +144,12 @@
           font-family: "Press Start 2P";
           margin-top: 1vh;
           margin-bottom: 1vh;
+        }
 
-          option {
+        option {
             font-family: "Press Start 2P";
           }
         }
-      }
 
       section.action{
         text-align: center;
@@ -173,6 +173,8 @@
       .control-group {
         display: flex;
         flex-direction: row;
+        max-height: 60px;
+        margin-top: 10px;
 
         img {
           width: 30px;
@@ -210,8 +212,18 @@
         align-items: center;
         justify-content: center;
       }
+    }
 
-
+    @media only screen and (max-width: 800px) {
+      .enableCameraScene h2 {
+        font-size: 80%;
+      }
+      .enableCameraScene .control-group .nes-select {
+        font-size: 80%;
+      }
+      .enableCameraScene button.letsgo {
+        font-size: 160%;
+      }
     }
 </style>
 

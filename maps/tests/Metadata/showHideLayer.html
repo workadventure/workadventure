@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <script src="http://play.workadventure.localhost/iframe_api.js"></script>
+    </head>
+    <body>
+    	<div>
+            <label for="show/hideLayer">Crysal Layer : </label><input type="checkbox" id="show/hideLayer" name="visible" value="show" checked>
+        </div>
+    	<script>
+    		document.getElementById('show/hideLayer').onclick = () => {
+                if (document.getElementById('show/hideLayer').checked) {
+                    WA.room.showLayer('crystal');
+                }
+                else {
+                    WA.room.hideLayer('crystal');
+                }
+            }
+    	</script>
+    </body>
+</html>

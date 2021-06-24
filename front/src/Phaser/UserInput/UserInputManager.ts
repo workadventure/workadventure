@@ -2,6 +2,7 @@ import type { Direction } from "../../types";
 import type {GameScene} from "../Game/GameScene";
 import {touchScreenManager} from "../../Touch/TouchScreenManager";
 import {MobileJoystick} from "../Components/MobileJoystick";
+import {enableUserInputsStore} from "../../Stores/UserInputStore";
 
 interface UserInputManagerDatum {
     keyInstance: Phaser.Input.Keyboard.Key;
@@ -58,6 +59,10 @@ export class UserInputManager {
         if (touchScreenManager.supportTouchScreen) {
             this.initVirtualJoystick();
         }
+
+        enableUserInputsStore.subscribe((enable) => {
+            enable ? this.restoreControls() : this.disableControls()
+        })
     }
 
     initVirtualJoystick() {

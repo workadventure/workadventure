@@ -2,7 +2,7 @@
     import { fly } from 'svelte/transition';
     import megaphoneImg from "./images/megaphone.svg";
     import {soundPlayingStore} from "../../Stores/SoundPlayingStore";
-    import {afterUpdate, onMount} from "svelte";
+    import {afterUpdate} from "svelte";
 
     export let url: string;
     let audio: HTMLAudioElement;

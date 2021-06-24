@@ -3,10 +3,10 @@
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import {onDestroy} from "svelte";
 
-    function srcObject(node, stream) {
+    function srcObject(node: HTMLVideoElement, stream: MediaStream) {
         node.srcObject = stream;
         return {
-            update(newStream) {
+            update(newStream: MediaStream) {
                 if (node.srcObject != newStream) {
                     node.srcObject = newStream
                 }
@@ -38,9 +38,9 @@
 
 <div>
     <div class="video-container div-myCamVideo" class:hide={!$localStreamStore.constraints.video}>
+        {#if $localStreamStore.type === "success" && $localStreamStore.stream }
         <video class="myCamVideo" use:srcObject={$localStreamStore.stream} autoplay muted playsinline></video>
-        <!-- {#if stream}
         <SoundMeterWidget stream={stream}></SoundMeterWidget>
-        {/if} -->
+        {/if}
     </div>
 </div>

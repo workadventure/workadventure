@@ -1,5 +1,9 @@
 /node_modules/
-/dist/bundle.js
+/dist/*.js
+/dist/*.js.map
+/dist/*.js.LICENSE.txt
+/dist/main.*.css
+/dist/main.*.css.map
 /dist/tests/
 /yarn-error.log
 /dist/webpack.config.js

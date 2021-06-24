@@ -1,4 +1,9 @@
-import {gameManager, HasMovedEvent} from "./GameManager";
+import { Queue } from 'queue-typescript';
+import type { Subscription } from "rxjs";
+import { GlobalMessageManager } from "../../Administration/GlobalMessageManager";
+import { userMessageManager } from "../../Administration/UserMessageManager";
+import { iframeListener } from "../../Api/IframeListener";
+import { connectionManager } from "../../Connexion/ConnectionManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
     MessageUserJoined,
@@ -9,95 +14,89 @@ import type {
     PositionInterface,
     RoomJoinedMessageInterface
 } from "../../Connexion/ConnexionModels";
-import {hasMovedEventName, Player, requestEmoteEventName} from "../Player/Player";
+import { localUserStore } from "../../Connexion/LocalUserStore";
+import { Room } from "../../Connexion/Room";
+import type { RoomConnection } from "../../Connexion/RoomConnection";
+import { worldFullMessageStream } from "../../Connexion/WorldFullMessageStream";
 import {
     DEBUG_MODE,
     JITSI_PRIVATE_MODE,
     MAX_PER_GROUP,
-    POSITION_DELAY,
+    POSITION_DELAY
 } from "../../Enum/EnvironmentVariable";
-import type {
-    ITiledMap,
-    ITiledMapLayer,
-    ITiledMapLayerProperty,
-    ITiledMapObject,
-    ITiledText,
-    ITiledMapTileLayer,
-    ITiledTileSet
-} from "../Map/ITiledMap";
-import type {AddPlayerInterface} from "./AddPlayerInterface";
-import {PlayerAnimationDirections} from "../Player/Animation";
-import {PlayerMovement} from "./PlayerMovement";
-import {PlayersPositionInterpolator} from "./PlayersPositionInterpolator";
-import {playerClickedEvent, RemotePlayer} from "../Entity/RemotePlayer";
-import {Queue} from 'queue-typescript';
-import {SimplePeer, UserSimplePeerInterface} from "../../WebRtc/SimplePeer";
-import {ReconnectingSceneName} from "../Reconnecting/ReconnectingScene";
-import {lazyLoadPlayerCharacterTextures, loadCustomTexture} from "../Entity/PlayerTexturesLoadingManager";
+import { TextureError } from "../../Exception/TextureError";
+import type { UserMovedMessage } from "../../Messages/generated/messages_pb";
+import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
+import { peerStore } from "../../Stores/PeerStore";
+import { touchScreenManager } from "../../Touch/TouchScreenManager";
+import { urlManager } from "../../Url/UrlManager";
+import { audioManager } from "../../WebRtc/AudioManager";
+import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
+import { HtmlUtils } from "../../WebRtc/HtmlUtils";
+import { jitsiFactory } from "../../WebRtc/JitsiFactory";
 import {
-    CenterListener,
+    AUDIO_LOOP_PROPERTY, AUDIO_VOLUME_PROPERTY, CenterListener,
     JITSI_MESSAGE_PROPERTIES,
     layoutManager,
     LayoutMode,
     ON_ACTION_TRIGGER_BUTTON,
     TRIGGER_JITSI_PROPERTIES,
     TRIGGER_WEBSITE_PROPERTIES,
-    WEBSITE_MESSAGE_PROPERTIES,
-    AUDIO_VOLUME_PROPERTY,
-    AUDIO_LOOP_PROPERTY
+    WEBSITE_MESSAGE_PROPERTIES
 } from "../../WebRtc/LayoutManager";
-import {GameMap} from "./GameMap";
-import {coWebsiteManager} from "../../WebRtc/CoWebsiteManager";
-import {mediaManager} from "../../WebRtc/MediaManager";
-import type {ItemFactoryInterface} from "../Items/ItemFactoryInterface";
-import type {ActionableItem} from "../Items/ActionableItem";
-import {UserInputManager} from "../UserInput/UserInputManager";
-import {soundManager} from "./SoundManager";
-import type {UserMovedMessage} from "../../Messages/generated/messages_pb";
-import {ProtobufClientUtils} from "../../Network/ProtobufClientUtils";
-import {connectionManager} from "../../Connexion/ConnectionManager";
-import type {RoomConnection} from "../../Connexion/RoomConnection";
-import {GlobalMessageManager} from "../../Administration/GlobalMessageManager";
-import {userMessageManager} from "../../Administration/UserMessageManager";
-import {ConsoleGlobalMessageManager} from "../../Administration/ConsoleGlobalMessageManager";
-import {ResizableScene} from "../Login/ResizableScene";
-import {Room} from "../../Connexion/Room";
-import {jitsiFactory} from "../../WebRtc/JitsiFactory";
-import {urlManager} from "../../Url/UrlManager";
-import {audioManager} from "../../WebRtc/AudioManager";
-import {PresentationModeIcon} from "../Components/PresentationModeIcon";
-import {ChatModeIcon} from "../Components/ChatModeIcon";
-import {OpenChatIcon, openChatIconName} from "../Components/OpenChatIcon";
-import {SelectCharacterScene, SelectCharacterSceneName} from "../Login/SelectCharacterScene";
-import {TextureError} from "../../Exception/TextureError";
-import {addLoader} from "../Components/Loader";
-import {ErrorSceneName} from "../Reconnecting/ErrorScene";
-import {localUserStore} from "../../Connexion/LocalUserStore";
-import {iframeListener} from "../../Api/IframeListener";
-import {HtmlUtils} from "../../WebRtc/HtmlUtils";
+import { mediaManager } from "../../WebRtc/MediaManager";
+import { SimplePeer, UserSimplePeerInterface } from "../../WebRtc/SimplePeer";
+import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
+import { ChatModeIcon } from "../Components/ChatModeIcon";
+import { addLoader } from "../Components/Loader";
+import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
+import { OpenChatIcon, openChatIconName } from "../Components/OpenChatIcon";
+import { PresentationModeIcon } from "../Components/PresentationModeIcon";
+import { TextUtils } from "../Components/TextUtils";
+import { lazyLoadPlayerCharacterTextures, loadCustomTexture } from "../Entity/PlayerTexturesLoadingManager";
+import { RemotePlayer } from "../Entity/RemotePlayer";
+import type { ActionableItem } from "../Items/ActionableItem";
+import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
+import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
+import type {
+    ITiledMap,
+    ITiledMapLayer,
+    ITiledMapLayerProperty,
+    ITiledMapObject,
+    ITiledMapTileLayer,
+    ITiledTileSet } from "../Map/ITiledMap";
+import { MenuScene, MenuSceneName } from '../Menu/MenuScene';
+import { PlayerAnimationDirections } from "../Player/Animation";
+import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
+import { ErrorSceneName } from "../Reconnecting/ErrorScene";
+import { ReconnectingSceneName } from "../Reconnecting/ReconnectingScene";
+import { waScaleManager } from "../Services/WaScaleManager";
+import { PinchManager } from "../UserInput/PinchManager";
+import { UserInputManager } from "../UserInput/UserInputManager";
+import type { AddPlayerInterface } from "./AddPlayerInterface";
+import { DEPTH_OVERLAY_INDEX } from "./DepthIndexes";
+import { DirtyScene } from "./DirtyScene";
+import { EmoteManager } from "./EmoteManager";
+import { gameManager } from "./GameManager";
+import { GameMap } from "./GameMap";
+import { PlayerMovement } from "./PlayerMovement";
+import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
 import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import DOMElement = Phaser.GameObjects.DOMElement;
-import type {Subscription} from "rxjs";
-import {worldFullMessageStream} from "../../Connexion/WorldFullMessageStream";
-import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
+import EVENT_TYPE = Phaser.Scenes.Events
 import RenderTexture = Phaser.GameObjects.RenderTexture;
 import Tilemap = Phaser.Tilemaps.Tilemap;
-import {DirtyScene} from "./DirtyScene";
-import {TextUtils} from "../Components/TextUtils";
-import {touchScreenManager} from "../../Touch/TouchScreenManager";
-import {PinchManager} from "../UserInput/PinchManager";
-import {joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey} from "../Components/MobileJoystick";
-import {DEPTH_OVERLAY_INDEX} from "./DepthIndexes";
-import {waScaleManager} from "../Services/WaScaleManager";
-import {peerStore} from "../../Stores/PeerStore";
-import {EmoteManager} from "./EmoteManager";
+import type { HasPlayerMovedEvent } from '../../Api/Events/HasPlayerMovedEvent';
+
+import AnimatedTiles from "phaser-animated-tiles";
+import {soundManager} from "./SoundManager";
 
 export interface GameSceneInitInterface {
-    initPosition: PointInterface|null,
+    initPosition: PointInterface | null,
     reconnecting: boolean
 }
 
@@ -134,32 +133,31 @@ interface DeleteGroupEventInterface {
 const defaultStartLayerName = 'start';
 
 export class GameScene extends DirtyScene implements CenterListener {
-    Terrains : Array<Phaser.Tilemaps.Tileset>;
+    Terrains: Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer!: Player;
     MapPlayers!: Phaser.Physics.Arcade.Group;
-    MapPlayersByKey : Map<number, RemotePlayer> = new Map<number, RemotePlayer>();
+    MapPlayersByKey: Map<number, RemotePlayer> = new Map<number, RemotePlayer>();
     Map!: Phaser.Tilemaps.Tilemap;
-    Layers!: Array<Phaser.Tilemaps.TilemapLayer>;
     Objects!: Array<Phaser.Physics.Arcade.Sprite>;
     mapFile!: ITiledMap;
+    animatedTiles!: AnimatedTiles;
     groups: Map<number, Sprite>;
     startX!: number;
     startY!: number;
     circleTexture!: CanvasTexture;
     circleRedTexture!: CanvasTexture;
-    pendingEvents: Queue<InitUserPositionEventInterface|AddPlayerEventInterface|RemovePlayerEventInterface|UserMovedEventInterface|GroupCreatedUpdatedEventInterface|DeleteGroupEventInterface> = new Queue<InitUserPositionEventInterface|AddPlayerEventInterface|RemovePlayerEventInterface|UserMovedEventInterface|GroupCreatedUpdatedEventInterface|DeleteGroupEventInterface>();
-    private initPosition: PositionInterface|null = null;
+    pendingEvents: Queue<InitUserPositionEventInterface | AddPlayerEventInterface | RemovePlayerEventInterface | UserMovedEventInterface | GroupCreatedUpdatedEventInterface | DeleteGroupEventInterface> = new Queue<InitUserPositionEventInterface | AddPlayerEventInterface | RemovePlayerEventInterface | UserMovedEventInterface | GroupCreatedUpdatedEventInterface | DeleteGroupEventInterface>();
+    private initPosition: PositionInterface | null = null;
     private playersPositionInterpolator = new PlayersPositionInterpolator();
-    public connection: RoomConnection|undefined;
+    public connection: RoomConnection | undefined;
     private simplePeer!: SimplePeer;
     private GlobalMessageManager!: GlobalMessageManager;
-    public ConsoleGlobalMessageManager!: ConsoleGlobalMessageManager;
     private connectionAnswerPromise: Promise<RoomJoinedMessageInterface>;
     private connectionAnswerPromiseResolve!: (value: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>) => void;
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
     private createPromise: Promise<void>;
     private createPromiseResolve!: (value?: void | PromiseLike<void>) => void;
-    private iframeSubscriptionList! : Array<Subscription>;
+    private iframeSubscriptionList!: Array<Subscription>;
     private peerStoreUnsubscribe!: () => void;
     MapUrlFile: string;
     RoomId: string;
@@ -167,7 +165,7 @@ export class GameScene extends DirtyScene implements CenterListener {
 
     currentTick!: number;
     lastSentTick!: number; // The last tick at which a position was sent.
-    lastMoveEventSent: HasMovedEvent = {
+    lastMoveEventSent: HasPlayerMovedEvent = {
         direction: '',
         moving: false,
         x: -1000,
@@ -179,22 +177,22 @@ export class GameScene extends DirtyScene implements CenterListener {
     private gameMap!: GameMap;
     private actionableItems: Map<number, ActionableItem> = new Map<number, ActionableItem>();
     // The item that can be selected by pressing the space key.
-    private outlinedItem: ActionableItem|null = null;
+    private outlinedItem: ActionableItem | null = null;
     public userInputManager!: UserInputManager;
-    private isReconnecting: boolean|undefined = undefined;
+    private isReconnecting: boolean | undefined = undefined;
     private startLayerName!: string | null;
     private openChatIcon!: OpenChatIcon;
     private playerName!: string;
     private characterLayers!: string[];
-    private companion!: string|null;
-    private messageSubscription: Subscription|null = null;
-    private popUpElements : Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
-    private originalMapUrl: string|undefined;
-    private pinchManager: PinchManager|undefined;
+    private companion!: string | null;
+    private messageSubscription: Subscription | null = null;
+    private popUpElements: Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
+    private originalMapUrl: string | undefined;
+    private pinchManager: PinchManager | undefined;
     private mapTransitioning: boolean = false; //used to prevent transitions happenning at the same time.
     private emoteManager!: EmoteManager;
 
-    constructor(private room: Room, MapUrlFile: string, customKey?: string|undefined) {
+    constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
             key: customKey ?? room.id
         });
@@ -234,13 +232,13 @@ export class GameScene extends DirtyScene implements CenterListener {
         //this.load.audio('audio-report-message', '/resources/objects/report-message.mp3');
         this.sound.pauseOnBlur = false;
 
-        this.load.on(FILE_LOAD_ERROR, (file: {src: string}) => {
+        this.load.on(FILE_LOAD_ERROR, (file: { src: string }) => {
             // If we happen to be in HTTP and we are trying to load a URL in HTTPS only... (this happens only in dev environments)
             if (window.location.protocol === 'http:' && file.src === this.MapUrlFile && file.src.startsWith('http:') && this.originalMapUrl === undefined) {
                 this.originalMapUrl = this.MapUrlFile;
                 this.MapUrlFile = this.MapUrlFile.replace('http://', 'https://');
                 this.load.tilemapTiledJSON(this.MapUrlFile, this.MapUrlFile);
-                this.load.on('filecomplete-tilemapJSON-'+this.MapUrlFile, (key: string, type: string, data: unknown) => {
+                this.load.on('filecomplete-tilemapJSON-' + this.MapUrlFile, (key: string, type: string, data: unknown) => {
                     this.onMapLoad(data);
                 });
                 return;
@@ -254,7 +252,7 @@ export class GameScene extends DirtyScene implements CenterListener {
                 this.originalMapUrl = this.MapUrlFile;
                 this.MapUrlFile = this.MapUrlFile.replace('https://', 'http://');
                 this.load.tilemapTiledJSON(this.MapUrlFile, this.MapUrlFile);
-                this.load.on('filecomplete-tilemapJSON-'+this.MapUrlFile, (key: string, type: string, data: unknown) => {
+                this.load.on('filecomplete-tilemapJSON-' + this.MapUrlFile, (key: string, type: string, data: unknown) => {
                     this.onMapLoad(data);
                 });
                 return;
@@ -266,7 +264,8 @@ export class GameScene extends DirtyScene implements CenterListener {
                 message: this.originalMapUrl ?? file.src
             });
         });
-        this.load.on('filecomplete-tilemapJSON-'+this.MapUrlFile, (key: string, type: string, data: unknown) => {
+        this.load.scenePlugin('AnimatedTiles', AnimatedTiles, 'animatedTiles', 'animatedTiles');
+        this.load.on('filecomplete-tilemapJSON-' + this.MapUrlFile, (key: string, type: string, data: unknown) => {
             this.onMapLoad(data);
         });
         //TODO strategy to add access token
@@ -278,7 +277,7 @@ export class GameScene extends DirtyScene implements CenterListener {
             this.onMapLoad(data);
         }
 
-        this.load.spritesheet('layout_modes', 'resources/objects/layout_modes.png', {frameWidth: 32, frameHeight: 32});
+        this.load.spritesheet('layout_modes', 'resources/objects/layout_modes.png', { frameWidth: 32, frameHeight: 32 });
         this.load.bitmapFont('main_font', 'resources/fonts/arcade.png', 'resources/fonts/arcade.xml');
         //eslint-disable-next-line @typescript-eslint/no-explicit-any
         (this.load as any).rexWebFont({
@@ -315,7 +314,7 @@ export class GameScene extends DirtyScene implements CenterListener {
         for (const layer of this.mapFile.layers) {
             if (layer.type === 'objectgroup') {
                 for (const object of layer.objects) {
-                    let objectsOfType: ITiledMapObject[]|undefined;
+                    let objectsOfType: ITiledMapObject[] | undefined;
                     if (!objects.has(object.type)) {
                         objectsOfType = new Array<ITiledMapObject>();
                     } else {
@@ -343,7 +342,7 @@ export class GameScene extends DirtyScene implements CenterListener {
                 }
                 default:
                     continue;
-                    //throw new Error('Unsupported object type: "'+ itemType +'"');
+                //throw new Error('Unsupported object type: "'+ itemType +'"');
             }
 
             itemFactory.preload(this.load);
@@ -378,7 +377,7 @@ export class GameScene extends DirtyScene implements CenterListener {
     }
 
     //hook initialisation
-    init(initData : GameSceneInitInterface) {
+    init(initData: GameSceneInitInterface) {
         if (initData.initPosition !== undefined) {
             this.initPosition = initData.initPosition; //todo: still used?
         }
@@ -411,7 +410,6 @@ export class GameScene extends DirtyScene implements CenterListener {
 
         //initalise map
         this.Map = this.add.tilemap(this.MapUrlFile);
-        this.gameMap = new GameMap(this.mapFile);
         const mapDirUrl = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf('/'));
         this.mapFile.tilesets.forEach((tileset: ITiledTileSet) => {
             this.Terrains.push(this.Map.addTilesetImage(tileset.name, `${mapDirUrl}/${tileset.image}`, tileset.tilewidth, tileset.tileheight, tileset.margin, tileset.spacing/*, tileset.firstgid*/));
@@ -421,11 +419,9 @@ export class GameScene extends DirtyScene implements CenterListener {
         this.physics.world.setBounds(0, 0, this.Map.widthInPixels, this.Map.heightInPixels);
 
         //add layer on map
-        this.Layers = new Array<Phaser.Tilemaps.TilemapLayer>();
-        let depth = -2;
-        for (const layer of this.gameMap.layersIterator) {
+        this.gameMap = new GameMap(this.mapFile, this.Map, this.Terrains);
+        for (const layer of this.gameMap.flatLayers) {
             if (layer.type === 'tilelayer') {
-                this.addLayer(this.Map.createLayer(layer.name, this.Terrains, 0, 0).setDepth(depth));
 
                 const exitSceneUrl = this.getExitSceneUrl(layer);
                 if (exitSceneUrl !== undefined) {
@@ -436,9 +432,6 @@ export class GameScene extends DirtyScene implements CenterListener {
                     this.loadNextGame(exitUrl);
                 }
             }
-            if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
-                depth = DEPTH_OVERLAY_INDEX;
-            }
             if (layer.type === 'objectgroup') {
                 for (const object of layer.objects) {
                     if (object.text) {
@@ -447,9 +440,10 @@ export class GameScene extends DirtyScene implements CenterListener {
                 }
             }
         }
-        if (depth === -2) {
-            throw new Error('Your map MUST contain a layer of type "objectgroup" whose name is "floorLayer" that represents the layer characters are drawn at. This layer cannot be contained in a group.');
-        }
+
+        this.gameMap.exitUrls.forEach(exitUrl => {
+            this.loadNextGame(exitUrl)
+        })
 
         this.initStartXAndStartY();
 
@@ -457,7 +451,7 @@ export class GameScene extends DirtyScene implements CenterListener {
         this.Objects = new Array<Phaser.Physics.Arcade.Sprite>();
 
         //initialise list of other player
-        this.MapPlayers = this.physics.add.group({immovable: true});
+        this.MapPlayers = this.physics.add.group({ immovable: true });
 
 
         //create input to move
@@ -473,6 +467,9 @@ export class GameScene extends DirtyScene implements CenterListener {
         this.removeAllRemotePlayers(); //cleanup the list  of remote players in case the scene was rebooted
 
         this.initCamera();
+
+        this.animatedTiles.init(this.Map);
+        this.events.on('tileanimationupdate', () => this.dirty = true);
 
         this.initCirclesCanvas();
 
@@ -563,7 +560,7 @@ export class GameScene extends DirtyScene implements CenterListener {
                 bottom: camera.scrollY + camera.height,
             },
             this.companion
-            ).then((onConnect: OnConnectInterface) => {
+        ).then((onConnect: OnConnectInterface) => {
             this.connection = onConnect.connection;
 
             this.connection.onUserJoins((message: MessageUserJoined) => {
@@ -572,6 +569,7 @@ export class GameScene extends DirtyScene implements CenterListener {
                     characterLayers: message.characterLayers,
                     name: message.name,
                     position: message.position,
+                    visitCardUrl: message.visitCardUrl,
                     companion: message.companion
                 }
                 this.addPlayer(userMessage);
@@ -669,14 +667,13 @@ export class GameScene extends DirtyScene implements CenterListener {
             //listen event to share position of user
             this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this))
             this.CurrentPlayer.on(hasMovedEventName, this.outlineItem.bind(this))
-            this.CurrentPlayer.on(hasMovedEventName, (event: HasMovedEvent) => {
+            this.CurrentPlayer.on(hasMovedEventName, (event: HasPlayerMovedEvent) => {
                 this.gameMap.setPosition(event.x, event.y);
             })
 
             //this.initUsersPosition(roomJoinedMessage.users);
             this.connectionAnswerPromiseResolve(onConnect.room);
             // Analyze tags to find if we are admin. If yes, show console.
-            this.ConsoleGlobalMessageManager = new ConsoleGlobalMessageManager(this.connection, this.userInputManager, this.connection.isAdmin());
 
 
             this.scene.wake();
@@ -715,23 +712,23 @@ export class GameScene extends DirtyScene implements CenterListener {
         const contextRed = this.circleRedTexture.context;
         contextRed.beginPath();
         contextRed.arc(48, 48, 48, 0, 2 * Math.PI, false);
-         //context.lineWidth = 5;
+        //context.lineWidth = 5;
         contextRed.strokeStyle = '#ff0000';
         contextRed.stroke();
         this.circleRedTexture.refresh();
     }
 
 
-    private safeParseJSONstring(jsonString: string|undefined, propertyName: string) {
+    private safeParseJSONstring(jsonString: string | undefined, propertyName: string) {
         try {
             return jsonString ? JSON.parse(jsonString) : {};
-        } catch(e) {
+        } catch (e) {
             console.warn('Invalid JSON found in property "' + propertyName + '" of the map:' + jsonString, e);
             return {}
         }
     }
 
-    private triggerOnMapLayerPropertyChange(){
+    private triggerOnMapLayerPropertyChange() {
         this.gameMap.onPropertyChange('exitSceneUrl', (newValue, oldValue) => {
             if (newValue) this.onMapExit(newValue as string);
         });
@@ -742,22 +739,22 @@ export class GameScene extends DirtyScene implements CenterListener {
             if (newValue === undefined) {
                 layoutManager.removeActionButton('openWebsite', this.userInputManager);
                 coWebsiteManager.closeCoWebsite();
-            }else{
+            } else {
                 const openWebsiteFunction = () => {
                     coWebsiteManager.loadCoWebsite(newValue as string, this.MapUrlFile, allProps.get('openWebsiteAllowApi') as boolean | undefined, allProps.get('openWebsitePolicy') as string | undefined);
                     layoutManager.removeActionButton('openWebsite', this.userInputManager);
                 };
 
                 const openWebsiteTriggerValue = allProps.get(TRIGGER_WEBSITE_PROPERTIES);
-                if(openWebsiteTriggerValue && openWebsiteTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
+                if (openWebsiteTriggerValue && openWebsiteTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                     let message = allProps.get(WEBSITE_MESSAGE_PROPERTIES);
-                    if(message === undefined){
+                    if (message === undefined) {
                         message = 'Press SPACE or touch here to open web site';
                     }
                     layoutManager.addActionButton('openWebsite', message.toString(), () => {
                         openWebsiteFunction();
                     }, this.userInputManager);
-                }else{
+                } else {
                     openWebsiteFunction();
                 }
             }
@@ -766,12 +763,12 @@ export class GameScene extends DirtyScene implements CenterListener {
             if (newValue === undefined) {
                 layoutManager.removeActionButton('jitsiRoom', this.userInputManager);
                 this.stopJitsi();
-            }else{
+            } else {
                 const openJitsiRoomFunction = () => {
                     const roomName = jitsiFactory.getRoomName(newValue.toString(), this.instance);
-                    const jitsiUrl = allProps.get("jitsiUrl") as string|undefined;
+                    const jitsiUrl = allProps.get("jitsiUrl") as string | undefined;
                     if (JITSI_PRIVATE_MODE && !jitsiUrl) {
-                        const adminTag = allProps.get("jitsiRoomAdminTag") as string|undefined;
+                        const adminTag = allProps.get("jitsiRoomAdminTag") as string | undefined;
 
                         this.connection?.emitQueryJitsiJwtMessage(roomName, adminTag);
                     } else {
@@ -781,7 +778,7 @@ export class GameScene extends DirtyScene implements CenterListener {
                 }
 
                 const jitsiTriggerValue = allProps.get(TRIGGER_JITSI_PROPERTIES);
-                if(jitsiTriggerValue && jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
+                if (jitsiTriggerValue && jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                     let message = allProps.get(JITSI_MESSAGE_PROPERTIES);
                     if (message === undefined) {
                         message = 'Press SPACE or touch here to enter Jitsi Meet room';
@@ -789,7 +786,7 @@ export class GameScene extends DirtyScene implements CenterListener {
                     layoutManager.addActionButton('jitsiRoom', message.toString(), () => {
                         openJitsiRoomFunction();
                     }, this.userInputManager);
-                }else{
+                } else {
                     openJitsiRoomFunction();
                 }
             }
@@ -802,8 +799,8 @@ export class GameScene extends DirtyScene implements CenterListener {
             }
         });
         this.gameMap.onPropertyChange('playAudio', (newValue, oldValue, allProps) => {
-            const volume = allProps.get(AUDIO_VOLUME_PROPERTY) as number|undefined;
-            const loop = allProps.get(AUDIO_LOOP_PROPERTY) as boolean|undefined;
+            const volume = allProps.get(AUDIO_VOLUME_PROPERTY) as number | undefined;
+            const loop = allProps.get(AUDIO_LOOP_PROPERTY) as boolean | undefined;
             newValue === undefined ? audioManager.unloadAudio() : audioManager.playAudio(newValue, this.getMapDirUrl(), volume, loop);
         });
         // TODO: This legacy property should be removed at some point
@@ -822,13 +819,13 @@ export class GameScene extends DirtyScene implements CenterListener {
     }
 
     private listenToIframeEvents(): void {
-            this.iframeSubscriptionList = [];
-            this.iframeSubscriptionList.push(iframeListener.openPopupStream.subscribe((openPopupEvent) => {
+        this.iframeSubscriptionList = [];
+        this.iframeSubscriptionList.push(iframeListener.openPopupStream.subscribe((openPopupEvent) => {
 
-            let  objectLayerSquare : ITiledMapObject;
+            let objectLayerSquare: ITiledMapObject;
             const targetObjectData = this.getObjectLayerData(openPopupEvent.targetObject);
-            if (targetObjectData !== undefined){
-                    objectLayerSquare = targetObjectData;
+            if (targetObjectData !== undefined) {
+                objectLayerSquare = targetObjectData;
             } else {
                 console.error("Error while opening a popup. Cannot find an object on the map with name '" + openPopupEvent.targetObject + "'. The first parameter of WA.openPopup() must be the name of a rectangle object in your map.");
                 return;
@@ -841,14 +838,14 @@ ${escapedMessage}
             html += buttonContainer;
             let id = 0;
             for (const button of openPopupEvent.buttons) {
-                html  += `<button type="button" class="nes-btn is-${HtmlUtils.escapeHtml(button.className ?? '')}" id="popup-${openPopupEvent.popupId}-${id}">${HtmlUtils.escapeHtml(button.label)}</button>`;
+                html += `<button type="button" class="nes-btn is-${HtmlUtils.escapeHtml(button.className ?? '')}" id="popup-${openPopupEvent.popupId}-${id}">${HtmlUtils.escapeHtml(button.label)}</button>`;
                 id++;
             }
             html += '</div>';
-            const domElement = this.add.dom(objectLayerSquare.x  ,
+            const domElement = this.add.dom(objectLayerSquare.x,
                 objectLayerSquare.y).createFromHTML(html);
 
-            const container : HTMLDivElement =  domElement.getChildByID("container") as HTMLDivElement;
+            const container: HTMLDivElement = domElement.getChildByID("container") as HTMLDivElement;
             container.style.width = objectLayerSquare.width + "px";
             domElement.scale = 0;
             domElement.setClassName('popUpElement');
@@ -868,71 +865,127 @@ ${escapedMessage}
                 id++;
             }
             this.tweens.add({
-                targets     : domElement ,
-                scale       : 1,
-                ease        : "EaseOut",
-                duration    : 400,
+                targets: domElement,
+                scale: 1,
+                ease: "EaseOut",
+                duration: 400,
             });
 
             this.popUpElements.set(openPopupEvent.popupId, domElement);
         }));
 
-       this.iframeSubscriptionList.push(iframeListener.closePopupStream.subscribe((closePopupEvent) => {
+        this.iframeSubscriptionList.push(iframeListener.closePopupStream.subscribe((closePopupEvent) => {
             const popUpElement = this.popUpElements.get(closePopupEvent.popupId);
             if (popUpElement === undefined) {
-                console.error('Could not close popup with ID ', closePopupEvent.popupId,'. Maybe it has already been closed?');
+                console.error('Could not close popup with ID ', closePopupEvent.popupId, '. Maybe it has already been closed?');
             }
 
             this.tweens.add({
-                targets     : popUpElement ,
-                scale       : 0,
-                ease        : "EaseOut",
-                duration    : 400,
-                onComplete  : () => {
+                targets: popUpElement,
+                scale: 0,
+                ease: "EaseOut",
+                duration: 400,
+                onComplete: () => {
                     popUpElement?.destroy();
                     this.popUpElements.delete(closePopupEvent.popupId);
                 },
             });
         }));
 
-       this.iframeSubscriptionList.push(iframeListener.disablePlayerControlStream.subscribe(()=>{
+        this.iframeSubscriptionList.push(iframeListener.disablePlayerControlStream.subscribe(() => {
             this.userInputManager.disableControls();
         }));
 
-       this.iframeSubscriptionList.push(iframeListener.playSoundStream.subscribe((playSoundEvent)=>
-       {
-           const url = new URL(playSoundEvent.url, this.MapUrlFile);
-           soundManager.playSound(this.load,this.sound,url.toString(),playSoundEvent.config);
-       }))
+        this.iframeSubscriptionList.push(iframeListener.playSoundStream.subscribe((playSoundEvent) => {
+            const url = new URL(playSoundEvent.url, this.MapUrlFile);
+            soundManager.playSound(this.load, this.sound, url.toString(), playSoundEvent.config);
+        }))
 
-        this.iframeSubscriptionList.push(iframeListener.stopSoundStream.subscribe((stopSoundEvent)=>
-        {
+        this.iframeSubscriptionList.push(iframeListener.stopSoundStream.subscribe((stopSoundEvent) => {
             const url = new URL(stopSoundEvent.url, this.MapUrlFile);
-            soundManager.stopSound(this.sound,url.toString());
+            soundManager.stopSound(this.sound, url.toString());
         }))
 
-        this.iframeSubscriptionList.push(iframeListener.loadSoundStream.subscribe((loadSoundEvent)=>
-        {
+        this.iframeSubscriptionList.push(iframeListener.loadSoundStream.subscribe((loadSoundEvent) => {
             const url = new URL(loadSoundEvent.url, this.MapUrlFile);
-            soundManager.loadSound(this.load,this.sound,url.toString());
+            soundManager.loadSound(this.load, this.sound, url.toString());
         }))
 
-       this.iframeSubscriptionList.push(iframeListener.enablePlayerControlStream.subscribe(()=>{
+        this.iframeSubscriptionList.push(iframeListener.enablePlayerControlStream.subscribe(() => {
             this.userInputManager.restoreControls();
         }));
-
-        let scriptedBubbleSprite : Sprite;
-       this.iframeSubscriptionList.push(iframeListener.displayBubbleStream.subscribe(()=>{
-            scriptedBubbleSprite = new Sprite(this,this.CurrentPlayer.x + 25,this.CurrentPlayer.y,'circleSprite-white');
+        this.iframeSubscriptionList.push(iframeListener.loadPageStream.subscribe((url: string) => {
+            this.loadNextGame(url).then(() => {
+                this.events.once(EVENT_TYPE.POST_UPDATE, () => {
+                    this.onMapExit(url);
+                })
+            })
+        }));
+        let scriptedBubbleSprite: Sprite;
+        this.iframeSubscriptionList.push(iframeListener.displayBubbleStream.subscribe(() => {
+            scriptedBubbleSprite = new Sprite(this, this.CurrentPlayer.x + 25, this.CurrentPlayer.y, 'circleSprite-white');
             scriptedBubbleSprite.setDisplayOrigin(48, 48);
             this.add.existing(scriptedBubbleSprite);
         }));
 
-       this.iframeSubscriptionList.push(iframeListener.removeBubbleStream.subscribe(()=>{
+        this.iframeSubscriptionList.push(iframeListener.removeBubbleStream.subscribe(() => {
             scriptedBubbleSprite.destroy();
         }));
 
+        this.iframeSubscriptionList.push(iframeListener.showLayerStream.subscribe((layerEvent)=>{
+            this.setLayerVisibility(layerEvent.name, true);
+        }));
+
+        this.iframeSubscriptionList.push(iframeListener.hideLayerStream.subscribe((layerEvent)=>{
+            this.setLayerVisibility(layerEvent.name, false);
+        }));
+
+        this.iframeSubscriptionList.push(iframeListener.setPropertyStream.subscribe((setProperty) => {
+            this.setPropertyLayer(setProperty.layerName, setProperty.propertyName, setProperty.propertyValue);
+        }));
+
+        this.iframeSubscriptionList.push(iframeListener.dataLayerChangeStream.subscribe(() => {
+            iframeListener.sendDataLayerEvent({data: this.gameMap.getMap()});
+        }))
+
+        this.iframeSubscriptionList.push(iframeListener.gameStateStream.subscribe(() => {
+            iframeListener.sendGameStateEvent({
+                mapUrl: this.MapUrlFile,
+                startLayerName: this.startLayerName,
+                uuid: localUserStore.getLocalUser()?.uuid,
+                nickname: localUserStore.getName(),
+                roomId: this.RoomId,
+                tags: this.connection ? this.connection.getAllTags() : []
+            })
+        }));
+
     }
+
+    private setPropertyLayer(layerName: string, propertyName: string, propertyValue: string | number | boolean | undefined): void {
+        const layer = this.gameMap.findLayer(layerName);
+       if (layer === undefined) {
+            console.warn('Could not find layer "' + layerName + '" when calling setProperty');
+            return;
+        }
+       const property = (layer.properties as ITiledMapLayerProperty[])?.find((property) => property.name === propertyName);
+       if (property === undefined) {
+           layer.properties = [];
+           layer.properties.push({name : propertyName, type : typeof propertyValue, value : propertyValue});
+           return;
+       }
+       property.value = propertyValue;
+    }
+
+    private setLayerVisibility(layerName: string, visible: boolean): void {
+        const phaserLayer = this.gameMap.findPhaserLayer(layerName);
+        if (phaserLayer === undefined) {
+            console.warn('Could not find layer "' + layerName + '" when calling WA.hideLayer / WA.showLayer');
+            return;
+        }
+        phaserLayer.setVisible(visible);
+        this.dirty = true;
+    }
+
 
     private getMapDirUrl(): string {
         return this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf('/'));
@@ -941,9 +994,11 @@ ${escapedMessage}
     private onMapExit(exitKey: string) {
         if (this.mapTransitioning) return;
         this.mapTransitioning = true;
-        const {roomId, hash} = Room.getIdFromIdentifier(exitKey, this.MapUrlFile, this.instance);
-        if (!roomId) throw new Error('Could not find the room from its exit key: '+exitKey);
+        const { roomId, hash } = Room.getIdFromIdentifier(exitKey, this.MapUrlFile, this.instance);
+        if (!roomId) throw new Error('Could not find the room from its exit key: ' + exitKey);
         urlManager.pushStartLayerNameToUrl(hash);
+        const menuScene: MenuScene = this.scene.get(MenuSceneName) as MenuScene
+        menuScene.reset()
         if (roomId !== this.scene.key) {
             if (this.scene.get(roomId) === null) {
                 console.error("next room not loaded", exitKey);
@@ -985,7 +1040,7 @@ ${escapedMessage}
 
         mediaManager.hideGameOverlay();
 
-        for(const iframeEvents of this.iframeSubscriptionList){
+        for (const iframeEvents of this.iframeSubscriptionList) {
             iframeEvents.unsubscribe();
         }
     }
@@ -1005,7 +1060,7 @@ ${escapedMessage}
 
     private switchLayoutMode(): void {
         //if discussion is activated, this layout cannot be activated
-        if(mediaManager.activatedDiscussion){
+        if (mediaManager.activatedDiscussion) {
             return;
         }
         const mode = layoutManager.getLayoutMode();
@@ -1045,25 +1100,25 @@ ${escapedMessage}
     }
 
     private initPositionFromLayerName(layerName: string) {
-        for (const layer of this.gameMap.layersIterator) {
-            if ((layerName === layer.name || layer.name.endsWith('/'+layerName)) && layer.type === 'tilelayer' && (layerName === defaultStartLayerName || this.isStartLayer(layer))) {
+        for (const layer of this.gameMap.flatLayers) {
+            if ((layerName === layer.name || layer.name.endsWith('/' + layerName)) && layer.type === 'tilelayer' && (layerName === defaultStartLayerName || this.isStartLayer(layer))) {
                 const startPosition = this.startUser(layer);
-                this.startX = startPosition.x + this.mapFile.tilewidth/2;
-                this.startY = startPosition.y + this.mapFile.tileheight/2;
+                this.startX = startPosition.x + this.mapFile.tilewidth / 2;
+                this.startY = startPosition.y + this.mapFile.tileheight / 2;
             }
         }
 
     }
 
-    private getExitUrl(layer: ITiledMapLayer): string|undefined {
-        return this.getProperty(layer, "exitUrl") as string|undefined;
+    private getExitUrl(layer: ITiledMapLayer): string | undefined {
+        return this.getProperty(layer, "exitUrl") as string | undefined;
     }
 
     /**
      * @deprecated the map property exitSceneUrl is deprecated
      */
-    private getExitSceneUrl(layer: ITiledMapLayer): string|undefined {
-        return this.getProperty(layer, "exitSceneUrl") as string|undefined;
+    private getExitSceneUrl(layer: ITiledMapLayer): string | undefined {
+        return this.getProperty(layer, "exitSceneUrl") as string | undefined;
     }
 
     private isStartLayer(layer: ITiledMapLayer): boolean {
@@ -1074,8 +1129,8 @@ ${escapedMessage}
         return (this.getProperties(map, "script") as string[]).map((script) => (new URL(script, this.MapUrlFile)).toString());
     }
 
-    private getProperty(layer: ITiledMapLayer|ITiledMap, name: string): string|boolean|number|undefined {
-        const properties: ITiledMapLayerProperty[]|undefined = layer.properties;
+    private getProperty(layer: ITiledMapLayer | ITiledMap, name: string): string | boolean | number | undefined {
+        const properties: ITiledMapLayerProperty[] | undefined = layer.properties;
         if (!properties) {
             return undefined;
         }
@@ -1086,8 +1141,8 @@ ${escapedMessage}
         return obj.value;
     }
 
-    private getProperties(layer: ITiledMapLayer|ITiledMap, name: string): (string|number|boolean|undefined)[] {
-        const properties: ITiledMapLayerProperty[]|undefined = layer.properties;
+    private getProperties(layer: ITiledMapLayer | ITiledMap, name: string): (string | number | boolean | undefined)[] {
+        const properties: ITiledMapLayerProperty[] | undefined = layer.properties;
         if (!properties) {
             return [];
         }
@@ -1095,30 +1150,30 @@ ${escapedMessage}
     }
 
     //todo: push that into the gameManager
-    private loadNextGame(exitSceneIdentifier: string): void {
-        const {roomId, hash} = Room.getIdFromIdentifier(exitSceneIdentifier, this.MapUrlFile, this.instance);
+    private loadNextGame(exitSceneIdentifier: string) : Promise<void>{
+        const { roomId, hash } = Room.getIdFromIdentifier(exitSceneIdentifier, this.MapUrlFile, this.instance);
         const room = new Room(roomId);
-        gameManager.loadMap(room, this.scene).catch(() => {});
+        return gameManager.loadMap(room, this.scene).catch(() => { });
     }
 
     private startUser(layer: ITiledMapTileLayer): PositionInterface {
         const tiles = layer.data;
-        if (typeof(tiles) === 'string') {
+        if (typeof (tiles) === 'string') {
             throw new Error('The content of a JSON map must be filled as a JSON array, not as a string');
         }
-        const possibleStartPositions : PositionInterface[]  = [];
-        tiles.forEach((objectKey : number, key: number) => {
-            if(objectKey === 0){
+        const possibleStartPositions: PositionInterface[] = [];
+        tiles.forEach((objectKey: number, key: number) => {
+            if (objectKey === 0) {
                 return;
             }
             const y = Math.floor(key / layer.width);
             const x = key % layer.width;
 
-            possibleStartPositions.push({x: x * this.mapFile.tilewidth, y: y * this.mapFile.tilewidth});
+            possibleStartPositions.push({ x: x * this.mapFile.tilewidth, y: y * this.mapFile.tilewidth });
         });
         // Get a value at random amongst allowed values
         if (possibleStartPositions.length === 0) {
-            console.warn('The start layer "'+layer.name+'" for this map is empty.');
+            console.warn('The start layer "' + layer.name + '" for this map is empty.');
             return {
                 x: 0,
                 y: 0
@@ -1130,34 +1185,33 @@ ${escapedMessage}
 
     //todo: in a dedicated class/function?
     initCamera() {
-        this.cameras.main.setBounds(0,0, this.Map.widthInPixels, this.Map.heightInPixels);
+        this.cameras.main.setBounds(0, 0, this.Map.widthInPixels, this.Map.heightInPixels);
         this.cameras.main.startFollow(this.CurrentPlayer, true);
         this.updateCameraOffset();
     }
 
-    addLayer(Layer : Phaser.Tilemaps.TilemapLayer){
-        this.Layers.push(Layer);
-    }
-
     createCollisionWithPlayer() {
         //add collision layer
-        this.Layers.forEach((Layer: Phaser.Tilemaps.TilemapLayer) => {
-            this.physics.add.collider(this.CurrentPlayer, Layer, (object1: GameObject, object2: GameObject) => {
-                //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
-            });
-            Layer.setCollisionByProperty({collides: true});
-            if (DEBUG_MODE) {
-                //debug code to see the collision hitbox of the object in the top layer
-                Layer.renderDebug(this.add.graphics(), {
-                    tileColor: null, //non-colliding tiles
-                    collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles,
-                    faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Colliding face edges
+        for (const phaserLayer of this.gameMap.phaserLayers) {
+            if (phaserLayer.type == "tilelayer") {
+                this.physics.add.collider(this.CurrentPlayer, phaserLayer, (object1: GameObject, object2: GameObject) => {
+                    //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
                 });
+                phaserLayer.setCollisionByProperty({collides: true});
+                if (DEBUG_MODE) {
+                    //debug code to see the collision hitbox of the object in the top layer
+                    phaserLayer.renderDebug(this.add.graphics(), {
+                        tileColor: null, //non-colliding tiles
+                        collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles,
+                        faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Colliding face edges
+                    });
+                }
+            //});
             }
-        });
+        }
     }
 
-    createCurrentPlayer(){
+    createCurrentPlayer() {
         //TODO create animation moving between exit and start
         const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, this.characterLayers);
         try {
@@ -1182,8 +1236,8 @@ ${escapedMessage}
             this.CurrentPlayer.on(requestEmoteEventName, (emoteKey: string) => {
                 this.connection?.emitEmoteEvent(emoteKey);
             })
-        }catch (err){
-            if(err instanceof TextureError) {
+        } catch (err) {
+            if (err instanceof TextureError) {
                 gameManager.leaveGame(this, SelectCharacterSceneName, new SelectCharacterScene());
             }
             throw err;
@@ -1193,7 +1247,7 @@ ${escapedMessage}
         this.createCollisionWithPlayer();
     }
 
-    pushPlayerPosition(event: HasMovedEvent) {
+    pushPlayerPosition(event: HasPlayerMovedEvent) {
         if (this.lastMoveEventSent === event) {
             return;
         }
@@ -1223,7 +1277,7 @@ ${escapedMessage}
      * Finds the correct item to outline and outline it (if there is an item to be outlined)
      * @param event
      */
-    private outlineItem(event: HasMovedEvent): void {
+    private outlineItem(event: HasPlayerMovedEvent): void {
         let x = event.x;
         let y = event.y;
         switch (event.direction) {
@@ -1244,7 +1298,7 @@ ${escapedMessage}
         }
 
         let shortestDistance: number = Infinity;
-        let selectedItem: ActionableItem|null = null;
+        let selectedItem: ActionableItem | null = null;
         for (const item of this.actionableItems.values()) {
             const distance = item.actionableDistance(x, y);
             if (distance !== null && distance < shortestDistance) {
@@ -1262,7 +1316,7 @@ ${escapedMessage}
         this.outlinedItem?.selectable();
     }
 
-    private doPushPlayerPosition(event: HasMovedEvent): void {
+    private doPushPlayerPosition(event: HasPlayerMovedEvent): void {
         this.lastMoveEventSent = event;
         this.lastSentTick = this.currentTick;
         const camera = this.cameras.main;
@@ -1272,14 +1326,14 @@ ${escapedMessage}
             right: camera.scrollX + camera.width,
             bottom: camera.scrollY + camera.height,
         });
+        iframeListener.hasPlayerMoved(event);
     }
 
     /**
      * @param time
      * @param delta The delta time in ms since the last frame. This is a smoothed and capped value based on the FPS rate.
      */
-    update(time: number, delta: number) : void {
-        this.dirty = false;
+    update(time: number, delta: number): void {
         mediaManager.updateScene();
         this.currentTick = time;
         this.CurrentPlayer.moveUser(delta);
@@ -1311,7 +1365,7 @@ ${escapedMessage}
         }
         // Let's move all users
         const updatedPlayersPositions = this.playersPositionInterpolator.getUpdatedPositions(time);
-        updatedPlayersPositions.forEach((moveEvent: HasMovedEvent, userId: number) => {
+        updatedPlayersPositions.forEach((moveEvent: HasPlayerMovedEvent, userId: number) => {
             this.dirty = true;
             const player: RemotePlayer | undefined = this.MapPlayersByKey.get(userId);
             if (player === undefined) {
@@ -1338,8 +1392,8 @@ ${escapedMessage}
         const currentPlayerId = this.connection?.getUserId();
         this.removeAllRemotePlayers();
         // load map
-        usersPosition.forEach((userPosition : MessageUserPositionInterface) => {
-            if(userPosition.userId === currentPlayerId){
+        usersPosition.forEach((userPosition: MessageUserPositionInterface) => {
+            if (userPosition.userId === currentPlayerId) {
                 return;
             }
             this.addPlayer(userPosition);
@@ -1349,16 +1403,16 @@ ${escapedMessage}
     /**
      * Called by the connexion when a new player arrives on a map
      */
-    public addPlayer(addPlayerData : AddPlayerInterface) : void {
+    public addPlayer(addPlayerData: AddPlayerInterface): void {
         this.pendingEvents.enqueue({
             type: "AddPlayerEvent",
             event: addPlayerData
         });
     }
 
-    private doAddPlayer(addPlayerData : AddPlayerInterface): void {
+    private doAddPlayer(addPlayerData: AddPlayerInterface): void {
         //check if exist player, if exist, move position
-        if(this.MapPlayersByKey.has(addPlayerData.userId)){
+        if (this.MapPlayersByKey.has(addPlayerData.userId)) {
             this.updatePlayerPosition({
                 userId: addPlayerData.userId,
                 position: addPlayerData.position
@@ -1376,12 +1430,10 @@ ${escapedMessage}
             texturesPromise,
             addPlayerData.position.direction as PlayerAnimationDirections,
             addPlayerData.position.moving,
+            addPlayerData.visitCardUrl,
             addPlayerData.companion,
             addPlayerData.companion !== null ? lazyLoadCompanionResource(this.load, addPlayerData.companion) : undefined
         );
-        player.on(playerClickedEvent, (userID:number) => {
-            this.connection?.requestVisitCardUrl(userID);
-        })
         this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);
         player.updatePosition(addPlayerData.position);
@@ -1422,10 +1474,10 @@ ${escapedMessage}
     }
 
     private doUpdatePlayerPosition(message: MessageUserMovedInterface): void {
-        const player : RemotePlayer | undefined = this.MapPlayersByKey.get(message.userId);
+        const player: RemotePlayer | undefined = this.MapPlayersByKey.get(message.userId);
         if (player === undefined) {
             //throw new Error('Cannot find player with ID "' + message.userId +'"');
-            console.error('Cannot update position of player with ID "' + message.userId +'": player not found');
+            console.error('Cannot update position of player with ID "' + message.userId + '": player not found');
             return;
         }
 
@@ -1469,7 +1521,7 @@ ${escapedMessage}
 
     doDeleteGroup(groupId: number): void {
         const group = this.groups.get(groupId);
-        if(!group){
+        if (!group) {
             return;
         }
         group.destroy();
@@ -1498,7 +1550,7 @@ ${escapedMessage}
             bottom: camera.scrollY + camera.height,
         });
     }
-    private getObjectLayerData(objectName : string) : ITiledMapObject| undefined{
+    private getObjectLayerData(objectName: string): ITiledMapObject | undefined {
         for (const layer of this.mapFile.layers) {
             if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
                 for (const object of layer.objects) {
@@ -1532,7 +1584,7 @@ ${escapedMessage}
         const game = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>('#game canvas');
         // Let's put this in Game coordinates by applying the zoom level:
 
-        this.cameras.main.setFollowOffset((xCenter - game.offsetWidth/2) * window.devicePixelRatio / this.scale.zoom , (yCenter - game.offsetHeight/2) * window.devicePixelRatio / this.scale.zoom);
+        this.cameras.main.setFollowOffset((xCenter - game.offsetWidth / 2) * window.devicePixelRatio / this.scale.zoom, (yCenter - game.offsetHeight / 2) * window.devicePixelRatio / this.scale.zoom);
     }
 
     public onCenterChange(): void {
@@ -1541,16 +1593,16 @@ ${escapedMessage}
 
     public startJitsi(roomName: string, jwt?: string): void {
         const allProps = this.gameMap.getCurrentProperties();
-        const jitsiConfig = this.safeParseJSONstring(allProps.get("jitsiConfig") as string|undefined, 'jitsiConfig');
-        const jitsiInterfaceConfig = this.safeParseJSONstring(allProps.get("jitsiInterfaceConfig") as string|undefined, 'jitsiInterfaceConfig');
-        const jitsiUrl = allProps.get("jitsiUrl") as string|undefined;
+        const jitsiConfig = this.safeParseJSONstring(allProps.get("jitsiConfig") as string | undefined, 'jitsiConfig');
+        const jitsiInterfaceConfig = this.safeParseJSONstring(allProps.get("jitsiInterfaceConfig") as string | undefined, 'jitsiInterfaceConfig');
+        const jitsiUrl = allProps.get("jitsiUrl") as string | undefined;
 
         jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl);
         this.connection?.setSilent(true);
         mediaManager.hideGameOverlay();
 
         //permit to stop jitsi when user close iframe
-        mediaManager.addTriggerCloseJitsiFrameButton('close-jisi',() => {
+        mediaManager.addTriggerCloseJitsiFrameButton('close-jisi', () => {
             this.stopJitsi();
         });
     }
@@ -1564,7 +1616,7 @@ ${escapedMessage}
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
-    private bannedUser(){
+    private bannedUser() {
         this.cleanupClosingScene();
         this.userInputManager.disableControls();
         this.scene.start(ErrorSceneName, {
@@ -1575,22 +1627,22 @@ ${escapedMessage}
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
-    private showWorldFullError(message: string|null): void {
+    private showWorldFullError(message: string | null): void {
         this.cleanupClosingScene();
         this.scene.stop(ReconnectingSceneName);
         this.scene.remove(ReconnectingSceneName);
         this.userInputManager.disableControls();
         //FIX ME to use status code
-        if(message == undefined){
+        if (message == undefined) {
             this.scene.start(ErrorSceneName, {
                 title: 'Connection rejected',
                 subTitle: 'The world you are trying to join is full. Try again later.',
                 message: 'If you want more information, you may contact us at: workadventure@thecodingmachine.com'
             });
-        }else{
+        } else {
             this.scene.start(ErrorSceneName, {
                 title: 'Connection rejected',
-                subTitle: 'You cannot join the World. Try again later. \n\r \n\r Error: '+message+'.',
+                subTitle: 'You cannot join the World. Try again later. \n\r \n\r Error: ' + message + '.',
                 message: 'If you want more information, you may contact administrator or contact us at: workadventure@thecodingmachine.com'
             });
         }
