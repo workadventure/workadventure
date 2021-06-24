@@ -108,10 +108,10 @@ class WorkadventureRoomCommands extends IframeApiContribution<WorkadventureRoomC
         subject.subscribe(callback);
     }
     showLayer(layerName: string): void {
-        sendToWorkadventure({type: 'showLayer', data: {'name': layerName} as LayerEvent});
+        sendToWorkadventure({type: 'showLayer', data: {'name': layerName}});
     }
     hideLayer(layerName: string): void {
-        sendToWorkadventure({type: 'hideLayer', data: {'name': layerName} as LayerEvent});
+        sendToWorkadventure({type: 'hideLayer', data: {'name': layerName}});
     }
     setProperty(layerName: string, propertyName: string, propertyValue: string | number | boolean | undefined): void {
         sendToWorkadventure({
@@ -120,7 +120,7 @@ class WorkadventureRoomCommands extends IframeApiContribution<WorkadventureRoomC
                 'layerName': layerName,
                 'propertyName': propertyName,
                 'propertyValue': propertyValue,
-            } as SetPropertyEvent
+            }
         })
     }
     getCurrentRoom(): Promise<Room> {

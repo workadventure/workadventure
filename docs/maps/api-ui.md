@@ -85,5 +85,5 @@ WA.ui.registerMenuCommand("test", () => {
 ```
 
 <div class="col">
-    <img src="./assets/menu-command.png" class="figure-img img-fluid rounded" alt="" />
+    <img src="https://workadventu.re/img/docs/menu-command.png" class="figure-img img-fluid rounded" alt="" />
 </div>
