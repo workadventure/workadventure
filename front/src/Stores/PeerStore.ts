@@ -1,4 +1,4 @@
-import {derived, get, readable, writable} from "svelte/store";
+import {readable, writable} from "svelte/store";
 import type {RemotePeer, SimplePeer} from "../WebRtc/SimplePeer";
 import {VideoPeer} from "../WebRtc/VideoPeer";
 import {ScreenSharingPeer} from "../WebRtc/ScreenSharingPeer";
