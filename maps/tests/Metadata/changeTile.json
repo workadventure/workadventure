@@ -1,4 +1,11 @@
 { "compressionlevel":-1,
+ "editorsettings":
+    {
+     "export":
+        {
+         "target":"."
+        }
+    },
  "height":10,
  "infinite":false,
  "layers":[
@@ -50,7 +57,7 @@
          "y":0
         }, 
         {
-         "data":[65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 0, 0, 0, 0, 0, 65, 65, 65, 65, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         "data":[65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 65, 65, 65, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 0, 0, 0, 0, 0, 0, 0, 0, 0],
          "height":10,
          "id":8,
          "name":"changeTile",
@@ -67,7 +74,7 @@
          "name":"floorLayer",
          "objects":[
                 {
-                 "height":159.866671635267,
+                 "height":191.866671635267,
                  "id":1,
                  "name":"",
                  "rotation":0,
@@ -75,14 +82,14 @@
                     {
                      "fontfamily":"Sans Serif",
                      "pixelsize":9,
-                     "text":"Test : \nWalk on the grass\n\nResult : \nTiles of the first left colum become red tile (tile find by Number)\nTiles of the below the grass become blue (tile find by String)\n",
+                     "text":"Test : \nWalk on the grass\n\nResult : \nThe Yellow Tile open a jitsi with Trigger.\n\nThe Red Tile open cowebsite Wikip\u00e9dia. The highest Red Tile is find by 'string' index, the lowest by 'number' index.\n\nThe White Tile are silent tile. You can not open a bubble in it. (Even if the other player didn't activate the script.)\n\nThe Pale Tile (Lowest) is an exitUrl tile to customMenu.json.\n\nThe Blue Tile are 'collides' tile. The two tile in the center are 'number' index. The others are 'string' index.\n",
                      "wrap":true
                     },
                  "type":"",
                  "visible":true,
                  "width":287.674838251912,
                  "x":32.5473600365393,
-                 "y":160.305680721763
+                 "y":128.305680721763
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -259,12 +266,61 @@
          "tileheight":32,
          "tiles":[
                 {
+                 "id":9,
+                 "properties":[
+                        {
+                         "name":"exitUrl",
+                         "type":"string",
+                         "value":"customMenu.json"
+                        }]
+                }, 
+                {
+                 "id":27,
+                 "properties":[
+                        {
+                         "name":"jitsiRoom",
+                         "type":"string",
+                         "value":"TEST"
+                        }, 
+                        {
+                         "name":"jitsiTrigger",
+                         "type":"string",
+                         "value":"onaction"
+                        }, 
+                        {
+                         "name":"jitsiUrl",
+                         "type":"string",
+                         "value":"meet.jit.si"
+                        }]
+                }, 
+                {
                  "id":34,
+                 "properties":[
+                        {
+                         "name":"openWebsite",
+                         "type":"string",
+                         "value":"https:\/\/fr.wikipedia.org\/wiki\/Wikip%C3%A9dia:Accueil_principal"
+                        }],
                  "type":"Red"
                 }, 
                 {
                  "id":44,
+                 "properties":[
+                        {
+                         "name":"collides",
+                         "type":"bool",
+                         "value":true
+                        }],
                  "type":"blue"
+                }, 
+                {
+                 "id":52,
+                 "properties":[
+                        {
+                         "name":"silent",
+                         "type":"bool",
+                         "value":true
+                        }]
                 }],
          "tilewidth":32
         }],

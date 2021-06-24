@@ -130,6 +130,10 @@ export class GameMap {
         return this.map;
     }
 
+    public getTilesetProperties(): { [tile_index: number]: Array<ITiledMapLayerProperty> } {
+        return this.tileSetPropertyMap;
+    }
+
     private trigger(propName: string, oldValue: string | number | boolean | undefined, newValue: string | number | boolean | undefined, allProps: Map<string, string | boolean | number>) {
         const callbacksArray = this.callbacks.get(propName);
         if (callbacksArray !== undefined) {
@@ -163,6 +167,15 @@ export class GameMap {
         for (const phaserLayer of this.phaserLayers) {
             phaserLayer.tileset.push(terrain);
         }
+    }
+
+    public putTileInFlatLayer(index: number, x: number, y: number, layer: string): void {
+        const fLayer = this.findLayer(layer);
+        if (fLayer?.type !== 'tilelayer') {
+            return;
+        }
+        // @ts-ignore
+        fLayer.data[x+y*fLayer.height] = index;
     }
 
 }

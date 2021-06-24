@@ -958,6 +958,23 @@ ${escapedMessage}
                 tags: this.connection ? this.connection.getAllTags() : []
             })
         }));
+        this.iframeSubscriptionList.push(iframeListener.changeTileStream.subscribe((eventTiles) => {
+            for (const eventTile of eventTiles) {
+                const layer = this.gameMap.findPhaserLayer(eventTile.layer);
+                if ( layer ) {
+                    const tileIndex = this.getIndexForTileType(eventTile.tile);
+                    if ( tileIndex ) {
+                        this.gameMap.putTileInFlatLayer(tileIndex, eventTile.x, eventTile.y, eventTile.layer);
+                        const tile = layer.putTileAt(tileIndex, eventTile.x, eventTile.y);
+                        for (const property of this.gameMap.getTilesetProperties()[tileIndex]) {
+                            if ( property.name === "collides" ) {
+                                tile.setCollision(true);
+                            }
+                        }
+                    }
+                }
+            }
+        }))
 
     }
 
@@ -986,18 +1003,21 @@ ${escapedMessage}
         this.dirty = true;
     }
 
-    private getIndexForTileType(tileType: string): number | null {
-            for (const tileset of this.mapFile.tilesets) {
-                if (tileset.tiles) {
-                    for (const tilesetTile of tileset.tiles) {
-                        if (tilesetTile.type == tileType) {
-                            return tileset.firstgid + tilesetTile.id
-                        }
+    private getIndexForTileType(tileType: string | number): number | null {
+        if (typeof tileType == "number") {
+            return tileType;
+        }
+        for (const tileset of this.mapFile.tilesets) {
+            if (tileset.tiles) {
+                for (const tilesetTile of tileset.tiles) {
+                    if (tilesetTile.type == tileType) {
+                        return tileset.firstgid + tilesetTile.id
                     }
                 }
             }
-            return null
         }
+        return null
+    }
 
     private getMapDirUrl(): string {
         return this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf('/'));
@@ -1205,21 +1225,19 @@ ${escapedMessage}
     createCollisionWithPlayer() {
         //add collision layer
         for (const phaserLayer of this.gameMap.phaserLayers) {
-            if (phaserLayer.type == "tilelayer") {
-                this.physics.add.collider(this.CurrentPlayer, phaserLayer, (object1: GameObject, object2: GameObject) => {
-                    //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
+            this.physics.add.collider(this.CurrentPlayer, phaserLayer, (object1: GameObject, object2: GameObject) => {
+                //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
+            });
+            phaserLayer.setCollisionByProperty({collides: true});
+            if (DEBUG_MODE) {
+                //debug code to see the collision hitbox of the object in the top layer
+                phaserLayer.renderDebug(this.add.graphics(), {
+                    tileColor: null, //non-colliding tiles
+                    collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles,
+                    faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Colliding face edges
                 });
-                phaserLayer.setCollisionByProperty({collides: true});
-                if (DEBUG_MODE) {
-                    //debug code to see the collision hitbox of the object in the top layer
-                    phaserLayer.renderDebug(this.add.graphics(), {
-                        tileColor: null, //non-colliding tiles
-                        collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles,
-                        faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Colliding face edges
-                    });
-                }
-            //});
             }
+            //});
         }
     }
 
