@@ -112,8 +112,8 @@ export class MenuScene extends Phaser.Scene {
 
         this.gameReportElement = new ReportMenu(this, connectionManager.getConnexionType === GameConnexionTypes.anonymous);
         showReportScreenStore.subscribe((user) => {
-            this.closeAll();
             if (user !== null) {
+                this.closeAll();
                 this.gameReportElement.open(user.userId, user.userName);
             }
         });
