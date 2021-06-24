@@ -1164,21 +1164,19 @@ ${escapedMessage}
     createCollisionWithPlayer() {
         //add collision layer
         for (const phaserLayer of this.gameMap.phaserLayers) {
-            if (phaserLayer.type == "tilelayer") {
-                this.physics.add.collider(this.CurrentPlayer, phaserLayer, (object1: GameObject, object2: GameObject) => {
-                    //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
+            this.physics.add.collider(this.CurrentPlayer, phaserLayer, (object1: GameObject, object2: GameObject) => {
+                //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
+            });
+            phaserLayer.setCollisionByProperty({collides: true});
+            if (DEBUG_MODE) {
+                //debug code to see the collision hitbox of the object in the top layer
+                phaserLayer.renderDebug(this.add.graphics(), {
+                    tileColor: null, //non-colliding tiles
+                    collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles,
+                    faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Colliding face edges
                 });
-                phaserLayer.setCollisionByProperty({collides: true});
-                if (DEBUG_MODE) {
-                    //debug code to see the collision hitbox of the object in the top layer
-                    phaserLayer.renderDebug(this.add.graphics(), {
-                        tileColor: null, //non-colliding tiles
-                        collidingTileColor: new Phaser.Display.Color(243, 134, 48, 200), // Colliding tiles,
-                        faceColor: new Phaser.Display.Color(40, 39, 37, 255) // Colliding face edges
-                    });
-                }
-            //});
             }
+            //});
         }
     }
 
