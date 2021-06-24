@@ -7,7 +7,6 @@ import type {Subscription} from "rxjs";
 import type {UserSimplePeerInterface} from "./SimplePeer";
 import {get, readable, Readable} from "svelte/store";
 import {obtainedMediaConstraintStore} from "../Stores/MediaStore";
-import {DivImportance} from "./LayoutManager";
 import {discussionManager} from "./DiscussionManager";
 
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');

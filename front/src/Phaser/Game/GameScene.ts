@@ -27,7 +27,6 @@ import {
 import { TextureError } from "../../Exception/TextureError";
 import type { UserMovedMessage } from "../../Messages/generated/messages_pb";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
-import { peerStore } from "../../Stores/PeerStore";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { urlManager } from "../../Url/UrlManager";
 import { audioManager } from "../../WebRtc/AudioManager";
@@ -94,7 +93,7 @@ import type { HasPlayerMovedEvent } from '../../Api/Events/HasPlayerMovedEvent';
 
 import AnimatedTiles from "phaser-animated-tiles";
 import {soundManager} from "./SoundManager";
-import {screenSharingPeerStore} from "../../Stores/PeerStore";
+import {peerStore, screenSharingPeerStore} from "../../Stores/PeerStore";
 import {videoFocusStore} from "../../Stores/VideoFocusStore";
 import {biggestAvailableAreaStore} from "../../Stores/BiggestAvailableAreaStore";
 
