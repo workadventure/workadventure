@@ -1,7 +1,7 @@
 import { ReadStream } from "fs";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extend(who: any, from: any, overwrite = true) {
-    // eslint-disable-line @typescript-eslint/no-explicit-any
     const ownProps = Object.getOwnPropertyNames(Object.getPrototypeOf(from)).concat(Object.keys(from));
     ownProps.forEach((prop) => {
         if (prop === "constructor" || from[prop] === undefined) return;
