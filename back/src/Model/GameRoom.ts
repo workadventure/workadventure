@@ -1,16 +1,16 @@
-import {PointInterface} from "./Websocket/PointInterface";
-import {Group} from "./Group";
-import {User, UserSocket} from "./User";
-import {PositionInterface} from "_Model/PositionInterface";
-import {EmoteCallback, EntersCallback, LeavesCallback, MovesCallback} from "_Model/Zone";
-import {PositionNotifier} from "./PositionNotifier";
-import {Movable} from "_Model/Movable";
-import {extractDataFromPrivateRoomId, extractRoomSlugPublicRoomId, isRoomAnonymous} from "./RoomIdentifier";
-import {arrayIntersect} from "../Services/ArrayHelper";
-import {EmoteEventMessage, JoinRoomMessage} from "../Messages/generated/messages_pb";
-import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
-import {ZoneSocket} from "src/RoomManager";
-import {Admin} from "../Model/Admin";
+import { PointInterface } from "./Websocket/PointInterface";
+import { Group } from "./Group";
+import { User, UserSocket } from "./User";
+import { PositionInterface } from "_Model/PositionInterface";
+import { EmoteCallback, EntersCallback, LeavesCallback, MovesCallback } from "_Model/Zone";
+import { PositionNotifier } from "./PositionNotifier";
+import { Movable } from "_Model/Movable";
+import { extractDataFromPrivateRoomId, extractRoomSlugPublicRoomId, isRoomAnonymous } from "./RoomIdentifier";
+import { arrayIntersect } from "../Services/ArrayHelper";
+import { EmoteEventMessage, JoinRoomMessage } from "../Messages/generated/messages_pb";
+import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
+import { ZoneSocket } from "src/RoomManager";
+import { Admin } from "../Model/Admin";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -39,32 +39,32 @@ export class GameRoom {
     private readonly positionNotifier: PositionNotifier;
     public readonly roomId: string;
     public readonly roomSlug: string;
-    public readonly worldSlug: string = '';
-    public readonly organizationSlug: string = '';
-    private versionNumber:number = 1;
+    public readonly worldSlug: string = "";
+    public readonly organizationSlug: string = "";
+    private versionNumber: number = 1;
     private nextUserId: number = 1;
 
-    constructor(roomId: string,
-                connectCallback: ConnectCallback,
-                disconnectCallback: DisconnectCallback,
-                minDistance: number,
-                groupRadius: number,
-                onEnters: EntersCallback,
-                onMoves: MovesCallback,
-                onLeaves: LeavesCallback,
-                onEmote: EmoteCallback,
+    constructor(
+        roomId: string,
+        connectCallback: ConnectCallback,
+        disconnectCallback: DisconnectCallback,
+        minDistance: number,
+        groupRadius: number,
+        onEnters: EntersCallback,
+        onMoves: MovesCallback,
+        onLeaves: LeavesCallback,
+        onEmote: EmoteCallback
     ) {
         this.roomId = roomId;
 
         if (isRoomAnonymous(roomId)) {
             this.roomSlug = extractRoomSlugPublicRoomId(this.roomId);
         } else {
-            const {organizationSlug, worldSlug, roomSlug} = extractDataFromPrivateRoomId(this.roomId);
+            const { organizationSlug, worldSlug, roomSlug } = extractDataFromPrivateRoomId(this.roomId);
             this.roomSlug = roomSlug;
             this.organizationSlug = organizationSlug;
             this.worldSlug = worldSlug;
         }
-
 
         this.users = new Map<number, User>();
         this.usersByUuid = new Map<string, User>();
@@ -86,21 +86,22 @@ export class GameRoom {
         return this.users;
     }
 
-    public getUserByUuid(uuid: string): User|undefined {
+    public getUserByUuid(uuid: string): User | undefined {
         return this.usersByUuid.get(uuid);
     }
-    public getUserById(id: number): User|undefined {
+    public getUserById(id: number): User | undefined {
         return this.users.get(id);
     }
-    
-    public join(socket : UserSocket, joinRoomMessage: JoinRoomMessage): User {
+
+    public join(socket: UserSocket, joinRoomMessage: JoinRoomMessage): User {
         const positionMessage = joinRoomMessage.getPositionmessage();
         if (positionMessage === undefined) {
-            throw new Error('Missing position message');
+            throw new Error("Missing position message");
         }
         const position = ProtobufUtils.toPointInterface(positionMessage);
 
-        const user = new User(this.nextUserId,
+        const user = new User(
+            this.nextUserId,
             joinRoomMessage.getUseruuid(),
             joinRoomMessage.getIpaddress(),
             position,
@@ -126,12 +127,12 @@ export class GameRoom {
         return user;
     }
 
-    public leave(user : User){
+    public leave(user: User) {
         const userObj = this.users.get(user.id);
         if (userObj === undefined) {
-            console.warn('User ', user.id, 'does not belong to this game room! It should!');
+            console.warn("User ", user.id, "does not belong to this game room! It should!");
         }
-        if (userObj !== undefined && typeof userObj.group !== 'undefined') {
+        if (userObj !== undefined && typeof userObj.group !== "undefined") {
             this.leaveGroup(userObj);
         }
         this.users.delete(user.id);
@@ -143,7 +144,7 @@ export class GameRoom {
 
         // Notify admins
         for (const admin of this.admins) {
-            admin.sendUserLeft(user.uuid/*, user.name, user.IPAddress*/);
+            admin.sendUserLeft(user.uuid /*, user.name, user.IPAddress*/);
         }
     }
 
@@ -151,7 +152,7 @@ export class GameRoom {
         return this.users.size === 0 && this.admins.size === 0;
     }
 
-    public updatePosition(user : User, userPosition: PointInterface): void {
+    public updatePosition(user: User, userPosition: PointInterface): void {
         user.setPosition(userPosition);
 
         this.updateUserGroup(user);
@@ -173,22 +174,24 @@ export class GameRoom {
                 return;
             }
 
-            const closestItem: User|Group|null = this.searchClosestAvailableUserOrGroup(user);
+            const closestItem: User | Group | null = this.searchClosestAvailableUserOrGroup(user);
 
             if (closestItem !== null) {
                 if (closestItem instanceof Group) {
                     // Let's join the group!
                     closestItem.join(user);
                 } else {
-                    const closestUser : User = closestItem;
-                    const group: Group = new Group(this.roomId,[
-                        user,
-                        closestUser
-                    ], this.connectCallback, this.disconnectCallback, this.positionNotifier);
+                    const closestUser: User = closestItem;
+                    const group: Group = new Group(
+                        this.roomId,
+                        [user, closestUser],
+                        this.connectCallback,
+                        this.disconnectCallback,
+                        this.positionNotifier
+                    );
                     this.groups.add(group);
                 }
             }
-
         } else {
             // If the user is part of a group:
             //  should he leave the group?
@@ -229,7 +232,9 @@ export class GameRoom {
             this.positionNotifier.leave(group);
             group.destroy();
             if (!this.groups.has(group)) {
-                throw new Error("Could not find group "+group.getId()+" referenced by user "+user.id+" in World.");
+                throw new Error(
+                    "Could not find group " + group.getId() + " referenced by user " + user.id + " in World."
+                );
             }
             this.groups.delete(group);
             //todo: is the group garbage collected?
@@ -247,16 +252,15 @@ export class GameRoom {
      * OR
      * - close enough to a group (distance <= groupRadius)
      */
-    private searchClosestAvailableUserOrGroup(user: User): User|Group|null
-    {
+    private searchClosestAvailableUserOrGroup(user: User): User | Group | null {
         let minimumDistanceFound: number = Math.max(this.minDistance, this.groupRadius);
         let matchingItem: User | Group | null = null;
         this.users.forEach((currentUser, userId) => {
             // Let's only check users that are not part of a group
-            if (typeof currentUser.group !== 'undefined') {
+            if (typeof currentUser.group !== "undefined") {
                 return;
             }
-            if(currentUser === user) {
+            if (currentUser === user) {
                 return;
             }
             if (currentUser.silent) {
@@ -265,7 +269,7 @@ export class GameRoom {
 
             const distance = GameRoom.computeDistance(user, currentUser); // compute distance between peers.
 
-            if(distance <= minimumDistanceFound && distance <= this.minDistance) {
+            if (distance <= minimumDistanceFound && distance <= this.minDistance) {
                 minimumDistanceFound = distance;
                 matchingItem = currentUser;
             }
@@ -276,7 +280,7 @@ export class GameRoom {
                 return;
             }
             const distance = GameRoom.computeDistanceBetweenPositions(user.getPosition(), group.getPosition());
-            if(distance <= minimumDistanceFound && distance <= this.groupRadius) {
+            if (distance <= minimumDistanceFound && distance <= this.groupRadius) {
                 minimumDistanceFound = distance;
                 matchingItem = group;
             }
@@ -285,15 +289,15 @@ export class GameRoom {
         return matchingItem;
     }
 
-    public static computeDistance(user1: User, user2: User): number
-    {
+    public static computeDistance(user1: User, user2: User): number {
         const user1Position = user1.getPosition();
         const user2Position = user2.getPosition();
-        return Math.sqrt(Math.pow(user2Position.x - user1Position.x, 2) + Math.pow(user2Position.y - user1Position.y, 2));
+        return Math.sqrt(
+            Math.pow(user2Position.x - user1Position.x, 2) + Math.pow(user2Position.y - user1Position.y, 2)
+        );
     }
 
-    public static computeDistanceBetweenPositions(position1: PositionInterface, position2: PositionInterface): number
-    {
+    public static computeDistanceBetweenPositions(position1: PositionInterface, position2: PositionInterface): number {
         return Math.sqrt(Math.pow(position2.x - position1.x, 2) + Math.pow(position2.y - position1.y, 2));
     }
 
@@ -325,9 +329,9 @@ export class GameRoom {
     public adminLeave(admin: Admin): void {
         this.admins.delete(admin);
     }
-    
+
     public incrementVersion(): number {
-        this.versionNumber++
+        this.versionNumber++;
         return this.versionNumber;
     }
 
