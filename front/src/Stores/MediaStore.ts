@@ -1,13 +1,13 @@
 import {derived, get, Readable, readable, writable, Writable} from "svelte/store";
 import {peerStore} from "./PeerStore";
 import {localUserStore} from "../Connexion/LocalUserStore";
-import {ITiledMapGroupLayer, ITiledMapObjectLayer, ITiledMapTileLayer} from "../Phaser/Map/ITiledMap";
 import {userMovingStore} from "./GameStore";
 import {HtmlUtils} from "../WebRtc/HtmlUtils";
 import {BrowserTooOldError} from "./Errors/BrowserTooOldError";
 import {errorStore} from "./ErrorStore";
 import {isIOS} from "../WebRtc/DeviceUtils";
 import {WebviewOnOldIOS} from "./Errors/WebviewOnOldIOS";
+import {gameOverlayVisibilityStore} from "./GameOverlayStoreVisibility";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -51,20 +51,6 @@ export const visibilityStore = readable(document.visibilityState === 'visible', 
 });
 
 /**
- * A store that contains whether the game overlay is shown or not.
- * Typically, the overlay is hidden when entering Jitsi meet.
- */
-function createGameOverlayVisibilityStore() {
-    const { subscribe, set, update } = writable(false);
-
-    return {
-        subscribe,
-        showGameOverlay: () => set(true),
-        hideGameOverlay: () => set(false),
-    };
-}
-
-/**
  * A store that contains whether the EnableCameraScene is shown or not.
  */
 function createEnableCameraSceneVisibilityStore() {
@@ -79,7 +65,6 @@ function createEnableCameraSceneVisibilityStore() {
 
 export const requestedCameraState = createRequestedCameraState();
 export const requestedMicrophoneState = createRequestedMicrophoneState();
-export const gameOverlayVisibilityStore = createGameOverlayVisibilityStore();
 export const enableCameraSceneVisibilityStore = createEnableCameraSceneVisibilityStore();
 
 /**

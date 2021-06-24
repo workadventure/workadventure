@@ -95,6 +95,7 @@ module.exports = {
 
                             if (warning.code === 'a11y-no-onchange') { return }
                             if (warning.code === 'a11y-autofocus') { return }
+                            if (warning.code === 'a11y-media-has-caption') { return }
 
                             // process as usual
                             handleWarning(warning);
