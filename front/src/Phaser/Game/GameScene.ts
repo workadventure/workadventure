@@ -498,12 +498,6 @@ export class GameScene extends DirtyScene {
 
         this.openChatIcon = new OpenChatIcon(this, 2, this.game.renderer.height - 2)
 
-        // FIXME: change this to use the UserInputManager class for input
-        // FIXME: Comment this feature because when user write M key in report input, the layout change.
-        /*this.input.keyboard.on('keyup-M', () => {
-            this.switchLayoutMode();
-        });*/
-
         this.reposition();
 
         // From now, this game scene will be notified of reposition events
