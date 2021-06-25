@@ -1,11 +1,17 @@
 import { Group } from "./Group";
 import { PointInterface } from "./Websocket/PointInterface";
-import {Zone} from "_Model/Zone";
-import {Movable} from "_Model/Movable";
-import {PositionNotifier} from "_Model/PositionNotifier";
-import {ServerDuplexStream} from "grpc";
-import {BatchMessage, CompanionMessage, PusherToBackMessage, ServerToClientMessage, SubMessage} from "../Messages/generated/messages_pb";
-import {CharacterLayer} from "_Model/Websocket/CharacterLayer";
+import { Zone } from "_Model/Zone";
+import { Movable } from "_Model/Movable";
+import { PositionNotifier } from "_Model/PositionNotifier";
+import { ServerDuplexStream } from "grpc";
+import {
+    BatchMessage,
+    CompanionMessage,
+    PusherToBackMessage,
+    ServerToClientMessage,
+    SubMessage,
+} from "../Messages/generated/messages_pb";
+import { CharacterLayer } from "_Model/Websocket/CharacterLayer";
 
 export type UserSocket = ServerDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 
@@ -22,6 +28,7 @@ export class User implements Movable {
         private positionNotifier: PositionNotifier,
         public readonly socket: UserSocket,
         public readonly tags: string[],
+        public readonly visitCardUrl: string | null,
         public readonly name: string,
         public readonly characterLayers: CharacterLayer[],
         public readonly companion?: CompanionMessage
@@ -41,9 +48,8 @@ export class User implements Movable {
         this.positionNotifier.updatePosition(this, position, oldPosition);
     }
 
-
     private batchedMessages: BatchMessage = new BatchMessage();
-    private batchTimeout: NodeJS.Timeout|null = null;
+    private batchTimeout: NodeJS.Timeout | null = null;
 
     public emitInBatch(payload: SubMessage): void {
         this.batchedMessages.addPayload(payload);

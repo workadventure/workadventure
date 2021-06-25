@@ -1,7 +1,7 @@
-import {App} from "../Server/sifrr.server";
-import {HttpRequest, HttpResponse} from "uWebSockets.js";
-const register = require('prom-client').register;
-const collectDefaultMetrics = require('prom-client').collectDefaultMetrics;
+import { App } from "../Server/sifrr.server";
+import { HttpRequest, HttpResponse } from "uWebSockets.js";
+const register = require("prom-client").register;
+const collectDefaultMetrics = require("prom-client").collectDefaultMetrics;
 
 export class PrometheusController {
     constructor(private App: App) {
@@ -14,7 +14,7 @@ export class PrometheusController {
     }
 
     private metrics(res: HttpResponse, req: HttpRequest): void {
-        res.writeHeader('Content-Type', register.contentType);
+        res.writeHeader("Content-Type", register.contentType);
         res.end(register.metrics());
     }
 }

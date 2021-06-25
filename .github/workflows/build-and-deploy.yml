@@ -1,7 +1,13 @@
 name: Build, push and deploy Docker image
 
 on:
-  - push
+  push:
+    branches: [master, develop]
+  release:
+    types: [created]
+  pull_request:
+    types: [ labeled, synchronize ]
+
 
 # Enables BuildKit
 env:
@@ -10,7 +16,7 @@ env:
 jobs:
 
   build-front:
-
+    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -30,11 +36,11 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-front
-          tags: ${{ env.GITHUB_REF_SLUG }}
+          tags: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           add_git_labels: true
 
   build-back:
-
+    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -53,11 +59,11 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-back
-          tags: ${{ env.GITHUB_REF_SLUG }}
+          tags: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           add_git_labels: true
 
   build-pusher:
-
+    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -76,11 +82,11 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-pusher
-          tags: ${{ env.GITHUB_REF_SLUG }}
+          tags: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           add_git_labels: true
 
   build-uploader:
-
+    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -99,11 +105,11 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-uploader
-          tags: ${{ env.GITHUB_REF_SLUG }}
+          tags: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           add_git_labels: true
 
   build-maps:
-
+    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -123,7 +129,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: thecodingmachine/workadventure-maps
-          tags: ${{ env.GITHUB_REF_SLUG }}
+          tags: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           add_git_labels: true
 
   deeploy:
@@ -134,6 +140,7 @@ jobs:
       - build-maps
       - build-uploader
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
 
     steps:
       - name: Checkout
@@ -141,6 +148,37 @@ jobs:
 
       # Create a slugified value of the branch
       - uses: rlespinasse/github-slug-action@3.1.0
+
+      - name: Write certificate
+        run: echo "${CERTS_PRIVATE_KEY}" > secret.key && chmod 0600 secret.key
+        env:
+          CERTS_PRIVATE_KEY: ${{ secrets.CERTS_PRIVATE_KEY }}
+
+      - name: Download certificate
+        run: mkdir secrets && scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i secret.key ubuntu@cert.workadventu.re:./config/live/workadventu.re/* secrets/
+
+      - name: Create namespace
+        uses: steebchen/kubectl@v1.0.0
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
+        with:
+          args: create namespace workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+        continue-on-error: true
+
+      - name: Delete old certificates in namespace
+        uses: steebchen/kubectl@v1.0.0
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
+        with:
+          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} delete secret certificate-tls
+        continue-on-error: true
+
+      - name: Install certificates in namespace
+        uses: steebchen/kubectl@v1.0.0
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
+        with:
+          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} create secret tls certificate-tls --key="secrets/privkey.pem" --cert="secrets/fullchain.pem"
 
       - name: Deploy
         uses: thecodingmachine/deeployer-action@master
@@ -151,14 +189,14 @@ jobs:
           JITSI_URL: ${{ secrets.JITSI_URL }}
           SECRET_JITSI_KEY: ${{ secrets.SECRET_JITSI_KEY }}
           TURN_STATIC_AUTH_SECRET: ${{ secrets.TURN_STATIC_AUTH_SECRET }}
+          DEPLOY_REF: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         with:
-          namespace: workadventure-${{ env.GITHUB_REF_SLUG }}
+          namespace: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
 
       - name: Add a comment in PR
         uses: unsplash/comment-on-pr@v1.2.0
-        if: ${{ env.GITHUB_REF_SLUG != 'master' }}
+        if: ${{ github.event_name == 'pull_request' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          msg: Environment deployed at https://play.${{ env.GITHUB_REF_SLUG }}.workadventure.test.thecodingmachine.com
-          check_for_duplicate_msg: true
+          msg: Environment deployed at https://play-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re

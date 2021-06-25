@@ -1,7 +1,7 @@
-const EventEmitter = require('events');
+const EventEmitter = require("events");
 
-const clientJoinEvent = 'clientJoin';
-const clientLeaveEvent = 'clientLeave';
+const clientJoinEvent = "clientJoin";
+const clientLeaveEvent = "clientLeave";
 
 class ClientEventsEmitter extends EventEmitter {
     emitClientJoin(clientUUid: string, roomId: string): void {

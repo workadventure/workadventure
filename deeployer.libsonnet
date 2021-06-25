@@ -1,8 +1,8 @@
 {
   local env = std.extVar("env"),
-  local namespace = env.GITHUB_REF_SLUG,
+  local namespace = env.DEPLOY_REF,
   local tag = namespace,
-  local url = if namespace == "master" then "workadventu.re" else namespace+".workadventure.test.thecodingmachine.com",
+  local url = namespace+".test.workadventu.re",
   // develop branch does not use admin because of issue with SSL certificate of admin as of now.
   local adminUrl = if namespace == "master" || namespace == "develop" || std.startsWith(namespace, "admin") then "https://"+url else null,
   "$schema": "https://raw.githubusercontent.com/thecodingmachine/deeployer/master/deeployer.schema.json",
@@ -11,8 +11,7 @@
      "back1": {
        "image": "thecodingmachine/workadventure-back:"+tag,
        "host": {
-         "url": "api1."+url,
-         "https": "enable",
+         "url": "api1-"+url,
          "containerPort": 8080
        },
        "ports": [8080, 50051],
@@ -25,16 +24,12 @@
          "TURN_STATIC_AUTH_SECRET": env.TURN_STATIC_AUTH_SECRET,
        } + (if adminUrl != null then {
          "ADMIN_API_URL": adminUrl,
-       } else {}) + if namespace != "master" then {
-         // Absolutely ugly WorkAround to circumvent broken certificates on the K8S test cluster. Don't do this in production kids!
-         "NODE_TLS_REJECT_UNAUTHORIZED": "0"
-       }
+       } else {})
      },
      "back2": {
             "image": "thecodingmachine/workadventure-back:"+tag,
             "host": {
-              "url": "api2."+url,
-              "https": "enable",
+              "url": "api2-"+url,
               "containerPort": 8080
             },
             "ports": [8080, 50051],
@@ -47,17 +42,13 @@
               "TURN_STATIC_AUTH_SECRET": env.TURN_STATIC_AUTH_SECRET,
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
-            } else {}) + if namespace != "master" then {
-              // Absolutely ugly WorkAround to circumvent broken certificates on the K8S test cluster. Don't do this in production kids!
-              "NODE_TLS_REJECT_UNAUTHORIZED": "0"
-            }
+            } else {})
           },
      "pusher": {
             "replicas": 2,
             "image": "thecodingmachine/workadventure-pusher:"+tag,
             "host": {
-              "url": "pusher."+url,
-              "https": "enable"
+              "url": "pusher-"+url,
             },
             "ports": [8080],
             "env": {
@@ -69,35 +60,30 @@
               "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
-            } else {}) + if namespace != "master" then {
-              // Absolutely ugly WorkAround to circumvent broken certificates on the K8S test cluster. Don't do this in production kids!
-              "NODE_TLS_REJECT_UNAUTHORIZED": "0"
-            }
+            } else {})
           },
     "front": {
       "image": "thecodingmachine/workadventure-front:"+tag,
       "host": {
-        "url": "play."+url,
-        "https": "enable"
+        "url": "play-"+url,
       },
       "ports": [80],
       "env": {
-        "PUSHER_URL": "//pusher."+url,
-        "UPLOADER_URL": "//uploader."+url,
+        "PUSHER_URL": "//pusher-"+url,
+        "UPLOADER_URL": "//uploader-"+url,
         "ADMIN_URL": "//"+url,
         "JITSI_URL": env.JITSI_URL,
         "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
         "TURN_SERVER": "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443",
         "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
-        "START_ROOM_URL": "/_/global/maps."+url+"/Floor0/floor0.json"
+        "START_ROOM_URL": "/_/global/maps-"+url+"/Floor0/floor0.json"
         //"GA_TRACKING_ID": "UA-10196481-11"
       }
     },
     "uploader": {
            "image": "thecodingmachine/workadventure-uploader:"+tag,
            "host": {
-             "url": "uploader."+url,
-             "https": "enable",
+             "url": "uploader-"+url,
              "containerPort": 8080
            },
            "ports": [8080],
@@ -107,16 +93,12 @@
     "maps": {
       "image": "thecodingmachine/workadventure-maps:"+tag,
       "host": {
-        "url": "maps."+url,
-        "https": "enable"
+        "url": "maps-"+url
       },
       "ports": [80]
     },
   },
   "config": {
-    "https": {
-      "mail": "d.negrier@thecodingmachine.com"
-    },
     k8sextension(k8sConf)::
         k8sConf + {
           back1+: {
@@ -130,6 +112,14 @@
                     }
                   }
                 }
+              }
+            },
+            ingress+: {
+              spec+: {
+                tls+: [{
+                  hosts: ["api1-"+url],
+                  secretName: "certificate-tls"
+                }]
               }
             }
           },
@@ -145,6 +135,14 @@
                   }
                 }
               }
+            },
+            ingress+: {
+              spec+: {
+                tls+: [{
+                  hosts: ["api2-"+url],
+                  secretName: "certificate-tls"
+                }]
+              }
             }
           },
           pusher+: {
@@ -159,8 +157,46 @@
                   }
                 }
               }
-            }
-          }
+            },
+            ingress+: {
+              spec+: {
+                tls+: [{
+                  hosts: ["pusher-"+url],
+                  secretName: "certificate-tls"
+                }]
+              }
+             }
+          },
+          front+: {
+            ingress+: {
+              spec+: {
+                tls+: [{
+                  hosts: ["play-"+url],
+                  secretName: "certificate-tls"
+                }]
+              }
+             }
+          },
+          uploader+: {
+            ingress+: {
+              spec+: {
+                tls+: [{
+                  hosts: ["uploader-"+url],
+                  secretName: "certificate-tls"
+                }]
+              }
+             }
+          },
+          maps+: {
+            ingress+: {
+              spec+: {
+                tls+: [{
+                  hosts: ["maps-"+url],
+                  secretName: "certificate-tls"
+                }]
+              }
+             }
+          },
         }
   }
 }

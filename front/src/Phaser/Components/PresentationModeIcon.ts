@@ -1,3 +1,5 @@
+import {DEPTH_INGAME_TEXT_INDEX} from "../Game/DepthIndexes";
+
 export class PresentationModeIcon extends Phaser.GameObjects.Sprite {
     constructor(scene: Phaser.Scene, x: number, y: number) {
         super(scene, x, y, 'layout_modes', 0);
@@ -6,6 +8,6 @@ export class PresentationModeIcon extends Phaser.GameObjects.Sprite {
         this.setOrigin(0, 1);
         this.setInteractive();
         this.setVisible(false);
-        this.setDepth(99999);
+        this.setDepth(DEPTH_INGAME_TEXT_INDEX);
     }
 }

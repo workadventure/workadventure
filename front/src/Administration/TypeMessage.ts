@@ -1,4 +1,4 @@
-import {TypeMessageInterface} from "./UserMessageManager";
+import type {TypeMessageInterface} from "./UserMessageManager";
 import {HtmlUtils} from "../WebRtc/HtmlUtils";
 
 let modalTimeOut : NodeJS.Timeout;
@@ -44,7 +44,13 @@ export class TypeMessageExt implements TypeMessageInterface{
         mainSectionDiv.appendChild(div);
 
         const reportMessageAudio = HtmlUtils.getElementByIdOrFail<HTMLAudioElement>('report-message');
-        reportMessageAudio.play();
+        // FIXME: this will fail on iOS
+        // We should move the sound playing into the GameScene and listen to the event of a report using a store
+        try {
+            reportMessageAudio.play();
+        } catch (e) {
+            console.error(e);
+        }
 
         this.nbSecond = this.maxNbSecond;
         setTimeout((c) => {

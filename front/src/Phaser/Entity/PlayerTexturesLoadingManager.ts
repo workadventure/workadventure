@@ -1,8 +1,11 @@
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
-import TextureManager = Phaser.Textures.TextureManager;
-import {CharacterTexture} from "../../Connexion/LocalUser";
+import type {CharacterTexture} from "../../Connexion/LocalUser";
 import {BodyResourceDescriptionInterface, LAYERS, PLAYER_RESOURCES} from "./PlayerTextures";
 
+export interface FrameConfig {
+    frameWidth: number,
+    frameHeight: number,
+}
 
 export const loadAllLayers = (load: LoaderPlugin): BodyResourceDescriptionInterface[][] => {
     const returnArray:BodyResourceDescriptionInterface[][] = [];
@@ -27,7 +30,10 @@ export const loadAllDefaultModels = (load: LoaderPlugin): BodyResourceDescriptio
 export const loadCustomTexture = (loaderPlugin: LoaderPlugin, texture: CharacterTexture) : Promise<BodyResourceDescriptionInterface> => {
     const name = 'customCharacterTexture'+texture.id;
     const playerResourceDescriptor: BodyResourceDescriptionInterface = {name, img: texture.url, level: texture.level}
-    return createLoadingPromise(loaderPlugin, playerResourceDescriptor);
+    return createLoadingPromise(loaderPlugin, playerResourceDescriptor, {
+        frameWidth: 32,
+        frameHeight: 32
+    });
 }
 
 export const lazyLoadPlayerCharacterTextures = (loadPlugin: LoaderPlugin, texturekeys:Array<string|BodyResourceDescriptionInterface>): Promise<string[]> => {
@@ -37,7 +43,10 @@ export const lazyLoadPlayerCharacterTextures = (loadPlugin: LoaderPlugin, textur
             //TODO refactor
             const playerResourceDescriptor = getRessourceDescriptor(textureKey);
             if (playerResourceDescriptor && !loadPlugin.textureManager.exists(playerResourceDescriptor.name)) {
-                promisesList.push(createLoadingPromise(loadPlugin, playerResourceDescriptor));
+                promisesList.push(createLoadingPromise(loadPlugin, playerResourceDescriptor, {
+                    frameWidth: 32,
+                    frameHeight: 32
+                }));
             }
         }catch (err){
             console.error(err);
@@ -62,7 +71,7 @@ export const getRessourceDescriptor = (textureKey: string|BodyResourceDescriptio
     const textureName:string = typeof textureKey === 'string' ? textureKey : textureKey.name;
     const playerResource = PLAYER_RESOURCES[textureName];
     if (playerResource !== undefined) return playerResource;
-    
+
     for (let i=0; i<LAYERS.length;i++) {
         const playerResource = LAYERS[i][textureName];
         if (playerResource !== undefined) return playerResource;
@@ -70,15 +79,12 @@ export const getRessourceDescriptor = (textureKey: string|BodyResourceDescriptio
     throw 'Could not find a data for texture '+textureName;
 }
 
-const createLoadingPromise = (loadPlugin: LoaderPlugin, playerResourceDescriptor: BodyResourceDescriptionInterface) => {
+export const createLoadingPromise = (loadPlugin: LoaderPlugin, playerResourceDescriptor: BodyResourceDescriptionInterface, frameConfig: FrameConfig) => {
     return new Promise<BodyResourceDescriptionInterface>((res) => {
         if (loadPlugin.textureManager.exists(playerResourceDescriptor.name)) {
             return res(playerResourceDescriptor);
         }
-        loadPlugin.spritesheet(playerResourceDescriptor.name, playerResourceDescriptor.img, {
-            frameWidth: 32,
-            frameHeight: 32
-        });
+        loadPlugin.spritesheet(playerResourceDescriptor.name, playerResourceDescriptor.img, frameConfig);
         loadPlugin.once('filecomplete-spritesheet-' + playerResourceDescriptor.name, () => res(playerResourceDescriptor));
     });
 }

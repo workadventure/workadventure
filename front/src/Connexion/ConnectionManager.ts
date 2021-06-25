@@ -1,10 +1,10 @@
 import Axios from "axios";
 import {PUSHER_URL, START_ROOM_URL} from "../Enum/EnvironmentVariable";
 import {RoomConnection} from "./RoomConnection";
-import {OnConnectInterface, PositionInterface, ViewportInterface} from "./ConnexionModels";
+import type {OnConnectInterface, PositionInterface, ViewportInterface} from "./ConnexionModels";
 import {GameConnexionTypes, urlManager} from "../Url/UrlManager";
 import {localUserStore} from "./LocalUserStore";
-import {LocalUser} from "./LocalUser";
+import {CharacterTexture, LocalUser} from "./LocalUser";
 import {Room} from "./Room";
 
 
@@ -46,8 +46,8 @@ class ConnectionManager {
             urlManager.pushRoomIdToUrl(room);
             return Promise.resolve(room);
         } else if (connexionType === GameConnexionTypes.organization || connexionType === GameConnexionTypes.anonymous || connexionType === GameConnexionTypes.empty) {
-            const localUser = localUserStore.getLocalUser();
 
+            let localUser = localUserStore.getLocalUser();
             if (localUser && localUser.jwtToken && localUser.uuid && localUser.textures) {
                 this.localUser = localUser;
                 try {
@@ -57,16 +57,42 @@ class ConnectionManager {
                     console.error('JWT token invalid. Did it expire? Login anonymously instead.');
                     await this.anonymousLogin();
                 }
-            } else {
+            }else{
                 await this.anonymousLogin();
             }
-            let roomId: string
+
+            localUser = localUserStore.getLocalUser();
+            if(!localUser){
+                throw "Error to store local user data";
+            }
+
+            let roomId: string;
             if (connexionType === GameConnexionTypes.empty) {
                 roomId = START_ROOM_URL;
             } else {
                 roomId = window.location.pathname + window.location.search + window.location.hash;
             }
-            return Promise.resolve(new Room(roomId));
+
+            //get detail map for anonymous login and set texture in local storage
+            const room = new Room(roomId);
+            const mapDetail = await room.getMapDetail();
+            if(mapDetail.textures != undefined && mapDetail.textures.length > 0) {
+                //check if texture was changed
+                if(localUser.textures.length === 0){
+                    localUser.textures = mapDetail.textures;
+                }else{
+                    mapDetail.textures.forEach((newTexture) => {
+                        const alreadyExistTexture = localUser?.textures.find((c) => newTexture.id === c.id);
+                        if(localUser?.textures.findIndex((c) => newTexture.id === c.id) !== -1){
+                            return;
+                        }
+                        localUser?.textures.push(newTexture)
+                    });
+                }
+                this.localUser = localUser;
+                localUserStore.saveUser(localUser);
+            }
+            return Promise.resolve(room);
         }
 
         return Promise.reject(new Error('Invalid URL'));

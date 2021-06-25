@@ -20,7 +20,7 @@ Install Docker.
 Run:
 
 ```
-docker-compose up
+docker-compose up -d
 ```
 
 The environment will start.

@@ -1,9 +1,9 @@
 import {HtmlUtils} from "./HtmlUtils";
-import {mediaManager, ReportCallback, ShowReportCallBack} from "./MediaManager";
-import {UserInputManager} from "../Phaser/UserInput/UserInputManager";
+import type {UserInputManager} from "../Phaser/UserInput/UserInputManager";
 import {connectionManager} from "../Connexion/ConnectionManager";
 import {GameConnexionTypes} from "../Url/UrlManager";
 import {iframeListener} from "../Api/IframeListener";
+import {showReportScreenStore} from "../Stores/ShowReportScreenStore";
 
 export type SendMessageCallback = (message:string) => void;
 
@@ -104,11 +104,10 @@ export class DiscussionManager {
     }
 
     public addParticipant(
-        userId: number|string,
+        userId: number|'me',
         name: string|undefined,
         img?: string|undefined,
         isMe: boolean = false,
-        showReportCallBack?: ShowReportCallBack
     ) {
         const divParticipant: HTMLDivElement = document.createElement('div');
         divParticipant.classList.add('participant');
@@ -132,16 +131,13 @@ export class DiscussionManager {
             !isMe
             && connectionManager.getConnexionType
             && connectionManager.getConnexionType !== GameConnexionTypes.anonymous
+            && userId !== 'me'
         ) {
             const reportBanUserAction: HTMLButtonElement = document.createElement('button');
             reportBanUserAction.classList.add('report-btn')
             reportBanUserAction.innerText = 'Report';
             reportBanUserAction.addEventListener('click', () => {
-                if(showReportCallBack) {
-                    showReportCallBack(`${userId}`, name);
-                }else{
-                    console.info('report feature is not activated!');
-                }
+                showReportScreenStore.set({ userId: userId, userName: name ? name : ''});
             });
             divParticipant.appendChild(reportBanUserAction);
         }
@@ -171,6 +167,8 @@ export class DiscussionManager {
         const date = new Date();
         if(isMe){
             name = 'Me';
+        } else {
+            name = HtmlUtils.escapeHtml(name);
         }
         pMessage.innerHTML = `<span style="font-weight: bold">${name}</span>    
                     <span style="color:#bac2cc;display:inline-block;font-size:12px;">
