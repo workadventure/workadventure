@@ -22,6 +22,7 @@ import {waScaleManager} from "./Phaser/Services/WaScaleManager";
 import {Game} from "./Phaser/Game/Game";
 import App from './Components/App.svelte';
 import {HtmlUtils} from "./WebRtc/HtmlUtils";
+import {gameManager} from "./Phaser/Game/GameManager";
 
 const {width, height} = coWebsiteManager.getGameSize();
 

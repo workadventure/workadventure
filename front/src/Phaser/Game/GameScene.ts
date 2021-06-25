@@ -1098,7 +1098,7 @@ ${escapedMessage}
     private loadNextGame(exitSceneIdentifier: string): void {
         const {roomId, hash} = Room.getIdFromIdentifier(exitSceneIdentifier, this.MapUrlFile, this.instance);
         const room = new Room(roomId);
-        gameManager.loadMap(room, this.scene).catch(() => {});
+        gameManager.loadMap(room).catch(() => {});
     }
 
     private startUser(layer: ITiledMapTileLayer): PositionInterface {
@@ -1184,7 +1184,7 @@ ${escapedMessage}
             })
         }catch (err){
             if(err instanceof TextureError) {
-                gameManager.leaveGame(this, SelectCharacterSceneName, new SelectCharacterScene());
+                gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
             }
             throw err;
         }

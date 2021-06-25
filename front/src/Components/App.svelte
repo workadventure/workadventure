@@ -1,6 +1,6 @@
 <script lang="typescript">
     import MenuIcon from "./Menu/MenuIcon.svelte";
-    import {menuIconVisible} from "../Stores/MenuStore";
+    import {menuIconVisible, menuVisible} from "../Stores/MenuStore";
     import {enableCameraSceneVisibilityStore, gameOverlayVisibilityStore} from "../Stores/MediaStore";
     import CameraControls from "./CameraControls.svelte";
     import MyCamera from "./MyCamera.svelte";
@@ -23,6 +23,7 @@
     import AudioPlaying from "./UI/AudioPlaying.svelte";
     import {soundPlayingStore} from "../Stores/SoundPlayingStore";
     import ErrorDialog from "./UI/ErrorDialog.svelte";
+    import Menu from "./Menu/Menu.svelte";
 
     export let game: Game;
 </script>
@@ -59,13 +60,18 @@
     </div>
     {/if}
 
-    <!--
+
     {#if $menuIconVisible}
         <div>
-            <MenuIcon  />
+            <MenuIcon  game ={game}></MenuIcon>
         </div>
     {/if}
-    -->
+    {#if $menuVisible}
+        <div>
+            <Menu></Menu>
+        </div>
+    {/if}
+
     {#if $gameOverlayVisibilityStore}
         <div>
             <MyCamera></MyCamera>
