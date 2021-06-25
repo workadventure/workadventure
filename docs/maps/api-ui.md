@@ -65,3 +65,25 @@ WA.room.onLeaveZone('myZone', () => {
     helloWorldPopup.close();
 });
 ```
+
+### Add custom menu
+
+```typescript
+WA.ui.registerMenuCommand(menuCommand: string, callback: (menuCommand: string) => void): void
+```
+Add a custom menu item containing the text `commandDescriptor` in the main menu. A click on the menu will trigger the `callback`.
+Custom menu exist only until the map is unloaded, or you leave the iframe zone of the script.
+
+Example:
+
+```javascript
+
+WA.ui.registerMenuCommand("test", () => {
+    WA.chat.sendChatMessage("test clicked", "menu cmd")
+})
+
+```
+
+<div class="col">
+    <img src="https://workadventu.re/img/docs/menu-command.png" class="figure-img img-fluid rounded" alt="" />
+</div>

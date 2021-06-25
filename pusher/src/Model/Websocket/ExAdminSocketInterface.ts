@@ -1,21 +1,22 @@
-import {PointInterface} from "./PointInterface";
-import {Identificable} from "./Identificable";
-import {ViewportInterface} from "_Model/Websocket/ViewportMessage";
+import { PointInterface } from "./PointInterface";
+import { Identificable } from "./Identificable";
+import { ViewportInterface } from "_Model/Websocket/ViewportMessage";
 import {
     AdminPusherToBackMessage,
     BatchMessage,
-    PusherToBackMessage, ServerToAdminClientMessage,
+    PusherToBackMessage,
+    ServerToAdminClientMessage,
     ServerToClientMessage,
-    SubMessage
+    SubMessage,
 } from "../../Messages/generated/messages_pb";
-import {WebSocket} from "uWebSockets.js"
-import {CharacterTexture} from "../../Services/AdminApi";
-import {ClientDuplexStream} from "grpc";
-import {Zone} from "_Model/Zone";
+import { WebSocket } from "uWebSockets.js";
+import { CharacterTexture } from "../../Services/AdminApi";
+import { ClientDuplexStream } from "grpc";
+import { Zone } from "_Model/Zone";
 
 export type AdminConnection = ClientDuplexStream<AdminPusherToBackMessage, ServerToAdminClientMessage>;
 
 export interface ExAdminSocketInterface extends WebSocket {
-    adminConnection: AdminConnection,
-    disconnecting: boolean,
+    adminConnection: AdminConnection;
+    disconnecting: boolean;
 }

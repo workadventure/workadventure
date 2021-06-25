@@ -1,30 +1,30 @@
-import type { ChatEvent } from '../Events/ChatEvent'
-import { isUserInputChatEvent, UserInputChatEvent } from '../Events/UserInputChatEvent'
-import { IframeApiContribution, sendToWorkadventure } from './IframeApiContribution'
+import type { ChatEvent } from "../Events/ChatEvent";
+import { isUserInputChatEvent, UserInputChatEvent } from "../Events/UserInputChatEvent";
+import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
-import {Subject} from "rxjs";
+import { Subject } from "rxjs";
 
 const chatStream = new Subject<string>();
 
 class WorkadventureChatCommands extends IframeApiContribution<WorkadventureChatCommands> {
-
-    callbacks = [apiCallback({
-        callback: (event: UserInputChatEvent) => {
-            chatStream.next(event.message);
-        },
-        type: "userInputChat",
-        typeChecker: isUserInputChatEvent
-    })]
-
+    callbacks = [
+        apiCallback({
+            callback: (event: UserInputChatEvent) => {
+                chatStream.next(event.message);
+            },
+            type: "userInputChat",
+            typeChecker: isUserInputChatEvent,
+        }),
+    ];
 
     sendChatMessage(message: string, author: string) {
         sendToWorkadventure({
-            type: 'chat',
+            type: "chat",
             data: {
-                'message': message,
-                'author': author
-            } as ChatEvent
-        })
+                message: message,
+                author: author,
+            },
+        });
     }
 
     /**
@@ -35,4 +35,4 @@ class WorkadventureChatCommands extends IframeApiContribution<WorkadventureChatC
     }
 }
 
-export default new WorkadventureChatCommands()
+export default new WorkadventureChatCommands();
