@@ -96,6 +96,7 @@ import { peerStore } from "../../Stores/PeerStore";
 import { EmoteManager } from "./EmoteManager";
 
 import AnimatedTiles from "phaser-animated-tiles";
+import { StartPositionCalculator } from './StartPositionCalculator';
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null,
@@ -132,7 +133,6 @@ interface DeleteGroupEventInterface {
     groupId: number
 }
 
-const defaultStartLayerName = 'start';
 
 export class GameScene extends DirtyScene implements CenterListener {
     Terrains: Array<Phaser.Tilemaps.Tileset>;
@@ -145,8 +145,6 @@ export class GameScene extends DirtyScene implements CenterListener {
     mapFile!: ITiledMap;
     animatedTiles!: AnimatedTiles;
     groups: Map<number, Sprite>;
-    startX!: number;
-    startY!: number;
     circleTexture!: CanvasTexture;
     circleRedTexture!: CanvasTexture;
     pendingEvents: Queue<InitUserPositionEventInterface | AddPlayerEventInterface | RemovePlayerEventInterface | UserMovedEventInterface | GroupCreatedUpdatedEventInterface | DeleteGroupEventInterface> = new Queue<InitUserPositionEventInterface | AddPlayerEventInterface | RemovePlayerEventInterface | UserMovedEventInterface | GroupCreatedUpdatedEventInterface | DeleteGroupEventInterface>();
@@ -183,7 +181,6 @@ export class GameScene extends DirtyScene implements CenterListener {
     private outlinedItem: ActionableItem | null = null;
     public userInputManager!: UserInputManager;
     private isReconnecting: boolean | undefined = undefined;
-    private startLayerName!: string | null;
     private openChatIcon!: OpenChatIcon;
     private playerName!: string;
     private characterLayers!: string[];
@@ -194,6 +191,7 @@ export class GameScene extends DirtyScene implements CenterListener {
     private pinchManager: PinchManager | undefined;
     private mapTransitioning: boolean = false; //used to prevent transitions happenning at the same time.
     private emoteManager!: EmoteManager;
+    startPositionCalculator!: StartPositionCalculator;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -395,7 +393,6 @@ export class GameScene extends DirtyScene implements CenterListener {
 
         gameManager.gameSceneIsCreated(this);
         urlManager.pushRoomIdToUrl(this.room);
-        this.startLayerName = urlManager.getStartLayerNameFromUrl();
 
         if (touchScreenManager.supportTouchScreen) {
             this.pinchManager = new PinchManager(this);
@@ -458,7 +455,9 @@ export class GameScene extends DirtyScene implements CenterListener {
             throw new Error('Your map MUST contain a layer of type "objectgroup" whose name is "floorLayer" that represents the layer characters are drawn at. This layer cannot be contained in a group.');
         }
 
-        this.initStartXAndStartY();
+        this.startPositionCalculator = new StartPositionCalculator(this.gameMap, this.mapFile, this.initPosition, urlManager.getStartLayerNameFromUrl())
+
+
 
         //add entities
         this.Objects = new Array<Phaser.Physics.Arcade.Sprite>();
@@ -563,8 +562,8 @@ export class GameScene extends DirtyScene implements CenterListener {
             this.playerName,
             this.characterLayers,
             {
-                x: this.startX,
-                y: this.startY
+                x: this.startPositionCalculator.startX,
+                y: this.startPositionCalculator.startY
             },
             {
                 left: camera.scrollX,
@@ -970,9 +969,9 @@ ${escapedMessage}
             this.scene.start(roomId);
         } else {
             //if the exit points to the current map, we simply teleport the user back to the startLayer
-            this.initPositionFromLayerName(hash || defaultStartLayerName, hash);
-            this.CurrentPlayer.x = this.startX;
-            this.CurrentPlayer.y = this.startY;
+            this.startPositionCalculator.initPositionFromLayerName(hash, hash);
+            this.CurrentPlayer.x = this.startPositionCalculator.startX;
+            this.CurrentPlayer.y = this.startPositionCalculator.startY;
             setTimeout(() => this.mapTransitioning = false, 500);
         }
     }
@@ -1035,40 +1034,7 @@ ${escapedMessage}
         }
     }
 
-    private initStartXAndStartY() {
-        // If there is an init position passed
-        if (this.initPosition !== null) {
-            this.startX = this.initPosition.x;
-            this.startY = this.initPosition.y;
-        } else {
-            // Now, let's find the start layer
-            if (this.startLayerName) {
-                this.initPositionFromLayerName(this.startLayerName, this.startLayerName);
-            }
-            if (this.startX === undefined) {
-                // If we have no start layer specified or if the hash passed does not exist, let's go with the default start position.
-                this.initPositionFromLayerName(defaultStartLayerName, this.startLayerName);
-            }
-        }
-        // Still no start position? Something is wrong with the map, we need a "start" layer.
-        if (this.startX === undefined) {
-            console.warn('This map is missing a layer named "start" that contains the available default start positions.');
-            // Let's start in the middle of the map
-            this.startX = this.mapFile.width * 16;
-            this.startY = this.mapFile.height * 16;
-        }
-    }
 
-    private initPositionFromLayerName(selectedOrdDefaultLayer: string, selectedLayer: string | null) {
-        for (const layer of this.gameMap.layersIterator) {
-            if ((selectedOrdDefaultLayer === layer.name || layer.name.endsWith('/' + selectedOrdDefaultLayer)) && layer.type === 'tilelayer' && (selectedOrdDefaultLayer === defaultStartLayerName || this.isStartLayer(layer))) {
-                const startPosition = this.startUser(layer, selectedLayer);
-                this.startX = startPosition.x + this.mapFile.tilewidth / 2;
-                this.startY = startPosition.y + this.mapFile.tileheight / 2;
-            }
-        }
-
-    }
 
     private getExitUrl(layer: ITiledMapLayer): string | undefined {
         return this.getProperty(layer, "exitUrl") as string | undefined;
@@ -1079,10 +1045,6 @@ ${escapedMessage}
      */
     private getExitSceneUrl(layer: ITiledMapLayer): string | undefined {
         return this.getProperty(layer, "exitSceneUrl") as string | undefined;
-    }
-
-    private isStartLayer(layer: ITiledMapLayer): boolean {
-        return this.getProperty(layer, "startLayer") == true;
     }
 
     private getScriptUrls(map: ITiledMap): string[] {
@@ -1116,38 +1078,6 @@ ${escapedMessage}
         return gameManager.loadMap(room, this.scene).catch(() => { });
     }
 
-    private startUser(selectedOrDefaultLayer: ITiledMapTileLayer, startName: string | null): PositionInterface {
-        const tiles = selectedOrDefaultLayer.data;
-        if (typeof (tiles) === 'string') {
-            throw new Error('The content of a JSON map must be filled as a JSON array, not as a string');
-        }
-        const possibleStartPositions: PositionInterface[] = [];
-        tiles.forEach((objectKey: number, key: number) => {
-            if (objectKey === 0) {
-                return;
-            }
-            const y = Math.floor(key / selectedOrDefaultLayer.width);
-            const x = key % selectedOrDefaultLayer.width;
-
-            if (startName && this.gameMap.hasStartTile) {
-                const properties = this.gameMap.getPropertiesForIndex(objectKey);
-                if (!properties.length || !properties.some(property => property.name == "start" && property.value == startName)) {
-                    return
-                }
-            }
-            possibleStartPositions.push({ x: x * this.mapFile.tilewidth, y: y * this.mapFile.tilewidth });
-        });
-        // Get a value at random amongst allowed values
-        if (possibleStartPositions.length === 0) {
-            console.warn('The start layer "' + selectedOrDefaultLayer.name + '" for this map is empty.');
-            return {
-                x: 0,
-                y: 0
-            };
-        }
-        // Choose one of the available start positions at random amongst the list of available start positions.
-        return possibleStartPositions[Math.floor(Math.random() * possibleStartPositions.length)];
-    }
 
     //todo: in a dedicated class/function?
     initCamera() {
@@ -1184,8 +1114,8 @@ ${escapedMessage}
         try {
             this.CurrentPlayer = new Player(
                 this,
-                this.startX,
-                this.startY,
+                this.startPositionCalculator.startX,
+                this.startPositionCalculator.startY,
                 this.playerName,
                 texturesPromise,
                 PlayerAnimationDirections.Down,
