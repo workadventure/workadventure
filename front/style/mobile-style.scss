@@ -1,0 +1,49 @@
+@media (hover: none) {
+  /**
+   * If we cannot hover over elements, let's display camera button in full.
+   */
+  .btn-cam-action {
+    div {
+      transform: translateY(0px);
+    }
+  }
+}
+
+@media screen and (max-width: 700px),
+        screen and (max-height: 700px){
+  video.myCamVideo {
+    width: 150px;
+  }
+
+  .div-myCamVideo.hide {
+    right: -160px;
+  }
+
+  .sidebar {
+    width: 20%;
+    min-width: 200px;
+    position: absolute;
+    display: block;
+    right: 0;
+    height: 80%;
+
+    &> div {
+      max-height: 120px;
+      min-width: 200px;
+    }
+
+    .video-container{
+      min-width: 200px;
+    }
+  }
+
+  .main-section {
+    position: absolute;
+    width: 100%;
+    min-width: 400px;
+
+    & > div {
+      z-index: 2;
+    }
+  }
+}

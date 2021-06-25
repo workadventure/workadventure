@@ -1,34 +1,33 @@
-import {PointInterface} from "./PointInterface";
+import { PointInterface } from "./PointInterface";
 import {
     CharacterLayerMessage,
     ItemEventMessage,
     PointMessage,
-    PositionMessage
+    PositionMessage,
 } from "../../Messages/generated/messages_pb";
-import {CharacterLayer} from "_Model/Websocket/CharacterLayer";
+import { CharacterLayer } from "_Model/Websocket/CharacterLayer";
 import Direction = PositionMessage.Direction;
-import {ItemEventMessageInterface} from "_Model/Websocket/ItemEventMessage";
-import {PositionInterface} from "_Model/PositionInterface";
+import { ItemEventMessageInterface } from "_Model/Websocket/ItemEventMessage";
+import { PositionInterface } from "_Model/PositionInterface";
 
 export class ProtobufUtils {
-
     public static toPositionMessage(point: PointInterface): PositionMessage {
         let direction: Direction;
         switch (point.direction) {
-            case 'up':
+            case "up":
                 direction = Direction.UP;
                 break;
-            case 'down':
+            case "down":
                 direction = Direction.DOWN;
                 break;
-            case 'left':
+            case "left":
                 direction = Direction.LEFT;
                 break;
-            case 'right':
+            case "right":
                 direction = Direction.RIGHT;
                 break;
             default:
-                throw new Error('unexpected direction');
+                throw new Error("unexpected direction");
         }
 
         const position = new PositionMessage();
@@ -44,16 +43,16 @@ export class ProtobufUtils {
         let direction: string;
         switch (position.getDirection()) {
             case Direction.UP:
-                direction = 'up';
+                direction = "up";
                 break;
             case Direction.DOWN:
-                direction = 'down';
+                direction = "down";
                 break;
             case Direction.LEFT:
-                direction = 'left';
+                direction = "left";
                 break;
             case Direction.RIGHT:
-                direction = 'right';
+                direction = "right";
                 break;
             default:
                 throw new Error("Unexpected direction");
@@ -82,7 +81,7 @@ export class ProtobufUtils {
             event: itemEventMessage.getEvent(),
             parameters: JSON.parse(itemEventMessage.getParametersjson()),
             state: JSON.parse(itemEventMessage.getStatejson()),
-        }
+        };
     }
 
     public static toItemEventProtobuf(itemEvent: ItemEventMessageInterface): ItemEventMessage {
@@ -96,7 +95,7 @@ export class ProtobufUtils {
     }
 
     public static toCharacterLayerMessages(characterLayers: CharacterLayer[]): CharacterLayerMessage[] {
-        return characterLayers.map(function(characterLayer): CharacterLayerMessage {
+        return characterLayers.map(function (characterLayer): CharacterLayerMessage {
             const message = new CharacterLayerMessage();
             message.setName(characterLayer.name);
             if (characterLayer.url) {
@@ -107,7 +106,7 @@ export class ProtobufUtils {
     }
 
     public static toCharacterLayerObjects(characterLayers: CharacterLayerMessage[]): CharacterLayer[] {
-        return characterLayers.map(function(characterLayer): CharacterLayer {
+        return characterLayers.map(function (characterLayer): CharacterLayer {
             const url = characterLayer.getUrl();
             return {
                 name: characterLayer.getName(),

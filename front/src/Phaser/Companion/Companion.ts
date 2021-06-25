@@ -1,6 +1,5 @@
 import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
-import { lazyLoadCompanionResource } from "./CompanionTexturesLoadingManager";
 import { PlayerAnimationDirections, PlayerAnimationTypes } from "../Player/Animation";
 
 export interface CompanionStatus {
@@ -25,7 +24,7 @@ export class Companion extends Container {
 
     constructor(scene: Phaser.Scene, x: number, y: number, name: string, texturePromise: Promise<string>) {
         super(scene, x + 14, y + 4);
-            
+
         this.sprites = new Map<string, Sprite>();
 
         this.delta = 0;
@@ -104,7 +103,7 @@ export class Companion extends Container {
                 }
             }
         }
-        
+
         this.setDepth(this.y);
         this.playAnimation(this.direction, this.animationType);
     }
@@ -137,7 +136,7 @@ export class Companion extends Container {
         this.getAnimations(resource).forEach(animation => {
             this.scene.anims.create(animation);
         });
-        
+
         this.scene.sys.updateList.add(sprite);
         this.sprites.set(resource, sprite);
     }

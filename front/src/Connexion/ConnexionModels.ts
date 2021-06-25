@@ -1,8 +1,6 @@
-import {PlayerAnimationDirections} from "../Phaser/Player/Animation";
-import {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
-import {SignalData} from "simple-peer";
-import {RoomConnection} from "./RoomConnection";
-import {BodyResourceDescriptionInterface} from "../Phaser/Entity/PlayerTextures";
+import type {SignalData} from "simple-peer";
+import type {RoomConnection} from "./RoomConnection";
+import type {BodyResourceDescriptionInterface} from "../Phaser/Entity/PlayerTextures";
 
 export enum EventMessage{
     CONNECT = "connect",
@@ -47,6 +45,7 @@ export interface MessageUserPositionInterface {
     name: string;
     characterLayers: BodyResourceDescriptionInterface[];
     position: PointInterface;
+    visitCardUrl: string|null;
     companion: string|null;
 }
 
@@ -60,6 +59,7 @@ export interface MessageUserJoined {
     name: string;
     characterLayers: BodyResourceDescriptionInterface[];
     position: PointInterface;
+    visitCardUrl: string | null;
     companion: string|null;
 }
 
@@ -83,11 +83,6 @@ export interface WebRtcSignalReceivedMessageInterface {
     signal: SignalData,
     webRtcUser: string | undefined,
     webRtcPassword: string | undefined
-}
-
-export interface StartMapInterface {
-    mapUrlStart: string,
-    startInstance: string
 }
 
 export interface ViewportInterface {

@@ -3,25 +3,25 @@ console.log('SCRIPT LAUNCHED');
 var isFirstTimeTuto = false;
 var textFirstPopup = 'Hey ! This is how to open start a discussion with someone ! You can be 4 max in a booble';
 var textSecondPopup = 'You can also use the chat to communicate ! ';
-var targetObjectTutoBubble ='tutoBobble';
-var targetObjectTutoChat ='tutoChat';
+var targetObjectTutoBubble ='myPopup1';
+var targetObjectTutoChat ='myPopup2';
 var popUpExplanation = undefined;
 function launchTuto (){
-        WA.openPopup(targetObjectTutoBubble, textFirstPopup, [
+        WA.ui.openPopup(targetObjectTutoBubble, textFirstPopup, [
             {
                 label: "Next",
                 className: "popUpElement",
                 callback: (popup) => {
                     popup.close();
 
-                    WA.openPopup(targetObjectTutoChat, textSecondPopup, [
+                    WA.ui.openPopup(targetObjectTutoChat, textSecondPopup, [
                         {
                             label: "Open Chat",
                             className: "popUpElement",
                             callback: (popup1) => {
-                                WA.sendChatMessage("Hey you can talk here too ! ", 'WA Guide');
+                                WA.chat.sendChatMessage("Hey you can talk here too ! ", 'WA Guide');
                                 popup1.close();
-                                WA.restorePlayerControl();
+                                WA.controls.restorePlayerControls();
                             }
                         }
 
@@ -29,32 +29,32 @@ function launchTuto (){
                 }
             }
         ]);
-        WA.disablePlayerControl();
+        WA.controls.disablePlayerControls();
 
 }
-WA.onChatMessage((message => {
+WA.chat.onChatMessage((message => {
     console.log('CHAT MESSAGE RECEIVED BY SCRIPT');
-    WA.sendChatMessage('Poly Parrot says: "'+message+'"', 'Poly Parrot');
+    WA.chat.sendChatMessage('Poly Parrot says: "'+message+'"', 'Poly Parrot');
 }));
 
-WA.onEnterZone('myTrigger', () => {
-    WA.sendChatMessage("Don't step on my carpet!", 'Poly Parrot');
+WA.room.onEnterZone('myTrigger', () => {
+    WA.chat.sendChatMessage("Don't step on my carpet!", 'Poly Parrot');
 })
 
-WA.onLeaveZone('popupZone', () => {
+WA.room.onLeaveZone('popupZone', () => {
 })
 
-WA.onEnterZone('notExist', () => {
-    WA.sendChatMessage("YOU SHOULD NEVER SEE THIS", 'Poly Parrot');
+WA.room.onEnterZone('notExist', () => {
+    WA.chat.sendChatMessage("YOU SHOULD NEVER SEE THIS", 'Poly Parrot');
 })
 
-WA.onEnterZone('popupZone', () => {
-    WA.displayBubble();
+WA.room.onEnterZone('popupZone', () => {
+    WA.ui.displayBubble();
     if (!isFirstTimeTuto) {
         isFirstTimeTuto = true;
         launchTuto();
     }
-     else popUpExplanation =  WA.openPopup(targetObjectTutoChat,'Do you want to review the explanation ? ', [
+     else popUpExplanation =  WA.ui.openPopup(targetObjectTutoChat,'Do you want to review the explanation ? ', [
         {
             label: "No",
             className: "popUpElementReviewexplanation",
@@ -73,7 +73,7 @@ WA.onEnterZone('popupZone', () => {
     ])
 });
 
-WA.onLeaveZone('popupZone', () => {
+WA.room.onLeaveZone('popupZone', () => {
     if (popUpExplanation !== undefined) popUpExplanation.close();
-    WA.removeBubble();
+    WA.ui.removeBubble();
 })

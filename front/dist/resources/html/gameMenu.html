@@ -1,4 +1,7 @@
 <style>
+    #gameMenu main{
+        margin-top: 15px;
+    }
     #gameMenu button {
         background-color: black;
         color: white;
@@ -15,6 +18,21 @@
     section#socialLinks img{
         width: 32px;
         cursor: url('/resources/logos/cursor_pointer.png'), pointer;
+    }
+    @media only screen and (max-height: 700px) {
+        #gameMenu main {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            margin-top: 0;
+        }
+        #gameMenu section{
+            margin: 2px;
+        }
+        section#socialLinks{
+            position: relative;
+        }
     }
 </style>
 
@@ -46,7 +64,7 @@
             <button id="adminConsoleButton">Admin console</button>
         </section>
         <section id="socialLinks" hidden>
-            <a class="not-button" href="https://www.facebook.com/workadventurebytcm" target="_blank"><img class="not-button" src="/resources/objects/facebook-icon.png"/></a>
+            <a class="not-button" href="https://www.facebook.com/workadventure.WA" target="_blank"><img class="not-button" src="/resources/objects/facebook-icon.png"/></a>
             <a class="not-button" href="https://twitter.com/Workadventure_" target="_blank"><img class="not-button" src="/resources/objects/twitter-icon.png"/></a>
         </section>
     </main>

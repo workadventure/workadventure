@@ -1,4 +1,5 @@
 import {discussionManager} from "../../WebRtc/DiscussionManager";
+import {DEPTH_INGAME_TEXT_INDEX} from "../Game/DepthIndexes";
 
 export const openChatIconName = 'openChatIcon';
 export class OpenChatIcon extends Phaser.GameObjects.Image {
@@ -9,7 +10,7 @@ export class OpenChatIcon extends Phaser.GameObjects.Image {
         this.setOrigin(0, 1);
         this.setInteractive();
         this.setVisible(false);
-        this.setDepth(99999);
+        this.setDepth(DEPTH_INGAME_TEXT_INDEX);
 
         this.on("pointerup", () => discussionManager.showDiscussionPart());
     }
