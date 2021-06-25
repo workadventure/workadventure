@@ -1043,7 +1043,7 @@ ${escapedMessage}
         } else {
             // Now, let's find the start layer
             if (this.startLayerName) {
-                this.initPositionFromLayerName(this.startLayerName, null);
+                this.initPositionFromLayerName(this.startLayerName, this.startLayerName);
             }
             if (this.startX === undefined) {
                 // If we have no start layer specified or if the hash passed does not exist, let's go with the default start position.
@@ -1059,10 +1059,10 @@ ${escapedMessage}
         }
     }
 
-    private initPositionFromLayerName(layerName: string, startLayerName: string | null) {
+    private initPositionFromLayerName(selectedOrdDefaultLayer: string, selectedLayer: string | null) {
         for (const layer of this.gameMap.layersIterator) {
-            if ((layerName === layer.name || layer.name.endsWith('/' + layerName)) && layer.type === 'tilelayer' && (layerName === defaultStartLayerName || this.isStartLayer(layer))) {
-                const startPosition = this.startUser(layer, startLayerName);
+            if ((selectedOrdDefaultLayer === layer.name || layer.name.endsWith('/' + selectedOrdDefaultLayer)) && layer.type === 'tilelayer' && (selectedOrdDefaultLayer === defaultStartLayerName || this.isStartLayer(layer))) {
+                const startPosition = this.startUser(layer, selectedLayer);
                 this.startX = startPosition.x + this.mapFile.tilewidth / 2;
                 this.startY = startPosition.y + this.mapFile.tileheight / 2;
             }
@@ -1116,8 +1116,8 @@ ${escapedMessage}
         return gameManager.loadMap(room, this.scene).catch(() => { });
     }
 
-    private startUser(layer: ITiledMapTileLayer, startName: string | null): PositionInterface {
-        const tiles = layer.data;
+    private startUser(selectedOrDefaultLayer: ITiledMapTileLayer, startName: string | null): PositionInterface {
+        const tiles = selectedOrDefaultLayer.data;
         if (typeof (tiles) === 'string') {
             throw new Error('The content of a JSON map must be filled as a JSON array, not as a string');
         }
@@ -1126,21 +1126,20 @@ ${escapedMessage}
             if (objectKey === 0) {
                 return;
             }
-            const y = Math.floor(key / layer.width);
-            const x = key % layer.width;
+            const y = Math.floor(key / selectedOrDefaultLayer.width);
+            const x = key % selectedOrDefaultLayer.width;
 
-            if (startName) {
+            if (startName && this.gameMap.hasStartTile) {
                 const properties = this.gameMap.getPropertiesForIndex(objectKey);
                 if (!properties.length || !properties.some(property => property.name == "start" && property.value == startName)) {
                     return
                 }
             }
-
             possibleStartPositions.push({ x: x * this.mapFile.tilewidth, y: y * this.mapFile.tilewidth });
         });
         // Get a value at random amongst allowed values
         if (possibleStartPositions.length === 0) {
-            console.warn('The start layer "' + layer.name + '" for this map is empty.');
+            console.warn('The start layer "' + selectedOrDefaultLayer.name + '" for this map is empty.');
             return {
                 x: 0,
                 y: 0

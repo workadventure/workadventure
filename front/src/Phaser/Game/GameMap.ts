@@ -17,6 +17,8 @@ export class GameMap {
 
     public exitUrls: Array<string> = []
 
+    public hasStartTile = false;
+
     public constructor(private map: ITiledMap) {
         this.layersIterator = new LayersIterator(map);
 
@@ -27,6 +29,8 @@ export class GameMap {
                     tile.properties.forEach(prop => {
                         if (prop.name == "exitUrl" && typeof prop.value == "string") {
                             this.exitUrls.push(prop.value);
+                        } else if (prop.name == "start") {
+                            this.hasStartTile = true
                         }
                     })
                 }
