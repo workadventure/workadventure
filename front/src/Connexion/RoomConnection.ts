@@ -67,8 +67,8 @@ export class RoomConnection implements RoomConnection {
     private closed: boolean = false;
     private tags: string[] = [];
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
-        // eslint-disable-line @typescript-eslint/no-explicit-any
         RoomConnection.websocketFactory = websocketFactory;
     }
 
