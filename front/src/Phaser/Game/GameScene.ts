@@ -562,8 +562,7 @@ export class GameScene extends DirtyScene implements CenterListener {
             this.playerName,
             this.characterLayers,
             {
-                x: this.startPositionCalculator.startX,
-                y: this.startPositionCalculator.startY
+                ...this.startPositionCalculator.startPosition
             },
             {
                 left: camera.scrollX,
@@ -970,8 +969,8 @@ ${escapedMessage}
         } else {
             //if the exit points to the current map, we simply teleport the user back to the startLayer
             this.startPositionCalculator.initPositionFromLayerName(hash, hash);
-            this.CurrentPlayer.x = this.startPositionCalculator.startX;
-            this.CurrentPlayer.y = this.startPositionCalculator.startY;
+            this.CurrentPlayer.x = this.startPositionCalculator.startPosition.x;
+            this.CurrentPlayer.y = this.startPositionCalculator.startPosition.y;
             setTimeout(() => this.mapTransitioning = false, 500);
         }
     }
@@ -1114,8 +1113,8 @@ ${escapedMessage}
         try {
             this.CurrentPlayer = new Player(
                 this,
-                this.startPositionCalculator.startX,
-                this.startPositionCalculator.startY,
+                this.startPositionCalculator.startPosition.x,
+                this.startPositionCalculator.startPosition.y,
                 this.playerName,
                 texturesPromise,
                 PlayerAnimationDirections.Down,

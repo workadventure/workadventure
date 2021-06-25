@@ -6,10 +6,8 @@ import type { GameMap } from './GameMap';
 const defaultStartLayerName = 'start';
 
 export class StartPositionCalculator {
-    public startX!: number;
-    public startY!: number;
 
-
+    public startPosition!: PositionInterface
 
     constructor(
         private readonly gameMap: GameMap,
@@ -21,24 +19,25 @@ export class StartPositionCalculator {
     private initStartXAndStartY() {
         // If there is an init position passed
         if (this.initPosition !== null) {
-            this.startX = this.initPosition.x;
-            this.startY = this.initPosition.y;
+            this.startPosition = this.initPosition;
         } else {
             // Now, let's find the start layer
             if (this.startLayerName) {
                 this.initPositionFromLayerName(this.startLayerName, this.startLayerName);
             }
-            if (this.startX === undefined) {
+            if (this.startPosition === undefined) {
                 // If we have no start layer specified or if the hash passed does not exist, let's go with the default start position.
                 this.initPositionFromLayerName(defaultStartLayerName, this.startLayerName);
             }
         }
         // Still no start position? Something is wrong with the map, we need a "start" layer.
-        if (this.startX === undefined) {
+        if (this.startPosition === undefined) {
             console.warn('This map is missing a layer named "start" that contains the available default start positions.');
             // Let's start in the middle of the map
-            this.startX = this.mapFile.width * 16;
-            this.startY = this.mapFile.height * 16;
+            this.startPosition = {
+                x: this.mapFile.width * 16,
+                y: this.mapFile.height * 16
+            };
         }
     }
 
@@ -54,8 +53,10 @@ export class StartPositionCalculator {
         for (const layer of this.gameMap.layersIterator) {
             if ((selectedOrDefaultLayer === layer.name || layer.name.endsWith('/' + selectedOrDefaultLayer)) && layer.type === 'tilelayer' && (selectedOrDefaultLayer === defaultStartLayerName || this.isStartLayer(layer))) {
                 const startPosition = this.startUser(layer, selectedLayer);
-                this.startX = startPosition.x + this.mapFile.tilewidth / 2;
-                this.startY = startPosition.y + this.mapFile.tileheight / 2;
+                this.startPosition = {
+                    x: startPosition.x + this.mapFile.tilewidth / 2,
+                    y: startPosition.y + this.mapFile.tileheight / 2
+                }
             }
         }
 
