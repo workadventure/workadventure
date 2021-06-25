@@ -51,7 +51,7 @@ export class StartPositionCalculator {
         if (!selectedOrDefaultLayer) {
             selectedOrDefaultLayer = defaultStartLayerName;
         }
-        for (const layer of this.gameMap.layersIterator) {
+        for (const layer of this.gameMap.flatLayers) {
             if (
                 (selectedOrDefaultLayer === layer.name || layer.name.endsWith("/" + selectedOrDefaultLayer)) &&
                 layer.type === "tilelayer" &&
