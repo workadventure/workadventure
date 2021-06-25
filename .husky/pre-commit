@@ -1,0 +1,15 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+(
+cd front || exit
+yarn run precommit
+)
+(
+cd pusher || exit
+yarn run precommit
+)
+(
+cd back || exit
+yarn run precommit
+)

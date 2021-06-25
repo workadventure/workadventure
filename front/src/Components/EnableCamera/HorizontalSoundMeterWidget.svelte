@@ -8,7 +8,7 @@
 
     const NB_BARS = 20;
 
-    let timeout;
+    let timeout: ReturnType<typeof setTimeout>;
     const soundMeter = new SoundMeter();
     let display = false;
 
@@ -58,7 +58,7 @@
 
 
 <div class="horizontal-sound-meter" class:active={display}>
-    {#each [...Array(NB_BARS).keys()] as i}
+    {#each [...Array(NB_BARS).keys()] as i (i)}
         <div style={color(i, volume)}></div>
     {/each}
 </div>

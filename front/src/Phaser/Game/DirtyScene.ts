@@ -37,6 +37,7 @@ export abstract class DirtyScene extends ResizableScene {
 
         this.events.on(Events.RENDER, () => {
             this.objectListChanged = false;
+            this.dirty = false;
         });
 
         this.physics.disableUpdate();
@@ -67,6 +68,10 @@ export abstract class DirtyScene extends ResizableScene {
 
     public isDirty(): boolean {
         return this.dirty || this.objectListChanged;
+    }
+
+    public markDirty(): void {
+        this.events.once(Phaser.Scenes.Events.POST_UPDATE, () => this.dirty = true);
     }
 
     public onResize(): void {

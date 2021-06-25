@@ -1,14 +1,13 @@
 <script lang="typescript">
-    import {Game} from "../../Phaser/Game/Game";
-    import {LoginSceneName} from "../../Phaser/Login/LoginScene";
+    import type {Game} from "../../Phaser/Game/Game";
+    import {LoginScene, LoginSceneName} from "../../Phaser/Login/LoginScene";
     import {DISPLAY_TERMS_OF_USE, MAX_USERNAME_LENGTH} from "../../Enum/EnvironmentVariable";
     import logoImg from "../images/logo.png";
     import {gameManager} from "../../Phaser/Game/GameManager";
-    import {maxUserNameLength} from "../../Connexion/LocalUser";
 
     export let game: Game;
 
-    const loginScene = game.scene.getScene(LoginSceneName);
+    const loginScene = game.scene.getScene(LoginSceneName) as LoginScene;
 
     let name = gameManager.getPlayerName() || '';
     let startValidating = false;

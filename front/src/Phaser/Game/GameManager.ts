@@ -9,13 +9,9 @@ import {localUserStore} from "../../Connexion/LocalUserStore";
 import {get} from "svelte/store";
 import {requestedCameraState, requestedMicrophoneState} from "../../Stores/MediaStore";
 import {helpCameraSettingsVisibleStore} from "../../Stores/HelpCameraSettingsStore";
+import {menuIconVisible} from "../../Stores/MenuStore";
 
-export interface HasMovedEvent {
-    direction: string;
-    moving: boolean;
-    x: number;
-    y: number;
-}
+
 
 /**
  * This class should be responsible for any scene starting/stopping
@@ -107,6 +103,7 @@ export class GameManager {
         this.currentGameSceneName = scene.scene.key;
         const menuScene: MenuScene = scene.scene.get(MenuSceneName) as MenuScene;
         menuScene.revealMenuIcon();
+        menuIconVisible.set(true);
     }
 
     /**

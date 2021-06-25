@@ -1,13 +1,12 @@
 import { ConnectCallback, DisconnectCallback } from "./GameRoom";
 import { User } from "./User";
-import {PositionInterface} from "_Model/PositionInterface";
-import {Movable} from "_Model/Movable";
-import {PositionNotifier} from "_Model/PositionNotifier";
-import {gaugeManager} from "../Services/GaugeManager";
-import {MAX_PER_GROUP} from "../Enum/EnvironmentVariable";
+import { PositionInterface } from "_Model/PositionInterface";
+import { Movable } from "_Model/Movable";
+import { PositionNotifier } from "_Model/PositionNotifier";
+import { gaugeManager } from "../Services/GaugeManager";
+import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable";
 
 export class Group implements Movable {
-
     private static nextId: number = 1;
 
     private id: number;
@@ -18,8 +17,13 @@ export class Group implements Movable {
     private wasDestroyed: boolean = false;
     private roomId: string;
 
-
-    constructor(roomId: string, users: User[], private connectCallback: ConnectCallback, private disconnectCallback: DisconnectCallback, private positionNotifier: PositionNotifier) {
+    constructor(
+        roomId: string,
+        users: User[],
+        private connectCallback: ConnectCallback,
+        private disconnectCallback: DisconnectCallback,
+        private positionNotifier: PositionNotifier
+    ) {
         this.roomId = roomId;
         this.users = new Set<User>();
         this.id = Group.nextId;
@@ -43,7 +47,7 @@ export class Group implements Movable {
         return Array.from(this.users.values());
     }
 
-    getId() : number {
+    getId(): number {
         return this.id;
     }
 
@@ -53,7 +57,7 @@ export class Group implements Movable {
     getPosition(): PositionInterface {
         return {
             x: this.x,
-            y: this.y
+            y: this.y,
         };
     }
 
@@ -83,7 +87,7 @@ export class Group implements Movable {
         if (oldX === undefined) {
             this.positionNotifier.enter(this);
         } else {
-            this.positionNotifier.updatePosition(this, {x, y}, {x: oldX, y: oldY});
+            this.positionNotifier.updatePosition(this, { x, y }, { x: oldX, y: oldY });
         }
     }
 
@@ -95,19 +99,17 @@ export class Group implements Movable {
         return this.users.size <= 1;
     }
 
-    join(user: User): void
-    {
+    join(user: User): void {
         // Broadcast on the right event
         this.connectCallback(user, this);
         this.users.add(user);
         user.group = this;
     }
 
-    leave(user: User): void
-    {
+    leave(user: User): void {
         const success = this.users.delete(user);
         if (success === false) {
-            throw new Error("Could not find user "+user.id+" in the group "+this.id);
+            throw new Error("Could not find user " + user.id + " in the group " + this.id);
         }
         user.group = undefined;
 
@@ -123,8 +125,7 @@ export class Group implements Movable {
      * Let's kick everybody out.
      * Usually used when there is only one user left.
      */
-    destroy(): void
-    {
+    destroy(): void {
         if (this.hasEditedGauge) gaugeManager.decNbGroupsPerRoomGauge(this.roomId);
         for (const user of this.users) {
             this.leave(user);
@@ -132,7 +133,7 @@ export class Group implements Movable {
         this.wasDestroyed = true;
     }
 
-    get getSize(){
+    get getSize() {
         return this.users.size;
     }
 }

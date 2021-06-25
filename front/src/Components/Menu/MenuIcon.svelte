@@ -1,11 +1,12 @@
 <script lang="typescript">
     import { Game } from "../../Phaser/Game/Game";
     import {menuVisible} from "../../Stores/MenuStore";
+
     export let game: Game;
     let isOpen : Boolean = false;
 
     function openMenu(){
-        isOpen = !isOpen;//Devrait être dans le store/menuVisible.set(isOPen);/
+        isOpen = !isOpen; //Devrait être dans le store/menuVisible.set(isOPen);/
         if(isOpen) menuVisible.set(true);
         else menuVisible.set(false);
     }

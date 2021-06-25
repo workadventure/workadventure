@@ -4,6 +4,8 @@
  * Represents the interface for the Tiled exported data structure (JSON). Used
  * when loading resources via Resource loader.
  */
+import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
+
 export interface ITiledMap {
     width: number;
     height: number;
@@ -81,6 +83,7 @@ export interface ITiledMapTileLayer {
      * Draw order (topdown (default), index)
      */
     draworder?: string;
+    phaserLayer?: TilemapLayer;
 }
 
 export interface ITiledMapObjectLayer {
@@ -167,12 +170,19 @@ export interface ITiledTileSet {
     tilewidth: number;
     transparentcolor: string;
     terrains: ITiledMapTerrain[];
-    tiles: {[key: string]: { terrain: number[] }};
+    tiles?: Array<ITile>;
 
     /**
      * Refers to external tileset file (should be JSON)
      */
     source: string;
+}
+
+export interface ITile {
+    id: number,
+    type?: string
+
+    properties?: Array<ITiledMapLayerProperty>
 }
 
 export interface ITiledMapTerrain {

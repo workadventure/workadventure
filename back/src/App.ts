@@ -1,7 +1,7 @@
 // lib/app.ts
-import {PrometheusController} from "./Controller/PrometheusController";
-import {DebugController} from "./Controller/DebugController";
-import {App as uwsApp} from "./Server/sifrr.server";
+import { PrometheusController } from "./Controller/PrometheusController";
+import { DebugController } from "./Controller/DebugController";
+import { App as uwsApp } from "./Server/sifrr.server";
 
 class App {
     public app: uwsApp;

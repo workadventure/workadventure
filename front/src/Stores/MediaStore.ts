@@ -1,13 +1,14 @@
 import {derived, get, Readable, readable, writable, Writable} from "svelte/store";
-import {peerStore} from "./PeerStore";
 import {localUserStore} from "../Connexion/LocalUserStore";
-import {ITiledMapGroupLayer, ITiledMapObjectLayer, ITiledMapTileLayer} from "../Phaser/Map/ITiledMap";
 import {userMovingStore} from "./GameStore";
 import {HtmlUtils} from "../WebRtc/HtmlUtils";
 import {BrowserTooOldError} from "./Errors/BrowserTooOldError";
 import {errorStore} from "./ErrorStore";
 import {isIOS} from "../WebRtc/DeviceUtils";
 import {WebviewOnOldIOS} from "./Errors/WebviewOnOldIOS";
+import {gameOverlayVisibilityStore} from "./GameOverlayStoreVisibility";
+import {peerStore} from "./PeerStore";
+import {privacyShutdownStore} from "./PrivacyShutdownStore";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -36,35 +37,6 @@ function createRequestedMicrophoneState() {
 }
 
 /**
- * A store containing whether the current page is visible or not.
- */
-export const visibilityStore = readable(document.visibilityState === 'visible', function start(set) {
-    const onVisibilityChange = () => {
-        set(document.visibilityState === 'visible');
-    };
-
-    document.addEventListener('visibilitychange', onVisibilityChange);
-
-    return function stop() {
-        document.removeEventListener('visibilitychange', onVisibilityChange);
-    };
-});
-
-/**
- * A store that contains whether the game overlay is shown or not.
- * Typically, the overlay is hidden when entering Jitsi meet.
- */
-function createGameOverlayVisibilityStore() {
-    const { subscribe, set, update } = writable(false);
-
-    return {
-        subscribe,
-        showGameOverlay: () => set(true),
-        hideGameOverlay: () => set(false),
-    };
-}
-
-/**
  * A store that contains whether the EnableCameraScene is shown or not.
  */
 function createEnableCameraSceneVisibilityStore() {
@@ -79,43 +51,7 @@ function createEnableCameraSceneVisibilityStore() {
 
 export const requestedCameraState = createRequestedCameraState();
 export const requestedMicrophoneState = createRequestedMicrophoneState();
-export const gameOverlayVisibilityStore = createGameOverlayVisibilityStore();
 export const enableCameraSceneVisibilityStore = createEnableCameraSceneVisibilityStore();
-
-/**
- * A store that contains "true" if the webcam should be stopped for privacy reasons - i.e. if the the user left the the page while not in a discussion.
- */
-function createPrivacyShutdownStore() {
-    let privacyEnabled = false;
-
-    const { subscribe, set, update } = writable(privacyEnabled);
-
-    visibilityStore.subscribe((isVisible) => {
-        if (!isVisible && get(peerStore).size === 0) {
-            privacyEnabled = true;
-            set(true);
-        }
-        if (isVisible) {
-            privacyEnabled = false;
-            set(false);
-        }
-    });
-
-    peerStore.subscribe((peers) => {
-        if (peers.size === 0 && get(visibilityStore) === false) {
-            privacyEnabled = true;
-            set(true);
-        }
-    });
-
-
-    return {
-        subscribe,
-    };
-}
-
-export const privacyShutdownStore = createPrivacyShutdownStore();
-
 
 /**
  * A store containing whether the webcam was enabled in the last 10 seconds

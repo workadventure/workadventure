@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <script src="http://play.workadventure.localhost/iframe_api.js"></script>
+    </head>
+    <body>
+    	<script>
+    		WA.room.getCurrentRoom().then((room) => {
+                console.log('id : ', room.id);
+                console.log('map : ', room.map);
+                console.log('mapUrl : ', room.mapUrl);
+                console.log('startLayer : ', room.startLayer);
+            })
+    	</script>
+    </body>
+</html>
