@@ -11,8 +11,8 @@ class ScriptUtils {
 
     }
 
-    public openCoWebsite(url: string, base: string) {
-           coWebsiteManager.loadCoWebsite(url, base);
+    public openCoWebsite(url: string, base: string, allowApi: boolean, allowPolicy: string) {
+           coWebsiteManager.loadCoWebsite(url, base, allowApi, allowPolicy);
     }
 
     public closeCoWebSite(){

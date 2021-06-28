@@ -114,7 +114,7 @@ class IframeListener {
                     this._loadSoundStream.next(payload.data);
                 }
                 else if (payload.type === 'openCoWebSite' && isOpenCoWebsite(payload.data)) {
-                    scriptUtils.openCoWebsite(payload.data.url, foundSrc);
+                    scriptUtils.openCoWebsite(payload.data.url, foundSrc, payload.data.allowApi, payload.data.allowPolicy);
                 }
 
                 else if (payload.type === 'closeCoWebSite') {

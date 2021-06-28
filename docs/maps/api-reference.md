@@ -190,11 +190,11 @@ WA.goToPage('https://www.wikipedia.org/');
 ### Opening/closing a web page in an iFrame
 
 ```
-openCoWebSite(url: string): void
+openCoWebSite(url : string, allowApi: boolean = false, allowPolicy: string = "") : void
 closeCoWebSite(): void
 ```
 
-Opens the webpage at "url" in an iFrame (on the right side of the screen) or close that iFrame.
+Opens the webpage at "url" in an iFrame (on the right side of the screen) or close that iFrame. `allowApi` allow the webpage to use the "IFrame API" and execute script. `allowPolicy` grant additional access rights to the webpage.
 
 Example:
 
