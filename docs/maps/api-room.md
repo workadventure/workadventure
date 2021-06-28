@@ -118,6 +118,14 @@ WA.room.getCurrentUser().then((user) => {
 WA.room.changeTile(tiles: TileDescriptor[]): void
 ```
 Replace the tile at the `x` and `y` coordinates in the layer named `layer` by the tile with the id `tile`.
+
+If `tile` is a string, it's not the id of the tile but the value of the property `name`.
+<div class="row">
+    <div class="col">
+        <img src="https://workadventu.re/img/docs/nameIndexProperty.png" class="figure-img img-fluid rounded" alt="" />
+    </div>
+</div>
+
 `TileDescriptor` has the following attributes : 
 * **x (number) :** The coordinate x of the tile that you want to replace.
 * **y (number) :** The coordinate y of the tile that you want to replace.
@@ -125,6 +133,7 @@ Replace the tile at the `x` and `y` coordinates in the layer named `layer` by th
 * **layer (string) :** The name of the layer where the tile will be placed.
 
 **Important !** : If you use `tile` as a number, be sure to add the `firstgid` of the tileset of the tile that you want to the id of the tile in Tiled Editor.
+
 
 Example : 
 ```javascript

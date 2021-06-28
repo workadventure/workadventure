@@ -13,8 +13,9 @@ export class GameMap {
     private key: number | undefined;
     private lastProperties = new Map<string, string | boolean | number>();
     private callbacks = new Map<string, Array<PropertyChangeCallback>>();
+    private tileNameMap = new Map<string, number>();
 
-    private tileSetPropertyMap: { [tile_index: number]: Array<ITiledMapLayerProperty> } = {}
+    private tileSetPropertyMap: { [tile_index: number]: Array<ITiledMapLayerProperty> } = {};
     public readonly flatLayers: ITiledMapLayer[];
     public readonly phaserLayers: TilemapLayer[] = [];
 
@@ -36,6 +37,9 @@ export class GameMap {
                 if (tile.properties) {
                     this.tileSetPropertyMap[tileset.firstgid + tile.id] = tile.properties
                     tile.properties.forEach(prop => {
+                        if (prop.name == 'name' && typeof prop.value == "string") {
+                            this.tileNameMap.set(prop.value, tileset.firstgid + tile.id);
+                        }
                         if (prop.name == "exitUrl" && typeof prop.value == "string") {
                             this.exitUrls.push(prop.value);
                         }
@@ -130,8 +134,8 @@ export class GameMap {
         return this.map;
     }
 
-    public getTilesetProperties(): { [tile_index: number]: Array<ITiledMapLayerProperty> } {
-        return this.tileSetPropertyMap;
+    private getTileProperty(index: number): Array<ITiledMapLayerProperty> {
+        return this.tileSetPropertyMap[index];
     }
 
     private trigger(propName: string, oldValue: string | number | boolean | undefined, newValue: string | number | boolean | undefined, allProps: Map<string, string | boolean | number>) {
@@ -169,13 +173,47 @@ export class GameMap {
         }
     }
 
-    public putTileInFlatLayer(index: number, x: number, y: number, layer: string): void {
+    private putTileInFlatLayer(index: number, x: number, y: number, layer: string): void {
         const fLayer = this.findLayer(layer);
-        if (fLayer?.type !== 'tilelayer') {
+        if ( fLayer == undefined ) {
+            console.error("The layer that you want to change doesn't exist.");
+            return;
+        }
+        if (fLayer.type !== 'tilelayer') {
+            console.error("The layer that you want to change is not a tilelayer. Tile can only be put in tilelayer.");
             return;
         }
         // @ts-ignore
         fLayer.data[x+y*fLayer.height] = index;
+    }
+
+    public putTile(tile: string | number, x: number, y: number, layer: string): void {
+        const phaserLayer = this.findPhaserLayer(layer);
+        if ( phaserLayer ) {
+            const tileIndex = this.getIndexForTileType(tile);
+            if ( tileIndex !== undefined ) {
+                this.putTileInFlatLayer(tileIndex, x, y, layer);
+                const phaserTile = phaserLayer.putTileAt(tileIndex, x, y);
+                for (const property of this.getTileProperty(tileIndex)) {
+                    if ( property.name === "collides" ) {
+                        phaserTile.setCollision(true);
+                    }
+                }
+            }
+            else {
+                console.error("The tile that you want to place doesn't exist.");
+            }
+        }
+        else {
+            console.error("The layer that you want to change is not a tilelayer. Tile can only be put in tilelayer.");
+        }
+    }
+
+    private getIndexForTileType(tile: string | number): number | undefined {
+        if (typeof tile == "number") {
+            return tile;
+        }
+        return this.tileNameMap.get(tile);
     }
 
 }

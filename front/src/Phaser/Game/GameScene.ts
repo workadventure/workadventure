@@ -954,19 +954,7 @@ ${escapedMessage}
         }));
         this.iframeSubscriptionList.push(iframeListener.changeTileStream.subscribe((eventTiles) => {
             for (const eventTile of eventTiles) {
-                const layer = this.gameMap.findPhaserLayer(eventTile.layer);
-                if ( layer ) {
-                    const tileIndex = this.getIndexForTileType(eventTile.tile);
-                    if ( tileIndex ) {
-                        this.gameMap.putTileInFlatLayer(tileIndex, eventTile.x, eventTile.y, eventTile.layer);
-                        const tile = layer.putTileAt(tileIndex, eventTile.x, eventTile.y);
-                        for (const property of this.gameMap.getTilesetProperties()[tileIndex]) {
-                            if ( property.name === "collides" ) {
-                                tile.setCollision(true);
-                            }
-                        }
-                    }
-                }
+                this.gameMap.putTile(eventTile.tile, eventTile.x, eventTile.y, eventTile.layer);
             }
         }))
 
@@ -995,22 +983,6 @@ ${escapedMessage}
         }
         phaserLayer.setVisible(visible);
         this.dirty = true;
-    }
-
-    private getIndexForTileType(tileType: string | number): number | null {
-        if (typeof tileType == "number") {
-            return tileType;
-        }
-        for (const tileset of this.mapFile.tilesets) {
-            if (tileset.tiles) {
-                for (const tilesetTile of tileset.tiles) {
-                    if (tilesetTile.type == tileType) {
-                        return tileset.firstgid + tilesetTile.id
-                    }
-                }
-            }
-        }
-        return null
     }
 
     private getMapDirUrl(): string {

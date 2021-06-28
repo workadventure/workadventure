@@ -193,8 +193,6 @@ class IframeListener {
                         this._unregisterMenuCommandStream.next(data);
                     })
                     handleMenuItemRegistrationEvent(payload.data)
-                } else if (payload.type == "registerMenuCommand" && isMenuItemRegisterEvent(payload.data)) {
-                    this._registerMenuCommandStream.next(payload.data.menutItem)
                 } else if (payload.type == "changeTile" && isChangeTileEvent(payload.data)) {
                     this._changeTileStream.next(payload.data);
                 }
