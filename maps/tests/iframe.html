@@ -1,22 +1,31 @@
 <!doctype html>
 <html lang="en">
     <head>
-        <script src="http://play.workadventure.localhost/iframe_api.js"></script>
+
+        <script>
+            var script = document.createElement('script');
+            script.setAttribute('src', document.referrer + 'iframe_api.js');
+            script.defer = false;
+            script.async = false;
+            document.head.appendChild(script);
+        </script>
     </head>
     <body>
         <button id="sendchat">Send chat message</button>
         <script>
             document.getElementById('sendchat').onclick = () => {
-                WA.sendChatMessage('Hello world!', 'Mr ROBOT');
+                WA.chat.sendChatMessage('Hello world!', 'Mr ROBOT');
             }
         </script>
         <div id="chatSent"></div>
         <script>
-            WA.onChatMessage((message => {
-                const chatDiv = document.createElement('p');
-                chatDiv.innerText = message;
-                document.getElementById('chatSent').append(chatDiv);
-            }));
+            window.addEventListener('load', () => {
+                WA.chat.onChatMessage((message => {
+                    const chatDiv = document.createElement('p');
+                    chatDiv.innerText = message;
+                    document.getElementById('chatSent').append(chatDiv);
+                }));
+            })
         </script>
     </body>
 </html>
