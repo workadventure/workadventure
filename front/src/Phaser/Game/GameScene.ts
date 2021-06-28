@@ -161,6 +161,7 @@ export class GameScene extends DirtyScene {
     private createPromiseResolve!: (value?: void | PromiseLike<void>) => void;
     private iframeSubscriptionList!: Array<Subscription>;
     private peerStoreUnsubscribe!: () => void;
+    private biggestAvailableAreaStoreUnsubscribe!: () => void;
     MapUrlFile: string;
     RoomId: string;
     instance: string;
@@ -498,16 +499,10 @@ export class GameScene extends DirtyScene {
 
         this.openChatIcon = new OpenChatIcon(this, 2, this.game.renderer.height - 2)
 
-        // FIXME: change this to use the UserInputManager class for input
-        // FIXME: Comment this feature because when user write M key in report input, the layout change.
-        /*this.input.keyboard.on('keyup-M', () => {
-            this.switchLayoutMode();
-        });*/
-
         this.reposition();
 
         // From now, this game scene will be notified of reposition events
-        biggestAvailableAreaStore.subscribe((box) => this.updateCameraOffset(box));
+        this.biggestAvailableAreaStoreUnsubscribe = biggestAvailableAreaStore.subscribe((box) => this.updateCameraOffset(box));
 
         this.triggerOnMapLayerPropertyChange();
         this.listenToIframeEvents();
@@ -1035,6 +1030,7 @@ ${escapedMessage}
         this.pinchManager?.destroy();
         this.emoteManager.destroy();
         this.peerStoreUnsubscribe();
+        this.biggestAvailableAreaStoreUnsubscribe();
 
         mediaManager.hideGameOverlay();
 
