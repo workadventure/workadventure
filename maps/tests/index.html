@@ -4,7 +4,7 @@
     </head>
     <body>
         <label>Base test URL:</label>
-        <input id="baseurl" type="text" value="http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/" />
+        <input id="baseurl" type="text" value="" />
         <table>
             <tr>
                 <th>Result</th>
@@ -166,6 +166,21 @@
 
         <script>
             const baseInput = document.getElementById('baseurl');
+
+            let host = window.location.host;
+            let playHost;
+            if (host.startsWith('maps-')) {
+                playHost = 'play-'+host.substr(5);
+            } else if (host.startsWith('maps.')) {
+                playHost = 'play.'+host.substr(5);
+            } else {
+                playHost = 'localhost';
+            }
+
+            let completeUrl = window.location.protocol + '//' + playHost + '/_/global/' + host + window.location.pathname;
+
+            baseInput.value = completeUrl;
+
             baseInput.addEventListener('change', init);
 
             function init() {
