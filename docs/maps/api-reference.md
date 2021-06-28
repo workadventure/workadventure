@@ -194,7 +194,7 @@ openCoWebSite(url : string, allowApi: boolean = false, allowPolicy: string = "")
 closeCoWebSite(): void
 ```
 
-Opens the webpage at "url" in an iFrame (on the right side of the screen) or close that iFrame. `allowApi` allow the webpage to use the "IFrame API" and execute script. `allowPolicy` grant additional access rights to the webpage.
+Opens the webpage at "url" in an iFrame (on the right side of the screen) or close that iFrame. `allowApi` allows the webpage to use the "IFrame API" and execute script (it is equivalent to putting the `openWebsiteAllowApi` property in the map). `allowPolicy` grants additional access rights to the iFrame. The `allowPolicy` parameter is turned into an [`allow` feature policy in the iFrame](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#attr-allow).
 
 Example:
 
