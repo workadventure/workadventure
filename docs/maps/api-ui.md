@@ -93,7 +93,7 @@ WA.ui.registerMenuCommand("test", () => {
 ### Awaiting User Confirmation (with space bar)
 
 ```typescript
-triggerMessage(message: string): TriggerMessage
+triggerMessage(message: string, callback: ()=>void): TriggerMessage
 ```
 
 Displays a message at the bottom of the screen (that will disappear when space bar is pressed).
