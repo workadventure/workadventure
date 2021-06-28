@@ -1,12 +1,17 @@
-import * as SimplePeerNamespace from "simple-peer";
+import type * as SimplePeerNamespace from "simple-peer";
 import {mediaManager} from "./MediaManager";
 import {STUN_SERVER, TURN_PASSWORD, TURN_SERVER, TURN_USER} from "../Enum/EnvironmentVariable";
-import {RoomConnection} from "../Connexion/RoomConnection";
+import type {RoomConnection} from "../Connexion/RoomConnection";
 import {blackListManager} from "./BlackListManager";
-import {Subscription} from "rxjs";
-import {UserSimplePeerInterface} from "./SimplePeer";
+import type {Subscription} from "rxjs";
+import type {UserSimplePeerInterface} from "./SimplePeer";
+import {get, readable, Readable} from "svelte/store";
+import {obtainedMediaConstraintStore} from "../Stores/MediaStore";
+import {discussionManager} from "./DiscussionManager";
 
 const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
+
+export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
 export const MESSAGE_TYPE_CONSTRAINT = 'constraint';
 export const MESSAGE_TYPE_MESSAGE = 'message';
@@ -20,15 +25,18 @@ export class VideoPeer extends Peer {
     public _connected: boolean = false;
     private remoteStream!: MediaStream;
     private blocked: boolean = false;
-    private userId: number;
-    private userName: string;
+    public readonly userId: number;
+    public readonly uniqueId: string;
     private onBlockSubscribe: Subscription;
     private onUnBlockSubscribe: Subscription;
+    public readonly streamStore: Readable<MediaStream | null>;
+    public readonly statusStore: Readable<PeerStatus>;
+    public readonly constraintsStore: Readable<MediaStreamConstraints|null>;
 
-    constructor(public user: UserSimplePeerInterface, initiator: boolean, private connection: RoomConnection) {
+    constructor(public user: UserSimplePeerInterface, initiator: boolean, public readonly userName: string, private connection: RoomConnection, localStream: MediaStream | null) {
         super({
             initiator: initiator ? initiator : false,
-            reconnectTimer: 10000,
+            //reconnectTimer: 10000,
             config: {
                 iceServers: [
                     {
@@ -44,7 +52,68 @@ export class VideoPeer extends Peer {
         });
 
         this.userId = user.userId;
-        this.userName = user.name || '';
+        this.uniqueId = 'video_'+this.userId;
+
+        this.streamStore = readable<MediaStream|null>(null, (set) => {
+            const onStream = (stream: MediaStream|null) => {
+                set(stream);
+            };
+            const onData = (chunk: Buffer) => {
+                this.on('data',  (chunk: Buffer) => {
+                    const message = JSON.parse(chunk.toString('utf8'));
+                    if (message.type === MESSAGE_TYPE_CONSTRAINT) {
+                        if (!message.video) {
+                            set(null);
+                        }
+                    }
+                });
+            }
+
+            this.on('stream', onStream);
+            this.on('data', onData);
+
+            return () => {
+                this.off('stream', onStream);
+                this.off('data', onData);
+            };
+        });
+
+        this.constraintsStore = readable<MediaStreamConstraints|null>(null, (set) => {
+            const onData = (chunk: Buffer) => {
+                const message = JSON.parse(chunk.toString('utf8'));
+                if(message.type === MESSAGE_TYPE_CONSTRAINT) {
+                    set(message);
+                }
+            }
+
+            this.on('data', onData);
+
+            return () => {
+                this.off('data', onData);
+            };
+        });
+
+        this.statusStore = readable<PeerStatus>("connecting", (set) => {
+            const onConnect = () => {
+                set('connected');
+            };
+            const onError = () => {
+                set('error');
+            };
+            const onClose = () => {
+                set('closed');
+            };
+
+            this.on('connect', onConnect);
+            this.on('error', onError);
+            this.on('close', onClose);
+
+            return () => {
+                this.off('connect', onConnect);
+                this.off('error', onError);
+                this.off('close', onClose);
+            };
+        });
 
         //start listen signal for the peer connection
         this.on('signal', (data: unknown) => {
@@ -67,8 +136,6 @@ export class VideoPeer extends Peer {
 
         this.on('connect', () => {
             this._connected = true;
-            mediaManager.isConnected("" + this.userId);
-            console.info(`connect => ${this.userId}`);
         });
 
         this.on('data',  (chunk: Buffer) => {
@@ -105,7 +172,7 @@ export class VideoPeer extends Peer {
             this._onFinish();
         });
 
-        this.pushVideoToRemoteUser();
+        this.pushVideoToRemoteUser(localStream);
         this.onBlockSubscribe = blackListManager.onBlockStream.subscribe((userId) => {
             if (userId === this.userId) {
                 this.toggleRemoteStream(false);
@@ -150,7 +217,6 @@ export class VideoPeer extends Peer {
             if (blackListManager.isBlackListed(this.userId) || this.blocked) {
                 this.toggleRemoteStream(false);
             }
-            mediaManager.addStreamRemoteVideo("" + this.userId, stream);
         }catch (err){
             console.error(err);
         }
@@ -167,7 +233,7 @@ export class VideoPeer extends Peer {
             }
             this.onBlockSubscribe.unsubscribe();
             this.onUnBlockSubscribe.unsubscribe();
-            mediaManager.removeActiveVideo("" + this.userId);
+            discussionManager.removeParticipant(this.userId);
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
             super.destroy(error);
@@ -188,10 +254,9 @@ export class VideoPeer extends Peer {
         }
     }
 
-    private pushVideoToRemoteUser() {
+    private pushVideoToRemoteUser(localStream: MediaStream | null) {
         try {
-            const localStream: MediaStream | null = mediaManager.localStream;
-            this.write(new Buffer(JSON.stringify({type: MESSAGE_TYPE_CONSTRAINT, ...mediaManager.constraintsMedia})));
+            this.write(new Buffer(JSON.stringify({type: MESSAGE_TYPE_CONSTRAINT, ...get(obtainedMediaConstraintStore)})));
 
             if(!localStream){
                 return;

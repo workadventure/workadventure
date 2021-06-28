@@ -1,9 +1,9 @@
-import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
-import {PositionDispatcher} from "./PositionDispatcher";
-import {ViewportInterface} from "_Model/Websocket/ViewportMessage";
-import {extractDataFromPrivateRoomId, extractRoomSlugPublicRoomId, isRoomAnonymous} from "./RoomIdentifier";
-import {arrayIntersect} from "../Services/ArrayHelper";
-import {ZoneEventListener} from "_Model/Zone";
+import { ExSocketInterface } from "_Model/Websocket/ExSocketInterface";
+import { PositionDispatcher } from "./PositionDispatcher";
+import { ViewportInterface } from "_Model/Websocket/ViewportMessage";
+import { extractDataFromPrivateRoomId, extractRoomSlugPublicRoomId, isRoomAnonymous } from "./RoomIdentifier";
+import { arrayIntersect } from "../Services/ArrayHelper";
+import { ZoneEventListener } from "_Model/Zone";
 
 export enum GameRoomPolicyTypes {
     ANONYMUS_POLICY = 1,
@@ -13,24 +13,23 @@ export enum GameRoomPolicyTypes {
 
 export class PusherRoom {
     private readonly positionNotifier: PositionDispatcher;
-    public readonly anonymous: boolean;
+    public readonly public: boolean;
     public tags: string[];
     public policyType: GameRoomPolicyTypes;
     public readonly roomSlug: string;
-    public readonly worldSlug: string = '';
-    public readonly organizationSlug: string = '';
+    public readonly worldSlug: string = "";
+    public readonly organizationSlug: string = "";
+    private versionNumber: number = 1;
 
-    constructor(public readonly roomId: string,
-                private socketListener: ZoneEventListener)
-    {
-        this.anonymous = isRoomAnonymous(roomId);
+    constructor(public readonly roomId: string, private socketListener: ZoneEventListener) {
+        this.public = isRoomAnonymous(roomId);
         this.tags = [];
         this.policyType = GameRoomPolicyTypes.ANONYMUS_POLICY;
 
-        if (this.anonymous) {
+        if (this.public) {
             this.roomSlug = extractRoomSlugPublicRoomId(this.roomId);
         } else {
-            const {organizationSlug, worldSlug, roomSlug} = extractDataFromPrivateRoomId(this.roomId);
+            const { organizationSlug, worldSlug, roomSlug } = extractDataFromPrivateRoomId(this.roomId);
             this.roomSlug = roomSlug;
             this.organizationSlug = organizationSlug;
             this.worldSlug = worldSlug;
@@ -40,11 +39,11 @@ export class PusherRoom {
         this.positionNotifier = new PositionDispatcher(this.roomId, 320, 320, this.socketListener);
     }
 
-    public setViewport(socket : ExSocketInterface, viewport: ViewportInterface): void {
+    public setViewport(socket: ExSocketInterface, viewport: ViewportInterface): void {
         this.positionNotifier.setViewport(socket, viewport);
     }
 
-    public leave(socket : ExSocketInterface){
+    public leave(socket: ExSocketInterface) {
         this.positionNotifier.removeViewport(socket);
     }
 
@@ -54,5 +53,14 @@ export class PusherRoom {
 
     public isEmpty(): boolean {
         return this.positionNotifier.isEmpty();
+    }
+
+    public needsUpdate(versionNumber: number): boolean {
+        if (this.versionNumber < versionNumber) {
+            this.versionNumber = versionNumber;
+            return true;
+        } else {
+            return false;
+        }
     }
 }

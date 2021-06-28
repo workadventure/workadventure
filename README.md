@@ -1,4 +1,4 @@
-![](https://github.com/thecodingmachine/workadventure/workflows/Continuous%20Integration/badge.svg) [![Discord](https://img.shields.io/discord/821338762134290432?label=Discord)](https://discord.gg/JVVhXzcE)
+![](https://github.com/thecodingmachine/workadventure/workflows/Continuous%20Integration/badge.svg) [![Discord](https://img.shields.io/discord/821338762134290432?label=Discord)](https://discord.gg/YGtngdh9gt)
 
 ![WorkAdventure landscape image](README-INTRO.jpg)
 
@@ -20,7 +20,7 @@ Install Docker.
 Run:
 
 ```
-docker-compose up
+docker-compose up -d
 ```
 
 The environment will start.

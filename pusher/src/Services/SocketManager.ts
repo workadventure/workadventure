@@ -1,5 +1,5 @@
-import {PusherRoom} from "../Model/PusherRoom";
-import {CharacterLayer, ExSocketInterface} from "../Model/Websocket/ExSocketInterface";
+import { PusherRoom } from "../Model/PusherRoom";
+import { CharacterLayer, ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
 import {
     GroupDeleteMessage,
     ItemEventMessage,
@@ -20,25 +20,32 @@ import {
     CharacterLayerMessage,
     PusherToBackMessage,
     WorldFullMessage,
+    WorldConnexionMessage,
     AdminPusherToBackMessage,
     ServerToAdminClientMessage,
-    UserJoinedRoomMessage, UserLeftRoomMessage, AdminMessage, BanMessage
+    EmoteEventMessage,
+    UserJoinedRoomMessage,
+    UserLeftRoomMessage,
+    AdminMessage,
+    BanMessage,
+    RefreshRoomMessage,
+    EmotePromptMessage,
 } from "../Messages/generated/messages_pb";
-import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
-import {JITSI_ISS, SECRET_JITSI_KEY} from "../Enum/EnvironmentVariable";
-import {adminApi, CharacterTexture} from "./AdminApi";
-import {emitInBatch} from "./IoSocketHelpers";
+import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
+import { JITSI_ISS, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
+import { adminApi, CharacterTexture } from "./AdminApi";
+import { emitInBatch } from "./IoSocketHelpers";
 import Jwt from "jsonwebtoken";
-import {JITSI_URL} from "../Enum/EnvironmentVariable";
-import {clientEventsEmitter} from "./ClientEventsEmitter";
-import {gaugeManager} from "./GaugeManager";
-import {apiClientRepository} from "./ApiClientRepository";
-import {GroupDescriptor, UserDescriptor, ZoneEventListener} from "_Model/Zone";
+import { JITSI_URL } from "../Enum/EnvironmentVariable";
+import { clientEventsEmitter } from "./ClientEventsEmitter";
+import { gaugeManager } from "./GaugeManager";
+import { apiClientRepository } from "./ApiClientRepository";
+import { GroupDescriptor, UserDescriptor, ZoneEventListener } from "_Model/Zone";
 import Debug from "debug";
-import {ExAdminSocketInterface} from "_Model/Websocket/ExAdminSocketInterface";
-import {WebSocket} from "uWebSockets.js";
+import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
+import { WebSocket } from "uWebSockets.js";
 
-const debug = Debug('socket');
+const debug = Debug("socket");
 
 interface AdminSocketRoomsList {
     [index: string]: number;
@@ -48,13 +55,12 @@ interface AdminSocketUsersList {
 }
 
 export interface AdminSocketData {
-    rooms: AdminSocketRoomsList,
-    users: AdminSocketUsersList,
+    rooms: AdminSocketRoomsList;
+    users: AdminSocketUsersList;
 }
 
 export class SocketManager implements ZoneEventListener {
-    
-    private Worlds: Map<string, PusherRoom> = new Map<string, PusherRoom>();
+    private rooms: Map<string, PusherRoom> = new Map<string, PusherRoom>();
     private sockets: Map<number, ExSocketInterface> = new Map<number, ExSocketInterface>();
 
     constructor() {
@@ -71,46 +77,53 @@ export class SocketManager implements ZoneEventListener {
         const adminRoomStream = apiClient.adminRoom();
         client.adminConnection = adminRoomStream;
 
-        adminRoomStream.on('data', (message: ServerToAdminClientMessage) => {
-            if (message.hasUserjoinedroom()) {
-                const userJoinedRoomMessage = message.getUserjoinedroom() as UserJoinedRoomMessage;
-                if (!client.disconnecting) {
-                    client.send(JSON.stringify({
-                        type: 'MemberJoin',
-                        data: {
-                            uuid: userJoinedRoomMessage.getUuid(),
-                            name: userJoinedRoomMessage.getName(),
-                            ipAddress: userJoinedRoomMessage.getIpaddress(),
-                            roomId: roomId,
-                        }
-                    }));
+        adminRoomStream
+            .on("data", (message: ServerToAdminClientMessage) => {
+                if (message.hasUserjoinedroom()) {
+                    const userJoinedRoomMessage = message.getUserjoinedroom() as UserJoinedRoomMessage;
+                    if (!client.disconnecting) {
+                        client.send(
+                            JSON.stringify({
+                                type: "MemberJoin",
+                                data: {
+                                    uuid: userJoinedRoomMessage.getUuid(),
+                                    name: userJoinedRoomMessage.getName(),
+                                    ipAddress: userJoinedRoomMessage.getIpaddress(),
+                                    roomId: roomId,
+                                },
+                            })
+                        );
+                    }
+                } else if (message.hasUserleftroom()) {
+                    const userLeftRoomMessage = message.getUserleftroom() as UserLeftRoomMessage;
+                    if (!client.disconnecting) {
+                        client.send(
+                            JSON.stringify({
+                                type: "MemberLeave",
+                                data: {
+                                    uuid: userLeftRoomMessage.getUuid(),
+                                },
+                            })
+                        );
+                    }
+                } else {
+                    throw new Error("Unexpected admin message");
                 }
-            } else if (message.hasUserleftroom()) {
-                const userLeftRoomMessage = message.getUserleftroom() as UserLeftRoomMessage;
+            })
+            .on("end", () => {
+                console.warn("Admin connection lost to back server");
+                // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                 if (!client.disconnecting) {
-                    client.send(JSON.stringify({
-                        type: 'MemberLeave',
-                        data: {
-                            uuid: userLeftRoomMessage.getUuid()
-                        }
-                    }));
+                    this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
                 }
-            } else {
-                throw new Error('Unexpected admin message');
-            }
-        }).on('end', () => {
-            console.warn('Admin connection lost to back server');
-            // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
-            if (!client.disconnecting) {
-                this.closeWebsocketConnection(client, 1011, 'Connection lost to back server');
-            }
-            console.log('A user left');
-        }).on('error', (err: Error) => {
-            console.error('Error in connection to back server:', err);
-            if (!client.disconnecting) {
-                this.closeWebsocketConnection(client, 1011, 'Error while connecting to back server');
-            }
-        });
+                console.log("A user left");
+            })
+            .on("error", (err: Error) => {
+                console.error("Error in connection to back server:", err);
+                if (!client.disconnecting) {
+                    this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
+                }
+            });
 
         const message = new AdminPusherToBackMessage();
         message.setSubscribetoroom(roomId);
@@ -118,14 +131,14 @@ export class SocketManager implements ZoneEventListener {
         adminRoomStream.write(message);
     }
 
-    leaveAdminRoom(socket : ExAdminSocketInterface) {
+    leaveAdminRoom(socket: ExAdminSocketInterface) {
         if (socket.adminConnection) {
             socket.adminConnection.end();
         }
     }
 
-    getAdminSocketDataFor(roomId:string): AdminSocketData {
-        throw new Error('Not reimplemented yet');
+    getAdminSocketDataFor(roomId: string): AdminSocketData {
+        throw new Error("Not reimplemented yet");
         /*const data:AdminSocketData = {
             rooms: {},
             users: {},
@@ -145,7 +158,6 @@ export class SocketManager implements ZoneEventListener {
     async handleJoinRoom(client: ExSocketInterface): Promise<void> {
         const viewport = client.viewport;
         try {
-
             const joinRoomMessage = new JoinRoomMessage();
             joinRoomMessage.setUseruuid(client.userUuid);
             joinRoomMessage.setIpaddress(client.IPAddress);
@@ -153,6 +165,11 @@ export class SocketManager implements ZoneEventListener {
             joinRoomMessage.setName(client.name);
             joinRoomMessage.setPositionmessage(ProtobufUtils.toPositionMessage(client.position));
             joinRoomMessage.setTagList(client.tags);
+            if (client.visitCardUrl) {
+                joinRoomMessage.setVisitcardurl(client.visitCardUrl);
+            }
+            joinRoomMessage.setCompanion(client.companion);
+
             for (const characterLayer of client.characterLayers) {
                 const characterLayerMessage = new CharacterLayerMessage();
                 characterLayerMessage.setName(characterLayer.name);
@@ -163,41 +180,49 @@ export class SocketManager implements ZoneEventListener {
                 joinRoomMessage.addCharacterlayer(characterLayerMessage);
             }
 
-
-            console.log('Calling joinRoom')
+            console.log("Calling joinRoom");
             const apiClient = await apiClientRepository.getClient(client.roomId);
             const streamToPusher = apiClient.joinRoom();
             clientEventsEmitter.emitClientJoin(client.userUuid, client.roomId);
 
             client.backConnection = streamToPusher;
 
-            streamToPusher.on('data', (message: ServerToClientMessage) => {
-                if (message.hasRoomjoinedmessage()) {
-                    client.userId = (message.getRoomjoinedmessage() as RoomJoinedMessage).getCurrentuserid();
-                    // TODO: do we need this.sockets anymore?
-                    this.sockets.set(client.userId, client);
+            streamToPusher
+                .on("data", (message: ServerToClientMessage) => {
+                    if (message.hasRoomjoinedmessage()) {
+                        client.userId = (message.getRoomjoinedmessage() as RoomJoinedMessage).getCurrentuserid();
+                        // TODO: do we need this.sockets anymore?
+                        this.sockets.set(client.userId, client);
 
-                    // If this is the first message sent, send back the viewport.
-                    this.handleViewport(client, viewport);
-                }
+                        // If this is the first message sent, send back the viewport.
+                        this.handleViewport(client, viewport);
+                    }
 
-                // Let's pass data over from the back to the client.
-                if (!client.disconnecting) {
-                    client.send(message.serializeBinary().buffer, true);
-                }
-            }).on('end', () => {
-                console.warn('Connection lost to back server');
-                // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
-                if (!client.disconnecting) {
-                    this.closeWebsocketConnection(client, 1011, 'Connection lost to back server');
-                }
-                console.log('A user left');
-            }).on('error', (err: Error) => {
-                console.error('Error in connection to back server:', err);
-                if (!client.disconnecting) {
-                    this.closeWebsocketConnection(client, 1011, 'Error while connecting to back server');
-                }
-            });
+                    if (message.hasRefreshroommessage()) {
+                        const refreshMessage: RefreshRoomMessage =
+                            message.getRefreshroommessage() as unknown as RefreshRoomMessage;
+                        this.refreshRoomData(refreshMessage.getRoomid(), refreshMessage.getVersionnumber());
+                    }
+
+                    // Let's pass data over from the back to the client.
+                    if (!client.disconnecting) {
+                        client.send(message.serializeBinary().buffer, true);
+                    }
+                })
+                .on("end", () => {
+                    console.warn("Connection lost to back server");
+                    // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
+                    if (!client.disconnecting) {
+                        this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
+                    }
+                    console.log("A user left");
+                })
+                .on("error", (err: Error) => {
+                    console.error("Error in connection to back server:", err);
+                    if (!client.disconnecting) {
+                        this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
+                    }
+                });
 
             const pusherToBackMessage = new PusherToBackMessage();
             pusherToBackMessage.setJoinroommessage(joinRoomMessage);
@@ -208,7 +233,7 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    private closeWebsocketConnection(client: ExSocketInterface|ExAdminSocketInterface, code: number, reason: string) {
+    private closeWebsocketConnection(client: ExSocketInterface | ExAdminSocketInterface, code: number, reason: string) {
         client.disconnecting = true;
         //this.leaveRoom(client);
         //client.close();
@@ -219,7 +244,7 @@ export class SocketManager implements ZoneEventListener {
         try {
             client.viewport = viewport;
 
-            const world = this.Worlds.get(client.roomId);
+            const world = this.rooms.get(client.roomId);
             if (!world) {
                 console.error("In SET_VIEWPORT, could not find world with id '", client.roomId, "'");
                 return;
@@ -239,11 +264,18 @@ export class SocketManager implements ZoneEventListener {
 
         const viewport = userMovesMessage.getViewport();
         if (viewport === undefined) {
-            throw new Error('Missing viewport in UserMovesMessage');
+            throw new Error("Missing viewport in UserMovesMessage");
         }
 
         // Now, we need to listen to the correct viewport.
-        this.handleViewport(client, viewport.toObject())
+        this.handleViewport(client, viewport.toObject());
+    }
+
+    onEmote(emoteMessage: EmoteEventMessage, listener: ExSocketInterface): void {
+        const subMessage = new SubMessage();
+        subMessage.setEmoteeventmessage(emoteMessage);
+
+        emitInBatch(listener, subMessage);
     }
 
     // Useless now, will be useful again if we allow editing details in game
@@ -272,10 +304,16 @@ export class SocketManager implements ZoneEventListener {
         try {
             const reportedSocket = this.sockets.get(reportPlayerMessage.getReporteduserid());
             if (!reportedSocket) {
-                throw 'reported socket user not found';
+                throw "reported socket user not found";
             }
             //TODO report user on admin application
-            await adminApi.reportPlayer(reportedSocket.userUuid, reportPlayerMessage.getReportcomment(),  client.userUuid, client.roomId.split('/')[2])
+            //todo: move to back because this fail if the reported player is in another pusher.
+            await adminApi.reportPlayer(
+                reportedSocket.userUuid,
+                reportPlayerMessage.getReportcomment(),
+                client.userUuid,
+                client.roomId.split("/")[2]
+            );
         } catch (e) {
             console.error('An error occurred on "handleReportMessage"');
             console.error(e);
@@ -297,29 +335,30 @@ export class SocketManager implements ZoneEventListener {
     }
 
     private searchClientByIdOrFail(userId: number): ExSocketInterface {
-        const client: ExSocketInterface|undefined = this.sockets.get(userId);
+        const client: ExSocketInterface | undefined = this.sockets.get(userId);
         if (client === undefined) {
             throw new Error("Could not find user with id " + userId);
         }
         return client;
     }
 
-    leaveRoom(socket : ExSocketInterface) {
+    leaveRoom(socket: ExSocketInterface) {
         // leave previous room and world
         try {
             if (socket.roomId) {
                 try {
                     //user leaves room
-                    const room: PusherRoom | undefined = this.Worlds.get(socket.roomId);
+                    const room: PusherRoom | undefined = this.rooms.get(socket.roomId);
                     if (room) {
-                        debug('Leaving room %s.', socket.roomId);
+                        debug("Leaving room %s.", socket.roomId);
+
                         room.leave(socket);
                         if (room.isEmpty()) {
-                            this.Worlds.delete(socket.roomId);
-                            debug('Room %s is empty. Deleting.', socket.roomId);
+                            this.rooms.delete(socket.roomId);
+                            debug("Room %s is empty. Deleting.", socket.roomId);
                         }
                     } else {
-                        console.error('Could not find the GameRoom the user is leaving!');
+                        console.error("Could not find the GameRoom the user is leaving!");
                     }
                     //user leave previous room
                     //Client.leave(Client.roomId);
@@ -327,7 +366,7 @@ export class SocketManager implements ZoneEventListener {
                     //delete Client.roomId;
                     this.sockets.delete(socket.userId);
                     clientEventsEmitter.emitClientLeave(socket.userUuid, socket.roomId);
-                    console.log('A user left (', this.sockets.size, ' connected users)');
+                    console.log("A user left (", this.sockets.size, " connected users)");
                 }
             }
         } finally {
@@ -339,20 +378,28 @@ export class SocketManager implements ZoneEventListener {
 
     async getOrCreateRoom(roomId: string): Promise<PusherRoom> {
         //check and create new world for a room
-        let world = this.Worlds.get(roomId)
-        if(world === undefined){
+        let world = this.rooms.get(roomId);
+        if (world === undefined) {
             world = new PusherRoom(roomId, this);
-            if (!world.anonymous) {
-                const data = await adminApi.fetchMapDetails(world.organizationSlug, world.worldSlug, world.roomSlug)
-                world.tags = data.tags
-                world.policyType = Number(data.policy_type)
+            if (!world.public) {
+                await this.updateRoomWithAdminData(world);
             }
-            this.Worlds.set(roomId, world);
+            this.rooms.set(roomId, world);
         }
-        return Promise.resolve(world)
+        return Promise.resolve(world);
+    }
+
+    public async updateRoomWithAdminData(world: PusherRoom): Promise<void> {
+        const data = await adminApi.fetchMapDetails(world.organizationSlug, world.worldSlug, world.roomSlug);
+        world.tags = data.tags;
+        world.policyType = Number(data.policy_type);
     }
 
     emitPlayGlobalMessage(client: ExSocketInterface, playglobalmessage: PlayGlobalMessage) {
+        if (!client.tags.includes("admin")) {
+            //In case of xss injection, we just kill the connection.
+            throw "Client is not an admin!";
+        }
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setPlayglobalmessage(playglobalmessage);
 
@@ -360,46 +407,50 @@ export class SocketManager implements ZoneEventListener {
     }
 
     public getWorlds(): Map<string, PusherRoom> {
-        return this.Worlds;
+        return this.rooms;
     }
-    
+
     searchClientByUuid(uuid: string): ExSocketInterface | null {
-        for(const socket of this.sockets.values()){
-            if(socket.userUuid === uuid){
+        for (const socket of this.sockets.values()) {
+            if (socket.userUuid === uuid) {
                 return socket;
             }
         }
         return null;
     }
 
-
     public handleQueryJitsiJwtMessage(client: ExSocketInterface, queryJitsiJwtMessage: QueryJitsiJwtMessage) {
         try {
             const room = queryJitsiJwtMessage.getJitsiroom();
             const tag = queryJitsiJwtMessage.getTag(); // FIXME: this is not secure. We should load the JSON for the current room and check rights associated to room instead.
 
-            if (SECRET_JITSI_KEY === '') {
-                throw new Error('You must set the SECRET_JITSI_KEY key to the secret to generate JWT tokens for Jitsi.');
+            if (SECRET_JITSI_KEY === "") {
+                throw new Error(
+                    "You must set the SECRET_JITSI_KEY key to the secret to generate JWT tokens for Jitsi."
+                );
             }
 
             // Let's see if the current client has
             const isAdmin = client.tags.includes(tag);
 
-            const jwt = Jwt.sign({
-                "aud": "jitsi",
-                "iss": JITSI_ISS,
-                "sub": JITSI_URL,
-                "room": room,
-                "moderator": isAdmin
-            }, SECRET_JITSI_KEY, {
-                expiresIn: '1d',
-                algorithm: "HS256",
-                header:
-                    {
-                        "alg": "HS256",
-                        "typ": "JWT"
-                    }
-            });
+            const jwt = Jwt.sign(
+                {
+                    aud: "jitsi",
+                    iss: JITSI_ISS,
+                    sub: JITSI_URL,
+                    room: room,
+                    moderator: isAdmin,
+                },
+                SECRET_JITSI_KEY,
+                {
+                    expiresIn: "1d",
+                    algorithm: "HS256",
+                    header: {
+                        alg: "HS256",
+                        typ: "JWT",
+                    },
+                }
+            );
 
             const sendJitsiJwtMessage = new SendJitsiJwtMessage();
             sendJitsiJwtMessage.setJitsiroom(room);
@@ -410,7 +461,7 @@ export class SocketManager implements ZoneEventListener {
 
             client.send(serverToClientMessage.serializeBinary().buffer, true);
         } catch (e) {
-            console.error('An error occured while generating the Jitsi JWT token: ', e);
+            console.error("An error occured while generating the Jitsi JWT token: ", e);
         }
     }
 
@@ -434,7 +485,7 @@ export class SocketManager implements ZoneEventListener {
         backAdminMessage.setType(type);
         backConnection.sendAdminMessage(backAdminMessage, (error) => {
             if (error !== null) {
-                console.error('Error while sending admin message', error);
+                console.error("Error while sending admin message", error);
             }
         });
     }
@@ -459,7 +510,7 @@ export class SocketManager implements ZoneEventListener {
         banMessage.setType(type);
         backConnection.ban(banMessage, (error) => {
             if (error !== null) {
-                console.error('Error while sending admin message', error);
+                console.error("Error while sending admin message", error);
             }
         });
     }
@@ -467,25 +518,28 @@ export class SocketManager implements ZoneEventListener {
     /**
      * Merges the characterLayers received from the front (as an array of string) with the custom textures from the back.
      */
-    static mergeCharacterLayersAndCustomTextures(characterLayers: string[], memberTextures: CharacterTexture[]): CharacterLayer[] {
+    static mergeCharacterLayersAndCustomTextures(
+        characterLayers: string[],
+        memberTextures: CharacterTexture[]
+    ): CharacterLayer[] {
         const characterLayerObjs: CharacterLayer[] = [];
         for (const characterLayer of characterLayers) {
-            if (characterLayer.startsWith('customCharacterTexture')) {
+            if (characterLayer.startsWith("customCharacterTexture")) {
                 const customCharacterLayerId: number = +characterLayer.substr(22);
                 for (const memberTexture of memberTextures) {
                     if (memberTexture.id == customCharacterLayerId) {
                         characterLayerObjs.push({
                             name: characterLayer,
-                            url: memberTexture.url
-                        })
+                            url: memberTexture.url,
+                        });
                         break;
                     }
                 }
             } else {
                 characterLayerObjs.push({
                     name: characterLayer,
-                    url: undefined
-                })
+                    url: undefined,
+                });
             }
         }
         return characterLayerObjs;
@@ -535,7 +589,7 @@ export class SocketManager implements ZoneEventListener {
 
         emitInBatch(listener, subMessage);
     }
-    
+
     public emitWorldFullMessage(client: WebSocket) {
         const errorMessage = new WorldFullMessage();
 
@@ -543,6 +597,31 @@ export class SocketManager implements ZoneEventListener {
         serverToClientMessage.setWorldfullmessage(errorMessage);
 
         client.send(serverToClientMessage.serializeBinary().buffer, true);
+    }
+
+    public emitConnexionErrorMessage(client: WebSocket, message: string) {
+        const errorMessage = new WorldConnexionMessage();
+        errorMessage.setMessage(message);
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setWorldconnexionmessage(errorMessage);
+
+        client.send(serverToClientMessage.serializeBinary().buffer, true);
+    }
+
+    private refreshRoomData(roomId: string, versionNumber: number): void {
+        const room = this.rooms.get(roomId);
+        //this function is run for every users connected to the room, so we need to make sure the room wasn't already refreshed.
+        if (!room || !room.needsUpdate(versionNumber)) return;
+
+        this.updateRoomWithAdminData(room);
+    }
+
+    handleEmotePromptMessage(client: ExSocketInterface, emoteEventmessage: EmotePromptMessage) {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setEmotepromptmessage(emoteEventmessage);
+
+        client.backConnection.write(pusherToBackMessage);
     }
 }
 

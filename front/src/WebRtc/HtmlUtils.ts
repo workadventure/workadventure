@@ -24,7 +24,7 @@ export class HtmlUtils {
         throw new Error("Cannot find HTML element with id '"+id+"'");
     }
 
-    private static escapeHtml(html: string): string {
+    public static escapeHtml(html: string): string {
         const text = document.createTextNode(html);
         const p = document.createElement('p');
         p.appendChild(text);
@@ -35,7 +35,12 @@ export class HtmlUtils {
         const urlRegex = /(https?:\/\/[^\s]+)/g;
         text = HtmlUtils.escapeHtml(text);
         return text.replace(urlRegex, (url: string) => {
-            return '<a href="' + url + '" target="_blank" style=":visited {color: white}">' + url + '</a>';
+            const link = document.createElement('a');
+            link.href = url;
+            link.target = "_blank";
+            const text = document.createTextNode(url);
+            link.appendChild(text);
+            return link.outerHTML;
         });
     }
 

@@ -37,7 +37,7 @@ services:
       DEBUG_MODE: "$DEBUG_MODE"
       JITSI_URL: $JITSI_URL
       JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
-      API_URL: pusher.${DOMAIN}
+      PUSHER_URL: //pusher.${DOMAIN}
       TURN_SERVER: "${TURN_SERVER}"
       TURN_USER: "${TURN_USER}"
       TURN_PASSWORD: "${TURN_PASSWORD}"

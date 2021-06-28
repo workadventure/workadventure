@@ -1,4 +1,4 @@
-import {Room} from "../Connexion/Room";
+import type {Room} from "../Connexion/Room";
 
 export enum GameConnexionTypes {
     anonymous=1,
@@ -35,7 +35,8 @@ class UrlManager {
     public pushRoomIdToUrl(room:Room): void {
         if (window.location.pathname === room.id) return;
         const hash = window.location.hash;
-        history.pushState({}, 'WorkAdventure', room.id+hash);
+        const search = room.search.toString();
+        history.pushState({}, 'WorkAdventure', room.id+(search?'?'+search:'')+hash);
     }
 
     public getStartLayerNameFromUrl(): string|null {

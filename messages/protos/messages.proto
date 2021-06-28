@@ -36,6 +36,10 @@ message CharacterLayerMessage {
   string name = 2;
 }
 
+message CompanionMessage {
+  string name = 1;
+}
+
 /*********** CLIENT TO SERVER MESSAGES *************/
 
 message PingMessage {
@@ -62,6 +66,15 @@ message ReportPlayerMessage {
   string reportComment = 2;
 }
 
+message EmotePromptMessage {
+    string emote = 2;
+}
+
+message EmoteEventMessage {
+    int32 actorUserId = 1;
+    string emote = 2;
+}
+
 message QueryJitsiJwtMessage {
   string jitsiRoom = 1;
   string tag = 2; // FIXME: rather than reading the tag from the query, we should read it from the current map!
@@ -80,6 +93,7 @@ message ClientToServerMessage {
     StopGlobalMessage stopGlobalMessage = 10;
     ReportPlayerMessage reportPlayerMessage = 11;
     QueryJitsiJwtMessage queryJitsiJwtMessage = 12;
+    EmotePromptMessage emotePromptMessage = 13;
   }
 }
 
@@ -118,6 +132,7 @@ message SubMessage {
     UserJoinedMessage userJoinedMessage = 4;
     UserLeftMessage userLeftMessage = 5;
     ItemEventMessage itemEventMessage = 6;
+    EmoteEventMessage emoteEventMessage = 7;
   }
 }
 
@@ -141,6 +156,8 @@ message UserJoinedMessage {
   string name = 2;
   repeated CharacterLayerMessage characterLayers = 3;
   PositionMessage position = 4;
+  CompanionMessage companion = 5;
+  string visitCardUrl = 6;
 }
 
 message UserLeftMessage {
@@ -202,8 +219,19 @@ message WorldFullWarningMessage{
 message WorldFullWarningToRoomMessage{
     string roomId = 1;
 }
+message RefreshRoomPromptMessage{
+    string roomId = 1;
+}
+message RefreshRoomMessage{
+    string roomId = 1;
+    int32 versionNumber = 2;
+}
 
 message WorldFullMessage{
+}
+
+message WorldConnexionMessage{
+  string message = 2;
 }
 
 message BanUserMessage{
@@ -229,6 +257,9 @@ message ServerToClientMessage {
     AdminRoomMessage adminRoomMessage = 14;
     WorldFullWarningMessage worldFullWarningMessage = 15;
     WorldFullMessage worldFullMessage = 16;
+    RefreshRoomMessage refreshRoomMessage = 17; 
+    WorldConnexionMessage worldConnexionMessage = 18;
+    EmoteEventMessage emoteEventMessage = 19;
   }
 }
 
@@ -243,6 +274,8 @@ message JoinRoomMessage {
   string roomId = 5;
   repeated string tag = 6;
   string IPAddress = 7;
+  CompanionMessage companion = 8;
+  string visitCardUrl = 9;
 }
 
 message UserJoinedZoneMessage {
@@ -251,6 +284,8 @@ message UserJoinedZoneMessage {
   repeated CharacterLayerMessage characterLayers = 3;
   PositionMessage position = 4;
   Zone fromZone = 5;
+  CompanionMessage companion = 6;
+  string visitCardUrl = 7;
 }
 
 message UserLeftZoneMessage {
@@ -297,6 +332,7 @@ message PusherToBackMessage {
     QueryJitsiJwtMessage queryJitsiJwtMessage = 11;
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
+    EmotePromptMessage emotePromptMessage = 14;
   }
 }
 
@@ -314,6 +350,7 @@ message SubToPusherMessage {
     ItemEventMessage itemEventMessage = 6;
     SendUserMessage sendUserMessage = 7;
     BanUserMessage banUserMessage = 8;
+    EmoteEventMessage emoteEventMessage = 9;
   }
 }
 
@@ -395,4 +432,5 @@ service RoomManager {
   rpc ban(BanMessage) returns (EmptyMessage);
   rpc sendAdminMessageToRoom(AdminRoomMessage) returns (EmptyMessage);
   rpc sendWorldFullWarningToRoom(WorldFullWarningToRoomMessage) returns (EmptyMessage);
+  rpc sendRefreshRoomPrompt(RefreshRoomPromptMessage) returns (EmptyMessage);
 }

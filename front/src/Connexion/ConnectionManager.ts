@@ -1,21 +1,30 @@
 import Axios from "axios";
-import {API_URL, START_ROOM_URL} from "../Enum/EnvironmentVariable";
+import {PUSHER_URL, START_ROOM_URL} from "../Enum/EnvironmentVariable";
 import {RoomConnection} from "./RoomConnection";
-import {OnConnectInterface, PositionInterface, ViewportInterface} from "./ConnexionModels";
+import type {OnConnectInterface, PositionInterface, ViewportInterface} from "./ConnexionModels";
 import {GameConnexionTypes, urlManager} from "../Url/UrlManager";
 import {localUserStore} from "./LocalUserStore";
-import {LocalUser} from "./LocalUser";
+import {CharacterTexture, LocalUser} from "./LocalUser";
 import {Room} from "./Room";
-import {Subject} from "rxjs";
-import {ServerToClientMessage} from "../Messages/generated/messages_pb";
 
 
 class ConnectionManager {
     private localUser!:LocalUser;
 
     private connexionType?: GameConnexionTypes
-    
-    public _serverToClientMessageStream:Subject<ServerToClientMessage> = new Subject();
+    private reconnectingTimeout: NodeJS.Timeout|null = null;
+    private _unloading:boolean = false;
+
+    get unloading () {
+        return this._unloading;
+    }
+
+    constructor() {
+        window.addEventListener('beforeunload', () => {
+            this._unloading = true;
+            if (this.reconnectingTimeout) clearTimeout(this.reconnectingTimeout)
+        })
+    }
     /**
      * Tries to login to the node server and return the starting map url to be loaded
      */
@@ -25,7 +34,7 @@ class ConnectionManager {
         this.connexionType = connexionType;
         if(connexionType === GameConnexionTypes.register) {
            const organizationMemberToken = urlManager.getOrganizationToken();
-            const data = await Axios.post(`${API_URL}/register`, {organizationMemberToken}).then(res => res.data);
+            const data = await Axios.post(`${PUSHER_URL}/register`, {organizationMemberToken}).then(res => res.data);
             this.localUser = new LocalUser(data.userUuid, data.authToken, data.textures);
             localUserStore.saveUser(this.localUser);
 
@@ -33,12 +42,12 @@ class ConnectionManager {
             const worldSlug = data.worldSlug;
             const roomSlug = data.roomSlug;
 
-            const room = new Room('/@/'+organizationSlug+'/'+worldSlug+'/'+roomSlug + window.location.hash);
+            const room = new Room('/@/'+organizationSlug+'/'+worldSlug+'/'+roomSlug + window.location.search + window.location.hash);
             urlManager.pushRoomIdToUrl(room);
             return Promise.resolve(room);
         } else if (connexionType === GameConnexionTypes.organization || connexionType === GameConnexionTypes.anonymous || connexionType === GameConnexionTypes.empty) {
-            const localUser = localUserStore.getLocalUser();
 
+            let localUser = localUserStore.getLocalUser();
             if (localUser && localUser.jwtToken && localUser.uuid && localUser.textures) {
                 this.localUser = localUser;
                 try {
@@ -48,27 +57,53 @@ class ConnectionManager {
                     console.error('JWT token invalid. Did it expire? Login anonymously instead.');
                     await this.anonymousLogin();
                 }
-            } else {
+            }else{
                 await this.anonymousLogin();
             }
-            let roomId: string
+
+            localUser = localUserStore.getLocalUser();
+            if(!localUser){
+                throw "Error to store local user data";
+            }
+
+            let roomId: string;
             if (connexionType === GameConnexionTypes.empty) {
                 roomId = START_ROOM_URL;
             } else {
-                roomId = window.location.pathname + window.location.hash;
+                roomId = window.location.pathname + window.location.search + window.location.hash;
             }
-            return Promise.resolve(new Room(roomId));
+
+            //get detail map for anonymous login and set texture in local storage
+            const room = new Room(roomId);
+            const mapDetail = await room.getMapDetail();
+            if(mapDetail.textures != undefined && mapDetail.textures.length > 0) {
+                //check if texture was changed
+                if(localUser.textures.length === 0){
+                    localUser.textures = mapDetail.textures;
+                }else{
+                    mapDetail.textures.forEach((newTexture) => {
+                        const alreadyExistTexture = localUser?.textures.find((c) => newTexture.id === c.id);
+                        if(localUser?.textures.findIndex((c) => newTexture.id === c.id) !== -1){
+                            return;
+                        }
+                        localUser?.textures.push(newTexture)
+                    });
+                }
+                this.localUser = localUser;
+                localUserStore.saveUser(localUser);
+            }
+            return Promise.resolve(room);
         }
 
-        return Promise.reject('Invalid URL');
+        return Promise.reject(new Error('Invalid URL'));
     }
 
     private async verifyToken(token: string): Promise<void> {
-        await Axios.get(`${API_URL}/verify`, {params: {token}});
+        await Axios.get(`${PUSHER_URL}/verify`, {params: {token}});
     }
 
     public async anonymousLogin(isBenchmark: boolean = false): Promise<void> {
-        const data = await Axios.post(`${API_URL}/anonymLogin`).then(res => res.data);
+        const data = await Axios.post(`${PUSHER_URL}/anonymLogin`).then(res => res.data);
         this.localUser = new LocalUser(data.userUuid, data.authToken, []);
         if (!isBenchmark) { // In benchmark, we don't have a local storage.
             localUserStore.saveUser(this.localUser);
@@ -79,9 +114,9 @@ class ConnectionManager {
         this.localUser = new LocalUser('', 'test', []);
     }
 
-    public connectToRoomSocket(roomId: string, name: string, characterLayers: string[], position: PositionInterface, viewport: ViewportInterface): Promise<OnConnectInterface> {
+    public connectToRoomSocket(roomId: string, name: string, characterLayers: string[], position: PositionInterface, viewport: ViewportInterface, companion: string|null): Promise<OnConnectInterface> {
         return new Promise<OnConnectInterface>((resolve, reject) => {
-            const connection = new RoomConnection(this.localUser.jwtToken, roomId, name, characterLayers, position, viewport);
+            const connection = new RoomConnection(this.localUser.jwtToken, roomId, name, characterLayers, position, viewport, companion);
             connection.onConnectError((error: object) => {
                 console.log('An error occurred while connecting to socket server. Retrying');
                 reject(error);
@@ -99,10 +134,10 @@ class ConnectionManager {
         }).catch((err) => {
             // Let's retry in 4-6 seconds
             return new Promise<OnConnectInterface>((resolve, reject) => {
-                setTimeout(() => {
+                this.reconnectingTimeout = setTimeout(() => {
                     //todo: allow a way to break recursion?
                     //todo: find a way to avoid recursive function. Otherwise, the call stack will grow indefinitely.
-                    this.connectToRoomSocket(roomId, name, characterLayers, position, viewport).then((connection) => resolve(connection));
+                    this.connectToRoomSocket(roomId, name, characterLayers, position, viewport, companion).then((connection) => resolve(connection));
                 }, 4000 + Math.floor(Math.random() * 2000) );
             });
         });

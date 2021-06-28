@@ -1,19 +1,16 @@
 import {GameScene} from "./GameScene";
 import {connectionManager} from "../../Connexion/ConnectionManager";
-import {Room} from "../../Connexion/Room";
+import type {Room} from "../../Connexion/Room";
 import {MenuScene, MenuSceneName} from "../Menu/MenuScene";
-import {HelpCameraSettingsScene, HelpCameraSettingsSceneName} from "../Menu/HelpCameraSettingsScene";
 import {LoginSceneName} from "../Login/LoginScene";
 import {SelectCharacterSceneName} from "../Login/SelectCharacterScene";
 import {EnableCameraSceneName} from "../Login/EnableCameraScene";
 import {localUserStore} from "../../Connexion/LocalUserStore";
+import {get} from "svelte/store";
+import {requestedCameraState, requestedMicrophoneState} from "../../Stores/MediaStore";
+import {helpCameraSettingsVisibleStore} from "../../Stores/HelpCameraSettingsStore";
 
-export interface HasMovedEvent {
-    direction: string;
-    moving: boolean;
-    x: number;
-    y: number;
-}
+
 
 /**
  * This class should be responsible for any scene starting/stopping
@@ -21,21 +18,23 @@ export interface HasMovedEvent {
 export class GameManager {
     private playerName: string|null;
     private characterLayers: string[]|null;
+    private companion: string|null;
     private startRoom!:Room;
     currentGameSceneName: string|null = null;
-    
+
     constructor() {
         this.playerName = localUserStore.getName();
         this.characterLayers = localUserStore.getCharacterLayers();
+        this.companion = localUserStore.getCompanion();
     }
 
     public async init(scenePlugin: Phaser.Scenes.ScenePlugin): Promise<string> {
         this.startRoom = await connectionManager.initGameConnexion();
         await this.loadMap(this.startRoom, scenePlugin);
-        
+
         if (!this.playerName) {
             return LoginSceneName;
-        } else if (!this.characterLayers) {
+        } else if (!this.characterLayers || !this.characterLayers.length) {
             return SelectCharacterSceneName;
         } else {
             return EnableCameraSceneName;
@@ -64,13 +63,21 @@ export class GameManager {
     }
 
 
+    setCompanion(companion: string|null): void {
+        this.companion = companion;
+    }
+
+    getCompanion(): string|null {
+        return this.companion;
+    }
+
     public async loadMap(room: Room, scenePlugin: Phaser.Scenes.ScenePlugin): Promise<void> {
         const roomID = room.id;
-        const mapUrl = await room.getMapUrl();
+        const mapDetail = await room.getMapDetail();
 
         const gameIndex = scenePlugin.getIndex(roomID);
         if(gameIndex === -1){
-            const game : Phaser.Scene = new GameScene(room, mapUrl);
+            const game : Phaser.Scene = new GameScene(room, mapDetail.mapUrl);
             scenePlugin.add(roomID, game, false);
         }
     }
@@ -79,12 +86,13 @@ export class GameManager {
         console.log('starting '+ (this.currentGameSceneName || this.startRoom.id))
         scenePlugin.start(this.currentGameSceneName || this.startRoom.id);
         scenePlugin.launch(MenuSceneName);
-        
-        if (!localUserStore.getHelpCameraSettingsShown()) {
-            scenePlugin.launch(HelpCameraSettingsSceneName);//700
+
+        if(!localUserStore.getHelpCameraSettingsShown() && (!get(requestedMicrophoneState) || !get(requestedCameraState))){
+            helpCameraSettingsVisibleStore.set(true);
+            localUserStore.setHelpCameraSettingsShown();
         }
     }
-    
+
     public gameSceneIsCreated(scene: GameScene) {
         this.currentGameSceneName = scene.scene.key;
         const menuScene: MenuScene = scene.scene.get(MenuSceneName) as MenuScene;
@@ -118,7 +126,7 @@ export class GameManager {
             scene.scene.run(fallbackSceneName)
         }
     }
-    
+
     public getCurrentGameScene(scene: Phaser.Scene): GameScene {
         if (this.currentGameSceneName === null) throw 'No current scene id set!';
         return scene.scene.get(this.currentGameSceneName) as GameScene

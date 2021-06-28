@@ -1,11 +1,4 @@
 { "compressionlevel":-1,
- "editorsettings":
-    {
-     "export":
-        {
-         "target":"."
-        }
-    },
  "height":10,
  "infinite":false,
  "layers":[
@@ -70,7 +63,25 @@
          "draworder":"topdown",
          "id":3,
          "name":"floorLayer",
-         "objects":[],
+         "objects":[
+                {
+                 "height":83.6666666666666,
+                 "id":1,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "fontfamily":"Sans Serif",
+                     "pixelsize":13,
+                     "text":"Test:\nWalk on the carpet and press space\nResult:\nJitsi opens, background in green and audio\/video is muted",
+                     "wrap":true
+                    },
+                 "type":"",
+                 "visible":true,
+                 "width":315.4375,
+                 "x":2.28125,
+                 "y":235.166666666667
+                }],
          "opacity":1,
          "type":"objectgroup",
          "visible":true,
@@ -78,10 +89,10 @@
          "y":0
         }],
  "nextlayerid":6,
- "nextobjectid":1,
+ "nextobjectid":2,
  "orientation":"orthogonal",
  "renderorder":"right-down",
- "tiledversion":"1.4.3",
+ "tiledversion":"2021.03.23",
  "tileheight":32,
  "tilesets":[
         {
@@ -99,6 +110,6 @@
         }],
  "tilewidth":32,
  "type":"map",
- "version":1.4,
+ "version":1.5,
  "width":10
 }

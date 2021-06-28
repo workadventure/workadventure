@@ -1,17 +1,23 @@
-import {ExSocketInterface} from "./Websocket/ExSocketInterface";
-import {apiClientRepository} from "../Services/ApiClientRepository";
+import { ExSocketInterface } from "./Websocket/ExSocketInterface";
+import { apiClientRepository } from "../Services/ApiClientRepository";
 import {
     BatchToPusherMessage,
-    CharacterLayerMessage, GroupLeftZoneMessage, GroupUpdateMessage, GroupUpdateZoneMessage,
-    PointMessage, PositionMessage, UserJoinedMessage,
-    UserJoinedZoneMessage, UserLeftZoneMessage, UserMovedMessage,
-    ZoneMessage
+    CharacterLayerMessage,
+    GroupLeftZoneMessage,
+    GroupUpdateMessage,
+    GroupUpdateZoneMessage,
+    PointMessage,
+    PositionMessage,
+    UserJoinedMessage,
+    UserJoinedZoneMessage,
+    UserLeftZoneMessage,
+    UserMovedMessage,
+    ZoneMessage,
+    EmoteEventMessage,
+    CompanionMessage,
 } from "../Messages/generated/messages_pb";
-import * as messages_pb from "../Messages/generated/messages_pb";
-import {ClientReadableStream} from "grpc";
-import {PositionDispatcher} from "_Model/PositionDispatcher";
-import {socketManager} from "../Services/SocketManager";
-import {ProtobufUtils} from "_Model/Websocket/ProtobufUtils";
+import { ClientReadableStream } from "grpc";
+import { PositionDispatcher } from "_Model/PositionDispatcher";
 import Debug from "debug";
 
 const debug = Debug("zone");
@@ -23,6 +29,7 @@ export interface ZoneEventListener {
     onGroupEnters(group: GroupDescriptor, listener: ExSocketInterface): void;
     onGroupMoves(group: GroupDescriptor, listener: ExSocketInterface): void;
     onGroupLeaves(groupId: number, listener: ExSocketInterface): void;
+    onEmote(emoteMessage: EmoteEventMessage, listener: ExSocketInterface): void;
 }
 
 /*export type EntersCallback = (thing: Movable, listener: User) => void;
@@ -30,24 +37,38 @@ export type MovesCallback = (thing: Movable, position: PositionInterface, listen
 export type LeavesCallback = (thing: Movable, listener: User) => void;*/
 
 export class UserDescriptor {
-    private constructor(public readonly userId: number, private name: string, private characterLayers: CharacterLayerMessage[], private position: PositionMessage) {
+    private constructor(
+        public readonly userId: number,
+        private name: string,
+        private characterLayers: CharacterLayerMessage[],
+        private position: PositionMessage,
+        private visitCardUrl: string | null,
+        private companion?: CompanionMessage
+    ) {
         if (!Number.isInteger(this.userId)) {
-            throw new Error('UserDescriptor.userId is not an integer: '+this.userId);
+            throw new Error("UserDescriptor.userId is not an integer: " + this.userId);
         }
     }
 
     public static createFromUserJoinedZoneMessage(message: UserJoinedZoneMessage): UserDescriptor {
         const position = message.getPosition();
         if (position === undefined) {
-            throw new Error('Missing position');
+            throw new Error("Missing position");
         }
-        return new UserDescriptor(message.getUserid(), message.getName(), message.getCharacterlayersList(), position);
+        return new UserDescriptor(
+            message.getUserid(),
+            message.getName(),
+            message.getCharacterlayersList(),
+            position,
+            message.getVisitcardurl(),
+            message.getCompanion()
+        );
     }
 
     public update(userMovedMessage: UserMovedMessage) {
         const position = userMovedMessage.getPosition();
         if (position === undefined) {
-            throw new Error('Missing position');
+            throw new Error("Missing position");
         }
         this.position = position;
     }
@@ -59,6 +80,10 @@ export class UserDescriptor {
         userJoinedMessage.setName(this.name);
         userJoinedMessage.setCharacterlayersList(this.characterLayers);
         userJoinedMessage.setPosition(this.position);
+        if (this.visitCardUrl) {
+            userJoinedMessage.setVisitcardurl(this.visitCardUrl);
+        }
+        userJoinedMessage.setCompanion(this.companion);
 
         return userJoinedMessage;
     }
@@ -74,13 +99,12 @@ export class UserDescriptor {
 }
 
 export class GroupDescriptor {
-    private constructor(public readonly groupId: number, private groupSize: number, private position: PointMessage) {
-    }
+    private constructor(public readonly groupId: number, private groupSize: number, private position: PointMessage) {}
 
     public static createFromGroupUpdateZoneMessage(message: GroupUpdateZoneMessage): GroupDescriptor {
         const position = message.getPosition();
         if (position === undefined) {
-            throw new Error('Missing position');
+            throw new Error("Missing position");
         }
         return new GroupDescriptor(message.getGroupid(), message.getGroupsize(), position);
     }
@@ -93,7 +117,7 @@ export class GroupDescriptor {
     public toGroupUpdateMessage(): GroupUpdateMessage {
         const groupUpdateMessage = new GroupUpdateMessage();
         if (!Number.isInteger(this.groupId)) {
-            throw new Error('GroupDescriptor.groupId is not an integer: '+this.groupId);
+            throw new Error("GroupDescriptor.groupId is not an integer: " + this.groupId);
         }
         groupUpdateMessage.setGroupid(this.groupId);
         groupUpdateMessage.setGroupsize(this.groupSize);
@@ -104,8 +128,8 @@ export class GroupDescriptor {
 }
 
 interface ZoneDescriptor {
-    x: number,
-    y: number
+    x: number;
+    y: number;
 }
 
 export class Zone {
@@ -116,21 +140,26 @@ export class Zone {
     private backConnection!: ClientReadableStream<BatchToPusherMessage>;
     private isClosing: boolean = false;
 
-    constructor(private positionDispatcher: PositionDispatcher, private socketListener: ZoneEventListener, public readonly x: number, public readonly y: number, private onBackFailure: (e: Error|null, zone: Zone) => void) {
-    }
+    constructor(
+        private positionDispatcher: PositionDispatcher,
+        private socketListener: ZoneEventListener,
+        public readonly x: number,
+        public readonly y: number,
+        private onBackFailure: (e: Error | null, zone: Zone) => void
+    ) {}
 
     /**
      * Creates a connection to the back server to track the users.
      */
     public async init(): Promise<void> {
-        debug('Opening connection to zone %d, %d on back server', this.x, this.y);
+        debug("Opening connection to zone %d, %d on back server", this.x, this.y);
         const apiClient = await apiClientRepository.getClient(this.positionDispatcher.roomId);
         const zoneMessage = new ZoneMessage();
         zoneMessage.setRoomid(this.positionDispatcher.roomId);
         zoneMessage.setX(this.x);
         zoneMessage.setY(this.y);
         this.backConnection = apiClient.listenZone(zoneMessage);
-        this.backConnection.on('data', (batch: BatchToPusherMessage) => {
+        this.backConnection.on("data", (batch: BatchToPusherMessage) => {
             for (const message of batch.getPayloadList()) {
                 if (message.hasUserjoinedzonemessage()) {
                     const userJoinedZoneMessage = message.getUserjoinedzonemessage() as UserJoinedZoneMessage;
@@ -175,30 +204,32 @@ export class Zone {
                     const userDescriptor = this.users.get(userId);
 
                     if (userDescriptor === undefined) {
-                        console.error('Unexpected move message received for user "'+userId+'"');
+                        console.error('Unexpected move message received for user "' + userId + '"');
                         return;
                     }
 
                     userDescriptor.update(userMovedMessage);
 
                     this.notifyUserMove(userDescriptor);
+                } else if (message.hasEmoteeventmessage()) {
+                    const emoteEventMessage = message.getEmoteeventmessage() as EmoteEventMessage;
+                    this.notifyEmote(emoteEventMessage);
                 } else {
-                    throw new Error('Unexpected message');
+                    throw new Error("Unexpected message");
                 }
-
             }
         });
 
-        this.backConnection.on('error', (e) => {
+        this.backConnection.on("error", (e) => {
             if (!this.isClosing) {
-                debug('Error on back connection')
+                debug("Error on back connection");
                 this.close();
                 this.onBackFailure(e, this);
             }
         });
-        this.backConnection.on('close', () => {
+        this.backConnection.on("close", () => {
             if (!this.isClosing) {
-                debug('Close on back connection')
+                debug("Close on back connection");
                 this.close();
                 this.onBackFailure(null, this);
             }
@@ -206,7 +237,7 @@ export class Zone {
     }
 
     public close(): void {
-        debug('Closing connection to zone %d, %d on back server', this.x, this.y);
+        debug("Closing connection to zone %d, %d on back server", this.x, this.y);
         this.isClosing = true;
         this.backConnection.cancel();
     }
@@ -218,7 +249,7 @@ export class Zone {
     /**
      * Notify listeners of this zone that this user entered
      */
-    private notifyUserEnter(user: UserDescriptor, oldZone: ZoneDescriptor|undefined) {
+    private notifyUserEnter(user: UserDescriptor, oldZone: ZoneDescriptor | undefined) {
         for (const listener of this.listeners) {
             if (listener.userId === user.userId) {
                 continue;
@@ -234,7 +265,7 @@ export class Zone {
     /**
      * Notify listeners of this zone that this group entered
      */
-    private notifyGroupEnter(group: GroupDescriptor, oldZone: ZoneDescriptor|undefined) {
+    private notifyGroupEnter(group: GroupDescriptor, oldZone: ZoneDescriptor | undefined) {
         for (const listener of this.listeners) {
             if (oldZone === undefined || !this.isListeningZone(listener, oldZone.x, oldZone.y)) {
                 this.socketListener.onGroupEnters(group, listener);
@@ -247,7 +278,7 @@ export class Zone {
     /**
      * Notify listeners of this zone that this user left
      */
-    private notifyUserLeft(userId: number, newZone: ZoneDescriptor|undefined) {
+    private notifyUserLeft(userId: number, newZone: ZoneDescriptor | undefined) {
         for (const listener of this.listeners) {
             if (listener.userId === userId) {
                 continue;
@@ -260,10 +291,19 @@ export class Zone {
         }
     }
 
+    private notifyEmote(emoteMessage: EmoteEventMessage) {
+        for (const listener of this.listeners) {
+            if (listener.userId === emoteMessage.getActoruserid()) {
+                continue;
+            }
+            this.socketListener.onEmote(emoteMessage, listener);
+        }
+    }
+
     /**
      * Notify listeners of this zone that this group left
      */
-    private notifyGroupLeft(groupId: number, newZone: ZoneDescriptor|undefined) {
+    private notifyGroupLeft(groupId: number, newZone: ZoneDescriptor | undefined) {
         for (const listener of this.listeners) {
             if (listener.groupId === groupId) {
                 continue;
