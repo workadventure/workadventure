@@ -1,6 +1,6 @@
 import * as tg from "generic-type-guard";
 
-export const isChangeTileEvent =
+export const isSetTilesEvent =
     tg.isArray(
         new tg.IsInterface().withProperties({
             x: tg.isNumber,
@@ -10,6 +10,6 @@ export const isChangeTileEvent =
         }).get()
     );
 /**
- * A message sent from the game to the iFrame when a user enters or leaves a zone marked with the "zone" property.
+ * A message sent from the iFrame to the game to set one or many tiles.
  */
-export type ChangeTileEvent = tg.GuardedType<typeof isChangeTileEvent>;
+export type SetTilesEvent = tg.GuardedType<typeof isSetTilesEvent>;

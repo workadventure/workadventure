@@ -137,9 +137,9 @@ class WorkadventureRoomCommands extends IframeApiContribution<WorkadventureRoomC
             return { id: gameState.uuid, nickName: gameState.nickname, tags: gameState.tags };
         });
     }
-    changeTile(tiles: TileDescriptor[]) {
+    setTiles(tiles: TileDescriptor[]) {
         sendToWorkadventure({
-            type: 'changeTile',
+            type: 'setTiles',
             data: tiles
         })
     }

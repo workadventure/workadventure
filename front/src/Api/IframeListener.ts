@@ -29,7 +29,7 @@ import type {GameStateEvent} from "./Events/GameStateEvent";
 import type {HasPlayerMovedEvent} from "./Events/HasPlayerMovedEvent";
 import {isLoadPageEvent} from "./Events/LoadPageEvent";
 import {handleMenuItemRegistrationEvent, isMenuItemRegisterIframeEvent} from "./Events/ui/MenuItemRegisterEvent";
-import {ChangeTileEvent, isChangeTileEvent} from "./Events/ChangeTileEvent";
+import {SetTilesEvent, isSetTilesEvent} from "./Events/SetTilesEvent";
 
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.
@@ -103,8 +103,8 @@ class IframeListener {
     private readonly _loadSoundStream: Subject<LoadSoundEvent> = new Subject();
     public readonly loadSoundStream = this._loadSoundStream.asObservable();
 
-    private readonly _changeTileStream: Subject<ChangeTileEvent> = new Subject();
-    public readonly changeTileStream = this._changeTileStream.asObservable();
+    private readonly _setTilesStream: Subject<SetTilesEvent> = new Subject();
+    public readonly setTilesStream = this._setTilesStream.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
@@ -193,8 +193,8 @@ class IframeListener {
                         this._unregisterMenuCommandStream.next(data);
                     })
                     handleMenuItemRegistrationEvent(payload.data)
-                } else if (payload.type == "changeTile" && isChangeTileEvent(payload.data)) {
-                    this._changeTileStream.next(payload.data);
+                } else if (payload.type == "setTiles" && isSetTilesEvent(payload.data)) {
+                    this._setTilesStream.next(payload.data);
                 }
             }
         }, false);

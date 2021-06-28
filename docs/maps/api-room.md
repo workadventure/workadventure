@@ -115,7 +115,7 @@ WA.room.getCurrentUser().then((user) => {
 
 ### Changing tiles 
 ```
-WA.room.changeTile(tiles: TileDescriptor[]): void
+WA.room.setTiles(tiles: TileDescriptor[]): void
 ```
 Replace the tile at the `x` and `y` coordinates in the layer named `layer` by the tile with the id `tile`.
 
@@ -137,10 +137,10 @@ If `tile` is a string, it's not the id of the tile but the value of the property
 
 Example : 
 ```javascript
-WA.room.changeTile([
-                {x: 6, y: 4, tile: 'blue', layer: 'changeTile'},
-                {x: 7, y: 4, tile: 109, layer: 'changeTile'},
-                {x: 8, y: 4, tile: 109, layer: 'changeTile'},
-                {x: 9, y: 4, tile: 'blue', layer: 'changeTile'}
+WA.room.setTiles([
+                {x: 6, y: 4, tile: 'blue', layer: 'setTiles'},
+                {x: 7, y: 4, tile: 109, layer: 'setTiles'},
+                {x: 8, y: 4, tile: 109, layer: 'setTiles'},
+                {x: 9, y: 4, tile: 'blue', layer: 'setTiles'}
                 ]);
 ```

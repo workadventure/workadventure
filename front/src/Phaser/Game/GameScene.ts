@@ -947,7 +947,7 @@ ${escapedMessage}
                 tags: this.connection ? this.connection.getAllTags() : []
             })
         }));
-        this.iframeSubscriptionList.push(iframeListener.changeTileStream.subscribe((eventTiles) => {
+        this.iframeSubscriptionList.push(iframeListener.setTilesStream.subscribe((eventTiles) => {
             for (const eventTile of eventTiles) {
                 this.gameMap.putTile(eventTile.tile, eventTile.x, eventTile.y, eventTile.layer);
             }
