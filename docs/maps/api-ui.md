@@ -101,7 +101,9 @@ Displays a message at the bottom of the screen (that will disappear when space b
 Example:
 
 ```javascript
-const triggerMessage = WA.ui.triggerMessage("press 'space' to confirm");
+const triggerMessage = WA.ui.triggerMessage("press 'space' to confirm",()=>{
+     WA.chat.sendChatMessage("confirmed", "trigger message logic")
+});
 setTimeout(()=>{
 	// later
 	triggerMessage.remove();
