@@ -144,3 +144,34 @@ WA.room.setTiles([
                 {x: 9, y: 4, tile: 'blue', layer: 'setTiles'}
                 ]);
 ```
+
+### Saving / loading metadata
+
+```
+WA.room.saveMetadata(key : string, data : any): void
+WA.room.loadMetadata(key : string) : any
+```
+
+These 2 methods can be used to save and load data related to the current room.
+
+`data` can be any value that is serializable in JSON.
+
+Please refrain from storing large amounts of data in a room. Those functions are typically useful for saving or restoring
+configuration / metadatas.
+
+Example :
+```javascript
+WA.room.saveMetadata('config', {
+    'bottomExitUrl': '/@/org/world/castle',
+    'topExitUrl': '/@/org/world/tower',
+    'enableBirdSound': true
+});
+//...
+let config = WA.room.loadMetadata('config');
+```
+
+{.alert.alert-danger}
+Important: metadata can only be saved/loaded if an administration server is attached to WorkAdventure. The `WA.room.saveMetadata`
+and `WA.room.loadMetadata` functions will therefore be available on the hosted version of WorkAdventure, but will not
+be available in the self-hosted version (unless you decide to code an administration server stub to provide storage for
+those data)
