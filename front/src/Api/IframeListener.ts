@@ -126,11 +126,18 @@ class IframeListener {
                 }
             }
 
+            const payload = message.data;
+
             if (foundSrc === undefined) {
+                if (isIframeEventWrapper(payload)) {
+                    console.warn('It seems an iFrame is trying to communicate with WorkAdventure but was not explicitly granted the permission to do so. ' +
+                        'If you are looking to use the WorkAdventure Scripting API inside an iFrame, you should allow the ' +
+                        'iFrame to communicate with WorkAdventure by using the "openWebsiteAllowApi" property in your map (or passing "true" as a second' +
+                        'parameter to WA.nav.openCoWebSite())');
+                }
                 return;
             }
 
-            const payload = message.data;
             if (isIframeEventWrapper(payload)) {
                 if (payload.type === 'showLayer' && isLayerEvent(payload.data)) {
                     this._showLayerStream.next(payload.data);
