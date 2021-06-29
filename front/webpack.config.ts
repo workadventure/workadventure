@@ -14,7 +14,7 @@ const buildNpmTypingsForApi = !!process.env.BUILD_TYPINGS;
 const isProduction = mode === 'production';
 const isDevelopment = !isProduction;
 
-let entries: { [key: string]: string; } = {};
+const entries: { [key: string]: string; } = {};
 if (!buildNpmTypingsForApi) {
     entries.main = './src/index.ts';
 }
