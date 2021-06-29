@@ -183,7 +183,10 @@ export class GameMap {
             console.error("The layer that you want to change is not a tilelayer. Tile can only be put in tilelayer.");
             return;
         }
-        // @ts-ignore
+        if (typeof fLayer.data === "string") {
+            console.error("Data of the layer that you want to change is only readable.");
+            return;
+        }
         fLayer.data[x+y*fLayer.height] = index;
     }
 
@@ -195,7 +198,7 @@ export class GameMap {
                 this.putTileInFlatLayer(tileIndex, x, y, layer);
                 const phaserTile = phaserLayer.putTileAt(tileIndex, x, y);
                 for (const property of this.getTileProperty(tileIndex)) {
-                    if ( property.name === "collides" ) {
+                    if ( property.name === "collides" && property.value === "true") {
                         phaserTile.setCollision(true);
                     }
                 }
