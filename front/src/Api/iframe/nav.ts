@@ -36,11 +36,13 @@ class WorkadventureNavigationCommands extends IframeApiContribution<Workadventur
         });
     }
 
-    openCoWebSite(url: string): void {
+    openCoWebSite(url: string, allowApi: boolean = false, allowPolicy: string = ""): void {
         sendToWorkadventure({
             "type": 'openCoWebSite',
             "data": {
-                url
+                url,
+                allowApi,
+                allowPolicy,
             }
         });
     }

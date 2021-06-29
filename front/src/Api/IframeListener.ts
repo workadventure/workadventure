@@ -135,6 +135,8 @@ class IframeListener {
                 return;
             }
 
+            foundSrc = this.getBaseUrl(foundSrc, message.source);
+
             if (isIframeEventWrapper(payload)) {
                 if (payload.type === 'showLayer' && isLayerEvent(payload.data)) {
                     this._showLayerStream.next(payload.data);
@@ -168,7 +170,7 @@ class IframeListener {
                     this._loadSoundStream.next(payload.data);
                 }
                 else if (payload.type === 'openCoWebSite' && isOpenCoWebsite(payload.data)) {
-                    scriptUtils.openCoWebsite(payload.data.url, foundSrc);
+                    scriptUtils.openCoWebsite(payload.data.url, foundSrc, payload.data.allowApi, payload.data.allowPolicy);
                 }
 
                 else if (payload.type === 'closeCoWebSite') {
@@ -279,6 +281,15 @@ class IframeListener {
         }
 
 
+    }
+
+    private getBaseUrl(src: string, source: MessageEventSource | null): string{
+       for (const script of this.scripts) {
+           if (script[1].contentWindow === source) {
+               return script[0];
+           }
+       }
+       return src;
     }
 
     private static getIFrameId(scriptUrl: string): string {
