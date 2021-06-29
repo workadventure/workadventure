@@ -23,7 +23,7 @@ module.exports = {
     devServer: {
         contentBase: './dist',
         host: '0.0.0.0',
-        sockPort: 443,
+        sockPort: 80,
         disableHostCheck: true,
         historyApiFallback: {
             rewrites: [
