@@ -12,7 +12,9 @@
     <body>
     <p>Website opened by script.</p>
         <script>
-            WA.sendChatMessage('The iframe opened by a script works !', 'Mr Robot');
+            window.addEventListener('load', () => {
+                WA.sendChatMessage('The iframe opened by a script works !', 'Mr Robot');
+            })
         </script>
     </body>
 </html>
