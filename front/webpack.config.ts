@@ -10,14 +10,18 @@ import NodePolyfillPlugin from 'node-polyfill-webpack-plugin';
 import {DISPLAY_TERMS_OF_USE} from "./src/Enum/EnvironmentVariable";
 
 const mode = process.env.NODE_ENV ?? 'development';
+const buildNpmTypingsForApi = !!process.env.BUILD_TYPINGS;
 const isProduction = mode === 'production';
 const isDevelopment = !isProduction;
 
+let entries: { [key: string]: string; } = {};
+if (!buildNpmTypingsForApi) {
+    entries.main = './src/index.ts';
+}
+entries.iframe_api = './src/iframe_api.ts';
+
 module.exports = {
-    entry: {
-        'main': './src/index.ts',
-        'iframe_api': './src/iframe_api.ts'
-    },
+    entry: entries,
     mode: mode,
     devtool: isDevelopment ? 'inline-source-map' : 'source-map',
     devServer: {
@@ -40,7 +44,10 @@ module.exports = {
                 exclude: /node_modules/,
                 loader: 'ts-loader',
                 options: {
-                    transpileOnly: true,
+                    transpileOnly: !buildNpmTypingsForApi,
+                    compilerOptions: {
+                        declaration: buildNpmTypingsForApi
+                    }
                 },
             },
             {
