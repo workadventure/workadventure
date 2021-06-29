@@ -1,0 +1,1 @@
+WA.openCoWebSite("cowebsiteAllowApi.html", true, "");

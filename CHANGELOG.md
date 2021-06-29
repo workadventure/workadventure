@@ -1,4 +1,10 @@
-## Version 1.3.9 - in dev
+## Version 1.4.2 
+
+## Updates 
+
+- A script in an iframe opened by another script can use the IFrame API.
+
+## Version 1.4.0
 
 ### BREAKING CHANGES
 

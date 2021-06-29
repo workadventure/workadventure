@@ -22,7 +22,7 @@ interface WorkAdventureApi {
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup;
     openTab(url : string): void;
     goToPage(url : string): void;
-    openCoWebSite(url : string): void;
+    openCoWebSite(url : string, allowApi: boolean, allowPolicy: string): void;
     closeCoWebSite(): void;
     disablePlayerControls(): void;
     restorePlayerControls(): void;
@@ -166,11 +166,13 @@ window.WA = {
         }, '*');
     },
 
-    openCoWebSite(url : string) : void{
+    openCoWebSite(url : string, allowApi: boolean = false, allowPolicy: string = "") : void{
         window.parent.postMessage({
             "type" : 'openCoWebSite',
             "data" : {
-                url
+                url,
+                allowApi,
+                allowPolicy,
             } as OpenCoWebSiteEvent
         }, '*');
     },
