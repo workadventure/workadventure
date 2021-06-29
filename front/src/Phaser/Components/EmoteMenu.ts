@@ -1,0 +1,71 @@
+import Sprite = Phaser.GameObjects.Sprite;
+import Text = Phaser.GameObjects.Text;
+import {DEPTH_UI_INDEX} from "../Game/DepthIndexes";
+import {waScaleManager} from "../Services/WaScaleManager";
+
+export const EmoteMenuClickEvent = 'emoteClick';
+
+export class EmoteMenu extends Phaser.GameObjects.Container {
+    private resizeCallback: OmitThisParameter<() => void>;
+
+    constructor(scene: Phaser.Scene, x: number, y: number, private items: string[]) {
+        super(scene, x, y);
+        this.setDepth(DEPTH_UI_INDEX)
+        this.scene.add.existing(this);
+        this.initItems();
+
+        this.resize();
+        this.resizeCallback = this.resize.bind(this);
+        this.scene.scale.on(Phaser.Scale.Events.RESIZE, this.resizeCallback);
+    }
+
+    private initItems() {
+        const itemsNumber = this.items.length;
+        const menuRadius = 70 + (waScaleManager.uiScalingFactor - 1) * 20;
+        this.items.forEach((item, index) => this.createEmoteElement(item, index, itemsNumber, menuRadius))
+    }
+
+    private createEmoteElement(item: string, index: number, itemsNumber: number, menuRadius: number) {
+        // const image = new Sprite(this.scene, 0,  menuRadius, item.image);
+        const image = new Text(this.scene, -12, menuRadius, item, {fontFamily: '"twemoji"', fontSize:'75px'});
+        this.add(image);
+        // this.scene.sys.updateList.add(image);
+        const scalingFactor = waScaleManager.uiScalingFactor * 0.3;
+        image.setScale(scalingFactor)
+        image.setInteractive({
+            useHandCursor: true,
+        });
+        image.on('pointerdown', () => this.emit(EmoteMenuClickEvent, item));
+        image.on('pointerover', () => {
+            this.scene.tweens.add({
+                targets: image,
+                props: {
+                    scale: 1.5 * scalingFactor,
+                },
+                duration: 500,
+                ease: 'Power3',
+            })
+        });
+        image.on('pointerout', () => {
+            this.scene.tweens.add({
+                targets: image,
+                props: {
+                    scale: scalingFactor,
+                },
+                duration: 500,
+                ease: 'Power3',
+            })
+        });
+        const angle = 2 * Math.PI * index / itemsNumber;
+        Phaser.Actions.RotateAroundDistance([image], {x: -12, y: -12}, angle, menuRadius);
+    }
+
+    private resize() {
+        this.setScale(waScaleManager.uiScalingFactor);
+    }
+
+    public destroy() {
+        this.scene.scale.removeListener(Phaser.Scale.Events.RESIZE, this.resizeCallback);
+        super.destroy();
+    }
+}

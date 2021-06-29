@@ -3,7 +3,7 @@ import type {GameScene} from "../Game/GameScene";
 import {UserInputEvent, UserInputManager} from "../UserInput/UserInputManager";
 import {Character} from "../Entity/Character";
 import {userMovingStore} from "../../Stores/GameStore";
-import {RadialMenu, RadialMenuClickEvent, RadialMenuItem} from "../Components/RadialMenu";
+import {EmoteMenu, EmoteMenuClickEvent} from "../Components/EmoteMenu";
 
 export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";
@@ -11,7 +11,7 @@ export const requestEmoteEventName = "requestEmote";
 export class Player extends Character {
     private previousDirection: string = PlayerAnimationDirections.Down;
     private wasMoving: boolean = false;
-    private emoteMenu: RadialMenu|null = null;
+    private emoteMenu: EmoteMenu|null = null;
     private updateListener: () => void;
 
     constructor(
@@ -94,7 +94,7 @@ export class Player extends Character {
         return this.wasMoving;
     }
 
-    openOrCloseEmoteMenu(emotes:RadialMenuItem[]) {
+    openOrCloseEmoteMenu(emotes:string[]) {
         if(this.emoteMenu) {
             this.closeEmoteMenu();
         } else {
@@ -102,13 +102,13 @@ export class Player extends Character {
         }
     }
 
-    openEmoteMenu(emotes:RadialMenuItem[]): void {
+    openEmoteMenu(emotes:string[]): void {
         this.cancelPreviousEmote();
-        this.emoteMenu = new RadialMenu(this.scene, this.x, this.y, emotes)
-        this.emoteMenu.on(RadialMenuClickEvent, (item: RadialMenuItem) => {
+        this.emoteMenu = new EmoteMenu(this.scene, this.x, this.y, emotes)
+        this.emoteMenu.on(EmoteMenuClickEvent, (emote: string) => {
             this.closeEmoteMenu();
-            this.emit(requestEmoteEventName, item.name);
-            this.playEmote(item.name);
+            this.emit(requestEmoteEventName, emote);
+            this.playEmote(emote);
         });
     }
 
