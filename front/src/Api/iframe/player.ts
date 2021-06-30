@@ -1,28 +1,28 @@
-import {IframeApiContribution, sendToWorkadventure} from "./IframeApiContribution";
-import type {HasPlayerMovedEvent, HasPlayerMovedEventCallback} from "../Events/HasPlayerMovedEvent";
-import {Subject} from "rxjs";
-import {apiCallback} from "./registeredCallbacks";
-import {isHasPlayerMovedEvent} from "../Events/HasPlayerMovedEvent";
+import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
+import type { HasPlayerMovedEvent, HasPlayerMovedEventCallback } from "../Events/HasPlayerMovedEvent";
+import { Subject } from "rxjs";
+import { apiCallback } from "./registeredCallbacks";
+import { isHasPlayerMovedEvent } from "../Events/HasPlayerMovedEvent";
 
 const moveStream = new Subject<HasPlayerMovedEvent>();
 
-class WorkadventurePlayerCommands extends IframeApiContribution<WorkadventurePlayerCommands> {
+export class WorkadventurePlayerCommands extends IframeApiContribution<WorkadventurePlayerCommands> {
     callbacks = [
         apiCallback({
-            type: 'hasPlayerMoved',
+            type: "hasPlayerMoved",
             typeChecker: isHasPlayerMovedEvent,
             callback: (payloadData) => {
                 moveStream.next(payloadData);
-            }
+            },
         }),
-    ]
+    ];
 
     onPlayerMove(callback: HasPlayerMovedEventCallback): void {
         moveStream.subscribe(callback);
         sendToWorkadventure({
-            type: 'onPlayerMove',
-            data: null
-        })
+            type: "onPlayerMove",
+            data: null,
+        });
     }
 }
 
