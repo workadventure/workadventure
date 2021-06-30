@@ -1,4 +1,4 @@
-import { IframeApiContribution, relativeToPreviousScript, sendToWorkadventure } from "./IframeApiContribution";
+import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
 import type { HasPlayerMovedEvent, HasPlayerMovedEventCallback } from "../Events/HasPlayerMovedEvent";
 import { Subject } from "rxjs";
 import { apiCallback } from "./registeredCallbacks";
