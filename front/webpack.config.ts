@@ -23,7 +23,6 @@ entries.iframe_api = "./src/iframe_api.ts";
 module.exports = {
     entry: entries,
     mode: mode,
-    devtool: isDevelopment ? "inline-source-map" : "source-map",
     devServer: {
         contentBase: "./dist",
         host: "0.0.0.0",

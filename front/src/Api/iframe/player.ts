@@ -1,8 +1,9 @@
-import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
+import { IframeApiContribution, relativeToPreviousScript, sendToWorkadventure } from "./IframeApiContribution";
 import type { HasPlayerMovedEvent, HasPlayerMovedEventCallback } from "../Events/HasPlayerMovedEvent";
 import { Subject } from "rxjs";
 import { apiCallback } from "./registeredCallbacks";
 import { isHasPlayerMovedEvent } from "../Events/HasPlayerMovedEvent";
+import type { SpriteEvent } from "../Events/AddSpriteEvent";
 
 const moveStream = new Subject<HasPlayerMovedEvent>();
 
@@ -22,6 +23,13 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
         sendToWorkadventure({
             type: "onPlayerMove",
             data: null,
+        });
+    }
+
+    addSprite(options: SpriteEvent) {
+        sendToWorkadventure({
+            type: "addSprite",
+            data: options,
         });
     }
 }
