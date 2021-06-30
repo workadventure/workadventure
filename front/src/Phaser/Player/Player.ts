@@ -1,15 +1,15 @@
-import { PlayerAnimationDirections } from "./Animation";
-import type { GameScene } from "../Game/GameScene";
-import { UserInputEvent, UserInputManager } from "../UserInput/UserInputManager";
-import { Character } from "../Entity/Character";
-import { userMovingStore } from "../../Stores/GameStore";
-import { RadialMenu, RadialMenuClickEvent, RadialMenuItem } from "../Components/RadialMenu";
-import { iframeListener } from "../../Api/IframeListener";
-import { isSpriteEvent } from "../../Api/Events/AddSpriteEvent";
-import { loadCustomTexture } from "../Entity/PlayerTexturesLoadingManager";
+import { PlayerAnimationDirections } from './Animation';
+import type { GameScene } from '../Game/GameScene';
+import { UserInputEvent, UserInputManager } from '../UserInput/UserInputManager';
+import { Character } from '../Entity/Character';
+import { userMovingStore } from '../../Stores/GameStore';
+import { RadialMenu, RadialMenuClickEvent, RadialMenuItem } from '../Components/RadialMenu';
+import { iframeListener } from '../../Api/IframeListener';
+import { isSpriteEvent } from '../../Api/Events/AddSpriteEvent';
+import { loadCustomTexture } from '../Entity/PlayerTexturesLoadingManager';
 
-export const hasMovedEventName = "hasMoved";
-export const requestEmoteEventName = "requestEmote";
+export const hasMovedEventName = 'hasMoved';
+export const requestEmoteEventName = 'requestEmote';
 
 export class Player extends Character {
     private previousDirection: string = PlayerAnimationDirections.Down;
@@ -40,15 +40,15 @@ export class Player extends Character {
                 this.emoteMenu.y = this.y;
             }
         };
-        this.scene.events.addListener("postupdate", this.updateListener);
+        this.scene.events.addListener('postupdate', this.updateListener);
 
         iframeListener.events.subscribe((event) => {
-            if (event.type == "addSprite" && isSpriteEvent(event.data)) {
+            if (event.type == 'addSprite' && isSpriteEvent(event.data)) {
                 const spriteEvent = event.data;
                 loadCustomTexture(Scene.load, {
                     id: 9999,
                     level: 9999,
-                    rights: "",
+                    rights: '',
                     url: spriteEvent.spiteSourceUrl,
                 }).then((descriptor) => {
                     this.addTextures([descriptor.name], 1, spriteEvent.relativePositionOffset);
@@ -139,7 +139,7 @@ export class Player extends Character {
     }
 
     destroy() {
-        this.scene.events.removeListener("postupdate", this.updateListener);
+        this.scene.events.removeListener('postupdate', this.updateListener);
         super.destroy();
     }
 }

@@ -1,8 +1,8 @@
-import type * as tg from "generic-type-guard";
-import type { IframeEvent, IframeEventMap, IframeResponseEventMap } from "../Events/IframeEvent";
+import type * as tg from 'generic-type-guard';
+import type { IframeEvent, IframeEventMap, IframeResponseEventMap } from '../Events/IframeEvent';
 
 export function sendToWorkadventure(content: IframeEvent<keyof IframeEventMap>) {
-    window.parent.postMessage(content, "*");
+    window.parent.postMessage(content, '*');
 }
 type GuardedType<Guard extends tg.TypeGuard<unknown>> = Guard extends tg.TypeGuard<infer T> ? T : never;
 
@@ -30,5 +30,5 @@ export abstract class IframeApiContribution<
         callbacks: Array<IframeCallbackContribution<keyof IframeResponseEventMap>>;
     }
 > {
-    abstract callbacks: T["callbacks"];
+    abstract callbacks: T['callbacks'];
 }

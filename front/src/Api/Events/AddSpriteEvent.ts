@@ -1,4 +1,4 @@
-import * as tg from "generic-type-guard";
+import * as tg from 'generic-type-guard';
 
 export const isVector2D = new tg.IsInterface()
     .withProperties({

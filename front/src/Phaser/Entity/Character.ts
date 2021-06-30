@@ -1,15 +1,15 @@
-import { PlayerAnimationDirections, PlayerAnimationTypes } from "../Player/Animation";
-import { SpeechBubble } from "./SpeechBubble";
+import { PlayerAnimationDirections, PlayerAnimationTypes } from '../Player/Animation';
+import { SpeechBubble } from './SpeechBubble';
 import Text = Phaser.GameObjects.Text;
 import Container = Phaser.GameObjects.Container;
 import Sprite = Phaser.GameObjects.Sprite;
-import { TextureError } from "../../Exception/TextureError";
-import { Companion } from "../Companion/Companion";
-import type { GameScene } from "../Game/GameScene";
-import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
-import { waScaleManager } from "../Services/WaScaleManager";
-import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
-import type { Vector } from "matter";
+import { TextureError } from '../../Exception/TextureError';
+import { Companion } from '../Companion/Companion';
+import type { GameScene } from '../Game/GameScene';
+import { DEPTH_INGAME_TEXT_INDEX } from '../Game/DepthIndexes';
+import { waScaleManager } from '../Services/WaScaleManager';
+import type OutlinePipelinePlugin from 'phaser3-rex-plugins/plugins/outlinepipeline-plugin.js';
+import type { Vector } from 'matter';
 
 const playerNameY = -25;
 
@@ -64,9 +64,9 @@ export abstract class Character extends Container {
 
         this.playerName = new Text(scene, 0, playerNameY, name, {
             fontFamily: '"Press Start 2P"',
-            fontSize: "8px",
+            fontSize: '8px',
             strokeThickness: 2,
-            stroke: "gray",
+            stroke: 'gray',
         });
         this.playerName.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
         this.add(this.playerName);
@@ -78,14 +78,14 @@ export abstract class Character extends Container {
                 useHandCursor: true,
             });
 
-            this.on("pointerover", () => {
+            this.on('pointerover', () => {
                 this.getOutlinePlugin()?.add(this.playerName, {
                     thickness: 2,
                     outlineColor: 0xffff00,
                 });
                 this.scene.markDirty();
             });
-            this.on("pointerout", () => {
+            this.on('pointerout', () => {
                 this.getOutlinePlugin()?.remove(this.playerName);
                 this.scene.markDirty();
             });
@@ -103,17 +103,17 @@ export abstract class Character extends Container {
 
         this.playAnimation(direction, moving);
 
-        if (typeof companion === "string") {
+        if (typeof companion === 'string') {
             this.addCompanion(companion, companionTexturePromise);
         }
     }
 
     private getOutlinePlugin(): OutlinePipelinePlugin | undefined {
-        return this.scene.plugins.get("rexOutlinePipeline") as unknown as OutlinePipelinePlugin | undefined;
+        return this.scene.plugins.get('rexOutlinePipeline') as unknown as OutlinePipelinePlugin | undefined;
     }
 
     public addCompanion(name: string, texturePromise?: Promise<string>): void {
-        if (typeof texturePromise !== "undefined") {
+        if (typeof texturePromise !== 'undefined') {
             this.companion = new Companion(this.scene, this.x, this.y, name, texturePromise);
         }
     }
@@ -121,7 +121,7 @@ export abstract class Character extends Container {
     public addTextures(textures: string[], frame?: string | number, position?: Vector): void {
         for (const texture of textures) {
             if (this.scene && !this.scene.textures.exists(texture)) {
-                throw new TextureError("texture not found");
+                throw new TextureError('texture not found');
             }
             const sprite = new Sprite(this.scene, position?.x || 0, position?.y || 0, texture, frame);
             this.add(sprite);
@@ -206,13 +206,13 @@ export abstract class Character extends Container {
         if (this.invisible) return;
         for (const [texture, sprite] of this.sprites.entries()) {
             if (!sprite.anims) {
-                console.error("ANIMS IS NOT DEFINED!!!");
+                console.error('ANIMS IS NOT DEFINED!!!');
                 return;
             }
             if (moving && (!sprite.anims.currentAnim || sprite.anims.currentAnim.key !== direction)) {
-                sprite.play(texture + "-" + direction + "-" + PlayerAnimationTypes.Walk, true);
+                sprite.play(texture + '-' + direction + '-' + PlayerAnimationTypes.Walk, true);
             } else if (!moving) {
-                sprite.anims.play(texture + "-" + direction + "-" + PlayerAnimationTypes.Idle, true);
+                sprite.anims.play(texture + '-' + direction + '-' + PlayerAnimationTypes.Idle, true);
             }
         }
     }
@@ -220,7 +220,7 @@ export abstract class Character extends Container {
     protected getBody(): Phaser.Physics.Arcade.Body {
         const body = this.body;
         if (!(body instanceof Phaser.Physics.Arcade.Body)) {
-            throw new Error("Container does not have arcade body");
+            throw new Error('Container does not have arcade body');
         }
         return body;
     }
@@ -306,7 +306,7 @@ export abstract class Character extends Container {
                 alpha: 1,
                 y: emoteY,
             },
-            ease: "Power2",
+            ease: 'Power2',
             duration: 500,
             onComplete: () => {
                 this.startPulseTransition(emoteY, scalingFactor);
@@ -338,7 +338,7 @@ export abstract class Character extends Container {
                 alpha: 0,
                 y: 2 * emoteY,
             },
-            ease: "Power2",
+            ease: 'Power2',
             duration: 500,
             onComplete: () => {
                 this.destroyEmote();
