@@ -31,6 +31,14 @@ interface User {
     tags: string[];
 }
 
+interface TileDescriptor {
+    x: number
+    y: number
+    tile: number | string
+    layer: string
+}
+
+
 function getGameState(): Promise<GameStateEvent> {
     if (immutableDataPromise === undefined) {
         immutableDataPromise = new Promise<GameStateEvent>((resolver, thrower) => {
@@ -129,6 +137,13 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
             return { id: gameState.uuid, nickName: gameState.nickname, tags: gameState.tags };
         });
     }
+    setTiles(tiles: TileDescriptor[]) {
+        sendToWorkadventure({
+            type: 'setTiles',
+            data: tiles
+        })
+    }
+
 }
 
 export default new WorkadventureRoomCommands();

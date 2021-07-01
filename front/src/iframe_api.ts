@@ -16,6 +16,7 @@ import player from "./Api/iframe/player";
 import type { ButtonDescriptor } from "./Api/iframe/Ui/ButtonDescriptor";
 import type { Popup } from "./Api/iframe/Ui/Popup";
 import type { Sound } from "./Api/iframe/Sound/Sound";
+import {sendToWorkadventure} from "./Api/iframe/IframeApiContribution";
 
 const wa = {
     ui,
@@ -36,6 +37,7 @@ const wa = {
         console.warn('Method WA.sendChatMessage is deprecated. Please use WA.chat.sendChatMessage instead');
         chat.sendChatMessage(message, author);
     },
+
     /**
      * @deprecated Use WA.chat.disablePlayerControls instead
      */
