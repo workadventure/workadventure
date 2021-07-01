@@ -56,7 +56,7 @@ function getDataLayer(): Promise<DataLayerEvent> {
     });
 }
 
-class WorkadventureRoomCommands extends IframeApiContribution<WorkadventureRoomCommands> {
+export class WorkadventureRoomCommands extends IframeApiContribution<WorkadventureRoomCommands> {
     callbacks = [
         apiCallback({
             callback: (payloadData: EnterLeaveEvent) => {

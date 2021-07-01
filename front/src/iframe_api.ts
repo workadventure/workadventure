@@ -105,9 +105,9 @@ const wa = {
     /**
      * @deprecated Use WA.nav.openCoWebSite instead
      */
-    openCoWebSite(url: string): void {
+    openCoWebSite(url: string, allowApi: boolean = false, allowPolicy: string = ""): void {
         console.warn('Method WA.openCoWebSite is deprecated. Please use WA.nav.openCoWebSite instead');
-        nav.openCoWebSite(url);
+        nav.openCoWebSite(url, allowApi, allowPolicy);
     },
 
     /**

@@ -17,6 +17,18 @@
   - Use `WA.ui.registerMenuCommand(): void` to add a custom menu
   - Use `WA.room.setTiles(): void` to change an array of tiles
 
+## Version 1.4.3 - 1.4.4 - 1.4.5
+
+## Bugfixes
+
+- Fixing the generation of @workadventure/iframe-api-typings
+
+## Version 1.4.2
+
+## Updates
+
+- A script in an iframe opened by another script can use the IFrame API.
+
 ## Version 1.4.1
 
 ### Bugfixes
