@@ -18,7 +18,6 @@ import {
     TypedMessageEvent
 } from "./Events/IframeEvent";
 import type {UserInputChatEvent} from "./Events/UserInputChatEvent";
-//import { isLoadPageEvent } from './Events/LoadPageEvent';
 import {isPlaySoundEvent, PlaySoundEvent} from "./Events/PlaySoundEvent";
 import {isStopSoundEvent, StopSoundEvent} from "./Events/StopSoundEvent";
 import {isLoadSoundEvent, LoadSoundEvent} from "./Events/LoadSoundEvent";
@@ -30,6 +29,7 @@ import type {GameStateEvent} from "./Events/GameStateEvent";
 import type {HasPlayerMovedEvent} from "./Events/HasPlayerMovedEvent";
 import {isLoadPageEvent} from "./Events/LoadPageEvent";
 import {handleMenuItemRegistrationEvent, isMenuItemRegisterIframeEvent} from "./Events/ui/MenuItemRegisterEvent";
+import {SetTilesEvent, isSetTilesEvent} from "./Events/SetTilesEvent";
 
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.
@@ -103,6 +103,9 @@ class IframeListener {
     private readonly _loadSoundStream: Subject<LoadSoundEvent> = new Subject();
     public readonly loadSoundStream = this._loadSoundStream.asObservable();
 
+    private readonly _setTilesStream: Subject<SetTilesEvent> = new Subject();
+    public readonly setTilesStream = this._setTilesStream.asObservable();
+
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
@@ -123,11 +126,20 @@ class IframeListener {
                 }
             }
 
+            const payload = message.data;
+
             if (foundSrc === undefined) {
+                if (isIframeEventWrapper(payload)) {
+                    console.warn('It seems an iFrame is trying to communicate with WorkAdventure but was not explicitly granted the permission to do so. ' +
+                        'If you are looking to use the WorkAdventure Scripting API inside an iFrame, you should allow the ' +
+                        'iFrame to communicate with WorkAdventure by using the "openWebsiteAllowApi" property in your map (or passing "true" as a second' +
+                        'parameter to WA.nav.openCoWebSite())');
+                }
                 return;
             }
 
-            const payload = message.data;
+            foundSrc = this.getBaseUrl(foundSrc, message.source);
+
             if (isIframeEventWrapper(payload)) {
                 if (payload.type === 'showLayer' && isLayerEvent(payload.data)) {
                     this._showLayerStream.next(payload.data);
@@ -161,7 +173,7 @@ class IframeListener {
                     this._loadSoundStream.next(payload.data);
                 }
                 else if (payload.type === 'openCoWebSite' && isOpenCoWebsite(payload.data)) {
-                    scriptUtils.openCoWebsite(payload.data.url, foundSrc);
+                    scriptUtils.openCoWebsite(payload.data.url, foundSrc, payload.data.allowApi, payload.data.allowPolicy);
                 }
 
                 else if (payload.type === 'closeCoWebSite') {
@@ -190,6 +202,8 @@ class IframeListener {
                         this._unregisterMenuCommandStream.next(data);
                     })
                     handleMenuItemRegistrationEvent(payload.data)
+                } else if (payload.type == "setTiles" && isSetTilesEvent(payload.data)) {
+                    this._setTilesStream.next(payload.data);
                 }
             }
         }, false);
@@ -272,6 +286,15 @@ class IframeListener {
         }
 
 
+    }
+
+    private getBaseUrl(src: string, source: MessageEventSource | null): string{
+       for (const script of this.scripts) {
+           if (script[1].contentWindow === source) {
+               return script[0];
+           }
+       }
+       return src;
     }
 
     private static getIFrameId(scriptUrl: string): string {

@@ -1,11 +1,11 @@
 <script lang="typescript">
     import type { Game } from "../../Phaser/Game/Game";
     import {CustomizeScene, CustomizeSceneName} from "../../Phaser/Login/CustomizeScene";
+    import {activeRowStore} from "../../Stores/CustomCharacterStore";
 
     export let game: Game;
 
     const customCharacterScene = game.scene.getScene(CustomizeSceneName) as CustomizeScene;
-    let activeRow = customCharacterScene.activeRow;
 
     function selectLeft() {
         customCharacterScene.moveCursorHorizontally(-1);
@@ -17,12 +17,10 @@
 
     function selectUp() {
         customCharacterScene.moveCursorVertically(-1);
-        activeRow = customCharacterScene.activeRow;
     }
 
     function selectDown() {
         customCharacterScene.moveCursorVertically(1);
-        activeRow = customCharacterScene.activeRow;
     }
 
     function previousScene() {
@@ -44,16 +42,16 @@
         <button class="customCharacterSceneButton customCharacterSceneButtonRight nes-btn" on:click|preventDefault={ selectRight }> &gt; </button>
     </section>
     <section class="action">
-        {#if activeRow === 0}
+        {#if $activeRowStore === 0}
             <button type="submit" class="customCharacterSceneFormBack nes-btn" on:click|preventDefault={ previousScene }>Return</button>
         {/if}
-        {#if activeRow !== 0}
+        {#if $activeRowStore !== 0}
             <button type="submit" class="customCharacterSceneFormBack nes-btn" on:click|preventDefault={ selectUp }>Back <img src="resources/objects/arrow_up_black.png" alt=""/></button>
         {/if}
-        {#if activeRow === 5}
+        {#if $activeRowStore === 5}
             <button type="submit" class="customCharacterSceneFormSubmit nes-btn is-primary" on:click|preventDefault={ finish }>Finish</button>
         {/if}
-        {#if activeRow !== 5}
+        {#if $activeRowStore !== 5}
             <button type="submit" class="customCharacterSceneFormSubmit nes-btn is-primary" on:click|preventDefault={ selectDown }>Next <img src="resources/objects/arrow_down.png" alt=""/></button>
         {/if}
     </section>
