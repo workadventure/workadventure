@@ -6,7 +6,7 @@ import { isHasPlayerMovedEvent } from "../Events/HasPlayerMovedEvent";
 
 const moveStream = new Subject<HasPlayerMovedEvent>();
 
-class WorkadventurePlayerCommands extends IframeApiContribution<WorkadventurePlayerCommands> {
+export class WorkadventurePlayerCommands extends IframeApiContribution<WorkadventurePlayerCommands> {
     callbacks = [
         apiCallback({
             type: "hasPlayerMoved",

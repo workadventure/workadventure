@@ -23,7 +23,7 @@ interface ZonedPopupOptions {
     popupOptions: Array<ButtonDescriptor>;
 }
 
-class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventureUiCommands> {
+export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventureUiCommands> {
     callbacks = [
         apiCallback({
             type: "buttonClickedEvent",

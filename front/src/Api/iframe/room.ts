@@ -1,14 +1,15 @@
 import { Subject } from "rxjs";
+
+import { isDataLayerEvent } from "../Events/DataLayerEvent";
 import { EnterLeaveEvent, isEnterLeaveEvent } from "../Events/EnterLeaveEvent";
+import { isGameStateEvent } from "../Events/GameStateEvent";
+
 import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
-import type { LayerEvent } from "../Events/LayerEvent";
-import type { SetPropertyEvent } from "../Events/setPropertyEvent";
-import type { GameStateEvent } from "../Events/GameStateEvent";
+
 import type { ITiledMap } from "../../Phaser/Map/ITiledMap";
 import type { DataLayerEvent } from "../Events/DataLayerEvent";
-import { isGameStateEvent } from "../Events/GameStateEvent";
-import { isDataLayerEvent } from "../Events/DataLayerEvent";
+import type { GameStateEvent } from "../Events/GameStateEvent";
 
 const enterStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
 const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
@@ -30,6 +31,13 @@ interface User {
     tags: string[];
 }
 
+interface TileDescriptor {
+    x: number;
+    y: number;
+    tile: number | string;
+    layer: string;
+}
+
 function getGameState(): Promise<GameStateEvent> {
     if (immutableData) {
         return Promise.resolve(immutableData);
@@ -48,7 +56,7 @@ function getDataLayer(): Promise<DataLayerEvent> {
     });
 }
 
-class WorkadventureRoomCommands extends IframeApiContribution<WorkadventureRoomCommands> {
+export class WorkadventureRoomCommands extends IframeApiContribution<WorkadventureRoomCommands> {
     callbacks = [
         apiCallback({
             callback: (payloadData: EnterLeaveEvent) => {
@@ -127,6 +135,12 @@ class WorkadventureRoomCommands extends IframeApiContribution<WorkadventureRoomC
     getCurrentUser(): Promise<User> {
         return getGameState().then((gameState) => {
             return { id: gameState.uuid, nickName: gameState.nickname, tags: gameState.tags };
+        });
+    }
+    setTiles(tiles: TileDescriptor[]) {
+        sendToWorkadventure({
+            type: "setTiles",
+            data: tiles,
         });
     }
 }

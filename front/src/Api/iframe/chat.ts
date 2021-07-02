@@ -6,7 +6,7 @@ import { Subject } from "rxjs";
 
 const chatStream = new Subject<string>();
 
-class WorkadventureChatCommands extends IframeApiContribution<WorkadventureChatCommands> {
+export class WorkadventureChatCommands extends IframeApiContribution<WorkadventureChatCommands> {
     callbacks = [
         apiCallback({
             callback: (event: UserInputChatEvent) => {

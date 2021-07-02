@@ -17,14 +17,13 @@ import type { PlaySoundEvent } from "./PlaySoundEvent";
 import type { MenuItemClickedEvent } from "./ui/MenuItemClickedEvent";
 import type { MenuItemRegisterEvent } from "./ui/MenuItemRegisterEvent";
 import type { HasPlayerMovedEvent } from "./HasPlayerMovedEvent";
+import type { SetTilesEvent } from "./SetTilesEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
 }
 
 export type IframeEventMap = {
-    //getState: GameStateEvent,
-    // updateTile: UpdateTileEvent
     loadPage: LoadPageEvent;
     chat: ChatEvent;
     openPopup: OpenPopupEvent;
@@ -47,6 +46,7 @@ export type IframeEventMap = {
     stopSound: null;
     getState: undefined;
     registerMenuCommand: MenuItemRegisterEvent;
+    setTiles: SetTilesEvent;
 };
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;

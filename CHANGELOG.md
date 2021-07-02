@@ -15,6 +15,19 @@
   - Use `WA.room.getCurrentUser(): Promise<User>` to get the ID, name and tags of the current player
   - Use `WA.room.getCurrentRoom(): Promise<Room>` to get the ID, JSON map file, url of the map of the current room and the layer where the current player started
   - Use `WA.ui.registerMenuCommand(): void` to add a custom menu
+  - Use `WA.room.setTiles(): void` to change an array of tiles
+
+## Version 1.4.3 - 1.4.4 - 1.4.5
+
+## Bugfixes
+
+- Fixing the generation of @workadventure/iframe-api-typings
+
+## Version 1.4.2
+
+## Updates
+
+- A script in an iframe opened by another script can use the IFrame API.
 
 ## Version 1.4.1
 

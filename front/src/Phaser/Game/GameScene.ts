@@ -1,3 +1,8 @@
+import type { Subscription } from "rxjs";
+import { GlobalMessageManager } from "../../Administration/GlobalMessageManager";
+import { userMessageManager } from "../../Administration/UserMessageManager";
+import { iframeListener } from "../../Api/IframeListener";
+import { connectionManager } from "../../Connexion/ConnectionManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
     MessageUserJoined,
@@ -25,17 +30,13 @@ import {
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import type { UserMovedMessage } from "../../Messages/generated/messages_pb";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
-import { connectionManager } from "../../Connexion/ConnectionManager";
 import type { RoomConnection } from "../../Connexion/RoomConnection";
-import { GlobalMessageManager } from "../../Administration/GlobalMessageManager";
-import { userMessageManager } from "../../Administration/UserMessageManager";
 import { Room } from "../../Connexion/Room";
 import { jitsiFactory } from "../../WebRtc/JitsiFactory";
 import { urlManager } from "../../Url/UrlManager";
 import { audioManager } from "../../WebRtc/AudioManager";
 import { TextureError } from "../../Exception/TextureError";
 import { localUserStore } from "../../Connexion/LocalUserStore";
-import { iframeListener } from "../../Api/IframeListener";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import { mediaManager } from "../../WebRtc/MediaManager";
 import { SimplePeer } from "../../WebRtc/SimplePeer";
@@ -70,8 +71,6 @@ import CanvasTexture = Phaser.Textures.CanvasTexture;
 import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import DOMElement = Phaser.GameObjects.DOMElement;
-import EVENT_TYPE = Phaser.Scenes.Events;
-import type { Subscription } from "rxjs";
 import { worldFullMessageStream } from "../../Connexion/WorldFullMessageStream";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
 import { DirtyScene } from "./DirtyScene";
@@ -81,6 +80,10 @@ import { PinchManager } from "../UserInput/PinchManager";
 import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { EmoteManager } from "./EmoteManager";
+import EVENT_TYPE = Phaser.Scenes.Events;
+import RenderTexture = Phaser.GameObjects.RenderTexture;
+import Tilemap = Phaser.Tilemaps.Tilemap;
+import type { HasPlayerMovedEvent } from "../../Api/Events/HasPlayerMovedEvent";
 
 import AnimatedTiles from "phaser-animated-tiles";
 import { StartPositionCalculator } from "./StartPositionCalculator";
@@ -88,7 +91,6 @@ import { soundManager } from "./SoundManager";
 import { peerStore, screenSharingPeerStore } from "../../Stores/PeerStore";
 import { videoFocusStore } from "../../Stores/VideoFocusStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
-import type { HasPlayerMovedEvent } from "../../Api/Events/HasPlayerMovedEvent";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -196,6 +198,7 @@ export class GameScene extends DirtyScene {
     private pinchManager: PinchManager | undefined;
     private mapTransitioning: boolean = false; //used to prevent transitions happenning at the same time.
     private emoteManager!: EmoteManager;
+    private preloading: boolean = true;
     startPositionCalculator!: StartPositionCalculator;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
@@ -279,11 +282,15 @@ export class GameScene extends DirtyScene {
                 return;
             }
 
-            this.scene.start(ErrorSceneName, {
-                title: "Network error",
-                subTitle: "An error occurred while loading resource:",
-                message: this.originalMapUrl ?? file.src,
-            });
+            //once preloading is over, we don't want loading errors to crash the game, so we need to disable this behavior after preloading.
+            console.error("Error when loading: ", file);
+            if (this.preloading) {
+                this.scene.start(ErrorSceneName, {
+                    title: "Network error",
+                    subTitle: "An error occurred while loading resource:",
+                    message: this.originalMapUrl ?? file.src,
+                });
+            }
         });
         this.load.scenePlugin("AnimatedTiles", AnimatedTiles, "animatedTiles", "animatedTiles");
         this.load.on("filecomplete-tilemapJSON-" + this.MapUrlFile, (key: string, type: string, data: unknown) => {
@@ -408,6 +415,7 @@ export class GameScene extends DirtyScene {
 
     //hook create scene
     create(): void {
+        this.preloading = false;
         this.trackDirtyAnims();
 
         gameManager.gameSceneIsCreated(this);
@@ -1046,6 +1054,13 @@ ${escapedMessage}
                     roomId: this.RoomId,
                     tags: this.connection ? this.connection.getAllTags() : [],
                 });
+            })
+        );
+        this.iframeSubscriptionList.push(
+            iframeListener.setTilesStream.subscribe((eventTiles) => {
+                for (const eventTile of eventTiles) {
+                    this.gameMap.putTile(eventTile.tile, eventTile.x, eventTile.y, eventTile.layer);
+                }
             })
         );
     }
