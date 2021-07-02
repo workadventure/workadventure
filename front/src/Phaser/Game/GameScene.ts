@@ -1078,9 +1078,7 @@ ${escapedMessage}
         if (layer.properties === undefined) {
             layer.properties = [];
         }
-        const property = (layer.properties as ITiledMapLayerProperty[]).find(
-            (property) => property.name === propertyName
-        );
+        const property = layer.properties.find((property) => property.name === propertyName);
         if (property === undefined) {
             layer.properties.push({ name: propertyName, type: typeof propertyValue, value: propertyValue });
             return;
