@@ -1,22 +1,11 @@
-import { Subject } from "rxjs";
-import { iframeListener } from "../../IframeListener";
 import {
     isMessageReferenceEvent,
     isTriggerMessageEvent,
-    MessageReferenceEvent,
     removeTriggerMessage,
     triggerMessage,
-    TriggerMessageEvent,
-} from "./TriggerMessageEvent";
-import * as tg from "generic-type-guard";
-export function sendMessageTriggeredEvent(uuid: string) {
-    iframeListener.postMessage({
-        type: "messageTriggered",
-        data: {
-            uuid,
-        } as MessageReferenceEvent,
-    });
-}
+} from './TriggerMessageEvent';
+
+import * as tg from 'generic-type-guard';
 
 const isTriggerMessageEventObject = new tg.IsInterface()
     .withProperties({
