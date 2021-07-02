@@ -38,11 +38,10 @@ export class GameMap {
             if (layer.type === 'tilelayer') {
                 this.phaserLayers.push(
                     phaserMap
-                        .createLayer(layer.name, terrains, 0, 0)
+                        .createLayer(layer.name, terrains, (layer.x || 0) * 32, (layer.y || 0) * 32)
                         .setDepth(depth)
                         .setAlpha(layer.opacity)
                         .setVisible(layer.visible)
-                        .setOrigin(layer.x, layer.y)
                         .setSize(layer.width, layer.height)
                 );
             }
