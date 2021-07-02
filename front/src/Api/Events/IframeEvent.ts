@@ -18,6 +18,9 @@ import type { MenuItemClickedEvent } from "./ui/MenuItemClickedEvent";
 import type { MenuItemRegisterEvent } from "./ui/MenuItemRegisterEvent";
 import type { HasPlayerMovedEvent } from "./HasPlayerMovedEvent";
 import type { SetTilesEvent } from "./SetTilesEvent";
+import type { SetVariableEvent } from "./SetVariableEvent";
+import type {InitEvent} from "./InitEvent";
+
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -50,6 +53,9 @@ export type IframeEventMap = {
     getState: undefined;
     registerMenuCommand: MenuItemRegisterEvent;
     setTiles: SetTilesEvent;
+    setVariable: SetVariableEvent;
+    // A script/iframe is ready to receive events
+    ready: null;
 };
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;
@@ -68,6 +74,8 @@ export interface IframeResponseEventMap {
     hasPlayerMoved: HasPlayerMovedEvent;
     dataLayer: DataLayerEvent;
     menuItemClicked: MenuItemClickedEvent;
+    setVariable: SetVariableEvent;
+    init: InitEvent;
 }
 export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
     type: T;

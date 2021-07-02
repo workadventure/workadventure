@@ -91,6 +91,8 @@ import { soundManager } from "./SoundManager";
 import { peerStore, screenSharingPeerStore } from "../../Stores/PeerStore";
 import { videoFocusStore } from "../../Stores/VideoFocusStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
+import { SharedVariablesManager } from "./SharedVariablesManager";
+import type {InitEvent} from "../../Api/Events/InitEvent";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -199,7 +201,8 @@ export class GameScene extends DirtyScene {
     private mapTransitioning: boolean = false; //used to prevent transitions happenning at the same time.
     private emoteManager!: EmoteManager;
     private preloading: boolean = true;
-    startPositionCalculator!: StartPositionCalculator;
+    private startPositionCalculator!: StartPositionCalculator;
+    private sharedVariablesManager!: SharedVariablesManager;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -395,6 +398,23 @@ export class GameScene extends DirtyScene {
                 });
             });
         }
+
+
+        this.iframeSubscriptionList.push(iframeListener.readyStream.subscribe((iframe) => {
+            this.connectionAnswerPromise.then(connection => {
+                // Generate init message for an iframe
+                // TODO: merge with GameStateEvent
+                const initEvent: InitEvent = {
+                    variables: this.sharedVariablesManager.variables
+                }
+
+            });
+            // TODO: SEND INIT MESSAGE TO IFRAMES ONLY WHEN CONNECTION IS ESTABLISHED
+            // TODO: SEND INIT MESSAGE TO IFRAMES ONLY WHEN CONNECTION IS ESTABLISHED
+            // TODO: SEND INIT MESSAGE TO IFRAMES ONLY WHEN CONNECTION IS ESTABLISHED
+            // TODO: SEND INIT MESSAGE TO IFRAMES ONLY WHEN CONNECTION IS ESTABLISHED
+            // TODO: SEND INIT MESSAGE TO IFRAMES ONLY WHEN CONNECTION IS ESTABLISHED
+        }));
 
         // Now, let's load the script, if any
         const scripts = this.getScriptUrls(this.mapFile);
@@ -705,6 +725,9 @@ export class GameScene extends DirtyScene {
                 this.CurrentPlayer.on(hasMovedEventName, (event: HasPlayerMovedEvent) => {
                     this.gameMap.setPosition(event.x, event.y);
                 });
+
+                // Set up variables manager
+                this.sharedVariablesManager = new SharedVariablesManager(this.connection, this.gameMap);
 
                 //this.initUsersPosition(roomJoinedMessage.users);
                 this.connectionAnswerPromiseResolve(onConnect.room);
@@ -1148,6 +1171,7 @@ ${escapedMessage}
         this.peerStoreUnsubscribe();
         this.biggestAvailableAreaStoreUnsubscribe();
         iframeListener.unregisterAnswerer('getState');
+        this.sharedVariablesManager?.close();
 
         mediaManager.hideGameOverlay();
 

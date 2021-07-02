@@ -206,3 +206,9 @@ window.addEventListener(
         // ...
     }
 );
+
+// Notify WorkAdventure that we are ready to receive data
+sendToWorkadventure({
+    type: 'ready',
+    data: null
+});

@@ -145,14 +145,15 @@ WA.room.setTiles([
                 ]);
 ```
 
-### Saving / loading metadata
+### Saving / loading state
 
 ```
-WA.room.saveMetadata(key : string, data : any): void
-WA.room.loadMetadata(key : string) : any
+WA.room.saveVariable(key : string, data : unknown): void
+WA.room.loadVariable(key : string) : unknown
+WA.room.onVariableChange(key : string).subscribe((data: unknown) => {}) : Subscription
 ```
 
-These 2 methods can be used to save and load data related to the current room.
+These 3 methods can be used to save, load and track changes in variables related to the current room.
 
 `data` can be any value that is serializable in JSON.
 
@@ -161,17 +162,62 @@ configuration / metadatas.
 
 Example :
 ```javascript
-WA.room.saveMetadata('config', {
+WA.room.saveVariable('config', {
     'bottomExitUrl': '/@/org/world/castle',
     'topExitUrl': '/@/org/world/tower',
     'enableBirdSound': true
 });
 //...
-let config = WA.room.loadMetadata('config');
+let config = WA.room.loadVariable('config');
 ```
 
-{.alert.alert-danger}
-Important: metadata can only be saved/loaded if an administration server is attached to WorkAdventure. The `WA.room.saveMetadata`
-and `WA.room.loadMetadata` functions will therefore be available on the hosted version of WorkAdventure, but will not
-be available in the self-hosted version (unless you decide to code an administration server stub to provide storage for
-those data)
+If you are using Typescript, please note that the return type of `loadVariable` is `unknown`. This is
+for security purpose, as we don't know the type of the variable. In order to use the returned value,
+you will need to cast it to the correct type (or better, use a [Type guard](https://www.typescriptlang.org/docs/handbook/2/narrowing.html) to actually check at runtime
+that you get the expected type).
+
+{.alert.alert-warning}
+For security reasons, you cannot load or save **any** variable (otherwise, anyone on your map could set any data).
+Variables storage is subject to an authorization process. Read below to learn more.
+
+#### Declaring allowed keys
+
+In order to declare allowed keys related to a room, you need to add a **objects** in an "object layer" of the map.
+
+Each object will represent a variable.
+
+<div class="row">
+    <div class="col">
+        <img src="https://workadventu.re/img/docs/object_variable.png" class="figure-img img-fluid rounded" alt="" />
+    </div>
+</div>
+
+TODO: move the image in https://workadventu.re/img/docs
+
+
+The name of the variable is the name of the object.
+The object **type** MUST be **variable**.
+
+You can set a default value for the object in the `default` property.
+
+Use the `persist` property to save the state of the variable in database. If `persist` is false, the variable will stay
+in the memory of the WorkAdventure servers but will be wiped out of the memory as soon as the room is empty (or if the
+server restarts).
+
+{.alert.alert-info}
+Do not use `persist` for highly dynamic values that have a short life spawn.
+
+With `readableBy` and `writableBy`, you control who can read of write in this variable. The property accepts a string
+representing a "tag". Anyone having this "tag" can read/write in the variable.
+
+{.alert.alert-warning}
+`readableBy` and `writableBy` are specific to the public version of WorkAdventure because the notion of tags
+is not available unless you have an "admin" server (that is not part of the self-hosted version of WorkAdventure).
+
+Finally, the `jsonSchema` property can contain [a complete JSON schema](https://json-schema.org/) to validate the content of the variable.
+Trying to set a variable to a value that is not compatible with the schema will fail.
+
+
+
+
+TODO: document tracking, unsubscriber, etc...
