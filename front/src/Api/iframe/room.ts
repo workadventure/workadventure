@@ -4,7 +4,7 @@ import { isDataLayerEvent } from "../Events/DataLayerEvent";
 import { EnterLeaveEvent, isEnterLeaveEvent } from "../Events/EnterLeaveEvent";
 import { isGameStateEvent } from "../Events/GameStateEvent";
 
-import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
+import {IframeApiContribution, queryWorkadventure, sendToWorkadventure} from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 
 import type { ITiledMap } from "../../Phaser/Map/ITiledMap";
@@ -16,7 +16,7 @@ const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subj
 const dataLayerResolver = new Subject<DataLayerEvent>();
 const stateResolvers = new Subject<GameStateEvent>();
 
-let immutableData: GameStateEvent;
+let immutableDataPromise: Promise<GameStateEvent> | undefined = undefined;
 
 interface Room {
     id: string;
@@ -39,14 +39,10 @@ interface TileDescriptor {
 }
 
 function getGameState(): Promise<GameStateEvent> {
-    if (immutableData) {
-        return Promise.resolve(immutableData);
-    } else {
-        return new Promise<GameStateEvent>((resolver, thrower) => {
-            stateResolvers.subscribe(resolver);
-            sendToWorkadventure({ type: "getState", data: null });
-        });
+    if (immutableDataPromise === undefined) {
+        immutableDataPromise = queryWorkadventure({ type: "getState", data: undefined });
     }
+    return immutableDataPromise;
 }
 
 function getDataLayer(): Promise<DataLayerEvent> {
@@ -70,13 +66,6 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
             typeChecker: isEnterLeaveEvent,
             callback: (payloadData) => {
                 leaveStreams.get(payloadData.name)?.next();
-            },
-        }),
-        apiCallback({
-            type: "gameState",
-            typeChecker: isGameStateEvent,
-            callback: (payloadData) => {
-                stateResolvers.next(payloadData);
             },
         }),
         apiCallback({

@@ -23,6 +23,9 @@ export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
 }
 
+/**
+ * List event types sent from an iFrame to WorkAdventure
+ */
 export type IframeEventMap = {
     loadPage: LoadPageEvent;
     chat: ChatEvent;
@@ -62,7 +65,6 @@ export interface IframeResponseEventMap {
     enterEvent: EnterLeaveEvent;
     leaveEvent: EnterLeaveEvent;
     buttonClickedEvent: ButtonClickedEvent;
-    gameState: GameStateEvent;
     hasPlayerMoved: HasPlayerMovedEvent;
     dataLayer: DataLayerEvent;
     menuItemClicked: MenuItemClickedEvent;
@@ -76,3 +78,46 @@ export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
 export const isIframeResponseEventWrapper = (event: {
     type?: string;
 }): event is IframeResponseEvent<keyof IframeResponseEventMap> => typeof event.type === "string";
+
+
+/**
+ * List event types sent from an iFrame to WorkAdventure that expect a unique answer from WorkAdventure along the type for the answer from WorkAdventure to the iFrame
+ */
+export type IframeQueryMap = {
+    getState: {
+        query: undefined,
+        answer: GameStateEvent
+    },
+}
+
+export interface IframeQuery<T extends keyof IframeQueryMap> {
+    type: T;
+    data: IframeQueryMap[T]['query'];
+}
+
+export interface IframeQueryWrapper<T extends keyof IframeQueryMap> {
+    id: number;
+    query: IframeQuery<T>;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const isIframeQuery = (event: any): event is IframeQuery<keyof IframeQueryMap> => typeof event.type === 'string';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const isIframeQueryWrapper = (event: any): event is IframeQueryWrapper<keyof IframeQueryMap> => typeof event.id === 'number' && isIframeQuery(event.query);
+
+export interface IframeAnswerEvent<T extends keyof IframeQueryMap> {
+    id: number;
+    type: T;
+    data: IframeQueryMap[T]['answer'];
+}
+
+export const isIframeAnswerEvent = (event: { type?: string, id?: number }): event is IframeAnswerEvent<keyof IframeQueryMap> => typeof event.type === 'string' && typeof event.id === 'number';
+
+export interface IframeErrorAnswerEvent {
+    id: number;
+    type: keyof IframeQueryMap;
+    error: string;
+}
+
+export const isIframeErrorAnswerEvent = (event: { type?: string, id?: number, error?: string }): event is IframeErrorAnswerEvent => typeof event.type === 'string' && typeof event.id === 'number' && typeof event.error === 'string';

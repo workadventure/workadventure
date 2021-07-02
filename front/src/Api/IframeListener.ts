@@ -10,11 +10,13 @@ import { scriptUtils } from "./ScriptUtils";
 import { GoToPageEvent, isGoToPageEvent } from "./Events/GoToPageEvent";
 import { isOpenCoWebsite, OpenCoWebSiteEvent } from "./Events/OpenCoWebSiteEvent";
 import {
+    IframeErrorAnswerEvent,
     IframeEvent,
-    IframeEventMap,
+    IframeEventMap, IframeQueryMap,
     IframeResponseEvent,
     IframeResponseEventMap,
     isIframeEventWrapper,
+    isIframeQueryWrapper,
     TypedMessageEvent,
 } from "./Events/IframeEvent";
 import type { UserInputChatEvent } from "./Events/UserInputChatEvent";
@@ -30,6 +32,8 @@ import type { HasPlayerMovedEvent } from "./Events/HasPlayerMovedEvent";
 import { isLoadPageEvent } from "./Events/LoadPageEvent";
 import { handleMenuItemRegistrationEvent, isMenuItemRegisterIframeEvent } from "./Events/ui/MenuItemRegisterEvent";
 import { SetTilesEvent, isSetTilesEvent } from "./Events/SetTilesEvent";
+
+type AnswererCallback<T extends keyof IframeQueryMap> = (query: IframeQueryMap[T]['query']) => IframeQueryMap[T]['answer']|Promise<IframeQueryMap[T]['answer']>;
 
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.
@@ -81,9 +85,6 @@ class IframeListener {
     private readonly _setPropertyStream: Subject<SetPropertyEvent> = new Subject();
     public readonly setPropertyStream = this._setPropertyStream.asObservable();
 
-    private readonly _gameStateStream: Subject<void> = new Subject();
-    public readonly gameStateStream = this._gameStateStream.asObservable();
-
     private readonly _dataLayerChangeStream: Subject<void> = new Subject();
     public readonly dataLayerChangeStream = this._dataLayerChangeStream.asObservable();
 
@@ -110,6 +111,10 @@ class IframeListener {
     private readonly scripts = new Map<string, HTMLIFrameElement>();
     private sendPlayerMove: boolean = false;
 
+    private answerers: {
+        [key in keyof IframeQueryMap]?: AnswererCallback<key>
+    } = {};
+
     init() {
         window.addEventListener(
             "message",
@@ -119,7 +124,7 @@ class IframeListener {
                 // Note: maybe we could restrict on the domain too for additional security (in case the iframe goes to another domain).
                 let foundSrc: string | undefined;
 
-                let iframe: HTMLIFrameElement;
+                let iframe: HTMLIFrameElement | undefined;
                 for (iframe of this.iframes) {
                     if (iframe.contentWindow === message.source) {
                         foundSrc = iframe.src;
@@ -129,7 +134,7 @@ class IframeListener {
 
                 const payload = message.data;
 
-                if (foundSrc === undefined) {
+                if (foundSrc === undefined || iframe === undefined) {
                     if (isIframeEventWrapper(payload)) {
                         console.warn(
                             "It seems an iFrame is trying to communicate with WorkAdventure but was not explicitly granted the permission to do so. " +
@@ -143,65 +148,101 @@ class IframeListener {
 
                 foundSrc = this.getBaseUrl(foundSrc, message.source);
 
-                if (isIframeEventWrapper(payload)) {
-                    if (payload.type === "showLayer" && isLayerEvent(payload.data)) {
-                        this._showLayerStream.next(payload.data);
-                    } else if (payload.type === "hideLayer" && isLayerEvent(payload.data)) {
-                        this._hideLayerStream.next(payload.data);
-                    } else if (payload.type === "setProperty" && isSetPropertyEvent(payload.data)) {
-                        this._setPropertyStream.next(payload.data);
-                    } else if (payload.type === "chat" && isChatEvent(payload.data)) {
-                        this._chatStream.next(payload.data);
-                    } else if (payload.type === "openPopup" && isOpenPopupEvent(payload.data)) {
-                        this._openPopupStream.next(payload.data);
-                    } else if (payload.type === "closePopup" && isClosePopupEvent(payload.data)) {
-                        this._closePopupStream.next(payload.data);
-                    } else if (payload.type === "openTab" && isOpenTabEvent(payload.data)) {
-                        scriptUtils.openTab(payload.data.url);
-                    } else if (payload.type === "goToPage" && isGoToPageEvent(payload.data)) {
-                        scriptUtils.goToPage(payload.data.url);
-                    } else if (payload.type === "loadPage" && isLoadPageEvent(payload.data)) {
-                        this._loadPageStream.next(payload.data.url);
-                    } else if (payload.type === "playSound" && isPlaySoundEvent(payload.data)) {
-                        this._playSoundStream.next(payload.data);
-                    } else if (payload.type === "stopSound" && isStopSoundEvent(payload.data)) {
-                        this._stopSoundStream.next(payload.data);
-                    } else if (payload.type === "loadSound" && isLoadSoundEvent(payload.data)) {
-                        this._loadSoundStream.next(payload.data);
-                    } else if (payload.type === "openCoWebSite" && isOpenCoWebsite(payload.data)) {
-                        scriptUtils.openCoWebsite(
-                            payload.data.url,
-                            foundSrc,
-                            payload.data.allowApi,
-                            payload.data.allowPolicy
-                        );
-                    } else if (payload.type === "closeCoWebSite") {
-                        scriptUtils.closeCoWebSite();
-                    } else if (payload.type === "disablePlayerControls") {
-                        this._disablePlayerControlStream.next();
-                    } else if (payload.type === "restorePlayerControls") {
-                        this._enablePlayerControlStream.next();
-                    } else if (payload.type === "displayBubble") {
-                        this._displayBubbleStream.next();
-                    } else if (payload.type === "removeBubble") {
-                        this._removeBubbleStream.next();
-                    } else if (payload.type == "getState") {
-                        this._gameStateStream.next();
-                    } else if (payload.type == "onPlayerMove") {
-                        this.sendPlayerMove = true;
-                    } else if (payload.type == "getDataLayer") {
-                        this._dataLayerChangeStream.next();
-                    } else if (isMenuItemRegisterIframeEvent(payload)) {
-                        const data = payload.data.menutItem;
-                        // @ts-ignore
-                        this.iframeCloseCallbacks.get(iframe).push(() => {
-                            this._unregisterMenuCommandStream.next(data);
-                        });
-                        handleMenuItemRegistrationEvent(payload.data);
-                    } else if (payload.type == "setTiles" && isSetTilesEvent(payload.data)) {
-                        this._setTilesStream.next(payload.data);
+                if (isIframeQueryWrapper(payload)) {
+                    const queryId = payload.id;
+                    const query = payload.query;
+
+                    const answerer = this.answerers[query.type];
+                    if (answerer === undefined) {
+                        const errorMsg = 'The iFrame sent a message of type "'+query.type+'" but there is no service configured to answer these messages.';
+                        console.error(errorMsg);
+                        iframe.contentWindow?.postMessage({
+                            id: queryId,
+                            type: query.type,
+                            error: errorMsg
+                        } as IframeErrorAnswerEvent, '*');
+                        return;
                     }
-                }
+
+                    Promise.resolve(answerer(query.data)).then((value) => {
+                        iframe?.contentWindow?.postMessage({
+                            id: queryId,
+                            type: query.type,
+                            data: value
+                        }, '*');
+                    }).catch(reason => {
+                        console.error('An error occurred while responding to an iFrame query.', reason);
+                        let reasonMsg: string;
+                        if (reason instanceof Error) {
+                            reasonMsg = reason.message;
+                        } else {
+                            reasonMsg = reason.toString();
+                        }
+
+                        iframe?.contentWindow?.postMessage({
+                            id: queryId,
+                            type: query.type,
+                            error: reasonMsg
+                        } as IframeErrorAnswerEvent, '*');
+                    });
+
+                } else if (isIframeEventWrapper(payload)) {
+                    if (payload.type === "showLayer" && isLayerEvent(payload.data)) {
+                            this._showLayerStream.next(payload.data);
+                        } else if (payload.type === "hideLayer" && isLayerEvent(payload.data)) {
+                            this._hideLayerStream.next(payload.data);
+                        } else if (payload.type === "setProperty" && isSetPropertyEvent(payload.data)) {
+                            this._setPropertyStream.next(payload.data);
+                        } else if (payload.type === "chat" && isChatEvent(payload.data)) {
+                            this._chatStream.next(payload.data);
+                        } else if (payload.type === "openPopup" && isOpenPopupEvent(payload.data)) {
+                            this._openPopupStream.next(payload.data);
+                        } else if (payload.type === "closePopup" && isClosePopupEvent(payload.data)) {
+                            this._closePopupStream.next(payload.data);
+                        } else if (payload.type === "openTab" && isOpenTabEvent(payload.data)) {
+                            scriptUtils.openTab(payload.data.url);
+                        } else if (payload.type === "goToPage" && isGoToPageEvent(payload.data)) {
+                            scriptUtils.goToPage(payload.data.url);
+                        } else if (payload.type === "loadPage" && isLoadPageEvent(payload.data)) {
+                            this._loadPageStream.next(payload.data.url);
+                        } else if (payload.type === "playSound" && isPlaySoundEvent(payload.data)) {
+                            this._playSoundStream.next(payload.data);
+                        } else if (payload.type === "stopSound" && isStopSoundEvent(payload.data)) {
+                            this._stopSoundStream.next(payload.data);
+                        } else if (payload.type === "loadSound" && isLoadSoundEvent(payload.data)) {
+                            this._loadSoundStream.next(payload.data);
+                        } else if (payload.type === "openCoWebSite" && isOpenCoWebsite(payload.data)) {
+                            scriptUtils.openCoWebsite(
+                                payload.data.url,
+                                foundSrc,
+                                payload.data.allowApi,
+                                payload.data.allowPolicy
+                            );
+                        } else if (payload.type === "closeCoWebSite") {
+                            scriptUtils.closeCoWebSite();
+                        } else if (payload.type === "disablePlayerControls") {
+                            this._disablePlayerControlStream.next();
+                        } else if (payload.type === "restorePlayerControls") {
+                            this._enablePlayerControlStream.next();
+                        } else if (payload.type === "displayBubble") {
+                            this._displayBubbleStream.next();
+                        } else if (payload.type === "removeBubble") {
+                        this._removeBubbleStream.next();
+                        } else if (payload.type == "onPlayerMove") {
+                            this.sendPlayerMove = true;
+                        } else if (payload.type == "getDataLayer") {
+                            this._dataLayerChangeStream.next();
+                        } else if (isMenuItemRegisterIframeEvent(payload)) {
+                            const data = payload.data.menutItem;
+                            // @ts-ignore
+                            this.iframeCloseCallbacks.get(iframe).push(() => {
+                                this._unregisterMenuCommandStream.next(data);
+                            });
+                            handleMenuItemRegistrationEvent(payload.data);
+                        } else if (payload.type == "setTiles" && isSetTilesEvent(payload.data)) {
+                            this._setTilesStream.next(payload.data);
+                        }
+                    }
             },
             false
         );
@@ -211,13 +252,6 @@ class IframeListener {
         this.postMessage({
             type: "dataLayer",
             data: dataLayerEvent,
-        });
-    }
-
-    sendGameStateEvent(gameStateEvent: GameStateEvent) {
-        this.postMessage({
-            type: "gameState",
-            data: gameStateEvent,
         });
     }
 
@@ -367,6 +401,22 @@ class IframeListener {
         for (const iframe of this.iframes) {
             iframe.contentWindow?.postMessage(message, "*");
         }
+    }
+
+    /**
+     * Registers a callback that can be used to respond to some query (as defined in the IframeQueryMap type).
+     *
+     * Important! There can be only one "answerer" so registering a new one will unregister the old one.
+     *
+     * @param key The "type" of the query we are answering
+     * @param callback
+     */
+    public registerAnswerer<T extends keyof IframeQueryMap>(key: T, callback: (query: IframeQueryMap[T]['query']) => IframeQueryMap[T]['answer']|Promise<IframeQueryMap[T]['answer']> ): void {
+        this.answerers[key] = callback;
+    }
+
+    public unregisterAnswerer(key: keyof IframeQueryMap): void {
+        delete this.answerers[key];
     }
 }
 

@@ -1,7 +1,7 @@
 import { registeredCallbacks } from "./Api/iframe/registeredCallbacks";
 import {
     IframeResponseEvent,
-    IframeResponseEventMap,
+    IframeResponseEventMap, isIframeAnswerEvent, isIframeErrorAnswerEvent,
     isIframeResponseEventWrapper,
     TypedMessageEvent,
 } from "./Api/Events/IframeEvent";
@@ -16,7 +16,7 @@ import player from "./Api/iframe/player";
 import type { ButtonDescriptor } from "./Api/iframe/Ui/ButtonDescriptor";
 import type { Popup } from "./Api/iframe/Ui/Popup";
 import type { Sound } from "./Api/iframe/Sound/Sound";
-import { sendToWorkadventure } from "./Api/iframe/IframeApiContribution";
+import { answerPromises, sendToWorkadventure} from "./Api/iframe/IframeApiContribution";
 
 const wa = {
     ui,
@@ -164,16 +164,38 @@ declare global {
 window.WA = wa;
 
 window.addEventListener(
-    "message",
-    <T extends keyof IframeResponseEventMap>(message: TypedMessageEvent<IframeResponseEvent<T>>) => {
-        if (message.source !== window.parent) {
-            return; // Skip message in this event listener
-        }
-        const payload = message.data;
-        console.debug(payload);
+    "message", <T extends keyof IframeResponseEventMap>(message: TypedMessageEvent<IframeResponseEvent<T>>) => {
+    if (message.source !== window.parent) {
+        return; // Skip message in this event listener
+    }
+    const payload = message.data;
 
-        if (isIframeResponseEventWrapper(payload)) {
-            const payloadData = payload.data;
+    console.debug(payload);
+
+    if (isIframeAnswerEvent(payload)) {
+        const queryId = payload.id;
+        const payloadData = payload.data;
+
+        const resolver = answerPromises.get(queryId);
+        if (resolver === undefined) {
+            throw new Error('In Iframe API, got an answer for a question that we have no track of.');
+        }
+        resolver.resolve(payloadData);
+
+        answerPromises.delete(queryId);
+    } else if (isIframeErrorAnswerEvent(payload)) {
+        const queryId = payload.id;
+        const payloadError = payload.error;
+
+        const resolver = answerPromises.get(queryId);
+        if (resolver === undefined) {
+            throw new Error('In Iframe API, got an error answer for a question that we have no track of.');
+        }
+        resolver.reject(payloadError);
+
+        answerPromises.delete(queryId);
+    } else if (isIframeResponseEventWrapper(payload)) {
+        const payloadData = payload.data;
 
             const callback = registeredCallbacks[payload.type] as IframeCallback<T> | undefined;
             if (callback?.typeChecker(payloadData)) {
