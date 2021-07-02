@@ -1044,18 +1044,16 @@ ${escapedMessage}
             })
         );
 
-        this.iframeSubscriptionList.push(
-            iframeListener.gameStateStream.subscribe(() => {
-                iframeListener.sendGameStateEvent({
-                    mapUrl: this.MapUrlFile,
-                    startLayerName: this.startPositionCalculator.startLayerName,
-                    uuid: localUserStore.getLocalUser()?.uuid,
-                    nickname: localUserStore.getName(),
-                    roomId: this.RoomId,
-                    tags: this.connection ? this.connection.getAllTags() : [],
-                });
-            })
-        );
+        iframeListener.registerAnswerer('getState', () => {
+            return Promise.resolve({
+                mapUrl: this.MapUrlFile,
+                startLayerName: this.startPositionCalculator.startLayerName,
+                uuid: localUserStore.getLocalUser()?.uuid,
+                nickname: localUserStore.getName(),
+                roomId: this.RoomId,
+                tags: this.connection ? this.connection.getAllTags() : [],
+            });
+        });
         this.iframeSubscriptionList.push(
             iframeListener.setTilesStream.subscribe((eventTiles) => {
                 for (const eventTile of eventTiles) {
@@ -1149,6 +1147,7 @@ ${escapedMessage}
         this.emoteManager.destroy();
         this.peerStoreUnsubscribe();
         this.biggestAvailableAreaStoreUnsubscribe();
+        iframeListener.unregisterAnswerer('getState');
 
         mediaManager.hideGameOverlay();
 
