@@ -33,7 +33,7 @@ import { isLoadPageEvent } from "./Events/LoadPageEvent";
 import { handleMenuItemRegistrationEvent, isMenuItemRegisterIframeEvent } from "./Events/ui/MenuItemRegisterEvent";
 import { SetTilesEvent, isSetTilesEvent } from "./Events/SetTilesEvent";
 
-type AnswererCallback<T extends keyof IframeQueryMap> = (query: IframeQueryMap[T]['query']) => Promise<IframeQueryMap[T]['answer']>;
+type AnswererCallback<T extends keyof IframeQueryMap> = (query: IframeQueryMap[T]['query']) => IframeQueryMap[T]['answer']|Promise<IframeQueryMap[T]['answer']>;
 
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.
@@ -164,7 +164,7 @@ class IframeListener {
                         return;
                     }
 
-                    answerer(query.data).then((value) => {
+                    Promise.resolve(answerer(query.data)).then((value) => {
                         iframe?.contentWindow?.postMessage({
                             id: queryId,
                             type: query.type,
@@ -411,7 +411,7 @@ class IframeListener {
      * @param key The "type" of the query we are answering
      * @param callback
      */
-    public registerAnswerer<T extends keyof IframeQueryMap>(key: T, callback: (query: IframeQueryMap[T]['query']) => Promise<IframeQueryMap[T]['answer']> ): void {
+    public registerAnswerer<T extends keyof IframeQueryMap>(key: T, callback: (query: IframeQueryMap[T]['query']) => IframeQueryMap[T]['answer']|Promise<IframeQueryMap[T]['answer']> ): void {
         this.answerers[key] = callback;
     }
 

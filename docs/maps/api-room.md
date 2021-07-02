@@ -81,7 +81,7 @@ WA.room.getCurrentRoom(): Promise<Room>
 ```
 Return a promise that resolves to a `Room` object with the following attributes :
 * **id (string) :** ID of the current room
-* **map (ITiledMap) :** contains the JSON map file with the properties that were setted by the script if `setProperty` was called.
+* **map (ITiledMap) :** contains the JSON map file with the properties that were set by the script if `setProperty` was called.
 * **mapUrl (string) :** Url of the JSON map file
 * **startLayer (string | null) :** Name of the layer where the current user started, only if different from `start` layer
 

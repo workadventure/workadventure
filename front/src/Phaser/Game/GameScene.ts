@@ -1045,14 +1045,14 @@ ${escapedMessage}
         );
 
         iframeListener.registerAnswerer('getState', () => {
-            return Promise.resolve({
+            return {
                 mapUrl: this.MapUrlFile,
                 startLayerName: this.startPositionCalculator.startLayerName,
                 uuid: localUserStore.getLocalUser()?.uuid,
                 nickname: localUserStore.getName(),
                 roomId: this.RoomId,
                 tags: this.connection ? this.connection.getAllTags() : [],
-            });
+            };
         });
         this.iframeSubscriptionList.push(
             iframeListener.setTilesStream.subscribe((eventTiles) => {
