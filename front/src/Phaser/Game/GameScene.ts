@@ -1075,11 +1075,13 @@ ${escapedMessage}
             console.warn('Could not find layer "' + layerName + '" when calling setProperty');
             return;
         }
-        const property = (layer.properties as ITiledMapLayerProperty[])?.find(
+        if (layer.properties === undefined) {
+            layer.properties = [];
+        }
+        const property = (layer.properties as ITiledMapLayerProperty[]).find(
             (property) => property.name === propertyName
         );
         if (property === undefined) {
-            layer.properties = [];
             layer.properties.push({ name: propertyName, type: typeof propertyValue, value: propertyValue });
             return;
         }

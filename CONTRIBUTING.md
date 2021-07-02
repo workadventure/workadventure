@@ -42,7 +42,7 @@ Before committing, be sure to install the "Prettier" precommit hook that will re
 In order to enable the "Prettier" precommit hook, at the root of the project, run:
 
 ```console
-$ yarn run install
+$ yarn install
 $ yarn run prepare
 ```
 
