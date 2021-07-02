@@ -1,6 +1,6 @@
-import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
-import {BatchMessage, ErrorMessage, ServerToClientMessage, SubMessage} from "../Messages/generated/messages_pb";
-import {WebSocket} from "uWebSockets.js";
+import { ExSocketInterface } from "_Model/Websocket/ExSocketInterface";
+import { BatchMessage, ErrorMessage, ServerToClientMessage, SubMessage } from "../Messages/generated/messages_pb";
+import { WebSocket } from "uWebSockets.js";
 
 export function emitInBatch(socket: ExSocketInterface, payload: SubMessage): void {
     socket.batchedMessages.addPayload(payload);
@@ -33,4 +33,3 @@ export function emitError(Client: WebSocket, message: string): void {
     }
     console.warn(message);
 }
-

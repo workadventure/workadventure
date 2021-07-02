@@ -1,10 +1,14 @@
 import { MAX_EXTRAPOLATION_TIME } from "../../Enum/EnvironmentVariable";
 import type { PositionInterface } from "../../Connexion/ConnexionModels";
-import type { HasPlayerMovedEvent } from '../../Api/Events/HasPlayerMovedEvent';
+import type { HasPlayerMovedEvent } from "../../Api/Events/HasPlayerMovedEvent";
 
 export class PlayerMovement {
-    public constructor(private startPosition: PositionInterface, private startTick: number, private endPosition: HasPlayerMovedEvent, private endTick: number) {
-    }
+    public constructor(
+        private startPosition: PositionInterface,
+        private startTick: number,
+        private endPosition: HasPlayerMovedEvent,
+        private endTick: number
+    ) {}
 
     public isOutdated(tick: number): boolean {
         //console.log(tick, this.endTick, MAX_EXTRAPOLATION_TIME)
@@ -24,14 +28,18 @@ export class PlayerMovement {
             return this.endPosition;
         }
 
-        const x = (this.endPosition.x - this.startPosition.x) * ((tick - this.startTick) / (this.endTick - this.startTick)) + this.startPosition.x;
-        const y = (this.endPosition.y - this.startPosition.y) * ((tick - this.startTick) / (this.endTick - this.startTick)) + this.startPosition.y;
+        const x =
+            (this.endPosition.x - this.startPosition.x) * ((tick - this.startTick) / (this.endTick - this.startTick)) +
+            this.startPosition.x;
+        const y =
+            (this.endPosition.y - this.startPosition.y) * ((tick - this.startTick) / (this.endTick - this.startTick)) +
+            this.startPosition.y;
         //console.log('Computed position ', x, y)
         return {
             x,
             y,
             direction: this.endPosition.direction,
-            moving: true
-        }
+            moving: true,
+        };
     }
 }

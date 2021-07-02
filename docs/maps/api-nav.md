@@ -52,11 +52,11 @@ WA.nav.goToRoom("/_/global/<path to global map>.json#start-layer-2")
 ### Opening/closing a web page in an iFrame
 
 ```
-WA.nav.openCoWebSite(url: string): void
+WA.nav.openCoWebSite(url: string, allowApi: boolean = false, allowPolicy: string = ""): void
 WA.nav.closeCoWebSite(): void
 ```
 
-Opens the webpage at "url" in an iFrame (on the right side of the screen) or close that iFrame.
+Opens the webpage at "url" in an iFrame (on the right side of the screen) or close that iFrame. `allowApi` allows the webpage to use the "IFrame API" and execute script (it is equivalent to putting the `openWebsiteAllowApi` property in the map). `allowPolicy` grants additional access rights to the iFrame. The `allowPolicy` parameter is turned into an [`allow` feature policy in the iFrame](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#attr-allow).
 
 Example:
 
@@ -65,4 +65,3 @@ WA.nav.openCoWebSite('https://www.wikipedia.org/');
 // ...
 WA.nav.closeCoWebSite();
 ```
-

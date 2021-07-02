@@ -7,4 +7,5 @@ docker-compose.override.yaml
 maps/yarn.lock
 maps/dist/computer.js
 maps/dist/computer.js.map
-/node_modules/
+node_modules
+_

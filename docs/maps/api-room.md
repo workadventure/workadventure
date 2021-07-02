@@ -81,7 +81,7 @@ WA.room.getCurrentRoom(): Promise<Room>
 ```
 Return a promise that resolves to a `Room` object with the following attributes :
 * **id (string) :** ID of the current room
-* **map (ITiledMap) :** contains the JSON map file with the properties that were setted by the script if `setProperty` was called.
+* **map (ITiledMap) :** contains the JSON map file with the properties that were set by the script if `setProperty` was called.
 * **mapUrl (string) :** Url of the JSON map file
 * **startLayer (string | null) :** Name of the layer where the current user started, only if different from `start` layer
 
@@ -111,4 +111,36 @@ WA.room.getCurrentUser().then((user) => {
         console.log(user.tags);
     }
 })
+```
+
+### Changing tiles 
+```
+WA.room.setTiles(tiles: TileDescriptor[]): void
+```
+Replace the tile at the `x` and `y` coordinates in the layer named `layer` by the tile with the id `tile`.
+
+If `tile` is a string, it's not the id of the tile but the value of the property `name`.
+<div class="row">
+    <div class="col">
+        <img src="https://workadventu.re/img/docs/nameIndexProperty.png" class="figure-img img-fluid rounded" alt="" />
+    </div>
+</div>
+
+`TileDescriptor` has the following attributes : 
+* **x (number) :** The coordinate x of the tile that you want to replace.
+* **y (number) :** The coordinate y of the tile that you want to replace.
+* **tile (number | string) :** The id of the tile that will be placed in the map.
+* **layer (string) :** The name of the layer where the tile will be placed.
+
+**Important !** : If you use `tile` as a number, be sure to add the `firstgid` of the tileset of the tile that you want to the id of the tile in Tiled Editor.
+
+
+Example : 
+```javascript
+WA.room.setTiles([
+                {x: 6, y: 4, tile: 'blue', layer: 'setTiles'},
+                {x: 7, y: 4, tile: 109, layer: 'setTiles'},
+                {x: 8, y: 4, tile: 109, layer: 'setTiles'},
+                {x: 9, y: 4, tile: 'blue', layer: 'setTiles'}
+                ]);
 ```
