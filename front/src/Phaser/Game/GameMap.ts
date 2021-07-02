@@ -35,9 +35,15 @@ export class GameMap {
         this.flatLayers = flattenGroupLayersMap(map);
         let depth = -2;
         for (const layer of this.flatLayers) {
-            if (layer.type === 'tilelayer' && layer.visible !== false) {
+            if (layer.type === 'tilelayer') {
                 this.phaserLayers.push(
-                    phaserMap.createLayer(layer.name, terrains, 0, 0).setDepth(depth).setAlpha(layer.opacity)
+                    phaserMap
+                        .createLayer(layer.name, terrains, 0, 0)
+                        .setDepth(depth)
+                        .setAlpha(layer.opacity)
+                        .setVisible(layer.visible)
+                        .setOrigin(layer.x, layer.y)
+                        .setSize(layer.width, layer.height)
                 );
             }
             if (layer.type === 'objectgroup' && layer.name === 'floorLayer') {
