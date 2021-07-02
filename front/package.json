@@ -61,7 +61,7 @@
     "serve": "cross-env TS_NODE_PROJECT=\"tsconfig-for-webpack.json\" webpack serve --open",
     "build": "cross-env TS_NODE_PROJECT=\"tsconfig-for-webpack.json\" NODE_ENV=production webpack",
     "build-typings": "cross-env TS_NODE_PROJECT=\"tsconfig-for-webpack.json\" NODE_ENV=production BUILD_TYPINGS=1 webpack",
-    "test": "TS_NODE_PROJECT=\"tsconfig-for-jasmine.json\" ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
+    "test": "cross-env TS_NODE_PROJECT=\"tsconfig-for-jasmine.json\" ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
     "lint": "node_modules/.bin/eslint src/ . --ext .ts",
     "fix": "node_modules/.bin/eslint --fix src/ . --ext .ts",
     "precommit": "lint-staged",

@@ -16,7 +16,7 @@ const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subj
 const dataLayerResolver = new Subject<DataLayerEvent>();
 const stateResolvers = new Subject<GameStateEvent>();
 
-let immutableDataPromise: Promise<GameStateEvent> | undefined = undefined;
+let immutableData: GameStateEvent;
 
 interface Room {
     id: string;
@@ -32,21 +32,21 @@ interface User {
 }
 
 interface TileDescriptor {
-    x: number
-    y: number
-    tile: number | string
-    layer: string
+    x: number;
+    y: number;
+    tile: number | string;
+    layer: string;
 }
 
-
 function getGameState(): Promise<GameStateEvent> {
-    if (immutableDataPromise === undefined) {
-        immutableDataPromise = new Promise<GameStateEvent>((resolver, thrower) => {
+    if (immutableData) {
+        return Promise.resolve(immutableData);
+    } else {
+        return new Promise<GameStateEvent>((resolver, thrower) => {
             stateResolvers.subscribe(resolver);
             sendToWorkadventure({ type: "getState", data: null });
         });
     }
-    return immutableDataPromise;
 }
 
 function getDataLayer(): Promise<DataLayerEvent> {
@@ -139,11 +139,10 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
     }
     setTiles(tiles: TileDescriptor[]) {
         sendToWorkadventure({
-            type: 'setTiles',
-            data: tiles
-        })
+            type: "setTiles",
+            data: tiles,
+        });
     }
-
 }
 
 export default new WorkadventureRoomCommands();

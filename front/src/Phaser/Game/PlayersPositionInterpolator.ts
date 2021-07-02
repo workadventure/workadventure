@@ -2,7 +2,7 @@
  * This class is in charge of computing the position of all players.
  * Player movement is delayed by 200ms so position depends on ticks.
  */
-import type { HasPlayerMovedEvent } from '../../Api/Events/HasPlayerMovedEvent';
+import type { HasPlayerMovedEvent } from "../../Api/Events/HasPlayerMovedEvent";
 import type { PlayerMovement } from "./PlayerMovement";
 
 export class PlayersPositionInterpolator {
@@ -24,7 +24,7 @@ export class PlayersPositionInterpolator {
                 this.playerMovements.delete(userId);
             }
             //console.log("moving")
-            positions.set(userId, playerMovement.getPosition(tick))
+            positions.set(userId, playerMovement.getPosition(tick));
         });
         return positions;
     }

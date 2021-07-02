@@ -1,4 +1,3 @@
-import { Queue } from "queue-typescript";
 import type { Subscription } from "rxjs";
 import { GlobalMessageManager } from "../../Administration/GlobalMessageManager";
 import { userMessageManager } from "../../Administration/UserMessageManager";
@@ -14,20 +13,9 @@ import type {
     PositionInterface,
     RoomJoinedMessageInterface,
 } from "../../Connexion/ConnexionModels";
-import { localUserStore } from "../../Connexion/LocalUserStore";
-import { Room } from "../../Connexion/Room";
-import type { RoomConnection } from "../../Connexion/RoomConnection";
-import { worldFullMessageStream } from "../../Connexion/WorldFullMessageStream";
 import { DEBUG_MODE, JITSI_PRIVATE_MODE, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
-import { TextureError } from "../../Exception/TextureError";
-import type { UserMovedMessage } from "../../Messages/generated/messages_pb";
-import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
-import { touchScreenManager } from "../../Touch/TouchScreenManager";
-import { urlManager } from "../../Url/UrlManager";
-import { audioManager } from "../../WebRtc/AudioManager";
-import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
-import { HtmlUtils } from "../../WebRtc/HtmlUtils";
-import { jitsiFactory } from "../../WebRtc/JitsiFactory";
+
+import { Queue } from "queue-typescript";
 import {
     AUDIO_LOOP_PROPERTY,
     AUDIO_VOLUME_PROPERTY,
@@ -39,15 +27,21 @@ import {
     TRIGGER_WEBSITE_PROPERTIES,
     WEBSITE_MESSAGE_PROPERTIES,
 } from "../../WebRtc/LayoutManager";
+import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
+import type { UserMovedMessage } from "../../Messages/generated/messages_pb";
+import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
+import type { RoomConnection } from "../../Connexion/RoomConnection";
+import { Room } from "../../Connexion/Room";
+import { jitsiFactory } from "../../WebRtc/JitsiFactory";
+import { urlManager } from "../../Url/UrlManager";
+import { audioManager } from "../../WebRtc/AudioManager";
+import { TextureError } from "../../Exception/TextureError";
+import { localUserStore } from "../../Connexion/LocalUserStore";
+import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import { mediaManager } from "../../WebRtc/MediaManager";
-import { SimplePeer, UserSimplePeerInterface } from "../../WebRtc/SimplePeer";
-import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
-import { ChatModeIcon } from "../Components/ChatModeIcon";
+import { SimplePeer } from "../../WebRtc/SimplePeer";
 import { addLoader } from "../Components/Loader";
-import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
 import { OpenChatIcon, openChatIconName } from "../Components/OpenChatIcon";
-import { PresentationModeIcon } from "../Components/PresentationModeIcon";
-import { TextUtils } from "../Components/TextUtils";
 import { lazyLoadPlayerCharacterTextures, loadCustomTexture } from "../Entity/PlayerTexturesLoadingManager";
 import { RemotePlayer } from "../Entity/RemotePlayer";
 import type { ActionableItem } from "../Items/ActionableItem";
@@ -58,7 +52,6 @@ import type {
     ITiledMapLayer,
     ITiledMapLayerProperty,
     ITiledMapObject,
-    ITiledMapTileLayer,
     ITiledTileSet,
 } from "../Map/ITiledMap";
 import { MenuScene, MenuSceneName } from "../Menu/MenuScene";
@@ -66,13 +59,8 @@ import { PlayerAnimationDirections } from "../Player/Animation";
 import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
 import { ErrorSceneName } from "../Reconnecting/ErrorScene";
 import { ReconnectingSceneName } from "../Reconnecting/ReconnectingScene";
-import { waScaleManager } from "../Services/WaScaleManager";
-import { PinchManager } from "../UserInput/PinchManager";
 import { UserInputManager } from "../UserInput/UserInputManager";
 import type { AddPlayerInterface } from "./AddPlayerInterface";
-import { DEPTH_OVERLAY_INDEX } from "./DepthIndexes";
-import { DirtyScene } from "./DirtyScene";
-import { EmoteManager } from "./EmoteManager";
 import { gameManager } from "./GameManager";
 import { GameMap } from "./GameMap";
 import { PlayerMovement } from "./PlayerMovement";
@@ -83,12 +71,22 @@ import CanvasTexture = Phaser.Textures.CanvasTexture;
 import GameObject = Phaser.GameObjects.GameObject;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import DOMElement = Phaser.GameObjects.DOMElement;
+import { worldFullMessageStream } from "../../Connexion/WorldFullMessageStream";
+import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
+import { DirtyScene } from "./DirtyScene";
+import { TextUtils } from "../Components/TextUtils";
+import { touchScreenManager } from "../../Touch/TouchScreenManager";
+import { PinchManager } from "../UserInput/PinchManager";
+import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
+import { waScaleManager } from "../Services/WaScaleManager";
+import { EmoteManager } from "./EmoteManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
 import RenderTexture = Phaser.GameObjects.RenderTexture;
 import Tilemap = Phaser.Tilemaps.Tilemap;
 import type { HasPlayerMovedEvent } from "../../Api/Events/HasPlayerMovedEvent";
 
 import AnimatedTiles from "phaser-animated-tiles";
+import { StartPositionCalculator } from "./StartPositionCalculator";
 import { soundManager } from "./SoundManager";
 import { peerStore, screenSharingPeerStore } from "../../Stores/PeerStore";
 import { videoFocusStore } from "../../Stores/VideoFocusStore";
@@ -129,8 +127,6 @@ interface DeleteGroupEventInterface {
     groupId: number;
 }
 
-const defaultStartLayerName = "start";
-
 export class GameScene extends DirtyScene {
     Terrains: Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer!: Player;
@@ -141,8 +137,6 @@ export class GameScene extends DirtyScene {
     mapFile!: ITiledMap;
     animatedTiles!: AnimatedTiles;
     groups: Map<number, Sprite>;
-    startX!: number;
-    startY!: number;
     circleTexture!: CanvasTexture;
     circleRedTexture!: CanvasTexture;
     pendingEvents: Queue<
@@ -194,7 +188,6 @@ export class GameScene extends DirtyScene {
     private outlinedItem: ActionableItem | null = null;
     public userInputManager!: UserInputManager;
     private isReconnecting: boolean | undefined = undefined;
-    private startLayerName!: string | null;
     private openChatIcon!: OpenChatIcon;
     private playerName!: string;
     private characterLayers!: string[];
@@ -206,6 +199,7 @@ export class GameScene extends DirtyScene {
     private mapTransitioning: boolean = false; //used to prevent transitions happenning at the same time.
     private emoteManager!: EmoteManager;
     private preloading: boolean = true;
+    startPositionCalculator!: StartPositionCalculator;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -426,7 +420,6 @@ export class GameScene extends DirtyScene {
 
         gameManager.gameSceneIsCreated(this);
         urlManager.pushRoomIdToUrl(this.room);
-        this.startLayerName = urlManager.getStartLayerNameFromUrl();
 
         if (touchScreenManager.supportTouchScreen) {
             this.pinchManager = new PinchManager(this);
@@ -489,7 +482,12 @@ export class GameScene extends DirtyScene {
             this.loadNextGame(exitUrl);
         });
 
-        this.initStartXAndStartY();
+        this.startPositionCalculator = new StartPositionCalculator(
+            this.gameMap,
+            this.mapFile,
+            this.initPosition,
+            urlManager.getStartLayerNameFromUrl()
+        );
 
         //add entities
         this.Objects = new Array<Phaser.Physics.Arcade.Sprite>();
@@ -586,8 +584,7 @@ export class GameScene extends DirtyScene {
                 this.playerName,
                 this.characterLayers,
                 {
-                    x: this.startX,
-                    y: this.startY,
+                    ...this.startPositionCalculator.startPosition,
                 },
                 {
                     left: camera.scrollX,
@@ -989,8 +986,8 @@ ${escapedMessage}
             })
         );
 
-       this.iframeSubscriptionList.push(
-            iframeListener.enablePlayerControlStream.subscribe(()=>{
+        this.iframeSubscriptionList.push(
+            iframeListener.enablePlayerControlStream.subscribe(() => {
                 this.userInputManager.restoreControls();
             })
         );
@@ -1051,20 +1048,21 @@ ${escapedMessage}
             iframeListener.gameStateStream.subscribe(() => {
                 iframeListener.sendGameStateEvent({
                     mapUrl: this.MapUrlFile,
-                    startLayerName: this.startLayerName,
+                    startLayerName: this.startPositionCalculator.startLayerName,
                     uuid: localUserStore.getLocalUser()?.uuid,
                     nickname: localUserStore.getName(),
                     roomId: this.RoomId,
                     tags: this.connection ? this.connection.getAllTags() : [],
                 });
             })
-        )
-        this.iframeSubscriptionList.push(iframeListener.setTilesStream.subscribe((eventTiles) => {
-            for (const eventTile of eventTiles) {
-                this.gameMap.putTile(eventTile.tile, eventTile.x, eventTile.y, eventTile.layer);
-            }
-        }))
-
+        );
+        this.iframeSubscriptionList.push(
+            iframeListener.setTilesStream.subscribe((eventTiles) => {
+                for (const eventTile of eventTiles) {
+                    this.gameMap.putTile(eventTile.tile, eventTile.x, eventTile.y, eventTile.layer);
+                }
+            })
+        );
     }
 
     private setPropertyLayer(
@@ -1077,11 +1075,11 @@ ${escapedMessage}
             console.warn('Could not find layer "' + layerName + '" when calling setProperty');
             return;
         }
-        const property = (layer.properties as ITiledMapLayerProperty[])?.find(
-            (property) => property.name === propertyName
-        );
-        if (property === undefined) {
+        if (layer.properties === undefined) {
             layer.properties = [];
+        }
+        const property = layer.properties.find((property) => property.name === propertyName);
+        if (property === undefined) {
             layer.properties.push({ name: propertyName, type: typeof propertyValue, value: propertyValue });
             return;
         }
@@ -1107,7 +1105,9 @@ ${escapedMessage}
         this.mapTransitioning = true;
         const { roomId, hash } = Room.getIdFromIdentifier(exitKey, this.MapUrlFile, this.instance);
         if (!roomId) throw new Error("Could not find the room from its exit key: " + exitKey);
-        urlManager.pushStartLayerNameToUrl(hash);
+        if (hash) {
+            urlManager.pushStartLayerNameToUrl(hash);
+        }
         const menuScene: MenuScene = this.scene.get(MenuSceneName) as MenuScene;
         menuScene.reset();
         if (roomId !== this.scene.key) {
@@ -1121,9 +1121,9 @@ ${escapedMessage}
             this.scene.start(roomId);
         } else {
             //if the exit points to the current map, we simply teleport the user back to the startLayer
-            this.initPositionFromLayerName(hash || defaultStartLayerName);
-            this.CurrentPlayer.x = this.startX;
-            this.CurrentPlayer.y = this.startY;
+            this.startPositionCalculator.initPositionFromLayerName(hash, hash);
+            this.CurrentPlayer.x = this.startPositionCalculator.startPosition.x;
+            this.CurrentPlayer.y = this.startPositionCalculator.startPosition.y;
             setTimeout(() => (this.mapTransitioning = false), 500);
         }
     }
@@ -1170,46 +1170,6 @@ ${escapedMessage}
         this.MapPlayersByKey = new Map<number, RemotePlayer>();
     }
 
-    private initStartXAndStartY() {
-        // If there is an init position passed
-        if (this.initPosition !== null) {
-            this.startX = this.initPosition.x;
-            this.startY = this.initPosition.y;
-        } else {
-            // Now, let's find the start layer
-            if (this.startLayerName) {
-                this.initPositionFromLayerName(this.startLayerName);
-            }
-            if (this.startX === undefined) {
-                // If we have no start layer specified or if the hash passed does not exist, let's go with the default start position.
-                this.initPositionFromLayerName(defaultStartLayerName);
-            }
-        }
-        // Still no start position? Something is wrong with the map, we need a "start" layer.
-        if (this.startX === undefined) {
-            console.warn(
-                'This map is missing a layer named "start" that contains the available default start positions.'
-            );
-            // Let's start in the middle of the map
-            this.startX = this.mapFile.width * 16;
-            this.startY = this.mapFile.height * 16;
-        }
-    }
-
-    private initPositionFromLayerName(layerName: string) {
-        for (const layer of this.gameMap.flatLayers) {
-            if (
-                (layerName === layer.name || layer.name.endsWith("/" + layerName)) &&
-                layer.type === "tilelayer" &&
-                (layerName === defaultStartLayerName || this.isStartLayer(layer))
-            ) {
-                const startPosition = this.startUser(layer);
-                this.startX = startPosition.x + this.mapFile.tilewidth / 2;
-                this.startY = startPosition.y + this.mapFile.tileheight / 2;
-            }
-        }
-    }
-
     private getExitUrl(layer: ITiledMapLayer): string | undefined {
         return this.getProperty(layer, "exitUrl") as string | undefined;
     }
@@ -1219,10 +1179,6 @@ ${escapedMessage}
      */
     private getExitSceneUrl(layer: ITiledMapLayer): string | undefined {
         return this.getProperty(layer, "exitSceneUrl") as string | undefined;
-    }
-
-    private isStartLayer(layer: ITiledMapLayer): boolean {
-        return this.getProperty(layer, "startLayer") == true;
     }
 
     private getScriptUrls(map: ITiledMap): string[] {
@@ -1262,33 +1218,6 @@ ${escapedMessage}
         return gameManager.loadMap(room, this.scene).catch(() => {});
     }
 
-    private startUser(layer: ITiledMapTileLayer): PositionInterface {
-        const tiles = layer.data;
-        if (typeof tiles === "string") {
-            throw new Error("The content of a JSON map must be filled as a JSON array, not as a string");
-        }
-        const possibleStartPositions: PositionInterface[] = [];
-        tiles.forEach((objectKey: number, key: number) => {
-            if (objectKey === 0) {
-                return;
-            }
-            const y = Math.floor(key / layer.width);
-            const x = key % layer.width;
-
-            possibleStartPositions.push({ x: x * this.mapFile.tilewidth, y: y * this.mapFile.tilewidth });
-        });
-        // Get a value at random amongst allowed values
-        if (possibleStartPositions.length === 0) {
-            console.warn('The start layer "' + layer.name + '" for this map is empty.');
-            return {
-                x: 0,
-                y: 0,
-            };
-        }
-        // Choose one of the available start positions at random amongst the list of available start positions.
-        return possibleStartPositions[Math.floor(Math.random() * possibleStartPositions.length)];
-    }
-
     //todo: in a dedicated class/function?
     initCamera() {
         this.cameras.main.setBounds(0, 0, this.Map.widthInPixels, this.Map.heightInPixels);
@@ -1321,8 +1250,8 @@ ${escapedMessage}
         try {
             this.CurrentPlayer = new Player(
                 this,
-                this.startX,
-                this.startY,
+                this.startPositionCalculator.startPosition.x,
+                this.startPositionCalculator.startPosition.y,
                 this.playerName,
                 texturesPromise,
                 PlayerAnimationDirections.Down,
