@@ -92,7 +92,6 @@ import { peerStore, screenSharingPeerStore } from "../../Stores/PeerStore";
 import { videoFocusStore } from "../../Stores/VideoFocusStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
 import { SharedVariablesManager } from "./SharedVariablesManager";
-import type {InitEvent} from "../../Api/Events/InitEvent";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -398,23 +397,6 @@ export class GameScene extends DirtyScene {
                 });
             });
         }
-
-
-        this.iframeSubscriptionList.push(iframeListener.readyStream.subscribe((iframe) => {
-            this.connectionAnswerPromise.then(connection => {
-                // Generate init message for an iframe
-                // TODO: merge with GameStateEvent
-                const initEvent: InitEvent = {
-                    variables: this.sharedVariablesManager.variables
-                }
-
-            });
-            // TODO: SEND INIT MESSAGE TO IFRAMES ONLY WHEN CONNECTION IS ESTABLISHED
-            // TODO: SEND INIT MESSAGE TO IFRAMES ONLY WHEN CONNECTION IS ESTABLISHED
-            // TODO: SEND INIT MESSAGE TO IFRAMES ONLY WHEN CONNECTION IS ESTABLISHED
-            // TODO: SEND INIT MESSAGE TO IFRAMES ONLY WHEN CONNECTION IS ESTABLISHED
-            // TODO: SEND INIT MESSAGE TO IFRAMES ONLY WHEN CONNECTION IS ESTABLISHED
-        }));
 
         // Now, let's load the script, if any
         const scripts = this.getScriptUrls(this.mapFile);
@@ -1061,20 +1043,24 @@ ${escapedMessage}
             })
         );
 
-        this.iframeSubscriptionList.push(
-            iframeListener.dataLayerChangeStream.subscribe(() => {
-                iframeListener.sendDataLayerEvent({ data: this.gameMap.getMap() });
-            })
-        );
+        iframeListener.registerAnswerer('getMapData', () => {
+            return {
+                data: this.gameMap.getMap()
+            }
+        });
 
-        iframeListener.registerAnswerer('getState', () => {
+        iframeListener.registerAnswerer('getState', async () => {
+            // The sharedVariablesManager is not instantiated before the connection is established. So we need to wait
+            // for the connection to send back the answer.
+            await this.connectionAnswerPromise;
             return {
                 mapUrl: this.MapUrlFile,
                 startLayerName: this.startPositionCalculator.startLayerName,
                 uuid: localUserStore.getLocalUser()?.uuid,
-                nickname: localUserStore.getName(),
+                nickname: this.playerName,
                 roomId: this.RoomId,
                 tags: this.connection ? this.connection.getAllTags() : [],
+                variables: this.sharedVariablesManager.variables,
             };
         });
         this.iframeSubscriptionList.push(

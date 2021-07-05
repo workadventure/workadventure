@@ -26,15 +26,13 @@ import { isLoadSoundEvent, LoadSoundEvent } from "./Events/LoadSoundEvent";
 import { isSetPropertyEvent, SetPropertyEvent } from "./Events/setPropertyEvent";
 import { isLayerEvent, LayerEvent } from "./Events/LayerEvent";
 import { isMenuItemRegisterEvent } from "./Events/ui/MenuItemRegisterEvent";
-import type { DataLayerEvent } from "./Events/DataLayerEvent";
+import type { MapDataEvent } from "./Events/MapDataEvent";
 import type { GameStateEvent } from "./Events/GameStateEvent";
 import type { HasPlayerMovedEvent } from "./Events/HasPlayerMovedEvent";
 import { isLoadPageEvent } from "./Events/LoadPageEvent";
 import { handleMenuItemRegistrationEvent, isMenuItemRegisterIframeEvent } from "./Events/ui/MenuItemRegisterEvent";
 import { SetTilesEvent, isSetTilesEvent } from "./Events/SetTilesEvent";
 import { isSetVariableIframeEvent, SetVariableEvent } from "./Events/SetVariableEvent";
-
-type AnswererCallback<T extends keyof IframeQueryMap> = (query: IframeQueryMap[T]['query']) => IframeQueryMap[T]['answer']|Promise<IframeQueryMap[T]['answer']>;
 
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.
@@ -89,9 +87,6 @@ class IframeListener {
     private readonly _setPropertyStream: Subject<SetPropertyEvent> = new Subject();
     public readonly setPropertyStream = this._setPropertyStream.asObservable();
 
-    private readonly _dataLayerChangeStream: Subject<void> = new Subject();
-    public readonly dataLayerChangeStream = this._dataLayerChangeStream.asObservable();
-
     private readonly _registerMenuCommandStream: Subject<string> = new Subject();
     public readonly registerMenuCommandStream = this._registerMenuCommandStream.asObservable();
 
@@ -118,9 +113,14 @@ class IframeListener {
     private readonly scripts = new Map<string, HTMLIFrameElement>();
     private sendPlayerMove: boolean = false;
 
-    private answerers: {
-        [key in keyof IframeQueryMap]?: AnswererCallback<key>
-    } = {};
+
+    // Note: we are forced to type this in "any" because of https://github.com/microsoft/TypeScript/issues/31904
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private answerers: any = {};
+    /*private answerers: {
+        [key in keyof IframeQueryMap]?: (query: IframeQueryMap[key]['query']) => IframeQueryMap[key]['answer']|PromiseLike<IframeQueryMap[key]['answer']>
+    } = {};*/
+
 
     init() {
         window.addEventListener(
@@ -194,9 +194,7 @@ class IframeListener {
                     });
 
                 } else if (isIframeEventWrapper(payload)) {
-                    if (payload.type === 'ready') {
-                        this._readyStream.next();
-                    } else if (payload.type === "showLayer" && isLayerEvent(payload.data)) {
+                    if (payload.type === "showLayer" && isLayerEvent(payload.data)) {
                         this._showLayerStream.next(payload.data);
                     } else if (payload.type === "hideLayer" && isLayerEvent(payload.data)) {
                         this._hideLayerStream.next(payload.data);
@@ -239,8 +237,6 @@ class IframeListener {
                     this._removeBubbleStream.next();
                     } else if (payload.type == "onPlayerMove") {
                         this.sendPlayerMove = true;
-                    } else if (payload.type == "getDataLayer") {
-                        this._dataLayerChangeStream.next();
                     } else if (isMenuItemRegisterIframeEvent(payload)) {
                         const data = payload.data.menutItem;
                         // @ts-ignore
@@ -267,13 +263,6 @@ class IframeListener {
             },
             false
         );
-    }
-
-    sendDataLayerEvent(dataLayerEvent: DataLayerEvent) {
-        this.postMessage({
-            type: "dataLayer",
-            data: dataLayerEvent,
-        });
     }
 
     /**
@@ -439,7 +428,7 @@ class IframeListener {
      * @param key The "type" of the query we are answering
      * @param callback
      */
-    public registerAnswerer<T extends keyof IframeQueryMap>(key: T, callback: (query: IframeQueryMap[T]['query']) => IframeQueryMap[T]['answer']|Promise<IframeQueryMap[T]['answer']> ): void {
+    public registerAnswerer<T extends keyof IframeQueryMap>(key: T, callback: (query: IframeQueryMap[T]['query']) => IframeQueryMap[T]['answer']|PromiseLike<IframeQueryMap[T]['answer']> ): void {
         this.answerers[key] = callback;
     }
 

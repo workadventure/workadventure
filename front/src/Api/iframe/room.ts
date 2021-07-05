@@ -1,6 +1,6 @@
 import {Observable, Subject} from "rxjs";
 
-import { isDataLayerEvent } from "../Events/DataLayerEvent";
+import { isMapDataEvent } from "../Events/MapDataEvent";
 import { EnterLeaveEvent, isEnterLeaveEvent } from "../Events/EnterLeaveEvent";
 import { isGameStateEvent } from "../Events/GameStateEvent";
 
@@ -11,31 +11,14 @@ import type {SetPropertyEvent} from "../Events/setPropertyEvent";
 import {isSetVariableEvent, SetVariableEvent} from "../Events/SetVariableEvent";
 
 import type { ITiledMap } from "../../Phaser/Map/ITiledMap";
-import type { DataLayerEvent } from "../Events/DataLayerEvent";
+import type { MapDataEvent } from "../Events/MapDataEvent";
 import type { GameStateEvent } from "../Events/GameStateEvent";
 
 const enterStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
 const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
-const dataLayerResolver = new Subject<DataLayerEvent>();
-const stateResolvers = new Subject<GameStateEvent>();
 const setVariableResolvers = new Subject<SetVariableEvent>();
 const variables = new Map<string, unknown>();
 const variableSubscribers = new Map<string, Subject<unknown>>();
-
-let immutableDataPromise: Promise<GameStateEvent> | undefined = undefined;
-
-interface Room {
-    id: string;
-    mapUrl: string;
-    map: ITiledMap;
-    startLayer: string | null;
-}
-
-interface User {
-    id: string | undefined;
-    nickName: string | null;
-    tags: string[];
-}
 
 interface TileDescriptor {
     x: number;
@@ -44,18 +27,16 @@ interface TileDescriptor {
     layer: string;
 }
 
-function getGameState(): Promise<GameStateEvent> {
-    if (immutableDataPromise === undefined) {
-        immutableDataPromise = queryWorkadventure({ type: "getState", data: undefined });
-    }
-    return immutableDataPromise;
+let roomId: string|undefined;
+
+export const setRoomId = (id: string) => {
+    roomId = id;
 }
 
-function getDataLayer(): Promise<DataLayerEvent> {
-    return new Promise<DataLayerEvent>((resolver, thrower) => {
-        dataLayerResolver.subscribe(resolver);
-        sendToWorkadventure({ type: "getDataLayer", data: null });
-    });
+let mapURL: string|undefined;
+
+export const setMapURL = (url: string) => {
+    mapURL = url;
 }
 
 setVariableResolvers.subscribe((event) => {
@@ -80,13 +61,6 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
             typeChecker: isEnterLeaveEvent,
             callback: (payloadData) => {
                 leaveStreams.get(payloadData.name)?.next();
-            },
-        }),
-        apiCallback({
-            type: "dataLayer",
-            typeChecker: isDataLayerEvent,
-            callback: (payloadData) => {
-                dataLayerResolver.next(payloadData);
             },
         }),
         apiCallback({
@@ -130,22 +104,9 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
             },
         });
     }
-    getCurrentRoom(): Promise<Room> {
-        return getGameState().then((gameState) => {
-            return getDataLayer().then((mapJson) => {
-                return {
-                    id: gameState.roomId,
-                    map: mapJson.data as ITiledMap,
-                    mapUrl: gameState.mapUrl,
-                    startLayer: gameState.startLayerName,
-                };
-            });
-        });
-    }
-    getCurrentUser(): Promise<User> {
-        return getGameState().then((gameState) => {
-            return { id: gameState.uuid, nickName: gameState.nickname, tags: gameState.tags };
-        });
+    async getMap(): Promise<ITiledMap> {
+        const event = await queryWorkadventure({ type: "getMapData", data: undefined });
+        return event.data as ITiledMap;
     }
     setTiles(tiles: TileDescriptor[]) {
         sendToWorkadventure({
@@ -176,6 +137,21 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
             variableSubscribers.set(key, subject);
         }
         return subject.asObservable();
+    }
+
+
+    get id() : string {
+        if (roomId === undefined) {
+            throw new Error('Room id not initialized yet. You should call WA.room.id within a WA.onInit callback.');
+        }
+        return roomId;
+    }
+
+    get mapURL() : string {
+        if (mapURL === undefined) {
+            throw new Error('mapURL is not initialized yet. You should call WA.room.mapURL within a WA.onInit callback.');
+        }
+        return mapURL;
     }
 }
 

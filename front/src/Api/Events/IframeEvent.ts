@@ -9,7 +9,7 @@ import type { OpenCoWebSiteEvent } from "./OpenCoWebSiteEvent";
 import type { OpenPopupEvent } from "./OpenPopupEvent";
 import type { OpenTabEvent } from "./OpenTabEvent";
 import type { UserInputChatEvent } from "./UserInputChatEvent";
-import type { DataLayerEvent } from "./DataLayerEvent";
+import type { MapDataEvent } from "./MapDataEvent";
 import type { LayerEvent } from "./LayerEvent";
 import type { SetPropertyEvent } from "./setPropertyEvent";
 import type { LoadSoundEvent } from "./LoadSoundEvent";
@@ -19,8 +19,6 @@ import type { MenuItemRegisterEvent } from "./ui/MenuItemRegisterEvent";
 import type { HasPlayerMovedEvent } from "./HasPlayerMovedEvent";
 import type { SetTilesEvent } from "./SetTilesEvent";
 import type { SetVariableEvent } from "./SetVariableEvent";
-import type {InitEvent} from "./InitEvent";
-
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -46,7 +44,6 @@ export type IframeEventMap = {
     showLayer: LayerEvent;
     hideLayer: LayerEvent;
     setProperty: SetPropertyEvent;
-    getDataLayer: undefined;
     loadSound: LoadSoundEvent;
     playSound: PlaySoundEvent;
     stopSound: null;
@@ -54,8 +51,6 @@ export type IframeEventMap = {
     registerMenuCommand: MenuItemRegisterEvent;
     setTiles: SetTilesEvent;
     setVariable: SetVariableEvent;
-    // A script/iframe is ready to receive events
-    ready: null;
 };
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;
@@ -72,10 +67,8 @@ export interface IframeResponseEventMap {
     leaveEvent: EnterLeaveEvent;
     buttonClickedEvent: ButtonClickedEvent;
     hasPlayerMoved: HasPlayerMovedEvent;
-    dataLayer: DataLayerEvent;
     menuItemClicked: MenuItemClickedEvent;
     setVariable: SetVariableEvent;
-    init: InitEvent;
 }
 export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
     type: T;
@@ -94,8 +87,14 @@ export const isIframeResponseEventWrapper = (event: {
 export type IframeQueryMap = {
     getState: {
         query: undefined,
-        answer: GameStateEvent
+        answer: GameStateEvent,
+        callback: () => GameStateEvent|PromiseLike<GameStateEvent>
     },
+    getMapData: {
+        query: undefined,
+        answer: MapDataEvent,
+        callback: () => MapDataEvent|PromiseLike<GameStateEvent>
+    }
 }
 
 export interface IframeQuery<T extends keyof IframeQueryMap> {

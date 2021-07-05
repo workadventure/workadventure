@@ -11,12 +11,12 @@ import nav from "./Api/iframe/nav";
 import controls from "./Api/iframe/controls";
 import ui from "./Api/iframe/ui";
 import sound from "./Api/iframe/sound";
-import room from "./Api/iframe/room";
-import player from "./Api/iframe/player";
+import room, {setMapURL, setRoomId} from "./Api/iframe/room";
+import player, {setPlayerName, setTags, setUuid} from "./Api/iframe/player";
 import type { ButtonDescriptor } from "./Api/iframe/Ui/ButtonDescriptor";
 import type { Popup } from "./Api/iframe/Ui/Popup";
 import type { Sound } from "./Api/iframe/Sound/Sound";
-import { answerPromises, sendToWorkadventure} from "./Api/iframe/IframeApiContribution";
+import {answerPromises, queryWorkadventure, sendToWorkadventure} from "./Api/iframe/IframeApiContribution";
 
 const wa = {
     ui,
@@ -208,7 +208,15 @@ window.addEventListener(
 );
 
 // Notify WorkAdventure that we are ready to receive data
-sendToWorkadventure({
-    type: 'ready',
-    data: null
-});
+queryWorkadventure({
+    type: 'getState',
+    data: undefined
+}).then((state => {
+    setPlayerName(state.nickname);
+    setRoomId(state.roomId);
+    setMapURL(state.mapUrl);
+    setTags(state.tags);
+    setUuid(state.uuid);
+
+    // TODO: remove the WA.room.getRoom method and replace it with WA.room.getMapData and WA.player.nickname, etc...
+}));
