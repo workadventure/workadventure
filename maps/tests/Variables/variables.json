@@ -68,8 +68,40 @@
                  "y":2.5
                 }, 
                 {
+                 "height":0,
                  "id":5,
-                 "template":"config.tx",
+                 "name":"config",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"default",
+                         "type":"string",
+                         "value":"{}"
+                        }, 
+                        {
+                         "name":"jsonSchema",
+                         "type":"string",
+                         "value":"{}"
+                        }, 
+                        {
+                         "name":"persist",
+                         "type":"bool",
+                         "value":true
+                        }, 
+                        {
+                         "name":"readableBy",
+                         "type":"string",
+                         "value":""
+                        }, 
+                        {
+                         "name":"writableBy",
+                         "type":"string",
+                         "value":"admin"
+                        }],
+                 "rotation":0,
+                 "type":"variable",
+                 "visible":true,
+                 "width":0,
                  "x":57.5,
                  "y":111
                 }, 
@@ -98,7 +130,7 @@
          "y":0
         }],
  "nextlayerid":8,
- "nextobjectid":8,
+ "nextobjectid":9,
  "orientation":"orthogonal",
  "properties":[
         {

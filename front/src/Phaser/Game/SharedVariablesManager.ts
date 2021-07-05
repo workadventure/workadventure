@@ -48,6 +48,10 @@ export class SharedVariablesManager {
             if (layer.type === 'objectgroup') {
                 for (const object of layer.objects) {
                     if (object.type === 'variable') {
+                        if (object.template) {
+                            console.warn('Warning, a variable object is using a Tiled "template". WorkAdventure does not support objects generated from Tiled templates.')
+                        }
+
                         // We store a copy of the object (to make it immutable)
                         objects.set(object.name, this.iTiledObjectToVariable(object));
                     }

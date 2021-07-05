@@ -141,6 +141,7 @@ export interface ITiledMapObject {
     polyline: { x: number; y: number }[];
 
     text?: ITiledText;
+    template?: string;
 }
 
 export interface ITiledText {

@@ -190,7 +190,7 @@ window.addEventListener(
     }
     const payload = message.data;
 
-    console.debug(payload);
+    //console.debug(payload);
 
     if (isIframeErrorAnswerEvent(payload)) {
         const queryId = payload.id;
