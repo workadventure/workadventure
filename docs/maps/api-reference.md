@@ -1,6 +1,7 @@
 {.section-title.accent.text-primary}
 # API Reference
 
+- [Start / Init functions](api-start.md)
 - [Navigation functions](api-nav.md)
 - [Chat functions](api-chat.md)
 - [Room functions](api-room.md)

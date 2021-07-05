@@ -18,6 +18,21 @@ import type { Popup } from "./Api/iframe/Ui/Popup";
 import type { Sound } from "./Api/iframe/Sound/Sound";
 import {answerPromises, queryWorkadventure, sendToWorkadventure} from "./Api/iframe/IframeApiContribution";
 
+const initPromise = new Promise<void>((resolve) => {
+// Notify WorkAdventure that we are ready to receive data
+    queryWorkadventure({
+        type: 'getState',
+        data: undefined
+    }).then((state => {
+        setPlayerName(state.nickname);
+        setRoomId(state.roomId);
+        setMapURL(state.mapUrl);
+        setTags(state.tags);
+        setUuid(state.uuid);
+        resolve();
+    }));
+});
+
 const wa = {
     ui,
     nav,
@@ -26,6 +41,10 @@ const wa = {
     sound,
     room,
     player,
+
+    onInit(): Promise<void> {
+        return initPromise;
+    },
 
     // All methods below are deprecated and should not be used anymore.
     // They are kept here for backward compatibility.
@@ -206,17 +225,3 @@ window.addEventListener(
         // ...
     }
 );
-
-// Notify WorkAdventure that we are ready to receive data
-queryWorkadventure({
-    type: 'getState',
-    data: undefined
-}).then((state => {
-    setPlayerName(state.nickname);
-    setRoomId(state.roomId);
-    setMapURL(state.mapUrl);
-    setTags(state.tags);
-    setUuid(state.uuid);
-
-    // TODO: remove the WA.room.getRoom method and replace it with WA.room.getMapData and WA.player.nickname, etc...
-}));
