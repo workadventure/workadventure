@@ -192,7 +192,18 @@ window.addEventListener(
 
     console.debug(payload);
 
-    if (isIframeAnswerEvent(payload)) {
+    if (isIframeErrorAnswerEvent(payload)) {
+        const queryId = payload.id;
+        const payloadError = payload.error;
+
+        const resolver = answerPromises.get(queryId);
+        if (resolver === undefined) {
+            throw new Error('In Iframe API, got an error answer for a question that we have no track of.');
+        }
+        resolver.reject(new Error(payloadError));
+
+        answerPromises.delete(queryId);
+    } else if (isIframeAnswerEvent(payload)) {
         const queryId = payload.id;
         const payloadData = payload.data;
 
@@ -201,17 +212,6 @@ window.addEventListener(
             throw new Error('In Iframe API, got an answer for a question that we have no track of.');
         }
         resolver.resolve(payloadData);
-
-        answerPromises.delete(queryId);
-    } else if (isIframeErrorAnswerEvent(payload)) {
-        const queryId = payload.id;
-        const payloadError = payload.error;
-
-        const resolver = answerPromises.get(queryId);
-        if (resolver === undefined) {
-            throw new Error('In Iframe API, got an error answer for a question that we have no track of.');
-        }
-        resolver.reject(payloadError);
 
         answerPromises.delete(queryId);
     } else if (isIframeResponseEventWrapper(payload)) {

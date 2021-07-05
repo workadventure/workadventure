@@ -50,7 +50,6 @@ export type IframeEventMap = {
     getState: undefined;
     registerMenuCommand: MenuItemRegisterEvent;
     setTiles: SetTilesEvent;
-    setVariable: SetVariableEvent;
 };
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;
@@ -93,6 +92,10 @@ export type IframeQueryMap = {
         query: undefined,
         answer: MapDataEvent,
     },
+    setVariable: {
+        query: SetVariableEvent,
+        answer: void
+    }
 }
 
 export interface IframeQuery<T extends keyof IframeQueryMap> {

@@ -119,9 +119,9 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
         });
     }
 
-    saveVariable(key : string, value : unknown): void {
+    saveVariable(key : string, value : unknown): Promise<void> {
         variables.set(key, value);
-        sendToWorkadventure({
+        return queryWorkadventure({
             type: 'setVariable',
             data: {
                 key,

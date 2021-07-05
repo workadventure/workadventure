@@ -14,7 +14,6 @@ interface Variable {
 
 export class SharedVariablesManager {
     private _variables = new Map<string, unknown>();
-    private iframeListenerSubscription: Subscription;
     private variableObjects: Map<string, Variable>;
 
     constructor(private roomConnection: RoomConnection, private gameMap: GameMap) {
@@ -28,7 +27,7 @@ export class SharedVariablesManager {
         }
 
         // When a variable is modified from an iFrame
-        this.iframeListenerSubscription = iframeListener.setVariableStream.subscribe((event) => {
+        iframeListener.registerAnswerer('setVariable', (event) => {
             const key = event.key;
 
             if (!this.variableObjects.has(key)) {
@@ -75,7 +74,7 @@ export class SharedVariablesManager {
     }
 
     public close(): void {
-        this.iframeListenerSubscription.unsubscribe();
+        iframeListener.unregisterAnswerer('setVariable');
     }
 
     get variables(): Map<string, unknown> {

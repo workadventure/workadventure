@@ -105,9 +105,6 @@ class IframeListener {
     private readonly _setTilesStream: Subject<SetTilesEvent> = new Subject();
     public readonly setTilesStream = this._setTilesStream.asObservable();
 
-    private readonly _setVariableStream: Subject<SetVariableEvent> = new Subject();
-    public readonly setVariableStream = this._setVariableStream.asObservable();
-
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
@@ -171,13 +168,7 @@ class IframeListener {
                         return;
                     }
 
-                    Promise.resolve(answerer(query.data)).then((value) => {
-                        iframe?.contentWindow?.postMessage({
-                            id: queryId,
-                            type: query.type,
-                            data: value
-                        }, '*');
-                    }).catch(reason => {
+                    const errorHandler = (reason: any) => {
                         console.error('An error occurred while responding to an iFrame query.', reason);
                         let reasonMsg: string;
                         if (reason instanceof Error) {
@@ -191,8 +182,31 @@ class IframeListener {
                             type: query.type,
                             error: reasonMsg
                         } as IframeErrorAnswerEvent, '*');
-                    });
+                    };
 
+                    try {
+                        Promise.resolve(answerer(query.data)).then((value) => {
+                            iframe?.contentWindow?.postMessage({
+                                id: queryId,
+                                type: query.type,
+                                data: value
+                            }, '*');
+                        }).catch(errorHandler);
+                    } catch (reason) {
+                        errorHandler(reason);
+                    }
+
+                    if (isSetVariableIframeEvent(payload.query)) {
+                        // Let's dispatch the message to the other iframes
+                        for (iframe of this.iframes) {
+                            if (iframe.contentWindow !== message.source) {
+                                iframe.contentWindow?.postMessage({
+                                    'type': 'setVariable',
+                                    'data': payload.query.data
+                                }, '*');
+                            }
+                        }
+                    }
                 } else if (isIframeEventWrapper(payload)) {
                     if (payload.type === "showLayer" && isLayerEvent(payload.data)) {
                         this._showLayerStream.next(payload.data);
@@ -246,18 +260,6 @@ class IframeListener {
                         handleMenuItemRegistrationEvent(payload.data);
                     } else if (payload.type == "setTiles" && isSetTilesEvent(payload.data)) {
                         this._setTilesStream.next(payload.data);
-                    } else if (isSetVariableIframeEvent(payload)) {
-                        this._setVariableStream.next(payload.data);
-
-                        // Let's dispatch the message to the other iframes
-                        for (iframe of this.iframes) {
-                            if (iframe.contentWindow !== message.source) {
-                                iframe.contentWindow?.postMessage({
-                                    'type': 'setVariable',
-                                    'data': payload.data
-                                }, '*');
-                            }
-                        }
                     }
                 }
             },
