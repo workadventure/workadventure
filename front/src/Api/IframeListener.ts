@@ -436,8 +436,7 @@ class IframeListener {
         callback: AnswererCallback<T>,
         typeChecker?: Guard
     ): void {
-        //@ts-ignore
-        this.answerers[key] = callback;
+        this.answerers[key] = callback as never;
     }
 
     public unregisterAnswerer(key: keyof IframeQueryMap): void {
