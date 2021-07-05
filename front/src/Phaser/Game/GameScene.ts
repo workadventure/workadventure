@@ -50,7 +50,7 @@ import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectC
 import type {
     ITiledMap,
     ITiledMapLayer,
-    ITiledMapLayerProperty,
+    ITiledMapProperty,
     ITiledMapObject,
     ITiledTileSet,
 } from "../Map/ITiledMap";
@@ -1197,12 +1197,12 @@ ${escapedMessage}
     }
 
     private getProperty(layer: ITiledMapLayer | ITiledMap, name: string): string | boolean | number | undefined {
-        const properties: ITiledMapLayerProperty[] | undefined = layer.properties;
+        const properties: ITiledMapProperty[] | undefined = layer.properties;
         if (!properties) {
             return undefined;
         }
         const obj = properties.find(
-            (property: ITiledMapLayerProperty) => property.name.toLowerCase() === name.toLowerCase()
+            (property: ITiledMapProperty) => property.name.toLowerCase() === name.toLowerCase()
         );
         if (obj === undefined) {
             return undefined;
@@ -1211,12 +1211,12 @@ ${escapedMessage}
     }
 
     private getProperties(layer: ITiledMapLayer | ITiledMap, name: string): (string | number | boolean | undefined)[] {
-        const properties: ITiledMapLayerProperty[] | undefined = layer.properties;
+        const properties: ITiledMapProperty[] | undefined = layer.properties;
         if (!properties) {
             return [];
         }
         return properties
-            .filter((property: ITiledMapLayerProperty) => property.name.toLowerCase() === name.toLowerCase())
+            .filter((property: ITiledMapProperty) => property.name.toLowerCase() === name.toLowerCase())
             .map((property) => property.value);
     }
 

@@ -72,6 +72,24 @@
                  "template":"config.tx",
                  "x":57.5,
                  "y":111
+                }, 
+                {
+                 "height":0,
+                 "id":6,
+                 "name":"doorOpened",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"default",
+                         "type":"bool",
+                         "value":true
+                        }],
+                 "rotation":0,
+                 "type":"variable",
+                 "visible":true,
+                 "width":0,
+                 "x":131.38069962269,
+                 "y":106.004988169086
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -80,7 +98,7 @@
          "y":0
         }],
  "nextlayerid":8,
- "nextobjectid":6,
+ "nextobjectid":8,
  "orientation":"orthogonal",
  "properties":[
         {

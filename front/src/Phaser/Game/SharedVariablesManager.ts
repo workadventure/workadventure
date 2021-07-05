@@ -5,17 +5,27 @@ import type {RoomConnection} from "../../Connexion/RoomConnection";
 import {iframeListener} from "../../Api/IframeListener";
 import type {Subscription} from "rxjs";
 import type {GameMap} from "./GameMap";
-import type {ITiledMapObject} from "../Map/ITiledMap";
+import type {ITile, ITiledMapObject} from "../Map/ITiledMap";
+import type {Var} from "svelte/types/compiler/interfaces";
+
+interface Variable {
+    defaultValue: unknown
+}
 
 export class SharedVariablesManager {
     private _variables = new Map<string, unknown>();
     private iframeListenerSubscription: Subscription;
-    private variableObjects: Map<string, ITiledMapObject>;
+    private variableObjects: Map<string, Variable>;
 
     constructor(private roomConnection: RoomConnection, private gameMap: GameMap) {
         // We initialize the list of variable object at room start. The objects cannot be edited later
         // (otherwise, this would cause a security issue if the scripting API can edit this list of objects)
         this.variableObjects = SharedVariablesManager.findVariablesInMap(gameMap);
+
+        // Let's initialize default values
+        for (const [name, variableObject] of this.variableObjects.entries()) {
+            this._variables.set(name, variableObject.defaultValue);
+        }
 
         // When a variable is modified from an iFrame
         this.iframeListenerSubscription = iframeListener.setVariableStream.subscribe((event) => {
@@ -33,14 +43,14 @@ export class SharedVariablesManager {
         });
     }
 
-    private static findVariablesInMap(gameMap: GameMap): Map<string, ITiledMapObject> {
-        const objects = new Map<string, ITiledMapObject>();
+    private static findVariablesInMap(gameMap: GameMap): Map<string, Variable> {
+        const objects = new Map<string, Variable>();
         for (const layer of gameMap.getMap().layers) {
             if (layer.type === 'objectgroup') {
                 for (const object of layer.objects) {
                     if (object.type === 'variable') {
                         // We store a copy of the object (to make it immutable)
-                        objects.set(object.name, {...object});
+                        objects.set(object.name, this.iTiledObjectToVariable(object));
                     }
                 }
             }
@@ -48,6 +58,21 @@ export class SharedVariablesManager {
         return objects;
     }
 
+    private static iTiledObjectToVariable(object: ITiledMapObject): Variable {
+        const variable: Variable = {
+            defaultValue: undefined
+        };
+
+        if (object.properties) {
+            for (const property of object.properties) {
+                if (property.name === 'default') {
+                    variable.defaultValue = property.value;
+                }
+            }
+        }
+
+        return variable;
+    }
 
     public close(): void {
         this.iframeListenerSubscription.unsubscribe();

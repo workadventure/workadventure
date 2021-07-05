@@ -1,18 +1,12 @@
 import {Observable, Subject} from "rxjs";
 
-import { isMapDataEvent } from "../Events/MapDataEvent";
 import { EnterLeaveEvent, isEnterLeaveEvent } from "../Events/EnterLeaveEvent";
-import { isGameStateEvent } from "../Events/GameStateEvent";
 
 import {IframeApiContribution, queryWorkadventure, sendToWorkadventure} from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
-import type {LayerEvent} from "../Events/LayerEvent";
-import type {SetPropertyEvent} from "../Events/setPropertyEvent";
 import {isSetVariableEvent, SetVariableEvent} from "../Events/SetVariableEvent";
 
 import type { ITiledMap } from "../../Phaser/Map/ITiledMap";
-import type { MapDataEvent } from "../Events/MapDataEvent";
-import type { GameStateEvent } from "../Events/GameStateEvent";
 
 const enterStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
 const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
@@ -37,6 +31,16 @@ let mapURL: string|undefined;
 
 export const setMapURL = (url: string) => {
     mapURL = url;
+}
+
+export const initVariables = (_variables: Map<string, unknown>): void => {
+    for (const [name, value] of _variables.entries()) {
+        // In case the user already decided to put values in the variables (before onInit), let's make sure onInit does not override this.
+        if (!variables.has(name)) {
+            variables.set(name, value);
+        }
+    }
+
 }
 
 setVariableResolvers.subscribe((event) => {

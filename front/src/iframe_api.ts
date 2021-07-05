@@ -11,7 +11,7 @@ import nav from "./Api/iframe/nav";
 import controls from "./Api/iframe/controls";
 import ui from "./Api/iframe/ui";
 import sound from "./Api/iframe/sound";
-import room, {setMapURL, setRoomId} from "./Api/iframe/room";
+import room, {initVariables, setMapURL, setRoomId} from "./Api/iframe/room";
 import player, {setPlayerName, setTags, setUuid} from "./Api/iframe/player";
 import type { ButtonDescriptor } from "./Api/iframe/Ui/ButtonDescriptor";
 import type { Popup } from "./Api/iframe/Ui/Popup";
@@ -29,6 +29,7 @@ const initPromise = new Promise<void>((resolve) => {
         setMapURL(state.mapUrl);
         setTags(state.tags);
         setUuid(state.uuid);
+        initVariables(state.variables as Map<string, unknown>);
         resolve();
     }));
 });

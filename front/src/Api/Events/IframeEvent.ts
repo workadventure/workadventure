@@ -88,13 +88,11 @@ export type IframeQueryMap = {
     getState: {
         query: undefined,
         answer: GameStateEvent,
-        callback: () => GameStateEvent|PromiseLike<GameStateEvent>
     },
     getMapData: {
         query: undefined,
         answer: MapDataEvent,
-        callback: () => MapDataEvent|PromiseLike<GameStateEvent>
-    }
+    },
 }
 
 export interface IframeQuery<T extends keyof IframeQueryMap> {
