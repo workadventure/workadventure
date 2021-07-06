@@ -29,7 +29,7 @@ import {
     AdminMessage,
     BanMessage,
     RefreshRoomMessage,
-    EmotePromptMessage,
+    EmotePromptMessage, VariableMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { JITSI_ISS, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
@@ -227,6 +227,9 @@ export class SocketManager implements ZoneEventListener {
             const pusherToBackMessage = new PusherToBackMessage();
             pusherToBackMessage.setJoinroommessage(joinRoomMessage);
             streamToPusher.write(pusherToBackMessage);
+
+            const pusherRoom = await this.getOrCreateRoom(client.roomId);
+            pusherRoom.join(client);
         } catch (e) {
             console.error('An error occurred on "join_room" event');
             console.error(e);
@@ -300,6 +303,13 @@ export class SocketManager implements ZoneEventListener {
         client.backConnection.write(pusherToBackMessage);
     }
 
+    handleVariableEvent(client: ExSocketInterface, variableMessage: VariableMessage) {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setVariablemessage(variableMessage);
+
+        client.backConnection.write(pusherToBackMessage);
+    }
+
     async handleReportMessage(client: ExSocketInterface, reportPlayerMessage: ReportPlayerMessage) {
         try {
             const reportedSocket = this.sockets.get(reportPlayerMessage.getReporteduserid());
@@ -334,14 +344,6 @@ export class SocketManager implements ZoneEventListener {
         socket.backConnection.write(pusherToBackMessage);
     }
 
-    private searchClientByIdOrFail(userId: number): ExSocketInterface {
-        const client: ExSocketInterface | undefined = this.sockets.get(userId);
-        if (client === undefined) {
-            throw new Error("Could not find user with id " + userId);
-        }
-        return client;
-    }
-
     leaveRoom(socket: ExSocketInterface) {
         // leave previous room and world
         try {
@@ -354,6 +356,7 @@ export class SocketManager implements ZoneEventListener {
 
                         room.leave(socket);
                         if (room.isEmpty()) {
+                            room.close();
                             this.rooms.delete(socket.roomId);
                             debug("Room %s is empty. Deleting.", socket.roomId);
                         }
@@ -384,9 +387,10 @@ export class SocketManager implements ZoneEventListener {
             if (!world.public) {
                 await this.updateRoomWithAdminData(world);
             }
+            await world.init();
             this.rooms.set(roomId, world);
         }
-        return Promise.resolve(world);
+        return world;
     }
 
     public async updateRoomWithAdminData(world: PusherRoom): Promise<void> {
@@ -408,15 +412,6 @@ export class SocketManager implements ZoneEventListener {
 
     public getWorlds(): Map<string, PusherRoom> {
         return this.rooms;
-    }
-
-    searchClientByUuid(uuid: string): ExSocketInterface | null {
-        for (const socket of this.sockets.values()) {
-            if (socket.userUuid === uuid) {
-                return socket;
-            }
-        }
-        return null;
     }
 
     public handleQueryJitsiJwtMessage(client: ExSocketInterface, queryJitsiJwtMessage: QueryJitsiJwtMessage) {

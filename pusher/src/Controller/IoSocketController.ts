@@ -16,7 +16,7 @@ import {
     SendUserMessage,
     ServerToClientMessage,
     CompanionMessage,
-    EmotePromptMessage,
+    EmotePromptMessage, VariableMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { TemplatedApp } from "uWebSockets.js";
@@ -358,6 +358,8 @@ export class IoSocketController {
                     socketManager.handleSilentMessage(client, message.getSilentmessage() as SilentMessage);
                 } else if (message.hasItemeventmessage()) {
                     socketManager.handleItemEvent(client, message.getItemeventmessage() as ItemEventMessage);
+                } else if (message.hasVariablemessage()) {
+                    socketManager.handleVariableEvent(client, message.getVariablemessage() as VariableMessage);
                 } else if (message.hasWebrtcsignaltoservermessage()) {
                     socketManager.emitVideo(
                         client,

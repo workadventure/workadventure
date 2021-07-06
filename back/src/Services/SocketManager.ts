@@ -29,7 +29,7 @@ import {
     EmoteEventMessage,
     BanUserMessage,
     RefreshRoomMessage,
-    EmotePromptMessage,
+    EmotePromptMessage, VariableMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -178,6 +178,28 @@ export class SocketManager {
             }
 
             room.setItemState(itemEvent.itemId, itemEvent.state);
+        } catch (e) {
+            console.error('An error occurred on "item_event"');
+            console.error(e);
+        }
+    }
+
+    handleVariableEvent(room: GameRoom, user: User, variableMessage: VariableMessage) {
+        const itemEvent = ProtobufUtils.toItemEvent(itemEventMessage);
+
+        try {
+            // TODO: DISPATCH ON NEW ROOM CHANNEL
+
+            const subMessage = new SubMessage();
+            subMessage.setItemeventmessage(itemEventMessage);
+
+            // Let's send the event without using the SocketIO room.
+            // TODO: move this in the GameRoom class.
+            for (const user of room.getUsers().values()) {
+                user.emitInBatch(subMessage);
+            }
+
+            room.setVariable(variableMessage.getName(), variableMessage.getValue());
         } catch (e) {
             console.error('An error occurred on "item_event"');
             console.error(e);
@@ -425,6 +447,7 @@ export class SocketManager {
             // Let's send 2 messages: one to the user joining the group and one to the other user
             const webrtcStartMessage1 = new WebRtcStartMessage();
             webrtcStartMessage1.setUserid(otherUser.id);
+            webrtcStartMessage1.setUseruuid(otherUser.uuid);
             webrtcStartMessage1.setName(otherUser.name);
             webrtcStartMessage1.setInitiator(true);
             if (TURN_STATIC_AUTH_SECRET !== "") {
@@ -443,6 +466,7 @@ export class SocketManager {
 
             const webrtcStartMessage2 = new WebRtcStartMessage();
             webrtcStartMessage2.setUserid(user.id);
+            webrtcStartMessage2.setUseruuid(user.uuid);
             webrtcStartMessage2.setName(user.name);
             webrtcStartMessage2.setInitiator(false);
             if (TURN_STATIC_AUTH_SECRET !== "") {

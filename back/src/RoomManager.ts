@@ -16,7 +16,7 @@ import {
     ServerToAdminClientMessage,
     ServerToClientMessage,
     SilentMessage,
-    UserMovesMessage,
+    UserMovesMessage, VariableMessage,
     WebRtcSignalToServerMessage,
     WorldFullWarningToRoomMessage,
     ZoneMessage,
@@ -72,6 +72,8 @@ const roomManager: IRoomManagerServer = {
                         socketManager.handleSilentMessage(room, user, message.getSilentmessage() as SilentMessage);
                     } else if (message.hasItemeventmessage()) {
                         socketManager.handleItemEvent(room, user, message.getItemeventmessage() as ItemEventMessage);
+                    } else if (message.hasVariablemessage()) {
+                        socketManager.handleVariableEvent(room, user, message.getVariablemessage() as VariableMessage);
                     } else if (message.hasWebrtcsignaltoservermessage()) {
                         socketManager.emitVideo(
                             room,

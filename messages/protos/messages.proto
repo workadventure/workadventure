@@ -325,6 +325,10 @@ message ZoneMessage {
   int32 y = 3;
 }
 
+message RoomMessage {
+  string roomId = 1;
+}
+
 message PusherToBackMessage {
   oneof message {
     JoinRoomMessage joinRoomMessage = 1;
@@ -360,9 +364,19 @@ message SubToPusherMessage {
     SendUserMessage sendUserMessage = 7;
     BanUserMessage banUserMessage = 8;
     EmoteEventMessage emoteEventMessage = 9;
-    VariableMessage variableMessage = 10;
   }
 }
+
+message BatchToPusherRoomMessage {
+  repeated SubToPusherRoomMessage payload = 2;
+}
+
+message SubToPusherRoomMessage {
+  oneof message {
+    VariableMessage variableMessage = 1;
+  }
+}
+
 
 /*message BatchToAdminPusherMessage {
   repeated SubToAdminPusherMessage payload = 2;
@@ -433,9 +447,13 @@ message EmptyMessage {
 
 }
 
+/**
+ * Service handled by the "back". Pusher servers connect to this service.
+ */
 service RoomManager {
-  rpc joinRoom(stream PusherToBackMessage) returns (stream ServerToClientMessage);
-  rpc listenZone(ZoneMessage) returns (stream BatchToPusherMessage);
+  rpc joinRoom(stream PusherToBackMessage) returns (stream ServerToClientMessage); // Holds a connection between one given client and the back
+  rpc listenZone(ZoneMessage) returns (stream BatchToPusherMessage); // Connection used to send to a pusher messages related to a given zone of a given room
+  rpc listenRoom(RoomMessage) returns (stream BatchToPusherRoomMessage); // Connection used to send to a pusher messages related to a given room
   rpc adminRoom(stream AdminPusherToBackMessage) returns (stream ServerToAdminClientMessage);
   rpc sendAdminMessage(AdminMessage) returns (EmptyMessage);
   rpc sendGlobalAdminMessage(AdminGlobalMessage) returns (EmptyMessage);

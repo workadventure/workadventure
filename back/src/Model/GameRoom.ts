@@ -34,7 +34,8 @@ export class GameRoom {
     private readonly connectCallback: ConnectCallback;
     private readonly disconnectCallback: DisconnectCallback;
 
-    private itemsState: Map<number, unknown> = new Map<number, unknown>();
+    private itemsState = new Map<number, unknown>();
+    private variables = new Map<string, string>();
 
     private readonly positionNotifier: PositionNotifier;
     public readonly roomId: string;
@@ -307,6 +308,10 @@ export class GameRoom {
 
     public getItemsState(): Map<number, unknown> {
         return this.itemsState;
+    }
+
+    public setVariable(name: string, value: string): void {
+        this.variables.set(name, value);
     }
 
     public addZoneListener(call: ZoneSocket, x: number, y: number): Set<Movable> {
