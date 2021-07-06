@@ -466,7 +466,6 @@ export class RoomConnection implements RoomConnection {
         this.onMessage(EventMessage.WEBRTC_START, (message: WebRtcStartMessage) => {
             callback({
                 userId: message.getUserid(),
-                name: message.getName(),
                 initiator: message.getInitiator(),
                 webRtcUser: message.getWebrtcusername() ?? undefined,
                 webRtcPassword: message.getWebrtcpassword() ?? undefined,
