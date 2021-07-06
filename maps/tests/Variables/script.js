@@ -7,9 +7,14 @@ WA.onInit().then(() => {
         console.log('Successfully caught error: ', e);
     });
 
-    console.log('Trying to set variable "config". This should work.');
-    WA.room.saveVariable('config', {'foo': 'bar'});
+    console.log('Trying to set variable "myvar". This should work.');
+    WA.room.saveVariable('myvar', {'foo': 'bar'});
 
-    console.log('Trying to read variable "config". This should display a {"foo": "bar"} object.');
-    console.log(WA.room.loadVariable('config'));
+    console.log('Trying to read variable "myvar". This should display a {"foo": "bar"} object.');
+    console.log(WA.room.loadVariable('myvar'));
+
+    console.log('Trying to set variable "config". This should not work because we are not logged as admin.');
+    WA.room.saveVariable('config', {'foo': 'bar'}).catch(e => {
+        console.log('Successfully caught error because variable "config" is not writable: ', e);
+    });
 });

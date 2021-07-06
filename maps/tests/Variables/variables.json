@@ -104,6 +104,44 @@
                  "width":0,
                  "x":131.38069962269,
                  "y":106.004988169086
+                }, 
+                {
+                 "height":0,
+                 "id":9,
+                 "name":"myvar",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"default",
+                         "type":"string",
+                         "value":"{}"
+                        }, 
+                        {
+                         "name":"jsonSchema",
+                         "type":"string",
+                         "value":"{}"
+                        }, 
+                        {
+                         "name":"persist",
+                         "type":"bool",
+                         "value":true
+                        }, 
+                        {
+                         "name":"readableBy",
+                         "type":"string",
+                         "value":""
+                        }, 
+                        {
+                         "name":"writableBy",
+                         "type":"string",
+                         "value":""
+                        }],
+                 "rotation":0,
+                 "type":"variable",
+                 "visible":true,
+                 "width":0,
+                 "x":88.8149900876127,
+                 "y":147.75212636695
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -112,7 +150,7 @@
          "y":0
         }],
  "nextlayerid":8,
- "nextobjectid":9,
+ "nextobjectid":10,
  "orientation":"orthogonal",
  "properties":[
         {

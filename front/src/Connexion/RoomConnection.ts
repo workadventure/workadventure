@@ -31,7 +31,7 @@ import {
     EmoteEventMessage,
     EmotePromptMessage,
     SendUserMessage,
-    BanUserMessage,
+    BanUserMessage, VariableMessage,
 } from "../Messages/generated/messages_pb";
 
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
@@ -532,6 +532,17 @@ export class RoomConnection implements RoomConnection {
 
         const clientToServerMessage = new ClientToServerMessage();
         clientToServerMessage.setItemeventmessage(itemEventMessage);
+
+        this.socket.send(clientToServerMessage.serializeBinary().buffer);
+    }
+
+    emitSetVariableEvent(name: string, value: unknown): void {
+        const variableMessage = new VariableMessage();
+        variableMessage.setName(name);
+        variableMessage.setValue(JSON.stringify(value));
+
+        const clientToServerMessage = new ClientToServerMessage();
+        clientToServerMessage.setVariablemessage(variableMessage);
 
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }

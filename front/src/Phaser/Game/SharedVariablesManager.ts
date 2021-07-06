@@ -9,7 +9,9 @@ import type {ITile, ITiledMapObject} from "../Map/ITiledMap";
 import type {Var} from "svelte/types/compiler/interfaces";
 
 interface Variable {
-    defaultValue: unknown
+    defaultValue: unknown,
+    readableBy?: string,
+    writableBy?: string,
 }
 
 export class SharedVariablesManager {
@@ -30,15 +32,24 @@ export class SharedVariablesManager {
         iframeListener.registerAnswerer('setVariable', (event) => {
             const key = event.key;
 
-            if (!this.variableObjects.has(key)) {
+            const object = this.variableObjects.get(key);
+
+            if (object === undefined) {
                 const errMsg = 'A script is trying to modify variable "'+key+'" but this variable is not defined in the map.' +
                     'There should be an object in the map whose name is "'+key+'" and whose type is "variable"';
                 console.error(errMsg);
                 throw new Error(errMsg);
             }
 
+            if (object.writableBy && !this.roomConnection.hasTag(object.writableBy)) {
+                const errMsg = 'A script is trying to modify variable "'+key+'" but this variable is only writable for users with tag "'+object.writableBy+'".';
+                console.error(errMsg);
+                throw new Error(errMsg);
+            }
+
             this._variables.set(key, event.value);
             // TODO: dispatch to the room connection.
+            this.roomConnection.emitSetVariableEvent(key, event.value);
         });
     }
 
@@ -68,8 +79,27 @@ export class SharedVariablesManager {
 
         if (object.properties) {
             for (const property of object.properties) {
-                if (property.name === 'default') {
-                    variable.defaultValue = property.value;
+                const value = property.value;
+                switch (property.name) {
+                    case 'default':
+                        variable.defaultValue = value;
+                        break;
+                    case 'writableBy':
+                        if (typeof value !== 'string') {
+                            throw new Error('The writableBy property of variable "'+object.name+'" must be a string');
+                        }
+                        if (value) {
+                            variable.writableBy = value;
+                        }
+                        break;
+                    case 'readableBy':
+                        if (typeof value !== 'string') {
+                            throw new Error('The readableBy property of variable "'+object.name+'" must be a string');
+                        }
+                        if (value) {
+                            variable.readableBy = value;
+                        }
+                        break;
                 }
             }
         }

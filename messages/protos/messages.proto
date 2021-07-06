@@ -186,7 +186,7 @@ message RoomJoinedMessage {
   repeated ItemStateMessage item = 3;
   int32 currentUserId = 4;
   repeated string tag = 5;
-  repeated VariableMessage = 6;
+  repeated VariableMessage variable = 6;
 }
 
 message WebRtcStartMessage {
