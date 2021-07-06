@@ -91,6 +91,7 @@ import { soundManager } from "./SoundManager";
 import { peerStore, screenSharingPeerStore } from "../../Stores/PeerStore";
 import { videoFocusStore } from "../../Stores/VideoFocusStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
+import {playersStore} from "../../Stores/PlayersStore";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -596,6 +597,8 @@ export class GameScene extends DirtyScene {
             )
             .then((onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
+
+                playersStore.connectToRoomConnection(this.connection);
 
                 this.connection.onUserJoins((message: MessageUserJoined) => {
                     const userMessage: AddPlayerInterface = {
