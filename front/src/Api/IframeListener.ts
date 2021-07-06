@@ -168,13 +168,15 @@ class IframeListener {
                         return;
                     }
 
-                    const errorHandler = (reason: any) => {
+                    const errorHandler = (reason: unknown) => {
                         console.error('An error occurred while responding to an iFrame query.', reason);
-                        let reasonMsg: string;
+                        let reasonMsg: string = '';
                         if (reason instanceof Error) {
                             reasonMsg = reason.message;
-                        } else {
-                            reasonMsg = reason.toString();
+                        } else if (typeof reason === 'object') {
+                            reasonMsg = reason ? reason.toString() : '';
+                        } else  if (typeof reason === 'string') {
+                            reasonMsg = reason;
                         }
 
                         iframe?.contentWindow?.postMessage({
