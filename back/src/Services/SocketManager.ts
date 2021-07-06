@@ -29,7 +29,8 @@ import {
     EmoteEventMessage,
     BanUserMessage,
     RefreshRoomMessage,
-    EmotePromptMessage, VariableMessage,
+    EmotePromptMessage,
+    VariableMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -447,8 +448,6 @@ export class SocketManager {
             // Let's send 2 messages: one to the user joining the group and one to the other user
             const webrtcStartMessage1 = new WebRtcStartMessage();
             webrtcStartMessage1.setUserid(otherUser.id);
-            webrtcStartMessage1.setUseruuid(otherUser.uuid);
-            webrtcStartMessage1.setName(otherUser.name);
             webrtcStartMessage1.setInitiator(true);
             if (TURN_STATIC_AUTH_SECRET !== "") {
                 const { username, password } = this.getTURNCredentials("" + otherUser.id, TURN_STATIC_AUTH_SECRET);
@@ -466,8 +465,6 @@ export class SocketManager {
 
             const webrtcStartMessage2 = new WebRtcStartMessage();
             webrtcStartMessage2.setUserid(user.id);
-            webrtcStartMessage2.setUseruuid(user.uuid);
-            webrtcStartMessage2.setName(user.name);
             webrtcStartMessage2.setInitiator(false);
             if (TURN_STATIC_AUTH_SECRET !== "") {
                 const { username, password } = this.getTURNCredentials("" + user.id, TURN_STATIC_AUTH_SECRET);

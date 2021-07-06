@@ -47,13 +47,7 @@ import { RemotePlayer } from "../Entity/RemotePlayer";
 import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
-import type {
-    ITiledMap,
-    ITiledMapLayer,
-    ITiledMapProperty,
-    ITiledMapObject,
-    ITiledTileSet,
-} from "../Map/ITiledMap";
+import type { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapObject, ITiledTileSet } from "../Map/ITiledMap";
 import { MenuScene, MenuSceneName } from "../Menu/MenuScene";
 import { PlayerAnimationDirections } from "../Player/Animation";
 import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
@@ -92,6 +86,7 @@ import { peerStore, screenSharingPeerStore } from "../../Stores/PeerStore";
 import { videoFocusStore } from "../../Stores/VideoFocusStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
 import { SharedVariablesManager } from "./SharedVariablesManager";
+import { playersStore } from "../../Stores/PlayersStore";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -599,6 +594,8 @@ export class GameScene extends DirtyScene {
             .then((onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
 
+                playersStore.connectToRoomConnection(this.connection);
+
                 this.connection.onUserJoins((message: MessageUserJoined) => {
                     const userMessage: AddPlayerInterface = {
                         userId: message.userId,
@@ -1043,13 +1040,13 @@ ${escapedMessage}
             })
         );
 
-        iframeListener.registerAnswerer('getMapData', () => {
+        iframeListener.registerAnswerer("getMapData", () => {
             return {
-                data: this.gameMap.getMap()
-            }
+                data: this.gameMap.getMap(),
+            };
         });
 
-        iframeListener.registerAnswerer('getState', async () => {
+        iframeListener.registerAnswerer("getState", async () => {
             // The sharedVariablesManager is not instantiated before the connection is established. So we need to wait
             // for the connection to send back the answer.
             await this.connectionAnswerPromise;
@@ -1156,7 +1153,7 @@ ${escapedMessage}
         this.emoteManager.destroy();
         this.peerStoreUnsubscribe();
         this.biggestAvailableAreaStoreUnsubscribe();
-        iframeListener.unregisterAnswerer('getState');
+        iframeListener.unregisterAnswerer("getState");
         this.sharedVariablesManager?.close();
 
         mediaManager.hideGameOverlay();

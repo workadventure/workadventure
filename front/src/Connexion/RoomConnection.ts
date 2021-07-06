@@ -31,7 +31,8 @@ import {
     EmoteEventMessage,
     EmotePromptMessage,
     SendUserMessage,
-    BanUserMessage, VariableMessage,
+    BanUserMessage,
+    VariableMessage,
 } from "../Messages/generated/messages_pb";
 
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
@@ -466,7 +467,6 @@ export class RoomConnection implements RoomConnection {
         this.onMessage(EventMessage.WEBRTC_START, (message: WebRtcStartMessage) => {
             callback({
                 userId: message.getUserid(),
-                name: message.getName(),
                 initiator: message.getInitiator(),
                 webRtcUser: message.getWebrtcusername() ?? undefined,
                 webRtcPassword: message.getWebrtcpassword() ?? undefined,

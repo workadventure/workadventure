@@ -11,10 +11,10 @@ import { get } from "svelte/store";
 import { localStreamStore, LocalStreamStoreValue, obtainedMediaConstraintStore } from "../Stores/MediaStore";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { discussionManager } from "./DiscussionManager";
+import { playersStore } from "../Stores/PlayersStore";
 
 export interface UserSimplePeerInterface {
     userId: number;
-    name?: string;
     initiator?: boolean;
     webRtcUser?: string | undefined;
     webRtcPassword?: string | undefined;
@@ -153,10 +153,7 @@ export class SimplePeer {
             }
         }
 
-        let name = user.name;
-        if (!name) {
-            name = this.getName(user.userId);
-        }
+        const name = this.getName(user.userId);
 
         discussionManager.removeParticipant(user.userId);
 
@@ -191,7 +188,7 @@ export class SimplePeer {
 
         //Create a notification for first user in circle discussion
         if (this.PeerConnectionArray.size === 0) {
-            mediaManager.createNotification(user.name ?? "");
+            mediaManager.createNotification(name);
         }
         this.PeerConnectionArray.set(user.userId, peer);
 
@@ -202,12 +199,7 @@ export class SimplePeer {
     }
 
     private getName(userId: number): string {
-        const userSearch = this.Users.find((userSearch: UserSimplePeerInterface) => userSearch.userId === userId);
-        if (userSearch) {
-            return userSearch.name || "";
-        } else {
-            return "";
-        }
+        return playersStore.getPlayerById(userId)?.name || "";
     }
 
     /**
