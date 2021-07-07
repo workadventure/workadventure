@@ -1,16 +1,11 @@
-import { DivImportance, layoutManager } from "./LayoutManager";
+import { layoutManager } from "./LayoutManager";
 import { HtmlUtils } from "./HtmlUtils";
-import { discussionManager, SendMessageCallback } from "./DiscussionManager";
 import type { UserInputManager } from "../Phaser/UserInput/UserInputManager";
-import { localUserStore } from "../Connexion/LocalUserStore";
-import type { UserSimplePeerInterface } from "./SimplePeer";
-import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { DISABLE_NOTIFICATIONS } from "../Enum/EnvironmentVariable";
 import { localStreamStore } from "../Stores/MediaStore";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { helpCameraSettingsVisibleStore } from "../Stores/HelpCameraSettingsStore";
 
-export type UpdatedLocalStreamCallback = (media: MediaStream | null) => void;
 export type StartScreenSharingCallback = (media: MediaStream) => void;
 export type StopScreenSharingCallback = (media: MediaStream) => void;
 
@@ -182,22 +177,8 @@ export class MediaManager {
         }
     }
 
-    public addNewMessage(name: string, message: string, isMe: boolean = false) {
-        discussionManager.addMessage(name, message, isMe);
-
-        //when there are new message, show discussion
-        if (!discussionManager.activatedDiscussion) {
-            discussionManager.showDiscussionPart();
-        }
-    }
-
-    public addSendMessageCallback(userId: string | number, callback: SendMessageCallback) {
-        discussionManager.onSendMessageCallback(userId, callback);
-    }
-
     public setUserInputManager(userInputManager: UserInputManager) {
         this.userInputManager = userInputManager;
-        discussionManager.setUserInputManager(userInputManager);
     }
 
     public getNotification() {

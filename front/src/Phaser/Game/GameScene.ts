@@ -692,12 +692,12 @@ export class GameScene extends DirtyScene {
                 const self = this;
                 this.simplePeer.registerPeerConnectionListener({
                     onConnect(peer) {
-                        self.openChatIcon.setVisible(true);
+                        //self.openChatIcon.setVisible(true);
                         audioManager.decreaseVolume();
                     },
                     onDisconnect(userId: number) {
                         if (self.simplePeer.getNbConnections() === 0) {
-                            self.openChatIcon.setVisible(false);
+                            //self.openChatIcon.setVisible(false);
                             audioManager.restoreVolume();
                         }
                     },

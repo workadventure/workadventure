@@ -101,7 +101,6 @@ export const createLoadingPromise = (
     frameConfig: FrameConfig
 ) => {
     return new Promise<BodyResourceDescriptionInterface>((res, rej) => {
-        console.log("count", loadPlugin.listenerCount("loaderror"));
         if (loadPlugin.textureManager.exists(playerResourceDescriptor.name)) {
             return res(playerResourceDescriptor);
         }
