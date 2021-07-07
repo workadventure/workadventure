@@ -11,7 +11,8 @@ import nav from "./Api/iframe/nav";
 import controls from "./Api/iframe/controls";
 import ui from "./Api/iframe/ui";
 import sound from "./Api/iframe/sound";
-import room, {initVariables, setMapURL, setRoomId} from "./Api/iframe/room";
+import room, {setMapURL, setRoomId} from "./Api/iframe/room";
+import state, {initVariables} from "./Api/iframe/state";
 import player, {setPlayerName, setTags, setUuid} from "./Api/iframe/player";
 import type { ButtonDescriptor } from "./Api/iframe/Ui/ButtonDescriptor";
 import type { Popup } from "./Api/iframe/Ui/Popup";
@@ -42,6 +43,7 @@ const wa = {
     sound,
     room,
     player,
+    state,
 
     onInit(): Promise<void> {
         return initPromise;

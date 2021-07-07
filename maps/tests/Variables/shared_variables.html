@@ -12,21 +12,21 @@
             WA.onInit().then(() => {
                 console.log('After WA init');
                 const textField = document.getElementById('textField');
-                textField.value = WA.room.loadVariable('textField');
+                textField.value = WA.state.loadVariable('textField');
 
                 textField.addEventListener('change', function (evt) {
                     console.log('saving variable')
-                    WA.room.saveVariable('textField', this.value);
+                    WA.state.saveVariable('textField', this.value);
                 });
 
-                WA.room.onVariableChange('textField').subscribe((value) => {
+                WA.state.onVariableChange('textField').subscribe((value) => {
                     console.log('variable changed received')
                     textField.value = value;
                 });
 
                 document.getElementById('btn').addEventListener('click', () => {
-                    console.log(WA.room.loadVariable('textField'));
-                    document.getElementById('placeholder').innerText = WA.room.loadVariable('textField');
+                    console.log(WA.state.loadVariable('textField'));
+                    document.getElementById('placeholder').innerText = WA.state.loadVariable('textField');
                 });
             });
         })

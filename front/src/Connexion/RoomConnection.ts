@@ -177,7 +177,6 @@ export class RoomConnection implements RoomConnection {
                     }
                 }
             } else if (message.hasRoomjoinedmessage()) {
-                console.error('COUCOU')
                 const roomJoinedMessage = message.getRoomjoinedmessage() as RoomJoinedMessage;
 
                 const items: { [itemId: number]: unknown } = {};
