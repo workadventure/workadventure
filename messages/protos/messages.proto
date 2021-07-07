@@ -62,7 +62,7 @@ message WebRtcSignalToServerMessage {
 }
 
 message ReportPlayerMessage {
-  int32 reportedUserId = 1;
+  string reportedUserUuid = 1;
   string reportComment = 2;
 }
 
@@ -165,6 +165,7 @@ message UserJoinedMessage {
   PositionMessage position = 4;
   CompanionMessage companion = 5;
   string visitCardUrl = 6;
+  string userUuid = 7;
 }
 
 message UserLeftMessage {
@@ -293,6 +294,7 @@ message UserJoinedZoneMessage {
   Zone fromZone = 5;
   CompanionMessage companion = 6;
   string visitCardUrl = 7;
+  string userUuid = 8;
 }
 
 message UserLeftZoneMessage {

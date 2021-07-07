@@ -604,6 +604,7 @@ export class GameScene extends DirtyScene {
                         position: message.position,
                         visitCardUrl: message.visitCardUrl,
                         companion: message.companion,
+                        userUuid: message.userUuid,
                     };
                     this.addPlayer(userMessage);
                 });

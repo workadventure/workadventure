@@ -331,6 +331,7 @@ export class SocketManager {
                 throw new Error("clientUser.userId is not an integer " + thing.id);
             }
             userJoinedZoneMessage.setUserid(thing.id);
+            userJoinedZoneMessage.setUseruuid(thing.uuid);
             userJoinedZoneMessage.setName(thing.name);
             userJoinedZoneMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
             userJoinedZoneMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
@@ -635,6 +636,7 @@ export class SocketManager {
             if (thing instanceof User) {
                 const userJoinedMessage = new UserJoinedZoneMessage();
                 userJoinedMessage.setUserid(thing.id);
+                userJoinedMessage.setUseruuid(thing.uuid);
                 userJoinedMessage.setName(thing.name);
                 userJoinedMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
                 userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));

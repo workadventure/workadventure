@@ -6,4 +6,5 @@ export interface PlayerInterface {
     characterLayers: BodyResourceDescriptionInterface[];
     visitCardUrl: string | null;
     companion: string | null;
+    userUuid: string;
 }

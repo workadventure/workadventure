@@ -39,6 +39,7 @@ export type LeavesCallback = (thing: Movable, listener: User) => void;*/
 export class UserDescriptor {
     private constructor(
         public readonly userId: number,
+        private userUuid: string,
         private name: string,
         private characterLayers: CharacterLayerMessage[],
         private position: PositionMessage,
@@ -57,6 +58,7 @@ export class UserDescriptor {
         }
         return new UserDescriptor(
             message.getUserid(),
+            message.getUseruuid(),
             message.getName(),
             message.getCharacterlayersList(),
             position,
@@ -84,6 +86,7 @@ export class UserDescriptor {
             userJoinedMessage.setVisitcardurl(this.visitCardUrl);
         }
         userJoinedMessage.setCompanion(this.companion);
+        userJoinedMessage.setUseruuid(this.userUuid);
 
         return userJoinedMessage;
     }

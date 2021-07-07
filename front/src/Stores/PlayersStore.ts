@@ -23,6 +23,7 @@ function createPlayersStore() {
                         characterLayers: message.characterLayers,
                         visitCardUrl: message.visitCardUrl,
                         companion: message.companion,
+                        userUuid: message.userUuid,
                     });
                     return users;
                 });
