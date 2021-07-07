@@ -707,7 +707,7 @@ export class GameScene extends DirtyScene {
                 });
 
                 // Set up variables manager
-                this.sharedVariablesManager = new SharedVariablesManager(this.connection, this.gameMap);
+                this.sharedVariablesManager = new SharedVariablesManager(this.connection, this.gameMap, onConnect.room.variables);
 
                 //this.initUsersPosition(roomJoinedMessage.users);
                 this.connectionAnswerPromiseResolve(onConnect.room);

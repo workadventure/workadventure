@@ -165,6 +165,9 @@ export class RoomConnection implements RoomConnection {
                     } else if (subMessage.hasEmoteeventmessage()) {
                         const emoteMessage = subMessage.getEmoteeventmessage() as EmoteEventMessage;
                         emoteEventStream.fire(emoteMessage.getActoruserid(), emoteMessage.getEmote());
+                    } else if (subMessage.hasVariablemessage()) {
+                        event = EventMessage.SET_VARIABLE;
+                        payload = subMessage.getVariablemessage();
                     } else {
                         throw new Error("Unexpected batch message type");
                     }
@@ -174,11 +177,17 @@ export class RoomConnection implements RoomConnection {
                     }
                 }
             } else if (message.hasRoomjoinedmessage()) {
+                console.error('COUCOU')
                 const roomJoinedMessage = message.getRoomjoinedmessage() as RoomJoinedMessage;
 
                 const items: { [itemId: number]: unknown } = {};
                 for (const item of roomJoinedMessage.getItemList()) {
                     items[item.getItemid()] = JSON.parse(item.getStatejson());
+                }
+
+                const variables = new Map<string, unknown>();
+                for (const variable of roomJoinedMessage.getVariableList()) {
+                    variables.set(variable.getName(), JSON.parse(variable.getValue()));
                 }
 
                 this.userId = roomJoinedMessage.getCurrentuserid();
@@ -188,6 +197,7 @@ export class RoomConnection implements RoomConnection {
                     connection: this,
                     room: {
                         items,
+                        variables,
                     } as RoomJoinedMessageInterface,
                 });
             } else if (message.hasWorldfullmessage()) {
@@ -631,6 +641,18 @@ export class RoomConnection implements RoomConnection {
     public onStartJitsiRoom(callback: (jwt: string, room: string) => void): void {
         this.onMessage(EventMessage.START_JITSI_ROOM, (message: SendJitsiJwtMessage) => {
             callback(message.getJwt(), message.getJitsiroom());
+        });
+    }
+
+    public onSetVariable(callback: (name: string, value: unknown) => void): void {
+        this.onMessage(EventMessage.SET_VARIABLE, (message: VariableMessage) => {
+            const name = message.getName();
+            const serializedValue = message.getValue();
+            let value: unknown = undefined;
+            if (serializedValue) {
+                value = JSON.parse(serializedValue);
+            }
+            callback(name, value);
         });
     }
 

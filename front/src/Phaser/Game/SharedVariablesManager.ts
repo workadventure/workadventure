@@ -7,6 +7,7 @@ import type {Subscription} from "rxjs";
 import type {GameMap} from "./GameMap";
 import type {ITile, ITiledMapObject} from "../Map/ITiledMap";
 import type {Var} from "svelte/types/compiler/interfaces";
+import {init} from "svelte/internal";
 
 interface Variable {
     defaultValue: unknown,
@@ -18,7 +19,7 @@ export class SharedVariablesManager {
     private _variables = new Map<string, unknown>();
     private variableObjects: Map<string, Variable>;
 
-    constructor(private roomConnection: RoomConnection, private gameMap: GameMap) {
+    constructor(private roomConnection: RoomConnection, private gameMap: GameMap, serverVariables: Map<string, unknown>) {
         // We initialize the list of variable object at room start. The objects cannot be edited later
         // (otherwise, this would cause a security issue if the scripting API can edit this list of objects)
         this.variableObjects = SharedVariablesManager.findVariablesInMap(gameMap);
@@ -27,6 +28,22 @@ export class SharedVariablesManager {
         for (const [name, variableObject] of this.variableObjects.entries()) {
             this._variables.set(name, variableObject.defaultValue);
         }
+
+        // Override default values with the variables from the server:
+        for (const [name, value] of serverVariables) {
+            this._variables.set(name, value);
+        }
+
+        roomConnection.onSetVariable((name, value) => {
+            console.log('Set Variable received from server');
+            this._variables.set(name, value);
+
+            // On server change, let's notify the iframes
+            iframeListener.setVariable({
+                key: name,
+                value: value,
+            })
+        });
 
         // When a variable is modified from an iFrame
         iframeListener.registerAnswerer('setVariable', (event) => {
@@ -48,7 +65,8 @@ export class SharedVariablesManager {
             }
 
             this._variables.set(key, event.value);
-            // TODO: dispatch to the room connection.
+
+            // Dispatch to the room connection.
             this.roomConnection.emitSetVariableEvent(key, event.value);
         });
     }

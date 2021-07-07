@@ -34,6 +34,8 @@ import { handleMenuItemRegistrationEvent, isMenuItemRegisterIframeEvent } from "
 import { SetTilesEvent, isSetTilesEvent } from "./Events/SetTilesEvent";
 import { isSetVariableIframeEvent, SetVariableEvent } from "./Events/SetVariableEvent";
 
+type AnswererCallback<T extends keyof IframeQueryMap> = (query: IframeQueryMap[T]['query']) => IframeQueryMap[T]['answer']|PromiseLike<IframeQueryMap[T]['answer']>;
+
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.
  * Also allows to send messages to those iframes.
@@ -111,12 +113,10 @@ class IframeListener {
     private sendPlayerMove: boolean = false;
 
 
-    // Note: we are forced to type this in "any" because of https://github.com/microsoft/TypeScript/issues/31904
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private answerers: any = {};
-    /*private answerers: {
-        [key in keyof IframeQueryMap]?: (query: IframeQueryMap[key]['query']) => IframeQueryMap[key]['answer']|PromiseLike<IframeQueryMap[key]['answer']>
-    } = {};*/
+    // Note: we are forced to type this in unknown and later cast with "as" because of https://github.com/microsoft/TypeScript/issues/31904
+    private answerers: {
+        [str in keyof IframeQueryMap]?: unknown
+    } = {};
 
 
     init() {
@@ -156,7 +156,7 @@ class IframeListener {
                     const queryId = payload.id;
                     const query = payload.query;
 
-                    const answerer = this.answerers[query.type];
+                    const answerer = this.answerers[query.type] as AnswererCallback<keyof IframeQueryMap> | undefined;
                     if (answerer === undefined) {
                         const errorMsg = 'The iFrame sent a message of type "'+query.type+'" but there is no service configured to answer these messages.';
                         console.error(errorMsg);
@@ -432,7 +432,7 @@ class IframeListener {
      * @param key The "type" of the query we are answering
      * @param callback
      */
-    public registerAnswerer<T extends keyof IframeQueryMap>(key: T, callback: (query: IframeQueryMap[T]['query']) => IframeQueryMap[T]['answer']|PromiseLike<IframeQueryMap[T]['answer']> ): void {
+    public registerAnswerer<T extends keyof IframeQueryMap>(key: T, callback: AnswererCallback<T> ): void {
         this.answerers[key] = callback;
     }
 

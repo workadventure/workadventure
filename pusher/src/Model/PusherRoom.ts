@@ -13,6 +13,7 @@ import {
 } from "../Messages/generated/messages_pb";
 import Debug from "debug";
 import {ClientReadableStream} from "grpc";
+import {ExAdminSocketInterface} from "_Model/Websocket/ExAdminSocketInterface";
 
 const debug = Debug("room");
 
@@ -34,8 +35,9 @@ export class PusherRoom {
     private backConnection!: ClientReadableStream<BatchToPusherRoomMessage>;
     private isClosing: boolean = false;
     private listeners: Set<ExSocketInterface> = new Set<ExSocketInterface>();
+    public readonly variables = new Map<string, string>();
 
-    constructor(public readonly roomId: string, private socketListener: ZoneEventListener, private onBackFailure: (e: Error | null, room: PusherRoom) => void) {
+    constructor(public readonly roomId: string, private socketListener: ZoneEventListener) {
         this.public = isRoomAnonymous(roomId);
         this.tags = [];
         this.policyType = GameRoomPolicyTypes.ANONYMOUS_POLICY;
@@ -96,7 +98,11 @@ export class PusherRoom {
             for (const message of batch.getPayloadList()) {
                 if (message.hasVariablemessage()) {
                     const variableMessage = message.getVariablemessage() as VariableMessage;
-                    // We need to dispatch this variable to all the listeners
+
+                    // We need to store all variables to dispatch variables later to the listeners
+                    this.variables.set(variableMessage.getName(), variableMessage.getValue());
+
+                    // Let's dispatch this variable to all the listeners
                     for (const listener of this.listeners) {
                         const subMessage = new SubMessage();
                         subMessage.setVariablemessage(variableMessage);
@@ -112,14 +118,22 @@ export class PusherRoom {
             if (!this.isClosing) {
                 debug("Error on back connection");
                 this.close();
-                this.onBackFailure(e, this);
+                // Let's close all connections linked to that room
+                for (const listener of this.listeners) {
+                    listener.disconnecting = true;
+                    listener.end(1011, "Connection error between pusher and back server")
+                }
             }
         });
         this.backConnection.on("close", () => {
             if (!this.isClosing) {
                 debug("Close on back connection");
                 this.close();
-                this.onBackFailure(null, this);
+                // Let's close all connections linked to that room
+                for (const listener of this.listeners) {
+                    listener.disconnecting = true;
+                    listener.end(1011, "Connection closed between pusher and back server")
+                }
             }
         });
     }
@@ -128,10 +142,5 @@ export class PusherRoom {
         debug("Closing connection to room %s on back server", this.roomId);
         this.isClosing = true;
         this.backConnection.cancel();
-
-        // Let's close all connections linked to that room
-        for (const listener of this.listeners) {
-            listener.close();
-        }
     }
 }

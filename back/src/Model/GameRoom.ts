@@ -7,9 +7,14 @@ import { PositionNotifier } from "./PositionNotifier";
 import { Movable } from "_Model/Movable";
 import { extractDataFromPrivateRoomId, extractRoomSlugPublicRoomId, isRoomAnonymous } from "./RoomIdentifier";
 import { arrayIntersect } from "../Services/ArrayHelper";
-import { EmoteEventMessage, JoinRoomMessage } from "../Messages/generated/messages_pb";
+import {
+    BatchToPusherMessage,
+    BatchToPusherRoomMessage,
+    EmoteEventMessage,
+    JoinRoomMessage, SubToPusherRoomMessage, VariableMessage
+} from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
-import { ZoneSocket } from "src/RoomManager";
+import {RoomSocket, ZoneSocket} from "src/RoomManager";
 import { Admin } from "../Model/Admin";
 
 export type ConnectCallback = (user: User, group: Group) => void;
@@ -35,7 +40,7 @@ export class GameRoom {
     private readonly disconnectCallback: DisconnectCallback;
 
     private itemsState = new Map<number, unknown>();
-    private variables = new Map<string, string>();
+    public readonly variables = new Map<string, string>();
 
     private readonly positionNotifier: PositionNotifier;
     public readonly roomId: string;
@@ -44,6 +49,8 @@ export class GameRoom {
     public readonly organizationSlug: string = "";
     private versionNumber: number = 1;
     private nextUserId: number = 1;
+
+    private roomListeners: Set<RoomSocket> = new Set<RoomSocket>();
 
     constructor(
         roomId: string,
@@ -312,6 +319,22 @@ export class GameRoom {
 
     public setVariable(name: string, value: string): void {
         this.variables.set(name, value);
+
+        // TODO: should we batch those every 100ms?
+        const variableMessage = new VariableMessage();
+        variableMessage.setName(name);
+        variableMessage.setValue(value);
+
+        const subMessage = new SubToPusherRoomMessage();
+        subMessage.setVariablemessage(variableMessage);
+
+        const batchMessage = new BatchToPusherRoomMessage();
+        batchMessage.addPayload(subMessage);
+
+        // Dispatch the message on the room listeners
+        for (const socket of this.roomListeners) {
+            socket.write(batchMessage);
+        }
     }
 
     public addZoneListener(call: ZoneSocket, x: number, y: number): Set<Movable> {
@@ -342,5 +365,13 @@ export class GameRoom {
 
     public emitEmoteEvent(user: User, emoteEventMessage: EmoteEventMessage) {
         this.positionNotifier.emitEmoteEvent(user, emoteEventMessage);
+    }
+
+    public addRoomListener(socket: RoomSocket) {
+        this.roomListeners.add(socket);
+    }
+
+    public removeRoomListener(socket: RoomSocket) {
+        this.roomListeners.delete(socket);
     }
 }

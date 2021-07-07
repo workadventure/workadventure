@@ -4,7 +4,7 @@ import {
     AdminMessage,
     AdminPusherToBackMessage,
     AdminRoomMessage,
-    BanMessage,
+    BanMessage, BatchToPusherRoomMessage,
     EmotePromptMessage,
     EmptyMessage,
     ItemEventMessage,
@@ -12,7 +12,7 @@ import {
     PlayGlobalMessage,
     PusherToBackMessage,
     QueryJitsiJwtMessage,
-    RefreshRoomPromptMessage,
+    RefreshRoomPromptMessage, RoomMessage,
     ServerToAdminClientMessage,
     ServerToClientMessage,
     SilentMessage,
@@ -33,6 +33,7 @@ const debug = Debug("roommanager");
 
 export type AdminSocket = ServerDuplexStream<AdminPusherToBackMessage, ServerToAdminClientMessage>;
 export type ZoneSocket = ServerWritableStream<ZoneMessage, ServerToClientMessage>;
+export type RoomSocket = ServerWritableStream<RoomMessage, BatchToPusherRoomMessage>;
 
 const roomManager: IRoomManagerServer = {
     joinRoom: (call: UserSocket): void => {
@@ -156,6 +157,29 @@ const roomManager: IRoomManagerServer = {
         });
     },
 
+    listenRoom(call: RoomSocket): void {
+        debug("listenRoom called");
+        const roomMessage = call.request;
+
+        socketManager.addRoomListener(call, roomMessage.getRoomid());
+
+        call.on("cancelled", () => {
+            debug("listenRoom cancelled");
+            socketManager.removeRoomListener(call, roomMessage.getRoomid());
+            call.end();
+        });
+
+        call.on("close", () => {
+            debug("listenRoom connection closed");
+            socketManager.removeRoomListener(call, roomMessage.getRoomid());
+        }).on("error", (e) => {
+            console.error("An error occurred in listenRoom stream:", e);
+            socketManager.removeRoomListener(call, roomMessage.getRoomid());
+            call.end();
+        });
+
+    },
+
     adminRoom(call: AdminSocket): void {
         console.log("adminRoom called");
 
@@ -230,7 +254,7 @@ const roomManager: IRoomManagerServer = {
     ): void {
         socketManager.dispatchRoomRefresh(call.request.getRoomid());
         callback(null, new EmptyMessage());
-    },
+    }
 };
 
 export { roomManager };

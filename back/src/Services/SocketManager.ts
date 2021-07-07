@@ -30,7 +30,7 @@ import {
     BanUserMessage,
     RefreshRoomMessage,
     EmotePromptMessage,
-    VariableMessage,
+    VariableMessage, BatchToPusherRoomMessage, SubToPusherRoomMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -49,7 +49,7 @@ import Jwt from "jsonwebtoken";
 import { JITSI_URL } from "../Enum/EnvironmentVariable";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
-import { ZoneSocket } from "../RoomManager";
+import {RoomSocket, ZoneSocket} from "../RoomManager";
 import { Zone } from "_Model/Zone";
 import Debug from "debug";
 import { Admin } from "_Model/Admin";
@@ -66,7 +66,9 @@ function emitZoneMessage(subMessage: SubToPusherMessage, socket: ZoneSocket): vo
 }
 
 export class SocketManager {
-    private rooms: Map<string, GameRoom> = new Map<string, GameRoom>();
+    private rooms = new Map<string, GameRoom>();
+    // List of rooms in process of loading.
+    private roomsPromises = new Map<string, PromiseLike<GameRoom>>();
 
     constructor() {
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
@@ -100,6 +102,14 @@ export class SocketManager {
             itemStateMessage.setStatejson(JSON.stringify(item));
 
             roomJoinedMessage.addItem(itemStateMessage);
+        }
+
+        for (const [name, value] of room.variables.entries()) {
+            const variableMessage = new VariableMessage();
+            variableMessage.setName(name);
+            variableMessage.setValue(value);
+
+            roomJoinedMessage.addVariable(variableMessage);
         }
 
         roomJoinedMessage.setCurrentuserid(user.id);
@@ -186,23 +196,10 @@ export class SocketManager {
     }
 
     handleVariableEvent(room: GameRoom, user: User, variableMessage: VariableMessage) {
-        const itemEvent = ProtobufUtils.toItemEvent(itemEventMessage);
-
         try {
-            // TODO: DISPATCH ON NEW ROOM CHANNEL
-
-            const subMessage = new SubMessage();
-            subMessage.setItemeventmessage(itemEventMessage);
-
-            // Let's send the event without using the SocketIO room.
-            // TODO: move this in the GameRoom class.
-            for (const user of room.getUsers().values()) {
-                user.emitInBatch(subMessage);
-            }
-
             room.setVariable(variableMessage.getName(), variableMessage.getValue());
         } catch (e) {
-            console.error('An error occurred on "item_event"');
+            console.error('An error occurred on "handleVariableEvent"');
             console.error(e);
         }
     }
@@ -284,10 +281,18 @@ export class SocketManager {
     }
 
     async getOrCreateRoom(roomId: string): Promise<GameRoom> {
-        //check and create new world for a room
-        let world = this.rooms.get(roomId);
-        if (world === undefined) {
-            world = new GameRoom(
+        //check and create new room
+        let room = this.rooms.get(roomId);
+        if (room === undefined) {
+            let roomPromise = this.roomsPromises.get(roomId);
+            if (roomPromise) {
+                return roomPromise;
+            }
+
+            // Note: for now, the promise is useless (because this is synchronous, but soon, we will need to
+            // load the map server side.
+
+            room = new GameRoom(
                 roomId,
                 (user: User, group: Group) => this.joinWebRtcRoom(user, group),
                 (user: User, group: Group) => this.disConnectedUser(user, group),
@@ -303,9 +308,12 @@ export class SocketManager {
                     this.onEmote(emoteEventMessage, listener)
             );
             gaugeManager.incNbRoomGauge();
-            this.rooms.set(roomId, world);
+            this.rooms.set(roomId, room);
+
+            // TODO: change this the to new Promise()... when the method becomes actually asynchronous
+            roomPromise = Promise.resolve(room);
         }
-        return Promise.resolve(world);
+        return Promise.resolve(room);
     }
 
     private async joinRoom(
@@ -676,6 +684,42 @@ export class SocketManager {
         room.removeZoneListener(call, x, y);
     }
 
+    async addRoomListener(call: RoomSocket, roomId: string) {
+        const room = await this.getOrCreateRoom(roomId);
+        if (!room) {
+            console.error("In addRoomListener, could not find room with id '" + roomId + "'");
+            return;
+        }
+
+        room.addRoomListener(call);
+        //const things = room.addZoneListener(call, x, y);
+
+        const batchMessage = new BatchToPusherRoomMessage();
+
+        for (const [name, value] of room.variables.entries()) {
+            const variableMessage = new VariableMessage();
+            variableMessage.setName(name);
+            variableMessage.setValue(value);
+
+            const subMessage = new SubToPusherRoomMessage();
+            subMessage.setVariablemessage(variableMessage);
+
+            batchMessage.addPayload(subMessage);
+        }
+
+        call.write(batchMessage);
+    }
+
+    removeRoomListener(call: RoomSocket, roomId: string) {
+        const room = this.rooms.get(roomId);
+        if (!room) {
+            console.error("In removeRoomListener, could not find room with id '" + roomId + "'");
+            return;
+        }
+
+        room.removeRoomListener(call);
+    }
+
     public async handleJoinAdminRoom(admin: Admin, roomId: string): Promise<GameRoom> {
         const room = await socketManager.getOrCreateRoom(roomId);
 
@@ -831,6 +875,7 @@ export class SocketManager {
         emoteEventMessage.setActoruserid(user.id);
         room.emitEmoteEvent(user, emoteEventMessage);
     }
+
 }
 
 export const socketManager = new SocketManager();
