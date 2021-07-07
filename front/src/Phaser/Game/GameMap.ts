@@ -152,7 +152,10 @@ export class GameMap {
     }
 
     private getTileProperty(index: number): Array<ITiledMapLayerProperty> {
-        return this.tileSetPropertyMap[index];
+        if (this.tileSetPropertyMap[index]) {
+            return this.tileSetPropertyMap[index];
+        }
+        return [];
     }
 
     private trigger(
@@ -198,37 +201,49 @@ export class GameMap {
     private putTileInFlatLayer(index: number, x: number, y: number, layer: string): void {
         const fLayer = this.findLayer(layer);
         if (fLayer == undefined) {
-            console.error("The layer that you want to change doesn't exist.");
+            console.error("The layer '" + layer + "' that you want to change doesn't exist.");
             return;
         }
         if (fLayer.type !== "tilelayer") {
-            console.error("The layer that you want to change is not a tilelayer. Tile can only be put in tilelayer.");
+            console.error(
+                "The layer '" +
+                    layer +
+                    "' that you want to change is not a tilelayer. Tile can only be put in tilelayer."
+            );
             return;
         }
         if (typeof fLayer.data === "string") {
-            console.error("Data of the layer that you want to change is only readable.");
+            console.error("Data of the layer '" + layer + "' that you want to change is only readable.");
             return;
         }
-        fLayer.data[x + y * fLayer.height] = index;
+        fLayer.data[x + y * fLayer.width] = index;
     }
 
-    public putTile(tile: string | number, x: number, y: number, layer: string): void {
+    public putTile(tile: string | number | null, x: number, y: number, layer: string): void {
         const phaserLayer = this.findPhaserLayer(layer);
         if (phaserLayer) {
+            if (tile === null) {
+                phaserLayer.putTileAt(-1, x, y);
+                return;
+            }
             const tileIndex = this.getIndexForTileType(tile);
             if (tileIndex !== undefined) {
                 this.putTileInFlatLayer(tileIndex, x, y, layer);
                 const phaserTile = phaserLayer.putTileAt(tileIndex, x, y);
                 for (const property of this.getTileProperty(tileIndex)) {
-                    if (property.name === "collides" && property.value === "true") {
+                    if (property.name === "collides" && property.value) {
                         phaserTile.setCollision(true);
                     }
                 }
             } else {
-                console.error("The tile that you want to place doesn't exist.");
+                console.error("The tile '" + tile + "' that you want to place doesn't exist.");
             }
         } else {
-            console.error("The layer that you want to change is not a tilelayer. Tile can only be put in tilelayer.");
+            console.error(
+                "The layer '" +
+                    layer +
+                    "' that you want to change is not a tilelayer. Tile can only be put in tilelayer."
+            );
         }
     }
 
