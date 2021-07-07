@@ -72,7 +72,7 @@ WA.room.setProperty(layerName : string, propertyName : string, propertyValue : s
 Set the value of the `propertyName` property of the layer `layerName` at `propertyValue`. If the property doesn't exist, create the property `propertyName` and set the value of the property at `propertyValue`.
 
 Note : 
-To unset a property form a layer, use `setProperty` with `propertyValue` set to `undefined`.
+To unset a property from a layer, use `setProperty` with `propertyValue` set to `undefined`.
 
 Example :
 ```javascript
