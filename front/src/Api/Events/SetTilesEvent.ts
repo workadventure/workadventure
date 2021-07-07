@@ -5,7 +5,7 @@ export const isSetTilesEvent = tg.isArray(
         .withProperties({
             x: tg.isNumber,
             y: tg.isNumber,
-            tile: tg.isUnion(tg.isNumber, tg.isString),
+            tile: tg.isUnion(tg.isUnion(tg.isNumber, tg.isString), tg.isNull),
             layer: tg.isString,
         })
         .get()

@@ -134,6 +134,7 @@ If `tile` is a string, it's not the id of the tile but the value of the property
 
 **Important !** : If you use `tile` as a number, be sure to add the `firstgid` of the tileset of the tile that you want to the id of the tile in Tiled Editor.
 
+Note: If you want to unset a tile, use `setTiles` with `tile` set to `null`.
 
 Example : 
 ```javascript
