@@ -239,11 +239,7 @@ export class GameMap {
                 console.error("The tile '" + tile + "' that you want to place doesn't exist.");
             }
         } else {
-            console.error(
-                "The layer '" +
-                    layer +
-                    "' that you want to change is not a tilelayer. Tile can only be put in tilelayer."
-            );
+            console.error("The layer '" + layer + "' does not exist (or is not a tilelaye).");
         }
     }
 

@@ -10,12 +10,12 @@
 - New scripting API features :
   - Use `WA.room.showLayer(): void` to show a layer
   - Use `WA.room.hideLayer(): void` to hide a layer
-  - Use `WA.room.setProperty() : void` to add or change existing property of a layer
+  - Use `WA.room.setProperty() : void` to add, delete or change existing property of a layer
   - Use `WA.player.onPlayerMove(): void` to track the movement of the current player
   - Use `WA.room.getCurrentUser(): Promise<User>` to get the ID, name and tags of the current player
   - Use `WA.room.getCurrentRoom(): Promise<Room>` to get the ID, JSON map file, url of the map of the current room and the layer where the current player started
   - Use `WA.ui.registerMenuCommand(): void` to add a custom menu
-  - Use `WA.room.setTiles(): void` to change an array of tiles
+  - Use `WA.room.setTiles(): void` to add, delete or change an array of tiles
 - Users blocking now relies on UUID rather than ID. A blocked user that leaves a room and comes back will stay blocked.
 
 ## Version 1.4.3 - 1.4.4 - 1.4.5
