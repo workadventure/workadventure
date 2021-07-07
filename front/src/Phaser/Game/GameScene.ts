@@ -1100,12 +1100,25 @@ ${escapedMessage}
 
     private setLayerVisibility(layerName: string, visible: boolean): void {
         const phaserLayer = this.gameMap.findPhaserLayer(layerName);
-        if (phaserLayer === undefined) {
-            console.warn('Could not find layer "' + layerName + '" when calling WA.hideLayer / WA.showLayer');
-            return;
+        if (phaserLayer != undefined) {
+            phaserLayer.setVisible(visible);
+            phaserLayer.setCollisionByProperty({ collides: true }, visible);
+        } else {
+            const phaserLayers = this.gameMap.findPhaserLayers(layerName + "/");
+            if (phaserLayers === []) {
+                console.warn(
+                    'Could not find layer with name that contains "' +
+                        layerName +
+                        '" when calling WA.hideLayer / WA.showLayer'
+                );
+                return;
+            }
+            for (let i = 0; i < phaserLayers.length; i++) {
+                phaserLayers[i].setVisible(visible);
+                phaserLayers[i].setCollisionByProperty({ collides: true }, visible);
+            }
         }
-        phaserLayer.setVisible(visible);
-        this.dirty = true;
+        this.markDirty();
     }
 
     private getMapDirUrl(): string {
