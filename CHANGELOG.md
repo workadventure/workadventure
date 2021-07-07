@@ -16,6 +16,7 @@
   - Use `WA.room.getCurrentRoom(): Promise<Room>` to get the ID, JSON map file, url of the map of the current room and the layer where the current player started
   - Use `WA.ui.registerMenuCommand(): void` to add a custom menu
   - Use `WA.room.setTiles(): void` to change an array of tiles
+- Users blocking now relies on UUID rather than ID. A blocked user that leaves a room and comes back will stay blocked.
 
 ## Version 1.4.3 - 1.4.4 - 1.4.5
 

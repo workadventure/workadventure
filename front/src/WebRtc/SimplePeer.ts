@@ -11,7 +11,7 @@ import { get } from "svelte/store";
 import { localStreamStore, LocalStreamStoreValue, obtainedMediaConstraintStore } from "../Stores/MediaStore";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { discussionManager } from "./DiscussionManager";
-import {playersStore} from "../Stores/PlayersStore";
+import { playersStore } from "../Stores/PlayersStore";
 
 export interface UserSimplePeerInterface {
     userId: number;
@@ -199,7 +199,7 @@ export class SimplePeer {
     }
 
     private getName(userId: number): string {
-        return playersStore.getPlayerById(userId)?.name || '';
+        return playersStore.getPlayerById(userId)?.name || "";
     }
 
     /**
@@ -364,7 +364,8 @@ export class SimplePeer {
     }
 
     private receiveWebrtcScreenSharingSignal(data: WebRtcSignalReceivedMessageInterface) {
-        if (blackListManager.isBlackListed(data.userId)) return;
+        const uuid = playersStore.getPlayerById(data.userId)?.userUuid || "";
+        if (blackListManager.isBlackListed(uuid)) return;
         console.log("receiveWebrtcScreenSharingSignal", data);
         const streamResult = get(screenSharingLocalStreamStore);
         let stream: MediaStream | null = null;
@@ -465,7 +466,8 @@ export class SimplePeer {
     }
 
     private sendLocalScreenSharingStreamToUser(userId: number, localScreenCapture: MediaStream): void {
-        if (blackListManager.isBlackListed(userId)) return;
+        const uuid = playersStore.getPlayerById(userId)?.userUuid || "";
+        if (blackListManager.isBlackListed(uuid)) return;
         // If a connection already exists with user (because it is already sharing a screen with us... let's use this connection)
         if (this.PeerScreenSharingConnectionArray.has(userId)) {
             this.pushScreenSharingToRemoteUser(userId, localScreenCapture);

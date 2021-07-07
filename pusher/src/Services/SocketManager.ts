@@ -61,7 +61,6 @@ export interface AdminSocketData {
 
 export class SocketManager implements ZoneEventListener {
     private rooms: Map<string, PusherRoom> = new Map<string, PusherRoom>();
-    private sockets: Map<number, ExSocketInterface> = new Map<number, ExSocketInterface>();
 
     constructor() {
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
@@ -191,8 +190,6 @@ export class SocketManager implements ZoneEventListener {
                 .on("data", (message: ServerToClientMessage) => {
                     if (message.hasRoomjoinedmessage()) {
                         client.userId = (message.getRoomjoinedmessage() as RoomJoinedMessage).getCurrentuserid();
-                        // TODO: do we need this.sockets anymore?
-                        this.sockets.set(client.userId, client);
 
                         // If this is the first message sent, send back the viewport.
                         this.handleViewport(client, viewport);
@@ -302,14 +299,8 @@ export class SocketManager implements ZoneEventListener {
 
     async handleReportMessage(client: ExSocketInterface, reportPlayerMessage: ReportPlayerMessage) {
         try {
-            const reportedSocket = this.sockets.get(reportPlayerMessage.getReporteduserid());
-            if (!reportedSocket) {
-                throw "reported socket user not found";
-            }
-            //TODO report user on admin application
-            //todo: move to back because this fail if the reported player is in another pusher.
             await adminApi.reportPlayer(
-                reportedSocket.userUuid,
+                reportPlayerMessage.getReporteduseruuid(),
                 reportPlayerMessage.getReportcomment(),
                 client.userUuid,
                 client.roomId.split("/")[2]
@@ -334,14 +325,6 @@ export class SocketManager implements ZoneEventListener {
         socket.backConnection.write(pusherToBackMessage);
     }
 
-    private searchClientByIdOrFail(userId: number): ExSocketInterface {
-        const client: ExSocketInterface | undefined = this.sockets.get(userId);
-        if (client === undefined) {
-            throw new Error("Could not find user with id " + userId);
-        }
-        return client;
-    }
-
     leaveRoom(socket: ExSocketInterface) {
         // leave previous room and world
         try {
@@ -364,9 +347,8 @@ export class SocketManager implements ZoneEventListener {
                     //Client.leave(Client.roomId);
                 } finally {
                     //delete Client.roomId;
-                    this.sockets.delete(socket.userId);
                     clientEventsEmitter.emitClientLeave(socket.userUuid, socket.roomId);
-                    console.log("A user left (", this.sockets.size, " connected users)");
+                    console.log("A user left");
                 }
             }
         } finally {
@@ -408,15 +390,6 @@ export class SocketManager implements ZoneEventListener {
 
     public getWorlds(): Map<string, PusherRoom> {
         return this.rooms;
-    }
-
-    searchClientByUuid(uuid: string): ExSocketInterface | null {
-        for (const socket of this.sockets.values()) {
-            if (socket.userUuid === uuid) {
-                return socket;
-            }
-        }
-        return null;
     }
 
     public handleQueryJitsiJwtMessage(client: ExSocketInterface, queryJitsiJwtMessage: QueryJitsiJwtMessage) {

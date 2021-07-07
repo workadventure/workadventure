@@ -365,6 +365,7 @@ export class RoomConnection implements RoomConnection {
             visitCardUrl: message.getVisitcardurl(),
             position: ProtobufClientUtils.toPointInterface(position),
             companion: companion ? companion.getName() : null,
+            userUuid: message.getUseruuid(),
         };
     }
 
@@ -591,9 +592,9 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 
-    public emitReportPlayerMessage(reportedUserId: number, reportComment: string): void {
+    public emitReportPlayerMessage(reportedUserUuid: string, reportComment: string): void {
         const reportPlayerMessage = new ReportPlayerMessage();
-        reportPlayerMessage.setReporteduserid(reportedUserId);
+        reportPlayerMessage.setReporteduseruuid(reportedUserUuid);
         reportPlayerMessage.setReportcomment(reportComment);
 
         const clientToServerMessage = new ClientToServerMessage();
