@@ -91,6 +91,7 @@ import { soundManager } from "./SoundManager";
 import { peerStore, screenSharingPeerStore } from "../../Stores/PeerStore";
 import { videoFocusStore } from "../../Stores/VideoFocusStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
+import { playersStore } from "../../Stores/PlayersStore";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -597,6 +598,8 @@ export class GameScene extends DirtyScene {
             .then((onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
 
+                playersStore.connectToRoomConnection(this.connection);
+
                 this.connection.onUserJoins((message: MessageUserJoined) => {
                     const userMessage: AddPlayerInterface = {
                         userId: message.userId,
@@ -605,6 +608,7 @@ export class GameScene extends DirtyScene {
                         position: message.position,
                         visitCardUrl: message.visitCardUrl,
                         companion: message.companion,
+                        userUuid: message.userUuid,
                     };
                     this.addPlayer(userMessage);
                 });
@@ -1044,7 +1048,7 @@ ${escapedMessage}
             })
         );
 
-        iframeListener.registerAnswerer('getState', () => {
+        iframeListener.registerAnswerer("getState", () => {
             return {
                 mapUrl: this.MapUrlFile,
                 startLayerName: this.startPositionCalculator.startLayerName,
@@ -1073,13 +1077,23 @@ ${escapedMessage}
             console.warn('Could not find layer "' + layerName + '" when calling setProperty');
             return;
         }
+        if (propertyName === "exitUrl" && typeof propertyValue === "string") {
+            this.loadNextGame(propertyValue);
+        }
         if (layer.properties === undefined) {
             layer.properties = [];
         }
         const property = layer.properties.find((property) => property.name === propertyName);
         if (property === undefined) {
+            if (propertyValue === undefined) {
+                return;
+            }
             layer.properties.push({ name: propertyName, type: typeof propertyValue, value: propertyValue });
             return;
+        }
+        if (propertyValue === undefined) {
+            const index = layer.properties.indexOf(property);
+            layer.properties.splice(index, 1);
         }
         property.value = propertyValue;
     }
@@ -1147,7 +1161,7 @@ ${escapedMessage}
         this.emoteManager.destroy();
         this.peerStoreUnsubscribe();
         this.biggestAvailableAreaStoreUnsubscribe();
-        iframeListener.unregisterAnswerer('getState');
+        iframeListener.unregisterAnswerer("getState");
 
         mediaManager.hideGameOverlay();
 

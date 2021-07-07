@@ -8,6 +8,7 @@ import type { UserSimplePeerInterface } from "./SimplePeer";
 import { get, readable, Readable } from "svelte/store";
 import { obtainedMediaConstraintStore } from "../Stores/MediaStore";
 import { discussionManager } from "./DiscussionManager";
+import { playersStore } from "../Stores/PlayersStore";
 
 const Peer: SimplePeerNamespace.SimplePeer = require("simple-peer");
 
@@ -26,6 +27,7 @@ export class VideoPeer extends Peer {
     private remoteStream!: MediaStream;
     private blocked: boolean = false;
     public readonly userId: number;
+    public readonly userUuid: string;
     public readonly uniqueId: string;
     private onBlockSubscribe: Subscription;
     private onUnBlockSubscribe: Subscription;
@@ -60,6 +62,7 @@ export class VideoPeer extends Peer {
         });
 
         this.userId = user.userId;
+        this.userUuid = playersStore.getPlayerById(this.userId)?.userUuid || "";
         this.uniqueId = "video_" + this.userId;
 
         this.streamStore = readable<MediaStream | null>(null, (set) => {
@@ -181,20 +184,20 @@ export class VideoPeer extends Peer {
         });
 
         this.pushVideoToRemoteUser(localStream);
-        this.onBlockSubscribe = blackListManager.onBlockStream.subscribe((userId) => {
-            if (userId === this.userId) {
+        this.onBlockSubscribe = blackListManager.onBlockStream.subscribe((userUuid) => {
+            if (userUuid === this.userUuid) {
                 this.toggleRemoteStream(false);
                 this.sendBlockMessage(true);
             }
         });
-        this.onUnBlockSubscribe = blackListManager.onUnBlockStream.subscribe((userId) => {
-            if (userId === this.userId) {
+        this.onUnBlockSubscribe = blackListManager.onUnBlockStream.subscribe((userUuid) => {
+            if (userUuid === this.userUuid) {
                 this.toggleRemoteStream(true);
                 this.sendBlockMessage(false);
             }
         });
 
-        if (blackListManager.isBlackListed(this.userId)) {
+        if (blackListManager.isBlackListed(this.userUuid)) {
             this.sendBlockMessage(true);
         }
     }
@@ -231,7 +234,7 @@ export class VideoPeer extends Peer {
     private stream(stream: MediaStream) {
         try {
             this.remoteStream = stream;
-            if (blackListManager.isBlackListed(this.userId) || this.blocked) {
+            if (blackListManager.isBlackListed(this.userUuid) || this.blocked) {
                 this.toggleRemoteStream(false);
             }
         } catch (err) {

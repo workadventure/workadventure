@@ -1,23 +1,26 @@
-import {Subject} from 'rxjs';
+import { Subject } from "rxjs";
 
 class BlackListManager {
-    private list: number[] = [];
-    public onBlockStream: Subject<number> = new Subject();
-    public onUnBlockStream: Subject<number> = new Subject();
-    
-    isBlackListed(userId: number): boolean {
-        return this.list.find((data) => data === userId) !== undefined;
-    }
-    
-    blackList(userId: number): void {
-        if (this.isBlackListed(userId)) return;
-        this.list.push(userId);
-        this.onBlockStream.next(userId);
+    private list: string[] = [];
+    public onBlockStream: Subject<string> = new Subject();
+    public onUnBlockStream: Subject<string> = new Subject();
+
+    isBlackListed(userUuid: string): boolean {
+        return this.list.find((data) => data === userUuid) !== undefined;
     }
 
-    cancelBlackList(userId: number): void {
-        this.list.splice(this.list.findIndex(data => data === userId), 1);
-        this.onUnBlockStream.next(userId);
+    blackList(userUuid: string): void {
+        if (this.isBlackListed(userUuid)) return;
+        this.list.push(userUuid);
+        this.onBlockStream.next(userUuid);
+    }
+
+    cancelBlackList(userUuid: string): void {
+        this.list.splice(
+            this.list.findIndex((data) => data === userUuid),
+            1
+        );
+        this.onUnBlockStream.next(userUuid);
     }
 }
 

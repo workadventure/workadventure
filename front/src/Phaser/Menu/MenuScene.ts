@@ -18,6 +18,7 @@ import { registerMenuCommandStream } from "../../Api/Events/ui/MenuItemRegisterE
 import { sendMenuClickedEvent } from "../../Api/iframe/Ui/MenuItem";
 import { consoleGlobalMessageManagerVisibleStore } from "../../Stores/ConsoleGlobalMessageManagerStore";
 import { get } from "svelte/store";
+import { playersStore } from "../../Stores/PlayersStore";
 
 export const MenuSceneName = "MenuScene";
 const gameMenuKey = "gameMenu";
@@ -120,7 +121,11 @@ export class MenuScene extends Phaser.Scene {
         showReportScreenStore.subscribe((user) => {
             if (user !== null) {
                 this.closeAll();
-                this.gameReportElement.open(user.userId, user.userName);
+                const uuid = playersStore.getPlayerById(user.userId)?.userUuid;
+                if (uuid === undefined) {
+                    throw new Error("Could not find UUID for user with ID " + user.userId);
+                }
+                this.gameReportElement.open(uuid, user.userName);
             }
         });
 
