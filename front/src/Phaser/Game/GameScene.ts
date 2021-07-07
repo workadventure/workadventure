@@ -91,7 +91,7 @@ import { soundManager } from "./SoundManager";
 import { peerStore, screenSharingPeerStore } from "../../Stores/PeerStore";
 import { videoFocusStore } from "../../Stores/VideoFocusStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
-import {playersStore} from "../../Stores/PlayersStore";
+import { playersStore } from "../../Stores/PlayersStore";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -608,6 +608,7 @@ export class GameScene extends DirtyScene {
                         position: message.position,
                         visitCardUrl: message.visitCardUrl,
                         companion: message.companion,
+                        userUuid: message.userUuid,
                     };
                     this.addPlayer(userMessage);
                 });
@@ -1047,7 +1048,7 @@ ${escapedMessage}
             })
         );
 
-        iframeListener.registerAnswerer('getState', () => {
+        iframeListener.registerAnswerer("getState", () => {
             return {
                 mapUrl: this.MapUrlFile,
                 startLayerName: this.startPositionCalculator.startLayerName,
@@ -1150,7 +1151,7 @@ ${escapedMessage}
         this.emoteManager.destroy();
         this.peerStoreUnsubscribe();
         this.biggestAvailableAreaStoreUnsubscribe();
-        iframeListener.unregisterAnswerer('getState');
+        iframeListener.unregisterAnswerer("getState");
 
         mediaManager.hideGameOverlay();
 

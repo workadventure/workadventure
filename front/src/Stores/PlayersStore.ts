@@ -1,6 +1,6 @@
 import { writable } from "svelte/store";
-import type {PlayerInterface} from "../Phaser/Game/PlayerInterface";
-import type {RoomConnection} from "../Connexion/RoomConnection";
+import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
+import type { RoomConnection } from "../Connexion/RoomConnection";
 
 /**
  * A store that contains the list of players currently known.
@@ -23,6 +23,7 @@ function createPlayersStore() {
                         characterLayers: message.characterLayers,
                         visitCardUrl: message.visitCardUrl,
                         companion: message.companion,
+                        userUuid: message.userUuid,
                     });
                     return users;
                 });
@@ -34,9 +35,9 @@ function createPlayersStore() {
                 });
             });
         },
-        getPlayerById(userId: number): PlayerInterface|undefined {
+        getPlayerById(userId: number): PlayerInterface | undefined {
             return players.get(userId);
-        }
+        },
     };
 }
 
