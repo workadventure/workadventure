@@ -93,11 +93,11 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
         }
         subject.subscribe(callback);
     }
-    showLayer(layerName: string, group: boolean = false): void {
-        sendToWorkadventure({ type: "showLayer", data: { name: layerName, group: group } });
+    showLayer(layerName: string): void {
+        sendToWorkadventure({ type: "showLayer", data: { name: layerName } });
     }
-    hideLayer(layerName: string, group: boolean = false): void {
-        sendToWorkadventure({ type: "hideLayer", data: { name: layerName, group: group } });
+    hideLayer(layerName: string): void {
+        sendToWorkadventure({ type: "hideLayer", data: { name: layerName } });
     }
     setProperty(layerName: string, propertyName: string, propertyValue: string | number | boolean | undefined): void {
         sendToWorkadventure({

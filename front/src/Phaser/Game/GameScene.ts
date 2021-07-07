@@ -1026,13 +1026,13 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.showLayerStream.subscribe((layerEvent) => {
-                this.setLayerVisibility(layerEvent.name, true, layerEvent.group);
+                this.setLayerVisibility(layerEvent.name, true);
             })
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.hideLayerStream.subscribe((layerEvent) => {
-                this.setLayerVisibility(layerEvent.name, false, layerEvent.group);
+                this.setLayerVisibility(layerEvent.name, false);
             })
         );
 
@@ -1088,9 +1088,13 @@ ${escapedMessage}
         property.value = propertyValue;
     }
 
-    private setLayerVisibility(layerName: string, visible: boolean, group: boolean): void {
-        if (group) {
-            const phaserLayers = this.gameMap.findPhaserLayers(layerName);
+    private setLayerVisibility(layerName: string, visible: boolean): void {
+        const phaserLayer = this.gameMap.findPhaserLayer(layerName);
+        if (phaserLayer != undefined) {
+            phaserLayer.setVisible(visible);
+            phaserLayer.setCollisionByProperty({ collides: true }, visible);
+        } else {
+            const phaserLayers = this.gameMap.findPhaserLayers(layerName + "/");
             if (phaserLayers === []) {
                 console.warn(
                     'Could not find layer with name that contains "' +
@@ -1103,14 +1107,6 @@ ${escapedMessage}
                 phaserLayers[i].setVisible(visible);
                 phaserLayers[i].setCollisionByProperty({ collides: true }, visible);
             }
-        } else {
-            const phaserLayer = this.gameMap.findPhaserLayer(layerName);
-            if (phaserLayer === undefined) {
-                console.warn('Could not find layer "' + layerName + '" when calling WA.hideLayer / WA.showLayer');
-                return;
-            }
-            phaserLayer.setVisible(visible);
-            phaserLayer.setCollisionByProperty({ collides: true }, visible);
         }
         this.markDirty();
     }
