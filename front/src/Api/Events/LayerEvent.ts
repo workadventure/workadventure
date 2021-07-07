@@ -3,6 +3,7 @@ import * as tg from "generic-type-guard";
 export const isLayerEvent = new tg.IsInterface()
     .withProperties({
         name: tg.isString,
+        group: tg.isBoolean,
     })
     .get();
 /**

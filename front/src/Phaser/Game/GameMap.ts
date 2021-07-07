@@ -189,6 +189,10 @@ export class GameMap {
         return this.phaserLayers.find((layer) => layer.layer.name === layerName);
     }
 
+    public findPhaserLayers(groupName: string): TilemapLayer[] {
+        return this.phaserLayers.filter((l) => l.layer.name.includes(groupName));
+    }
+
     public addTerrain(terrain: Phaser.Tilemaps.Tileset): void {
         for (const phaserLayer of this.phaserLayers) {
             phaserLayer.tileset.push(terrain);

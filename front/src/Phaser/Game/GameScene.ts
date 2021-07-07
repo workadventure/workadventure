@@ -1022,13 +1022,13 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.showLayerStream.subscribe((layerEvent) => {
-                this.setLayerVisibility(layerEvent.name, true);
+                this.setLayerVisibility(layerEvent.name, true, layerEvent.group);
             })
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.hideLayerStream.subscribe((layerEvent) => {
-                this.setLayerVisibility(layerEvent.name, false);
+                this.setLayerVisibility(layerEvent.name, false, layerEvent.group);
             })
         );
 
@@ -1044,7 +1044,7 @@ ${escapedMessage}
             })
         );
 
-        iframeListener.registerAnswerer('getState', () => {
+        iframeListener.registerAnswerer("getState", () => {
             return {
                 mapUrl: this.MapUrlFile,
                 startLayerName: this.startPositionCalculator.startLayerName,
@@ -1084,14 +1084,31 @@ ${escapedMessage}
         property.value = propertyValue;
     }
 
-    private setLayerVisibility(layerName: string, visible: boolean): void {
-        const phaserLayer = this.gameMap.findPhaserLayer(layerName);
-        if (phaserLayer === undefined) {
-            console.warn('Could not find layer "' + layerName + '" when calling WA.hideLayer / WA.showLayer');
-            return;
+    private setLayerVisibility(layerName: string, visible: boolean, group: boolean): void {
+        if (group) {
+            const phaserLayers = this.gameMap.findPhaserLayers(layerName);
+            if (phaserLayers === []) {
+                console.warn(
+                    'Could not find layer with name that contains "' +
+                        layerName +
+                        '" when calling WA.hideLayer / WA.showLayer'
+                );
+                return;
+            }
+            for (let i = 0; i < phaserLayers.length; i++) {
+                phaserLayers[i].setVisible(visible);
+                phaserLayers[i].setCollisionByProperty({ collides: true }, visible);
+            }
+        } else {
+            const phaserLayer = this.gameMap.findPhaserLayer(layerName);
+            if (phaserLayer === undefined) {
+                console.warn('Could not find layer "' + layerName + '" when calling WA.hideLayer / WA.showLayer');
+                return;
+            }
+            phaserLayer.setVisible(visible);
+            phaserLayer.setCollisionByProperty({ collides: true }, visible);
         }
-        phaserLayer.setVisible(visible);
-        this.dirty = true;
+        this.markDirty();
     }
 
     private getMapDirUrl(): string {
@@ -1147,7 +1164,7 @@ ${escapedMessage}
         this.emoteManager.destroy();
         this.peerStoreUnsubscribe();
         this.biggestAvailableAreaStoreUnsubscribe();
-        iframeListener.unregisterAnswerer('getState');
+        iframeListener.unregisterAnswerer("getState");
 
         mediaManager.hideGameOverlay();
 

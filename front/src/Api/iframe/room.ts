@@ -4,7 +4,7 @@ import { isDataLayerEvent } from "../Events/DataLayerEvent";
 import { EnterLeaveEvent, isEnterLeaveEvent } from "../Events/EnterLeaveEvent";
 import { isGameStateEvent } from "../Events/GameStateEvent";
 
-import {IframeApiContribution, queryWorkadventure, sendToWorkadventure} from "./IframeApiContribution";
+import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 
 import type { ITiledMap } from "../../Phaser/Map/ITiledMap";
@@ -93,11 +93,11 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
         }
         subject.subscribe(callback);
     }
-    showLayer(layerName: string): void {
-        sendToWorkadventure({ type: "showLayer", data: { name: layerName } });
+    showLayer(layerName: string, group: boolean = false): void {
+        sendToWorkadventure({ type: "showLayer", data: { name: layerName, group: group } });
     }
-    hideLayer(layerName: string): void {
-        sendToWorkadventure({ type: "hideLayer", data: { name: layerName } });
+    hideLayer(layerName: string, group: boolean = false): void {
+        sendToWorkadventure({ type: "hideLayer", data: { name: layerName, group: group } });
     }
     setProperty(layerName: string, propertyName: string, propertyValue: string | number | boolean | undefined): void {
         sendToWorkadventure({
