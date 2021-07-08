@@ -23,6 +23,13 @@ export const initVariables = (_variables: Map<string, unknown>): void => {
 }
 
 setVariableResolvers.subscribe((event) => {
+    const oldValue = variables.get(event.key);
+
+    // If we are setting the same value, no need to do anything.
+    if (oldValue === event.value) {
+        return;
+    }
+
     variables.set(event.key, event.value);
     const subject = variableSubscribers.get(event.key);
     if (subject !== undefined) {

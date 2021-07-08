@@ -24,7 +24,7 @@
   - Use `WA.ui.registerMenuCommand(): void` to add a custom menu
   - Use `WA.state.loadVariable(key: string): unknown` to retrieve a variable
   - Use `WA.state.saveVariable(key: string, value: unknown): Promise<void>` to set a variable (across the room, for all users)
-  - Use `WA.state.onVariableChange(key: string): Subscription<unknown>` to track a variable
+  - Use `WA.state.onVariableChange(key: string): Observable<unknown>` to track a variable
   - Use `WA.state.[any variable]: unknown` to access directly any variable (this is a shortcut to using `WA.state.loadVariable` and `WA.state.saveVariable`)
 - Users blocking now relies on UUID rather than ID. A blocked user that leaves a room and comes back will stay blocked.
 
