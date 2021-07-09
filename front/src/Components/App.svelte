@@ -27,9 +27,10 @@
     import {gameOverlayVisibilityStore} from "../Stores/GameOverlayStoreVisibility";
     import {consoleGlobalMessageManagerVisibleStore} from "../Stores/ConsoleGlobalMessageManagerStore";
     import ConsoleGlobalMessageManager from "./ConsoleGlobalMessageManager/ConsoleGlobalMessageManager.svelte";
+    import { peopleMenuVisible } from '../Stores/PeopleStore';
+    import PeopleMenu from './People/PeopleMenu.svelte';
 
     export let game: Game;
-
 </script>
 
 <div>
@@ -63,6 +64,19 @@
         <AudioPlaying url={$soundPlayingStore} />
     </div>
     {/if}
+
+    {#if $peopleMenuVisible}
+        <div>
+            <PeopleMenu />
+        </div>
+    {/if}
+    <!--
+    {#if $menuIconVisible}
+        <div>
+            <MenuIcon  />
+        </div>
+    {/if}
+    -->
     {#if $gameOverlayVisibilityStore}
         <div>
             <VideoOverlay></VideoOverlay>

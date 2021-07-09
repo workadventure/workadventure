@@ -161,6 +161,16 @@ message UserJoinedMessage {
   string userUuid = 7;
 }
 
+message UserInfoMessage {
+  int32 userId = 1;
+  string name = 2;
+  string characterLayerName = 3;
+}
+
+message UserListMessage {
+  repeated UserInfoMessage user = 1;
+}
+
 message UserLeftMessage {
   int32 userId = 1;
 }
@@ -260,6 +270,7 @@ message ServerToClientMessage {
     RefreshRoomMessage refreshRoomMessage = 17;
     WorldConnexionMessage worldConnexionMessage = 18;
     EmoteEventMessage emoteEventMessage = 19;
+    UserListMessage userListMessage = 20;
   }
 }
 

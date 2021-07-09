@@ -31,6 +31,7 @@ export enum EventMessage {
     TELEPORT = "teleport",
     USER_MESSAGE = "user-message",
     START_JITSI_ROOM = "start-jitsi-room",
+    USER_LIST = "user-list",
 }
 
 export interface PointInterface {

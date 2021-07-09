@@ -93,6 +93,7 @@ import { videoFocusStore } from "../../Stores/VideoFocusStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
+import { peopleStore } from "../../Stores/PeopleStore";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -607,6 +608,7 @@ export class GameScene extends DirtyScene {
                 this.connection = onConnect.connection;
 
                 playersStore.connectToRoomConnection(this.connection);
+                peopleStore.connectToRoomConnection(this.connection);
 
                 this.connection.onUserJoins((message: MessageUserJoined) => {
                     const userMessage: AddPlayerInterface = {

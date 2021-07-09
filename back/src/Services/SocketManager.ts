@@ -30,6 +30,8 @@ import {
     BanUserMessage,
     RefreshRoomMessage,
     EmotePromptMessage,
+    UserListMessage,
+    UserInfoMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -83,6 +85,8 @@ export class SocketManager {
         //join new previous room
         const { room, user } = await this.joinRoom(socket, joinRoomMessage);
 
+        this.updateUserList(room);
+
         if (!socket.writable) {
             console.warn("Socket was aborted");
             return {
@@ -111,6 +115,38 @@ export class SocketManager {
             room,
             user,
         };
+    }
+
+    private updateUserList(room: GameRoom) {
+        try {
+            const users = [...room.getUsers().values()];
+            const userListMessage = users.reduce((memo, user) => {
+                const userInfoMessage = new UserInfoMessage();
+                userInfoMessage.setUserid(user.id);
+                userInfoMessage.setName(user.name);
+                userInfoMessage.setCharacterlayername(user.characterLayers[0]?.name ?? "");
+
+                memo.addUser(userInfoMessage);
+                return memo;
+            }, new UserListMessage());
+
+            const message = new ServerToClientMessage();
+            message.setUserlistmessage(userListMessage);
+
+            console.log("user list", userListMessage.toObject());
+
+            for (const user of users) {
+                if (user.socket.writable) {
+                    try {
+                        user.socket.write(message);
+                    } catch (err) {
+                        console.warn(`Error sending user list to user ${user.id}. Error: ${err}`);
+                    }
+                }
+            }
+        } catch (err) {
+            console.error(`Error updating user list. Error: ${err}`);
+        }
     }
 
     handleUserMovesMessage(room: GameRoom, user: User, userMovesMessage: UserMovesMessage) {
@@ -249,6 +285,8 @@ export class SocketManager {
         try {
             //user leave previous world
             room.leave(user);
+            this.updateUserList(room);
+
             if (room.isEmpty()) {
                 this.rooms.delete(room.roomUrl);
                 gaugeManager.decNbRoomGauge();

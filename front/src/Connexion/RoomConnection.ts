@@ -32,6 +32,7 @@ import {
     EmotePromptMessage,
     SendUserMessage,
     BanUserMessage,
+    UserListMessage,
 } from "../Messages/generated/messages_pb";
 
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
@@ -59,6 +60,8 @@ import { emoteEventStream } from "./EmoteEventStream";
 
 const manualPingDelay = 20000;
 
+export type UserList = UserListMessage.AsObject["userList"];
+
 export class RoomConnection implements RoomConnection {
     private readonly socket: WebSocket;
     private userId: number | null = null;
@@ -66,6 +69,7 @@ export class RoomConnection implements RoomConnection {
     private static websocketFactory: null | ((url: string) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
     private closed: boolean = false;
     private tags: string[] = [];
+    private userList: UserList = [];
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
@@ -222,6 +226,9 @@ export class RoomConnection implements RoomConnection {
                 worldFullWarningStream.onMessage();
             } else if (message.hasRefreshroommessage()) {
                 //todo: implement a way to notify the user the room was refreshed.
+            } else if (message.hasUserlistmessage()) {
+                this.userList = message.getUserlistmessage()?.toObject()?.userList ?? [];
+                this.dispatch(EventMessage.USER_LIST, this.userList);
             } else {
                 throw new Error("Unknown message received");
             }
@@ -338,6 +345,10 @@ export class RoomConnection implements RoomConnection {
         this.onMessage(EventMessage.JOIN_ROOM, (message: UserJoinedMessage) => {
             callback(this.toMessageUserJoined(message));
         });
+    }
+
+    public onUserListUpdated(callback: (payload: UserList) => void) {
+        this.onMessage(EventMessage.USER_LIST, callback);
     }
 
     // TODO: move this to protobuf utils
@@ -642,5 +653,9 @@ export class RoomConnection implements RoomConnection {
 
     public getAllTags(): string[] {
         return this.tags;
+    }
+
+    public getUserList(): UserList {
+        return [...this.userList];
     }
 }
