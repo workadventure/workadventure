@@ -23,6 +23,7 @@ import { waScaleManager } from "./Phaser/Services/WaScaleManager";
 import { Game } from "./Phaser/Game/Game";
 import App from "./Components/App.svelte";
 import { HtmlUtils } from "./WebRtc/HtmlUtils";
+import { PeopleScene } from "./Phaser/People/PeopleScene";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
 
 const { width, height } = coWebsiteManager.getGameSize();
@@ -98,6 +99,7 @@ const config: GameConfig = {
         ErrorScene,
         CustomizeScene,
         MenuScene,
+        PeopleScene,
     ],
     //resolution: window.devicePixelRatio / 2,
     fps: fps,

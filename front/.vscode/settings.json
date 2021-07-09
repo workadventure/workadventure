@@ -1,0 +1,11 @@
+{
+    "editor.formatOnSave": false,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": false
+    },
+    "[typescript]": {
+      "editor.codeActionsOnSave": {
+          "source.organizeImports": false
+      }
+  },
+}

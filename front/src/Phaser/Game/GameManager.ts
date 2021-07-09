@@ -9,6 +9,7 @@ import { localUserStore } from "../../Connexion/LocalUserStore";
 import { get } from "svelte/store";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { helpCameraSettingsVisibleStore } from "../../Stores/HelpCameraSettingsStore";
+import { PeopleScene, PeopleSceneName } from "../People/PeopleScene";
 
 /**
  * This class should be responsible for any scene starting/stopping
@@ -98,6 +99,8 @@ export class GameManager {
         this.currentGameSceneName = scene.scene.key;
         const menuScene: MenuScene = scene.scene.get(MenuSceneName) as MenuScene;
         menuScene.revealMenuIcon();
+        const peopleScene: PeopleScene = scene.scene.get(PeopleSceneName) as PeopleScene;
+        peopleScene.showPeopleMenu();
     }
 
     /**
