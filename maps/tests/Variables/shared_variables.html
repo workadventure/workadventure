@@ -12,11 +12,11 @@
             WA.onInit().then(() => {
                 console.log('After WA init');
                 const textField = document.getElementById('textField');
-                textField.value = WA.state.loadVariable('textField');
+                textField.value = WA.state.textField;
 
                 textField.addEventListener('change', function (evt) {
                     console.log('saving variable')
-                    WA.state.saveVariable('textField', this.value);
+                    WA.state.textField = this.value;
                 });
 
                 WA.state.onVariableChange('textField').subscribe((value) => {
