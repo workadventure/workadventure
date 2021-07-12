@@ -1,5 +1,9 @@
 export function getRandomColor(): string {
-    return hsv_to_rgb(Math.random(), 0.5, 0.95);
+    const golden_ratio_conjugate = 0.618033988749895;
+    let hue = Math.random();
+    hue += golden_ratio_conjugate;
+    hue %= 1;
+    return hsv_to_rgb(hue, 0.5, 0.95);
 }
 
 //todo: test this.

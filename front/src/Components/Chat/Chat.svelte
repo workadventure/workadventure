@@ -32,7 +32,7 @@
 
 <aside class="chatWindow" transition:fly="{{ x: -1000, duration: 500 }}">
     <section class="chatWindowTitle">
-        <h3>Here is your chat history <button on:click={closeChat}>❌</button></h3>
+        <h3>Here is your chat history <span class="float-right" on:click={closeChat}>&times</span></h3>
 
     </section>
     <section class="messagesList">
@@ -50,7 +50,15 @@
 <style lang="scss">
     h3 {
       font-family: 'Whiteney';
+
+      span.float-right {
+        font-size: 30px;
+        line-height: 25px;
+        font-weight: bold;
+        float: right;
+      }
     }
+
     aside.chatWindow {
       z-index:100;
       pointer-events: auto;
@@ -60,7 +68,7 @@
       height: 100vh;
       width:30vw;
       min-width: 350px;
-      background: #051f33;
+      background: rgb(5, 31, 51, 0.9);
       color: whitesmoke;
       display: flex;
       flex-direction: column;

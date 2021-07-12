@@ -25,9 +25,9 @@
 <div class="chatElement">
     <div class="messagePart">
         {#if message.type === ChatMessageTypes.userIncoming}
-            ➡️: {#each targets as target}<ChatPlayerName player={target}></ChatPlayerName>{/each} ({renderDate(message.date)})
+            &gt;&gt; {#each targets as target}<ChatPlayerName player={target}></ChatPlayerName>{/each} enter ({renderDate(message.date)})
         {:else if message.type === ChatMessageTypes.userOutcoming}
-            ⬅️: {#each targets as target}<ChatPlayerName player={target}></ChatPlayerName>{/each} ({renderDate(message.date)})
+            &lt;&lt; {#each targets as target}<ChatPlayerName player={target}></ChatPlayerName>{/each} left ({renderDate(message.date)})
         {:else if message.type === ChatMessageTypes.me}
             <h4>Me: ({renderDate(message.date)})</h4>
             {#each texts as text}

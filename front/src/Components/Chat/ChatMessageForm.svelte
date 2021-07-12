@@ -39,6 +39,8 @@
           border: none;
           font-size: 22px;
           font-family: Whiteney;
+          min-width: 0; //Needed so that the input doesn't overflow the container in firefox
+          outline: none;
         }
         
         button {
