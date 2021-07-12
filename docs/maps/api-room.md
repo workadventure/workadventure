@@ -99,24 +99,6 @@ WA.room.getCurrentRoom((room) => {
 })
 ```
 
-### Getting information on the current user
-```
-WA.player.getCurrentUser(): Promise<User>
-```
-Return a promise that resolves to a `User` object with the following attributes :
-* **id (string) :** ID of the current user
-* **nickName (string) :** name displayed above the current user
-* **tags (string[]) :** list of all the tags of the current user
-
-Example :
-```javascript
-WA.room.getCurrentUser().then((user) => {
-    if (user.nickName === 'ABC') {
-        console.log(user.tags);
-    }
-})
-```
-
 ### Changing tiles 
 ```
 WA.room.setTiles(tiles: TileDescriptor[]): void

@@ -14,7 +14,6 @@ import type { GameStateEvent } from "../Events/GameStateEvent";
 const enterStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
 const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
 const dataLayerResolver = new Subject<DataLayerEvent>();
-const stateResolvers = new Subject<GameStateEvent>();
 
 let immutableDataPromise: Promise<GameStateEvent> | undefined = undefined;
 
@@ -25,12 +24,6 @@ interface Room {
     startLayer: string | null;
 }
 
-interface User {
-    id: string | undefined;
-    nickName: string | null;
-    tags: string[];
-}
-
 interface TileDescriptor {
     x: number;
     y: number;
@@ -38,7 +31,7 @@ interface TileDescriptor {
     layer: string;
 }
 
-function getGameState(): Promise<GameStateEvent> {
+export function getGameState(): Promise<GameStateEvent> {
     if (immutableDataPromise === undefined) {
         immutableDataPromise = queryWorkadventure({ type: "getState", data: undefined });
     }
@@ -119,11 +112,6 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
                     startLayer: gameState.startLayerName,
                 };
             });
-        });
-    }
-    getCurrentUser(): Promise<User> {
-        return getGameState().then((gameState) => {
-            return { id: gameState.uuid, nickName: gameState.nickname, tags: gameState.tags };
         });
     }
     setTiles(tiles: TileDescriptor[]) {

@@ -12,7 +12,7 @@
   - Use `WA.room.hideLayer(): void` to hide a layer
   - Use `WA.room.setProperty() : void` to add, delete or change existing property of a layer
   - Use `WA.player.onPlayerMove(): void` to track the movement of the current player
-  - Use `WA.room.getCurrentUser(): Promise<User>` to get the ID, name and tags of the current player
+  - Use `WA.player.getCurrentUser(): Promise<User>` to get the ID, name and tags of the current player
   - Use `WA.room.getCurrentRoom(): Promise<Room>` to get the ID, JSON map file, url of the map of the current room and the layer where the current player started
   - Use `WA.ui.registerMenuCommand(): void` to add a custom menu
   - Use `WA.room.setTiles(): void` to add, delete or change an array of tiles

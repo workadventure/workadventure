@@ -1,6 +1,24 @@
 {.section-title.accent.text-primary}
 # API Player functions Reference
 
+### Getting information on the current user
+```
+WA.player.getCurrentUser(): Promise<User>
+```
+Return a promise that resolves to a `User` object with the following attributes :
+* **id (string) :** ID of the current user
+* **nickName (string) :** name displayed above the current user
+* **tags (string[]) :** list of all the tags of the current user
+
+Example :
+```javascript
+WA.player.getCurrentUser().then((user) => {
+    if (user.nickName === 'ABC') {
+        console.log(user.tags);
+    }
+})
+```
+
 ### Listen to player movement
 ```
 WA.player.onPlayerMove(callback: HasPlayerMovedEventCallback): void;
