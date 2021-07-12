@@ -1,7 +1,6 @@
 import { MenuScene } from "./MenuScene";
 import { gameManager } from "../Game/GameManager";
 import { blackListManager } from "../../WebRtc/BlackListManager";
-import { playersStore } from "../../Stores/PlayersStore";
 
 export const gameReportKey = "gameReport";
 export const gameReportRessource = "resources/html/gameReport.html";
@@ -9,7 +8,7 @@ export const gameReportRessource = "resources/html/gameReport.html";
 export class ReportMenu extends Phaser.GameObjects.DOMElement {
     private opened: boolean = false;
 
-    private userUuid!: string;
+    private userId!: number;
     private userName!: string | undefined;
     private anonymous: boolean;
 
@@ -41,13 +40,13 @@ export class ReportMenu extends Phaser.GameObjects.DOMElement {
         });
     }
 
-    public open(userUuid: string, userName: string | undefined): void {
+    public open(userId: number, userName: string | undefined): void {
         if (this.opened) {
             this.close();
             return;
         }
 
-        this.userUuid = userUuid;
+        this.userId = userId;
         this.userName = userName;
 
         const mainEl = this.getChildByID("gameReport") as HTMLElement;
@@ -58,11 +57,11 @@ export class ReportMenu extends Phaser.GameObjects.DOMElement {
         gameTitleReport.innerText = userName || "";
 
         const blockButton = this.getChildByID("toggleBlockButton") as HTMLElement;
-        blockButton.innerText = blackListManager.isBlackListed(this.userUuid) ? "Unblock this user" : "Block this user";
+        blockButton.innerText = blackListManager.isBlackListed(this.userId) ? "Unblock this user" : "Block this user";
 
         this.opened = true;
 
-        gameManager.getCurrentGameScene(this.scene).userInputManager.disableControls();
+        gameManager.getCurrentGameScene().userInputManager.disableControls();
 
         this.scene.tweens.add({
             targets: this,
@@ -73,7 +72,7 @@ export class ReportMenu extends Phaser.GameObjects.DOMElement {
     }
 
     public close(): void {
-        gameManager.getCurrentGameScene(this.scene).userInputManager.restoreControls();
+        gameManager.getCurrentGameScene().userInputManager.restoreControls();
         this.opened = false;
         const mainEl = this.getChildByID("gameReport") as HTMLElement;
         this.scene.tweens.add({
@@ -96,9 +95,9 @@ export class ReportMenu extends Phaser.GameObjects.DOMElement {
     }
 
     private toggleBlock(): void {
-        !blackListManager.isBlackListed(this.userUuid)
-            ? blackListManager.blackList(this.userUuid)
-            : blackListManager.cancelBlackList(this.userUuid);
+        !blackListManager.isBlackListed(this.userId)
+            ? blackListManager.blackList(this.userId)
+            : blackListManager.cancelBlackList(this.userId);
         this.close();
     }
 
@@ -112,9 +111,7 @@ export class ReportMenu extends Phaser.GameObjects.DOMElement {
             gamePError.style.display = "block";
             return;
         }
-        gameManager
-            .getCurrentGameScene(this.scene)
-            .connection?.emitReportPlayerMessage(this.userUuid, gameTextArea.value);
+        gameManager.getCurrentGameScene().connection?.emitReportPlayerMessage(this.userId, gameTextArea.value);
         this.close();
     }
 }
