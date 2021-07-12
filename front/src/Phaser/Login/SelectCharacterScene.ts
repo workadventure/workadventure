@@ -92,7 +92,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         });
     }
 
-    protected nextSceneToCameraScene(): void {
+    public nextSceneToCameraScene(): void {
         if (this.selectedPlayer !== null && !areCharacterLayersValid([this.selectedPlayer.texture.key])) {
             return;
         }
@@ -108,7 +108,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.events.removeListener('wake');
     }
 
-    protected nextSceneToCustomizeScene(): void {
+    public nextSceneToCustomizeScene(): void {
         if (this.selectedPlayer !== null && !areCharacterLayersValid([this.selectedPlayer.texture.key])) {
             return;
         }
@@ -118,7 +118,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         selectCharacterSceneVisibleStore.set(false);
     }
 
-    createCurrentPlayer(): void {        
+    createCurrentPlayer(): void {
         for (let i = 0; i <this.playerModels.length; i++) {
             const playerResource = this.playerModels[i];
 
@@ -165,7 +165,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.updateSelectedPlayer();
     }
 
-    protected moveToLeft(){
+    public moveToLeft(){
         if(this.currentSelectUser === 0){
             return;
         }
@@ -173,7 +173,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.moveUser();
     }
 
-    protected moveToRight(){
+    public moveToRight(){
         if(this.currentSelectUser === (this.players.length - 1)){
             return;
         }

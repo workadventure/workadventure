@@ -1,8 +1,40 @@
-## Version 1.4.2 
+## Version 1.4.x-dev
 
-## Updates 
+### Updates
+
+- Added the ability to have animated tiles in maps #1216 #1217
+- Enabled outlines on actionable item again (they were disabled when migrating to Phaser 3.50) #1218
+- Enabled outlines on player names (when the mouse hovers on a player you can interact with) #1219
+- Migrated the admin console to Svelte, and redesigned the console #1211
+- Layer properties (like `exitUrl`, `silent`, etc...) can now also used in tile properties #1210 (@jonnytest1)
+- New scripting API features :
+  - Use `WA.room.showLayer(): void` to show a layer
+  - Use `WA.room.hideLayer(): void` to hide a layer
+  - Use `WA.room.setProperty() : void` to add, delete or change existing property of a layer
+  - Use `WA.player.onPlayerMove(): void` to track the movement of the current player
+  - Use `WA.room.getCurrentUser(): Promise<User>` to get the ID, name and tags of the current player
+  - Use `WA.room.getCurrentRoom(): Promise<Room>` to get the ID, JSON map file, url of the map of the current room and the layer where the current player started
+  - Use `WA.ui.registerMenuCommand(): void` to add a custom menu
+  - Use `WA.room.setTiles(): void` to add, delete or change an array of tiles
+- Users blocking now relies on UUID rather than ID. A blocked user that leaves a room and comes back will stay blocked.
+
+## Version 1.4.3 - 1.4.4 - 1.4.5
+
+## Bugfixes
+
+- Fixing the generation of @workadventure/iframe-api-typings
+
+## Version 1.4.2
+
+## Updates
 
 - A script in an iframe opened by another script can use the IFrame API.
+
+## Version 1.4.1
+
+### Bugfixes
+
+- Loading errors after the preload stage should not crash the game anymore
 
 ## Version 1.4.0
 
@@ -39,6 +71,7 @@
     - Added a new `DISPLAY_TERMS_OF_USE` environment variable to trigger the display of terms of use  
 - New scripting API features:
   - Use `WA.loadSound(): Sound` to load / play / stop a sound
+
 
 ### Bug Fixes
 

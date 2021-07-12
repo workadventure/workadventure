@@ -1,11 +1,11 @@
 <script lang="typescript">
-    import { Game } from "../../Phaser/Game/Game";
-    import { CustomizeSceneName } from "../../Phaser/Login/CustomizeScene";
+    import type { Game } from "../../Phaser/Game/Game";
+    import {CustomizeScene, CustomizeSceneName} from "../../Phaser/Login/CustomizeScene";
     import {activeRowStore} from "../../Stores/CustomCharacterStore";
 
     export let game: Game;
 
-    const customCharacterScene = game.scene.getScene(CustomizeSceneName);
+    const customCharacterScene = game.scene.getScene(CustomizeSceneName) as CustomizeScene;
 
     function selectLeft() {
         customCharacterScene.moveCursorHorizontally(-1);

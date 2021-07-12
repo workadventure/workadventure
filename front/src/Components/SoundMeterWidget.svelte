@@ -6,9 +6,7 @@
     export let stream: MediaStream|null;
     let volume = 0;
 
-    const NB_BARS = 5;
-
-    let timeout;
+    let timeout: ReturnType<typeof setTimeout>;
     const soundMeter = new SoundMeter();
     let display = false;
 
@@ -23,7 +21,7 @@
 
             timeout = setInterval(() => {
                 try{
-                    volume = parseInt((soundMeter.getVolume() / 100 * NB_BARS).toFixed(0));
+                    volume = soundMeter.getVolume();
                     //console.log(volume);
                 }catch(err){
 
@@ -45,9 +43,9 @@
 
 
 <div class="sound-progress" class:active={display}>
-    <span class:active={volume > 1}></span>
-    <span class:active={volume > 2}></span>
-    <span class:active={volume > 3}></span>
-    <span class:active={volume > 4}></span>
     <span class:active={volume > 5}></span>
+    <span class:active={volume > 10}></span>
+    <span class:active={volume > 15}></span>
+    <span class:active={volume > 40}></span>
+    <span class:active={volume > 70}></span>
 </div>

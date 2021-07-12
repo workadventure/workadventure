@@ -1,278 +1,208 @@
-import type { ChatEvent } from "./Api/Events/ChatEvent";
-import { isIframeResponseEventWrapper } from "./Api/Events/IframeEvent";
-import { isUserInputChatEvent, UserInputChatEvent } from "./Api/Events/UserInputChatEvent";
-import { Subject } from "rxjs";
-import { EnterLeaveEvent, isEnterLeaveEvent } from "./Api/Events/EnterLeaveEvent";
-import type { OpenPopupEvent } from "./Api/Events/OpenPopupEvent";
-import { isButtonClickedEvent } from "./Api/Events/ButtonClickedEvent";
-import type { ClosePopupEvent } from "./Api/Events/ClosePopupEvent";
-import type { OpenTabEvent } from "./Api/Events/OpenTabEvent";
-import type { GoToPageEvent } from "./Api/Events/GoToPageEvent";
-import type { OpenCoWebSiteEvent } from "./Api/Events/OpenCoWebSiteEvent";
-import type {PlaySoundEvent} from "./Api/Events/PlaySoundEvent";
-import type  {StopSoundEvent} from "./Api/Events/StopSoundEvent";
-import type {LoadSoundEvent} from "./Api/Events/LoadSoundEvent";
-import SoundConfig = Phaser.Types.Sound.SoundConfig;
+import { registeredCallbacks } from "./Api/iframe/registeredCallbacks";
+import {
+    IframeResponseEvent,
+    IframeResponseEventMap, isIframeAnswerEvent, isIframeErrorAnswerEvent,
+    isIframeResponseEventWrapper,
+    TypedMessageEvent,
+} from "./Api/Events/IframeEvent";
+import chat from "./Api/iframe/chat";
+import type { IframeCallback } from "./Api/iframe/IframeApiContribution";
+import nav from "./Api/iframe/nav";
+import controls from "./Api/iframe/controls";
+import ui from "./Api/iframe/ui";
+import sound from "./Api/iframe/sound";
+import room from "./Api/iframe/room";
+import player from "./Api/iframe/player";
+import type { ButtonDescriptor } from "./Api/iframe/Ui/ButtonDescriptor";
+import type { Popup } from "./Api/iframe/Ui/Popup";
+import type { Sound } from "./Api/iframe/Sound/Sound";
+import { answerPromises, sendToWorkadventure} from "./Api/iframe/IframeApiContribution";
 
-interface WorkAdventureApi {
-    sendChatMessage(message: string, author: string): void;
-    onChatMessage(callback: (message: string) => void): void;
-    onEnterZone(name: string, callback: () => void): void;
-    onLeaveZone(name: string, callback: () => void): void;
-    openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup;
-    openTab(url : string): void;
-    goToPage(url : string): void;
-    openCoWebSite(url : string, allowApi?: boolean, allowPolicy?: string): void;
-    closeCoWebSite(): void;
-    disablePlayerControls(): void;
-    restorePlayerControls(): void;
-    displayBubble(): void;
-    removeBubble(): void;
-    loadSound(url : string): Sound;
-}
+const wa = {
+    ui,
+    nav,
+    controls,
+    chat,
+    sound,
+    room,
+    player,
+
+    // All methods below are deprecated and should not be used anymore.
+    // They are kept here for backward compatibility.
+
+    /**
+     * @deprecated Use WA.chat.sendChatMessage instead
+     */
+    sendChatMessage(message: string, author: string): void {
+        console.warn("Method WA.sendChatMessage is deprecated. Please use WA.chat.sendChatMessage instead");
+        chat.sendChatMessage(message, author);
+    },
+
+    /**
+     * @deprecated Use WA.chat.disablePlayerControls instead
+     */
+    disablePlayerControls(): void {
+        console.warn(
+            "Method WA.disablePlayerControls is deprecated. Please use WA.controls.disablePlayerControls instead"
+        );
+        controls.disablePlayerControls();
+    },
+
+    /**
+     * @deprecated Use WA.controls.restorePlayerControls instead
+     */
+    restorePlayerControls(): void {
+        console.warn(
+            "Method WA.restorePlayerControls is deprecated. Please use WA.controls.restorePlayerControls instead"
+        );
+        controls.restorePlayerControls();
+    },
+
+    /**
+     * @deprecated Use WA.ui.displayBubble instead
+     */
+    displayBubble(): void {
+        console.warn("Method WA.displayBubble is deprecated. Please use WA.ui.displayBubble instead");
+        ui.displayBubble();
+    },
+
+    /**
+     * @deprecated Use WA.ui.removeBubble instead
+     */
+    removeBubble(): void {
+        console.warn("Method WA.removeBubble is deprecated. Please use WA.ui.removeBubble instead");
+        ui.removeBubble();
+    },
+
+    /**
+     * @deprecated Use WA.nav.openTab instead
+     */
+    openTab(url: string): void {
+        console.warn("Method WA.openTab is deprecated. Please use WA.nav.openTab instead");
+        nav.openTab(url);
+    },
+
+    /**
+     * @deprecated Use WA.sound.loadSound instead
+     */
+    loadSound(url: string): Sound {
+        console.warn("Method WA.loadSound is deprecated. Please use WA.sound.loadSound instead");
+        return sound.loadSound(url);
+    },
+
+    /**
+     * @deprecated Use WA.nav.goToPage instead
+     */
+    goToPage(url: string): void {
+        console.warn("Method WA.goToPage is deprecated. Please use WA.nav.goToPage instead");
+        nav.goToPage(url);
+    },
+
+    /**
+     * @deprecated Use WA.nav.goToRoom instead
+     */
+    goToRoom(url: string): void {
+        console.warn("Method WA.goToRoom is deprecated. Please use WA.nav.goToRoom instead");
+        nav.goToRoom(url);
+    },
+
+    /**
+     * @deprecated Use WA.nav.openCoWebSite instead
+     */
+    openCoWebSite(url: string, allowApi: boolean = false, allowPolicy: string = ""): void {
+        console.warn("Method WA.openCoWebSite is deprecated. Please use WA.nav.openCoWebSite instead");
+        nav.openCoWebSite(url, allowApi, allowPolicy);
+    },
+
+    /**
+     * @deprecated Use WA.nav.closeCoWebSite instead
+     */
+    closeCoWebSite(): void {
+        console.warn("Method WA.closeCoWebSite is deprecated. Please use WA.nav.closeCoWebSite instead");
+        nav.closeCoWebSite();
+    },
+
+    /**
+     * @deprecated Use WA.controls.restorePlayerControls instead
+     */
+    openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup {
+        console.warn("Method WA.openPopup is deprecated. Please use WA.ui.openPopup instead");
+        return ui.openPopup(targetObject, message, buttons);
+    },
+    /**
+     * @deprecated Use WA.chat.onChatMessage instead
+     */
+    onChatMessage(callback: (message: string) => void): void {
+        console.warn("Method WA.onChatMessage is deprecated. Please use WA.chat.onChatMessage instead");
+        chat.onChatMessage(callback);
+    },
+    /**
+     * @deprecated Use WA.room.onEnterZone instead
+     */
+    onEnterZone(name: string, callback: () => void): void {
+        console.warn("Method WA.onEnterZone is deprecated. Please use WA.room.onEnterZone instead");
+        room.onEnterZone(name, callback);
+    },
+    /**
+     * @deprecated Use WA.room.onLeaveZone instead
+     */
+    onLeaveZone(name: string, callback: () => void): void {
+        console.warn("Method WA.onLeaveZone is deprecated. Please use WA.room.onLeaveZone instead");
+        room.onLeaveZone(name, callback);
+    },
+};
+
+export type WorkAdventureApi = typeof wa;
 
 declare global {
-    // eslint-disable-next-line no-var
-    var WA: WorkAdventureApi
-
+    interface Window {
+        WA: WorkAdventureApi;
+    }
+    let WA: WorkAdventureApi;
 }
 
-type ChatMessageCallback = (message: string) => void;
-type ButtonClickedCallback = (popup: Popup) => void;
+window.WA = wa;
 
-const userInputChatStream: Subject<UserInputChatEvent> = new Subject();
-const enterStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
-const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
-const popups: Map<number, Popup> = new Map<number, Popup>();
-const popupCallbacks: Map<number, Map<number, ButtonClickedCallback>> = new Map<number, Map<number, ButtonClickedCallback>>();
-
-let popupId = 0;
-interface ButtonDescriptor {
-    /**
-     * The label of the button
-     */
-    label: string,
-    /**
-     * The type of the button. Can be one of "normal", "primary", "success", "warning", "error", "disabled"
-     */
-    className?: "normal" | "primary" | "success" | "warning" | "error" | "disabled",
-    /**
-     * Callback called if the button is pressed
-     */
-    callback: ButtonClickedCallback,
-}
-
-export class Popup {
-    constructor(private id: number) {
-    }
-
-    /**
-     * Closes the popup
-     */
-    public close(): void {
-        window.parent.postMessage({
-            'type': 'closePopup',
-            'data': {
-                'popupId': this.id,
-            } as ClosePopupEvent
-        }, '*');
-    }
-}
-
-export class Sound {
-    constructor(private url: string) {
-        window.parent.postMessage({
-            "type" : 'loadSound',
-            "data": {
-                url: this.url,
-            } as LoadSoundEvent
-
-        },'*');
-    }
-
-    public play(config : SoundConfig) {
-        window.parent.postMessage({
-            "type" : 'playSound',
-            "data": {
-                url: this.url,
-                config
-            } as PlaySoundEvent
-
-        },'*');
-        return this.url;
-    }
-    public stop() {
-        window.parent.postMessage({
-            "type" : 'stopSound',
-            "data": {
-                url: this.url,
-            } as StopSoundEvent
-
-        },'*');
-        return this.url;
-    }
-
-}
-
-window.WA = {
-    /**
-     * Send a message in the chat.
-     * Only the local user will receive this message.
-     */
-    sendChatMessage(message: string, author: string) {
-        window.parent.postMessage({
-            'type': 'chat',
-            'data': {
-                'message': message,
-                'author': author
-            } as ChatEvent
-        }, '*');
-    },
-    disablePlayerControls(): void {
-        window.parent.postMessage({ 'type': 'disablePlayerControls' }, '*');
-    },
-
-    restorePlayerControls(): void {
-        window.parent.postMessage({ 'type': 'restorePlayerControls' }, '*');
-    },
-
-    displayBubble(): void {
-        window.parent.postMessage({ 'type': 'displayBubble' }, '*');
-    },
-
-    removeBubble(): void {
-        window.parent.postMessage({ 'type': 'removeBubble' }, '*');
-    },
-
-    openTab(url: string): void {
-        window.parent.postMessage({
-            "type": 'openTab',
-            "data": {
-                url
-            } as OpenTabEvent
-        }, '*');
-    },
-
-    loadSound(url: string) : Sound {
-        return new Sound(url);
-    },
-
-    goToPage(url : string) : void{
-        window.parent.postMessage({
-            "type": 'goToPage',
-            "data": {
-                url
-            } as GoToPageEvent
-        }, '*');
-    },
-
-    openCoWebSite(url : string, allowApi: boolean = false, allowPolicy: string = "") : void{
-        window.parent.postMessage({
-            "type" : 'openCoWebSite',
-            "data" : {
-                url,
-                allowApi,
-                allowPolicy,
-            } as OpenCoWebSiteEvent
-        }, '*');
-    },
-
-    closeCoWebSite(): void {
-        window.parent.postMessage({
-            "type": 'closeCoWebSite'
-        }, '*');
-    },
-
-    openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup {
-        popupId++;
-        const popup = new Popup(popupId);
-        const btnMap = new Map<number, () => void>();
-        popupCallbacks.set(popupId, btnMap);
-        let id = 0;
-        for (const button of buttons) {
-            const callback = button.callback;
-            if (callback) {
-                btnMap.set(id, () => {
-                    callback(popup);
-                });
-            }
-            id++;
-        }
-
-
-        window.parent.postMessage({
-            'type': 'openPopup',
-            'data': {
-                popupId,
-                targetObject,
-                message,
-                buttons: buttons.map((button) => {
-                    return {
-                        label: button.label,
-                        className: button.className
-                    };
-                })
-            } as OpenPopupEvent
-        }, '*');
-
-        popups.set(popupId, popup)
-        return popup;
-    },
-    /**
-     * Listen to messages sent by the local user, in the chat.
-     */
-    onChatMessage(callback: ChatMessageCallback): void {
-        userInputChatStream.subscribe((userInputChatEvent) => {
-            callback(userInputChatEvent.message);
-        });
-    },
-    onEnterZone(name: string, callback: () => void): void {
-        let subject = enterStreams.get(name);
-        if (subject === undefined) {
-            subject = new Subject<EnterLeaveEvent>();
-            enterStreams.set(name, subject);
-        }
-        subject.subscribe(callback);
-    },
-    onLeaveZone(name: string, callback: () => void): void {
-        let subject = leaveStreams.get(name);
-        if (subject === undefined) {
-            subject = new Subject<EnterLeaveEvent>();
-            leaveStreams.set(name, subject);
-        }
-        subject.subscribe(callback);
-    },
-}
-
-window.addEventListener('message', message => {
+window.addEventListener(
+    "message", <T extends keyof IframeResponseEventMap>(message: TypedMessageEvent<IframeResponseEvent<T>>) => {
     if (message.source !== window.parent) {
         return; // Skip message in this event listener
     }
-
     const payload = message.data;
 
     console.debug(payload);
 
-    if (isIframeResponseEventWrapper(payload)) {
+    if (isIframeAnswerEvent(payload)) {
+        const queryId = payload.id;
         const payloadData = payload.data;
-        if (payload.type === 'userInputChat' && isUserInputChatEvent(payloadData)) {
-            userInputChatStream.next(payloadData);
-        } else if (payload.type === 'enterEvent' && isEnterLeaveEvent(payloadData)) {
-            enterStreams.get(payloadData.name)?.next();
-        } else if (payload.type === 'leaveEvent' && isEnterLeaveEvent(payloadData)) {
-            leaveStreams.get(payloadData.name)?.next();
-        } else if (payload.type === 'buttonClickedEvent' && isButtonClickedEvent(payloadData)) {
-            const callback = popupCallbacks.get(payloadData.popupId)?.get(payloadData.buttonId);
-            const popup = popups.get(payloadData.popupId);
-            if (popup === undefined) {
-                throw new Error('Could not find popup with ID "' + payloadData.popupId + '"');
-            }
-            if (callback) {
-                callback(popup);
+
+        const resolver = answerPromises.get(queryId);
+        if (resolver === undefined) {
+            throw new Error('In Iframe API, got an answer for a question that we have no track of.');
+        }
+        resolver.resolve(payloadData);
+
+        answerPromises.delete(queryId);
+    } else if (isIframeErrorAnswerEvent(payload)) {
+        const queryId = payload.id;
+        const payloadError = payload.error;
+
+        const resolver = answerPromises.get(queryId);
+        if (resolver === undefined) {
+            throw new Error('In Iframe API, got an error answer for a question that we have no track of.');
+        }
+        resolver.reject(payloadError);
+
+        answerPromises.delete(queryId);
+    } else if (isIframeResponseEventWrapper(payload)) {
+        const payloadData = payload.data;
+
+            const callback = registeredCallbacks[payload.type] as IframeCallback<T> | undefined;
+            if (callback?.typeChecker(payloadData)) {
+                callback?.callback(payloadData);
             }
         }
 
+        // ...
     }
-
-    // ...
-});
+);

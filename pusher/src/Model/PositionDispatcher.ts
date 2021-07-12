@@ -8,9 +8,9 @@
  * The PositionNotifier is important for performance. It allows us to send the position of players only to a restricted
  * number of players around the current player.
  */
-import {Zone, ZoneEventListener} from "./Zone";
-import {ViewportInterface} from "_Model/Websocket/ViewportMessage";
-import {ExSocketInterface} from "_Model/Websocket/ExSocketInterface";
+import { Zone, ZoneEventListener } from "./Zone";
+import { ViewportInterface } from "_Model/Websocket/ViewportMessage";
+import { ExSocketInterface } from "_Model/Websocket/ExSocketInterface";
 //import Debug from "debug";
 
 //const debug = Debug('positiondispatcher');
@@ -21,19 +21,22 @@ interface ZoneDescriptor {
 }
 
 export class PositionDispatcher {
-
     // TODO: we need a way to clean the zones if noone is in the zone and noone listening (to free memory!)
 
     private zones: Zone[][] = [];
 
-    constructor(public readonly roomId: string, private zoneWidth: number, private zoneHeight: number, private socketListener: ZoneEventListener) {
-    }
+    constructor(
+        public readonly roomId: string,
+        private zoneWidth: number,
+        private zoneHeight: number,
+        private socketListener: ZoneEventListener
+    ) {}
 
     private getZoneDescriptorFromCoordinates(x: number, y: number): ZoneDescriptor {
         return {
             i: Math.floor(x / this.zoneWidth),
             j: Math.floor(y / this.zoneHeight),
-        }
+        };
     }
 
     /**
@@ -41,7 +44,7 @@ export class PositionDispatcher {
      */
     public setViewport(socket: ExSocketInterface, viewport: ViewportInterface): void {
         if (viewport.left > viewport.right || viewport.top > viewport.bottom) {
-            console.warn('Invalid viewport received: ', viewport);
+            console.warn("Invalid viewport received: ", viewport);
             return;
         }
 
@@ -57,8 +60,8 @@ export class PositionDispatcher {
             }
         }
 
-        const addedZones = [...newZones].filter(x => !oldZones.has(x));
-        const removedZones = [...oldZones].filter(x => !newZones.has(x));
+        const addedZones = [...newZones].filter((x) => !oldZones.has(x));
+        const removedZones = [...oldZones].filter((x) => !newZones.has(x));
 
         for (const zone of addedZones) {
             zone.startListening(socket);

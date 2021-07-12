@@ -35,102 +35,109 @@ body .message-info.info{
 body .message-info.warning{
     background: #ffa500d6;
 }
-.video-container{
+
+.video-container {
     position: relative;
     transition: all 0.2s ease;
     background-color: #00000099;
     cursor: url('./images/cursor_pointer.png'), pointer;
-}
-.video-container i{
-    position: absolute;
-    width: 100px;
-    height: 100px;
-    left: calc(50% - 50px);
-    top: calc(50% - 50px);
-    background-color: black;
-    border-radius: 50%;
-    text-align: center;
-    padding-top: 32px;
-    font-size: 28px;
-    color: white;
-    overflow: hidden;
-}
 
-.video-container img{
-    position: absolute;
-    display: none;
-    width: 40px;
-    height: 40px;
-    left: 5px;
-    bottom: 5px;
-    padding: 10px;
-    z-index: 2;
-}
-.video-container img.block-logo {
-    left: 30%;
-    bottom: 15%;
-    width: 150px;
-    height: 150px;
-}
+    video {
+        width: 100%;
+        height: 100%;
+        max-height: 90vh;
+        cursor: url('./images/cursor_pointer.png'), pointer;
+    }
 
-.video-container button.report{
-    display: block;
-    cursor: url('./images/cursor_pointer.png'), pointer;
-    background: none;
-    background-color: rgba(0, 0, 0, 0);
-    border: none;
-    background-color: black;
-    border-radius: 15px;
-    position: absolute;
-    width: 0px;
-    height: 35px;
-    right: 5px;
-    bottom: 5px;
-    padding: 0px;
-    overflow: hidden;
-    z-index: 2;
-    transition: all .5s ease;
-}
+    i {
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        left: calc(50% - 50px);
+        top: calc(50% - 50px);
+        background-color: black;
+        border-radius: 50%;
+        text-align: center;
+        padding-top: 32px;
+        font-size: 28px;
+        color: white;
+        overflow: hidden;
+    }
 
-.video-container:hover button.report{
-    width: 35px;
-    padding: 10px;
-}
+    img {
+        position: absolute;
+        display: none;
+        width: 40px;
+        height: 40px;
+        left: 5px;
+        bottom: 5px;
+        padding: 10px;
+        z-index: 2;
+    }
 
-.video-container button.report:hover {
-    width: 160px;
-}
+    img.block-logo {
+        left: 30%;
+        bottom: 15%;
+        width: 150px;
+        height: 150px;
+    }
 
-.video-container button.report img{
-    position: absolute;
-    display: block;
-    bottom: 5px;
-    left: 5px;
-    margin: 0;
-    padding: 0;
-    cursor: url('./images/cursor_pointer.png'), pointer;
-    width: 25px;
-    height: 25px;
-}
-.video-container button.report span{
-    position: absolute;
-    bottom: 6px;
-    left: 36px;
-    color: white;
-    font-size: 16px;
-    cursor: url('./images/cursor_pointer.png'), pointer;
-}
-.video-container img.active {
-    display: block !important;
-}
+    button.report{
+        display: block;
+        cursor: url('./images/cursor_pointer.png'), pointer;
+        background: none;
+        background-color: rgba(0, 0, 0, 0);
+        border: none;
+        background-color: black;
+        border-radius: 15px;
+        position: absolute;
+        width: 0px;
+        height: 35px;
+        right: 5px;
+        bottom: 5px;
+        padding: 0px;
+        overflow: hidden;
+        z-index: 2;
+        transition: all .5s ease;
 
-.video-container video{
-    height: 100%;
-    cursor: url('./images/cursor_pointer.png'), pointer;
-}
+        img{
+            position: absolute;
+            display: block;
+            bottom: 5px;
+            left: 5px;
+            margin: 0;
+            padding: 0;
+            cursor: url('./images/cursor_pointer.png'), pointer;
+            width: 25px;
+            height: 25px;
+        }
 
-.video-container video:focus{
-    outline: none;
+        span {
+            position: absolute;
+            bottom: 6px;
+            left: 36px;
+            color: white;
+            font-size: 16px;
+            cursor: url('./images/cursor_pointer.png'), pointer;
+        }
+
+        img.active {
+            display: block !important;
+        }
+    }
+
+    &:hover button.report{
+        width: 35px;
+        padding: 10px;
+
+        &:hover {
+            width: 160px;
+        }
+    }
+
+    video:focus{
+        outline: none;
+    }
 }
 
 .video-container.div-myCamVideo{
@@ -204,7 +211,7 @@ video.myCamVideo{
     display: inline-flex;
     bottom: 10px;
     right: 15px;
-    width: 180px;
+    width: 240px;
     height: 40px;
     text-align: center;
     align-content: center;
@@ -224,7 +231,7 @@ video.myCamVideo{
     background: #666;
     box-shadow: 2px 2px 24px #444;
     border-radius: 48px;
-    transform: translateY(20px);
+    transform: translateY(15px);
     transition-timing-function: ease-in-out;
     margin: 0 4%;
 }
@@ -261,6 +268,16 @@ video.myCamVideo{
     transform: translateY(60px);
 }
 .btn-cam-action:hover .btn-monitor.hide{
+    transform: translateY(60px);
+}
+.btn-layout{
+    pointer-events: auto;
+    transition: all .15s;
+}
+.btn-layout.hide {
+    transform: translateY(60px);
+}
+.btn-cam-action:hover .btn-layout.hide{
     transform: translateY(60px);
 }
 .btn-copy{
@@ -627,17 +644,15 @@ input[type=range]:focus::-ms-fill-upper {
     grid-template-columns: repeat(4, 1fr);
 }
 
-/*CONSOLE*/
-
-.message-container,
-.main-console{
+/*GLOBAL MESSAGE*/
+.message-container {
     position: absolute;
     width: 80%;
     height: 80%;
     min-height: 200px;
     max-height: 80%;
     top: -80%;
-    /*left: 10%;*/
+    //left: 10%;
     left: 250px;
     background: #333333;
     z-index: 200;
@@ -660,7 +675,6 @@ input[type=range]:focus::-ms-fill-upper {
     max-height: 400px;
 }
 
-.main-console div.console,
 .message-container div.clear {
     position: absolute;
     color: white;
@@ -675,22 +689,11 @@ input[type=range]:focus::-ms-fill-upper {
     text-align: center;
 }
 
-.main-console div.message,
-.main-console div.setting{
-    display: none;
-}
-
-.main-console div.message.active,
-.main-console div.setting.active{
-    display: block;
-}
-
 .message-container div.clear{
     width: 100px;
     left: calc(50% - 50px);
 }
 
-.main-console div.console img,
 .message-container div.clear img{
     margin-top: 6px;
     width: 30px;
@@ -701,110 +704,24 @@ input[type=range]:focus::-ms-fill-upper {
     transform: rotateY(0);
     opacity: 0.5;
 }
-.main-console div.console img:hover,
+
 .message-container div.clear img:hover{
     opacity: 1;
 }
 
-.main-console div.console img.active,
 .message-container div.clear img{
     transform: rotateY(3.142rad);
     opacity: 1;
 }
 
-.main-console div.console p,
 .message-container div.clear p{
     margin-top: 12px;
 }
 
-.main-console div.console:hover,
 .message-container div.clear:hover {
     cursor: url('./images/cursor_pointer.png'), pointer;
     top: calc(100% + 5px);
     transform: scale(1.2) translateY(3px);
-}
-
-.main-console #input-send-text{
-    min-height: 200px;
-}
-
-.main-console #input-send-text .ql-editor{
-    color: white;
-    min-height: 200px;
-    max-height: 300px;
-}
-
-.main-console .ql-toolbar{
-    background: white;
-}
-
-.main-console .btn-action{
-    margin: 10px;
-    text-align: center;
-}
-
-.main-console .btn-action .btn{
-    border: 1px solid black;
-    background-color: #00000000;
-    color: #ffda01;
-    border-radius: 15px;
-    padding: 10px 30px;
-    transition: all .2s ease;
-}
-.main-console .btn-action .btn:hover{
-    cursor: url('./images/cursor_pointer.png'), pointer;
-    background-color: #ffda01;
-    color: black;
-    border: 1px solid black;
-    transform: scale(1.1);
-}
-
-.main-console .menu {
-    padding: 20px;
-    color: #ffffffa6;
-    text-align: center;
-}
-
-.main-console .menu span {
-    margin: 20px;
-    cursor: url('./images/cursor_pointer.png'), pointer;
-}
-
-.main-console .menu span.active {
-    color: white;
-    border-bottom: solid 1px white;
-}
-
-.main-console section{
-    text-align: center;
-    display: none;
-}
-
-.main-console section.active{
-    display: block;
-}
-
-.main-console section div.upload{
-    text-align: center;
-    border: solid 1px #ffda01;
-    height: 150px;
-    margin: 10px 200px;
-    padding: 20px;
-    min-height: 200px;
-}
-
-.main-console section div.upload label{
-    color: #ffda01;
-}
-.main-console section div.upload input{
-    display: none;
-}
-.main-console section div.upload label img{
-    height: 150px;
-    cursor: url('./images/cursor_pointer.png'), pointer;
-}
-.main-console section div.upload label img{
-    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 
 

@@ -7,14 +7,12 @@
             // We are OK in this precise case because the HTML page is hosted on the "maps" domain that contains only static files.
             script.setAttribute('src', document.referrer + 'iframe_api.js');
             document.head.appendChild(script);
+            window.addEventListener('load', () => {
+                WA.chat.sendChatMessage('The iframe opened by a script works !', 'Mr Robot');
+            })
         </script>
     </head>
     <body>
-    <p>Website opened by script.</p>
-        <script>
-            window.addEventListener('load', () => {
-                WA.sendChatMessage('The iframe opened by a script works !', 'Mr Robot');
-            })
-        </script>
+        <p>Website opened by script.</p>
     </body>
 </html>

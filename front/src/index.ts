@@ -10,6 +10,7 @@ import {SelectCompanionScene} from "./Phaser/Login/SelectCompanionScene";
 import {EnableCameraScene} from "./Phaser/Login/EnableCameraScene";
 import {CustomizeScene} from "./Phaser/Login/CustomizeScene";
 import WebFontLoaderPlugin from 'phaser3-rex-plugins/plugins/webfontloader-plugin.js';
+import OutlinePipelinePlugin from 'phaser3-rex-plugins/plugins/outlinepipeline-plugin.js';
 import {EntryScene} from "./Phaser/Login/EntryScene";
 import {coWebsiteManager} from "./WebRtc/CoWebsiteManager";
 import {MenuScene} from "./Phaser/Menu/MenuScene";
@@ -22,6 +23,8 @@ import {waScaleManager} from "./Phaser/Services/WaScaleManager";
 import {Game} from "./Phaser/Game/Game";
 import App from './Components/App.svelte';
 import {HtmlUtils} from "./WebRtc/HtmlUtils";
+import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
+
 
 const {width, height} = coWebsiteManager.getGameSize();
 
@@ -123,11 +126,11 @@ const config: GameConfig = {
     powerPreference: "low-power",
     callbacks: {
         postBoot: game => {
-            // Commented out to try to fix MacOS bug
-            /*const renderer = game.renderer;
+            // Install rexOutlinePipeline only if the renderer is WebGL.
+            const renderer = game.renderer;
             if (renderer instanceof WebGLRenderer) {
-                renderer.pipelines.add(OutlinePipeline.KEY, new OutlinePipeline(game));
-            }*/
+                game.plugins.install('rexOutlinePipeline', OutlinePipelinePlugin, true);
+            }
         }
     }
 };
@@ -157,3 +160,15 @@ const app = new App({
 })
 
 export default app
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/resources/service-worker.js')
+            .then(serviceWorker => {
+                console.log("Service Worker registered: ", serviceWorker);
+            })
+            .catch(error => {
+                console.error("Error registering the Service Worker: ", error);
+            });
+    });
+}

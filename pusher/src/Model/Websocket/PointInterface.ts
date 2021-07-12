@@ -7,11 +7,12 @@ import * as tg from "generic-type-guard";
     readonly moving: boolean;
 }*/
 
-export const isPointInterface =
-    new tg.IsInterface().withProperties({
+export const isPointInterface = new tg.IsInterface()
+    .withProperties({
         x: tg.isNumber,
         y: tg.isNumber,
         direction: tg.isString,
-        moving: tg.isBoolean
-    }).get();
+        moving: tg.isBoolean,
+    })
+    .get();
 export type PointInterface = tg.GuardedType<typeof isPointInterface>;

@@ -1,11 +1,11 @@
 // lib/app.ts
-import {IoSocketController} from "./Controller/IoSocketController"; //TODO fix import by "_Controller/..."
-import {AuthenticateController} from "./Controller/AuthenticateController"; //TODO fix import by "_Controller/..."
-import {MapController} from "./Controller/MapController";
-import {PrometheusController} from "./Controller/PrometheusController";
-import {DebugController} from "./Controller/DebugController";
-import {App as uwsApp} from "./Server/sifrr.server";
-import {AdminController} from "./Controller/AdminController";
+import { IoSocketController } from "./Controller/IoSocketController"; //TODO fix import by "_Controller/..."
+import { AuthenticateController } from "./Controller/AuthenticateController"; //TODO fix import by "_Controller/..."
+import { MapController } from "./Controller/MapController";
+import { PrometheusController } from "./Controller/PrometheusController";
+import { DebugController } from "./Controller/DebugController";
+import { App as uwsApp } from "./Server/sifrr.server";
+import { AdminController } from "./Controller/AdminController";
 
 class App {
     public app: uwsApp;

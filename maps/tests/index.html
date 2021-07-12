@@ -4,7 +4,7 @@
     </head>
     <body>
         <label>Base test URL:</label>
-        <input id="baseurl" type="text" value="http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/" />
+        <input id="baseurl" type="text" value="" />
         <table>
             <tr>
                 <th>Result</th>
@@ -44,10 +44,26 @@
             </tr>
             <tr>
                 <td>
+                    <input type="radio" name="test-scripting-api-gotopage"> Success <input type="radio" name="test-scripting-api-gotopage"> Failure <input type="radio" name="test-scripting-api-gotopage" checked> Pending
+                </td>
+                <td>
+                    <a href="#" class="testLink" data-testmap="goToPage.json" target="_blank">Testing goToPage script Api</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
                     <input type="radio" name="test-scripting-sound"> Success <input type="radio" name="test-scripting-sound"> Failure <input type="radio" name="test-scripting-sound" checked> Pending
                 </td>
                 <td>
                     <a href="#" class="testLink" data-testmap="SoundTest.json" target="_blank">Testing scripting API loadSound() function</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="radio" name="test-scripting-deprecated"> Success <input type="radio" name="test-scripting-deprecated"> Failure <input type="radio" name="test-scripting-deprecated" checked> Pending
+                </td>
+                <td>
+                    <a href="#" class="testLink" data-testmap="deprecated_functions.json" target="_blank">Testing scripting API deprecated function</a>
                 </td>
             </tr>
             <tr>
@@ -98,10 +114,113 @@
                     <a href="#" class="testLink" data-testmap="Metadata/cowebsiteAllowApi.json" target="_blank">Test a iframe opened by a script can use Iframe API</a>
                 </td>
             </tr>
+            <tr>
+                <td>
+                    <input type="radio" name="test-custom-menu"> Success <input type="radio" name="test-custom-menu"> Failure <input type="radio" name="test-custom-menu" checked> Pending
+                </td>
+                <td>
+                    <a href="#" class="testLink" data-testmap="Metadata/customMenu.json" target="_blank">Testing add a custom menu by scripting API</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="radio" name="test-getCurrentRoom"> Success <input type="radio" name="test-getCurrentRoom"> Failure <input type="radio" name="test-getCurrentRoom" checked> Pending
+                </td>
+                <td>
+                    <a href="#" class="testLink" data-testmap="Metadata/getCurrentRoom.json" target="_blank">Testing return current room attributes by Scripting API (Need to test from current user)</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="radio" name="test-getCurrentUser"> Success <input type="radio" name="test-getCurrentUser"> Failure <input type="radio" name="test-getCurrentUser" checked> Pending
+                </td>
+                <td>
+                    <a href="#" class="testLink" data-testmap="Metadata/getCurrentUser.json" target="_blank">Testing return current user attributes by Scripting API</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="radio" name="test-player-move"> Success <input type="radio" name="test-player-move"> Failure <input type="radio" name="test-player-move" checked> Pending
+                </td>
+                <td>
+                    <a href="#" class="testLink" data-testmap="Metadata/playerMove.json" target="_blank">Test listening player movement by Scripting API</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="radio" name="test-setProperty"> Success <input type="radio" name="test-setProperty"> Failure <input type="radio" name="test-setProperty" checked> Pending
+                </td>
+                <td>
+                    <a href="#" class="testLink" data-testmap="Metadata/setProperty.json" target="_blank">Testing set a property on a layer by Scripting API</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="radio" name="test-show-hide"> Success <input type="radio" name="test-show-hide"> Failure <input type="radio" name="test-show-hide" checked> Pending
+                </td>
+                <td>
+                    <a href="#" class="testLink" data-testmap="Metadata/showHideLayer.json" target="_blank">Testing show or hide a layer by Scripting API</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="radio" name="test-animated-tiles"> Success <input type="radio" name="test-animated-tiles"> Failure <input type="radio" name="test-animated-tiles" checked> Pending
+                </td>
+                <td>
+                    <a href="#" class="testLink" data-testmap="animated_tiles.json" target="_blank">Test animated tiles</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="radio" name="test-start-tile-S1"> Success <input type="radio" name="test-start-tile-S1"> Failure <input type="radio" name="test-start-tile-S1" checked> Pending
+                </td>
+                <td>
+                    <a href="#" class="testLink" data-testmap="start-tile.json#S1" target="_blank">Test start tile (S1)</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="radio" name="test-start-tile-S2"> Success <input type="radio" name="test-start-tile-S2"> Failure <input type="radio" name="test-start-tile-S2" checked> Pending
+                </td>
+                <td>
+                    <a href="#" class="testLink" data-testmap="start-tile.json#S2" target="_blank">Test start tile (S2)</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="radio" name="test-cowebsite-allowAPI"> Success <input type="radio" name="test-cowebsite-allowAPI"> Failure <input type="radio" name="test-cowebsite-allowAPI" checked> Pending
+                </td>
+                <td>
+                    <a href="#" class="testLink" data-testmap="Metadata/cowebsiteAllowApi.json" target="_blank">Test cowebsite opened by script is allowed to use IFrame API</a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="radio" name="test-set-tiles"> Success <input type="radio" name="test-set-tiles"> Failure <input type="radio" name="test-set-tiles" checked> Pending
+                </td>
+                <td>
+                    <a href="#" class="testLink" data-testmap="Metadata/setTiles.json" target="_blank">Test set tiles</a>
+                </td>
+            </tr>
         </table>
 
         <script>
             const baseInput = document.getElementById('baseurl');
+
+            let host = window.location.host;
+            let playHost;
+            if (host.startsWith('maps-')) {
+                playHost = 'play-'+host.substr(5);
+            } else if (host.startsWith('maps.')) {
+                playHost = 'play.'+host.substr(5);
+            } else {
+                playHost = 'localhost';
+            }
+
+            let completeUrl = window.location.protocol + '//' + playHost + '/_/global/' + host + window.location.pathname;
+
+            baseInput.value = completeUrl;
+
             baseInput.addEventListener('change', init);
 
             function init() {

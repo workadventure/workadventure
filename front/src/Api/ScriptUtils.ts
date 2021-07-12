@@ -1,21 +1,19 @@
-import {coWebsiteManager} from "../WebRtc/CoWebsiteManager";
+import { coWebsiteManager } from "../WebRtc/CoWebsiteManager";
 
 class ScriptUtils {
-
-    public openTab(url : string){
+    public openTab(url: string) {
         window.open(url);
     }
 
-    public goToPage(url : string){
-         window.location.href = url;
-
+    public goToPage(url: string) {
+        window.location.href = url;
     }
 
-    public openCoWebsite(url: string, base: string, allowApi: boolean, allowPolicy: string) {
-           coWebsiteManager.loadCoWebsite(url, base, allowApi, allowPolicy);
+    public openCoWebsite(url: string, base: string, api: boolean, policy: string) {
+        coWebsiteManager.loadCoWebsite(url, base, api, policy);
     }
 
-    public closeCoWebSite(){
+    public closeCoWebSite() {
         coWebsiteManager.closeCoWebsite();
     }
 }
