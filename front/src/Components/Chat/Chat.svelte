@@ -1,22 +1,21 @@
 <script lang="ts">
     import { fly } from 'svelte/transition';
-    import {chatMessagesStore, chatVisibilityStore} from "../../Stores/ChatStore";
+    import { chatMessagesStore, chatVisibilityStore } from "../../Stores/ChatStore";
     import ChatMessageForm from './ChatMessageForm.svelte';
     import ChatElement from './ChatElement.svelte';
-    import {onMount} from "svelte";
+    import { afterUpdate, beforeUpdate } from "svelte";
     
     let listDom: HTMLElement;
+    let autoscroll: boolean;
 
-    onMount(() => {
-        listDom.addEventListener('onscroll', function(e: Event) {
-            console.log(e);
-            // Active list item is top-most fully-visible item
-            //const visibleListItems = Array.from(document.getElementsByClassName('list-item')).map(inView.is);
-            // Array.indexOf() will give us the first one in list, so the current active item
-            //const topMostVisible = visibleListItems.indexOf(true);
-        });
-    })
-    
+    beforeUpdate(() => {
+        autoscroll = listDom && (listDom.offsetHeight + listDom.scrollTop) > (listDom.scrollHeight - 20);
+    });
+
+    afterUpdate(() => {
+        if (autoscroll) listDom.scrollTo(0, listDom.scrollHeight);
+    });
+
     function closeChat() {
         chatVisibilityStore.set(false);
     }
@@ -35,8 +34,8 @@
         <h3>Here is your chat history <span class="float-right" on:click={closeChat}>&times</span></h3>
 
     </section>
-    <section class="messagesList">
-        <ul bind:this={listDom}>
+    <section class="messagesList" bind:this={listDom}>
+        <ul>
         {#each $chatMessagesStore as message}
             <li><ChatElement message={message}></ChatElement></li>
         {/each} 
