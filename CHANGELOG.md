@@ -22,6 +22,7 @@
   - The chat now tracks incoming and outcoming users in your conversation
   - The chat allows your to see the visit card of users
   - You can close the chat window with the escape key
+- Added a 'Enable notifications' button in the menu.
 
 ## Version 1.4.3 - 1.4.4 - 1.4.5
 
