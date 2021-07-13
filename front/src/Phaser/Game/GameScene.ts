@@ -13,20 +13,10 @@ import type {
     PositionInterface,
     RoomJoinedMessageInterface,
 } from "../../Connexion/ConnexionModels";
-import { DEBUG_MODE, JITSI_PRIVATE_MODE, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
+import { DEBUG_MODE, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
 
 import { Queue } from "queue-typescript";
-import {
-    AUDIO_LOOP_PROPERTY,
-    AUDIO_VOLUME_PROPERTY,
-    Box,
-    JITSI_MESSAGE_PROPERTIES,
-    layoutManager,
-    ON_ACTION_TRIGGER_BUTTON,
-    TRIGGER_JITSI_PROPERTIES,
-    TRIGGER_WEBSITE_PROPERTIES,
-    WEBSITE_MESSAGE_PROPERTIES,
-} from "../../WebRtc/LayoutManager";
+import type { Box } from "../../WebRtc/LayoutManager";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import type { UserMovedMessage } from "../../Messages/generated/messages_pb";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
@@ -54,7 +44,8 @@ import type {
     ITiledMapObject,
     ITiledTileSet,
 } from "../Map/ITiledMap";
-import { MenuScene, MenuSceneName } from "../Menu/MenuScene";
+import type { MenuScene } from "../Menu/MenuScene";
+import { MenuSceneName } from "../Menu/MenuScene";
 import { PlayerAnimationDirections } from "../Player/Animation";
 import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
 import { ErrorSceneName } from "../Reconnecting/ErrorScene";
