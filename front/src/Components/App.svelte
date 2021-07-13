@@ -70,7 +70,7 @@
 
     {#if $menuIconVisible}
         <div>
-            <MenuIcon  game ={game}></MenuIcon>
+            <MenuIcon></MenuIcon>
         </div>
     {/if}
     {#if $menuVisible}

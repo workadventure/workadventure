@@ -20,6 +20,8 @@ export class GameManager {
     private companion: string | null;
     private startRoom!: Room;
     currentGameSceneName: string | null = null;
+    // Note: this scenePlugin is the scenePlugin of the EntryScene. We should always provide a key in methods called on this scenePlugin.
+    private scenePlugin!: Phaser.Scenes.ScenePlugin;
 
     constructor() {
         this.playerName = localUserStore.getName();
@@ -28,8 +30,9 @@ export class GameManager {
     }
 
     public async init(scenePlugin: Phaser.Scenes.ScenePlugin): Promise<string> {
+        this.scenePlugin = scenePlugin;
         this.startRoom = await connectionManager.initGameConnexion();
-        await this.loadMap(this.startRoom, scenePlugin);
+        await this.loadMap(this.startRoom);
 
         if (!this.playerName) {
             return LoginSceneName;
@@ -69,21 +72,20 @@ export class GameManager {
         return this.companion;
     }
 
-    public async loadMap(room: Room, scenePlugin: Phaser.Scenes.ScenePlugin): Promise<void> {
+    public async loadMap(room: Room): Promise<void> {
         const roomID = room.id;
         const mapDetail = await room.getMapDetail();
 
-        const gameIndex = scenePlugin.getIndex(roomID);
+        const gameIndex = this.scenePlugin.getIndex(roomID);
         if (gameIndex === -1) {
             const game: Phaser.Scene = new GameScene(room, mapDetail.mapUrl);
-            scenePlugin.add(roomID, game, false);
+            this.scenePlugin.add(roomID, game, false);
         }
     }
 
-    public goToStartingMap(scenePlugin: Phaser.Scenes.ScenePlugin): void {
-        console.log("starting " + (this.currentGameSceneName || this.startRoom.id));
-        scenePlugin.start(this.currentGameSceneName || this.startRoom.id);
-        scenePlugin.launch(MenuSceneName);
+    public goToStartingMap(): void {
+        this.scenePlugin.start(this.currentGameSceneName || this.startRoom.id);
+        this.scenePlugin.launch(MenuSceneName);
 
         if (
             !localUserStore.getHelpCameraSettingsShown() &&
@@ -105,33 +107,33 @@ export class GameManager {
      * Temporary leave a gameScene to go back to the loginScene for example.
      * This will close the socket connections and stop the gameScene, but won't remove it.
      */
-    leaveGame(scene: Phaser.Scene, targetSceneName: string, sceneClass: Phaser.Scene): void {
+    leaveGame(targetSceneName: string, sceneClass: Phaser.Scene): void {
         if (this.currentGameSceneName === null) throw "No current scene id set!";
-        const gameScene: GameScene = scene.scene.get(this.currentGameSceneName) as GameScene;
+        const gameScene: GameScene = this.scenePlugin.get(this.currentGameSceneName) as GameScene;
         gameScene.cleanupClosingScene();
-        scene.scene.stop(this.currentGameSceneName);
-        scene.scene.sleep(MenuSceneName);
-        if (!scene.scene.get(targetSceneName)) {
-            scene.scene.add(targetSceneName, sceneClass, false);
+        this.scenePlugin.stop(this.currentGameSceneName);
+        this.scenePlugin.sleep(MenuSceneName);
+        if (!this.scenePlugin.get(targetSceneName)) {
+            this.scenePlugin.add(targetSceneName, sceneClass, false);
         }
-        scene.scene.run(targetSceneName);
+        this.scenePlugin.run(targetSceneName);
     }
 
     /**
      * follow up to leaveGame()
      */
-    tryResumingGame(scene: Phaser.Scene, fallbackSceneName: string) {
+    tryResumingGame(fallbackSceneName: string) {
         if (this.currentGameSceneName) {
-            scene.scene.start(this.currentGameSceneName);
-            scene.scene.wake(MenuSceneName);
+            this.scenePlugin.start(this.currentGameSceneName);
+            this.scenePlugin.wake(MenuSceneName);
         } else {
-            scene.scene.run(fallbackSceneName);
+            this.scenePlugin.run(fallbackSceneName);
         }
     }
 
-    public getCurrentGameScene(scene: Phaser.Scene): GameScene {
+    public getCurrentGameScene(): GameScene {
         if (this.currentGameSceneName === null) throw "No current scene id set!";
-        return scene.scene.get(this.currentGameSceneName) as GameScene;
+        return this.scenePlugin.get(this.currentGameSceneName) as GameScene;
     }
 }
 

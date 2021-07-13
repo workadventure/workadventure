@@ -4,7 +4,6 @@
     import {gameManager} from "../../Phaser/Game/GameManager";
     import type {Game} from "../../Phaser/Game/Game";
 
-    export let game: Game;
     let inputSendTextActive = true;
     let uploadMusicActive = false;
 
@@ -33,10 +32,10 @@
             </div>
             <div class="main-input">
                 {#if inputSendTextActive}
-                    <InputTextGlobalMessage game={game} gameManager={gameManager}></InputTextGlobalMessage>
+                    <InputTextGlobalMessage gameManager={gameManager}></InputTextGlobalMessage>
                 {/if}
                 {#if uploadMusicActive}
-                    <UploadAudioGlobalMessage game={game} gameManager={gameManager}></UploadAudioGlobalMessage>
+                    <UploadAudioGlobalMessage gameManager={gameManager}></UploadAudioGlobalMessage>
                 {/if}
             </div>
         </div>

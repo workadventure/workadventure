@@ -3,7 +3,7 @@
     import EditProfileMenu from "./EditProfileMenu.svelte";
 
     enum SubMenus {
-        gameQuality = 1,
+        settings = 1,
         editProfile,
         shareUrl,
     }
@@ -13,6 +13,13 @@
     function switchMenu(menu: SubMenus) {
         activeSubMenu = menu;
     }
+
+    function gotToCreateMapPage() {
+        //const sparkHost = 'https://'+window.location.host.replace('play.', '')+'/choose-map.html';
+        //TODO fix me: this button can to send us on WorkAdventure BO.
+        const sparkHost = "https://workadventu.re/getting-started";
+        window.open(sparkHost, "_blank");
+    }
 </script>
 
 
@@ -20,17 +27,17 @@
     <section class="menuNav">
         <nav>
             <ul>
-                <li class:active={activeSubMenu === SubMenus.gameQuality } on:click={switchMenu(SubMenus.gameQuality)}>GameQuality</li>
-                <li class:active={activeSubMenu === SubMenus.editProfile } on:click={switchMenu(SubMenus.editProfile)}>Edit Profile</li>
-                <li class:active={activeSubMenu === 3 } on:click={switchMenu(3)}>Share Url </li>
-                <li class:active={activeSubMenu === 3 } on:click={switchMenu(3)}>Create Map</li>
-                <li class:active={activeSubMenu === 3 } on:click={switchMenu(3)}>Go to Menu</li>
+                <li class:active={activeSubMenu === SubMenus.settings } on:click={() => switchMenu(SubMenus.settings)}>Settings</li>
+                <li class:active={activeSubMenu === SubMenus.shareUrl } on:click={() => switchMenu(SubMenus.shareUrl)}>Share Url</li>
+                <li class:active={activeSubMenu === SubMenus.editProfile } on:click={() => switchMenu(SubMenus.editProfile)}>Edit Profile</li>
+                <li on:click={() => gotToCreateMapPage()}>Create Map</li>
+                <li>Go to Menu</li>
             </ul>
         </nav>
     </section>
 
     <section class="subMenuContainer">
-        {#if activeSubMenu === SubMenus.gameQuality}
+        {#if activeSubMenu === SubMenus.settings}
             <GameQualityMenu></GameQualityMenu>
         {:else if activeSubMenu === SubMenus.editProfile}
             <EditProfileMenu></EditProfileMenu>

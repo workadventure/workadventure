@@ -1,21 +1,18 @@
 <script lang="ts">
     import {HtmlUtils} from "../../WebRtc/HtmlUtils";
-    import type {Game} from "../../Phaser/Game/Game";
     import type {GameManager} from "../../Phaser/Game/GameManager";
     import {consoleGlobalMessageManagerFocusStore, consoleGlobalMessageManagerVisibleStore} from "../../Stores/ConsoleGlobalMessageManagerStore";
     import {AdminMessageEventTypes} from "../../Connexion/AdminMessagesService";
     import type {PlayGlobalMessageInterface} from "../../Connexion/ConnexionModels";
     import uploadFile from "../images/music-file.svg";
-    import {LoginSceneName} from "../../Phaser/Login/LoginScene";
 
     interface EventTargetFiles extends EventTarget {
         files: Array<File>;
     }
 
-    export let game: Game;
     export let gameManager: GameManager;
 
-    let gameScene = gameManager.getCurrentGameScene(game.scene.getScene(LoginSceneName));
+    let gameScene = gameManager.getCurrentGameScene();
     let fileinput: HTMLInputElement;
     let filename: string;
     let filesize: string;

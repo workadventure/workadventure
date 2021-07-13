@@ -1,12 +1,10 @@
 <script lang="ts">
     import {consoleGlobalMessageManagerFocusStore, consoleGlobalMessageManagerVisibleStore } from "../../Stores/ConsoleGlobalMessageManagerStore";
     import {onMount} from "svelte";
-    import type {Game} from "../../Phaser/Game/Game";
     import type {GameManager} from "../../Phaser/Game/GameManager";
     import type {PlayGlobalMessageInterface} from "../../Connexion/ConnexionModels";
     import {AdminMessageEventTypes} from "../../Connexion/AdminMessagesService";
     import type {Quill} from "quill";
-    import {LoginSceneName} from "../../Phaser/Login/LoginScene";
 
     //toolbar
     export const toolbarOptions = [
@@ -32,10 +30,9 @@
         // remove formatting button
     ];
 
-    export let game: Game;
     export let gameManager: GameManager;
 
-    let gameScene = gameManager.getCurrentGameScene(game.scene.getScene(LoginSceneName));
+    let gameScene = gameManager.getCurrentGameScene();
     let quill: Quill;
     let INPUT_CONSOLE_MESSAGE: HTMLDivElement;
 

@@ -1,8 +1,6 @@
 <script lang="typescript">
-    import { Game } from "../../Phaser/Game/Game";
     import {menuVisible} from "../../Stores/MenuStore";
 
-    export let game: Game;
     let isOpen : Boolean = false;
 
     function openMenu(){
@@ -15,7 +13,7 @@
 <main class="menuIcon">
     <section>
         <button on:click|preventDefault={openMenu}>
-             <img src="/static/images/logo-WA-min.png">
+             <img src="/static/images/logo-WA-min.png" alt="open menu">
         </button>
     </section>
 </main>
