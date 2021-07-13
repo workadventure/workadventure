@@ -15,12 +15,6 @@ import { Admin } from "../Model/Admin";
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
 
-export enum GameRoomPolicyTypes {
-    ANONYMOUS_POLICY = 1,
-    MEMBERS_ONLY_POLICY,
-    USE_TAGS_POLICY,
-}
-
 export class GameRoom {
     private readonly minDistance: number;
     private readonly groupRadius: number;

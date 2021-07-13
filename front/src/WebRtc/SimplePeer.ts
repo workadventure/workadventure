@@ -12,6 +12,7 @@ import { localStreamStore, LocalStreamStoreValue, obtainedMediaConstraintStore }
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { discussionManager } from "./DiscussionManager";
 import { playersStore } from "../Stores/PlayersStore";
+import { newChatMessageStore } from "../Stores/ChatStore";
 
 export interface UserSimplePeerInterface {
     userId: number;
@@ -155,26 +156,10 @@ export class SimplePeer {
 
         const name = this.getName(user.userId);
 
-        discussionManager.removeParticipant(user.userId);
-
         this.lastWebrtcUserName = user.webRtcUser;
         this.lastWebrtcPassword = user.webRtcPassword;
 
         const peer = new VideoPeer(user, user.initiator ? user.initiator : false, name, this.Connection, localStream);
-
-        //permit to send message
-        mediaManager.addSendMessageCallback(user.userId, (message: string) => {
-            peer.write(
-                new Buffer(
-                    JSON.stringify({
-                        type: MESSAGE_TYPE_MESSAGE,
-                        name: this.myName.toUpperCase(),
-                        userId: this.userId,
-                        message: message,
-                    })
-                )
-            );
-        });
 
         peer.toClose = false;
         // When a connection is established to a video stream, and if a screen sharing is taking place,
