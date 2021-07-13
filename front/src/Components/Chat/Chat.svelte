@@ -31,13 +31,13 @@
 
 <aside class="chatWindow" transition:fly="{{ x: -1000, duration: 500 }}">
     <section class="chatWindowTitle">
-        <h3>Here is your chat history <span class="float-right" on:click={closeChat}>&times</span></h3>
+        <h1>Your chat history <span class="float-right" on:click={closeChat}>&times</span></h1>
 
     </section>
     <section class="messagesList" bind:this={listDom}>
         <ul>
-        {#each $chatMessagesStore as message}
-            <li><ChatElement message={message}></ChatElement></li>
+        {#each $chatMessagesStore as message, i}
+            <li><ChatElement message={message} line={i}></ChatElement></li>
         {/each} 
         </ul>
     </section>
@@ -47,7 +47,7 @@
 </aside>
 
 <style lang="scss">
-    h3 {
+    h1 {
       font-family: 'Whiteney';
 
       span.float-right {
@@ -55,6 +55,7 @@
         line-height: 25px;
         font-weight: bold;
         float: right;
+        cursor: pointer;
       }
     }
 
@@ -77,11 +78,10 @@
       border-bottom-right-radius: 16px;
       border-top-right-radius: 16px;
       
-      h3 {
+      h1 {
         background-color: #5f5f5f;
         border-radius: 8px;
         padding: 2px;
-        font-size: 100%;
       }
       
       .chatWindowTitle {

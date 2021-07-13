@@ -6,6 +6,7 @@
     import type {PlayerInterface} from "../../Phaser/Game/PlayerInterface";
 
     export let message: ChatMessage;
+    export let line: number;
     
     $: author = message.author as PlayerInterface;
     $: targets = message.targets || [];
@@ -20,21 +21,24 @@
             minute:'2-digit'
         });
     }
+    function isLastIteration(index: number) {
+        return targets.length -1 === index;
+    }
 </script>
 
 <div class="chatElement">
     <div class="messagePart">
         {#if message.type === ChatMessageTypes.userIncoming}
-            &gt;&gt; {#each targets as target}<ChatPlayerName player={target}></ChatPlayerName>{/each} enter ({renderDate(message.date)})
+            &gt;&gt; {#each targets as target, index}<ChatPlayerName player={target} line={line}></ChatPlayerName>{#if !isLastIteration(index)}, {/if}{/each} enter <span class="date">({renderDate(message.date)})</span>
         {:else if message.type === ChatMessageTypes.userOutcoming}
-            &lt;&lt; {#each targets as target}<ChatPlayerName player={target}></ChatPlayerName>{/each} left ({renderDate(message.date)})
+            &lt;&lt; {#each targets as target, index}<ChatPlayerName player={target} line={line}></ChatPlayerName>{#if !isLastIteration(index)}, {/if}{/each} left <span class="date">({renderDate(message.date)})</span>
         {:else if message.type === ChatMessageTypes.me}
-            <h4>Me: ({renderDate(message.date)})</h4>
+            <h4>Me: <span class="date">({renderDate(message.date)})</span></h4>
             {#each texts as text}
                 <div><p class="my-text">{@html urlifyText(text)}</p></div>
             {/each}
         {:else}
-            <h4><ChatPlayerName player={author}></ChatPlayerName>: ({renderDate(message.date)})</h4>
+            <h4><ChatPlayerName player={author} line={line}></ChatPlayerName>: <span class="date">({renderDate(message.date)})</span></h4>
             {#each texts as text}
                 <div><p class="other-text">{@html urlifyText(text)}</p></div>
             {/each}
@@ -53,6 +57,11 @@
       .messagePart {
         flex-grow:1;
         max-width: 100%;
+
+        span.date {
+          font-size: 80%;
+          color: gray;
+        }
 
         div > p {
           border-radius: 8px;
