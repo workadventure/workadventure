@@ -1,7 +1,6 @@
 import { layoutManager } from "./LayoutManager";
 import { HtmlUtils } from "./HtmlUtils";
 import type { UserInputManager } from "../Phaser/UserInput/UserInputManager";
-import { DISABLE_NOTIFICATIONS } from "../Enum/EnvironmentVariable";
 import { localStreamStore } from "../Stores/MediaStore";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { helpCameraSettingsVisibleStore } from "../Stores/HelpCameraSettingsStore";
@@ -16,16 +15,11 @@ export class MediaManager {
     startScreenSharingCallBacks: Set<StartScreenSharingCallback> = new Set<StartScreenSharingCallback>();
     stopScreenSharingCallBacks: Set<StopScreenSharingCallback> = new Set<StopScreenSharingCallback>();
 
-    private focused: boolean = true;
-
     private triggerCloseJistiFrame: Map<String, Function> = new Map<String, Function>();
 
     private userInputManager?: UserInputManager;
 
     constructor() {
-        //Check of ask notification navigator permission
-        this.getNotification();
-
         localStreamStore.subscribe((result) => {
             if (result.type === "error") {
                 console.error(result.error);
@@ -181,49 +175,31 @@ export class MediaManager {
         this.userInputManager = userInputManager;
     }
 
-    public getNotification() {
-        //Get notification
-        if (!DISABLE_NOTIFICATIONS && window.Notification && Notification.permission !== "granted") {
-            if (this.checkNotificationPromise()) {
-                Notification.requestPermission().catch((err) => {
-                    console.error(`Notification permission error`, err);
-                });
-            } else {
-                Notification.requestPermission();
-            }
-        }
+    public hasNotification(): boolean {
+        return Notification.permission === "granted";
     }
 
-    /**
-     * Return true if the browser supports the modern version of the Notification API (which is Promise based) or false
-     * if we are on Safari...
-     *
-     * See https://developer.mozilla.org/en-US/docs/Web/API/Notifications_API/Using_the_Notifications_API
-     */
-    private checkNotificationPromise(): boolean {
-        try {
-            Notification.requestPermission().then();
-        } catch (e) {
-            return false;
+    public requestNotification() {
+        if (window.Notification && Notification.permission !== "granted") {
+            return Notification.requestPermission();
+        } else {
+            return Promise.reject();
         }
-
-        return true;
     }
 
     public createNotification(userName: string) {
-        if (this.focused) {
+        if (document.hasFocus()) {
             return;
         }
-        if (window.Notification && Notification.permission === "granted") {
-            const title = "WorkAdventure";
+
+        if (this.hasNotification()) {
+            const title = `${userName} wants to discuss with you`;
             const options = {
-                body: `Hi! ${userName} wants to discuss with you, don't be afraid!`,
                 icon: "/resources/logos/logo-WA-min.png",
                 image: "/resources/logos/logo-WA-min.png",
                 badge: "/resources/logos/logo-WA-min.png",
             };
             new Notification(title, options);
-            //new Notification(`Hi! ${userName} wants to discuss with you, don't be afraid!`);
         }
     }
 }

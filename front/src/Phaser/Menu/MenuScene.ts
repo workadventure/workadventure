@@ -19,6 +19,7 @@ import { sendMenuClickedEvent } from "../../Api/iframe/Ui/MenuItem";
 import { consoleGlobalMessageManagerVisibleStore } from "../../Stores/ConsoleGlobalMessageManagerStore";
 import { get } from "svelte/store";
 import { playersStore } from "../../Stores/PlayersStore";
+import { mediaManager } from "../../WebRtc/MediaManager";
 
 export const MenuSceneName = "MenuScene";
 const gameMenuKey = "gameMenu";
@@ -97,6 +98,10 @@ export class MenuScene extends Phaser.Scene {
         this.menuElement = this.add.dom(closedSideMenuX, 30).createFromCache(gameMenuKey);
         this.menuElement.setOrigin(0);
         MenuScene.revealMenusAfterInit(this.menuElement, "gameMenu");
+
+        if (mediaManager.hasNotification()) {
+            HtmlUtils.getElementByIdOrFail("enableNotification").hidden = true;
+        }
 
         const middleX = window.innerWidth / 3 - 298;
         this.gameQualityMenuElement = this.add.dom(middleX, -400).createFromCache(gameSettingsMenuKey);
@@ -357,6 +362,9 @@ export class MenuScene extends Phaser.Scene {
             case "toggleFullscreen":
                 this.toggleFullscreen();
                 break;
+            case "enableNotification":
+                this.enableNotification();
+                break;
             case "adminConsoleButton":
                 if (get(consoleGlobalMessageManagerVisibleStore)) {
                     consoleGlobalMessageManagerVisibleStore.set(false);
@@ -418,5 +426,13 @@ export class MenuScene extends Phaser.Scene {
 
     public isDirty(): boolean {
         return false;
+    }
+
+    private enableNotification() {
+        mediaManager.requestNotification().then(() => {
+            if (mediaManager.hasNotification()) {
+                HtmlUtils.getElementByIdOrFail("enableNotification").hidden = true;
+            }
+        });
     }
 }
