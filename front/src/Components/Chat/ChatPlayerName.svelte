@@ -1,37 +1,50 @@
 <script lang="ts">
     import type {PlayerInterface} from "../../Phaser/Game/PlayerInterface";
-    import {requestVisitCardsStore} from "../../Stores/GameStore";
+    import {chatSubMenuVisbilityStore} from "../../Stores/ChatStore";
+    import {onDestroy, onMount} from "svelte";
+    import type {Unsubscriber} from "svelte/store";
+    import ChatSubMenu from "./ChatSubMenu.svelte";
 
-    export let player:PlayerInterface;
-    let showMenu: boolean = false;
+    export let player: PlayerInterface;
+    export let line: number;
+    let isSubMenuOpen: boolean;
+    let chatSubMenuVisivilytUnsubcribe: Unsubscriber;
 
-    function openVisitCard() {
-        if (player.visitCardUrl) {
-            requestVisitCardsStore.set(player.visitCardUrl);
-        }
+    function openSubMenu() {
+        chatSubMenuVisbilityStore.openSubMenu(player.name, line);
     }
+
+    onMount(() => {
+        chatSubMenuVisivilytUnsubcribe = chatSubMenuVisbilityStore.subscribe((newValue) => {
+            isSubMenuOpen = (newValue === player.name + line);
+        })
+    })
+
+    onDestroy(() => {
+        chatSubMenuVisivilytUnsubcribe();
+    })
+
 </script>
 
-<span class="chatPlayerName" style="color: {player.color || 'white'}" on:click={() => showMenu = !showMenu}>
+<span class="subMenu">
+    <span class="chatPlayerName" style="color: {player.color || 'white'}" on:click={openSubMenu}>
     {player.name}
+    </span>
+    {#if isSubMenuOpen}
+        <ChatSubMenu player={player}/>
+    {/if}
 </span>
-
-{#if showMenu}
-    <ul class="selectMenu">
-        <li><button class="text-btn" disabled={!player.visitCardUrl} on:click={openVisitCard}>Visit card</button></li>
-    </ul>
-{/if}
 
 
 <style lang="scss">
+  span.subMenu {
+    display: inline-block;
+  }
+  span.chatPlayerName {
+    margin-left: 3px;
+  }
   .chatPlayerName:hover {
-    text-decoration: underline;
-    cursor: pointer;
-  }
-  ul.selectMenu {
-    background-color: whitesmoke;
-    position: absolute;
-    right: 0;
-    border-radius: 4px;
-  }
+      text-decoration: underline;
+      cursor: pointer;
+    }
 </style>

@@ -18,7 +18,7 @@
 </script>
 
 <form on:submit|preventDefault={saveMessage}>
-    <input type="text" bind:value={newMessageText} placeholder="Type here" on:focus={onFocus} on:blur={onBlur} >
+    <input type="text" bind:value={newMessageText} placeholder="Enter your message..." on:focus={onFocus} on:blur={onBlur} >
     <button type="submit">
         <img src="/static/images/send.png" alt="Send" width="20">
     </button>

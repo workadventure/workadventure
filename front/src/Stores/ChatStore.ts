@@ -100,3 +100,19 @@ function createChatMessagesStore() {
     };
 }
 export const chatMessagesStore = createChatMessagesStore();
+
+function createChatSubMenuVisibilityStore() {
+    const { subscribe, update } = writable<string>("");
+
+    return {
+        subscribe,
+        openSubMenu(playerName: string, index: number) {
+            const id = playerName + index;
+            update((oldValue) => {
+                return oldValue === id ? "" : id;
+            });
+        },
+    };
+}
+
+export const chatSubMenuVisbilityStore = createChatSubMenuVisibilityStore();
