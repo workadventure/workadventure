@@ -3,9 +3,7 @@ import Axios from "axios";
 import { GameRoomPolicyTypes } from "_Model/PusherRoom";
 
 export interface AdminApiData {
-    organizationSlug: string;
-    worldSlug: string;
-    roomSlug: string;
+    roomUrl: string;
     mapUrlStart: string;
     tags: string[];
     policy_type: number;
@@ -43,23 +41,14 @@ export interface FetchMemberDataByUuidResponse {
 }
 
 class AdminApi {
-    async fetchMapDetails(
-        organizationSlug: string,
-        worldSlug: string,
-        roomSlug: string | undefined
-    ): Promise<MapDetailsData> {
+    async fetchMapDetails(playUri: string): Promise<MapDetailsData> {
         if (!ADMIN_API_URL) {
             return Promise.reject(new Error("No admin backoffice set!"));
         }
 
-        const params: { organizationSlug: string; worldSlug: string; roomSlug?: string } = {
-            organizationSlug,
-            worldSlug,
+        const params: { playUri: string } = {
+            playUri,
         };
-
-        if (roomSlug) {
-            params.roomSlug = roomSlug;
-        }
 
         const res = await Axios.get(ADMIN_API_URL + "/api/map", {
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
@@ -121,26 +110,20 @@ class AdminApi {
         );
     }
 
-    async verifyBanUser(
-        organizationMemberToken: string,
-        ipAddress: string,
-        organization: string,
-        world: string
-    ): Promise<AdminBannedData> {
+    async verifyBanUser(userUuid: string, ipAddress: string, roomUrl: string): Promise<AdminBannedData> {
         if (!ADMIN_API_URL) {
             return Promise.reject(new Error("No admin backoffice set!"));
         }
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
         return Axios.get(
             ADMIN_API_URL +
-                "/api/check-moderate-user/" +
-                organization +
-                "/" +
-                world +
+                "/api/ban" +
                 "?ipAddress=" +
-                ipAddress +
+                encodeURIComponent(ipAddress) +
                 "&token=" +
-                organizationMemberToken,
+                encodeURIComponent(userUuid) +
+                "&roomUrl=" +
+                encodeURIComponent(roomUrl),
             { headers: { Authorization: `${ADMIN_API_TOKEN}` } }
         ).then((data) => {
             return data.data;

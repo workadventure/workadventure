@@ -32,7 +32,7 @@ import {
     EmotePromptMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
-import { JITSI_ISS, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
+import { ADMIN_API_URL, JITSI_ISS, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
 import { adminApi, CharacterTexture } from "./AdminApi";
 import { emitInBatch } from "./IoSocketHelpers";
 import Jwt from "jsonwebtoken";
@@ -358,23 +358,24 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    async getOrCreateRoom(roomId: string): Promise<PusherRoom> {
+    async getOrCreateRoom(roomUrl: string): Promise<PusherRoom> {
         //check and create new world for a room
-        let world = this.rooms.get(roomId);
-        if (world === undefined) {
-            world = new PusherRoom(roomId, this);
-            if (!world.public) {
-                await this.updateRoomWithAdminData(world);
+        let room = this.rooms.get(roomUrl);
+        if (room === undefined) {
+            room = new PusherRoom(roomUrl, this);
+            if (ADMIN_API_URL) {
+                await this.updateRoomWithAdminData(room);
             }
-            this.rooms.set(roomId, world);
+
+            this.rooms.set(roomUrl, room);
         }
-        return Promise.resolve(world);
+        return room;
     }
 
-    public async updateRoomWithAdminData(world: PusherRoom): Promise<void> {
-        const data = await adminApi.fetchMapDetails(world.organizationSlug, world.worldSlug, world.roomSlug);
-        world.tags = data.tags;
-        world.policyType = Number(data.policy_type);
+    public async updateRoomWithAdminData(room: PusherRoom): Promise<void> {
+        const data = await adminApi.fetchMapDetails(room.roomUrl);
+        room.tags = data.tags;
+        room.policyType = Number(data.policy_type);
     }
 
     emitPlayGlobalMessage(client: ExSocketInterface, playglobalmessage: PlayGlobalMessage) {

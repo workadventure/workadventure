@@ -5,8 +5,6 @@ import { PositionInterface } from "_Model/PositionInterface";
 import { EmoteCallback, EntersCallback, LeavesCallback, MovesCallback } from "_Model/Zone";
 import { PositionNotifier } from "./PositionNotifier";
 import { Movable } from "_Model/Movable";
-import { extractDataFromPrivateRoomId, extractRoomSlugPublicRoomId, isRoomAnonymous } from "./RoomIdentifier";
-import { arrayIntersect } from "../Services/ArrayHelper";
 import { EmoteEventMessage, JoinRoomMessage } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { ZoneSocket } from "src/RoomManager";
@@ -31,15 +29,12 @@ export class GameRoom {
     private itemsState: Map<number, unknown> = new Map<number, unknown>();
 
     private readonly positionNotifier: PositionNotifier;
-    public readonly roomId: string;
-    public readonly roomSlug: string;
-    public readonly worldSlug: string = "";
-    public readonly organizationSlug: string = "";
+    public readonly roomUrl: string;
     private versionNumber: number = 1;
     private nextUserId: number = 1;
 
     constructor(
-        roomId: string,
+        roomUrl: string,
         connectCallback: ConnectCallback,
         disconnectCallback: DisconnectCallback,
         minDistance: number,
@@ -49,16 +44,7 @@ export class GameRoom {
         onLeaves: LeavesCallback,
         onEmote: EmoteCallback
     ) {
-        this.roomId = roomId;
-
-        if (isRoomAnonymous(roomId)) {
-            this.roomSlug = extractRoomSlugPublicRoomId(this.roomId);
-        } else {
-            const { organizationSlug, worldSlug, roomSlug } = extractDataFromPrivateRoomId(this.roomId);
-            this.roomSlug = roomSlug;
-            this.organizationSlug = organizationSlug;
-            this.worldSlug = worldSlug;
-        }
+        this.roomUrl = roomUrl;
 
         this.users = new Map<number, User>();
         this.usersByUuid = new Map<string, User>();
@@ -177,7 +163,7 @@ export class GameRoom {
                 } else {
                     const closestUser: User = closestItem;
                     const group: Group = new Group(
-                        this.roomId,
+                        this.roomUrl,
                         [user, closestUser],
                         this.connectCallback,
                         this.disconnectCallback,

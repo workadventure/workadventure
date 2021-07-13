@@ -75,11 +75,11 @@ export class RoomConnection implements RoomConnection {
     /**
      *
      * @param token A JWT token containing the UUID of the user
-     * @param roomId The ID of the room in the form "_/[instance]/[map_url]" or "@/[org]/[event]/[map]"
+     * @param roomUrl The URL of the room in the form "https://example.com/_/[instance]/[map_url]" or "https://example.com/@/[org]/[event]/[map]"
      */
     public constructor(
         token: string | null,
-        roomId: string,
+        roomUrl: string,
         name: string,
         characterLayers: string[],
         position: PositionInterface,
@@ -92,7 +92,7 @@ export class RoomConnection implements RoomConnection {
             url += "/";
         }
         url += "room";
-        url += "?roomId=" + (roomId ? encodeURIComponent(roomId) : "");
+        url += "?roomId=" + (roomUrl ? encodeURIComponent(roomUrl) : "");
         url += "&token=" + (token ? encodeURIComponent(token) : "");
         url += "&name=" + encodeURIComponent(name);
         for (const layer of characterLayers) {

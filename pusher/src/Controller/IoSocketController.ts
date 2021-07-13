@@ -221,14 +221,12 @@ export class IoSocketController {
                                 memberVisitCardUrl = userData.visitCardUrl;
                                 memberTextures = userData.textures;
                                 if (
-                                    !room.public &&
                                     room.policyType === GameRoomPolicyTypes.USE_TAGS_POLICY &&
                                     (userData.anonymous === true || !room.canAccess(memberTags))
                                 ) {
                                     throw new Error("Insufficient privileges to access this room");
                                 }
                                 if (
-                                    !room.public &&
                                     room.policyType === GameRoomPolicyTypes.MEMBERS_ONLY_POLICY &&
                                     userData.anonymous === true
                                 ) {
