@@ -7,6 +7,7 @@
 
     export let player: PlayerInterface;
     export let line: number;
+
     let isSubMenuOpen: boolean;
     let chatSubMenuVisivilytUnsubcribe: Unsubscriber;
 
