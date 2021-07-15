@@ -1,6 +1,7 @@
 {.section-title.accent.text-primary}
 # API Player functions Reference
 
+
 ### Listen to player movement
 ```
 WA.player.onPlayerMove(callback: HasPlayerMovedEventCallback): void;

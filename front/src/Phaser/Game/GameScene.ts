@@ -92,6 +92,7 @@ import { peerStore, screenSharingPeerStore } from "../../Stores/PeerStore";
 import { videoFocusStore } from "../../Stores/VideoFocusStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
 import { playersStore } from "../../Stores/PlayersStore";
+import { chatVisibilityStore } from "../../Stores/ChatStore";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -169,6 +170,7 @@ export class GameScene extends DirtyScene {
     private createPromiseResolve!: (value?: void | PromiseLike<void>) => void;
     private iframeSubscriptionList!: Array<Subscription>;
     private peerStoreUnsubscribe!: () => void;
+    private chatVisibilityUnsubscribe!: () => void;
     private biggestAvailableAreaStoreUnsubscribe!: () => void;
     MapUrlFile: string;
     RoomId: string;
@@ -571,6 +573,10 @@ export class GameScene extends DirtyScene {
             }
             oldPeerNumber = newPeerNumber;
         });
+
+        this.chatVisibilityUnsubscribe = chatVisibilityStore.subscribe((v) => {
+            this.openChatIcon.setVisible(!v);
+        });
     }
 
     /**
@@ -692,12 +698,12 @@ export class GameScene extends DirtyScene {
                 const self = this;
                 this.simplePeer.registerPeerConnectionListener({
                     onConnect(peer) {
-                        self.openChatIcon.setVisible(true);
+                        //self.openChatIcon.setVisible(true);
                         audioManager.decreaseVolume();
                     },
                     onDisconnect(userId: number) {
                         if (self.simplePeer.getNbConnections() === 0) {
-                            self.openChatIcon.setVisible(false);
+                            //self.openChatIcon.setVisible(false);
                             audioManager.restoreVolume();
                         }
                     },
@@ -1173,6 +1179,7 @@ ${escapedMessage}
         this.pinchManager?.destroy();
         this.emoteManager.destroy();
         this.peerStoreUnsubscribe();
+        this.chatVisibilityUnsubscribe();
         this.biggestAvailableAreaStoreUnsubscribe();
         iframeListener.unregisterAnswerer("getState");
 

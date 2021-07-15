@@ -1,6 +1,7 @@
 import { writable } from "svelte/store";
 import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import type { RoomConnection } from "../Connexion/RoomConnection";
+import { getRandomColor } from "../WebRtc/ColorGenerator";
 
 /**
  * A store that contains the list of players currently known.
@@ -24,6 +25,7 @@ function createPlayersStore() {
                         visitCardUrl: message.visitCardUrl,
                         companion: message.companion,
                         userUuid: message.userUuid,
+                        color: getRandomColor(),
                     });
                     return users;
                 });
