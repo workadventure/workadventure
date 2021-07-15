@@ -35,6 +35,7 @@ export class VideoPeer extends Peer {
     public readonly statusStore: Readable<PeerStatus>;
     public readonly constraintsStore: Readable<MediaStreamConstraints | null>;
     private newMessageunsubscriber: Unsubscriber | null = null;
+    private closing: Boolean = false; //this is used to prevent destroy() from being called twice
 
     constructor(
         public user: UserSimplePeerInterface,
@@ -249,19 +250,18 @@ export class VideoPeer extends Peer {
     /**
      * This is triggered twice. Once by the server, and once by a remote client disconnecting
      */
-    public destroy(error?: Error): void {
+    public destroy(): void {
         try {
             this._connected = false;
-            if (!this.toClose) {
+            if (!this.toClose || this.closing) {
                 return;
             }
+            this.closing = true;
             this.onBlockSubscribe.unsubscribe();
             this.onUnBlockSubscribe.unsubscribe();
             if (this.newMessageunsubscriber) this.newMessageunsubscriber();
             chatMessagesStore.addOutcomingUser(this.userId);
-            // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
-            // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
-            super.destroy(error);
+            super.destroy();
         } catch (err) {
             console.error("VideoPeer::destroy", err);
         }
