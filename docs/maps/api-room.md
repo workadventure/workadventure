@@ -79,26 +79,6 @@ Example :
 WA.room.setProperty('wikiLayer', 'openWebsite', 'https://www.wikipedia.org/');
 ```
 
-### Getting information on the current room
-```
-WA.room.getCurrentRoom(): Promise<Room>
-```
-Return a promise that resolves to a `Room` object with the following attributes :
-* **id (string) :** ID of the current room
-* **map (ITiledMap) :** contains the JSON map file with the properties that were set by the script if `setProperty` was called.
-* **mapUrl (string) :** Url of the JSON map file
-* **startLayer (string | null) :** Name of the layer where the current user started, only if different from `start` layer
-
-Example :
-```javascript
-WA.room.getCurrentRoom((room) => {
-    if (room.id === '42') {
-        console.log(room.map);
-        window.open(room.mapUrl, '_blank');
-    }
-})
-```
-
 ### Changing tiles 
 ```
 WA.room.setTiles(tiles: TileDescriptor[]): void
