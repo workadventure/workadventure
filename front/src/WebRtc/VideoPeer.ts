@@ -1,15 +1,14 @@
 import type * as SimplePeerNamespace from "simple-peer";
 import { mediaManager } from "./MediaManager";
-import { STUN_SERVER, TURN_PASSWORD, TURN_SERVER, TURN_USER } from "../Enum/EnvironmentVariable";
 import type { RoomConnection } from "../Connexion/RoomConnection";
 import { blackListManager } from "./BlackListManager";
 import type { Subscription } from "rxjs";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { get, readable, Readable, Unsubscriber } from "svelte/store";
 import { obtainedMediaConstraintStore } from "../Stores/MediaStore";
-import { discussionManager } from "./DiscussionManager";
 import { playersStore } from "../Stores/PlayersStore";
 import { chatMessagesStore, chatVisibilityStore, newChatMessageStore } from "../Stores/ChatStore";
+import { getIceServersConfig } from "../Components/Video/utils";
 
 const Peer: SimplePeerNamespace.SimplePeer = require("simple-peer");
 
@@ -45,21 +44,9 @@ export class VideoPeer extends Peer {
         localStream: MediaStream | null
     ) {
         super({
-            initiator: initiator ? initiator : false,
-            //reconnectTimer: 10000,
+            initiator,
             config: {
-                iceServers: [
-                    {
-                        urls: STUN_SERVER.split(","),
-                    },
-                    TURN_SERVER !== ""
-                        ? {
-                              urls: TURN_SERVER.split(","),
-                              username: user.webRtcUser || TURN_USER,
-                              credential: user.webRtcPassword || TURN_PASSWORD,
-                          }
-                        : undefined,
-                ].filter((value) => value !== undefined),
+                iceServers: getIceServersConfig(user),
             },
         });
 
@@ -272,7 +259,6 @@ export class VideoPeer extends Peer {
             this.onUnBlockSubscribe.unsubscribe();
             if (this.newMessageunsubscriber) this.newMessageunsubscriber();
             chatMessagesStore.addOutcomingUser(this.userId);
-            //discussionManager.removeParticipant(this.userId);
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
             super.destroy(error);

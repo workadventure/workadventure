@@ -1,3 +1,6 @@
+import type { UserSimplePeerInterface } from "../../WebRtc/SimplePeer";
+import { STUN_SERVER, TURN_PASSWORD, TURN_SERVER, TURN_USER } from "../../Enum/EnvironmentVariable";
+
 export function getColorByString(str: string): string | null {
     let hash = 0;
     if (str.length === 0) {
@@ -15,7 +18,7 @@ export function getColorByString(str: string): string | null {
     return color;
 }
 
-export function srcObject(node: HTMLVideoElement, stream: MediaStream) {
+export function srcObject(node: HTMLVideoElement, stream: MediaStream | null) {
     node.srcObject = stream;
     return {
         update(newStream: MediaStream) {
@@ -24,4 +27,20 @@ export function srcObject(node: HTMLVideoElement, stream: MediaStream) {
             }
         },
     };
+}
+
+export function getIceServersConfig(user: UserSimplePeerInterface): RTCIceServer[] {
+    const config: RTCIceServer[] = [
+        {
+            urls: STUN_SERVER.split(","),
+        },
+    ];
+    if (TURN_SERVER !== "") {
+        config.push({
+            urls: TURN_SERVER.split(","),
+            username: user.webRtcUser || TURN_USER,
+            credential: user.webRtcPassword || TURN_PASSWORD,
+        });
+    }
+    return config;
 }
