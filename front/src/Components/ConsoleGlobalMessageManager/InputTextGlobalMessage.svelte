@@ -6,7 +6,6 @@
     import type {PlayGlobalMessageInterface} from "../../Connexion/ConnexionModels";
     import {AdminMessageEventTypes} from "../../Connexion/AdminMessagesService";
     import type {Quill} from "quill";
-    import {LoginSceneName} from "../../Phaser/Login/LoginScene";
 
     //toolbar
     export const toolbarOptions = [
@@ -35,7 +34,7 @@
     export let game: Game;
     export let gameManager: GameManager;
 
-    let gameScene = gameManager.getCurrentGameScene(game.scene.getScene(LoginSceneName));
+    let gameScene = gameManager.getCurrentGameScene(game.findAnyScene());
     let quill: Quill;
     let INPUT_CONSOLE_MESSAGE: HTMLDivElement;
 
@@ -48,6 +47,7 @@
         const {default: Quill} = await import("quill"); // eslint-disable-line @typescript-eslint/no-explicit-any
 
         quill = new Quill(INPUT_CONSOLE_MESSAGE, {
+            placeholder: 'Enter your message here...',
             theme: 'snow',
             modules: {
                 toolbar: toolbarOptions
@@ -88,7 +88,7 @@
 
 <section class="section-input-send-text">
     <div class="input-send-text" bind:this={INPUT_CONSOLE_MESSAGE}></div>
-    <div class="btn-action">
+    <div class="footer-btn-action">
         <button class="nes-btn is-primary" on:click|preventDefault={SendTextMessage}>Send</button>
     </div>
 </section>

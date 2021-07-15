@@ -6,7 +6,6 @@
     import {AdminMessageEventTypes} from "../../Connexion/AdminMessagesService";
     import type {PlayGlobalMessageInterface} from "../../Connexion/ConnexionModels";
     import uploadFile from "../images/music-file.svg";
-    import {LoginSceneName} from "../../Phaser/Login/LoginScene";
 
     interface EventTargetFiles extends EventTarget {
         files: Array<File>;
@@ -15,7 +14,7 @@
     export let game: Game;
     export let gameManager: GameManager;
 
-    let gameScene = gameManager.getCurrentGameScene(game.scene.getScene(LoginSceneName));
+    let gameScene = gameManager.getCurrentGameScene(game.findAnyScene());
     let fileinput: HTMLInputElement;
     let filename: string;
     let filesize: string;
@@ -85,46 +84,15 @@
 
 
 <section class="section-input-send-audio">
-    <div class="input-send-audio">
         <img src="{uploadFile}" alt="Upload a file" on:click|preventDefault={ () => {fileinput.click();}}>
-        {#if filename != undefined}
+        {#if filename !== undefined}
             <label for="input-send-audio">{filename} : {filesize}</label>
         {/if}
         {#if errorfile}
             <p class="err">No file selected. You need to upload a file before sending it.</p>
         {/if}
         <input type="file" id="input-send-audio" bind:this={fileinput} on:change={(e) => {inputAudioFile(e)}}>
-    </div>
-    <div class="btn-action">
+    <div class="footer-btn-action">
         <button class="nes-btn is-primary" on:click|preventDefault={SendAudioMessage}>Send</button>
     </div>
 </section>
-
-<style lang="scss">
-  //UploadAudioGlobalMessage
-  .section-input-send-audio {
-    margin: 10px;
-  }
-
-  .section-input-send-audio .input-send-audio {
-    text-align: center;
-  }
-
-  .section-input-send-audio #input-send-audio{
-    display: none;
-  }
-
-  .section-input-send-audio div.input-send-audio label{
-    color: white;
-  }
-
-  .section-input-send-audio div.input-send-audio p.err {
-    color: #ce372b;
-    text-align: center;
-  }
-
-  .section-input-send-audio div.input-send-audio img{
-    height: 150px;
-    cursor: url('../../../style/images/cursor_pointer.png'), pointer;
-  }
-</style>
