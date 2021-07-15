@@ -48,7 +48,7 @@
 
 <style lang="scss">
     h1 {
-      font-family: 'Whiteney';
+      font-family: Lato;
 
       span.float-right {
         font-size: 30px;
