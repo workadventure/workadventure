@@ -1,7 +1,9 @@
 import { HttpRequest, HttpResponse, TemplatedApp } from "uWebSockets.js";
 import { BaseController } from "./BaseController";
 import { parse } from "query-string";
-import { adminApi } from "../Services/AdminApi";
+import { adminApi, MapDetailsData } from "../Services/AdminApi";
+import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
+import { GameRoomPolicyTypes } from "../Model/PusherRoom";
 
 export class MapController extends BaseController {
     constructor(private App: TemplatedApp) {
@@ -25,35 +27,45 @@ export class MapController extends BaseController {
 
             const query = parse(req.getQuery());
 
-            if (typeof query.organizationSlug !== "string") {
-                console.error("Expected organizationSlug parameter");
+            if (typeof query.playUri !== "string") {
+                console.error("Expected playUri parameter in /map endpoint");
                 res.writeStatus("400 Bad request");
                 this.addCorsHeaders(res);
-                res.end("Expected organizationSlug parameter");
+                res.end("Expected playUri parameter");
                 return;
             }
-            if (typeof query.worldSlug !== "string") {
-                console.error("Expected worldSlug parameter");
-                res.writeStatus("400 Bad request");
+
+            // If no admin URL is set, let's react on '/_/[instance]/[map url]' URLs
+            if (!ADMIN_API_URL) {
+                const roomUrl = new URL(query.playUri);
+
+                const match = /\/_\/[^/]+\/(.+)/.exec(roomUrl.pathname);
+                if (!match) {
+                    res.writeStatus("404 Not Found");
+                    this.addCorsHeaders(res);
+                    res.end(JSON.stringify({}));
+                    return;
+                }
+
+                const mapUrl = roomUrl.protocol + "//" + match[1];
+
+                res.writeStatus("200 OK");
                 this.addCorsHeaders(res);
-                res.end("Expected worldSlug parameter");
-                return;
-            }
-            if (typeof query.roomSlug !== "string" && query.roomSlug !== undefined) {
-                console.error("Expected only one roomSlug parameter");
-                res.writeStatus("400 Bad request");
-                this.addCorsHeaders(res);
-                res.end("Expected only one roomSlug parameter");
+                res.end(
+                    JSON.stringify({
+                        mapUrl,
+                        policy_type: GameRoomPolicyTypes.ANONYMOUS_POLICY,
+                        roomSlug: "", // Deprecated
+                        tags: [],
+                    } as MapDetailsData)
+                );
+
                 return;
             }
 
             (async () => {
                 try {
-                    const mapDetails = await adminApi.fetchMapDetails(
-                        query.organizationSlug as string,
-                        query.worldSlug as string,
-                        query.roomSlug as string | undefined
-                    );
+                    const mapDetails = await adminApi.fetchMapDetails(query.playUri as string);
 
                     res.writeStatus("200 OK");
                     this.addCorsHeaders(res);

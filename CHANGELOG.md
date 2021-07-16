@@ -23,6 +23,10 @@
   - The chat allows your to see the visit card of users
   - You can close the chat window with the escape key
 - Added a 'Enable notifications' button in the menu.
+- The exchange format between Pusher and Admin servers has changed. If you have your own implementation of an admin server, these endpoints signatures have changed:
+  - `/api/map`: now accepts a complete room URL instead of organization/world/room slugs
+  - `/api/ban`: new endpoint to report users
+  - as a side effect, the "routing" is now completely stored on the admin side, so by implementing your own admin server, you can develop completely custom routing
 
 ## Version 1.4.3 - 1.4.4 - 1.4.5
 
