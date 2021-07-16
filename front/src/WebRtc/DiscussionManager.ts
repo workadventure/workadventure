@@ -1,11 +1,12 @@
 import { iframeListener } from "../Api/IframeListener";
-import { chatMessagesStore, chatVisibilityStore } from "../Stores/ChatStore";
+import { chatMessagesStore } from "../Stores/ChatStore";
+import { playersStore } from "../Stores/PlayersStore";
 
 export class DiscussionManager {
     constructor() {
         iframeListener.chatStream.subscribe((chatEvent) => {
-            chatMessagesStore.addExternalMessage(parseInt(chatEvent.author), chatEvent.message);
-            chatVisibilityStore.set(true);
+            const userId = playersStore.addFacticePlayer(chatEvent.author);
+            chatMessagesStore.addExternalMessage(userId, chatEvent.message);
         });
     }
 }

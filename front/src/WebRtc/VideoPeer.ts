@@ -170,7 +170,6 @@ export class VideoPeer extends Peer {
             } else if (message.type === MESSAGE_TYPE_MESSAGE) {
                 if (!blackListManager.isBlackListed(this.userUuid)) {
                     chatMessagesStore.addExternalMessage(this.userId, message.message);
-                    chatVisibilityStore.set(true);
                 }
             } else if (message.type === MESSAGE_TYPE_BLOCKED) {
                 //FIXME when A blacklists B, the output stream from A is muted in B's js client. This is insecure since B can manipulate the code to unmute A stream.
