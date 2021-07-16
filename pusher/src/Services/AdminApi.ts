@@ -1,6 +1,9 @@
 import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
 import { GameRoomPolicyTypes } from "_Model/PusherRoom";
+import { CharacterTexture } from "./AdminApi/CharacterTexture";
+import { MapDetailsData } from "./AdminApi/MapDetailsData";
+import { RoomRedirect } from "./AdminApi/RoomRedirect";
 
 export interface AdminApiData {
     roomUrl: string;
@@ -12,23 +15,9 @@ export interface AdminApiData {
     textures: CharacterTexture[];
 }
 
-export interface MapDetailsData {
-    roomSlug: string;
-    mapUrl: string;
-    policy_type: GameRoomPolicyTypes;
-    tags: string[];
-}
-
 export interface AdminBannedData {
     is_banned: boolean;
     message: string;
-}
-
-export interface CharacterTexture {
-    id: number;
-    level: number;
-    url: string;
-    rights: string;
 }
 
 export interface FetchMemberDataByUuidResponse {
@@ -41,7 +30,7 @@ export interface FetchMemberDataByUuidResponse {
 }
 
 class AdminApi {
-    async fetchMapDetails(playUri: string): Promise<MapDetailsData> {
+    async fetchMapDetails(playUri: string): Promise<MapDetailsData | RoomRedirect> {
         if (!ADMIN_API_URL) {
             return Promise.reject(new Error("No admin backoffice set!"));
         }

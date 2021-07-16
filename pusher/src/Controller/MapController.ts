@@ -1,9 +1,10 @@
 import { HttpRequest, HttpResponse, TemplatedApp } from "uWebSockets.js";
 import { BaseController } from "./BaseController";
 import { parse } from "query-string";
-import { adminApi, MapDetailsData } from "../Services/AdminApi";
+import { adminApi } from "../Services/AdminApi";
 import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 import { GameRoomPolicyTypes } from "../Model/PusherRoom";
+import { MapDetailsData } from "../Services/AdminApi/MapDetailsData";
 
 export class MapController extends BaseController {
     constructor(private App: TemplatedApp) {
@@ -57,6 +58,7 @@ export class MapController extends BaseController {
                         policy_type: GameRoomPolicyTypes.ANONYMOUS_POLICY,
                         roomSlug: "", // Deprecated
                         tags: [],
+                        textures: [],
                     } as MapDetailsData)
                 );
 
