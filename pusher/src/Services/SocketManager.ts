@@ -33,7 +33,7 @@ import {
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { ADMIN_API_URL, JITSI_ISS, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
-import { adminApi, CharacterTexture } from "./AdminApi";
+import { adminApi } from "./AdminApi";
 import { emitInBatch } from "./IoSocketHelpers";
 import Jwt from "jsonwebtoken";
 import { JITSI_URL } from "../Enum/EnvironmentVariable";
@@ -44,6 +44,8 @@ import { GroupDescriptor, UserDescriptor, ZoneEventListener } from "_Model/Zone"
 import Debug from "debug";
 import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
 import { WebSocket } from "uWebSockets.js";
+import { isRoomRedirect } from "./AdminApi/RoomRedirect";
+import { CharacterTexture } from "./AdminApi/CharacterTexture";
 
 const debug = Debug("socket");
 
@@ -374,8 +376,14 @@ export class SocketManager implements ZoneEventListener {
 
     public async updateRoomWithAdminData(room: PusherRoom): Promise<void> {
         const data = await adminApi.fetchMapDetails(room.roomUrl);
-        room.tags = data.tags;
-        room.policyType = Number(data.policy_type);
+
+        if (isRoomRedirect(data)) {
+            // TODO: if the updated room data is actually a redirect, we need to take everybody on the map
+            // and redirect everybody to the new location (so we need to close the connection for everybody)
+        } else {
+            room.tags = data.tags;
+            room.policyType = Number(data.policy_type);
+        }
     }
 
     emitPlayGlobalMessage(client: ExSocketInterface, playglobalmessage: PlayGlobalMessage) {
