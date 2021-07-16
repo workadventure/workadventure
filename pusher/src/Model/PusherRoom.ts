@@ -44,15 +44,6 @@ export class PusherRoom {
         this.tags = [];
         this.policyType = GameRoomPolicyTypes.ANONYMOUS_POLICY;
 
-        if (this.public) {
-            this.roomSlug = extractRoomSlugPublicRoomId(this.roomId);
-        } else {
-            const { organizationSlug, worldSlug, roomSlug } = extractDataFromPrivateRoomId(this.roomId);
-            this.roomSlug = roomSlug;
-            this.organizationSlug = organizationSlug;
-            this.worldSlug = worldSlug;
-        }
-
         // A zone is 10 sprites wide.
         this.positionNotifier = new PositionDispatcher(this.roomUrl, 320, 320, this.socketListener);
     }
@@ -91,10 +82,10 @@ export class PusherRoom {
      * Creates a connection to the back server to track global messages relative to this room (like variable changes).
      */
     public async init(): Promise<void> {
-        debug("Opening connection to room %s on back server", this.roomId);
-        const apiClient = await apiClientRepository.getClient(this.roomId);
+        debug("Opening connection to room %s on back server", this.roomUrl);
+        const apiClient = await apiClientRepository.getClient(this.roomUrl);
         const roomMessage = new RoomMessage();
-        roomMessage.setRoomid(this.roomId);
+        roomMessage.setRoomid(this.roomUrl);
         this.backConnection = apiClient.listenRoom(roomMessage);
         this.backConnection.on("data", (batch: BatchToPusherRoomMessage) => {
             for (const message of batch.getPayloadList()) {
@@ -141,7 +132,7 @@ export class PusherRoom {
     }
 
     public close(): void {
-        debug("Closing connection to room %s on back server", this.roomId);
+        debug("Closing connection to room %s on back server", this.roomUrl);
         this.isClosing = true;
         this.backConnection.cancel();
     }

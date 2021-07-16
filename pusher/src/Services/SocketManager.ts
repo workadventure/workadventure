@@ -380,7 +380,7 @@ export class SocketManager implements ZoneEventListener {
             if (ADMIN_API_URL) {
                 await this.updateRoomWithAdminData(room);
             }
-            await world.init();
+            await room.init();
             this.rooms.set(roomUrl, room);
         }
         return room;

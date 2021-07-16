@@ -2,14 +2,7 @@ import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribut
 import type { HasPlayerMovedEvent, HasPlayerMovedEventCallback } from "../Events/HasPlayerMovedEvent";
 import { Subject } from "rxjs";
 import { apiCallback } from "./registeredCallbacks";
-import { getGameState } from "./room";
 import { isHasPlayerMovedEvent } from "../Events/HasPlayerMovedEvent";
-
-interface User {
-    id: string | undefined;
-    nickName: string | null;
-    tags: string[];
-}
 
 const moveStream = new Subject<HasPlayerMovedEvent>();
 
