@@ -16,19 +16,21 @@ import {
     SendUserMessage,
     ServerToClientMessage,
     CompanionMessage,
-    EmotePromptMessage, VariableMessage,
+    EmotePromptMessage,
+    VariableMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { TemplatedApp } from "uWebSockets.js";
 import { parse } from "query-string";
 import { jwtTokenManager } from "../Services/JWTTokenManager";
-import { adminApi, CharacterTexture, FetchMemberDataByUuidResponse } from "../Services/AdminApi";
+import { adminApi, FetchMemberDataByUuidResponse } from "../Services/AdminApi";
 import { SocketManager, socketManager } from "../Services/SocketManager";
 import { emitInBatch } from "../Services/IoSocketHelpers";
 import { ADMIN_API_TOKEN, ADMIN_API_URL, SOCKET_IDLE_TIMER } from "../Enum/EnvironmentVariable";
 import { Zone } from "_Model/Zone";
 import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
 import { v4 } from "uuid";
+import { CharacterTexture } from "../Services/AdminApi/CharacterTexture";
 
 export class IoSocketController {
     private nextUserId: number = 1;
@@ -221,14 +223,12 @@ export class IoSocketController {
                                 memberVisitCardUrl = userData.visitCardUrl;
                                 memberTextures = userData.textures;
                                 if (
-                                    !room.public &&
                                     room.policyType === GameRoomPolicyTypes.USE_TAGS_POLICY &&
                                     (userData.anonymous === true || !room.canAccess(memberTags))
                                 ) {
                                     throw new Error("Insufficient privileges to access this room");
                                 }
                                 if (
-                                    !room.public &&
                                     room.policyType === GameRoomPolicyTypes.MEMBERS_ONLY_POLICY &&
                                     userData.anonymous === true
                                 ) {

@@ -11,7 +11,7 @@
   - Use `WA.onInit(): Promise<void>` to wait for scripting API initialization
   - Use `WA.room.showLayer(): void` to show a layer
   - Use `WA.room.hideLayer(): void` to hide a layer
-  - Use `WA.room.setProperty() : void` to add or change existing property of a layer
+  - Use `WA.room.setProperty() : void` to add, delete or change existing property of a layer
   - Use `WA.player.onPlayerMove(): void` to track the movement of the current player
   - Use `WA.player.id: string|undefined` to get the ID of the current player
   - Use `WA.player.name: string` to get the name of the current player
@@ -20,13 +20,23 @@
   - Use `WA.room.mapURL: string` to get the URL of the map
   - Use `WA.room.mapURL: string` to get the URL of the map
   - Use `WA.room.getMap(): Promise<ITiledMap>` to get the JSON map file
-  - Use `WA.room.setTiles(): void` to change an array of tiles
+  - Use `WA.room.setTiles(): void` to add, delete or change an array of tiles
   - Use `WA.ui.registerMenuCommand(): void` to add a custom menu
   - Use `WA.state.loadVariable(key: string): unknown` to retrieve a variable
   - Use `WA.state.saveVariable(key: string, value: unknown): Promise<void>` to set a variable (across the room, for all users)
   - Use `WA.state.onVariableChange(key: string): Observable<unknown>` to track a variable
   - Use `WA.state.[any variable]: unknown` to access directly any variable (this is a shortcut to using `WA.state.loadVariable` and `WA.state.saveVariable`)
 - Users blocking now relies on UUID rather than ID. A blocked user that leaves a room and comes back will stay blocked.
+- The text chat was redesigned to be prettier and to use more features :
+  - The chat is now persistent bewteen discussions and always accesible
+  - The chat now tracks incoming and outcoming users in your conversation
+  - The chat allows your to see the visit card of users
+  - You can close the chat window with the escape key
+- Added a 'Enable notifications' button in the menu.
+- The exchange format between Pusher and Admin servers has changed. If you have your own implementation of an admin server, these endpoints signatures have changed:
+  - `/api/map`: now accepts a complete room URL instead of organization/world/room slugs
+  - `/api/ban`: new endpoint to report users
+  - as a side effect, the "routing" is now completely stored on the admin side, so by implementing your own admin server, you can develop completely custom routing
 
 ## Version 1.4.3 - 1.4.4 - 1.4.5
 

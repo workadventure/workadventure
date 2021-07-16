@@ -54,6 +54,7 @@ WA.room.showLayer(layerName : string): void
 WA.room.hideLayer(layerName : string) : void
 ```
 These 2 methods can be used to show and hide a layer.
+if `layerName` is the name of a group layer, show/hide all the layer in that group layer.
 
 Example :
 ```javascript
@@ -69,6 +70,9 @@ WA.room.setProperty(layerName : string, propertyName : string, propertyValue : s
 ```
 
 Set the value of the `propertyName` property of the layer `layerName` at `propertyValue`. If the property doesn't exist, create the property `propertyName` and set the value of the property at `propertyValue`.
+
+Note : 
+To unset a property from a layer, use `setProperty` with `propertyValue` set to `undefined`.
 
 Example :
 ```javascript
@@ -148,6 +152,7 @@ If `tile` is a string, it's not the id of the tile but the value of the property
 
 **Important !** : If you use `tile` as a number, be sure to add the `firstgid` of the tileset of the tile that you want to the id of the tile in Tiled Editor.
 
+Note: If you want to unset a tile, use `setTiles` with `tile` set to `null`.
 
 Example : 
 ```javascript

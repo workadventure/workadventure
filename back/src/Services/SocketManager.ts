@@ -30,7 +30,9 @@ import {
     BanUserMessage,
     RefreshRoomMessage,
     EmotePromptMessage,
-    VariableMessage, BatchToPusherRoomMessage, SubToPusherRoomMessage,
+    VariableMessage,
+    BatchToPusherRoomMessage,
+    SubToPusherRoomMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -49,7 +51,7 @@ import Jwt from "jsonwebtoken";
 import { JITSI_URL } from "../Enum/EnvironmentVariable";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
-import {RoomSocket, ZoneSocket} from "../RoomManager";
+import { RoomSocket, ZoneSocket } from "../RoomManager";
 import { Zone } from "_Model/Zone";
 import Debug from "debug";
 import { Admin } from "_Model/Admin";
@@ -270,12 +272,12 @@ export class SocketManager {
             //user leave previous world
             room.leave(user);
             if (room.isEmpty()) {
-                this.rooms.delete(room.roomId);
+                this.rooms.delete(room.roomUrl);
                 gaugeManager.decNbRoomGauge();
-                debug('Room is empty. Deleting room "%s"', room.roomId);
+                debug('Room is empty. Deleting room "%s"', room.roomUrl);
             }
         } finally {
-            clientEventsEmitter.emitClientLeave(user.uuid, room.roomId);
+            clientEventsEmitter.emitClientLeave(user.uuid, room.roomUrl);
             console.log("A user left");
         }
     }
@@ -467,10 +469,7 @@ export class SocketManager {
             const serverToClientMessage1 = new ServerToClientMessage();
             serverToClientMessage1.setWebrtcstartmessage(webrtcStartMessage1);
 
-            //if (!user.socket.disconnecting) {
             user.socket.write(serverToClientMessage1);
-            //console.log('Sending webrtcstart initiator to '+user.socket.userId)
-            //}
 
             const webrtcStartMessage2 = new WebRtcStartMessage();
             webrtcStartMessage2.setUserid(user.id);
@@ -484,10 +483,7 @@ export class SocketManager {
             const serverToClientMessage2 = new ServerToClientMessage();
             serverToClientMessage2.setWebrtcstartmessage(webrtcStartMessage2);
 
-            //if (!otherUser.socket.disconnecting) {
             otherUser.socket.write(serverToClientMessage2);
-            //console.log('Sending webrtcstart to '+otherUser.socket.userId)
-            //}
         }
     }
 
@@ -731,9 +727,9 @@ export class SocketManager {
     public leaveAdminRoom(room: GameRoom, admin: Admin) {
         room.adminLeave(admin);
         if (room.isEmpty()) {
-            this.rooms.delete(room.roomId);
+            this.rooms.delete(room.roomUrl);
             gaugeManager.decNbRoomGauge();
-            debug('Room is empty. Deleting room "%s"', room.roomId);
+            debug('Room is empty. Deleting room "%s"', room.roomUrl);
         }
     }
 
@@ -875,7 +871,6 @@ export class SocketManager {
         emoteEventMessage.setActoruserid(user.id);
         room.emitEmoteEvent(user, emoteEventMessage);
     }
-
 }
 
 export const socketManager = new SocketManager();

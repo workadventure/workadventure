@@ -1,8 +1,8 @@
-import {Observable, Subject} from "rxjs";
+import { Observable, Subject } from "rxjs";
 
 import { EnterLeaveEvent, isEnterLeaveEvent } from "../Events/EnterLeaveEvent";
 
-import {IframeApiContribution, queryWorkadventure, sendToWorkadventure} from "./IframeApiContribution";
+import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 
 import type { ITiledMap } from "../../Phaser/Map/ITiledMap";
@@ -13,21 +13,21 @@ const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subj
 interface TileDescriptor {
     x: number;
     y: number;
-    tile: number | string;
+    tile: number | string | null;
     layer: string;
 }
 
-let roomId: string|undefined;
+let roomId: string | undefined;
 
 export const setRoomId = (id: string) => {
     roomId = id;
-}
+};
 
-let mapURL: string|undefined;
+let mapURL: string | undefined;
 
 export const setMapURL = (url: string) => {
     mapURL = url;
-}
+};
 
 export class WorkadventureRoomCommands extends IframeApiContribution<WorkadventureRoomCommands> {
     callbacks = [
@@ -90,16 +90,18 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
         });
     }
 
-    get id() : string {
+    get id(): string {
         if (roomId === undefined) {
-            throw new Error('Room id not initialized yet. You should call WA.room.id within a WA.onInit callback.');
+            throw new Error("Room id not initialized yet. You should call WA.room.id within a WA.onInit callback.");
         }
         return roomId;
     }
 
-    get mapURL() : string {
+    get mapURL(): string {
         if (mapURL === undefined) {
-            throw new Error('mapURL is not initialized yet. You should call WA.room.mapURL within a WA.onInit callback.');
+            throw new Error(
+                "mapURL is not initialized yet. You should call WA.room.mapURL within a WA.onInit callback."
+            );
         }
         return mapURL;
     }

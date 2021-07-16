@@ -1,19 +1,26 @@
 import { ExSocketInterface } from "_Model/Websocket/ExSocketInterface";
 import { PositionDispatcher } from "./PositionDispatcher";
 import { ViewportInterface } from "_Model/Websocket/ViewportMessage";
-import { extractDataFromPrivateRoomId, extractRoomSlugPublicRoomId, isRoomAnonymous } from "./RoomIdentifier";
 import { arrayIntersect } from "../Services/ArrayHelper";
-import {GroupDescriptor, UserDescriptor, ZoneEventListener} from "_Model/Zone";
-import {apiClientRepository} from "../Services/ApiClientRepository";
+import { GroupDescriptor, UserDescriptor, ZoneEventListener } from "_Model/Zone";
+import { apiClientRepository } from "../Services/ApiClientRepository";
 import {
-    BatchToPusherMessage, BatchToPusherRoomMessage, EmoteEventMessage, GroupLeftZoneMessage,
-    GroupUpdateZoneMessage, RoomMessage, SubMessage,
-    UserJoinedZoneMessage, UserLeftZoneMessage, UserMovedMessage, VariableMessage,
-    ZoneMessage
+    BatchToPusherMessage,
+    BatchToPusherRoomMessage,
+    EmoteEventMessage,
+    GroupLeftZoneMessage,
+    GroupUpdateZoneMessage,
+    RoomMessage,
+    SubMessage,
+    UserJoinedZoneMessage,
+    UserLeftZoneMessage,
+    UserMovedMessage,
+    VariableMessage,
+    ZoneMessage,
 } from "../Messages/generated/messages_pb";
 import Debug from "debug";
-import {ClientReadableStream} from "grpc";
-import {ExAdminSocketInterface} from "_Model/Websocket/ExAdminSocketInterface";
+import { ClientReadableStream } from "grpc";
+import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
 
 const debug = Debug("room");
 
@@ -25,20 +32,15 @@ export enum GameRoomPolicyTypes {
 
 export class PusherRoom {
     private readonly positionNotifier: PositionDispatcher;
-    public readonly public: boolean;
     public tags: string[];
     public policyType: GameRoomPolicyTypes;
-    public readonly roomSlug: string;
-    public readonly worldSlug: string = "";
-    public readonly organizationSlug: string = "";
     private versionNumber: number = 1;
     private backConnection!: ClientReadableStream<BatchToPusherRoomMessage>;
     private isClosing: boolean = false;
     private listeners: Set<ExSocketInterface> = new Set<ExSocketInterface>();
     public readonly variables = new Map<string, string>();
 
-    constructor(public readonly roomId: string, private socketListener: ZoneEventListener) {
-        this.public = isRoomAnonymous(roomId);
+    constructor(public readonly roomUrl: string, private socketListener: ZoneEventListener) {
         this.tags = [];
         this.policyType = GameRoomPolicyTypes.ANONYMOUS_POLICY;
 
@@ -52,7 +54,7 @@ export class PusherRoom {
         }
 
         // A zone is 10 sprites wide.
-        this.positionNotifier = new PositionDispatcher(this.roomId, 320, 320, this.socketListener);
+        this.positionNotifier = new PositionDispatcher(this.roomUrl, 320, 320, this.socketListener);
     }
 
     public setViewport(socket: ExSocketInterface, viewport: ViewportInterface): void {
@@ -121,7 +123,7 @@ export class PusherRoom {
                 // Let's close all connections linked to that room
                 for (const listener of this.listeners) {
                     listener.disconnecting = true;
-                    listener.end(1011, "Connection error between pusher and back server")
+                    listener.end(1011, "Connection error between pusher and back server");
                 }
             }
         });
@@ -132,7 +134,7 @@ export class PusherRoom {
                 // Let's close all connections linked to that room
                 for (const listener of this.listeners) {
                     listener.disconnecting = true;
-                    listener.end(1011, "Connection closed between pusher and back server")
+                    listener.end(1011, "Connection closed between pusher and back server");
                 }
             }
         });

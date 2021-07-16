@@ -87,6 +87,7 @@ import { videoFocusStore } from "../../Stores/VideoFocusStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { playersStore } from "../../Stores/PlayersStore";
+import { chatVisibilityStore } from "../../Stores/ChatStore";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -164,9 +165,10 @@ export class GameScene extends DirtyScene {
     private createPromiseResolve!: (value?: void | PromiseLike<void>) => void;
     private iframeSubscriptionList!: Array<Subscription>;
     private peerStoreUnsubscribe!: () => void;
+    private chatVisibilityUnsubscribe!: () => void;
     private biggestAvailableAreaStoreUnsubscribe!: () => void;
     MapUrlFile: string;
-    RoomId: string;
+    roomUrl: string;
     instance: string;
 
     currentTick!: number;
@@ -200,14 +202,14 @@ export class GameScene extends DirtyScene {
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
-            key: customKey ?? room.id,
+            key: customKey ?? room.key,
         });
         this.Terrains = [];
         this.groups = new Map<number, Sprite>();
         this.instance = room.getInstance();
 
         this.MapUrlFile = MapUrlFile;
-        this.RoomId = room.id;
+        this.roomUrl = room.key;
 
         this.createPromise = new Promise<void>((resolve, reject): void => {
             this.createPromiseResolve = resolve;
@@ -459,11 +461,13 @@ export class GameScene extends DirtyScene {
             if (layer.type === "tilelayer") {
                 const exitSceneUrl = this.getExitSceneUrl(layer);
                 if (exitSceneUrl !== undefined) {
-                    this.loadNextGame(exitSceneUrl);
+                    this.loadNextGame(
+                        Room.getRoomPathFromExitSceneUrl(exitSceneUrl, window.location.toString(), this.MapUrlFile)
+                    );
                 }
                 const exitUrl = this.getExitUrl(layer);
                 if (exitUrl !== undefined) {
-                    this.loadNextGame(exitUrl);
+                    this.loadNextGameFromExitUrl(exitUrl);
                 }
             }
             if (layer.type === "objectgroup") {
@@ -476,7 +480,7 @@ export class GameScene extends DirtyScene {
         }
 
         this.gameMap.exitUrls.forEach((exitUrl) => {
-            this.loadNextGame(exitUrl);
+            this.loadNextGameFromExitUrl(exitUrl);
         });
 
         this.startPositionCalculator = new StartPositionCalculator(
@@ -567,6 +571,10 @@ export class GameScene extends DirtyScene {
             }
             oldPeerNumber = newPeerNumber;
         });
+
+        this.chatVisibilityUnsubscribe = chatVisibilityStore.subscribe((v) => {
+            this.openChatIcon.setVisible(!v);
+        });
     }
 
     /**
@@ -577,7 +585,7 @@ export class GameScene extends DirtyScene {
 
         connectionManager
             .connectToRoomSocket(
-                this.RoomId,
+                this.roomUrl,
                 this.playerName,
                 this.characterLayers,
                 {
@@ -688,12 +696,12 @@ export class GameScene extends DirtyScene {
                 const self = this;
                 this.simplePeer.registerPeerConnectionListener({
                     onConnect(peer) {
-                        self.openChatIcon.setVisible(true);
+                        //self.openChatIcon.setVisible(true);
                         audioManager.decreaseVolume();
                     },
                     onDisconnect(userId: number) {
                         if (self.simplePeer.getNbConnections() === 0) {
-                            self.openChatIcon.setVisible(false);
+                            //self.openChatIcon.setVisible(false);
                             audioManager.restoreVolume();
                         }
                     },
@@ -707,7 +715,11 @@ export class GameScene extends DirtyScene {
                 });
 
                 // Set up variables manager
-                this.sharedVariablesManager = new SharedVariablesManager(this.connection, this.gameMap, onConnect.room.variables);
+                this.sharedVariablesManager = new SharedVariablesManager(
+                    this.connection,
+                    this.gameMap,
+                    onConnect.room.variables
+                );
 
                 //this.initUsersPosition(roomJoinedMessage.users);
                 this.connectionAnswerPromiseResolve(onConnect.room);
@@ -768,10 +780,13 @@ export class GameScene extends DirtyScene {
 
     private triggerOnMapLayerPropertyChange() {
         this.gameMap.onPropertyChange("exitSceneUrl", (newValue, oldValue) => {
-            if (newValue) this.onMapExit(newValue as string);
+            if (newValue)
+                this.onMapExit(
+                    Room.getRoomPathFromExitSceneUrl(newValue as string, window.location.toString(), this.MapUrlFile)
+                );
         });
         this.gameMap.onPropertyChange("exitUrl", (newValue, oldValue) => {
-            if (newValue) this.onMapExit(newValue as string);
+            if (newValue) this.onMapExit(Room.getRoomPathFromExitUrl(newValue as string, window.location.toString()));
         });
         this.gameMap.onPropertyChange("openWebsite", (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
@@ -996,9 +1011,9 @@ ${escapedMessage}
         );
         this.iframeSubscriptionList.push(
             iframeListener.loadPageStream.subscribe((url: string) => {
-                this.loadNextGame(url).then(() => {
+                this.loadNextGameFromExitUrl(url).then(() => {
                     this.events.once(EVENT_TYPE.POST_UPDATE, () => {
-                        this.onMapExit(url);
+                        this.onMapExit(Room.getRoomPathFromExitUrl(url, window.location.toString()));
                     });
                 });
             })
@@ -1056,7 +1071,7 @@ ${escapedMessage}
                 startLayerName: this.startPositionCalculator.startLayerName,
                 uuid: localUserStore.getLocalUser()?.uuid,
                 nickname: this.playerName,
-                roomId: this.RoomId,
+                roomId: this.roomUrl,
                 tags: this.connection ? this.connection.getAllTags() : [],
                 variables: this.sharedVariablesManager.variables,
             };
@@ -1080,53 +1095,86 @@ ${escapedMessage}
             console.warn('Could not find layer "' + layerName + '" when calling setProperty');
             return;
         }
+        if (propertyName === "exitUrl" && typeof propertyValue === "string") {
+            this.loadNextGameFromExitUrl(propertyValue);
+        }
         if (layer.properties === undefined) {
             layer.properties = [];
         }
         const property = layer.properties.find((property) => property.name === propertyName);
         if (property === undefined) {
+            if (propertyValue === undefined) {
+                return;
+            }
             layer.properties.push({ name: propertyName, type: typeof propertyValue, value: propertyValue });
             return;
+        }
+        if (propertyValue === undefined) {
+            const index = layer.properties.indexOf(property);
+            layer.properties.splice(index, 1);
         }
         property.value = propertyValue;
     }
 
     private setLayerVisibility(layerName: string, visible: boolean): void {
         const phaserLayer = this.gameMap.findPhaserLayer(layerName);
-        if (phaserLayer === undefined) {
-            console.warn('Could not find layer "' + layerName + '" when calling WA.hideLayer / WA.showLayer');
-            return;
+        if (phaserLayer != undefined) {
+            phaserLayer.setVisible(visible);
+            phaserLayer.setCollisionByProperty({ collides: true }, visible);
+        } else {
+            const phaserLayers = this.gameMap.findPhaserLayers(layerName + "/");
+            if (phaserLayers === []) {
+                console.warn(
+                    'Could not find layer with name that contains "' +
+                        layerName +
+                        '" when calling WA.hideLayer / WA.showLayer'
+                );
+                return;
+            }
+            for (let i = 0; i < phaserLayers.length; i++) {
+                phaserLayers[i].setVisible(visible);
+                phaserLayers[i].setCollisionByProperty({ collides: true }, visible);
+            }
         }
-        phaserLayer.setVisible(visible);
-        this.dirty = true;
+        this.markDirty();
     }
 
     private getMapDirUrl(): string {
         return this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf("/"));
     }
 
-    private onMapExit(exitKey: string) {
+    private async onMapExit(roomUrl: URL) {
         if (this.mapTransitioning) return;
         this.mapTransitioning = true;
-        const { roomId, hash } = Room.getIdFromIdentifier(exitKey, this.MapUrlFile, this.instance);
-        if (!roomId) throw new Error("Could not find the room from its exit key: " + exitKey);
-        if (hash) {
-            urlManager.pushStartLayerNameToUrl(hash);
+
+        let targetRoom: Room;
+        try {
+            targetRoom = await Room.createRoom(roomUrl);
+        } catch (e: unknown) {
+            console.error('Error while fetching new room "' + roomUrl.toString() + '"', e);
+            this.mapTransitioning = false;
+            return;
         }
+
+        if (roomUrl.hash) {
+            urlManager.pushStartLayerNameToUrl(roomUrl.hash);
+        }
+
         const menuScene: MenuScene = this.scene.get(MenuSceneName) as MenuScene;
         menuScene.reset();
-        if (roomId !== this.scene.key) {
-            if (this.scene.get(roomId) === null) {
-                console.error("next room not loaded", exitKey);
+
+        if (!targetRoom.isEqual(this.room)) {
+            if (this.scene.get(targetRoom.key) === null) {
+                console.error("next room not loaded", targetRoom.key);
                 return;
             }
             this.cleanupClosingScene();
             this.scene.stop();
+            this.scene.start(targetRoom.key);
             this.scene.remove(this.scene.key);
-            this.scene.start(roomId);
         } else {
             //if the exit points to the current map, we simply teleport the user back to the startLayer
-            this.startPositionCalculator.initPositionFromLayerName(hash, hash);
+            this.startPositionCalculator.initPositionFromLayerName(roomUrl.hash, roomUrl.hash);
             this.CurrentPlayer.x = this.startPositionCalculator.startPosition.x;
             this.CurrentPlayer.y = this.startPositionCalculator.startPosition.y;
             setTimeout(() => (this.mapTransitioning = false), 500);
@@ -1153,6 +1201,7 @@ ${escapedMessage}
         this.pinchManager?.destroy();
         this.emoteManager.destroy();
         this.peerStoreUnsubscribe();
+        this.chatVisibilityUnsubscribe();
         this.biggestAvailableAreaStoreUnsubscribe();
         iframeListener.unregisterAnswerer("getState");
         this.sharedVariablesManager?.close();
@@ -1218,11 +1267,18 @@ ${escapedMessage}
             .map((property) => property.value);
     }
 
+    private loadNextGameFromExitUrl(exitUrl: string): Promise<void> {
+        return this.loadNextGame(Room.getRoomPathFromExitUrl(exitUrl, window.location.toString()));
+    }
+
     //todo: push that into the gameManager
-    private loadNextGame(exitSceneIdentifier: string): Promise<void> {
-        const { roomId, hash } = Room.getIdFromIdentifier(exitSceneIdentifier, this.MapUrlFile, this.instance);
-        const room = new Room(roomId);
-        return gameManager.loadMap(room, this.scene).catch(() => {});
+    private async loadNextGame(exitRoomPath: URL): Promise<void> {
+        try {
+            const room = await Room.createRoom(exitRoomPath);
+            return gameManager.loadMap(room, this.scene);
+        } catch (e: unknown) {
+            console.warn('Error while pre-loading exit room "' + exitRoomPath.toString() + '"', e);
+        }
     }
 
     //todo: in a dedicated class/function?

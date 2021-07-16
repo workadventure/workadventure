@@ -5,26 +5,20 @@ import { PositionInterface } from "_Model/PositionInterface";
 import { EmoteCallback, EntersCallback, LeavesCallback, MovesCallback } from "_Model/Zone";
 import { PositionNotifier } from "./PositionNotifier";
 import { Movable } from "_Model/Movable";
-import { extractDataFromPrivateRoomId, extractRoomSlugPublicRoomId, isRoomAnonymous } from "./RoomIdentifier";
-import { arrayIntersect } from "../Services/ArrayHelper";
 import {
     BatchToPusherMessage,
     BatchToPusherRoomMessage,
     EmoteEventMessage,
-    JoinRoomMessage, SubToPusherRoomMessage, VariableMessage
+    JoinRoomMessage,
+    SubToPusherRoomMessage,
+    VariableMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
-import {RoomSocket, ZoneSocket} from "src/RoomManager";
+import { RoomSocket, ZoneSocket } from "src/RoomManager";
 import { Admin } from "../Model/Admin";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
-
-export enum GameRoomPolicyTypes {
-    ANONYMOUS_POLICY = 1,
-    MEMBERS_ONLY_POLICY,
-    USE_TAGS_POLICY,
-}
 
 export class GameRoom {
     private readonly minDistance: number;
@@ -43,17 +37,14 @@ export class GameRoom {
     public readonly variables = new Map<string, string>();
 
     private readonly positionNotifier: PositionNotifier;
-    public readonly roomId: string;
-    public readonly roomSlug: string;
-    public readonly worldSlug: string = "";
-    public readonly organizationSlug: string = "";
+    public readonly roomUrl: string;
     private versionNumber: number = 1;
     private nextUserId: number = 1;
 
     private roomListeners: Set<RoomSocket> = new Set<RoomSocket>();
 
     constructor(
-        roomId: string,
+        roomUrl: string,
         connectCallback: ConnectCallback,
         disconnectCallback: DisconnectCallback,
         minDistance: number,
@@ -63,16 +54,7 @@ export class GameRoom {
         onLeaves: LeavesCallback,
         onEmote: EmoteCallback
     ) {
-        this.roomId = roomId;
-
-        if (isRoomAnonymous(roomId)) {
-            this.roomSlug = extractRoomSlugPublicRoomId(this.roomId);
-        } else {
-            const { organizationSlug, worldSlug, roomSlug } = extractDataFromPrivateRoomId(this.roomId);
-            this.roomSlug = roomSlug;
-            this.organizationSlug = organizationSlug;
-            this.worldSlug = worldSlug;
-        }
+        this.roomUrl = roomUrl;
 
         this.users = new Map<number, User>();
         this.usersByUuid = new Map<string, User>();
@@ -191,7 +173,7 @@ export class GameRoom {
                 } else {
                     const closestUser: User = closestItem;
                     const group: Group = new Group(
-                        this.roomId,
+                        this.roomUrl,
                         [user, closestUser],
                         this.connectCallback,
                         this.disconnectCallback,
