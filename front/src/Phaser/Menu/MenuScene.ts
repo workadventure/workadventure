@@ -20,6 +20,7 @@ import { consoleGlobalMessageManagerVisibleStore } from "../../Stores/ConsoleGlo
 import { get } from "svelte/store";
 import { playersStore } from "../../Stores/PlayersStore";
 import { mediaManager } from "../../WebRtc/MediaManager";
+import { chatVisibilityStore } from "../../Stores/ChatStore";
 
 export const MenuSceneName = "MenuScene";
 const gameMenuKey = "gameMenu";
@@ -147,6 +148,9 @@ export class MenuScene extends Phaser.Scene {
         this.menuElement.on("click", this.onMenuClick.bind(this));
 
         worldFullWarningStream.stream.subscribe(() => this.showWorldCapacityWarning());
+        chatVisibilityStore.subscribe((v) => {
+            this.menuButton.setVisible(!v);
+        });
     }
 
     //todo put this method in a parent menuElement class

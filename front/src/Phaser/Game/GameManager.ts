@@ -28,7 +28,7 @@ export class GameManager {
 
     public async init(scenePlugin: Phaser.Scenes.ScenePlugin): Promise<string> {
         this.startRoom = await connectionManager.initGameConnexion();
-        await this.loadMap(this.startRoom, scenePlugin);
+        this.loadMap(this.startRoom, scenePlugin);
 
         if (!this.playerName) {
             return LoginSceneName;
@@ -68,20 +68,19 @@ export class GameManager {
         return this.companion;
     }
 
-    public async loadMap(room: Room, scenePlugin: Phaser.Scenes.ScenePlugin): Promise<void> {
-        const roomID = room.id;
-        const mapDetail = await room.getMapDetail();
+    public loadMap(room: Room, scenePlugin: Phaser.Scenes.ScenePlugin) {
+        const roomID = room.key;
 
         const gameIndex = scenePlugin.getIndex(roomID);
         if (gameIndex === -1) {
-            const game: Phaser.Scene = new GameScene(room, mapDetail.mapUrl);
+            const game: Phaser.Scene = new GameScene(room, room.mapUrl);
             scenePlugin.add(roomID, game, false);
         }
     }
 
     public goToStartingMap(scenePlugin: Phaser.Scenes.ScenePlugin): void {
-        console.log("starting " + (this.currentGameSceneName || this.startRoom.id));
-        scenePlugin.start(this.currentGameSceneName || this.startRoom.id);
+        console.log("starting " + (this.currentGameSceneName || this.startRoom.key));
+        scenePlugin.start(this.currentGameSceneName || this.startRoom.key);
         scenePlugin.launch(MenuSceneName);
 
         if (

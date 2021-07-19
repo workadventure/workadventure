@@ -9,7 +9,7 @@ class JWTTokenManager {
         return Jwt.sign({ userUuid: userUuid }, SECRET_KEY, { expiresIn: "200d" }); //todo: add a mechanic to refresh or recreate token
     }
 
-    public async getUserUuidFromToken(token: unknown, ipAddress?: string, room?: string): Promise<string> {
+    public async getUserUuidFromToken(token: unknown, ipAddress?: string, roomUrl?: string): Promise<string> {
         if (!token) {
             throw new Error("An authentication error happened, a user tried to connect without a token.");
         }
@@ -50,8 +50,8 @@ class JWTTokenManager {
                 if (ADMIN_API_URL) {
                     //verify user in admin
                     let promise = new Promise((resolve) => resolve());
-                    if (ipAddress && room) {
-                        promise = this.verifyBanUser(tokenInterface.userUuid, ipAddress, room);
+                    if (ipAddress && roomUrl) {
+                        promise = this.verifyBanUser(tokenInterface.userUuid, ipAddress, roomUrl);
                     }
                     promise
                         .then(() => {
@@ -79,19 +79,9 @@ class JWTTokenManager {
         });
     }
 
-    private verifyBanUser(userUuid: string, ipAddress: string, room: string): Promise<AdminBannedData> {
-        const parts = room.split("/");
-        if (parts.length < 3 || parts[0] !== "@") {
-            return Promise.resolve({
-                is_banned: false,
-                message: "",
-            });
-        }
-
-        const organization = parts[1];
-        const world = parts[2];
+    private verifyBanUser(userUuid: string, ipAddress: string, roomUrl: string): Promise<AdminBannedData> {
         return adminApi
-            .verifyBanUser(userUuid, ipAddress, organization, world)
+            .verifyBanUser(userUuid, ipAddress, roomUrl)
             .then((data: AdminBannedData) => {
                 if (data && data.is_banned) {
                     throw new Error("User was banned");

@@ -250,12 +250,12 @@ export class SocketManager {
             //user leave previous world
             room.leave(user);
             if (room.isEmpty()) {
-                this.rooms.delete(room.roomId);
+                this.rooms.delete(room.roomUrl);
                 gaugeManager.decNbRoomGauge();
-                debug('Room is empty. Deleting room "%s"', room.roomId);
+                debug('Room is empty. Deleting room "%s"', room.roomUrl);
             }
         } finally {
-            clientEventsEmitter.emitClientLeave(user.uuid, room.roomId);
+            clientEventsEmitter.emitClientLeave(user.uuid, room.roomUrl);
             console.log("A user left");
         }
     }
@@ -658,9 +658,9 @@ export class SocketManager {
     public leaveAdminRoom(room: GameRoom, admin: Admin) {
         room.adminLeave(admin);
         if (room.isEmpty()) {
-            this.rooms.delete(room.roomId);
+            this.rooms.delete(room.roomUrl);
             gaugeManager.decNbRoomGauge();
-            debug('Room is empty. Deleting room "%s"', room.roomId);
+            debug('Room is empty. Deleting room "%s"', room.roomUrl);
         }
     }
 
