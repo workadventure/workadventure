@@ -28,12 +28,19 @@
                     console.log(WA.state.loadVariable('textField'));
                     document.getElementById('placeholder').innerText = WA.state.loadVariable('textField');
                 });
+
+                document.getElementById('setUndefined').addEventListener('click', () => {
+                    WA.state.textField = undefined;
+                    document.getElementById('textField').value = '';
+                });
             });
         })
     </script>
 </head>
 <body>
 <input type="text" id="textField" />
+
+<button id="setUndefined">Delete variable</button>
 
 <button id="btn">Display textField variable value</button>
 <div id="placeholder"></div>

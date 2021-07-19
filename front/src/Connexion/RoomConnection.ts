@@ -189,7 +189,11 @@ export class RoomConnection implements RoomConnection {
 
                 const variables = new Map<string, unknown>();
                 for (const variable of roomJoinedMessage.getVariableList()) {
-                    variables.set(variable.getName(), JSON.parse(variable.getValue()));
+                    try {
+                        variables.set(variable.getName(), JSON.parse(variable.getValue()));
+                    } catch (e) {
+                        console.error('Unable to unserialize value received from server for variable "'+variable.getName()+'". Value received: "'+variable.getValue()+'". Error: ', e);
+                    }
                 }
 
                 this.userId = roomJoinedMessage.getCurrentuserid();
@@ -652,7 +656,11 @@ export class RoomConnection implements RoomConnection {
             const serializedValue = message.getValue();
             let value: unknown = undefined;
             if (serializedValue) {
-                value = JSON.parse(serializedValue);
+                try {
+                    value = JSON.parse(serializedValue);
+                } catch (e) {
+                    console.error('Unable to unserialize value received from server for variable "'+name+'". Value received: "'+serializedValue+'". Error: ', e);
+                }
             }
             callback(name, value);
         });
