@@ -10,7 +10,7 @@
     let inputSendTextActive = true;
     let uploadMusicActive = false;
     let handleSendText: { sendTextMessage(): void };
-    let handleSendAudio: { sendAudioMessage(): void };
+    let handleSendAudio: { sendAudioMessage(): Promise<void> };
     let broadcastToWorld = false;
 
     function closeConsoleGlobalMessage() {
