@@ -23,6 +23,7 @@ class MapFetcher {
         // - The result of the query is never displayed to the end user
         const res = await Axios.get(mapUrl, {
             maxContentLength: 50*1024*1024, // Max content length: 50MB. Maps should not be bigger
+            timeout: 10000, // Timeout after 10 seconds
         });
 
         if (!isTiledMap(res.data)) {
