@@ -11,18 +11,19 @@ import {
     EmoteEventMessage,
     JoinRoomMessage,
     SubToPusherRoomMessage,
-    VariableMessage, VariableWithTagMessage,
+    VariableMessage,
+    VariableWithTagMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { RoomSocket, ZoneSocket } from "src/RoomManager";
 import { Admin } from "../Model/Admin";
-import {adminApi} from "../Services/AdminApi";
-import {isMapDetailsData, MapDetailsData} from "../Services/AdminApi/MapDetailsData";
-import {ITiledMap} from "@workadventure/tiled-map-type-guard/dist";
-import {mapFetcher} from "../Services/MapFetcher";
-import {VariablesManager} from "../Services/VariablesManager";
-import {ADMIN_API_URL} from "../Enum/EnvironmentVariable";
-import {LocalUrlError} from "../Services/LocalUrlError";
+import { adminApi } from "../Services/AdminApi";
+import { isMapDetailsData, MapDetailsData } from "../Services/AdminApi/MapDetailsData";
+import { ITiledMap } from "@workadventure/tiled-map-type-guard/dist";
+import { mapFetcher } from "../Services/MapFetcher";
+import { VariablesManager } from "../Services/VariablesManager";
+import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
+import { LocalUrlError } from "../Services/LocalUrlError";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -68,10 +69,21 @@ export class GameRoom {
         onMoves: MovesCallback,
         onLeaves: LeavesCallback,
         onEmote: EmoteCallback
-    ) : Promise<GameRoom> {
+    ): Promise<GameRoom> {
         const mapDetails = await GameRoom.getMapDetails(roomUrl);
 
-        const gameRoom = new GameRoom(roomUrl, mapDetails.mapUrl, connectCallback, disconnectCallback, minDistance, groupRadius, onEnters, onMoves, onLeaves, onEmote);
+        const gameRoom = new GameRoom(
+            roomUrl,
+            mapDetails.mapUrl,
+            connectCallback,
+            disconnectCallback,
+            minDistance,
+            groupRadius,
+            onEnters,
+            onMoves,
+            onLeaves,
+            onEmote
+        );
 
         return gameRoom;
     }
@@ -381,7 +393,7 @@ export class GameRoom {
 
             const match = /\/_\/[^/]+\/(.+)/.exec(roomUrlObj.pathname);
             if (!match) {
-                console.error('Unexpected room URL', roomUrl);
+                console.error("Unexpected room URL", roomUrl);
                 throw new Error('Unexpected room URL "' + roomUrl + '"');
             }
 
@@ -392,18 +404,18 @@ export class GameRoom {
                 policy_type: 1,
                 textures: [],
                 tags: [],
-            }
+            };
         }
 
         const result = await adminApi.fetchMapDetails(roomUrl);
         if (!isMapDetailsData(result)) {
-            console.error('Unexpected room details received from server', result);
-            throw new Error('Unexpected room details received from server');
+            console.error("Unexpected room details received from server", result);
+            throw new Error("Unexpected room details received from server");
         }
         return result;
     }
 
-    private mapPromise: Promise<ITiledMap>|undefined;
+    private mapPromise: Promise<ITiledMap> | undefined;
 
     /**
      * Returns a promise to the map file.
@@ -418,27 +430,45 @@ export class GameRoom {
         return this.mapPromise;
     }
 
-    private variableManagerPromise: Promise<VariablesManager>|undefined;
+    private variableManagerPromise: Promise<VariablesManager> | undefined;
 
     private getVariableManager(): Promise<VariablesManager> {
         if (!this.variableManagerPromise) {
             this.variableManagerPromise = new Promise<VariablesManager>((resolve, reject) => {
-                this.getMap().then((map) => {
-                    resolve(new VariablesManager(map));
-                }).catch(e => {
-                    if (e instanceof LocalUrlError) {
-                        // If we are trying to load a local URL, we are probably in test mode.
-                        // In this case, let's bypass the server-side checks completely.
+                this.getMap()
+                    .then((map) => {
+                        const variablesManager = new VariablesManager(this.roomUrl, map);
+                        variablesManager
+                            .init()
+                            .then(() => {
+                                resolve(variablesManager);
+                            })
+                            .catch((e) => {
+                                reject(e);
+                            });
+                    })
+                    .catch((e) => {
+                        if (e instanceof LocalUrlError) {
+                            // If we are trying to load a local URL, we are probably in test mode.
+                            // In this case, let's bypass the server-side checks completely.
 
-                        // FIXME: find a way to send a warning to the client side
-                        // FIXME: find a way to send a warning to the client side
-                        // FIXME: find a way to send a warning to the client side
-                        // FIXME: find a way to send a warning to the client side
-                        resolve(new VariablesManager(null));
-                    } else {
-                        reject(e);
-                    }
-                })
+                            // FIXME: find a way to send a warning to the client side
+                            // FIXME: find a way to send a warning to the client side
+                            // FIXME: find a way to send a warning to the client side
+                            // FIXME: find a way to send a warning to the client side
+                            const variablesManager = new VariablesManager(this.roomUrl, null);
+                            variablesManager
+                                .init()
+                                .then(() => {
+                                    resolve(variablesManager);
+                                })
+                                .catch((e) => {
+                                    reject(e);
+                                });
+                        } else {
+                            reject(e);
+                        }
+                    });
             });
         }
         return this.variableManagerPromise;

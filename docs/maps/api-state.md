@@ -82,6 +82,8 @@ The object **type** MUST be **variable**.
 
 You can set a default value for the object in the `default` property.
 
+#### Persisting variables state
+
 Use the `persist` property to save the state of the variable in database. If `persist` is false, the variable will stay
 in the memory of the WorkAdventure servers but will be wiped out of the memory as soon as the room is empty (or if the
 server restarts).
@@ -89,11 +91,13 @@ server restarts).
 {.alert.alert-info}
 Do not use `persist` for highly dynamic values that have a short life spawn.
 
+#### Managing access rights to variables
+
 With `readableBy` and `writableBy`, you control who can read of write in this variable. The property accepts a string
 representing a "tag". Anyone having this "tag" can read/write in the variable.
 
 {.alert.alert-warning}
-`readableBy` and `writableBy` are specific to the public version of WorkAdventure because the notion of tags
+`readableBy` and `writableBy` are specific to the "online" version of WorkAdventure because the notion of tags
 is not available unless you have an "admin" server (that is not part of the self-hosted version of WorkAdventure).
 
 Finally, the `jsonSchema` property can contain [a complete JSON schema](https://json-schema.org/) to validate the content of the variable.

@@ -1,2 +1,1 @@
-export class LocalUrlError extends Error {
-}
+export class LocalUrlError extends Error {}

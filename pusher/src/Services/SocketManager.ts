@@ -30,7 +30,8 @@ import {
     BanMessage,
     RefreshRoomMessage,
     EmotePromptMessage,
-    VariableMessage, ErrorMessage,
+    VariableMessage,
+    ErrorMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { ADMIN_API_URL, JITSI_ISS, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";

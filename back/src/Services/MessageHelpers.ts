@@ -1,11 +1,14 @@
 import {
     BatchMessage,
-    BatchToPusherMessage, BatchToPusherRoomMessage,
+    BatchToPusherMessage,
+    BatchToPusherRoomMessage,
     ErrorMessage,
-    ServerToClientMessage, SubToPusherMessage, SubToPusherRoomMessage
+    ServerToClientMessage,
+    SubToPusherMessage,
+    SubToPusherRoomMessage,
 } from "../Messages/generated/messages_pb";
 import { UserSocket } from "_Model/User";
-import {RoomSocket, ZoneSocket} from "../RoomManager";
+import { RoomSocket, ZoneSocket } from "../RoomManager";
 
 export function emitError(Client: UserSocket, message: string): void {
     const errorMessage = new ErrorMessage();

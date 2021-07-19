@@ -15,7 +15,7 @@ export const isMapDetailsData = new tg.IsInterface()
         textures: tg.isArray(isCharacterTexture),
     })
     .withOptionalProperties({
-            roomSlug: tg.isUnion(tg.isString, tg.isNull), // deprecated
+        roomSlug: tg.isUnion(tg.isString, tg.isNull), // deprecated
     })
     .get();
 export type MapDetailsData = tg.GuardedType<typeof isMapDetailsData>;

@@ -7,7 +7,8 @@ import { apiClientRepository } from "../Services/ApiClientRepository";
 import {
     BatchToPusherMessage,
     BatchToPusherRoomMessage,
-    EmoteEventMessage, ErrorMessage,
+    EmoteEventMessage,
+    ErrorMessage,
     GroupLeftZoneMessage,
     GroupUpdateZoneMessage,
     RoomMessage,
@@ -15,7 +16,8 @@ import {
     UserJoinedZoneMessage,
     UserLeftZoneMessage,
     UserMovedMessage,
-    VariableMessage, VariableWithTagMessage,
+    VariableMessage,
+    VariableWithTagMessage,
     ZoneMessage,
 } from "../Messages/generated/messages_pb";
 import Debug from "debug";
@@ -99,7 +101,7 @@ export class PusherRoom {
                     // Let's dispatch this variable to all the listeners
                     for (const listener of this.listeners) {
                         const subMessage = new SubMessage();
-                        if (!readableBy || listener.tags.indexOf(readableBy) !== -1) {
+                        if (!readableBy || listener.tags.includes(readableBy)) {
                             subMessage.setVariablemessage(variableMessage);
                         }
                         listener.emitInBatch(subMessage);

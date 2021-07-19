@@ -305,13 +305,15 @@ export class SocketManager {
                         this.onClientLeave(thing, newZone, listener),
                     (emoteEventMessage: EmoteEventMessage, listener: ZoneSocket) =>
                         this.onEmote(emoteEventMessage, listener)
-                ).then((gameRoom) => {
-                    gaugeManager.incNbRoomGauge();
-                    resolve(gameRoom);
-                }).catch((e) => {
-                    this.roomsPromises.delete(roomId);
-                    reject(e);
-                });
+                )
+                    .then((gameRoom) => {
+                        gaugeManager.incNbRoomGauge();
+                        resolve(gameRoom);
+                    })
+                    .catch((e) => {
+                        this.roomsPromises.delete(roomId);
+                        reject(e);
+                    });
             });
             this.roomsPromises.set(roomId, roomPromise);
         }

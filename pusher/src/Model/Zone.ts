@@ -14,7 +14,8 @@ import {
     UserMovedMessage,
     ZoneMessage,
     EmoteEventMessage,
-    CompanionMessage, ErrorMessage,
+    CompanionMessage,
+    ErrorMessage,
 } from "../Messages/generated/messages_pb";
 import { ClientReadableStream } from "grpc";
 import { PositionDispatcher } from "_Model/PositionDispatcher";
