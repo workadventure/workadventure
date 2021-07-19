@@ -187,6 +187,13 @@
     semver "^7.3.2"
     tsutils "^3.17.1"
 
+"@workadventure/tiled-map-type-guard@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@workadventure/tiled-map-type-guard/-/tiled-map-type-guard-1.0.0.tgz#02524602ee8b2688429a1f56df1d04da3fc171ba"
+  integrity sha512-Mc0SE128otQnYlScQWVaQVyu1+CkailU/FTBh09UTrVnBAhyMO+jIn9vT9+Dv244xq+uzgQDpXmiVdjgrYFQ+A==
+  dependencies:
+    generic-type-guard "^3.4.1"
+
 abbrev@1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/abbrev/-/abbrev-1.1.1.tgz#f8f2c887ad10bf67f634f005b6987fed3179aac8"
@@ -1181,6 +1188,11 @@ generic-type-guard@^3.2.0:
   resolved "https://registry.yarnpkg.com/generic-type-guard/-/generic-type-guard-3.3.3.tgz#954b846fecff91047cadb0dcc28930811fcb9dc1"
   integrity sha512-SXraZvNW/uTfHVgB48iEwWaD1XFJ1nvZ8QP6qy9pSgaScEyQqFHYN5E6d6rCsJgrvlWKygPrNum7QeJHegzNuQ==
 
+generic-type-guard@^3.4.1:
+  version "3.4.1"
+  resolved "https://registry.yarnpkg.com/generic-type-guard/-/generic-type-guard-3.4.1.tgz#0896dc018de915c890562a34763858076e4676da"
+  integrity sha512-sXce0Lz3Wfy2rR1W8O8kUemgEriTeG1x8shqSJeWGb0FwJu2qBEkB1M2qXbdSLmpgDnHcIXo0Dj/1VLNJkK/QA==
+
 get-own-enumerable-property-symbols@^3.0.0:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/get-own-enumerable-property-symbols/-/get-own-enumerable-property-symbols-3.0.2.tgz#b5fde77f22cbe35f390b4e089922c50bce6ef664"
@@ -1416,6 +1428,11 @@ invert-kv@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/invert-kv/-/invert-kv-1.0.0.tgz#104a8e4aaca6d3d8cd157a8ef8bfab2d7a3ffdb6"
   integrity sha1-EEqOSqym09jNFXqO+L+rLXo//bY=
+
+ipaddr.js@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/ipaddr.js/-/ipaddr.js-2.0.1.tgz#eca256a7a877e917aeb368b0a7497ddf42ef81c0"
+  integrity sha512-1qTgH9NG+IIJ4yfKs2e6Pp1bZg8wbDbKHT21HrLIeYBTRLgMYKnMTPAuI3Lcs61nfx5h1xlXnbJtH1kX5/d/ng==
 
 is-accessor-descriptor@^0.1.6:
   version "0.1.6"

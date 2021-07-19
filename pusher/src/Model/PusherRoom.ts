@@ -7,7 +7,7 @@ import { apiClientRepository } from "../Services/ApiClientRepository";
 import {
     BatchToPusherMessage,
     BatchToPusherRoomMessage,
-    EmoteEventMessage,
+    EmoteEventMessage, ErrorMessage,
     GroupLeftZoneMessage,
     GroupUpdateZoneMessage,
     RoomMessage,
@@ -15,7 +15,7 @@ import {
     UserJoinedZoneMessage,
     UserLeftZoneMessage,
     UserMovedMessage,
-    VariableMessage,
+    VariableMessage, VariableWithTagMessage,
     ZoneMessage,
 } from "../Messages/generated/messages_pb";
 import Debug from "debug";
@@ -38,7 +38,7 @@ export class PusherRoom {
     private backConnection!: ClientReadableStream<BatchToPusherRoomMessage>;
     private isClosing: boolean = false;
     private listeners: Set<ExSocketInterface> = new Set<ExSocketInterface>();
-    public readonly variables = new Map<string, string>();
+    //public readonly variables = new Map<string, string>();
 
     constructor(public readonly roomUrl: string, private socketListener: ZoneEventListener) {
         this.tags = [];
@@ -90,15 +90,27 @@ export class PusherRoom {
         this.backConnection.on("data", (batch: BatchToPusherRoomMessage) => {
             for (const message of batch.getPayloadList()) {
                 if (message.hasVariablemessage()) {
-                    const variableMessage = message.getVariablemessage() as VariableMessage;
+                    const variableMessage = message.getVariablemessage() as VariableWithTagMessage;
+                    const readableBy = variableMessage.getReadableby();
 
                     // We need to store all variables to dispatch variables later to the listeners
-                    this.variables.set(variableMessage.getName(), variableMessage.getValue());
+                    //this.variables.set(variableMessage.getName(), variableMessage.getValue(), readableBy);
 
                     // Let's dispatch this variable to all the listeners
                     for (const listener of this.listeners) {
                         const subMessage = new SubMessage();
-                        subMessage.setVariablemessage(variableMessage);
+                        if (!readableBy || listener.tags.indexOf(readableBy) !== -1) {
+                            subMessage.setVariablemessage(variableMessage);
+                        }
+                        listener.emitInBatch(subMessage);
+                    }
+                } else if (message.hasErrormessage()) {
+                    const errorMessage = message.getErrormessage() as ErrorMessage;
+
+                    // Let's dispatch this error to all the listeners
+                    for (const listener of this.listeners) {
+                        const subMessage = new SubMessage();
+                        subMessage.setErrormessage(errorMessage);
                         listener.emitInBatch(subMessage);
                     }
                 } else {

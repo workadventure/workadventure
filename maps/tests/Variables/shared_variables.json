@@ -8,6 +8,17 @@
          "id":1,
          "name":"floor",
          "opacity":1,
+         "properties":[
+                {
+                 "name":"openWebsite",
+                 "type":"string",
+                 "value":"shared_variables.html"
+                }, 
+                {
+                 "name":"openWebsiteAllowApi",
+                 "type":"bool",
+                 "value":true
+                }],
          "type":"tilelayer",
          "visible":true,
          "width":10,
@@ -40,7 +51,7 @@
                     {
                      "fontfamily":"Sans Serif",
                      "pixelsize":11,
-                     "text":"Test:\nOpen your console\n\nResult:\nYou should see a list of tests performed and results associated.",
+                     "text":"Test:\nChange the form\nConnect with another user\n\nResult:\nThe form should open in the same state for the other user\nAlso, a change on one user is directly propagated to the other user",
                      "wrap":true
                     },
                  "type":"",
@@ -52,13 +63,13 @@
                 {
                  "height":0,
                  "id":5,
-                 "name":"config",
+                 "name":"textField",
                  "point":true,
                  "properties":[
                         {
                          "name":"default",
                          "type":"string",
-                         "value":"{}"
+                         "value":"default value"
                         }, 
                         {
                          "name":"jsonSchema",
@@ -78,7 +89,7 @@
                         {
                          "name":"writableBy",
                          "type":"string",
-                         "value":"admin"
+                         "value":""
                         }],
                  "rotation":0,
                  "type":"variable",
@@ -86,85 +97,6 @@
                  "width":0,
                  "x":57.5,
                  "y":111
-                }, 
-                {
-                 "height":0,
-                 "id":6,
-                 "name":"doorOpened",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"default",
-                         "type":"bool",
-                         "value":true
-                        }],
-                 "rotation":0,
-                 "type":"variable",
-                 "visible":true,
-                 "width":0,
-                 "x":131.38069962269,
-                 "y":106.004988169086
-                }, 
-                {
-                 "height":0,
-                 "id":9,
-                 "name":"myvar",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"default",
-                         "type":"string",
-                         "value":"{}"
-                        }, 
-                        {
-                         "name":"jsonSchema",
-                         "type":"string",
-                         "value":"{}"
-                        }, 
-                        {
-                         "name":"persist",
-                         "type":"bool",
-                         "value":true
-                        }, 
-                        {
-                         "name":"readableBy",
-                         "type":"string",
-                         "value":""
-                        }, 
-                        {
-                         "name":"writableBy",
-                         "type":"string",
-                         "value":""
-                        }],
-                 "rotation":0,
-                 "type":"variable",
-                 "visible":true,
-                 "width":0,
-                 "x":88.8149900876127,
-                 "y":147.75212636695
-                }, 
-                {
-                 "height":0,
-                 "id":10,
-                 "name":"readableByAdmin",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"default",
-                         "type":"bool",
-                         "value":true
-                        }, 
-                        {
-                         "name":"readableBy",
-                         "type":"string",
-                         "value":"admin"
-                        }],
-                 "rotation":0,
-                 "type":"variable",
-                 "visible":true,
-                 "width":0,
-                 "x":182.132122529897,
-                 "y":157.984268082113
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -173,14 +105,8 @@
          "y":0
         }],
  "nextlayerid":8,
- "nextobjectid":11,
+ "nextobjectid":10,
  "orientation":"orthogonal",
- "properties":[
-        {
-         "name":"script",
-         "type":"string",
-         "value":"script.js"
-        }],
  "renderorder":"right-down",
  "tiledversion":"2021.03.23",
  "tileheight":32,

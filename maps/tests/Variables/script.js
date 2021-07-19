@@ -23,4 +23,11 @@ WA.onInit().then(() => {
     WA.state.saveVariable('config', {'foo': 'bar'}).catch(e => {
         console.log('Successfully caught error because variable "config" is not writable: ', e);
     });
+
+    console.log('Trying to read variable "readableByAdmin" that can only be read by "admin". We are not admin so we should not get the default value.');
+    if (WA.state.readableByAdmin === true) {
+        console.error('Failed test: readableByAdmin can be read.');
+    } else {
+        console.log('Success test: readableByAdmin was not read.');
+    }
 });

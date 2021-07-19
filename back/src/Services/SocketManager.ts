@@ -68,7 +68,7 @@ function emitZoneMessage(subMessage: SubToPusherMessage, socket: ZoneSocket): vo
 }
 
 export class SocketManager {
-    private rooms = new Map<string, GameRoom>();
+    //private rooms = new Map<string, GameRoom>();
     // List of rooms in process of loading.
     private roomsPromises = new Map<string, PromiseLike<GameRoom>>();
 
@@ -106,7 +106,9 @@ export class SocketManager {
             roomJoinedMessage.addItem(itemStateMessage);
         }
 
-        for (const [name, value] of room.variables.entries()) {
+        const variables = await room.getVariablesForTags(user.tags);
+
+        for (const [name, value] of variables.entries()) {
             const variableMessage = new VariableMessage();
             variableMessage.setName(name);
             variableMessage.setValue(value);
@@ -198,12 +200,14 @@ export class SocketManager {
     }
 
     handleVariableEvent(room: GameRoom, user: User, variableMessage: VariableMessage) {
-        try {
-            room.setVariable(variableMessage.getName(), variableMessage.getValue());
-        } catch (e) {
-            console.error('An error occurred on "handleVariableEvent"');
-            console.error(e);
-        }
+        (async () => {
+            try {
+                await room.setVariable(variableMessage.getName(), variableMessage.getValue(), user);
+            } catch (e) {
+                console.error('An error occurred on "handleVariableEvent"');
+                console.error(e);
+            }
+        })();
     }
 
     emitVideo(room: GameRoom, user: User, data: WebRtcSignalToServerMessage): void {
@@ -272,7 +276,7 @@ export class SocketManager {
             //user leave previous world
             room.leave(user);
             if (room.isEmpty()) {
-                this.rooms.delete(room.roomUrl);
+                this.roomsPromises.delete(room.roomUrl);
                 gaugeManager.decNbRoomGauge();
                 debug('Room is empty. Deleting room "%s"', room.roomUrl);
             }
@@ -284,38 +288,34 @@ export class SocketManager {
 
     async getOrCreateRoom(roomId: string): Promise<GameRoom> {
         //check and create new room
-        let room = this.rooms.get(roomId);
-        if (room === undefined) {
-            let roomPromise = this.roomsPromises.get(roomId);
-            if (roomPromise) {
-                return roomPromise;
-            }
-
-            // Note: for now, the promise is useless (because this is synchronous, but soon, we will need to
-            // load the map server side.
-
-            room = new GameRoom(
-                roomId,
-                (user: User, group: Group) => this.joinWebRtcRoom(user, group),
-                (user: User, group: Group) => this.disConnectedUser(user, group),
-                MINIMUM_DISTANCE,
-                GROUP_RADIUS,
-                (thing: Movable, fromZone: Zone | null, listener: ZoneSocket) =>
-                    this.onZoneEnter(thing, fromZone, listener),
-                (thing: Movable, position: PositionInterface, listener: ZoneSocket) =>
-                    this.onClientMove(thing, position, listener),
-                (thing: Movable, newZone: Zone | null, listener: ZoneSocket) =>
-                    this.onClientLeave(thing, newZone, listener),
-                (emoteEventMessage: EmoteEventMessage, listener: ZoneSocket) =>
-                    this.onEmote(emoteEventMessage, listener)
-            );
-            gaugeManager.incNbRoomGauge();
-            this.rooms.set(roomId, room);
-
-            // TODO: change this the to new Promise()... when the method becomes actually asynchronous
-            roomPromise = Promise.resolve(room);
+        let roomPromise = this.roomsPromises.get(roomId);
+        if (roomPromise === undefined) {
+            roomPromise = new Promise<GameRoom>((resolve, reject) => {
+                GameRoom.create(
+                    roomId,
+                    (user: User, group: Group) => this.joinWebRtcRoom(user, group),
+                    (user: User, group: Group) => this.disConnectedUser(user, group),
+                    MINIMUM_DISTANCE,
+                    GROUP_RADIUS,
+                    (thing: Movable, fromZone: Zone | null, listener: ZoneSocket) =>
+                        this.onZoneEnter(thing, fromZone, listener),
+                    (thing: Movable, position: PositionInterface, listener: ZoneSocket) =>
+                        this.onClientMove(thing, position, listener),
+                    (thing: Movable, newZone: Zone | null, listener: ZoneSocket) =>
+                        this.onClientLeave(thing, newZone, listener),
+                    (emoteEventMessage: EmoteEventMessage, listener: ZoneSocket) =>
+                        this.onEmote(emoteEventMessage, listener)
+                ).then((gameRoom) => {
+                    gaugeManager.incNbRoomGauge();
+                    resolve(gameRoom);
+                }).catch((e) => {
+                    this.roomsPromises.delete(roomId);
+                    reject(e);
+                });
+            });
+            this.roomsPromises.set(roomId, roomPromise);
         }
-        return Promise.resolve(room);
+        return roomPromise;
     }
 
     private async joinRoom(
@@ -554,8 +554,8 @@ export class SocketManager {
         }
     }
 
-    public getWorlds(): Map<string, GameRoom> {
-        return this.rooms;
+    public getWorlds(): Map<string, PromiseLike<GameRoom>> {
+        return this.roomsPromises;
     }
 
     public handleQueryJitsiJwtMessage(user: User, queryJitsiJwtMessage: QueryJitsiJwtMessage) {
@@ -625,11 +625,10 @@ export class SocketManager {
         }, 10000);
     }
 
-    public addZoneListener(call: ZoneSocket, roomId: string, x: number, y: number): void {
-        const room = this.rooms.get(roomId);
+    public async addZoneListener(call: ZoneSocket, roomId: string, x: number, y: number): Promise<void> {
+        const room = await this.roomsPromises.get(roomId);
         if (!room) {
-            console.error("In addZoneListener, could not find room with id '" + roomId + "'");
-            return;
+            throw new Error("In addZoneListener, could not find room with id '" + roomId + "'");
         }
 
         const things = room.addZoneListener(call, x, y);
@@ -670,11 +669,10 @@ export class SocketManager {
         call.write(batchMessage);
     }
 
-    removeZoneListener(call: ZoneSocket, roomId: string, x: number, y: number) {
-        const room = this.rooms.get(roomId);
+    async removeZoneListener(call: ZoneSocket, roomId: string, x: number, y: number): Promise<void> {
+        const room = await this.roomsPromises.get(roomId);
         if (!room) {
-            console.error("In removeZoneListener, could not find room with id '" + roomId + "'");
-            return;
+            throw new Error("In removeZoneListener, could not find room with id '" + roomId + "'");
         }
 
         room.removeZoneListener(call, x, y);
@@ -683,8 +681,7 @@ export class SocketManager {
     async addRoomListener(call: RoomSocket, roomId: string) {
         const room = await this.getOrCreateRoom(roomId);
         if (!room) {
-            console.error("In addRoomListener, could not find room with id '" + roomId + "'");
-            return;
+            throw new Error("In addRoomListener, could not find room with id '" + roomId + "'");
         }
 
         room.addRoomListener(call);
@@ -692,7 +689,10 @@ export class SocketManager {
 
         const batchMessage = new BatchToPusherRoomMessage();
 
-        for (const [name, value] of room.variables.entries()) {
+        // Finally, no need to store variables in the pusher, let's only make it act as a relay
+        /*const variables = await room.getVariables();
+
+        for (const [name, value] of variables.entries()) {
             const variableMessage = new VariableMessage();
             variableMessage.setName(name);
             variableMessage.setValue(value);
@@ -701,16 +701,15 @@ export class SocketManager {
             subMessage.setVariablemessage(variableMessage);
 
             batchMessage.addPayload(subMessage);
-        }
+        }*/
 
         call.write(batchMessage);
     }
 
-    removeRoomListener(call: RoomSocket, roomId: string) {
-        const room = this.rooms.get(roomId);
+    async removeRoomListener(call: RoomSocket, roomId: string) {
+        const room = await this.roomsPromises.get(roomId);
         if (!room) {
-            console.error("In removeRoomListener, could not find room with id '" + roomId + "'");
-            return;
+            throw new Error("In removeRoomListener, could not find room with id '" + roomId + "'");
         }
 
         room.removeRoomListener(call);
@@ -727,14 +726,14 @@ export class SocketManager {
     public leaveAdminRoom(room: GameRoom, admin: Admin) {
         room.adminLeave(admin);
         if (room.isEmpty()) {
-            this.rooms.delete(room.roomUrl);
+            this.roomsPromises.delete(room.roomUrl);
             gaugeManager.decNbRoomGauge();
             debug('Room is empty. Deleting room "%s"', room.roomUrl);
         }
     }
 
-    public sendAdminMessage(roomId: string, recipientUuid: string, message: string): void {
-        const room = this.rooms.get(roomId);
+    public async sendAdminMessage(roomId: string, recipientUuid: string, message: string): Promise<void> {
+        const room = await this.roomsPromises.get(roomId);
         if (!room) {
             console.error(
                 "In sendAdminMessage, could not find room with id '" +
@@ -764,8 +763,8 @@ export class SocketManager {
         recipient.socket.write(serverToClientMessage);
     }
 
-    public banUser(roomId: string, recipientUuid: string, message: string): void {
-        const room = this.rooms.get(roomId);
+    public async banUser(roomId: string, recipientUuid: string, message: string): Promise<void> {
+        const room = await this.roomsPromises.get(roomId);
         if (!room) {
             console.error(
                 "In banUser, could not find room with id '" +
@@ -800,8 +799,8 @@ export class SocketManager {
         recipient.socket.end();
     }
 
-    sendAdminRoomMessage(roomId: string, message: string) {
-        const room = this.rooms.get(roomId);
+    async sendAdminRoomMessage(roomId: string, message: string) {
+        const room = await this.roomsPromises.get(roomId);
         if (!room) {
             //todo: this should cause the http call to return a 500
             console.error(
@@ -824,8 +823,8 @@ export class SocketManager {
         });
     }
 
-    dispatchWorlFullWarning(roomId: string): void {
-        const room = this.rooms.get(roomId);
+    async dispatchWorldFullWarning(roomId: string): Promise<void> {
+        const room = await this.roomsPromises.get(roomId);
         if (!room) {
             //todo: this should cause the http call to return a 500
             console.error(
@@ -846,8 +845,8 @@ export class SocketManager {
         });
     }
 
-    dispatchRoomRefresh(roomId: string): void {
-        const room = this.rooms.get(roomId);
+    async dispatchRoomRefresh(roomId: string): Promise<void> {
+        const room = await this.roomsPromises.get(roomId);
         if (!room) {
             return;
         }

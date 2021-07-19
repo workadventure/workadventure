@@ -30,7 +30,7 @@ import {
     BanMessage,
     RefreshRoomMessage,
     EmotePromptMessage,
-    VariableMessage,
+    VariableMessage, ErrorMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { ADMIN_API_URL, JITSI_ISS, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
@@ -277,6 +277,13 @@ export class SocketManager implements ZoneEventListener {
     onEmote(emoteMessage: EmoteEventMessage, listener: ExSocketInterface): void {
         const subMessage = new SubMessage();
         subMessage.setEmoteeventmessage(emoteMessage);
+
+        emitInBatch(listener, subMessage);
+    }
+
+    onError(errorMessage: ErrorMessage, listener: ExSocketInterface): void {
+        const subMessage = new SubMessage();
+        subMessage.setErrormessage(errorMessage);
 
         emitInBatch(listener, subMessage);
     }

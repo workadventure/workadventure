@@ -32,7 +32,7 @@ import {
     EmotePromptMessage,
     SendUserMessage,
     BanUserMessage,
-    VariableMessage,
+    VariableMessage, ErrorMessage,
 } from "../Messages/generated/messages_pb";
 
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
@@ -165,6 +165,9 @@ export class RoomConnection implements RoomConnection {
                     } else if (subMessage.hasEmoteeventmessage()) {
                         const emoteMessage = subMessage.getEmoteeventmessage() as EmoteEventMessage;
                         emoteEventStream.fire(emoteMessage.getActoruserid(), emoteMessage.getEmote());
+                    } else if (subMessage.hasErrormessage()) {
+                        const errorMessage = subMessage.getErrormessage() as ErrorMessage;
+                        console.error('An error occurred server side: '+errorMessage.getMessage());
                     } else if (subMessage.hasVariablemessage()) {
                         event = EventMessage.SET_VARIABLE;
                         payload = subMessage.getVariablemessage();

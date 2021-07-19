@@ -26,6 +26,11 @@ export class SharedVariablesManager {
 
         // Let's initialize default values
         for (const [name, variableObject] of this.variableObjects.entries()) {
+            if (variableObject.readableBy && !this.roomConnection.hasTag(variableObject.readableBy)) {
+                // Do not initialize default value for variables that are not readable
+                continue;
+            }
+
             this._variables.set(name, variableObject.defaultValue);
         }
 
@@ -35,7 +40,6 @@ export class SharedVariablesManager {
         }
 
         roomConnection.onSetVariable((name, value) => {
-            console.log('Set Variable received from server');
             this._variables.set(name, value);
 
             // On server change, let's notify the iframes
