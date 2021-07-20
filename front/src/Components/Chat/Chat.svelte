@@ -30,7 +30,7 @@
 
 
 <aside class="chatWindow" transition:fly="{{ x: -1000, duration: 500 }}">
-    <i class="close-icon" on:click={closeChat}>&times</i>
+    <p class="close-icon" on:click={closeChat}>&times</p>
     <section class="messagesList" bind:this={listDom}>
         <ul>
             <li><p class="system-text">Here is your chat history: </p></li>
@@ -45,13 +45,12 @@
 </aside>
 
 <style lang="scss">
-    i.close-icon {
+    p.close-icon {
       position: absolute;
       padding: 4px;
       right: 12px;
       font-size: 30px;
       line-height: 25px;
-      font-weight: bold;
       cursor: pointer;
     }
     
