@@ -1,8 +1,8 @@
-import {writable} from "svelte/store";
-import type {RemotePeer, SimplePeer} from "../WebRtc/SimplePeer";
-import {VideoPeer} from "../WebRtc/VideoPeer";
-import {ScreenSharingPeer} from "../WebRtc/ScreenSharingPeer";
-import type {Streamable} from "./StreamableCollectionStore";
+import { writable } from "svelte/store";
+import type { RemotePeer, SimplePeer } from "../WebRtc/SimplePeer";
+import { VideoPeer } from "../WebRtc/VideoPeer";
+import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
+import type { Streamable } from "./StreamableCollectionStore";
 
 /**
  * A store that contains the peer / media that has currently the "importance" focus.
@@ -32,15 +32,17 @@ function createVideoFocusStore() {
         },
         connectToSimplePeer: (simplePeer: SimplePeer) => {
             simplePeer.registerPeerConnectionListener({
-                onConnect(peer: RemotePeer) {
-                },
+                onConnect(peer: RemotePeer) {},
                 onDisconnect(userId: number) {
-                    if ((focusedMedia instanceof VideoPeer || focusedMedia instanceof ScreenSharingPeer) && focusedMedia.userId === userId) {
+                    if (
+                        (focusedMedia instanceof VideoPeer || focusedMedia instanceof ScreenSharingPeer) &&
+                        focusedMedia.userId === userId
+                    ) {
                         set(null);
                     }
-                }
-            })
-        }
+                },
+            });
+        },
     };
 }
 

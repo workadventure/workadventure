@@ -2,6 +2,7 @@ name: Push @workadventure/iframe-api-typings to NPM
 on:
   release:
     types: [created]
+  push:
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -12,10 +13,6 @@ jobs:
         with:
           node-version: '14.x'
           registry-url: 'https://registry.npmjs.org'
-
-      - name: Edit tsconfig.json to add declarations
-        run: "sed -i 's/\"declaration\": false/\"declaration\": true/g' tsconfig.json"
-        working-directory: "front"
 
       - name: Replace version number
         run: 'sed -i "s#VERSION_PLACEHOLDER#${GITHUB_REF/refs\/tags\//}#g" package.json'
@@ -47,14 +44,17 @@ jobs:
         working-directory: "front"
 
       - name: "Build"
-        run: yarn run build
+        run: yarn run build-typings
         env:
-          API_URL: "localhost:8080"
+          PUSHER_URL: "//localhost:8080"
         working-directory: "front"
 
       # We build the front to generate the typings of iframe_api, then we copy those typings in a separate package.
       - name: Copy typings to package dir
         run: cp front/dist/src/iframe_api.d.ts front/packages/iframe-api-typings/iframe_api.d.ts
+
+      - name: Copy typings to package dir (2)
+        run: cp -R front/dist/src/Api front/packages/iframe-api-typings/Api
 
       - name: Install dependencies in package
         run: yarn install
@@ -65,3 +65,4 @@ jobs:
         working-directory: "front/packages/iframe-api-typings"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        if: ${{ github.event_name == 'release' }}

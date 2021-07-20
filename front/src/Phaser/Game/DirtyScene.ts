@@ -1,17 +1,17 @@
-import {ResizableScene} from "../Login/ResizableScene";
+import { ResizableScene } from "../Login/ResizableScene";
 import GameObject = Phaser.GameObjects.GameObject;
 import Events = Phaser.Scenes.Events;
 import AnimationEvents = Phaser.Animations.Events;
 import StructEvents = Phaser.Structs.Events;
-import {SKIP_RENDER_OPTIMIZATIONS} from "../../Enum/EnvironmentVariable";
+import { SKIP_RENDER_OPTIMIZATIONS } from "../../Enum/EnvironmentVariable";
 
 /**
  * A scene that can track its dirty/pristine state.
  */
 export abstract class DirtyScene extends ResizableScene {
     private isAlreadyTracking: boolean = false;
-    protected dirty:boolean = true;
-    private objectListChanged:boolean = true;
+    protected dirty: boolean = true;
+    private objectListChanged: boolean = true;
     private physicsEnabled: boolean = false;
 
     /**
@@ -59,7 +59,6 @@ export abstract class DirtyScene extends ResizableScene {
                 this.physicsEnabled = false;
             }
         });
-
     }
 
     private trackAnimation(): void {
@@ -71,7 +70,7 @@ export abstract class DirtyScene extends ResizableScene {
     }
 
     public markDirty(): void {
-        this.events.once(Phaser.Scenes.Events.POST_UPDATE, () => this.dirty = true);
+        this.events.once(Phaser.Scenes.Events.POST_UPDATE, () => (this.dirty = true));
     }
 
     public onResize(): void {

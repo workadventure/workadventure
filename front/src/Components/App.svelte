@@ -10,12 +10,14 @@
     import {errorStore} from "../Stores/ErrorStore";
     import CustomCharacterScene from "./CustomCharacterScene/CustomCharacterScene.svelte";
     import LoginScene from "./Login/LoginScene.svelte";
+    import Chat from "./Chat/Chat.svelte";
     import {loginSceneVisibleStore} from "../Stores/LoginSceneStore";
     import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
     import VisitCard from "./VisitCard/VisitCard.svelte";
     import {requestVisitCardsStore} from "../Stores/GameStore";
 
     import type {Game} from "../Phaser/Game/Game";
+    import {chatVisibilityStore} from "../Stores/ChatStore";
     import {helpCameraSettingsVisibleStore} from "../Stores/HelpCameraSettingsStore";
     import HelpCameraSettingsPopup from "./HelpCameraSettings/HelpCameraSettingsPopup.svelte";
     import AudioPlaying from "./UI/AudioPlaying.svelte";
@@ -61,14 +63,6 @@
         <AudioPlaying url={$soundPlayingStore} />
     </div>
     {/if}
-
-    <!--
-    {#if $menuIconVisible}
-        <div>
-            <MenuIcon  />
-        </div>
-    {/if}
-    -->
     {#if $gameOverlayVisibilityStore}
         <div>
             <VideoOverlay></VideoOverlay>
@@ -93,5 +87,8 @@
     <div>
         <ErrorDialog></ErrorDialog>
     </div>
+    {/if}
+    {#if $chatVisibilityStore}
+        <Chat></Chat>
     {/if}
 </div>

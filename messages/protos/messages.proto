@@ -62,7 +62,7 @@ message WebRtcSignalToServerMessage {
 }
 
 message ReportPlayerMessage {
-  int32 reportedUserId = 1;
+  string reportedUserUuid = 1;
   string reportComment = 2;
 }
 
@@ -158,6 +158,7 @@ message UserJoinedMessage {
   PositionMessage position = 4;
   CompanionMessage companion = 5;
   string visitCardUrl = 6;
+  string userUuid = 7;
 }
 
 message UserLeftMessage {
@@ -183,7 +184,6 @@ message RoomJoinedMessage {
 
 message WebRtcStartMessage {
   int32 userId = 1;
-  string name = 2;
   bool initiator = 3;
   string webrtcUserName = 4;
   string webrtcPassword = 5;
@@ -257,7 +257,7 @@ message ServerToClientMessage {
     AdminRoomMessage adminRoomMessage = 14;
     WorldFullWarningMessage worldFullWarningMessage = 15;
     WorldFullMessage worldFullMessage = 16;
-    RefreshRoomMessage refreshRoomMessage = 17; 
+    RefreshRoomMessage refreshRoomMessage = 17;
     WorldConnexionMessage worldConnexionMessage = 18;
     EmoteEventMessage emoteEventMessage = 19;
   }
@@ -286,6 +286,7 @@ message UserJoinedZoneMessage {
   Zone fromZone = 5;
   CompanionMessage companion = 6;
   string visitCardUrl = 7;
+  string userUuid = 8;
 }
 
 message UserLeftZoneMessage {

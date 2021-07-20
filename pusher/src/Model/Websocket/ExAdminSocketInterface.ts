@@ -10,7 +10,6 @@ import {
     SubMessage,
 } from "../../Messages/generated/messages_pb";
 import { WebSocket } from "uWebSockets.js";
-import { CharacterTexture } from "../../Services/AdminApi";
 import { ClientDuplexStream } from "grpc";
 import { Zone } from "_Model/Zone";
 
