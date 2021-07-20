@@ -1144,6 +1144,7 @@ ${escapedMessage}
         try {
             targetRoom = await Room.createRoom(roomUrl);
         } catch (e: unknown) {
+            // @ts-ignore
             console.error('Error while fetching new room "' + roomUrl.toString() + '"', e);
             this.mapTransitioning = false;
             return;
@@ -1269,6 +1270,7 @@ ${escapedMessage}
             const room = await Room.createRoom(exitRoomPath);
             return gameManager.loadMap(room, this.scene);
         } catch (e: unknown) {
+            // @ts-ignore
             console.warn('Error while pre-loading exit room "' + exitRoomPath.toString() + '"', e);
         }
     }
