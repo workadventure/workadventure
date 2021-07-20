@@ -1,12 +1,19 @@
 <!doctype html>
 <html lang="en">
     <head>
-        <script src="http://play.workadventure.localhost/iframe_api.js"></script>
+        <script>
+            var script = document.createElement('script');
+            // Don't do this at home kids! The "document.referrer" part is actually inserting a XSS security.
+            // We are OK in this precise case because the HTML page is hosted on the "maps" domain that contains only static files.
+            script.setAttribute('src', document.referrer + 'iframe_api.js');
+            document.head.appendChild(script);
+            window.addEventListener('load', () => {
+                WA.room.setProperty('iframeTest', 'openWebsite', 'https://www.wikipedia.org/');
+                WA.room.setProperty('metadata', 'openWebsite', 'https://www.wikipedia.org/');
+            })
+        </script>
     </head>
     <body>
-    	<script>
-    		WA.room.setProperty('iframeTest', 'openWebsite', 'https://www.wikipedia.org/');
-    		WA.room.setProperty('metadata', 'openWebsite', 'https://www.wikipedia.org/');
-    	</script>
+        <p>Change the url of this iframe and add the 'openWebsite' property to the red tile layer</p>
     </body>
 </html>
