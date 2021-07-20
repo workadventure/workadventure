@@ -1,7 +1,7 @@
 {.section-title.accent.text-primary}
 # API state related functions Reference
 
-### Saving / loading state
+## Saving / loading state
 
 The `WA.state` functions allow you to easily share a common state between all the players in a given room.
 Moreover, `WA.state` functions can be used to persist this state across reloads.
@@ -62,7 +62,7 @@ that you get the expected type).
 For security reasons, the list of variables you are allowed to access and modify is **restricted** (otherwise, anyone on your map could set any data).
 Variables storage is subject to an authorization process. Read below to learn more.
 
-#### Declaring allowed keys
+### Declaring allowed keys
 
 In order to declare allowed keys related to a room, you need to add **objects** in an "object layer" of the map.
 
@@ -74,15 +74,12 @@ Each object will represent a variable.
     </div>
 </div>
 
-TODO: move the image in https://workadventu.re/img/docs
-
-
 The name of the variable is the name of the object.
 The object **type** MUST be **variable**.
 
 You can set a default value for the object in the `default` property.
 
-#### Persisting variables state
+### Persisting variables state
 
 Use the `persist` property to save the state of the variable in database. If `persist` is false, the variable will stay
 in the memory of the WorkAdventure servers but will be wiped out of the memory as soon as the room is empty (or if the
@@ -91,7 +88,7 @@ server restarts).
 {.alert.alert-info}
 Do not use `persist` for highly dynamic values that have a short life spawn.
 
-#### Managing access rights to variables
+### Managing access rights to variables
 
 With `readableBy` and `writableBy`, you control who can read of write in this variable. The property accepts a string
 representing a "tag". Anyone having this "tag" can read/write in the variable.
@@ -104,6 +101,36 @@ Finally, the `jsonSchema` property can contain [a complete JSON schema](https://
 Trying to set a variable to a value that is not compatible with the schema will fail.
 
 
+## Tracking variables changes
 
+The properties of the `WA.state` object are shared in real-time between users of a same room. You can listen to modifications
+of any property of `WA.state` by using the `WA.state.onVariableChange()` method.
 
-TODO: document tracking, unsubscriber, etc...
+```
+WA.state.onVariableChange(name: string): Observable<unknown>
+```
+
+Usage:
+
+```javascript
+WA.state.onVariableChange('config').subscribe((value) => {
+    console.log('Variable "config" changed. New value: ', value);
+});
+```
+
+The `WA.state.onVariableChange` method returns an [RxJS `Observable` object](https://rxjs.dev/guide/observable). This is 
+an object on which you can add subscriptions using the `subscribe` method.
+
+### Stopping tracking variables
+
+If you want to stop tracking a variable change, the `subscribe` method returns a subscription object with an `unsubscribe` method.
+
+**Example with unsubscription:**
+
+```javascript
+const subscription = WA.state.onVariableChange('config').subscribe((value) => {
+    console.log('Variable "config" changed. New value: ', value);
+});
+// Later:
+subscription.unsubscribe();
+```
