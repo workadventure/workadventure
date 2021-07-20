@@ -3,7 +3,7 @@
     import { onMount } from "svelte";
     import type { Game } from "../../Phaser/Game/Game";
     import type { GameManager } from "../../Phaser/Game/GameManager";
-    import type { PlayGlobalMessageInterface } from "../../Connexion/ConnexionModels";
+    import type { UserGlobalMessageInterface } from "../../Connexion/ConnexionModels";
     import { AdminMessageEventTypes } from "../../Connexion/AdminMessagesService";
     import type { Quill } from "quill";
 
@@ -41,20 +41,20 @@
     const MESSAGE_TYPE = AdminMessageEventTypes.admin;
 
     export const handleSending = {
-        sendTextMessage() {
+        sendTextMessage(broadcastToWorld: boolean) {
             if (gameScene == undefined) {
                 return;
             }
             const text = quill.getText(0, quill.getLength());
 
-            const GlobalMessage: PlayGlobalMessageInterface = {
-                id: "1", // FIXME: use another ID?
-                message: text,
-                type: MESSAGE_TYPE
+            const textGlobalMessage: UserGlobalMessageInterface = {
+                type: MESSAGE_TYPE,
+                content: text,
+                broadcastToWorld: broadcastToWorld
             };
 
             quill.deleteText(0, quill.getLength());
-            gameScene.connection?.emitGlobalMessage(GlobalMessage);
+            gameScene.connection?.sendUserGlobalMessage(textGlobalMessage);
             disableConsole();
         }
     }

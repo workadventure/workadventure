@@ -7,6 +7,7 @@ import {
     GroupUpdateMessage,
     ItemEventMessage,
     PlayGlobalMessage,
+    UserGlobalMessage,
     PositionMessage,
     RoomJoinedMessage,
     ServerToClientMessage,
@@ -44,6 +45,7 @@ import {
     MessageUserJoined,
     OnConnectInterface,
     PlayGlobalMessageInterface,
+    UserGlobalMessageInterface,
     PositionInterface,
     RoomJoinedMessageInterface,
     ViewportInterface,
@@ -642,5 +644,17 @@ export class RoomConnection implements RoomConnection {
 
     public getAllTags(): string[] {
         return this.tags;
+    }
+
+    public sendUserGlobalMessage(message: UserGlobalMessageInterface): void {
+        const userGlobalMessage = new UserGlobalMessage();
+        userGlobalMessage.setType(message.type);
+        userGlobalMessage.setContent(message.content);
+        userGlobalMessage.setBroadcasttoworld(message.broadcastToWorld);
+
+        const clientToServerMessage = new ClientToServerMessage();
+        clientToServerMessage.setUserglobalmessage(userGlobalMessage);
+
+        this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 }

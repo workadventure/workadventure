@@ -1,42 +1,43 @@
 import { PusherRoom } from "../Model/PusherRoom";
 import { CharacterLayer, ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
 import {
+    AdminMessage,
+    AdminPusherToBackMessage,
+    AdminRoomMessage,
+    BanMessage,
+    CharacterLayerMessage,
+    EmoteEventMessage,
+    EmotePromptMessage,
     GroupDeleteMessage,
     ItemEventMessage,
+    JoinRoomMessage,
     PlayGlobalMessage,
+    PusherToBackMessage,
+    QueryJitsiJwtMessage,
+    RefreshRoomMessage,
+    ReportPlayerMessage,
     RoomJoinedMessage,
+    SendJitsiJwtMessage,
+    ServerToAdminClientMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
     SilentMessage,
     SubMessage,
-    ReportPlayerMessage,
+    UserGlobalMessage,
+    UserJoinedRoomMessage,
     UserLeftMessage,
+    UserLeftRoomMessage,
     UserMovesMessage,
     ViewportMessage,
     WebRtcSignalToServerMessage,
-    QueryJitsiJwtMessage,
-    SendJitsiJwtMessage,
-    JoinRoomMessage,
-    CharacterLayerMessage,
-    PusherToBackMessage,
-    WorldFullMessage,
     WorldConnexionMessage,
-    AdminPusherToBackMessage,
-    ServerToAdminClientMessage,
-    EmoteEventMessage,
-    UserJoinedRoomMessage,
-    UserLeftRoomMessage,
-    AdminMessage,
-    BanMessage,
-    RefreshRoomMessage,
-    EmotePromptMessage,
+    WorldFullMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
-import { ADMIN_API_URL, JITSI_ISS, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
+import { ADMIN_API_URL, JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
 import { adminApi } from "./AdminApi";
 import { emitInBatch } from "./IoSocketHelpers";
 import Jwt from "jsonwebtoken";
-import { JITSI_URL } from "../Enum/EnvironmentVariable";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { apiClientRepository } from "./ApiClientRepository";
@@ -604,6 +605,35 @@ export class SocketManager implements ZoneEventListener {
         pusherToBackMessage.setEmotepromptmessage(emoteEventmessage);
 
         client.backConnection.write(pusherToBackMessage);
+    }
+
+    public async handleUserGlobalMessage(
+        client: ExSocketInterface,
+        userGlobalMessageEvent: UserGlobalMessage
+    ): Promise<void> {
+        if (!client.tags.includes("admin")) {
+            throw "Client is not an admin!";
+        }
+
+        const clientRoomUrl = client.roomId;
+        let tabUrlRooms: string[];
+
+        if (userGlobalMessageEvent.getBroadcasttoworld()) {
+            tabUrlRooms = await adminApi.getUrlRoomsFromSameWorld(clientRoomUrl);
+        } else {
+            tabUrlRooms = [clientRoomUrl];
+        }
+
+        let roomMessage = new AdminRoomMessage();
+        roomMessage.setMessage(userGlobalMessageEvent.getContent());
+
+        for (let roomUrl of tabUrlRooms) {
+            let apiRoom = await apiClientRepository.getClient(roomUrl);
+            roomMessage.setRoomid(roomUrl);
+            apiRoom.sendAdminMessageToRoom(roomMessage, (response) => {
+                return;
+            });
+        }
     }
 }
 

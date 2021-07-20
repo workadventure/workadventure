@@ -113,6 +113,12 @@ export interface PlayGlobalMessageInterface {
     message: string;
 }
 
+export interface UserGlobalMessageInterface {
+    type: string;
+    content: string;
+    broadcastToWorld: boolean;
+}
+
 export interface OnConnectInterface {
     connection: RoomConnection;
     room: RoomJoinedMessageInterface;

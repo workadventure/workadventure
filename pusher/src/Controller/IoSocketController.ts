@@ -17,6 +17,7 @@ import {
     ServerToClientMessage,
     CompanionMessage,
     EmotePromptMessage,
+    UserGlobalMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { TemplatedApp } from "uWebSockets.js";
@@ -381,6 +382,8 @@ export class IoSocketController {
                         client,
                         message.getEmotepromptmessage() as EmotePromptMessage
                     );
+                } else if (message.hasUserglobalmessage()) {
+                    socketManager.handleUserGlobalMessage(client, message.getUserglobalmessage() as UserGlobalMessage);
                 }
 
                 /* Ok is false if backpressure was built up, wait for drain */

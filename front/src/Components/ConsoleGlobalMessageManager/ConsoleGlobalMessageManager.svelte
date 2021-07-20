@@ -9,7 +9,7 @@
     export let game: Game;
     let inputSendTextActive = true;
     let uploadMusicActive = false;
-    let handleSendText: { sendTextMessage(): void };
+    let handleSendText: { sendTextMessage(broadcast: boolean): void };
     let handleSendAudio: { sendAudioMessage(): Promise<void> };
     let broadcastToWorld = false;
 
@@ -35,8 +35,7 @@
 
     function send() {
         if (inputSendTextActive) {
-            handleSendText.sendTextMessage();
-            console.log(typeof handleSendText);
+            handleSendText.sendTextMessage(broadcastToWorld);
         }
         if (uploadMusicActive) {
             handleSendAudio.sendAudioMessage();
