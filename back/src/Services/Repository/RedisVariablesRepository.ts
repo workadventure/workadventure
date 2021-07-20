@@ -10,14 +10,12 @@ export class RedisVariablesRepository implements VariablesRepositoryInterface {
     private readonly hset: OmitThisParameter<(arg1: [string, ...string[]]) => Promise<number>>;
     private readonly hdel: OmitThisParameter<(arg1: string, arg2: string) => Promise<number>>;
 
-
     constructor(private redisClient: RedisClient) {
-        // @eslint-disable-next-line @typescript-eslint/unbound-method
+        /* eslint-disable @typescript-eslint/unbound-method */
         this.hgetall = promisify(redisClient.hgetall).bind(redisClient);
-        // @eslint-disable-next-line @typescript-eslint/unbound-method
         this.hset = promisify(redisClient.hset).bind(redisClient);
-        // @eslint-disable-next-line @typescript-eslint/unbound-method
         this.hdel = promisify(redisClient.hdel).bind(redisClient);
+        /* eslint-enable @typescript-eslint/unbound-method */
     }
 
     /**
@@ -30,11 +28,10 @@ export class RedisVariablesRepository implements VariablesRepositoryInterface {
     }
 
     async saveVariable(roomUrl: string, key: string, value: string): Promise<number> {
-
         // The value is passed to JSON.stringify client side. If value is "undefined", JSON.stringify returns "undefined"
         // which is translated to empty string when fetching the value in the pusher.
         // Therefore, empty string server side == undefined client side.
-        if (value === '') {
+        if (value === "") {
             return this.hdel(roomUrl, key);
         }
 
