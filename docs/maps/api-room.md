@@ -93,7 +93,7 @@ You need to wait for the end of the initialization before accessing `WA.room.id`
 ```typescript
 WA.onInit().then(() => {
     console.log('Room id: ', WA.room.id);
-    // Will output something like: '/@/myorg/myworld/myroom', or '/_/global/mymap.org/map.json"
+    // Will output something like: 'https://play.workadventu.re/@/myorg/myworld/myroom', or 'https://play.workadventu.re/_/global/mymap.org/map.json"
 })
 ```
 
@@ -119,13 +119,13 @@ WA.onInit().then(() => {
 
 ### Getting map data
 ```
-WA.room.getMap(): Promise<ITiledMap>
+WA.room.getTiledMap(): Promise<ITiledMap>
 ```
 
 Returns a promise that resolves to the JSON map file.
 
 ```javascript
-const map = await WA.room.getMap();
+const map = await WA.room.getTiledMap();
 console.log("Map generated with Tiled version ", map.tiledversion);
 ```
 

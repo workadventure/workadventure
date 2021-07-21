@@ -79,7 +79,7 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
             },
         });
     }
-    async getMap(): Promise<ITiledMap> {
+    async getTiledMap(): Promise<ITiledMap> {
         const event = await queryWorkadventure({ type: "getMapData", data: undefined });
         return event.data as ITiledMap;
     }

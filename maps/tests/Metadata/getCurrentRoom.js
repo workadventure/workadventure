@@ -6,6 +6,6 @@ WA.onInit().then(() => {
     console.log('Player tags: ', WA.player.tags);
 });
 
-WA.room.getMap().then((data) => {
+WA.room.getTiledMap().then((data) => {
     console.log('Map data', data);
 })
