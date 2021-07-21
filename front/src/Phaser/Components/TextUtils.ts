@@ -44,7 +44,6 @@ export class TextUtils {
             options.align = object.text.halign;
         }
 
-        console.warn(options);
         const textElem = scene.add.text(object.x, object.y, object.text.text, options);
         textElem.setAngle(object.rotation);
     }

@@ -38,11 +38,9 @@ class ConnectionManager {
             this.localUser = new LocalUser(data.userUuid, data.authToken, data.textures);
             localUserStore.saveUser(this.localUser);
 
-            const organizationSlug = data.organizationSlug;
-            const worldSlug = data.worldSlug;
-            const roomSlug = data.roomSlug;
+            const roomUrl = data.roomUrl;
 
-            const room = new Room('/@/'+organizationSlug+'/'+worldSlug+'/'+roomSlug + window.location.search + window.location.hash);
+            const room = await Room.createRoom(new URL(window.location.protocol + '//' + window.location.host + roomUrl + window.location.search + window.location.hash));
             urlManager.pushRoomIdToUrl(room);
             return Promise.resolve(room);
         } else if (connexionType === GameConnexionTypes.organization || connexionType === GameConnexionTypes.anonymous || connexionType === GameConnexionTypes.empty) {
@@ -66,22 +64,21 @@ class ConnectionManager {
                 throw "Error to store local user data";
             }
 
-            let roomId: string;
+            let roomPath: string;
             if (connexionType === GameConnexionTypes.empty) {
-                roomId = START_ROOM_URL;
+                roomPath = window.location.protocol + '//' + window.location.host + START_ROOM_URL;
             } else {
-                roomId = window.location.pathname + window.location.search + window.location.hash;
+                roomPath = window.location.protocol + '//' + window.location.host + window.location.pathname + window.location.search + window.location.hash;
             }
 
             //get detail map for anonymous login and set texture in local storage
-            const room = new Room(roomId);
-            const mapDetail = await room.getMapDetail();
-            if(mapDetail.textures != undefined && mapDetail.textures.length > 0) {
+            const room = await Room.createRoom(new URL(roomPath));
+            if(room.textures != undefined && room.textures.length > 0) {
                 //check if texture was changed
                 if(localUser.textures.length === 0){
-                    localUser.textures = mapDetail.textures;
+                    localUser.textures = room.textures;
                 }else{
-                    mapDetail.textures.forEach((newTexture) => {
+                    room.textures.forEach((newTexture) => {
                         const alreadyExistTexture = localUser?.textures.find((c) => newTexture.id === c.id);
                         if(localUser?.textures.findIndex((c) => newTexture.id === c.id) !== -1){
                             return;
@@ -114,9 +111,9 @@ class ConnectionManager {
         this.localUser = new LocalUser('', 'test', []);
     }
 
-    public connectToRoomSocket(roomId: string, name: string, characterLayers: string[], position: PositionInterface, viewport: ViewportInterface, companion: string|null): Promise<OnConnectInterface> {
+    public connectToRoomSocket(roomUrl: string, name: string, characterLayers: string[], position: PositionInterface, viewport: ViewportInterface, companion: string|null): Promise<OnConnectInterface> {
         return new Promise<OnConnectInterface>((resolve, reject) => {
-            const connection = new RoomConnection(this.localUser.jwtToken, roomId, name, characterLayers, position, viewport, companion);
+            const connection = new RoomConnection(this.localUser.jwtToken, roomUrl, name, characterLayers, position, viewport, companion);
             connection.onConnectError((error: object) => {
                 console.log('An error occurred while connecting to socket server. Retrying');
                 reject(error);
@@ -137,7 +134,7 @@ class ConnectionManager {
                 this.reconnectingTimeout = setTimeout(() => {
                     //todo: allow a way to break recursion?
                     //todo: find a way to avoid recursive function. Otherwise, the call stack will grow indefinitely.
-                    this.connectToRoomSocket(roomId, name, characterLayers, position, viewport, companion).then((connection) => resolve(connection));
+                    this.connectToRoomSocket(roomUrl, name, characterLayers, position, viewport, companion).then((connection) => resolve(connection));
                 }, 4000 + Math.floor(Math.random() * 2000) );
             });
         });

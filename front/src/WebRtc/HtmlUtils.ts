@@ -25,7 +25,7 @@ export class HtmlUtils {
     }
 
     public static escapeHtml(html: string): string {
-        const text = document.createTextNode(html);
+        const text = document.createTextNode(html.replace(/(\r\n|\r|\n)/g,'<br/>'));
         const p = document.createElement('p');
         p.appendChild(text);
         return p.innerHTML;

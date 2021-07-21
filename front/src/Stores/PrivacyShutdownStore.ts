@@ -1,6 +1,6 @@
-import {get, writable} from "svelte/store";
-import {peerStore} from "./PeerStore";
-import {visibilityStore} from "./VisibilityStore";
+import { get, writable } from "svelte/store";
+import { peerStore } from "./PeerStore";
+import { visibilityStore } from "./VisibilityStore";
 
 /**
  * A store that contains "true" if the webcam should be stopped for privacy reasons - i.e. if the the user left the the page while not in a discussion.
@@ -27,7 +27,6 @@ function createPrivacyShutdownStore() {
             set(true);
         }
     });
-
 
     return {
         subscribe,

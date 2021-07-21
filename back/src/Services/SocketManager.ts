@@ -250,12 +250,12 @@ export class SocketManager {
             //user leave previous world
             room.leave(user);
             if (room.isEmpty()) {
-                this.rooms.delete(room.roomId);
+                this.rooms.delete(room.roomUrl);
                 gaugeManager.decNbRoomGauge();
-                debug('Room is empty. Deleting room "%s"', room.roomId);
+                debug('Room is empty. Deleting room "%s"', room.roomUrl);
             }
         } finally {
-            clientEventsEmitter.emitClientLeave(user.uuid, room.roomId);
+            clientEventsEmitter.emitClientLeave(user.uuid, room.roomUrl);
             console.log("A user left");
         }
     }
@@ -308,6 +308,7 @@ export class SocketManager {
                 throw new Error("clientUser.userId is not an integer " + thing.id);
             }
             userJoinedZoneMessage.setUserid(thing.id);
+            userJoinedZoneMessage.setUseruuid(thing.uuid);
             userJoinedZoneMessage.setName(thing.name);
             userJoinedZoneMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
             userJoinedZoneMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
@@ -425,7 +426,6 @@ export class SocketManager {
             // Let's send 2 messages: one to the user joining the group and one to the other user
             const webrtcStartMessage1 = new WebRtcStartMessage();
             webrtcStartMessage1.setUserid(otherUser.id);
-            webrtcStartMessage1.setName(otherUser.name);
             webrtcStartMessage1.setInitiator(true);
             if (TURN_STATIC_AUTH_SECRET !== "") {
                 const { username, password } = this.getTURNCredentials("" + otherUser.id, TURN_STATIC_AUTH_SECRET);
@@ -436,14 +436,10 @@ export class SocketManager {
             const serverToClientMessage1 = new ServerToClientMessage();
             serverToClientMessage1.setWebrtcstartmessage(webrtcStartMessage1);
 
-            //if (!user.socket.disconnecting) {
             user.socket.write(serverToClientMessage1);
-            //console.log('Sending webrtcstart initiator to '+user.socket.userId)
-            //}
 
             const webrtcStartMessage2 = new WebRtcStartMessage();
             webrtcStartMessage2.setUserid(user.id);
-            webrtcStartMessage2.setName(user.name);
             webrtcStartMessage2.setInitiator(false);
             if (TURN_STATIC_AUTH_SECRET !== "") {
                 const { username, password } = this.getTURNCredentials("" + user.id, TURN_STATIC_AUTH_SECRET);
@@ -454,10 +450,7 @@ export class SocketManager {
             const serverToClientMessage2 = new ServerToClientMessage();
             serverToClientMessage2.setWebrtcstartmessage(webrtcStartMessage2);
 
-            //if (!otherUser.socket.disconnecting) {
             otherUser.socket.write(serverToClientMessage2);
-            //console.log('Sending webrtcstart to '+otherUser.socket.userId)
-            //}
         }
     }
 
@@ -614,6 +607,7 @@ export class SocketManager {
             if (thing instanceof User) {
                 const userJoinedMessage = new UserJoinedZoneMessage();
                 userJoinedMessage.setUserid(thing.id);
+                userJoinedMessage.setUseruuid(thing.uuid);
                 userJoinedMessage.setName(thing.name);
                 userJoinedMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
                 userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
@@ -664,9 +658,9 @@ export class SocketManager {
     public leaveAdminRoom(room: GameRoom, admin: Admin) {
         room.adminLeave(admin);
         if (room.isEmpty()) {
-            this.rooms.delete(room.roomId);
+            this.rooms.delete(room.roomUrl);
             gaugeManager.decNbRoomGauge();
-            debug('Room is empty. Deleting room "%s"', room.roomId);
+            debug('Room is empty. Deleting room "%s"', room.roomUrl);
         }
     }
 

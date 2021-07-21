@@ -1,7 +1,7 @@
-import {readable, writable} from "svelte/store";
-import type {RemotePeer, SimplePeer} from "../WebRtc/SimplePeer";
-import {VideoPeer} from "../WebRtc/VideoPeer";
-import {ScreenSharingPeer} from "../WebRtc/ScreenSharingPeer";
+import { readable, writable } from "svelte/store";
+import type { RemotePeer, SimplePeer } from "../WebRtc/SimplePeer";
+import { VideoPeer } from "../WebRtc/VideoPeer";
+import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 
 /**
  * A store that contains the list of (video) peers we are connected to.
@@ -19,20 +19,20 @@ function createPeerStore() {
             simplePeer.registerPeerConnectionListener({
                 onConnect(peer: RemotePeer) {
                     if (peer instanceof VideoPeer) {
-                        update(users => {
+                        update((users) => {
                             users.set(peer.userId, peer);
                             return users;
                         });
                     }
                 },
                 onDisconnect(userId: number) {
-                    update(users => {
+                    update((users) => {
                         users.delete(userId);
                         return users;
                     });
-                }
-            })
-        }
+                },
+            });
+        },
     };
 }
 
@@ -52,20 +52,20 @@ function createScreenSharingPeerStore() {
             simplePeer.registerPeerConnectionListener({
                 onConnect(peer: RemotePeer) {
                     if (peer instanceof ScreenSharingPeer) {
-                        update(users => {
+                        update((users) => {
                             users.set(peer.userId, peer);
                             return users;
                         });
                     }
                 },
                 onDisconnect(userId: number) {
-                    update(users => {
+                    update((users) => {
                         users.delete(userId);
                         return users;
                     });
-                }
-            })
-        }
+                },
+            });
+        },
     };
 }
 
@@ -79,8 +79,7 @@ function createScreenSharingStreamStore() {
     let peers = new Map<number, ScreenSharingPeer>();
 
     return readable<Map<number, ScreenSharingPeer>>(peers, function start(set) {
-
-        let unsubscribes: (()=>void)[] = [];
+        let unsubscribes: (() => void)[] = [];
 
         const unsubscribe = screenSharingPeerStore.subscribe((screenSharingPeers) => {
             for (const unsubscribe of unsubscribes) {
@@ -91,24 +90,23 @@ function createScreenSharingStreamStore() {
             peers = new Map<number, ScreenSharingPeer>();
 
             screenSharingPeers.forEach((screenSharingPeer: ScreenSharingPeer, key: number) => {
-
                 if (screenSharingPeer.isReceivingScreenSharingStream()) {
                     peers.set(key, screenSharingPeer);
                 }
 
-                unsubscribes.push(screenSharingPeer.streamStore.subscribe((stream) => {
-                    if (stream) {
-                        peers.set(key, screenSharingPeer);
-                    } else {
-                        peers.delete(key);
-                    }
-                    set(peers);
-                }));
-
+                unsubscribes.push(
+                    screenSharingPeer.streamStore.subscribe((stream) => {
+                        if (stream) {
+                            peers.set(key, screenSharingPeer);
+                        } else {
+                            peers.delete(key);
+                        }
+                        set(peers);
+                    })
+                );
             });
 
             set(peers);
-
         });
 
         return function stop() {
@@ -117,9 +115,7 @@ function createScreenSharingStreamStore() {
                 unsubscribe();
             }
         };
-    })
+    });
 }
 
 export const screenSharingStreamStore = createScreenSharingStreamStore();
-
-

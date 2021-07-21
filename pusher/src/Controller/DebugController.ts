@@ -16,7 +16,7 @@ export class DebugController {
             const query = parse(req.getQuery());
 
             if (query.token !== ADMIN_API_TOKEN) {
-                return res.status(401).send("Invalid token sent!");
+                return res.writeStatus("401 Unauthorized").end("Invalid token sent!");
             }
 
             return res

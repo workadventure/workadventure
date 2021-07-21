@@ -262,10 +262,10 @@
     "@types/mime" "^1"
     "@types/node" "*"
 
-"@types/simple-peer@^9.6.0":
-  version "9.6.3"
-  resolved "https://registry.yarnpkg.com/@types/simple-peer/-/simple-peer-9.6.3.tgz#aa118a57e036f4ce2059a7e25367526a4764206d"
-  integrity sha512-zrXEBch9tF4NgkZDsGR3c1D0kq99M1bBCjzEyL0PVfEWzCIXrK64TuxRz3XKOx1B0KoEQ9kTs+AhMDuQaHy5RQ==
+"@types/simple-peer@^9.11.1":
+  version "9.11.1"
+  resolved "https://registry.yarnpkg.com/@types/simple-peer/-/simple-peer-9.11.1.tgz#bef6ff1e75178d83438e33aa6a4df2fd98fded1d"
+  integrity sha512-Pzqbau/WlivSXdRC0He2Wz/ANj2wbi4gzJrtysZz93jvOyI2jo/ibMjUe6AvPllFl/UO6QXT/A0Rcp44bDQB5A==
   dependencies:
     "@types/node" "*"
 
@@ -5008,7 +5008,7 @@ signal-exit@^3.0.0, signal-exit@^3.0.2, signal-exit@^3.0.3:
   resolved "https://registry.yarnpkg.com/signal-exit/-/signal-exit-3.0.3.tgz#a1410c2edd8f077b08b4e253c8eacfcaf057461c"
   integrity sha512-VUJ49FC8U1OxwZLxIbTTrDvLnf/6TDgxZcK8wxR8zs13xpx7xbG60ndBlhNrFi2EMuFRoeDoJO7wthSLq42EjA==
 
-simple-peer@^9.6.2:
+simple-peer@^9.11.0:
   version "9.11.0"
   resolved "https://registry.yarnpkg.com/simple-peer/-/simple-peer-9.11.0.tgz#e8d27609c7a610c3ddd75767da868e8daab67571"
   integrity sha512-qvdNu/dGMHBm2uQ7oLhQBMhYlrOZC1ywXNCH/i8I4etxR1vrjCnU6ZSQBptndB1gcakjo2+w4OHo7Sjza1SHxg==

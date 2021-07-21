@@ -119,7 +119,13 @@
             "src": "/static/images/favicons/android-icon-192x192.png",
             "sizes": "192x192",
             "type": "image\/png",
-            "density": "4.0"
+            "density": "4.0",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/static/images/favicons/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image\/png"
         }
     ],
     "start_url": "/",
@@ -127,6 +133,7 @@
     "display_override": ["window-control-overlay", "minimal-ui"],
     "display": "standalone",
     "scope": "/",
+    "lang": "en",
     "theme_color": "#000000",
     "shortcuts": [
       {
@@ -134,7 +141,7 @@
         "short_name": "WA",
         "description": "WorkAdventure application",
         "url": "/",
-        "icons": [{ "src": "/static/images/favicons/android-icon-192x192.png", "sizes": "192x192" }]
+        "icons": [{ "src": "/static/images/favicons/android-icon-192x192.png", "sizes": "192x192", "type": "image/png" }]
       }
     ],
     "description": "WorkAdventure application",
