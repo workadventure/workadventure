@@ -687,23 +687,8 @@ export class SocketManager {
         }
 
         room.addRoomListener(call);
-        //const things = room.addZoneListener(call, x, y);
 
         const batchMessage = new BatchToPusherRoomMessage();
-
-        // Finally, no need to store variables in the pusher, let's only make it act as a relay
-        /*const variables = await room.getVariables();
-
-        for (const [name, value] of variables.entries()) {
-            const variableMessage = new VariableMessage();
-            variableMessage.setName(name);
-            variableMessage.setValue(value);
-
-            const subMessage = new SubToPusherRoomMessage();
-            subMessage.setVariablemessage(variableMessage);
-
-            batchMessage.addPayload(subMessage);
-        }*/
 
         call.write(batchMessage);
     }
