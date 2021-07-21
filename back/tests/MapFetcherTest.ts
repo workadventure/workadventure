@@ -23,4 +23,10 @@ describe("MapFetcher", () => {
     it("should return false on an DNS resolving to a global domain", async () => {
         expect(await mapFetcher.isLocalUrl("https://maps.workadventu.re")).toBeFalse();
     });
+
+    it("should throw error on invalid domain", async () => {
+        await expectAsync(
+            mapFetcher.isLocalUrl("https://this.domain.name.doesnotexistfoobgjkgfdjkgldf.com")
+        ).toBeRejected();
+    });
 });
