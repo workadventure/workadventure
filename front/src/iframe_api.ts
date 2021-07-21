@@ -123,7 +123,7 @@ const wa = {
     },
 
     /**
-     * @deprecated Use WA.controls.restorePlayerControls instead
+     * @deprecated Use WA.ui.openPopup instead
      */
     openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup {
         console.warn("Method WA.openPopup is deprecated. Please use WA.ui.openPopup instead");
