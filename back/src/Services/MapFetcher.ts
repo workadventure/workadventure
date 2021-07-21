@@ -36,8 +36,10 @@ class MapFetcher {
     /**
      * Returns true if the domain name is localhost of *.localhost
      * Returns true if the domain name resolves to an IP address that is "private" (like 10.x.x.x or 192.168.x.x)
+     *
+     * @private
      */
-    private async isLocalUrl(url: string): Promise<boolean> {
+    async isLocalUrl(url: string): Promise<boolean> {
         const urlObj = new URL(url);
         if (urlObj.hostname === "localhost" || urlObj.hostname.endsWith(".localhost")) {
             return true;
@@ -46,7 +48,7 @@ class MapFetcher {
         let addresses = [];
         if (!ipaddr.isValid(urlObj.hostname)) {
             const resolver = new Resolver();
-            addresses = await promisify(resolver.resolve)(urlObj.hostname);
+            addresses = await promisify(resolver.resolve).bind(resolver)(urlObj.hostname);
         } else {
             addresses = [urlObj.hostname];
         }
