@@ -9,6 +9,7 @@ import {
     BatchToPusherMessage,
     BatchToPusherRoomMessage,
     EmoteEventMessage,
+    ErrorMessage,
     JoinRoomMessage,
     SubToPusherRoomMessage,
     VariableMessage,
@@ -24,6 +25,7 @@ import { mapFetcher } from "../Services/MapFetcher";
 import { VariablesManager } from "../Services/VariablesManager";
 import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 import { LocalUrlError } from "../Services/LocalUrlError";
+import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -452,10 +454,16 @@ export class GameRoom {
                             // If we are trying to load a local URL, we are probably in test mode.
                             // In this case, let's bypass the server-side checks completely.
 
-                            // FIXME: find a way to send a warning to the client side
-                            // FIXME: find a way to send a warning to the client side
-                            // FIXME: find a way to send a warning to the client side
-                            // FIXME: find a way to send a warning to the client side
+                            // Note: we run this message inside a setTimeout so that the room listeners can have time to connect.
+                            setTimeout(() => {
+                                for (const roomListener of this.roomListeners) {
+                                    emitErrorOnRoomSocket(
+                                        roomListener,
+                                        "You are loading a local map. If you use the scripting API in this map, please be aware that server-side checks and variable persistence is disabled."
+                                    );
+                                }
+                            }, 1000);
+
                             const variablesManager = new VariablesManager(this.roomUrl, null);
                             variablesManager
                                 .init()
