@@ -50,7 +50,6 @@ export class VariablesManager {
             return;
         }
         const variables = await variablesRepository.loadVariables(this.roomUrl);
-        console.error("LIST OF VARIABLES FETCHED", variables);
         for (const key in variables) {
             this._variables.set(key, variables[key]);
         }
