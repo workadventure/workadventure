@@ -1,4 +1,4 @@
-import {writable} from "svelte/store";
+import { writable } from "svelte/store";
 
 /**
  * A store that contains whether the game overlay is shown or not.

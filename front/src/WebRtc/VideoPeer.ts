@@ -1,22 +1,23 @@
 import type * as SimplePeerNamespace from "simple-peer";
-import {mediaManager} from "./MediaManager";
-import {STUN_SERVER, TURN_PASSWORD, TURN_SERVER, TURN_USER} from "../Enum/EnvironmentVariable";
-import type {RoomConnection} from "../Connexion/RoomConnection";
-import {blackListManager} from "./BlackListManager";
-import type {Subscription} from "rxjs";
-import type {UserSimplePeerInterface} from "./SimplePeer";
-import {get, readable, Readable} from "svelte/store";
-import {obtainedMediaConstraintStore} from "../Stores/MediaStore";
-import {discussionManager} from "./DiscussionManager";
+import { mediaManager } from "./MediaManager";
+import type { RoomConnection } from "../Connexion/RoomConnection";
+import { blackListManager } from "./BlackListManager";
+import type { Subscription } from "rxjs";
+import type { UserSimplePeerInterface } from "./SimplePeer";
+import { get, readable, Readable, Unsubscriber } from "svelte/store";
+import { obtainedMediaConstraintStore } from "../Stores/MediaStore";
+import { playersStore } from "../Stores/PlayersStore";
+import { chatMessagesStore, chatVisibilityStore, newChatMessageStore } from "../Stores/ChatStore";
+import { getIceServersConfig } from "../Components/Video/utils";
 
-const Peer: SimplePeerNamespace.SimplePeer = require('simple-peer');
+const Peer: SimplePeerNamespace.SimplePeer = require("simple-peer");
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
-export const MESSAGE_TYPE_CONSTRAINT = 'constraint';
-export const MESSAGE_TYPE_MESSAGE = 'message';
-export const MESSAGE_TYPE_BLOCKED = 'blocked';
-export const MESSAGE_TYPE_UNBLOCKED = 'unblocked';
+export const MESSAGE_TYPE_CONSTRAINT = "constraint";
+export const MESSAGE_TYPE_MESSAGE = "message";
+export const MESSAGE_TYPE_BLOCKED = "blocked";
+export const MESSAGE_TYPE_UNBLOCKED = "unblocked";
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
  */
@@ -26,121 +27,135 @@ export class VideoPeer extends Peer {
     private remoteStream!: MediaStream;
     private blocked: boolean = false;
     public readonly userId: number;
+    public readonly userUuid: string;
     public readonly uniqueId: string;
     private onBlockSubscribe: Subscription;
     private onUnBlockSubscribe: Subscription;
     public readonly streamStore: Readable<MediaStream | null>;
     public readonly statusStore: Readable<PeerStatus>;
-    public readonly constraintsStore: Readable<MediaStreamConstraints|null>;
+    public readonly constraintsStore: Readable<MediaStreamConstraints | null>;
+    private newMessageunsubscriber: Unsubscriber | null = null;
+    private closing: Boolean = false; //this is used to prevent destroy() from being called twice
 
-    constructor(public user: UserSimplePeerInterface, initiator: boolean, public readonly userName: string, private connection: RoomConnection, localStream: MediaStream | null) {
+    constructor(
+        public user: UserSimplePeerInterface,
+        initiator: boolean,
+        public readonly userName: string,
+        private connection: RoomConnection,
+        localStream: MediaStream | null
+    ) {
         super({
-            initiator: initiator ? initiator : false,
-            //reconnectTimer: 10000,
+            initiator,
             config: {
-                iceServers: [
-                    {
-                        urls: STUN_SERVER.split(',')
-                    },
-                    TURN_SERVER !== '' ? {
-                        urls: TURN_SERVER.split(','),
-                        username: user.webRtcUser || TURN_USER,
-                        credential: user.webRtcPassword || TURN_PASSWORD
-                    } :  undefined,
-                ].filter((value) => value !== undefined)
-            }
+                iceServers: getIceServersConfig(user),
+            },
         });
 
         this.userId = user.userId;
-        this.uniqueId = 'video_'+this.userId;
+        this.userUuid = playersStore.getPlayerById(this.userId)?.userUuid || "";
+        this.uniqueId = "video_" + this.userId;
 
-        this.streamStore = readable<MediaStream|null>(null, (set) => {
-            const onStream = (stream: MediaStream|null) => {
+        this.streamStore = readable<MediaStream | null>(null, (set) => {
+            const onStream = (stream: MediaStream | null) => {
                 set(stream);
             };
             const onData = (chunk: Buffer) => {
-                this.on('data',  (chunk: Buffer) => {
-                    const message = JSON.parse(chunk.toString('utf8'));
+                this.on("data", (chunk: Buffer) => {
+                    const message = JSON.parse(chunk.toString("utf8"));
                     if (message.type === MESSAGE_TYPE_CONSTRAINT) {
                         if (!message.video) {
                             set(null);
                         }
                     }
                 });
-            }
+            };
 
-            this.on('stream', onStream);
-            this.on('data', onData);
+            this.on("stream", onStream);
+            this.on("data", onData);
 
             return () => {
-                this.off('stream', onStream);
-                this.off('data', onData);
+                this.off("stream", onStream);
+                this.off("data", onData);
             };
         });
 
-        this.constraintsStore = readable<MediaStreamConstraints|null>(null, (set) => {
+        this.constraintsStore = readable<MediaStreamConstraints | null>(null, (set) => {
             const onData = (chunk: Buffer) => {
-                const message = JSON.parse(chunk.toString('utf8'));
-                if(message.type === MESSAGE_TYPE_CONSTRAINT) {
+                const message = JSON.parse(chunk.toString("utf8"));
+                if (message.type === MESSAGE_TYPE_CONSTRAINT) {
                     set(message);
                 }
-            }
+            };
 
-            this.on('data', onData);
+            this.on("data", onData);
 
             return () => {
-                this.off('data', onData);
+                this.off("data", onData);
             };
         });
 
         this.statusStore = readable<PeerStatus>("connecting", (set) => {
             const onConnect = () => {
-                set('connected');
+                set("connected");
             };
             const onError = () => {
-                set('error');
+                set("error");
             };
             const onClose = () => {
-                set('closed');
+                set("closed");
             };
 
-            this.on('connect', onConnect);
-            this.on('error', onError);
-            this.on('close', onClose);
+            this.on("connect", onConnect);
+            this.on("error", onError);
+            this.on("close", onClose);
 
             return () => {
-                this.off('connect', onConnect);
-                this.off('error', onError);
-                this.off('close', onClose);
+                this.off("connect", onConnect);
+                this.off("error", onError);
+                this.off("close", onClose);
             };
         });
 
         //start listen signal for the peer connection
-        this.on('signal', (data: unknown) => {
+        this.on("signal", (data: unknown) => {
             this.sendWebrtcSignal(data);
         });
 
-        this.on('stream', (stream: MediaStream) => this.stream(stream));
+        this.on("stream", (stream: MediaStream) => this.stream(stream));
 
-        this.on('close', () => {
+        this.on("close", () => {
             this._connected = false;
             this.toClose = true;
             this.destroy();
         });
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.on('error', (err: any) => {
+        this.on("error", (err: any) => {
             console.error(`error => ${this.userId} => ${err.code}`, err);
             mediaManager.isError("" + this.userId);
         });
 
-        this.on('connect', () => {
+        this.on("connect", () => {
             this._connected = true;
+            chatMessagesStore.addIncomingUser(this.userId);
+
+            this.newMessageunsubscriber = newChatMessageStore.subscribe((newMessage) => {
+                if (!newMessage) return;
+                this.write(
+                    new Buffer(
+                        JSON.stringify({
+                            type: MESSAGE_TYPE_MESSAGE,
+                            message: newMessage,
+                        })
+                    )
+                ); //send more data
+                newChatMessageStore.set(null); //This is to prevent a newly created SimplePeer to send an old message a 2nd time. Is there a better way?
+            });
         });
 
-        this.on('data',  (chunk: Buffer) => {
-            const message = JSON.parse(chunk.toString('utf8'));
-            if(message.type === MESSAGE_TYPE_CONSTRAINT) {
+        this.on("data", (chunk: Buffer) => {
+            const message = JSON.parse(chunk.toString("utf8"));
+            if (message.type === MESSAGE_TYPE_CONSTRAINT) {
                 if (message.audio) {
                     mediaManager.enabledMicrophoneByUserId(this.userId);
                 } else {
@@ -152,58 +167,67 @@ export class VideoPeer extends Peer {
                 } else {
                     mediaManager.disabledVideoByUserId(this.userId);
                 }
-            } else if(message.type === MESSAGE_TYPE_MESSAGE) {
-                if (!blackListManager.isBlackListed(message.userId)) {
-                    mediaManager.addNewMessage(message.name, message.message);
+            } else if (message.type === MESSAGE_TYPE_MESSAGE) {
+                if (!blackListManager.isBlackListed(this.userUuid)) {
+                    chatMessagesStore.addExternalMessage(this.userId, message.message);
                 }
-            } else if(message.type === MESSAGE_TYPE_BLOCKED) {
+            } else if (message.type === MESSAGE_TYPE_BLOCKED) {
                 //FIXME when A blacklists B, the output stream from A is muted in B's js client. This is insecure since B can manipulate the code to unmute A stream.
                 // Find a way to block A's output stream in A's js client
                 //However, the output stream stream B is correctly blocked in A client
                 this.blocked = true;
                 this.toggleRemoteStream(false);
-            } else if(message.type === MESSAGE_TYPE_UNBLOCKED) {
+            } else if (message.type === MESSAGE_TYPE_UNBLOCKED) {
                 this.blocked = false;
                 this.toggleRemoteStream(true);
             }
         });
 
-        this.once('finish', () => {
+        this.once("finish", () => {
             this._onFinish();
         });
 
         this.pushVideoToRemoteUser(localStream);
-        this.onBlockSubscribe = blackListManager.onBlockStream.subscribe((userId) => {
-            if (userId === this.userId) {
+        this.onBlockSubscribe = blackListManager.onBlockStream.subscribe((userUuid) => {
+            if (userUuid === this.userUuid) {
                 this.toggleRemoteStream(false);
                 this.sendBlockMessage(true);
             }
         });
-        this.onUnBlockSubscribe = blackListManager.onUnBlockStream.subscribe((userId) => {
-            if (userId === this.userId) {
+        this.onUnBlockSubscribe = blackListManager.onUnBlockStream.subscribe((userUuid) => {
+            if (userUuid === this.userUuid) {
                 this.toggleRemoteStream(true);
                 this.sendBlockMessage(false);
             }
         });
 
-        if (blackListManager.isBlackListed(this.userId)) {
-            this.sendBlockMessage(true)
+        if (blackListManager.isBlackListed(this.userUuid)) {
+            this.sendBlockMessage(true);
         }
     }
 
     private sendBlockMessage(blocking: boolean) {
-        this.write(new Buffer(JSON.stringify({type: blocking ? MESSAGE_TYPE_BLOCKED : MESSAGE_TYPE_UNBLOCKED, name: this.userName.toUpperCase(), userId: this.userId, message: ''})));
+        this.write(
+            new Buffer(
+                JSON.stringify({
+                    type: blocking ? MESSAGE_TYPE_BLOCKED : MESSAGE_TYPE_UNBLOCKED,
+                    name: this.userName.toUpperCase(),
+                    userId: this.userId,
+                    message: "",
+                })
+            )
+        );
     }
 
     private toggleRemoteStream(enable: boolean) {
-        this.remoteStream.getTracks().forEach(track => track.enabled = enable);
+        this.remoteStream.getTracks().forEach((track) => (track.enabled = enable));
         mediaManager.toggleBlockLogo(this.userId, !enable);
     }
 
     private sendWebrtcSignal(data: unknown) {
         try {
             this.connection.sendWebrtcSignal(data, this.userId);
-        }catch (e) {
+        } catch (e) {
             console.error(`sendWebrtcSignal => ${this.userId}`, e);
         }
     }
@@ -214,10 +238,10 @@ export class VideoPeer extends Peer {
     private stream(stream: MediaStream) {
         try {
             this.remoteStream = stream;
-            if (blackListManager.isBlackListed(this.userId) || this.blocked) {
+            if (blackListManager.isBlackListed(this.userUuid) || this.blocked) {
                 this.toggleRemoteStream(false);
             }
-        }catch (err){
+        } catch (err) {
             console.error(err);
         }
     }
@@ -225,47 +249,49 @@ export class VideoPeer extends Peer {
     /**
      * This is triggered twice. Once by the server, and once by a remote client disconnecting
      */
-    public destroy(error?: Error): void {
+    public destroy(): void {
         try {
-            this._connected = false
-            if(!this.toClose){
+            this._connected = false;
+            if (!this.toClose || this.closing) {
                 return;
             }
+            this.closing = true;
             this.onBlockSubscribe.unsubscribe();
             this.onUnBlockSubscribe.unsubscribe();
-            discussionManager.removeParticipant(this.userId);
-            // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
-            // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
-            super.destroy(error);
+            if (this.newMessageunsubscriber) this.newMessageunsubscriber();
+            chatMessagesStore.addOutcomingUser(this.userId);
+            super.destroy();
         } catch (err) {
-            console.error("VideoPeer::destroy", err)
+            console.error("VideoPeer::destroy", err);
         }
     }
 
-    _onFinish () {
-        if (this.destroyed) return
+    _onFinish() {
+        if (this.destroyed) return;
         const destroySoon = () => {
             this.destroy();
-        }
+        };
         if (this._connected) {
             destroySoon();
         } else {
-            this.once('connect', destroySoon);
+            this.once("connect", destroySoon);
         }
     }
 
     private pushVideoToRemoteUser(localStream: MediaStream | null) {
         try {
-            this.write(new Buffer(JSON.stringify({type: MESSAGE_TYPE_CONSTRAINT, ...get(obtainedMediaConstraintStore)})));
+            this.write(
+                new Buffer(JSON.stringify({ type: MESSAGE_TYPE_CONSTRAINT, ...get(obtainedMediaConstraintStore) }))
+            );
 
-            if(!localStream){
+            if (!localStream) {
                 return;
             }
 
             for (const track of localStream.getTracks()) {
                 this.addTrack(track, localStream);
             }
-        }catch (e) {
+        } catch (e) {
             console.error(`pushVideoToRemoteUser => ${this.userId}`, e);
         }
     }

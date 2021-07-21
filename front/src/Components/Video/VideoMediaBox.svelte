@@ -37,9 +37,7 @@
         <img alt="Report this user" src={reportImg}>
         <span>Report/Block</span>
     </button>
-    {#if $streamStore }
     <video use:srcObject={$streamStore} autoplay playsinline on:click={() => videoFocusStore.toggleFocus(peer)}></video>
-    {/if}
     <img src={blockSignImg} class="block-logo" alt="Block" />
     {#if $constraintStore && $constraintStore.audio !== false}
         <SoundMeterWidget stream={$streamStore}></SoundMeterWidget>

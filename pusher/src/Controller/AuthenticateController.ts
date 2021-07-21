@@ -39,9 +39,7 @@ export class AuthenticateController extends BaseController {
                     if (typeof organizationMemberToken != "string") throw new Error("No organization token");
                     const data = await adminApi.fetchMemberDataByToken(organizationMemberToken);
                     const userUuid = data.userUuid;
-                    const organizationSlug = data.organizationSlug;
-                    const worldSlug = data.worldSlug;
-                    const roomSlug = data.roomSlug;
+                    const roomUrl = data.roomUrl;
                     const mapUrlStart = data.mapUrlStart;
                     const textures = data.textures;
 
@@ -52,9 +50,7 @@ export class AuthenticateController extends BaseController {
                         JSON.stringify({
                             authToken,
                             userUuid,
-                            organizationSlug,
-                            worldSlug,
-                            roomSlug,
+                            roomUrl,
                             mapUrlStart,
                             organizationMemberToken,
                             textures,

@@ -54,6 +54,7 @@ WA.room.showLayer(layerName : string): void
 WA.room.hideLayer(layerName : string) : void
 ```
 These 2 methods can be used to show and hide a layer.
+if `layerName` is the name of a group layer, show/hide all the layer in that group layer.
 
 Example :
 ```javascript
@@ -70,47 +71,12 @@ WA.room.setProperty(layerName : string, propertyName : string, propertyValue : s
 
 Set the value of the `propertyName` property of the layer `layerName` at `propertyValue`. If the property doesn't exist, create the property `propertyName` and set the value of the property at `propertyValue`.
 
+Note : 
+To unset a property from a layer, use `setProperty` with `propertyValue` set to `undefined`.
+
 Example :
 ```javascript
 WA.room.setProperty('wikiLayer', 'openWebsite', 'https://www.wikipedia.org/');
-```
-
-### Getting information on the current room
-```
-WA.room.getCurrentRoom(): Promise<Room>
-```
-Return a promise that resolves to a `Room` object with the following attributes :
-* **id (string) :** ID of the current room
-* **map (ITiledMap) :** contains the JSON map file with the properties that were setted by the script if `setProperty` was called.
-* **mapUrl (string) :** Url of the JSON map file
-* **startLayer (string | null) :** Name of the layer where the current user started, only if different from `start` layer
-
-Example :
-```javascript
-WA.room.getCurrentRoom((room) => {
-    if (room.id === '42') {
-        console.log(room.map);
-        window.open(room.mapUrl, '_blank');
-    }
-})
-```
-
-### Getting information on the current user
-```
-WA.player.getCurrentUser(): Promise<User>
-```
-Return a promise that resolves to a `User` object with the following attributes :
-* **id (string) :** ID of the current user
-* **nickName (string) :** name displayed above the current user
-* **tags (string[]) :** list of all the tags of the current user
-
-Example :
-```javascript
-WA.room.getCurrentUser().then((user) => {
-    if (user.nickName === 'ABC') {
-        console.log(user.tags);
-    }
-})
 ```
 
 ### Changing tiles 
@@ -134,6 +100,7 @@ If `tile` is a string, it's not the id of the tile but the value of the property
 
 **Important !** : If you use `tile` as a number, be sure to add the `firstgid` of the tileset of the tile that you want to the id of the tile in Tiled Editor.
 
+Note: If you want to unset a tile, use `setTiles` with `tile` set to `null`.
 
 Example : 
 ```javascript

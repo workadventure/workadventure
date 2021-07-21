@@ -45,8 +45,9 @@
 
   .visitCard {
     pointer-events: all;
-    margin-left: auto;
-    margin-right: auto;
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, 0);
     margin-top: 200px;
     max-width: 80vw;
 

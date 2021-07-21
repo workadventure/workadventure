@@ -286,11 +286,6 @@
                          "name":"jitsiTrigger",
                          "type":"string",
                          "value":"onaction"
-                        },
-                        {
-                         "name":"jitsiUrl",
-                         "type":"string",
-                         "value":"meet.jit.si"
                         }]
                 },
                 {

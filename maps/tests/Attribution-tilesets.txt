@@ -8,7 +8,7 @@ GNU GPL 3.0:
  - http://www.gnu.org/licenses/gpl-3.0.html
  - See the file: gpl-3.0.txt
 
-Assets from: workadventure@thecodingmachine.com
+Assets from: hello@workadventu.re
 
 BASE assets:
 ------------

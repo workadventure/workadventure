@@ -36,7 +36,7 @@ export interface ITiledMap {
 export interface ITiledMapLayerProperty {
     name: string;
     type: string;
-    value: string|boolean|number|undefined;
+    value: string | boolean | number | undefined;
 }
 
 /*export interface ITiledMapLayerBooleanProperty {
@@ -48,7 +48,7 @@ export interface ITiledMapLayerProperty {
 export type ITiledMapLayer = ITiledMapGroupLayer | ITiledMapObjectLayer | ITiledMapTileLayer;
 
 export interface ITiledMapGroupLayer {
-    id?: number,
+    id?: number;
     name: string;
     opacity: number;
     properties?: ITiledMapLayerProperty[];
@@ -64,8 +64,8 @@ export interface ITiledMapGroupLayer {
 }
 
 export interface ITiledMapTileLayer {
-    id?: number,
-    data: number[]|string;
+    id?: number;
+    data: number[] | string;
     height: number;
     name: string;
     opacity: number;
@@ -87,7 +87,7 @@ export interface ITiledMapTileLayer {
 }
 
 export interface ITiledMapObjectLayer {
-    id?: number,
+    id?: number;
     height: number;
     name: string;
     opacity: number;
@@ -117,7 +117,7 @@ export interface ITiledMapObject {
     gid: number;
     height: number;
     name: string;
-    properties: {[key: string]: string};
+    properties: { [key: string]: string };
     rotation: number;
     type: string;
     visible: boolean;
@@ -133,26 +133,26 @@ export interface ITiledMapObject {
     /**
      * Polygon points
      */
-    polygon: {x: number, y: number}[];
+    polygon: { x: number; y: number }[];
 
     /**
      * Polyline points
      */
-    polyline: {x: number, y: number}[];
+    polyline: { x: number; y: number }[];
 
-    text?: ITiledText
+    text?: ITiledText;
 }
 
 export interface ITiledText {
-    text: string,
-    wrap?: boolean,
-    fontfamily?: string,
-    pixelsize?: number,
-    color?: string,
-    underline?: boolean,
-    italic?: boolean,
-    strikeout?: boolean,
-    halign?: "center"|"right"|"justify"|"left"
+    text: string;
+    wrap?: boolean;
+    fontfamily?: string;
+    pixelsize?: number;
+    color?: string;
+    underline?: boolean;
+    italic?: boolean;
+    strikeout?: boolean;
+    halign?: "center" | "right" | "justify" | "left";
 }
 
 export interface ITiledTileSet {
@@ -163,7 +163,7 @@ export interface ITiledTileSet {
     imagewidth: number;
     margin: number;
     name: string;
-    properties: {[key: string]: string};
+    properties: { [key: string]: string };
     spacing: number;
     tilecount: number;
     tileheight: number;
@@ -179,10 +179,10 @@ export interface ITiledTileSet {
 }
 
 export interface ITile {
-    id: number,
-    type?: string
+    id: number;
+    type?: string;
 
-    properties?: Array<ITiledMapLayerProperty>
+    properties?: Array<ITiledMapLayerProperty>;
 }
 
 export interface ITiledMapTerrain {
