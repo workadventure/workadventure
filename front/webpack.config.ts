@@ -24,8 +24,8 @@ module.exports = {
     mode: mode,
     devtool: isDevelopment ? "inline-source-map" : "source-map",
     devServer: {
-        contentBase: './dist',
-        host: '0.0.0.0',
+        contentBase: "./dist",
+        host: "0.0.0.0",
         sockPort: 443,
         disableHostCheck: true,
         historyApiFallback: {
