@@ -32,26 +32,25 @@
       
         input {
           flex: auto;
-          background-color: #42464d;
+          background-color: #254560;
           color: white;
           border-bottom-left-radius: 4px;
           border-top-left-radius: 4px;
           border: none;
           font-size: 22px;
-          font-family: Whiteney;
+          font-family: Lato;
+          padding-left: 6px;
           min-width: 0; //Needed so that the input doesn't overflow the container in firefox
           outline: none;
         }
         
         button {
-          background-color: #42464d;
-          color: white;
+          background-color: #254560;
           border-bottom-right-radius: 4px;
           border-top-right-radius: 4px;
           border: none;
-          border-left: solid black 1px;
+          border-left: solid white 1px;
           font-size: 16px;
-          font-family: Whiteney;
         }
     }
 </style>
