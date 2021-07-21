@@ -436,48 +436,32 @@ export class GameRoom {
 
     private getVariableManager(): Promise<VariablesManager> {
         if (!this.variableManagerPromise) {
-            this.variableManagerPromise = new Promise<VariablesManager>((resolve, reject) => {
-                this.getMap()
-                    .then((map) => {
-                        const variablesManager = new VariablesManager(this.roomUrl, map);
-                        variablesManager
-                            .init()
-                            .then(() => {
-                                resolve(variablesManager);
-                            })
-                            .catch((e) => {
-                                reject(e);
-                            });
-                    })
-                    .catch((e) => {
-                        if (e instanceof LocalUrlError) {
-                            // If we are trying to load a local URL, we are probably in test mode.
-                            // In this case, let's bypass the server-side checks completely.
+            this.variableManagerPromise = this.getMap()
+                .then((map) => {
+                    const variablesManager = new VariablesManager(this.roomUrl, map);
+                    return variablesManager.init();
+                })
+                .catch((e) => {
+                    if (e instanceof LocalUrlError) {
+                        // If we are trying to load a local URL, we are probably in test mode.
+                        // In this case, let's bypass the server-side checks completely.
 
-                            // Note: we run this message inside a setTimeout so that the room listeners can have time to connect.
-                            setTimeout(() => {
-                                for (const roomListener of this.roomListeners) {
-                                    emitErrorOnRoomSocket(
-                                        roomListener,
-                                        "You are loading a local map. If you use the scripting API in this map, please be aware that server-side checks and variable persistence is disabled."
-                                    );
-                                }
-                            }, 1000);
+                        // Note: we run this message inside a setTimeout so that the room listeners can have time to connect.
+                        setTimeout(() => {
+                            for (const roomListener of this.roomListeners) {
+                                emitErrorOnRoomSocket(
+                                    roomListener,
+                                    "You are loading a local map. If you use the scripting API in this map, please be aware that server-side checks and variable persistence is disabled."
+                                );
+                            }
+                        }, 1000);
 
-                            const variablesManager = new VariablesManager(this.roomUrl, null);
-                            variablesManager
-                                .init()
-                                .then(() => {
-                                    resolve(variablesManager);
-                                })
-                                .catch((e) => {
-                                    reject(e);
-                                });
-                        } else {
-                            reject(e);
-                        }
-                    });
-            });
+                        const variablesManager = new VariablesManager(this.roomUrl, null);
+                        return variablesManager.init();
+                    } else {
+                        throw e;
+                    }
+                });
         }
         return this.variableManagerPromise;
     }

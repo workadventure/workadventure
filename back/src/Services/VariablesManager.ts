@@ -45,14 +45,15 @@ export class VariablesManager {
     /**
      * Let's load data from the Redis backend.
      */
-    public async init(): Promise<void> {
+    public async init(): Promise<VariablesManager> {
         if (!this.shouldPersist()) {
-            return;
+            return this;
         }
         const variables = await variablesRepository.loadVariables(this.roomUrl);
         for (const key in variables) {
             this._variables.set(key, variables[key]);
         }
+        return this;
     }
 
     /**
