@@ -30,12 +30,10 @@
 
 
 <aside class="chatWindow" transition:fly="{{ x: -1000, duration: 500 }}">
-    <section class="chatWindowTitle">
-        <h1>Your chat history <span class="float-right" on:click={closeChat}>&times</span></h1>
-
-    </section>
+    <p class="close-icon" on:click={closeChat}>&times</p>
     <section class="messagesList" bind:this={listDom}>
         <ul>
+            <li><p class="system-text">Here is your chat history: </p></li>
         {#each $chatMessagesStore as message, i}
             <li><ChatElement message={message} line={i}></ChatElement></li>
         {/each} 
@@ -47,16 +45,23 @@
 </aside>
 
 <style lang="scss">
-    h1 {
-      font-family: Lato;
-
-      span.float-right {
-        font-size: 30px;
-        line-height: 25px;
-        font-weight: bold;
-        float: right;
-        cursor: pointer;
-      }
+    p.close-icon {
+      position: absolute;
+      padding: 4px;
+      right: 12px;
+      font-size: 30px;
+      line-height: 25px;
+      cursor: pointer;
+    }
+    
+    p.system-text {
+      border-radius: 8px;
+      margin-bottom: 10px;
+      padding:6px;
+      overflow-wrap: break-word;
+      max-width: 100%;
+      background: gray;
+      display: inline-block;
     }
 
     aside.chatWindow {
@@ -78,16 +83,8 @@
       border-bottom-right-radius: 16px;
       border-top-right-radius: 16px;
       
-      h1 {
-        background-color: #5f5f5f;
-        border-radius: 8px;
-        padding: 2px;
-      }
-      
-      .chatWindowTitle {
-        flex: 0 100px;
-      }
       .messagesList {
+        margin-top: 35px;
         overflow-y: auto;
         flex: auto;
 
@@ -98,7 +95,7 @@
       }
       .messageForm {
         flex: 0 70px;
-        padding-top: 20px;
+        padding-top: 15px;
       }
     }
 </style>

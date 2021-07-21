@@ -96,6 +96,7 @@ function createChatMessagesStore() {
                 }
                 return list;
             });
+            chatVisibilityStore.set(true);
         },
     };
 }

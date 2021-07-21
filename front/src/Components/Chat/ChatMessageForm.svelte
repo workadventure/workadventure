@@ -32,7 +32,7 @@
       
         input {
           flex: auto;
-          background-color: #42464d;
+          background-color: #254560;
           color: white;
           border-bottom-left-radius: 4px;
           border-top-left-radius: 4px;
@@ -45,11 +45,11 @@
         }
         
         button {
-          background-color: #42464d;
+          background-color: #254560;
           border-bottom-right-radius: 4px;
           border-top-right-radius: 4px;
           border: none;
-          border-left: solid black 1px;
+          border-left: solid white 1px;
           font-size: 16px;
         }
     }
