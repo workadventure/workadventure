@@ -1,8 +1,7 @@
-import Sprite = Phaser.GameObjects.Sprite;
-import Text = Phaser.GameObjects.Text;
 import DOMElement = Phaser.GameObjects.DOMElement;
 import { DEPTH_UI_INDEX } from "../Game/DepthIndexes";
 import { waScaleManager } from "../Services/WaScaleManager";
+import type { UserInputManager } from "../UserInput/UserInputManager";
 import { EmojiButton } from "@joeattardi/emoji-button";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 
@@ -13,7 +12,7 @@ export class EmoteMenu extends Phaser.GameObjects.Container {
     private container: DOMElement;
     private picker: EmojiButton;
 
-    constructor(scene: Phaser.Scene, x: number, y: number) {
+    constructor(scene: Phaser.Scene, x: number, y: number, private userInputManager: UserInputManager) {
         super(scene, x, y);
         this.setDepth(DEPTH_UI_INDEX);
         this.scene.add.existing(this);
@@ -29,6 +28,10 @@ export class EmoteMenu extends Phaser.GameObjects.Container {
             this.emit(EmoteMenuClickEvent, selection.emoji);
         });
 
+        this.picker.on("hidden", () => {
+            this.userInputManager.restoreControls();
+        });
+
         this.resize();
         this.resizeCallback = this.resize.bind(this);
         this.scene.scale.on(Phaser.Scale.Events.RESIZE, this.resizeCallback);
@@ -39,6 +42,7 @@ export class EmoteMenu extends Phaser.GameObjects.Container {
     }
 
     public openPicker() {
+        this.userInputManager.disableControls();
         const emojiContainer = HtmlUtils.querySelectorOrFail(".emoji-container");
         this.picker.showPicker(emojiContainer);
     }

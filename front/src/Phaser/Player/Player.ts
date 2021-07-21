@@ -96,7 +96,7 @@ export class Player extends Character {
 
     openOrCloseEmoteMenu() {
         if (!this.emoteMenu) {
-            this.emoteMenu = new EmoteMenu(this.scene, this.x, this.y);
+            this.emoteMenu = new EmoteMenu(this.scene, this.x, this.y, this.userInputManager);
         }
 
         if (this.emoteMenu.isOpen()) {
@@ -109,7 +109,6 @@ export class Player extends Character {
     openEmoteMenu(): void {
         this.cancelPreviousEmote();
         if (!this.emoteMenu) return;
-        this.userInputManager.disableControls();
         this.emoteMenu.openPicker();
         this.emoteMenu.on(EmoteMenuClickEvent, (emote: string) => {
             this.closeEmoteMenu();
@@ -119,7 +118,6 @@ export class Player extends Character {
     }
 
     closeEmoteMenu(): void {
-        this.userInputManager.restoreControls();
         if (!this.emoteMenu) return;
         this.emoteMenu.closePicker();
     }
