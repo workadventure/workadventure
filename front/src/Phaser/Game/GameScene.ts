@@ -1319,9 +1319,9 @@ ${escapedMessage}
                 if (pointer.wasTouch && (pointer.event as TouchEvent).touches.length > 1) {
                     return; //we don't want the menu to open when pinching on a touch screen.
                 }
-                
-                this.CurrentPlayer.openOrCloseEmoteMenu( this.emoteManager.getEmotes());
-            })
+
+                this.CurrentPlayer.openOrCloseEmoteMenu();
+            });
             this.CurrentPlayer.on(requestEmoteEventName, (emoteKey: string) => {
                 this.connection?.emitEmoteEvent(emoteKey);
             });

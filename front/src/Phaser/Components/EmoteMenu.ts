@@ -1,63 +1,50 @@
 import Sprite = Phaser.GameObjects.Sprite;
 import Text = Phaser.GameObjects.Text;
-import {DEPTH_UI_INDEX} from "../Game/DepthIndexes";
-import {waScaleManager} from "../Services/WaScaleManager";
+import DOMElement = Phaser.GameObjects.DOMElement;
+import { DEPTH_UI_INDEX } from "../Game/DepthIndexes";
+import { waScaleManager } from "../Services/WaScaleManager";
+import { EmojiButton } from "@joeattardi/emoji-button";
+import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 
-export const EmoteMenuClickEvent = 'emoteClick';
+export const EmoteMenuClickEvent = "emoteClick";
 
 export class EmoteMenu extends Phaser.GameObjects.Container {
     private resizeCallback: OmitThisParameter<() => void>;
+    private container: DOMElement;
+    private picker: EmojiButton;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, private items: string[]) {
+    constructor(scene: Phaser.Scene, x: number, y: number) {
         super(scene, x, y);
-        this.setDepth(DEPTH_UI_INDEX)
+        this.setDepth(DEPTH_UI_INDEX);
         this.scene.add.existing(this);
-        this.initItems();
+        this.container = new DOMElement(this.scene, 0, 0, "div", "", "");
+        this.container.setClassName("emoji-container");
+        const scalingFactor = waScaleManager.uiScalingFactor * 0.5;
+        this.container.setScale(scalingFactor);
+        this.add(this.container);
+        const emojiContainer = HtmlUtils.querySelectorOrFail(".emoji-container");
+        this.picker = new EmojiButton({ rootElement: emojiContainer });
+
+        this.picker.on("emoji", (selection) => {
+            this.emit(EmoteMenuClickEvent, selection.emoji);
+        });
 
         this.resize();
         this.resizeCallback = this.resize.bind(this);
         this.scene.scale.on(Phaser.Scale.Events.RESIZE, this.resizeCallback);
     }
 
-    private initItems() {
-        const itemsNumber = this.items.length;
-        const menuRadius = 70 + (waScaleManager.uiScalingFactor - 1) * 20;
-        this.items.forEach((item, index) => this.createEmoteElement(item, index, itemsNumber, menuRadius))
+    public isOpen(): boolean {
+        return this.picker.isPickerVisible();
     }
 
-    private createEmoteElement(item: string, index: number, itemsNumber: number, menuRadius: number) {
-        // const image = new Sprite(this.scene, 0,  menuRadius, item.image);
-        const image = new Text(this.scene, -12, menuRadius, item, {fontFamily: '"twemoji"', fontSize:'75px'});
-        this.add(image);
-        // this.scene.sys.updateList.add(image);
-        const scalingFactor = waScaleManager.uiScalingFactor * 0.3;
-        image.setScale(scalingFactor)
-        image.setInteractive({
-            useHandCursor: true,
-        });
-        image.on('pointerdown', () => this.emit(EmoteMenuClickEvent, item));
-        image.on('pointerover', () => {
-            this.scene.tweens.add({
-                targets: image,
-                props: {
-                    scale: 1.5 * scalingFactor,
-                },
-                duration: 500,
-                ease: 'Power3',
-            })
-        });
-        image.on('pointerout', () => {
-            this.scene.tweens.add({
-                targets: image,
-                props: {
-                    scale: scalingFactor,
-                },
-                duration: 500,
-                ease: 'Power3',
-            })
-        });
-        const angle = 2 * Math.PI * index / itemsNumber;
-        Phaser.Actions.RotateAroundDistance([image], {x: -12, y: -12}, angle, menuRadius);
+    public openPicker() {
+        const emojiContainer = HtmlUtils.querySelectorOrFail(".emoji-container");
+        this.picker.showPicker(emojiContainer);
+    }
+
+    public closePicker() {
+        this.picker.hidePicker();
     }
 
     private resize() {
