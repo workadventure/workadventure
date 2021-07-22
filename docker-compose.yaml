@@ -115,6 +115,8 @@ services:
       JITSI_ISS: $JITSI_ISS
       TURN_STATIC_AUTH_SECRET: SomeStaticAuthSecret
       MAX_PER_GROUP: "MAX_PER_GROUP"
+      WEBEX_CLIENT_ID: $WEBEX_CLIENT_ID
+      WEBEX_CLIENT_SECRET: $WEBEX_CLIENT_SECRET
     volumes:
       - ./back:/usr/src/app
     labels:
