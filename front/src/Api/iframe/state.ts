@@ -85,6 +85,6 @@ const proxyCommand = new Proxy(new WorkadventureStateCommands(), {
         target.saveVariable(p.toString(), value);
         return true;
     },
-});
+}) as WorkadventureStateCommands & { [key: string]: unknown };
 
 export default proxyCommand;

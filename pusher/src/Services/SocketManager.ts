@@ -632,12 +632,12 @@ export class SocketManager implements ZoneEventListener {
             tabUrlRooms = [clientRoomUrl];
         }
 
-        let roomMessage = new AdminRoomMessage();
+        const roomMessage = new AdminRoomMessage();
         roomMessage.setMessage(playGlobalMessageEvent.getContent());
         roomMessage.setType(playGlobalMessageEvent.getType());
 
-        for (let roomUrl of tabUrlRooms) {
-            let apiRoom = await apiClientRepository.getClient(roomUrl);
+        for (const roomUrl of tabUrlRooms) {
+            const apiRoom = await apiClientRepository.getClient(roomUrl);
             roomMessage.setRoomid(roomUrl);
             apiRoom.sendAdminMessageToRoom(roomMessage, (response) => {
                 return;
