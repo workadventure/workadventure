@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "tsc": "tsc",
-    "dev": "ts-node-dev --respawn ./server.ts",
+    "dev": "ts-node-dev --respawn --poll ./server.ts",
     "prod": "tsc && node --max-old-space-size=4096 ./dist/server.js",
     "runprod": "node --max-old-space-size=4096 ./dist/server.js",
     "profile": "tsc && node --prof ./dist/server.js",
@@ -41,9 +41,12 @@
   "homepage": "https://github.com/thecodingmachine/workadventure#readme",
   "dependencies": {
     "@workadventure/tiled-map-type-guard": "^1.0.0",
+    "@types/cookie": "0.4.1",
+    "@types/node-fetch": "2.5.11",
     "axios": "^0.21.1",
     "busboy": "^0.3.1",
     "circular-json": "^0.5.9",
+    "cookie": "0.4.1",
     "debug": "^4.3.1",
     "generic-type-guard": "^3.2.0",
     "google-protobuf": "^3.13.0",
@@ -51,9 +54,11 @@
     "ipaddr.js": "^2.0.1",
     "jsonwebtoken": "^8.5.1",
     "mkdirp": "^1.0.4",
+    "node-fetch": "2.6.1",
     "prom-client": "^12.0.0",
     "query-string": "^6.13.3",
     "redis": "^3.1.2",
+    "request": "2.88.2",
     "systeminformation": "^4.31.1",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v18.5.0",
     "uuidv4": "^6.0.7"
