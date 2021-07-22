@@ -45,88 +45,90 @@ const roomManager: IRoomManagerServer = {
         let room: GameRoom | null = null;
         let user: User | null = null;
 
-        call.on("data", async (message: PusherToBackMessage) => {
-            try {
-                if (room === null || user === null) {
-                    if (message.hasJoinroommessage()) {
-                        socketManager
-                            .handleJoinRoom(call, message.getJoinroommessage() as JoinRoomMessage)
-                            .then(({ room: gameRoom, user: myUser }) => {
-                                if (call.writable) {
-                                    room = gameRoom;
-                                    user = myUser;
-                                } else {
-                                    //Connexion may have been closed before the init was finished, so we have to manually disconnect the user.
-                                    socketManager.leaveRoom(gameRoom, myUser);
-                                }
-                            })
-                            .catch((e) => emitError(call, e));
-                    } else {
-                        throw new Error("The first message sent MUST be of type JoinRoomMessage");
-                    }
-                } else {
-                    if (message.hasJoinroommessage()) {
-                        throw new Error("Cannot call JoinRoomMessage twice!");
-                    } else if (message.hasUsermovesmessage()) {
-                        socketManager.handleUserMovesMessage(
-                            room,
-                            user,
-                            message.getUsermovesmessage() as UserMovesMessage
-                        );
-                    } else if (message.hasSilentmessage()) {
-                        socketManager.handleSilentMessage(room, user, message.getSilentmessage() as SilentMessage);
-                    } else if (message.hasItemeventmessage()) {
-                        socketManager.handleItemEvent(room, user, message.getItemeventmessage() as ItemEventMessage);
-                    } else if (message.hasVariablemessage()) {
-                        await socketManager.handleVariableEvent(
-                            room,
-                            user,
-                            message.getVariablemessage() as VariableMessage
-                        );
-                    } else if (message.hasWebrtcsignaltoservermessage()) {
-                        socketManager.emitVideo(
-                            room,
-                            user,
-                            message.getWebrtcsignaltoservermessage() as WebRtcSignalToServerMessage
-                        );
-                    } else if (message.hasWebrtcscreensharingsignaltoservermessage()) {
-                        socketManager.emitScreenSharing(
-                            room,
-                            user,
-                            message.getWebrtcscreensharingsignaltoservermessage() as WebRtcSignalToServerMessage
-                        );
-                    } else if (message.hasPlayglobalmessage()) {
-                        socketManager.emitPlayGlobalMessage(room, message.getPlayglobalmessage() as PlayGlobalMessage);
-                    } else if (message.hasQueryjitsijwtmessage()) {
-                        socketManager.handleQueryJitsiJwtMessage(
-                            user,
-                            message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage
-                        );
-                    } else if (message.hasEmotepromptmessage()) {
-                        socketManager.handleEmoteEventMessage(
-                            room,
-                            user,
-                            message.getEmotepromptmessage() as EmotePromptMessage
-                        );
-                    } else if (message.hasSendusermessage()) {
-                        const sendUserMessage = message.getSendusermessage();
-                        if (sendUserMessage !== undefined) {
-                            socketManager.handlerSendUserMessage(user, sendUserMessage);
-                        }
-                    } else if (message.hasBanusermessage()) {
-                        const banUserMessage = message.getBanusermessage();
-                        if (banUserMessage !== undefined) {
-                            socketManager.handlerBanUserMessage(room, user, banUserMessage);
+        call.on("data", (message: PusherToBackMessage) => {
+            (async () => {
+                try {
+                    if (room === null || user === null) {
+                        if (message.hasJoinroommessage()) {
+                            socketManager
+                                .handleJoinRoom(call, message.getJoinroommessage() as JoinRoomMessage)
+                                .then(({ room: gameRoom, user: myUser }) => {
+                                    if (call.writable) {
+                                        room = gameRoom;
+                                        user = myUser;
+                                    } else {
+                                        //Connexion may have been closed before the init was finished, so we have to manually disconnect the user.
+                                        socketManager.leaveRoom(gameRoom, myUser);
+                                    }
+                                })
+                                .catch((e) => emitError(call, e));
+                        } else {
+                            throw new Error("The first message sent MUST be of type JoinRoomMessage");
                         }
                     } else {
-                        throw new Error("Unhandled message type");
+                        if (message.hasJoinroommessage()) {
+                            throw new Error("Cannot call JoinRoomMessage twice!");
+                        } else if (message.hasUsermovesmessage()) {
+                            socketManager.handleUserMovesMessage(
+                                room,
+                                user,
+                                message.getUsermovesmessage() as UserMovesMessage
+                            );
+                        } else if (message.hasSilentmessage()) {
+                            socketManager.handleSilentMessage(room, user, message.getSilentmessage() as SilentMessage);
+                        } else if (message.hasItemeventmessage()) {
+                            socketManager.handleItemEvent(room, user, message.getItemeventmessage() as ItemEventMessage);
+                        } else if (message.hasVariablemessage()) {
+                            await socketManager.handleVariableEvent(
+                                room,
+                                user,
+                                message.getVariablemessage() as VariableMessage
+                            );
+                        } else if (message.hasWebrtcsignaltoservermessage()) {
+                            socketManager.emitVideo(
+                                room,
+                                user,
+                                message.getWebrtcsignaltoservermessage() as WebRtcSignalToServerMessage
+                            );
+                        } else if (message.hasWebrtcscreensharingsignaltoservermessage()) {
+                            socketManager.emitScreenSharing(
+                                room,
+                                user,
+                                message.getWebrtcscreensharingsignaltoservermessage() as WebRtcSignalToServerMessage
+                            );
+                        } else if (message.hasPlayglobalmessage()) {
+                            socketManager.emitPlayGlobalMessage(room, message.getPlayglobalmessage() as PlayGlobalMessage);
+                        } else if (message.hasQueryjitsijwtmessage()) {
+                            socketManager.handleQueryJitsiJwtMessage(
+                                user,
+                                message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage
+                            );
+                        } else if (message.hasEmotepromptmessage()) {
+                            socketManager.handleEmoteEventMessage(
+                                room,
+                                user,
+                                message.getEmotepromptmessage() as EmotePromptMessage
+                            );
+                        } else if (message.hasSendusermessage()) {
+                            const sendUserMessage = message.getSendusermessage();
+                            if (sendUserMessage !== undefined) {
+                                socketManager.handlerSendUserMessage(user, sendUserMessage);
+                            }
+                        } else if (message.hasBanusermessage()) {
+                            const banUserMessage = message.getBanusermessage();
+                            if (banUserMessage !== undefined) {
+                                socketManager.handlerBanUserMessage(room, user, banUserMessage);
+                            }
+                        } else {
+                            throw new Error("Unhandled message type");
+                        }
                     }
+                } catch (e) {
+                    console.error(e);
+                    emitError(call, e);
+                    call.end();
                 }
-            } catch (e) {
-                console.error(e);
-                emitError(call, e);
-                call.end();
-            }
+            })().catch(e => console.error(e));
         });
 
         call.on("end", () => {
