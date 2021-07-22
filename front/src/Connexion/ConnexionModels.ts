@@ -108,12 +108,6 @@ export interface RoomJoinedMessageInterface {
 }
 
 export interface PlayGlobalMessageInterface {
-    id: string;
-    type: string;
-    message: string;
-}
-
-export interface UserGlobalMessageInterface {
     type: string;
     content: string;
     broadcastToWorld: boolean;

@@ -10,7 +10,7 @@
     let inputSendTextActive = true;
     let uploadMusicActive = false;
     let handleSendText: { sendTextMessage(broadcast: boolean): void };
-    let handleSendAudio: { sendAudioMessage(): Promise<void> };
+    let handleSendAudio: { sendAudioMessage(broadcast: boolean): Promise<void> };
     let broadcastToWorld = false;
 
     function closeConsoleGlobalMessage() {
@@ -38,7 +38,7 @@
             handleSendText.sendTextMessage(broadcastToWorld);
         }
         if (uploadMusicActive) {
-            handleSendAudio.sendAudioMessage();
+            handleSendAudio.sendAudioMessage(broadcastToWorld);
         }
     }
 </script>

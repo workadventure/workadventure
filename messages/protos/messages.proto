@@ -94,7 +94,6 @@ message ClientToServerMessage {
     ReportPlayerMessage reportPlayerMessage = 11;
     QueryJitsiJwtMessage queryJitsiJwtMessage = 12;
     EmotePromptMessage emotePromptMessage = 13;
-    UserGlobalMessage userGlobalMessage = 14;
   }
 }
 
@@ -109,12 +108,6 @@ message ItemEventMessage {
 }
 
 message PlayGlobalMessage {
-  string id = 1;
-  string type = 2;
-  string message = 3;
-}
-
-message UserGlobalMessage {
   string type = 1;
   string content = 2;
   bool broadcastToWorld = 3;
@@ -267,7 +260,6 @@ message ServerToClientMessage {
     RefreshRoomMessage refreshRoomMessage = 17;
     WorldConnexionMessage worldConnexionMessage = 18;
     EmoteEventMessage emoteEventMessage = 19;
-    UserGlobalMessage userGlobalMessage = 20;
   }
 }
 
@@ -342,7 +334,6 @@ message PusherToBackMessage {
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
     EmotePromptMessage emotePromptMessage = 14;
-    UserGlobalMessage userGlobalMessage = 15;
   }
 }
 
@@ -415,6 +406,7 @@ message AdminMessage {
 message AdminRoomMessage {
   string message = 1;
   string roomId = 2;
+  string type = 3;
 }
 
 // A message sent by an administrator to absolutely everybody

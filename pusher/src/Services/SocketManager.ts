@@ -23,7 +23,6 @@ import {
     SetPlayerDetailsMessage,
     SilentMessage,
     SubMessage,
-    UserGlobalMessage,
     UserJoinedRoomMessage,
     UserLeftMessage,
     UserLeftRoomMessage,
@@ -387,17 +386,6 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    emitPlayGlobalMessage(client: ExSocketInterface, playglobalmessage: PlayGlobalMessage) {
-        if (!client.tags.includes("admin")) {
-            //In case of xss injection, we just kill the connection.
-            throw "Client is not an admin!";
-        }
-        const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setPlayglobalmessage(playglobalmessage);
-
-        client.backConnection.write(pusherToBackMessage);
-    }
-
     public getWorlds(): Map<string, PusherRoom> {
         return this.rooms;
     }
@@ -607,9 +595,9 @@ export class SocketManager implements ZoneEventListener {
         client.backConnection.write(pusherToBackMessage);
     }
 
-    public async handleUserGlobalMessage(
+    public async emitPlayGlobalMessage(
         client: ExSocketInterface,
-        userGlobalMessageEvent: UserGlobalMessage
+        playGlobalMessageEvent: PlayGlobalMessage
     ): Promise<void> {
         if (!client.tags.includes("admin")) {
             throw "Client is not an admin!";
@@ -618,14 +606,15 @@ export class SocketManager implements ZoneEventListener {
         const clientRoomUrl = client.roomId;
         let tabUrlRooms: string[];
 
-        if (userGlobalMessageEvent.getBroadcasttoworld()) {
+        if (playGlobalMessageEvent.getBroadcasttoworld()) {
             tabUrlRooms = await adminApi.getUrlRoomsFromSameWorld(clientRoomUrl);
         } else {
             tabUrlRooms = [clientRoomUrl];
         }
 
         let roomMessage = new AdminRoomMessage();
-        roomMessage.setMessage(userGlobalMessageEvent.getContent());
+        roomMessage.setMessage(playGlobalMessageEvent.getContent());
+        roomMessage.setType(playGlobalMessageEvent.getType());
 
         for (let roomUrl of tabUrlRooms) {
             let apiRoom = await apiClientRepository.getClient(roomUrl);

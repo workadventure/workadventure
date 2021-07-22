@@ -212,7 +212,7 @@ const roomManager: IRoomManagerServer = {
         callback(null, new EmptyMessage());
     },
     sendAdminMessageToRoom(call: ServerUnaryCall<AdminRoomMessage>, callback: sendUnaryData<EmptyMessage>): void {
-        socketManager.sendAdminRoomMessage(call.request.getRoomid(), call.request.getMessage());
+        socketManager.sendAdminRoomMessage(call.request.getRoomid(), call.request.getMessage(), call.request.getType());
         callback(null, new EmptyMessage());
     },
     sendWorldFullWarningToRoom(

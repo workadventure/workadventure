@@ -3,9 +3,9 @@
     import { onMount } from "svelte";
     import type { Game } from "../../Phaser/Game/Game";
     import type { GameManager } from "../../Phaser/Game/GameManager";
-    import type { UserGlobalMessageInterface } from "../../Connexion/ConnexionModels";
     import { AdminMessageEventTypes } from "../../Connexion/AdminMessagesService";
     import type { Quill } from "quill";
+    import type { PlayGlobalMessageInterface } from "../../Connexion/ConnexionModels";
 
     //toolbar
     const toolbarOptions = [
@@ -46,15 +46,19 @@
                 return;
             }
             const text = quill.getText(0, quill.getLength());
+            const content = quill.getContents(0, quill.getLength());
 
-            const textGlobalMessage: UserGlobalMessageInterface = {
+            console.log('Text : ', text);
+            console.log('Content : ', content);
+
+            const textGlobalMessage: PlayGlobalMessageInterface = {
                 type: MESSAGE_TYPE,
                 content: text,
                 broadcastToWorld: broadcastToWorld
             };
 
             quill.deleteText(0, quill.getLength());
-            gameScene.connection?.sendUserGlobalMessage(textGlobalMessage);
+            gameScene.connection?.emitGlobalMessage(textGlobalMessage);
             disableConsole();
         }
     }
