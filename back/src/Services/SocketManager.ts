@@ -129,30 +129,25 @@ export class SocketManager {
     }
 
     handleUserMovesMessage(room: GameRoom, user: User, userMovesMessage: UserMovesMessage) {
-        try {
-            const userMoves = userMovesMessage.toObject();
-            const position = userMovesMessage.getPosition();
+        const userMoves = userMovesMessage.toObject();
+        const position = userMovesMessage.getPosition();
 
-            // If CPU is high, let's drop messages of users moving (we will only dispatch the final position)
-            if (cpuTracker.isOverHeating() && userMoves.position?.moving === true) {
-                return;
-            }
-
-            if (position === undefined) {
-                throw new Error("Position not found in message");
-            }
-            const viewport = userMoves.viewport;
-            if (viewport === undefined) {
-                throw new Error("Viewport not found in message");
-            }
-
-            // update position in the world
-            room.updatePosition(user, ProtobufUtils.toPointInterface(position));
-            //room.setViewport(client, client.viewport);
-        } catch (e) {
-            console.error('An error occurred on "user_position" event');
-            console.error(e);
+        // If CPU is high, let's drop messages of users moving (we will only dispatch the final position)
+        if (cpuTracker.isOverHeating() && userMoves.position?.moving === true) {
+            return;
         }
+
+        if (position === undefined) {
+            throw new Error("Position not found in message");
+        }
+        const viewport = userMoves.viewport;
+        if (viewport === undefined) {
+            throw new Error("Viewport not found in message");
+        }
+
+        // update position in the world
+        room.updatePosition(user, ProtobufUtils.toPointInterface(position));
+        //room.setViewport(client, client.viewport);
     }
 
     // Useless now, will be useful again if we allow editing details in game
@@ -171,43 +166,26 @@ export class SocketManager {
     }*/
 
     handleSilentMessage(room: GameRoom, user: User, silentMessage: SilentMessage) {
-        try {
-            room.setSilent(user, silentMessage.getSilent());
-        } catch (e) {
-            console.error('An error occurred on "handleSilentMessage"');
-            console.error(e);
-        }
+        room.setSilent(user, silentMessage.getSilent());
     }
 
     handleItemEvent(room: GameRoom, user: User, itemEventMessage: ItemEventMessage) {
         const itemEvent = ProtobufUtils.toItemEvent(itemEventMessage);
 
-        try {
-            const subMessage = new SubMessage();
-            subMessage.setItemeventmessage(itemEventMessage);
+        const subMessage = new SubMessage();
+        subMessage.setItemeventmessage(itemEventMessage);
 
-            // Let's send the event without using the SocketIO room.
-            // TODO: move this in the GameRoom class.
-            for (const user of room.getUsers().values()) {
-                user.emitInBatch(subMessage);
-            }
-
-            room.setItemState(itemEvent.itemId, itemEvent.state);
-        } catch (e) {
-            console.error('An error occurred on "item_event"');
-            console.error(e);
+        // Let's send the event without using the SocketIO room.
+        // TODO: move this in the GameRoom class.
+        for (const user of room.getUsers().values()) {
+            user.emitInBatch(subMessage);
         }
+
+        room.setItemState(itemEvent.itemId, itemEvent.state);
     }
 
-    handleVariableEvent(room: GameRoom, user: User, variableMessage: VariableMessage) {
-        (async () => {
-            try {
-                await room.setVariable(variableMessage.getName(), variableMessage.getValue(), user);
-            } catch (e) {
-                console.error('An error occurred on "handleVariableEvent"');
-                console.error(e);
-            }
-        })();
+    handleVariableEvent(room: GameRoom, user: User, variableMessage: VariableMessage): Promise<void> {
+        return room.setVariable(variableMessage.getName(), variableMessage.getValue(), user);
     }
 
     emitVideo(room: GameRoom, user: User, data: WebRtcSignalToServerMessage): void {
@@ -543,16 +521,11 @@ export class SocketManager {
     }
 
     emitPlayGlobalMessage(room: GameRoom, playGlobalMessage: PlayGlobalMessage) {
-        try {
-            const serverToClientMessage = new ServerToClientMessage();
-            serverToClientMessage.setPlayglobalmessage(playGlobalMessage);
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setPlayglobalmessage(playGlobalMessage);
 
-            for (const [id, user] of room.getUsers().entries()) {
-                user.socket.write(serverToClientMessage);
-            }
-        } catch (e) {
-            console.error('An error occurred on "emitPlayGlobalMessage" event');
-            console.error(e);
+        for (const [id, user] of room.getUsers().entries()) {
+            user.socket.write(serverToClientMessage);
         }
     }
 

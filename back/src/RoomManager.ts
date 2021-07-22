@@ -45,7 +45,7 @@ const roomManager: IRoomManagerServer = {
         let room: GameRoom | null = null;
         let user: User | null = null;
 
-        call.on("data", (message: PusherToBackMessage) => {
+        call.on("data", async (message: PusherToBackMessage) => {
             try {
                 if (room === null || user === null) {
                     if (message.hasJoinroommessage()) {
@@ -78,7 +78,11 @@ const roomManager: IRoomManagerServer = {
                     } else if (message.hasItemeventmessage()) {
                         socketManager.handleItemEvent(room, user, message.getItemeventmessage() as ItemEventMessage);
                     } else if (message.hasVariablemessage()) {
-                        socketManager.handleVariableEvent(room, user, message.getVariablemessage() as VariableMessage);
+                        await socketManager.handleVariableEvent(
+                            room,
+                            user,
+                            message.getVariablemessage() as VariableMessage
+                        );
                     } else if (message.hasWebrtcsignaltoservermessage()) {
                         socketManager.emitVideo(
                             room,
@@ -119,6 +123,7 @@ const roomManager: IRoomManagerServer = {
                     }
                 }
             } catch (e) {
+                console.error(e);
                 emitError(call, e);
                 call.end();
             }
