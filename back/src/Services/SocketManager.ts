@@ -268,31 +268,29 @@ export class SocketManager {
         //check and create new room
         let roomPromise = this.roomsPromises.get(roomId);
         if (roomPromise === undefined) {
-            roomPromise = new Promise<GameRoom>((resolve, reject) => {
-                GameRoom.create(
-                    roomId,
-                    (user: User, group: Group) => this.joinWebRtcRoom(user, group),
-                    (user: User, group: Group) => this.disConnectedUser(user, group),
-                    MINIMUM_DISTANCE,
-                    GROUP_RADIUS,
-                    (thing: Movable, fromZone: Zone | null, listener: ZoneSocket) =>
-                        this.onZoneEnter(thing, fromZone, listener),
-                    (thing: Movable, position: PositionInterface, listener: ZoneSocket) =>
-                        this.onClientMove(thing, position, listener),
-                    (thing: Movable, newZone: Zone | null, listener: ZoneSocket) =>
-                        this.onClientLeave(thing, newZone, listener),
-                    (emoteEventMessage: EmoteEventMessage, listener: ZoneSocket) =>
-                        this.onEmote(emoteEventMessage, listener)
-                )
-                    .then((gameRoom) => {
-                        gaugeManager.incNbRoomGauge();
-                        resolve(gameRoom);
-                    })
-                    .catch((e) => {
-                        this.roomsPromises.delete(roomId);
-                        reject(e);
-                    });
-            });
+            roomPromise = GameRoom.create(
+                roomId,
+                (user: User, group: Group) => this.joinWebRtcRoom(user, group),
+                (user: User, group: Group) => this.disConnectedUser(user, group),
+                MINIMUM_DISTANCE,
+                GROUP_RADIUS,
+                (thing: Movable, fromZone: Zone | null, listener: ZoneSocket) =>
+                    this.onZoneEnter(thing, fromZone, listener),
+                (thing: Movable, position: PositionInterface, listener: ZoneSocket) =>
+                    this.onClientMove(thing, position, listener),
+                (thing: Movable, newZone: Zone | null, listener: ZoneSocket) =>
+                    this.onClientLeave(thing, newZone, listener),
+                (emoteEventMessage: EmoteEventMessage, listener: ZoneSocket) =>
+                    this.onEmote(emoteEventMessage, listener)
+            )
+                .then((gameRoom) => {
+                    gaugeManager.incNbRoomGauge();
+                    return gameRoom;
+                })
+                .catch((e) => {
+                    this.roomsPromises.delete(roomId);
+                    throw e;
+                });
             this.roomsPromises.set(roomId, roomPromise);
         }
         return roomPromise;
