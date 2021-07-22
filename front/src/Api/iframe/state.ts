@@ -1,10 +1,10 @@
-import {Observable, Subject} from "rxjs";
+import { Observable, Subject } from "rxjs";
 
 import { EnterLeaveEvent, isEnterLeaveEvent } from "../Events/EnterLeaveEvent";
 
-import {IframeApiContribution, queryWorkadventure, sendToWorkadventure} from "./IframeApiContribution";
+import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
-import {isSetVariableEvent, SetVariableEvent} from "../Events/SetVariableEvent";
+import { isSetVariableEvent, SetVariableEvent } from "../Events/SetVariableEvent";
 
 import type { ITiledMap } from "../../Phaser/Map/ITiledMap";
 
@@ -19,8 +19,7 @@ export const initVariables = (_variables: Map<string, unknown>): void => {
             variables.set(name, value);
         }
     }
-
-}
+};
 
 setVariableResolvers.subscribe((event) => {
     const oldValue = variables.get(event.key);
@@ -44,19 +43,19 @@ export class WorkadventureStateCommands extends IframeApiContribution<Workadvent
             typeChecker: isSetVariableEvent,
             callback: (payloadData) => {
                 setVariableResolvers.next(payloadData);
-            }
+            },
         }),
     ];
 
-    saveVariable(key : string, value : unknown): Promise<void> {
+    saveVariable(key: string, value: unknown): Promise<void> {
         variables.set(key, value);
         return queryWorkadventure({
-            type: 'setVariable',
+            type: "setVariable",
             data: {
                 key,
-                value
-            }
-        })
+                value,
+            },
+        });
     }
 
     loadVariable(key: string): unknown {
@@ -71,7 +70,6 @@ export class WorkadventureStateCommands extends IframeApiContribution<Workadvent
         }
         return subject.asObservable();
     }
-
 }
 
 const proxyCommand = new Proxy(new WorkadventureStateCommands(), {
@@ -86,7 +84,7 @@ const proxyCommand = new Proxy(new WorkadventureStateCommands(), {
         // User must use WA.state.saveVariable to have error message.
         target.saveVariable(p.toString(), value);
         return true;
-    }
-});
+    },
+}) as WorkadventureStateCommands & { [key: string]: unknown };
 
 export default proxyCommand;
