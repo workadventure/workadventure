@@ -42,9 +42,7 @@ export class WebexController {
     authorize = (res: HttpResponse, req: HttpRequest) => {
         const jar = cookie.parse(req.getHeader("cookie"));
 
-        if (jar.webex_access_token) {
-            this.redirectToToken(res, jar.webex_access_token);
-        } else if (jar.webex_refresh_token) {
+        if (jar.webex_refresh_token) {
             this.redirect(res, "/webex/refresh");
         } else {
             this.redirect(res, authorizeUrl);
@@ -128,23 +126,34 @@ export class WebexController {
         res.end();
     }
 
-    private redirectToToken(res: HttpResponse, token: string, ...cookies: string[]) {
-        this.redirect(res, "/webex/token#" + token, ...cookies);
+    private redirectToToken(res: HttpResponse, args: { accessToken: string; expiresIn: number }, ...cookies: string[]) {
+        this.redirect(
+            res,
+            "http://play.workadventure.localhost?" +
+                Object.entries(args)
+                    .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
+                    .join("&"),
+            ...cookies
+        );
     }
 
     private handleTokenResult(res: HttpResponse, tokenResult: TokenResult) {
         this.redirectToToken(
             res,
-            tokenResult.access_token,
-            cookie.serialize("webex_access_token", tokenResult.access_token, {
-                httpOnly: true,
-                sameSite: "lax",
-                maxAge: tokenResult.expires_in,
-            }),
+            { accessToken: tokenResult.access_token, expiresIn: tokenResult.expires_in },
+            // cookie.serialize("webex_access_token", tokenResult.access_token, {
+            //     httpOnly: true,
+            //     sameSite: "lax",
+            //     maxAge: tokenResult.expires_in - 24 * 60 * 60,
+            //     domain: "workadventure.localhost",
+            //     path: "/",
+            // }),
             cookie.serialize("webex_refresh_token", tokenResult.refresh_token, {
                 httpOnly: true,
                 sameSite: "lax",
                 maxAge: tokenResult.refresh_token_expires_in,
+                domain: "workadventure.localhost",
+                path: "/",
             })
         );
     }
