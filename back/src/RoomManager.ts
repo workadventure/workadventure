@@ -77,7 +77,11 @@ const roomManager: IRoomManagerServer = {
                         } else if (message.hasSilentmessage()) {
                             socketManager.handleSilentMessage(room, user, message.getSilentmessage() as SilentMessage);
                         } else if (message.hasItemeventmessage()) {
-                            socketManager.handleItemEvent(room, user, message.getItemeventmessage() as ItemEventMessage);
+                            socketManager.handleItemEvent(
+                                room,
+                                user,
+                                message.getItemeventmessage() as ItemEventMessage
+                            );
                         } else if (message.hasVariablemessage()) {
                             await socketManager.handleVariableEvent(
                                 room,
@@ -97,7 +101,10 @@ const roomManager: IRoomManagerServer = {
                                 message.getWebrtcscreensharingsignaltoservermessage() as WebRtcSignalToServerMessage
                             );
                         } else if (message.hasPlayglobalmessage()) {
-                            socketManager.emitPlayGlobalMessage(room, message.getPlayglobalmessage() as PlayGlobalMessage);
+                            socketManager.emitPlayGlobalMessage(
+                                room,
+                                message.getPlayglobalmessage() as PlayGlobalMessage
+                            );
                         } else if (message.hasQueryjitsijwtmessage()) {
                             socketManager.handleQueryJitsiJwtMessage(
                                 user,
@@ -128,7 +135,7 @@ const roomManager: IRoomManagerServer = {
                     emitError(call, e);
                     call.end();
                 }
-            })().catch(e => console.error(e));
+            })().catch((e) => console.error(e));
         });
 
         call.on("end", () => {
