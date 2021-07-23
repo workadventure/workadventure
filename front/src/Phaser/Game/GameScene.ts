@@ -94,6 +94,7 @@ import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStor
 import { playersStore } from "../../Stores/PlayersStore";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
 import { peopleStore } from "../../Stores/PeopleStore";
+import { webexIntegration } from "../../WebRtc/WebexIntegration";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -1689,8 +1690,13 @@ ${escapedMessage}
             "jitsiInterfaceConfig"
         );
         const jitsiUrl = allProps.get("jitsiUrl") as string | undefined;
+        const webexSpaceId = allProps.get("webexSpace");
 
-        jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl);
+        if (webexSpaceId) {
+            webexIntegration.start(webexSpaceId as string);
+        } else {
+            jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl);
+        }
         this.connection?.setSilent(true);
         mediaManager.hideGameOverlay();
 
@@ -1703,6 +1709,7 @@ ${escapedMessage}
     public stopJitsi(): void {
         this.connection?.setSilent(false);
         jitsiFactory.stop();
+        webexIntegration.stop();
         mediaManager.showGameOverlay();
 
         mediaManager.removeTriggerCloseJitsiFrameButton("close-jisi");

@@ -29,6 +29,7 @@
     import ConsoleGlobalMessageManager from "./ConsoleGlobalMessageManager/ConsoleGlobalMessageManager.svelte";
     import { peopleMenuVisible } from '../Stores/PeopleStore';
     import PeopleMenu from './People/PeopleMenu.svelte';
+import WebexGlobalChat from './Webex/WebexGlobalChat.svelte';
 
     export let game: Game;
 </script>
@@ -68,6 +69,7 @@
     {#if $peopleMenuVisible}
         <div>
             <PeopleMenu />
+            <WebexGlobalChat />
         </div>
     {/if}
     <!--
