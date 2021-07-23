@@ -3,6 +3,7 @@ import { Subject } from "rxjs";
 import { iframeListener } from "../Api/IframeListener";
 import { touchScreenManager } from "../Touch/TouchScreenManager";
 import { waScaleManager } from "../Phaser/Services/WaScaleManager";
+import { webexIntegration } from "./WebexIntegration";
 
 enum iframeStates {
     closed = 1,
@@ -228,7 +229,13 @@ class CoWebsiteManager {
                         iframeListener.unregisterIframe(iframe);
                     }
                     setTimeout(() => {
+<<<<<<< HEAD
                         this.cowebsiteMainDom.innerHTML = ``;
+=======
+                        webexIntegration.stop();
+                        this.cowebsiteMainDom.innerHTML = ``;
+                        this.cowebsiteMainDom.className = ``;
+>>>>>>> 4a3185c0 (feat: hacky webex integration in frontend)
                         resolve();
                     }, animationTime);
                 })
