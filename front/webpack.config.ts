@@ -22,6 +22,11 @@ entries.iframe_api = "./src/iframe_api.ts";
 module.exports = {
     entry: entries,
     mode: mode,
+    watchOptions: {
+        ignored: /node_modules/,
+        aggregateTimeout: 500,
+        poll: 1000,
+    },
     devtool: isDevelopment ? "inline-source-map" : "source-map",
     devServer: {
         contentBase: "./dist",
@@ -31,6 +36,11 @@ module.exports = {
         historyApiFallback: {
             rewrites: [{ from: /^_\/.*$/, to: "/index.html" }],
             disableDotRule: true,
+        },
+        watchOptions: {
+            ignored: /node_modules/,
+            aggregateTimeout: 500,
+            poll: 1000,
         },
     },
     module: {
