@@ -327,6 +327,11 @@ export class GameRoom {
 
         const readableBy = variableManager.setVariable(name, value, user);
 
+        // If the variable was not changed, let's not dispatch anything.
+        if (readableBy === false) {
+            return;
+        }
+
         // TODO: should we batch those every 100ms?
         const variableMessage = new VariableWithTagMessage();
         variableMessage.setName(name);

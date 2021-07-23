@@ -51,6 +51,17 @@ export class VariablesManager {
         }
         const variables = await variablesRepository.loadVariables(this.roomUrl);
         for (const key in variables) {
+            // Let's only set variables if they are in the map (if the map has changed, maybe stored variables do not exist anymore)
+            if (this.variableObjects) {
+                const variableObject = this.variableObjects.get(key);
+                if (variableObject === undefined) {
+                    continue;
+                }
+                if (!variableObject.persist) {
+                    continue;
+                }
+            }
+
             this._variables.set(key, variables[key]);
         }
         return this;
@@ -134,10 +145,21 @@ export class VariablesManager {
         return variable;
     }
 
-    setVariable(name: string, value: string, user: User): string | undefined {
+    /**
+     * Sets the variable.
+     *
+     * Returns who is allowed to read the variable (the readableby property) or "undefined" if anyone can read it.
+     * Also, returns "false" if the variable was not modified (because we set it to the value it already has)
+     *
+     * @param name
+     * @param value
+     * @param user
+     */
+    setVariable(name: string, value: string, user: User): string | undefined | false {
         let readableBy: string | undefined;
+        let variableObject: Variable | undefined;
         if (this.variableObjects) {
-            const variableObject = this.variableObjects.get(name);
+            variableObject = this.variableObjects.get(name);
             if (variableObject === undefined) {
                 throw new Error('Trying to set a variable "' + name + '" that is not defined as an object in the map.');
             }
@@ -159,10 +181,19 @@ export class VariablesManager {
             readableBy = variableObject.readableBy;
         }
 
+        // If the value is not modified, return false
+        if (this._variables.get(name) === value) {
+            return false;
+        }
+
         this._variables.set(name, value);
-        variablesRepository
-            .saveVariable(this.roomUrl, name, value)
-            .catch((e) => console.error("Error while saving variable in Redis:", e));
+
+        if (variableObject !== undefined && variableObject.persist) {
+            variablesRepository
+                .saveVariable(this.roomUrl, name, value)
+                .catch((e) => console.error("Error while saving variable in Redis:", e));
+        }
+
         return readableBy;
     }
 
