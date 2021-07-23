@@ -7,7 +7,7 @@
 </script>
 
 <div class="webex-global">
-    <button on:click={openGlobalChat}>Webex Global</button>
+    <button on:click={openGlobalChat}>Global Chat</button>
 </div>
 
 <style lang="scss">
