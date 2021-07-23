@@ -200,6 +200,7 @@ export class GameScene extends DirtyScene {
     private startPositionCalculator!: StartPositionCalculator;
     private sharedVariablesManager!: SharedVariablesManager;
     private objectsByType = new Map<string, ITiledMapObject[]>();
+    private inMapIframes = new Array<HTMLIFrameElement>();
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -497,6 +498,15 @@ export class GameScene extends DirtyScene {
                         iframe.style.border = "none";
 
                         this.add.dom(object.x, object.y).setElement(iframe).setOrigin(0, 0);
+
+                        const allowApi = PropertyUtils.findBooleanProperty(
+                            "allowApi",
+                            object.properties,
+                        );
+                        if (allowApi) {
+                            iframeListener.registerIframe(iframe);
+                            this.inMapIframes.push(iframe);
+                        }
                     }
                 }
             }
@@ -1292,6 +1302,9 @@ ${escapedMessage}
         const scripts = this.getScriptUrls(this.mapFile);
         for (const script of scripts) {
             iframeListener.unregisterScript(script);
+        }
+        for (const iframe of this.inMapIframes) {
+            iframeListener.unregisterIframe(iframe);
         }
 
         this.stopJitsi();

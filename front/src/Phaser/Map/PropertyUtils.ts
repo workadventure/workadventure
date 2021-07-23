@@ -8,6 +8,23 @@ export class PropertyUtils {
         return properties?.find((property) => property.name === name)?.value;
     }
 
+    public static findBooleanProperty(
+        name: string,
+        properties: ITiledMapProperty[] | undefined,
+        context?: string
+    ): boolean | undefined {
+        const property = PropertyUtils.findProperty(name, properties);
+        if (property === undefined) {
+            return undefined;
+        }
+        if (typeof property !== "boolean") {
+            throw new Error(
+                'Expected property "' + name + '" to be a boolean. ' + (context ? " (" + context + ")" : "")
+            );
+        }
+        return property;
+    }
+
     public static mustFindProperty(
         name: string,
         properties: ITiledMapProperty[] | undefined,
