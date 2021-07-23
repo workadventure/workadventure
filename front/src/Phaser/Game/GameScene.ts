@@ -47,13 +47,7 @@ import { RemotePlayer } from "../Entity/RemotePlayer";
 import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
-import type {
-    ITiledMap,
-    ITiledMapLayer,
-    ITiledMapLayerProperty,
-    ITiledMapObject,
-    ITiledTileSet,
-} from "../Map/ITiledMap";
+import type { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapObject, ITiledTileSet } from "../Map/ITiledMap";
 import { MenuScene, MenuSceneName } from "../Menu/MenuScene";
 import { PlayerAnimationDirections } from "../Player/Animation";
 import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
@@ -92,6 +86,9 @@ import { peerStore, screenSharingPeerStore } from "../../Stores/PeerStore";
 import { videoFocusStore } from "../../Stores/VideoFocusStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
 import { isMessageReferenceEvent, isTriggerMessageEvent } from "../../Api/Events/ui/TriggerMessageEvent";
+import { SharedVariablesManager } from "./SharedVariablesManager";
+import { playersStore } from "../../Stores/PlayersStore";
+import { chatVisibilityStore } from "../../Stores/ChatStore";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -169,9 +166,10 @@ export class GameScene extends DirtyScene {
     private createPromiseResolve!: (value?: void | PromiseLike<void>) => void;
     private iframeSubscriptionList!: Array<Subscription>;
     private peerStoreUnsubscribe!: () => void;
+    private chatVisibilityUnsubscribe!: () => void;
     private biggestAvailableAreaStoreUnsubscribe!: () => void;
     MapUrlFile: string;
-    RoomId: string;
+    roomUrl: string;
     instance: string;
 
     currentTick!: number;
@@ -200,18 +198,19 @@ export class GameScene extends DirtyScene {
     private mapTransitioning: boolean = false; //used to prevent transitions happenning at the same time.
     private emoteManager!: EmoteManager;
     private preloading: boolean = true;
-    startPositionCalculator!: StartPositionCalculator;
+    private startPositionCalculator!: StartPositionCalculator;
+    private sharedVariablesManager!: SharedVariablesManager;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
-            key: customKey ?? room.id,
+            key: customKey ?? room.key,
         });
         this.Terrains = [];
         this.groups = new Map<number, Sprite>();
         this.instance = room.getInstance();
 
         this.MapUrlFile = MapUrlFile;
-        this.RoomId = room.id;
+        this.roomUrl = room.key;
 
         this.createPromise = new Promise<void>((resolve, reject): void => {
             this.createPromiseResolve = resolve;
@@ -463,11 +462,13 @@ export class GameScene extends DirtyScene {
             if (layer.type === "tilelayer") {
                 const exitSceneUrl = this.getExitSceneUrl(layer);
                 if (exitSceneUrl !== undefined) {
-                    this.loadNextGame(exitSceneUrl);
+                    this.loadNextGame(
+                        Room.getRoomPathFromExitSceneUrl(exitSceneUrl, window.location.toString(), this.MapUrlFile)
+                    );
                 }
                 const exitUrl = this.getExitUrl(layer);
                 if (exitUrl !== undefined) {
-                    this.loadNextGame(exitUrl);
+                    this.loadNextGameFromExitUrl(exitUrl);
                 }
             }
             if (layer.type === "objectgroup") {
@@ -480,7 +481,7 @@ export class GameScene extends DirtyScene {
         }
 
         this.gameMap.exitUrls.forEach((exitUrl) => {
-            this.loadNextGame(exitUrl);
+            this.loadNextGameFromExitUrl(exitUrl);
         });
 
         this.startPositionCalculator = new StartPositionCalculator(
@@ -571,6 +572,10 @@ export class GameScene extends DirtyScene {
             }
             oldPeerNumber = newPeerNumber;
         });
+
+        this.chatVisibilityUnsubscribe = chatVisibilityStore.subscribe((v) => {
+            this.openChatIcon.setVisible(!v);
+        });
     }
 
     /**
@@ -581,7 +586,7 @@ export class GameScene extends DirtyScene {
 
         connectionManager
             .connectToRoomSocket(
-                this.RoomId,
+                this.roomUrl,
                 this.playerName,
                 this.characterLayers,
                 {
@@ -598,6 +603,8 @@ export class GameScene extends DirtyScene {
             .then((onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
 
+                playersStore.connectToRoomConnection(this.connection);
+
                 this.connection.onUserJoins((message: MessageUserJoined) => {
                     const userMessage: AddPlayerInterface = {
                         userId: message.userId,
@@ -606,6 +613,7 @@ export class GameScene extends DirtyScene {
                         position: message.position,
                         visitCardUrl: message.visitCardUrl,
                         companion: message.companion,
+                        userUuid: message.userUuid,
                     };
                     this.addPlayer(userMessage);
                 });
@@ -689,12 +697,12 @@ export class GameScene extends DirtyScene {
                 const self = this;
                 this.simplePeer.registerPeerConnectionListener({
                     onConnect(peer) {
-                        self.openChatIcon.setVisible(true);
+                        //self.openChatIcon.setVisible(true);
                         audioManager.decreaseVolume();
                     },
                     onDisconnect(userId: number) {
                         if (self.simplePeer.getNbConnections() === 0) {
-                            self.openChatIcon.setVisible(false);
+                            //self.openChatIcon.setVisible(false);
                             audioManager.restoreVolume();
                         }
                     },
@@ -706,6 +714,13 @@ export class GameScene extends DirtyScene {
                 this.CurrentPlayer.on(hasMovedEventName, (event: HasPlayerMovedEvent) => {
                     this.gameMap.setPosition(event.x, event.y);
                 });
+
+                // Set up variables manager
+                this.sharedVariablesManager = new SharedVariablesManager(
+                    this.connection,
+                    this.gameMap,
+                    onConnect.room.variables
+                );
 
                 //this.initUsersPosition(roomJoinedMessage.users);
                 this.connectionAnswerPromiseResolve(onConnect.room);
@@ -766,10 +781,13 @@ export class GameScene extends DirtyScene {
 
     private triggerOnMapLayerPropertyChange() {
         this.gameMap.onPropertyChange("exitSceneUrl", (newValue, oldValue) => {
-            if (newValue) this.onMapExit(newValue as string);
+            if (newValue)
+                this.onMapExit(
+                    Room.getRoomPathFromExitSceneUrl(newValue as string, window.location.toString(), this.MapUrlFile)
+                );
         });
         this.gameMap.onPropertyChange("exitUrl", (newValue, oldValue) => {
-            if (newValue) this.onMapExit(newValue as string);
+            if (newValue) this.onMapExit(Room.getRoomPathFromExitUrl(newValue as string, window.location.toString()));
         });
         this.gameMap.onPropertyChange("openWebsite", (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
@@ -994,9 +1012,9 @@ ${escapedMessage}
         );
         this.iframeSubscriptionList.push(
             iframeListener.loadPageStream.subscribe((url: string) => {
-                this.loadNextGame(url).then(() => {
+                this.loadNextGameFromExitUrl(url).then(() => {
                     this.events.once(EVENT_TYPE.POST_UPDATE, () => {
-                        this.onMapExit(url);
+                        this.onMapExit(Room.getRoomPathFromExitUrl(url, window.location.toString()));
                     });
                 });
             })
@@ -1039,20 +1057,24 @@ ${escapedMessage}
             })
         );
 
-        this.iframeSubscriptionList.push(
-            iframeListener.dataLayerChangeStream.subscribe(() => {
-                iframeListener.sendDataLayerEvent({ data: this.gameMap.getMap() });
-            })
-        );
+        iframeListener.registerAnswerer("getMapData", () => {
+            return {
+                data: this.gameMap.getMap(),
+            };
+        });
 
-        iframeListener.registerAnswerer("getState", () => {
+        iframeListener.registerAnswerer("getState", async () => {
+            // The sharedVariablesManager is not instantiated before the connection is established. So we need to wait
+            // for the connection to send back the answer.
+            await this.connectionAnswerPromise;
             return {
                 mapUrl: this.MapUrlFile,
                 startLayerName: this.startPositionCalculator.startLayerName,
                 uuid: localUserStore.getLocalUser()?.uuid,
-                nickname: localUserStore.getName(),
-                roomId: this.RoomId,
+                nickname: this.playerName,
+                roomId: this.roomUrl,
                 tags: this.connection ? this.connection.getAllTags() : [],
+                variables: this.sharedVariablesManager.variables,
             };
         });
         this.iframeSubscriptionList.push(
@@ -1076,17 +1098,12 @@ ${escapedMessage}
                         },
                         this.userInputManager
                     );
-                }),
-            isTriggerMessageEvent
+                })
         );
 
-        iframeListener.registerAnswerer(
-            "removeTriggerMessage",
-            (message) => {
-                layoutManager.removeActionButton(message.uuid, this.userInputManager);
-            },
-            isMessageReferenceEvent
-        );
+        iframeListener.registerAnswerer("removeTriggerMessage", (message) => {
+            layoutManager.removeActionButton(message.uuid, this.userInputManager);
+        });
     }
 
     private setPropertyLayer(
@@ -1099,53 +1116,86 @@ ${escapedMessage}
             console.warn('Could not find layer "' + layerName + '" when calling setProperty');
             return;
         }
+        if (propertyName === "exitUrl" && typeof propertyValue === "string") {
+            this.loadNextGameFromExitUrl(propertyValue);
+        }
         if (layer.properties === undefined) {
             layer.properties = [];
         }
         const property = layer.properties.find((property) => property.name === propertyName);
         if (property === undefined) {
+            if (propertyValue === undefined) {
+                return;
+            }
             layer.properties.push({ name: propertyName, type: typeof propertyValue, value: propertyValue });
             return;
+        }
+        if (propertyValue === undefined) {
+            const index = layer.properties.indexOf(property);
+            layer.properties.splice(index, 1);
         }
         property.value = propertyValue;
     }
 
     private setLayerVisibility(layerName: string, visible: boolean): void {
         const phaserLayer = this.gameMap.findPhaserLayer(layerName);
-        if (phaserLayer === undefined) {
-            console.warn('Could not find layer "' + layerName + '" when calling WA.hideLayer / WA.showLayer');
-            return;
+        if (phaserLayer != undefined) {
+            phaserLayer.setVisible(visible);
+            phaserLayer.setCollisionByProperty({ collides: true }, visible);
+        } else {
+            const phaserLayers = this.gameMap.findPhaserLayers(layerName + "/");
+            if (phaserLayers === []) {
+                console.warn(
+                    'Could not find layer with name that contains "' +
+                        layerName +
+                        '" when calling WA.hideLayer / WA.showLayer'
+                );
+                return;
+            }
+            for (let i = 0; i < phaserLayers.length; i++) {
+                phaserLayers[i].setVisible(visible);
+                phaserLayers[i].setCollisionByProperty({ collides: true }, visible);
+            }
         }
-        phaserLayer.setVisible(visible);
-        this.dirty = true;
+        this.markDirty();
     }
 
     private getMapDirUrl(): string {
         return this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf("/"));
     }
 
-    private onMapExit(exitKey: string) {
+    private async onMapExit(roomUrl: URL) {
         if (this.mapTransitioning) return;
         this.mapTransitioning = true;
-        const { roomId, hash } = Room.getIdFromIdentifier(exitKey, this.MapUrlFile, this.instance);
-        if (!roomId) throw new Error("Could not find the room from its exit key: " + exitKey);
-        if (hash) {
-            urlManager.pushStartLayerNameToUrl(hash);
+
+        let targetRoom: Room;
+        try {
+            targetRoom = await Room.createRoom(roomUrl);
+        } catch (e: unknown) {
+            console.error('Error while fetching new room "' + roomUrl.toString() + '"', e);
+            this.mapTransitioning = false;
+            return;
         }
+
+        if (roomUrl.hash) {
+            urlManager.pushStartLayerNameToUrl(roomUrl.hash);
+        }
+
         const menuScene: MenuScene = this.scene.get(MenuSceneName) as MenuScene;
         menuScene.reset();
-        if (roomId !== this.scene.key) {
-            if (this.scene.get(roomId) === null) {
-                console.error("next room not loaded", exitKey);
+
+        if (!targetRoom.isEqual(this.room)) {
+            if (this.scene.get(targetRoom.key) === null) {
+                console.error("next room not loaded", targetRoom.key);
                 return;
             }
             this.cleanupClosingScene();
             this.scene.stop();
+            this.scene.start(targetRoom.key);
             this.scene.remove(this.scene.key);
-            this.scene.start(roomId);
         } else {
             //if the exit points to the current map, we simply teleport the user back to the startLayer
-            this.startPositionCalculator.initPositionFromLayerName(hash, hash);
+            this.startPositionCalculator.initPositionFromLayerName(roomUrl.hash, roomUrl.hash);
             this.CurrentPlayer.x = this.startPositionCalculator.startPosition.x;
             this.CurrentPlayer.y = this.startPositionCalculator.startPosition.y;
             setTimeout(() => (this.mapTransitioning = false), 500);
@@ -1172,8 +1222,13 @@ ${escapedMessage}
         this.pinchManager?.destroy();
         this.emoteManager.destroy();
         this.peerStoreUnsubscribe();
+        this.chatVisibilityUnsubscribe();
         this.biggestAvailableAreaStoreUnsubscribe();
+        iframeListener.unregisterAnswerer("getMapData");
         iframeListener.unregisterAnswerer("getState");
+        iframeListener.unregisterAnswerer("triggerMessage");
+        iframeListener.unregisterAnswerer("removeTriggerMessage");
+        this.sharedVariablesManager?.close();
 
         mediaManager.hideGameOverlay();
 
@@ -1213,12 +1268,12 @@ ${escapedMessage}
     }
 
     private getProperty(layer: ITiledMapLayer | ITiledMap, name: string): string | boolean | number | undefined {
-        const properties: ITiledMapLayerProperty[] | undefined = layer.properties;
+        const properties: ITiledMapProperty[] | undefined = layer.properties;
         if (!properties) {
             return undefined;
         }
         const obj = properties.find(
-            (property: ITiledMapLayerProperty) => property.name.toLowerCase() === name.toLowerCase()
+            (property: ITiledMapProperty) => property.name.toLowerCase() === name.toLowerCase()
         );
         if (obj === undefined) {
             return undefined;
@@ -1227,20 +1282,27 @@ ${escapedMessage}
     }
 
     private getProperties(layer: ITiledMapLayer | ITiledMap, name: string): (string | number | boolean | undefined)[] {
-        const properties: ITiledMapLayerProperty[] | undefined = layer.properties;
+        const properties: ITiledMapProperty[] | undefined = layer.properties;
         if (!properties) {
             return [];
         }
         return properties
-            .filter((property: ITiledMapLayerProperty) => property.name.toLowerCase() === name.toLowerCase())
+            .filter((property: ITiledMapProperty) => property.name.toLowerCase() === name.toLowerCase())
             .map((property) => property.value);
     }
 
+    private loadNextGameFromExitUrl(exitUrl: string): Promise<void> {
+        return this.loadNextGame(Room.getRoomPathFromExitUrl(exitUrl, window.location.toString()));
+    }
+
     //todo: push that into the gameManager
-    private loadNextGame(exitSceneIdentifier: string): Promise<void> {
-        const { roomId, hash } = Room.getIdFromIdentifier(exitSceneIdentifier, this.MapUrlFile, this.instance);
-        const room = new Room(roomId);
-        return gameManager.loadMap(room, this.scene).catch(() => {});
+    private async loadNextGame(exitRoomPath: URL): Promise<void> {
+        try {
+            const room = await Room.createRoom(exitRoomPath);
+            return gameManager.loadMap(room, this.scene);
+        } catch (e: unknown) {
+            console.warn('Error while pre-loading exit room "' + exitRoomPath.toString() + '"', e);
+        }
     }
 
     //todo: in a dedicated class/function?
@@ -1683,7 +1745,7 @@ ${escapedMessage}
         this.scene.start(ErrorSceneName, {
             title: "Banned",
             subTitle: "You were banned from WorkAdventure",
-            message: "If you want more information, you may contact us at: workadventure@thecodingmachine.com",
+            message: "If you want more information, you may contact us at: hello@workadventu.re",
         });
     }
 
@@ -1698,14 +1760,14 @@ ${escapedMessage}
             this.scene.start(ErrorSceneName, {
                 title: "Connection rejected",
                 subTitle: "The world you are trying to join is full. Try again later.",
-                message: "If you want more information, you may contact us at: workadventure@thecodingmachine.com",
+                message: "If you want more information, you may contact us at: hello@workadventu.re",
             });
         } else {
             this.scene.start(ErrorSceneName, {
                 title: "Connection rejected",
                 subTitle: "You cannot join the World. Try again later. \n\r \n\r Error: " + message + ".",
                 message:
-                    "If you want more information, you may contact administrator or contact us at: workadventure@thecodingmachine.com",
+                    "If you want more information, you may contact administrator or contact us at: hello@workadventu.re",
             });
         }
     }

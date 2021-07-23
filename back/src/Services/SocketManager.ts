@@ -30,6 +30,9 @@ import {
     BanUserMessage,
     RefreshRoomMessage,
     EmotePromptMessage,
+    VariableMessage,
+    BatchToPusherRoomMessage,
+    SubToPusherRoomMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -48,7 +51,7 @@ import Jwt from "jsonwebtoken";
 import { JITSI_URL } from "../Enum/EnvironmentVariable";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
-import { ZoneSocket } from "../RoomManager";
+import { RoomSocket, ZoneSocket } from "../RoomManager";
 import { Zone } from "_Model/Zone";
 import Debug from "debug";
 import { Admin } from "_Model/Admin";
@@ -65,7 +68,9 @@ function emitZoneMessage(subMessage: SubToPusherMessage, socket: ZoneSocket): vo
 }
 
 export class SocketManager {
-    private rooms: Map<string, GameRoom> = new Map<string, GameRoom>();
+    //private rooms = new Map<string, GameRoom>();
+    // List of rooms in process of loading.
+    private roomsPromises = new Map<string, PromiseLike<GameRoom>>();
 
     constructor() {
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
@@ -101,6 +106,16 @@ export class SocketManager {
             roomJoinedMessage.addItem(itemStateMessage);
         }
 
+        const variables = await room.getVariablesForTags(user.tags);
+
+        for (const [name, value] of variables.entries()) {
+            const variableMessage = new VariableMessage();
+            variableMessage.setName(name);
+            variableMessage.setValue(value);
+
+            roomJoinedMessage.addVariable(variableMessage);
+        }
+
         roomJoinedMessage.setCurrentuserid(user.id);
 
         const serverToClientMessage = new ServerToClientMessage();
@@ -114,30 +129,25 @@ export class SocketManager {
     }
 
     handleUserMovesMessage(room: GameRoom, user: User, userMovesMessage: UserMovesMessage) {
-        try {
-            const userMoves = userMovesMessage.toObject();
-            const position = userMovesMessage.getPosition();
+        const userMoves = userMovesMessage.toObject();
+        const position = userMovesMessage.getPosition();
 
-            // If CPU is high, let's drop messages of users moving (we will only dispatch the final position)
-            if (cpuTracker.isOverHeating() && userMoves.position?.moving === true) {
-                return;
-            }
-
-            if (position === undefined) {
-                throw new Error("Position not found in message");
-            }
-            const viewport = userMoves.viewport;
-            if (viewport === undefined) {
-                throw new Error("Viewport not found in message");
-            }
-
-            // update position in the world
-            room.updatePosition(user, ProtobufUtils.toPointInterface(position));
-            //room.setViewport(client, client.viewport);
-        } catch (e) {
-            console.error('An error occurred on "user_position" event');
-            console.error(e);
+        // If CPU is high, let's drop messages of users moving (we will only dispatch the final position)
+        if (cpuTracker.isOverHeating() && userMoves.position?.moving === true) {
+            return;
         }
+
+        if (position === undefined) {
+            throw new Error("Position not found in message");
+        }
+        const viewport = userMoves.viewport;
+        if (viewport === undefined) {
+            throw new Error("Viewport not found in message");
+        }
+
+        // update position in the world
+        room.updatePosition(user, ProtobufUtils.toPointInterface(position));
+        //room.setViewport(client, client.viewport);
     }
 
     // Useless now, will be useful again if we allow editing details in game
@@ -156,32 +166,26 @@ export class SocketManager {
     }*/
 
     handleSilentMessage(room: GameRoom, user: User, silentMessage: SilentMessage) {
-        try {
-            room.setSilent(user, silentMessage.getSilent());
-        } catch (e) {
-            console.error('An error occurred on "handleSilentMessage"');
-            console.error(e);
-        }
+        room.setSilent(user, silentMessage.getSilent());
     }
 
     handleItemEvent(room: GameRoom, user: User, itemEventMessage: ItemEventMessage) {
         const itemEvent = ProtobufUtils.toItemEvent(itemEventMessage);
 
-        try {
-            const subMessage = new SubMessage();
-            subMessage.setItemeventmessage(itemEventMessage);
+        const subMessage = new SubMessage();
+        subMessage.setItemeventmessage(itemEventMessage);
 
-            // Let's send the event without using the SocketIO room.
-            // TODO: move this in the GameRoom class.
-            for (const user of room.getUsers().values()) {
-                user.emitInBatch(subMessage);
-            }
-
-            room.setItemState(itemEvent.itemId, itemEvent.state);
-        } catch (e) {
-            console.error('An error occurred on "item_event"');
-            console.error(e);
+        // Let's send the event without using the SocketIO room.
+        // TODO: move this in the GameRoom class.
+        for (const user of room.getUsers().values()) {
+            user.emitInBatch(subMessage);
         }
+
+        room.setItemState(itemEvent.itemId, itemEvent.state);
+    }
+
+    handleVariableEvent(room: GameRoom, user: User, variableMessage: VariableMessage): Promise<void> {
+        return room.setVariable(variableMessage.getName(), variableMessage.getValue(), user);
     }
 
     emitVideo(room: GameRoom, user: User, data: WebRtcSignalToServerMessage): void {
@@ -250,21 +254,21 @@ export class SocketManager {
             //user leave previous world
             room.leave(user);
             if (room.isEmpty()) {
-                this.rooms.delete(room.roomId);
+                this.roomsPromises.delete(room.roomUrl);
                 gaugeManager.decNbRoomGauge();
-                debug('Room is empty. Deleting room "%s"', room.roomId);
+                debug('Room is empty. Deleting room "%s"', room.roomUrl);
             }
         } finally {
-            clientEventsEmitter.emitClientLeave(user.uuid, room.roomId);
+            clientEventsEmitter.emitClientLeave(user.uuid, room.roomUrl);
             console.log("A user left");
         }
     }
 
     async getOrCreateRoom(roomId: string): Promise<GameRoom> {
-        //check and create new world for a room
-        let world = this.rooms.get(roomId);
-        if (world === undefined) {
-            world = new GameRoom(
+        //check and create new room
+        let roomPromise = this.roomsPromises.get(roomId);
+        if (roomPromise === undefined) {
+            roomPromise = GameRoom.create(
                 roomId,
                 (user: User, group: Group) => this.joinWebRtcRoom(user, group),
                 (user: User, group: Group) => this.disConnectedUser(user, group),
@@ -278,11 +282,18 @@ export class SocketManager {
                     this.onClientLeave(thing, newZone, listener),
                 (emoteEventMessage: EmoteEventMessage, listener: ZoneSocket) =>
                     this.onEmote(emoteEventMessage, listener)
-            );
-            gaugeManager.incNbRoomGauge();
-            this.rooms.set(roomId, world);
+            )
+                .then((gameRoom) => {
+                    gaugeManager.incNbRoomGauge();
+                    return gameRoom;
+                })
+                .catch((e) => {
+                    this.roomsPromises.delete(roomId);
+                    throw e;
+                });
+            this.roomsPromises.set(roomId, roomPromise);
         }
-        return Promise.resolve(world);
+        return roomPromise;
     }
 
     private async joinRoom(
@@ -308,6 +319,7 @@ export class SocketManager {
                 throw new Error("clientUser.userId is not an integer " + thing.id);
             }
             userJoinedZoneMessage.setUserid(thing.id);
+            userJoinedZoneMessage.setUseruuid(thing.uuid);
             userJoinedZoneMessage.setName(thing.name);
             userJoinedZoneMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
             userJoinedZoneMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
@@ -425,7 +437,6 @@ export class SocketManager {
             // Let's send 2 messages: one to the user joining the group and one to the other user
             const webrtcStartMessage1 = new WebRtcStartMessage();
             webrtcStartMessage1.setUserid(otherUser.id);
-            webrtcStartMessage1.setName(otherUser.name);
             webrtcStartMessage1.setInitiator(true);
             if (TURN_STATIC_AUTH_SECRET !== "") {
                 const { username, password } = this.getTURNCredentials("" + otherUser.id, TURN_STATIC_AUTH_SECRET);
@@ -436,14 +447,10 @@ export class SocketManager {
             const serverToClientMessage1 = new ServerToClientMessage();
             serverToClientMessage1.setWebrtcstartmessage(webrtcStartMessage1);
 
-            //if (!user.socket.disconnecting) {
             user.socket.write(serverToClientMessage1);
-            //console.log('Sending webrtcstart initiator to '+user.socket.userId)
-            //}
 
             const webrtcStartMessage2 = new WebRtcStartMessage();
             webrtcStartMessage2.setUserid(user.id);
-            webrtcStartMessage2.setName(user.name);
             webrtcStartMessage2.setInitiator(false);
             if (TURN_STATIC_AUTH_SECRET !== "") {
                 const { username, password } = this.getTURNCredentials("" + user.id, TURN_STATIC_AUTH_SECRET);
@@ -454,10 +461,7 @@ export class SocketManager {
             const serverToClientMessage2 = new ServerToClientMessage();
             serverToClientMessage2.setWebrtcstartmessage(webrtcStartMessage2);
 
-            //if (!otherUser.socket.disconnecting) {
             otherUser.socket.write(serverToClientMessage2);
-            //console.log('Sending webrtcstart to '+otherUser.socket.userId)
-            //}
         }
     }
 
@@ -515,21 +519,16 @@ export class SocketManager {
     }
 
     emitPlayGlobalMessage(room: GameRoom, playGlobalMessage: PlayGlobalMessage) {
-        try {
-            const serverToClientMessage = new ServerToClientMessage();
-            serverToClientMessage.setPlayglobalmessage(playGlobalMessage);
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setPlayglobalmessage(playGlobalMessage);
 
-            for (const [id, user] of room.getUsers().entries()) {
-                user.socket.write(serverToClientMessage);
-            }
-        } catch (e) {
-            console.error('An error occurred on "emitPlayGlobalMessage" event');
-            console.error(e);
+        for (const [id, user] of room.getUsers().entries()) {
+            user.socket.write(serverToClientMessage);
         }
     }
 
-    public getWorlds(): Map<string, GameRoom> {
-        return this.rooms;
+    public getWorlds(): Map<string, PromiseLike<GameRoom>> {
+        return this.roomsPromises;
     }
 
     public handleQueryJitsiJwtMessage(user: User, queryJitsiJwtMessage: QueryJitsiJwtMessage) {
@@ -599,11 +598,10 @@ export class SocketManager {
         }, 10000);
     }
 
-    public addZoneListener(call: ZoneSocket, roomId: string, x: number, y: number): void {
-        const room = this.rooms.get(roomId);
+    public async addZoneListener(call: ZoneSocket, roomId: string, x: number, y: number): Promise<void> {
+        const room = await this.roomsPromises.get(roomId);
         if (!room) {
-            console.error("In addZoneListener, could not find room with id '" + roomId + "'");
-            return;
+            throw new Error("In addZoneListener, could not find room with id '" + roomId + "'");
         }
 
         const things = room.addZoneListener(call, x, y);
@@ -614,6 +612,7 @@ export class SocketManager {
             if (thing instanceof User) {
                 const userJoinedMessage = new UserJoinedZoneMessage();
                 userJoinedMessage.setUserid(thing.id);
+                userJoinedMessage.setUseruuid(thing.uuid);
                 userJoinedMessage.setName(thing.name);
                 userJoinedMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
                 userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
@@ -643,14 +642,35 @@ export class SocketManager {
         call.write(batchMessage);
     }
 
-    removeZoneListener(call: ZoneSocket, roomId: string, x: number, y: number) {
-        const room = this.rooms.get(roomId);
+    async removeZoneListener(call: ZoneSocket, roomId: string, x: number, y: number): Promise<void> {
+        const room = await this.roomsPromises.get(roomId);
         if (!room) {
-            console.error("In removeZoneListener, could not find room with id '" + roomId + "'");
-            return;
+            throw new Error("In removeZoneListener, could not find room with id '" + roomId + "'");
         }
 
         room.removeZoneListener(call, x, y);
+    }
+
+    async addRoomListener(call: RoomSocket, roomId: string) {
+        const room = await this.getOrCreateRoom(roomId);
+        if (!room) {
+            throw new Error("In addRoomListener, could not find room with id '" + roomId + "'");
+        }
+
+        room.addRoomListener(call);
+
+        const batchMessage = new BatchToPusherRoomMessage();
+
+        call.write(batchMessage);
+    }
+
+    async removeRoomListener(call: RoomSocket, roomId: string) {
+        const room = await this.roomsPromises.get(roomId);
+        if (!room) {
+            throw new Error("In removeRoomListener, could not find room with id '" + roomId + "'");
+        }
+
+        room.removeRoomListener(call);
     }
 
     public async handleJoinAdminRoom(admin: Admin, roomId: string): Promise<GameRoom> {
@@ -664,14 +684,14 @@ export class SocketManager {
     public leaveAdminRoom(room: GameRoom, admin: Admin) {
         room.adminLeave(admin);
         if (room.isEmpty()) {
-            this.rooms.delete(room.roomId);
+            this.roomsPromises.delete(room.roomUrl);
             gaugeManager.decNbRoomGauge();
-            debug('Room is empty. Deleting room "%s"', room.roomId);
+            debug('Room is empty. Deleting room "%s"', room.roomUrl);
         }
     }
 
-    public sendAdminMessage(roomId: string, recipientUuid: string, message: string): void {
-        const room = this.rooms.get(roomId);
+    public async sendAdminMessage(roomId: string, recipientUuid: string, message: string): Promise<void> {
+        const room = await this.roomsPromises.get(roomId);
         if (!room) {
             console.error(
                 "In sendAdminMessage, could not find room with id '" +
@@ -701,8 +721,8 @@ export class SocketManager {
         recipient.socket.write(serverToClientMessage);
     }
 
-    public banUser(roomId: string, recipientUuid: string, message: string): void {
-        const room = this.rooms.get(roomId);
+    public async banUser(roomId: string, recipientUuid: string, message: string): Promise<void> {
+        const room = await this.roomsPromises.get(roomId);
         if (!room) {
             console.error(
                 "In banUser, could not find room with id '" +
@@ -737,8 +757,8 @@ export class SocketManager {
         recipient.socket.end();
     }
 
-    sendAdminRoomMessage(roomId: string, message: string) {
-        const room = this.rooms.get(roomId);
+    async sendAdminRoomMessage(roomId: string, message: string) {
+        const room = await this.roomsPromises.get(roomId);
         if (!room) {
             //todo: this should cause the http call to return a 500
             console.error(
@@ -761,8 +781,8 @@ export class SocketManager {
         });
     }
 
-    dispatchWorlFullWarning(roomId: string): void {
-        const room = this.rooms.get(roomId);
+    async dispatchWorldFullWarning(roomId: string): Promise<void> {
+        const room = await this.roomsPromises.get(roomId);
         if (!room) {
             //todo: this should cause the http call to return a 500
             console.error(
@@ -783,8 +803,8 @@ export class SocketManager {
         });
     }
 
-    dispatchRoomRefresh(roomId: string): void {
-        const room = this.rooms.get(roomId);
+    async dispatchRoomRefresh(roomId: string): Promise<void> {
+        const room = await this.roomsPromises.get(roomId);
         if (!room) {
             return;
         }

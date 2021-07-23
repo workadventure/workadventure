@@ -15,6 +15,7 @@ import {
     ZoneMessage,
     EmoteEventMessage,
     CompanionMessage,
+    ErrorMessage,
 } from "../Messages/generated/messages_pb";
 import { ClientReadableStream } from "grpc";
 import { PositionDispatcher } from "_Model/PositionDispatcher";
@@ -30,6 +31,7 @@ export interface ZoneEventListener {
     onGroupMoves(group: GroupDescriptor, listener: ExSocketInterface): void;
     onGroupLeaves(groupId: number, listener: ExSocketInterface): void;
     onEmote(emoteMessage: EmoteEventMessage, listener: ExSocketInterface): void;
+    onError(errorMessage: ErrorMessage, listener: ExSocketInterface): void;
 }
 
 /*export type EntersCallback = (thing: Movable, listener: User) => void;
@@ -39,6 +41,7 @@ export type LeavesCallback = (thing: Movable, listener: User) => void;*/
 export class UserDescriptor {
     private constructor(
         public readonly userId: number,
+        private userUuid: string,
         private name: string,
         private characterLayers: CharacterLayerMessage[],
         private position: PositionMessage,
@@ -57,6 +60,7 @@ export class UserDescriptor {
         }
         return new UserDescriptor(
             message.getUserid(),
+            message.getUseruuid(),
             message.getName(),
             message.getCharacterlayersList(),
             position,
@@ -84,6 +88,7 @@ export class UserDescriptor {
             userJoinedMessage.setVisitcardurl(this.visitCardUrl);
         }
         userJoinedMessage.setCompanion(this.companion);
+        userJoinedMessage.setUseruuid(this.userUuid);
 
         return userJoinedMessage;
     }
@@ -214,6 +219,9 @@ export class Zone {
                 } else if (message.hasEmoteeventmessage()) {
                     const emoteEventMessage = message.getEmoteeventmessage() as EmoteEventMessage;
                     this.notifyEmote(emoteEventMessage);
+                } else if (message.hasErrormessage()) {
+                    const errorMessage = message.getErrormessage() as ErrorMessage;
+                    this.notifyError(errorMessage);
                 } else {
                     throw new Error("Unexpected message");
                 }
@@ -297,6 +305,12 @@ export class Zone {
                 continue;
             }
             this.socketListener.onEmote(emoteMessage, listener);
+        }
+    }
+
+    private notifyError(errorMessage: ErrorMessage) {
+        for (const listener of this.listeners) {
+            this.socketListener.onError(errorMessage, listener);
         }
     }
 

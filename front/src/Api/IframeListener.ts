@@ -14,7 +14,6 @@ import {
     IframeErrorAnswerEvent,
     IframeEvent,
     IframeEventMap,
-    IframeQuery,
     IframeQueryMap,
     IframeResponseEvent,
     IframeResponseEventMap,
@@ -29,22 +28,27 @@ import { isLoadSoundEvent, LoadSoundEvent } from "./Events/LoadSoundEvent";
 import { isSetPropertyEvent, SetPropertyEvent } from "./Events/setPropertyEvent";
 import { isLayerEvent, LayerEvent } from "./Events/LayerEvent";
 import { isMenuItemRegisterEvent } from "./Events/ui/MenuItemRegisterEvent";
-import type { DataLayerEvent } from "./Events/DataLayerEvent";
+import type { MapDataEvent } from "./Events/MapDataEvent";
 import type { GameStateEvent } from "./Events/GameStateEvent";
 import type { HasPlayerMovedEvent } from "./Events/HasPlayerMovedEvent";
 import { isLoadPageEvent } from "./Events/LoadPageEvent";
 import { handleMenuItemRegistrationEvent, isMenuItemRegisterIframeEvent } from "./Events/ui/MenuItemRegisterEvent";
 import { SetTilesEvent, isSetTilesEvent } from "./Events/SetTilesEvent";
+import type { SetVariableEvent } from "./Events/SetVariableEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
-    query: IframeQueryMap[T]["query"]
-) => IframeQueryMap[T]["answer"] | Promise<IframeQueryMap[T]["answer"]>;
+    query: IframeQueryMap[T]["query"],
+    source: MessageEventSource | null
+) => IframeQueryMap[T]["answer"] | PromiseLike<IframeQueryMap[T]["answer"]>;
 
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.
  * Also allows to send messages to those iframes.
  */
 class IframeListener {
+    private readonly _readyStream: Subject<HTMLIFrameElement> = new Subject();
+    public readonly readyStream = this._readyStream.asObservable();
+
     private readonly _chatStream: Subject<ChatEvent> = new Subject();
     public readonly chatStream = this._chatStream.asObservable();
 
@@ -90,9 +94,6 @@ class IframeListener {
     private readonly _setPropertyStream: Subject<SetPropertyEvent> = new Subject();
     public readonly setPropertyStream = this._setPropertyStream.asObservable();
 
-    private readonly _dataLayerChangeStream: Subject<void> = new Subject();
-    public readonly dataLayerChangeStream = this._dataLayerChangeStream.asObservable();
-
     private readonly _registerMenuCommandStream: Subject<string> = new Subject();
     public readonly registerMenuCommandStream = this._registerMenuCommandStream.asObservable();
 
@@ -116,16 +117,15 @@ class IframeListener {
     private readonly scripts = new Map<string, HTMLIFrameElement>();
     private sendPlayerMove: boolean = false;
 
+    // Note: we are forced to type this in unknown and later cast with "as" because of https://github.com/microsoft/TypeScript/issues/31904
     private answerers: {
-        [key in keyof IframeQueryMap]?: AnswererCallback<key>;
+        [str in keyof IframeQueryMap]?: unknown;
     } = {};
 
     init() {
         window.addEventListener(
             "message",
-            <T extends keyof IframeEventMap, U extends keyof IframeQueryMap>(
-                message: TypedMessageEvent<IframeEvent<T | U>>
-            ) => {
+            (message: MessageEvent<unknown>) => {
                 // Do we trust the sender of this message?
                 // Let's only accept messages from the iframe that are allowed.
                 // Note: maybe we could restrict on the domain too for additional security (in case the iframe goes to another domain).
@@ -157,9 +157,9 @@ class IframeListener {
 
                 if (isIframeQueryWrapper(payload)) {
                     const queryId = payload.id;
-                    const query = payload.query as IframeQuery<U>;
+                    const query = payload.query;
 
-                    const answerer = this.answerers[query.type] as AnswererCallback<U> | undefined;
+                    const answerer = this.answerers[query.type] as AnswererCallback<keyof IframeQueryMap> | undefined;
                     if (answerer === undefined) {
                         const errorMsg =
                             'The iFrame sent a message of type "' +
@@ -177,35 +177,43 @@ class IframeListener {
                         return;
                     }
 
-                    Promise.resolve(answerer(query.data))
-                        .then((value) => {
-                            iframe?.contentWindow?.postMessage(
-                                {
-                                    id: queryId,
-                                    type: query.type,
-                                    data: value,
-                                },
-                                "*"
-                            );
-                        })
-                        .catch((reason) => {
-                            console.error("An error occurred while responding to an iFrame query.", reason);
-                            let reasonMsg: string;
-                            if (reason instanceof Error) {
-                                reasonMsg = reason.message;
-                            } else {
-                                reasonMsg = reason.toString();
-                            }
+                    const errorHandler = (reason: unknown) => {
+                        console.error("An error occurred while responding to an iFrame query.", reason);
+                        let reasonMsg: string = "";
+                        if (reason instanceof Error) {
+                            reasonMsg = reason.message;
+                        } else if (typeof reason === "object") {
+                            reasonMsg = reason ? reason.toString() : "";
+                        } else if (typeof reason === "string") {
+                            reasonMsg = reason;
+                        }
 
-                            iframe?.contentWindow?.postMessage(
-                                {
-                                    id: queryId,
-                                    type: query.type,
-                                    error: reasonMsg,
-                                } as IframeErrorAnswerEvent,
-                                "*"
-                            );
-                        });
+                        iframe?.contentWindow?.postMessage(
+                            {
+                                id: queryId,
+                                type: query.type,
+                                error: reasonMsg,
+                            } as IframeErrorAnswerEvent,
+                            "*"
+                        );
+                    };
+
+                    try {
+                        Promise.resolve(answerer(query.data, message.source))
+                            .then((value) => {
+                                iframe?.contentWindow?.postMessage(
+                                    {
+                                        id: queryId,
+                                        type: query.type,
+                                        data: value,
+                                    },
+                                    "*"
+                                );
+                            })
+                            .catch(errorHandler);
+                    } catch (reason) {
+                        errorHandler(reason);
+                    }
                 } else if (isIframeEventWrapper(payload)) {
                     if (payload.type === "showLayer" && isLayerEvent(payload.data)) {
                         this._showLayerStream.next(payload.data);
@@ -250,8 +258,6 @@ class IframeListener {
                         this._removeBubbleStream.next();
                     } else if (payload.type == "onPlayerMove") {
                         this.sendPlayerMove = true;
-                    } else if (payload.type == "getDataLayer") {
-                        this._dataLayerChangeStream.next();
                     } else if (isMenuItemRegisterIframeEvent(payload)) {
                         const data = payload.data.menutItem;
                         // @ts-ignore
@@ -266,13 +272,6 @@ class IframeListener {
             },
             false
         );
-    }
-
-    sendDataLayerEvent(dataLayerEvent: DataLayerEvent) {
-        this.postMessage({
-            type: "dataLayer",
-            data: dataLayerEvent,
-        });
     }
 
     /**
@@ -414,6 +413,13 @@ class IframeListener {
         });
     }
 
+    setVariable(setVariableEvent: SetVariableEvent) {
+        this.postMessage({
+            type: "setVariable",
+            data: setVariableEvent,
+        });
+    }
+
     /**
      * Sends the message... to all allowed iframes.
      */
@@ -431,16 +437,30 @@ class IframeListener {
      * @param key The "type" of the query we are answering
      * @param callback
      */
-    public registerAnswerer<T extends keyof IframeQueryMap, Guard extends tg.TypeGuard<IframeQueryMap[T]["query"]>>(
-        key: T,
-        callback: AnswererCallback<T>,
-        typeChecker?: Guard
-    ): void {
-        this.answerers[key] = callback as never;
+    public registerAnswerer<T extends keyof IframeQueryMap>(key: T, callback: AnswererCallback<T>): void {
+        this.answerers[key] = callback;
     }
 
     public unregisterAnswerer(key: keyof IframeQueryMap): void {
         delete this.answerers[key];
+    }
+
+    dispatchVariableToOtherIframes(key: string, value: unknown, source: MessageEventSource | null) {
+        // Let's dispatch the message to the other iframes
+        for (const iframe of this.iframes) {
+            if (iframe.contentWindow !== source) {
+                iframe.contentWindow?.postMessage(
+                    {
+                        type: "setVariable",
+                        data: {
+                            key,
+                            value,
+                        },
+                    },
+                    "*"
+                );
+            }
+        }
     }
 }
 

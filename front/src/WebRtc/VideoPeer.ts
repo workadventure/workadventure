@@ -1,13 +1,14 @@
 import type * as SimplePeerNamespace from "simple-peer";
 import { mediaManager } from "./MediaManager";
-import { STUN_SERVER, TURN_PASSWORD, TURN_SERVER, TURN_USER } from "../Enum/EnvironmentVariable";
 import type { RoomConnection } from "../Connexion/RoomConnection";
 import { blackListManager } from "./BlackListManager";
 import type { Subscription } from "rxjs";
 import type { UserSimplePeerInterface } from "./SimplePeer";
-import { get, readable, Readable } from "svelte/store";
+import { get, readable, Readable, Unsubscriber } from "svelte/store";
 import { obtainedMediaConstraintStore } from "../Stores/MediaStore";
-import { discussionManager } from "./DiscussionManager";
+import { playersStore } from "../Stores/PlayersStore";
+import { chatMessagesStore, chatVisibilityStore, newChatMessageStore } from "../Stores/ChatStore";
+import { getIceServersConfig } from "../Components/Video/utils";
 
 const Peer: SimplePeerNamespace.SimplePeer = require("simple-peer");
 
@@ -26,12 +27,15 @@ export class VideoPeer extends Peer {
     private remoteStream!: MediaStream;
     private blocked: boolean = false;
     public readonly userId: number;
+    public readonly userUuid: string;
     public readonly uniqueId: string;
     private onBlockSubscribe: Subscription;
     private onUnBlockSubscribe: Subscription;
     public readonly streamStore: Readable<MediaStream | null>;
     public readonly statusStore: Readable<PeerStatus>;
     public readonly constraintsStore: Readable<MediaStreamConstraints | null>;
+    private newMessageunsubscriber: Unsubscriber | null = null;
+    private closing: Boolean = false; //this is used to prevent destroy() from being called twice
 
     constructor(
         public user: UserSimplePeerInterface,
@@ -41,25 +45,14 @@ export class VideoPeer extends Peer {
         localStream: MediaStream | null
     ) {
         super({
-            initiator: initiator ? initiator : false,
-            //reconnectTimer: 10000,
+            initiator,
             config: {
-                iceServers: [
-                    {
-                        urls: STUN_SERVER.split(","),
-                    },
-                    TURN_SERVER !== ""
-                        ? {
-                              urls: TURN_SERVER.split(","),
-                              username: user.webRtcUser || TURN_USER,
-                              credential: user.webRtcPassword || TURN_PASSWORD,
-                          }
-                        : undefined,
-                ].filter((value) => value !== undefined),
+                iceServers: getIceServersConfig(user),
             },
         });
 
         this.userId = user.userId;
+        this.userUuid = playersStore.getPlayerById(this.userId)?.userUuid || "";
         this.uniqueId = "video_" + this.userId;
 
         this.streamStore = readable<MediaStream | null>(null, (set) => {
@@ -144,6 +137,20 @@ export class VideoPeer extends Peer {
 
         this.on("connect", () => {
             this._connected = true;
+            chatMessagesStore.addIncomingUser(this.userId);
+
+            this.newMessageunsubscriber = newChatMessageStore.subscribe((newMessage) => {
+                if (!newMessage) return;
+                this.write(
+                    new Buffer(
+                        JSON.stringify({
+                            type: MESSAGE_TYPE_MESSAGE,
+                            message: newMessage,
+                        })
+                    )
+                ); //send more data
+                newChatMessageStore.set(null); //This is to prevent a newly created SimplePeer to send an old message a 2nd time. Is there a better way?
+            });
         });
 
         this.on("data", (chunk: Buffer) => {
@@ -161,8 +168,8 @@ export class VideoPeer extends Peer {
                     mediaManager.disabledVideoByUserId(this.userId);
                 }
             } else if (message.type === MESSAGE_TYPE_MESSAGE) {
-                if (!blackListManager.isBlackListed(message.userId)) {
-                    mediaManager.addNewMessage(message.name, message.message);
+                if (!blackListManager.isBlackListed(this.userUuid)) {
+                    chatMessagesStore.addExternalMessage(this.userId, message.message);
                 }
             } else if (message.type === MESSAGE_TYPE_BLOCKED) {
                 //FIXME when A blacklists B, the output stream from A is muted in B's js client. This is insecure since B can manipulate the code to unmute A stream.
@@ -181,20 +188,20 @@ export class VideoPeer extends Peer {
         });
 
         this.pushVideoToRemoteUser(localStream);
-        this.onBlockSubscribe = blackListManager.onBlockStream.subscribe((userId) => {
-            if (userId === this.userId) {
+        this.onBlockSubscribe = blackListManager.onBlockStream.subscribe((userUuid) => {
+            if (userUuid === this.userUuid) {
                 this.toggleRemoteStream(false);
                 this.sendBlockMessage(true);
             }
         });
-        this.onUnBlockSubscribe = blackListManager.onUnBlockStream.subscribe((userId) => {
-            if (userId === this.userId) {
+        this.onUnBlockSubscribe = blackListManager.onUnBlockStream.subscribe((userUuid) => {
+            if (userUuid === this.userUuid) {
                 this.toggleRemoteStream(true);
                 this.sendBlockMessage(false);
             }
         });
 
-        if (blackListManager.isBlackListed(this.userId)) {
+        if (blackListManager.isBlackListed(this.userUuid)) {
             this.sendBlockMessage(true);
         }
     }
@@ -231,7 +238,7 @@ export class VideoPeer extends Peer {
     private stream(stream: MediaStream) {
         try {
             this.remoteStream = stream;
-            if (blackListManager.isBlackListed(this.userId) || this.blocked) {
+            if (blackListManager.isBlackListed(this.userUuid) || this.blocked) {
                 this.toggleRemoteStream(false);
             }
         } catch (err) {
@@ -242,18 +249,18 @@ export class VideoPeer extends Peer {
     /**
      * This is triggered twice. Once by the server, and once by a remote client disconnecting
      */
-    public destroy(error?: Error): void {
+    public destroy(): void {
         try {
             this._connected = false;
-            if (!this.toClose) {
+            if (!this.toClose || this.closing) {
                 return;
             }
+            this.closing = true;
             this.onBlockSubscribe.unsubscribe();
             this.onUnBlockSubscribe.unsubscribe();
-            discussionManager.removeParticipant(this.userId);
-            // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
-            // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
-            super.destroy(error);
+            if (this.newMessageunsubscriber) this.newMessageunsubscriber();
+            chatMessagesStore.addOutcomingUser(this.userId);
+            super.destroy();
         } catch (err) {
             console.error("VideoPeer::destroy", err);
         }
