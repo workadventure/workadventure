@@ -32,9 +32,9 @@ import type { HasPlayerMovedEvent } from "./Events/HasPlayerMovedEvent";
 import { isLoadPageEvent } from "./Events/LoadPageEvent";
 import { handleMenuItemRegistrationEvent, isMenuItemRegisterIframeEvent } from "./Events/ui/MenuItemRegisterEvent";
 import { SetTilesEvent, isSetTilesEvent } from "./Events/SetTilesEvent";
-import { isSetVariableIframeEvent, SetVariableEvent } from "./Events/SetVariableEvent";
+import type { SetVariableEvent } from "./Events/SetVariableEvent";
 
-type AnswererCallback<T extends keyof IframeQueryMap> = (query: IframeQueryMap[T]['query']) => IframeQueryMap[T]['answer']|PromiseLike<IframeQueryMap[T]['answer']>;
+type AnswererCallback<T extends keyof IframeQueryMap> = (query: IframeQueryMap[T]["query"], source: MessageEventSource | null) => IframeQueryMap[T]["answer"] | PromiseLike<IframeQueryMap[T]["answer"]>;
 
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.
@@ -187,7 +187,7 @@ class IframeListener {
                     };
 
                     try {
-                        Promise.resolve(answerer(query.data)).then((value) => {
+                        Promise.resolve(answerer(query.data, message.source)).then((value) => {
                             iframe?.contentWindow?.postMessage({
                                 id: queryId,
                                 type: query.type,
@@ -196,18 +196,6 @@ class IframeListener {
                         }).catch(errorHandler);
                     } catch (reason) {
                         errorHandler(reason);
-                    }
-
-                    if (isSetVariableIframeEvent(payload.query)) {
-                        // Let's dispatch the message to the other iframes
-                        for (iframe of this.iframes) {
-                            if (iframe.contentWindow !== message.source) {
-                                iframe.contentWindow?.postMessage({
-                                    'type': 'setVariable',
-                                    'data': payload.query.data
-                                }, '*');
-                            }
-                        }
                     }
                 } else if (isIframeEventWrapper(payload)) {
                     if (payload.type === "showLayer" && isLayerEvent(payload.data)) {
@@ -438,6 +426,21 @@ class IframeListener {
 
     public unregisterAnswerer(key: keyof IframeQueryMap): void {
         delete this.answerers[key];
+    }
+
+    dispatchVariableToOtherIframes(key: string, value: unknown, source: MessageEventSource | null) {
+        // Let's dispatch the message to the other iframes
+        for (const iframe of this.iframes) {
+            if (iframe.contentWindow !== source) {
+                iframe.contentWindow?.postMessage({
+                    'type': 'setVariable',
+                    'data': {
+                        key,
+                        value,
+                    }
+                }, '*');
+            }
+        }
     }
 }
 

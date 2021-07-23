@@ -134,7 +134,17 @@ export class VariablesManager {
         return variable;
     }
 
-    setVariable(name: string, value: string, user: User): string | undefined {
+    /**
+     * Sets the variable.
+     *
+     * Returns who is allowed to read the variable (the readableby property) or "undefined" if anyone can read it.
+     * Also, returns "false" if the variable was not modified (because we set it to the value it already has)
+     *
+     * @param name
+     * @param value
+     * @param user
+     */
+    setVariable(name: string, value: string, user: User): string | undefined | false {
         let readableBy: string | undefined;
         if (this.variableObjects) {
             const variableObject = this.variableObjects.get(name);
@@ -157,6 +167,11 @@ export class VariablesManager {
             }
 
             readableBy = variableObject.readableBy;
+        }
+
+        // If the value is not modified, return false
+        if (this._variables.get(name) === value) {
+            return false;
         }
 
         this._variables.set(name, value);

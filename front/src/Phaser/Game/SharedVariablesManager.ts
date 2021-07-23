@@ -54,7 +54,7 @@ export class SharedVariablesManager {
         });
 
         // When a variable is modified from an iFrame
-        iframeListener.registerAnswerer("setVariable", (event) => {
+        iframeListener.registerAnswerer("setVariable", (event, source) => {
             const key = event.key;
 
             const object = this.variableObjects.get(key);
@@ -82,10 +82,18 @@ export class SharedVariablesManager {
                 throw new Error(errMsg);
             }
 
+            // Let's stop any propagation of the value we set is the same as the existing value.
+            if (JSON.stringify(event.value) === JSON.stringify(this._variables.get(key))) {
+                return;
+            }
+
             this._variables.set(key, event.value);
 
             // Dispatch to the room connection.
             this.roomConnection.emitSetVariableEvent(key, event.value);
+
+            // Dispatch to other iframes
+            iframeListener.dispatchVariableToOtherIframes(key, event.value, source);
         });
     }
 
