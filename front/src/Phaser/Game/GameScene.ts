@@ -84,6 +84,7 @@ import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStor
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { playersStore } from "../../Stores/PlayersStore";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
+import { PropertyUtils } from "../Map/PropertyUtils";
 import Tileset = Phaser.Tilemaps.Tileset;
 import { userIsAdminStore } from "../../Stores/GameStore";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
@@ -198,6 +199,7 @@ export class GameScene extends DirtyScene {
     private preloading: boolean = true;
     private startPositionCalculator!: StartPositionCalculator;
     private sharedVariablesManager!: SharedVariablesManager;
+    private objectsByType = new Map<string, ITiledMapObject[]>();
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -337,27 +339,27 @@ export class GameScene extends DirtyScene {
         });
 
         // Scan the object layers for objects to load and load them.
-        const objects = new Map<string, ITiledMapObject[]>();
+        this.objectsByType = new Map<string, ITiledMapObject[]>();
 
         for (const layer of this.mapFile.layers) {
             if (layer.type === "objectgroup") {
                 for (const object of layer.objects) {
                     let objectsOfType: ITiledMapObject[] | undefined;
-                    if (!objects.has(object.type)) {
+                    if (!this.objectsByType.has(object.type)) {
                         objectsOfType = new Array<ITiledMapObject>();
                     } else {
-                        objectsOfType = objects.get(object.type);
+                        objectsOfType = this.objectsByType.get(object.type);
                         if (objectsOfType === undefined) {
                             throw new Error("Unexpected object type not found");
                         }
                     }
                     objectsOfType.push(object);
-                    objects.set(object.type, objectsOfType);
+                    this.objectsByType.set(object.type, objectsOfType);
                 }
             }
         }
 
-        for (const [itemType, objectsOfType] of objects) {
+        for (const [itemType, objectsOfType] of this.objectsByType) {
             // FIXME: we would ideally need for the loader to WAIT for the import to be performed, which means writing our own loader plugin.
 
             let itemFactory: ItemFactoryInterface;
@@ -476,6 +478,25 @@ export class GameScene extends DirtyScene {
                 for (const object of layer.objects) {
                     if (object.text) {
                         TextUtils.createTextFromITiledMapObject(this, object);
+                    }
+                    if (object.type === "website") {
+                        // Let's load iframes in the map
+                        const url = PropertyUtils.mustFindStringProperty(
+                            "url",
+                            object.properties,
+                            'in the "' + object.name + '" object of type "website"'
+                        );
+                        const absoluteUrl = new URL(url, this.MapUrlFile).toString();
+
+                        const iframe = document.createElement("iframe");
+                        iframe.src = absoluteUrl;
+                        iframe.style.width = object.width + "px";
+                        iframe.style.height = object.height + "px";
+                        iframe.style.margin = "0";
+                        iframe.style.padding = "0";
+                        iframe.style.border = "none";
+
+                        this.add.dom(object.x, object.y).setElement(iframe).setOrigin(0, 0);
                     }
                 }
             }
