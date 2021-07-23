@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
+import cookie from "cookie";
+import fetch from "node-fetch";
 import { HttpRequest, HttpResponse } from "uWebSockets.js";
 import { App } from "../Server/sifrr.server";
-import fetch from "node-fetch";
-import cookie from "cookie";
 
 const clientId = process.env.WEBEX_CLIENT_ID ?? "";
 const clientSecret = process.env.WEBEX_CLIENT_SECRET ?? "";

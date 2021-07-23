@@ -24,10 +24,5 @@
             border-radius: 7px;
             padding: 2px 8px;
         }
-
-        & button img {
-            width: 14px;
-            padding-top: 0;
-        }
     }
 </style>
