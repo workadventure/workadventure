@@ -14,7 +14,7 @@
     .webex-global {
         position: absolute;
         bottom: 10px;
-        left: 70px;
+        left: 75px;
         pointer-events: all;
 
         & button {
