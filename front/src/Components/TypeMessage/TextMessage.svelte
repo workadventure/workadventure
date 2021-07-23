@@ -1,8 +1,10 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import {textMessageContentStore, textMessageVisibleStore} from "../../Stores/TypeMessageStore/TextMessageStore";
+    import { QuillDeltaToHtmlConverter } from "quill-delta-to-html";
 
-    const text = $textMessageContentStore;
+    const content = JSON.parse($textMessageContentStore);
+    const converter = new QuillDeltaToHtmlConverter(content.ops);
     const NAME_BUTTON = 'Ok';
 
     function closeTextMessage() {
@@ -20,7 +22,7 @@
 
 <div class="main-text-message nes-container is-rounded" transition:fly="{{ x: -1000, duration: 500 }}">
     <div class="content-text-message">
-        <p> {text} </p>
+        {@html converter.convert()}
     </div>
     <div class="footer-text-message">
         <button type="button" class="nes-btn is-primary" on:click|preventDefault={closeTextMessage}>{NAME_BUTTON}</button>

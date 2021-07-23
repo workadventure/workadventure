@@ -34,7 +34,7 @@
     export let game: Game;
     export let gameManager: GameManager;
 
-    let gameScene = gameManager.getCurrentGameScene(game.findAnyScene());
+    const gameScene = gameManager.getCurrentGameScene(game.findAnyScene());
     let quill: Quill;
     let INPUT_CONSOLE_MESSAGE: HTMLDivElement;
 
@@ -45,11 +45,7 @@
             if (gameScene == undefined) {
                 return;
             }
-            const text = quill.getText(0, quill.getLength());
-            const content = quill.getContents(0, quill.getLength());
-
-            console.log('Text : ', text);
-            console.log('Content : ', content);
+            const text = JSON.stringify(quill.getContents(0, quill.getLength()));
 
             const textGlobalMessage: PlayGlobalMessageInterface = {
                 type: MESSAGE_TYPE,

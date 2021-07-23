@@ -3463,6 +3463,11 @@ lodash.clonedeep@^4.5.0:
   resolved "https://registry.yarnpkg.com/lodash.clonedeep/-/lodash.clonedeep-4.5.0.tgz#e23f3f9c4f8fbdde872529c1071857a086e5ccef"
   integrity sha1-4j8/nE+Pvd6HJSnBBxhXoIblzO8=
 
+lodash.isequal@^4.5.0:
+  version "4.5.0"
+  resolved "https://registry.yarnpkg.com/lodash.isequal/-/lodash.isequal-4.5.0.tgz#415c4478f2bcc30120c22ce10ed3226f7d3e18e0"
+  integrity sha1-QVxEePK8wwEgwizhDtMib30+GOA=
+
 lodash.truncate@^4.4.2:
   version "4.4.2"
   resolved "https://registry.yarnpkg.com/lodash.truncate/-/lodash.truncate-4.4.2.tgz#5a350da0b1113b837ecfffd5812cbe58d6eae193"
@@ -4484,6 +4489,13 @@ queue-typescript@^1.0.1:
   integrity sha512-tkK08uPfmpPl0cX1WRSU3EoNb/T5zSoZPGkkpfGX4E8QayWvEmLS2cI3pFngNPkNTCU5pCDQ1IwlzN0L5gdFPg==
   dependencies:
     linked-list-typescript "^1.0.11"
+
+quill-delta-to-html@^0.12.0:
+  version "0.12.0"
+  resolved "https://registry.yarnpkg.com/quill-delta-to-html/-/quill-delta-to-html-0.12.0.tgz#ee572cfa208390d99d7646795358ddb81eaea17c"
+  integrity sha512-Yy6U2e7ov+ZlrFbj5/GbqOBCRjyNu+vuphy0Pk+7668zIMTVHJglZY2JNa++1/zkSiqptPBmP/CpsDzC4Wznsw==
+  dependencies:
+    lodash.isequal "^4.5.0"
 
 quill-delta@^3.6.2:
   version "3.6.3"
