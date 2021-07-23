@@ -46,7 +46,7 @@ export class WebexIntegration {
 
     get isAuthorized() {
         const now = new Date();
-        return this.accessToken && this.expiryDate && this.expiryDate > now;
+        return Boolean(this.accessToken && this.expiryDate && this.expiryDate > now);
     }
 
     public openAuthorizationPopup() {
@@ -97,7 +97,7 @@ export class WebexIntegration {
 
         const authorizationPopup = this.authorizationPopup;
         if (!authorizationPopup?.closed) {
-            setTimeout(() => authorizationPopup?.close(), 5000);
+            setTimeout(() => authorizationPopup?.close(), 3000);
         }
     }
 
