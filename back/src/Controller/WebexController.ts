@@ -6,7 +6,8 @@ import { App } from "../Server/sifrr.server";
 
 const clientId = process.env.WEBEX_CLIENT_ID ?? "";
 const clientSecret = process.env.WEBEX_CLIENT_SECRET ?? "";
-const redirectUri = process.env.WEBEX_REDIRECT_URI ?? "http://api.workadventure.localhost/webex/callback";
+const redirectUri = process.env.WEBEX_REDIRECT_URI ?? "/api/webex/callback";
+const tokenRedirectUri = process.env.WEBEX_TOKEN_REDIRECT_URI ?? "/";
 const scopes = "spark:all";
 const state = "workadventure-webex";
 
@@ -28,6 +29,11 @@ type TokenResult = {
     refresh_token: string;
     refresh_token_expires_in: number;
 };
+
+const urlEncode = (obj: Record<string, string | number>) =>
+    Object.keys(obj)
+        .map((key) => encodeURIComponent(key) + "=" + encodeURIComponent(obj[key]))
+        .join("&");
 
 export class WebexController {
     constructor(private App: App) {
@@ -128,39 +134,23 @@ export class WebexController {
     }
 
     private redirectToToken(res: HttpResponse, args: { accessToken: string; expiresIn: number }, ...cookies: string[]) {
-        this.redirect(
-            res,
-            "http://play.workadventure.localhost?" +
-                Object.entries(args)
-                    .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
-                    .join("&"),
-            ...cookies
-        );
+        this.redirect(res, `${tokenRedirectUri}?${urlEncode(args)}`, ...cookies);
     }
 
     private handleTokenResult(res: HttpResponse, tokenResult: TokenResult) {
         this.redirectToToken(
             res,
             { accessToken: tokenResult.access_token, expiresIn: tokenResult.expires_in },
-            // cookie.serialize("webex_access_token", tokenResult.access_token, {
-            //     httpOnly: true,
-            //     sameSite: "lax",
-            //     maxAge: tokenResult.expires_in - 24 * 60 * 60,
-            //     domain: "workadventure.localhost",
-            //     path: "/",
-            // }),
             cookie.serialize("webex_refresh_token", tokenResult.refresh_token, {
                 httpOnly: true,
                 sameSite: "lax",
                 maxAge: tokenResult.refresh_token_expires_in,
-                domain: "workadventure.localhost",
-                path: "/",
             })
         );
     }
 
     private fetchAccessToken = async (authorizationCode: string): Promise<TokenResult> => {
-        const form: { [key: string]: string } = {
+        const data: { [key: string]: string } = {
             grant_type: "authorization_code",
             client_id: clientId,
             client_secret: clientSecret,
@@ -173,17 +163,13 @@ export class WebexController {
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
             },
-            body: Object.keys(form)
-                .map((key) => encodeURIComponent(key) + "=" + encodeURIComponent(form[key]))
-                .join("&"),
+            body: urlEncode(data),
         });
 
         if (!tokenResponse.ok) {
             throw Error(await tokenResponse.text());
         }
         const result = await tokenResponse.json();
-
-        console.log("token response", result);
 
         return result as {
             access_token: string;
@@ -194,7 +180,7 @@ export class WebexController {
     };
 
     private refreshAccessToken = async (refreshToken: string): Promise<TokenResult> => {
-        const form: { [key: string]: string } = {
+        const data: { [key: string]: string } = {
             grant_type: "refresh_token",
             client_id: clientId,
             client_secret: clientSecret,
@@ -206,17 +192,13 @@ export class WebexController {
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
             },
-            body: Object.keys(form)
-                .map((key) => encodeURIComponent(key) + "=" + encodeURIComponent(form[key]))
-                .join("&"),
+            body: urlEncode(data),
         });
 
         if (!tokenResponse.ok) {
             throw Error(await tokenResponse.text());
         }
         const result = await tokenResponse.json();
-
-        console.log("token response", result);
 
         return result;
     };
