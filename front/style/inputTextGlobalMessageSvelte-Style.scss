@@ -9,8 +9,7 @@ section.section-input-send-text {
   }
 
   div.input-send-text{
-    height: auto;
-    max-height: calc(100% - 100px);
+    height: calc(100% - 100px);
     overflow: auto;
 
     color: whitesmoke;
@@ -19,6 +18,14 @@ section.section-input-send-text {
     .ql-editor.ql-blank::before {
       color: whitesmoke;
       font-size: 1rem;
+    }
+
+    .ql-tooltip {
+      top: 40% !important;
+      left: 20% !important;
+
+      color: whitesmoke;
+      background-color: #333333;
     }
   }
 }

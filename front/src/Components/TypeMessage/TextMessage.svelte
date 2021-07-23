@@ -4,7 +4,7 @@
     import { QuillDeltaToHtmlConverter } from "quill-delta-to-html";
 
     const content = JSON.parse($textMessageContentStore);
-    const converter = new QuillDeltaToHtmlConverter(content.ops);
+    const converter = new QuillDeltaToHtmlConverter(content.ops, {inlineStyles: true});
     const NAME_BUTTON = 'Ok';
 
     function closeTextMessage() {

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { consoleGlobalMessageManagerFocusStore, consoleGlobalMessageManagerVisibleStore } from "../../Stores/ConsoleGlobalMessageManagerStore";
-    import { onMount } from "svelte";
+    import {onDestroy, onMount} from "svelte";
     import type { Game } from "../../Phaser/Game/Game";
     import type { GameManager } from "../../Phaser/Game/GameManager";
     import { AdminMessageEventTypes } from "../../Connexion/AdminMessagesService";
@@ -73,13 +73,12 @@
             },
         });
 
-        quill.on('selection-change', function (range, oldRange) {
-            if (range === null && oldRange !== null) {
-                consoleGlobalMessageManagerFocusStore.set(false);
-            } else if (range !== null && oldRange === null)
-                consoleGlobalMessageManagerFocusStore.set(true);
-        });
+        consoleGlobalMessageManagerFocusStore.set(true);
     });
+
+    onDestroy(() => {
+        consoleGlobalMessageManagerFocusStore.set(false);
+    })
 
     function disableConsole() {
         consoleGlobalMessageManagerVisibleStore.set(false);
