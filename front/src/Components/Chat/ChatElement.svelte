@@ -28,10 +28,9 @@
 
 <div class="chatElement">
     <div class="messagePart">
-        {#if message.type === ChatMessageTypes.userIncoming}
-            &gt;&gt; {#each targets as target, index}<ChatPlayerName player={target} line={line}></ChatPlayerName>{#if !isLastIteration(index)}, {/if}{/each} entered <span class="date">({renderDate(message.date)})</span>
-        {:else if message.type === ChatMessageTypes.userOutcoming}
-            &lt;&lt; {#each targets as target, index}<ChatPlayerName player={target} line={line}></ChatPlayerName>{#if !isLastIteration(index)}, {/if}{/each} left <span class="date">({renderDate(message.date)})</span>
+        {#if message.type === ChatMessageTypes.userMoving}
+            {#each targets as target, index}{ target.type === 1 ? '>>' : '<<'} <ChatPlayerName player={target.player} line={line} index={index}></ChatPlayerName>{#if !isLastIteration(index)}, {/if}{/each}
+            <span class="date">({renderDate(message.date)})</span>
         {:else if message.type === ChatMessageTypes.me}
             <h4>Me: <span class="date">({renderDate(message.date)})</span></h4>
             {#each texts as text}

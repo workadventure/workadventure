@@ -10,15 +10,24 @@ export const newChatMessageStore = writable<string | null>(null);
 export enum ChatMessageTypes {
     text = 1,
     me,
-    userIncoming,
-    userOutcoming,
+    userMoving,
+}
+
+export enum MoveEventType {
+    in = 1,
+    out,
+}
+
+export interface MoveEvent {
+    type: MoveEventType;
+    player: PlayerInterface;
 }
 
 export interface ChatMessage {
     type: ChatMessageTypes;
     date: Date;
     author?: PlayerInterface;
-    targets?: PlayerInterface[];
+    targets?: MoveEvent[];
     text?: string[];
 }
 
@@ -30,6 +39,10 @@ function getAuthor(authorId: number): PlayerInterface {
     return author;
 }
 
+function wasLessThanFiveminutesAgo(date: Date): boolean {
+    return new Date().getTime() - date.getTime() < 5 * 60 * 1000;
+}
+
 function createChatMessagesStore() {
     const { subscribe, update } = writable<ChatMessage[]>([]);
 
@@ -38,12 +51,17 @@ function createChatMessagesStore() {
         addIncomingUser(authorId: number) {
             update((list) => {
                 const lastMessage = list[list.length - 1];
-                if (lastMessage && lastMessage.type === ChatMessageTypes.userIncoming && lastMessage.targets) {
-                    lastMessage.targets.push(getAuthor(authorId));
+                if (
+                    lastMessage &&
+                    lastMessage.type === ChatMessageTypes.userMoving &&
+                    lastMessage.targets &&
+                    wasLessThanFiveminutesAgo(lastMessage.date)
+                ) {
+                    lastMessage.targets.push({ type: MoveEventType.in, player: getAuthor(authorId) });
                 } else {
                     list.push({
-                        type: ChatMessageTypes.userIncoming,
-                        targets: [getAuthor(authorId)],
+                        type: ChatMessageTypes.userMoving,
+                        targets: [{ type: MoveEventType.in, player: getAuthor(authorId) }],
                         date: new Date(),
                     });
                 }
@@ -53,12 +71,17 @@ function createChatMessagesStore() {
         addOutcomingUser(authorId: number) {
             update((list) => {
                 const lastMessage = list[list.length - 1];
-                if (lastMessage && lastMessage.type === ChatMessageTypes.userOutcoming && lastMessage.targets) {
-                    lastMessage.targets.push(getAuthor(authorId));
+                if (
+                    lastMessage &&
+                    lastMessage.type === ChatMessageTypes.userMoving &&
+                    lastMessage.targets &&
+                    wasLessThanFiveminutesAgo(lastMessage.date)
+                ) {
+                    lastMessage.targets.push({ type: MoveEventType.out, player: getAuthor(authorId) });
                 } else {
                     list.push({
-                        type: ChatMessageTypes.userOutcoming,
-                        targets: [getAuthor(authorId)],
+                        type: ChatMessageTypes.userMoving,
+                        targets: [{ type: MoveEventType.out, player: getAuthor(authorId) }],
                         date: new Date(),
                     });
                 }
@@ -69,7 +92,12 @@ function createChatMessagesStore() {
             newChatMessageStore.set(text);
             update((list) => {
                 const lastMessage = list[list.length - 1];
-                if (lastMessage && lastMessage.type === ChatMessageTypes.me && lastMessage.text) {
+                if (
+                    lastMessage &&
+                    lastMessage.type === ChatMessageTypes.me &&
+                    lastMessage.text &&
+                    wasLessThanFiveminutesAgo(lastMessage.date)
+                ) {
                     lastMessage.text.push(text);
                 } else {
                     list.push({
@@ -84,7 +112,12 @@ function createChatMessagesStore() {
         addExternalMessage(authorId: number, text: string) {
             update((list) => {
                 const lastMessage = list[list.length - 1];
-                if (lastMessage && lastMessage.type === ChatMessageTypes.text && lastMessage.text) {
+                if (
+                    lastMessage &&
+                    lastMessage.type === ChatMessageTypes.text &&
+                    lastMessage.text &&
+                    wasLessThanFiveminutesAgo(lastMessage.date)
+                ) {
                     lastMessage.text.push(text);
                 } else {
                     list.push({
@@ -102,13 +135,17 @@ function createChatMessagesStore() {
 }
 export const chatMessagesStore = createChatMessagesStore();
 
+export function getSubMenuId(playerName: string, line: number, index: number): string {
+    return playerName + "-" + line + "-" + index;
+}
+
 function createChatSubMenuVisibilityStore() {
     const { subscribe, update } = writable<string>("");
 
     return {
         subscribe,
-        openSubMenu(playerName: string, index: number) {
-            const id = playerName + index;
+        openSubMenu(playerName: string, line: number, index: number) {
+            const id = getSubMenuId(playerName, line, index);
             update((oldValue) => {
                 return oldValue === id ? "" : id;
             });

@@ -1,23 +1,24 @@
 <script lang="ts">
     import type {PlayerInterface} from "../../Phaser/Game/PlayerInterface";
-    import {chatSubMenuVisbilityStore} from "../../Stores/ChatStore";
+    import {chatSubMenuVisbilityStore, getSubMenuId} from "../../Stores/ChatStore";
     import {onDestroy, onMount} from "svelte";
     import type {Unsubscriber} from "svelte/store";
     import ChatSubMenu from "./ChatSubMenu.svelte";
 
     export let player: PlayerInterface;
     export let line: number;
+    export let index: number;
 
     let isSubMenuOpen: boolean;
     let chatSubMenuVisivilytUnsubcribe: Unsubscriber;
 
     function openSubMenu() {
-        chatSubMenuVisbilityStore.openSubMenu(player.name, line);
+        chatSubMenuVisbilityStore.openSubMenu(player.name, line, index);
     }
 
     onMount(() => {
         chatSubMenuVisivilytUnsubcribe = chatSubMenuVisbilityStore.subscribe((newValue) => {
-            isSubMenuOpen = (newValue === player.name + line);
+            isSubMenuOpen = (newValue === getSubMenuId(player.name, line, index));
         })
     })
 
