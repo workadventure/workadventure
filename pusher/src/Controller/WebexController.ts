@@ -44,13 +44,16 @@ export class WebexController {
         this.App.get("/webex/authorize", this.authorize);
         this.App.get("/webex/refresh", this.refresh);
         this.App.get("/webex/callback", this.callback);
+        this.App.get("/webex/test", (res, req) => {
+            res.end(req.getUrl());
+        });
     }
 
     authorize = (res: HttpResponse, req: HttpRequest) => {
         const jar = cookie.parse(req.getHeader("cookie"));
 
         if (jar.webex_refresh_token) {
-            this.redirect(res, "/webex/refresh");
+            this.refresh(res, req);
         } else {
             this.redirect(res, authorizeUrl);
         }
