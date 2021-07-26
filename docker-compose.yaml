@@ -42,6 +42,7 @@ services:
       START_ROOM_URL: "$START_ROOM_URL"
       MAX_PER_GROUP: "$MAX_PER_GROUP"
       MAX_USERNAME_LENGTH: "$MAX_USERNAME_LENGTH"
+      WEBEX_AUTHORIZATION_URL: $WEBEX_AUTHORIZATION_URL
     command: yarn run start
     volumes:
       - ./front:/usr/src/app
