@@ -3,10 +3,17 @@
     import { chatMessagesStore, chatVisibilityStore } from "../../Stores/ChatStore";
     import ChatMessageForm from './ChatMessageForm.svelte';
     import ChatElement from './ChatElement.svelte';
-    import { afterUpdate, beforeUpdate } from "svelte";
+    import {afterUpdate, beforeUpdate, onMount} from "svelte";
+    import {HtmlUtils} from "../../WebRtc/HtmlUtils";
     
     let listDom: HTMLElement;
+    let chatWindowElement: HTMLElement;
+    let handleFormBlur: { blur() };
     let autoscroll: boolean;
+
+    onMount(() => {
+        chatWindowElement = HtmlUtils.querySelectorOrFail("aside.chatWindow");
+    })
 
     beforeUpdate(() => {
         autoscroll = listDom && (listDom.offsetHeight + listDom.scrollTop) > (listDom.scrollHeight - 20);
@@ -15,6 +22,12 @@
     afterUpdate(() => {
         if (autoscroll) listDom.scrollTo(0, listDom.scrollHeight);
     });
+
+    function onClick(e: MouseEvent) {
+        if (!e.composedPath().find((et) => et === chatWindowElement)) {
+            handleFormBlur.blur();
+        }
+    }
 
     function closeChat() {
         chatVisibilityStore.set(false);
@@ -26,7 +39,7 @@
     }
 </script>
 
-<svelte:window on:keydown={onKeyDown}/>
+<svelte:window on:keydown={onKeyDown} on:click={onClick}/>
 
 
 <aside class="chatWindow" transition:fly="{{ x: -1000, duration: 500 }}">
@@ -40,7 +53,7 @@
         </ul>
     </section>
     <section class="messageForm">
-        <ChatMessageForm></ChatMessageForm>
+        <ChatMessageForm bind:handleForm={handleFormBlur}></ChatMessageForm>
     </section>
 </aside>
 
