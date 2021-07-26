@@ -463,7 +463,7 @@ export class SocketManager implements ZoneEventListener {
 
             client.send(serverToClientMessage.serializeBinary().buffer, true);
         } catch (e) {
-            console.error("An error occured while generating the Jitsi JWT token: ", e);
+            console.error("An error occurred while generating the Jitsi JWT token: ", e);
         }
     }
 

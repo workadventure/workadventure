@@ -45,7 +45,7 @@ export class StartPositionCalculator {
     /**
      *
      * @param selectedLayer this is always the layer that is selected with the hash in the url
-     * @param selectedOrDefaultLayer  this can also be the {defaultStartLayerName} if the {selectedLayer} didnt yield any start points
+     * @param selectedOrDefaultLayer  this can also be the {defaultStartLayerName} if the {selectedLayer} did not yield any start points
      */
     public initPositionFromLayerName(selectedOrDefaultLayer: string | null, selectedLayer: string | null) {
         if (!selectedOrDefaultLayer) {
@@ -73,7 +73,7 @@ export class StartPositionCalculator {
     /**
      *
      * @param selectedLayer this is always the layer that is selected with the hash in the url
-     * @param selectedOrDefaultLayer  this can also be the default layer if the {selectedLayer} didnt yield any start points
+     * @param selectedOrDefaultLayer  this can also be the default layer if the {selectedLayer} did not yield any start points
      */
     private startUser(selectedOrDefaultLayer: ITiledMapTileLayer, selectedLayer: string | null): PositionInterface {
         const tiles = selectedOrDefaultLayer.data;
