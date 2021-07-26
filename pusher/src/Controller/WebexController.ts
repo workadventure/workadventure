@@ -6,8 +6,8 @@ import { App } from "../Server/sifrr.server";
 
 const clientId = process.env.WEBEX_CLIENT_ID ?? "";
 const clientSecret = process.env.WEBEX_CLIENT_SECRET ?? "";
-const redirectUri = process.env.WEBEX_REDIRECT_URI ?? "/api/webex/callback";
-const tokenRedirectUri = process.env.WEBEX_TOKEN_REDIRECT_URI ?? "/";
+const redirectUri = process.env.WEBEX_REDIRECT_URL ?? "/pusher/webex/callback";
+const tokenRedirectUri = process.env.WEBEX_TOKEN_REDIRECT_URL ?? "/";
 const scopes = "spark:all";
 const state = "workadventure-webex";
 
@@ -38,12 +38,12 @@ const urlEncode = (obj: Record<string, string | number>) =>
 export class WebexController {
     constructor(private App: App) {
         if (!clientId || !clientSecret) {
-            throw Error("WEBEX_CLIENT_ID or WEBEX_CLIENT_SECRET env variable not set.");
+            this.App.get("/webex", (res) => res.end("WEBEX_CLIENT_ID or WEBEX_CLIENT_SECRET env variable not set."));
         }
+        this.App.get("/webex", (res) => res.end("ok"));
         this.App.get("/webex/authorize", this.authorize);
         this.App.get("/webex/refresh", this.refresh);
         this.App.get("/webex/callback", this.callback);
-        this.App.get("/webex/token", (res) => res.end());
     }
 
     authorize = (res: HttpResponse, req: HttpRequest) => {

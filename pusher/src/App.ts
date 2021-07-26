@@ -6,6 +6,7 @@ import { PrometheusController } from "./Controller/PrometheusController";
 import { DebugController } from "./Controller/DebugController";
 import { App as uwsApp } from "./Server/sifrr.server";
 import { AdminController } from "./Controller/AdminController";
+import { WebexController } from "./Controller/WebexController";
 
 class App {
     public app: uwsApp;
@@ -15,6 +16,7 @@ class App {
     public prometheusController: PrometheusController;
     private debugController: DebugController;
     private adminController: AdminController;
+    private webexController: WebexController;
 
     constructor() {
         this.app = new uwsApp();
@@ -26,6 +28,7 @@ class App {
         this.prometheusController = new PrometheusController(this.app);
         this.debugController = new DebugController(this.app);
         this.adminController = new AdminController(this.app);
+        this.webexController = new WebexController(this.app);
     }
 }
 

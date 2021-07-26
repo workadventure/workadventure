@@ -211,6 +211,7 @@ module.exports = {
             MAX_USERNAME_LENGTH: 8,
             MAX_PER_GROUP: 4,
             DISPLAY_TERMS_OF_USE: false,
+            WEBEX_AUTHORIZATION_URL: null,
         }),
     ],
 } as Configuration & WebpackDevServer.Configuration;

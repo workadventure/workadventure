@@ -1,5 +1,6 @@
 import { coWebsiteManager } from "./CoWebsiteManager";
 import WebexSignIn from "../Components/Webex/WebexSignIn.svelte";
+import { WEBEX_AUTHORIZATION_URL } from "../Enum/EnvironmentVariable";
 
 interface Webex {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -58,7 +59,7 @@ export class WebexIntegration {
         const onClose = () => (this.authorizationPopup = null);
 
         this.authorizationPopup ??= window.open(
-            "http://api.workadventure.localhost/webex/authorize",
+            WEBEX_AUTHORIZATION_URL,
             "webex",
             `scrollbars=no,resizable=no,status=no,location=no,toolbar=no,menubar=no,width=620,height=680`
         );
