@@ -212,6 +212,7 @@ module.exports = {
             MAX_PER_GROUP: 4,
             DISPLAY_TERMS_OF_USE: false,
             NODE_ENV: mode,
+            WEBEX_AUTHORIZATION_URL: null,
         }),
     ],
 } as Configuration & WebpackDevServer.Configuration;

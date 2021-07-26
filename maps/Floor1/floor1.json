@@ -25,7 +25,13 @@
                  "name":"jitsiRoom",
                  "type":"string",
                  "value":"tcm-radiant"
-                }],
+                },
+                {
+                 "name":"webexSpace",
+                 "type":"string",
+                 "value":"Y2lzY29zcGFyazovL3VybjpURUFNOmV1LWNlbnRyYWwtMV9rL1JPT00vYjEzZjU4NDAtZWJhMi0xMWViLWEwMTYtMzc5MzBkMTVmMzI3"
+                }
+              ],
          "type":"tilelayer",
          "visible":true,
          "width":46,
@@ -43,6 +49,10 @@
                  "name":"jitsiRoom",
                  "type":"string",
                  "value":"tcm-white-room"
+                },{
+                     "name":"webexSpace",
+                     "type":"string",
+                     "value":"Y2lzY29zcGFyazovL3VybjpURUFNOmV1LWNlbnRyYWwtMV9rL1JPT00vZTRlNTdjNTAtZWJhOC0xMWViLWI0NzUtYjM0OGZlYTk3OTY0" 
                 }],
          "type":"tilelayer",
          "visible":true,
@@ -61,6 +71,10 @@
                  "name":"jitsiRoom",
                  "type":"string",
                  "value":"tcm-dire"
+                }, {
+                       "name": "webexSpace",
+                     "type":"string",
+                     "value":"Y2lzY29zcGFyazovL3VybjpURUFNOmV1LWNlbnRyYWwtMV9rL1JPT00vZTIwMWIyYzAtZWJhNy0xMWViLWEzYjgtN2YzMTM3OTVmYmMz"
                 }],
          "type":"tilelayer",
          "visible":true,

@@ -3,6 +3,7 @@
     "husky": "^7.0.1"
   },
   "scripts": {
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "compose": "docker compose up --build"
   }
 }
