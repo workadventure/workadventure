@@ -74,7 +74,7 @@ export class GameRoom {
     }
     public getUsersByUuid(uuid: string): User[] {
         const userList : User[] = [];
-        for (let user of this.users.values()) {
+        for (const user of this.users.values()) {
             if(user.uuid === uuid){
                 userList.push(user)
             }
