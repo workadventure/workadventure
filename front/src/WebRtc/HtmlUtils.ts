@@ -31,7 +31,7 @@ export class HtmlUtils {
         return p.innerHTML;
     }
 
-    public static urlify(text: string): string {
+    public static urlify(text: string, style: string = ""): string {
         const urlRegex = /(https?:\/\/[^\s]+)/g;
         text = HtmlUtils.escapeHtml(text);
         return text.replace(urlRegex, (url: string) => {
@@ -40,8 +40,17 @@ export class HtmlUtils {
             link.target = "_blank";
             const text = document.createTextNode(url);
             link.appendChild(text);
+            link.setAttribute("style", style);
             return link.outerHTML;
         });
+    }
+
+    public static isClickedInside(event: MouseEvent, target: HTMLElement): boolean {
+        return !!event.composedPath().find((et) => et === target);
+    }
+
+    public static isClickedOutside(event: MouseEvent, target: HTMLElement): boolean {
+        return !this.isClickedInside(event, target);
     }
 
     private static isHtmlElement<T extends HTMLElement>(elem: HTMLElement | null): elem is T {
