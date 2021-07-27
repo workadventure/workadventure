@@ -685,7 +685,7 @@ export class SocketManager {
             return;
         }
 
-        for(const recipient of recipients) {
+        for (const recipient of recipients) {
             const sendUserMessage = new SendUserMessage();
             sendUserMessage.setMessage(message);
             sendUserMessage.setType("ban"); //todo: is the type correct?
@@ -718,7 +718,7 @@ export class SocketManager {
             return;
         }
 
-        for(const recipient of recipients) {
+        for (const recipient of recipients) {
             // Let's leave the room now.
             room.leave(recipient);
 
