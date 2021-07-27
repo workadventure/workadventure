@@ -21,7 +21,7 @@ interface ZoneDescriptor {
 }
 
 export class PositionDispatcher {
-    // TODO: we need a way to clean the zones if noone is in the zone and noone listening (to free memory!)
+    // TODO: we need a way to clean the zones if no one is in the zone and no one listening (to free memory!)
 
     private zones: Zone[][] = [];
 
