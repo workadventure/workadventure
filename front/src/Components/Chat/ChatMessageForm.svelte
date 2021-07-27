@@ -1,7 +1,7 @@
 <script lang="ts">
     import {chatMessagesStore, chatInputFocusStore} from "../../Stores/ChatStore";
 
-    export let handleForm = {
+    export const handleForm = {
         blur() {
             inputElement.blur();
         }

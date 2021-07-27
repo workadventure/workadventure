@@ -45,6 +45,14 @@ export class HtmlUtils {
         });
     }
 
+    public static isClickedInside(event: MouseEvent, target: HTMLElement): boolean {
+        return !!event.composedPath().find((et) => et === target);
+    }
+
+    public static isClickedOutside(event: MouseEvent, target: HTMLElement): boolean {
+        return !this.isClickedInside(event, target);
+    }
+
     private static isHtmlElement<T extends HTMLElement>(elem: HTMLElement | null): elem is T {
         return elem !== null;
     }
