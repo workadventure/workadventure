@@ -1,4 +1,12 @@
-## Version 1.4.x-dev
+## Version develop
+
+### Updates
+
+- Rewrote the way authentification works: the auth jwt token can now contains an email instead of an uuid
+- Added an OpenId login flow than can be plugged to any OIDC provider.
+- 
+
+## Version 1.4.10
 
 ### Updates
 
