@@ -675,8 +675,8 @@ export class SocketManager {
             return;
         }
 
-        const recipient = room.getUserByUuid(recipientUuid);
-        if (recipient === undefined) {
+        const recipients = room.getUsersByUuid(recipientUuid);
+        if (recipients.length === 0) {
             console.error(
                 "In sendAdminMessage, could not find user with id '" +
                     recipientUuid +
@@ -685,14 +685,16 @@ export class SocketManager {
             return;
         }
 
-        const sendUserMessage = new SendUserMessage();
-        sendUserMessage.setMessage(message);
-        sendUserMessage.setType("ban"); //todo: is the type correct?
+        for (const recipient of recipients) {
+            const sendUserMessage = new SendUserMessage();
+            sendUserMessage.setMessage(message);
+            sendUserMessage.setType("ban"); //todo: is the type correct?
 
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setSendusermessage(sendUserMessage);
+            const serverToClientMessage = new ServerToClientMessage();
+            serverToClientMessage.setSendusermessage(sendUserMessage);
 
-        recipient.socket.write(serverToClientMessage);
+            recipient.socket.write(serverToClientMessage);
+        }
     }
 
     public banUser(roomId: string, recipientUuid: string, message: string): void {
@@ -706,8 +708,8 @@ export class SocketManager {
             return;
         }
 
-        const recipient = room.getUserByUuid(recipientUuid);
-        if (recipient === undefined) {
+        const recipients = room.getUsersByUuid(recipientUuid);
+        if (recipients.length === 0) {
             console.error(
                 "In banUser, could not find user with id '" +
                     recipientUuid +
@@ -716,19 +718,21 @@ export class SocketManager {
             return;
         }
 
-        // Let's leave the room now.
-        room.leave(recipient);
+        for (const recipient of recipients) {
+            // Let's leave the room now.
+            room.leave(recipient);
 
-        const banUserMessage = new BanUserMessage();
-        banUserMessage.setMessage(message);
-        banUserMessage.setType("banned");
+            const banUserMessage = new BanUserMessage();
+            banUserMessage.setMessage(message);
+            banUserMessage.setType("banned");
 
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setBanusermessage(banUserMessage);
+            const serverToClientMessage = new ServerToClientMessage();
+            serverToClientMessage.setBanusermessage(banUserMessage);
 
-        // Let's close the connection when the user is banned.
-        recipient.socket.write(serverToClientMessage);
-        recipient.socket.end();
+            // Let's close the connection when the user is banned.
+            recipient.socket.write(serverToClientMessage);
+            recipient.socket.end();
+        }
     }
 
     sendAdminRoomMessage(roomId: string, message: string) {
