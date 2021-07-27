@@ -244,6 +244,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     update(time: number, delta: number): void {
         if (this.lazyloadingAttempt) {
             this.moveLayers();
+            this.doMoveCursorHorizontally(this.moveHorizontally);
             this.lazyloadingAttempt = false;
         }
 
