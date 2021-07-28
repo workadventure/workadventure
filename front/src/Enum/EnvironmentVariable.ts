@@ -17,6 +17,7 @@ export const MAX_USERNAME_LENGTH = parseInt(process.env.MAX_USERNAME_LENGTH || "
 export const MAX_PER_GROUP = parseInt(process.env.MAX_PER_GROUP || "4");
 export const DISPLAY_TERMS_OF_USE = process.env.DISPLAY_TERMS_OF_USE == "true";
 export const WEBEX_AUTHORIZATION_URL = process.env.WEBEX_AUTHORIZATION_URL ?? "/pusher/webex/authorize";
+export const WEBEX_GLOBAL_SPACE_ID = process.env.WEBEX_GLOBAL_SPACE_ID;
 
 export const isMobile = (): boolean => window.innerWidth <= 800 || window.innerHeight <= 600;
 
