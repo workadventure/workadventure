@@ -1,6 +1,6 @@
 import { coWebsiteManager } from "./CoWebsiteManager";
 import WebexSignIn from "../Components/Webex/WebexSignIn.svelte";
-import { WEBEX_AUTHORIZATION_URL } from "../Enum/EnvironmentVariable";
+import { WEBEX_AUTHORIZATION_URL, WEBEX_GLOBAL_SPACE_ID } from "../Enum/EnvironmentVariable";
 
 interface Webex {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -27,9 +27,6 @@ export type SpaceWidgetConfig = {
 const accessTokenKey = "@workadventure/webex_access_token";
 const expiryDateKey = "@workadventure/webex_expiry_date";
 
-export const GLOBAL_SPACE_ID =
-    "Y2lzY29zcGFyazovL3VybjpURUFNOmV1LWNlbnRyYWwtMV9rL1JPT00vN2RiMTY1ZjAtZGZmZC0xMWViLWFhMmYtMTVkZmUxNzMyMGJi";
-
 export class WebexIntegration {
     private scriptLoader: Promise<Webex> | null = null;
     private authorizationPopup: Window | null = null;
@@ -50,6 +47,9 @@ export class WebexIntegration {
         return Boolean(this.accessToken && this.expiryDate && this.expiryDate > now);
     }
 
+    public get hasGlobalChat() {
+        return Boolean(WEBEX_GLOBAL_SPACE_ID);
+    }
     public openAuthorizationPopup() {
         if (this.isAuthorized) return;
 
@@ -107,7 +107,9 @@ export class WebexIntegration {
     }
 
     public async startGlobal() {
-        return this.start(GLOBAL_SPACE_ID, "message", { files: false, people: false, meet: false });
+        return WEBEX_GLOBAL_SPACE_ID
+            ? this.start(WEBEX_GLOBAL_SPACE_ID, "message", { files: false, people: false, meet: false })
+            : Promise.reject("WEBEX_GLOBAL_SPACE_ID not configured.");
     }
 
     public async start(
@@ -116,6 +118,9 @@ export class WebexIntegration {
         activities: Partial<SpaceWidgetConfig["spaceActivities"]> = {}
     ) {
         const self = this;
+
+        await this.stop();
+
         coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
             new WebexSignIn({ target: cowebsiteDiv });
 

@@ -213,6 +213,7 @@ module.exports = {
             DISPLAY_TERMS_OF_USE: false,
             NODE_ENV: mode,
             WEBEX_AUTHORIZATION_URL: null,
+            WEBEX_GLOBAL_SPACE_ID: null,
         }),
     ],
 } as Configuration & WebpackDevServer.Configuration;

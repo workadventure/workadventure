@@ -7,7 +7,9 @@
 </script>
 
 <div class="webex-global">
-    <button on:click={openGlobalChat}>Global Chat</button>
+    {#if webexIntegration.hasGlobalChat}
+        <button on:click={openGlobalChat}>Global Chat</button>
+    {/if}
 </div>
 
 <style lang="scss">
