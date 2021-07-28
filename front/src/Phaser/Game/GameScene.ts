@@ -75,8 +75,6 @@ import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } 
 import { waScaleManager } from "../Services/WaScaleManager";
 import { EmoteManager } from "./EmoteManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
-import RenderTexture = Phaser.GameObjects.RenderTexture;
-import Tilemap = Phaser.Tilemaps.Tilemap;
 import type { HasPlayerMovedEvent } from "../../Api/Events/HasPlayerMovedEvent";
 
 import AnimatedTiles from "phaser-animated-tiles";
@@ -88,6 +86,7 @@ import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStor
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { playersStore } from "../../Stores/PlayersStore";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
+import Tileset = Phaser.Tilemaps.Tileset;
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -1083,6 +1082,52 @@ ${escapedMessage}
                 }
             })
         );
+        iframeListener.registerAnswerer("loadTileset", (eventTileset) => {
+            const jsonTilesetDir = eventTileset.url.substr(0, eventTileset.url.lastIndexOf("/"));
+            let newFirstgid = 1;
+            const lastTileset = this.mapFile.tilesets[this.mapFile.tilesets.length - 1];
+            if (lastTileset) {
+                newFirstgid = lastTileset.firstgid + lastTileset.tilecount;
+            }
+            return new Promise((resolve, reject) => {
+                this.load.on("filecomplete-json-" + eventTileset.url, () => {
+                    let jsonTileset = this.cache.json.get(eventTileset.url);
+                    this.load.on("filecomplete-image-" + jsonTilesetDir + "/" + jsonTileset.image, () => {
+                        jsonTileset = { ...jsonTileset, firstgid: newFirstgid };
+                        this.mapFile.tilesets.push(jsonTileset);
+                        const newTileset = new Tileset(
+                            jsonTileset.name,
+                            jsonTileset.firstgid,
+                            jsonTileset.tileWidth,
+                            jsonTileset.tileHeight,
+                            jsonTileset.margin,
+                            jsonTileset.spacing,
+                            jsonTileset.tiles
+                        );
+                        this.Map.tilesets.push(newTileset);
+                        this.Terrains.push(
+                            this.Map.addTilesetImage(
+                                jsonTileset.name,
+                                jsonTilesetDir + "/" + jsonTileset.image,
+                                jsonTileset.tilewidth,
+                                jsonTileset.tileheight,
+                                jsonTileset.margin,
+                                jsonTileset.spacing
+                            )
+                        );
+                        this.gameMap.addLoadedTileset(this.mapFile, this.Map, this.Terrains);
+                        resolve(newFirstgid);
+                    });
+                    this.load.image(jsonTilesetDir + "/" + jsonTileset.image, jsonTilesetDir + "/" + jsonTileset.image);
+                });
+                this.load.on("loaderror", () => {
+                    console.error("Error while loading " + eventTileset.url + ".");
+                    reject(-1);
+                });
+                this.load.json(eventTileset.url, eventTileset.url);
+                this.load.start();
+            });
+        });
     }
 
     private setPropertyLayer(
@@ -1150,7 +1195,7 @@ ${escapedMessage}
         let targetRoom: Room;
         try {
             targetRoom = await Room.createRoom(roomUrl);
-        } catch (e: unknown) {
+        } catch (e) {
             console.error('Error while fetching new room "' + roomUrl.toString() + '"', e);
             this.mapTransitioning = false;
             return;
@@ -1204,6 +1249,7 @@ ${escapedMessage}
         this.chatVisibilityUnsubscribe();
         this.biggestAvailableAreaStoreUnsubscribe();
         iframeListener.unregisterAnswerer("getState");
+        iframeListener.unregisterAnswerer("loadTileset");
         this.sharedVariablesManager?.close();
 
         mediaManager.hideGameOverlay();
@@ -1276,7 +1322,7 @@ ${escapedMessage}
         try {
             const room = await Room.createRoom(exitRoomPath);
             return gameManager.loadMap(room, this.scene);
-        } catch (e: unknown) {
+        } catch (e) {
             console.warn('Error while pre-loading exit room "' + exitRoomPath.toString() + '"', e);
         }
     }
