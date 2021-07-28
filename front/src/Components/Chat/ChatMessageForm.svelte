@@ -1,6 +1,12 @@
 <script lang="ts">
     import {chatMessagesStore, chatInputFocusStore} from "../../Stores/ChatStore";
 
+    export const handleForm = {
+        blur() {
+            inputElement.blur();
+        }
+    }
+    let inputElement: HTMLElement;
     let newMessageText = '';
     
     function onFocus() {
@@ -18,7 +24,7 @@
 </script>
 
 <form on:submit|preventDefault={saveMessage}>
-    <input type="text" bind:value={newMessageText} placeholder="Enter your message..." on:focus={onFocus} on:blur={onBlur} >
+    <input type="text" bind:value={newMessageText} placeholder="Enter your message..." on:focus={onFocus} on:blur={onBlur} bind:this={inputElement}>
     <button type="submit">
         <img src="/static/images/send.png" alt="Send" width="20">
     </button>
