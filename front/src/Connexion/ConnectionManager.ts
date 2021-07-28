@@ -117,7 +117,6 @@ class ConnectionManager {
             return Promise.reject(new Error("Invalid URL"));
         }
 
-        console.log("initGameConnexion => serviceWorker", room);
         this.serviceWorker = new _ServiceWorker();
         return Promise.resolve(room);
     }
