@@ -108,7 +108,7 @@ export class WebexIntegration {
 
     public async startGlobal() {
         return WEBEX_GLOBAL_SPACE_ID
-            ? this.start(WEBEX_GLOBAL_SPACE_ID, "message", { files: false, people: false, meet: false })
+            ? this.start(WEBEX_GLOBAL_SPACE_ID, "message")
             : Promise.reject("WEBEX_GLOBAL_SPACE_ID not configured.");
     }
 
