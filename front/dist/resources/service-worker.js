@@ -49,23 +49,11 @@ self.addEventListener('fetch', function(event) {
 });
 
 self.addEventListener('wait', function(event) {
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then(function(cache) {
-                console.log('Opened cache');
-                return cache.addAll(urlsToCache);
-            })
-    );
+    //TODO wait
 });
 
 self.addEventListener('update', function(event) {
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then(function(cache) {
-                console.log('Opened cache');
-                return cache.addAll(urlsToCache);
-            })
-    );
+    //TODO update
 });
 
 self.addEventListener('beforeinstallprompt', (e) => {
