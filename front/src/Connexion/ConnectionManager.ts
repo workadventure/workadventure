@@ -6,6 +6,7 @@ import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
 import { localUserStore } from "./LocalUserStore";
 import { CharacterTexture, LocalUser } from "./LocalUser";
 import { Room } from "./Room";
+import { _ServiceWorker } from "../Network/ServiceWorker";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -13,6 +14,8 @@ class ConnectionManager {
     private connexionType?: GameConnexionTypes;
     private reconnectingTimeout: NodeJS.Timeout | null = null;
     private _unloading: boolean = false;
+
+    private serviceWorker?: _ServiceWorker;
 
     get unloading() {
         return this._unloading;
@@ -30,6 +33,8 @@ class ConnectionManager {
     public async initGameConnexion(): Promise<Room> {
         const connexionType = urlManager.getGameConnexionType();
         this.connexionType = connexionType;
+
+        let room: Room | null = null;
         if (connexionType === GameConnexionTypes.register) {
             const organizationMemberToken = urlManager.getOrganizationToken();
             const data = await Axios.post(`${PUSHER_URL}/register`, { organizationMemberToken }).then(
@@ -40,7 +45,7 @@ class ConnectionManager {
 
             const roomUrl = data.roomUrl;
 
-            const room = await Room.createRoom(
+            room = await Room.createRoom(
                 new URL(
                     window.location.protocol +
                         "//" +
@@ -51,7 +56,6 @@ class ConnectionManager {
                 )
             );
             urlManager.pushRoomIdToUrl(room);
-            return Promise.resolve(room);
         } else if (
             connexionType === GameConnexionTypes.organization ||
             connexionType === GameConnexionTypes.anonymous ||
@@ -90,7 +94,7 @@ class ConnectionManager {
             }
 
             //get detail map for anonymous login and set texture in local storage
-            const room = await Room.createRoom(new URL(roomPath));
+            room = await Room.createRoom(new URL(roomPath));
             if (room.textures != undefined && room.textures.length > 0) {
                 //check if texture was changed
                 if (localUser.textures.length === 0) {
@@ -107,10 +111,13 @@ class ConnectionManager {
                 this.localUser = localUser;
                 localUserStore.saveUser(localUser);
             }
-            return Promise.resolve(room);
+        }
+        if (room == undefined) {
+            return Promise.reject(new Error("Invalid URL"));
         }
 
-        return Promise.reject(new Error("Invalid URL"));
+        this.serviceWorker = new _ServiceWorker();
+        return Promise.resolve(room);
     }
 
     private async verifyToken(token: string): Promise<void> {
@@ -148,6 +155,7 @@ class ConnectionManager {
                 viewport,
                 companion
             );
+
             connection.onConnectError((error: object) => {
                 console.log("An error occurred while connecting to socket server. Retrying");
                 reject(error);
@@ -166,6 +174,9 @@ class ConnectionManager {
             });
 
             connection.onConnect((connect: OnConnectInterface) => {
+                //save last room url connected
+                localUserStore.setLastRoomUrl(roomUrl);
+
                 resolve(connect);
             });
         }).catch((err) => {
