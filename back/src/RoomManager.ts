@@ -57,7 +57,7 @@ const roomManager: IRoomManagerServer = {
                                         room = gameRoom;
                                         user = myUser;
                                     } else {
-                                        //Connexion may have been closed before the init was finished, so we have to manually disconnect the user.
+                                        //Connection may have been closed before the init was finished, so we have to manually disconnect the user.
                                         socketManager.leaveRoom(gameRoom, myUser);
                                     }
                                 })

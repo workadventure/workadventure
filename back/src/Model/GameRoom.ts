@@ -104,6 +104,15 @@ export class GameRoom {
     public getUserById(id: number): User | undefined {
         return this.users.get(id);
     }
+    public getUsersByUuid(uuid: string): User[] {
+        const userList: User[] = [];
+        for (const user of this.users.values()) {
+            if (user.uuid === uuid) {
+                userList.push(user);
+            }
+        }
+        return userList;
+    }
 
     public join(socket: UserSocket, joinRoomMessage: JoinRoomMessage): User {
         const positionMessage = joinRoomMessage.getPositionmessage();
