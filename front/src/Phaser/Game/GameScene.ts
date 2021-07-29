@@ -1098,11 +1098,9 @@ ${escapedMessage}
                 return new Promise((resolve, reject) => {
                     this.load.on("filecomplete-json-" + eventTileset.url, () => {
                         let jsonTileset = this.cache.json.get(eventTileset.url);
-                        this.load.image(
-                            jsonTilesetDir + "/" + jsonTileset.image,
-                            jsonTilesetDir + "/" + jsonTileset.image
-                        );
-                        this.load.on("filecomplete-image-" + jsonTilesetDir + "/" + jsonTileset.image, () => {
+                        const imageUrl = jsonTilesetDir + "/" + jsonTileset.image;
+                        this.load.image(imageUrl, imageUrl);
+                        this.load.on("filecomplete-image-" + imageUrl, () => {
                             //Add the firstgid of the tileset to the json file
                             jsonTileset = { ...jsonTileset, firstgid: newFirstgid };
                             this.mapFile.tilesets.push(jsonTileset);
@@ -1120,7 +1118,7 @@ ${escapedMessage}
                             this.Terrains.push(
                                 this.Map.addTilesetImage(
                                     jsonTileset.name,
-                                    jsonTilesetDir + "/" + jsonTileset.image,
+                                    imageUrl,
                                     jsonTileset.tilewidth,
                                     jsonTileset.tileheight,
                                     jsonTileset.margin,
