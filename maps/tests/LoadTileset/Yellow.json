@@ -25,6 +25,11 @@
                  "name":"collides",
                  "type":"bool",
                  "value":true
+                }, 
+                {
+                 "name":"name",
+                 "type":"string",
+                 "value":"Mur"
                 }]
         }, 
         {
@@ -43,6 +48,20 @@
                  "name":"collides",
                  "type":"bool",
                  "value":true
+                }]
+        }, 
+        {
+         "id":12,
+         "properties":[
+                {
+                 "name":"name",
+                 "type":"string",
+                 "value":"sol"
+                }, 
+                {
+                 "name":"openWebsite",
+                 "type":"string",
+                 "value":"https:\/\/fr.wikipedia.org\/wiki\/Wikip%C3%A9dia:Accueil_principal"
                 }]
         }, 
         {

@@ -61,17 +61,6 @@ export class GameMap {
         }
     }
 
-    public addLoadedTileset(
-        newMap: ITiledMap,
-        newPhaserMap: Phaser.Tilemaps.Tilemap,
-        newTerrains: Array<Phaser.Tilemaps.Tileset>
-    ) {
-        this.map = newMap;
-        for (const layer of this.phaserLayers) {
-            layer.tileset = newTerrains;
-        }
-    }
-
     public getPropertiesForIndex(index: number): Array<ITiledMapProperty> {
         if (this.tileSetPropertyMap[index]) {
             return this.tileSetPropertyMap[index];

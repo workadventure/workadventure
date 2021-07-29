@@ -1080,31 +1080,36 @@ ${escapedMessage}
                 for (const eventTile of eventTiles) {
                     this.gameMap.putTile(eventTile.tile, eventTile.x, eventTile.y, eventTile.layer);
                 }
+                this.markDirty();
             })
         );
         iframeListener.registerAnswerer("loadTileset", (eventTileset) => {
             const jsonTilesetDir = eventTileset.url.substr(0, eventTileset.url.lastIndexOf("/"));
+            //Initialise the firstgid to 1 because if there is no tileset in the tilemap, the firstgid will be 1
             let newFirstgid = 1;
             const lastTileset = this.mapFile.tilesets[this.mapFile.tilesets.length - 1];
             if (lastTileset) {
+                //If there is at least one tileset in the tilemap then calculate the firstgid of the new tileset
                 newFirstgid = lastTileset.firstgid + lastTileset.tilecount;
             }
             return new Promise((resolve, reject) => {
                 this.load.on("filecomplete-json-" + eventTileset.url, () => {
                     let jsonTileset = this.cache.json.get(eventTileset.url);
                     this.load.on("filecomplete-image-" + jsonTilesetDir + "/" + jsonTileset.image, () => {
+                        //Add the firstgid of the tileset to the json file
                         jsonTileset = { ...jsonTileset, firstgid: newFirstgid };
                         this.mapFile.tilesets.push(jsonTileset);
-                        const newTileset = new Tileset(
-                            jsonTileset.name,
-                            jsonTileset.firstgid,
-                            jsonTileset.tileWidth,
-                            jsonTileset.tileHeight,
-                            jsonTileset.margin,
-                            jsonTileset.spacing,
-                            jsonTileset.tiles
+                        this.Map.tilesets.push(
+                            new Tileset(
+                                jsonTileset.name,
+                                jsonTileset.firstgid,
+                                jsonTileset.tileWidth,
+                                jsonTileset.tileHeight,
+                                jsonTileset.margin,
+                                jsonTileset.spacing,
+                                jsonTileset.tiles
+                            )
                         );
-                        this.Map.tilesets.push(newTileset);
                         this.Terrains.push(
                             this.Map.addTilesetImage(
                                 jsonTileset.name,
@@ -1115,7 +1120,18 @@ ${escapedMessage}
                                 jsonTileset.spacing
                             )
                         );
-                        this.gameMap.addLoadedTileset(this.mapFile, this.Map, this.Terrains);
+                        //destroy the tilemapayer because they are unique and we need to reuse their key and layerdData
+                        for (const layer of this.Map.layers) {
+                            layer.tilemapLayer.destroy(false);
+                        }
+                        //Create a new GameMap with the changed file
+                        this.gameMap = new GameMap(this.mapFile, this.Map, this.Terrains);
+                        //Destroy the colliders of the old tilemapLayer
+                        this.physics.add.world.colliders.destroy();
+                        //Create new colliders with the new GameMap
+                        this.createCollisionWithPlayer();
+                        //Create new trigger with the new GameMap
+                        this.triggerOnMapLayerPropertyChange();
                         resolve(newFirstgid);
                     });
                     this.load.image(jsonTilesetDir + "/" + jsonTileset.image, jsonTilesetDir + "/" + jsonTileset.image);
