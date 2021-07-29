@@ -56,7 +56,6 @@ class ConnectionManager {
                 )
             );
             urlManager.pushRoomIdToUrl(room);
-            Promise.resolve(room);
         } else if (
             connexionType === GameConnexionTypes.organization ||
             connexionType === GameConnexionTypes.anonymous ||
