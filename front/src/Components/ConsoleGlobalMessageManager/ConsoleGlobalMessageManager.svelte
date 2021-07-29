@@ -36,7 +36,6 @@
     function send() {
         if (inputSendTextActive) {
             handleSendText.sendTextMessage();
-            console.log(typeof handleSendText);
         }
         if (uploadMusicActive) {
             handleSendAudio.sendAudioMessage();
