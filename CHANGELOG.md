@@ -1,4 +1,11 @@
-## Version 1.4.x-dev
+## Version develop
+
+### Updates
+- New scripting API features : 
+  - Use `WA.room.loadTileset(url: string) : Promise<number>` to load a tileset from a JSON file.
+
+
+## Version 1.4.10
 
 ### Updates
 

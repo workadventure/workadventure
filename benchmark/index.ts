@@ -23,7 +23,7 @@ async function startOneUser(): Promise<void> {
             bottom: 200,
             left: 500,
             right: 800
-        });
+        }, null);
 
     const connection = onConnect.connection;
 
