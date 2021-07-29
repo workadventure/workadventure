@@ -48,6 +48,14 @@ self.addEventListener('fetch', function(event) {
     );
 });
 
-self.addEventListener('activate', function(event) {
-    //TODO activate service worker
+self.addEventListener('wait', function(event) {
+    //TODO wait
+});
+
+self.addEventListener('update', function(event) {
+    //TODO update
+});
+
+self.addEventListener('beforeinstallprompt', (e) => {
+    //TODO change prompt
 });

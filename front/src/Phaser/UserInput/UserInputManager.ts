@@ -21,7 +21,7 @@ export enum UserInputEvent {
 }
 
 
-//we cannot use a map structure so we have to create a replacment
+//we cannot use a map structure so we have to create a replacement
 export class ActiveEventList {
     private eventMap : Map<UserInputEvent, boolean> = new Map<UserInputEvent, boolean>();
 

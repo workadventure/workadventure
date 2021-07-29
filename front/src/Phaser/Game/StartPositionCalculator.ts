@@ -1,5 +1,5 @@
 import type { PositionInterface } from "../../Connexion/ConnexionModels";
-import type { ITiledMap, ITiledMapLayer, ITiledMapLayerProperty, ITiledMapTileLayer } from "../Map/ITiledMap";
+import type { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapTileLayer } from "../Map/ITiledMap";
 import type { GameMap } from "./GameMap";
 
 const defaultStartLayerName = "start";
@@ -45,7 +45,7 @@ export class StartPositionCalculator {
     /**
      *
      * @param selectedLayer this is always the layer that is selected with the hash in the url
-     * @param selectedOrDefaultLayer  this can also be the {defaultStartLayerName} if the {selectedLayer} didnt yield any start points
+     * @param selectedOrDefaultLayer  this can also be the {defaultStartLayerName} if the {selectedLayer} did not yield any start points
      */
     public initPositionFromLayerName(selectedOrDefaultLayer: string | null, selectedLayer: string | null) {
         if (!selectedOrDefaultLayer) {
@@ -73,7 +73,7 @@ export class StartPositionCalculator {
     /**
      *
      * @param selectedLayer this is always the layer that is selected with the hash in the url
-     * @param selectedOrDefaultLayer  this can also be the default layer if the {selectedLayer} didnt yield any start points
+     * @param selectedOrDefaultLayer  this can also be the default layer if the {selectedLayer} did not yield any start points
      */
     private startUser(selectedOrDefaultLayer: ITiledMapTileLayer, selectedLayer: string | null): PositionInterface {
         const tiles = selectedOrDefaultLayer.data;
@@ -112,12 +112,12 @@ export class StartPositionCalculator {
     }
 
     private getProperty(layer: ITiledMapLayer | ITiledMap, name: string): string | boolean | number | undefined {
-        const properties: ITiledMapLayerProperty[] | undefined = layer.properties;
+        const properties: ITiledMapProperty[] | undefined = layer.properties;
         if (!properties) {
             return undefined;
         }
         const obj = properties.find(
-            (property: ITiledMapLayerProperty) => property.name.toLowerCase() === name.toLowerCase()
+            (property: ITiledMapProperty) => property.name.toLowerCase() === name.toLowerCase()
         );
         if (obj === undefined) {
             return undefined;
