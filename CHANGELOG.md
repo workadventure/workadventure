@@ -1,4 +1,9 @@
-## Version 1.4.x-dev
+## Version develop
+
+### Updates 
+  You can send a message to all the room of your world from the console global message (user with tag admin only).
+
+## Version 1.4.10
 
 ### Updates
 
