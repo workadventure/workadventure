@@ -32,7 +32,8 @@ import {
     EmotePromptMessage,
     SendUserMessage,
     BanUserMessage,
-    VariableMessage, ErrorMessage,
+    VariableMessage,
+    ErrorMessage,
 } from "../Messages/generated/messages_pb";
 
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
@@ -54,9 +55,9 @@ import {
 import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
 import { adminMessagesService } from "./AdminMessagesService";
 import { worldFullMessageStream } from "./WorldFullMessageStream";
-import { worldFullWarningStream } from "./WorldFullWarningStream";
 import { connectionManager } from "./ConnectionManager";
 import { emoteEventStream } from "./EmoteEventStream";
+import { warningContainerStore } from "../Stores/MenuStore";
 
 const manualPingDelay = 20000;
 
@@ -167,7 +168,7 @@ export class RoomConnection implements RoomConnection {
                         emoteEventStream.fire(emoteMessage.getActoruserid(), emoteMessage.getEmote());
                     } else if (subMessage.hasErrormessage()) {
                         const errorMessage = subMessage.getErrormessage() as ErrorMessage;
-                        console.error('An error occurred server side: '+errorMessage.getMessage());
+                        console.error("An error occurred server side: " + errorMessage.getMessage());
                     } else if (subMessage.hasVariablemessage()) {
                         event = EventMessage.SET_VARIABLE;
                         payload = subMessage.getVariablemessage();
@@ -192,7 +193,14 @@ export class RoomConnection implements RoomConnection {
                     try {
                         variables.set(variable.getName(), JSON.parse(variable.getValue()));
                     } catch (e) {
-                        console.error('Unable to unserialize value received from server for variable "'+variable.getName()+'". Value received: "'+variable.getValue()+'". Error: ', e);
+                        console.error(
+                            'Unable to unserialize value received from server for variable "' +
+                                variable.getName() +
+                                '". Value received: "' +
+                                variable.getValue() +
+                                '". Error: ',
+                            e
+                        );
                     }
                 }
 
@@ -236,7 +244,7 @@ export class RoomConnection implements RoomConnection {
             } else if (message.hasBanusermessage()) {
                 adminMessagesService.onSendusermessage(message.getBanusermessage() as BanUserMessage);
             } else if (message.hasWorldfullwarningmessage()) {
-                worldFullWarningStream.onMessage();
+                warningContainerStore.activateWarningContainer();
             } else if (message.hasRefreshroommessage()) {
                 //todo: implement a way to notify the user the room was refreshed.
             } else {
@@ -659,7 +667,14 @@ export class RoomConnection implements RoomConnection {
                 try {
                     value = JSON.parse(serializedValue);
                 } catch (e) {
-                    console.error('Unable to unserialize value received from server for variable "'+name+'". Value received: "'+serializedValue+'". Error: ', e);
+                    console.error(
+                        'Unable to unserialize value received from server for variable "' +
+                            name +
+                            '". Value received: "' +
+                            serializedValue +
+                            '". Error: ',
+                        e
+                    );
                 }
             }
             callback(name, value);
