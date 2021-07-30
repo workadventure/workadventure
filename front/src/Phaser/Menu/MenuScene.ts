@@ -19,6 +19,7 @@ import { get } from "svelte/store";
 import { playersStore } from "../../Stores/PlayersStore";
 import { mediaManager } from "../../WebRtc/MediaManager";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
+import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
 
 export const MenuSceneName = "MenuScene";
 const gameMenuKey = "gameMenu";
@@ -383,7 +384,7 @@ export class MenuScene extends Phaser.Scene {
     private gotToCreateMapPage() {
         //const sparkHost = 'https://'+window.location.host.replace('play.', '')+'/choose-map.html';
         //TODO fix me: this button can to send us on WorkAdventure BO.
-        const sparkHost = "https://workadventu.re/getting-started";
+        const sparkHost = ADMIN_URL + "/getting-started";
         window.open(sparkHost, "_blank");
     }
 
