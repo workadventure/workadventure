@@ -7,13 +7,14 @@
 
     export let message: ChatMessage;
     export let line: number;
+    const chatStyleLink = "color: white; text-decoration: underline;";
     
     $: author = message.author as PlayerInterface;
     $: targets = message.targets || [];
     $: texts = message.text || [];
     
     function urlifyText(text: string): string {
-        return HtmlUtils.urlify(text)
+        return HtmlUtils.urlify(text, chatStyleLink);
     }
     function renderDate(date: Date) {
         return date.toLocaleTimeString(navigator.language, {
