@@ -29,6 +29,8 @@
     import ConsoleGlobalMessageManager from "./ConsoleGlobalMessageManager/ConsoleGlobalMessageManager.svelte";
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import { audioManagerVisibilityStore } from "../Stores/AudioManagerStore";
+    import {warningContainerStore} from "../Stores/MenuStore";
+    import WarningContainer from "./WarningContainer/WarningContainer.svelte";
 
     export let game: Game;
 
@@ -97,5 +99,8 @@
     {/if}
     {#if $chatVisibilityStore}
         <Chat></Chat>
+    {/if}
+    {#if $warningContainerStore}
+        <WarningContainer></WarningContainer>
     {/if}
 </div>
