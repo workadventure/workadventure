@@ -13,7 +13,6 @@ RoomConnection.setWebsocketFactory((url: string) => {
 });
 
 async function startOneUser(): Promise<void> {
-    await connectionManager.anonymousLogin(true);
     const onConnect = await connectionManager.connectToRoomSocket(process.env.ROOM_ID ? process.env.ROOM_ID : '_/global/maps.workadventure.localhost/Floor0/floor0.json', 'TEST', ['male3'],
         {
             x: 783,
