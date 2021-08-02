@@ -32,11 +32,14 @@
 <div class="main-ban-message nes-container is-rounded" transition:fly="{{ y: -1000, duration: 500 }}">
     <h2 class="title-ban-message"><img src="resources/logos/report.svg" alt="***"/> Important message <img src="resources/logos/report.svg" alt="***"/></h2>
     <div class="content-ban-message">
-        {text}
+        <p>{text}</p>
     </div>
     <div class="footer-ban-message">
         <button type="button" class="nes-btn {nameButton === NAME_BUTTON ? 'is-primary' : 'is-error'}" disabled="{!(nameButton === NAME_BUTTON)}" on:click|preventDefault={closeBanMessage}>{nameButton}</button>
     </div>
+    <audio id="report-message" autoplay>
+        <source src="/resources/objects/report-message.mp3" type="audio/mp3">
+    </audio>
 </div>
 
 
@@ -73,6 +76,10 @@
       flex: 1 1 auto;
       max-height: calc(100% - 50px);
       overflow: auto;
+
+      p {
+        white-space: pre-wrap;
+      }
     }
 
     div.footer-ban-message {
