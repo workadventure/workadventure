@@ -27,8 +27,6 @@
     import {gameOverlayVisibilityStore} from "../Stores/GameOverlayStoreVisibility";
     import {consoleGlobalMessageManagerVisibleStore} from "../Stores/ConsoleGlobalMessageManagerStore";
     import ConsoleGlobalMessageManager from "./ConsoleGlobalMessageManager/ConsoleGlobalMessageManager.svelte";
-    import {warningContainerStore} from "../Stores/MenuStore";
-    import WarningContainer from "./WarningContainer/WarningContainer.svelte";
 
     export let game: Game;
 
@@ -92,8 +90,5 @@
     {/if}
     {#if $chatVisibilityStore}
         <Chat></Chat>
-    {/if}
-    {#if $warningContainerStore}
-        <WarningContainer></WarningContainer>
     {/if}
 </div>

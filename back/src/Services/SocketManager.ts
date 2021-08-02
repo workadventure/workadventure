@@ -790,7 +790,7 @@ export class SocketManager {
         if (!room) {
             //todo: this should cause the http call to return a 500
             console.error(
-                "In dispatchWorldFullWarning, could not find room with id '" +
+                "In sendAdminRoomMessage, could not find room with id '" +
                     roomId +
                     "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
             );

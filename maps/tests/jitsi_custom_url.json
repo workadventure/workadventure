@@ -58,17 +58,11 @@
                  "height":94.6489098314831,
                  "id":1,
                  "name":"",
-                 "properties":[
-                        {
-                         "name":"font-family",
-                         "type":"string",
-                         "value":"\"Press Start 2P\""
-                        }],
                  "rotation":0,
                  "text":
                     {
                      "fontfamily":"Sans Serif",
-                     "pixelsize":8,
+                     "pixelsize":11,
                      "text":"Test:\nWalk on the carpet and press space\nResult:\nJitsi opens on meet.jit.si (check this in the network tab). Note: this test only makes sense if the default configured Jitsi instance is NOT meet.jit.si  (check your .env file)",
                      "wrap":true
                     },

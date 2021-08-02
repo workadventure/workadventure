@@ -50,7 +50,6 @@ jobs:
         run: yarn run build
         env:
           PUSHER_URL: "//localhost:8080"
-          ADMIN_URL: "//localhost:80"
         working-directory: "front"
 
       - name: "Svelte check"
@@ -82,7 +81,7 @@ jobs:
       - name: "Setup NodeJS"
         uses: actions/setup-node@v1
         with:
-          node-version: '14.x'
+          node-version: '12.x'
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1

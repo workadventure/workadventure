@@ -247,8 +247,6 @@ message RefreshRoomMessage{
 
 message WorldFullMessage{
 }
-message TokenExpiredMessage{
-}
 
 message WorldConnexionMessage{
   string message = 2;
@@ -280,7 +278,6 @@ message ServerToClientMessage {
     RefreshRoomMessage refreshRoomMessage = 17;
     WorldConnexionMessage worldConnexionMessage = 18;
     EmoteEventMessage emoteEventMessage = 19;
-    TokenExpiredMessage tokenExpiredMessage = 20;
   }
 }
 

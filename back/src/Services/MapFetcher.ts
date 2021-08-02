@@ -27,9 +27,7 @@ class MapFetcher {
         });
 
         if (!isTiledMap(res.data)) {
-            //TODO fixme
-            //throw new Error("Invalid map format for map " + mapUrl);
-            console.error("Invalid map format for map " + mapUrl);
+            throw new Error("Invalid map format for map " + mapUrl);
         }
 
         return res.data;

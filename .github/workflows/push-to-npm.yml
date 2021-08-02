@@ -47,7 +47,6 @@ jobs:
         run: yarn run build-typings
         env:
           PUSHER_URL: "//localhost:8080"
-          ADMIN_URL: "//localhost:80"
         working-directory: "front"
 
       # We build the front to generate the typings of iframe_api, then we copy those typings in a separate package.
