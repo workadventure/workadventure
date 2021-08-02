@@ -30,6 +30,7 @@ import {
     ViewportMessage,
     WebRtcSignalToServerMessage,
     WorldConnexionMessage,
+    TokenExpiredMessage,
     VariableMessage,
     ErrorMessage,
     WorldFullMessage,
@@ -117,7 +118,7 @@ export class SocketManager implements ZoneEventListener {
                 console.warn("Admin connection lost to back server");
                 // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                 if (!client.disconnecting) {
-                    this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
+                    this.closeWebsocketConnection(client, 1011, "Admin Connection lost to back server");
                 }
                 console.log("A user left");
             })
@@ -138,24 +139,6 @@ export class SocketManager implements ZoneEventListener {
         if (socket.adminConnection) {
             socket.adminConnection.end();
         }
-    }
-
-    getAdminSocketDataFor(roomId: string): AdminSocketData {
-        throw new Error("Not reimplemented yet");
-        /*const data:AdminSocketData = {
-            rooms: {},
-            users: {},
-        }
-        const room = this.Worlds.get(roomId);
-        if (room === undefined) {
-            return data;
-        }
-        const users = room.getUsers();
-        data.rooms[roomId] = users.size;
-        users.forEach(user => {
-            data.users[user.uuid] = true
-        })
-        return data;*/
     }
 
     async handleJoinRoom(client: ExSocketInterface): Promise<void> {
@@ -587,7 +570,20 @@ export class SocketManager implements ZoneEventListener {
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setWorldfullmessage(errorMessage);
 
-        client.send(serverToClientMessage.serializeBinary().buffer, true);
+        if (!client.disconnecting) {
+            client.send(serverToClientMessage.serializeBinary().buffer, true);
+        }
+    }
+
+    public emitTokenExpiredMessage(client: WebSocket) {
+        const errorMessage = new TokenExpiredMessage();
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setTokenexpiredmessage(errorMessage);
+
+        if (!client.disconnecting) {
+            client.send(serverToClientMessage.serializeBinary().buffer, true);
+        }
     }
 
     public emitConnexionErrorMessage(client: WebSocket, message: string) {

@@ -31,6 +31,8 @@
     import TextMessage from "./TypeMessage/TextMessage.svelte";
     import {banMessageVisibleStore} from "../Stores/TypeMessageStore/BanMessageStore";
     import {textMessageVisibleStore} from "../Stores/TypeMessageStore/TextMessageStore";
+    import {warningContainerStore} from "../Stores/MenuStore";
+    import WarningContainer from "./WarningContainer/WarningContainer.svelte";
 
     export let game: Game;
 
@@ -104,5 +106,8 @@
     {/if}
     {#if $chatVisibilityStore}
         <Chat></Chat>
+    {/if}
+    {#if $warningContainerStore}
+        <WarningContainer></WarningContainer>
     {/if}
 </div>

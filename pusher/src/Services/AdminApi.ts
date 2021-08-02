@@ -7,6 +7,7 @@ import { RoomRedirect } from "./AdminApi/RoomRedirect";
 
 export interface AdminApiData {
     roomUrl: string;
+    email: string | null;
     mapUrlStart: string;
     tags: string[];
     policy_type: number;
@@ -21,7 +22,7 @@ export interface AdminBannedData {
 }
 
 export interface FetchMemberDataByUuidResponse {
-    uuid: string;
+    userUuid: string;
     tags: string[];
     visitCardUrl: string | null;
     textures: CharacterTexture[];
@@ -46,12 +47,16 @@ class AdminApi {
         return res.data;
     }
 
-    async fetchMemberDataByUuid(uuid: string, roomId: string): Promise<FetchMemberDataByUuidResponse> {
+    async fetchMemberDataByUuid(
+        userIdentifier: string | null,
+        roomId: string,
+        ipAddress: string
+    ): Promise<FetchMemberDataByUuidResponse> {
         if (!ADMIN_API_URL) {
             return Promise.reject(new Error("No admin backoffice set!"));
         }
         const res = await Axios.get(ADMIN_API_URL + "/api/room/access", {
-            params: { uuid, roomId },
+            params: { userIdentifier, roomId, ipAddress },
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
         });
         return res.data;

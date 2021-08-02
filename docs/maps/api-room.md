@@ -163,3 +163,17 @@ WA.room.setTiles([
                 {x: 9, y: 4, tile: 'blue', layer: 'setTiles'}
                 ]);
 ```
+
+### Loading a tileset
+```
+WA.room.loadTileset(url: string): Promise<number>
+```
+Load a tileset in JSON format from an url and return the id of the first tile of the loaded tileset.
+
+You can create a tileset file in Tile Editor.
+
+```javascript
+WA.room.loadTileset("Assets/Tileset.json").then((firstId) => {
+    WA.room.setTiles([{x: 4, y: 4, tile: firstId, layer: 'bottom'}]);
+})
+```

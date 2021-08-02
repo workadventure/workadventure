@@ -1,9 +1,13 @@
 ## Version develop
 
 ### Updates
+- New scripting API features : 
+  - Use `WA.room.loadTileset(url: string) : Promise<number>` to load a tileset from a JSON file.
+- Rewrote the way authentification works: the auth jwt token can now contains an email instead of an uuid
+- Added an OpenId login flow than can be plugged to any OIDC provider.
 - You can send a message to all rooms of your world from the console global message (user with tag admin only).
 
-## Version 1.4.10
+## Version 1.4.11
 
 ### Updates
 

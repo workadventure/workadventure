@@ -55,7 +55,7 @@ services:
       - "traefik.http.routers.front-ssl.service=front"
 
   pusher:
-    image: thecodingmachine/nodejs:12
+    image: thecodingmachine/nodejs:14
     command: yarn dev
     environment:
       DEBUG: "socket:*"
@@ -66,6 +66,10 @@ services:
       API_URL: back:50051
       JITSI_URL: $JITSI_URL
       JITSI_ISS: $JITSI_ISS
+      FRONT_URL: http://play.workadventure.localhost
+      OPID_CLIENT_ID: $OPID_CLIENT_ID
+      OPID_CLIENT_SECRET: $OPID_CLIENT_SECRET
+      OPID_CLIENT_ISSUER: $OPID_CLIENT_ISSUER
     volumes:
       - ./pusher:/usr/src/app
     labels:

@@ -1,5 +1,4 @@
 import * as tg from "generic-type-guard";
-import type { GameStateEvent } from "./GameStateEvent";
 import type { ButtonClickedEvent } from "./ButtonClickedEvent";
 import type { ChatEvent } from "./ChatEvent";
 import type { ClosePopupEvent } from "./ClosePopupEvent";
@@ -10,7 +9,6 @@ import type { OpenCoWebSiteEvent } from "./OpenCoWebSiteEvent";
 import type { OpenPopupEvent } from "./OpenPopupEvent";
 import type { OpenTabEvent } from "./OpenTabEvent";
 import type { UserInputChatEvent } from "./UserInputChatEvent";
-import type { MapDataEvent } from "./MapDataEvent";
 import type { LayerEvent } from "./LayerEvent";
 import type { SetPropertyEvent } from "./setPropertyEvent";
 import type { LoadSoundEvent } from "./LoadSoundEvent";
@@ -23,6 +21,8 @@ import type { SetVariableEvent } from "./SetVariableEvent";
 import { isGameStateEvent } from "./GameStateEvent";
 import { isMapDataEvent } from "./MapDataEvent";
 import { isSetVariableEvent } from "./SetVariableEvent";
+import type { LoadTilesetEvent } from "./LoadTilesetEvent";
+import { isLoadTilesetEvent } from "./LoadTilesetEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -52,6 +52,7 @@ export type IframeEventMap = {
     playSound: PlaySoundEvent;
     stopSound: null;
     getState: undefined;
+    loadTileset: LoadTilesetEvent;
     registerMenuCommand: MenuItemRegisterEvent;
     setTiles: SetTilesEvent;
 };
@@ -99,6 +100,10 @@ export const iframeQueryMapTypeGuards = {
     setVariable: {
         query: isSetVariableEvent,
         answer: tg.isUndefined,
+    },
+    loadTileset: {
+        query: isLoadTilesetEvent,
+        answer: tg.isNumber,
     },
 };
 

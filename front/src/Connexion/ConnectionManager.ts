@@ -14,6 +14,7 @@ class ConnectionManager {
     private connexionType?: GameConnexionTypes;
     private reconnectingTimeout: NodeJS.Timeout | null = null;
     private _unloading: boolean = false;
+    private authToken: string | null = null;
 
     private serviceWorker?: _ServiceWorker;
 
@@ -27,21 +28,54 @@ class ConnectionManager {
             if (this.reconnectingTimeout) clearTimeout(this.reconnectingTimeout);
         });
     }
+
+    public loadOpenIDScreen() {
+        localUserStore.setAuthToken(null);
+        const state = localUserStore.generateState();
+        const nonce = localUserStore.generateNonce();
+        window.location.assign(`http://${PUSHER_URL}/login-screen?state=${state}&nonce=${nonce}`);
+    }
+
+    public logout() {
+        localUserStore.setAuthToken(null);
+        window.location.reload();
+    }
+
     /**
      * Tries to login to the node server and return the starting map url to be loaded
      */
     public async initGameConnexion(): Promise<Room> {
         const connexionType = urlManager.getGameConnexionType();
         this.connexionType = connexionType;
-
         let room: Room | null = null;
-        if (connexionType === GameConnexionTypes.register) {
+        if (connexionType === GameConnexionTypes.jwt) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get("code");
+            const state = urlParams.get("state");
+            if (!state || !localUserStore.verifyState(state)) {
+                throw "Could not validate state!";
+            }
+            if (!code) {
+                throw "No Auth code provided";
+            }
+            const nonce = localUserStore.getNonce();
+            const { authToken } = await Axios.get(`${PUSHER_URL}/login-callback`, { params: { code, nonce } }).then(
+                (res) => res.data
+            );
+            localUserStore.setAuthToken(authToken);
+            this.authToken = authToken;
+            room = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
+            urlManager.pushRoomIdToUrl(room);
+        } else if (connexionType === GameConnexionTypes.register) {
+            //@deprecated
             const organizationMemberToken = urlManager.getOrganizationToken();
             const data = await Axios.post(`${PUSHER_URL}/register`, { organizationMemberToken }).then(
                 (res) => res.data
             );
-            this.localUser = new LocalUser(data.userUuid, data.authToken, data.textures);
+            this.localUser = new LocalUser(data.userUuid, data.textures);
+            this.authToken = data.authToken;
             localUserStore.saveUser(this.localUser);
+            localUserStore.setAuthToken(this.authToken);
 
             const roomUrl = data.roomUrl;
 
@@ -61,24 +95,12 @@ class ConnectionManager {
             connexionType === GameConnexionTypes.anonymous ||
             connexionType === GameConnexionTypes.empty
         ) {
-            let localUser = localUserStore.getLocalUser();
-            if (localUser && localUser.jwtToken && localUser.uuid && localUser.textures) {
-                this.localUser = localUser;
-                try {
-                    await this.verifyToken(localUser.jwtToken);
-                } catch (e) {
-                    // If the token is invalid, let's generate an anonymous one.
-                    console.error("JWT token invalid. Did it expire? Login anonymously instead.");
-                    await this.anonymousLogin();
-                }
-            } else {
+            this.authToken = localUserStore.getAuthToken();
+            //todo: add here some kind of warning if authToken has expired.
+            if (!this.authToken) {
                 await this.anonymousLogin();
             }
-
-            localUser = localUserStore.getLocalUser();
-            if (!localUser) {
-                throw "Error to store local user data";
-            }
+            this.localUser = localUserStore.getLocalUser() as LocalUser; //if authToken exist in localStorage then localUser cannot be null
 
             let roomPath: string;
             if (connexionType === GameConnexionTypes.empty) {
@@ -97,19 +119,18 @@ class ConnectionManager {
             room = await Room.createRoom(new URL(roomPath));
             if (room.textures != undefined && room.textures.length > 0) {
                 //check if texture was changed
-                if (localUser.textures.length === 0) {
-                    localUser.textures = room.textures;
+                if (this.localUser.textures.length === 0) {
+                    this.localUser.textures = room.textures;
                 } else {
                     room.textures.forEach((newTexture) => {
-                        const alreadyExistTexture = localUser?.textures.find((c) => newTexture.id === c.id);
-                        if (localUser?.textures.findIndex((c) => newTexture.id === c.id) !== -1) {
+                        const alreadyExistTexture = this.localUser.textures.find((c) => newTexture.id === c.id);
+                        if (this.localUser.textures.findIndex((c) => newTexture.id === c.id) !== -1) {
                             return;
                         }
-                        localUser?.textures.push(newTexture);
+                        this.localUser.textures.push(newTexture);
                     });
                 }
-                this.localUser = localUser;
-                localUserStore.saveUser(localUser);
+                localUserStore.saveUser(this.localUser);
             }
         }
         if (room == undefined) {
@@ -120,21 +141,19 @@ class ConnectionManager {
         return Promise.resolve(room);
     }
 
-    private async verifyToken(token: string): Promise<void> {
-        await Axios.get(`${PUSHER_URL}/verify`, { params: { token } });
-    }
-
     public async anonymousLogin(isBenchmark: boolean = false): Promise<void> {
         const data = await Axios.post(`${PUSHER_URL}/anonymLogin`).then((res) => res.data);
-        this.localUser = new LocalUser(data.userUuid, data.authToken, []);
+        this.localUser = new LocalUser(data.userUuid, []);
+        this.authToken = data.authToken;
         if (!isBenchmark) {
             // In benchmark, we don't have a local storage.
             localUserStore.saveUser(this.localUser);
+            localUserStore.setAuthToken(this.authToken);
         }
     }
 
     public initBenchmark(): void {
-        this.localUser = new LocalUser("", "test", []);
+        this.localUser = new LocalUser("", []);
     }
 
     public connectToRoomSocket(
@@ -147,7 +166,7 @@ class ConnectionManager {
     ): Promise<OnConnectInterface> {
         return new Promise<OnConnectInterface>((resolve, reject) => {
             const connection = new RoomConnection(
-                this.localUser.jwtToken,
+                this.authToken,
                 roomUrl,
                 name,
                 characterLayers,
