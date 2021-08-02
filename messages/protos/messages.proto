@@ -123,9 +123,9 @@ message VariableWithTagMessage {
 }
 
 message PlayGlobalMessage {
-  string id = 1;
-  string type = 2;
-  string message = 3;
+  string type = 1;
+  string content = 2;
+  bool broadcastToWorld = 3;
 }
 
 message StopGlobalMessage {
@@ -445,6 +445,7 @@ message AdminMessage {
 message AdminRoomMessage {
   string message = 1;
   string roomId = 2;
+  string type = 3;
 }
 
 // A message sent by an administrator to absolutely everybody

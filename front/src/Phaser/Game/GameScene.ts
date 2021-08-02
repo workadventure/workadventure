@@ -1,5 +1,4 @@
 import type { Subscription } from "rxjs";
-import { GlobalMessageManager } from "../../Administration/GlobalMessageManager";
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { iframeListener } from "../../Api/IframeListener";
 import { connectionManager } from "../../Connexion/ConnectionManager";
@@ -155,7 +154,6 @@ export class GameScene extends DirtyScene {
     private playersPositionInterpolator = new PlayersPositionInterpolator();
     public connection: RoomConnection | undefined;
     private simplePeer!: SimplePeer;
-    private GlobalMessageManager!: GlobalMessageManager;
     private connectionAnswerPromise: Promise<RoomJoinedMessageInterface>;
     private connectionAnswerPromiseResolve!: (
         value: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>
@@ -694,7 +692,6 @@ export class GameScene extends DirtyScene {
                 peerStore.connectToSimplePeer(this.simplePeer);
                 screenSharingPeerStore.connectToSimplePeer(this.simplePeer);
                 videoFocusStore.connectToSimplePeer(this.simplePeer);
-                this.GlobalMessageManager = new GlobalMessageManager(this.connection);
                 userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
                 const self = this;
