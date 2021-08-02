@@ -123,6 +123,18 @@ class AdminApi {
             return data.data;
         });
     }
+
+    async getUrlRoomsFromSameWorld(roomUrl: string): Promise<string[]> {
+        if (!ADMIN_API_URL) {
+            return Promise.reject(new Error("No admin backoffice set!"));
+        }
+
+        return Axios.get(ADMIN_API_URL + "/api/room/sameWorld" + "?roomUrl=" + encodeURIComponent(roomUrl), {
+            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+        }).then((data) => {
+            return data.data;
+        });
+    }
 }
 
 export const adminApi = new AdminApi();

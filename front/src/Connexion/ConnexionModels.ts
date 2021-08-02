@@ -110,9 +110,9 @@ export interface RoomJoinedMessageInterface {
 }
 
 export interface PlayGlobalMessageInterface {
-    id: string;
     type: string;
-    message: string;
+    content: string;
+    broadcastToWorld: boolean;
 }
 
 export interface OnConnectInterface {

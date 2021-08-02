@@ -761,7 +761,7 @@ export class SocketManager {
         }
     }
 
-    async sendAdminRoomMessage(roomId: string, message: string) {
+    async sendAdminRoomMessage(roomId: string, message: string, type: string) {
         const room = await this.roomsPromises.get(roomId);
         if (!room) {
             //todo: this should cause the http call to return a 500
@@ -776,7 +776,7 @@ export class SocketManager {
         room.getUsers().forEach((recipient) => {
             const sendUserMessage = new SendUserMessage();
             sendUserMessage.setMessage(message);
-            sendUserMessage.setType("message");
+            sendUserMessage.setType(type);
 
             const clientMessage = new ServerToClientMessage();
             clientMessage.setSendusermessage(sendUserMessage);
