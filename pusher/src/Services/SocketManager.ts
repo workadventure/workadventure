@@ -28,8 +28,11 @@ import {
     UserLeftRoomMessage,
     AdminMessage,
     BanMessage,
+    TokenExpiredMessage,
     RefreshRoomMessage,
     EmotePromptMessage,
+    VariableMessage,
+    ErrorMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { ADMIN_API_URL, JITSI_ISS, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
@@ -115,7 +118,7 @@ export class SocketManager implements ZoneEventListener {
                 console.warn("Admin connection lost to back server");
                 // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                 if (!client.disconnecting) {
-                    this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
+                    this.closeWebsocketConnection(client, 1011, "Admin Connection lost to back server");
                 }
                 console.log("A user left");
             })
@@ -136,24 +139,6 @@ export class SocketManager implements ZoneEventListener {
         if (socket.adminConnection) {
             socket.adminConnection.end();
         }
-    }
-
-    getAdminSocketDataFor(roomId: string): AdminSocketData {
-        throw new Error("Not reimplemented yet");
-        /*const data:AdminSocketData = {
-            rooms: {},
-            users: {},
-        }
-        const room = this.Worlds.get(roomId);
-        if (room === undefined) {
-            return data;
-        }
-        const users = room.getUsers();
-        data.rooms[roomId] = users.size;
-        users.forEach(user => {
-            data.users[user.uuid] = true
-        })
-        return data;*/
     }
 
     async handleJoinRoom(client: ExSocketInterface): Promise<void> {
@@ -226,6 +211,9 @@ export class SocketManager implements ZoneEventListener {
             const pusherToBackMessage = new PusherToBackMessage();
             pusherToBackMessage.setJoinroommessage(joinRoomMessage);
             streamToPusher.write(pusherToBackMessage);
+
+            const pusherRoom = await this.getOrCreateRoom(client.roomId);
+            pusherRoom.join(client);
         } catch (e) {
             console.error('An error occurred on "join_room" event');
             console.error(e);
@@ -277,6 +265,13 @@ export class SocketManager implements ZoneEventListener {
         emitInBatch(listener, subMessage);
     }
 
+    onError(errorMessage: ErrorMessage, listener: ExSocketInterface): void {
+        const subMessage = new SubMessage();
+        subMessage.setErrormessage(errorMessage);
+
+        emitInBatch(listener, subMessage);
+    }
+
     // Useless now, will be useful again if we allow editing details in game
     handleSetPlayerDetails(client: ExSocketInterface, playerDetailsMessage: SetPlayerDetailsMessage) {
         const pusherToBackMessage = new PusherToBackMessage();
@@ -295,6 +290,13 @@ export class SocketManager implements ZoneEventListener {
     handleItemEvent(client: ExSocketInterface, itemEventMessage: ItemEventMessage) {
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setItemeventmessage(itemEventMessage);
+
+        client.backConnection.write(pusherToBackMessage);
+    }
+
+    handleVariableEvent(client: ExSocketInterface, variableMessage: VariableMessage) {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setVariablemessage(variableMessage);
 
         client.backConnection.write(pusherToBackMessage);
     }
@@ -339,6 +341,7 @@ export class SocketManager implements ZoneEventListener {
 
                         room.leave(socket);
                         if (room.isEmpty()) {
+                            room.close();
                             this.rooms.delete(socket.roomId);
                             debug("Room %s is empty. Deleting.", socket.roomId);
                         }
@@ -368,7 +371,7 @@ export class SocketManager implements ZoneEventListener {
             if (ADMIN_API_URL) {
                 await this.updateRoomWithAdminData(room);
             }
-
+            await room.init();
             this.rooms.set(roomUrl, room);
         }
         return room;
@@ -443,7 +446,7 @@ export class SocketManager implements ZoneEventListener {
 
             client.send(serverToClientMessage.serializeBinary().buffer, true);
         } catch (e) {
-            console.error("An error occured while generating the Jitsi JWT token: ", e);
+            console.error("An error occurred while generating the Jitsi JWT token: ", e);
         }
     }
 
@@ -578,7 +581,19 @@ export class SocketManager implements ZoneEventListener {
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setWorldfullmessage(errorMessage);
 
-        client.send(serverToClientMessage.serializeBinary().buffer, true);
+        if (!client.disconnecting) {
+            client.send(serverToClientMessage.serializeBinary().buffer, true);
+        }
+    }
+    public emitTokenExpiredMessage(client: WebSocket) {
+        const errorMessage = new TokenExpiredMessage();
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setTokenexpiredmessage(errorMessage);
+
+        if (!client.disconnecting) {
+            client.send(serverToClientMessage.serializeBinary().buffer, true);
+        }
     }
 
     public emitConnexionErrorMessage(client: WebSocket, message: string) {

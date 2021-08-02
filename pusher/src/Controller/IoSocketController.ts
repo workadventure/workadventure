@@ -17,11 +17,12 @@ import {
     ServerToClientMessage,
     CompanionMessage,
     EmotePromptMessage,
+    VariableMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { TemplatedApp } from "uWebSockets.js";
 import { parse } from "query-string";
-import { jwtTokenManager } from "../Services/JWTTokenManager";
+import { jwtTokenManager, tokenInvalidException } from "../Services/JWTTokenManager";
 import { adminApi, FetchMemberDataByUuidResponse } from "../Services/AdminApi";
 import { SocketManager, socketManager } from "../Services/SocketManager";
 import { emitInBatch } from "../Services/IoSocketHelpers";
@@ -172,31 +173,34 @@ export class IoSocketController {
                             characterLayers = [characterLayers];
                         }
 
-                        const userUuid = await jwtTokenManager.getUserUuidFromToken(token, IPAddress, roomId);
+                        const tokenData =
+                            token && typeof token === "string" ? jwtTokenManager.decodeJWTToken(token) : null;
+                        const userIdentifier = tokenData ? tokenData.identifier : "";
 
                         let memberTags: string[] = [];
                         let memberVisitCardUrl: string | null = null;
                         let memberMessages: unknown;
                         let memberTextures: CharacterTexture[] = [];
                         const room = await socketManager.getOrCreateRoom(roomId);
+                        let userData: FetchMemberDataByUuidResponse = {
+                            userUuid: userIdentifier,
+                            tags: [],
+                            visitCardUrl: null,
+                            textures: [],
+                            messages: [],
+                            anonymous: true,
+                        };
                         if (ADMIN_API_URL) {
                             try {
-                                let userData: FetchMemberDataByUuidResponse = {
-                                    uuid: v4(),
-                                    tags: [],
-                                    visitCardUrl: null,
-                                    textures: [],
-                                    messages: [],
-                                    anonymous: true,
-                                };
                                 try {
-                                    userData = await adminApi.fetchMemberDataByUuid(userUuid, roomId);
+                                    userData = await adminApi.fetchMemberDataByUuid(userIdentifier, roomId, IPAddress);
                                 } catch (err) {
                                     if (err?.response?.status == 404) {
                                         // If we get an HTTP 404, the token is invalid. Let's perform an anonymous login!
+
                                         console.warn(
-                                            'Cannot find user with uuid "' +
-                                                userUuid +
+                                            'Cannot find user with email "' +
+                                                (userIdentifier || "anonymous") +
                                                 '". Performing an anonymous login instead.'
                                         );
                                     } else if (err?.response?.status == 403) {
@@ -234,7 +238,12 @@ export class IoSocketController {
                                     throw new Error("Use the login URL to connect");
                                 }
                             } catch (e) {
-                                console.log("access not granted for user " + userUuid + " and room " + roomId);
+                                console.log(
+                                    "access not granted for user " +
+                                        (userIdentifier || "anonymous") +
+                                        " and room " +
+                                        roomId
+                                );
                                 console.error(e);
                                 throw new Error("User cannot access this world");
                             }
@@ -256,7 +265,7 @@ export class IoSocketController {
                                 // Data passed here is accessible on the "websocket" socket object.
                                 url,
                                 token,
-                                userUuid,
+                                userUuid: userData.userUuid,
                                 IPAddress,
                                 roomId,
                                 name,
@@ -286,15 +295,10 @@ export class IoSocketController {
                             context
                         );
                     } catch (e) {
-                        /*if (e instanceof Error) {
-                            console.log(e.message);
-                            res.writeStatus("401 Unauthorized").end(e.message);
-                        } else {
-                            res.writeStatus("500 Internal Server Error").end('An error occurred');
-                        }*/
-                        return res.upgrade(
+                        res.upgrade(
                             {
                                 rejected: true,
+                                reason: e.reason || null,
                                 message: e.message ? e.message : "500 Internal Server Error",
                             },
                             websocketKey,
@@ -309,12 +313,14 @@ export class IoSocketController {
             open: (ws) => {
                 if (ws.rejected === true) {
                     //FIX ME to use status code
-                    if (ws.message === "World is full") {
+                    if (ws.reason === tokenInvalidException) {
+                        socketManager.emitTokenExpiredMessage(ws);
+                    } else if (ws.message === "World is full") {
                         socketManager.emitWorldFullMessage(ws);
                     } else {
                         socketManager.emitConnexionErrorMessage(ws, ws.message as string);
                     }
-                    ws.close();
+                    setTimeout(() => ws.close(), 0);
                     return;
                 }
 
@@ -357,6 +363,8 @@ export class IoSocketController {
                     socketManager.handleSilentMessage(client, message.getSilentmessage() as SilentMessage);
                 } else if (message.hasItemeventmessage()) {
                     socketManager.handleItemEvent(client, message.getItemeventmessage() as ItemEventMessage);
+                } else if (message.hasVariablemessage()) {
+                    socketManager.handleVariableEvent(client, message.getVariablemessage() as VariableMessage);
                 } else if (message.hasWebrtcsignaltoservermessage()) {
                     socketManager.emitVideo(
                         client,

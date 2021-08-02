@@ -47,13 +47,7 @@ import { RemotePlayer } from "../Entity/RemotePlayer";
 import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
-import type {
-    ITiledMap,
-    ITiledMapLayer,
-    ITiledMapLayerProperty,
-    ITiledMapObject,
-    ITiledTileSet,
-} from "../Map/ITiledMap";
+import type { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapObject, ITiledTileSet } from "../Map/ITiledMap";
 import { MenuScene, MenuSceneName } from "../Menu/MenuScene";
 import { PlayerAnimationDirections } from "../Player/Animation";
 import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
@@ -91,8 +85,10 @@ import { soundManager } from "./SoundManager";
 import { peerStore, screenSharingPeerStore } from "../../Stores/PeerStore";
 import { videoFocusStore } from "../../Stores/VideoFocusStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
+import { SharedVariablesManager } from "./SharedVariablesManager";
 import { playersStore } from "../../Stores/PlayersStore";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
+import { userIsAdminStore } from "../../Stores/GameStore";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -199,10 +195,11 @@ export class GameScene extends DirtyScene {
     private popUpElements: Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string | undefined;
     private pinchManager: PinchManager | undefined;
-    private mapTransitioning: boolean = false; //used to prevent transitions happenning at the same time.
+    private mapTransitioning: boolean = false; //used to prevent transitions happening at the same time.
     private emoteManager!: EmoteManager;
     private preloading: boolean = true;
-    startPositionCalculator!: StartPositionCalculator;
+    private startPositionCalculator!: StartPositionCalculator;
+    private sharedVariablesManager!: SharedVariablesManager;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -440,7 +437,7 @@ export class GameScene extends DirtyScene {
         this.characterLayers = gameManager.getCharacterLayers();
         this.companion = gameManager.getCompanion();
 
-        //initalise map
+        //initialise map
         this.Map = this.add.tilemap(this.MapUrlFile);
         const mapDirUrl = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf("/"));
         this.mapFile.tilesets.forEach((tileset: ITiledTileSet) => {
@@ -608,6 +605,8 @@ export class GameScene extends DirtyScene {
 
                 playersStore.connectToRoomConnection(this.connection);
 
+                userIsAdminStore.set(this.connection.hasTag("admin"));
+
                 this.connection.onUserJoins((message: MessageUserJoined) => {
                     const userMessage: AddPlayerInterface = {
                         userId: message.userId,
@@ -717,6 +716,13 @@ export class GameScene extends DirtyScene {
                 this.CurrentPlayer.on(hasMovedEventName, (event: HasPlayerMovedEvent) => {
                     this.gameMap.setPosition(event.x, event.y);
                 });
+
+                // Set up variables manager
+                this.sharedVariablesManager = new SharedVariablesManager(
+                    this.connection,
+                    this.gameMap,
+                    onConnect.room.variables
+                );
 
                 //this.initUsersPosition(roomJoinedMessage.users);
                 this.connectionAnswerPromiseResolve(onConnect.room);
@@ -1053,20 +1059,24 @@ ${escapedMessage}
             })
         );
 
-        this.iframeSubscriptionList.push(
-            iframeListener.dataLayerChangeStream.subscribe(() => {
-                iframeListener.sendDataLayerEvent({ data: this.gameMap.getMap() });
-            })
-        );
+        iframeListener.registerAnswerer("getMapData", () => {
+            return {
+                data: this.gameMap.getMap(),
+            };
+        });
 
-        iframeListener.registerAnswerer("getState", () => {
+        iframeListener.registerAnswerer("getState", async () => {
+            // The sharedVariablesManager is not instantiated before the connection is established. So we need to wait
+            // for the connection to send back the answer.
+            await this.connectionAnswerPromise;
             return {
                 mapUrl: this.MapUrlFile,
                 startLayerName: this.startPositionCalculator.startLayerName,
                 uuid: localUserStore.getLocalUser()?.uuid,
-                nickname: localUserStore.getName(),
+                nickname: this.playerName,
                 roomId: this.roomUrl,
                 tags: this.connection ? this.connection.getAllTags() : [],
+                variables: this.sharedVariablesManager.variables,
             };
         });
         this.iframeSubscriptionList.push(
@@ -1197,6 +1207,7 @@ ${escapedMessage}
         this.chatVisibilityUnsubscribe();
         this.biggestAvailableAreaStoreUnsubscribe();
         iframeListener.unregisterAnswerer("getState");
+        this.sharedVariablesManager?.close();
 
         mediaManager.hideGameOverlay();
 
@@ -1236,12 +1247,12 @@ ${escapedMessage}
     }
 
     private getProperty(layer: ITiledMapLayer | ITiledMap, name: string): string | boolean | number | undefined {
-        const properties: ITiledMapLayerProperty[] | undefined = layer.properties;
+        const properties: ITiledMapProperty[] | undefined = layer.properties;
         if (!properties) {
             return undefined;
         }
         const obj = properties.find(
-            (property: ITiledMapLayerProperty) => property.name.toLowerCase() === name.toLowerCase()
+            (property: ITiledMapProperty) => property.name.toLowerCase() === name.toLowerCase()
         );
         if (obj === undefined) {
             return undefined;
@@ -1250,12 +1261,12 @@ ${escapedMessage}
     }
 
     private getProperties(layer: ITiledMapLayer | ITiledMap, name: string): (string | number | boolean | undefined)[] {
-        const properties: ITiledMapLayerProperty[] | undefined = layer.properties;
+        const properties: ITiledMapProperty[] | undefined = layer.properties;
         if (!properties) {
             return [];
         }
         return properties
-            .filter((property: ITiledMapLayerProperty) => property.name.toLowerCase() === name.toLowerCase())
+            .filter((property: ITiledMapProperty) => property.name.toLowerCase() === name.toLowerCase())
             .map((property) => property.value);
     }
 

@@ -55,7 +55,7 @@ services:
       - "traefik.http.routers.front-ssl.service=front"
 
   pusher:
-    image: thecodingmachine/nodejs:12
+    image: thecodingmachine/nodejs:14
     command: yarn dev
     environment:
       DEBUG: "socket:*"
@@ -66,6 +66,10 @@ services:
       API_URL: back:50051
       JITSI_URL: $JITSI_URL
       JITSI_ISS: $JITSI_ISS
+      FRONT_URL: http://play.workadventure.localhost
+      OPID_CLIENT_ID: $OPID_CLIENT_ID
+      OPID_CLIENT_SECRET: $OPID_CLIENT_SECRET
+      OPID_CLIENT_ISSUER: $OPID_CLIENT_ISSUER
     volumes:
       - ./pusher:/usr/src/app
     labels:
@@ -115,6 +119,8 @@ services:
       JITSI_ISS: $JITSI_ISS
       TURN_STATIC_AUTH_SECRET: SomeStaticAuthSecret
       MAX_PER_GROUP: "MAX_PER_GROUP"
+      REDIS_HOST: redis
+      NODE_ENV: development
     volumes:
       - ./back:/usr/src/app
     labels:
@@ -156,6 +162,20 @@ services:
       - ./back:/usr/src/back
       - ./front:/usr/src/front
       - ./pusher:/usr/src/pusher
+
+  redis:
+    image: redis:6
+
+  redisinsight:
+    image: redislabs/redisinsight:latest
+    labels:
+      - "traefik.http.routers.redisinsight.rule=Host(`redis.workadventure.localhost`)"
+      - "traefik.http.routers.redisinsight.entryPoints=web"
+      - "traefik.http.services.redisinsight.loadbalancer.server.port=8001"
+      - "traefik.http.routers.redisinsight-ssl.rule=Host(`redis.workadventure.localhost`)"
+      - "traefik.http.routers.redisinsight-ssl.entryPoints=websecure"
+      - "traefik.http.routers.redisinsight-ssl.tls=true"
+      - "traefik.http.routers.redisinsight-ssl.service=redisinsight"
 
 #  coturn:
 #    image: coturn/coturn:4.5.2

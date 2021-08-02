@@ -169,6 +169,7 @@ export class Room {
      */
     public get key(): string {
         const newUrl = new URL(this.roomUrl.toString());
+        newUrl.search = "";
         newUrl.hash = "";
         return newUrl.toString();
     }
