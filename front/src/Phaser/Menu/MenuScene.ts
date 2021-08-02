@@ -6,8 +6,6 @@ import { localUserStore } from "../../Connexion/LocalUserStore";
 import { gameReportKey, gameReportRessource, ReportMenu } from "./ReportMenu";
 import { connectionManager } from "../../Connexion/ConnectionManager";
 import { GameConnexionTypes } from "../../Url/UrlManager";
-import { WarningContainer, warningContainerHtml, warningContainerKey } from "../Components/WarningContainer";
-import { worldFullWarningStream } from "../../Connexion/WorldFullWarningStream";
 import { menuIconVisible } from "../../Stores/MenuStore";
 import { videoConstraintStore } from "../../Stores/MediaStore";
 import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
@@ -21,6 +19,7 @@ import { get } from "svelte/store";
 import { playersStore } from "../../Stores/PlayersStore";
 import { mediaManager } from "../../WebRtc/MediaManager";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
+import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
 
 export const MenuSceneName = "MenuScene";
 const gameMenuKey = "gameMenu";
@@ -45,8 +44,6 @@ export class MenuScene extends Phaser.Scene {
     private gameQualityValue: number;
     private videoQualityValue: number;
     private menuButton!: Phaser.GameObjects.DOMElement;
-    private warningContainer: WarningContainer | null = null;
-    private warningContainerTimeout: NodeJS.Timeout | null = null;
     private subscriptions = new Subscription();
     constructor() {
         super({ key: MenuSceneName });
@@ -91,7 +88,6 @@ export class MenuScene extends Phaser.Scene {
         this.load.html(gameSettingsMenuKey, "resources/html/gameQualityMenu.html");
         this.load.html(gameShare, "resources/html/gameShare.html");
         this.load.html(gameReportKey, gameReportRessource);
-        this.load.html(warningContainerKey, warningContainerHtml);
     }
 
     create() {
@@ -147,7 +143,6 @@ export class MenuScene extends Phaser.Scene {
         this.menuElement.addListener("click");
         this.menuElement.on("click", this.onMenuClick.bind(this));
 
-        worldFullWarningStream.stream.subscribe(() => this.showWorldCapacityWarning());
         chatVisibilityStore.subscribe((v) => {
             this.menuButton.setVisible(!v);
         });
@@ -192,20 +187,6 @@ export class MenuScene extends Phaser.Scene {
             duration: 500,
             ease: "Power3",
         });
-    }
-
-    private showWorldCapacityWarning() {
-        if (!this.warningContainer) {
-            this.warningContainer = new WarningContainer(this);
-        }
-        if (this.warningContainerTimeout) {
-            clearTimeout(this.warningContainerTimeout);
-        }
-        this.warningContainerTimeout = setTimeout(() => {
-            this.warningContainer?.destroy();
-            this.warningContainer = null;
-            this.warningContainerTimeout = null;
-        }, 120000);
     }
 
     private closeSideMenu(): void {
@@ -363,6 +344,9 @@ export class MenuScene extends Phaser.Scene {
             case "editGameSettingsButton":
                 this.openGameSettingsMenu();
                 break;
+            case "oidcLogin":
+                connectionManager.loadOpenIDScreen();
+                break;
             case "toggleFullscreen":
                 this.toggleFullscreen();
                 break;
@@ -403,7 +387,7 @@ export class MenuScene extends Phaser.Scene {
     private gotToCreateMapPage() {
         //const sparkHost = 'https://'+window.location.host.replace('play.', '')+'/choose-map.html';
         //TODO fix me: this button can to send us on WorkAdventure BO.
-        const sparkHost = "https://workadventu.re/getting-started";
+        const sparkHost = ADMIN_URL + "/getting-started";
         window.open(sparkHost, "_blank");
     }
 

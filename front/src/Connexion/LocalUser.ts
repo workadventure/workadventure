@@ -1,10 +1,10 @@
-import {MAX_USERNAME_LENGTH} from "../Enum/EnvironmentVariable";
+import { MAX_USERNAME_LENGTH } from "../Enum/EnvironmentVariable";
 
 export interface CharacterTexture {
-    id: number,
-    level: number,
-    url: string,
-    rights: string
+    id: number;
+    level: number;
+    url: string;
+    rights: string;
 }
 
 export const maxUserNameLength: number = MAX_USERNAME_LENGTH;
@@ -24,6 +24,5 @@ export function areCharacterLayersValid(value: string[] | null): boolean {
 }
 
 export class LocalUser {
-    constructor(public readonly uuid:string, public readonly jwtToken: string, public textures: CharacterTexture[]) {
-    }
+    constructor(public readonly uuid: string, public textures: CharacterTexture[]) {}
 }
