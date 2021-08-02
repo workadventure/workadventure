@@ -34,7 +34,6 @@ import type { RoomConnection } from "../../Connexion/RoomConnection";
 import { Room } from "../../Connexion/Room";
 import { jitsiFactory } from "../../WebRtc/JitsiFactory";
 import { urlManager } from "../../Url/UrlManager";
-import { audioManager } from "../../WebRtc/AudioManager";
 import { TextureError } from "../../Exception/TextureError";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
@@ -88,6 +87,11 @@ import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStor
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { playersStore } from "../../Stores/PlayersStore";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
+import {
+    audioManagerFileStore,
+    audioManagerVisibilityStore,
+    audioManagerVolumeStore,
+} from "../../Stores/AudioManagerStore";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -697,12 +701,12 @@ export class GameScene extends DirtyScene {
                 this.simplePeer.registerPeerConnectionListener({
                     onConnect(peer) {
                         //self.openChatIcon.setVisible(true);
-                        audioManager.decreaseVolume();
+                        audioManagerVolumeStore.setTalking(true);
                     },
                     onDisconnect(userId: number) {
                         if (self.simplePeer.getNbConnections() === 0) {
                             //self.openChatIcon.setVisible(false);
-                            audioManager.restoreVolume();
+                            audioManagerVolumeStore.setTalking(false);
                         }
                     },
                 });
@@ -870,14 +874,16 @@ export class GameScene extends DirtyScene {
             const volume = allProps.get(AUDIO_VOLUME_PROPERTY) as number | undefined;
             const loop = allProps.get(AUDIO_LOOP_PROPERTY) as boolean | undefined;
             newValue === undefined
-                ? audioManager.unloadAudio()
-                : audioManager.playAudio(newValue, this.getMapDirUrl(), volume, loop);
+                ? audioManagerFileStore.unloadAudio()
+                : audioManagerFileStore.playAudio(newValue, this.getMapDirUrl(), volume, loop);
+            audioManagerVisibilityStore.set(!(newValue === undefined));
         });
         // TODO: This legacy property should be removed at some point
         this.gameMap.onPropertyChange("playAudioLoop", (newValue, oldValue) => {
             newValue === undefined
-                ? audioManager.unloadAudio()
-                : audioManager.playAudio(newValue, this.getMapDirUrl(), undefined, true);
+                ? audioManagerFileStore.unloadAudio()
+                : audioManagerFileStore.playAudio(newValue, this.getMapDirUrl(), undefined, true);
+            audioManagerVisibilityStore.set(!(newValue === undefined));
         });
 
         this.gameMap.onPropertyChange("zone", (newValue, oldValue) => {
@@ -1150,7 +1156,7 @@ ${escapedMessage}
         let targetRoom: Room;
         try {
             targetRoom = await Room.createRoom(roomUrl);
-        } catch (e: unknown) {
+        } catch (e) {
             console.error('Error while fetching new room "' + roomUrl.toString() + '"', e);
             this.mapTransitioning = false;
             return;
@@ -1191,7 +1197,7 @@ ${escapedMessage}
         }
 
         this.stopJitsi();
-        audioManager.unloadAudio();
+        audioManagerFileStore.unloadAudio();
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
@@ -1276,7 +1282,7 @@ ${escapedMessage}
         try {
             const room = await Room.createRoom(exitRoomPath);
             return gameManager.loadMap(room, this.scene);
-        } catch (e: unknown) {
+        } catch (e) {
             console.warn('Error while pre-loading exit room "' + exitRoomPath.toString() + '"', e);
         }
     }

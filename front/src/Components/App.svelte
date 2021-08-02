@@ -27,6 +27,8 @@
     import {gameOverlayVisibilityStore} from "../Stores/GameOverlayStoreVisibility";
     import {consoleGlobalMessageManagerVisibleStore} from "../Stores/ConsoleGlobalMessageManagerStore";
     import ConsoleGlobalMessageManager from "./ConsoleGlobalMessageManager/ConsoleGlobalMessageManager.svelte";
+    import AudioManager from "./AudioManager/AudioManager.svelte";
+    import { audioManagerVisibilityStore } from "../Stores/AudioManagerStore";
 
     export let game: Game;
 
@@ -61,6 +63,11 @@
     {#if $soundPlayingStore}
     <div>
         <AudioPlaying url={$soundPlayingStore} />
+    </div>
+    {/if}
+    {#if $audioManagerVisibilityStore}
+    <div>
+        <AudioManager></AudioManager>
     </div>
     {/if}
     {#if $gameOverlayVisibilityStore}
