@@ -1,10 +1,10 @@
 ## Version develop
 
 ### Updates
-
+- New scripting API features : 
+  - Use `WA.room.loadTileset(url: string) : Promise<number>` to load a tileset from a JSON file.
 - Rewrote the way authentification works: the auth jwt token can now contains an email instead of an uuid
 - Added an OpenId login flow than can be plugged to any OIDC provider.
-- 
 
 ## Version 1.4.10
 

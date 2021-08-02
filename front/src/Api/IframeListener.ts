@@ -12,7 +12,8 @@ import { isOpenCoWebsite, OpenCoWebSiteEvent } from "./Events/OpenCoWebSiteEvent
 import {
     IframeErrorAnswerEvent,
     IframeEvent,
-    IframeEventMap, IframeQueryMap,
+    IframeEventMap,
+    IframeQueryMap,
     IframeResponseEvent,
     IframeResponseEventMap,
     isIframeEventWrapper,
@@ -25,16 +26,16 @@ import { isStopSoundEvent, StopSoundEvent } from "./Events/StopSoundEvent";
 import { isLoadSoundEvent, LoadSoundEvent } from "./Events/LoadSoundEvent";
 import { isSetPropertyEvent, SetPropertyEvent } from "./Events/setPropertyEvent";
 import { isLayerEvent, LayerEvent } from "./Events/LayerEvent";
-import { isMenuItemRegisterEvent } from "./Events/ui/MenuItemRegisterEvent";
-import type { MapDataEvent } from "./Events/MapDataEvent";
-import type { GameStateEvent } from "./Events/GameStateEvent";
 import type { HasPlayerMovedEvent } from "./Events/HasPlayerMovedEvent";
 import { isLoadPageEvent } from "./Events/LoadPageEvent";
 import { handleMenuItemRegistrationEvent, isMenuItemRegisterIframeEvent } from "./Events/ui/MenuItemRegisterEvent";
 import { SetTilesEvent, isSetTilesEvent } from "./Events/SetTilesEvent";
 import type { SetVariableEvent } from "./Events/SetVariableEvent";
 
-type AnswererCallback<T extends keyof IframeQueryMap> = (query: IframeQueryMap[T]["query"], source: MessageEventSource | null) => IframeQueryMap[T]["answer"] | PromiseLike<IframeQueryMap[T]["answer"]>;
+type AnswererCallback<T extends keyof IframeQueryMap> = (
+    query: IframeQueryMap[T]["query"],
+    source: MessageEventSource | null
+) => IframeQueryMap[T]["answer"] | PromiseLike<IframeQueryMap[T]["answer"]>;
 
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.
@@ -112,12 +113,10 @@ class IframeListener {
     private readonly scripts = new Map<string, HTMLIFrameElement>();
     private sendPlayerMove: boolean = false;
 
-
     // Note: we are forced to type this in unknown and later cast with "as" because of https://github.com/microsoft/TypeScript/issues/31904
     private answerers: {
-        [str in keyof IframeQueryMap]?: unknown
+        [str in keyof IframeQueryMap]?: unknown;
     } = {};
-
 
     init() {
         window.addEventListener(
@@ -158,42 +157,56 @@ class IframeListener {
 
                     const answerer = this.answerers[query.type] as AnswererCallback<keyof IframeQueryMap> | undefined;
                     if (answerer === undefined) {
-                        const errorMsg = 'The iFrame sent a message of type "'+query.type+'" but there is no service configured to answer these messages.';
+                        const errorMsg =
+                            'The iFrame sent a message of type "' +
+                            query.type +
+                            '" but there is no service configured to answer these messages.';
                         console.error(errorMsg);
-                        iframe.contentWindow?.postMessage({
-                            id: queryId,
-                            type: query.type,
-                            error: errorMsg
-                        } as IframeErrorAnswerEvent, '*');
+                        iframe.contentWindow?.postMessage(
+                            {
+                                id: queryId,
+                                type: query.type,
+                                error: errorMsg,
+                            } as IframeErrorAnswerEvent,
+                            "*"
+                        );
                         return;
                     }
 
                     const errorHandler = (reason: unknown) => {
-                        console.error('An error occurred while responding to an iFrame query.', reason);
-                        let reasonMsg: string = '';
+                        console.error("An error occurred while responding to an iFrame query.", reason);
+                        let reasonMsg: string = "";
                         if (reason instanceof Error) {
                             reasonMsg = reason.message;
-                        } else if (typeof reason === 'object') {
-                            reasonMsg = reason ? reason.toString() : '';
-                        } else  if (typeof reason === 'string') {
+                        } else if (typeof reason === "object") {
+                            reasonMsg = reason ? reason.toString() : "";
+                        } else if (typeof reason === "string") {
                             reasonMsg = reason;
                         }
 
-                        iframe?.contentWindow?.postMessage({
-                            id: queryId,
-                            type: query.type,
-                            error: reasonMsg
-                        } as IframeErrorAnswerEvent, '*');
+                        iframe?.contentWindow?.postMessage(
+                            {
+                                id: queryId,
+                                type: query.type,
+                                error: reasonMsg,
+                            } as IframeErrorAnswerEvent,
+                            "*"
+                        );
                     };
 
                     try {
-                        Promise.resolve(answerer(query.data, message.source)).then((value) => {
-                            iframe?.contentWindow?.postMessage({
-                                id: queryId,
-                                type: query.type,
-                                data: value
-                            }, '*');
-                        }).catch(errorHandler);
+                        Promise.resolve(answerer(query.data, message.source))
+                            .then((value) => {
+                                iframe?.contentWindow?.postMessage(
+                                    {
+                                        id: queryId,
+                                        type: query.type,
+                                        data: value,
+                                    },
+                                    "*"
+                                );
+                            })
+                            .catch(errorHandler);
                     } catch (reason) {
                         errorHandler(reason);
                     }
@@ -238,7 +251,7 @@ class IframeListener {
                     } else if (payload.type === "displayBubble") {
                         this._displayBubbleStream.next();
                     } else if (payload.type === "removeBubble") {
-                    this._removeBubbleStream.next();
+                        this._removeBubbleStream.next();
                     } else if (payload.type == "onPlayerMove") {
                         this.sendPlayerMove = true;
                     } else if (isMenuItemRegisterIframeEvent(payload)) {
@@ -398,8 +411,8 @@ class IframeListener {
 
     setVariable(setVariableEvent: SetVariableEvent) {
         this.postMessage({
-            'type': 'setVariable',
-            'data': setVariableEvent
+            type: "setVariable",
+            data: setVariableEvent,
         });
     }
 
@@ -420,7 +433,7 @@ class IframeListener {
      * @param key The "type" of the query we are answering
      * @param callback
      */
-    public registerAnswerer<T extends keyof IframeQueryMap>(key: T, callback: AnswererCallback<T> ): void {
+    public registerAnswerer<T extends keyof IframeQueryMap>(key: T, callback: AnswererCallback<T>): void {
         this.answerers[key] = callback;
     }
 
@@ -432,13 +445,16 @@ class IframeListener {
         // Let's dispatch the message to the other iframes
         for (const iframe of this.iframes) {
             if (iframe.contentWindow !== source) {
-                iframe.contentWindow?.postMessage({
-                    'type': 'setVariable',
-                    'data': {
-                        key,
-                        value,
-                    }
-                }, '*');
+                iframe.contentWindow?.postMessage(
+                    {
+                        type: "setVariable",
+                        data: {
+                            key,
+                            value,
+                        },
+                    },
+                    "*"
+                );
             }
         }
     }
