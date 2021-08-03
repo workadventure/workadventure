@@ -48,15 +48,33 @@
                 width: 307px;
                 font-size: 20px;
             }
+            body p:nth-child(2){
+                top: calc( 50% + 50px);
+                left: calc( 50% - 150px);
+            }
+            body p:nth-child(3){
+                top: calc( 50% + 100px);
+                left: 0;
+                font-size: 10px;
+                width: 100%;
+            }
         </style>
     </head>
     <body>
         <img src="/static/images/logo.png" alt="WorkAdventure logo"/>
         <p>Charging your workspace ...</p>
+        <p id="roomId"></p>
     <script>
-        setTimeout(() => {
-            window.location = localStorage.getItem('lastRoomUrl');
-        }, 4000);
+        document.addEventListener('DOMContentLoaded', () => {
+            //TODO when the user will be connected, get all rooms of the user and he could be select room access
+
+            let paragraph = document.getElementById('roomId');
+            paragraph.innerText = localStorage.getItem('lastRoomUrl');
+            //the event occurred
+            setTimeout(() => {
+                window.location = localStorage.getItem('lastRoomUrl');
+            }, 3000);
+        });
     </script>
     </body>
 </html>
