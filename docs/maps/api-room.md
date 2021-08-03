@@ -79,43 +79,57 @@ Example :
 WA.room.setProperty('wikiLayer', 'openWebsite', 'https://www.wikipedia.org/');
 ```
 
-### Getting information on the current room
-```
-WA.room.getCurrentRoom(): Promise<Room>
-```
-Return a promise that resolves to a `Room` object with the following attributes :
-* **id (string) :** ID of the current room
-* **map (ITiledMap) :** contains the JSON map file with the properties that were set by the script if `setProperty` was called.
-* **mapUrl (string) :** Url of the JSON map file
-* **startLayer (string | null) :** Name of the layer where the current user started, only if different from `start` layer
+### Get the room id
 
-Example :
-```javascript
-WA.room.getCurrentRoom((room) => {
-    if (room.id === '42') {
-        console.log(room.map);
-        window.open(room.mapUrl, '_blank');
-    }
+```
+WA.room.id: string;
+```
+
+The ID of the current room is available from the `WA.room.id` property.
+
+{.alert.alert-info}
+You need to wait for the end of the initialization before accessing `WA.room.id`
+
+```typescript
+WA.onInit().then(() => {
+    console.log('Room id: ', WA.room.id);
+    // Will output something like: 'https://play.workadventu.re/@/myorg/myworld/myroom', or 'https://play.workadventu.re/_/global/mymap.org/map.json"
 })
 ```
 
-### Getting information on the current user
-```
-WA.player.getCurrentUser(): Promise<User>
-```
-Return a promise that resolves to a `User` object with the following attributes :
-* **id (string) :** ID of the current user
-* **nickName (string) :** name displayed above the current user
-* **tags (string[]) :** list of all the tags of the current user
+### Get the map URL
 
-Example :
-```javascript
-WA.room.getCurrentUser().then((user) => {
-    if (user.nickName === 'ABC') {
-        console.log(user.tags);
-    }
+```
+WA.room.mapURL: string;
+```
+
+The URL of the map is available from the `WA.room.mapURL` property.
+
+{.alert.alert-info}
+You need to wait for the end of the initialization before accessing `WA.room.mapURL`
+
+```typescript
+WA.onInit().then(() => {
+    console.log('Map URL: ', WA.room.mapURL);
+    // Will output something like: 'https://mymap.org/map.json"
 })
 ```
+
+
+
+### Getting map data
+```
+WA.room.getTiledMap(): Promise<ITiledMap>
+```
+
+Returns a promise that resolves to the JSON map file.
+
+```javascript
+const map = await WA.room.getTiledMap();
+console.log("Map generated with Tiled version ", map.tiledversion);
+```
+
+Check the [Tiled documentation to learn more about the format of the JSON map](https://doc.mapeditor.org/en/stable/reference/json-map-format/).
 
 ### Changing tiles 
 ```
@@ -148,4 +162,18 @@ WA.room.setTiles([
                 {x: 8, y: 4, tile: 109, layer: 'setTiles'},
                 {x: 9, y: 4, tile: 'blue', layer: 'setTiles'}
                 ]);
+```
+
+### Loading a tileset
+```
+WA.room.loadTileset(url: string): Promise<number>
+```
+Load a tileset in JSON format from an url and return the id of the first tile of the loaded tileset.
+
+You can create a tileset file in Tile Editor.
+
+```javascript
+WA.room.loadTileset("Assets/Tileset.json").then((firstId) => {
+    WA.room.setTiles([{x: 4, y: 4, tile: firstId, layer: 'bottom'}]);
+})
 ```

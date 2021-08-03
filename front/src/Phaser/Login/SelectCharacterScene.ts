@@ -152,6 +152,9 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             });
             this.players.push(player);
         }
+        if (this.currentSelectUser >= this.players.length) {
+            this.currentSelectUser = 0;
+        }
         this.selectedPlayer = this.players[this.currentSelectUser];
         this.selectedPlayer.play(this.playerModels[this.currentSelectUser].name);
     }

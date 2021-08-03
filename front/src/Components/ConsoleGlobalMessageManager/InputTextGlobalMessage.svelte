@@ -1,13 +1,13 @@
 <script lang="ts">
-    import {consoleGlobalMessageManagerFocusStore, consoleGlobalMessageManagerVisibleStore } from "../../Stores/ConsoleGlobalMessageManagerStore";
-    import {onMount} from "svelte";
-    import type {GameManager} from "../../Phaser/Game/GameManager";
-    import type {PlayGlobalMessageInterface} from "../../Connexion/ConnexionModels";
-    import {AdminMessageEventTypes} from "../../Connexion/AdminMessagesService";
-    import type {Quill} from "quill";
+    import { consoleGlobalMessageManagerFocusStore, consoleGlobalMessageManagerVisibleStore } from "../../Stores/ConsoleGlobalMessageManagerStore";
+    import {onDestroy, onMount} from "svelte";
+    import type { GameManager } from "../../Phaser/Game/GameManager";
+    import { AdminMessageEventTypes } from "../../Connexion/AdminMessagesService";
+    import type { Quill } from "quill";
+    import type { PlayGlobalMessageInterface } from "../../Connexion/ConnexionModels";
 
     //toolbar
-    export const toolbarOptions = [
+    const toolbarOptions = [
         ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
         ['blockquote', 'code-block'],
 
@@ -32,11 +32,30 @@
 
     export let gameManager: GameManager;
 
-    let gameScene = gameManager.getCurrentGameScene();
+    const gameScene = gameManager.getCurrentGameScene();
     let quill: Quill;
     let INPUT_CONSOLE_MESSAGE: HTMLDivElement;
 
     const MESSAGE_TYPE = AdminMessageEventTypes.admin;
+
+    export const handleSending = {
+        sendTextMessage(broadcastToWorld: boolean) {
+            if (gameScene == undefined) {
+                return;
+            }
+            const text = JSON.stringify(quill.getContents(0, quill.getLength()));
+
+            const textGlobalMessage: PlayGlobalMessageInterface = {
+                type: MESSAGE_TYPE,
+                content: text,
+                broadcastToWorld: broadcastToWorld
+            };
+
+            quill.deleteText(0, quill.getLength());
+            gameScene.connection?.emitGlobalMessage(textGlobalMessage);
+            disableConsole();
+        }
+    }
 
     //Quill
     onMount(async () => {
@@ -45,49 +64,28 @@
         const {default: Quill} = await import("quill"); // eslint-disable-line @typescript-eslint/no-explicit-any
 
         quill = new Quill(INPUT_CONSOLE_MESSAGE, {
+            placeholder: 'Enter your message here...',
             theme: 'snow',
             modules: {
                 toolbar: toolbarOptions
             },
         });
 
-        quill.on('selection-change', function (range, oldRange) {
-            if (range === null && oldRange !== null) {
-                consoleGlobalMessageManagerFocusStore.set(false);
-            } else if (range !== null && oldRange === null)
-                consoleGlobalMessageManagerFocusStore.set(true);
-        });
+        consoleGlobalMessageManagerFocusStore.set(true);
     });
+
+    onDestroy(() => {
+        consoleGlobalMessageManagerFocusStore.set(false);
+    })
 
     function disableConsole() {
         consoleGlobalMessageManagerVisibleStore.set(false);
         consoleGlobalMessageManagerFocusStore.set(false);
     }
-
-    function SendTextMessage() {
-        if (gameScene == undefined) {
-            return;
-        }
-        const text = quill.getText(0, quill.getLength());
-
-        const GlobalMessage: PlayGlobalMessageInterface = {
-            id: "1", // FIXME: use another ID?
-            message: text,
-            type: MESSAGE_TYPE
-        };
-
-        quill.deleteText(0, quill.getLength());
-        gameScene.connection?.emitGlobalMessage(GlobalMessage);
-        disableConsole();
-    }
 </script>
-
 
 <section class="section-input-send-text">
     <div class="input-send-text" bind:this={INPUT_CONSOLE_MESSAGE}></div>
-    <div class="btn-action">
-        <button class="nes-btn is-primary" on:click|preventDefault={SendTextMessage}>Send</button>
-    </div>
 </section>
 
 

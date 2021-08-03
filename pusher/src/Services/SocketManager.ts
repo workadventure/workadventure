@@ -1,42 +1,45 @@
 import { PusherRoom } from "../Model/PusherRoom";
 import { CharacterLayer, ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
 import {
+    AdminMessage,
+    AdminPusherToBackMessage,
+    AdminRoomMessage,
+    BanMessage,
+    CharacterLayerMessage,
+    EmoteEventMessage,
+    EmotePromptMessage,
     GroupDeleteMessage,
     ItemEventMessage,
+    JoinRoomMessage,
     PlayGlobalMessage,
+    PusherToBackMessage,
+    QueryJitsiJwtMessage,
+    RefreshRoomMessage,
+    ReportPlayerMessage,
     RoomJoinedMessage,
+    SendJitsiJwtMessage,
+    ServerToAdminClientMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
     SilentMessage,
     SubMessage,
-    ReportPlayerMessage,
+    UserJoinedRoomMessage,
     UserLeftMessage,
+    UserLeftRoomMessage,
     UserMovesMessage,
     ViewportMessage,
     WebRtcSignalToServerMessage,
-    QueryJitsiJwtMessage,
-    SendJitsiJwtMessage,
-    JoinRoomMessage,
-    CharacterLayerMessage,
-    PusherToBackMessage,
-    WorldFullMessage,
     WorldConnexionMessage,
-    AdminPusherToBackMessage,
-    ServerToAdminClientMessage,
-    EmoteEventMessage,
-    UserJoinedRoomMessage,
-    UserLeftRoomMessage,
-    AdminMessage,
-    BanMessage,
-    RefreshRoomMessage,
-    EmotePromptMessage,
+    TokenExpiredMessage,
+    VariableMessage,
+    ErrorMessage,
+    WorldFullMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
-import { JITSI_ISS, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
-import { adminApi, CharacterTexture } from "./AdminApi";
+import { ADMIN_API_URL, JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
+import { adminApi } from "./AdminApi";
 import { emitInBatch } from "./IoSocketHelpers";
 import Jwt from "jsonwebtoken";
-import { JITSI_URL } from "../Enum/EnvironmentVariable";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { apiClientRepository } from "./ApiClientRepository";
@@ -44,6 +47,8 @@ import { GroupDescriptor, UserDescriptor, ZoneEventListener } from "_Model/Zone"
 import Debug from "debug";
 import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
 import { WebSocket } from "uWebSockets.js";
+import { isRoomRedirect } from "./AdminApi/RoomRedirect";
+import { CharacterTexture } from "./AdminApi/CharacterTexture";
 
 const debug = Debug("socket");
 
@@ -113,7 +118,7 @@ export class SocketManager implements ZoneEventListener {
                 console.warn("Admin connection lost to back server");
                 // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                 if (!client.disconnecting) {
-                    this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
+                    this.closeWebsocketConnection(client, 1011, "Admin Connection lost to back server");
                 }
                 console.log("A user left");
             })
@@ -134,24 +139,6 @@ export class SocketManager implements ZoneEventListener {
         if (socket.adminConnection) {
             socket.adminConnection.end();
         }
-    }
-
-    getAdminSocketDataFor(roomId: string): AdminSocketData {
-        throw new Error("Not reimplemented yet");
-        /*const data:AdminSocketData = {
-            rooms: {},
-            users: {},
-        }
-        const room = this.Worlds.get(roomId);
-        if (room === undefined) {
-            return data;
-        }
-        const users = room.getUsers();
-        data.rooms[roomId] = users.size;
-        users.forEach(user => {
-            data.users[user.uuid] = true
-        })
-        return data;*/
     }
 
     async handleJoinRoom(client: ExSocketInterface): Promise<void> {
@@ -224,6 +211,9 @@ export class SocketManager implements ZoneEventListener {
             const pusherToBackMessage = new PusherToBackMessage();
             pusherToBackMessage.setJoinroommessage(joinRoomMessage);
             streamToPusher.write(pusherToBackMessage);
+
+            const pusherRoom = await this.getOrCreateRoom(client.roomId);
+            pusherRoom.join(client);
         } catch (e) {
             console.error('An error occurred on "join_room" event');
             console.error(e);
@@ -275,6 +265,13 @@ export class SocketManager implements ZoneEventListener {
         emitInBatch(listener, subMessage);
     }
 
+    onError(errorMessage: ErrorMessage, listener: ExSocketInterface): void {
+        const subMessage = new SubMessage();
+        subMessage.setErrormessage(errorMessage);
+
+        emitInBatch(listener, subMessage);
+    }
+
     // Useless now, will be useful again if we allow editing details in game
     handleSetPlayerDetails(client: ExSocketInterface, playerDetailsMessage: SetPlayerDetailsMessage) {
         const pusherToBackMessage = new PusherToBackMessage();
@@ -293,6 +290,13 @@ export class SocketManager implements ZoneEventListener {
     handleItemEvent(client: ExSocketInterface, itemEventMessage: ItemEventMessage) {
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setItemeventmessage(itemEventMessage);
+
+        client.backConnection.write(pusherToBackMessage);
+    }
+
+    handleVariableEvent(client: ExSocketInterface, variableMessage: VariableMessage) {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setVariablemessage(variableMessage);
 
         client.backConnection.write(pusherToBackMessage);
     }
@@ -337,6 +341,7 @@ export class SocketManager implements ZoneEventListener {
 
                         room.leave(socket);
                         if (room.isEmpty()) {
+                            room.close();
                             this.rooms.delete(socket.roomId);
                             debug("Room %s is empty. Deleting.", socket.roomId);
                         }
@@ -358,34 +363,30 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    async getOrCreateRoom(roomId: string): Promise<PusherRoom> {
+    async getOrCreateRoom(roomUrl: string): Promise<PusherRoom> {
         //check and create new world for a room
-        let world = this.rooms.get(roomId);
-        if (world === undefined) {
-            world = new PusherRoom(roomId, this);
-            if (!world.public) {
-                await this.updateRoomWithAdminData(world);
+        let room = this.rooms.get(roomUrl);
+        if (room === undefined) {
+            room = new PusherRoom(roomUrl, this);
+            if (ADMIN_API_URL) {
+                await this.updateRoomWithAdminData(room);
             }
-            this.rooms.set(roomId, world);
+            await room.init();
+            this.rooms.set(roomUrl, room);
         }
-        return Promise.resolve(world);
+        return room;
     }
 
-    public async updateRoomWithAdminData(world: PusherRoom): Promise<void> {
-        const data = await adminApi.fetchMapDetails(world.organizationSlug, world.worldSlug, world.roomSlug);
-        world.tags = data.tags;
-        world.policyType = Number(data.policy_type);
-    }
+    public async updateRoomWithAdminData(room: PusherRoom): Promise<void> {
+        const data = await adminApi.fetchMapDetails(room.roomUrl);
 
-    emitPlayGlobalMessage(client: ExSocketInterface, playglobalmessage: PlayGlobalMessage) {
-        if (!client.tags.includes("admin")) {
-            //In case of xss injection, we just kill the connection.
-            throw "Client is not an admin!";
+        if (isRoomRedirect(data)) {
+            // TODO: if the updated room data is actually a redirect, we need to take everybody on the map
+            // and redirect everybody to the new location (so we need to close the connection for everybody)
+        } else {
+            room.tags = data.tags;
+            room.policyType = Number(data.policy_type);
         }
-        const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setPlayglobalmessage(playglobalmessage);
-
-        client.backConnection.write(pusherToBackMessage);
     }
 
     public getWorlds(): Map<string, PusherRoom> {
@@ -434,7 +435,7 @@ export class SocketManager implements ZoneEventListener {
 
             client.send(serverToClientMessage.serializeBinary().buffer, true);
         } catch (e) {
-            console.error("An error occured while generating the Jitsi JWT token: ", e);
+            console.error("An error occurred while generating the Jitsi JWT token: ", e);
         }
     }
 
@@ -569,7 +570,20 @@ export class SocketManager implements ZoneEventListener {
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setWorldfullmessage(errorMessage);
 
-        client.send(serverToClientMessage.serializeBinary().buffer, true);
+        if (!client.disconnecting) {
+            client.send(serverToClientMessage.serializeBinary().buffer, true);
+        }
+    }
+
+    public emitTokenExpiredMessage(client: WebSocket) {
+        const errorMessage = new TokenExpiredMessage();
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setTokenexpiredmessage(errorMessage);
+
+        if (!client.disconnecting) {
+            client.send(serverToClientMessage.serializeBinary().buffer, true);
+        }
     }
 
     public emitConnexionErrorMessage(client: WebSocket, message: string) {
@@ -595,6 +609,36 @@ export class SocketManager implements ZoneEventListener {
         pusherToBackMessage.setEmotepromptmessage(emoteEventmessage);
 
         client.backConnection.write(pusherToBackMessage);
+    }
+
+    public async emitPlayGlobalMessage(
+        client: ExSocketInterface,
+        playGlobalMessageEvent: PlayGlobalMessage
+    ): Promise<void> {
+        if (!client.tags.includes("admin")) {
+            throw "Client is not an admin!";
+        }
+
+        const clientRoomUrl = client.roomId;
+        let tabUrlRooms: string[];
+
+        if (playGlobalMessageEvent.getBroadcasttoworld()) {
+            tabUrlRooms = await adminApi.getUrlRoomsFromSameWorld(clientRoomUrl);
+        } else {
+            tabUrlRooms = [clientRoomUrl];
+        }
+
+        const roomMessage = new AdminRoomMessage();
+        roomMessage.setMessage(playGlobalMessageEvent.getContent());
+        roomMessage.setType(playGlobalMessageEvent.getType());
+
+        for (const roomUrl of tabUrlRooms) {
+            const apiRoom = await apiClientRepository.getClient(roomUrl);
+            roomMessage.setRoomid(roomUrl);
+            apiRoom.sendAdminMessageToRoom(roomMessage, (response) => {
+                return;
+            });
+        }
     }
 }
 

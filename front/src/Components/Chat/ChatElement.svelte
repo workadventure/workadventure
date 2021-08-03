@@ -7,13 +7,14 @@
 
     export let message: ChatMessage;
     export let line: number;
+    const chatStyleLink = "color: white; text-decoration: underline;";
     
     $: author = message.author as PlayerInterface;
     $: targets = message.targets || [];
     $: texts = message.text || [];
     
     function urlifyText(text: string): string {
-        return HtmlUtils.urlify(text)
+        return HtmlUtils.urlify(text, chatStyleLink);
     }
     function renderDate(date: Date) {
         return date.toLocaleTimeString(navigator.language, {
@@ -29,7 +30,7 @@
 <div class="chatElement">
     <div class="messagePart">
         {#if message.type === ChatMessageTypes.userIncoming}
-            &gt;&gt; {#each targets as target, index}<ChatPlayerName player={target} line={line}></ChatPlayerName>{#if !isLastIteration(index)}, {/if}{/each} enter <span class="date">({renderDate(message.date)})</span>
+            &gt;&gt; {#each targets as target, index}<ChatPlayerName player={target} line={line}></ChatPlayerName>{#if !isLastIteration(index)}, {/if}{/each} entered <span class="date">({renderDate(message.date)})</span>
         {:else if message.type === ChatMessageTypes.userOutcoming}
             &lt;&lt; {#each targets as target, index}<ChatPlayerName player={target} line={line}></ChatPlayerName>{#if !isLastIteration(index)}, {/if}{/each} left <span class="date">({renderDate(message.date)})</span>
         {:else if message.type === ChatMessageTypes.me}
@@ -48,7 +49,7 @@
 
 <style lang="scss">
     h4, p {
-        font-family: 'Whiteney';
+        font-family: Lato;
     }
     div.chatElement {
       display: flex;

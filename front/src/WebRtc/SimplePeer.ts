@@ -295,7 +295,7 @@ export class SimplePeer {
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
             peer.destroy();
 
-            //Comment this peer connexion because if we delete and try to reshare screen, the RTCPeerConnection send renegociate event. This array will be remove when user left circle discussion
+            //Comment this peer connection because if we delete and try to reshare screen, the RTCPeerConnection send renegotiate event. This array will be remove when user left circle discussion
             /*if(!this.PeerScreenSharingConnectionArray.delete(userId)){
                 throw 'Couln\'t delete peer screen sharing connexion';
             }*/
@@ -370,14 +370,14 @@ export class SimplePeer {
                 console.error(
                     'Could not find peer whose ID is "' + data.userId + '" in receiveWebrtcScreenSharingSignal'
                 );
-                console.info("Attempt to create new peer connexion");
+                console.info("Attempt to create new peer connection");
                 if (stream) {
                     this.sendLocalScreenSharingStreamToUser(data.userId, stream);
                 }
             }
         } catch (e) {
             console.error(`receiveWebrtcSignal => ${data.userId}`, e);
-            //Comment this peer connexion because if we delete and try to reshare screen, the RTCPeerConnection send renegociate event. This array will be remove when user left circle discussion
+            //Comment this peer connection because if we delete and try to reshare screen, the RTCPeerConnection send renegotiate event. This array will be remove when user left circle discussion
             //this.PeerScreenSharingConnectionArray.delete(data.userId);
             this.receiveWebrtcScreenSharingSignal(data);
         }
@@ -485,7 +485,7 @@ export class SimplePeer {
 
         if (!PeerConnectionScreenSharing.isReceivingScreenSharingStream()) {
             PeerConnectionScreenSharing.destroy();
-            //Comment this peer connexion because if we delete and try to reshare screen, the RTCPeerConnection send renegociate event. This array will be remove when user left circle discussion
+            //Comment this peer connection because if we delete and try to reshare screen, the RTCPeerConnection send renegotiate event. This array will be remove when user left circle discussion
             //this.PeerScreenSharingConnectionArray.delete(userId);
         }
     }

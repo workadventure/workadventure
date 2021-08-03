@@ -1,11 +1,13 @@
 import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
 import { GameRoomPolicyTypes } from "_Model/PusherRoom";
+import { CharacterTexture } from "./AdminApi/CharacterTexture";
+import { MapDetailsData } from "./AdminApi/MapDetailsData";
+import { RoomRedirect } from "./AdminApi/RoomRedirect";
 
 export interface AdminApiData {
-    organizationSlug: string;
-    worldSlug: string;
-    roomSlug: string;
+    roomUrl: string;
+    email: string | null;
     mapUrlStart: string;
     tags: string[];
     policy_type: number;
@@ -14,27 +16,13 @@ export interface AdminApiData {
     textures: CharacterTexture[];
 }
 
-export interface MapDetailsData {
-    roomSlug: string;
-    mapUrl: string;
-    policy_type: GameRoomPolicyTypes;
-    tags: string[];
-}
-
 export interface AdminBannedData {
     is_banned: boolean;
     message: string;
 }
 
-export interface CharacterTexture {
-    id: number;
-    level: number;
-    url: string;
-    rights: string;
-}
-
 export interface FetchMemberDataByUuidResponse {
-    uuid: string;
+    userUuid: string;
     tags: string[];
     visitCardUrl: string | null;
     textures: CharacterTexture[];
@@ -43,23 +31,14 @@ export interface FetchMemberDataByUuidResponse {
 }
 
 class AdminApi {
-    async fetchMapDetails(
-        organizationSlug: string,
-        worldSlug: string,
-        roomSlug: string | undefined
-    ): Promise<MapDetailsData> {
+    async fetchMapDetails(playUri: string): Promise<MapDetailsData | RoomRedirect> {
         if (!ADMIN_API_URL) {
             return Promise.reject(new Error("No admin backoffice set!"));
         }
 
-        const params: { organizationSlug: string; worldSlug: string; roomSlug?: string } = {
-            organizationSlug,
-            worldSlug,
+        const params: { playUri: string } = {
+            playUri,
         };
-
-        if (roomSlug) {
-            params.roomSlug = roomSlug;
-        }
 
         const res = await Axios.get(ADMIN_API_URL + "/api/map", {
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
@@ -68,12 +47,16 @@ class AdminApi {
         return res.data;
     }
 
-    async fetchMemberDataByUuid(uuid: string, roomId: string): Promise<FetchMemberDataByUuidResponse> {
+    async fetchMemberDataByUuid(
+        userIdentifier: string | null,
+        roomId: string,
+        ipAddress: string
+    ): Promise<FetchMemberDataByUuidResponse> {
         if (!ADMIN_API_URL) {
             return Promise.reject(new Error("No admin backoffice set!"));
         }
         const res = await Axios.get(ADMIN_API_URL + "/api/room/access", {
-            params: { uuid, roomId },
+            params: { userIdentifier, roomId, ipAddress },
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
         });
         return res.data;
@@ -121,28 +104,34 @@ class AdminApi {
         );
     }
 
-    async verifyBanUser(
-        organizationMemberToken: string,
-        ipAddress: string,
-        organization: string,
-        world: string
-    ): Promise<AdminBannedData> {
+    async verifyBanUser(userUuid: string, ipAddress: string, roomUrl: string): Promise<AdminBannedData> {
         if (!ADMIN_API_URL) {
             return Promise.reject(new Error("No admin backoffice set!"));
         }
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
         return Axios.get(
             ADMIN_API_URL +
-                "/api/check-moderate-user/" +
-                organization +
-                "/" +
-                world +
+                "/api/ban" +
                 "?ipAddress=" +
-                ipAddress +
+                encodeURIComponent(ipAddress) +
                 "&token=" +
-                organizationMemberToken,
+                encodeURIComponent(userUuid) +
+                "&roomUrl=" +
+                encodeURIComponent(roomUrl),
             { headers: { Authorization: `${ADMIN_API_TOKEN}` } }
         ).then((data) => {
+            return data.data;
+        });
+    }
+
+    async getUrlRoomsFromSameWorld(roomUrl: string): Promise<string[]> {
+        if (!ADMIN_API_URL) {
+            return Promise.reject(new Error("No admin backoffice set!"));
+        }
+
+        return Axios.get(ADMIN_API_URL + "/api/room/sameWorld" + "?roomUrl=" + encodeURIComponent(roomUrl), {
+            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+        }).then((data) => {
             return data.data;
         });
     }

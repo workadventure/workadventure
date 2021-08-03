@@ -1,11 +1,10 @@
 import type * as SimplePeerNamespace from "simple-peer";
-import { mediaManager } from "./MediaManager";
-import { STUN_SERVER, TURN_PASSWORD, TURN_SERVER, TURN_USER } from "../Enum/EnvironmentVariable";
 import type { RoomConnection } from "../Connexion/RoomConnection";
 import { MESSAGE_TYPE_CONSTRAINT, PeerStatus } from "./VideoPeer";
 import type { UserSimplePeerInterface } from "./SimplePeer";
-import { Readable, readable, writable, Writable } from "svelte/store";
+import { Readable, readable } from "svelte/store";
 import { videoFocusStore } from "../Stores/VideoFocusStore";
+import { getIceServersConfig } from "../Components/Video/utils";
 
 const Peer: SimplePeerNamespace.SimplePeer = require("simple-peer");
 
@@ -32,21 +31,9 @@ export class ScreenSharingPeer extends Peer {
         stream: MediaStream | null
     ) {
         super({
-            initiator: initiator ? initiator : false,
-            //reconnectTimer: 10000,
+            initiator,
             config: {
-                iceServers: [
-                    {
-                        urls: STUN_SERVER.split(","),
-                    },
-                    TURN_SERVER !== ""
-                        ? {
-                              urls: TURN_SERVER.split(","),
-                              username: user.webRtcUser || TURN_USER,
-                              credential: user.webRtcPassword || TURN_PASSWORD,
-                          }
-                        : undefined,
-                ].filter((value) => value !== undefined),
+                iceServers: getIceServersConfig(user),
             },
         });
 

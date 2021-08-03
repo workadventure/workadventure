@@ -1,4 +1,4 @@
-import type { GameStateEvent } from "./GameStateEvent";
+import * as tg from "generic-type-guard";
 import type { ButtonClickedEvent } from "./ButtonClickedEvent";
 import type { ChatEvent } from "./ChatEvent";
 import type { ClosePopupEvent } from "./ClosePopupEvent";
@@ -9,7 +9,6 @@ import type { OpenCoWebSiteEvent } from "./OpenCoWebSiteEvent";
 import type { OpenPopupEvent } from "./OpenPopupEvent";
 import type { OpenTabEvent } from "./OpenTabEvent";
 import type { UserInputChatEvent } from "./UserInputChatEvent";
-import type { DataLayerEvent } from "./DataLayerEvent";
 import type { LayerEvent } from "./LayerEvent";
 import type { SetPropertyEvent } from "./setPropertyEvent";
 import type { LoadSoundEvent } from "./LoadSoundEvent";
@@ -18,6 +17,12 @@ import type { MenuItemClickedEvent } from "./ui/MenuItemClickedEvent";
 import type { MenuItemRegisterEvent } from "./ui/MenuItemRegisterEvent";
 import type { HasPlayerMovedEvent } from "./HasPlayerMovedEvent";
 import type { SetTilesEvent } from "./SetTilesEvent";
+import type { SetVariableEvent } from "./SetVariableEvent";
+import { isGameStateEvent } from "./GameStateEvent";
+import { isMapDataEvent } from "./MapDataEvent";
+import { isSetVariableEvent } from "./SetVariableEvent";
+import type { LoadTilesetEvent } from "./LoadTilesetEvent";
+import { isLoadTilesetEvent } from "./LoadTilesetEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -43,11 +48,11 @@ export type IframeEventMap = {
     showLayer: LayerEvent;
     hideLayer: LayerEvent;
     setProperty: SetPropertyEvent;
-    getDataLayer: undefined;
     loadSound: LoadSoundEvent;
     playSound: PlaySoundEvent;
     stopSound: null;
     getState: undefined;
+    loadTileset: LoadTilesetEvent;
     registerMenuCommand: MenuItemRegisterEvent;
     setTiles: SetTilesEvent;
 };
@@ -66,8 +71,8 @@ export interface IframeResponseEventMap {
     leaveEvent: EnterLeaveEvent;
     buttonClickedEvent: ButtonClickedEvent;
     hasPlayerMoved: HasPlayerMovedEvent;
-    dataLayer: DataLayerEvent;
     menuItemClicked: MenuItemClickedEvent;
+    setVariable: SetVariableEvent;
 }
 export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
     type: T;
@@ -79,20 +84,43 @@ export const isIframeResponseEventWrapper = (event: {
     type?: string;
 }): event is IframeResponseEvent<keyof IframeResponseEventMap> => typeof event.type === "string";
 
-
 /**
- * List event types sent from an iFrame to WorkAdventure that expect a unique answer from WorkAdventure along the type for the answer from WorkAdventure to the iFrame
+ * List event types sent from an iFrame to WorkAdventure that expect a unique answer from WorkAdventure along the type for the answer from WorkAdventure to the iFrame.
+ * Types are defined using Type guards that will actually bused to enforce and check types.
  */
-export type IframeQueryMap = {
+export const iframeQueryMapTypeGuards = {
     getState: {
-        query: undefined,
-        answer: GameStateEvent
+        query: tg.isUndefined,
+        answer: isGameStateEvent,
     },
-}
+    getMapData: {
+        query: tg.isUndefined,
+        answer: isMapDataEvent,
+    },
+    setVariable: {
+        query: isSetVariableEvent,
+        answer: tg.isUndefined,
+    },
+    loadTileset: {
+        query: isLoadTilesetEvent,
+        answer: tg.isNumber,
+    },
+};
+
+type GuardedType<T> = T extends (x: unknown) => x is infer T ? T : never;
+type IframeQueryMapTypeGuardsType = typeof iframeQueryMapTypeGuards;
+type UnknownToVoid<T> = undefined extends T ? void : T;
+
+export type IframeQueryMap = {
+    [key in keyof IframeQueryMapTypeGuardsType]: {
+        query: GuardedType<IframeQueryMapTypeGuardsType[key]["query"]>;
+        answer: UnknownToVoid<GuardedType<IframeQueryMapTypeGuardsType[key]["answer"]>>;
+    };
+};
 
 export interface IframeQuery<T extends keyof IframeQueryMap> {
     type: T;
-    data: IframeQueryMap[T]['query'];
+    data: IframeQueryMap[T]["query"];
 }
 
 export interface IframeQueryWrapper<T extends keyof IframeQueryMap> {
@@ -100,19 +128,36 @@ export interface IframeQueryWrapper<T extends keyof IframeQueryMap> {
     query: IframeQuery<T>;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const isIframeQuery = (event: any): event is IframeQuery<keyof IframeQueryMap> => typeof event.type === 'string';
+export const isIframeQueryKey = (type: string): type is keyof IframeQueryMap => {
+    return type in iframeQueryMapTypeGuards;
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const isIframeQueryWrapper = (event: any): event is IframeQueryWrapper<keyof IframeQueryMap> => typeof event.id === 'number' && isIframeQuery(event.query);
+export const isIframeQuery = (event: any): event is IframeQuery<keyof IframeQueryMap> => {
+    const type = event.type;
+    if (typeof type !== "string") {
+        return false;
+    }
+    if (!isIframeQueryKey(type)) {
+        return false;
+    }
+    return iframeQueryMapTypeGuards[type].query(event.data);
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const isIframeQueryWrapper = (event: any): event is IframeQueryWrapper<keyof IframeQueryMap> =>
+    typeof event.id === "number" && isIframeQuery(event.query);
 
 export interface IframeAnswerEvent<T extends keyof IframeQueryMap> {
     id: number;
     type: T;
-    data: IframeQueryMap[T]['answer'];
+    data: IframeQueryMap[T]["answer"];
 }
 
-export const isIframeAnswerEvent = (event: { type?: string, id?: number }): event is IframeAnswerEvent<keyof IframeQueryMap> => typeof event.type === 'string' && typeof event.id === 'number';
+export const isIframeAnswerEvent = (event: {
+    type?: string;
+    id?: number;
+}): event is IframeAnswerEvent<keyof IframeQueryMap> => typeof event.type === "string" && typeof event.id === "number";
 
 export interface IframeErrorAnswerEvent {
     id: number;
@@ -120,4 +165,9 @@ export interface IframeErrorAnswerEvent {
     error: string;
 }
 
-export const isIframeErrorAnswerEvent = (event: { type?: string, id?: number, error?: string }): event is IframeErrorAnswerEvent => typeof event.type === 'string' && typeof event.id === 'number' && typeof event.error === 'string';
+export const isIframeErrorAnswerEvent = (event: {
+    type?: string;
+    id?: number;
+    error?: string;
+}): event is IframeErrorAnswerEvent =>
+    typeof event.type === "string" && typeof event.id === "number" && typeof event.error === "string";
