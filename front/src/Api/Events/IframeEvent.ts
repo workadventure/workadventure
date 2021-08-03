@@ -22,6 +22,8 @@ import type { SetVariableEvent } from "./SetVariableEvent";
 import { isGameStateEvent } from "./GameStateEvent";
 import { isMapDataEvent } from "./MapDataEvent";
 import { isSetVariableEvent } from "./SetVariableEvent";
+import type { EmbeddedWebsite } from "../iframe/Room/EmbeddedWebsite";
+import { isCreateEmbeddedWebsiteEvent } from "./EmbeddedWebsiteEvent";
 import type { LoadTilesetEvent } from "./LoadTilesetEvent";
 import { isLoadTilesetEvent } from "./LoadTilesetEvent";
 import type {
@@ -63,6 +65,7 @@ export type IframeEventMap = {
     loadTileset: LoadTilesetEvent;
     registerMenuCommand: MenuItemRegisterEvent;
     setTiles: SetTilesEvent;
+    modifyEmbeddedWebsite: Partial<EmbeddedWebsite>; // Note: name should be compulsory in fact
 };
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;
@@ -122,6 +125,18 @@ export const iframeQueryMapTypeGuards = {
         query: isMessageReferenceEvent,
         answer: tg.isUndefined,
     },
+    getEmbeddedWebsite: {
+        query: tg.isString,
+        answer: isCreateEmbeddedWebsiteEvent,
+    },
+    deleteEmbeddedWebsite: {
+        query: tg.isString,
+        answer: tg.isUndefined,
+    },
+    createEmbeddedWebsite: {
+        query: isCreateEmbeddedWebsiteEvent,
+        answer: tg.isUndefined,
+    },
 };
 
 type GuardedType<T> = T extends (x: unknown) => x is infer T ? T : never;
@@ -158,7 +173,12 @@ export const isIframeQuery = (event: any): event is IframeQuery<keyof IframeQuer
     if (!isIframeQueryKey(type)) {
         return false;
     }
-    return iframeQueryMapTypeGuards[type].query(event.data);
+
+    const result = iframeQueryMapTypeGuards[type].query(event.data);
+    if (!result) {
+        console.warn('Received a query with type "' + type + '" but the payload is invalid.');
+    }
+    return result;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

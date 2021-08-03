@@ -32,6 +32,8 @@ import { isLoadPageEvent } from "./Events/LoadPageEvent";
 import { handleMenuItemRegistrationEvent, isMenuItemRegisterIframeEvent } from "./Events/ui/MenuItemRegisterEvent";
 import { SetTilesEvent, isSetTilesEvent } from "./Events/SetTilesEvent";
 import type { SetVariableEvent } from "./Events/SetVariableEvent";
+import { ModifyEmbeddedWebsiteEvent, isEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
+import { EmbeddedWebsite } from "./iframe/Room/EmbeddedWebsite";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -108,6 +110,9 @@ class IframeListener {
 
     private readonly _setTilesStream: Subject<SetTilesEvent> = new Subject();
     public readonly setTilesStream = this._setTilesStream.asObservable();
+
+    private readonly _modifyEmbeddedWebsiteStream: Subject<ModifyEmbeddedWebsiteEvent> = new Subject();
+    public readonly modifyEmbeddedWebsiteStream = this._modifyEmbeddedWebsiteStream.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
@@ -264,6 +269,8 @@ class IframeListener {
                         handleMenuItemRegistrationEvent(payload.data);
                     } else if (payload.type == "setTiles" && isSetTilesEvent(payload.data)) {
                         this._setTilesStream.next(payload.data);
+                    } else if (payload.type == "modifyEmbeddedWebsite" && isEmbeddedWebsiteEvent(payload.data)) {
+                        this._modifyEmbeddedWebsiteStream.next(payload.data);
                     }
                 }
             },

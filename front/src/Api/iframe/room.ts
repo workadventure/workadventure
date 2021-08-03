@@ -6,6 +6,8 @@ import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "
 import { apiCallback } from "./registeredCallbacks";
 
 import type { ITiledMap } from "../../Phaser/Map/ITiledMap";
+import type { WorkadventureRoomWebsiteCommands } from "./website";
+import website from "./website";
 
 const enterStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
 const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
@@ -105,6 +107,7 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
         }
         return mapURL;
     }
+
     async loadTileset(url: string): Promise<number> {
         return await queryWorkadventure({
             type: "loadTileset",
@@ -112,6 +115,10 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
                 url: url,
             },
         });
+    }
+
+    get website(): WorkadventureRoomWebsiteCommands {
+        return website;
     }
 }
 
