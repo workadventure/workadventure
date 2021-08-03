@@ -64,11 +64,8 @@ class ConnectionManager {
             );
             localUserStore.setAuthToken(authToken);
             this.authToken = authToken;
-            room = await Room.createRoom(
-                new URL(localUserStore.getLastRoomUrl())
-            );
+            room = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
             urlManager.pushRoomIdToUrl(room);
-            
         } else if (connexionType === GameConnexionTypes.register) {
             //@deprecated
             const organizationMemberToken = urlManager.getOrganizationToken();

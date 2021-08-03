@@ -387,7 +387,11 @@ export class MenuScene extends Phaser.Scene {
     private gotToCreateMapPage() {
         //const sparkHost = 'https://'+window.location.host.replace('play.', '')+'/choose-map.html';
         //TODO fix me: this button can to send us on WorkAdventure BO.
-        const sparkHost = ADMIN_URL + "/getting-started";
+        //const sparkHost = ADMIN_URL + "/getting-started";
+
+        //The redirection must be only on workadventu.re domain
+        //To day the domain staging cannot be use by customer
+        const sparkHost = "https://workadventu.re/getting-started";
         window.open(sparkHost, "_blank");
     }
 

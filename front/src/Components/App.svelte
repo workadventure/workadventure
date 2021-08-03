@@ -27,6 +27,10 @@
     import {gameOverlayVisibilityStore} from "../Stores/GameOverlayStoreVisibility";
     import {consoleGlobalMessageManagerVisibleStore} from "../Stores/ConsoleGlobalMessageManagerStore";
     import ConsoleGlobalMessageManager from "./ConsoleGlobalMessageManager/ConsoleGlobalMessageManager.svelte";
+    import AdminMessage from "./TypeMessage/BanMessage.svelte";
+    import TextMessage from "./TypeMessage/TextMessage.svelte";
+    import {banMessageVisibleStore} from "../Stores/TypeMessageStore/BanMessageStore";
+    import {textMessageVisibleStore} from "../Stores/TypeMessageStore/TextMessageStore";
     import {warningContainerStore} from "../Stores/MenuStore";
     import WarningContainer from "./WarningContainer/WarningContainer.svelte";
     import {layoutManagerVisibilityStore} from "../Stores/LayoutManagerStore";
@@ -60,6 +64,16 @@
     {#if $enableCameraSceneVisibilityStore}
         <div class="scrollable">
             <EnableCameraScene game={game}></EnableCameraScene>
+        </div>
+    {/if}
+    {#if $banMessageVisibleStore}
+        <div>
+            <AdminMessage></AdminMessage>
+        </div>
+    {/if}
+    {#if $textMessageVisibleStore}
+        <div>
+            <TextMessage></TextMessage>
         </div>
     {/if}
     {#if $soundPlayingStore}

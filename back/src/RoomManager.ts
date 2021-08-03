@@ -272,7 +272,7 @@ const roomManager: IRoomManagerServer = {
     sendAdminMessageToRoom(call: ServerUnaryCall<AdminRoomMessage>, callback: sendUnaryData<EmptyMessage>): void {
         // FIXME: we could improve return message by returning a Success|ErrorMessage message
         socketManager
-            .sendAdminRoomMessage(call.request.getRoomid(), call.request.getMessage())
+            .sendAdminRoomMessage(call.request.getRoomid(), call.request.getMessage(), call.request.getType())
             .catch((e) => console.error(e));
         callback(null, new EmptyMessage());
     },

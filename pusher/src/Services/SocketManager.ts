@@ -1,45 +1,45 @@
 import { PusherRoom } from "../Model/PusherRoom";
 import { CharacterLayer, ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
 import {
+    AdminMessage,
+    AdminPusherToBackMessage,
+    AdminRoomMessage,
+    BanMessage,
+    CharacterLayerMessage,
+    EmoteEventMessage,
+    EmotePromptMessage,
     GroupDeleteMessage,
     ItemEventMessage,
+    JoinRoomMessage,
     PlayGlobalMessage,
+    PusherToBackMessage,
+    QueryJitsiJwtMessage,
+    RefreshRoomMessage,
+    ReportPlayerMessage,
     RoomJoinedMessage,
+    SendJitsiJwtMessage,
+    ServerToAdminClientMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
     SilentMessage,
     SubMessage,
-    ReportPlayerMessage,
+    UserJoinedRoomMessage,
     UserLeftMessage,
+    UserLeftRoomMessage,
     UserMovesMessage,
     ViewportMessage,
     WebRtcSignalToServerMessage,
-    QueryJitsiJwtMessage,
-    SendJitsiJwtMessage,
-    JoinRoomMessage,
-    CharacterLayerMessage,
-    PusherToBackMessage,
-    WorldFullMessage,
     WorldConnexionMessage,
-    AdminPusherToBackMessage,
-    ServerToAdminClientMessage,
-    EmoteEventMessage,
-    UserJoinedRoomMessage,
-    UserLeftRoomMessage,
-    AdminMessage,
-    BanMessage,
     TokenExpiredMessage,
-    RefreshRoomMessage,
-    EmotePromptMessage,
     VariableMessage,
     ErrorMessage,
+    WorldFullMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
-import { ADMIN_API_URL, JITSI_ISS, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
+import { ADMIN_API_URL, JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
 import { adminApi } from "./AdminApi";
 import { emitInBatch } from "./IoSocketHelpers";
 import Jwt from "jsonwebtoken";
-import { JITSI_URL } from "../Enum/EnvironmentVariable";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { apiClientRepository } from "./ApiClientRepository";
@@ -389,17 +389,6 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    emitPlayGlobalMessage(client: ExSocketInterface, playglobalmessage: PlayGlobalMessage) {
-        if (!client.tags.includes("admin")) {
-            //In case of xss injection, we just kill the connection.
-            throw "Client is not an admin!";
-        }
-        const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setPlayglobalmessage(playglobalmessage);
-
-        client.backConnection.write(pusherToBackMessage);
-    }
-
     public getWorlds(): Map<string, PusherRoom> {
         return this.rooms;
     }
@@ -585,6 +574,7 @@ export class SocketManager implements ZoneEventListener {
             client.send(serverToClientMessage.serializeBinary().buffer, true);
         }
     }
+
     public emitTokenExpiredMessage(client: WebSocket) {
         const errorMessage = new TokenExpiredMessage();
 
@@ -619,6 +609,36 @@ export class SocketManager implements ZoneEventListener {
         pusherToBackMessage.setEmotepromptmessage(emoteEventmessage);
 
         client.backConnection.write(pusherToBackMessage);
+    }
+
+    public async emitPlayGlobalMessage(
+        client: ExSocketInterface,
+        playGlobalMessageEvent: PlayGlobalMessage
+    ): Promise<void> {
+        if (!client.tags.includes("admin")) {
+            throw "Client is not an admin!";
+        }
+
+        const clientRoomUrl = client.roomId;
+        let tabUrlRooms: string[];
+
+        if (playGlobalMessageEvent.getBroadcasttoworld()) {
+            tabUrlRooms = await adminApi.getUrlRoomsFromSameWorld(clientRoomUrl);
+        } else {
+            tabUrlRooms = [clientRoomUrl];
+        }
+
+        const roomMessage = new AdminRoomMessage();
+        roomMessage.setMessage(playGlobalMessageEvent.getContent());
+        roomMessage.setType(playGlobalMessageEvent.getType());
+
+        for (const roomUrl of tabUrlRooms) {
+            const apiRoom = await apiClientRepository.getClient(roomUrl);
+            roomMessage.setRoomid(roomUrl);
+            apiRoom.sendAdminMessageToRoom(roomMessage, (response) => {
+                return;
+            });
+        }
     }
 }
 

@@ -1,5 +1,4 @@
 import type { Subscription } from "rxjs";
-import { GlobalMessageManager } from "../../Administration/GlobalMessageManager";
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { iframeListener } from "../../Api/IframeListener";
 import { connectionManager } from "../../Connexion/ConnectionManager";
@@ -74,8 +73,6 @@ import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } 
 import { waScaleManager } from "../Services/WaScaleManager";
 import { EmoteManager } from "./EmoteManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
-import RenderTexture = Phaser.GameObjects.RenderTexture;
-import Tilemap = Phaser.Tilemaps.Tilemap;
 import type { HasPlayerMovedEvent } from "../../Api/Events/HasPlayerMovedEvent";
 
 import AnimatedTiles from "phaser-animated-tiles";
@@ -87,6 +84,7 @@ import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStor
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { playersStore } from "../../Stores/PlayersStore";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
+import Tileset = Phaser.Tilemaps.Tileset;
 import { userIsAdminStore } from "../../Stores/GameStore";
 import { layoutManagerActionStore, layoutManagerVisibilityStore } from "../../Stores/LayoutManagerStore";
 import { get } from "svelte/store";
@@ -157,7 +155,6 @@ export class GameScene extends DirtyScene {
     private playersPositionInterpolator = new PlayersPositionInterpolator();
     public connection: RoomConnection | undefined;
     private simplePeer!: SimplePeer;
-    private GlobalMessageManager!: GlobalMessageManager;
     private connectionAnswerPromise: Promise<RoomJoinedMessageInterface>;
     private connectionAnswerPromiseResolve!: (
         value: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>
@@ -223,6 +220,9 @@ export class GameScene extends DirtyScene {
 
     //hook preload scene
     preload(): void {
+        //initialize frame event of scripting API
+        this.listenToIframeEvents();
+
         const localUser = localUserStore.getLocalUser();
         const textures = localUser?.textures;
         if (textures) {
@@ -551,7 +551,6 @@ export class GameScene extends DirtyScene {
         );
 
         this.triggerOnMapLayerPropertyChange();
-        this.listenToIframeEvents();
 
         if (!this.room.isDisconnected()) {
             this.connect();
@@ -694,7 +693,6 @@ export class GameScene extends DirtyScene {
                 peerStore.connectToSimplePeer(this.simplePeer);
                 screenSharingPeerStore.connectToSimplePeer(this.simplePeer);
                 videoFocusStore.connectToSimplePeer(this.simplePeer);
-                this.GlobalMessageManager = new GlobalMessageManager(this.connection);
                 userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
                 const self = this;
@@ -1083,8 +1081,74 @@ ${escapedMessage}
                 for (const eventTile of eventTiles) {
                     this.gameMap.putTile(eventTile.tile, eventTile.x, eventTile.y, eventTile.layer);
                 }
+                this.markDirty();
             })
         );
+        iframeListener.registerAnswerer("loadTileset", (eventTileset) => {
+            return this.connectionAnswerPromise.then(() => {
+                const jsonTilesetDir = eventTileset.url.substr(0, eventTileset.url.lastIndexOf("/"));
+                //Initialise the firstgid to 1 because if there is no tileset in the tilemap, the firstgid will be 1
+                let newFirstgid = 1;
+                const lastTileset = this.mapFile.tilesets[this.mapFile.tilesets.length - 1];
+                if (lastTileset) {
+                    //If there is at least one tileset in the tilemap then calculate the firstgid of the new tileset
+                    newFirstgid = lastTileset.firstgid + lastTileset.tilecount;
+                }
+                return new Promise((resolve, reject) => {
+                    this.load.on("filecomplete-json-" + eventTileset.url, () => {
+                        let jsonTileset = this.cache.json.get(eventTileset.url);
+                        const imageUrl = jsonTilesetDir + "/" + jsonTileset.image;
+                        this.load.image(imageUrl, imageUrl);
+                        this.load.on("filecomplete-image-" + imageUrl, () => {
+                            //Add the firstgid of the tileset to the json file
+                            jsonTileset = { ...jsonTileset, firstgid: newFirstgid };
+                            this.mapFile.tilesets.push(jsonTileset);
+                            this.Map.tilesets.push(
+                                new Tileset(
+                                    jsonTileset.name,
+                                    jsonTileset.firstgid,
+                                    jsonTileset.tileWidth,
+                                    jsonTileset.tileHeight,
+                                    jsonTileset.margin,
+                                    jsonTileset.spacing,
+                                    jsonTileset.tiles
+                                )
+                            );
+                            this.Terrains.push(
+                                this.Map.addTilesetImage(
+                                    jsonTileset.name,
+                                    imageUrl,
+                                    jsonTileset.tilewidth,
+                                    jsonTileset.tileheight,
+                                    jsonTileset.margin,
+                                    jsonTileset.spacing
+                                )
+                            );
+                            //destroy the tilemapayer because they are unique and we need to reuse their key and layerdData
+                            for (const layer of this.Map.layers) {
+                                layer.tilemapLayer.destroy(false);
+                            }
+                            //Create a new GameMap with the changed file
+                            this.gameMap = new GameMap(this.mapFile, this.Map, this.Terrains);
+                            //Destroy the colliders of the old tilemapLayer
+                            this.physics.add.world.colliders.destroy();
+                            //Create new colliders with the new GameMap
+                            this.createCollisionWithPlayer();
+                            //Create new trigger with the new GameMap
+                            this.triggerOnMapLayerPropertyChange();
+                            resolve(newFirstgid);
+                        });
+                    });
+                    this.load.on("loaderror", () => {
+                        console.error("Error while loading " + eventTileset.url + ".");
+                        reject(-1);
+                    });
+
+                    this.load.json(eventTileset.url, eventTileset.url);
+                    this.load.start();
+                });
+            });
+        });
     }
 
     private setPropertyLayer(
@@ -1206,6 +1270,7 @@ ${escapedMessage}
         this.chatVisibilityUnsubscribe();
         this.biggestAvailableAreaStoreUnsubscribe();
         iframeListener.unregisterAnswerer("getState");
+        iframeListener.unregisterAnswerer("loadTileset");
         this.sharedVariablesManager?.close();
 
         mediaManager.hideGameOverlay();
