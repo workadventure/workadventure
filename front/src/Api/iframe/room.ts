@@ -105,6 +105,14 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
         }
         return mapURL;
     }
+    async loadTileset(url: string): Promise<number> {
+        return await queryWorkadventure({
+            type: "loadTileset",
+            data: {
+                url: url,
+            },
+        });
+    }
 }
 
 export default new WorkadventureRoomCommands();

@@ -55,9 +55,9 @@ import {
 import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
 import { adminMessagesService } from "./AdminMessagesService";
 import { worldFullMessageStream } from "./WorldFullMessageStream";
-import { worldFullWarningStream } from "./WorldFullWarningStream";
 import { connectionManager } from "./ConnectionManager";
 import { emoteEventStream } from "./EmoteEventStream";
+import { warningContainerStore } from "../Stores/MenuStore";
 
 const manualPingDelay = 20000;
 
@@ -76,7 +76,7 @@ export class RoomConnection implements RoomConnection {
 
     /**
      *
-     * @param token A JWT token containing the UUID of the user
+     * @param token A JWT token containing the email of the user
      * @param roomUrl The URL of the room in the form "https://example.com/_/[instance]/[map_url]" or "https://example.com/@/[org]/[event]/[map]"
      */
     public constructor(
@@ -217,6 +217,9 @@ export class RoomConnection implements RoomConnection {
             } else if (message.hasWorldfullmessage()) {
                 worldFullMessageStream.onMessage();
                 this.closed = true;
+            } else if (message.hasTokenexpiredmessage()) {
+                connectionManager.loadOpenIDScreen();
+                this.closed = true; //technically, this isn't needed since loadOpenIDScreen() will do window.location.assign() but I prefer to leave it for consistency
             } else if (message.hasWorldconnexionmessage()) {
                 worldFullMessageStream.onMessage(message.getWorldconnexionmessage()?.getMessage());
                 this.closed = true;
@@ -244,7 +247,7 @@ export class RoomConnection implements RoomConnection {
             } else if (message.hasBanusermessage()) {
                 adminMessagesService.onSendusermessage(message.getBanusermessage() as BanUserMessage);
             } else if (message.hasWorldfullwarningmessage()) {
-                worldFullWarningStream.onMessage();
+                warningContainerStore.activateWarningContainer();
             } else if (message.hasRefreshroommessage()) {
                 //todo: implement a way to notify the user the room was refreshed.
             } else {
@@ -594,7 +597,7 @@ export class RoomConnection implements RoomConnection {
             });
     }
 
-    public receivePlayGlobalMessage(callback: (message: PlayGlobalMessageInterface) => void) {
+    /*    public receivePlayGlobalMessage(callback: (message: PlayGlobalMessageInterface) => void) {
         return this.onMessage(EventMessage.PLAY_GLOBAL_MESSAGE, (message: PlayGlobalMessage) => {
             callback({
                 id: message.getId(),
@@ -602,7 +605,7 @@ export class RoomConnection implements RoomConnection {
                 message: message.getMessage(),
             });
         });
-    }
+    }*/
 
     public receiveStopGlobalMessage(callback: (messageId: string) => void) {
         return this.onMessage(EventMessage.STOP_GLOBAL_MESSAGE, (message: StopGlobalMessage) => {
@@ -616,11 +619,11 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitGlobalMessage(message: PlayGlobalMessageInterface) {
+    public emitGlobalMessage(message: PlayGlobalMessageInterface): void {
         const playGlobalMessage = new PlayGlobalMessage();
-        playGlobalMessage.setId(message.id);
         playGlobalMessage.setType(message.type);
-        playGlobalMessage.setMessage(message.message);
+        playGlobalMessage.setContent(message.content);
+        playGlobalMessage.setBroadcasttoworld(message.broadcastToWorld);
 
         const clientToServerMessage = new ClientToServerMessage();
         clientToServerMessage.setPlayglobalmessage(playGlobalMessage);

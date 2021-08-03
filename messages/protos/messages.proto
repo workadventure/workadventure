@@ -123,9 +123,9 @@ message VariableWithTagMessage {
 }
 
 message PlayGlobalMessage {
-  string id = 1;
-  string type = 2;
-  string message = 3;
+  string type = 1;
+  string content = 2;
+  bool broadcastToWorld = 3;
 }
 
 message StopGlobalMessage {
@@ -247,6 +247,8 @@ message RefreshRoomMessage{
 
 message WorldFullMessage{
 }
+message TokenExpiredMessage{
+}
 
 message WorldConnexionMessage{
   string message = 2;
@@ -278,6 +280,7 @@ message ServerToClientMessage {
     RefreshRoomMessage refreshRoomMessage = 17;
     WorldConnexionMessage worldConnexionMessage = 18;
     EmoteEventMessage emoteEventMessage = 19;
+    TokenExpiredMessage tokenExpiredMessage = 20;
   }
 }
 
@@ -442,6 +445,7 @@ message AdminMessage {
 message AdminRoomMessage {
   string message = 1;
   string roomId = 2;
+  string type = 3;
 }
 
 // A message sent by an administrator to absolutely everybody

@@ -107,7 +107,7 @@ export const createLoadingPromise = (
         loadPlugin.spritesheet(playerResourceDescriptor.name, playerResourceDescriptor.img, frameConfig);
         const errorCallback = (file: { src: string }) => {
             if (file.src !== playerResourceDescriptor.img) return;
-            console.error("failed loading player ressource: ", playerResourceDescriptor);
+            console.error("failed loading player resource: ", playerResourceDescriptor);
             rej(playerResourceDescriptor);
             loadPlugin.off("filecomplete-spritesheet-" + playerResourceDescriptor.name, successCallback);
             loadPlugin.off("loaderror", errorCallback);

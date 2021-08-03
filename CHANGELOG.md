@@ -1,4 +1,13 @@
-## Version 1.4.x-dev
+## Version develop
+
+### Updates
+- New scripting API features : 
+  - Use `WA.room.loadTileset(url: string) : Promise<number>` to load a tileset from a JSON file.
+- Rewrote the way authentification works: the auth jwt token can now contains an email instead of an uuid
+- Added an OpenId login flow than can be plugged to any OIDC provider.
+- You can send a message to all rooms of your world from the console global message (user with tag admin only).
+
+## Version 1.4.11
 
 ### Updates
 
@@ -28,7 +37,7 @@
   - Use `WA.state.[any variable]: unknown` to access directly any variable (this is a shortcut to using `WA.state.loadVariable` and `WA.state.saveVariable`)
 - Users blocking now relies on UUID rather than ID. A blocked user that leaves a room and comes back will stay blocked.
 - The text chat was redesigned to be prettier and to use more features :
-  - The chat is now persistent bewteen discussions and always accesible
+  - The chat is now persistent between discussions and always accessible
   - The chat now tracks incoming and outcoming users in your conversation
   - The chat allows your to see the visit card of users
   - You can close the chat window with the escape key

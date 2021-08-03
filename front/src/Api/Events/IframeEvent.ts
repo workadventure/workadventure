@@ -1,5 +1,4 @@
 import * as tg from "generic-type-guard";
-import type { GameStateEvent } from "./GameStateEvent";
 import type { ButtonClickedEvent } from "./ButtonClickedEvent";
 import type { ChatEvent } from "./ChatEvent";
 import type { ClosePopupEvent } from "./ClosePopupEvent";
@@ -19,16 +18,18 @@ import type { MenuItemClickedEvent } from "./ui/MenuItemClickedEvent";
 import type { MenuItemRegisterEvent } from "./ui/MenuItemRegisterEvent";
 import type { HasPlayerMovedEvent } from "./HasPlayerMovedEvent";
 import type { SetTilesEvent } from "./SetTilesEvent";
+import type { SetVariableEvent } from "./SetVariableEvent";
+import { isGameStateEvent } from "./GameStateEvent";
+import { isMapDataEvent } from "./MapDataEvent";
+import { isSetVariableEvent } from "./SetVariableEvent";
+import type { LoadTilesetEvent } from "./LoadTilesetEvent";
+import { isLoadTilesetEvent } from "./LoadTilesetEvent";
 import type {
     MessageReferenceEvent,
     removeTriggerMessage,
     triggerMessage,
     TriggerMessageEvent,
 } from "./ui/TriggerMessageEvent";
-import type { SetVariableEvent } from "./SetVariableEvent";
-import { isGameStateEvent } from "./GameStateEvent";
-import { isMapDataEvent } from "./MapDataEvent";
-import { isSetVariableEvent } from "./SetVariableEvent";
 import { isMessageReferenceEvent, isTriggerMessageEvent } from "./ui/TriggerMessageEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
@@ -59,6 +60,7 @@ export type IframeEventMap = {
     playSound: PlaySoundEvent;
     stopSound: null;
     getState: undefined;
+    loadTileset: LoadTilesetEvent;
     registerMenuCommand: MenuItemRegisterEvent;
     setTiles: SetTilesEvent;
 
@@ -110,6 +112,10 @@ export const iframeQueryMapTypeGuards = {
     setVariable: {
         query: isSetVariableEvent,
         answer: tg.isUndefined,
+    },
+    loadTileset: {
+        query: isLoadTilesetEvent,
+        answer: tg.isNumber,
     },
     triggerMessage: {
         query: isTriggerMessageEvent,
