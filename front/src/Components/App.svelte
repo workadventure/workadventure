@@ -29,6 +29,8 @@
     import ConsoleGlobalMessageManager from "./ConsoleGlobalMessageManager/ConsoleGlobalMessageManager.svelte";
     import {warningContainerStore} from "../Stores/MenuStore";
     import WarningContainer from "./WarningContainer/WarningContainer.svelte";
+    import {layoutManagerVisibilityStore} from "../Stores/LayoutManagerStore";
+    import LayoutManager from "./LayoutManager/LayoutManager.svelte";
 
     export let game: Game;
 
@@ -64,6 +66,11 @@
     <div>
         <AudioPlaying url={$soundPlayingStore} />
     </div>
+    {/if}
+    {#if $layoutManagerVisibilityStore}
+        <div>
+            <LayoutManager></LayoutManager>
+        </div>
     {/if}
     {#if $gameOverlayVisibilityStore}
         <div>
