@@ -20,7 +20,6 @@ import {
     AUDIO_VOLUME_PROPERTY,
     Box,
     JITSI_MESSAGE_PROPERTIES,
-    layoutManager,
     ON_ACTION_TRIGGER_BUTTON,
     TRIGGER_JITSI_PROPERTIES,
     TRIGGER_WEBSITE_PROPERTIES,
@@ -87,6 +86,8 @@ import { playersStore } from "../../Stores/PlayersStore";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
 import Tileset = Phaser.Tilemaps.Tileset;
 import { userIsAdminStore } from "../../Stores/GameStore";
+import { layoutManagerActionStore, layoutManagerVisibilityStore } from "../../Stores/LayoutManagerStore";
+import { get } from "svelte/store";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -791,7 +792,7 @@ export class GameScene extends DirtyScene {
         });
         this.gameMap.onPropertyChange("openWebsite", (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
-                layoutManager.removeActionButton("openWebsite", this.userInputManager);
+                layoutManagerVisibilityStore.set(false);
                 coWebsiteManager.closeCoWebsite();
             } else {
                 const openWebsiteFunction = () => {
@@ -801,7 +802,7 @@ export class GameScene extends DirtyScene {
                         allProps.get("openWebsiteAllowApi") as boolean | undefined,
                         allProps.get("openWebsitePolicy") as string | undefined
                     );
-                    layoutManager.removeActionButton("openWebsite", this.userInputManager);
+                    layoutManagerVisibilityStore.set(false);
                 };
 
                 const openWebsiteTriggerValue = allProps.get(TRIGGER_WEBSITE_PROPERTIES);
@@ -810,14 +811,13 @@ export class GameScene extends DirtyScene {
                     if (message === undefined) {
                         message = "Press SPACE or touch here to open web site";
                     }
-                    layoutManager.addActionButton(
-                        "openWebsite",
-                        message.toString(),
-                        () => {
-                            openWebsiteFunction();
-                        },
-                        this.userInputManager
-                    );
+                    layoutManagerActionStore.addAction({
+                        type: "openWebsite",
+                        message: message,
+                        callback: () => openWebsiteFunction(),
+                        userInputManager: this.userInputManager,
+                    });
+                    layoutManagerVisibilityStore.set(true);
                 } else {
                     openWebsiteFunction();
                 }
@@ -825,7 +825,7 @@ export class GameScene extends DirtyScene {
         });
         this.gameMap.onPropertyChange("jitsiRoom", (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
-                layoutManager.removeActionButton("jitsiRoom", this.userInputManager);
+                layoutManagerVisibilityStore.set(false);
                 this.stopJitsi();
             } else {
                 const openJitsiRoomFunction = () => {
@@ -838,7 +838,7 @@ export class GameScene extends DirtyScene {
                     } else {
                         this.startJitsi(roomName, undefined);
                     }
-                    layoutManager.removeActionButton("jitsiRoom", this.userInputManager);
+                    layoutManagerVisibilityStore.set(false);
                 };
 
                 const jitsiTriggerValue = allProps.get(TRIGGER_JITSI_PROPERTIES);
@@ -847,14 +847,13 @@ export class GameScene extends DirtyScene {
                     if (message === undefined) {
                         message = "Press SPACE or touch here to enter Jitsi Meet room";
                     }
-                    layoutManager.addActionButton(
-                        "jitsiRoom",
-                        message.toString(),
-                        () => {
-                            openJitsiRoomFunction();
-                        },
-                        this.userInputManager
-                    );
+                    layoutManagerActionStore.addAction({
+                        type: "jitsiRoom",
+                        message: message,
+                        callback: () => openJitsiRoomFunction(),
+                        userInputManager: this.userInputManager,
+                    });
+                    layoutManagerVisibilityStore.set(true);
                 } else {
                     openJitsiRoomFunction();
                 }
