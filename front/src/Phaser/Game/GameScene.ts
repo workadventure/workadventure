@@ -87,7 +87,6 @@ import { playersStore } from "../../Stores/PlayersStore";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
 import Tileset = Phaser.Tilemaps.Tileset;
 import { userIsAdminStore } from "../../Stores/GameStore";
-import { isMessageReferenceEvent, isTriggerMessageEvent } from "../../Api/Events/ui/TriggerMessageEvent";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -1153,7 +1152,7 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer(
-            "triggerMessage",
+            "triggerActionMessage",
             (message) =>
                 new Promise((resolver) => {
                     layoutManager.addActionButton(
@@ -1168,7 +1167,7 @@ ${escapedMessage}
                 })
         );
 
-        iframeListener.registerAnswerer("removeTriggerMessage", (message) => {
+        iframeListener.registerAnswerer("removeActionMessage", (message) => {
             layoutManager.removeActionButton(message.uuid, this.userInputManager);
         });
     }
@@ -1295,8 +1294,8 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("loadTileset");
         iframeListener.unregisterAnswerer("getMapData");
         iframeListener.unregisterAnswerer("getState");
-        iframeListener.unregisterAnswerer("triggerMessage");
-        iframeListener.unregisterAnswerer("removeTriggerMessage");
+        iframeListener.unregisterAnswerer("triggerActionMessage");
+        iframeListener.unregisterAnswerer("removeActionMessage");
         this.sharedVariablesManager?.close();
 
         mediaManager.hideGameOverlay();

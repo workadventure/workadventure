@@ -92,20 +92,38 @@ WA.ui.registerMenuCommand("test", () => {
 
 ### Awaiting User Confirmation (with space bar)
 
-```typescript
-triggerMessage(message: string, callback: ()=>void): TriggerMessage
+```
+WA.ui.displayActionMessage(message: string, callback: () => void): ActionMessage
 ```
 
 Displays a message at the bottom of the screen (that will disappear when space bar is pressed).
 
+<div class="col">
+    <img src="https://workadventu.re/img/docs/trigger_message.png" class="figure-img img-fluid rounded" alt="" />
+</div>
+
 Example:
 
 ```javascript
-const triggerMessage = WA.ui.triggerMessage("press 'space' to confirm",()=>{
-     WA.chat.sendChatMessage("confirmed", "trigger message logic")
+const triggerMessage = WA.ui.displayActionMessage("press 'space' to confirm", () => {
+    WA.chat.sendChatMessage("confirmed", "trigger message logic")
 });
-setTimeout(()=>{
-	// later
-	triggerMessage.remove();
-},1000)
+
+setTimeout(() => {
+    // later
+    triggerMessage.remove();
+}, 1000)
+```
+
+Please note that `displayActionMessage` returns an object of the `ActionMessage` class.
+
+The `ActionMessage` class contains a single method: `remove(): Promise<void>`. This will obviously remove the message when called.
+
+```javascript
+class ActionMessage {
+    /**
+     * Hides the message
+     */
+    remove() {};
+}
 ```

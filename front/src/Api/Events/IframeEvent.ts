@@ -26,11 +26,11 @@ import type { LoadTilesetEvent } from "./LoadTilesetEvent";
 import { isLoadTilesetEvent } from "./LoadTilesetEvent";
 import type {
     MessageReferenceEvent,
-    removeTriggerMessage,
-    triggerMessage,
-    TriggerMessageEvent,
-} from "./ui/TriggerMessageEvent";
-import { isMessageReferenceEvent, isTriggerMessageEvent } from "./ui/TriggerMessageEvent";
+    removeActionMessage,
+    triggerActionMessage,
+    TriggerActionMessageEvent,
+} from "./ui/TriggerActionMessageEvent";
+import { isMessageReferenceEvent, isTriggerActionMessageEvent } from "./ui/TriggerActionMessageEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -63,9 +63,6 @@ export type IframeEventMap = {
     loadTileset: LoadTilesetEvent;
     registerMenuCommand: MenuItemRegisterEvent;
     setTiles: SetTilesEvent;
-
-    triggerMessage: TriggerMessageEvent;
-    removeTriggerMessage: MessageReferenceEvent;
 };
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;
@@ -117,11 +114,11 @@ export const iframeQueryMapTypeGuards = {
         query: isLoadTilesetEvent,
         answer: tg.isNumber,
     },
-    triggerMessage: {
-        query: isTriggerMessageEvent,
+    triggerActionMessage: {
+        query: isTriggerActionMessageEvent,
         answer: tg.isUndefined,
     },
-    removeTriggerMessage: {
+    removeActionMessage: {
         query: isMessageReferenceEvent,
         answer: tg.isUndefined,
     },

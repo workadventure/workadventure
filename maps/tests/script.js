@@ -79,7 +79,7 @@ WA.room.onLeaveZone('popupZone', () => {
     WA.ui.removeBubble();
 })
 
-const message = WA.ui.triggerMessage("testMessage", () => {
+const message = WA.ui.displayActionMessage("testMessage", () => {
     WA.chat.sendChatMessage("triggered", "triggerbot");
 })
 setTimeout(() => {

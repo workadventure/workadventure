@@ -1,22 +1,22 @@
 import {
     isMessageReferenceEvent,
-    isTriggerMessageEvent,
-    removeTriggerMessage,
-    triggerMessage,
-} from './TriggerMessageEvent';
+    isTriggerActionMessageEvent,
+    removeActionMessage,
+    triggerActionMessage,
+} from './TriggerActionMessageEvent';
 
 import * as tg from 'generic-type-guard';
 
 const isTriggerMessageEventObject = new tg.IsInterface()
     .withProperties({
-        type: tg.isSingletonString(triggerMessage),
-        data: isTriggerMessageEvent,
+        type: tg.isSingletonString(triggerActionMessage),
+        data: isTriggerActionMessageEvent,
     })
     .get();
 
 const isTriggerMessageRemoveEventObject = new tg.IsInterface()
     .withProperties({
-        type: tg.isSingletonString(removeTriggerMessage),
+        type: tg.isSingletonString(removeActionMessage),
         data: isMessageReferenceEvent,
     })
     .get();
