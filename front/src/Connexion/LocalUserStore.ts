@@ -16,6 +16,7 @@ const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
 const state = "state";
 const nonce = "nonce";
+const cameraSetup = "cameraSetup";
 
 class LocalUserStore {
     saveUser(localUser: LocalUser) {
@@ -149,6 +150,14 @@ class LocalUserStore {
         const oldValue = localStorage.getItem(nonce);
         localStorage.removeItem(nonce);
         return oldValue;
+    }
+
+    setCameraSetup(cameraId: string) {
+        localStorage.setItem(cameraSetup, cameraId);
+    }
+    getCameraSetup(): { video: unknown; audio: unknown } | undefined {
+        const cameraSetupValues = localStorage.getItem(cameraSetup);
+        return cameraSetupValues != undefined ? JSON.parse(cameraSetupValues) : undefined;
     }
 }
 

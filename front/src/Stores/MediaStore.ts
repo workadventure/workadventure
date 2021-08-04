@@ -251,10 +251,18 @@ export const mediaStreamConstraintsStore = derived(
         let currentAudioConstraint: boolean | MediaTrackConstraints = $audioConstraintStore;
 
         if ($enableCameraSceneVisibilityStore) {
+            console.log("currentVideoConstraint", currentVideoConstraint);
+            console.log("currentAudioConstraint", currentAudioConstraint);
             set({
                 video: currentVideoConstraint,
                 audio: currentAudioConstraint,
             });
+            localUserStore.setCameraSetup(
+                JSON.stringify({
+                    video: currentVideoConstraint,
+                    audio: currentAudioConstraint,
+                })
+            );
             return;
         }
 

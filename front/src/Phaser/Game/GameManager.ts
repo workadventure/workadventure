@@ -18,12 +18,14 @@ export class GameManager {
     private characterLayers: string[] | null;
     private companion: string | null;
     private startRoom!: Room;
+    private cameraSetup?: { video: unknown; audio: unknown };
     currentGameSceneName: string | null = null;
 
     constructor() {
         this.playerName = localUserStore.getName();
         this.characterLayers = localUserStore.getCharacterLayers();
         this.companion = localUserStore.getCompanion();
+        this.cameraSetup = localUserStore.getCameraSetup();
     }
 
     public async init(scenePlugin: Phaser.Scenes.ScenePlugin): Promise<string> {
@@ -34,8 +36,10 @@ export class GameManager {
             return LoginSceneName;
         } else if (!this.characterLayers || !this.characterLayers.length) {
             return SelectCharacterSceneName;
-        } else {
+        } else if (this.cameraSetup == undefined) {
             return EnableCameraSceneName;
+        } else {
+            this.goToStartingMap(scenePlugin);
         }
     }
 
