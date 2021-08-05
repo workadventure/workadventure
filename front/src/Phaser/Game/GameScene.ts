@@ -812,7 +812,7 @@ export class GameScene extends DirtyScene {
                         message = "Press SPACE or touch here to open web site";
                     }
                     layoutManagerActionStore.addAction({
-                        uuid: "openWebSite",
+                        uuid: "openWebsite",
                         type: "message",
                         message: message,
                         callback: () => openWebsiteFunction(),
