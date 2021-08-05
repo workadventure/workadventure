@@ -1,4 +1,4 @@
-import { Observable, Subject } from "rxjs";
+import { Subject } from "rxjs";
 
 import { EnterLeaveEvent, isEnterLeaveEvent } from "../Events/EnterLeaveEvent";
 
@@ -104,6 +104,14 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
             );
         }
         return mapURL;
+    }
+    async loadTileset(url: string): Promise<number> {
+        return await queryWorkadventure({
+            type: "loadTileset",
+            data: {
+                url: url,
+            },
+        });
     }
 }
 

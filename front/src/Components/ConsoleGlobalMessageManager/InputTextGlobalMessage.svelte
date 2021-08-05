@@ -1,11 +1,11 @@
 <script lang="ts">
     import { consoleGlobalMessageManagerFocusStore, consoleGlobalMessageManagerVisibleStore } from "../../Stores/ConsoleGlobalMessageManagerStore";
-    import { onMount } from "svelte";
+    import {onDestroy, onMount} from "svelte";
     import type { Game } from "../../Phaser/Game/Game";
     import type { GameManager } from "../../Phaser/Game/GameManager";
-    import type { PlayGlobalMessageInterface } from "../../Connexion/ConnexionModels";
     import { AdminMessageEventTypes } from "../../Connexion/AdminMessagesService";
     import type { Quill } from "quill";
+    import type { PlayGlobalMessageInterface } from "../../Connexion/ConnexionModels";
 
     //toolbar
     const toolbarOptions = [
@@ -34,27 +34,27 @@
     export let game: Game;
     export let gameManager: GameManager;
 
-    let gameScene = gameManager.getCurrentGameScene(game.findAnyScene());
+    const gameScene = gameManager.getCurrentGameScene(game.findAnyScene());
     let quill: Quill;
     let INPUT_CONSOLE_MESSAGE: HTMLDivElement;
 
     const MESSAGE_TYPE = AdminMessageEventTypes.admin;
 
     export const handleSending = {
-        sendTextMessage() {
+        sendTextMessage(broadcastToWorld: boolean) {
             if (gameScene == undefined) {
                 return;
             }
-            const text = quill.getText(0, quill.getLength());
+            const text = JSON.stringify(quill.getContents(0, quill.getLength()));
 
-            const GlobalMessage: PlayGlobalMessageInterface = {
-                id: "1", // FIXME: use another ID?
-                message: text,
-                type: MESSAGE_TYPE
+            const textGlobalMessage: PlayGlobalMessageInterface = {
+                type: MESSAGE_TYPE,
+                content: text,
+                broadcastToWorld: broadcastToWorld
             };
 
             quill.deleteText(0, quill.getLength());
-            gameScene.connection?.emitGlobalMessage(GlobalMessage);
+            gameScene.connection?.emitGlobalMessage(textGlobalMessage);
             disableConsole();
         }
     }
@@ -73,13 +73,12 @@
             },
         });
 
-        quill.on('selection-change', function (range, oldRange) {
-            if (range === null && oldRange !== null) {
-                consoleGlobalMessageManagerFocusStore.set(false);
-            } else if (range !== null && oldRange === null)
-                consoleGlobalMessageManagerFocusStore.set(true);
-        });
+        consoleGlobalMessageManagerFocusStore.set(true);
     });
+
+    onDestroy(() => {
+        consoleGlobalMessageManagerFocusStore.set(false);
+    })
 
     function disableConsole() {
         consoleGlobalMessageManagerVisibleStore.set(false);

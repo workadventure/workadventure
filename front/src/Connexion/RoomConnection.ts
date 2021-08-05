@@ -597,7 +597,7 @@ export class RoomConnection implements RoomConnection {
             });
     }
 
-    public receivePlayGlobalMessage(callback: (message: PlayGlobalMessageInterface) => void) {
+    /*    public receivePlayGlobalMessage(callback: (message: PlayGlobalMessageInterface) => void) {
         return this.onMessage(EventMessage.PLAY_GLOBAL_MESSAGE, (message: PlayGlobalMessage) => {
             callback({
                 id: message.getId(),
@@ -605,7 +605,7 @@ export class RoomConnection implements RoomConnection {
                 message: message.getMessage(),
             });
         });
-    }
+    }*/
 
     public receiveStopGlobalMessage(callback: (messageId: string) => void) {
         return this.onMessage(EventMessage.STOP_GLOBAL_MESSAGE, (message: StopGlobalMessage) => {
@@ -619,11 +619,11 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitGlobalMessage(message: PlayGlobalMessageInterface) {
+    public emitGlobalMessage(message: PlayGlobalMessageInterface): void {
         const playGlobalMessage = new PlayGlobalMessage();
-        playGlobalMessage.setId(message.id);
         playGlobalMessage.setType(message.type);
-        playGlobalMessage.setMessage(message.message);
+        playGlobalMessage.setContent(message.content);
+        playGlobalMessage.setBroadcasttoworld(message.broadcastToWorld);
 
         const clientToServerMessage = new ClientToServerMessage();
         clientToServerMessage.setPlayglobalmessage(playGlobalMessage);

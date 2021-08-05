@@ -4,8 +4,8 @@
     import type { GameManager } from "../../Phaser/Game/GameManager";
     import { consoleGlobalMessageManagerFocusStore, consoleGlobalMessageManagerVisibleStore } from "../../Stores/ConsoleGlobalMessageManagerStore";
     import { AdminMessageEventTypes } from "../../Connexion/AdminMessagesService";
-    import type { PlayGlobalMessageInterface } from "../../Connexion/ConnexionModels";
     import uploadFile from "../images/music-file.svg";
+    import type {PlayGlobalMessageInterface} from "../../Connexion/ConnexionModels";
 
     interface EventTargetFiles extends EventTarget {
         files: Array<File>;
@@ -23,7 +23,7 @@
     const AUDIO_TYPE = AdminMessageEventTypes.audio;
 
     export const handleSending = {
-        async sendAudioMessage() {
+        async sendAudioMessage(broadcast: boolean) {
             if (gameScene == undefined) {
                 return;
             }
@@ -38,13 +38,13 @@
             fd.append('file', selectedFile);
             const res = await gameScene.connection?.uploadAudio(fd);
 
-            const GlobalMessage: PlayGlobalMessageInterface = {
-                id: (res as { id: string }).id,
-                message: (res as { path: string }).path,
-                type: AUDIO_TYPE
+            const audioGlobalMessage: PlayGlobalMessageInterface = {
+                content: (res as { path: string }).path,
+                type: AUDIO_TYPE,
+                broadcastToWorld: broadcast
             }
             inputAudio.value = '';
-            gameScene.connection?.emitGlobalMessage(GlobalMessage);
+            gameScene.connection?.emitGlobalMessage(audioGlobalMessage);
             disableConsole();
         }
     }
