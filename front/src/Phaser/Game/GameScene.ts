@@ -86,7 +86,7 @@ import { playersStore } from "../../Stores/PlayersStore";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
 import Tileset = Phaser.Tilemaps.Tileset;
 import { userIsAdminStore } from "../../Stores/GameStore";
-import { layoutManagerActionStore, layoutManagerVisibilityStore } from "../../Stores/LayoutManagerStore";
+import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { get } from "svelte/store";
 
 export interface GameSceneInitInterface {
@@ -792,7 +792,7 @@ export class GameScene extends DirtyScene {
         });
         this.gameMap.onPropertyChange("openWebsite", (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
-                layoutManagerVisibilityStore.set(false);
+                layoutManagerActionStore.removeAction("openWebsite");
                 coWebsiteManager.closeCoWebsite();
             } else {
                 const openWebsiteFunction = () => {
@@ -802,7 +802,7 @@ export class GameScene extends DirtyScene {
                         allProps.get("openWebsiteAllowApi") as boolean | undefined,
                         allProps.get("openWebsitePolicy") as string | undefined
                     );
-                    layoutManagerVisibilityStore.set(false);
+                    layoutManagerActionStore.removeAction("openWebsite");
                 };
 
                 const openWebsiteTriggerValue = allProps.get(TRIGGER_WEBSITE_PROPERTIES);
@@ -812,12 +812,12 @@ export class GameScene extends DirtyScene {
                         message = "Press SPACE or touch here to open web site";
                     }
                     layoutManagerActionStore.addAction({
-                        type: "openWebsite",
+                        uuid: "openWebSite",
+                        type: "message",
                         message: message,
                         callback: () => openWebsiteFunction(),
                         userInputManager: this.userInputManager,
                     });
-                    layoutManagerVisibilityStore.set(true);
                 } else {
                     openWebsiteFunction();
                 }
@@ -825,7 +825,7 @@ export class GameScene extends DirtyScene {
         });
         this.gameMap.onPropertyChange("jitsiRoom", (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
-                layoutManagerVisibilityStore.set(false);
+                layoutManagerActionStore.removeAction("jitsi");
                 this.stopJitsi();
             } else {
                 const openJitsiRoomFunction = () => {
@@ -838,7 +838,7 @@ export class GameScene extends DirtyScene {
                     } else {
                         this.startJitsi(roomName, undefined);
                     }
-                    layoutManagerVisibilityStore.set(false);
+                    layoutManagerActionStore.removeAction("jitsi");
                 };
 
                 const jitsiTriggerValue = allProps.get(TRIGGER_JITSI_PROPERTIES);
@@ -848,12 +848,12 @@ export class GameScene extends DirtyScene {
                         message = "Press SPACE or touch here to enter Jitsi Meet room";
                     }
                     layoutManagerActionStore.addAction({
-                        type: "jitsiRoom",
+                        uuid: "jitsi",
+                        type: "message",
                         message: message,
                         callback: () => openJitsiRoomFunction(),
                         userInputManager: this.userInputManager,
                     });
-                    layoutManagerVisibilityStore.set(true);
                 } else {
                     openJitsiRoomFunction();
                 }
@@ -1154,20 +1154,21 @@ ${escapedMessage}
             "triggerActionMessage",
             (message) =>
                 new Promise((resolver) => {
-                    layoutManager.addActionButton(
-                        message.uuid,
-                        message.message,
-                        () => {
-                            layoutManager.removeActionButton(message.uuid, this.userInputManager);
+                    layoutManagerActionStore.addAction({
+                        uuid: message.uuid,
+                        type: "message",
+                        message: message.message,
+                        callback: () => {
+                            layoutManagerActionStore.removeAction(message.uuid);
                             resolver();
                         },
-                        this.userInputManager
-                    );
+                        userInputManager: this.userInputManager,
+                    });
                 })
         );
 
         iframeListener.registerAnswerer("removeActionMessage", (message) => {
-            layoutManager.removeActionButton(message.uuid, this.userInputManager);
+            layoutManagerActionStore.removeAction(message.uuid);
         });
     }
 
