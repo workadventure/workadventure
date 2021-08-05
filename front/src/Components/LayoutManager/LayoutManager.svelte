@@ -1,26 +1,5 @@
 <script lang="ts">
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
-    import { onDestroy, onMount } from "svelte";
-    import { get } from "svelte/store";
-
-    onMount(() => {
-        for (const action of get(layoutManagerActionStore)) {
-            action.userInputManager?.addSpaceEventListner(action.callback);
-            if ( action.type === 'warning') {
-                //remove it after 10 sec
-                setTimeout(() => {
-                    layoutManagerActionStore.removeAction(action);
-                }, 10000)
-            }
-        }
-    })
-
-    onDestroy(() => {
-        for (const action of get(layoutManagerActionStore)) {
-            action.userInputManager?.removeSpaceEventListner(action.callback);
-        }
-        layoutManagerActionStore.clearActions();
-    })
 
     function onClick(callback: () => void) {
         callback();

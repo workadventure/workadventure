@@ -9,6 +9,7 @@ import type { OpenCoWebSiteEvent } from "./OpenCoWebSiteEvent";
 import type { OpenPopupEvent } from "./OpenPopupEvent";
 import type { OpenTabEvent } from "./OpenTabEvent";
 import type { UserInputChatEvent } from "./UserInputChatEvent";
+import type { MapDataEvent } from "./MapDataEvent";
 import type { LayerEvent } from "./LayerEvent";
 import type { SetPropertyEvent } from "./setPropertyEvent";
 import type { LoadSoundEvent } from "./LoadSoundEvent";
@@ -23,6 +24,13 @@ import { isMapDataEvent } from "./MapDataEvent";
 import { isSetVariableEvent } from "./SetVariableEvent";
 import type { LoadTilesetEvent } from "./LoadTilesetEvent";
 import { isLoadTilesetEvent } from "./LoadTilesetEvent";
+import type {
+    MessageReferenceEvent,
+    removeActionMessage,
+    triggerActionMessage,
+    TriggerActionMessageEvent,
+} from "./ui/TriggerActionMessageEvent";
+import { isMessageReferenceEvent, isTriggerActionMessageEvent } from "./ui/TriggerActionMessageEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -73,6 +81,7 @@ export interface IframeResponseEventMap {
     hasPlayerMoved: HasPlayerMovedEvent;
     menuItemClicked: MenuItemClickedEvent;
     setVariable: SetVariableEvent;
+    messageTriggered: MessageReferenceEvent;
 }
 export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
     type: T;
@@ -104,6 +113,14 @@ export const iframeQueryMapTypeGuards = {
     loadTileset: {
         query: isLoadTilesetEvent,
         answer: tg.isNumber,
+    },
+    triggerActionMessage: {
+        query: isTriggerActionMessageEvent,
+        answer: tg.isUndefined,
+    },
+    removeActionMessage: {
+        query: isMessageReferenceEvent,
+        answer: tg.isUndefined,
     },
 };
 
