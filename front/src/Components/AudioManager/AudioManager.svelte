@@ -2,12 +2,13 @@
     import audioImg from "../images/audio.svg";
     import audioMuteImg from  "../images/audio-mute.svg";
     import { localUserStore } from "../../Connexion/LocalUserStore";
+    import type { audioManagerVolume } from "../../Stores/AudioManagerStore";
     import {
         audioManagerFileStore,
-        audioManagerVolume,
         audioManagerVolumeStore,
     } from "../../Stores/AudioManagerStore";
-    import {get, Unsubscriber} from "svelte/store";
+    import {get} from "svelte/store";
+    import type { Unsubscriber } from "svelte/store";
     import {onDestroy, onMount} from "svelte";
 
     let HTMLAudioPlayer: HTMLAudioElement;
