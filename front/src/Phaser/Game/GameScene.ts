@@ -1150,21 +1150,17 @@ ${escapedMessage}
             });
         });
 
-        iframeListener.registerAnswerer(
-            "triggerActionMessage",
-            (message) =>
-                new Promise((resolver) => {
-                    layoutManagerActionStore.addAction({
-                        uuid: message.uuid,
-                        type: "message",
-                        message: message.message,
-                        callback: () => {
-                            layoutManagerActionStore.removeAction(message.uuid);
-                            resolver();
-                        },
-                        userInputManager: this.userInputManager,
-                    });
-                })
+        iframeListener.registerAnswerer("triggerActionMessage", (message) =>
+            layoutManagerActionStore.addAction({
+                uuid: message.uuid,
+                type: "message",
+                message: message.message,
+                callback: () => {
+                    layoutManagerActionStore.removeAction(message.uuid);
+                    iframeListener.sendActionMessageTriggered(message.uuid);
+                },
+                userInputManager: this.userInputManager,
+            })
         );
 
         iframeListener.registerAnswerer("removeActionMessage", (message) => {

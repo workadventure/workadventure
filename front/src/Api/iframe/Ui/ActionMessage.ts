@@ -1,10 +1,12 @@
 import {
+    ActionMessageType,
     MessageReferenceEvent,
     removeActionMessage,
     triggerActionMessage,
     TriggerActionMessageEvent,
 } from "../../Events/ui/TriggerActionMessageEvent";
 import { queryWorkadventure } from "../IframeApiContribution";
+import type { ActionMessageOptions } from "../ui";
 function uuidv4() {
     return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
         const r = (Math.random() * 16) | 0,
@@ -13,29 +15,29 @@ function uuidv4() {
     });
 }
 
-export let triggerMessageInstance: ActionMessage | undefined = undefined;
-
 export class ActionMessage {
-    uuid: string;
+    public readonly uuid: string;
+    private readonly type: ActionMessageType;
+    private readonly message: string;
+    private readonly callback: () => void;
 
-    constructor(private message: string, private callback: () => void) {
+    constructor(actionMessageOptions: ActionMessageOptions, private onRemove: () => void) {
         this.uuid = uuidv4();
-        if (triggerMessageInstance) {
-            triggerMessageInstance.remove();
-        }
-        triggerMessageInstance = this;
+        this.message = actionMessageOptions.message;
+        this.type = actionMessageOptions.type ?? "message";
+        this.callback = actionMessageOptions.callback;
         this.create();
     }
 
-    async create() {
+    private async create() {
         await queryWorkadventure({
             type: triggerActionMessage,
             data: {
                 message: this.message,
+                type: this.type,
                 uuid: this.uuid,
             } as TriggerActionMessageEvent,
         });
-        this.callback();
     }
 
     async remove() {
@@ -45,6 +47,10 @@ export class ActionMessage {
                 uuid: this.uuid,
             } as MessageReferenceEvent,
         });
-        triggerMessageInstance = undefined;
+        this.onRemove();
+    }
+
+    triggerCallback() {
+        this.callback();
     }
 }

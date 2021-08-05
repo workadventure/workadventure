@@ -417,6 +417,15 @@ class IframeListener {
         });
     }
 
+    sendActionMessageTriggered(uuid: string): void {
+        this.postMessage({
+            type: "messageTriggered",
+            data: {
+                uuid,
+            },
+        });
+    }
+
     /**
      * Sends the message... to all allowed iframes.
      */

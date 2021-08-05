@@ -1,12 +1,17 @@
-import * as tg from 'generic-type-guard';
+import * as tg from "generic-type-guard";
 
-export const triggerActionMessage = 'triggerActionMessage';
-export const removeActionMessage = 'removeActionMessage';
+export const triggerActionMessage = "triggerActionMessage";
+export const removeActionMessage = "removeActionMessage";
+
+export const isActionMessageType = tg.isSingletonStringUnion("message", "warning");
+
+export type ActionMessageType = tg.GuardedType<typeof isActionMessageType>;
 
 export const isTriggerActionMessageEvent = new tg.IsInterface()
     .withProperties({
         message: tg.isString,
         uuid: tg.isString,
+        type: isActionMessageType,
     })
     .get();
 

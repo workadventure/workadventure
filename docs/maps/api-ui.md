@@ -93,7 +93,11 @@ WA.ui.registerMenuCommand("test", () => {
 ### Awaiting User Confirmation (with space bar)
 
 ```
-WA.ui.displayActionMessage(message: string, callback: () => void): ActionMessage
+WA.ui.displayActionMessage({
+    message: string,
+    callback: () => void,
+    type?: "message"|"warning",
+}): ActionMessage
 ```
 
 Displays a message at the bottom of the screen (that will disappear when space bar is pressed).
@@ -105,8 +109,11 @@ Displays a message at the bottom of the screen (that will disappear when space b
 Example:
 
 ```javascript
-const triggerMessage = WA.ui.displayActionMessage("press 'space' to confirm", () => {
-    WA.chat.sendChatMessage("confirmed", "trigger message logic")
+const triggerMessage = WA.ui.displayActionMessage({
+    message: "press 'space' to confirm",
+    callback: () => {
+        WA.chat.sendChatMessage("confirmed", "trigger message logic")
+    }
 });
 
 setTimeout(() => {
