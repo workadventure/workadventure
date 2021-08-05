@@ -9,6 +9,7 @@ import type { OpenCoWebSiteEvent } from "./OpenCoWebSiteEvent";
 import type { OpenPopupEvent } from "./OpenPopupEvent";
 import type { OpenTabEvent } from "./OpenTabEvent";
 import type { UserInputChatEvent } from "./UserInputChatEvent";
+import type { MapDataEvent } from "./MapDataEvent";
 import type { LayerEvent } from "./LayerEvent";
 import type { SetPropertyEvent } from "./setPropertyEvent";
 import type { LoadSoundEvent } from "./LoadSoundEvent";
@@ -21,8 +22,17 @@ import type { SetVariableEvent } from "./SetVariableEvent";
 import { isGameStateEvent } from "./GameStateEvent";
 import { isMapDataEvent } from "./MapDataEvent";
 import { isSetVariableEvent } from "./SetVariableEvent";
+import type { EmbeddedWebsite } from "../iframe/Room/EmbeddedWebsite";
+import { isCreateEmbeddedWebsiteEvent } from "./EmbeddedWebsiteEvent";
 import type { LoadTilesetEvent } from "./LoadTilesetEvent";
 import { isLoadTilesetEvent } from "./LoadTilesetEvent";
+import type {
+    MessageReferenceEvent,
+    removeActionMessage,
+    triggerActionMessage,
+    TriggerActionMessageEvent,
+} from "./ui/TriggerActionMessageEvent";
+import { isMessageReferenceEvent, isTriggerActionMessageEvent } from "./ui/TriggerActionMessageEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -55,6 +65,7 @@ export type IframeEventMap = {
     loadTileset: LoadTilesetEvent;
     registerMenuCommand: MenuItemRegisterEvent;
     setTiles: SetTilesEvent;
+    modifyEmbeddedWebsite: Partial<EmbeddedWebsite>; // Note: name should be compulsory in fact
 };
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;
@@ -73,6 +84,7 @@ export interface IframeResponseEventMap {
     hasPlayerMoved: HasPlayerMovedEvent;
     menuItemClicked: MenuItemClickedEvent;
     setVariable: SetVariableEvent;
+    messageTriggered: MessageReferenceEvent;
 }
 export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
     type: T;
@@ -104,6 +116,26 @@ export const iframeQueryMapTypeGuards = {
     loadTileset: {
         query: isLoadTilesetEvent,
         answer: tg.isNumber,
+    },
+    triggerActionMessage: {
+        query: isTriggerActionMessageEvent,
+        answer: tg.isUndefined,
+    },
+    removeActionMessage: {
+        query: isMessageReferenceEvent,
+        answer: tg.isUndefined,
+    },
+    getEmbeddedWebsite: {
+        query: tg.isString,
+        answer: isCreateEmbeddedWebsiteEvent,
+    },
+    deleteEmbeddedWebsite: {
+        query: tg.isString,
+        answer: tg.isUndefined,
+    },
+    createEmbeddedWebsite: {
+        query: isCreateEmbeddedWebsiteEvent,
+        answer: tg.isUndefined,
     },
 };
 
@@ -141,7 +173,12 @@ export const isIframeQuery = (event: any): event is IframeQuery<keyof IframeQuer
     if (!isIframeQueryKey(type)) {
         return false;
     }
-    return iframeQueryMapTypeGuards[type].query(event.data);
+
+    const result = iframeQueryMapTypeGuards[type].query(event.data);
+    if (!result) {
+        console.warn('Received a query with type "' + type + '" but the payload is invalid.');
+    }
+    return result;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

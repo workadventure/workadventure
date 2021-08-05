@@ -385,6 +385,10 @@ body {
 
 #game {
     position: relative; /* Position relative is needed for the game-overlay. */
+
+    iframe {
+        pointer-events: all;
+    }
 }
 
 .audioplayer:first-child  {

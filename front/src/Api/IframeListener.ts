@@ -1,4 +1,5 @@
 import { Subject } from "rxjs";
+import type * as tg from "generic-type-guard";
 import { ChatEvent, isChatEvent } from "./Events/ChatEvent";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
@@ -31,6 +32,8 @@ import { isLoadPageEvent } from "./Events/LoadPageEvent";
 import { handleMenuItemRegistrationEvent, isMenuItemRegisterIframeEvent } from "./Events/ui/MenuItemRegisterEvent";
 import { SetTilesEvent, isSetTilesEvent } from "./Events/SetTilesEvent";
 import type { SetVariableEvent } from "./Events/SetVariableEvent";
+import { ModifyEmbeddedWebsiteEvent, isEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
+import { EmbeddedWebsite } from "./iframe/Room/EmbeddedWebsite";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -108,6 +111,9 @@ class IframeListener {
     private readonly _setTilesStream: Subject<SetTilesEvent> = new Subject();
     public readonly setTilesStream = this._setTilesStream.asObservable();
 
+    private readonly _modifyEmbeddedWebsiteStream: Subject<ModifyEmbeddedWebsiteEvent> = new Subject();
+    public readonly modifyEmbeddedWebsiteStream = this._modifyEmbeddedWebsiteStream.asObservable();
+
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
@@ -121,7 +127,7 @@ class IframeListener {
     init() {
         window.addEventListener(
             "message",
-            (message: TypedMessageEvent<IframeEvent<keyof IframeEventMap>>) => {
+            (message: MessageEvent<unknown>) => {
                 // Do we trust the sender of this message?
                 // Let's only accept messages from the iframe that are allowed.
                 // Note: maybe we could restrict on the domain too for additional security (in case the iframe goes to another domain).
@@ -263,6 +269,8 @@ class IframeListener {
                         handleMenuItemRegistrationEvent(payload.data);
                     } else if (payload.type == "setTiles" && isSetTilesEvent(payload.data)) {
                         this._setTilesStream.next(payload.data);
+                    } else if (payload.type == "modifyEmbeddedWebsite" && isEmbeddedWebsiteEvent(payload.data)) {
+                        this._modifyEmbeddedWebsiteStream.next(payload.data);
                     }
                 }
             },
@@ -413,6 +421,15 @@ class IframeListener {
         this.postMessage({
             type: "setVariable",
             data: setVariableEvent,
+        });
+    }
+
+    sendActionMessageTriggered(uuid: string): void {
+        this.postMessage({
+            type: "messageTriggered",
+            data: {
+                uuid,
+            },
         });
     }
 
