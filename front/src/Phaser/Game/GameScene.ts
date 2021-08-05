@@ -420,7 +420,6 @@ export class GameScene extends DirtyScene {
 
     //hook create scene
     create(): void {
-        console.log("GAAAAAAAGAGAGAGAGA");
         this.preloading = false;
         this.trackDirtyAnims();
 
