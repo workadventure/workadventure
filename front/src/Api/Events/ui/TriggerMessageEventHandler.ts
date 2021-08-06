@@ -3,9 +3,9 @@ import {
     isTriggerActionMessageEvent,
     removeActionMessage,
     triggerActionMessage,
-} from './TriggerActionMessageEvent';
+} from "./TriggerActionMessageEvent";
 
-import * as tg from 'generic-type-guard';
+import * as tg from "generic-type-guard";
 
 const isTriggerMessageEventObject = new tg.IsInterface()
     .withProperties({
