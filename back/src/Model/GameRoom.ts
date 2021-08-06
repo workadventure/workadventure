@@ -473,7 +473,22 @@ export class GameRoom {
                         const variablesManager = new VariablesManager(this.roomUrl, null);
                         return variablesManager.init();
                     } else {
-                        throw e;
+                        // An error occurred while loading the map
+                        // Right now, let's bypass the error. In the future, we should make sure the user is aware of that
+                        // and that he/she will act on it to fix the problem.
+
+                        // Note: we run this message inside a setTimeout so that the room listeners can have time to connect.
+                        setTimeout(() => {
+                            for (const roomListener of this.roomListeners) {
+                                emitErrorOnRoomSocket(
+                                    roomListener,
+                                    "Your map does not seem accessible from the WorkAdventure servers. Is it behind a firewall or a proxy? Your map should be accessible from the WorkAdventure servers. If you use the scripting API in this map, please be aware that server-side checks and variable persistence is disabled."
+                                );
+                            }
+                        }, 1000);
+
+                        const variablesManager = new VariablesManager(this.roomUrl, null);
+                        return variablesManager.init();
                     }
                 });
         }
