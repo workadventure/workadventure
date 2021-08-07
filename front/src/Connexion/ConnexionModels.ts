@@ -32,6 +32,7 @@ export enum EventMessage {
     USER_MESSAGE = "user-message",
     START_JITSI_ROOM = "start-jitsi-room",
     SET_VARIABLE = "set-variable",
+    SILENT = "silent",
 }
 
 export interface PointInterface {

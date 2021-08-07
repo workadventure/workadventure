@@ -33,6 +33,7 @@ import {
     VariableMessage,
     BatchToPusherRoomMessage,
     SubToPusherRoomMessage,
+    SilentEventMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -167,6 +168,19 @@ export class SocketManager {
 
     handleSilentMessage(room: GameRoom, user: User, silentMessage: SilentMessage) {
         room.setSilent(user, silentMessage.getSilent());
+
+        const silentEventMessage = new SilentEventMessage();
+        silentEventMessage.setSilent(silentMessage.getSilent());
+        silentEventMessage.setActoruserid(user.id);
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setSilenteventmessage(silentEventMessage);
+
+        for (const [id, userToSend] of room.getUsers().entries()) {
+            if (user.id === userToSend.id) {
+                continue;
+            }
+            userToSend.socket.write(serverToClientMessage);
+        }
     }
 
     handleItemEvent(room: GameRoom, user: User, itemEventMessage: ItemEventMessage) {

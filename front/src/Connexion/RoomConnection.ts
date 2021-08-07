@@ -34,6 +34,7 @@ import {
     BanUserMessage,
     VariableMessage,
     ErrorMessage,
+    SilentEventMessage,
 } from "../Messages/generated/messages_pb";
 
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
@@ -250,6 +251,8 @@ export class RoomConnection implements RoomConnection {
                 warningContainerStore.activateWarningContainer();
             } else if (message.hasRefreshroommessage()) {
                 //todo: implement a way to notify the user the room was refreshed.
+            } else if (message.hasSilenteventmessage()) {
+                this.dispatch(EventMessage.SILENT, message.getSilenteventmessage());
             } else {
                 throw new Error("Unknown message received");
             }
@@ -535,6 +538,12 @@ export class RoomConnection implements RoomConnection {
                 return;
             }
             callback();
+        });
+    }
+
+    public onSilentMessage(callback: (userId: number, silent: boolean) => void) {
+        this.onMessage(EventMessage.SILENT, (message: SilentEventMessage) => {
+            callback(message.getActoruserid(), message.getSilent());
         });
     }
 

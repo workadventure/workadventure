@@ -721,6 +721,11 @@ export class GameScene extends DirtyScene {
                     this.startJitsi(room, jwt);
                 });
 
+                /**
+                 * Triggered when we receive silent update text for remote player
+                 */
+                this.connection.onSilentMessage(this.setSilentPlayer.bind(this));
+
                 // When connection is performed, let's connect SimplePeer
                 this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic, this.playerName);
                 peerStore.connectToSimplePeer(this.simplePeer);
@@ -1898,5 +1903,19 @@ ${escapedMessage}
     zoomByFactor(zoomFactor: number) {
         waScaleManager.zoomModifier *= zoomFactor;
         biggestAvailableAreaStore.recompute();
+    }
+
+    setSilentPlayer(userId: number, silent: boolean) {
+        //check if exist player, if exist, move position
+        const userToUpdate = this.MapPlayersByKey.get(userId);
+        if (!userToUpdate) {
+            console.error("setSilentPlayer => User was not found");
+            return;
+        }
+        if (silent) {
+            userToUpdate.showSilentIcon();
+        } else {
+            userToUpdate.hideSilentIcon();
+        }
     }
 }
