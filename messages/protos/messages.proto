@@ -385,7 +385,6 @@ message SubToPusherMessage {
     BanUserMessage banUserMessage = 8;
     EmoteEventMessage emoteEventMessage = 9;
     ErrorMessage errorMessage = 10;
-    SilentMessage silentMessage = 11;
   }
 }
 
