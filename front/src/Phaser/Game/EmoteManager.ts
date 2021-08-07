@@ -19,8 +19,6 @@ export const emotes: { [key: string]: RegisteredEmote } = {
     "emote-thumb-down": { name: "emote-thumb-down", img: "resources/emotes/thumb-down-emote.png" },
 };
 
-export const emoteSilent: RegisteredEmote = { name: "emote-silent", img: "resources/emotes/silent-emote.png" };
-
 export class EmoteManager {
     private subscription: Subscription;
 
@@ -68,14 +66,6 @@ export class EmoteManager {
             promises.push(promise);
         }
         return Promise.all(promises);
-    }
-
-    lazyLoadEmoteSilentTexture(): Promise<RegisteredEmote> {
-        const loadPromise = this.createLoadingPromise(this.scene.load, emoteSilent).then(() => {
-            return emoteSilent;
-        });
-        this.scene.load.start();
-        return loadPromise;
     }
 
     destroy() {

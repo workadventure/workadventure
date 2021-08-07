@@ -895,10 +895,10 @@ export class GameScene extends DirtyScene {
         this.gameMap.onPropertyChange("silent", (newValue, oldValue) => {
             if (newValue === undefined || newValue === false || newValue === "") {
                 this.connection?.setSilent(false);
-                this.CurrentPlayer.cancelPreviousEmote();
+                this.CurrentPlayer.noSilent();
             } else {
                 this.connection?.setSilent(true);
-                this.emoteManager.lazyLoadEmoteSilentTexture().then(() => this.CurrentPlayer.isSilent());
+                this.CurrentPlayer.isSilent();
             }
         });
         this.gameMap.onPropertyChange("playAudio", (newValue, oldValue, allProps) => {

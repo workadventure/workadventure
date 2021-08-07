@@ -281,27 +281,13 @@ export abstract class Character extends Container {
         super.destroy();
     }
 
-    showEmote(emoteKey: string) {
-        this.cancelPreviousEmote();
-        const scalingFactor = waScaleManager.uiScalingFactor * 0.05;
-        const emoteY = -30 - scalingFactor * 10;
-
-        this.playerName.setVisible(false);
-        this.emote = new Sprite(this.scene, 0, 0, emoteKey);
-        this.emote.setAlpha(0);
-        this.emote.setScale(0.1 * scalingFactor);
-        this.add(this.emote);
-        this.scene.sys.updateList.add(this.emote);
-
-        this.emoteTween = this.scene?.tweens.add({
-            targets: this.emote,
-            props: {
-                scale: scalingFactor,
-                alpha: 1,
-                y: emoteY,
-            },
-            ease: "Power2",
-        });
+    showSilentIcon(): string {
+        this.playerName.setText(this.PlayerValue + " 🔇");
+        return this.playerName.text;
+    }
+    hideSilentIcon(): string {
+        this.playerName.setText(this.PlayerValue);
+        return this.playerName.text;
     }
 
     playEmote(emoteKey: string) {

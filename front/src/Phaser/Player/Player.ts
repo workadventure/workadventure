@@ -4,7 +4,6 @@ import { UserInputEvent, UserInputManager } from "../UserInput/UserInputManager"
 import { Character } from "../Entity/Character";
 import { userMovingStore } from "../../Stores/GameStore";
 import { RadialMenu, RadialMenuClickEvent, RadialMenuItem } from "../Components/RadialMenu";
-import { emoteSilent } from "../Game/EmoteManager";
 
 export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";
@@ -114,10 +113,10 @@ export class Player extends Character {
     }
 
     isSilent() {
-        this.cancelPreviousEmote();
-        this.closeEmoteMenu();
-        this.emit(requestEmoteEventName, emoteSilent.name);
-        this.showEmote(emoteSilent.name);
+        this.showSilentIcon();
+    }
+    noSilent() {
+        this.hideSilentIcon();
     }
 
     closeEmoteMenu(): void {
