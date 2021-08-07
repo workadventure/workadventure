@@ -1906,7 +1906,7 @@ ${escapedMessage}
     }
 
     setSilentPlayer(userId: number, silent: boolean) {
-        //check if exist player, if exist, move position
+        //check if exist player, if exist, update name
         const userToUpdate = this.MapPlayersByKey.get(userId);
         if (!userToUpdate) {
             console.error("setSilentPlayer => User was not found");
