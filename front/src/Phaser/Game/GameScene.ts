@@ -1,5 +1,4 @@
 import type { Subscription } from "rxjs";
-import { GlobalMessageManager } from "../../Administration/GlobalMessageManager";
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { iframeListener } from "../../Api/IframeListener";
 import { connectionManager } from "../../Connexion/ConnectionManager";
@@ -21,7 +20,6 @@ import {
     AUDIO_VOLUME_PROPERTY,
     Box,
     JITSI_MESSAGE_PROPERTIES,
-    layoutManager,
     ON_ACTION_TRIGGER_BUTTON,
     TRIGGER_JITSI_PROPERTIES,
     TRIGGER_WEBSITE_PROPERTIES,
@@ -34,7 +32,6 @@ import type { RoomConnection } from "../../Connexion/RoomConnection";
 import { Room } from "../../Connexion/Room";
 import { jitsiFactory } from "../../WebRtc/JitsiFactory";
 import { urlManager } from "../../Url/UrlManager";
-import { audioManager } from "../../WebRtc/AudioManager";
 import { TextureError } from "../../Exception/TextureError";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
@@ -47,13 +44,7 @@ import { RemotePlayer } from "../Entity/RemotePlayer";
 import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
-import type {
-    ITiledMap,
-    ITiledMapLayer,
-    ITiledMapLayerProperty,
-    ITiledMapObject,
-    ITiledTileSet,
-} from "../Map/ITiledMap";
+import type { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapObject, ITiledTileSet } from "../Map/ITiledMap";
 import { MenuScene, MenuSceneName } from "../Menu/MenuScene";
 import { PlayerAnimationDirections } from "../Player/Animation";
 import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
@@ -81,8 +72,6 @@ import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } 
 import { waScaleManager } from "../Services/WaScaleManager";
 import { EmoteManager } from "./EmoteManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
-import RenderTexture = Phaser.GameObjects.RenderTexture;
-import Tilemap = Phaser.Tilemaps.Tilemap;
 import type { HasPlayerMovedEvent } from "../../Api/Events/HasPlayerMovedEvent";
 
 import AnimatedTiles from "phaser-animated-tiles";
@@ -91,8 +80,20 @@ import { soundManager } from "./SoundManager";
 import { peerStore, screenSharingPeerStore } from "../../Stores/PeerStore";
 import { videoFocusStore } from "../../Stores/VideoFocusStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
+import { SharedVariablesManager } from "./SharedVariablesManager";
 import { playersStore } from "../../Stores/PlayersStore";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
+import {
+    audioManagerFileStore,
+    audioManagerVisibilityStore,
+    audioManagerVolumeStore,
+} from "../../Stores/AudioManagerStore";
+import { PropertyUtils } from "../Map/PropertyUtils";
+import Tileset = Phaser.Tilemaps.Tileset;
+import { userIsAdminStore } from "../../Stores/GameStore";
+import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
+import { get } from "svelte/store";
+import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -160,7 +161,6 @@ export class GameScene extends DirtyScene {
     private playersPositionInterpolator = new PlayersPositionInterpolator();
     public connection: RoomConnection | undefined;
     private simplePeer!: SimplePeer;
-    private GlobalMessageManager!: GlobalMessageManager;
     private connectionAnswerPromise: Promise<RoomJoinedMessageInterface>;
     private connectionAnswerPromiseResolve!: (
         value: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>
@@ -199,10 +199,13 @@ export class GameScene extends DirtyScene {
     private popUpElements: Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string | undefined;
     private pinchManager: PinchManager | undefined;
-    private mapTransitioning: boolean = false; //used to prevent transitions happenning at the same time.
+    private mapTransitioning: boolean = false; //used to prevent transitions happening at the same time.
     private emoteManager!: EmoteManager;
     private preloading: boolean = true;
-    startPositionCalculator!: StartPositionCalculator;
+    private startPositionCalculator!: StartPositionCalculator;
+    private sharedVariablesManager!: SharedVariablesManager;
+    private objectsByType = new Map<string, ITiledMapObject[]>();
+    private embeddedWebsiteManager!: EmbeddedWebsiteManager;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -225,6 +228,9 @@ export class GameScene extends DirtyScene {
 
     //hook preload scene
     preload(): void {
+        //initialize frame event of scripting API
+        this.listenToIframeEvents();
+
         const localUser = localUserStore.getLocalUser();
         const textures = localUser?.textures;
         if (textures) {
@@ -339,27 +345,27 @@ export class GameScene extends DirtyScene {
         });
 
         // Scan the object layers for objects to load and load them.
-        const objects = new Map<string, ITiledMapObject[]>();
+        this.objectsByType = new Map<string, ITiledMapObject[]>();
 
         for (const layer of this.mapFile.layers) {
             if (layer.type === "objectgroup") {
                 for (const object of layer.objects) {
                     let objectsOfType: ITiledMapObject[] | undefined;
-                    if (!objects.has(object.type)) {
+                    if (!this.objectsByType.has(object.type)) {
                         objectsOfType = new Array<ITiledMapObject>();
                     } else {
-                        objectsOfType = objects.get(object.type);
+                        objectsOfType = this.objectsByType.get(object.type);
                         if (objectsOfType === undefined) {
                             throw new Error("Unexpected object type not found");
                         }
                     }
                     objectsOfType.push(object);
-                    objects.set(object.type, objectsOfType);
+                    this.objectsByType.set(object.type, objectsOfType);
                 }
             }
         }
 
-        for (const [itemType, objectsOfType] of objects) {
+        for (const [itemType, objectsOfType] of this.objectsByType) {
             // FIXME: we would ideally need for the loader to WAIT for the import to be performed, which means writing our own loader plugin.
 
             let itemFactory: ItemFactoryInterface;
@@ -440,7 +446,7 @@ export class GameScene extends DirtyScene {
         this.characterLayers = gameManager.getCharacterLayers();
         this.companion = gameManager.getCompanion();
 
-        //initalise map
+        //initialise map
         this.Map = this.add.tilemap(this.MapUrlFile);
         const mapDirUrl = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf("/"));
         this.mapFile.tilesets.forEach((tileset: ITiledTileSet) => {
@@ -458,6 +464,8 @@ export class GameScene extends DirtyScene {
 
         //permit to set bound collision
         this.physics.world.setBounds(0, 0, this.Map.widthInPixels, this.Map.heightInPixels);
+
+        this.embeddedWebsiteManager = new EmbeddedWebsiteManager(this);
 
         //add layer on map
         this.gameMap = new GameMap(this.mapFile, this.Map, this.Terrains);
@@ -478,6 +486,28 @@ export class GameScene extends DirtyScene {
                 for (const object of layer.objects) {
                     if (object.text) {
                         TextUtils.createTextFromITiledMapObject(this, object);
+                    }
+                    if (object.type === "website") {
+                        // Let's load iframes in the map
+                        const url = PropertyUtils.mustFindStringProperty(
+                            "url",
+                            object.properties,
+                            'in the "' + object.name + '" object of type "website"'
+                        );
+                        const allowApi = PropertyUtils.findBooleanProperty("allowApi", object.properties);
+
+                        // TODO: add a "allow" property to iframe
+                        this.embeddedWebsiteManager.createEmbeddedWebsite(
+                            object.name,
+                            url,
+                            object.x,
+                            object.y,
+                            object.width,
+                            object.height,
+                            object.visible,
+                            allowApi ?? false,
+                            ""
+                        );
                     }
                 }
             }
@@ -553,7 +583,6 @@ export class GameScene extends DirtyScene {
         );
 
         this.triggerOnMapLayerPropertyChange();
-        this.listenToIframeEvents();
 
         if (!this.room.isDisconnected()) {
             this.connect();
@@ -607,6 +636,8 @@ export class GameScene extends DirtyScene {
                 this.connection = onConnect.connection;
 
                 playersStore.connectToRoomConnection(this.connection);
+
+                userIsAdminStore.set(this.connection.hasTag("admin"));
 
                 this.connection.onUserJoins((message: MessageUserJoined) => {
                     const userMessage: AddPlayerInterface = {
@@ -694,19 +725,18 @@ export class GameScene extends DirtyScene {
                 peerStore.connectToSimplePeer(this.simplePeer);
                 screenSharingPeerStore.connectToSimplePeer(this.simplePeer);
                 videoFocusStore.connectToSimplePeer(this.simplePeer);
-                this.GlobalMessageManager = new GlobalMessageManager(this.connection);
                 userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
                 const self = this;
                 this.simplePeer.registerPeerConnectionListener({
                     onConnect(peer) {
                         //self.openChatIcon.setVisible(true);
-                        audioManager.decreaseVolume();
+                        audioManagerVolumeStore.setTalking(true);
                     },
                     onDisconnect(userId: number) {
                         if (self.simplePeer.getNbConnections() === 0) {
                             //self.openChatIcon.setVisible(false);
-                            audioManager.restoreVolume();
+                            audioManagerVolumeStore.setTalking(false);
                         }
                     },
                 });
@@ -717,6 +747,13 @@ export class GameScene extends DirtyScene {
                 this.CurrentPlayer.on(hasMovedEventName, (event: HasPlayerMovedEvent) => {
                     this.gameMap.setPosition(event.x, event.y);
                 });
+
+                // Set up variables manager
+                this.sharedVariablesManager = new SharedVariablesManager(
+                    this.connection,
+                    this.gameMap,
+                    onConnect.room.variables
+                );
 
                 //this.initUsersPosition(roomJoinedMessage.users);
                 this.connectionAnswerPromiseResolve(onConnect.room);
@@ -787,7 +824,7 @@ export class GameScene extends DirtyScene {
         });
         this.gameMap.onPropertyChange("openWebsite", (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
-                layoutManager.removeActionButton("openWebsite", this.userInputManager);
+                layoutManagerActionStore.removeAction("openWebsite");
                 coWebsiteManager.closeCoWebsite();
             } else {
                 const openWebsiteFunction = () => {
@@ -797,7 +834,7 @@ export class GameScene extends DirtyScene {
                         allProps.get("openWebsiteAllowApi") as boolean | undefined,
                         allProps.get("openWebsitePolicy") as string | undefined
                     );
-                    layoutManager.removeActionButton("openWebsite", this.userInputManager);
+                    layoutManagerActionStore.removeAction("openWebsite");
                 };
 
                 const openWebsiteTriggerValue = allProps.get(TRIGGER_WEBSITE_PROPERTIES);
@@ -806,14 +843,13 @@ export class GameScene extends DirtyScene {
                     if (message === undefined) {
                         message = "Press SPACE or touch here to open web site";
                     }
-                    layoutManager.addActionButton(
-                        "openWebsite",
-                        message.toString(),
-                        () => {
-                            openWebsiteFunction();
-                        },
-                        this.userInputManager
-                    );
+                    layoutManagerActionStore.addAction({
+                        uuid: "openWebsite",
+                        type: "message",
+                        message: message,
+                        callback: () => openWebsiteFunction(),
+                        userInputManager: this.userInputManager,
+                    });
                 } else {
                     openWebsiteFunction();
                 }
@@ -821,7 +857,7 @@ export class GameScene extends DirtyScene {
         });
         this.gameMap.onPropertyChange("jitsiRoom", (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
-                layoutManager.removeActionButton("jitsiRoom", this.userInputManager);
+                layoutManagerActionStore.removeAction("jitsi");
                 this.stopJitsi();
             } else {
                 const openJitsiRoomFunction = () => {
@@ -834,7 +870,7 @@ export class GameScene extends DirtyScene {
                     } else {
                         this.startJitsi(roomName, undefined);
                     }
-                    layoutManager.removeActionButton("jitsiRoom", this.userInputManager);
+                    layoutManagerActionStore.removeAction("jitsi");
                 };
 
                 const jitsiTriggerValue = allProps.get(TRIGGER_JITSI_PROPERTIES);
@@ -843,14 +879,13 @@ export class GameScene extends DirtyScene {
                     if (message === undefined) {
                         message = "Press SPACE or touch here to enter Jitsi Meet room";
                     }
-                    layoutManager.addActionButton(
-                        "jitsiRoom",
-                        message.toString(),
-                        () => {
-                            openJitsiRoomFunction();
-                        },
-                        this.userInputManager
-                    );
+                    layoutManagerActionStore.addAction({
+                        uuid: "jitsi",
+                        type: "message",
+                        message: message,
+                        callback: () => openJitsiRoomFunction(),
+                        userInputManager: this.userInputManager,
+                    });
                 } else {
                     openJitsiRoomFunction();
                 }
@@ -867,14 +902,16 @@ export class GameScene extends DirtyScene {
             const volume = allProps.get(AUDIO_VOLUME_PROPERTY) as number | undefined;
             const loop = allProps.get(AUDIO_LOOP_PROPERTY) as boolean | undefined;
             newValue === undefined
-                ? audioManager.unloadAudio()
-                : audioManager.playAudio(newValue, this.getMapDirUrl(), volume, loop);
+                ? audioManagerFileStore.unloadAudio()
+                : audioManagerFileStore.playAudio(newValue, this.getMapDirUrl(), volume, loop);
+            audioManagerVisibilityStore.set(!(newValue === undefined));
         });
         // TODO: This legacy property should be removed at some point
         this.gameMap.onPropertyChange("playAudioLoop", (newValue, oldValue) => {
             newValue === undefined
-                ? audioManager.unloadAudio()
-                : audioManager.playAudio(newValue, this.getMapDirUrl(), undefined, true);
+                ? audioManagerFileStore.unloadAudio()
+                : audioManagerFileStore.playAudio(newValue, this.getMapDirUrl(), undefined, true);
+            audioManagerVisibilityStore.set(!(newValue === undefined));
         });
 
         this.gameMap.onPropertyChange("zone", (newValue, oldValue) => {
@@ -906,7 +943,7 @@ export class GameScene extends DirtyScene {
                 let html = `<div id="container" hidden><div class="nes-container with-title is-centered">
 ${escapedMessage}
  </div> `;
-                const buttonContainer = `<div class="buttonContainer"</div>`;
+                const buttonContainer = '<div class="buttonContainer"</div>';
                 html += buttonContainer;
                 let id = 0;
                 for (const button of openPopupEvent.buttons) {
@@ -1053,20 +1090,24 @@ ${escapedMessage}
             })
         );
 
-        this.iframeSubscriptionList.push(
-            iframeListener.dataLayerChangeStream.subscribe(() => {
-                iframeListener.sendDataLayerEvent({ data: this.gameMap.getMap() });
-            })
-        );
+        iframeListener.registerAnswerer("getMapData", () => {
+            return {
+                data: this.gameMap.getMap(),
+            };
+        });
 
-        iframeListener.registerAnswerer("getState", () => {
+        iframeListener.registerAnswerer("getState", async () => {
+            // The sharedVariablesManager is not instantiated before the connection is established. So we need to wait
+            // for the connection to send back the answer.
+            await this.connectionAnswerPromise;
             return {
                 mapUrl: this.MapUrlFile,
                 startLayerName: this.startPositionCalculator.startLayerName,
                 uuid: localUserStore.getLocalUser()?.uuid,
-                nickname: localUserStore.getName(),
+                nickname: this.playerName,
                 roomId: this.roomUrl,
                 tags: this.connection ? this.connection.getAllTags() : [],
+                variables: this.sharedVariablesManager.variables,
             };
         });
         this.iframeSubscriptionList.push(
@@ -1074,6 +1115,110 @@ ${escapedMessage}
                 for (const eventTile of eventTiles) {
                     this.gameMap.putTile(eventTile.tile, eventTile.x, eventTile.y, eventTile.layer);
                 }
+                this.markDirty();
+            })
+        );
+        iframeListener.registerAnswerer("loadTileset", (eventTileset) => {
+            return this.connectionAnswerPromise.then(() => {
+                const jsonTilesetDir = eventTileset.url.substr(0, eventTileset.url.lastIndexOf("/"));
+                //Initialise the firstgid to 1 because if there is no tileset in the tilemap, the firstgid will be 1
+                let newFirstgid = 1;
+                const lastTileset = this.mapFile.tilesets[this.mapFile.tilesets.length - 1];
+                if (lastTileset) {
+                    //If there is at least one tileset in the tilemap then calculate the firstgid of the new tileset
+                    newFirstgid = lastTileset.firstgid + lastTileset.tilecount;
+                }
+                return new Promise((resolve, reject) => {
+                    this.load.on("filecomplete-json-" + eventTileset.url, () => {
+                        let jsonTileset = this.cache.json.get(eventTileset.url);
+                        const imageUrl = jsonTilesetDir + "/" + jsonTileset.image;
+                        this.load.image(imageUrl, imageUrl);
+                        this.load.on("filecomplete-image-" + imageUrl, () => {
+                            //Add the firstgid of the tileset to the json file
+                            jsonTileset = { ...jsonTileset, firstgid: newFirstgid };
+                            this.mapFile.tilesets.push(jsonTileset);
+                            this.Map.tilesets.push(
+                                new Tileset(
+                                    jsonTileset.name,
+                                    jsonTileset.firstgid,
+                                    jsonTileset.tileWidth,
+                                    jsonTileset.tileHeight,
+                                    jsonTileset.margin,
+                                    jsonTileset.spacing,
+                                    jsonTileset.tiles
+                                )
+                            );
+                            this.Terrains.push(
+                                this.Map.addTilesetImage(
+                                    jsonTileset.name,
+                                    imageUrl,
+                                    jsonTileset.tilewidth,
+                                    jsonTileset.tileheight,
+                                    jsonTileset.margin,
+                                    jsonTileset.spacing
+                                )
+                            );
+                            //destroy the tilemapayer because they are unique and we need to reuse their key and layerdData
+                            for (const layer of this.Map.layers) {
+                                layer.tilemapLayer.destroy(false);
+                            }
+                            //Create a new GameMap with the changed file
+                            this.gameMap = new GameMap(this.mapFile, this.Map, this.Terrains);
+                            //Destroy the colliders of the old tilemapLayer
+                            this.physics.add.world.colliders.destroy();
+                            //Create new colliders with the new GameMap
+                            this.createCollisionWithPlayer();
+                            //Create new trigger with the new GameMap
+                            this.triggerOnMapLayerPropertyChange();
+                            resolve(newFirstgid);
+                        });
+                    });
+                    this.load.on("loaderror", () => {
+                        console.error("Error while loading " + eventTileset.url + ".");
+                        reject(-1);
+                    });
+
+                    this.load.json(eventTileset.url, eventTileset.url);
+                    this.load.start();
+                });
+            });
+        });
+
+        iframeListener.registerAnswerer("triggerActionMessage", (message) =>
+            layoutManagerActionStore.addAction({
+                uuid: message.uuid,
+                type: "message",
+                message: message.message,
+                callback: () => {
+                    layoutManagerActionStore.removeAction(message.uuid);
+                    iframeListener.sendActionMessageTriggered(message.uuid);
+                },
+                userInputManager: this.userInputManager,
+            })
+        );
+
+        iframeListener.registerAnswerer("removeActionMessage", (message) => {
+            layoutManagerActionStore.removeAction(message.uuid);
+        });
+
+        this.iframeSubscriptionList.push(
+            iframeListener.modifyEmbeddedWebsiteStream.subscribe((embeddedWebsite) => {
+                // TODO
+                // TODO
+                // TODO
+                // TODO
+                // TODO
+                // TODO
+                // TODO
+                // TODO
+                // TODO
+                // TODO
+                // TODO
+                // TODO
+                // TODO
+                // TODO
+                // TODO
+                // TODO
             })
         );
     }
@@ -1143,7 +1288,7 @@ ${escapedMessage}
         let targetRoom: Room;
         try {
             targetRoom = await Room.createRoom(roomUrl);
-        } catch (e: unknown) {
+        } catch (e /*: unknown*/) {
             console.error('Error while fetching new room "' + roomUrl.toString() + '"', e);
             this.mapTransitioning = false;
             return;
@@ -1184,7 +1329,7 @@ ${escapedMessage}
         }
 
         this.stopJitsi();
-        audioManager.unloadAudio();
+        audioManagerFileStore.unloadAudio();
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
@@ -1197,6 +1342,13 @@ ${escapedMessage}
         this.chatVisibilityUnsubscribe();
         this.biggestAvailableAreaStoreUnsubscribe();
         iframeListener.unregisterAnswerer("getState");
+        iframeListener.unregisterAnswerer("loadTileset");
+        iframeListener.unregisterAnswerer("getMapData");
+        iframeListener.unregisterAnswerer("getState");
+        iframeListener.unregisterAnswerer("triggerActionMessage");
+        iframeListener.unregisterAnswerer("removeActionMessage");
+        this.sharedVariablesManager?.close();
+        this.embeddedWebsiteManager?.close();
 
         mediaManager.hideGameOverlay();
 
@@ -1236,12 +1388,12 @@ ${escapedMessage}
     }
 
     private getProperty(layer: ITiledMapLayer | ITiledMap, name: string): string | boolean | number | undefined {
-        const properties: ITiledMapLayerProperty[] | undefined = layer.properties;
+        const properties: ITiledMapProperty[] | undefined = layer.properties;
         if (!properties) {
             return undefined;
         }
         const obj = properties.find(
-            (property: ITiledMapLayerProperty) => property.name.toLowerCase() === name.toLowerCase()
+            (property: ITiledMapProperty) => property.name.toLowerCase() === name.toLowerCase()
         );
         if (obj === undefined) {
             return undefined;
@@ -1250,12 +1402,12 @@ ${escapedMessage}
     }
 
     private getProperties(layer: ITiledMapLayer | ITiledMap, name: string): (string | number | boolean | undefined)[] {
-        const properties: ITiledMapLayerProperty[] | undefined = layer.properties;
+        const properties: ITiledMapProperty[] | undefined = layer.properties;
         if (!properties) {
             return [];
         }
         return properties
-            .filter((property: ITiledMapLayerProperty) => property.name.toLowerCase() === name.toLowerCase())
+            .filter((property: ITiledMapProperty) => property.name.toLowerCase() === name.toLowerCase())
             .map((property) => property.value);
     }
 
@@ -1268,7 +1420,7 @@ ${escapedMessage}
         try {
             const room = await Room.createRoom(exitRoomPath);
             return gameManager.loadMap(room, this.scene);
-        } catch (e: unknown) {
+        } catch (e /*: unknown*/) {
             console.warn('Error while pre-loading exit room "' + exitRoomPath.toString() + '"', e);
         }
     }

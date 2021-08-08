@@ -27,6 +27,16 @@
     import {gameOverlayVisibilityStore} from "../Stores/GameOverlayStoreVisibility";
     import {consoleGlobalMessageManagerVisibleStore} from "../Stores/ConsoleGlobalMessageManagerStore";
     import ConsoleGlobalMessageManager from "./ConsoleGlobalMessageManager/ConsoleGlobalMessageManager.svelte";
+    import AdminMessage from "./TypeMessage/BanMessage.svelte";
+    import TextMessage from "./TypeMessage/TextMessage.svelte";
+    import {banMessageVisibleStore} from "../Stores/TypeMessageStore/BanMessageStore";
+    import {textMessageVisibleStore} from "../Stores/TypeMessageStore/TextMessageStore";
+    import {warningContainerStore} from "../Stores/MenuStore";
+    import WarningContainer from "./WarningContainer/WarningContainer.svelte";
+    import {layoutManagerVisibilityStore} from "../Stores/LayoutManagerStore";
+    import LayoutManager from "./LayoutManager/LayoutManager.svelte";
+    import {audioManagerVisibilityStore} from "../Stores/AudioManagerStore";
+    import AudioManager from "./AudioManager/AudioManager.svelte"
 
     export let game: Game;
 
@@ -58,10 +68,30 @@
             <EnableCameraScene game={game}></EnableCameraScene>
         </div>
     {/if}
+    {#if $banMessageVisibleStore}
+        <div>
+            <AdminMessage></AdminMessage>
+        </div>
+    {/if}
+    {#if $textMessageVisibleStore}
+        <div>
+            <TextMessage></TextMessage>
+        </div>
+    {/if}
     {#if $soundPlayingStore}
     <div>
         <AudioPlaying url={$soundPlayingStore} />
     </div>
+    {/if}
+    {#if $audioManagerVisibilityStore}
+    <div>
+        <AudioManager></AudioManager>
+    </div>
+    {/if}
+    {#if $layoutManagerVisibilityStore}
+        <div>
+            <LayoutManager></LayoutManager>
+        </div>
     {/if}
     {#if $gameOverlayVisibilityStore}
         <div>
@@ -90,5 +120,8 @@
     {/if}
     {#if $chatVisibilityStore}
         <Chat></Chat>
+    {/if}
+    {#if $warningContainerStore}
+        <WarningContainer></WarningContainer>
     {/if}
 </div>

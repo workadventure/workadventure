@@ -1,4 +1,5 @@
 import { Subject } from "rxjs";
+import type * as tg from "generic-type-guard";
 import { ChatEvent, isChatEvent } from "./Events/ChatEvent";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
@@ -12,7 +13,8 @@ import { isOpenCoWebsite, OpenCoWebSiteEvent } from "./Events/OpenCoWebSiteEvent
 import {
     IframeErrorAnswerEvent,
     IframeEvent,
-    IframeEventMap, IframeQueryMap,
+    IframeEventMap,
+    IframeQueryMap,
     IframeResponseEvent,
     IframeResponseEventMap,
     isIframeEventWrapper,
@@ -25,21 +27,27 @@ import { isStopSoundEvent, StopSoundEvent } from "./Events/StopSoundEvent";
 import { isLoadSoundEvent, LoadSoundEvent } from "./Events/LoadSoundEvent";
 import { isSetPropertyEvent, SetPropertyEvent } from "./Events/setPropertyEvent";
 import { isLayerEvent, LayerEvent } from "./Events/LayerEvent";
-import { isMenuItemRegisterEvent } from "./Events/ui/MenuItemRegisterEvent";
-import type { DataLayerEvent } from "./Events/DataLayerEvent";
-import type { GameStateEvent } from "./Events/GameStateEvent";
 import type { HasPlayerMovedEvent } from "./Events/HasPlayerMovedEvent";
 import { isLoadPageEvent } from "./Events/LoadPageEvent";
 import { handleMenuItemRegistrationEvent, isMenuItemRegisterIframeEvent } from "./Events/ui/MenuItemRegisterEvent";
 import { SetTilesEvent, isSetTilesEvent } from "./Events/SetTilesEvent";
+import type { SetVariableEvent } from "./Events/SetVariableEvent";
+import { ModifyEmbeddedWebsiteEvent, isEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
+import { EmbeddedWebsite } from "./iframe/Room/EmbeddedWebsite";
 
-type AnswererCallback<T extends keyof IframeQueryMap> = (query: IframeQueryMap[T]['query']) => IframeQueryMap[T]['answer']|Promise<IframeQueryMap[T]['answer']>;
+type AnswererCallback<T extends keyof IframeQueryMap> = (
+    query: IframeQueryMap[T]["query"],
+    source: MessageEventSource | null
+) => IframeQueryMap[T]["answer"] | PromiseLike<IframeQueryMap[T]["answer"]>;
 
 /**
  * Listens to messages from iframes and turn those messages into easy to use observables.
  * Also allows to send messages to those iframes.
  */
 class IframeListener {
+    private readonly _readyStream: Subject<HTMLIFrameElement> = new Subject();
+    public readonly readyStream = this._readyStream.asObservable();
+
     private readonly _chatStream: Subject<ChatEvent> = new Subject();
     public readonly chatStream = this._chatStream.asObservable();
 
@@ -85,9 +93,6 @@ class IframeListener {
     private readonly _setPropertyStream: Subject<SetPropertyEvent> = new Subject();
     public readonly setPropertyStream = this._setPropertyStream.asObservable();
 
-    private readonly _dataLayerChangeStream: Subject<void> = new Subject();
-    public readonly dataLayerChangeStream = this._dataLayerChangeStream.asObservable();
-
     private readonly _registerMenuCommandStream: Subject<string> = new Subject();
     public readonly registerMenuCommandStream = this._registerMenuCommandStream.asObservable();
 
@@ -106,19 +111,23 @@ class IframeListener {
     private readonly _setTilesStream: Subject<SetTilesEvent> = new Subject();
     public readonly setTilesStream = this._setTilesStream.asObservable();
 
+    private readonly _modifyEmbeddedWebsiteStream: Subject<ModifyEmbeddedWebsiteEvent> = new Subject();
+    public readonly modifyEmbeddedWebsiteStream = this._modifyEmbeddedWebsiteStream.asObservable();
+
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
     private sendPlayerMove: boolean = false;
 
+    // Note: we are forced to type this in unknown and later cast with "as" because of https://github.com/microsoft/TypeScript/issues/31904
     private answerers: {
-        [key in keyof IframeQueryMap]?: AnswererCallback<key>
+        [str in keyof IframeQueryMap]?: unknown;
     } = {};
 
     init() {
         window.addEventListener(
             "message",
-            (message: TypedMessageEvent<IframeEvent<keyof IframeEventMap>>) => {
+            (message: MessageEvent<unknown>) => {
                 // Do we trust the sender of this message?
                 // Let's only accept messages from the iframe that are allowed.
                 // Note: maybe we could restrict on the domain too for additional security (in case the iframe goes to another domain).
@@ -152,107 +161,121 @@ class IframeListener {
                     const queryId = payload.id;
                     const query = payload.query;
 
-                    const answerer = this.answerers[query.type];
+                    const answerer = this.answerers[query.type] as AnswererCallback<keyof IframeQueryMap> | undefined;
                     if (answerer === undefined) {
-                        const errorMsg = 'The iFrame sent a message of type "'+query.type+'" but there is no service configured to answer these messages.';
+                        const errorMsg =
+                            'The iFrame sent a message of type "' +
+                            query.type +
+                            '" but there is no service configured to answer these messages.';
                         console.error(errorMsg);
-                        iframe.contentWindow?.postMessage({
-                            id: queryId,
-                            type: query.type,
-                            error: errorMsg
-                        } as IframeErrorAnswerEvent, '*');
+                        iframe.contentWindow?.postMessage(
+                            {
+                                id: queryId,
+                                type: query.type,
+                                error: errorMsg,
+                            } as IframeErrorAnswerEvent,
+                            "*"
+                        );
                         return;
                     }
 
-                    Promise.resolve(answerer(query.data)).then((value) => {
-                        iframe?.contentWindow?.postMessage({
-                            id: queryId,
-                            type: query.type,
-                            data: value
-                        }, '*');
-                    }).catch(reason => {
-                        console.error('An error occurred while responding to an iFrame query.', reason);
-                        let reasonMsg: string;
+                    const errorHandler = (reason: unknown) => {
+                        console.error("An error occurred while responding to an iFrame query.", reason);
+                        let reasonMsg: string = "";
                         if (reason instanceof Error) {
                             reasonMsg = reason.message;
-                        } else {
-                            reasonMsg = reason.toString();
+                        } else if (typeof reason === "object") {
+                            reasonMsg = reason ? reason.toString() : "";
+                        } else if (typeof reason === "string") {
+                            reasonMsg = reason;
                         }
 
-                        iframe?.contentWindow?.postMessage({
-                            id: queryId,
-                            type: query.type,
-                            error: reasonMsg
-                        } as IframeErrorAnswerEvent, '*');
-                    });
+                        iframe?.contentWindow?.postMessage(
+                            {
+                                id: queryId,
+                                type: query.type,
+                                error: reasonMsg,
+                            } as IframeErrorAnswerEvent,
+                            "*"
+                        );
+                    };
 
+                    try {
+                        Promise.resolve(answerer(query.data, message.source))
+                            .then((value) => {
+                                iframe?.contentWindow?.postMessage(
+                                    {
+                                        id: queryId,
+                                        type: query.type,
+                                        data: value,
+                                    },
+                                    "*"
+                                );
+                            })
+                            .catch(errorHandler);
+                    } catch (reason) {
+                        errorHandler(reason);
+                    }
                 } else if (isIframeEventWrapper(payload)) {
                     if (payload.type === "showLayer" && isLayerEvent(payload.data)) {
-                            this._showLayerStream.next(payload.data);
-                        } else if (payload.type === "hideLayer" && isLayerEvent(payload.data)) {
-                            this._hideLayerStream.next(payload.data);
-                        } else if (payload.type === "setProperty" && isSetPropertyEvent(payload.data)) {
-                            this._setPropertyStream.next(payload.data);
-                        } else if (payload.type === "chat" && isChatEvent(payload.data)) {
-                            this._chatStream.next(payload.data);
-                        } else if (payload.type === "openPopup" && isOpenPopupEvent(payload.data)) {
-                            this._openPopupStream.next(payload.data);
-                        } else if (payload.type === "closePopup" && isClosePopupEvent(payload.data)) {
-                            this._closePopupStream.next(payload.data);
-                        } else if (payload.type === "openTab" && isOpenTabEvent(payload.data)) {
-                            scriptUtils.openTab(payload.data.url);
-                        } else if (payload.type === "goToPage" && isGoToPageEvent(payload.data)) {
-                            scriptUtils.goToPage(payload.data.url);
-                        } else if (payload.type === "loadPage" && isLoadPageEvent(payload.data)) {
-                            this._loadPageStream.next(payload.data.url);
-                        } else if (payload.type === "playSound" && isPlaySoundEvent(payload.data)) {
-                            this._playSoundStream.next(payload.data);
-                        } else if (payload.type === "stopSound" && isStopSoundEvent(payload.data)) {
-                            this._stopSoundStream.next(payload.data);
-                        } else if (payload.type === "loadSound" && isLoadSoundEvent(payload.data)) {
-                            this._loadSoundStream.next(payload.data);
-                        } else if (payload.type === "openCoWebSite" && isOpenCoWebsite(payload.data)) {
-                            scriptUtils.openCoWebsite(
-                                payload.data.url,
-                                foundSrc,
-                                payload.data.allowApi,
-                                payload.data.allowPolicy
-                            );
-                        } else if (payload.type === "closeCoWebSite") {
-                            scriptUtils.closeCoWebSite();
-                        } else if (payload.type === "disablePlayerControls") {
-                            this._disablePlayerControlStream.next();
-                        } else if (payload.type === "restorePlayerControls") {
-                            this._enablePlayerControlStream.next();
-                        } else if (payload.type === "displayBubble") {
-                            this._displayBubbleStream.next();
-                        } else if (payload.type === "removeBubble") {
+                        this._showLayerStream.next(payload.data);
+                    } else if (payload.type === "hideLayer" && isLayerEvent(payload.data)) {
+                        this._hideLayerStream.next(payload.data);
+                    } else if (payload.type === "setProperty" && isSetPropertyEvent(payload.data)) {
+                        this._setPropertyStream.next(payload.data);
+                    } else if (payload.type === "chat" && isChatEvent(payload.data)) {
+                        this._chatStream.next(payload.data);
+                    } else if (payload.type === "openPopup" && isOpenPopupEvent(payload.data)) {
+                        this._openPopupStream.next(payload.data);
+                    } else if (payload.type === "closePopup" && isClosePopupEvent(payload.data)) {
+                        this._closePopupStream.next(payload.data);
+                    } else if (payload.type === "openTab" && isOpenTabEvent(payload.data)) {
+                        scriptUtils.openTab(payload.data.url);
+                    } else if (payload.type === "goToPage" && isGoToPageEvent(payload.data)) {
+                        scriptUtils.goToPage(payload.data.url);
+                    } else if (payload.type === "loadPage" && isLoadPageEvent(payload.data)) {
+                        this._loadPageStream.next(payload.data.url);
+                    } else if (payload.type === "playSound" && isPlaySoundEvent(payload.data)) {
+                        this._playSoundStream.next(payload.data);
+                    } else if (payload.type === "stopSound" && isStopSoundEvent(payload.data)) {
+                        this._stopSoundStream.next(payload.data);
+                    } else if (payload.type === "loadSound" && isLoadSoundEvent(payload.data)) {
+                        this._loadSoundStream.next(payload.data);
+                    } else if (payload.type === "openCoWebSite" && isOpenCoWebsite(payload.data)) {
+                        scriptUtils.openCoWebsite(
+                            payload.data.url,
+                            foundSrc,
+                            payload.data.allowApi,
+                            payload.data.allowPolicy
+                        );
+                    } else if (payload.type === "closeCoWebSite") {
+                        scriptUtils.closeCoWebSite();
+                    } else if (payload.type === "disablePlayerControls") {
+                        this._disablePlayerControlStream.next();
+                    } else if (payload.type === "restorePlayerControls") {
+                        this._enablePlayerControlStream.next();
+                    } else if (payload.type === "displayBubble") {
+                        this._displayBubbleStream.next();
+                    } else if (payload.type === "removeBubble") {
                         this._removeBubbleStream.next();
-                        } else if (payload.type == "onPlayerMove") {
-                            this.sendPlayerMove = true;
-                        } else if (payload.type == "getDataLayer") {
-                            this._dataLayerChangeStream.next();
-                        } else if (isMenuItemRegisterIframeEvent(payload)) {
-                            const data = payload.data.menutItem;
-                            // @ts-ignore
-                            this.iframeCloseCallbacks.get(iframe).push(() => {
-                                this._unregisterMenuCommandStream.next(data);
-                            });
-                            handleMenuItemRegistrationEvent(payload.data);
-                        } else if (payload.type == "setTiles" && isSetTilesEvent(payload.data)) {
-                            this._setTilesStream.next(payload.data);
-                        }
+                    } else if (payload.type == "onPlayerMove") {
+                        this.sendPlayerMove = true;
+                    } else if (isMenuItemRegisterIframeEvent(payload)) {
+                        const data = payload.data.menutItem;
+                        // @ts-ignore
+                        this.iframeCloseCallbacks.get(iframe).push(() => {
+                            this._unregisterMenuCommandStream.next(data);
+                        });
+                        handleMenuItemRegistrationEvent(payload.data);
+                    } else if (payload.type == "setTiles" && isSetTilesEvent(payload.data)) {
+                        this._setTilesStream.next(payload.data);
+                    } else if (payload.type == "modifyEmbeddedWebsite" && isEmbeddedWebsiteEvent(payload.data)) {
+                        this._modifyEmbeddedWebsiteStream.next(payload.data);
                     }
+                }
             },
             false
         );
-    }
-
-    sendDataLayerEvent(dataLayerEvent: DataLayerEvent) {
-        this.postMessage({
-            type: "dataLayer",
-            data: dataLayerEvent,
-        });
     }
 
     /**
@@ -394,6 +417,22 @@ class IframeListener {
         });
     }
 
+    setVariable(setVariableEvent: SetVariableEvent) {
+        this.postMessage({
+            type: "setVariable",
+            data: setVariableEvent,
+        });
+    }
+
+    sendActionMessageTriggered(uuid: string): void {
+        this.postMessage({
+            type: "messageTriggered",
+            data: {
+                uuid,
+            },
+        });
+    }
+
     /**
      * Sends the message... to all allowed iframes.
      */
@@ -411,12 +450,30 @@ class IframeListener {
      * @param key The "type" of the query we are answering
      * @param callback
      */
-    public registerAnswerer<T extends keyof IframeQueryMap>(key: T, callback: (query: IframeQueryMap[T]['query']) => IframeQueryMap[T]['answer']|Promise<IframeQueryMap[T]['answer']> ): void {
+    public registerAnswerer<T extends keyof IframeQueryMap>(key: T, callback: AnswererCallback<T>): void {
         this.answerers[key] = callback;
     }
 
     public unregisterAnswerer(key: keyof IframeQueryMap): void {
         delete this.answerers[key];
+    }
+
+    dispatchVariableToOtherIframes(key: string, value: unknown, source: MessageEventSource | null) {
+        // Let's dispatch the message to the other iframes
+        for (const iframe of this.iframes) {
+            if (iframe.contentWindow !== source) {
+                iframe.contentWindow?.postMessage(
+                    {
+                        type: "setVariable",
+                        data: {
+                            key,
+                            value,
+                        },
+                    },
+                    "*"
+                );
+            }
+        }
     }
 }
 
