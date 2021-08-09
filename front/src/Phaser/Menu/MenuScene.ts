@@ -6,7 +6,7 @@ import { localUserStore } from "../../Connexion/LocalUserStore";
 import { gameReportKey, gameReportRessource, ReportMenu } from "./ReportMenu";
 import { connectionManager } from "../../Connexion/ConnectionManager";
 import { GameConnexionTypes } from "../../Url/UrlManager";
-import { menuIconVisible, menuVisible } from "../../Stores/MenuStore";
+import { menuIconVisiblilityStore, menuVisiblilityStore } from "../../Stores/MenuStore";
 import { videoConstraintStore } from "../../Stores/MediaStore";
 import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
@@ -163,7 +163,7 @@ export class MenuScene extends Phaser.Scene {
     }
 
     openSideMenu() {
-        menuVisible.set(true);
+        menuVisiblilityStore.set(true);
         if (this.sideMenuOpened) return;
 
         /*this.closeAll();
@@ -188,7 +188,7 @@ export class MenuScene extends Phaser.Scene {
     }
 
     private closeSideMenu(): void {
-        menuVisible.set(false);
+        menuVisiblilityStore.set(false);
         /* if (!this.sideMenuOpened) return;
         this.sideMenuOpened = false;
         this.closeAll();

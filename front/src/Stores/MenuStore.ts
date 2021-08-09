@@ -1,8 +1,9 @@
 import { writable } from "svelte/store";
 import Timeout = NodeJS.Timeout;
 
-export const menuIconVisible = writable(false);
-export const menuVisible = writable(false);
+export const menuIconVisiblilityStore = writable(false);
+export const menuVisiblilityStore = writable(false);
+export const menuInputFocusStore = writable(false);
 
 let warningContainerTimeout: Timeout | null = null;
 function createWarningContainerStore() {

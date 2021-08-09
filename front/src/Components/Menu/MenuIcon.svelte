@@ -1,39 +1,29 @@
 <script lang="typescript">
-    import {menuVisible} from "../../Stores/MenuStore";
-
-    let isOpen : Boolean = false;
+    import {menuVisiblilityStore} from "../../Stores/MenuStore";
+    import {get} from "svelte/store";
 
     function openMenu(){
-        isOpen = !isOpen; //Devrait être dans le store/menuVisible.set(isOPen);/
-        if(isOpen) menuVisible.set(true);
-        else menuVisible.set(false);
+        menuVisiblilityStore.set(!get(menuVisiblilityStore))
     }
 </script>
 
 <main class="menuIcon">
-    <section>
-        <button on:click|preventDefault={openMenu}>
-             <img src="/static/images/logo-WA-min.png" alt="open menu">
-        </button>
-    </section>
+    <img src="/static/images/logo-WA-min.png" alt="open menu" on:click|preventDefault={openMenu}>
 </main>
 
 <style lang="scss">
-    .menuIcon button {
-        pointer-events: auto;
-        border-radius: 200px;
-        img {
-            width: 60px;
-            padding-top: 0;
-            cursor: url('/resources/logos/cursor_pointer.png'), pointer;
-        }
+  .menuIcon {
+    pointer-events: auto;
+    margin: 25px;
+    img {
+      width: 60px;
+      padding-top: 0;
+      //cursor: url('/resources/logos/cursor_pointer.png'), pointer;
     }
-    .menuIcon section {
-        margin: 25px;
+  }
+  @media only screen and (max-height: 700px) {
+    .menuIcon {
+      margin: 100px;
     }
-    @media only screen and (max-height: 700px) {
-        .menuIcon section {
-            margin: 100px;
-        }
-    }
+  }
 </style>

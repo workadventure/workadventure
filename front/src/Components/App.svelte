@@ -1,6 +1,6 @@
 <script lang="typescript">
     import MenuIcon from "./Menu/MenuIcon.svelte";
-    import {menuIconVisible, menuVisible} from "../Stores/MenuStore";
+    import {menuIconVisiblilityStore, menuVisiblilityStore} from "../Stores/MenuStore";
     import {enableCameraSceneVisibilityStore} from "../Stores/MediaStore";
     import CameraControls from "./CameraControls.svelte";
     import MyCamera from "./MyCamera.svelte";
@@ -28,8 +28,6 @@
     import Menu from "./Menu/Menu.svelte";
     import VideoOverlay from "./Video/VideoOverlay.svelte";
     import {gameOverlayVisibilityStore} from "../Stores/GameOverlayStoreVisibility";
-    import {consoleGlobalMessageManagerVisibleStore} from "../Stores/ConsoleGlobalMessageManagerStore";
-    import ConsoleGlobalMessageManager from "./ConsoleGlobalMessageManager/ConsoleGlobalMessageManager.svelte";
     import AdminMessage from "./TypeMessage/BanMessage.svelte";
     import TextMessage from "./TypeMessage/TextMessage.svelte";
     import {banMessageVisibleStore} from "../Stores/TypeMessageStore/BanMessageStore";
@@ -89,29 +87,21 @@
             <LayoutManager></LayoutManager>
         </div>
     {/if}
-
-
-    {#if $menuIconVisible}
+    {#if $menuIconVisiblilityStore}
         <div>
             <MenuIcon></MenuIcon>
         </div>
     {/if}
-    {#if $menuVisible}
+    {#if $menuVisiblilityStore}
         <div>
             <Menu></Menu>
         </div>
     {/if}
-
     {#if $gameOverlayVisibilityStore}
         <div>
             <VideoOverlay></VideoOverlay>
             <MyCamera></MyCamera>
             <CameraControls></CameraControls>
-        </div>
-    {/if}
-    {#if $consoleGlobalMessageManagerVisibleStore}
-        <div>
-            <ConsoleGlobalMessageManager></ConsoleGlobalMessageManager>
         </div>
     {/if}
     {#if $helpCameraSettingsVisibleStore}

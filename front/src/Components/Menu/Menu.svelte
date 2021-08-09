@@ -1,80 +1,103 @@
 <script lang="typescript">
-    import GameQualityMenu from "./GameQualityMenu.svelte";
-    import EditProfileMenu from "./EditProfileMenu.svelte";
+    import {fly} from "svelte/transition";
+    import type { SvelteComponent } from "svelte";
+    import SettingsSubMenu from "./SettingsSubMenu.svelte";
+    import CreateMapSubMenu from "./CreateMapSubMenu.svelte";
+    import ProfileSubMenu from "./ProfileSubMenu.svelte";
+    import ContactSubMenu from "./ContactSubMenu.svelte";
+    import AboutRoomSubMenu from "./AboutRoomSubMenu.svelte";
+    import GlobalMessagesSubMenu from "./GlobalMessagesSubMenu.svelte";
+    import {menuVisiblilityStore} from "../../Stores/MenuStore";
 
-    enum SubMenus {
-        settings = 1,
-        editProfile,
-        shareUrl,
-    }
+    //TODO: When we register a new custom menu we need to add it here
+    const SubMenus = new Map<string, typeof SvelteComponent>([
+        ['Settings', SettingsSubMenu],
+        ['Profile', ProfileSubMenu],
+        ['Create a Map', CreateMapSubMenu],
+        ['About the room', AboutRoomSubMenu],
+        ['Global Messages', GlobalMessagesSubMenu], //Remove if player has not the admin tag
+        ['Contact', ContactSubMenu] //Always last (except custom)
+    ]);
 
-    let activeSubMenu: SubMenus = 2;
+    let activeSubMenu = 'Settings';
+    let activeComponent = SubMenus.get(activeSubMenu);
 
-    function switchMenu(menu: SubMenus) {
-        activeSubMenu = menu;
-    }
-
-    function gotToCreateMapPage() {
-        //const sparkHost = 'https://'+window.location.host.replace('play.', '')+'/choose-map.html';
-        //TODO fix me: this button can to send us on WorkAdventure BO.
-        const sparkHost = "https://workadventu.re/getting-started";
-        window.open(sparkHost, "_blank");
-    }
-</script>
-
-
-<aside class="menuContainer">
-    <section class="menuNav">
-        <nav>
-            <ul>
-                <li class:active={activeSubMenu === SubMenus.settings } on:click={() => switchMenu(SubMenus.settings)}>Settings</li>
-                <li class:active={activeSubMenu === SubMenus.shareUrl } on:click={() => switchMenu(SubMenus.shareUrl)}>Share Url</li>
-                <li class:active={activeSubMenu === SubMenus.editProfile } on:click={() => switchMenu(SubMenus.editProfile)}>Edit Profile</li>
-                <li on:click={() => gotToCreateMapPage()}>Create Map</li>
-                <li>Go to Menu</li>
-            </ul>
-        </nav>
-    </section>
-
-    <section class="subMenuContainer">
-        {#if activeSubMenu === SubMenus.settings}
-            <GameQualityMenu></GameQualityMenu>
-        {:else if activeSubMenu === SubMenus.editProfile}
-            <EditProfileMenu></EditProfileMenu>
-        {/if}
-    </section>
-
-</aside>
-
-<style lang="scss">
-    aside.menuContainer{
-        pointer-events: auto;
-        background: #7a7a7a;
-        position: absolute;
-        width: 30vw;
-        height: 70vh;
-        border-radius: 8px;
-        display: flex;
-        padding:5px;
-        color: white;
-
-    }
-
-    section.menuNav{
-        width:30%;
-        border-right:white solid 4px;
-        nav{
-          ul{
-            padding: 10px;
-            list-style: none;
-            li{
-              cursor: pointer;
-            }
-            li.active{
-                background: #6f6f6f ;
-            }
-          }
+    function switchMenu(menu: string) {
+        if (SubMenus.has(menu)) {
+            activeSubMenu = menu
+            activeComponent = SubMenus.get(activeSubMenu);
         }
     }
 
+    function closeMenu() {
+        menuVisiblilityStore.set(false);
+    }
+    function onKeyDown(e:KeyboardEvent) {
+        if (e.key === 'Escape') {
+            closeMenu();
+        }
+    }
+</script>
+
+<svelte:window on:keydown={onKeyDown}/>
+
+
+<div class="menu-container-main">
+    <div class="menu-nav-sidebar nes-container is-rounded" transition:fly="{{ x: -1000, duration: 500 }}">
+        <h2>Menu</h2>
+        <nav>
+            {#each [...SubMenus] as [submenuKey, submenuComponent]}
+                <button type="button" class="nes-btn {activeComponent === submenuComponent ? 'is-disabled' : ''}" on:click|preventDefault={() => switchMenu(submenuKey)}>{submenuKey}</button>
+            {/each}
+        </nav>
+    </div>
+    <div class="menu-submenu-container nes-container is-rounded" transition:fly="{{ y: -1000, duration: 500 }}">
+        <h2>{activeSubMenu}</h2>
+        {#if activeComponent}
+            <svelte:component this="{activeComponent}"/>
+        {/if}
+    </div>
+</div>
+
+<style lang="scss">
+  .nes-container {
+    padding: 5px;
+  }
+
+  div.menu-container-main {
+    --size-first-columns-grid: 15%; //TODO: clamp value
+
+    font-family: "Press Start 2P";
+    pointer-events: auto;
+    height: 70vh;
+    width: 75vw;
+    top: 10vh;
+
+    position: relative;
+    margin: auto;
+
+    display: grid;
+    grid-template-columns: var(--size-first-columns-grid) calc(100% - var(--size-first-columns-grid));
+    grid-template-rows: 100%;
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    div.menu-nav-sidebar {
+      background-color: #333333;
+      color: whitesmoke;
+
+      nav button {
+        width: calc(100% - 10px);
+        margin-bottom: 10px;
+      }
+    }
+
+    div.menu-submenu-container {
+      background-color: #333333;
+      color: whitesmoke;
+    }
+  }
 </style>

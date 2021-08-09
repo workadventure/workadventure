@@ -1,0 +1,127 @@
+<script lang="typescript">
+import {localUserStore} from "../../Connexion/LocalUserStore";
+import {videoConstraintStore} from "../../Stores/MediaStore";
+import {HtmlUtils} from "../../WebRtc/HtmlUtils";
+
+let fullscreen : boolean = localUserStore.getFullscreen();
+let notification : boolean = localUserStore.getNotification() === 'granted';
+let valueGame : number = localUserStore.getGameQualityValue();
+let valueVideo : number = localUserStore.getVideoQualityValue();
+let previewValueGame = valueGame;
+let previewValueVideo =  valueVideo;
+
+function saveSetting(){
+    if (valueGame !== previewValueGame) {
+        previewValueGame = valueGame;
+        localUserStore.setGameQualityValue(valueGame);
+        window.location.reload();// TODO edit that
+    }
+
+    if (valueVideo !== previewValueVideo) {
+        previewValueVideo = valueVideo;
+        videoConstraintStore.setFrameRate(valueVideo);
+    }
+}
+
+function changeFullscreen() {
+    const body = HtmlUtils.querySelectorOrFail('body');
+    if (body) {
+        if (document.fullscreenElement !== null && !fullscreen) {
+            document.exitFullscreen()
+        } else {
+            body.requestFullscreen();
+        }
+        localUserStore.setFullscreen(fullscreen);
+    }
+}
+
+function changeNotification() {
+    if (Notification.permission === 'granted') {
+        localUserStore.setNotification(notification ? 'granted' : 'denied');
+    } else {
+        Notification.requestPermission().then((response) => {
+            if (response === 'granted') {
+                localUserStore.setNotification(notification ? 'granted' : 'denied');
+            } else {
+                localUserStore.setNotification('denied');
+                notification = false;
+            }
+        })
+    }
+}
+</script>
+
+<div class="settings-main" on:submit|preventDefault={saveSetting}>
+    <section>
+        <h3>Game quality</h3>
+            <select bind:value={valueGame}>
+                <option value="{120}">High video quality (120 fps)</option>
+                <option value="{60}">Medium video quality (60 fps, recommended)</option>
+                <option value="{40}">Minimum video quality (40 fps)</option>
+                <option value="{20}">Small video quality (20 fps)</option>
+            </select>
+    </section>
+    <section>
+        <h3>Video quality</h3>
+            <select bind:value={valueVideo}>
+                <option value="{30}">High video quality (30 fps)</option>
+                <option value="{20}">Medium video quality (20 fps, recommended)</option>
+                <option value="{10}">Minimum video quality (10 fps)</option>
+                <option value="{5}">Small video quality (5 fps)</option>
+            </select>
+    </section>
+    <section class="settings-section-save">
+        <p>(Saving these settings will restart the game)</p>
+        <button type="button" class="nes-btn is-primary" on:click|preventDefault={saveSetting}>Save</button>
+    </section>
+    <section class="settings-section-noSaveOption">
+        <label>
+            <input type="checkbox" class="nes-checkbox is-dark" bind:checked={fullscreen} on:change={changeFullscreen}/>
+            <span>Fullscreen</span>
+        </label>
+        <label>
+            <input type="checkbox" class="nes-checkbox is-dark" bind:checked={notification} on:change={changeNotification}>
+            <span>Notifications</span>
+        </label>
+    </section>
+</div>
+
+<style lang="scss">
+  div.settings-main {
+    height: calc(100% - 56px);
+    display: grid;
+    grid-template-rows: 25% 25% 25% 20%;
+
+    section {
+      width: 100%; //TODO clamp value
+      padding: 20px 20px 0;
+      text-align: center;
+
+      select {
+        border-radius: 16px;
+        padding: 10px;
+        margin: 5px;
+      }
+      select:focus {
+        outline: none;
+      }
+    }
+    section.settings-section-save {
+      text-align: center;
+      p {
+        margin: 16px 0;
+      }
+    }
+    section.settings-section-noSaveOption {
+      --nb-noSaveOptions: 2; //number of sub-element in the section
+      display: grid;
+      grid-template-columns: calc(100% / var(--nb-noSaveOptions)) calc(100% / var(--nb-noSaveOptions)); //Same size for every sub-element
+
+      label {
+        text-align: center;
+        width: 100%;
+        margin: 0;
+      }
+    }
+  }
+</style>
