@@ -127,7 +127,7 @@ export class MenuScene extends Phaser.Scene {
                 if (uuid === undefined) {
                     throw new Error("Could not find UUID for user with ID " + user.userId);
                 }
-                this.gameReportElement.open(uuid, user.userName);
+                //this.gameReportElement.open(uuid, user.userName);
             }
         });
 
