@@ -113,10 +113,10 @@ export class Player extends Character {
     }
 
     isSilent() {
-        this.showSilentIcon();
+        super.isSilent();
     }
     noSilent() {
-        this.hideSilentIcon();
+        super.noSilent();
     }
 
     closeEmoteMenu(): void {

@@ -9,6 +9,7 @@ import type { GameScene } from "../Game/GameScene";
 import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
 import { waScaleManager } from "../Services/WaScaleManager";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
+import { isSilentStore } from "../../Stores/MediaStore";
 
 const playerNameY = -25;
 
@@ -281,13 +282,11 @@ export abstract class Character extends Container {
         super.destroy();
     }
 
-    showSilentIcon(): string {
-        this.playerName.setText(this.PlayerValue + " 🔇");
-        return this.playerName.text;
+    isSilent() {
+        isSilentStore.set(true);
     }
-    hideSilentIcon(): string {
-        this.playerName.setText(this.PlayerValue);
-        return this.playerName.text;
+    noSilent() {
+        isSilentStore.set(false);
     }
 
     playEmote(emoteKey: string) {
