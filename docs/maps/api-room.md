@@ -177,3 +177,101 @@ WA.room.loadTileset("Assets/Tileset.json").then((firstId) => {
     WA.room.setTiles([{x: 4, y: 4, tile: firstId, layer: 'bottom'}]);
 })
 ```
+
+
+## Embedding websites in a map
+
+You can use the scripting API to embed websites in a map, or to edit websites that are already embedded (using the ["website" objects](website-in-map.md)).
+
+### Getting an instance of a website already embedded in the map
+
+```
+WA.room.website.get(objectName: string): Promise<EmbeddedWebsite>
+```
+
+You can get an instance of an embedded website by using the `WA.room.website.get()` method.
+It returns a promise of an `EmbeddedWebsite` instance.
+
+```javascript
+// Get an existing website object where 'my_website' is the name of the object (on any layer object of the map)
+const website = await WA.room.website.get('my_website');
+website.url = 'https://example.com';
+website.visible = true;
+```
+
+
+### Adding a new website in a map
+
+```
+WA.room.website.create(website: CreateEmbeddedWebsiteEvent): EmbeddedWebsite
+
+interface CreateEmbeddedWebsiteEvent {
+    name: string;       // A unique name for this iframe
+    url: string;        // The URL the iframe points to.
+    position: {
+        x: number,      // In pixels, relative to the map coordinates
+        y: number,      // In pixels, relative to the map coordinates
+        width: number,  // In pixels, sensitive to zoom level
+        height: number, // In pixels, sensitive to zoom level
+    },
+    visible?: boolean,  // Whether to display the iframe or not
+    allowApi?: boolean, // Whether the scripting API should be available to the iframe
+    allow?: string,     // The list of feature policies allowed
+}
+```
+
+You can create an instance of an embedded website by using the `WA.room.website.create()` method.
+It returns an `EmbeddedWebsite` instance.
+
+```javascript
+// Create a new website object
+const website = WA.room.website.create({
+    name: "my_website",
+    url: "https://example.com",
+    position: {
+        x: 64,
+        y: 128,
+        width: 320,
+        height: 240,
+    },
+    visible: true,
+    allowApi: true,
+    allow: "fullscreen",
+});
+```
+
+### Deleting a website from a map
+
+```
+WA.room.website.delete(name: string): Promise<void>
+```
+
+Use `WA.room.website.delete` to completely remove an embedded website from your map. 
+
+
+### The EmbeddedWebsite class
+
+Instances of the `EmbeddedWebsite` class represent the website displayed on the map.
+
+```typescript
+class EmbeddedWebsite {
+    readonly name: string;
+    url: string;
+    visible: boolean;
+    allow: string;
+    allowApi: boolean;
+    x: number;         // In pixels, relative to the map coordinates
+    y: number;         // In pixels, relative to the map coordinates
+    width: number;     // In pixels, sensitive to zoom level
+    height: number;    // In pixels, sensitive to zoom level
+}
+```
+
+When you modify a property of an `EmbeddedWebsite` instance, the iframe is automatically modified in the map.
+
+
+{.alert.alert-warning}
+The websites you add/edit/delete via the scripting API are only shown locally. If you want them 
+to be displayed for every player, you can use [variables](api-start.md) to share a common state
+between all users.
+

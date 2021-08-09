@@ -26,15 +26,18 @@ export class MediaManager {
             if (result.type === "error") {
                 console.error(result.error);
                 layoutManagerActionStore.addAction({
+                    uuid: "cameraAccessDenied",
                     type: "warning",
                     message: "Camera access denied. Click here and check your browser permissions.",
                     callback: () => {
                         helpCameraSettingsVisibleStore.set(true);
-                        layoutManagerVisibilityStore.set(false);
                     },
                     userInputManager: this.userInputManager,
                 });
-                layoutManagerVisibilityStore.set(true);
+                //remove it after 10 sec
+                setTimeout(() => {
+                    layoutManagerActionStore.removeAction("cameraAccessDenied");
+                }, 10000);
                 return;
             }
         });
@@ -43,15 +46,18 @@ export class MediaManager {
             if (result.type === "error") {
                 console.error(result.error);
                 layoutManagerActionStore.addAction({
+                    uuid: "screenSharingAccessDenied",
                     type: "warning",
                     message: "Screen sharing denied. Click here and check your browser permissions.",
                     callback: () => {
                         helpCameraSettingsVisibleStore.set(true);
-                        layoutManagerVisibilityStore.set(false);
                     },
                     userInputManager: this.userInputManager,
                 });
-                layoutManagerVisibilityStore.set(true);
+                //remove it after 10 sec
+                setTimeout(() => {
+                    layoutManagerActionStore.removeAction("screenSharingAccessDenied");
+                }, 10000);
                 return;
             }
         });

@@ -307,7 +307,7 @@ export class SocketManager implements ZoneEventListener {
                 reportPlayerMessage.getReporteduseruuid(),
                 reportPlayerMessage.getReportcomment(),
                 client.userUuid,
-                client.roomId.split("/")[2]
+                client.roomId
             );
         } catch (e) {
             console.error('An error occurred on "handleReportMessage"');

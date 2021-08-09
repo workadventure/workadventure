@@ -105,6 +105,15 @@ class ConnectionManager {
             let roomPath: string;
             if (connexionType === GameConnexionTypes.empty) {
                 roomPath = window.location.protocol + "//" + window.location.host + START_ROOM_URL;
+                //get last room path from cache api
+                try {
+                    const lastRoomUrl = await localUserStore.getLastRoomUrlCacheApi();
+                    if (lastRoomUrl != undefined) {
+                        roomPath = lastRoomUrl;
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
             } else {
                 roomPath =
                     window.location.protocol +

@@ -18,6 +18,8 @@ const state = "state";
 const nonce = "nonce";
 const notification = "notificationPermission";
 
+const cacheAPIIndex = "workavdenture-cache-v1";
+
 class LocalUserStore {
     saveUser(localUser: LocalUser) {
         localStorage.setItem("localUser", JSON.stringify(localUser));
@@ -117,9 +119,22 @@ class LocalUserStore {
 
     setLastRoomUrl(roomUrl: string): void {
         localStorage.setItem(lastRoomUrl, roomUrl.toString());
+        caches.open(cacheAPIIndex).then((cache) => {
+            const stringResponse = new Response(JSON.stringify({ roomUrl }));
+            cache.put(`/${lastRoomUrl}`, stringResponse);
+        });
     }
     getLastRoomUrl(): string {
         return localStorage.getItem(lastRoomUrl) ?? "";
+    }
+    getLastRoomUrlCacheApi(): Promise<string | undefined> {
+        return caches.open(cacheAPIIndex).then((cache) => {
+            return cache.match(`/${lastRoomUrl}`).then((res) => {
+                return res?.json().then((data) => {
+                    return data.roomUrl;
+                });
+            });
+        });
     }
 
     setAuthToken(value: string | null) {

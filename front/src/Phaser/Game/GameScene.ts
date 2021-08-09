@@ -32,7 +32,6 @@ import type { RoomConnection } from "../../Connexion/RoomConnection";
 import { Room } from "../../Connexion/Room";
 import { jitsiFactory } from "../../WebRtc/JitsiFactory";
 import { urlManager } from "../../Url/UrlManager";
-import { audioManager } from "../../WebRtc/AudioManager";
 import { TextureError } from "../../Exception/TextureError";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
@@ -84,10 +83,17 @@ import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStor
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { playersStore } from "../../Stores/PlayersStore";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
+import {
+    audioManagerFileStore,
+    audioManagerVisibilityStore,
+    audioManagerVolumeStore,
+} from "../../Stores/AudioManagerStore";
+import { PropertyUtils } from "../Map/PropertyUtils";
 import Tileset = Phaser.Tilemaps.Tileset;
 import { userIsAdminStore } from "../../Stores/GameStore";
-import { layoutManagerActionStore, layoutManagerVisibilityStore } from "../../Stores/LayoutManagerStore";
+import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { get } from "svelte/store";
+import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -198,6 +204,8 @@ export class GameScene extends DirtyScene {
     private preloading: boolean = true;
     private startPositionCalculator!: StartPositionCalculator;
     private sharedVariablesManager!: SharedVariablesManager;
+    private objectsByType = new Map<string, ITiledMapObject[]>();
+    private embeddedWebsiteManager!: EmbeddedWebsiteManager;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -337,27 +345,27 @@ export class GameScene extends DirtyScene {
         });
 
         // Scan the object layers for objects to load and load them.
-        const objects = new Map<string, ITiledMapObject[]>();
+        this.objectsByType = new Map<string, ITiledMapObject[]>();
 
         for (const layer of this.mapFile.layers) {
             if (layer.type === "objectgroup") {
                 for (const object of layer.objects) {
                     let objectsOfType: ITiledMapObject[] | undefined;
-                    if (!objects.has(object.type)) {
+                    if (!this.objectsByType.has(object.type)) {
                         objectsOfType = new Array<ITiledMapObject>();
                     } else {
-                        objectsOfType = objects.get(object.type);
+                        objectsOfType = this.objectsByType.get(object.type);
                         if (objectsOfType === undefined) {
                             throw new Error("Unexpected object type not found");
                         }
                     }
                     objectsOfType.push(object);
-                    objects.set(object.type, objectsOfType);
+                    this.objectsByType.set(object.type, objectsOfType);
                 }
             }
         }
 
-        for (const [itemType, objectsOfType] of objects) {
+        for (const [itemType, objectsOfType] of this.objectsByType) {
             // FIXME: we would ideally need for the loader to WAIT for the import to be performed, which means writing our own loader plugin.
 
             let itemFactory: ItemFactoryInterface;
@@ -457,6 +465,8 @@ export class GameScene extends DirtyScene {
         //permit to set bound collision
         this.physics.world.setBounds(0, 0, this.Map.widthInPixels, this.Map.heightInPixels);
 
+        this.embeddedWebsiteManager = new EmbeddedWebsiteManager(this);
+
         //add layer on map
         this.gameMap = new GameMap(this.mapFile, this.Map, this.Terrains);
         for (const layer of this.gameMap.flatLayers) {
@@ -476,6 +486,28 @@ export class GameScene extends DirtyScene {
                 for (const object of layer.objects) {
                     if (object.text) {
                         TextUtils.createTextFromITiledMapObject(this, object);
+                    }
+                    if (object.type === "website") {
+                        // Let's load iframes in the map
+                        const url = PropertyUtils.mustFindStringProperty(
+                            "url",
+                            object.properties,
+                            'in the "' + object.name + '" object of type "website"'
+                        );
+                        const allowApi = PropertyUtils.findBooleanProperty("allowApi", object.properties);
+
+                        // TODO: add a "allow" property to iframe
+                        this.embeddedWebsiteManager.createEmbeddedWebsite(
+                            object.name,
+                            url,
+                            object.x,
+                            object.y,
+                            object.width,
+                            object.height,
+                            object.visible,
+                            allowApi ?? false,
+                            ""
+                        );
                     }
                 }
             }
@@ -699,12 +731,12 @@ export class GameScene extends DirtyScene {
                 this.simplePeer.registerPeerConnectionListener({
                     onConnect(peer) {
                         //self.openChatIcon.setVisible(true);
-                        audioManager.decreaseVolume();
+                        audioManagerVolumeStore.setTalking(true);
                     },
                     onDisconnect(userId: number) {
                         if (self.simplePeer.getNbConnections() === 0) {
                             //self.openChatIcon.setVisible(false);
-                            audioManager.restoreVolume();
+                            audioManagerVolumeStore.setTalking(false);
                         }
                     },
                 });
@@ -792,7 +824,7 @@ export class GameScene extends DirtyScene {
         });
         this.gameMap.onPropertyChange("openWebsite", (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
-                layoutManagerVisibilityStore.set(false);
+                layoutManagerActionStore.removeAction("openWebsite");
                 coWebsiteManager.closeCoWebsite();
             } else {
                 const openWebsiteFunction = () => {
@@ -802,7 +834,7 @@ export class GameScene extends DirtyScene {
                         allProps.get("openWebsiteAllowApi") as boolean | undefined,
                         allProps.get("openWebsitePolicy") as string | undefined
                     );
-                    layoutManagerVisibilityStore.set(false);
+                    layoutManagerActionStore.removeAction("openWebsite");
                 };
 
                 const openWebsiteTriggerValue = allProps.get(TRIGGER_WEBSITE_PROPERTIES);
@@ -812,12 +844,12 @@ export class GameScene extends DirtyScene {
                         message = "Press SPACE or touch here to open web site";
                     }
                     layoutManagerActionStore.addAction({
-                        type: "openWebsite",
+                        uuid: "openWebsite",
+                        type: "message",
                         message: message,
                         callback: () => openWebsiteFunction(),
                         userInputManager: this.userInputManager,
                     });
-                    layoutManagerVisibilityStore.set(true);
                 } else {
                     openWebsiteFunction();
                 }
@@ -825,7 +857,7 @@ export class GameScene extends DirtyScene {
         });
         this.gameMap.onPropertyChange("jitsiRoom", (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
-                layoutManagerVisibilityStore.set(false);
+                layoutManagerActionStore.removeAction("jitsi");
                 this.stopJitsi();
             } else {
                 const openJitsiRoomFunction = () => {
@@ -838,7 +870,7 @@ export class GameScene extends DirtyScene {
                     } else {
                         this.startJitsi(roomName, undefined);
                     }
-                    layoutManagerVisibilityStore.set(false);
+                    layoutManagerActionStore.removeAction("jitsi");
                 };
 
                 const jitsiTriggerValue = allProps.get(TRIGGER_JITSI_PROPERTIES);
@@ -848,12 +880,12 @@ export class GameScene extends DirtyScene {
                         message = "Press SPACE or touch here to enter Jitsi Meet room";
                     }
                     layoutManagerActionStore.addAction({
-                        type: "jitsiRoom",
+                        uuid: "jitsi",
+                        type: "message",
                         message: message,
                         callback: () => openJitsiRoomFunction(),
                         userInputManager: this.userInputManager,
                     });
-                    layoutManagerVisibilityStore.set(true);
                 } else {
                     openJitsiRoomFunction();
                 }
@@ -870,14 +902,16 @@ export class GameScene extends DirtyScene {
             const volume = allProps.get(AUDIO_VOLUME_PROPERTY) as number | undefined;
             const loop = allProps.get(AUDIO_LOOP_PROPERTY) as boolean | undefined;
             newValue === undefined
-                ? audioManager.unloadAudio()
-                : audioManager.playAudio(newValue, this.getMapDirUrl(), volume, loop);
+                ? audioManagerFileStore.unloadAudio()
+                : audioManagerFileStore.playAudio(newValue, this.getMapDirUrl(), volume, loop);
+            audioManagerVisibilityStore.set(!(newValue === undefined));
         });
         // TODO: This legacy property should be removed at some point
         this.gameMap.onPropertyChange("playAudioLoop", (newValue, oldValue) => {
             newValue === undefined
-                ? audioManager.unloadAudio()
-                : audioManager.playAudio(newValue, this.getMapDirUrl(), undefined, true);
+                ? audioManagerFileStore.unloadAudio()
+                : audioManagerFileStore.playAudio(newValue, this.getMapDirUrl(), undefined, true);
+            audioManagerVisibilityStore.set(!(newValue === undefined));
         });
 
         this.gameMap.onPropertyChange("zone", (newValue, oldValue) => {
@@ -909,7 +943,7 @@ export class GameScene extends DirtyScene {
                 let html = `<div id="container" hidden><div class="nes-container with-title is-centered">
 ${escapedMessage}
  </div> `;
-                const buttonContainer = `<div class="buttonContainer"</div>`;
+                const buttonContainer = '<div class="buttonContainer"</div>';
                 html += buttonContainer;
                 let id = 0;
                 for (const button of openPopupEvent.buttons) {
@@ -1149,6 +1183,44 @@ ${escapedMessage}
                 });
             });
         });
+
+        iframeListener.registerAnswerer("triggerActionMessage", (message) =>
+            layoutManagerActionStore.addAction({
+                uuid: message.uuid,
+                type: "message",
+                message: message.message,
+                callback: () => {
+                    layoutManagerActionStore.removeAction(message.uuid);
+                    iframeListener.sendActionMessageTriggered(message.uuid);
+                },
+                userInputManager: this.userInputManager,
+            })
+        );
+
+        iframeListener.registerAnswerer("removeActionMessage", (message) => {
+            layoutManagerActionStore.removeAction(message.uuid);
+        });
+
+        this.iframeSubscriptionList.push(
+            iframeListener.modifyEmbeddedWebsiteStream.subscribe((embeddedWebsite) => {
+                // TODO
+                // TODO
+                // TODO
+                // TODO
+                // TODO
+                // TODO
+                // TODO
+                // TODO
+                // TODO
+                // TODO
+                // TODO
+                // TODO
+                // TODO
+                // TODO
+                // TODO
+                // TODO
+            })
+        );
     }
 
     private setPropertyLayer(
@@ -1216,7 +1288,7 @@ ${escapedMessage}
         let targetRoom: Room;
         try {
             targetRoom = await Room.createRoom(roomUrl);
-        } catch (e) {
+        } catch (e /*: unknown*/) {
             console.error('Error while fetching new room "' + roomUrl.toString() + '"', e);
             this.mapTransitioning = false;
             return;
@@ -1257,7 +1329,7 @@ ${escapedMessage}
         }
 
         this.stopJitsi();
-        audioManager.unloadAudio();
+        audioManagerFileStore.unloadAudio();
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
@@ -1271,7 +1343,12 @@ ${escapedMessage}
         this.biggestAvailableAreaStoreUnsubscribe();
         iframeListener.unregisterAnswerer("getState");
         iframeListener.unregisterAnswerer("loadTileset");
+        iframeListener.unregisterAnswerer("getMapData");
+        iframeListener.unregisterAnswerer("getState");
+        iframeListener.unregisterAnswerer("triggerActionMessage");
+        iframeListener.unregisterAnswerer("removeActionMessage");
         this.sharedVariablesManager?.close();
+        this.embeddedWebsiteManager?.close();
 
         mediaManager.hideGameOverlay();
 
@@ -1343,7 +1420,7 @@ ${escapedMessage}
         try {
             const room = await Room.createRoom(exitRoomPath);
             return gameManager.loadMap(room);
-        } catch (e) {
+        } catch (e /*: unknown*/) {
             console.warn('Error while pre-loading exit room "' + exitRoomPath.toString() + '"', e);
         }
     }
