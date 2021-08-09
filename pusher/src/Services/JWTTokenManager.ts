@@ -11,7 +11,8 @@ export const tokenInvalidException = "tokenInvalid";
 
 class JWTTokenManager {
     public createAuthToken(identifier: string) {
-        return Jwt.sign({ identifier }, SECRET_KEY, { expiresIn: "3d" });
+        //TODO fix me 200d when ory authentication will be available
+        return Jwt.sign({ identifier }, SECRET_KEY, { expiresIn: "200d" });
     }
 
     public decodeJWTToken(token: string): AuthTokenData {
