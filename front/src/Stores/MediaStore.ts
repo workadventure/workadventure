@@ -576,3 +576,8 @@ localStreamStore.subscribe((streamResult) => {
         }
     }
 });
+
+/**
+ * A store containing the real active media is mobile
+ */
+export const obtainedMediaConstraintIsMobileStore = writable(false);
