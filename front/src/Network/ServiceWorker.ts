@@ -8,7 +8,6 @@ export class _ServiceWorker {
     }
 
     init() {
-        console.log("NODE_ENV", NODE_ENV);
         if (NODE_ENV === "development") {
             navigator.serviceWorker
                 .register("/service-worker-dev.js")
