@@ -17,6 +17,7 @@ const MAX_EXTRAPOLATION_TIME = 100; // Extrapolate a maximum of 250ms if no new 
 export const MAX_USERNAME_LENGTH = parseInt(process.env.MAX_USERNAME_LENGTH || "") || 8;
 export const MAX_PER_GROUP = parseInt(process.env.MAX_PER_GROUP || "4");
 export const DISPLAY_TERMS_OF_USE = process.env.DISPLAY_TERMS_OF_USE == "true";
+export const NODE_ENV = process.env.NODE_ENV || "development";
 
 export const isMobile = (): boolean => window.innerWidth <= 800 || window.innerHeight <= 600;
 
