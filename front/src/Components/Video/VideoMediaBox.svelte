@@ -31,7 +31,7 @@
         <i style="background-color: {getColorByString(name)};">{name}</i>
     {/if}
     {#if $constraintStore && $constraintStore.audio === false}
-        <img src={microphoneCloseImg} alt="Muted">
+        <img src={microphoneCloseImg} class="active" alt="Muted">
     {/if}
     <button class="report" on:click={() => openReport(peer)}>
         <img alt="Report this user" src={reportImg}>

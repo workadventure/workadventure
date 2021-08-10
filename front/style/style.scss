@@ -73,6 +73,10 @@ body .message-info.warning{
         bottom: 5px;
         padding: 10px;
         z-index: 2;
+
+        &.active {
+            display: block !important;
+        }
     }
 
     img.block-logo {
