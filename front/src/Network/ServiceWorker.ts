@@ -8,6 +8,7 @@ export class _ServiceWorker {
     }
 
     init() {
+        //Check node env and if is development, use service worker dev file
         if (NODE_ENV === "development") {
             navigator.serviceWorker
                 .register("/service-worker-dev.js")
