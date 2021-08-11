@@ -7,7 +7,7 @@
     import {videoFocusStore} from "../../Stores/VideoFocusStore";
     import {showReportScreenStore} from "../../Stores/ShowReportScreenStore";
     import {getColorByString, srcObject} from "./utils";
-    import {localStreamStore, obtainedMediaConstraintIsMobileStore} from "../../Stores/MediaStore";
+    import {obtainedMediaConstraintIsMobileStore} from "../../Stores/MediaStore";
     import {onDestroy} from "svelte";
 
     export let peer: VideoPeer;
