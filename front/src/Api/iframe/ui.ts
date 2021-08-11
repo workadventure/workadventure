@@ -51,7 +51,6 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
             type: "menuItemClicked",
             typeChecker: isMenuItemClickedEvent,
             callback: (event) => {
-                console.log("BOUM : " + event.menuItem);
                 const callback = menuCallbacks.get(event.menuItem);
                 if (callback) {
                     callback(event.menuItem);
