@@ -19,6 +19,10 @@
     let decreaseWhileTalking: boolean = true;
 
     onMount(() => {
+        volume = localUserStore.getAudioPlayerVolume();
+        audioManagerVolumeStore.setMuted(localUserStore.getAudioPlayerMuted());
+        setVolume();
+
         unsubscriberFileStore = audioManagerFileStore.subscribe(() =>{
             HTMLAudioPlayer.pause();
             HTMLAudioPlayer.loop = get(audioManagerVolumeStore).loop;
