@@ -22,7 +22,6 @@
 
     let isMobile : boolean|null;
     const unsubscribe = obtainedMediaConstraintIsMobileStore.subscribe(value => {
-        console.log('unsubscribe => obtainedMediaConstraintIsMobileStore', value);
         isMobile = value;
     });
     onDestroy(unsubscribe);
