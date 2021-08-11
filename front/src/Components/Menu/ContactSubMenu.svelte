@@ -22,37 +22,37 @@
             The WorkAdventure team has its own offices in ... WorkAdventure!
             Do not hesitate to come see and talk to us.
         </p>
-        <a href="https://play.staging.workadventu.re/@tcm/workadventure/wa-village" target="_blank">Visit us</a>
+        <a class="nes-pointer" href="https://play.staging.workadventu.re/@tcm/workadventure/wa-village" target="_blank">Visit us</a>
     </section>
     <section>
         <h3>Our Mail</h3>
         <p>Although we offer a solution to reduce their use, we have an email address that allows us to receive all your requests.</p>
-        <a href="mailto:hello@workadventu.re" target="_blank">hello@workadventu.re</a>
+        <a class="nes-pointer" href="mailto:hello@workadventu.re" target="_blank">hello@workadventu.re</a>
     </section>
     <section>
         <h3>Our web site</h3>
         <p>If you want to know more about us, follow the link to our web site.</p>
-        <a href="https://workadventu.re/about-us" target="_blank">About us</a>
+        <a class="nes-pointer" href="https://workadventu.re/about-us" target="_blank">About us</a>
     </section>
     <section>
         <h3>Our social media</h3>
         <a href="https://discord.gg/YGtngdh9gt" target="_blank">
-            <img src="{discordImg}" alt="{'Discord'}">
+            <img class="nes-pointer" src="{discordImg}" alt="{'Discord'}">
         </a>
         <a href="https://www.facebook.com/workadventure.WA" target="_blank">
-            <img src="{facebookImg}" alt="{'Facebook'}">
+            <img class="nes-pointer" src="{facebookImg}" alt="{'Facebook'}">
         </a>
         <a href="https://www.instagram.com/workadventure_/" target="_blank">
-            <img src="{instagramImg}" alt="{'Instagram'}">
+            <img class="nes-pointer" src="{instagramImg}" alt="{'Instagram'}">
         </a>
         <a href="https://www.linkedin.com/company/workadventure-by-tcm/" target="_blank">
-            <img src="{linkedinImg}" alt="{'LinkedIn'}">
+            <img class="nes-pointer" src="{linkedinImg}" alt="{'LinkedIn'}">
         </a>
         <a href="https://twitter.com/Workadventure_" target="_blank">
-            <img src="{twitterImg}" alt="{'Twitter'}">
+            <img class="nes-pointer" src="{twitterImg}" alt="{'Twitter'}">
         </a>
         <a href="https://www.youtube.com/channel/UCXJ9igV-kb9gw1ftR33y5tA" target="_blank">
-            <img src="{youtubeImg}" alt="{'Youtube'}">
+            <img class="nes-pointer" src="{youtubeImg}" alt="{'Youtube'}">
         </a>
     </section>
 </div>

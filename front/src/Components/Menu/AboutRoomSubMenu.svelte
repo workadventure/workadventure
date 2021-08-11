@@ -52,7 +52,7 @@
         <button type="button" class="nes-btn is-primary" on:click={copyLink}>Copy</button>
     </section>
     <section class="presentation-map">
-        <p>This room use this map : </p>
+        <p>This room use the following map : </p>
         <h3>{mapName}</h3>
         <p class="string-HTML">{mapDescription}</p>
     </section>

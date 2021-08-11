@@ -45,7 +45,6 @@ import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
 import type { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapObject, ITiledTileSet } from "../Map/ITiledMap";
-import { MenuScene, MenuSceneName } from "../Menu/MenuScene";
 import { PlayerAnimationDirections } from "../Player/Animation";
 import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
 import { ErrorSceneName } from "../Reconnecting/ErrorScene";
@@ -1297,9 +1296,6 @@ ${escapedMessage}
         if (roomUrl.hash) {
             urlManager.pushStartLayerNameToUrl(roomUrl.hash);
         }
-
-        const menuScene: MenuScene = this.scene.get(MenuSceneName) as MenuScene;
-        menuScene.reset();
 
         if (!targetRoom.isEqual(this.room)) {
             if (this.scene.get(targetRoom.key) === null) {

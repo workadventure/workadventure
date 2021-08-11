@@ -1,32 +1,57 @@
 <script lang="typescript">
     import {fly} from "svelte/transition";
-    import type { SvelteComponent } from "svelte";
     import SettingsSubMenu from "./SettingsSubMenu.svelte";
-    import CreateMapSubMenu from "./CreateMapSubMenu.svelte";
     import ProfileSubMenu from "./ProfileSubMenu.svelte";
-    import ContactSubMenu from "./ContactSubMenu.svelte";
+    import CreateMapSubMenu from "./CreateMapSubMenu.svelte";
     import AboutRoomSubMenu from "./AboutRoomSubMenu.svelte";
-    import GlobalMessagesSubMenu from "./GlobalMessagesSubMenu.svelte";
-    import {menuVisiblilityStore} from "../../Stores/MenuStore";
+    import GlobalMessageSubMenu from "./GlobalMessagesSubMenu.svelte";
+    import ContactSubMenu from "./ContactSubMenu.svelte";
+    import CustomSubMenu from "./CustomSubMenu.svelte";
+    import {menuVisiblilityStore, SubMenusInterface, subMenusStore} from "../../Stores/MenuStore";
+    import {userIsAdminStore} from "../../Stores/GameStore";
+    import {onMount} from "svelte";
+    import {get} from "svelte/store";
 
-    //TODO: When we register a new custom menu we need to add it here
-    const SubMenus = new Map<string, typeof SvelteComponent>([
-        ['Settings', SettingsSubMenu],
-        ['Profile', ProfileSubMenu],
-        ['Create a Map', CreateMapSubMenu],
-        ['About the room', AboutRoomSubMenu],
-        ['Global Messages', GlobalMessagesSubMenu], //Remove if player has not the admin tag
-        ['Contact', ContactSubMenu] //Always last (except custom)
-    ]);
+    let activeSubMenu: string = SubMenusInterface.settings;
+    let props: { menuCommand: string } = { menuCommand: SubMenusInterface.settings};
+    let activeComponent: typeof SettingsSubMenu | typeof CustomSubMenu = SettingsSubMenu;
 
-    let activeSubMenu = 'Settings';
-    let activeComponent = SubMenus.get(activeSubMenu);
+    onMount(() => {
+        if(!get(userIsAdminStore)) {
+            subMenusStore.removeMenu(SubMenusInterface.globalMessages);
+        }
+
+        switchMenu(SubMenusInterface.settings);
+    })
 
     function switchMenu(menu: string) {
-        if (SubMenus.has(menu)) {
-            activeSubMenu = menu
-            activeComponent = SubMenus.get(activeSubMenu);
-        }
+        if (get(subMenusStore).find((subMenu) => subMenu === menu)) {
+            activeSubMenu = menu;
+            props = {menuCommand: menu};
+            switch (menu) {
+                case SubMenusInterface.settings:
+                    activeComponent = SettingsSubMenu;
+                    break;
+                case SubMenusInterface.profile:
+                    activeComponent = ProfileSubMenu;
+                    break;
+                case SubMenusInterface.createMap:
+                    activeComponent = CreateMapSubMenu;
+                    break;
+                case SubMenusInterface.aboutRoom:
+                    activeComponent = AboutRoomSubMenu;
+                    break;
+                case SubMenusInterface.globalMessages:
+                    activeComponent = GlobalMessageSubMenu;
+                    break;
+                case SubMenusInterface.contact:
+                    activeComponent = ContactSubMenu;
+                    break;
+                default:
+                    activeComponent = CustomSubMenu;
+                    break;
+            }
+        } else throw ("There is no menu called " + menu);
     }
 
     function closeMenu() {
@@ -46,16 +71,16 @@
     <div class="menu-nav-sidebar nes-container is-rounded" transition:fly="{{ x: -1000, duration: 500 }}">
         <h2>Menu</h2>
         <nav>
-            {#each [...SubMenus] as [submenuKey, submenuComponent]}
-                <button type="button" class="nes-btn {activeComponent === submenuComponent ? 'is-disabled' : ''}" on:click|preventDefault={() => switchMenu(submenuKey)}>{submenuKey}</button>
+            {#each $subMenusStore as submenu}
+                <button type="button" class="nes-btn {activeSubMenu === submenu ? 'is-disabled' : ''}" on:click|preventDefault={() => switchMenu(submenu)}>
+                    {submenu}
+                </button>
             {/each}
         </nav>
     </div>
     <div class="menu-submenu-container nes-container is-rounded" transition:fly="{{ y: -1000, duration: 500 }}">
         <h2>{activeSubMenu}</h2>
-        {#if activeComponent}
-            <svelte:component this="{activeComponent}"/>
-        {/if}
+        <svelte:component this={activeComponent} {...props}/>
     </div>
 </div>
 
@@ -65,7 +90,7 @@
   }
 
   div.menu-container-main {
-    --size-first-columns-grid: 15%; //TODO: clamp value
+    --size-first-columns-grid: 15%;
 
     font-family: "Press Start 2P";
     pointer-events: auto;

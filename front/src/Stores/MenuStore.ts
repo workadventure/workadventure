@@ -23,3 +23,46 @@ function createWarningContainerStore() {
 }
 
 export const warningContainerStore = createWarningContainerStore();
+
+export enum SubMenusInterface {
+    settings = "Settings",
+    profile = "Profile",
+    createMap = "Create a Map",
+    aboutRoom = "About the Room",
+    globalMessages = "Global Messages",
+    contact = "Contact",
+}
+
+function createSubMenusStore() {
+    const { subscribe, update } = writable<string[]>([
+        SubMenusInterface.settings,
+        SubMenusInterface.profile,
+        SubMenusInterface.createMap,
+        SubMenusInterface.aboutRoom,
+        SubMenusInterface.globalMessages,
+        SubMenusInterface.contact,
+    ]);
+
+    return {
+        subscribe,
+        addMenu(menuCommand: string) {
+            update((menuList: string[]) => {
+                if (!menuList.find((menu) => menu === menuCommand)) {
+                    menuList.push(menuCommand);
+                }
+                return menuList;
+            });
+        },
+        removeMenu(menuCommand: string) {
+            update((menuList: string[]) => {
+                const index = menuList.findIndex((menu) => menu === menuCommand);
+                if (index !== -1) {
+                    menuList.splice(index, 1);
+                }
+                return menuList;
+            });
+        },
+    };
+}
+
+export const subMenusStore = createSubMenusStore();

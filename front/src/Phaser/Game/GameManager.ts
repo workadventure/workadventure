@@ -1,7 +1,6 @@
 import { GameScene } from "./GameScene";
 import { connectionManager } from "../../Connexion/ConnectionManager";
 import type { Room } from "../../Connexion/Room";
-import { MenuScene, MenuSceneName } from "../Menu/MenuScene";
 import { LoginSceneName } from "../Login/LoginScene";
 import { SelectCharacterSceneName } from "../Login/SelectCharacterScene";
 import { EnableCameraSceneName } from "../Login/EnableCameraScene";
@@ -85,7 +84,6 @@ export class GameManager {
     public goToStartingMap(): void {
         console.log("starting " + (this.currentGameSceneName || this.startRoom.key));
         this.scenePlugin.start(this.currentGameSceneName || this.startRoom.key);
-        this.scenePlugin.launch(MenuSceneName);
 
         if (
             !localUserStore.getHelpCameraSettingsShown() &&
@@ -98,8 +96,6 @@ export class GameManager {
 
     public gameSceneIsCreated(scene: GameScene) {
         this.currentGameSceneName = scene.scene.key;
-        const menuScene: MenuScene = scene.scene.get(MenuSceneName) as MenuScene;
-        menuScene.revealMenuIcon();
         menuIconVisiblilityStore.set(true);
     }
 
@@ -112,7 +108,7 @@ export class GameManager {
         const gameScene: GameScene = this.scenePlugin.get(this.currentGameSceneName) as GameScene;
         gameScene.cleanupClosingScene();
         this.scenePlugin.stop(this.currentGameSceneName);
-        this.scenePlugin.sleep(MenuSceneName);
+        menuIconVisiblilityStore.set(false);
         if (!this.scenePlugin.get(targetSceneName)) {
             this.scenePlugin.add(targetSceneName, sceneClass, false);
         }
@@ -125,7 +121,7 @@ export class GameManager {
     tryResumingGame(fallbackSceneName: string) {
         if (this.currentGameSceneName) {
             this.scenePlugin.start(this.currentGameSceneName);
-            this.scenePlugin.wake(MenuSceneName);
+            menuIconVisiblilityStore.set(true);
         } else {
             this.scenePlugin.run(fallbackSceneName);
         }

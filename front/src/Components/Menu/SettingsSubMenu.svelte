@@ -54,7 +54,7 @@ function changeNotification() {
 <div class="settings-main" on:submit|preventDefault={saveSetting}>
     <section>
         <h3>Game quality</h3>
-            <select bind:value={valueGame}>
+            <select class="nes-pointer" bind:value={valueGame}>
                 <option value="{120}">High video quality (120 fps)</option>
                 <option value="{60}">Medium video quality (60 fps, recommended)</option>
                 <option value="{40}">Minimum video quality (40 fps)</option>
@@ -63,7 +63,7 @@ function changeNotification() {
     </section>
     <section>
         <h3>Video quality</h3>
-            <select bind:value={valueVideo}>
+            <select class="nes-pointer" bind:value={valueVideo}>
                 <option value="{30}">High video quality (30 fps)</option>
                 <option value="{20}">Medium video quality (20 fps, recommended)</option>
                 <option value="{10}">Minimum video quality (10 fps)</option>

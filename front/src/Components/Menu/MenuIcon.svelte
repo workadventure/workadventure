@@ -2,13 +2,21 @@
     import {menuVisiblilityStore} from "../../Stores/MenuStore";
     import {get} from "svelte/store";
 
-    function openMenu(){
+    function showMenu(){
         menuVisiblilityStore.set(!get(menuVisiblilityStore))
+    }
+
+    function onKeyDown(e: KeyboardEvent) {
+        if (e.key === "Tab") {
+            showMenu();
+        }
     }
 </script>
 
+<svelte:window on:keydown={onKeyDown}/>
+
 <main class="menuIcon">
-    <img src="/static/images/logo-WA-min.png" alt="open menu" on:click|preventDefault={openMenu}>
+    <img src="/static/images/logo-WA-min.png" alt="open menu" class="nes-pointer" on:click|preventDefault={showMenu}>
 </main>
 
 <style lang="scss">
@@ -18,7 +26,6 @@
     img {
       width: 60px;
       padding-top: 0;
-      //cursor: url('/resources/logos/cursor_pointer.png'), pointer;
     }
   }
   @media only screen and (max-height: 700px) {
