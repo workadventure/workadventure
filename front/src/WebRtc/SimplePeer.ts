@@ -13,6 +13,7 @@ import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { discussionManager } from "./DiscussionManager";
 import { playersStore } from "../Stores/PlayersStore";
 import { newChatMessageStore } from "../Stores/ChatStore";
+import { isMobile } from "../Enum/EnvironmentVariable";
 
 export interface UserSimplePeerInterface {
     userId: number;
@@ -391,7 +392,13 @@ export class SimplePeer {
             }
 
             PeerConnection.write(
-                new Buffer(JSON.stringify({ type: MESSAGE_TYPE_CONSTRAINT, ...streamResult.constraints }))
+                new Buffer(
+                    JSON.stringify({
+                        type: MESSAGE_TYPE_CONSTRAINT,
+                        ...streamResult.constraints,
+                        isMobile: isMobile(),
+                    })
+                )
             );
 
             if (streamResult.type === "error") {

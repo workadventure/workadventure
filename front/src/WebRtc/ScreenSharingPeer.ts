@@ -5,6 +5,7 @@ import type { UserSimplePeerInterface } from "./SimplePeer";
 import { Readable, readable } from "svelte/store";
 import { videoFocusStore } from "../Stores/VideoFocusStore";
 import { getIceServersConfig } from "../Components/Video/utils";
+import { isMobile } from "../Enum/EnvironmentVariable";
 
 const Peer: SimplePeerNamespace.SimplePeer = require("simple-peer");
 
@@ -175,6 +176,8 @@ export class ScreenSharingPeer extends Peer {
 
     public stopPushingScreenSharingToRemoteUser(stream: MediaStream) {
         this.removeStream(stream);
-        this.write(new Buffer(JSON.stringify({ type: MESSAGE_TYPE_CONSTRAINT, streamEnded: true })));
+        this.write(
+            new Buffer(JSON.stringify({ type: MESSAGE_TYPE_CONSTRAINT, streamEnded: true, isMobile: isMobile() }))
+        );
     }
 }

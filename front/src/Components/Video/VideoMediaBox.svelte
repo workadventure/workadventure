@@ -7,6 +7,8 @@
     import {videoFocusStore} from "../../Stores/VideoFocusStore";
     import {showReportScreenStore} from "../../Stores/ShowReportScreenStore";
     import {getColorByString, srcObject} from "./utils";
+    import {obtainedMediaConstraintIsMobileStore} from "../../Stores/MediaStore";
+    import {onDestroy} from "svelte";
 
     export let peer: VideoPeer;
     let streamStore = peer.streamStore;
@@ -17,6 +19,12 @@
     function openReport(peer: VideoPeer): void {
         showReportScreenStore.set({ userId:peer.userId, userName: peer.userName });
     }
+
+    let isMobile : boolean|null;
+    const unsubscribe = obtainedMediaConstraintIsMobileStore.subscribe(value => {
+        isMobile = value;
+    });
+    onDestroy(unsubscribe);
 
 </script>
 
@@ -31,13 +39,13 @@
         <i style="background-color: {getColorByString(name)};">{name}</i>
     {/if}
     {#if $constraintStore && $constraintStore.audio === false}
-        <img src={microphoneCloseImg} alt="Muted">
+        <img src={microphoneCloseImg} class="active" alt="Muted">
     {/if}
     <button class="report" on:click={() => openReport(peer)}>
         <img alt="Report this user" src={reportImg}>
         <span>Report/Block</span>
     </button>
-    <video use:srcObject={$streamStore} autoplay playsinline on:click={() => videoFocusStore.toggleFocus(peer)}></video>
+    <video class:mobile="{isMobile === true}" use:srcObject={$streamStore} autoplay playsinline on:click={() => videoFocusStore.toggleFocus(peer)}></video>
     <img src={blockSignImg} class="block-logo" alt="Block" />
     {#if $constraintStore && $constraintStore.audio !== false}
         <SoundMeterWidget stream={$streamStore}></SoundMeterWidget>

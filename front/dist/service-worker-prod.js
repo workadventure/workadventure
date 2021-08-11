@@ -1,4 +1,4 @@
-let CACHE_NAME = 'workavdenture-cache-v1';
+let CACHE_NAME = 'workavdenture-cache-v1.4.14';
 let urlsToCache = [
     '/'
 ];
