@@ -79,6 +79,58 @@ Example :
 WA.room.setProperty('wikiLayer', 'openWebsite', 'https://www.wikipedia.org/');
 ```
 
+### Get the room id
+
+```
+WA.room.id: string;
+```
+
+The ID of the current room is available from the `WA.room.id` property.
+
+{.alert.alert-info}
+You need to wait for the end of the initialization before accessing `WA.room.id`
+
+```typescript
+WA.onInit().then(() => {
+    console.log('Room id: ', WA.room.id);
+    // Will output something like: 'https://play.workadventu.re/@/myorg/myworld/myroom', or 'https://play.workadventu.re/_/global/mymap.org/map.json"
+})
+```
+
+### Get the map URL
+
+```
+WA.room.mapURL: string;
+```
+
+The URL of the map is available from the `WA.room.mapURL` property.
+
+{.alert.alert-info}
+You need to wait for the end of the initialization before accessing `WA.room.mapURL`
+
+```typescript
+WA.onInit().then(() => {
+    console.log('Map URL: ', WA.room.mapURL);
+    // Will output something like: 'https://mymap.org/map.json"
+})
+```
+
+
+
+### Getting map data
+```
+WA.room.getTiledMap(): Promise<ITiledMap>
+```
+
+Returns a promise that resolves to the JSON map file.
+
+```javascript
+const map = await WA.room.getTiledMap();
+console.log("Map generated with Tiled version ", map.tiledversion);
+```
+
+Check the [Tiled documentation to learn more about the format of the JSON map](https://doc.mapeditor.org/en/stable/reference/json-map-format/).
+
 ### Changing tiles 
 ```
 WA.room.setTiles(tiles: TileDescriptor[]): void
@@ -111,3 +163,115 @@ WA.room.setTiles([
                 {x: 9, y: 4, tile: 'blue', layer: 'setTiles'}
                 ]);
 ```
+
+### Loading a tileset
+```
+WA.room.loadTileset(url: string): Promise<number>
+```
+Load a tileset in JSON format from an url and return the id of the first tile of the loaded tileset.
+
+You can create a tileset file in Tile Editor.
+
+```javascript
+WA.room.loadTileset("Assets/Tileset.json").then((firstId) => {
+    WA.room.setTiles([{x: 4, y: 4, tile: firstId, layer: 'bottom'}]);
+})
+```
+
+
+## Embedding websites in a map
+
+You can use the scripting API to embed websites in a map, or to edit websites that are already embedded (using the ["website" objects](website-in-map.md)).
+
+### Getting an instance of a website already embedded in the map
+
+```
+WA.room.website.get(objectName: string): Promise<EmbeddedWebsite>
+```
+
+You can get an instance of an embedded website by using the `WA.room.website.get()` method.
+It returns a promise of an `EmbeddedWebsite` instance.
+
+```javascript
+// Get an existing website object where 'my_website' is the name of the object (on any layer object of the map)
+const website = await WA.room.website.get('my_website');
+website.url = 'https://example.com';
+website.visible = true;
+```
+
+
+### Adding a new website in a map
+
+```
+WA.room.website.create(website: CreateEmbeddedWebsiteEvent): EmbeddedWebsite
+
+interface CreateEmbeddedWebsiteEvent {
+    name: string;       // A unique name for this iframe
+    url: string;        // The URL the iframe points to.
+    position: {
+        x: number,      // In pixels, relative to the map coordinates
+        y: number,      // In pixels, relative to the map coordinates
+        width: number,  // In pixels, sensitive to zoom level
+        height: number, // In pixels, sensitive to zoom level
+    },
+    visible?: boolean,  // Whether to display the iframe or not
+    allowApi?: boolean, // Whether the scripting API should be available to the iframe
+    allow?: string,     // The list of feature policies allowed
+}
+```
+
+You can create an instance of an embedded website by using the `WA.room.website.create()` method.
+It returns an `EmbeddedWebsite` instance.
+
+```javascript
+// Create a new website object
+const website = WA.room.website.create({
+    name: "my_website",
+    url: "https://example.com",
+    position: {
+        x: 64,
+        y: 128,
+        width: 320,
+        height: 240,
+    },
+    visible: true,
+    allowApi: true,
+    allow: "fullscreen",
+});
+```
+
+### Deleting a website from a map
+
+```
+WA.room.website.delete(name: string): Promise<void>
+```
+
+Use `WA.room.website.delete` to completely remove an embedded website from your map. 
+
+
+### The EmbeddedWebsite class
+
+Instances of the `EmbeddedWebsite` class represent the website displayed on the map.
+
+```typescript
+class EmbeddedWebsite {
+    readonly name: string;
+    url: string;
+    visible: boolean;
+    allow: string;
+    allowApi: boolean;
+    x: number;         // In pixels, relative to the map coordinates
+    y: number;         // In pixels, relative to the map coordinates
+    width: number;     // In pixels, sensitive to zoom level
+    height: number;    // In pixels, sensitive to zoom level
+}
+```
+
+When you modify a property of an `EmbeddedWebsite` instance, the iframe is automatically modified in the map.
+
+
+{.alert.alert-warning}
+The websites you add/edit/delete via the scripting API are only shown locally. If you want them 
+to be displayed for every player, you can use [variables](api-start.md) to share a common state
+between all users.
+

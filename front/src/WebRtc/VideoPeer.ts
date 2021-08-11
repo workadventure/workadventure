@@ -5,10 +5,11 @@ import { blackListManager } from "./BlackListManager";
 import type { Subscription } from "rxjs";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { get, readable, Readable, Unsubscriber } from "svelte/store";
-import { obtainedMediaConstraintStore } from "../Stores/MediaStore";
+import { obtainedMediaConstraintIsMobileStore, obtainedMediaConstraintStore } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
 import { chatMessagesStore, chatVisibilityStore, newChatMessageStore } from "../Stores/ChatStore";
 import { getIceServersConfig } from "../Components/Video/utils";
+import { isMobile } from "../Enum/EnvironmentVariable";
 
 const Peer: SimplePeerNamespace.SimplePeer = require("simple-peer");
 
@@ -167,6 +168,9 @@ export class VideoPeer extends Peer {
                 } else {
                     mediaManager.disabledVideoByUserId(this.userId);
                 }
+                if (message.isMobile != undefined) {
+                    obtainedMediaConstraintIsMobileStore.set(message.isMobile);
+                }
             } else if (message.type === MESSAGE_TYPE_MESSAGE) {
                 if (!blackListManager.isBlackListed(this.userUuid)) {
                     chatMessagesStore.addExternalMessage(this.userId, message.message);
@@ -281,7 +285,13 @@ export class VideoPeer extends Peer {
     private pushVideoToRemoteUser(localStream: MediaStream | null) {
         try {
             this.write(
-                new Buffer(JSON.stringify({ type: MESSAGE_TYPE_CONSTRAINT, ...get(obtainedMediaConstraintStore) }))
+                new Buffer(
+                    JSON.stringify({
+                        type: MESSAGE_TYPE_CONSTRAINT,
+                        ...get(obtainedMediaConstraintStore),
+                        isMobile: isMobile(),
+                    })
+                )
             );
 
             if (!localStream) {

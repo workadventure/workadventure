@@ -1,43 +1,34 @@
-import * as TypeMessages from "./TypeMessage";
-import {Banned} from "./TypeMessage";
-import {adminMessagesService} from "../Connexion/AdminMessagesService";
-
-export interface TypeMessageInterface {
-    showMessage(message: string): void;
-}
+import { AdminMessageEventTypes, adminMessagesService } from "../Connexion/AdminMessagesService";
+import { textMessageContentStore, textMessageVisibleStore } from "../Stores/TypeMessageStore/TextMessageStore";
+import { soundPlayingStore } from "../Stores/SoundPlayingStore";
+import { UPLOADER_URL } from "../Enum/EnvironmentVariable";
+import { banMessageContentStore, banMessageVisibleStore } from "../Stores/TypeMessageStore/BanMessageStore";
 
 class UserMessageManager {
-
-    typeMessages: Map<string, TypeMessageInterface> = new Map<string, TypeMessageInterface>();
     receiveBannedMessageListener!: Function;
 
     constructor() {
-        const valueTypeMessageTab = Object.values(TypeMessages);
-        Object.keys(TypeMessages).forEach((value: string, index: number) => {
-            const typeMessageInstance: TypeMessageInterface = (new valueTypeMessageTab[index]() as TypeMessageInterface);
-            this.typeMessages.set(value.toLowerCase(), typeMessageInstance);
-        });
-
         adminMessagesService.messageStream.subscribe((event) => {
-            const typeMessage = this.showMessage(event.type, event.text);
-            if(typeMessage instanceof Banned) {
+            textMessageVisibleStore.set(false);
+            banMessageVisibleStore.set(false);
+            if (event.type === AdminMessageEventTypes.admin) {
+                textMessageContentStore.set(event.text);
+                textMessageVisibleStore.set(true);
+            } else if (event.type === AdminMessageEventTypes.audio) {
+                soundPlayingStore.playSound(UPLOADER_URL + event.text);
+            } else if (event.type === AdminMessageEventTypes.ban) {
+                banMessageContentStore.set(event.text);
+                banMessageVisibleStore.set(true);
+            } else if (event.type === AdminMessageEventTypes.banned) {
+                banMessageContentStore.set(event.text);
+                banMessageVisibleStore.set(true);
                 this.receiveBannedMessageListener();
             }
-        })
+        });
     }
 
-    showMessage(type: string, message: string) {
-        const classTypeMessage = this.typeMessages.get(type.toLowerCase());
-        if (!classTypeMessage) {
-            console.error('Message unknown');
-            return;
-        }
-        classTypeMessage.showMessage(message);
-        return classTypeMessage;
-    }
-
-    setReceiveBanListener(callback: Function){
+    setReceiveBanListener(callback: Function) {
         this.receiveBannedMessageListener = callback;
     }
 }
-export const userMessageManager = new UserMessageManager()
+export const userMessageManager = new UserMessageManager();

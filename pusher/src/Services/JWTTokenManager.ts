@@ -1,100 +1,26 @@
 import { ADMIN_API_URL, ALLOW_ARTILLERY, SECRET_KEY } from "../Enum/EnvironmentVariable";
 import { uuid } from "uuidv4";
-import Jwt from "jsonwebtoken";
+import Jwt, { verify } from "jsonwebtoken";
 import { TokenInterface } from "../Controller/AuthenticateController";
 import { adminApi, AdminBannedData } from "../Services/AdminApi";
 
+export interface AuthTokenData {
+    identifier: string; //will be a email if logged in or an uuid if anonymous
+}
+export const tokenInvalidException = "tokenInvalid";
+
 class JWTTokenManager {
-    public createJWTToken(userUuid: string) {
-        return Jwt.sign({ userUuid: userUuid }, SECRET_KEY, { expiresIn: "200d" }); //todo: add a mechanic to refresh or recreate token
+    public createAuthToken(identifier: string) {
+        //TODO fix me 200d when ory authentication will be available
+        return Jwt.sign({ identifier }, SECRET_KEY, { expiresIn: "200d" });
     }
 
-    public async getUserUuidFromToken(token: unknown, ipAddress?: string, roomUrl?: string): Promise<string> {
-        if (!token) {
-            throw new Error("An authentication error happened, a user tried to connect without a token.");
+    public decodeJWTToken(token: string): AuthTokenData {
+        try {
+            return Jwt.verify(token, SECRET_KEY, { ignoreExpiration: false }) as AuthTokenData;
+        } catch (e) {
+            throw { reason: tokenInvalidException, message: e.message };
         }
-        if (typeof token !== "string") {
-            throw new Error("Token is expected to be a string");
-        }
-
-        if (token === "test") {
-            if (ALLOW_ARTILLERY) {
-                return uuid();
-            } else {
-                throw new Error(
-                    "In order to perform a load-testing test on this environment, you must set the ALLOW_ARTILLERY environment variable to 'true'"
-                );
-            }
-        }
-
-        return new Promise<string>((resolve, reject) => {
-            Jwt.verify(token, SECRET_KEY, {}, (err, tokenDecoded) => {
-                const tokenInterface = tokenDecoded as TokenInterface;
-                if (err) {
-                    console.error("An authentication error happened, invalid JsonWebToken.", err);
-                    reject(new Error("An authentication error happened, invalid JsonWebToken. " + err.message));
-                    return;
-                }
-                if (tokenDecoded === undefined) {
-                    console.error("Empty token found.");
-                    reject(new Error("Empty token found."));
-                    return;
-                }
-
-                //verify token
-                if (!this.isValidToken(tokenInterface)) {
-                    reject(new Error("Authentication error, invalid token structure."));
-                    return;
-                }
-
-                if (ADMIN_API_URL) {
-                    //verify user in admin
-                    let promise = new Promise((resolve) => resolve());
-                    if (ipAddress && roomUrl) {
-                        promise = this.verifyBanUser(tokenInterface.userUuid, ipAddress, roomUrl);
-                    }
-                    promise
-                        .then(() => {
-                            adminApi
-                                .fetchCheckUserByToken(tokenInterface.userUuid)
-                                .then(() => {
-                                    resolve(tokenInterface.userUuid);
-                                })
-                                .catch((err) => {
-                                    //anonymous user
-                                    if (err.response && err.response.status && err.response.status === 404) {
-                                        resolve(tokenInterface.userUuid);
-                                        return;
-                                    }
-                                    reject(err);
-                                });
-                        })
-                        .catch((err) => {
-                            reject(err);
-                        });
-                } else {
-                    resolve(tokenInterface.userUuid);
-                }
-            });
-        });
-    }
-
-    private verifyBanUser(userUuid: string, ipAddress: string, roomUrl: string): Promise<AdminBannedData> {
-        return adminApi
-            .verifyBanUser(userUuid, ipAddress, roomUrl)
-            .then((data: AdminBannedData) => {
-                if (data && data.is_banned) {
-                    throw new Error("User was banned");
-                }
-                return data;
-            })
-            .catch((err) => {
-                throw err;
-            });
-    }
-
-    private isValidToken(token: object): token is TokenInterface {
-        return !(typeof (token as TokenInterface).userUuid !== "string");
     }
 }
 

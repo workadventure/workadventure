@@ -189,7 +189,7 @@ module.exports = {
             DISABLE_NOTIFICATIONS: false,
             PUSHER_URL: undefined,
             UPLOADER_URL: null,
-            ADMIN_URL: null,
+            ADMIN_URL: undefined,
             DEBUG_MODE: null,
             STUN_SERVER: null,
             TURN_SERVER: null,
@@ -201,6 +201,7 @@ module.exports = {
             MAX_USERNAME_LENGTH: 8,
             MAX_PER_GROUP: 4,
             DISPLAY_TERMS_OF_USE: false,
+            NODE_ENV: mode,
         }),
     ],
 } as Configuration & WebpackDevServer.Configuration;
