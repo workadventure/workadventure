@@ -1,4 +1,4 @@
-let CACHE_NAME = 'workavdenture-cache-v1';
+let CACHE_NAME = 'workavdenture-cache-dev';
 let urlsToCache = [
     '/'
 ];
@@ -14,16 +14,7 @@ self.addEventListener('install', function(event) {
 });
 
 self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        caches.match(event.request)
-            .then((response) => {
-                return fetch(event.request).then((response) => {
-                        //Dev service worker, just return reponse
-                        return response;
-                    }
-                );
-            })
-    );
+    //never cache data will be stored in dev mode
 });
 
 self.addEventListener('wait', function(event) {

@@ -201,7 +201,7 @@ module.exports = {
             MAX_USERNAME_LENGTH: 8,
             MAX_PER_GROUP: 4,
             DISPLAY_TERMS_OF_USE: false,
-            NODE_ENV: "development",
+            NODE_ENV: mode,
         }),
     ],
 } as Configuration & WebpackDevServer.Configuration;
