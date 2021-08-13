@@ -915,9 +915,10 @@ export class GameScene extends DirtyScene {
         });
 
         this.gameMap.onPropertyChange("zone", (newValue, oldValue) => {
-            if (newValue === undefined || newValue === false || newValue === "") {
+            if (oldValue) {
                 iframeListener.sendLeaveEvent(oldValue as string);
-            } else {
+            }
+            if (newValue) {
                 iframeListener.sendEnterEvent(newValue as string);
             }
         });
@@ -1344,7 +1345,6 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("getState");
         iframeListener.unregisterAnswerer("loadTileset");
         iframeListener.unregisterAnswerer("getMapData");
-        iframeListener.unregisterAnswerer("getState");
         iframeListener.unregisterAnswerer("triggerActionMessage");
         iframeListener.unregisterAnswerer("removeActionMessage");
         this.sharedVariablesManager?.close();
