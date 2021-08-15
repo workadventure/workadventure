@@ -6,7 +6,8 @@ import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 import { GameRoomPolicyTypes } from "../Model/PusherRoom";
 import { MapDetailsData } from "../Services/AdminApi/MapDetailsData";
 import { socketManager } from "../Services/SocketManager";
-import { jwtTokenManager } from "../Services/JWTTokenManager";
+import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
+import { v4 } from "uuid";
 
 export class MapController extends BaseController {
     constructor(private App: TemplatedApp) {
@@ -71,8 +72,16 @@ export class MapController extends BaseController {
                 try {
                     let userId: string | undefined = undefined;
                     if (query.authToken != undefined) {
-                        const authTokenData = jwtTokenManager.decodeJWTToken(query.authToken as string);
-                        userId = authTokenData.identifier;
+                        let authTokenData: AuthTokenData;
+                        try {
+                            authTokenData = jwtTokenManager.verifyJWTToken(query.authToken as string);
+                            userId = authTokenData.identifier;
+                        } catch (e) {
+                            // Decode token, in this case we don't need to create new token.
+                            authTokenData = jwtTokenManager.verifyJWTToken(query.authToken as string, true);
+                            userId = authTokenData.identifier;
+                            console.info("JWT expire, but decoded", userId);
+                        }
                     }
                     const mapDetails = await adminApi.fetchMapDetails(query.playUri as string, userId);
 
