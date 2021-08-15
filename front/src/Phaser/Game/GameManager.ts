@@ -39,7 +39,8 @@ export class GameManager {
         } else if (this.cameraSetup == undefined) {
             return EnableCameraSceneName;
         } else {
-            this.goToStartingMap(scenePlugin);
+            this.activeMenuSceneAndHelpCameraSettings(scenePlugin);
+            return this.startRoom.key;
         }
     }
 
@@ -85,6 +86,15 @@ export class GameManager {
     public goToStartingMap(scenePlugin: Phaser.Scenes.ScenePlugin): void {
         console.log("starting " + (this.currentGameSceneName || this.startRoom.key));
         scenePlugin.start(this.currentGameSceneName || this.startRoom.key);
+        this.activeMenuSceneAndHelpCameraSettings(scenePlugin);
+    }
+
+    /**
+     * @param scenePlugin
+     * @private
+     * @return void
+     */
+    private activeMenuSceneAndHelpCameraSettings(scenePlugin: Phaser.Scenes.ScenePlugin): void {
         scenePlugin.launch(MenuSceneName);
 
         if (
