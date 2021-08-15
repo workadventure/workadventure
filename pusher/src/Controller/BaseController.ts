@@ -29,7 +29,12 @@ export class BaseController {
         if (e.response) {
             res.writeStatus(e.response.status + " " + e.response.statusText);
             this.addCorsHeaders(res);
-            res.end("An error occurred: " + e.response.status + " " + e.response.statusText);
+            res.end(
+                "An error occurred: " +
+                    e.response.status +
+                    " " +
+                    (e.response.data && e.response.data.message ? e.response.data.message : e.response.statusText)
+            );
         } else {
             res.writeStatus("500 Internal Server Error");
             this.addCorsHeaders(res);
