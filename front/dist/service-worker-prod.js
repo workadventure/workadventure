@@ -1,4 +1,4 @@
-let CACHE_NAME = 'workavdenture-cache-v1';
+let CACHE_NAME = 'workavdenture-cache-v1.4.14';
 let urlsToCache = [
     '/'
 ];
@@ -8,7 +8,6 @@ self.addEventListener('install', function(event) {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(function(cache) {
-                console.log('Opened cache');
                 return cache.addAll(urlsToCache);
             })
     );

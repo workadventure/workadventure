@@ -5,6 +5,8 @@ import { adminApi } from "../Services/AdminApi";
 import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 import { GameRoomPolicyTypes } from "../Model/PusherRoom";
 import { MapDetailsData } from "../Services/AdminApi/MapDetailsData";
+import { socketManager } from "../Services/SocketManager";
+import { jwtTokenManager } from "../Services/JWTTokenManager";
 
 export class MapController extends BaseController {
     constructor(private App: TemplatedApp) {
@@ -67,7 +69,12 @@ export class MapController extends BaseController {
 
             (async () => {
                 try {
-                    const mapDetails = await adminApi.fetchMapDetails(query.playUri as string);
+                    let userId: string | undefined = undefined;
+                    if (query.authToken != undefined) {
+                        const authTokenData = jwtTokenManager.decodeJWTToken(query.authToken as string);
+                        userId = authTokenData.identifier;
+                    }
+                    const mapDetails = await adminApi.fetchMapDetails(query.playUri as string, userId);
 
                     res.writeStatus("200 OK");
                     this.addCorsHeaders(res);

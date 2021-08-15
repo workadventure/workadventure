@@ -33,6 +33,10 @@
     import {textMessageVisibleStore} from "../Stores/TypeMessageStore/TextMessageStore";
     import {warningContainerStore} from "../Stores/MenuStore";
     import WarningContainer from "./WarningContainer/WarningContainer.svelte";
+    import {layoutManagerVisibilityStore} from "../Stores/LayoutManagerStore";
+    import LayoutManager from "./LayoutManager/LayoutManager.svelte";
+    import {audioManagerVisibilityStore} from "../Stores/AudioManagerStore";
+    import AudioManager from "./AudioManager/AudioManager.svelte"
 
     export let game: Game;
 
@@ -78,6 +82,16 @@
     <div>
         <AudioPlaying url={$soundPlayingStore} />
     </div>
+    {/if}
+    {#if $audioManagerVisibilityStore}
+    <div>
+        <AudioManager></AudioManager>
+    </div>
+    {/if}
+    {#if $layoutManagerVisibilityStore}
+        <div>
+            <LayoutManager></LayoutManager>
+        </div>
     {/if}
     {#if $gameOverlayVisibilityStore}
         <div>
