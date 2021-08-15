@@ -28,6 +28,10 @@ export class GameManager {
 
     public async init(scenePlugin: Phaser.Scenes.ScenePlugin): Promise<string> {
         this.startRoom = await connectionManager.initGameConnexion();
+        const titleElement = document.getElementById("titleWebPage");
+        if (titleElement != undefined) {
+            titleElement.innerText = `WorkAdventure ${this.startRoom.key}`;
+        }
         this.loadMap(this.startRoom, scenePlugin);
 
         if (!this.playerName) {
