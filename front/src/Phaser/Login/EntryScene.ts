@@ -1,6 +1,6 @@
 import { gameManager } from "../Game/GameManager";
 import { Scene } from "phaser";
-import { ErrorScene } from "../Reconnecting/ErrorScene";
+import { ErrorScene, ErrorSceneName } from "../Reconnecting/ErrorScene";
 import { WAError } from "../Reconnecting/WAError";
 import { waScaleManager } from "../Services/WaScaleManager";
 
@@ -32,6 +32,17 @@ export class EntryScene extends Scene {
                         new WAError(
                             "Access link incorrect",
                             "Could not find map. Please check your access link.",
+                            "If you want more information, you may contact administrator or contact us at: hello@workadventu.re"
+                        ),
+                        this.scene
+                    );
+                } else if (err.response && err.response.status == 403) {
+                    ErrorScene.showError(
+                        new WAError(
+                            "Connection rejected",
+                            "You cannot join the World. Try again later" +
+                                (err.response.data ? ". \n\r \n\r" + `${err.response.data}` : "") +
+                                ".",
                             "If you want more information, you may contact administrator or contact us at: hello@workadventu.re"
                         ),
                         this.scene
