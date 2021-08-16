@@ -30,23 +30,13 @@ class ConnectionManager {
     }
 
     /**
-     * @return Promise<void>
+     * @return void
      */
-    public loadOpenIDScreen(): Promise<void> {
+    public loadOpenIDScreen(): Promise<void> | void {
         const state = localUserStore.generateState();
         const nonce = localUserStore.generateNonce();
         localUserStore.setAuthToken(null);
-
-        //TODO refactor this and don't realise previous call
-        return Axios.get(`http://${PUSHER_URL}/login-screen?state=${state}&nonce=${nonce}`)
-            .then(() => {
-                window.location.assign(`http://${PUSHER_URL}/login-screen?state=${state}&nonce=${nonce}`);
-            })
-            .catch((err) => {
-                console.error(err, "We don't have URL to regenerate authentication user");
-                //TODO show modal login
-                window.location.reload();
-            });
+        window.location.assign(`http://${PUSHER_URL}/login-screen?state=${state}&nonce=${nonce}`);
     }
 
     public logout() {
