@@ -90,7 +90,11 @@ export class ErrorScene extends Phaser.Scene {
             // Axios HTTP error
             // client received an error response (5xx, 4xx)
             scene.start(ErrorSceneName, {
-                title: "HTTP " + error.response.status + " - " + error.response.statusText,
+                title:
+                    "HTTP " +
+                    error.response.status +
+                    " - " +
+                    (error.response.data ? error.response.data : error.response.statusText),
                 subTitle: "An error occurred while accessing URL:",
                 message: error.response.config.url,
             });
