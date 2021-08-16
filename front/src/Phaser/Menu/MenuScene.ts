@@ -171,7 +171,7 @@ export class MenuScene extends Phaser.Scene {
         this.closeAll();
         this.sideMenuOpened = true;
         this.menuButton.getChildByID("openMenuButton").innerHTML = "X";
-        const connection = gameManager.getCurrentGameScene(this).connection;
+        const connection = gameManager.getCurrentGameScene().connection;
         if (connection && connection.isAdmin()) {
             const adminSection = this.menuElement.getChildByID("adminConsoleSection") as HTMLElement;
             adminSection.hidden = false;
@@ -322,18 +322,18 @@ export class MenuScene extends Phaser.Scene {
         switch ((event?.target as HTMLInputElement).id) {
             case "changeNameButton":
                 this.closeSideMenu();
-                gameManager.leaveGame(this, LoginSceneName, new LoginScene());
+                gameManager.leaveGame(LoginSceneName, new LoginScene());
                 break;
             case "sparkButton":
                 this.gotToCreateMapPage();
                 break;
             case "changeSkinButton":
                 this.closeSideMenu();
-                gameManager.leaveGame(this, SelectCharacterSceneName, new SelectCharacterScene());
+                gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
                 break;
             case "changeCompanionButton":
                 this.closeSideMenu();
-                gameManager.leaveGame(this, SelectCompanionSceneName, new SelectCompanionScene());
+                gameManager.leaveGame(SelectCompanionSceneName, new SelectCompanionScene());
                 break;
             case "closeButton":
                 this.closeSideMenu();

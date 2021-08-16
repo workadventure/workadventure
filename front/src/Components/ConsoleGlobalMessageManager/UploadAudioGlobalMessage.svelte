@@ -1,6 +1,5 @@
 <script lang="ts">
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
-    import type { Game } from "../../Phaser/Game/Game";
     import type { GameManager } from "../../Phaser/Game/GameManager";
     import { consoleGlobalMessageManagerFocusStore, consoleGlobalMessageManagerVisibleStore } from "../../Stores/ConsoleGlobalMessageManagerStore";
     import { AdminMessageEventTypes } from "../../Connexion/AdminMessagesService";
@@ -11,10 +10,9 @@
         files: Array<File>;
     }
 
-    export let game: Game;
     export let gameManager: GameManager;
 
-    let gameScene = gameManager.getCurrentGameScene(game.findAnyScene());
+    let gameScene = gameManager.getCurrentGameScene();
     let fileInput: HTMLInputElement;
     let fileName: string;
     let fileSize: string;
