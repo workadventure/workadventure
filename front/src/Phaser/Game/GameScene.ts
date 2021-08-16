@@ -165,7 +165,7 @@ export class GameScene extends DirtyScene {
         value: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>
     ) => void;
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
-    private createPromise: Promise<void>;
+    public createPromise: Promise<void>;
     private createPromiseResolve!: (value?: void | PromiseLike<void>) => void;
     private iframeSubscriptionList!: Array<Subscription>;
     private peerStoreUnsubscribe!: () => void;
@@ -403,12 +403,6 @@ export class GameScene extends DirtyScene {
                 });
             });
         }
-
-        // Now, let's load the script, if any
-        const scripts = this.getScriptUrls(this.mapFile);
-        for (const script of scripts) {
-            iframeListener.registerScript(script);
-        }
     }
 
     //hook initialisation
@@ -567,6 +561,12 @@ export class GameScene extends DirtyScene {
         }
 
         this.createPromiseResolve();
+        // Now, let's load the script, if any
+        const scripts = this.getScriptUrls(this.mapFile);
+        const scriptPromises = [];
+        for (const script of scripts) {
+            scriptPromises.push(iframeListener.registerScript(script));
+        }
 
         this.userInputManager.spaceEvent(() => {
             this.outlinedItem?.activate();
@@ -584,6 +584,7 @@ export class GameScene extends DirtyScene {
         this.triggerOnMapLayerPropertyChange();
 
         if (!this.room.isDisconnected()) {
+            this.scene.sleep();
             this.connect();
         }
 
@@ -606,6 +607,10 @@ export class GameScene extends DirtyScene {
 
         this.chatVisibilityUnsubscribe = chatVisibilityStore.subscribe((v) => {
             this.openChatIcon.setVisible(!v);
+        });
+
+        Promise.all([this.connectionAnswerPromise as Promise<unknown>, ...scriptPromises]).then(() => {
+            this.scene.wake();
         });
     }
 
@@ -747,7 +752,6 @@ export class GameScene extends DirtyScene {
                 // Analyze tags to find if we are admin. If yes, show console.
 
                 if (this.scene.isSleeping()) {
-                    this.scene.wake();
                     this.scene.stop(ReconnectingSceneName);
                 }
 

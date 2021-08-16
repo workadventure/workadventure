@@ -293,57 +293,67 @@ class IframeListener {
         this.iframes.delete(iframe);
     }
 
-    registerScript(scriptUrl: string): void {
-        console.log("Loading map related script at ", scriptUrl);
+    registerScript(scriptUrl: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            console.log("Loading map related script at ", scriptUrl);
 
-        if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") {
-            // Using external iframe mode (
-            const iframe = document.createElement("iframe");
-            iframe.id = IframeListener.getIFrameId(scriptUrl);
-            iframe.style.display = "none";
-            iframe.src = "/iframe.html?script=" + encodeURIComponent(scriptUrl);
+            if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") {
+                // Using external iframe mode (
+                const iframe = document.createElement("iframe");
+                iframe.id = IframeListener.getIFrameId(scriptUrl);
+                iframe.style.display = "none";
+                iframe.src = "/iframe.html?script=" + encodeURIComponent(scriptUrl);
 
-            // We are putting a sandbox on this script because it will run in the same domain as the main website.
-            iframe.sandbox.add("allow-scripts");
-            iframe.sandbox.add("allow-top-navigation-by-user-activation");
+                // We are putting a sandbox on this script because it will run in the same domain as the main website.
+                iframe.sandbox.add("allow-scripts");
+                iframe.sandbox.add("allow-top-navigation-by-user-activation");
 
-            document.body.prepend(iframe);
+                iframe.addEventListener("load", () => {
+                    resolve();
+                });
 
-            this.scripts.set(scriptUrl, iframe);
-            this.registerIframe(iframe);
-        } else {
-            // production code
-            const iframe = document.createElement("iframe");
-            iframe.id = IframeListener.getIFrameId(scriptUrl);
-            iframe.style.display = "none";
+                document.body.prepend(iframe);
 
-            // We are putting a sandbox on this script because it will run in the same domain as the main website.
-            iframe.sandbox.add("allow-scripts");
-            iframe.sandbox.add("allow-top-navigation-by-user-activation");
+                this.scripts.set(scriptUrl, iframe);
+                this.registerIframe(iframe);
+            } else {
+                // production code
+                const iframe = document.createElement("iframe");
+                iframe.id = IframeListener.getIFrameId(scriptUrl);
+                iframe.style.display = "none";
 
-            //iframe.src = "data:text/html;charset=utf-8," + escape(html);
-            iframe.srcdoc =
-                "<!doctype html>\n" +
-                "\n" +
-                '<html lang="en">\n' +
-                "<head>\n" +
-                '<script src="' +
-                window.location.protocol +
-                "//" +
-                window.location.host +
-                '/iframe_api.js" ></script>\n' +
-                '<script src="' +
-                scriptUrl +
-                '" ></script>\n' +
-                "<title></title>\n" +
-                "</head>\n" +
-                "</html>\n";
+                // We are putting a sandbox on this script because it will run in the same domain as the main website.
+                iframe.sandbox.add("allow-scripts");
+                iframe.sandbox.add("allow-top-navigation-by-user-activation");
 
-            document.body.prepend(iframe);
+                //iframe.src = "data:text/html;charset=utf-8," + escape(html);
+                iframe.srcdoc =
+                    "<!doctype html>\n" +
+                    "\n" +
+                    '<html lang="en">\n' +
+                    "<head>\n" +
+                    '<script src="' +
+                    window.location.protocol +
+                    "//" +
+                    window.location.host +
+                    '/iframe_api.js" ></script>\n' +
+                    '<script src="' +
+                    scriptUrl +
+                    '" ></script>\n' +
+                    "<title></title>\n" +
+                    "</head>\n" +
+                    "</html>\n";
 
-            this.scripts.set(scriptUrl, iframe);
-            this.registerIframe(iframe);
-        }
+                iframe.addEventListener("load", () => {
+                    resolve();
+                });
+
+                document.body.prepend(iframe);
+
+                this.scripts.set(scriptUrl, iframe);
+                this.registerIframe(iframe);
+            }
+        });
     }
 
     private getBaseUrl(src: string, source: MessageEventSource | null): string {
