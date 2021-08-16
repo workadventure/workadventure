@@ -34,7 +34,6 @@ import { SetTilesEvent, isSetTilesEvent } from "./Events/SetTilesEvent";
 import type { SetVariableEvent } from "./Events/SetVariableEvent";
 import { ModifyEmbeddedWebsiteEvent, isEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
 import { EmbeddedWebsite } from "./iframe/Room/EmbeddedWebsite";
-import { gameManager } from "../Phaser/Game/GameManager";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -155,8 +154,6 @@ class IframeListener {
                     }
                     return;
                 }
-
-                //await gameManager.getCurrentGameScene()
 
                 foundSrc = this.getBaseUrl(foundSrc, message.source);
 
