@@ -1,7 +1,6 @@
 <script lang="ts">
     import { consoleGlobalMessageManagerFocusStore, consoleGlobalMessageManagerVisibleStore } from "../../Stores/ConsoleGlobalMessageManagerStore";
     import {onDestroy, onMount} from "svelte";
-    import type { Game } from "../../Phaser/Game/Game";
     import type { GameManager } from "../../Phaser/Game/GameManager";
     import { AdminMessageEventTypes } from "../../Connexion/AdminMessagesService";
     import type { Quill } from "quill";
@@ -31,10 +30,9 @@
         // remove formatting button
     ];
 
-    export let game: Game;
     export let gameManager: GameManager;
 
-    const gameScene = gameManager.getCurrentGameScene(game.findAnyScene());
+    const gameScene = gameManager.getCurrentGameScene();
     let quill: Quill;
     let INPUT_CONSOLE_MESSAGE: HTMLDivElement;
 
