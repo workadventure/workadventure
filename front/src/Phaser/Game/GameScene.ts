@@ -165,7 +165,7 @@ export class GameScene extends DirtyScene {
         value: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>
     ) => void;
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
-    public createPromise: Promise<void>;
+    private createPromise: Promise<void>;
     private createPromiseResolve!: (value?: void | PromiseLike<void>) => void;
     private iframeSubscriptionList!: Array<Subscription>;
     private peerStoreUnsubscribe!: () => void;
