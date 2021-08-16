@@ -1443,7 +1443,7 @@ ${escapedMessage}
     private async loadNextGame(exitRoomPath: URL): Promise<void> {
         try {
             const room = await Room.createRoom(exitRoomPath);
-            return gameManager.loadMap(room, this.scene);
+            return gameManager.loadMap(room);
         } catch (e /*: unknown*/) {
             console.warn('Error while pre-loading exit room "' + exitRoomPath.toString() + '"', e);
         }
@@ -1504,7 +1504,7 @@ ${escapedMessage}
             });
         } catch (err) {
             if (err instanceof TextureError) {
-                gameManager.leaveGame(this, SelectCharacterSceneName, new SelectCharacterScene());
+                gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
             }
             throw err;
         }

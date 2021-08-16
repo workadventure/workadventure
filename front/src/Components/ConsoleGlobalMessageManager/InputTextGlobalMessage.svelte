@@ -34,7 +34,7 @@
     export let game: Game;
     export let gameManager: GameManager;
 
-    const gameScene = gameManager.getCurrentGameScene(game.findAnyScene());
+    const gameScene = gameManager.getCurrentGameScene();
     let quill: Quill;
     let INPUT_CONSOLE_MESSAGE: HTMLDivElement;
 
