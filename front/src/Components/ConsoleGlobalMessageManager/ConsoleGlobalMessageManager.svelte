@@ -3,10 +3,8 @@
     import InputTextGlobalMessage from "./InputTextGlobalMessage.svelte";
     import UploadAudioGlobalMessage from "./UploadAudioGlobalMessage.svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import type { Game } from "../../Phaser/Game/Game";
     import { consoleGlobalMessageManagerVisibleStore } from "../../Stores/ConsoleGlobalMessageManagerStore";
 
-    export let game: Game;
     let inputSendTextActive = true;
     let uploadMusicActive = false;
     let handleSendText: { sendTextMessage(broadcast: boolean): void };
@@ -57,10 +55,10 @@
         </div>
         <div class="content-console-global-message">
             {#if inputSendTextActive}
-                <InputTextGlobalMessage game={game} gameManager={gameManager} bind:handleSending={handleSendText}/>
+                <InputTextGlobalMessage gameManager={gameManager} bind:handleSending={handleSendText}/>
             {/if}
             {#if uploadMusicActive}
-                <UploadAudioGlobalMessage game={game} gameManager={gameManager} bind:handleSending={handleSendAudio}/>
+                <UploadAudioGlobalMessage gameManager={gameManager} bind:handleSending={handleSendAudio}/>
             {/if}
         </div>
         <div class="footer-console-global-message">

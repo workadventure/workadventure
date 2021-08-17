@@ -94,6 +94,7 @@ import { userIsAdminStore } from "../../Stores/GameStore";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { get } from "svelte/store";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
+import { helpCameraSettingsVisibleStore } from "../../Stores/HelpCameraSettingsStore";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -814,13 +815,24 @@ export class GameScene extends DirtyScene {
 
     private triggerOnMapLayerPropertyChange() {
         this.gameMap.onPropertyChange("exitSceneUrl", (newValue, oldValue) => {
-            if (newValue)
+            if (newValue) {
                 this.onMapExit(
                     Room.getRoomPathFromExitSceneUrl(newValue as string, window.location.toString(), this.MapUrlFile)
                 );
+            } else {
+                setTimeout(() => {
+                    layoutManagerActionStore.removeAction("roomAccessDenied");
+                }, 2000);
+            }
         });
         this.gameMap.onPropertyChange("exitUrl", (newValue, oldValue) => {
-            if (newValue) this.onMapExit(Room.getRoomPathFromExitUrl(newValue as string, window.location.toString()));
+            if (newValue) {
+                this.onMapExit(Room.getRoomPathFromExitUrl(newValue as string, window.location.toString()));
+            } else {
+                setTimeout(() => {
+                    layoutManagerActionStore.removeAction("roomAccessDenied");
+                }, 2000);
+            }
         });
         this.gameMap.onPropertyChange("openWebsite", (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
@@ -915,9 +927,10 @@ export class GameScene extends DirtyScene {
         });
 
         this.gameMap.onPropertyChange("zone", (newValue, oldValue) => {
-            if (newValue === undefined || newValue === false || newValue === "") {
+            if (oldValue) {
                 iframeListener.sendLeaveEvent(oldValue as string);
-            } else {
+            }
+            if (newValue) {
                 iframeListener.sendEnterEvent(newValue as string);
             }
         });
@@ -1290,6 +1303,18 @@ ${escapedMessage}
             targetRoom = await Room.createRoom(roomUrl);
         } catch (e /*: unknown*/) {
             console.error('Error while fetching new room "' + roomUrl.toString() + '"', e);
+
+            //show information room access denied
+            layoutManagerActionStore.addAction({
+                uuid: "roomAccessDenied",
+                type: "warning",
+                message: "Room access denied. You don't have right to access on this room.",
+                callback: () => {
+                    layoutManagerActionStore.removeAction("roomAccessDenied");
+                },
+                userInputManager: this.userInputManager,
+            });
+
             this.mapTransitioning = false;
             return;
         }
@@ -1344,7 +1369,6 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("getState");
         iframeListener.unregisterAnswerer("loadTileset");
         iframeListener.unregisterAnswerer("getMapData");
-        iframeListener.unregisterAnswerer("getState");
         iframeListener.unregisterAnswerer("triggerActionMessage");
         iframeListener.unregisterAnswerer("removeActionMessage");
         this.sharedVariablesManager?.close();
@@ -1419,7 +1443,7 @@ ${escapedMessage}
     private async loadNextGame(exitRoomPath: URL): Promise<void> {
         try {
             const room = await Room.createRoom(exitRoomPath);
-            return gameManager.loadMap(room, this.scene);
+            return gameManager.loadMap(room);
         } catch (e /*: unknown*/) {
             console.warn('Error while pre-loading exit room "' + exitRoomPath.toString() + '"', e);
         }
@@ -1480,7 +1504,7 @@ ${escapedMessage}
             });
         } catch (err) {
             if (err instanceof TextureError) {
-                gameManager.leaveGame(this, SelectCharacterSceneName, new SelectCharacterScene());
+                gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
             }
             throw err;
         }

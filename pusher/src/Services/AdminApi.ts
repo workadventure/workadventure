@@ -31,13 +31,19 @@ export interface FetchMemberDataByUuidResponse {
 }
 
 class AdminApi {
-    async fetchMapDetails(playUri: string): Promise<MapDetailsData | RoomRedirect> {
+    /**
+     * @var playUri: is url of the room
+     * @var userId: can to be undefined or email or uuid
+     * @return MapDetailsData|RoomRedirect
+     */
+    async fetchMapDetails(playUri: string, userId?: string): Promise<MapDetailsData | RoomRedirect> {
         if (!ADMIN_API_URL) {
             return Promise.reject(new Error("No admin backoffice set!"));
         }
 
-        const params: { playUri: string } = {
+        const params: { playUri: string; userId?: string } = {
             playUri,
+            userId,
         };
 
         const res = await Axios.get(ADMIN_API_URL + "/api/map", {

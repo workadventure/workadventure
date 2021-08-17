@@ -62,7 +62,7 @@ export class ReportMenu extends Phaser.GameObjects.DOMElement {
 
         this.opened = true;
 
-        gameManager.getCurrentGameScene(this.scene).userInputManager.disableControls();
+        gameManager.getCurrentGameScene().userInputManager.disableControls();
 
         this.scene.tweens.add({
             targets: this,
@@ -73,7 +73,7 @@ export class ReportMenu extends Phaser.GameObjects.DOMElement {
     }
 
     public close(): void {
-        gameManager.getCurrentGameScene(this.scene).userInputManager.restoreControls();
+        gameManager.getCurrentGameScene().userInputManager.restoreControls();
         this.opened = false;
         const mainEl = this.getChildByID("gameReport") as HTMLElement;
         this.scene.tweens.add({
@@ -112,9 +112,7 @@ export class ReportMenu extends Phaser.GameObjects.DOMElement {
             gamePError.style.display = "block";
             return;
         }
-        gameManager
-            .getCurrentGameScene(this.scene)
-            .connection?.emitReportPlayerMessage(this.userUuid, gameTextArea.value);
+        gameManager.getCurrentGameScene().connection?.emitReportPlayerMessage(this.userUuid, gameTextArea.value);
         this.close();
     }
 }

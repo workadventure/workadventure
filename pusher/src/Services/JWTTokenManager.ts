@@ -15,9 +15,9 @@ class JWTTokenManager {
         return Jwt.sign({ identifier }, SECRET_KEY, { expiresIn: "200d" });
     }
 
-    public decodeJWTToken(token: string): AuthTokenData {
+    public verifyJWTToken(token: string, ignoreExpiration: boolean = false): AuthTokenData {
         try {
-            return Jwt.verify(token, SECRET_KEY, { ignoreExpiration: false }) as AuthTokenData;
+            return Jwt.verify(token, SECRET_KEY, { ignoreExpiration }) as AuthTokenData;
         } catch (e) {
             throw { reason: tokenInvalidException, message: e.message };
         }

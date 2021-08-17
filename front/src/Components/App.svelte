@@ -102,7 +102,7 @@
     {/if}
     {#if $consoleGlobalMessageManagerVisibleStore}
         <div>
-            <ConsoleGlobalMessageManager game={game}></ConsoleGlobalMessageManager>
+            <ConsoleGlobalMessageManager></ConsoleGlobalMessageManager>
         </div>
     {/if}
     {#if $helpCameraSettingsVisibleStore}
