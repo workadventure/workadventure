@@ -38,7 +38,7 @@ class OpenIDClient {
                     return {
                         ...res,
                         email: res.email as string,
-                        sub: res.sub as string,
+                        sub: res.sub,
                         access_token: tokenSet.access_token as string,
                     };
                 });
