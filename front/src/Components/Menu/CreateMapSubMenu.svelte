@@ -22,20 +22,22 @@
 </script>
 
 <div class="create-map-main">
-    <section class="create-map-building">
-        <h3>Create your map</h3>
-        <p>
-            WorkAdventure allows you to create an online space to communicate spontaneously with others.
-            And it all starts with creating your own space. Choose from a large selection of prefabricated maps by our team.
-            Or create your own map from scratch.
-        </p>
-        <button type="button" class="nes-btn is-primary" on:click={goToCreateMapPage}>Create a map</button>
-    </section>
-    <section class="create-map-scripting">
-        <h3>Use the scripting API</h3>
-        <p>Make your map more interactive, more alive and totally unique with the scripting API.</p>
-        <p>(Programming skills are required to use the scripting API).</p>
-        <button type="button" class="nes-btn" on:click={goToScriptingApiPage}>Use a script</button>
+    <section class="container-overflow">
+        <section>
+            <h3>Create your map</h3>
+            <p>
+                WorkAdventure allows you to create an online space to communicate spontaneously with others.
+                And it all starts with creating your own space. Choose from a large selection of prefabricated maps by our team.
+                Or create your own map from scratch.
+            </p>
+            <button type="button" class="nes-btn is-primary" on:click={goToCreateMapPage}>Create a map</button>
+        </section>
+        <section>
+            <h3>Use the scripting API</h3>
+            <p>Make your map more interactive, more alive and totally unique with the scripting API.</p>
+            <p>(Programming skills are required to use the scripting API).</p>
+            <button type="button" class="nes-btn" on:click={goToScriptingApiPage}>Use a script</button>
+        </section>
     </section>
 </div>
 
@@ -44,8 +46,17 @@
       height: calc(100% - 56px);
 
       text-align: center;
-      display: grid;
-      grid-template-rows: 50% 50%;
+
+      section {
+        margin-bottom: 50px;
+      }
+
+      section.container-overflow {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: auto;
+      }
     }
 
 </style>

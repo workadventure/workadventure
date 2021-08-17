@@ -2,6 +2,7 @@
 import {localUserStore} from "../../Connexion/LocalUserStore";
 import {videoConstraintStore} from "../../Stores/MediaStore";
 import {HtmlUtils} from "../../WebRtc/HtmlUtils";
+import {isMobile} from "../../Enum/EnvironmentVariable";
 
 let fullscreen : boolean = localUserStore.getFullscreen();
 let notification : boolean = localUserStore.getNotification() === 'granted';
@@ -55,19 +56,19 @@ function changeNotification() {
     <section>
         <h3>Game quality</h3>
             <select class="nes-pointer" bind:value={valueGame}>
-                <option value="{120}">High video quality (120 fps)</option>
-                <option value="{60}">Medium video quality (60 fps, recommended)</option>
-                <option value="{40}">Minimum video quality (40 fps)</option>
-                <option value="{20}">Small video quality (20 fps)</option>
+                <option value="{120}">{isMobile() ? 'High (120 fps)' : 'High video quality (120 fps)'}</option>
+                <option value="{60}">{isMobile() ? 'Medium (60 fps)' : 'Medium video quality (60 fps, recommended)'}</option>
+                <option value="{40}">{isMobile() ? 'Minimum (40 fps)' : 'Minimum video quality (40 fps)'}</option>
+                <option value="{20}">{isMobile() ? 'Small (20 fps)' : 'Small video quality (20 fps)'}</option>
             </select>
     </section>
     <section>
         <h3>Video quality</h3>
             <select class="nes-pointer" bind:value={valueVideo}>
-                <option value="{30}">High video quality (30 fps)</option>
-                <option value="{20}">Medium video quality (20 fps, recommended)</option>
-                <option value="{10}">Minimum video quality (10 fps)</option>
-                <option value="{5}">Small video quality (5 fps)</option>
+                <option value="{30}">{isMobile() ? 'High (30 fps)' : 'High video quality (30 fps)'}</option>
+                <option value="{20}">{isMobile() ? 'Medium (20 fps)' : 'Medium video quality (20 fps, recommended)'}</option>
+                <option value="{10}">{isMobile() ? 'Minimum (10 fps)' : 'Minimum video quality (10 fps)'}</option>
+                <option value="{5}">{isMobile() ? 'Small (5 fps)' : 'Small video quality (5 fps)'}</option>
             </select>
     </section>
     <section class="settings-section-save">
@@ -93,7 +94,7 @@ function changeNotification() {
     grid-template-rows: 25% 25% 25% 20%;
 
     section {
-      width: 100%; //TODO clamp value
+      width: 100%;
       padding: 20px 20px 0;
       text-align: center;
 
@@ -121,6 +122,20 @@ function changeNotification() {
         text-align: center;
         width: 100%;
         margin: 0;
+      }
+    }
+  }
+
+  @media only screen and (max-height: 900px) {
+    div.settings-main {
+      section {
+        padding: 0;
+      }
+
+      section.settings-section-noSaveOption {
+        margin-top: 20px;
+        grid-template-columns: none;
+        grid-template-rows: calc(100% / var(--nb-noSaveOptions)) calc(100% / var(--nb-noSaveOptions)); //Same size for every sub-element;
       }
     }
   }

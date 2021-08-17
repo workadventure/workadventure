@@ -28,9 +28,12 @@
       padding-top: 0;
     }
   }
-  @media only screen and (max-height: 700px) {
+  @media only screen and (max-height: 900px) {
     .menuIcon {
-      margin: 100px;
+      margin: 3px;
+      img {
+        width: 50px;
+      }
     }
   }
 </style>

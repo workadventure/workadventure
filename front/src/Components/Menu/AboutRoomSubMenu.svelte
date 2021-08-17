@@ -51,15 +51,13 @@
         <input type="text" readonly bind:this={HTMLShareLink} value={location.toString()}>
         <button type="button" class="nes-btn is-primary" on:click={copyLink}>Copy</button>
     </section>
-    <section class="presentation-map">
-        <p>This room use the following map : </p>
+    <h2>Informations on the map</h2>
+    <section class="container-overflow">
         <h3>{mapName}</h3>
         <p class="string-HTML">{mapDescription}</p>
-    </section>
-    <section class="copyright">
-        <h3 class="nes-pointer" on:click={() => expandedMapCopyright = !expandedMapCopyright}>Copyrights of the map</h3>
+        <h3 class="nes-pointer hoverable" on:click={() => expandedMapCopyright = !expandedMapCopyright}>Copyrights of the map</h3>
         <p class="string-HTML" hidden="{!expandedMapCopyright}">{mapCopyright}</p>
-        <h3 class="nes-pointer" on:click={() => expandedTilesetCopyright = !expandedTilesetCopyright}>Copyrights of the tilesets</h3>
+        <h3 class="nes-pointer hoverable" on:click={() => expandedTilesetCopyright = !expandedTilesetCopyright}>Copyrights of the tilesets</h3>
         <section hidden="{!expandedTilesetCopyright}">
             {#each tilesetCopyright as copyright}
                 <p class="string-HTML">{copyright}</p>
@@ -78,11 +76,10 @@
 
   div.about-room-main {
     height: calc(100% - 56px);
-    display: grid;
-    grid-template-rows: 20% 40% 30%;
 
     section.share-url {
       text-align: center;
+      margin-bottom: 20px;
 
       input {
         width: 85%;
@@ -93,30 +90,33 @@
         background-color: #209cee;
       }
     }
-    section.presentation-map {
-      h3 {
-        width: 100%;
-        text-align: center;
-      }
-      p {
-        max-height: calc(100% - 36px);
-        overflow: auto;
-      }
-    }
-    section.copyright {
-      text-align: center;
 
-      h3:hover {
-        background-color: #3c3e40;
-        border-radius: 32px;
+    h2, h3 {
+      width: 100%;
+      text-align: center;
+    }
+
+    h3.hoverable:hover {
+      background-color: #3c3e40;
+      border-radius: 32px;
+    }
+
+    section.container-overflow {
+      height: calc(100% - 220px);
+      margin: 0;
+      padding: 0;
+      overflow-y: auto;
       }
-      p {
-        max-height: calc(100% - 36px);
-        overflow: auto;
+  }
+
+  @media only screen and (max-height: 900px) {
+    div.about-room-main {
+      section.share-url input {
+        display: none;
       }
-      section {
-        max-height: calc(100% - 36px);
-        overflow: auto;
+
+      section.container-overflow {
+        height: calc(100% - 120px);
       }
     }
   }

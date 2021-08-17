@@ -57,7 +57,7 @@
 <style lang="scss">
     div.customize-main{
       display: grid;
-      grid-template-rows: 33% 33% 33%; //TODO: clamp values
+      grid-template-rows: 33% 33% 33%;
 
       section {
         display: flex;
@@ -65,9 +65,15 @@
         align-items: center;
 
         button {
-          height: 50px; //TODO: clamp value
-          width: 250px; //TODO: clamp value
+          height: 50px;
+          width: 250px;
         }
+      }
+    }
+
+    @media only screen and (max-height: 900px) {
+      div.customize-main section button {
+        width: 130px;
       }
     }
 </style>

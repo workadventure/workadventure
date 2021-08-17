@@ -17,9 +17,10 @@
     let activeComponent: typeof SettingsSubMenu | typeof CustomSubMenu = SettingsSubMenu;
 
     onMount(() => {
-        if(!get(userIsAdminStore)) {
+        //TODO: Uncomment before final push to merge
+        /*if(!get(userIsAdminStore)) {
             subMenusStore.removeMenu(SubMenusInterface.globalMessages);
-        }
+        }*/
 
         switchMenu(SubMenusInterface.settings);
     })
@@ -90,11 +91,11 @@
   }
 
   div.menu-container-main {
-    --size-first-columns-grid: 15%;
+    --size-first-columns-grid: clamp(120px, 15%, 200px);
 
     font-family: "Press Start 2P";
     pointer-events: auto;
-    height: 70vh;
+    height: 80vh;
     width: 75vw;
     top: 10vh;
 
@@ -123,6 +124,15 @@
     div.menu-submenu-container {
       background-color: #333333;
       color: whitesmoke;
+    }
+  }
+
+  @media only screen and (max-height: 900px) {
+    div.menu-container-main {
+      top: 5vh;
+      height: 85vh;
+      width: 100vw;
+      font-size: 0.5em;
     }
   }
 </style>
