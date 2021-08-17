@@ -17,7 +17,7 @@ const authToken = "authToken";
 const state = "state";
 const nonce = "nonce";
 
-const cacheAPIIndex = "workavdenture-cache-v1";
+const cacheAPIIndex = "workavdenture-cache-v1.4.14";
 
 class LocalUserStore {
     saveUser(localUser: LocalUser) {
