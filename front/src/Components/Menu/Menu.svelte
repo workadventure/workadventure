@@ -8,7 +8,7 @@
     import ContactSubMenu from "./ContactSubMenu.svelte";
     import CustomSubMenu from "./CustomSubMenu.svelte";
     import {menuVisiblilityStore, SubMenusInterface, subMenusStore} from "../../Stores/MenuStore";
-    import {userIsAdminStore} from "../../Stores/GameStore";
+    //import {userIsAdminStore} from "../../Stores/GameStore";
     import {onMount} from "svelte";
     import {get} from "svelte/store";
 
