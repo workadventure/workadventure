@@ -32,7 +32,12 @@ class ConnectionManager {
     /**
      * @return void
      */
-    public loadOpenIDScreen(): Promise<void> | void {
+    public async loadOpenIDScreen(): Promise<void> {
+        try {
+            return await this.checkAuthUserConnexion();
+        } catch (err) {
+            console.info("Authentication user by token wasn't checked", err);
+        }
         const state = localUserStore.generateState();
         const nonce = localUserStore.generateNonce();
         localUserStore.setAuthToken(null);
@@ -61,12 +66,13 @@ class ConnectionManager {
             if (!code) {
                 throw "No Auth code provided";
             }
-            const nonce = localUserStore.getNonce();
-            const { authToken } = await Axios.get(`${PUSHER_URL}/login-callback`, { params: { code, nonce } }).then(
-                (res) => res.data
-            );
-            localUserStore.setAuthToken(authToken);
-            this.authToken = authToken;
+            localUserStore.setCode(code);
+            try {
+                await this.checkAuthUserConnexion();
+            } catch (err) {
+                console.error(err);
+                this.loadOpenIDScreen();
+            }
             room = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
             urlManager.pushRoomIdToUrl(room);
         } else if (connexionType === GameConnexionTypes.register) {
@@ -226,6 +232,24 @@ class ConnectionManager {
 
     get getConnexionType() {
         return this.connexionType;
+    }
+
+    async checkAuthUserConnexion() {
+        const state = localUserStore.getState();
+        const code = localUserStore.getCode();
+        if (!state || !localUserStore.verifyState(state)) {
+            throw "Could not validate state!";
+        }
+        if (!code) {
+            throw "No Auth code provided";
+        }
+        const nonce = localUserStore.getNonce();
+        const token = localUserStore.getAuthToken();
+        const { authToken } = await Axios.get(`${PUSHER_URL}/login-callback`, { params: { code, nonce, token } }).then(
+            (res) => res.data
+        );
+        localUserStore.setAuthToken(authToken);
+        this.authToken = authToken;
     }
 }
 

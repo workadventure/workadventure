@@ -2,7 +2,7 @@ import { v4 } from "uuid";
 import { HttpRequest, HttpResponse, TemplatedApp } from "uWebSockets.js";
 import { BaseController } from "./BaseController";
 import { adminApi } from "../Services/AdminApi";
-import { jwtTokenManager } from "../Services/JWTTokenManager";
+import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { parse } from "query-string";
 import { openIDClient } from "../Services/OpenIDClient";
 
@@ -48,14 +48,31 @@ export class AuthenticateController extends BaseController {
             res.onAborted(() => {
                 console.warn("/message request was aborted");
             });
-            const { code, nonce } = parse(req.getQuery());
+            const { code, nonce, token } = parse(req.getQuery());
             try {
+                //verify connected by token
+                if (token != undefined) {
+                    try {
+                        const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
+                        if (authTokenData.hydraAccessToken == undefined) {
+                            throw Error("Token cannot to be check on Hydra");
+                        }
+                        await openIDClient.checkTokenAuth(authTokenData.hydraAccessToken as string);
+                        res.writeStatus("200");
+                        this.addCorsHeaders(res);
+                        return res.end(JSON.stringify({ token }));
+                    } catch (err) {
+                        console.info("User was not connected", err);
+                    }
+                }
+
+                //user have not token created, check data on hydra and create token
                 const userInfo = await openIDClient.getUserInfo(code as string, nonce as string);
                 const email = userInfo.email || userInfo.sub;
                 if (!email) {
                     throw new Error("No email in the response");
                 }
-                const authToken = jwtTokenManager.createAuthToken(email);
+                const authToken = jwtTokenManager.createAuthToken(email, userInfo.access_token);
                 res.writeStatus("200");
                 this.addCorsHeaders(res);
                 return res.end(JSON.stringify({ authToken }));

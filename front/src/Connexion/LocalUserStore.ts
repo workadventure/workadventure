@@ -16,6 +16,7 @@ const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
 const state = "state";
 const nonce = "nonce";
+const code = "code";
 
 const cacheAPIIndex = "workavdenture-cache-v1";
 
@@ -151,19 +152,24 @@ class LocalUserStore {
 
     verifyState(value: string): boolean {
         const oldValue = localStorage.getItem(state);
-        localStorage.removeItem(state);
         return oldValue === value;
+    }
+    getState(): string | null {
+        return localStorage.getItem(state);
     }
     generateNonce(): string {
         const newNonce = uuidv4();
         localStorage.setItem(nonce, newNonce);
         return newNonce;
     }
-
     getNonce(): string | null {
-        const oldValue = localStorage.getItem(nonce);
-        localStorage.removeItem(nonce);
-        return oldValue;
+        return localStorage.getItem(nonce);
+    }
+    setCode(value: string): void {
+        localStorage.setItem(code, value);
+    }
+    getCode(): string | null {
+        return localStorage.getItem(code);
     }
 }
 
