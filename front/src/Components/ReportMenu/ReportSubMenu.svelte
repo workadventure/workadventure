@@ -2,7 +2,7 @@
     import {showReportScreenStore} from "../../Stores/ShowReportScreenStore";
     import {gameManager} from "../../Phaser/Game/GameManager";
 
-    export let userUUID: string;
+    export let userUUID: string | undefined;
     let reportMessage: string;
     let hiddenError = true;
 

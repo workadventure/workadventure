@@ -7,7 +7,7 @@
     import {loginSceneVisibleStore} from "../../Stores/LoginSceneStore";
     import {selectCharacterSceneVisibleStore} from "../../Stores/SelectCharacterStore";
     import {SelectCharacterScene, SelectCharacterSceneName} from "../../Phaser/Login/SelectCharacterScene";
-    import {connectionManager} from "../../Connexion/ConnectionManager";
+    //import {connectionManager} from "../../Connexion/ConnectionManager";
 
 
     function disableMenuStores(){
