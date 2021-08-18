@@ -12,8 +12,7 @@ export const tokenInvalidException = "tokenInvalid";
 
 class JWTTokenManager {
     public createAuthToken(identifier: string, hydraAccessToken?: string) {
-        //TODO fix me 200d when ory authentication will be available
-        return Jwt.sign({ identifier, hydraAccessToken }, SECRET_KEY, { expiresIn: "200d" });
+        return Jwt.sign({ identifier, hydraAccessToken }, SECRET_KEY, { expiresIn: "30d" });
     }
 
     public verifyJWTToken(token: string, ignoreExpiration: boolean = false): AuthTokenData {
