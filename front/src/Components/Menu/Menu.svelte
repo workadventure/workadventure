@@ -90,13 +90,13 @@
   }
 
   div.menu-container-main {
-    --size-first-columns-grid: clamp(120px, 15%, 200px);
+    --size-first-columns-grid: 200px;
 
     font-family: "Press Start 2P";
     pointer-events: auto;
-    height: 80vh;
+    height: 70vh;
     width: 75vw;
-    top: clamp(55px, 10vh, 10vh);
+    top: 10vh;
 
     position: relative;
     margin: auto;
@@ -126,9 +126,11 @@
     }
   }
 
-  @media only screen and (max-height: 900px) {
+  @media only screen and (max-width: 800px) {
     div.menu-container-main {
-      bottom: 55px;
+      --size-first-columns-grid: 120px;
+      //height: calc(100vh - 110px);
+      top: 55px;
       width: 100vw;
       font-size: 0.5em;
     }

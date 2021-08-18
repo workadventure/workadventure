@@ -30,7 +30,7 @@ section.section-input-send-text {
   }
 }
 
-@media only screen and (max-height: 900px) {
+@media only screen and (max-width: 800px), only screen and (max-height: 800px) {
   section.section-input-send-text {
     --height-toolbar: 30%;
 

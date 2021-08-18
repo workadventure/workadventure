@@ -127,7 +127,7 @@
       }
   }
 
-  @media only screen and (max-height: 900px) {
+  @media only screen and (max-width: 800px), only screen and (max-height: 800px) {
     div.about-room-main {
       section.share-url.not-mobile {
         display: none;

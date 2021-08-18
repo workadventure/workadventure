@@ -42,7 +42,13 @@
       text-align: center;
 
       textarea {
-        height: clamp(100px, 20vh, 20vh);
+        height: clamp(100px, 15vh, 300px);
+      }
+    }
+
+    @media only screen and (max-height: 630px) {
+      div.report-container-main textarea {
+        height: 50px;
       }
     }
 </style>

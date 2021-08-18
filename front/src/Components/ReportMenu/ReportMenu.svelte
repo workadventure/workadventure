@@ -5,12 +5,12 @@
     import {onDestroy, onMount} from "svelte";
     import type {Unsubscriber} from "svelte/store";
     import {playersStore} from "../../Stores/PlayersStore";
-    import {connectionManager} from "../../Connexion/ConnectionManager";
-    import {GameConnexionTypes} from "../../Url/UrlManager";
+    //import {connectionManager} from "../../Connexion/ConnectionManager";
+    //import {GameConnexionTypes} from "../../Url/UrlManager";
 
     let blockActive =  true;
     let reportActive = !blockActive;
-    let anonymous: boolean;
+    let anonymous: boolean = false;
     let userUUID: string | undefined = '';
     let userName = "No name";
     let unsubscriber: Unsubscriber
@@ -25,7 +25,7 @@
                 }
             }
         })
-        anonymous = connectionManager.getConnexionType === GameConnexionTypes.anonymous;
+        //anonymous = connectionManager.getConnexionType === GameConnexionTypes.anonymous;
     })
 
     onDestroy(() => {
@@ -48,7 +48,14 @@
         reportActive = true;
     }
 
+    function onKeyDown(e:KeyboardEvent) {
+        if (e.key === 'Escape') {
+            close();
+        }
+    }
 </script>
+
+<svelte:window on:keydown={onKeyDown}/>
 
 <div class="report-menu-main nes-container is-rounded">
     <section class="report-menu-title">
@@ -96,7 +103,7 @@
     position: relative;
     height: 70vh;
     width: 50vw;
-    top: clamp(55px, 10vh, 10vh);
+    top: 10vh;
     margin: auto;
 
     section.report-menu-title {
@@ -122,9 +129,10 @@
     }
   }
 
-  @media only screen and (max-height: 900px) {
+  @media only screen and (max-width: 800px) {
     div.report-menu-main {
-      bottom: 55px;
+      top: 21vh;
+      height: 60vh;
       width: 100vw;
       font-size: 0.5em;
     }

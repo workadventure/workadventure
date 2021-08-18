@@ -70,7 +70,7 @@
       }
     }
 
-    @media only screen and (max-height: 900px) {
+    @media only screen and (max-width: 800px) {
       div.customize-main section button {
         width: 130px;
       }

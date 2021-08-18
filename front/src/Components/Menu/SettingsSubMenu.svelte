@@ -125,7 +125,7 @@ function changeNotification() {
     }
   }
 
-  @media only screen and (max-height: 900px) {
+  @media only screen and (max-width: 800px), only screen and (max-height: 800px) {
     div.settings-main {
       section {
         padding: 0;
