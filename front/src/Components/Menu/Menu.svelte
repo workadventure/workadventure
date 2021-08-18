@@ -6,15 +6,14 @@
     import AboutRoomSubMenu from "./AboutRoomSubMenu.svelte";
     import GlobalMessageSubMenu from "./GlobalMessagesSubMenu.svelte";
     import ContactSubMenu from "./ContactSubMenu.svelte";
-    import CustomSubMenu from "./CustomSubMenu.svelte";
     import {menuVisiblilityStore, SubMenusInterface, subMenusStore} from "../../Stores/MenuStore";
     //import {userIsAdminStore} from "../../Stores/GameStore";
     import {onMount} from "svelte";
     import {get} from "svelte/store";
+    import {sendMenuClickedEvent} from "../../Api/iframe/Ui/MenuItem";
 
     let activeSubMenu: string = SubMenusInterface.settings;
-    let props: { menuCommand: string } = { menuCommand: SubMenusInterface.settings};
-    let activeComponent: typeof SettingsSubMenu | typeof CustomSubMenu = SettingsSubMenu;
+    let activeComponent: typeof SettingsSubMenu = SettingsSubMenu;
 
     onMount(() => {
         //TODO: Uncomment before final push to merge
@@ -28,7 +27,6 @@
     function switchMenu(menu: string) {
         if (get(subMenusStore).find((subMenu) => subMenu === menu)) {
             activeSubMenu = menu;
-            props = {menuCommand: menu};
             switch (menu) {
                 case SubMenusInterface.settings:
                     activeComponent = SettingsSubMenu;
@@ -49,7 +47,8 @@
                     activeComponent = ContactSubMenu;
                     break;
                 default:
-                    activeComponent = CustomSubMenu;
+                    sendMenuClickedEvent(menu);
+                    menuVisiblilityStore.set(false);
                     break;
             }
         } else throw ("There is no menu called " + menu);
@@ -81,7 +80,7 @@
     </div>
     <div class="menu-submenu-container nes-container is-rounded" transition:fly="{{ y: -1000, duration: 500 }}">
         <h2>{activeSubMenu}</h2>
-        <svelte:component this={activeComponent} {...props}/>
+        <svelte:component this={activeComponent}/>
     </div>
 </div>
 
@@ -97,7 +96,7 @@
     pointer-events: auto;
     height: 80vh;
     width: 75vw;
-    top: 10vh;
+    top: clamp(55px, 10vh, 10vh);
 
     position: relative;
     margin: auto;
@@ -129,8 +128,7 @@
 
   @media only screen and (max-height: 900px) {
     div.menu-container-main {
-      top: 5vh;
-      height: 85vh;
+      bottom: 55px;
       width: 100vw;
       font-size: 0.5em;
     }

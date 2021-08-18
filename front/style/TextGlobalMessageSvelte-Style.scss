@@ -29,3 +29,13 @@ section.section-input-send-text {
     }
   }
 }
+
+@media only screen and (max-height: 900px) {
+  section.section-input-send-text {
+    --height-toolbar: 30%;
+
+    .ql-toolbar {
+      overflow: auto;
+    }
+  }
+}

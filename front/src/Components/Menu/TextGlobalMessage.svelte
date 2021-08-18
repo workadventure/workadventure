@@ -24,10 +24,9 @@
         [{'font': []}],
         [{'align': []}],
 
-        ['clean'],
+        ['clean'],                                // remove formatting button
 
         ['link', 'image', 'video']
-        // remove formatting button
     ];
 
     const gameScene = gameManager.getCurrentGameScene();

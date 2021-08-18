@@ -1,7 +1,8 @@
 <script lang="ts">
     import {showReportScreenStore} from "../../Stores/ShowReportScreenStore";
+    import {gameManager} from "../../Phaser/Game/GameManager";
 
-    //export let userUUID: string;
+    export let userUUID: string;
     let reportMessage: string;
     let hiddenError = true;
 
@@ -10,8 +11,8 @@
             hiddenError = true;
         } else {
             hiddenError = false;
-            //gameManager.getCurrentGameScene().connection?.emitReportPlayerMessage(userUUID, reportMessage); //TODO: Use when merge with MenuSvelte
-            showReportScreenStore.set(null) //close the report menu
+            gameManager.getCurrentGameScene().connection?.emitReportPlayerMessage(userUUID, reportMessage);
+            showReportScreenStore.set(null)
         }
     }
 </script>
@@ -38,7 +39,7 @@
       text-align: center;
 
       textarea {
-        height: 200px;
+        height: clamp(100px, 20vh, 20vh);
       }
     }
 </style>

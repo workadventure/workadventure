@@ -33,9 +33,10 @@
         gameManager.leaveGame(SelectCharacterSceneName,new SelectCharacterScene());
     }
 
-    function clickLogin() {
+    //TODO: Uncomment when login will be completely developed
+    /*function clickLogin() {
         connectionManager.loadOpenIDScreen();
-    }
+    }*/
 
 </script>
 
@@ -49,20 +50,18 @@
     <section>
         <button type="button" class="nes-btn" on:click|preventDefault={openEditCompanionScene}>Edit Companion</button>
     </section>
-    <section>
+<!--    <section>
         <button type="button" class="nes-btn is-primary" on:click|preventDefault={clickLogin}>Login</button>
-    </section>
+    </section>-->
 </div>
 
 <style lang="scss">
     div.customize-main{
-      display: grid;
-      grid-template-rows: 33% 33% 33%;
-
       section {
         display: flex;
         justify-content: center;
         align-items: center;
+        margin-bottom: 20px;
 
         button {
           height: 50px;

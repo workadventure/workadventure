@@ -62,7 +62,7 @@
 
 <style lang="scss">
     div.global-message-main {
-      height: calc(100% - 56px);
+      height: calc(100% - 50px);
       display: grid;
       grid-template-rows: 15% 65% 20%;
 
@@ -99,6 +99,19 @@
           span {
             font-family: "Press Start 2P";
           }
+        }
+      }
+    }
+
+    @media only screen and (max-height: 900px) {
+      .global-message-content {
+        height: calc(100% - 5px);
+      }
+      .global-message-footer {
+        margin-bottom: 0;
+
+        label {
+          width: calc(100% - 10px);
         }
       }
     }

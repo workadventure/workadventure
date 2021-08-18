@@ -43,15 +43,29 @@
         HTMLShareLink.select();
         document.execCommand('copy');
     }
+
+    async function shareLink() {
+        const shareData = {url: location.toString()};
+
+        try {
+            await navigator.share(shareData);
+        } catch (err) {
+            console.error('Error: ' + err);
+        }
+    }
 </script>
 
 <div class="about-room-main">
-    <section class="share-url">
+    <section class="share-url not-mobile">
         <h3>Share the link of the room !</h3>
         <input type="text" readonly bind:this={HTMLShareLink} value={location.toString()}>
         <button type="button" class="nes-btn is-primary" on:click={copyLink}>Copy</button>
     </section>
-    <h2>Informations on the map</h2>
+    <section class="is-mobile">
+        <h3>Share the link of the room !</h3>
+        <button type="button" class="nes-btn is-primary" on:click={shareLink}>Share</button>
+    </section>
+    <h2>Information on the map</h2>
     <section class="container-overflow">
         <h3>{mapName}</h3>
         <p class="string-HTML">{mapDescription}</p>
@@ -91,6 +105,10 @@
       }
     }
 
+    section.is-mobile {
+      display: none;
+    }
+
     h2, h3 {
       width: 100%;
       text-align: center;
@@ -111,8 +129,14 @@
 
   @media only screen and (max-height: 900px) {
     div.about-room-main {
-      section.share-url input {
+      section.share-url.not-mobile {
         display: none;
+      }
+
+      section.is-mobile {
+        display: block;
+        text-align: center;
+        margin-bottom: 20px;
       }
 
       section.container-overflow {
