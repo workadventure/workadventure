@@ -2,7 +2,7 @@
     import {showReportScreenStore} from "../../Stores/ShowReportScreenStore";
     import {gameManager} from "../../Phaser/Game/GameManager";
 
-    export let userUUID: string;
+    export let userUUID: string | undefined;
     let reportMessage: string;
     let hiddenError = true;
 
@@ -11,6 +11,9 @@
             hiddenError = true;
         } else {
             hiddenError = false;
+            if( userUUID === undefined) {
+                throw ('User UUID is not valid.');
+            }
             gameManager.getCurrentGameScene().connection?.emitReportPlayerMessage(userUUID, reportMessage);
             showReportScreenStore.set(null)
         }
