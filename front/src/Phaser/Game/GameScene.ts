@@ -953,9 +953,13 @@ export class GameScene extends DirtyScene {
                     return;
                 }
                 const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
-                let html = `<div id="container" hidden><div class="nes-container with-title is-centered">
+                let html = '<div id="container" hidden>';
+                if (escapedMessage) {
+                    html += `<div class="nes-container with-title is-centered">
 ${escapedMessage}
  </div> `;
+                }
+
                 const buttonContainer = '<div class="buttonContainer"</div>';
                 html += buttonContainer;
                 let id = 0;
@@ -985,7 +989,11 @@ ${escapedMessage}
                     const btnId = id;
                     button.onclick = () => {
                         iframeListener.sendButtonClickedEvent(openPopupEvent.popupId, btnId);
+                        // Disable for a short amount of time to let time to the script to remove the popup
                         button.disabled = true;
+                        setTimeout(() => {
+                            button.disabled = false;
+                        }, 100);
                     };
                     id++;
                 }
