@@ -17,6 +17,7 @@ export class GameManager {
     private playerName: string | null;
     private characterLayers: string[] | null;
     private companion: string | null;
+    private positionBeforeSleep: { scene: string; x: number; y: number } | undefined;
     private startRoom!: Room;
     private scenePlugin!: Phaser.Scenes.ScenePlugin;
     currentGameSceneName: string | null = null;
@@ -70,6 +71,10 @@ export class GameManager {
         return this.companion;
     }
 
+    getPositionBeforeSleep(): { scene: string; x: number; y: number } | undefined {
+        return this.positionBeforeSleep;
+    }
+
     public loadMap(room: Room) {
         const roomID = room.key;
 
@@ -108,6 +113,11 @@ export class GameManager {
         if (this.currentGameSceneName === null) throw "No current scene id set!";
         const gameScene: GameScene = this.scenePlugin.get(this.currentGameSceneName) as GameScene;
         gameScene.cleanupClosingScene();
+        this.positionBeforeSleep = {
+            scene: gameScene.roomUrl,
+            x: gameScene.CurrentPlayer.x,
+            y: gameScene.CurrentPlayer.y,
+        };
         this.scenePlugin.stop(this.currentGameSceneName);
         this.scenePlugin.sleep(MenuSceneName);
         if (!this.scenePlugin.get(targetSceneName)) {

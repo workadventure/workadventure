@@ -92,9 +92,7 @@ import { PropertyUtils } from "../Map/PropertyUtils";
 import Tileset = Phaser.Tilemaps.Tileset;
 import { userIsAdminStore } from "../../Stores/GameStore";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
-import { get } from "svelte/store";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
-import { helpCameraSettingsVisibleStore } from "../../Stores/HelpCameraSettingsStore";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -540,7 +538,15 @@ export class GameScene extends DirtyScene {
         }
 
         //notify game manager can to create currentUser in map
-        this.createCurrentPlayer();
+        const positionBeforeSleep = gameManager.getPositionBeforeSleep();
+        if (positionBeforeSleep && positionBeforeSleep.scene === this.room.key) {
+            this.createCurrentPlayer(positionBeforeSleep.x, positionBeforeSleep.y);
+        } else {
+            this.createCurrentPlayer(
+                this.startPositionCalculator.startPosition.x,
+                this.startPositionCalculator.startPosition.y
+            );
+        }
         this.removeAllRemotePlayers(); //cleanup the list  of remote players in case the scene was rebooted
 
         this.initCamera();
@@ -760,8 +766,10 @@ export class GameScene extends DirtyScene {
                 this.connectionAnswerPromiseResolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.
 
-                this.scene.wake();
-                this.scene.stop(ReconnectingSceneName);
+                if (this.scene.isSleeping()) {
+                    this.scene.wake();
+                    this.scene.stop(ReconnectingSceneName);
+                }
 
                 //init user position and play trigger to check layers properties
                 this.gameMap.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
@@ -1483,14 +1491,14 @@ ${escapedMessage}
         }
     }
 
-    createCurrentPlayer() {
+    createCurrentPlayer(x: number, y: number) {
         //TODO create animation moving between exit and start
         const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, this.characterLayers);
         try {
             this.CurrentPlayer = new Player(
                 this,
-                this.startPositionCalculator.startPosition.x,
-                this.startPositionCalculator.startPosition.y,
+                x,
+                y,
                 this.playerName,
                 texturesPromise,
                 PlayerAnimationDirections.Down,
