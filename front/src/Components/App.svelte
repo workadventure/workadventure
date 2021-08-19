@@ -38,7 +38,7 @@
     import LayoutManager from "./LayoutManager/LayoutManager.svelte";
     import {audioManagerVisibilityStore} from "../Stores/AudioManagerStore";
     import AudioManager from "./AudioManager/AudioManager.svelte"
-    import { showReportScreenStore } from "../Stores/ShowReportScreenStore";
+    import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore";
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
 
     export let game: Game;
@@ -96,7 +96,7 @@
             <LayoutManager></LayoutManager>
         </div>
     {/if}
-    {#if $showReportScreenStore}
+    {#if $showReportScreenStore !== userReportEmpty}
         <div>
             <ReportMenu></ReportMenu>
         </div>

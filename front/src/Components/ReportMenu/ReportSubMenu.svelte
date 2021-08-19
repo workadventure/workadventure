@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {showReportScreenStore} from "../../Stores/ShowReportScreenStore";
+    import {showReportScreenStore, userReportEmpty} from "../../Stores/ShowReportScreenStore";
     import {gameManager} from "../../Phaser/Game/GameManager";
 
     export let userUUID: string | undefined;
@@ -12,10 +12,11 @@
         } else {
             hiddenError = false;
             if( userUUID === undefined) {
-                throw ('User UUID is not valid.');
+                console.error('User UUID is not valid.');
+                return;
             }
             gameManager.getCurrentGameScene().connection?.emitReportPlayerMessage(userUUID, reportMessage);
-            showReportScreenStore.set(null)
+            showReportScreenStore.set(userReportEmpty)
         }
     }
 </script>

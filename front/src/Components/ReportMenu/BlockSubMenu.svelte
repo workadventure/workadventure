@@ -1,6 +1,6 @@
 <script lang="ts">
     import {blackListManager} from "../../WebRtc/BlackListManager";
-    import {showReportScreenStore} from "../../Stores/ShowReportScreenStore";
+    import {showReportScreenStore, userReportEmpty} from "../../Stores/ShowReportScreenStore";
     import {onMount} from "svelte";
 
     export let userUUID: string | undefined;
@@ -9,7 +9,7 @@
     onMount(() => {
         if (userUUID === undefined) {
             userIsBlocked = false;
-            throw new Error("There is no user to block");
+            console.error("There is no user to block");
         } else {
             userIsBlocked = blackListManager.isBlackListed(userUUID);
         }
@@ -17,12 +17,13 @@
 
     function blockUser(): void {
         if (userUUID === undefined) {
-            throw new Error("There is no user to block");
+            console.error("There is no user to block");
+            return;
         }
         blackListManager.isBlackListed(userUUID)
             ? blackListManager.cancelBlackList(userUUID)
             : blackListManager.blackList(userUUID);
-        showReportScreenStore.set(null); //close the report menu
+        showReportScreenStore.set(userReportEmpty); //close the report menu
     }
 </script>
 

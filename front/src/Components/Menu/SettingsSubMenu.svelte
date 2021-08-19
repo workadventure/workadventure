@@ -93,13 +93,12 @@ function changeNotification() {
 
 <style lang="scss">
   div.settings-main {
-    height: calc(100% - 56px);
-    display: grid;
-    grid-template-rows: 25% 25% 25% 20%;
+    height: calc(100% - 40px);
 
     section {
       width: 100%;
       padding: 20px 20px 0;
+      margin-bottom: 20px;
       text-align: center;
 
       div.nes-select select:focus {
@@ -132,7 +131,7 @@ function changeNotification() {
       }
 
       section.settings-section-noSaveOption {
-        margin-top: 20px;
+        height: 80px;
         grid-template-columns: none;
         grid-template-rows: calc(100% / var(--nb-noSaveOptions)) calc(100% / var(--nb-noSaveOptions)); //Same size for every sub-element;
       }

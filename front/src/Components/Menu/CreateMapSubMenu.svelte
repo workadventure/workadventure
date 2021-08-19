@@ -1,15 +1,11 @@
 <script lang="ts">
 
     function goToGettingStarted() {
-        //The redirection must be only on workadventu.re domain
-        //To day the domain staging cannot be use by customer
         const sparkHost = "https://workadventu.re/getting-started";
         window.open(sparkHost, "_blank");
     }
 
     function goToBuildingMap() {
-        //The redirection must be only on workadventu.re domain
-        //The scripting API function could change on other domain and that could break map created with the old function
         const sparkHost = "https://workadventu.re/map-building";
         window.open(sparkHost, "_blank");
     }

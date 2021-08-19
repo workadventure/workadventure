@@ -7,7 +7,7 @@
     import GlobalMessageSubMenu from "./GlobalMessagesSubMenu.svelte";
     import ContactSubMenu from "./ContactSubMenu.svelte";
     import {menuVisiblilityStore, SubMenusInterface, subMenusStore} from "../../Stores/MenuStore";
-    //import {userIsAdminStore} from "../../Stores/GameStore";
+    import {userIsAdminStore} from "../../Stores/GameStore";
     import {onMount} from "svelte";
     import {get} from "svelte/store";
     import {sendMenuClickedEvent} from "../../Api/iframe/Ui/MenuItem";
@@ -16,10 +16,13 @@
     let activeComponent: typeof SettingsSubMenu = SettingsSubMenu;
 
     onMount(() => {
-        //TODO: Uncomment before final push to merge
-        /*if(!get(userIsAdminStore)) {
+        if(!get(userIsAdminStore)) {
             subMenusStore.removeMenu(SubMenusInterface.globalMessages);
-        }*/
+        }
+
+        //Until we can add iframe to a menu and change contact for self-hosted version
+        //we remove the contact sub-menu
+        subMenusStore.removeMenu(SubMenusInterface.contact);
 
         switchMenu(SubMenusInterface.settings);
     })
@@ -94,7 +97,7 @@
 
     font-family: "Press Start 2P";
     pointer-events: auto;
-    height: 70vh;
+    height: 80vh;
     width: 75vw;
     top: 10vh;
 
@@ -129,7 +132,7 @@
   @media only screen and (max-width: 800px) {
     div.menu-container-main {
       --size-first-columns-grid: 120px;
-      //height: calc(100vh - 110px);
+      height: 70vh;
       top: 55px;
       width: 100vw;
       font-size: 0.5em;

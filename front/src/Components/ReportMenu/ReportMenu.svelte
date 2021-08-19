@@ -1,31 +1,32 @@
 <script lang="ts">
-    import {showReportScreenStore} from "../../Stores/ShowReportScreenStore";
+    import {showReportScreenStore, userReportEmpty} from "../../Stores/ShowReportScreenStore";
     import BlockSubMenu from "./BlockSubMenu.svelte";
     import ReportSubMenu from "./ReportSubMenu.svelte";
     import {onDestroy, onMount} from "svelte";
     import type {Unsubscriber} from "svelte/store";
     import {playersStore} from "../../Stores/PlayersStore";
-    //import {connectionManager} from "../../Connexion/ConnectionManager";
-    //import {GameConnexionTypes} from "../../Url/UrlManager";
+    import {connectionManager} from "../../Connexion/ConnectionManager";
+    import {GameConnexionTypes} from "../../Url/UrlManager";
+    import {get} from "svelte/store";
 
     let blockActive =  true;
     let reportActive = !blockActive;
     let anonymous: boolean = false;
-    let userUUID: string | undefined = '';
+    let userUUID: string | undefined = playersStore.getPlayerById(get(showReportScreenStore).userId)?.userUuid;
     let userName = "No name";
     let unsubscriber: Unsubscriber
 
     onMount(() => {
-        unsubscriber = showReportScreenStore.subscribe((reportSreenStore) => {
-            if (reportSreenStore != null) {
-                userName = reportSreenStore.userName;
-                userUUID = playersStore.getPlayerById(reportSreenStore.userId)?.userUuid;
+        unsubscriber = showReportScreenStore.subscribe((reportScreenStore) => {
+            if (reportScreenStore != null) {
+                userName = reportScreenStore.userName;
+                userUUID = playersStore.getPlayerById(reportScreenStore.userId)?.userUuid;
                 if (userUUID === undefined) {
-                    throw new Error("Could not find UUID for user with ID " + reportSreenStore.userId);
+                    console.error("Could not find UUID for user with ID " + reportScreenStore.userId);
                 }
             }
         })
-        //anonymous = connectionManager.getConnexionType === GameConnexionTypes.anonymous;
+        anonymous = connectionManager.getConnexionType === GameConnexionTypes.anonymous;
     })
 
     onDestroy(() => {
@@ -35,7 +36,7 @@
     })
 
     function close() {
-        showReportScreenStore.set(null);
+        showReportScreenStore.set(userReportEmpty);
     }
 
     function activateBlock() {
