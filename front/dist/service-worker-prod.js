@@ -1,4 +1,4 @@
-let CACHE_NAME = 'workavdenture-cache-v1.4.14';
+let CACHE_NAME = 'workavdenture-cache';
 let urlsToCache = [
     '/'
 ];
@@ -14,7 +14,8 @@ self.addEventListener('install', function(event) {
 });
 
 self.addEventListener('fetch', function(event) {
-    event.respondWith(
+    //TODO mamnage fetch data and cache management
+    /*event.respondWith(
         caches.match(event.request)
             .then(function(response) {
                 // Cache hit - return response
@@ -44,7 +45,7 @@ self.addEventListener('fetch', function(event) {
                     }
                 );
             })
-    );
+    );*/
 });
 
 self.addEventListener('wait', function(event) {
