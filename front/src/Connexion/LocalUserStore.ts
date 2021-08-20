@@ -18,7 +18,7 @@ const state = "state";
 const nonce = "nonce";
 const notification = "notificationPermission";
 
-const cacheAPIIndex = "workavdenture-cache-v1";
+const cacheAPIIndex = "workavdenture-cache";
 
 class LocalUserStore {
     saveUser(localUser: LocalUser) {
