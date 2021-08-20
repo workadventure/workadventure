@@ -11,7 +11,7 @@ To do this in Tiled:
 
 <div>
     <figure class="figure">
-        <img src="https://workadventu.re/img/docs/website_url_property.png" class="figure-img img-fluid rounded" alt="" style="width: 70%" />
+        <img src="images/website_url_property.png" class="figure-img img-fluid rounded" alt="" style="width: 70%" />
         <figcaption class="figure-caption">A "website" object</figcaption>
     </figure>
 </div>
@@ -34,7 +34,7 @@ to explicitly allow it, by setting an additional `allowApi` property to `true`.
 
 <div>
     <figure class="figure">
-        <img src="https://workadventu.re/img/docs/website_allowapi_property.png" class="figure-img img-fluid rounded" alt="" style="width: 70%" />
+        <img src="images/website_allowapi_property.png" class="figure-img img-fluid rounded" alt="" style="width: 70%" />
         <figcaption class="figure-caption">A "website" object that can communicate using the Iframe API</figcaption>
     </figure>
 </div>

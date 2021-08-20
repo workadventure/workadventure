@@ -46,7 +46,7 @@ You can put relative URLs. If your script file is next to your map, you can simp
 
 <div>
     <figure class="figure">
-        <img src="https://workadventu.re/img/docs/script_property.png" class="figure-img img-fluid rounded" alt="" />
+        <img src="images/script_property.png" class="figure-img img-fluid rounded" alt="" />
         <figcaption class="figure-caption">The script property</figcaption>
     </figure>
 </div>
@@ -72,7 +72,7 @@ In order to allow communication with WorkAdventure, you need to add an additiona
 
 <div>
     <figure class="figure">
-        <img src="https://workadventu.re/img/docs/open_website_allow_api.png" class="figure-img img-fluid rounded" alt="" />
+        <img src="images/open_website_allow_api.png" class="figure-img img-fluid rounded" alt="" />
         <figcaption class="figure-caption">The `openWebsiteAllowApi` property</figcaption>
     </figure>
 </div>
