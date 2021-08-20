@@ -54,10 +54,11 @@ class ConnectionManager {
      */
     public async logout() {
         //Logout user in pusher and hydra
-        const code = localUserStore.getCode();
-        const { authToken } = await Axios.get(`${PUSHER_URL}/logout-callback`, { params: { code } }).then(
+        const token = localUserStore.getAuthToken();
+        const { authToken } = await Axios.get(`${PUSHER_URL}/logout-callback`, { params: { token } }).then(
             (res) => res.data
         );
+        localUserStore.setAuthToken(null);
 
         //Go on login page can permit to clear token and start authentication process
         window.location.assign("/login");

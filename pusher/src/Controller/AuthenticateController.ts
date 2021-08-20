@@ -86,13 +86,16 @@ export class AuthenticateController extends BaseController {
                 console.warn("/message request was aborted");
             });
 
-            const { code } = parse(req.getQuery());
+            const { token } = parse(req.getQuery());
 
             try {
-                //TODO logout from hydra
-                await openIDClient.logoutUser(code as string);
+                const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
+                if (authTokenData.hydraAccessToken == undefined) {
+                    throw Error("Token cannot to be logout on Hydra");
+                }
+                await openIDClient.logoutUser(authTokenData.hydraAccessToken);
             } catch (error) {
-                console.error(error);
+                console.error("openIDCallback => logout-callback", error);
             } finally {
                 res.writeStatus("200");
                 this.addCorsHeaders(res);
