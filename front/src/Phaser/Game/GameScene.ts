@@ -538,15 +538,7 @@ export class GameScene extends DirtyScene {
         }
 
         //notify game manager can to create currentUser in map
-        const positionBeforeSleep = gameManager.getPositionBeforeSleep();
-        if (positionBeforeSleep && positionBeforeSleep.scene === this.room.key) {
-            this.createCurrentPlayer(positionBeforeSleep.x, positionBeforeSleep.y);
-        } else {
-            this.createCurrentPlayer(
-                this.startPositionCalculator.startPosition.x,
-                this.startPositionCalculator.startPosition.y
-            );
-        }
+        this.createCurrentPlayer();
         this.removeAllRemotePlayers(); //cleanup the list  of remote players in case the scene was rebooted
 
         this.initCamera();
@@ -692,19 +684,7 @@ export class GameScene extends DirtyScene {
                 this.connection.onServerDisconnected(() => {
                     console.log("Player disconnected from server. Reloading scene.");
                     this.cleanupClosingScene();
-
-                    const gameSceneKey = "somekey" + Math.round(Math.random() * 10000);
-                    const game: Phaser.Scene = new GameScene(this.room, this.MapUrlFile, gameSceneKey);
-                    this.scene.add(gameSceneKey, game, true, {
-                        initPosition: {
-                            x: this.CurrentPlayer.x,
-                            y: this.CurrentPlayer.y,
-                        },
-                        reconnecting: true,
-                    });
-
-                    this.scene.stop(this.scene.key);
-                    this.scene.remove(this.scene.key);
+                    this.createSuccessorGameScene(true, true);
                 });
 
                 this.connection.onActionableEvent((message) => {
@@ -1491,14 +1471,14 @@ ${escapedMessage}
         }
     }
 
-    createCurrentPlayer(x: number, y: number) {
+    createCurrentPlayer() {
         //TODO create animation moving between exit and start
         const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, this.characterLayers);
         try {
             this.CurrentPlayer = new Player(
                 this,
-                x,
-                y,
+                this.startPositionCalculator.startPosition.x,
+                this.startPositionCalculator.startPosition.y,
                 this.playerName,
                 texturesPromise,
                 PlayerAnimationDirections.Down,
@@ -1935,5 +1915,25 @@ ${escapedMessage}
     zoomByFactor(zoomFactor: number) {
         waScaleManager.zoomModifier *= zoomFactor;
         biggestAvailableAreaStore.recompute();
+    }
+
+    public createSuccessorGameScene(autostart: boolean, reconnecting: boolean) {
+        const gameSceneKey = "somekey" + Math.round(Math.random() * 10000);
+        const game = new GameScene(this.room, this.MapUrlFile, gameSceneKey);
+        this.scene.add(gameSceneKey, game, autostart, {
+            initPosition: {
+                x: this.CurrentPlayer.x,
+                y: this.CurrentPlayer.y,
+            },
+            reconnecting: reconnecting,
+        });
+
+        //If new gameScene doesn't start automatically then we change the gameScene in gameManager so that it can start the new gameScene
+        if (!autostart) {
+            gameManager.gameSceneIsCreated(game);
+        }
+
+        this.scene.stop(this.scene.key);
+        this.scene.remove(this.scene.key);
     }
 }
