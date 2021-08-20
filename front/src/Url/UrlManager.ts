@@ -7,13 +7,16 @@ export enum GameConnexionTypes {
     empty,
     unknown,
     jwt,
+    login,
 }
 
 //this class is responsible with analysing and editing the game's url
 class UrlManager {
     public getGameConnexionType(): GameConnexionTypes {
         const url = window.location.pathname.toString();
-        if (url === "/jwt") {
+        if (url === "/login") {
+            return GameConnexionTypes.login;
+        } else if (url === "/jwt") {
             return GameConnexionTypes.jwt;
         } else if (url.includes("_/")) {
             return GameConnexionTypes.anonymous;

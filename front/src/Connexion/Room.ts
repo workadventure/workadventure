@@ -14,6 +14,8 @@ export interface RoomRedirect {
 export class Room {
     public readonly id: string;
     public readonly isPublic: boolean;
+    private _authenticationMandatory: boolean = false;
+    private _iframeAuthentication?: string;
     private _mapUrl: string | undefined;
     private _textures: CharacterTexture[] | undefined;
     private instance: string | undefined;
@@ -41,6 +43,9 @@ export class Room {
      * This method will follow room redirects if necessary, so the instance returned is a "real" room.
      */
     public static async createRoom(roomUrl: URL): Promise<Room> {
+        //Set last room visited! (connected or nor, must to be saved in localstorage and cache API)
+        localUserStore.setLastRoomUrl(roomUrl.toString());
+
         let redirectCount = 0;
         while (redirectCount < 32) {
             const room = new Room(roomUrl);
@@ -101,6 +106,8 @@ export class Room {
         console.log("Map ", this.id, " resolves to URL ", data.mapUrl);
         this._mapUrl = data.mapUrl;
         this._textures = data.textures;
+        this._authenticationMandatory = data.authenticationMandatory || false;
+        this._iframeAuthentication = data.iframeAuthentication;
         return new MapDetail(data.mapUrl, data.textures);
     }
 
@@ -185,5 +192,13 @@ export class Room {
             throw new Error("Map URL not fetched yet");
         }
         return this._mapUrl;
+    }
+
+    get authenticationMandatory(): boolean {
+        return this._authenticationMandatory;
+    }
+
+    get iframeAuthentication(): string | undefined {
+        return this._iframeAuthentication;
     }
 }

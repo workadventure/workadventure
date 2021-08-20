@@ -60,7 +60,7 @@ export class AuthenticateController extends BaseController {
                         await openIDClient.checkTokenAuth(authTokenData.hydraAccessToken);
                         res.writeStatus("200");
                         this.addCorsHeaders(res);
-                        return res.end(JSON.stringify({ token }));
+                        return res.end(JSON.stringify({ authToken: token }));
                     } catch (err) {
                         console.info("User was not connected", err);
                     }
@@ -78,6 +78,25 @@ export class AuthenticateController extends BaseController {
                 return res.end(JSON.stringify({ authToken }));
             } catch (e) {
                 return this.errorToResponse(e, res);
+            }
+        });
+
+        this.App.get("/logout-callback", async (res: HttpResponse, req: HttpRequest) => {
+            res.onAborted(() => {
+                console.warn("/message request was aborted");
+            });
+
+            const { code } = parse(req.getQuery());
+
+            try {
+                //TODO logout from hydra
+                await openIDClient.logoutUser(code as string);
+            } catch (error) {
+                console.error(error);
+            } finally {
+                res.writeStatus("200");
+                this.addCorsHeaders(res);
+                return res.end();
             }
         });
     }

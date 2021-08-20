@@ -218,7 +218,7 @@ export class RoomConnection implements RoomConnection {
                 worldFullMessageStream.onMessage();
                 this.closed = true;
             } else if (message.hasTokenexpiredmessage()) {
-                connectionManager.loadOpenIDScreen();
+                connectionManager.logout();
                 this.closed = true; //technically, this isn't needed since loadOpenIDScreen() will do window.location.assign() but I prefer to leave it for consistency
             } else if (message.hasWorldconnexionmessage()) {
                 worldFullMessageStream.onMessage(message.getWorldconnexionmessage()?.getMessage());

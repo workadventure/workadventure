@@ -7,6 +7,7 @@ import { localUserStore } from "./LocalUserStore";
 import { CharacterTexture, LocalUser } from "./LocalUser";
 import { Room } from "./Room";
 import { _ServiceWorker } from "../Network/ServiceWorker";
+import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -15,6 +16,7 @@ class ConnectionManager {
     private reconnectingTimeout: NodeJS.Timeout | null = null;
     private _unloading: boolean = false;
     private authToken: string | null = null;
+    private _currentRoom: Room | null = null;
 
     private serviceWorker?: _ServiceWorker;
 
@@ -30,23 +32,35 @@ class ConnectionManager {
     }
 
     /**
-     * @return void
+     * TODO fix me to be move in game manager
      */
-    public async loadOpenIDScreen(): Promise<void> {
-        try {
-            return await this.checkAuthUserConnexion();
-        } catch (err) {
-            console.info("Authentication user by token wasn't checked", err);
-        }
+    public loadOpenIDScreen() {
         const state = localUserStore.generateState();
         const nonce = localUserStore.generateNonce();
         localUserStore.setAuthToken(null);
-        window.location.assign(`http://${PUSHER_URL}/login-screen?state=${state}&nonce=${nonce}`);
+
+        //TODO fix me to redirect this URL by pusher
+        if (!this._currentRoom || !this._currentRoom.iframeAuthentication) {
+            loginSceneVisibleIframeStore.set(false);
+            return null;
+        }
+        const redirectUrl = `${this._currentRoom.iframeAuthentication}?state=${state}&nonce=${nonce}`;
+        window.location.assign(redirectUrl);
+        return redirectUrl;
     }
 
-    public logout() {
-        localUserStore.setAuthToken(null);
-        window.location.reload();
+    /**
+     * Logout
+     */
+    public async logout() {
+        //Logout user in pusher and hydra
+        const code = localUserStore.getCode();
+        const { authToken } = await Axios.get(`${PUSHER_URL}/logout-callback`, { params: { code } }).then(
+            (res) => res.data
+        );
+
+        //Go on login page can permit to clear token and start authentication process
+        window.location.assign("/login");
     }
 
     /**
@@ -55,8 +69,13 @@ class ConnectionManager {
     public async initGameConnexion(): Promise<Room> {
         const connexionType = urlManager.getGameConnexionType();
         this.connexionType = connexionType;
-        let room: Room | null = null;
-        if (connexionType === GameConnexionTypes.jwt) {
+        this._currentRoom = null;
+        if (connexionType === GameConnexionTypes.login) {
+            //TODO clear all cash and redirect on login scene (iframe)
+            localUserStore.setAuthToken(null);
+            this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
+            urlManager.pushRoomIdToUrl(this._currentRoom);
+        } else if (connexionType === GameConnexionTypes.jwt) {
             const urlParams = new URLSearchParams(window.location.search);
             const code = urlParams.get("code");
             const state = urlParams.get("state");
@@ -73,8 +92,8 @@ class ConnectionManager {
                 console.error(err);
                 this.loadOpenIDScreen();
             }
-            room = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
-            urlManager.pushRoomIdToUrl(room);
+            this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
+            urlManager.pushRoomIdToUrl(this._currentRoom);
         } else if (connexionType === GameConnexionTypes.register) {
             //@deprecated
             const organizationMemberToken = urlManager.getOrganizationToken();
@@ -88,7 +107,7 @@ class ConnectionManager {
 
             const roomUrl = data.roomUrl;
 
-            room = await Room.createRoom(
+            this._currentRoom = await Room.createRoom(
                 new URL(
                     window.location.protocol +
                         "//" +
@@ -98,7 +117,7 @@ class ConnectionManager {
                         window.location.hash
                 )
             );
-            urlManager.pushRoomIdToUrl(room);
+            urlManager.pushRoomIdToUrl(this._currentRoom);
         } else if (
             connexionType === GameConnexionTypes.organization ||
             connexionType === GameConnexionTypes.anonymous ||
@@ -134,13 +153,13 @@ class ConnectionManager {
             }
 
             //get detail map for anonymous login and set texture in local storage
-            room = await Room.createRoom(new URL(roomPath));
-            if (room.textures != undefined && room.textures.length > 0) {
+            this._currentRoom = await Room.createRoom(new URL(roomPath));
+            if (this._currentRoom.textures != undefined && this._currentRoom.textures.length > 0) {
                 //check if texture was changed
                 if (this.localUser.textures.length === 0) {
-                    this.localUser.textures = room.textures;
+                    this.localUser.textures = this._currentRoom.textures;
                 } else {
-                    room.textures.forEach((newTexture) => {
+                    this._currentRoom.textures.forEach((newTexture) => {
                         const alreadyExistTexture = this.localUser.textures.find((c) => newTexture.id === c.id);
                         if (this.localUser.textures.findIndex((c) => newTexture.id === c.id) !== -1) {
                             return;
@@ -151,12 +170,12 @@ class ConnectionManager {
                 localUserStore.saveUser(this.localUser);
             }
         }
-        if (room == undefined) {
+        if (this._currentRoom == undefined) {
             return Promise.reject(new Error("Invalid URL"));
         }
 
         this.serviceWorker = new _ServiceWorker();
-        return Promise.resolve(room);
+        return Promise.resolve(this._currentRoom);
     }
 
     public async anonymousLogin(isBenchmark: boolean = false): Promise<void> {
@@ -211,9 +230,6 @@ class ConnectionManager {
             });
 
             connection.onConnect((connect: OnConnectInterface) => {
-                //save last room url connected
-                localUserStore.setLastRoomUrl(roomUrl);
-
                 resolve(connect);
             });
         }).catch((err) => {
@@ -250,6 +266,10 @@ class ConnectionManager {
         );
         localUserStore.setAuthToken(authToken);
         this.authToken = authToken;
+    }
+
+    get currentRoom() {
+        return this._currentRoom;
     }
 }
 

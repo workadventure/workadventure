@@ -46,6 +46,10 @@ class OpenIDClient {
         });
     }
 
+    public logoutUser(code: string): Promise<void> {
+        return Promise.resolve();
+    }
+
     public checkTokenAuth(token: string): Promise<IntrospectionResponse> {
         return this.initClient().then((client) => {
             return client.userinfo(token);
