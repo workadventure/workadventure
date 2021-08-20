@@ -101,6 +101,7 @@
     },
     "redis": {
       "image": "redis:6",
+      "ports": [6379]
     }
   },
   "config": {
