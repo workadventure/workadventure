@@ -158,7 +158,7 @@ export class InteractiveLayer extends Container {
             const sprite = entity.sprite;
 
             if (sprite.anims.isPlaying) {
-                sprite.anims.play({ key: entity.animation, startFrame: sprite.anims.currentFrame.index }, false);
+                //sprite.anims.play({ key: entity.animation, startFrame: sprite.anims.currentFrame.index }, false);
             } else {
                 sprite.anims.play(entity.animation);
             }
