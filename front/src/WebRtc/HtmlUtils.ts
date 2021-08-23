@@ -1,3 +1,5 @@
+import { blackListManager } from "./BlackListManager";
+
 export class HtmlUtils {
     public static getElementByIdOrFail<T extends HTMLElement>(id: string): T {
         const elem = document.getElementById(id);
@@ -25,10 +27,14 @@ export class HtmlUtils {
     }
 
     public static escapeHtml(html: string): string {
-        const text = document.createTextNode(html.replace(/(\r\n|\r|\n)/g, "<br/>"));
-        const p = document.createElement("p");
-        p.appendChild(text);
-        return p.innerHTML;
+        let innerHTML = "";
+        const tabBackLine = html.match(/(\r\n|\r|\n)/g);
+        for (const text in blackListManager) {
+            const p = document.createElement("p");
+            p.appendChild(document.createTextNode(text));
+            innerHTML += p.innerHTML;
+        }
+        return innerHTML;
     }
 
     public static urlify(text: string, style: string = ""): string {
