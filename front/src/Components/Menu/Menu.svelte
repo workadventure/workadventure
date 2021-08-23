@@ -11,6 +11,7 @@
     import {onMount} from "svelte";
     import {get} from "svelte/store";
     import {sendMenuClickedEvent} from "../../Api/iframe/Ui/MenuItem";
+    import {CONTACT_URL} from "../../Enum/EnvironmentVariable";
 
     let activeSubMenu: string = SubMenusInterface.settings;
     let activeComponent: typeof SettingsSubMenu = SettingsSubMenu;
@@ -20,9 +21,9 @@
             subMenusStore.removeMenu(SubMenusInterface.globalMessages);
         }
 
-        //Until we can add iframe to a menu and change contact for self-hosted version
-        //we remove the contact sub-menu
-        subMenusStore.removeMenu(SubMenusInterface.contact);
+        if(CONTACT_URL === undefined) {
+            subMenusStore.removeMenu(SubMenusInterface.contact);
+        }
 
         switchMenu(SubMenusInterface.settings);
     })
