@@ -29,7 +29,7 @@ font that has support for a variety of accents. It renders great when used at *8
 
 <div>
     <figure class="figure">
-        <img src="https://workadventu.re/img/docs/text-object.png" class="figure-img img-fluid rounded" alt="" style="width: 70%" />
+        <img src="images/text-object.png" class="figure-img img-fluid rounded" alt="" style="width: 70%" />
         <figcaption class="figure-caption">The "font-family" property</figcaption>
     </figure>
 </div>
