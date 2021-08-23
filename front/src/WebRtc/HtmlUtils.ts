@@ -28,7 +28,7 @@ export class HtmlUtils {
 
     public static escapeHtml(html: string): string {
         let innerHTML = "";
-        const tabBackLine = html.match(/(\r\n|\r|\n)/g);
+        const tabBackLine = html.match(/(\n\r|\r\n|\r|\n)/g);
         for (const text in blackListManager) {
             const p = document.createElement("p");
             p.appendChild(document.createTextNode(text));
