@@ -9,10 +9,10 @@ You can position this popup by using a "rectangle" object in Tiled that you will
 
 <div class="row">
     <div class="col">
-        <img src="https://workadventu.re/img/docs/screen_popup_tiled.png" class="figure-img img-fluid rounded" alt="" />
+        <img src="images/screen_popup_tiled.png" class="figure-img img-fluid rounded" alt="" />
     </div>
     <div class="col">
-        <img src="https://workadventu.re/img/docs/screen_popup_in_game.png" class="figure-img img-fluid rounded" alt="" />
+        <img src="images/screen_popup_in_game.png" class="figure-img img-fluid rounded" alt="" />
     </div>
 </div>
 
@@ -85,7 +85,7 @@ WA.ui.registerMenuCommand("test", () => {
 ```
 
 <div class="col">
-    <img src="https://workadventu.re/img/docs/menu-command.png" class="figure-img img-fluid rounded" alt="" />
+    <img src="images/menu-command.png" class="figure-img img-fluid rounded" alt="" />
 </div>
 
 
@@ -103,7 +103,7 @@ WA.ui.displayActionMessage({
 Displays a message at the bottom of the screen (that will disappear when space bar is pressed).
 
 <div class="col">
-    <img src="https://workadventu.re/img/docs/trigger_message.png" class="figure-img img-fluid rounded" alt="" />
+    <img src="images/trigger_message.png" class="figure-img img-fluid rounded" alt="" />
 </div>
 
 Example:
