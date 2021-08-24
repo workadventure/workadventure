@@ -1084,10 +1084,14 @@ div.action.danger p.action-body{
     text-align: left;
     color: white;
 }
-.popUpElement div {
+.popUpElement div{
     font-family: 'Press Start 2P';
     font-size: 10px;
     background-color: #727678;
+    white-space: pre-line;
+}
+.popUpElement .nes-container{
+    padding: 1rem 1rem;
 }
 
 .popUpElement button {
