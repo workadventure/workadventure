@@ -109,9 +109,31 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         sendToWorkadventure({
             type: "registerMenuCommand",
             data: {
-                menutItem: commandDescriptor,
+                menuItem: commandDescriptor,
             },
         });
+    }
+
+    registerMenuIframe(menuName: string, iframeUrl: string) {
+        sendToWorkadventure({
+            type: "registerMenuIframe",
+            data: {
+                name: menuName,
+                url: iframeUrl,
+            },
+        });
+    }
+
+    unregisterMenu(menuName: string) {
+        sendToWorkadventure({
+            type: "unregisterMenu",
+            data: {
+                name: menuName,
+            },
+        });
+        if (menuCallbacks.get(menuName)) {
+            menuCallbacks.delete(menuName);
+        }
     }
 
     displayBubble(): void {

@@ -1,4 +1,4 @@
-import { writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 import Timeout = NodeJS.Timeout;
 
 export const menuIconVisiblilityStore = writable(false);
@@ -66,3 +66,35 @@ function createSubMenusStore() {
 }
 
 export const subMenusStore = createSubMenusStore();
+
+export const customMenuIframe = new Map<string, string>();
+
+export function handleMenuRegistrationEvent(
+    menuName: string,
+    iframeUrl: string | undefined = undefined,
+    source: string | undefined = undefined
+) {
+    if (get(subMenusStore).includes(menuName)) {
+        console.warn("The menu " + menuName + " already exist.");
+        return;
+    }
+
+    subMenusStore.addMenu(menuName);
+
+    if (iframeUrl !== undefined) {
+        //Add a subMenu from an iframe to the menu
+        const url = new URL(iframeUrl, source);
+        customMenuIframe.set(menuName, url.toString());
+    }
+}
+
+export function handleMenuUnregisterEvent(menuName: string) {
+    const subMenuGeneral: string[] = Object.values(SubMenusInterface);
+    if (subMenuGeneral.includes(menuName)) {
+        console.warn("The menu " + menuName + " is a mandatory menu. It can't be remove");
+        return;
+    }
+
+    subMenusStore.removeMenu(menuName);
+    customMenuIframe.delete(menuName);
+}

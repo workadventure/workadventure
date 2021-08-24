@@ -6,7 +6,8 @@
     import AboutRoomSubMenu from "./AboutRoomSubMenu.svelte";
     import GlobalMessageSubMenu from "./GlobalMessagesSubMenu.svelte";
     import ContactSubMenu from "./ContactSubMenu.svelte";
-    import {menuVisiblilityStore, SubMenusInterface, subMenusStore} from "../../Stores/MenuStore";
+    import CustomSubMenu from "./CustomSubMenu.svelte"
+    import {customMenuIframe, menuVisiblilityStore, SubMenusInterface, subMenusStore} from "../../Stores/MenuStore";
     import {userIsAdminStore} from "../../Stores/GameStore";
     import {onMount} from "svelte";
     import {get} from "svelte/store";
@@ -14,7 +15,8 @@
     import {CONTACT_URL} from "../../Enum/EnvironmentVariable";
 
     let activeSubMenu: string = SubMenusInterface.settings;
-    let activeComponent: typeof SettingsSubMenu = SettingsSubMenu;
+    let activeComponent: typeof SettingsSubMenu | typeof CustomSubMenu= SettingsSubMenu;
+    let props: {iframe: string};
 
     onMount(() => {
         if(!get(userIsAdminStore)) {
@@ -51,8 +53,14 @@
                     activeComponent = ContactSubMenu;
                     break;
                 default:
-                    sendMenuClickedEvent(menu);
-                    menuVisiblilityStore.set(false);
+                    const customMenu = customMenuIframe.get(menu);
+                    if (customMenu !== undefined) {
+                        props = {iframe: customMenu};
+                        activeComponent = CustomSubMenu;
+                    } else {
+                        sendMenuClickedEvent(menu);
+                        menuVisiblilityStore.set(false);
+                    }
                     break;
             }
         } else throw ("There is no menu called " + menu);
@@ -84,7 +92,7 @@
     </div>
     <div class="menu-submenu-container nes-container is-rounded" transition:fly="{{ y: -1000, duration: 500 }}">
         <h2>{activeSubMenu}</h2>
-        <svelte:component this={activeComponent}/>
+        <svelte:component this={activeComponent} {...props}/>
     </div>
 </div>
 
