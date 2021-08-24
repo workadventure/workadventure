@@ -107,7 +107,7 @@ export class GameManager {
         if (this.currentGameSceneName === null) throw "No current scene id set!";
         const gameScene: GameScene = this.scenePlugin.get(this.currentGameSceneName) as GameScene;
         gameScene.cleanupClosingScene();
-        this.scenePlugin.stop(this.currentGameSceneName);
+        gameScene.createSuccessorGameScene(false, false);
         menuIconVisiblilityStore.set(false);
         if (!this.scenePlugin.get(targetSceneName)) {
             this.scenePlugin.add(targetSceneName, sceneClass, false);
