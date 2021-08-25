@@ -257,8 +257,7 @@ class IframeListener {
                         this.sendPlayerMove = true;
                     } else if (isMenuItemRegisterIframeEvent(payload)) {
                         const data = payload.data.menuItem;
-                        // @ts-ignore
-                        this.iframeCloseCallbacks.get(iframe).push(() => {
+                        this.iframeCloseCallbacks.get(iframe)?.push(() => {
                             handleMenuUnregisterEvent(data);
                         });
                         handleMenuRegistrationEvent(payload.data.menuItem);
@@ -268,8 +267,7 @@ class IframeListener {
                         this._modifyEmbeddedWebsiteStream.next(payload.data);
                     } else if (payload.type == "registerMenuIframe" && isMenuIframeEvent(payload.data)) {
                         const data = payload.data.name;
-                        // @ts-ignore
-                        this.iframeCloseCallbacks.get(iframe).push(() => {
+                        this.iframeCloseCallbacks.get(iframe)?.push(() => {
                             handleMenuUnregisterEvent(data);
                         });
                         handleMenuRegistrationEvent(payload.data.name, payload.data.url, foundSrc);
