@@ -7,24 +7,14 @@
     import GlobalMessageSubMenu from "./GlobalMessagesSubMenu.svelte";
     import ContactSubMenu from "./ContactSubMenu.svelte";
     import {menuVisiblilityStore, SubMenusInterface, subMenusStore} from "../../Stores/MenuStore";
-    import {userIsAdminStore} from "../../Stores/GameStore";
     import {onMount} from "svelte";
     import {get} from "svelte/store";
     import {sendMenuClickedEvent} from "../../Api/iframe/Ui/MenuItem";
-    import {CONTACT_URL} from "../../Enum/EnvironmentVariable";
 
     let activeSubMenu: string = SubMenusInterface.settings;
     let activeComponent: typeof SettingsSubMenu = SettingsSubMenu;
 
     onMount(() => {
-        if(!get(userIsAdminStore)) {
-            subMenusStore.removeMenu(SubMenusInterface.globalMessages);
-        }
-
-        if(CONTACT_URL === undefined) {
-            subMenusStore.removeMenu(SubMenusInterface.contact);
-        }
-
         switchMenu(SubMenusInterface.settings);
     })
 

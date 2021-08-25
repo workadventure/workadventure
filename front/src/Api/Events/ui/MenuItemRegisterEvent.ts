@@ -19,9 +19,6 @@ export const isMenuItemRegisterIframeEvent = new tg.IsInterface()
     })
     .get();
 
-const _registerMenuCommandStream: Subject<string> = new Subject();
-export const registerMenuCommandStream = _registerMenuCommandStream.asObservable();
-
 export function handleMenuItemRegistrationEvent(event: MenuItemRegisterEvent) {
     subMenusStore.addMenu(event.menutItem);
 }

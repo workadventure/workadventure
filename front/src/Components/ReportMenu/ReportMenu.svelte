@@ -75,7 +75,7 @@
     </section>
     <section class="report-menu-content">
         {#if blockActive}
-            <BlockSubMenu userUUID="{userUUID}"/>
+            <BlockSubMenu userUUID="{userUUID}" userName="{userName}"/>
         {:else if reportActive}
             <ReportSubMenu userUUID="{userUUID}"/>
         {:else }

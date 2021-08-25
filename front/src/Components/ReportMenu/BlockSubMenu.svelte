@@ -4,6 +4,7 @@
     import {onMount} from "svelte";
 
     export let userUUID: string | undefined;
+    export let userName: string;
     let userIsBlocked = false;
 
     onMount(() => {
@@ -29,7 +30,7 @@
 
 <div class="block-container">
     <h3>Block</h3>
-    <p>Block any communication from and to this user. This can be reverted.</p>
+    <p>Block any communication from and to {userName}. This can be reverted.</p>
     <button type="button" class="nes-btn is-error" on:click|preventDefault={blockUser}>
         {userIsBlocked ? 'Unblock this user' : 'Block this user'}
     </button>

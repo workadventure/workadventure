@@ -1,4 +1,5 @@
 <script lang="typescript">
+    import logoWA from "../images/logo-WA-min.png"
     import {menuVisiblilityStore} from "../../Stores/MenuStore";
     import {get} from "svelte/store";
 
@@ -16,7 +17,7 @@
 <svelte:window on:keydown={onKeyDown}/>
 
 <main class="menuIcon">
-    <img src="/static/images/logo-WA-min.png" alt="open menu" class="nes-pointer" on:click|preventDefault={showMenu}>
+    <img src={logoWA} alt="open menu" class="nes-pointer" on:click|preventDefault={showMenu}>
 </main>
 
 <style lang="scss">

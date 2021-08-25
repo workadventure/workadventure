@@ -8,9 +8,9 @@
     let expandedMapCopyright = false;
     let expandedTilesetCopyright = false;
 
-    let mapName: string = 'The map has not a name.';
-    let mapDescription: string = "The creator of the map didn't use the property to describe the map.";
-    let mapCopyright: string = "There is not copyright and this map.";
+    let mapName: string = "";
+    let mapDescription: string = "";
+    let mapCopyright: string = "The map creator did not declare a copyright for the map.";
     let tilesetCopyright: string[] = [];
 
     onMount(() => {
@@ -76,7 +76,7 @@
             {#each tilesetCopyright as copyright}
                 <p class="string-HTML">{copyright}</p>
             {:else}
-                <p>None of the tilesets of this map have a property copyright. This doesn't mean that those tilesets have no license.</p>
+                <p>The map creator did not declare a copyright for the tilesets. Warning, This doesn't mean that those tilesets have no license.</p>
             {/each}
         </section>
     </section>
