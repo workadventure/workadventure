@@ -9,7 +9,6 @@ import type { CompanionResourceDescriptionInterface } from "../Companion/Compani
 import { getAllCompanionResources } from "../Companion/CompanionTexturesLoadingManager";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
-import { MenuScene } from "../Menu/MenuScene";
 import { selectCompanionSceneVisibleStore } from "../../Stores/SelectCompanionStore";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { isMobile } from "../../Enum/EnvironmentVariable";

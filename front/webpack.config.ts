@@ -190,6 +190,7 @@ module.exports = {
             PUSHER_URL: undefined,
             UPLOADER_URL: null,
             ADMIN_URL: undefined,
+            CONTACT_URL: null,
             DEBUG_MODE: null,
             STUN_SERVER: null,
             TURN_SERVER: null,

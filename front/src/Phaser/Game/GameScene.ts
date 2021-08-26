@@ -45,7 +45,6 @@ import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
 import type { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapObject, ITiledTileSet } from "../Map/ITiledMap";
-import { MenuScene, MenuSceneName } from "../Menu/MenuScene";
 import { PlayerAnimationDirections } from "../Player/Animation";
 import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
 import { ErrorSceneName } from "../Reconnecting/ErrorScene";
@@ -92,9 +91,7 @@ import { PropertyUtils } from "../Map/PropertyUtils";
 import Tileset = Phaser.Tilemaps.Tileset;
 import { userIsAdminStore } from "../../Stores/GameStore";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
-import { get } from "svelte/store";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
-import { helpCameraSettingsVisibleStore } from "../../Stores/HelpCameraSettingsStore";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -405,12 +402,6 @@ export class GameScene extends DirtyScene {
                 });
             });
         }
-
-        // Now, let's load the script, if any
-        const scripts = this.getScriptUrls(this.mapFile);
-        for (const script of scripts) {
-            iframeListener.registerScript(script);
-        }
     }
 
     //hook initialisation
@@ -569,6 +560,12 @@ export class GameScene extends DirtyScene {
         }
 
         this.createPromiseResolve();
+        // Now, let's load the script, if any
+        const scripts = this.getScriptUrls(this.mapFile);
+        const scriptPromises = [];
+        for (const script of scripts) {
+            scriptPromises.push(iframeListener.registerScript(script));
+        }
 
         this.userInputManager.spaceEvent(() => {
             this.outlinedItem?.activate();
@@ -586,6 +583,7 @@ export class GameScene extends DirtyScene {
         this.triggerOnMapLayerPropertyChange();
 
         if (!this.room.isDisconnected()) {
+            this.scene.sleep();
             this.connect();
         }
 
@@ -608,6 +606,10 @@ export class GameScene extends DirtyScene {
 
         this.chatVisibilityUnsubscribe = chatVisibilityStore.subscribe((v) => {
             this.openChatIcon.setVisible(!v);
+        });
+
+        Promise.all([this.connectionAnswerPromise as Promise<unknown>, ...scriptPromises]).then(() => {
+            this.scene.wake();
         });
     }
 
@@ -686,19 +688,7 @@ export class GameScene extends DirtyScene {
                 this.connection.onServerDisconnected(() => {
                     console.log("Player disconnected from server. Reloading scene.");
                     this.cleanupClosingScene();
-
-                    const gameSceneKey = "somekey" + Math.round(Math.random() * 10000);
-                    const game: Phaser.Scene = new GameScene(this.room, this.MapUrlFile, gameSceneKey);
-                    this.scene.add(gameSceneKey, game, true, {
-                        initPosition: {
-                            x: this.CurrentPlayer.x,
-                            y: this.CurrentPlayer.y,
-                        },
-                        reconnecting: true,
-                    });
-
-                    this.scene.stop(this.scene.key);
-                    this.scene.remove(this.scene.key);
+                    this.createSuccessorGameScene(true, true);
                 });
 
                 this.connection.onActionableEvent((message) => {
@@ -760,8 +750,9 @@ export class GameScene extends DirtyScene {
                 this.connectionAnswerPromiseResolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.
 
-                this.scene.wake();
-                this.scene.stop(ReconnectingSceneName);
+                if (this.scene.isSleeping()) {
+                    this.scene.stop(ReconnectingSceneName);
+                }
 
                 //init user position and play trigger to check layers properties
                 this.gameMap.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
@@ -1330,9 +1321,6 @@ ${escapedMessage}
         if (roomUrl.hash) {
             urlManager.pushStartLayerNameToUrl(roomUrl.hash);
         }
-
-        const menuScene: MenuScene = this.scene.get(MenuSceneName) as MenuScene;
-        menuScene.reset();
 
         if (!targetRoom.isEqual(this.room)) {
             if (this.scene.get(targetRoom.key) === null) {
@@ -1927,5 +1915,25 @@ ${escapedMessage}
     zoomByFactor(zoomFactor: number) {
         waScaleManager.zoomModifier *= zoomFactor;
         biggestAvailableAreaStore.recompute();
+    }
+
+    public createSuccessorGameScene(autostart: boolean, reconnecting: boolean) {
+        const gameSceneKey = "somekey" + Math.round(Math.random() * 10000);
+        const game = new GameScene(this.room, this.MapUrlFile, gameSceneKey);
+        this.scene.add(gameSceneKey, game, autostart, {
+            initPosition: {
+                x: this.CurrentPlayer.x,
+                y: this.CurrentPlayer.y,
+            },
+            reconnecting: reconnecting,
+        });
+
+        //If new gameScene doesn't start automatically then we change the gameScene in gameManager so that it can start the new gameScene
+        if (!autostart) {
+            gameManager.gameSceneIsCreated(game);
+        }
+
+        this.scene.stop(this.scene.key);
+        this.scene.remove(this.scene.key);
     }
 }
