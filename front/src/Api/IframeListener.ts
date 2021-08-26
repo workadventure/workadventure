@@ -34,6 +34,7 @@ import { SetTilesEvent, isSetTilesEvent } from "./Events/SetTilesEvent";
 import type { SetVariableEvent } from "./Events/SetVariableEvent";
 import { ModifyEmbeddedWebsiteEvent, isEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
 import { EmbeddedWebsite } from "./iframe/Room/EmbeddedWebsite";
+import { subMenusStore } from "../Stores/MenuStore";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -92,12 +93,6 @@ class IframeListener {
 
     private readonly _setPropertyStream: Subject<SetPropertyEvent> = new Subject();
     public readonly setPropertyStream = this._setPropertyStream.asObservable();
-
-    private readonly _registerMenuCommandStream: Subject<string> = new Subject();
-    public readonly registerMenuCommandStream = this._registerMenuCommandStream.asObservable();
-
-    private readonly _unregisterMenuCommandStream: Subject<string> = new Subject();
-    public readonly unregisterMenuCommandStream = this._unregisterMenuCommandStream.asObservable();
 
     private readonly _playSoundStream: Subject<PlaySoundEvent> = new Subject();
     public readonly playSoundStream = this._playSoundStream.asObservable();
@@ -264,7 +259,7 @@ class IframeListener {
                         const data = payload.data.menutItem;
                         // @ts-ignore
                         this.iframeCloseCallbacks.get(iframe).push(() => {
-                            this._unregisterMenuCommandStream.next(data);
+                            subMenusStore.removeMenu(data);
                         });
                         handleMenuItemRegistrationEvent(payload.data);
                     } else if (payload.type == "setTiles" && isSetTilesEvent(payload.data)) {

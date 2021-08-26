@@ -1,5 +1,6 @@
 import * as tg from "generic-type-guard";
 import { Subject } from "rxjs";
+import { subMenusStore } from "../../../Stores/MenuStore";
 
 export const isMenuItemRegisterEvent = new tg.IsInterface()
     .withProperties({
@@ -18,9 +19,6 @@ export const isMenuItemRegisterIframeEvent = new tg.IsInterface()
     })
     .get();
 
-const _registerMenuCommandStream: Subject<string> = new Subject();
-export const registerMenuCommandStream = _registerMenuCommandStream.asObservable();
-
 export function handleMenuItemRegistrationEvent(event: MenuItemRegisterEvent) {
-    _registerMenuCommandStream.next(event.menutItem);
+    subMenusStore.addMenu(event.menutItem);
 }

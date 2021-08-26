@@ -16,6 +16,7 @@ const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
 const state = "state";
 const nonce = "nonce";
+const notification = "notificationPermission";
 
 const cacheAPIIndex = "workavdenture-cache";
 
@@ -141,6 +142,14 @@ class LocalUserStore {
     }
     getAuthToken(): string | null {
         return localStorage.getItem(authToken);
+    }
+
+    setNotification(value: string): void {
+        localStorage.setItem(notification, value);
+    }
+
+    getNotification(): string | null {
+        return localStorage.getItem(notification);
     }
 
     generateState(): string {
