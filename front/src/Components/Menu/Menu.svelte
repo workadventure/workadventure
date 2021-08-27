@@ -9,14 +9,15 @@
     import CustomSubMenu from "./CustomSubMenu.svelte"
     import {customMenuIframe, menuVisiblilityStore, SubMenusInterface, subMenusStore} from "../../Stores/MenuStore";
     import {userIsAdminStore} from "../../Stores/GameStore";
-    import {onMount} from "svelte";
-    import {get} from "svelte/store";
+    import {onDestroy, onMount} from "svelte";
+    import {get, Unsubscriber} from "svelte/store";
     import {sendMenuClickedEvent} from "../../Api/iframe/Ui/MenuItem";
     import {CONTACT_URL} from "../../Enum/EnvironmentVariable";
 
     let activeSubMenu: string = SubMenusInterface.settings;
-    let activeComponent: typeof SettingsSubMenu | typeof CustomSubMenu= SettingsSubMenu;
-    let props: {iframe: string};
+    let activeComponent: typeof SettingsSubMenu | typeof CustomSubMenu = SettingsSubMenu;
+    let props: { url: string, allowApi: boolean };
+    let unsubscriberSubMenuStore: Unsubscriber;
 
     onMount(() => {
         if(!get(userIsAdminStore)) {
@@ -27,7 +28,19 @@
             subMenusStore.removeMenu(SubMenusInterface.contact);
         }
 
+        unsubscriberSubMenuStore = subMenusStore.subscribe(() => {
+            if(!get(subMenusStore).includes(activeSubMenu)) {
+                switchMenu(SubMenusInterface.settings);
+            }
+        })
+
         switchMenu(SubMenusInterface.settings);
+    })
+
+    onDestroy(() => {
+        if(unsubscriberSubMenuStore) {
+            unsubscriberSubMenuStore();
+        }
     })
 
     function switchMenu(menu: string) {
@@ -55,7 +68,7 @@
                 default:
                     const customMenu = customMenuIframe.get(menu);
                     if (customMenu !== undefined) {
-                        props = {iframe: customMenu};
+                        props = { url: customMenu.url, allowApi: customMenu.allowApi };
                         activeComponent = CustomSubMenu;
                     } else {
                         sendMenuClickedEvent(menu);

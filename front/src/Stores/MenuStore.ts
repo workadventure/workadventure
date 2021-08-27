@@ -67,12 +67,13 @@ function createSubMenusStore() {
 
 export const subMenusStore = createSubMenusStore();
 
-export const customMenuIframe = new Map<string, string>();
+export const customMenuIframe = new Map<string, { url: string; allowApi: boolean }>();
 
 export function handleMenuRegistrationEvent(
     menuName: string,
     iframeUrl: string | undefined = undefined,
-    source: string | undefined = undefined
+    source: string | undefined = undefined,
+    options: { allowApi: boolean }
 ) {
     if (get(subMenusStore).includes(menuName)) {
         console.warn("The menu " + menuName + " already exist.");
@@ -82,9 +83,8 @@ export function handleMenuRegistrationEvent(
     subMenusStore.addMenu(menuName);
 
     if (iframeUrl !== undefined) {
-        //Add a subMenu from an iframe to the menu
         const url = new URL(iframeUrl, source);
-        customMenuIframe.set(menuName, url.toString());
+        customMenuIframe.set(menuName, { url: url.toString(), allowApi: options.allowApi });
     }
 }
 

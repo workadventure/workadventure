@@ -8,7 +8,7 @@
         script.setAttribute('src', document.referrer + 'iframe_api.js');
         document.head.appendChild(script);
         window.addEventListener('load', () => {
-            WA.ui.registerMenuIframe('test', 'customIframeMenu.html');
+            WA.ui.registerMenuCommand('test', 'customIframeMenu.html', {autoClose: true});
         })
     </script>
 </head>

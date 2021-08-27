@@ -32,7 +32,7 @@ import type {
     TriggerActionMessageEvent,
 } from "./ui/TriggerActionMessageEvent";
 import { isMessageReferenceEvent, isTriggerActionMessageEvent } from "./ui/TriggerActionMessageEvent";
-import type { MenuIframeRegisterEvent, MenuItemRegisterEvent, UnregisterMenuEvent } from "./ui/MenuRegisterEvent";
+import type { MenuRegisterEvent, UnregisterMenuEvent } from "./ui/MenuRegisterEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -63,8 +63,7 @@ export type IframeEventMap = {
     stopSound: null;
     getState: undefined;
     loadTileset: LoadTilesetEvent;
-    registerMenuCommand: MenuItemRegisterEvent;
-    registerMenuIframe: MenuIframeRegisterEvent;
+    registerMenu: MenuRegisterEvent;
     unregisterMenu: UnregisterMenuEvent;
     setTiles: SetTilesEvent;
     modifyEmbeddedWebsite: Partial<EmbeddedWebsite>; // Note: name should be compulsory in fact

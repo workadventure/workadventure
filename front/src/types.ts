@@ -1,10 +1,10 @@
 import type Phaser from "phaser";
 
 export type CursorKey = {
-    isDown: boolean
-}
+    isDown: boolean;
+};
 
-export type Direction =  'left' | 'right' | 'up' | 'down'
+export type Direction = "left" | "right" | "up" | "down";
 
 export interface CursorKeys extends Record<Direction, CursorKey> {
     left: CursorKey;
@@ -22,3 +22,7 @@ export interface IVirtualJoystick extends Phaser.GameObjects.GameObject {
     createCursorKeys: () => CursorKeys;
 }
 
+export type RequireOnlyOne<T, keys extends keyof T = keyof T> = Pick<T, Exclude<keyof T, keys>> &
+    {
+        [K in keys]-?: Required<Pick<T, K>> & Partial<Record<Exclude<keys, K>, undefined>>;
+    }[keys];

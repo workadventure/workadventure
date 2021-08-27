@@ -1,10 +1,27 @@
 <script lang="ts">
-    export let iframe: string;
+    import {onDestroy, onMount} from "svelte";
+    import {iframeListener} from "../../Api/IframeListener";
 
+    export let url: string;
+    export let allowApi: boolean;
+
+    let HTMLIframe: HTMLIFrameElement;
+
+    onMount( () => {
+        if (allowApi) {
+            iframeListener.registerIframe(HTMLIframe);
+        }
+    })
+
+    onDestroy( () => {
+        if (allowApi) {
+            iframeListener.unregisterIframe(HTMLIframe);
+        }
+    })
 </script>
 
 
-<iframe title="customSubMenu" src="{iframe}"></iframe>
+<iframe title="customSubMenu" src="{url}" bind:this={HTMLIframe}></iframe>
 
 <style lang="scss">
   iframe {
