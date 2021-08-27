@@ -9,7 +9,8 @@
     import CustomSubMenu from "./CustomSubMenu.svelte"
     import {customMenuIframe, menuVisiblilityStore, SubMenusInterface, subMenusStore} from "../../Stores/MenuStore";
     import {onDestroy, onMount} from "svelte";
-    import {get, Unsubscriber} from "svelte/store";
+    import {get} from "svelte/store";
+    import type {Unsubscriber} from "svelte/store";
     import {sendMenuClickedEvent} from "../../Api/iframe/Ui/MenuItem";
 
     let activeSubMenu: string = SubMenusInterface.settings;

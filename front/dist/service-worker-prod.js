@@ -57,4 +57,5 @@ self.addEventListener('update', function(event) {
 });
 
 self.addEventListener('beforeinstallprompt', (e) => {
-//TODO change prompt
+    //TODO change prompt
+});

@@ -7,7 +7,7 @@ import { Popup } from "./Ui/Popup";
 import { ActionMessage } from "./Ui/ActionMessage";
 import { isMessageReferenceEvent } from "../Events/ui/TriggerActionMessageEvent";
 import { Menu } from "./Ui/Menu";
-import type { RequireOnlyOne } from "../../types";
+import type { RequireOnlyOne } from "../types";
 
 let popupId = 0;
 const popups: Map<number, Popup> = new Map<number, Popup>();
@@ -26,7 +26,7 @@ interface MenuDescriptor {
     allowApi?: boolean;
 }
 
-type CallbackOrIframe = RequireOnlyOne<MenuDescriptor, "callback" | "iframe">;
+export type MenuOptions = RequireOnlyOne<MenuDescriptor, "callback" | "iframe">;
 
 interface ZonedPopupOptions {
     zone: string;
@@ -119,10 +119,7 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         return popup;
     }
 
-    registerMenuCommand(
-        commandDescriptor: string,
-        options: CallbackOrIframe | ((commandDescriptor: string) => void)
-    ): Menu {
+    registerMenuCommand(commandDescriptor: string, options: MenuOptions | ((commandDescriptor: string) => void)): Menu {
         const menu = new Menu(commandDescriptor);
 
         if (typeof options === "function") {
