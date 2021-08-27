@@ -1,5 +1,4 @@
 import * as tg from "generic-type-guard";
-import { isMenuItemRegisterEvent } from "./ui/MenuItemRegisterEvent";
 
 export const isSetVariableEvent = new tg.IsInterface()
     .withProperties({

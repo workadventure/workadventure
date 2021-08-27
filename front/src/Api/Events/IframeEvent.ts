@@ -15,7 +15,6 @@ import type { SetPropertyEvent } from "./setPropertyEvent";
 import type { LoadSoundEvent } from "./LoadSoundEvent";
 import type { PlaySoundEvent } from "./PlaySoundEvent";
 import type { MenuItemClickedEvent } from "./ui/MenuItemClickedEvent";
-import type { MenuItemRegisterEvent } from "./ui/MenuItemRegisterEvent";
 import type { HasPlayerMovedEvent } from "./HasPlayerMovedEvent";
 import type { SetTilesEvent } from "./SetTilesEvent";
 import type { SetVariableEvent } from "./SetVariableEvent";
@@ -33,6 +32,7 @@ import type {
     TriggerActionMessageEvent,
 } from "./ui/TriggerActionMessageEvent";
 import { isMessageReferenceEvent, isTriggerActionMessageEvent } from "./ui/TriggerActionMessageEvent";
+import type { MenuRegisterEvent, UnregisterMenuEvent } from "./ui/MenuRegisterEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -63,7 +63,8 @@ export type IframeEventMap = {
     stopSound: null;
     getState: undefined;
     loadTileset: LoadTilesetEvent;
-    registerMenuCommand: MenuItemRegisterEvent;
+    registerMenu: MenuRegisterEvent;
+    unregisterMenu: UnregisterMenuEvent;
     setTiles: SetTilesEvent;
     modifyEmbeddedWebsite: Partial<EmbeddedWebsite>; // Note: name should be compulsory in fact
 };
