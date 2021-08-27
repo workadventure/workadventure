@@ -8,11 +8,9 @@
     import ContactSubMenu from "./ContactSubMenu.svelte";
     import CustomSubMenu from "./CustomSubMenu.svelte"
     import {customMenuIframe, menuVisiblilityStore, SubMenusInterface, subMenusStore} from "../../Stores/MenuStore";
-    import {userIsAdminStore} from "../../Stores/GameStore";
     import {onDestroy, onMount} from "svelte";
     import {get, Unsubscriber} from "svelte/store";
     import {sendMenuClickedEvent} from "../../Api/iframe/Ui/MenuItem";
-    import {CONTACT_URL} from "../../Enum/EnvironmentVariable";
 
     let activeSubMenu: string = SubMenusInterface.settings;
     let activeComponent: typeof SettingsSubMenu | typeof CustomSubMenu = SettingsSubMenu;
@@ -20,14 +18,6 @@
     let unsubscriberSubMenuStore: Unsubscriber;
 
     onMount(() => {
-        if(!get(userIsAdminStore)) {
-            subMenusStore.removeMenu(SubMenusInterface.globalMessages);
-        }
-
-        if(CONTACT_URL === undefined) {
-            subMenusStore.removeMenu(SubMenusInterface.contact);
-        }
-
         unsubscriberSubMenuStore = subMenusStore.subscribe(() => {
             if(!get(subMenusStore).includes(activeSubMenu)) {
                 switchMenu(SubMenusInterface.settings);

@@ -1,5 +1,7 @@
 import { get, writable } from "svelte/store";
 import Timeout = NodeJS.Timeout;
+import { userIsAdminStore } from "./GameStore";
+import { CONTACT_URL } from "../Enum/EnvironmentVariable";
 
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
@@ -66,6 +68,18 @@ function createSubMenusStore() {
 }
 
 export const subMenusStore = createSubMenusStore();
+
+function checkSubMenuToShow() {
+    if (!get(userIsAdminStore)) {
+        subMenusStore.removeMenu(SubMenusInterface.globalMessages);
+    }
+
+    if (CONTACT_URL === undefined) {
+        subMenusStore.removeMenu(SubMenusInterface.contact);
+    }
+}
+
+checkSubMenuToShow();
 
 export const customMenuIframe = new Map<string, { url: string; allowApi: boolean }>();
 
