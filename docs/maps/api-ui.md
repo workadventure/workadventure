@@ -69,13 +69,15 @@ WA.room.onLeaveZone('myZone', () => {
 ### Add custom menu
 
 ```
-WA.ui.registerMenuCommand(commandDescriptor: string, options: MenuOptions | ((commandDescriptor: string) => void)): Menu
+WA.ui.registerMenuCommand(commandDescriptor: string, options: MenuOptions): Menu
 ```
 Add a custom menu item containing the text `commandDescriptor` in the navbar of the menu.
-`options` attributes can have three values :
-- `(commandDescriptor: string) => void` : That value is deprecated. But will work like the second value.
-- `{callback : (commandDescriptor: string) => void, allowApi?: boolean = true}` : A click on the custom menu will trigger the `callback`. The `allowApi` attribute is not used with the `callback`.
-- `{iframe: string, allowApi?: boolean = true}` : A click on the custom menu will open the `iframe` inside the menu. The `allowApi` attribute allow the `iframe` to use the Scripting API.
+`options` attribute accepts an object with three properties :
+- `callback : (commandDescriptor: string) => void` : A click on the custom menu will trigger the `callback`.
+- `iframe: string` : A click on the custom menu will open the `iframe` inside the menu.
+- `allowApi?: boolean` : Allow the iframe of the custom menu to use the Scripting API.
+
+Important : `options` accepts only `callback` or `iframe` not both.
 
 Custom menu exist only until the map is unloaded, or you leave the iframe zone of the script.
 
@@ -90,20 +92,15 @@ Custom menu exist only until the map is unloaded, or you leave the iframe zone o
 
 Example: 
 ```javascript
-//Add a callback menu in a zone
-let menu: undefined;
-WA.room.onEnterZone('myZone', () => {
-	menu = WA.ui.registerMenuCommand('menu test', {callback: () => {
-	    WA.chat.sendChatMessage('test');
-        }})
-})
-//Remove the callback menu when the player leave the zone
-WA.room.onLeaveZone('myZone', () => {
-    menu.remove();
-})
+const menu = WA.ui.registerMenuCommand('menu test',
+    {
+        callback: () => {
+            WA.chat.sendChatMessage('test');
+        }
+    })
 
-//Add an iframe in the menu
-WA.ui.registerMenuCommand('iframe', {iframe: 'myIframe.html', allowApi: true});
+// Some time later, if you want to remove the menu:
+menu.remove();
 ```
 
 Please note that `registerMenuCommand` returns an object of the `Menu` class.
