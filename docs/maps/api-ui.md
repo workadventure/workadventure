@@ -68,25 +68,56 @@ WA.room.onLeaveZone('myZone', () => {
 
 ### Add custom menu
 
-```typescript
-WA.ui.registerMenuCommand(menuCommand: string, callback: (menuCommand: string) => void): void
 ```
-Add a custom menu item containing the text `commandDescriptor` in the main menu. A click on the menu will trigger the `callback`.
+WA.ui.registerMenuCommand(commandDescriptor: string, options: MenuOptions | ((commandDescriptor: string) => void)): Menu
+```
+Add a custom menu item containing the text `commandDescriptor` in the navbar of the menu.
+`options` attributes can have three values :
+- `(commandDescriptor: string) => void` : That value is deprecated. But will work like the second value.
+- `{callback : (commandDescriptor: string) => void, allowApi?: boolean = true}` : A click on the custom menu will trigger the `callback`. The `allowApi` attribute is not used with the `callback`.
+- `{iframe: string, allowApi?: boolean = true}` : A click on the custom menu will open the `iframe` inside the menu. The `allowApi` attribute allow the `iframe` to use the Scripting API.
+
 Custom menu exist only until the map is unloaded, or you leave the iframe zone of the script.
 
-Example:
+<div class="row">
+    <div class="col">
+        <img src="images/custom-menu-navbar.png" class="figure-img img-fluid rounded" alt="" />
+    </div>
+    <div class="col">
+        <img src="images/custom-menu-iframe.png" class="figure-img img-fluid rounded" alt="" />
+    </div>
+</div>
 
+Example: 
 ```javascript
-
-WA.ui.registerMenuCommand("test", () => {
-    WA.chat.sendChatMessage("test clicked", "menu cmd")
+//Add a callback menu in a zone
+let menu: undefined;
+WA.room.onEnterZone('myZone', () => {
+	menu = WA.ui.registerMenuCommand('menu test', {callback: () => {
+	    WA.chat.sendChatMessage('test');
+        }})
+})
+//Remove the callback menu when the player leave the zone
+WA.room.onLeaveZone('myZone', () => {
+    menu.remove();
 })
 
+//Add an iframe in the menu
+WA.ui.registerMenuCommand('iframe', {iframe: 'myIframe.html', allowApi: true});
 ```
 
-<div class="col">
-    <img src="images/menu-command.png" class="figure-img img-fluid rounded" alt="" />
-</div>
+Please note that `registerMenuCommand` returns an object of the `Menu` class.
+
+The `Menu` class contains a single method: `remove(): void`. This will obviously remove the menu when called.
+
+```javascript
+class Menu {
+	/**
+	* Remove the menu
+	*/
+	remove() {};
+}
+```
 
 
 
