@@ -1,12 +1,13 @@
 <script lang="typescript">
     import {gameManager} from "../../Phaser/Game/GameManager";
     import {SelectCompanionScene, SelectCompanionSceneName} from "../../Phaser/Login/SelectCompanionScene";
-    import {menuIconVisiblilityStore, menuVisiblilityStore} from "../../Stores/MenuStore";
+    import {menuIconVisiblilityStore, menuVisiblilityStore, loginUrlStore} from "../../Stores/MenuStore";
     import {selectCompanionSceneVisibleStore} from "../../Stores/SelectCompanionStore";
     import {LoginScene, LoginSceneName} from "../../Phaser/Login/LoginScene";
     import {loginSceneVisibleStore} from "../../Stores/LoginSceneStore";
     import {selectCharacterSceneVisibleStore} from "../../Stores/SelectCharacterStore";
     import {SelectCharacterScene, SelectCharacterSceneName} from "../../Phaser/Login/SelectCharacterScene";
+    import {playersStore} from "../../Stores/PlayersStore";
     //import {connectionManager} from "../../Connexion/ConnectionManager";
 
 
@@ -41,6 +42,11 @@
 </script>
 
 <div class="customize-main">
+    <section>
+        {#if $playersStore}
+            <iframe src="loginUrlStore"></iframe>
+        {/if}
+    </section>
     <section>
         <button type="button" class="nes-btn" on:click|preventDefault={openEditNameScene}>Edit Name</button>
     </section>

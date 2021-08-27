@@ -25,6 +25,7 @@ export interface FetchMemberDataByUuidResponse {
     userUuid: string;
     tags: string[];
     visitCardUrl: string | null;
+    profileUrl: string | null;
     textures: CharacterTexture[];
     messages: unknown[];
     anonymous?: boolean;
@@ -138,6 +139,26 @@ class AdminApi {
         return Axios.get(ADMIN_API_URL + "/api/room/sameWorld" + "?roomUrl=" + encodeURIComponent(roomUrl), {
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
         }).then((data) => {
+            return data.data;
+        });
+    }
+
+    async getProfileUrl(userIdentify: string, loginChallenge: string): Promise<string> {
+        if (!ADMIN_API_URL) {
+            return Promise.reject(new Error("No admin backoffice set!"));
+        }
+
+        return Axios.get(
+            ADMIN_API_URL +
+                "/profile" +
+                "?login_challenge=" +
+                encodeURIComponent(loginChallenge) +
+                "&user_identify=" +
+                encodeURIComponent(userIdentify),
+            {
+                headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            }
+        ).then((data) => {
             return data.data;
         });
     }

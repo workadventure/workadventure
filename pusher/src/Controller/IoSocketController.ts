@@ -179,6 +179,7 @@ export class IoSocketController {
 
                         let memberTags: string[] = [];
                         let memberVisitCardUrl: string | null = null;
+                        let memberProfileUrl: string | null = null;
                         let memberMessages: unknown;
                         let memberTextures: CharacterTexture[] = [];
                         const room = await socketManager.getOrCreateRoom(roomId);
@@ -186,6 +187,7 @@ export class IoSocketController {
                             userUuid: userIdentifier,
                             tags: [],
                             visitCardUrl: null,
+                            profileUrl: null,
                             textures: [],
                             messages: [],
                             anonymous: true,
@@ -224,6 +226,7 @@ export class IoSocketController {
                                 memberMessages = userData.messages;
                                 memberTags = userData.tags;
                                 memberVisitCardUrl = userData.visitCardUrl;
+                                memberProfileUrl = userData.profileUrl;
                                 memberTextures = userData.textures;
                                 if (
                                     room.policyType === GameRoomPolicyTypes.USE_TAGS_POLICY &&
@@ -274,6 +277,7 @@ export class IoSocketController {
                                 messages: memberMessages,
                                 tags: memberTags,
                                 visitCardUrl: memberVisitCardUrl,
+                                profileUrl: memberProfileUrl,
                                 textures: memberTextures,
                                 position: {
                                     x: x,
