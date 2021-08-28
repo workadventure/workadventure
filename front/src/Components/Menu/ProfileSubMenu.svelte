@@ -43,8 +43,14 @@
 
 <div class="customize-main">
     <section>
-        {#if $playersStore}
-            <iframe src="loginUrlStore"></iframe>
+        {#if $playersStore.getCurrentPlayer && $playersStore.getCurrentPlayer.profileUrl}
+            <!-- Show name in game -->
+            <!-- Show WOKA selected -->
+            <!-- Show profil iframe -->
+            <iframe on:src="{$playersStore.getCurrentPlayer.profileUrl}"></iframe>
+        {:else if !$playersStore.isConnected}
+            <a type="button" class="nes-btn" on:click|preventDefault={openEditNameScene}>Login</a>
+            <a type="button" class="nes-btn" on:click|preventDefault={openEditNameScene}>Register</a>
         {/if}
     </section>
     <section>

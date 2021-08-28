@@ -2,6 +2,7 @@ import { writable } from "svelte/store";
 import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import type { RoomConnection } from "../Connexion/RoomConnection";
 import { getRandomColor } from "../WebRtc/ColorGenerator";
+import { localUserStore } from "../Connexion/LocalUserStore";
 
 let idCount = 0;
 
@@ -10,6 +11,7 @@ let idCount = 0;
  */
 function createPlayersStore() {
     let players = new Map<number, PlayerInterface>();
+    let currentPlayer: PlayerInterface;
 
     const { subscribe, set, update } = writable(players);
 
@@ -62,6 +64,15 @@ function createPlayersStore() {
                 return users;
             });
             return newUserId;
+        },
+        get isConnected(): boolean {
+            return localUserStore.getAuthToken() != undefined;
+        },
+        set setCurrentPlayer(player: PlayerInterface) {
+            currentPlayer = player;
+        },
+        get getCurrentPlayer(): PlayerInterface | undefined {
+            return currentPlayer;
         },
     };
 }
