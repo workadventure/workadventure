@@ -143,24 +143,13 @@ class AdminApi {
         });
     }
 
-    async getProfileUrl(userIdentify: string, loginChallenge: string): Promise<string> {
+    /*TODO add constant to use profile companny*/
+    getProfileUrl(accessToken: string): string {
         if (!ADMIN_API_URL) {
-            return Promise.reject(new Error("No admin backoffice set!"));
+            throw new Error("No admin backoffice set!");
         }
 
-        return Axios.get(
-            ADMIN_API_URL +
-                "/profile" +
-                "?login_challenge=" +
-                encodeURIComponent(loginChallenge) +
-                "&user_identify=" +
-                encodeURIComponent(userIdentify),
-            {
-                headers: { Authorization: `${ADMIN_API_TOKEN}` },
-            }
-        ).then((data) => {
-            return data.data;
-        });
+        return ADMIN_API_URL + `/profile?token=${accessToken}`;
     }
 }
 

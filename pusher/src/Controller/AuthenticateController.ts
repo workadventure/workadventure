@@ -34,6 +34,9 @@ export class AuthenticateController extends BaseController {
             }
             try {
                 const loginUri = await openIDClient.authorizationUrl(state as string, nonce as string);
+                console.log("openIDLogin => state", state);
+                console.log("openIDLogin => nonce", nonce);
+                console.log("openIDLogin => loginUri", loginUri);
                 res.writeStatus("302");
                 res.writeHeader("Location", loginUri);
                 return res.end();
@@ -199,14 +202,11 @@ export class AuthenticateController extends BaseController {
                         await openIDClient.checkTokenAuth(authTokenData.hydraAccessToken);
 
                         //get login profile
-                        const data = await adminApi.getProfileUrl(
-                            userIdentify as string,
-                            authTokenData.hydraAccessToken
-                        );
                         res.writeStatus("302");
+                        res.writeHeader("Location", adminApi.getProfileUrl(authTokenData.hydraAccessToken));
                         this.addCorsHeaders(res);
                         // eslint-disable-next-line no-unsafe-finally
-                        return res.end(data);
+                        return res.end();
                     } catch (error) {
                         return this.errorToResponse(error, res);
                     }
