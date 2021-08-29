@@ -143,7 +143,7 @@ class ConnectionManager {
 
             let roomPath: string;
             if (connexionType === GameConnexionTypes.empty) {
-                roomPath = window.location.protocol + "//" + window.location.host + START_ROOM_URL;
+                roomPath = localUserStore.getLastRoomUrl();
                 //get last room path from cache api
                 try {
                     const lastRoomUrl = await localUserStore.getLastRoomUrlCacheApi();

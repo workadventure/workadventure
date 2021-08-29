@@ -11,7 +11,6 @@ let idCount = 0;
  */
 function createPlayersStore() {
     let players = new Map<number, PlayerInterface>();
-    let currentPlayer: PlayerInterface;
 
     const { subscribe, set, update } = writable(players);
 
@@ -64,15 +63,6 @@ function createPlayersStore() {
                 return users;
             });
             return newUserId;
-        },
-        get isConnected(): boolean {
-            return localUserStore.getAuthToken() != undefined;
-        },
-        set setCurrentPlayer(player: PlayerInterface) {
-            currentPlayer = player;
-        },
-        get getCurrentPlayer(): PlayerInterface | undefined {
-            return currentPlayer;
         },
     };
 }
