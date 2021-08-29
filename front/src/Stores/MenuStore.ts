@@ -7,6 +7,7 @@ export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
 export const menuInputFocusStore = writable(false);
 export const loginUrlStore = writable(false);
+export const userIsConnected = writable(false);
 
 let warningContainerTimeout: Timeout | null = null;
 function createWarningContainerStore() {

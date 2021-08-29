@@ -8,6 +8,7 @@ import { CharacterTexture, LocalUser } from "./LocalUser";
 import { Room } from "./Room";
 import { _ServiceWorker } from "../Network/ServiceWorker";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
+import { userIsConnected } from "../Stores/MenuStore";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -53,6 +54,9 @@ class ConnectionManager {
      * Logout
      */
     public async logout() {
+        //user logout, set connected store for menu at false
+        userIsConnected.set(false);
+
         //Logout user in pusher and hydra
         const token = localUserStore.getAuthToken();
         const { authToken } = await Axios.get(`${PUSHER_URL}/logout-callback`, { params: { token } }).then(
@@ -128,6 +132,12 @@ class ConnectionManager {
             //todo: add here some kind of warning if authToken has expired.
             if (!this.authToken) {
                 await this.anonymousLogin();
+            } else {
+                try {
+                    await this.checkAuthUserConnexion();
+                } catch (err) {
+                    console.error(err);
+                }
             }
             this.localUser = localUserStore.getLocalUser() as LocalUser; //if authToken exist in localStorage then localUser cannot be null
 
@@ -252,6 +262,9 @@ class ConnectionManager {
     }
 
     async checkAuthUserConnexion() {
+        //set connected store for menu at false
+        userIsConnected.set(false);
+
         const state = localUserStore.getState();
         const code = localUserStore.getCode();
         if (!state || !localUserStore.verifyState(state)) {
@@ -267,6 +280,9 @@ class ConnectionManager {
         );
         localUserStore.setAuthToken(authToken);
         this.authToken = authToken;
+
+        //user connected, set connected store for menu at true
+        userIsConnected.set(true);
     }
 
     get currentRoom() {

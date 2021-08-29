@@ -1,15 +1,16 @@
 <script lang="typescript">
     import {gameManager} from "../../Phaser/Game/GameManager";
     import {SelectCompanionScene, SelectCompanionSceneName} from "../../Phaser/Login/SelectCompanionScene";
-    import {menuIconVisiblilityStore, menuVisiblilityStore, loginUrlStore} from "../../Stores/MenuStore";
+    import {menuIconVisiblilityStore, menuVisiblilityStore, userIsConnected} from "../../Stores/MenuStore";
     import {selectCompanionSceneVisibleStore} from "../../Stores/SelectCompanionStore";
     import {LoginScene, LoginSceneName} from "../../Phaser/Login/LoginScene";
     import {loginSceneVisibleStore} from "../../Stores/LoginSceneStore";
     import {selectCharacterSceneVisibleStore} from "../../Stores/SelectCharacterStore";
     import {SelectCharacterScene, SelectCharacterSceneName} from "../../Phaser/Login/SelectCharacterScene";
-    import {playersStore} from "../../Stores/PlayersStore";
+    import {connectionManager} from "../../Connexion/ConnectionManager";
     //import {connectionManager} from "../../Connexion/ConnectionManager";
-
+    //import {connectionManager} from "../../Connexion/ConnectionManager";
+    //import {playersStore} from "../../Stores/PlayersStore";
 
     function disableMenuStores(){
         menuVisiblilityStore.set(false);
@@ -34,25 +35,30 @@
         gameManager.leaveGame(SelectCharacterSceneName,new SelectCharacterScene());
     }
 
+    function logOut(){
+        disableMenuStores();
+        loginSceneVisibleStore.set(true);
+        connectionManager.logout();
+    }
+
     //TODO: Uncomment when login will be completely developed
     /*function clickLogin() {
         connectionManager.loadOpenIDScreen();
     }*/
-
 </script>
 
 <div class="customize-main">
-    <section>
-        {#if $playersStore.getCurrentPlayer && $playersStore.getCurrentPlayer.profileUrl}
-            <!-- Show name in game -->
-            <!-- Show WOKA selected -->
-            <!-- Show profil iframe -->
-            <iframe on:src="{$playersStore.getCurrentPlayer.profileUrl}"></iframe>
-        {:else if !$playersStore.isConnected}
-            <a type="button" class="nes-btn" on:click|preventDefault={openEditNameScene}>Login</a>
-            <a type="button" class="nes-btn" on:click|preventDefault={openEditNameScene}>Register</a>
-        {/if}
-    </section>
+    {#if $userIsConnected}
+        <section>
+            <p>User is connected</p>
+            <p>Profile form will be available soon!</p>
+            <button type="button" class="nes-btn" on:click|preventDefault={logOut}>Log out</button>
+        </section>
+    {:else}
+        <section>
+            <a type="button" class="nes-btn" href="/login">Sing in</a>
+        </section>
+    {/if}
     <section>
         <button type="button" class="nes-btn" on:click|preventDefault={openEditNameScene}>Edit Name</button>
     </section>

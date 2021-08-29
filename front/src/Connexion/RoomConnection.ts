@@ -78,6 +78,11 @@ export class RoomConnection implements RoomConnection {
      *
      * @param token A JWT token containing the email of the user
      * @param roomUrl The URL of the room in the form "https://example.com/_/[instance]/[map_url]" or "https://example.com/@/[org]/[event]/[map]"
+     * @param name
+     * @param characterLayers
+     * @param position
+     * @param viewport
+     * @param companion
      */
     public constructor(
         token: string | null,
