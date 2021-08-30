@@ -8,6 +8,8 @@
     import {selectCharacterSceneVisibleStore} from "../../Stores/SelectCharacterStore";
     import {SelectCharacterScene, SelectCharacterSceneName} from "../../Phaser/Login/SelectCharacterScene";
     import {connectionManager} from "../../Connexion/ConnectionManager";
+    import {PROFILE_URL} from "../../Enum/EnvironmentVariable";
+    import {localUserStore} from "../../Connexion/LocalUserStore";
     //import {connectionManager} from "../../Connexion/ConnectionManager";
     //import {connectionManager} from "../../Connexion/ConnectionManager";
     //import {playersStore} from "../../Stores/PlayersStore";
@@ -41,17 +43,25 @@
         connectionManager.logout();
     }
 
+    function getProfileUrl(){
+        return PROFILE_URL + `?token=${localUserStore.getAuthToken()}`;
+    }
+
     //TODO: Uncomment when login will be completely developed
     /*function clickLogin() {
         connectionManager.loadOpenIDScreen();
     }*/
+    console.log('profileUrl', PROFILE_URL);
 </script>
 
 <div class="customize-main">
     {#if $userIsConnected}
         <section>
-            <p>User is connected</p>
-            <p>Profile form will be available soon!</p>
+            {#if PROFILE_URL != undefined}
+                <iframe title="profile" src="{getProfileUrl()}"></iframe>
+            {/if}
+        </section>
+        <section>
             <button type="button" class="nes-btn" on:click|preventDefault={logOut}>Log out</button>
         </section>
     {:else}
@@ -61,11 +71,7 @@
     {/if}
     <section>
         <button type="button" class="nes-btn" on:click|preventDefault={openEditNameScene}>Edit Name</button>
-    </section>
-    <section>
         <button type="button" class="nes-btn is-rounded" on:click|preventDefault={openEditSkinScene}>Edit Skin</button>
-    </section>
-    <section>
         <button type="button" class="nes-btn" on:click|preventDefault={openEditCompanionScene}>Edit Companion</button>
     </section>
 <!--    <section>
@@ -80,6 +86,12 @@
         justify-content: center;
         align-items: center;
         margin-bottom: 20px;
+
+        iframe{
+          width: 100%;
+          height: 58vh;
+          border: none;
+        }
 
         button {
           height: 50px;
