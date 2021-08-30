@@ -836,7 +836,7 @@ export class GameScene extends DirtyScene {
                         this.MapUrlFile,
                         allProps.get("openWebsiteAllowApi") as boolean | undefined,
                         allProps.get("openWebsitePolicy") as string | undefined,
-                        allProps.get("openWebsiteWidth") as number | undefinded
+                        allProps.get("openWebsiteWidth") as number | undefined
                     );
                     layoutManagerActionStore.removeAction("openWebsite");
                 };
