@@ -213,7 +213,7 @@ class CoWebsiteManager {
             .then(() => callback(this.cowebsiteMainDom))
             .then(() => {
                 this.open();
-                if (jitsiWidth) {
+                if (widthPercent) {
                     this.widthPercent = widthPercent;
                 }
                 setTimeout(() => {
