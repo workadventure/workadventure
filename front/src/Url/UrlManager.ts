@@ -1,4 +1,5 @@
 import type { Room } from "../Connexion/Room";
+import { localUserStore } from "../Connexion/LocalUserStore";
 
 export enum GameConnexionTypes {
     anonymous = 1,
@@ -38,6 +39,8 @@ class UrlManager {
 
     public pushRoomIdToUrl(room: Room): void {
         if (window.location.pathname === room.id) return;
+        //Set last room visited! (connected or nor, must to be saved in localstorage and cache API)
+        localUserStore.setLastRoomUrl(room.key);
         const hash = window.location.hash;
         const search = room.search.toString();
         history.pushState({}, "WorkAdventure", room.id + (search ? "?" + search : "") + hash);

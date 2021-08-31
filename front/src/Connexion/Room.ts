@@ -43,9 +43,6 @@ export class Room {
      * This method will follow room redirects if necessary, so the instance returned is a "real" room.
      */
     public static async createRoom(roomUrl: URL): Promise<Room> {
-        //Set last room visited! (connected or nor, must to be saved in localstorage and cache API)
-        localUserStore.setLastRoomUrl(roomUrl.toString());
-
         let redirectCount = 0;
         while (redirectCount < 32) {
             const room = new Room(roomUrl);
