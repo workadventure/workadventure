@@ -7,7 +7,13 @@
     import GlobalMessageSubMenu from "./GlobalMessagesSubMenu.svelte";
     import ContactSubMenu from "./ContactSubMenu.svelte";
     import CustomSubMenu from "./CustomSubMenu.svelte"
-    import {customMenuIframe, menuVisiblilityStore, SubMenusInterface, subMenusStore} from "../../Stores/MenuStore";
+    import {
+        checkSubMenuToShow,
+        customMenuIframe,
+        menuVisiblilityStore,
+        SubMenusInterface,
+        subMenusStore
+    } from "../../Stores/MenuStore";
     import {onDestroy, onMount} from "svelte";
     import {get} from "svelte/store";
     import type {Unsubscriber} from "svelte/store";
@@ -24,6 +30,8 @@
                 switchMenu(SubMenusInterface.settings);
             }
         })
+
+        checkSubMenuToShow();
 
         switchMenu(SubMenusInterface.settings);
     })

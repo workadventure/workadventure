@@ -6,6 +6,7 @@ import { CONTACT_URL } from "../Enum/EnvironmentVariable";
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
 export const menuInputFocusStore = writable(false);
+export const contactPageStore = writable<string>(CONTACT_URL);
 
 let warningContainerTimeout: Timeout | null = null;
 function createWarningContainerStore() {
@@ -69,17 +70,15 @@ function createSubMenusStore() {
 
 export const subMenusStore = createSubMenusStore();
 
-function checkSubMenuToShow() {
+export function checkSubMenuToShow() {
     if (!get(userIsAdminStore)) {
         subMenusStore.removeMenu(SubMenusInterface.globalMessages);
     }
 
-    if (CONTACT_URL === undefined) {
+    if (get(contactPageStore) === "") {
         subMenusStore.removeMenu(SubMenusInterface.contact);
     }
 }
-
-checkSubMenuToShow();
 
 export const customMenuIframe = new Map<string, { url: string; allowApi: boolean }>();
 

@@ -1,9 +1,9 @@
 <script lang="ts">
-    import {CONTACT_URL} from "../../Enum/EnvironmentVariable";
+    import {contactPageStore} from "../../Stores/MenuStore";
 
 </script>
 
-<iframe title="contact" src="{CONTACT_URL}"></iframe>
+<iframe title="contact" src="{$contactPageStore}"></iframe>
 
 <style lang="scss">
     iframe {
