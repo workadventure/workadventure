@@ -51,7 +51,6 @@
     /*function clickLogin() {
         connectionManager.loadOpenIDScreen();
     }*/
-    console.log('profileUrl', PROFILE_URL);
 </script>
 
 <div class="customize-main">

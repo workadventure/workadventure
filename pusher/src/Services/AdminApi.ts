@@ -25,7 +25,6 @@ export interface FetchMemberDataByUuidResponse {
     userUuid: string;
     tags: string[];
     visitCardUrl: string | null;
-    profileUrl: string | null;
     textures: CharacterTexture[];
     messages: unknown[];
     anonymous?: boolean;
