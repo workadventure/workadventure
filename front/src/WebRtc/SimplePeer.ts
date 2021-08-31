@@ -409,13 +409,7 @@ export class SimplePeer {
             if (!localStream) {
                 return;
             }
-
-            for (const track of localStream.getTracks()) {
-                //todo: this is a ugly hack to reduce the amount of error in console. Find a better way.
-                if ((track as any).added !== undefined) continue; // eslint-disable-line @typescript-eslint/no-explicit-any
-                (track as any).added = true; // eslint-disable-line @typescript-eslint/no-explicit-any
-                PeerConnection.addTrack(track, localStream);
-            }
+            PeerConnection.addStream(localStream);
         } catch (e) {
             console.error(`pushVideoToRemoteUser => ${userId}`, e);
         }
