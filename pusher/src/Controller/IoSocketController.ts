@@ -179,7 +179,6 @@ export class IoSocketController {
 
                         let memberTags: string[] = [];
                         let memberVisitCardUrl: string | null = null;
-                        let memberProfileUrl: string | null = null;
                         let memberMessages: unknown;
                         let memberTextures: CharacterTexture[] = [];
                         const room = await socketManager.getOrCreateRoom(roomId);
