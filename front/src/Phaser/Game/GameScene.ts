@@ -712,7 +712,7 @@ export class GameScene extends DirtyScene {
                 });
 
                 // When connection is performed, let's connect SimplePeer
-                this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic, this.playerName);
+                this.simplePeer = new SimplePeer(this.connection);
                 peerStore.connectToSimplePeer(this.simplePeer);
                 screenSharingPeerStore.connectToSimplePeer(this.simplePeer);
                 videoFocusStore.connectToSimplePeer(this.simplePeer);
