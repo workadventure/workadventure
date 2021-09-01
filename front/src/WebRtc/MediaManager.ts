@@ -11,6 +11,7 @@ import { cowebsiteCloseButtonId } from "./CoWebsiteManager";
 import { gameOverlayVisibilityStore } from "../Stores/GameOverlayStoreVisibility";
 import { layoutManagerActionStore, layoutManagerVisibilityStore } from "../Stores/LayoutManagerStore";
 import { get } from "svelte/store";
+import { localUserStore } from "../Connexion/LocalUserStore";
 
 export class MediaManager {
     startScreenSharingCallBacks: Set<StartScreenSharingCallback> = new Set<StartScreenSharingCallback>();
@@ -187,7 +188,11 @@ export class MediaManager {
     }
 
     public hasNotification(): boolean {
-        return Notification.permission === "granted";
+        if (Notification.permission === "granted") {
+            return localUserStore.getNotification() === "granted";
+        } else {
+            return false;
+        }
     }
 
     public requestNotification() {
