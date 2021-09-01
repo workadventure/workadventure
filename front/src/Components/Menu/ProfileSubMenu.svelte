@@ -88,7 +88,7 @@
 
         iframe{
           width: 100%;
-          height: 58vh;
+          height: 50vh;
           border: none;
         }
 
