@@ -18,7 +18,6 @@ export class GameMapPropertyChange {
                 scriptUtils.openTab(newValue);
             }
         });
-
         this.gameMap.onPropertyChange("openWebsite", (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
                 layoutManagerActionStore.removeAction("openWebsite");
@@ -29,11 +28,11 @@ export class GameMapPropertyChange {
                         newValue as string,
                         this.scene.MapUrlFile,
                         allProps.get("openWebsiteAllowApi") as boolean | undefined,
-                        allProps.get("openWebsitePolicy") as string | undefined
+                        allProps.get("openWebsitePolicy") as string | undefined,
+                        allProps.get("openWebsiteWidth") as number | undefined
                     );
                     layoutManagerActionStore.removeAction("openWebsite");
                 };
-
                 const openWebsiteTriggerValue = allProps.get(TRIGGER_WEBSITE_PROPERTIES);
                 if (openWebsiteTriggerValue && openWebsiteTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                     let message = allProps.get(WEBSITE_MESSAGE_PROPERTIES);
