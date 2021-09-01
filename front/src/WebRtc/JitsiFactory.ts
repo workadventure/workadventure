@@ -82,7 +82,7 @@ class JitsiFactory {
         return slugify(instance.replace('/', '-') + "-" + roomName);
     }
 
-    public start(roomName: string, playerName:string, jwt?: string, config?: object, interfaceConfig?: object, jitsiUrl?: string): void {
+    public start(roomName: string, playerName:string, jwt?: string, config?: object, interfaceConfig?: object, jitsiUrl?: string, jitsiWidth?: number): void {
         coWebsiteManager.insertCoWebsite((async cowebsiteDiv => {
             // Jitsi meet external API maintains some data in local storage
             // which is sent via the appData URL parameter when joining a
@@ -120,7 +120,7 @@ class JitsiFactory {
                 this.jitsiApi.addListener('audioMuteStatusChanged', this.audioCallback);
                 this.jitsiApi.addListener('videoMuteStatusChanged', this.videoCallback);
             });
-        }));
+        }), jitsiWidth);
     }
 
     public async stop(): Promise<void> {

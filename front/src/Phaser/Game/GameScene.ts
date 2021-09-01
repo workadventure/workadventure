@@ -835,7 +835,8 @@ export class GameScene extends DirtyScene {
                         newValue as string,
                         this.MapUrlFile,
                         allProps.get("openWebsiteAllowApi") as boolean | undefined,
-                        allProps.get("openWebsitePolicy") as string | undefined
+                        allProps.get("openWebsitePolicy") as string | undefined,
+                        allProps.get("openWebsiteWidth") as number | undefined
                     );
                     layoutManagerActionStore.removeAction("openWebsite");
                 };
@@ -1839,8 +1840,9 @@ ${escapedMessage}
             "jitsiInterfaceConfig"
         );
         const jitsiUrl = allProps.get("jitsiUrl") as string | undefined;
+        const jitsiWidth = allProps.get("jitsiWidth") as number | undefined;
 
-        jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl);
+        jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl, jitsiWidth);
         this.connection?.setSilent(true);
         mediaManager.hideGameOverlay();
 
