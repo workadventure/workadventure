@@ -9,7 +9,7 @@ import {
     WEBSITE_MESSAGE_PROPERTIES,
 } from "../../WebRtc/LayoutManager";
 
-export class GameMapPropertyChange {
+export class GameMapPropertiesListener {
     constructor(private scene: GameScene, private gameMap: GameMap) {}
 
     register() {

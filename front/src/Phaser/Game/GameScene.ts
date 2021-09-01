@@ -92,7 +92,7 @@ import Tileset = Phaser.Tilemaps.Tileset;
 import { userIsAdminStore } from "../../Stores/GameStore";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
-import { GameMapPropertyChange } from "./GameMapPropertyChange";
+import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -581,7 +581,7 @@ export class GameScene extends DirtyScene {
             this.updateCameraOffset(box)
         );
 
-        new GameMapPropertyChange(this, this.gameMap).register();
+        new GameMapPropertiesListener(this, this.gameMap).register();
         this.triggerOnMapLayerPropertyChange();
 
         if (!this.room.isDisconnected()) {
