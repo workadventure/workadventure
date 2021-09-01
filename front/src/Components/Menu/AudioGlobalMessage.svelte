@@ -1,20 +1,15 @@
 <script lang="ts">
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
-    import type { Game } from "../../Phaser/Game/Game";
-    import type { GameManager } from "../../Phaser/Game/GameManager";
-    import { consoleGlobalMessageManagerFocusStore, consoleGlobalMessageManagerVisibleStore } from "../../Stores/ConsoleGlobalMessageManagerStore";
+    import { gameManager } from "../../Phaser/Game/GameManager";
     import { AdminMessageEventTypes } from "../../Connexion/AdminMessagesService";
     import uploadFile from "../images/music-file.svg";
-    import type {PlayGlobalMessageInterface} from "../../Connexion/ConnexionModels";
+    import type { PlayGlobalMessageInterface } from "../../Connexion/ConnexionModels";
 
     interface EventTargetFiles extends EventTarget {
         files: Array<File>;
     }
 
-    export let game: Game;
-    export let gameManager: GameManager;
-
-    let gameScene = gameManager.getCurrentGameScene(game.findAnyScene());
+    let gameScene = gameManager.getCurrentGameScene();
     let fileInput: HTMLInputElement;
     let fileName: string;
     let fileSize: string;
@@ -45,7 +40,6 @@
             }
             inputAudio.value = '';
             gameScene.connection?.emitGlobalMessage(audioGlobalMessage);
-            disableConsole();
         }
     }
 
@@ -76,11 +70,6 @@
             return '';
         }
     }
-
-    function disableConsole() {
-        consoleGlobalMessageManagerVisibleStore.set(false);
-        consoleGlobalMessageManagerFocusStore.set(false);
-    }
 </script>
 
 
@@ -105,24 +94,17 @@
 
     img {
       flex: 1 1 auto;
-
       max-height: 80%;
       margin-bottom: 20px;
     }
-
     p {
-      flex: 1 1 auto;
-
       margin-bottom: 5px;
-
       color: whitesmoke;
       font-size: 1rem;
-
       &.err {
         color: #ce372b;
       }
     }
-
     input {
       display: none;
     }

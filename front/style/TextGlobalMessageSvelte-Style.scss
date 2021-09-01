@@ -1,15 +1,15 @@
-//InputTextGlobalMessage
+//TextGlobalMessage
 section.section-input-send-text {
+  --height-toolbar: 15%;
   height: 100%;
 
   .ql-toolbar{
-    max-height: 100px;
-
+    height: var(--height-toolbar);
     background: whitesmoke;
   }
 
   div.input-send-text{
-    height: calc(100% - 100px);
+    height: calc(100% - var(--height-toolbar));
     overflow: auto;
 
     color: whitesmoke;
@@ -26,6 +26,16 @@ section.section-input-send-text {
 
       color: whitesmoke;
       background-color: #333333;
+    }
+  }
+}
+
+@media only screen and (max-width: 800px), only screen and (max-height: 800px) {
+  section.section-input-send-text {
+    --height-toolbar: 30%;
+
+    .ql-toolbar {
+      overflow: auto;
     }
   }
 }

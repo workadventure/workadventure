@@ -9,6 +9,7 @@ Moreover, `WA.state` functions can be used to persist this state across reloads.
 ```
 WA.state.saveVariable(key : string, data : unknown): void
 WA.state.loadVariable(key : string) : unknown
+WA.state.hasVariable(key : string) : boolean
 WA.state.onVariableChange(key : string).subscribe((data: unknown) => {}) : Subscription
 WA.state.[any property]: unknown
 ```
@@ -70,7 +71,7 @@ Each object will represent a variable.
 
 <div class="row">
     <div class="col">
-        <img src="https://workadventu.re/img/docs/object_variable.png" class="figure-img img-fluid rounded" alt="" />
+        <img src="images/object_variable.png" class="figure-img img-fluid rounded" alt="" />
     </div>
 </div>
 
