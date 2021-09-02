@@ -1,10 +1,7 @@
 import type { RoomConnection } from "../../Connexion/RoomConnection";
 import { iframeListener } from "../../Api/IframeListener";
-import type { Subscription } from "rxjs";
 import type { GameMap } from "./GameMap";
-import type { ITile, ITiledMapObject } from "../Map/ITiledMap";
-import type { Var } from "svelte/types/compiler/interfaces";
-import { init } from "svelte/internal";
+import type {ITiledMapLayer, ITiledMapObject, ITiledMapObjectLayer} from "../Map/ITiledMap";
 
 interface Variable {
     defaultValue: unknown;
@@ -100,22 +97,31 @@ export class SharedVariablesManager {
     private static findVariablesInMap(gameMap: GameMap): Map<string, Variable> {
         const objects = new Map<string, Variable>();
         for (const layer of gameMap.getMap().layers) {
-            if (layer.type === "objectgroup") {
-                for (const object of layer.objects) {
-                    if (object.type === "variable") {
-                        if (object.template) {
-                            console.warn(
-                                'Warning, a variable object is using a Tiled "template". WorkAdventure does not support objects generated from Tiled templates.'
-                            );
-                        }
-
-                        // We store a copy of the object (to make it immutable)
-                        objects.set(object.name, this.iTiledObjectToVariable(object));
-                    }
-                }
-            }
+            this.recursiveFindVariablesInLayer(layer, objects);
         }
         return objects;
+    }
+
+    private static recursiveFindVariablesInLayer(layer: ITiledMapLayer, objects: Map<string, Variable>): void {
+        if (layer.type === "objectgroup") {
+            for (const object of layer.objects) {
+                if (object.type === "variable") {
+                    if (object.template) {
+                        console.warn(
+                            'Warning, a variable object is using a Tiled "template". WorkAdventure does not support objects generated from Tiled templates.'
+                        );
+                        continue;
+                    }
+
+                    // We store a copy of the object (to make it immutable)
+                    objects.set(object.name, this.iTiledObjectToVariable(object));
+                }
+            }
+        } else if (layer.type === "group") {
+            for (const innerLayer of layer.layers) {
+                this.recursiveFindVariablesInLayer(innerLayer, objects);
+            }
+        }
     }
 
     private static iTiledObjectToVariable(object: ITiledMapObject): Variable {
