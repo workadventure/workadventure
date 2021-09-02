@@ -166,7 +166,13 @@ class CoWebsiteManager {
         return iframe;
     }
 
-    public loadCoWebsite(url: string, base: string, allowApi?: boolean, allowPolicy?: string, widthPercent?: number): void {
+    public loadCoWebsite(
+        url: string,
+        base: string,
+        allowApi?: boolean,
+        allowPolicy?: string,
+        widthPercent?: number
+    ): void {
         this.load();
         this.cowebsiteMainDom.innerHTML = ``;
 
