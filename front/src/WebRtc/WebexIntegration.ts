@@ -125,6 +125,14 @@ export class WebexIntegration {
         await this.stop();
 
         coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
+            new WebexSignIn({ target: cowebsiteDiv});
+
+            return Promise.resolve();
+        });
+
+        await self.waitForAuthorization();
+
+        coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
             new WebexVideoChat({target: cowebsiteDiv, props: {
                 meetingRoom: meetingUrl,
                 accessToken: this.accessToken
