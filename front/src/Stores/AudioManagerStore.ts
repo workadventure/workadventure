@@ -1,4 +1,5 @@
 import { get, writable } from "svelte/store";
+import { peerStore } from "./PeerStore";
 
 export interface audioManagerVolume {
     muted: boolean;
@@ -103,3 +104,7 @@ export const audioManagerVisibilityStore = writable(false);
 export const audioManagerVolumeStore = createAudioManagerVolumeStore();
 
 export const audioManagerFileStore = createAudioManagerFileStore();
+
+peerStore.subscribe((peers) => {
+    audioManagerVolumeStore.setTalking(peers.size > 0);
+});

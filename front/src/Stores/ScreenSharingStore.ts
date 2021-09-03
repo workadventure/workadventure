@@ -175,6 +175,7 @@ export const screenSharingAvailableStore = derived(peerStore, ($peerStore, set) 
 export interface ScreenSharingLocalMedia {
     uniqueId: string;
     stream: MediaStream | null;
+    userId?: undefined;
 }
 
 /**

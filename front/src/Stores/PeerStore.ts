@@ -1,37 +1,29 @@
 import { readable, writable } from "svelte/store";
-import type { RemotePeer, SimplePeer } from "../WebRtc/SimplePeer";
-import { VideoPeer } from "../WebRtc/VideoPeer";
-import { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
+import type { VideoPeer } from "../WebRtc/VideoPeer";
+import type { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
 
 /**
  * A store that contains the list of (video) peers we are connected to.
  */
 function createPeerStore() {
-    let peers = new Map<number, VideoPeer>();
-
-    const { subscribe, set, update } = writable(peers);
+    const { subscribe, set, update } = writable(new Map<number, VideoPeer>());
 
     return {
         subscribe,
-        connectToSimplePeer: (simplePeer: SimplePeer) => {
-            peers = new Map<number, VideoPeer>();
-            set(peers);
-            simplePeer.registerPeerConnectionListener({
-                onConnect(peer: RemotePeer) {
-                    if (peer instanceof VideoPeer) {
-                        update((users) => {
-                            users.set(peer.userId, peer);
-                            return users;
-                        });
-                    }
-                },
-                onDisconnect(userId: number) {
-                    update((users) => {
-                        users.delete(userId);
-                        return users;
-                    });
-                },
+        pushNewPeer(peer: VideoPeer) {
+            update((users) => {
+                users.set(peer.userId, peer);
+                return users;
             });
+        },
+        removePeer(userId: number) {
+            update((users) => {
+                users.delete(userId);
+                return users;
+            });
+        },
+        cleanupStore() {
+            set(new Map<number, VideoPeer>());
         },
     };
 }
@@ -40,31 +32,24 @@ function createPeerStore() {
  * A store that contains the list of screen sharing peers we are connected to.
  */
 function createScreenSharingPeerStore() {
-    let peers = new Map<number, ScreenSharingPeer>();
-
-    const { subscribe, set, update } = writable(peers);
+    const { subscribe, set, update } = writable(new Map<number, ScreenSharingPeer>());
 
     return {
         subscribe,
-        connectToSimplePeer: (simplePeer: SimplePeer) => {
-            peers = new Map<number, ScreenSharingPeer>();
-            set(peers);
-            simplePeer.registerPeerConnectionListener({
-                onConnect(peer: RemotePeer) {
-                    if (peer instanceof ScreenSharingPeer) {
-                        update((users) => {
-                            users.set(peer.userId, peer);
-                            return users;
-                        });
-                    }
-                },
-                onDisconnect(userId: number) {
-                    update((users) => {
-                        users.delete(userId);
-                        return users;
-                    });
-                },
+        pushNewPeer(peer: ScreenSharingPeer) {
+            update((users) => {
+                users.set(peer.userId, peer);
+                return users;
             });
+        },
+        removePeer(userId: number) {
+            update((users) => {
+                users.delete(userId);
+                return users;
+            });
+        },
+        cleanupStore() {
+            set(new Map<number, ScreenSharingPeer>());
         },
     };
 }
