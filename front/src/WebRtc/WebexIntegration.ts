@@ -1,6 +1,10 @@
 import { coWebsiteManager } from "./CoWebsiteManager";
 import WebexSignIn from "../Components/Webex/WebexSignIn.svelte";
 import { WEBEX_AUTHORIZATION_URL, WEBEX_GLOBAL_SPACE_ID } from "../Enum/EnvironmentVariable";
+//import App from "../Components/App.svelte"; <- Causes peerStore issue
+import App from "svelte"
+import type {SvelteComponentDev} from "svelte/internal";
+import WebexVideoChat from "../Components/Webex/WebexVideoChat.svelte";
 
 interface Webex {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -32,6 +36,7 @@ export class WebexIntegration {
     private authorizationPopup: Window | null = null;
     private storage: Storage = window.localStorage;
     private spaceWidget: { remove: () => void } | null = null;
+    private meetingWidget: SvelteComponentDev | null = null;
 
     get accessToken() {
         return this.storage.getItem(accessTokenKey);
@@ -112,6 +117,46 @@ export class WebexIntegration {
             : Promise.reject("WEBEX_GLOBAL_SPACE_ID not configured.");
     }
 
+    public async startMeeting(meetingUrl: string | number | boolean) {
+        if (typeof meetingUrl !== "string") {
+            throw new Error("meetingURL isn't a string!")
+        }
+        const self = this;
+        await this.stop();
+
+        // TODO
+        //coWebsiteManager.insertCoWebsite((cowebsideDiv) => {
+        //    new WebexSignIn({target: cowebsideDiv});
+        //    return Promise.resolve();
+        //});
+
+        //const [webex] = await Promise.all([await self.waitForAuthorization()]);
+
+       // coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
+        //    const app  = document.
+        //    this.meetingWidget = app;
+        //    return Promise.resolve();
+        //})
+
+        //coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
+        //    new WebexSignIn({ target: cowebsiteDiv });
+
+        //    return Promise.resolve();
+        //});
+
+        coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
+            new WebexVideoChat({target: cowebsiteDiv, props: {
+                meetingRoom: meetingUrl,
+                accessToken: this.accessToken
+            } })
+
+            return Promise.resolve();
+        });
+
+        // coWebsiteManager.loadCoWebsite(meetingUrl.substring(25), "https://meet108.webex.com", true, "*");
+
+    }
+
     public async start(
         spaceId: string,
         initialActivity: string = "meet",
@@ -122,7 +167,7 @@ export class WebexIntegration {
         await this.stop();
 
         coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
-            new WebexSignIn({ target: cowebsiteDiv });
+            new WebexSignIn({ target: cowebsiteDiv});
 
             return Promise.resolve();
         });
@@ -153,6 +198,11 @@ export class WebexIntegration {
         if (this.spaceWidget) {
             this.spaceWidget?.remove();
             this.spaceWidget = null;
+            await coWebsiteManager.closeCoWebsite();
+        }
+
+        if (this.meetingWidget) {
+            this.meetingWidget = null;
             await coWebsiteManager.closeCoWebsite();
         }
     }
