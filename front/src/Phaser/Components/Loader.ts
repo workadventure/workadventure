@@ -1,4 +1,5 @@
 import ImageFrameConfig = Phaser.Types.Loader.FileTypes.ImageFrameConfig;
+import { DirtyScene } from "../Game/DirtyScene";
 
 const LogoNameIndex: string = "logoLoading";
 const TextName: string = "Loading...";
@@ -64,6 +65,9 @@ export const addLoader = (scene: Phaser.Scene): void => {
         });
         progress.destroy();
         progressContainer.destroy();
+        if (scene instanceof DirtyScene) {
+            scene.markDirty();
+        }
     });
 };
 

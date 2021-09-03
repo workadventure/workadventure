@@ -40,7 +40,7 @@
   },
   "homepage": "https://github.com/thecodingmachine/workadventure#readme",
   "dependencies": {
-    "@workadventure/tiled-map-type-guard": "^1.0.0",
+    "@workadventure/tiled-map-type-guard": "^1.0.2",
     "axios": "^0.21.1",
     "busboy": "^0.3.1",
     "circular-json": "^0.5.9",
@@ -54,7 +54,6 @@
     "prom-client": "^12.0.0",
     "query-string": "^6.13.3",
     "redis": "^3.1.2",
-    "systeminformation": "^4.31.1",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v18.5.0",
     "uuidv4": "^6.0.7"
   },

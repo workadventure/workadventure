@@ -16,9 +16,10 @@ const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
 const state = "state";
 const nonce = "nonce";
+const notification = "notificationPermission";
 const cameraSetup = "cameraSetup";
 
-const cacheAPIIndex = "workavdenture-cache-v1";
+const cacheAPIIndex = "workavdenture-cache";
 
 class LocalUserStore {
     saveUser(localUser: LocalUser) {
@@ -142,6 +143,14 @@ class LocalUserStore {
     }
     getAuthToken(): string | null {
         return localStorage.getItem(authToken);
+    }
+
+    setNotification(value: string): void {
+        localStorage.setItem(notification, value);
+    }
+
+    getNotification(): string | null {
+        return localStorage.getItem(notification);
     }
 
     generateState(): string {

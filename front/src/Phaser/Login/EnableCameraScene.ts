@@ -34,6 +34,6 @@ export class EnableCameraScene extends ResizableScene {
         enableCameraSceneVisibilityStore.hideEnableCameraScene();
 
         this.scene.sleep(EnableCameraSceneName);
-        gameManager.goToStartingMap(this.scene);
+        gameManager.goToStartingMap();
     }
 }

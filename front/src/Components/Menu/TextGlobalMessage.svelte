@@ -1,8 +1,7 @@
 <script lang="ts">
-    import { consoleGlobalMessageManagerFocusStore, consoleGlobalMessageManagerVisibleStore } from "../../Stores/ConsoleGlobalMessageManagerStore";
-    import {onDestroy, onMount} from "svelte";
-    import type { Game } from "../../Phaser/Game/Game";
-    import type { GameManager } from "../../Phaser/Game/GameManager";
+    import { menuInputFocusStore } from "../../Stores/MenuStore";
+    import { onDestroy, onMount } from "svelte";
+    import { gameManager } from "../../Phaser/Game/GameManager";
     import { AdminMessageEventTypes } from "../../Connexion/AdminMessagesService";
     import type { Quill } from "quill";
     import type { PlayGlobalMessageInterface } from "../../Connexion/ConnexionModels";
@@ -25,20 +24,15 @@
         [{'font': []}],
         [{'align': []}],
 
-        ['clean'],
+        ['clean'],                                // remove formatting button
 
         ['link', 'image', 'video']
-        // remove formatting button
     ];
 
-    export let game: Game;
-    export let gameManager: GameManager;
-
-    const gameScene = gameManager.getCurrentGameScene(game.findAnyScene());
-    let quill: Quill;
-    let INPUT_CONSOLE_MESSAGE: HTMLDivElement;
-
+    const gameScene = gameManager.getCurrentGameScene();
     const MESSAGE_TYPE = AdminMessageEventTypes.admin;
+    let quill: Quill;
+    let QUILL_EDITOR: HTMLDivElement;
 
     export const handleSending = {
         sendTextMessage(broadcastToWorld: boolean) {
@@ -55,39 +49,31 @@
 
             quill.deleteText(0, quill.getLength());
             gameScene.connection?.emitGlobalMessage(textGlobalMessage);
-            disableConsole();
         }
     }
 
     //Quill
     onMount(async () => {
-
         // Import quill
         const {default: Quill} = await import("quill"); // eslint-disable-line @typescript-eslint/no-explicit-any
 
-        quill = new Quill(INPUT_CONSOLE_MESSAGE, {
+        quill = new Quill(QUILL_EDITOR, {
             placeholder: 'Enter your message here...',
             theme: 'snow',
             modules: {
                 toolbar: toolbarOptions
             },
         });
-
-        consoleGlobalMessageManagerFocusStore.set(true);
+        menuInputFocusStore.set(true);
     });
 
     onDestroy(() => {
-        consoleGlobalMessageManagerFocusStore.set(false);
+        menuInputFocusStore.set(false);
     })
-
-    function disableConsole() {
-        consoleGlobalMessageManagerVisibleStore.set(false);
-        consoleGlobalMessageManagerFocusStore.set(false);
-    }
 </script>
 
 <section class="section-input-send-text">
-    <div class="input-send-text" bind:this={INPUT_CONSOLE_MESSAGE}></div>
+    <div class="input-send-text" bind:this={QUILL_EDITOR}></div>
 </section>
 
 
