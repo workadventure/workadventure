@@ -34,9 +34,6 @@ export class AuthenticateController extends BaseController {
             }
             try {
                 const loginUri = await openIDClient.authorizationUrl(state as string, nonce as string);
-                console.log("openIDLogin => state", state);
-                console.log("openIDLogin => nonce", nonce);
-                console.log("openIDLogin => loginUri", loginUri);
                 res.writeStatus("302");
                 res.writeHeader("Location", loginUri);
                 return res.end();
