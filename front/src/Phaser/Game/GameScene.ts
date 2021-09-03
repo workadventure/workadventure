@@ -1877,11 +1877,17 @@ ${escapedMessage}
         const webexSpaceId = allProps.get("webexSpace");
         const webexMeetingUrl = allProps.get("webexMeetingUrl")
 
+        console.log("Jitsi: "+jitsiUrl)
+        console.log("webexSpaceId: "+webexSpaceId)
+        console.log("webexMeetingUrl: "+webexMeetingUrl)
+
         if (webexMeetingUrl) {
+            console.log("Found webex meeting url")
             webexIntegration.startMeeting(webexMeetingUrl)
         } else if (webexSpaceId) {
             webexIntegration.start(webexSpaceId as string);
         } else {
+            console.log("Didn't find webex Meeting URl or Space ID")
             jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl);
         }
         this.connection?.setSilent(true);
