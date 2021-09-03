@@ -1875,8 +1875,11 @@ ${escapedMessage}
         );
         const jitsiUrl = allProps.get("jitsiUrl") as string | undefined;
         const webexSpaceId = allProps.get("webexSpace");
+        const webexMeetingUrl = allProps.get("webexMeetingUrl")
 
-        if (webexSpaceId) {
+        if (webexMeetingUrl) {
+            webexIntegration.startMeeting(webexMeetingUrl)
+        } else if (webexSpaceId) {
             webexIntegration.start(webexSpaceId as string);
         } else {
             jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl);

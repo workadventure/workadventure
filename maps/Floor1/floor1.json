@@ -30,8 +30,13 @@
                  "name":"webexSpace",
                  "type":"string",
                  "value":"Y2lzY29zcGFyazovL3VybjpURUFNOmV1LWNlbnRyYWwtMV9rL1JPT00vYjEzZjU4NDAtZWJhMi0xMWViLWEwMTYtMzc5MzBkMTVmMzI3"
-                }
-              ],
+                },
+           {
+             "name": "webexMeetingUrl",
+             "type": "string",
+             "value": "https://meet108.webex.com/meet/pr1885265408"
+           }
+         ],
          "type":"tilelayer",
          "visible":true,
          "width":46,
@@ -53,7 +58,12 @@
                      "name":"webexSpace",
                      "type":"string",
                      "value":"Y2lzY29zcGFyazovL3VybjpURUFNOmV1LWNlbnRyYWwtMV9rL1JPT00vZTRlNTdjNTAtZWJhOC0xMWViLWI0NzUtYjM0OGZlYTk3OTY0" 
-                }],
+                }, {
+             "name": "webexMeetingUrl",
+             "type": "string",
+             "value": "https://meet108.webex.com/meet/pr1885265408"
+           }
+         ],
          "type":"tilelayer",
          "visible":true,
          "width":46,
@@ -75,7 +85,12 @@
                        "name": "webexSpace",
                      "type":"string",
                      "value":"Y2lzY29zcGFyazovL3VybjpURUFNOmV1LWNlbnRyYWwtMV9rL1JPT00vZTIwMWIyYzAtZWJhNy0xMWViLWEzYjgtN2YzMTM3OTVmYmMz"
-                }],
+                }, {
+             "name": "webexMeetingUrl",
+             "type": "string",
+             "value": "https://meet108.webex.com/meet/pr1885265408"
+           }
+         ],
          "type":"tilelayer",
          "visible":true,
          "width":46,
