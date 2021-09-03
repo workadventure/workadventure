@@ -29,8 +29,8 @@ jobs:
         with:
           dockerfile: front/Dockerfile
           path: ./
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_DEPLOY_TOKEN }}
           repository: iits/workadventure-front
           tags: ${{ env.GITHUB_SHA_SHORT }},${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           add_git_labels: true
