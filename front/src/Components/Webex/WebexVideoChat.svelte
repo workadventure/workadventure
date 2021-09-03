@@ -110,7 +110,7 @@
         await importWebex();
         webex = window.Webex.init({
             credentials: {
-                access_token: accessToken
+                access_token: accessToken //
             }
         });
         webex.config.logger.level = 'debug';
