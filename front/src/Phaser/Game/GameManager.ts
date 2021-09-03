@@ -42,7 +42,7 @@ export class GameManager {
         } else if (this.cameraSetup == undefined) {
             return EnableCameraSceneName;
         } else {
-            this.activeMenuSceneAndHelpCameraSettings(scenePlugin);
+            this.activeMenuSceneAndHelpCameraSettings();
             return this.startRoom.key;
         }
     }
