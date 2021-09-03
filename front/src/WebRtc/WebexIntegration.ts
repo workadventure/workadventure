@@ -134,7 +134,7 @@ export class WebexIntegration {
 
         coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
             new WebexVideoChat({target: cowebsiteDiv, props: { //
-                meetingRoom: meetingUrl,
+                meetingRoom: meetingUrl, //
                 accessToken: this.accessToken
             } })
 
