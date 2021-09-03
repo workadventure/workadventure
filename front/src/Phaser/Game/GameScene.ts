@@ -715,24 +715,7 @@ export class GameScene extends DirtyScene {
 
                 // When connection is performed, let's connect SimplePeer
                 this.simplePeer = new SimplePeer(this.connection);
-                peerStore.connectToSimplePeer(this.simplePeer);
-                screenSharingPeerStore.connectToSimplePeer(this.simplePeer);
-                videoFocusStore.connectToSimplePeer(this.simplePeer);
                 userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
-
-                const self = this;
-                this.simplePeer.registerPeerConnectionListener({
-                    onConnect(peer) {
-                        //self.openChatIcon.setVisible(true);
-                        audioManagerVolumeStore.setTalking(true);
-                    },
-                    onDisconnect(userId: number) {
-                        if (self.simplePeer.getNbConnections() === 0) {
-                            //self.openChatIcon.setVisible(false);
-                            audioManagerVolumeStore.setTalking(false);
-                        }
-                    },
-                });
 
                 //listen event to share position of user
                 this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this));
