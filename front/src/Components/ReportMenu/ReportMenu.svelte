@@ -21,7 +21,7 @@
             if (reportScreenStore != null) {
                 userName = reportScreenStore.userName;
                 userUUID = playersStore.getPlayerById(reportScreenStore.userId)?.userUuid;
-                if (userUUID === undefined) {
+                if (userUUID === undefined && reportScreenStore !== userReportEmpty) {
                     console.error("Could not find UUID for user with ID " + reportScreenStore.userId);
                 }
             }

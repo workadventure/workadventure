@@ -712,7 +712,7 @@ export class GameScene extends DirtyScene {
                 });
 
                 // When connection is performed, let's connect SimplePeer
-                this.simplePeer = new SimplePeer(this.connection, !this.room.isPublic, this.playerName);
+                this.simplePeer = new SimplePeer(this.connection);
                 peerStore.connectToSimplePeer(this.simplePeer);
                 screenSharingPeerStore.connectToSimplePeer(this.simplePeer);
                 videoFocusStore.connectToSimplePeer(this.simplePeer);
@@ -835,7 +835,8 @@ export class GameScene extends DirtyScene {
                         newValue as string,
                         this.MapUrlFile,
                         allProps.get("openWebsiteAllowApi") as boolean | undefined,
-                        allProps.get("openWebsitePolicy") as string | undefined
+                        allProps.get("openWebsitePolicy") as string | undefined,
+                        allProps.get("openWebsiteWidth") as number | undefined
                     );
                     layoutManagerActionStore.removeAction("openWebsite");
                 };
@@ -1240,30 +1241,10 @@ ${escapedMessage}
         propertyName: string,
         propertyValue: string | number | boolean | undefined
     ): void {
-        const layer = this.gameMap.findLayer(layerName);
-        if (layer === undefined) {
-            console.warn('Could not find layer "' + layerName + '" when calling setProperty');
-            return;
-        }
         if (propertyName === "exitUrl" && typeof propertyValue === "string") {
             this.loadNextGameFromExitUrl(propertyValue);
         }
-        if (layer.properties === undefined) {
-            layer.properties = [];
-        }
-        const property = layer.properties.find((property) => property.name === propertyName);
-        if (property === undefined) {
-            if (propertyValue === undefined) {
-                return;
-            }
-            layer.properties.push({ name: propertyName, type: typeof propertyValue, value: propertyValue });
-            return;
-        }
-        if (propertyValue === undefined) {
-            const index = layer.properties.indexOf(property);
-            layer.properties.splice(index, 1);
-        }
-        property.value = propertyValue;
+        this.gameMap.setLayerProperty(layerName, propertyName, propertyValue);
     }
 
     private setLayerVisibility(layerName: string, visible: boolean): void {
@@ -1859,8 +1840,9 @@ ${escapedMessage}
             "jitsiInterfaceConfig"
         );
         const jitsiUrl = allProps.get("jitsiUrl") as string | undefined;
+        const jitsiWidth = allProps.get("jitsiWidth") as number | undefined;
 
-        jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl);
+        jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl, jitsiWidth);
         this.connection?.setSilent(true);
         mediaManager.hideGameOverlay();
 

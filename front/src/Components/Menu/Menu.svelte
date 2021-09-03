@@ -6,16 +6,32 @@
     import AboutRoomSubMenu from "./AboutRoomSubMenu.svelte";
     import GlobalMessageSubMenu from "./GlobalMessagesSubMenu.svelte";
     import ContactSubMenu from "./ContactSubMenu.svelte";
-    import {menuVisiblilityStore, SubMenusInterface, subMenusStore} from "../../Stores/MenuStore";
-    import {onMount} from "svelte";
+    import CustomSubMenu from "./CustomSubMenu.svelte"
+    import {customMenuIframe, menuVisiblilityStore, SubMenusInterface, subMenusStore} from "../../Stores/MenuStore";
+    import {onDestroy, onMount} from "svelte";
     import {get} from "svelte/store";
+    import type {Unsubscriber} from "svelte/store";
     import {sendMenuClickedEvent} from "../../Api/iframe/Ui/MenuItem";
 
     let activeSubMenu: string = SubMenusInterface.settings;
-    let activeComponent: typeof SettingsSubMenu = SettingsSubMenu;
+    let activeComponent: typeof SettingsSubMenu | typeof CustomSubMenu = SettingsSubMenu;
+    let props: { url: string, allowApi: boolean };
+    let unsubscriberSubMenuStore: Unsubscriber;
 
     onMount(() => {
+        unsubscriberSubMenuStore = subMenusStore.subscribe(() => {
+            if(!get(subMenusStore).includes(activeSubMenu)) {
+                switchMenu(SubMenusInterface.settings);
+            }
+        })
+
         switchMenu(SubMenusInterface.settings);
+    })
+
+    onDestroy(() => {
+        if(unsubscriberSubMenuStore) {
+            unsubscriberSubMenuStore();
+        }
     })
 
     function switchMenu(menu: string) {
@@ -41,8 +57,14 @@
                     activeComponent = ContactSubMenu;
                     break;
                 default:
-                    sendMenuClickedEvent(menu);
-                    menuVisiblilityStore.set(false);
+                    const customMenu = customMenuIframe.get(menu);
+                    if (customMenu !== undefined) {
+                        props = { url: customMenu.url, allowApi: customMenu.allowApi };
+                        activeComponent = CustomSubMenu;
+                    } else {
+                        sendMenuClickedEvent(menu);
+                        menuVisiblilityStore.set(false);
+                    }
                     break;
             }
         } else throw ("There is no menu called " + menu);
@@ -74,7 +96,7 @@
     </div>
     <div class="menu-submenu-container nes-container is-rounded" transition:fly="{{ y: -1000, duration: 500 }}">
         <h2>{activeSubMenu}</h2>
-        <svelte:component this={activeComponent}/>
+        <svelte:component this={activeComponent} {...props}/>
     </div>
 </div>
 

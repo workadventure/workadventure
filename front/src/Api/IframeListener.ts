@@ -29,12 +29,12 @@ import { isSetPropertyEvent, SetPropertyEvent } from "./Events/setPropertyEvent"
 import { isLayerEvent, LayerEvent } from "./Events/LayerEvent";
 import type { HasPlayerMovedEvent } from "./Events/HasPlayerMovedEvent";
 import { isLoadPageEvent } from "./Events/LoadPageEvent";
-import { handleMenuItemRegistrationEvent, isMenuItemRegisterIframeEvent } from "./Events/ui/MenuItemRegisterEvent";
+import { isMenuRegisterEvent, isUnregisterMenuEvent } from "./Events/ui/MenuRegisterEvent";
 import { SetTilesEvent, isSetTilesEvent } from "./Events/SetTilesEvent";
 import type { SetVariableEvent } from "./Events/SetVariableEvent";
 import { ModifyEmbeddedWebsiteEvent, isEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
 import { EmbeddedWebsite } from "./iframe/Room/EmbeddedWebsite";
-import { subMenusStore } from "../Stores/MenuStore";
+import { handleMenuRegistrationEvent, handleMenuUnregisterEvent } from "../Stores/MenuStore";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -255,17 +255,23 @@ class IframeListener {
                         this._removeBubbleStream.next();
                     } else if (payload.type == "onPlayerMove") {
                         this.sendPlayerMove = true;
-                    } else if (isMenuItemRegisterIframeEvent(payload)) {
-                        const data = payload.data.menutItem;
-                        // @ts-ignore
-                        this.iframeCloseCallbacks.get(iframe).push(() => {
-                            subMenusStore.removeMenu(data);
-                        });
-                        handleMenuItemRegistrationEvent(payload.data);
                     } else if (payload.type == "setTiles" && isSetTilesEvent(payload.data)) {
                         this._setTilesStream.next(payload.data);
                     } else if (payload.type == "modifyEmbeddedWebsite" && isEmbeddedWebsiteEvent(payload.data)) {
                         this._modifyEmbeddedWebsiteStream.next(payload.data);
+                    } else if (payload.type == "registerMenu" && isMenuRegisterEvent(payload.data)) {
+                        const dataName = payload.data.name;
+                        this.iframeCloseCallbacks.get(iframe)?.push(() => {
+                            handleMenuUnregisterEvent(dataName);
+                        });
+                        handleMenuRegistrationEvent(
+                            payload.data.name,
+                            payload.data.iframe,
+                            foundSrc,
+                            payload.data.options
+                        );
+                    } else if (payload.type == "unregisterMenu" && isUnregisterMenuEvent(payload.data)) {
+                        handleMenuUnregisterEvent(payload.data.name);
                     }
                 }
             },

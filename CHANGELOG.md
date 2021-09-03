@@ -1,5 +1,11 @@
 ## Version develop
 
+### Updates 
+- New scripting API features : 
+  - Use `WA.ui.registerMenuCommand(commandDescriptor: string, options: MenuOptions): Menu` to add a custom menu or an iframe to the menu.
+
+## Version 1.4.14
+
 ### Updates
 - New scripting API features : 
   - Use `WA.room.loadTileset(url: string) : Promise<number>` to load a tileset from a JSON file.
