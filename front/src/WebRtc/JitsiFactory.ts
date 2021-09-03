@@ -1,14 +1,38 @@
 import { JITSI_URL } from "../Enum/EnvironmentVariable";
-import { mediaManager } from "./MediaManager";
 import { coWebsiteManager } from "./CoWebsiteManager";
 import { requestedCameraState, requestedMicrophoneState } from "../Stores/MediaStore";
 import { get } from "svelte/store";
-declare const window: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 interface jitsiConfigInterface {
     startWithAudioMuted: boolean;
     startWithVideoMuted: boolean;
     prejoinPageEnabled: boolean;
+}
+
+interface JitsiOptions {
+    jwt?: string;
+    roomName: string;
+    width: string;
+    height: string;
+    parentNode: HTMLElement;
+    configOverwrite: jitsiConfigInterface;
+    interfaceConfigOverwrite: typeof defaultInterfaceConfig;
+    onload?: Function;
+}
+
+interface JitsiApi {
+    executeCommand: (command: string, ...args: Array<unknown>) => void;
+
+    addListener: (type: string, callback: Function) => void;
+    removeListener: (type: string, callback: Function) => void;
+
+    dispose: () => void;
+}
+
+declare global {
+    interface Window {
+        JitsiMeetExternalAPI: new (domain: string, options: JitsiOptions) => JitsiApi;
+    }
 }
 
 const getDefaultConfig = (): jitsiConfigInterface => {
@@ -96,7 +120,7 @@ const slugify = (...args: (string | number)[]): string => {
 };
 
 class JitsiFactory {
-    private jitsiApi: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+    private jitsiApi?: JitsiApi;
     private audioCallback = this.onAudioChange.bind(this);
     private videoCallback = this.onVideoChange.bind(this);
     private jitsiScriptLoaded: boolean = false;
@@ -132,8 +156,7 @@ class JitsiFactory {
             }
             await this.loadJitsiScript(domain);
 
-            const options: any = {
-                // eslint-disable-line @typescript-eslint/no-explicit-any
+            const options: JitsiOptions = {
                 roomName: roomName,
                 jwt: jwt,
                 width: "100%",
