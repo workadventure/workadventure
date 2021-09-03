@@ -124,26 +124,6 @@ export class WebexIntegration {
         const self = this;
         await this.stop();
 
-        // TODO
-        //coWebsiteManager.insertCoWebsite((cowebsideDiv) => {
-        //    new WebexSignIn({target: cowebsideDiv});
-        //    return Promise.resolve();
-        //});
-
-        //const [webex] = await Promise.all([await self.waitForAuthorization()]);
-
-       // coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
-        //    const app  = document.
-        //    this.meetingWidget = app;
-        //    return Promise.resolve();
-        //})
-
-        //coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
-        //    new WebexSignIn({ target: cowebsiteDiv });
-
-        //    return Promise.resolve();
-        //});
-
         coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
             new WebexVideoChat({target: cowebsiteDiv, props: {
                 meetingRoom: meetingUrl,
@@ -152,9 +132,6 @@ export class WebexIntegration {
 
             return Promise.resolve();
         });
-
-        // coWebsiteManager.loadCoWebsite(meetingUrl.substring(25), "https://meet108.webex.com", true, "*");
-
     }
 
     public async start(

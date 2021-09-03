@@ -19,7 +19,7 @@
         sendShare: false
     }
 
-    function horribleImportWebex() {
+    function importWebex() {
         return new Promise((resolve, reject) => {
             let scriptElement = document.createElement('script');
             scriptElement.src = webexCDNLink;
@@ -85,8 +85,6 @@
                         console.error(err.toString())
                     }
                 });
-
-
             }).catch(err => {
                 console.error(err)
             })
@@ -109,7 +107,7 @@
     }
 
     onMount(async () => {
-        await horribleImportWebex();
+        await importWebex();
         webex = window.Webex.init({
             credentials: {
                 access_token: accessToken
@@ -120,9 +118,9 @@
             startCall()
         })
             .catch(err => {
-                console.error(err);
-                alert(err);
-                throw(err);
+                console.error("Error: "+err+"\nmeetingRoom: "+meetingRoom+"\n"+"accessToken: "+accessToken);
+                alert("Error: "+err+"\nmeetingRoom: "+meetingRoom+"\n"+"accessToken: "+accessToken);
+                throw("Error: "+err+"\nmeetingRoom: "+meetingRoom+"\n"+"accessToken: "+accessToken);
             });
 
         ready = true;
