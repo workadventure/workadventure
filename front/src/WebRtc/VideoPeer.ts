@@ -4,7 +4,7 @@ import type { RoomConnection } from "../Connexion/RoomConnection";
 import { blackListManager } from "./BlackListManager";
 import type { Subscription } from "rxjs";
 import type { UserSimplePeerInterface } from "./SimplePeer";
-import { get, readable, Readable, Unsubscriber } from "svelte/store";
+import { readable, Readable, Unsubscriber } from "svelte/store";
 import {
     localStreamStore,
     obtainedMediaConstraintIsMobileStore,
@@ -12,7 +12,7 @@ import {
     ObtainedMediaStreamConstraints,
 } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
-import { chatMessagesStore, chatVisibilityStore, newChatMessageStore } from "../Stores/ChatStore";
+import { chatMessagesStore, newChatMessageStore } from "../Stores/ChatStore";
 import { getIceServersConfig } from "../Components/Video/utils";
 import { isMobile } from "../Enum/EnvironmentVariable";
 

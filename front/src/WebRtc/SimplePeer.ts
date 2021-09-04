@@ -10,6 +10,7 @@ import { blackListManager } from "./BlackListManager";
 import { get } from "svelte/store";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { playersStore } from "../Stores/PlayersStore";
+import { peerStore, screenSharingPeerStore } from "../Stores/PeerStore";
 
 export interface UserSimplePeerInterface {
     userId: number;
@@ -19,12 +20,6 @@ export interface UserSimplePeerInterface {
 }
 
 export type RemotePeer = VideoPeer | ScreenSharingPeer;
-
-export interface PeerConnectionListener {
-    onConnect(user: RemotePeer): void;
-
-    onDisconnect(userId: number): void;
-}
 
 /**
  * This class manages connections to all the peers in the same group as me.
@@ -37,12 +32,14 @@ export class SimplePeer {
     private readonly sendLocalScreenSharingStreamCallback: StartScreenSharingCallback;
     private readonly stopLocalScreenSharingStreamCallback: StopScreenSharingCallback;
     private readonly unsubscribers: (() => void)[] = [];
-    private readonly peerConnectionListeners: Array<PeerConnectionListener> = new Array<PeerConnectionListener>();
     private readonly userId: number;
     private lastWebrtcUserName: string | undefined;
     private lastWebrtcPassword: string | undefined;
 
     constructor(private Connection: RoomConnection) {
+        //we make sure we don't get any old peer.
+        peerStore.cleanupStore();
+        screenSharingPeerStore.cleanupStore();
         // We need to go through this weird bound function pointer in order to be able to "free" this reference later.
         this.sendLocalScreenSharingStreamCallback = this.sendLocalScreenSharingStream.bind(this);
         this.stopLocalScreenSharingStreamCallback = this.stopLocalScreenSharingStream.bind(this);
@@ -71,14 +68,6 @@ export class SimplePeer {
 
         this.userId = Connection.getUserId();
         this.initialise();
-    }
-
-    public registerPeerConnectionListener(peerConnectionListener: PeerConnectionListener) {
-        this.peerConnectionListeners.push(peerConnectionListener);
-    }
-
-    public getNbConnections(): number {
-        return this.Users.length;
     }
 
     /**
@@ -164,9 +153,7 @@ export class SimplePeer {
         }
         this.PeerConnectionArray.set(user.userId, peer);
 
-        for (const peerConnectionListener of this.peerConnectionListeners) {
-            peerConnectionListener.onConnect(peer);
-        }
+        peerStore.pushNewPeer(peer);
         return peer;
     }
 
@@ -214,9 +201,7 @@ export class SimplePeer {
         );
         this.PeerScreenSharingConnectionArray.set(user.userId, peer);
 
-        for (const peerConnectionListener of this.peerConnectionListeners) {
-            peerConnectionListener.onConnect(peer);
-        }
+        screenSharingPeerStore.pushNewPeer(peer);
         return peer;
     }
 
@@ -255,12 +240,11 @@ export class SimplePeer {
             for (const userId of this.PeerScreenSharingConnectionArray.keys()) {
                 this.closeScreenSharingConnection(userId);
                 this.PeerScreenSharingConnectionArray.delete(userId);
+                screenSharingPeerStore.removePeer(userId);
             }
         }
 
-        for (const peerConnectionListener of this.peerConnectionListeners) {
-            peerConnectionListener.onDisconnect(userId);
-        }
+        peerStore.removePeer(userId);
     }
 
     /**
@@ -302,6 +286,8 @@ export class SimplePeer {
         for (const unsubscriber of this.unsubscribers) {
             unsubscriber();
         }
+        peerStore.cleanupStore();
+        screenSharingPeerStore.cleanupStore();
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -325,7 +311,6 @@ export class SimplePeer {
     private receiveWebrtcScreenSharingSignal(data: WebRtcSignalReceivedMessageInterface) {
         const uuid = playersStore.getPlayerById(data.userId)?.userUuid || "";
         if (blackListManager.isBlackListed(uuid)) return;
-        console.log("receiveWebrtcScreenSharingSignal", data);
         const streamResult = get(screenSharingLocalStreamStore);
         let stream: MediaStream | null = null;
         if (streamResult.type === "success" && streamResult.stream !== null) {

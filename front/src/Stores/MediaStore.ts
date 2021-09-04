@@ -1,4 +1,4 @@
-import { derived, get, Readable, readable, writable, Writable } from "svelte/store";
+import { derived, get, Readable, readable, writable } from "svelte/store";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { userMovingStore } from "./GameStore";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
