@@ -8,6 +8,7 @@
     import {selectCharacterSceneVisibleStore} from "../../Stores/SelectCharacterStore";
     import {SelectCharacterScene, SelectCharacterSceneName} from "../../Phaser/Login/SelectCharacterScene";
     import {EnableCameraScene, EnableCameraSceneName} from "../../Phaser/Login/EnableCameraScene";
+    import {enableCameraSceneVisibilityStore} from "../../Stores/MediaStore";
     //import {connectionManager} from "../../Connexion/ConnectionManager";
 
 
@@ -36,7 +37,7 @@
 
     function openEnableCameraScene(){
         disableMenuStores();
-        selectCharacterSceneVisibleStore.set(true);
+        enableCameraSceneVisibilityStore.showEnableCameraScene();
         gameManager.leaveGame(EnableCameraSceneName,new EnableCameraScene());
     }
 
@@ -58,7 +59,7 @@
         <button type="button" class="nes-btn" on:click|preventDefault={openEditCompanionScene}>Edit Companion</button>
     </section>
     <section>
-        <button type="button" class="nes-btn" on:click|preventDefault={openEnableCameraScene}>Setup camera and microphone</button>
+        <button type="button" class="nes-btn" on:click|preventDefault={openEnableCameraScene}>Setup camera</button>
     </section>
 <!--    <section>
         <button type="button" class="nes-btn is-primary" on:click|preventDefault={clickLogin}>Login</button>

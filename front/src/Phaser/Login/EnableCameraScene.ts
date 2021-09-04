@@ -15,10 +15,6 @@ export class EnableCameraScene extends ResizableScene {
     preload() {}
 
     create() {
-        if (localUserStore.getCameraSetup()) {
-            this.login();
-        }
-
         this.input.keyboard.on("keyup-ENTER", () => {
             this.login();
         });
