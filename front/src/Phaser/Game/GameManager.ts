@@ -18,6 +18,7 @@ export class GameManager {
     private characterLayers: string[] | null;
     private companion: string | null;
     private startRoom!: Room;
+    private cameraSetup?: { video: unknown; audio: unknown };
     currentGameSceneName: string | null = null;
     // Note: this scenePlugin is the scenePlugin of the EntryScene. We should always provide a key in methods called on this scenePlugin.
     private scenePlugin!: Phaser.Scenes.ScenePlugin;
@@ -26,6 +27,7 @@ export class GameManager {
         this.playerName = localUserStore.getName();
         this.characterLayers = localUserStore.getCharacterLayers();
         this.companion = localUserStore.getCompanion();
+        this.cameraSetup = localUserStore.getCameraSetup();
     }
 
     public async init(scenePlugin: Phaser.Scenes.ScenePlugin): Promise<string> {
@@ -37,8 +39,11 @@ export class GameManager {
             return LoginSceneName;
         } else if (!this.characterLayers || !this.characterLayers.length) {
             return SelectCharacterSceneName;
-        } else {
+        } else if (this.cameraSetup == undefined) {
             return EnableCameraSceneName;
+        } else {
+            this.activeMenuSceneAndHelpCameraSettings();
+            return this.startRoom.key;
         }
     }
 
@@ -84,7 +89,14 @@ export class GameManager {
     public goToStartingMap(): void {
         console.log("starting " + (this.currentGameSceneName || this.startRoom.key));
         this.scenePlugin.start(this.currentGameSceneName || this.startRoom.key);
+        this.activeMenuSceneAndHelpCameraSettings();
+    }
 
+    /**
+     * @private
+     * @return void
+     */
+    private activeMenuSceneAndHelpCameraSettings(): void {
         if (
             !localUserStore.getHelpCameraSettingsShown() &&
             (!get(requestedMicrophoneState) || !get(requestedCameraState))

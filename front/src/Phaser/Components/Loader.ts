@@ -70,3 +70,9 @@ export const addLoader = (scene: Phaser.Scene): void => {
         }
     });
 };
+
+export const removeLoader = (scene: Phaser.Scene): void => {
+    if (scene.load.textureManager.exists(LogoNameIndex)) {
+        scene.load.textureManager.remove(LogoNameIndex);
+    }
+};

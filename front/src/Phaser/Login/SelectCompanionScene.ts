@@ -1,5 +1,3 @@
-import Image = Phaser.GameObjects.Image;
-import Rectangle = Phaser.GameObjects.Rectangle;
 import { addLoader } from "../Components/Loader";
 import { gameManager } from "../Game/GameManager";
 import { ResizableScene } from "./ResizableScene";

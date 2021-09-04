@@ -37,7 +37,7 @@ import { localUserStore } from "../../Connexion/LocalUserStore";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import { mediaManager } from "../../WebRtc/MediaManager";
 import { SimplePeer } from "../../WebRtc/SimplePeer";
-import { addLoader } from "../Components/Loader";
+import { addLoader, removeLoader } from "../Components/Loader";
 import { OpenChatIcon, openChatIconName } from "../Components/OpenChatIcon";
 import { lazyLoadPlayerCharacterTextures, loadCustomTexture } from "../Entity/PlayerTexturesLoadingManager";
 import { RemotePlayer } from "../Entity/RemotePlayer";
@@ -291,8 +291,11 @@ export class GameScene extends DirtyScene {
             }
 
             //once preloading is over, we don't want loading errors to crash the game, so we need to disable this behavior after preloading.
-            console.error("Error when loading: ", file);
             if (this.preloading) {
+                //remove loader in progress
+                removeLoader(this);
+
+                //display an error scene
                 this.scene.start(ErrorSceneName, {
                     title: "Network error",
                     subTitle: "An error occurred while loading resource:",
@@ -1258,7 +1261,9 @@ ${escapedMessage}
         if (!targetRoom.isEqual(this.room)) {
             if (this.scene.get(targetRoom.key) === null) {
                 console.error("next room not loaded", targetRoom.key);
-                return;
+                // Try to load next dame room from exit URL
+                // The policy of room can to be updated during a session and not load before
+                await this.loadNextGameFromExitUrl(targetRoom.key);
             }
             this.cleanupClosingScene();
             this.scene.stop();
