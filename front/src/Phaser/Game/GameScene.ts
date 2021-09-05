@@ -93,6 +93,7 @@ import { userIsAdminStore } from "../../Stores/GameStore";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
 import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
+import type { RadialMenuItem } from "../Components/RadialMenu";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -853,8 +854,10 @@ export class GameScene extends DirtyScene {
         this.gameMap.onPropertyChange("silent", (newValue, oldValue) => {
             if (newValue === undefined || newValue === false || newValue === "") {
                 this.connection?.setSilent(false);
+                this.CurrentPlayer.noSilent();
             } else {
                 this.connection?.setSilent(true);
+                this.CurrentPlayer.isSilent();
             }
         });
         this.gameMap.onPropertyChange("playAudio", (newValue, oldValue, allProps) => {

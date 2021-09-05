@@ -569,3 +569,8 @@ localStreamStore.subscribe((streamResult) => {
  * A store containing the real active media is mobile
  */
 export const obtainedMediaConstraintIsMobileStore = writable(false);
+
+/**
+ * A store containing if user is silent, so if he is in silent zone. This permit to show et hide camera of user
+ */
+export const isSilentStore = writable(false);

@@ -1083,3 +1083,19 @@ div.action.danger p.action-body{
         }
     }
 }
+
+div.is-silent {
+    position: absolute;
+    bottom: 40px;
+    border-radius: 15px 15px 15px 15px;
+    max-height: 20%;
+    transition: right 350ms;
+    right: -20vw;
+    background-color: black;
+    font-size: 20px;
+    color: white;
+    padding: 30px 20px;
+}
+div.is-silent.hide {
+    right: 15px;
+}
