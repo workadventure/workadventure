@@ -10,6 +10,9 @@
     import {connectionManager} from "../../Connexion/ConnectionManager";
     import {PROFILE_URL} from "../../Enum/EnvironmentVariable";
     import {localUserStore} from "../../Connexion/LocalUserStore";
+    import {EnableCameraScene, EnableCameraSceneName} from "../../Phaser/Login/EnableCameraScene";
+    import {enableCameraSceneVisibilityStore} from "../../Stores/MediaStore";
+
 
     function disableMenuStores(){
         menuVisiblilityStore.set(false);
@@ -44,6 +47,12 @@
         return PROFILE_URL + `?token=${localUserStore.getAuthToken()}`;
     }
 
+    function openEnableCameraScene(){
+        disableMenuStores();
+        enableCameraSceneVisibilityStore.showEnableCameraScene();
+        gameManager.leaveGame(EnableCameraSceneName,new EnableCameraScene());
+    }
+
     //TODO: Uncomment when login will be completely developed
     /*function clickLogin() {
         connectionManager.loadOpenIDScreen();
@@ -69,6 +78,9 @@
         <button type="button" class="nes-btn" on:click|preventDefault={openEditNameScene}>Edit Name</button>
         <button type="button" class="nes-btn is-rounded" on:click|preventDefault={openEditSkinScene}>Edit Skin</button>
         <button type="button" class="nes-btn" on:click|preventDefault={openEditCompanionScene}>Edit Companion</button>
+    </section>
+    <section>
+        <button type="button" class="nes-btn" on:click|preventDefault={openEnableCameraScene}>Setup camera</button>
     </section>
 <!--    <section>
         <button type="button" class="nes-btn is-primary" on:click|preventDefault={clickLogin}>Login</button>
