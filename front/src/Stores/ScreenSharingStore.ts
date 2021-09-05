@@ -1,7 +1,6 @@
-import { derived, get, Readable, readable, writable, Writable } from "svelte/store";
+import { derived, Readable, readable, writable } from "svelte/store";
 import { peerStore } from "./PeerStore";
 import type { LocalStreamStoreValue } from "./MediaStore";
-import { DivImportance } from "../WebRtc/LayoutManager";
 import { gameOverlayVisibilityStore } from "./GameOverlayStoreVisibility";
 
 declare const navigator: any; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -106,7 +105,6 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
             set({
                 type: "success",
                 stream: null,
-                constraints,
             });
             return;
         }
@@ -121,7 +119,6 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
             set({
                 type: "error",
                 error: new Error("Your browser does not support sharing screen"),
-                constraints,
             });
             return;
         }
@@ -141,10 +138,6 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
                         set({
                             type: "success",
                             stream: null,
-                            constraints: {
-                                video: false,
-                                audio: false,
-                            },
                         });
                     };
                 }
@@ -152,7 +145,6 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
                 set({
                     type: "success",
                     stream: currentStream,
-                    constraints,
                 });
                 return;
             } catch (e) {
@@ -162,7 +154,6 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
                 set({
                     type: "error",
                     error: e,
-                    constraints,
                 });
             }
         })();
@@ -184,7 +175,7 @@ export const screenSharingAvailableStore = derived(peerStore, ($peerStore, set) 
 export interface ScreenSharingLocalMedia {
     uniqueId: string;
     stream: MediaStream | null;
-    //subscribe(this: void, run: Subscriber<ScreenSharingLocalMedia>, invalidate?: (value?: ScreenSharingLocalMedia) => void): Unsubscriber;
+    userId?: undefined;
 }
 
 /**

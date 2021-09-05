@@ -1,4 +1,4 @@
-import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../Enum/EnvironmentVariable";
+import { ADMIN_API_TOKEN, ADMIN_API_URL, ADMIN_URL } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
 import { GameRoomPolicyTypes } from "_Model/PusherRoom";
 import { CharacterTexture } from "./AdminApi/CharacterTexture";
@@ -31,13 +31,19 @@ export interface FetchMemberDataByUuidResponse {
 }
 
 class AdminApi {
-    async fetchMapDetails(playUri: string): Promise<MapDetailsData | RoomRedirect> {
+    /**
+     * @var playUri: is url of the room
+     * @var userId: can to be undefined or email or uuid
+     * @return MapDetailsData|RoomRedirect
+     */
+    async fetchMapDetails(playUri: string, userId?: string): Promise<MapDetailsData | RoomRedirect> {
         if (!ADMIN_API_URL) {
             return Promise.reject(new Error("No admin backoffice set!"));
         }
 
-        const params: { playUri: string } = {
+        const params: { playUri: string; userId?: string } = {
             playUri,
+            userId,
         };
 
         const res = await Axios.get(ADMIN_API_URL + "/api/map", {
@@ -134,6 +140,15 @@ class AdminApi {
         }).then((data) => {
             return data.data;
         });
+    }
+
+    /*TODO add constant to use profile companny*/
+    getProfileUrl(accessToken: string): string {
+        if (!ADMIN_URL) {
+            throw new Error("No admin backoffice set!");
+        }
+
+        return ADMIN_URL + `/profile?token=${accessToken}`;
     }
 }
 

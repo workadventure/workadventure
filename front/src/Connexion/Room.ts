@@ -1,6 +1,7 @@
 import Axios from "axios";
 import { PUSHER_URL } from "../Enum/EnvironmentVariable";
 import type { CharacterTexture } from "./LocalUser";
+import { localUserStore } from "./LocalUserStore";
 
 export class MapDetail {
     constructor(public readonly mapUrl: string, public readonly textures: CharacterTexture[] | undefined) {}
@@ -13,6 +14,8 @@ export interface RoomRedirect {
 export class Room {
     public readonly id: string;
     public readonly isPublic: boolean;
+    private _authenticationMandatory: boolean = false;
+    private _iframeAuthentication?: string;
     private _mapUrl: string | undefined;
     private _textures: CharacterTexture[] | undefined;
     private instance: string | undefined;
@@ -87,6 +90,7 @@ export class Room {
         const result = await Axios.get(`${PUSHER_URL}/map`, {
             params: {
                 playUri: this.roomUrl.toString(),
+                authToken: localUserStore.getAuthToken(),
             },
         });
 
@@ -99,6 +103,8 @@ export class Room {
         console.log("Map ", this.id, " resolves to URL ", data.mapUrl);
         this._mapUrl = data.mapUrl;
         this._textures = data.textures;
+        this._authenticationMandatory = data.authenticationMandatory || false;
+        this._iframeAuthentication = data.iframeAuthentication;
         return new MapDetail(data.mapUrl, data.textures);
     }
 
@@ -183,5 +189,13 @@ export class Room {
             throw new Error("Map URL not fetched yet");
         }
         return this._mapUrl;
+    }
+
+    get authenticationMandatory(): boolean {
+        return this._authenticationMandatory;
+    }
+
+    get iframeAuthentication(): string | undefined {
+        return this._iframeAuthentication;
     }
 }

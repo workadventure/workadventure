@@ -174,7 +174,7 @@ export class IoSocketController {
                         }
 
                         const tokenData =
-                            token && typeof token === "string" ? jwtTokenManager.decodeJWTToken(token) : null;
+                            token && typeof token === "string" ? jwtTokenManager.verifyJWTToken(token) : null;
                         const userIdentifier = tokenData ? tokenData.identifier : "";
 
                         let memberTags: string[] = [];
