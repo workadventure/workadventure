@@ -14,6 +14,8 @@ export interface RoomRedirect {
 export class Room {
     public readonly id: string;
     public readonly isPublic: boolean;
+    private _authenticationMandatory: boolean = false;
+    private _iframeAuthentication?: string;
     private _mapUrl: string | undefined;
     private _textures: CharacterTexture[] | undefined;
     private instance: string | undefined;
@@ -101,6 +103,8 @@ export class Room {
         console.log("Map ", this.id, " resolves to URL ", data.mapUrl);
         this._mapUrl = data.mapUrl;
         this._textures = data.textures;
+        this._authenticationMandatory = data.authenticationMandatory || false;
+        this._iframeAuthentication = data.iframeAuthentication;
         return new MapDetail(data.mapUrl, data.textures);
     }
 
@@ -185,5 +189,13 @@ export class Room {
             throw new Error("Map URL not fetched yet");
         }
         return this._mapUrl;
+    }
+
+    get authenticationMandatory(): boolean {
+        return this._authenticationMandatory;
+    }
+
+    get iframeAuthentication(): string | undefined {
+        return this._iframeAuthentication;
     }
 }

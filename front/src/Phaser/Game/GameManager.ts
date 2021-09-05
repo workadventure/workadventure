@@ -35,7 +35,9 @@ export class GameManager {
         this.startRoom = await connectionManager.initGameConnexion();
         this.loadMap(this.startRoom);
 
-        if (!this.playerName) {
+        //If player name was not set show login scene with player name
+        //If Room si not public and Auth was not set, show login scene to authenticate user (OpenID - SSO - Anonymous)
+        if (!this.playerName || (this.startRoom.authenticationMandatory && !localUserStore.getAuthToken())) {
             return LoginSceneName;
         } else if (!this.characterLayers || !this.characterLayers.length) {
             return SelectCharacterSceneName;
@@ -142,6 +144,10 @@ export class GameManager {
     public getCurrentGameScene(): GameScene {
         if (this.currentGameSceneName === null) throw "No current scene id set!";
         return this.scenePlugin.get(this.currentGameSceneName) as GameScene;
+    }
+
+    public get currentStartedRoom() {
+        return this.startRoom;
     }
 }
 
