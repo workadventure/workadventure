@@ -9,6 +9,7 @@ import { WebviewOnOldIOS } from "./Errors/WebviewOnOldIOS";
 import { gameOverlayVisibilityStore } from "./GameOverlayStoreVisibility";
 import { peerStore } from "./PeerStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
+import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -251,8 +252,6 @@ export const mediaStreamConstraintsStore = derived(
         let currentAudioConstraint: boolean | MediaTrackConstraints = $audioConstraintStore;
 
         if ($enableCameraSceneVisibilityStore) {
-            console.log("currentVideoConstraint", currentVideoConstraint);
-            console.log("currentAudioConstraint", currentAudioConstraint);
             set({
                 video: currentVideoConstraint,
                 audio: currentAudioConstraint,
@@ -421,7 +420,7 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                     });
                     return;
                 } catch (e) {
-                    if (constraints.video !== false) {
+                    if (constraints.video !== false || constraints.audio !== false) {
                         console.info(
                             "Error. Unable to get microphone and/or camera access. Trying audio only.",
                             $mediaStreamConstraintsStore,
@@ -433,7 +432,17 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                             error: e,
                         });
                         // Let's try without video constraints
-                        requestedCameraState.disableWebcam();
+                        if (constraints.video !== false) {
+                            requestedCameraState.disableWebcam();
+                        }
+                        if (constraints.audio !== false) {
+                            requestedMicrophoneState.disableMicrophone();
+                        }
+                    } else if (!constraints.video && !constraints.audio) {
+                        set({
+                            type: "error",
+                            error: new MediaStreamConstraintsError(),
+                        });
                     } else {
                         console.info(
                             "Error. Unable to get microphone and/or camera access.",
