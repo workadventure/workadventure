@@ -9,6 +9,7 @@ Moreover, `WA.state` functions can be used to persist this state across reloads.
 ```
 WA.state.saveVariable(key : string, data : unknown): void
 WA.state.loadVariable(key : string) : unknown
+WA.state.hasVariable(key : string) : boolean
 WA.state.onVariableChange(key : string).subscribe((data: unknown) => {}) : Subscription
 WA.state.[any property]: unknown
 ```

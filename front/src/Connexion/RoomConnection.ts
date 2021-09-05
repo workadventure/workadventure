@@ -78,6 +78,11 @@ export class RoomConnection implements RoomConnection {
      *
      * @param token A JWT token containing the email of the user
      * @param roomUrl The URL of the room in the form "https://example.com/_/[instance]/[map_url]" or "https://example.com/@/[org]/[event]/[map]"
+     * @param name
+     * @param characterLayers
+     * @param position
+     * @param viewport
+     * @param companion
      */
     public constructor(
         token: string | null,
@@ -218,7 +223,7 @@ export class RoomConnection implements RoomConnection {
                 worldFullMessageStream.onMessage();
                 this.closed = true;
             } else if (message.hasTokenexpiredmessage()) {
-                connectionManager.loadOpenIDScreen();
+                connectionManager.logout();
                 this.closed = true; //technically, this isn't needed since loadOpenIDScreen() will do window.location.assign() but I prefer to leave it for consistency
             } else if (message.hasWorldconnexionmessage()) {
                 worldFullMessageStream.onMessage(message.getWorldconnexionmessage()?.getMessage());

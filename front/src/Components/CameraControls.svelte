@@ -1,6 +1,6 @@
 <script lang="typescript">
     import {requestedScreenSharingState, screenSharingAvailableStore} from "../Stores/ScreenSharingStore";
-    import {requestedCameraState, requestedMicrophoneState} from "../Stores/MediaStore";
+    import {isSilentStore, requestedCameraState, requestedMicrophoneState} from "../Stores/MediaStore";
     import monitorImg from "./images/monitor.svg";
     import monitorCloseImg from "./images/monitor-close.svg";
     import cinemaImg from "./images/cinema.svg";
@@ -12,6 +12,7 @@
     import {layoutModeStore} from "../Stores/StreamableCollectionStore";
     import {LayoutMode} from "../WebRtc/LayoutManager";
     import {peerStore} from "../Stores/PeerStore";
+    import {onDestroy} from "svelte";
 
     function screenSharingClick(): void {
         if ($requestedScreenSharingState === true) {
@@ -44,6 +45,12 @@
             $layoutModeStore = LayoutMode.Presentation;
         }
     }
+
+    let isSilent: boolean;
+    const unsubscribeIsSilent = isSilentStore.subscribe(value => {
+        isSilent = value;
+    });
+    onDestroy(unsubscribeIsSilent);
 </script>
 
 <div>
@@ -55,22 +62,22 @@
                 <img src={layoutChatImg} style="padding: 2px" alt="Switch to presentation mode">
             {/if}
         </div>
-        <div class="btn-monitor" on:click={screenSharingClick} class:hide={!$screenSharingAvailableStore} class:enabled={$requestedScreenSharingState}>
-            {#if $requestedScreenSharingState}
+        <div class="btn-monitor" on:click={screenSharingClick} class:hide={!$screenSharingAvailableStore || isSilent} class:enabled={$requestedScreenSharingState}>
+            {#if $requestedScreenSharingState && !isSilent}
                 <img src={monitorImg} alt="Start screen sharing">
             {:else}
                 <img src={monitorCloseImg} alt="Stop screen sharing">
             {/if}
         </div>
-        <div class="btn-video" on:click={cameraClick} class:disabled={!$requestedCameraState}>
-            {#if $requestedCameraState}
+        <div class="btn-video" on:click={cameraClick} class:disabled={!$requestedCameraState || isSilent}>
+            {#if $requestedCameraState && !isSilent}
                 <img src={cinemaImg} alt="Turn on webcam">
             {:else}
                 <img src={cinemaCloseImg} alt="Turn off webcam">
             {/if}
         </div>
-        <div class="btn-micro" on:click={microphoneClick} class:disabled={!$requestedMicrophoneState}>
-            {#if $requestedMicrophoneState}
+        <div class="btn-micro" on:click={microphoneClick} class:disabled={!$requestedMicrophoneState || isSilent}>
+            {#if $requestedMicrophoneState && !isSilent}
                 <img src={microphoneImg} alt="Turn on microphone">
             {:else}
                 <img src={microphoneCloseImg} alt="Turn off microphone">

@@ -1,4 +1,4 @@
-import { derived, get, Readable, readable, writable, Writable } from "svelte/store";
+import { derived, get, Readable, readable, writable } from "svelte/store";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { userMovingStore } from "./GameStore";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
@@ -9,6 +9,7 @@ import { WebviewOnOldIOS } from "./Errors/WebviewOnOldIOS";
 import { gameOverlayVisibilityStore } from "./GameOverlayStoreVisibility";
 import { peerStore } from "./PeerStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
+import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -170,7 +171,7 @@ function createVideoConstraintStore() {
         setFrameRate: (frameRate: number) =>
             update((constraints) => {
                 constraints.frameRate = { ideal: frameRate };
-
+                localUserStore.setVideoQualityValue(frameRate);
                 return constraints;
             }),
     };
@@ -255,6 +256,12 @@ export const mediaStreamConstraintsStore = derived(
                 video: currentVideoConstraint,
                 audio: currentAudioConstraint,
             });
+            localUserStore.setCameraSetup(
+                JSON.stringify({
+                    video: currentVideoConstraint,
+                    audio: currentAudioConstraint,
+                })
+            );
             return;
         }
 
@@ -324,14 +331,11 @@ export type LocalStreamStoreValue = StreamSuccessValue | StreamErrorValue;
 interface StreamSuccessValue {
     type: "success";
     stream: MediaStream | null;
-    // The constraints that we got (and not the one that have been requested)
-    constraints: MediaStreamConstraints;
 }
 
 interface StreamErrorValue {
     type: "error";
     error: Error;
-    constraints: MediaStreamConstraints;
 }
 
 let currentStream: MediaStream | null = null;
@@ -339,10 +343,13 @@ let currentStream: MediaStream | null = null;
 /**
  * Stops the camera from filming
  */
-function stopCamera(): void {
+function applyCameraConstraints(currentStream: MediaStream | null, constraints: MediaTrackConstraints | boolean): void {
     if (currentStream) {
         for (const track of currentStream.getVideoTracks()) {
-            track.stop();
+            track.enabled = constraints !== false;
+            if (constraints && constraints !== true) {
+                track.applyConstraints(constraints);
+            }
         }
     }
 }
@@ -350,10 +357,16 @@ function stopCamera(): void {
 /**
  * Stops the microphone from listening
  */
-function stopMicrophone(): void {
+function applyMicrophoneConstraints(
+    currentStream: MediaStream | null,
+    constraints: MediaTrackConstraints | boolean
+): void {
     if (currentStream) {
         for (const track of currentStream.getAudioTracks()) {
-            track.stop();
+            track.enabled = constraints !== false;
+            if (constraints && constraints !== true) {
+                track.applyConstraints(constraints);
+            }
         }
     }
 }
@@ -372,122 +385,106 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                 set({
                     type: "error",
                     error: new Error("Unable to access your camera or microphone. You need to use a HTTPS connection."),
-                    constraints,
                 });
                 return;
             } else if (isIOS()) {
                 set({
                     type: "error",
                     error: new WebviewOnOldIOS(),
-                    constraints,
                 });
                 return;
             } else {
                 set({
                     type: "error",
                     error: new BrowserTooOldError(),
-                    constraints,
                 });
                 return;
             }
         }
 
-        if (constraints.audio === false) {
-            stopMicrophone();
-        }
-        if (constraints.video === false) {
-            stopCamera();
-        }
+        applyMicrophoneConstraints(currentStream, constraints.audio || false);
+        applyCameraConstraints(currentStream, constraints.video || false);
 
-        if (constraints.audio === false && constraints.video === false) {
-            currentStream = null;
+        if (currentStream === null) {
+            // we need to assign a first value to the stream because getUserMedia is async
             set({
                 type: "success",
                 stream: null,
-                constraints,
             });
-            return;
-        }
-
-        (async () => {
-            try {
-                stopMicrophone();
-                stopCamera();
-                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
-                set({
-                    type: "success",
-                    stream: currentStream,
-                    constraints,
-                });
-                return;
-            } catch (e) {
-                if (constraints.video !== false) {
-                    console.info(
-                        "Error. Unable to get microphone and/or camera access. Trying audio only.",
-                        $mediaStreamConstraintsStore,
-                        e
-                    );
-                    // TODO: does it make sense to pop this error when retrying?
-                    set({
-                        type: "error",
-                        error: e,
-                        constraints,
-                    });
-                    // Let's try without video constraints
-                    requestedCameraState.disableWebcam();
-                } else {
-                    console.info(
-                        "Error. Unable to get microphone and/or camera access.",
-                        $mediaStreamConstraintsStore,
-                        e
-                    );
-                    set({
-                        type: "error",
-                        error: e,
-                        constraints,
-                    });
-                }
-
-                /*constraints.video = false;
-            if (constraints.audio === false) {
-                console.info("Error. Unable to get microphone and/or camera access.", $mediaStreamConstraintsStore, e);
-                set({
-                    type: 'error',
-                    error: e,
-                    constraints
-                });
-                // Let's make as if the user did not ask.
-                requestedCameraState.disableWebcam();
-            } else {
-                console.info("Error. Unable to get microphone and/or camera access. Trying audio only.", $mediaStreamConstraintsStore, e);
+            (async () => {
                 try {
                     currentStream = await navigator.mediaDevices.getUserMedia(constraints);
                     set({
-                        type: 'success',
+                        type: "success",
                         stream: currentStream,
-                        constraints
                     });
                     return;
-                } catch (e2) {
-                    console.info("Error. Unable to get microphone fallback access.", $mediaStreamConstraintsStore, e2);
-                    set({
-                        type: 'error',
-                        error: e,
-                        constraints
-                    });
+                } catch (e) {
+                    if (constraints.video !== false || constraints.audio !== false) {
+                        console.info(
+                            "Error. Unable to get microphone and/or camera access. Trying audio only.",
+                            $mediaStreamConstraintsStore,
+                            e
+                        );
+                        // TODO: does it make sense to pop this error when retrying?
+                        set({
+                            type: "error",
+                            error: e,
+                        });
+                        // Let's try without video constraints
+                        if (constraints.video !== false) {
+                            requestedCameraState.disableWebcam();
+                        }
+                        if (constraints.audio !== false) {
+                            requestedMicrophoneState.disableMicrophone();
+                        }
+                    } else if (!constraints.video && !constraints.audio) {
+                        set({
+                            type: "error",
+                            error: new MediaStreamConstraintsError(),
+                        });
+                    } else {
+                        console.info(
+                            "Error. Unable to get microphone and/or camera access.",
+                            $mediaStreamConstraintsStore,
+                            e
+                        );
+                        set({
+                            type: "error",
+                            error: e,
+                        });
+                    }
                 }
-            }*/
-            }
-        })();
+            })();
+        }
     }
 );
 
+export interface ObtainedMediaStreamConstraints {
+    video: boolean;
+    audio: boolean;
+}
+
+let obtainedMediaConstraint: ObtainedMediaStreamConstraints = {
+    audio: false,
+    video: false,
+};
 /**
- * A store containing the real active media constrained (not the one requested by the user, but the one we got from the system)
+ * A store containing the actual states of audio and video (activated or deactivated)
  */
-export const obtainedMediaConstraintStore = derived(localStreamStore, ($localStreamStore) => {
-    return $localStreamStore.constraints;
-});
+export const obtainedMediaConstraintStore = derived<Readable<MediaStreamConstraints>, ObtainedMediaStreamConstraints>(
+    mediaStreamConstraintsStore,
+    ($mediaStreamConstraintsStore, set) => {
+        const newObtainedMediaConstraint = {
+            video: !!$mediaStreamConstraintsStore.video,
+            audio: !!$mediaStreamConstraintsStore.audio,
+        };
+        if (newObtainedMediaConstraint !== obtainedMediaConstraint) {
+            obtainedMediaConstraint = newObtainedMediaConstraint;
+            set(obtainedMediaConstraint);
+        }
+    }
+);
 
 /**
  * Device list
@@ -581,3 +578,8 @@ localStreamStore.subscribe((streamResult) => {
  * A store containing the real active media is mobile
  */
 export const obtainedMediaConstraintIsMobileStore = writable(false);
+
+/**
+ * A store containing if user is silent, so if he is in silent zone. This permit to show et hide camera of user
+ */
+export const isSilentStore = writable(false);

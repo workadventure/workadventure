@@ -12,7 +12,9 @@
 
 <div class="main-section">
     {#if $videoFocusStore }
-        <MediaBox streamable={$videoFocusStore}></MediaBox>
+        {#key $videoFocusStore.uniqueId}
+            <MediaBox streamable={$videoFocusStore}></MediaBox>
+        {/key}
     {/if}
 </div>
 <aside class="sidebar">

@@ -1,25 +1,35 @@
-import {gameManager} from "../Game/GameManager";
-import {SelectCharacterSceneName} from "./SelectCharacterScene";
-import {ResizableScene} from "./ResizableScene";
-import {loginSceneVisibleStore} from "../../Stores/LoginSceneStore";
+import { SelectCharacterSceneName } from "./SelectCharacterScene";
+import { ResizableScene } from "./ResizableScene";
+import { loginSceneVisibleIframeStore, loginSceneVisibleStore } from "../../Stores/LoginSceneStore";
+import { localUserStore } from "../../Connexion/LocalUserStore";
+import { connectionManager } from "../../Connexion/ConnectionManager";
+import { gameManager } from "../Game/GameManager";
 
 export const LoginSceneName = "LoginScene";
 
 export class LoginScene extends ResizableScene {
-
-    private name: string = '';
+    private name: string = "";
 
     constructor() {
         super({
-            key: LoginSceneName
+            key: LoginSceneName,
         });
-        this.name = gameManager.getPlayerName() || '';
+        this.name = gameManager.getPlayerName() || "";
     }
 
-    preload() {
-    }
+    preload() {}
 
     create() {
+        loginSceneVisibleIframeStore.set(false);
+        //If authentication is mandatory, push authentication iframe
+        if (
+            localUserStore.getAuthToken() == undefined &&
+            gameManager.currentStartedRoom &&
+            gameManager.currentStartedRoom?.authenticationMandatory
+        ) {
+            connectionManager.loadOpenIDScreen();
+            loginSceneVisibleIframeStore.set(true);
+        }
         loginSceneVisibleStore.set(true);
     }
 
@@ -27,15 +37,13 @@ export class LoginScene extends ResizableScene {
         name = name.trim();
         gameManager.setPlayerName(name);
 
-        this.scene.stop(LoginSceneName)
-        gameManager.tryResumingGame(this, SelectCharacterSceneName);
+        this.scene.stop(LoginSceneName);
+        gameManager.tryResumingGame(SelectCharacterSceneName);
         this.scene.remove(LoginSceneName);
         loginSceneVisibleStore.set(false);
     }
 
-    update(time: number, delta: number): void {
-    }
+    update(time: number, delta: number): void {}
 
-    public onResize(): void {
-    }
+    public onResize(): void {}
 }
