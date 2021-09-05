@@ -10,9 +10,6 @@
     import {connectionManager} from "../../Connexion/ConnectionManager";
     import {PROFILE_URL} from "../../Enum/EnvironmentVariable";
     import {localUserStore} from "../../Connexion/LocalUserStore";
-    //import {connectionManager} from "../../Connexion/ConnectionManager";
-    //import {connectionManager} from "../../Connexion/ConnectionManager";
-    //import {playersStore} from "../../Stores/PlayersStore";
 
     function disableMenuStores(){
         menuVisiblilityStore.set(false);
