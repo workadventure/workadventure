@@ -36,7 +36,7 @@
                 {
                  "name":"exitUrl",
                  "type":"string",
-                 "value":"_\/global\/raw.githubusercontent.com\/iits-consulting\/workadventure\/develop\/maps\/Village\/Village.json"
+                 "value":"https:\/\/workadventure.iits.tech\/_\/global\/raw.githubusercontent.com\/iits-consulting\/workadventure\/develop\/maps\/Village\/Village.json"
                 }],
          "type":"tilelayer",
          "visible":true,
