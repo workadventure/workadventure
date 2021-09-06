@@ -3,6 +3,8 @@
 .vagrant
 Vagrantfile
 docker-compose.override.yaml
+docker-compose.dev.*
+.env.dev.*
 *.DS_Store
 maps/yarn.lock
 maps/dist/computer.js
