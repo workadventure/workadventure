@@ -14,7 +14,7 @@ WA.state.onVariableChange(key : string).subscribe((data: unknown) => {}) : Subsc
 WA.state.[any property]: unknown
 ```
 
-These methods and properties can be used to save, load and track changes in variables related to the current room.
+These methods and properties can be used to save, load and track changes in [variables related to the current room](variables.md).
 
 Variables stored in `WA.state` can be any value that is serializable in JSON.
 
@@ -63,44 +63,11 @@ that you get the expected type).
 For security reasons, the list of variables you are allowed to access and modify is **restricted** (otherwise, anyone on your map could set any data).
 Variables storage is subject to an authorization process. Read below to learn more.
 
-### Declaring allowed keys
+## Defining a variable
 
-In order to declare allowed keys related to a room, you need to add **objects** in an "object layer" of the map.
+Out of the box, you cannot edit *any* variable. Variables MUST be declared in the map.
 
-Each object will represent a variable.
-
-<div class="row">
-    <div class="col">
-        <img src="images/object_variable.png" class="figure-img img-fluid rounded" alt="" />
-    </div>
-</div>
-
-The name of the variable is the name of the object.
-The object **type** MUST be **variable**.
-
-You can set a default value for the object in the `default` property.
-
-### Persisting variables state
-
-Use the `persist` property to save the state of the variable in database. If `persist` is false, the variable will stay
-in the memory of the WorkAdventure servers but will be wiped out of the memory as soon as the room is empty (or if the
-server restarts).
-
-{.alert.alert-info}
-Do not use `persist` for highly dynamic values that have a short life spawn.
-
-### Managing access rights to variables
-
-With `readableBy` and `writableBy`, you control who can read of write in this variable. The property accepts a string
-representing a "tag". Anyone having this "tag" can read/write in the variable.
-
-{.alert.alert-warning}
-`readableBy` and `writableBy` are specific to the "online" version of WorkAdventure because the notion of tags
-is not available unless you have an "admin" server (that is not part of the self-hosted version of WorkAdventure).
-
-Finally, the `jsonSchema` property can contain [a complete JSON schema](https://json-schema.org/) to validate the content of the variable.
-Trying to set a variable to a value that is not compatible with the schema will fail.
-
+Check the [dedicated variables page](variables.md) to learn how to declare a variable in a map.
 
 ## Tracking variables changes
 
