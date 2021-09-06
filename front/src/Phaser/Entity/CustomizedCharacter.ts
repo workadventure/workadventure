@@ -1,5 +1,5 @@
 import Container = Phaser.GameObjects.Container;
-import type {Scene} from "phaser";
+import type { Scene } from "phaser";
 import Sprite = Phaser.GameObjects.Sprite;
 
 /**

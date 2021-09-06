@@ -37,7 +37,7 @@ import { localUserStore } from "../../Connexion/LocalUserStore";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import { mediaManager } from "../../WebRtc/MediaManager";
 import { SimplePeer } from "../../WebRtc/SimplePeer";
-import { addLoader } from "../Components/Loader";
+import { addLoader, removeLoader } from "../Components/Loader";
 import { OpenChatIcon, openChatIconName } from "../Components/OpenChatIcon";
 import { lazyLoadPlayerCharacterTextures, loadCustomTexture } from "../Entity/PlayerTexturesLoadingManager";
 import { RemotePlayer } from "../Entity/RemotePlayer";
@@ -92,6 +92,8 @@ import Tileset = Phaser.Tilemaps.Tileset;
 import { userIsAdminStore } from "../../Stores/GameStore";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
+import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
+import type { RadialMenuItem } from "../Components/RadialMenu";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -290,8 +292,11 @@ export class GameScene extends DirtyScene {
             }
 
             //once preloading is over, we don't want loading errors to crash the game, so we need to disable this behavior after preloading.
-            console.error("Error when loading: ", file);
             if (this.preloading) {
+                //remove loader in progress
+                removeLoader(this);
+
+                //display an error scene
                 this.scene.start(ErrorSceneName, {
                     title: "Network error",
                     subTitle: "An error occurred while loading resource:",
@@ -580,6 +585,7 @@ export class GameScene extends DirtyScene {
             this.updateCameraOffset(box)
         );
 
+        new GameMapPropertiesListener(this, this.gameMap).register();
         this.triggerOnMapLayerPropertyChange();
 
         if (!this.room.isDisconnected()) {
@@ -713,24 +719,7 @@ export class GameScene extends DirtyScene {
 
                 // When connection is performed, let's connect SimplePeer
                 this.simplePeer = new SimplePeer(this.connection);
-                peerStore.connectToSimplePeer(this.simplePeer);
-                screenSharingPeerStore.connectToSimplePeer(this.simplePeer);
-                videoFocusStore.connectToSimplePeer(this.simplePeer);
                 userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
-
-                const self = this;
-                this.simplePeer.registerPeerConnectionListener({
-                    onConnect(peer) {
-                        //self.openChatIcon.setVisible(true);
-                        audioManagerVolumeStore.setTalking(true);
-                    },
-                    onDisconnect(userId: number) {
-                        if (self.simplePeer.getNbConnections() === 0) {
-                            //self.openChatIcon.setVisible(false);
-                            audioManagerVolumeStore.setTalking(false);
-                        }
-                    },
-                });
 
                 //listen event to share position of user
                 this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this));
@@ -825,40 +814,7 @@ export class GameScene extends DirtyScene {
                 }, 2000);
             }
         });
-        this.gameMap.onPropertyChange("openWebsite", (newValue, oldValue, allProps) => {
-            if (newValue === undefined) {
-                layoutManagerActionStore.removeAction("openWebsite");
-                coWebsiteManager.closeCoWebsite();
-            } else {
-                const openWebsiteFunction = () => {
-                    coWebsiteManager.loadCoWebsite(
-                        newValue as string,
-                        this.MapUrlFile,
-                        allProps.get("openWebsiteAllowApi") as boolean | undefined,
-                        allProps.get("openWebsitePolicy") as string | undefined,
-                        allProps.get("openWebsiteWidth") as number | undefined
-                    );
-                    layoutManagerActionStore.removeAction("openWebsite");
-                };
 
-                const openWebsiteTriggerValue = allProps.get(TRIGGER_WEBSITE_PROPERTIES);
-                if (openWebsiteTriggerValue && openWebsiteTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
-                    let message = allProps.get(WEBSITE_MESSAGE_PROPERTIES);
-                    if (message === undefined) {
-                        message = "Press SPACE or touch here to open web site";
-                    }
-                    layoutManagerActionStore.addAction({
-                        uuid: "openWebsite",
-                        type: "message",
-                        message: message,
-                        callback: () => openWebsiteFunction(),
-                        userInputManager: this.userInputManager,
-                    });
-                } else {
-                    openWebsiteFunction();
-                }
-            }
-        });
         this.gameMap.onPropertyChange("jitsiRoom", (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
                 layoutManagerActionStore.removeAction("jitsi");
@@ -898,8 +854,10 @@ export class GameScene extends DirtyScene {
         this.gameMap.onPropertyChange("silent", (newValue, oldValue) => {
             if (newValue === undefined || newValue === false || newValue === "") {
                 this.connection?.setSilent(false);
+                this.CurrentPlayer.noSilent();
             } else {
                 this.connection?.setSilent(true);
+                this.CurrentPlayer.isSilent();
             }
         });
         this.gameMap.onPropertyChange("playAudio", (newValue, oldValue, allProps) => {
@@ -1306,7 +1264,9 @@ ${escapedMessage}
         if (!targetRoom.isEqual(this.room)) {
             if (this.scene.get(targetRoom.key) === null) {
                 console.error("next room not loaded", targetRoom.key);
-                return;
+                // Try to load next dame room from exit URL
+                // The policy of room can to be updated during a session and not load before
+                await this.loadNextGameFromExitUrl(targetRoom.key);
             }
             this.cleanupClosingScene();
             this.scene.stop();

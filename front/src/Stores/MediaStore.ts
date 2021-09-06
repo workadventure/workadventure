@@ -1,4 +1,4 @@
-import { derived, get, Readable, readable, writable, Writable } from "svelte/store";
+import { derived, get, Readable, readable, writable } from "svelte/store";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { userMovingStore } from "./GameStore";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
@@ -9,6 +9,7 @@ import { WebviewOnOldIOS } from "./Errors/WebviewOnOldIOS";
 import { gameOverlayVisibilityStore } from "./GameOverlayStoreVisibility";
 import { peerStore } from "./PeerStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
+import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -255,6 +256,12 @@ export const mediaStreamConstraintsStore = derived(
                 video: currentVideoConstraint,
                 audio: currentAudioConstraint,
             });
+            localUserStore.setCameraSetup(
+                JSON.stringify({
+                    video: currentVideoConstraint,
+                    audio: currentAudioConstraint,
+                })
+            );
             return;
         }
 
@@ -413,7 +420,7 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                     });
                     return;
                 } catch (e) {
-                    if (constraints.video !== false) {
+                    if (constraints.video !== false || constraints.audio !== false) {
                         console.info(
                             "Error. Unable to get microphone and/or camera access. Trying audio only.",
                             $mediaStreamConstraintsStore,
@@ -425,7 +432,17 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                             error: e,
                         });
                         // Let's try without video constraints
-                        requestedCameraState.disableWebcam();
+                        if (constraints.video !== false) {
+                            requestedCameraState.disableWebcam();
+                        }
+                        if (constraints.audio !== false) {
+                            requestedMicrophoneState.disableMicrophone();
+                        }
+                    } else if (!constraints.video && !constraints.audio) {
+                        set({
+                            type: "error",
+                            error: new MediaStreamConstraintsError(),
+                        });
                     } else {
                         console.info(
                             "Error. Unable to get microphone and/or camera access.",
@@ -561,3 +578,8 @@ localStreamStore.subscribe((streamResult) => {
  * A store containing the real active media is mobile
  */
 export const obtainedMediaConstraintIsMobileStore = writable(false);
+
+/**
+ * A store containing if user is silent, so if he is in silent zone. This permit to show et hide camera of user
+ */
+export const isSilentStore = writable(false);
