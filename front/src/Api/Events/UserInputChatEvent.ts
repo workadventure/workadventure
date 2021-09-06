@@ -1,9 +1,10 @@
 import * as tg from "generic-type-guard";
 
-export const isUserInputChatEvent =
-    new tg.IsInterface().withProperties({
+export const isUserInputChatEvent = new tg.IsInterface()
+    .withProperties({
         message: tg.isString,
-    }).get();
+    })
+    .get();
 /**
  * A message sent from the game to the iFrame when a user types a message in the chat.
  */

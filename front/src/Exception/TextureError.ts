@@ -1,1 +1,1 @@
-export class TextureError extends Error{}
+export class TextureError extends Error {}
