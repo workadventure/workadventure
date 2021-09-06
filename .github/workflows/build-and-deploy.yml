@@ -51,8 +51,8 @@ jobs:
         with:
           dockerfile: back/Dockerfile
           path: ./
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_DEPLOY_TOKEN }}
           repository: iits/workadventure-back
           tags: ${{ env.GITHUB_SHA_SHORT }},${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           add_git_labels: true
@@ -73,8 +73,8 @@ jobs:
         with:
           dockerfile: pusher/Dockerfile
           path: ./
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_DEPLOY_TOKEN }}
           repository: iits/workadventure-pusher
           tags: ${{ env.GITHUB_SHA_SHORT }},${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           add_git_labels: true
@@ -95,8 +95,8 @@ jobs:
         with:
           dockerfile: uploader/Dockerfile
           path: ./
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_DEPLOY_TOKEN }}
           repository: iits/workadventure-uploader
           tags: ${{ env.GITHUB_SHA_SHORT }},${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           add_git_labels: true
@@ -117,8 +117,8 @@ jobs:
         with:
           dockerfile: maps/Dockerfile
           path: maps/
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_DEPLOY_TOKEN }}
           repository: iits/workadventure-maps
           tags: ${{ env.GITHUB_SHA_SHORT }},${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           add_git_labels: true
