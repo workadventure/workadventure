@@ -229,13 +229,9 @@ class CoWebsiteManager {
                         iframeListener.unregisterIframe(iframe);
                     }
                     setTimeout(() => {
-<<<<<<< HEAD
-                        this.cowebsiteMainDom.innerHTML = ``;
-=======
                         webexIntegration.stop();
                         this.cowebsiteMainDom.innerHTML = ``;
                         this.cowebsiteMainDom.className = ``;
->>>>>>> 4a3185c0 (feat: hacky webex integration in frontend)
                         resolve();
                     }, animationTime);
                 })
