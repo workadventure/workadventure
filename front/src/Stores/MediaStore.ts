@@ -4,7 +4,7 @@ import { userMovingStore } from "./GameStore";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import { BrowserTooOldError } from "./Errors/BrowserTooOldError";
 import { errorStore } from "./ErrorStore";
-import { isIOS } from "../WebRtc/DeviceUtils";
+import { getNavigatorType, isIOS, NavigatorType } from "../WebRtc/DeviceUtils";
 import { WebviewOnOldIOS } from "./Errors/WebviewOnOldIOS";
 import { gameOverlayVisibilityStore } from "./GameOverlayStoreVisibility";
 import { peerStore } from "./PeerStore";
@@ -339,18 +339,19 @@ interface StreamErrorValue {
 }
 
 let currentStream: MediaStream | null = null;
+let oldConstraints = { video: false, audio: false };
+//only firefox correctly implements the 'enabled' track  property, on chrome we have to stop the track then reinstantiate the stream
+const implementCorrectTrackBehavior = getNavigatorType() === NavigatorType.firefox;
 
 /**
  * Stops the camera from filming
  */
 function applyCameraConstraints(currentStream: MediaStream | null, constraints: MediaTrackConstraints | boolean): void {
-    if (currentStream) {
-        for (const track of currentStream.getVideoTracks()) {
-            track.enabled = constraints !== false;
-            if (constraints && constraints !== true) {
-                track.applyConstraints(constraints);
-            }
-        }
+    if (!currentStream) {
+        return;
+    }
+    for (const track of currentStream.getVideoTracks()) {
+        toggleConstraints(track, constraints);
     }
 }
 
@@ -361,13 +362,22 @@ function applyMicrophoneConstraints(
     currentStream: MediaStream | null,
     constraints: MediaTrackConstraints | boolean
 ): void {
-    if (currentStream) {
-        for (const track of currentStream.getAudioTracks()) {
-            track.enabled = constraints !== false;
-            if (constraints && constraints !== true) {
-                track.applyConstraints(constraints);
-            }
-        }
+    if (!currentStream) {
+        return;
+    }
+    for (const track of currentStream.getAudioTracks()) {
+        toggleConstraints(track, constraints);
+    }
+}
+
+function toggleConstraints(track: MediaStreamTrack, constraints: MediaTrackConstraints | boolean): void {
+    if (implementCorrectTrackBehavior) {
+        track.enabled = constraints !== false;
+    } else if (constraints === false) {
+        track.stop();
+    }
+    if (constraints && constraints !== true) {
+        track.applyConstraints(constraints);
     }
 }
 
@@ -378,6 +388,53 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
     mediaStreamConstraintsStore,
     ($mediaStreamConstraintsStore, set) => {
         const constraints = { ...$mediaStreamConstraintsStore };
+
+        async function initStream(constraints: MediaStreamConstraints) {
+            try {
+                const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+                if (currentStream) {
+                    //we need stop all tracks to make sure the old stream will be garbage collected
+                    currentStream.getTracks().forEach((t) => t.stop());
+                }
+                currentStream = newStream;
+                set({
+                    type: "success",
+                    stream: currentStream,
+                });
+                return;
+            } catch (e) {
+                if (constraints.video !== false || constraints.audio !== false) {
+                    console.info(
+                        "Error. Unable to get microphone and/or camera access. Trying audio only.",
+                        constraints,
+                        e
+                    );
+                    // TODO: does it make sense to pop this error when retrying?
+                    set({
+                        type: "error",
+                        error: e,
+                    });
+                    // Let's try without video constraints
+                    if (constraints.video !== false) {
+                        requestedCameraState.disableWebcam();
+                    }
+                    if (constraints.audio !== false) {
+                        requestedMicrophoneState.disableMicrophone();
+                    }
+                } else if (!constraints.video && !constraints.audio) {
+                    set({
+                        type: "error",
+                        error: new MediaStreamConstraintsError(),
+                    });
+                } else {
+                    console.info("Error. Unable to get microphone and/or camera access.", constraints, e);
+                    set({
+                        type: "error",
+                        error: e,
+                    });
+                }
+            }
+        }
 
         if (navigator.mediaDevices === undefined) {
             if (window.location.protocol === "http:") {
@@ -405,57 +462,31 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
         applyMicrophoneConstraints(currentStream, constraints.audio || false);
         applyCameraConstraints(currentStream, constraints.video || false);
 
-        if (currentStream === null) {
-            // we need to assign a first value to the stream because getUserMedia is async
-            set({
-                type: "success",
-                stream: null,
-            });
-            (async () => {
-                try {
-                    currentStream = await navigator.mediaDevices.getUserMedia(constraints);
-                    set({
-                        type: "success",
-                        stream: currentStream,
-                    });
-                    return;
-                } catch (e) {
-                    if (constraints.video !== false || constraints.audio !== false) {
-                        console.info(
-                            "Error. Unable to get microphone and/or camera access. Trying audio only.",
-                            $mediaStreamConstraintsStore,
-                            e
-                        );
-                        // TODO: does it make sense to pop this error when retrying?
-                        set({
-                            type: "error",
-                            error: e,
-                        });
-                        // Let's try without video constraints
-                        if (constraints.video !== false) {
-                            requestedCameraState.disableWebcam();
-                        }
-                        if (constraints.audio !== false) {
-                            requestedMicrophoneState.disableMicrophone();
-                        }
-                    } else if (!constraints.video && !constraints.audio) {
-                        set({
-                            type: "error",
-                            error: new MediaStreamConstraintsError(),
-                        });
-                    } else {
-                        console.info(
-                            "Error. Unable to get microphone and/or camera access.",
-                            $mediaStreamConstraintsStore,
-                            e
-                        );
-                        set({
-                            type: "error",
-                            error: e,
-                        });
-                    }
-                }
-            })();
+        if (implementCorrectTrackBehavior) {
+            //on good navigators like firefox, we can instantiate the stream once and simply disable or enable the tracks as needed
+            if (currentStream === null) {
+                // we need to assign a first value to the stream because getUserMedia is async
+                set({
+                    type: "success",
+                    stream: null,
+                });
+                initStream(constraints);
+            }
+        } else {
+            //on bad navigators like chrome, we have to stop the tracks when we mute and reinstantiate the stream when we need to unmute
+            if (constraints.audio === false && constraints.video === false) {
+                currentStream = null;
+                set({
+                    type: "success",
+                    stream: null,
+                });
+            } else if ((constraints.audio && !oldConstraints.audio) || (!oldConstraints.video && constraints.video)) {
+                initStream(constraints);
+            }
+            oldConstraints = {
+                video: !!constraints.video,
+                audio: !!constraints.audio,
+            };
         }
     }
 );
