@@ -150,6 +150,22 @@ class AdminApi {
 
         return ADMIN_URL + `/profile?token=${accessToken}`;
     }
+
+    /**
+     * Check saml user connexion
+     * @param accessUserId
+     */
+    checkSamlConnexion(accessUserId: string): Promise<unknown> {
+        if (!ADMIN_URL) {
+            throw new Error("No admin backoffice set!");
+        }
+
+        return Axios.get(ADMIN_URL + `/saml?accessUserId=${encodeURIComponent(accessUserId)}`, {
+            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+        }).then((data) => {
+            return data.data;
+        });
+    }
 }
 
 export const adminApi = new AdminApi();

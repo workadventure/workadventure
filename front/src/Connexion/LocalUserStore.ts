@@ -19,6 +19,7 @@ const state = "state";
 const nonce = "nonce";
 const notification = "notificationPermission";
 const code = "code";
+const type = "code";
 const cameraSetup = "cameraSetup";
 
 const cacheAPIIndex = "workavdenture-cache";
@@ -183,6 +184,12 @@ class LocalUserStore {
     }
     getCode(): string | null {
         return localStorage.getItem(code);
+    }
+    setType(value: string): void {
+        localStorage.setItem(type, value);
+    }
+    getType(): string | null {
+        return localStorage.getItem(type);
     }
 
     setCameraSetup(cameraId: string) {

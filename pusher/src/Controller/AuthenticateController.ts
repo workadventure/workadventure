@@ -5,10 +5,14 @@ import { adminApi } from "../Services/AdminApi";
 import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { parse } from "query-string";
 import { openIDClient } from "../Services/OpenIDClient";
+import { samlClient } from "../Services/SamlClient";
 
 export interface TokenInterface {
     userUuid: string;
 }
+
+const connexionOauth = "oauth";
+const connexionSAml = "saml";
 
 export class AuthenticateController extends BaseController {
     constructor(private App: TemplatedApp) {
@@ -20,7 +24,7 @@ export class AuthenticateController extends BaseController {
         this.profileCallback();
     }
 
-    openIDLogin() {
+    private openIDLogin() {
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.App.get("/login-screen", async (res: HttpResponse, req: HttpRequest) => {
             res.onAborted(() => {
@@ -43,37 +47,75 @@ export class AuthenticateController extends BaseController {
         });
     }
 
-    openIDCallback() {
+    private openIDCallback() {
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.App.get("/login-callback", async (res: HttpResponse, req: HttpRequest) => {
             res.onAborted(() => {
                 console.warn("/message request was aborted");
             });
-            const { code, nonce, token } = parse(req.getQuery());
+            const { code, nonce, type, token } = parse(req.getQuery());
+            let authToken = null;
+
             try {
                 //verify connected by token
-                if (token != undefined) {
-                    try {
-                        const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
-                        if (authTokenData.hydraAccessToken == undefined) {
-                            throw Error("Token cannot to be check on Hydra");
+                if (type != undefined && type === connexionOauth) {
+                    if (token != undefined) {
+                        try {
+                            const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
+                            if (authTokenData.hydraAccessToken == undefined) {
+                                throw Error("Token cannot to be check on Hydra");
+                            }
+                            await openIDClient.checkTokenAuth(authTokenData.hydraAccessToken);
+                            res.writeStatus("200");
+                            this.addCorsHeaders(res);
+                            return res.end(JSON.stringify({ authToken: token }));
+                        } catch (err) {
+                            console.info("User was not connected", err);
                         }
-                        await openIDClient.checkTokenAuth(authTokenData.hydraAccessToken);
-                        res.writeStatus("200");
-                        this.addCorsHeaders(res);
-                        return res.end(JSON.stringify({ authToken: token }));
-                    } catch (err) {
-                        console.info("User was not connected", err);
                     }
+
+                    //user have not token created, check data on hydra and create token
+                    const userInfo = await openIDClient.getUserInfo(code as string, nonce as string);
+                    const email = userInfo.email || userInfo.sub;
+                    if (!email) {
+                        throw new Error("No email in the response");
+                    }
+                    authToken = jwtTokenManager.createAuthToken(email, userInfo.access_token);
                 }
 
-                //user have not token created, check data on hydra and create token
-                const userInfo = await openIDClient.getUserInfo(code as string, nonce as string);
-                const email = userInfo.email || userInfo.sub;
-                if (!email) {
-                    throw new Error("No email in the response");
+                if (type != undefined && type === connexionSAml) {
+                    if (token != undefined) {
+                        try {
+                            const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
+                            if (authTokenData.samlAccessUserId == undefined) {
+                                throw Error("Token cannot to be check on Hydra");
+                            }
+                            const data = (await samlClient.checkTokenAuth(authTokenData.samlAccessUserId)) as {
+                                email: string;
+                                samlAccessUserId: string;
+                            };
+                            authToken = jwtTokenManager.createAuthToken(data.email, data.samlAccessUserId);
+                        } catch (err) {
+                            //if user is not connected on SSO, throw error
+                            throw new Error("User was not connected");
+                        }
+                    }
+
+                    const userInfo = (await samlClient.getUserInfo(code as string)) as {
+                        email: string;
+                        samlAccessUserId: string;
+                    };
+                    const email = userInfo.email;
+                    if (!email) {
+                        throw new Error("No email in the response");
+                    }
+                    authToken = jwtTokenManager.createAuthToken(email, userInfo.samlAccessUserId);
                 }
-                const authToken = jwtTokenManager.createAuthToken(email, userInfo.access_token);
+
+                if (authToken === null) {
+                    throw "No connexion type detected";
+                }
+
                 res.writeStatus("200");
                 this.addCorsHeaders(res);
                 return res.end(JSON.stringify({ authToken }));
@@ -179,7 +221,7 @@ export class AuthenticateController extends BaseController {
         });
     }
 
-    profileCallback() {
+    private profileCallback() {
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
         // @ts-ignore
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -210,6 +252,32 @@ export class AuthenticateController extends BaseController {
                 }
             } catch (error) {
                 this.errorToResponse(error, res);
+            }
+        });
+    }
+
+    private loginSso() {
+        this.App.get("/login-sso", async (res: HttpResponse, req: HttpRequest) => {
+            res.onAborted(() => {
+                console.warn("/message request was aborted");
+            });
+
+            const param = await res.json();
+
+            try {
+                const organizationMemberToken: string | null = param.organizationMemberToken;
+                if (typeof organizationMemberToken != "string") throw new Error("No organization token");
+                const data = await adminApi.fetchMemberDataByToken(organizationMemberToken);
+                const email = data.email;
+                const userUuid = data.userUuid;
+
+                const authToken = jwtTokenManager.createAuthToken(email || userUuid, undefined, "1d");
+
+                res.writeStatus("200");
+                this.addCorsHeaders(res);
+                return res.end(JSON.stringify({ authToken }));
+            } catch (e) {
+                return this.errorToResponse(e, res);
             }
         });
     }

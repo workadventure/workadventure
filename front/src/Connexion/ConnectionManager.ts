@@ -84,13 +84,18 @@ class ConnectionManager {
             const urlParams = new URLSearchParams(window.location.search);
             const code = urlParams.get("code");
             const state = urlParams.get("state");
+            const connexionType = urlParams.get("type");
             if (!state || !localUserStore.verifyState(state)) {
                 throw "Could not validate state!";
             }
             if (!code) {
                 throw "No Auth code provided";
             }
+            if (!connexionType) {
+                throw "No connexion authorize";
+            }
             localUserStore.setCode(code);
+            localUserStore.setType(connexionType);
             try {
                 await this.checkAuthUserConnexion();
             } catch (err) {
@@ -267,17 +272,21 @@ class ConnectionManager {
 
         const state = localUserStore.getState();
         const code = localUserStore.getCode();
+        const type = localUserStore.getType();
         if (!state || !localUserStore.verifyState(state)) {
             throw "Could not validate state!";
         }
         if (!code) {
             throw "No Auth code provided";
         }
+        if (!type) {
+            throw "Unknown connexion";
+        }
         const nonce = localUserStore.getNonce();
         const token = localUserStore.getAuthToken();
-        const { authToken } = await Axios.get(`${PUSHER_URL}/login-callback`, { params: { code, nonce, token } }).then(
-            (res) => res.data
-        );
+        const { authToken } = await Axios.get(`${PUSHER_URL}/login-callback`, {
+            params: { code, nonce, type, token },
+        }).then((res) => res.data);
         localUserStore.setAuthToken(authToken);
         this.authToken = authToken;
 
