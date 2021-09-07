@@ -7,6 +7,7 @@ import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import sveltePreprocess from "svelte-preprocess";
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import NodePolyfillPlugin from "node-polyfill-webpack-plugin";
+import { PROFILE_URL } from "./src/Enum/EnvironmentVariable";
 
 const mode = process.env.NODE_ENV ?? "development";
 const buildNpmTypingsForApi = !!process.env.BUILD_TYPINGS;
@@ -191,6 +192,7 @@ module.exports = {
             UPLOADER_URL: null,
             ADMIN_URL: undefined,
             CONTACT_URL: null,
+            PROFILE_URL: null,
             DEBUG_MODE: null,
             STUN_SERVER: null,
             TURN_SERVER: null,

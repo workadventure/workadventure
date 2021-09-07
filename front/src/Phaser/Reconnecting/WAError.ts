@@ -3,13 +3,13 @@ export class WAError extends Error {
     private _subTitle: string;
     private _details: string;
 
-    constructor (title: string, subTitle: string, details: string) {
-        super(title+' - '+subTitle+' - '+details);
+    constructor(title: string, subTitle: string, details: string) {
+        super(title + " - " + subTitle + " - " + details);
         this._title = title;
         this._subTitle = subTitle;
         this._details = details;
         // Set the prototype explicitly.
-        Object.setPrototypeOf (this, WAError.prototype);
+        Object.setPrototypeOf(this, WAError.prototype);
     }
 
     get title(): string {

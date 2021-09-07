@@ -1,14 +1,13 @@
-import {ResizableScene} from "./ResizableScene";
-import {localUserStore} from "../../Connexion/LocalUserStore";
-import type {BodyResourceDescriptionInterface} from "../Entity/PlayerTextures";
-import {loadCustomTexture} from "../Entity/PlayerTexturesLoadingManager";
-import type {CharacterTexture} from "../../Connexion/LocalUser";
+import { ResizableScene } from "./ResizableScene";
+import { localUserStore } from "../../Connexion/LocalUserStore";
+import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
+import { loadCustomTexture } from "../Entity/PlayerTexturesLoadingManager";
+import type { CharacterTexture } from "../../Connexion/LocalUser";
 
 export abstract class AbstractCharacterScene extends ResizableScene {
-
-    loadCustomSceneSelectCharacters() : Promise<BodyResourceDescriptionInterface[]> {
+    loadCustomSceneSelectCharacters(): Promise<BodyResourceDescriptionInterface[]> {
         const textures = this.getTextures();
-        const promises : Promise<BodyResourceDescriptionInterface>[] = [];
+        const promises: Promise<BodyResourceDescriptionInterface>[] = [];
         if (textures) {
             for (const texture of textures) {
                 if (texture.level === -1) {
@@ -17,10 +16,10 @@ export abstract class AbstractCharacterScene extends ResizableScene {
                 promises.push(loadCustomTexture(this.load, texture));
             }
         }
-        return Promise.all(promises)
+        return Promise.all(promises);
     }
 
-    loadSelectSceneCharacters() : Promise<BodyResourceDescriptionInterface[]> {
+    loadSelectSceneCharacters(): Promise<BodyResourceDescriptionInterface[]> {
         const textures = this.getTextures();
         const promises: Promise<BodyResourceDescriptionInterface>[] = [];
         if (textures) {
@@ -31,10 +30,10 @@ export abstract class AbstractCharacterScene extends ResizableScene {
                 promises.push(loadCustomTexture(this.load, texture));
             }
         }
-        return Promise.all(promises)
+        return Promise.all(promises);
     }
 
-    private getTextures() : CharacterTexture[]|undefined{
+    private getTextures(): CharacterTexture[] | undefined {
         const localUser = localUserStore.getLocalUser();
         return localUser?.textures;
     }
