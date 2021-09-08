@@ -1,3 +1,4 @@
+{.section-title.accent.text-primary}
 # Using Typescript with the scripting API
 
 {.alert.alert-info}
@@ -57,7 +58,9 @@ In your map directory, start by adding a `package.json` file. This file will con
 
 You can now install the dependencies:
 
-    $ npm install
+```console
+$ npm install
+```
 
 We now need to add a Webpack configuration file (for development mode). This Webpack file will:
 
@@ -65,109 +68,116 @@ We now need to add a Webpack configuration file (for development mode). This Web
 *   Compile Typescript into Javascript and serve it automatically
 
 **webpack.config.js**
+```js
+const path = require('path');
+const webpack = require('webpack');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
-    const path = require('path');
-    const webpack = require('webpack');
-    const HtmlWebpackPlugin = require('html-webpack-plugin');
-
-    module.exports = {
-        mode: 'development',
-        entry: './src/index.ts',
-        devtool: 'inline-source-map',
-        devServer: {
-            // The test webserver serves static files from the root directory.
-            // It comes with CORS enabled (important for WorkAdventure to be able to load the map)
-            contentBase: '.',
-            host: 'localhost',
-            disableHostCheck: true,
-            headers: {
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-                "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization"
-            }
+module.exports = {
+    mode: 'development',
+    entry: './src/index.ts',
+    devtool: 'inline-source-map',
+    devServer: {
+        // The test webserver serves static files from the root directory.
+        // It comes with CORS enabled (important for WorkAdventure to be able to load the map)
+        static: {
+            directory: ".",
+            serveIndex: true,
+            watch: true,
         },
-        module: {
-            rules: [
-                {
-                    test: /\.tsx?$/,
-                    use: 'ts-loader',
-                    exclude: /node_modules/,
-                },
-            ],
-        },
-        resolve: {
-            extensions: [ '.tsx', '.ts', '.js' ],
-        },
-        output: {
-            filename: 'script.js',
-            path: path.resolve(__dirname, 'dist'),
-            publicPath: '/'
+        host: 'localhost',
+        allowedHosts: "all",
+        headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+            "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization"
         }
-    };
+    },
+    module: {
+        rules: [
+            {
+                test: /\.tsx?$/,
+                use: 'ts-loader',
+                exclude: /node_modules/,
+            },
+        ],
+    },
+    resolve: {
+        extensions: [ '.tsx', '.ts', '.js' ],
+    },
+    output: {
+        filename: 'script.js',
+        path: path.resolve(__dirname, 'dist'),
+        publicPath: '/'
+    }
+};
+```
 
 We need to configure Typescript, using a `tsconfig.json` file.
 
 **tsconfig.json**
-
-    {
-      "compilerOptions": {
-        "outDir": "./dist/",
-        "sourceMap": true,
-        "moduleResolution": "node",
-        "module": "CommonJS",
-        "target": "ES2015",
-        "declaration": false,
-        "downlevelIteration": true,
-        "jsx": "react",
-        "allowJs": true,
-        "strict": true
-      }
-    }
+```json
+{
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "sourceMap": true,
+    "moduleResolution": "node",
+    "module": "CommonJS",
+    "target": "ES2015",
+    "declaration": false,
+    "downlevelIteration": true,
+    "jsx": "react",
+    "allowJs": true,
+    "strict": true
+  }
+}
+```
 
 Create your entry point (the Typescript file at the root of your project).
 
 **src/index.ts**
+```typescript
+/// <reference path="../node_modules/@workadventure/iframe-api-typings/iframe_api.d.ts" />
 
-    /// <reference path="../node_modules/@workadventure/iframe-api-typings/iframe_api.d.ts" />
-
-    console.log('Hello world!');
+console.log('Hello world!');
+```
 
 The first comment line is important in order to get `WA` typings.
 
 Now, you can start Webpack in dev mode!
 
-    npm run start
+```console
+$ npm run start
+```
 
 This will automatically compile Typescript, and serve it (along the map) on your local webserver (so at `http://localhost:8080/script.js`). Please note that the `script.js` file is never written to the disk. So do not worry if you don't see it appearing, you need to "build" it to actually write it to the disk.
 
 Final step, you must reference the script inside your map, by adding a `script` property at the root of your map:
 
-<div>
-
-<figure class="figure">![]({{url('img/docs/script_property.png')}})
-
-<figcaption class="figure-caption">The script property</figcaption>
-
+<figure class="figure">
+    <img src="images/script_property.png" class="figure-img img-fluid rounded" alt="" />
+    <figcaption class="figure-caption">The script property</figcaption>
 </figure>
-
-</div>
 
 ### Building the final script
 
 We now have a correct development setup. But we still need to be able to build the production script from Typescript files. We are not going to use the development server in production. To do this, we will add an additional `webpack.prod.js` file.
 
 **webpack.prod.js**
+```javascript
+const { merge } = require('webpack-merge');
+const common = require('./webpack.config.js');
 
-    const { merge } = require('webpack-merge');
-    const common = require('./webpack.config.js');
-
-    module.exports = merge(common, {
-      mode: 'production',
-      devtool: 'source-map'
-    });
+module.exports = merge(common, {
+  mode: 'production',
+  devtool: 'source-map'
+});
+```
 
 This file will simply switch the Webpack config file in "production" mode. You can simply run:
 
-    $ npm run build
+```console
+$ npm run build
+```
 
 and the `script.js` file will be generated in the `dist/` folder. Beware, you will need to move it at the root of map for it to be read by the map.
