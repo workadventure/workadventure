@@ -1,10 +1,10 @@
 //TextGlobalMessage
 section.section-input-send-text {
-  --height-toolbar: 15%;
+  --height-toolbar: 20%;
   height: 100%;
 
   .ql-toolbar{
-    height: var(--height-toolbar);
+    max-height: var(--height-toolbar);
     background: whitesmoke;
   }
 
