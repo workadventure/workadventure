@@ -1,5 +1,5 @@
 var isFirstTimeTuto = false;
-var textFirstPopup = 'Hey ! This is how to start a discussion with someone ! You can be 4 max in a bubble.';
+var textFirstPopup = 'Hi ! This is how to start a discussion with someone ! You can be 4 max in a bubble.';
 var textSecondPopup = 'You can also use the chat to communicate ! ';
 var targetObjectTutoBubble ='Tutobubble';
 var targetObjectTutoChat ='tutoChat';

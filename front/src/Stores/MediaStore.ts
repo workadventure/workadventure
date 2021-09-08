@@ -274,12 +274,12 @@ export const mediaStreamConstraintsStore = derived(
             currentAudioConstraint = false;
         }
 
-        // Disable webcam for privacy reasons (the game is not visible and we were talking to noone)
+        // Disable webcam for privacy reasons (the game is not visible and we were talking to no one)
         if ($privacyShutdownStore === true) {
             currentVideoConstraint = false;
         }
 
-        // Disable webcam for energy reasons (the user is not moving and we are talking to noone)
+        // Disable webcam for energy reasons (the user is not moving and we are talking to no one)
         if ($cameraEnergySavingStore === true) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;
@@ -576,3 +576,8 @@ localStreamStore.subscribe((streamResult) => {
         }
     }
 });
+
+/**
+ * A store containing the real active media is mobile
+ */
+export const obtainedMediaConstraintIsMobileStore = writable(false);

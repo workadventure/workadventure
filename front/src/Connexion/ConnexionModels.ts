@@ -31,6 +31,7 @@ export enum EventMessage {
     TELEPORT = "teleport",
     USER_MESSAGE = "user-message",
     START_JITSI_ROOM = "start-jitsi-room",
+    SET_VARIABLE = "set-variable",
     USER_LIST = "user-list",
 }
 
@@ -106,12 +107,13 @@ export interface RoomJoinedMessageInterface {
     //users: MessageUserPositionInterface[],
     //groups: GroupCreatedUpdatedMessageInterface[],
     items: { [itemId: number]: unknown };
+    variables: Map<string, unknown>;
 }
 
 export interface PlayGlobalMessageInterface {
-    id: string;
     type: string;
-    message: string;
+    content: string;
+    broadcastToWorld: boolean;
 }
 
 export interface OnConnectInterface {

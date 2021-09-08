@@ -244,6 +244,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     update(time: number, delta: number): void {
         if (this.lazyloadingAttempt) {
             this.moveLayers();
+            this.doMoveCursorHorizontally(this.moveHorizontally);
             this.lazyloadingAttempt = false;
         }
 
@@ -281,7 +282,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.scene.sleep(CustomizeSceneName);
         waScaleManager.restoreZoom();
         this.events.removeListener("wake");
-        gameManager.tryResumingGame(this, EnableCameraSceneName);
+        gameManager.tryResumingGame(EnableCameraSceneName);
         customCharacterSceneVisibleStore.set(false);
     }
 

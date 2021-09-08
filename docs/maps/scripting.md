@@ -55,10 +55,10 @@ Start by testing this with a simple message sent to the chat.
 
 **script.js**
 ```javascript
-WA.sendChatMessage('Hello world', 'Mr Robot');
+WA.chat.sendChatMessage('Hello world', 'Mr Robot');
 ```
 
-The `WA` objects contains a number of useful methods enabling you to interact with the WorkAdventure game. For instance, `WA.sendChatMessage` opens the chat and adds a message in it.
+The `WA` objects contains a number of useful methods enabling you to interact with the WorkAdventure game. For instance, `WA.chat.sendChatMessage` opens the chat and adds a message in it.
 
 In your browser console, when you open the map, the chat message should be displayed right away.
 

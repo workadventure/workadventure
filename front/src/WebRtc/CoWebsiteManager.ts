@@ -2,6 +2,7 @@ import { HtmlUtils } from "./HtmlUtils";
 import { Subject } from "rxjs";
 import { iframeListener } from "../Api/IframeListener";
 import { touchScreenManager } from "../Touch/TouchScreenManager";
+import { waScaleManager } from "../Phaser/Services/WaScaleManager";
 import { webexIntegration } from "./WebexIntegration";
 
 enum iframeStates {
@@ -260,6 +261,7 @@ class CoWebsiteManager {
 
     private fire(): void {
         this._onResize.next();
+        waScaleManager.applyNewSize();
     }
 
     private fullscreen(): void {

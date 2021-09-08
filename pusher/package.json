@@ -52,6 +52,7 @@
     "grpc": "^1.24.4",
     "jsonwebtoken": "^8.5.1",
     "mkdirp": "^1.0.4",
+    "openid-client": "^4.7.4",
     "node-fetch": "2.6.1",
     "prom-client": "^12.0.0",
     "query-string": "^6.13.3",
