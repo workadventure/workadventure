@@ -1,10 +1,9 @@
-import {HdpiManager} from "./HdpiManager";
+import { HdpiManager } from "./HdpiManager";
 import ScaleManager = Phaser.Scale.ScaleManager;
-import {coWebsiteManager} from "../../WebRtc/CoWebsiteManager";
-import type {Game} from "../Game/Game";
-import {ResizableScene} from "../Login/ResizableScene";
-import {HtmlUtils} from "../../WebRtc/HtmlUtils";
-
+import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
+import type { Game } from "../Game/Game";
+import { ResizableScene } from "../Login/ResizableScene";
+import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 
 class WaScaleManager {
     private hdpiManager: HdpiManager;
@@ -23,26 +22,29 @@ class WaScaleManager {
     }
 
     public applyNewSize() {
-        const {width, height} = coWebsiteManager.getGameSize();
+        const { width, height } = coWebsiteManager.getGameSize();
 
         let devicePixelRatio = 1;
         if (window.devicePixelRatio) {
             devicePixelRatio = window.devicePixelRatio;
         }
 
-        const { game: gameSize, real: realSize } = this.hdpiManager.getOptimalGameSize({width: width * devicePixelRatio, height: height * devicePixelRatio});
+        const { game: gameSize, real: realSize } = this.hdpiManager.getOptimalGameSize({
+            width: width * devicePixelRatio,
+            height: height * devicePixelRatio,
+        });
 
         this.actualZoom = realSize.width / gameSize.width / devicePixelRatio;
-        this.scaleManager.setZoom(realSize.width / gameSize.width / devicePixelRatio)
+        this.scaleManager.setZoom(realSize.width / gameSize.width / devicePixelRatio);
         this.scaleManager.resize(gameSize.width, gameSize.height);
 
         // Override bug in canvas resizing in Phaser. Let's resize the canvas ourselves
         const style = this.scaleManager.canvas.style;
-        style.width = Math.ceil(realSize.width / devicePixelRatio) + 'px';
-        style.height = Math.ceil(realSize.height / devicePixelRatio) + 'px';
+        style.width = Math.ceil(realSize.width / devicePixelRatio) + "px";
+        style.height = Math.ceil(realSize.height / devicePixelRatio) + "px";
 
         // Resize the game element at the same size at the canvas
-        const gameStyle = HtmlUtils.getElementByIdOrFail<HTMLDivElement>('game').style;
+        const gameStyle = HtmlUtils.getElementByIdOrFail<HTMLDivElement>("game").style;
         gameStyle.width = style.width;
         gameStyle.height = style.height;
 
@@ -70,7 +72,7 @@ class WaScaleManager {
         this._saveZoom = this.hdpiManager.zoomModifier;
     }
 
-    public restoreZoom(): void{
+    public restoreZoom(): void {
         this.hdpiManager.zoomModifier = this._saveZoom;
         this.applyNewSize();
     }
@@ -81,7 +83,6 @@ class WaScaleManager {
     public get uiScalingFactor(): number {
         return this.actualZoom > 1 ? 1 : 1.2;
     }
-
 }
 
-export const waScaleManager = new WaScaleManager(640*480, 196*196);
+export const waScaleManager = new WaScaleManager(640 * 480, 196 * 196);

@@ -1,15 +1,15 @@
-import {Subject} from "rxjs";
-import type {BanUserMessage, SendUserMessage} from "../Messages/generated/messages_pb";
+import { Subject } from "rxjs";
+import type { BanUserMessage, SendUserMessage } from "../Messages/generated/messages_pb";
 
 export enum AdminMessageEventTypes {
-    admin = 'message',
-    audio = 'audio',
-    ban = 'ban',
-    banned = 'banned',
+    admin = "message",
+    audio = "audio",
+    ban = "ban",
+    banned = "banned",
 }
 
 interface AdminMessageEvent {
-    type: AdminMessageEventTypes,
+    type: AdminMessageEventTypes;
     text: string;
     //todo add optional properties for other event types
 }
@@ -21,14 +21,14 @@ class AdminMessagesService {
     public messageStream = this._messageStream.asObservable();
 
     constructor() {
-        this.messageStream.subscribe((event) => console.log('message', event))
+        this.messageStream.subscribe((event) => console.log("message", event));
     }
 
-    onSendusermessage(message: SendUserMessage|BanUserMessage) {
+    onSendusermessage(message: SendUserMessage | BanUserMessage) {
         this._messageStream.next({
             type: message.getType() as unknown as AdminMessageEventTypes,
             text: message.getMessage(),
-        })
+        });
     }
 }
 
