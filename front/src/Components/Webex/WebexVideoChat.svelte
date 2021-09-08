@@ -708,23 +708,6 @@
         color: #666666;
     }
 
-    .widget-demo--signout--2xcwv div {
-        color: black !important;
-    }
-
-    .widget-demo--searchInput--EQgN7 input {
-        border: none;
-    }
-
-    .widget-demo--exampleCode--1yYQy pre {
-        word-wrap: break-word;
-        white-space: pre-wrap;
-    }
-
-    body {
-        font-size: 14px;
-    }
-
     .widget-demo--widgetSpaceComponentContainer--3L80J {
         position: absolute;
         right: 10px;
@@ -738,16 +721,6 @@
 
     .widget-demo--widgetSpaceComponentContainer--3L80J > div {
         height: 100%;
-    }
-
-    .widget-demo--widgetRecentsComponentContainer--2LcUG > div {
-        height: 100%;
-    }
-
-
-    .widget-demo--exampleCode--1KXcv pre {
-        word-wrap: break-word;
-        white-space: pre-wrap;
     }
 
     /* Button at the center bottom that sticks widgets */
