@@ -71,7 +71,7 @@ function createSubMenusStore() {
 
 export const subMenusStore = createSubMenusStore();
 
-function checkSubMenuToShow() {
+export function checkSubMenuToShow() {
     if (!get(userIsAdminStore)) {
         subMenusStore.removeMenu(SubMenusInterface.globalMessages);
     }
@@ -80,8 +80,6 @@ function checkSubMenuToShow() {
         subMenusStore.removeMenu(SubMenusInterface.contact);
     }
 }
-
-checkSubMenuToShow();
 
 export const customMenuIframe = new Map<string, { url: string; allowApi: boolean }>();
 
