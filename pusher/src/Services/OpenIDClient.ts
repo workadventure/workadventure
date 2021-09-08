@@ -20,13 +20,14 @@ class OpenIDClient {
         return this.issuerPromise;
     }
 
-    public authorizationUrl(state: string, nonce: string) {
+    public authorizationUrl(state: string, nonce: string, playUri?: string) {
         return this.initClient().then((client) => {
             return client.authorizationUrl({
                 scope: "openid email",
                 prompt: "login",
                 state: state,
                 nonce: nonce,
+                playUri: playUri,
             });
         });
     }
