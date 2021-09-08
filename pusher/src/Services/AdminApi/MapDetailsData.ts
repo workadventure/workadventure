@@ -15,7 +15,6 @@ export const isMapDetailsData = new tg.IsInterface()
         policy_type: isNumber, //isNumericEnum(GameRoomPolicyTypes),
         tags: tg.isArray(tg.isString),
         textures: tg.isArray(isCharacterTexture),
-        contactPage: tg.isString,
     })
     .get();
 

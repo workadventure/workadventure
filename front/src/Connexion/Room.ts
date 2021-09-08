@@ -1,7 +1,8 @@
 import Axios from "axios";
-import { PUSHER_URL } from "../Enum/EnvironmentVariable";
+import { CONTACT_URL, PUSHER_URL } from "../Enum/EnvironmentVariable";
 import type { CharacterTexture } from "./LocalUser";
 import { localUserStore } from "./LocalUserStore";
+import { contactPageStore } from "../Stores/MenuStore";
 
 export class MapDetail {
     constructor(public readonly mapUrl: string, public readonly textures: CharacterTexture[] | undefined) {}
@@ -106,6 +107,23 @@ export class Room {
         this._authenticationMandatory = data.authenticationMandatory || false;
         this._iframeAuthentication = data.iframeAuthentication;
         return new MapDetail(data.mapUrl, data.textures);
+    }
+
+    public async getContactPage(): Promise<void> {
+        if (this.isPublic) {
+            contactPageStore.set(CONTACT_URL);
+            return;
+        }
+        const params = this.getInstance().split("/");
+
+        const result = await Axios.get(`${PUSHER_URL}/contact`, {
+            params: {
+                team: params[0],
+                world: params[1],
+            },
+        });
+        const data = result.data;
+        contactPageStore.set(data === null ? CONTACT_URL : data);
     }
 
     /**

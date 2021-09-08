@@ -3,7 +3,7 @@
 
 </script>
 
-<iframe title="contact" src="{$contactPageStore}"></iframe>
+<iframe title="contact" src="{$contactPageStore}" allow="clipboard-read; clipboard-write self {$contactPageStore}"></iframe>
 
 <style lang="scss">
     iframe {

@@ -14,6 +14,7 @@ export class MapController extends BaseController {
         super();
         this.App = App;
         this.getMapUrl();
+        this.getContactPage();
     }
 
     // Returns a map mapping map name to file name of the map
@@ -62,7 +63,6 @@ export class MapController extends BaseController {
                         roomSlug: "", // Deprecated
                         tags: [],
                         textures: [],
-                        contactPage: "",
                     } as MapDetailsData)
                 );
 
@@ -93,6 +93,37 @@ export class MapController extends BaseController {
                     this.errorToResponse(e, res);
                 }
             })();
+        });
+    }
+
+    getContactPage() {
+        this.App.options("/contact", (res: HttpResponse, req: HttpRequest) => {
+            this.addCorsHeaders(res);
+
+            res.end();
+        });
+
+        this.App.get("/contact", (res: HttpResponse, req: HttpRequest) => {
+            res.onAborted(() => {
+                console.warn("/contact request was aborted");
+            });
+
+            const query = parse(req.getQuery());
+            if (typeof query.world !== "string" || typeof query.team !== "string") {
+                return;
+            }
+
+            if (!ADMIN_API_URL) {
+                res.end("");
+                return;
+            } else {
+                (async () => {
+                    const contactPage = await adminApi.getContactPage(query.team as string, query.world as string);
+                    res.writeStatus("200 OK");
+                    this.addCorsHeaders(res);
+                    res.end(contactPage);
+                })();
+            }
         });
     }
 }
