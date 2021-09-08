@@ -92,6 +92,7 @@
     }
 
     function startCall() {
+
         return webex.meetings.create(meetingRoom).then((meeting) => {
             bindMeetingEvents(meeting);
 
