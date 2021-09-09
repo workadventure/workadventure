@@ -74,12 +74,15 @@ export const subMenusStore = createSubMenusStore();
 export const contactPageStore = writable<string | undefined>(CONTACT_URL);
 
 export function checkSubMenuToShow() {
-    if (!get(userIsAdminStore)) {
-        subMenusStore.removeMenu(SubMenusInterface.globalMessages);
+    subMenusStore.removeMenu(SubMenusInterface.globalMessages);
+    subMenusStore.removeMenu(SubMenusInterface.contact);
+
+    if (get(userIsAdminStore)) {
+        subMenusStore.addMenu(SubMenusInterface.globalMessages);
     }
 
-    if (get(contactPageStore) === undefined) {
-        subMenusStore.removeMenu(SubMenusInterface.contact);
+    if (get(contactPageStore) !== undefined) {
+        subMenusStore.addMenu(SubMenusInterface.contact);
     }
 }
 

@@ -215,7 +215,6 @@ export class GameScene extends DirtyScene {
         this.Terrains = [];
         this.groups = new Map<number, Sprite>();
         this.instance = room.getInstance();
-        contactPageStore.set(room.contactPage);
 
         this.MapUrlFile = MapUrlFile;
         this.roomUrl = room.key;
@@ -428,6 +427,7 @@ export class GameScene extends DirtyScene {
 
         gameManager.gameSceneIsCreated(this);
         urlManager.pushRoomIdToUrl(this.room);
+        contactPageStore.set(this.room.contactPage);
 
         if (touchScreenManager.supportTouchScreen) {
             this.pinchManager = new PinchManager(this);
