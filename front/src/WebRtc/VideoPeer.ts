@@ -7,7 +7,6 @@ import type { UserSimplePeerInterface } from "./SimplePeer";
 import { readable, Readable, Unsubscriber } from "svelte/store";
 import {
     localStreamStore,
-    obtainedMediaConstraintIsMobileStore,
     obtainedMediaConstraintStore,
     ObtainedMediaStreamConstraints,
 } from "../Stores/MediaStore";
@@ -161,9 +160,6 @@ export class VideoPeer extends Peer {
                     mediaManager.enabledVideoByUserId(this.userId);
                 } else {
                     mediaManager.disabledVideoByUserId(this.userId);
-                }
-                if (message.isMobile != undefined) {
-                    obtainedMediaConstraintIsMobileStore.set(message.isMobile);
                 }
             } else if (message.type === MESSAGE_TYPE_MESSAGE) {
                 if (!blackListManager.isBlackListed(this.userUuid)) {
