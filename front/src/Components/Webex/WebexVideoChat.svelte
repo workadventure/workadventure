@@ -140,6 +140,9 @@
 
 <svelte:head>
     <link rel="stylesheet" href="https://code.s4d.io/widget-demo/archives/0.2.50/main.css"/>
+    <link href="https://code.s4d.io/widget-demo/archives/0.2.50/fonts/CiscoSansTTRegular.woff2" rel="preload" as="font">
+    <link href="https://code.s4d.io/widget-demo/archives/0.2.50/fonts/CiscoSansTTLight.woff2" rel="preload" as="font">
+    <link rel="preload" href="https://code.s4d.io/widget-demo/archives/0.2.50/fonts/momentum-ui-icons.woff2" as="font">
 </svelte:head>
 
 <main>
@@ -364,9 +367,6 @@
 <style>
 
     main {
-        @import url("https://code.s4d.io/widget-demo/archives/0.2.50/fonts/CiscoSansTTRegular.woff2");
-        @import url("https://code.s4d.io/widget-demo/archives/0.2.50/fonts/CiscoSansTTLight.woff2");
-        @import url("https://code.s4d.io/widget-demo/archives/0.2.50/fonts/momentum-ui-icons.woff2");
         text-align: center;
         padding: 1em;
         max-width: 240px;
