@@ -364,9 +364,9 @@
 <style>
 
     main {
-        @import ("https://code.s4d.io/widget-demo/archives/0.2.50/fonts/CiscoSansTTRegular.woff2");
-        @import("https://code.s4d.io/widget-demo/archives/0.2.50/fonts/CiscoSansTTLight.woff2");
-        @import("https://code.s4d.io/widget-demo/archives/0.2.50/fonts/momentum-ui-icons.woff2");
+        @import url("https://code.s4d.io/widget-demo/archives/0.2.50/fonts/CiscoSansTTRegular.woff2");
+        @import url("https://code.s4d.io/widget-demo/archives/0.2.50/fonts/CiscoSansTTLight.woff2");
+        @import url("https://code.s4d.io/widget-demo/archives/0.2.50/fonts/momentum-ui-icons.woff2");
         text-align: center;
         padding: 1em;
         max-width: 240px;
