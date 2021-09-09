@@ -45,7 +45,7 @@ class ConnectionManager {
             loginSceneVisibleIframeStore.set(false);
             return null;
         }
-        const redirectUrl = `${this._currentRoom.iframeAuthentication}?state=${state}&nonce=${nonce}`;
+        const redirectUrl = `${this._currentRoom.iframeAuthentication}?state=${state}&nonce=${nonce}&playUri=${this._currentRoom.key}`;
         window.location.assign(redirectUrl);
         return redirectUrl;
     }
@@ -76,10 +76,9 @@ class ConnectionManager {
         this.connexionType = connexionType;
         this._currentRoom = null;
         if (connexionType === GameConnexionTypes.login) {
-            //TODO clear all cash and redirect on login scene (iframe)
-            localUserStore.setAuthToken(null);
             this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
-            urlManager.pushRoomIdToUrl(this._currentRoom);
+            this.loadOpenIDScreen();
+            return Promise.reject(new Error("You will be redirect on login page"));
         } else if (connexionType === GameConnexionTypes.jwt) {
             const urlParams = new URLSearchParams(window.location.search);
             const code = urlParams.get("code");
@@ -91,13 +90,14 @@ class ConnectionManager {
                 throw "No Auth code provided";
             }
             localUserStore.setCode(code);
+            this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
             try {
                 await this.checkAuthUserConnexion();
             } catch (err) {
                 console.error(err);
                 this.loadOpenIDScreen();
+                return Promise.reject(new Error("You will be redirect on login page"));
             }
-            this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
             urlManager.pushRoomIdToUrl(this._currentRoom);
         } else if (connexionType === GameConnexionTypes.register) {
             //@deprecated

@@ -52,11 +52,6 @@
         enableCameraSceneVisibilityStore.showEnableCameraScene();
         gameManager.leaveGame(EnableCameraSceneName,new EnableCameraScene());
     }
-
-    //TODO: Uncomment when login will be completely developed
-    /*function clickLogin() {
-        connectionManager.loadOpenIDScreen();
-    }*/
 </script>
 
 <div class="customize-main">
@@ -71,20 +66,17 @@
         </section>
     {:else}
         <section>
-            <a type="button" class="nes-btn" href="/login">Sing in</a>
+            <a type="button" class="nes-btn" href="/login">Sign in</a>
         </section>
     {/if}
     <section>
         <button type="button" class="nes-btn" on:click|preventDefault={openEditNameScene}>Edit Name</button>
-        <button type="button" class="nes-btn is-rounded" on:click|preventDefault={openEditSkinScene}>Edit Skin</button>
+        <button type="button" class="nes-btn" on:click|preventDefault={openEditSkinScene}>Edit Skin</button>
         <button type="button" class="nes-btn" on:click|preventDefault={openEditCompanionScene}>Edit Companion</button>
     </section>
     <section>
         <button type="button" class="nes-btn" on:click|preventDefault={openEnableCameraScene}>Setup camera</button>
     </section>
-<!--    <section>
-        <button type="button" class="nes-btn is-primary" on:click|preventDefault={clickLogin}>Login</button>
-    </section>-->
 </div>
 
 <style lang="scss">
@@ -93,6 +85,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
+        flex-wrap: wrap;
         margin-bottom: 20px;
 
         iframe{

@@ -10,7 +10,7 @@ export function flattenGroupLayersMap(map: ITiledMap) {
 }
 
 function flattenGroupLayers(layers: ITiledMapLayer[], prefix: string, flatLayers: ITiledMapLayer[]) {
-    for (const layer of layers) {
+    for (const layer of layers.map((layer) => ({ ...layer }))) {
         if (layer.type === "group") {
             flattenGroupLayers(layer.layers, prefix + layer.name + "/", flatLayers);
         } else {
