@@ -84,7 +84,7 @@
                     mediaSettings
                 }).catch(err => {
                     if (err.toString() === "WebexMeetingsError 30101: Meeting has already Ended or not Active") {
-                        criticalError = new Error("Please ask the host to start the meeting!");
+                        criticalError = new Error("The meeting hasn't started yet ⏰");
                     } else {
                         console.error(err.toString())
                     }
@@ -92,7 +92,7 @@
             }).catch(err => {
                 console.error(err);
                 if (err.toString() === "ReconnectionError: Unable to retrieve media streams") {
-                    criticalError = new Error("Is your webcam blocked?");
+                    criticalError = new Error("Is your webcam blocked? 😅");
                 } else {
                     console.error(err.toString())
                 }
