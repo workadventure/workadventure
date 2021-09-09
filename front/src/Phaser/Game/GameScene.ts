@@ -94,6 +94,7 @@ import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
 import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
 import type { RadialMenuItem } from "../Components/RadialMenu";
+import { contactPageStore } from "../../Stores/MenuStore";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -214,7 +215,7 @@ export class GameScene extends DirtyScene {
         this.Terrains = [];
         this.groups = new Map<number, Sprite>();
         this.instance = room.getInstance();
-        room.getContactPage();
+        contactPageStore.set(room.contactPage);
 
         this.MapUrlFile = MapUrlFile;
         this.roomUrl = room.key;
@@ -1239,7 +1240,6 @@ ${escapedMessage}
 
         let targetRoom: Room;
         try {
-            console.log("exit map : ", roomUrl);
             targetRoom = await Room.createRoom(roomUrl);
         } catch (e /*: unknown*/) {
             console.error('Error while fetching new room "' + roomUrl.toString() + '"', e);

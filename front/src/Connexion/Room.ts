@@ -2,7 +2,6 @@ import Axios from "axios";
 import { CONTACT_URL, PUSHER_URL } from "../Enum/EnvironmentVariable";
 import type { CharacterTexture } from "./LocalUser";
 import { localUserStore } from "./LocalUserStore";
-import { contactPageStore } from "../Stores/MenuStore";
 
 export class MapDetail {
     constructor(public readonly mapUrl: string, public readonly textures: CharacterTexture[] | undefined) {}
@@ -21,6 +20,7 @@ export class Room {
     private _textures: CharacterTexture[] | undefined;
     private instance: string | undefined;
     private readonly _search: URLSearchParams;
+    private _contactPage: string | undefined;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -106,24 +106,8 @@ export class Room {
         this._textures = data.textures;
         this._authenticationMandatory = data.authenticationMandatory || false;
         this._iframeAuthentication = data.iframeAuthentication;
+        this._contactPage = data.contactPage || CONTACT_URL;
         return new MapDetail(data.mapUrl, data.textures);
-    }
-
-    public async getContactPage(): Promise<void> {
-        if (this.isPublic) {
-            contactPageStore.set(CONTACT_URL);
-            return;
-        }
-        const params = this.getInstance().split("/");
-
-        const result = await Axios.get(`${PUSHER_URL}/contact`, {
-            params: {
-                team: params[0],
-                world: params[1],
-            },
-        });
-        const data = result.data;
-        contactPageStore.set(data === null ? CONTACT_URL : data);
     }
 
     /**
@@ -215,5 +199,9 @@ export class Room {
 
     get iframeAuthentication(): string | undefined {
         return this._iframeAuthentication;
+    }
+
+    get contactPage(): string | undefined {
+        return this._contactPage;
     }
 }

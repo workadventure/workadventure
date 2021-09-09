@@ -150,23 +150,6 @@ class AdminApi {
 
         return ADMIN_URL + `/profile?token=${accessToken}`;
     }
-
-    async getContactPage(team: string, world: string): Promise<string> {
-        if (!ADMIN_API_URL) {
-            return Promise.reject(new Error("No admin backoffice set!"));
-        }
-
-        const params: { team: string; world: string } = {
-            team,
-            world,
-        };
-
-        const res = await Axios.get(ADMIN_API_URL + "/contact", {
-            headers: { Authorization: `${ADMIN_API_TOKEN}` },
-            params,
-        });
-        return res.data;
-    }
 }
 
 export const adminApi = new AdminApi();
