@@ -7,6 +7,8 @@
 
     let webexCDNLink = "https://unpkg.com/webex/umd/webex.min.js";
 
+    let initials = "TP";
+    let fullName = "Testing Person";
     let ready = false
     let currentMeeting = null;
     let webex = null;
@@ -147,11 +149,11 @@
                             <div class="ciscospark-title-bar-wrapper">
                                 <div class="ciscospark-title-bar widget-demo--titleBar--32_8a">
                                     <div class="ciscospark-avatar-container widget-demo--avatarContainer--shGVy">
-                                        <div class="md-avatar md-avatar--24" title="Mweya Ruider"><span
-                                                class="md-avatar__letter">MR</span></div>
+                                        <div class="md-avatar md-avatar--24" title="{fullName}"><span
+                                                class="md-avatar__letter">{initials}</span></div>
                                     </div>
                                     <div class="ciscospark-title-text widget-demo--titleText--3jwIv"><p><strong
-                                            class="ciscospark-title widget-demo--title--6SJXl">Mweya Ruider</strong></p>
+                                            class="ciscospark-title widget-demo--title--6SJXl">{fullName}</strong></p>
                                     </div>
                                     <div class="ciscospark-title-meta widget-demo--titleMeta--2Sz7g">
                                         <div class="ciscospark-activity-menu-button-wrapper widget-demo--activityMenuButtonWrapper--3eABx">
@@ -165,10 +167,9 @@
                                     <div class="widget-demo--wrapper--2FMs0">
                                         <div class="widget-demo--meetWidgetContainer--1fog_ meet-widget-container">
                                             <div class="widget-demo--callInactiveContainer--pCOsm call-inactive-container">
-                                                <div class="md-avatar md-avatar--84" title="Mweya Ruider"><span
-                                                        class="md-avatar__letter">MR</span></div>
-                                                <div class="widget-demo--personName--3fVsV call-person-name">Mweya
-                                                    Ruider
+                                                <div class="md-avatar md-avatar--84" title="{fullName}"><span
+                                                        class="md-avatar__letter">{initials}</span></div>
+                                                <div class="widget-demo--personName--3fVsV call-person-name">{fullName}
                                                 </div>
                                                 <div class="widget-demo--callControls--35xR2 call-controls-container">
                                                     <div class="ciscospark-controls-container widget-demo--controlContainer--1F4XU">
