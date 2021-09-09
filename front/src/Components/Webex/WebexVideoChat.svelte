@@ -136,9 +136,6 @@
 </svelte:head>
 
 <main>
-    <h1>WebEx Meeting PoC</h1>
-
-    <br/><br/>
     <div class="widget-demo--widgetSpaceComponentContainer--3L80J"
          style="width: calc( 100% - 30px); height: 100%; right: 0;">
         <div id="my-ciscospark-space-widget">
@@ -303,8 +300,6 @@
             {/if}
         </div>
     </div>
-
-    <p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
 </main>
 
 <style>
@@ -313,20 +308,6 @@
         padding: 1em;
         max-width: 240px;
         margin: 0 auto;
-    }
-
-    h1 {
-        color: #ff3e00;
-        text-transform: uppercase;
-        font-size: 4em;
-        font-weight: 100;
-    }
-
-    h2 {
-        color: #ff3e00;
-        text-transform: uppercase;
-        font-size: 2em;
-        font-weight: 100;
     }
 
     @media (min-width: 640px) {
