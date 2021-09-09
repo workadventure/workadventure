@@ -7,8 +7,8 @@
 
     let webexCDNLink = "https://unpkg.com/webex/umd/webex.min.js";
 
-    let initials = "L";
-    let fullName = "Loading...";
+    let initials = "👨‍💻";
+    let fullName = "iits";
     let personToCall = "Whiteboard";
     let ready = false
     let currentMeeting = null;
@@ -21,6 +21,7 @@
         sendAudio: true,
         sendShare: false
     }
+    let criticalError = null;
 
     function importWebex() {
         return new Promise((resolve, reject) => {
@@ -83,18 +84,21 @@
                     mediaSettings
                 }).catch(err => {
                     if (err.toString() === "WebexMeetingsError 30101: Meeting has already Ended or not Active") {
-                        console.error("No one's home")
+                        console.error("No one's home");
+                        criticalError = err;
                     } else {
                         console.error(err.toString())
                     }
                 });
             }).catch(err => {
-                console.error(err)
+                console.error(err);
+                criticalError = err;
             })
         })
     }
 
     function startCall() {
+        criticalError = null;
 
         return webex.meetings.create(meetingRoom).then((meeting) => {
             bindMeetingEvents(meeting);
@@ -139,6 +143,7 @@
     <div class="widget-demo--widgetSpaceComponentContainer--3L80J"
          style="width: calc( 100% - 30px); height: 100%; right: 0;">
         <div id="my-ciscospark-space-widget">
+            {#if criticalError == null}
             {#if (!ready)}
                 <div class="widget-demo--wrapper--2FMs0">
                     <div class="ciscospark-space-widget md widget-demo--spaceWidget--3h8bX">
@@ -298,6 +303,56 @@
                     {/if}
                 {/if}
             {/if}
+                {:else}
+                <div class="widget-demo--wrapper--2FMs0">
+                    <div class="ciscospark-space-widget md widget-demo--spaceWidget--3h8bX">
+                        <div class="ciscospark-title-bar-wrapper">
+                            <div class="ciscospark-title-bar widget-demo--titleBar--32_8a">
+                                <div class="ciscospark-avatar-container widget-demo--avatarContainer--shGVy">
+                                    <div class="md-avatar md-avatar--24" title="Oops..."><span
+                                            class="md-avatar__letter">😞</span></div>
+                                </div>
+                                <div class="ciscospark-title-text widget-demo--titleText--3jwIv"><p><strong
+                                        class="ciscospark-title widget-demo--title--6SJXl">Oops...</strong></p>
+                                </div>
+                                <div class="ciscospark-title-meta widget-demo--titleMeta--2Sz7g">
+                                    <div class="ciscospark-activity-menu-button-wrapper widget-demo--activityMenuButtonWrapper--3eABx">
+                                        <div class="ciscospark-activity-menu-button widget-demo--activityMenuButton--1FfBJ"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ciscospark-widget-body widget-demo--widgetBody--XshYm">
+                            <div class="ciscospark-meet-wrapper widget-demo--activityComponentWrapper--2OQlx">
+                                <div class="widget-demo--wrapper--2FMs0">
+                                    <div class="widget-demo--meetWidgetContainer--1fog_ meet-widget-container">
+                                        <div class="widget-demo--callInactiveContainer--pCOsm call-inactive-container">
+                                            <div class="md-avatar md-avatar--84" title="Oops..."><span
+                                                    class="md-avatar__letter">😞</span></div>
+                                            <div class="widget-demo--personName--3fVsV call-person-name">{criticalError.toString()+"\nTry again later."}
+                                            </div>
+                                            <div class="widget-demo--callControls--35xR2 call-controls-container">
+                                                <div class="ciscospark-controls-container widget-demo--controlContainer--1F4XU">
+                                                    <div class="md-button__container--small">
+                                                        <button on:click={prevent_default(startCall)}
+                                                                class="md-button md-button--circle md-button--68 md-activity md-activity__camera"
+                                                                type="button"
+                                                                aria-label="Start Call" tabindex="0"><span
+                                                                class="md-button__children" style="opacity: 1;"><i
+                                                                class="md-icon icon icon-camera_28"
+                                                                style="font-size: 28px;"></i></span></button>
+                                                        <div class="md-button__label">Call</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {/if}
         </div>
     </div>
 </main>
