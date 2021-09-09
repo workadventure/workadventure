@@ -239,15 +239,56 @@
 
                     {:else}
                         {#if true}<!-- TODO Waiting in line?-->
-                            <div style="display: flex">
-                                <video style="width:50%" id="self-view" muted autoplay></video>
-                                <div style="width:50%">
-                                    <audio id="remote-view-audio" autoplay></audio>
-                                    <video id="remote-view-video" muted autoplay></video>
+
+
+                            <div class="webex-widget-body widget-space--widgetBody--M20il">
+                                <div class="webex-meet-wrapper widget-space--activityComponentWrapper--1-a6y">
+                                    <div class="widget-space--wrapper--2FMs0">
+                                        <div class="widget-space--meetWidgetContainer--1fog_ meet-widget-container">
+                                            <div class="widget-space--callContainer--3K3TZ call-container">
+                                                <div class="wxc-meeting-control-bar widget-space--callControls--2-7gU">
+                                                    <button class="md-button md-button--circle md-button--56 wxc-meeting-control"
+                                                            id="md-button-25" data-md-event-key="md-button-25"
+                                                            type="button" aria-label="Mute" tabindex="0">
+                                                        <span class="md-button__children" style="opacity: 1;"><i
+                                                                class="md-icon icon icon-microphone-muted_28"
+                                                                style="font-size: 28px;"></i></span></button>
+                                                    <button class="md-button md-button--circle md-button--56 wxc-meeting-control"
+                                                            id="md-button-26" data-md-event-key="md-button-26"
+                                                            type="button" aria-label="Stop video"
+                                                            tabindex="0"><span class="md-button__children"
+                                                                               style="opacity: 1;"><i
+                                                            class="md-icon icon icon-camera-muted_28"
+                                                            style="font-size: 28px;"></i></span></button>
+                                                    <button class="md-button md-button--circle md-button--56 wxc-meeting-control"
+                                                            id="md-button-27" data-md-event-key="md-button-27"
+                                                            type="button" aria-label="Start Share"
+                                                            tabindex="0"><span class="md-button__children"
+                                                                               style="opacity: 1;"><i
+                                                            class="md-icon icon icon-share-screen-presence-stroke_26"
+                                                            style="font-size: 28px;"></i></span></button>
+                                                    <button on:click={prevent_default(hangup)} class="md-button md-button--circle md-button--56 md-button--red wxc-meeting-control"
+                                                            id="md-button-28" data-md-event-key="md-button-28"
+                                                            type="button" aria-label="Leave"  tabindex="0">
+                                                        <span class="md-button__children" style="opacity: 1;"><i
+                                                                class="md-icon icon icon-cancel_28"
+                                                                style="font-size: 28px;"></i></span></button>
+                                                </div>
+                                                <div class="wxc-in-meeting">
+                                                    <div class="wxc-remote-media remote-media-in-meeting">
+                                                        <video id="remote-view-video" class="wxc-remote-video" playsinline=""
+                                                               autoplay=""></video>
+                                                        <audio id="remote-view-audio" autoplay=""></audio>
+                                                    </div>
+                                                    <div class="wxc-local-media local-media-in-meeting">
+                                                        <video playsinline="" id="self-view" autoplay=""></video>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-
-                            <button id="hangup" title="hangup" type="button" on:click={hangup}>cancel/hangup</button>
 
                         {:else}
                             <div class="widget-demo--wrapper--2FMs0">
