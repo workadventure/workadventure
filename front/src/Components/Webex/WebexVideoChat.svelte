@@ -333,9 +333,7 @@
                                 <div class="widget-demo--wrapper--2FMs0">
                                     <div class="widget-demo--meetWidgetContainer--1fog_ meet-widget-container">
                                         <div class="widget-demo--callInactiveContainer--pCOsm call-inactive-container">
-                                            <div class="md-avatar md-avatar--84" title="Oops..."><span
-                                                    class="md-avatar__letter">😞</span></div>
-                                            <div class="widget-demo--personName--3fVsV call-person-name">{criticalError.toString() + "\nTry again later."}
+                                            <div class="widget-demo--personName--3fVsV call-person-name">{criticalError.toString()}
                                             </div>
                                             <div class="widget-demo--callControls--35xR2 call-controls-container">
                                                 <div class="ciscospark-controls-container widget-demo--controlContainer--1F4XU">
