@@ -130,8 +130,6 @@
         })
             .catch(err => {
                 console.error("Error: " + err + "\nmeetingRoom: " + meetingRoom + "\n" + "accessToken: " + accessToken);
-                alert("Error: " + err + "\nmeetingRoom: " + meetingRoom + "\n" + "accessToken: " + accessToken);
-                throw("Error: " + err + "\nmeetingRoom: " + meetingRoom + "\n" + "accessToken: " + accessToken);
             });
 
         ready = true;
@@ -139,11 +137,11 @@
 </script>
 
 <svelte:head>
-    <link rel="stylesheet" href="https://code.s4d.io/widget-demo/archives/0.2.50/main.css"/>
-    <link rel="stylesheet" href="https://code.s4d.io/widget-space/production/main.css" />
-    <link href="https://code.s4d.io/widget-demo/archives/0.2.50/fonts/CiscoSansTTRegular.woff2" rel="preload" as="font">
-    <link href="https://code.s4d.io/widget-demo/archives/0.2.50/fonts/CiscoSansTTLight.woff2" rel="preload" as="font">
-    <link rel="preload" href="https://code.s4d.io/widget-demo/archives/0.2.50/fonts/momentum-ui-icons.woff2" as="font">
+    <link rel="stylesheet" href="./style/widget-demo-main.css"/>
+    <link rel="stylesheet" href="./style/widget-space-main.css" />
+    <link href="./style/fonts/CiscoSansTTLight.woff2" rel="preload" as="font">
+    <link href="./style/fonts/CiscoSansTTRegular.woff2" rel="preload" as="font">
+    <link href="./style/fonts/momentum-ui-icons.woff2" rel="preload" as="font">
 </svelte:head>
 
 <main>
@@ -240,9 +238,7 @@
 
                     {:else}
                         {#if true}<!-- TODO Waiting in line?-->
-
-
-                            <div class="webex-widget-body widget-space--widgetBody--M20il">
+                            <div class="webex-widget-body widget-space--widgetBody--M20il" style="height: 100%;">
                                 <div class="webex-meet-wrapper widget-space--activityComponentWrapper--1-a6y">
                                     <div class="widget-space--wrapper--2FMs0">
                                         <div class="widget-space--meetWidgetContainer--1fog_ meet-widget-container">
@@ -290,7 +286,6 @@
                                     </div>
                                 </div>
                             </div>
-
                         {:else}
                             <div class="widget-demo--wrapper--2FMs0">
                                 <div class="ciscospark-space-widget md widget-demo--spaceWidget--3h8bX">
