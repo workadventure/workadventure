@@ -146,7 +146,7 @@
 
 <main>
     <div class="widget-demo--widgetSpaceComponentContainer--3L80J"
-         style="width: calc( 100% - 30px); height: 100%; right: 0;">
+         style="width: calc( 100% - 30px); height: 100%; right: 0;background-color: black;">
         <div id="my-ciscospark-space-widget">
             {#if criticalError == null}
                 {#if (!ready)}
@@ -272,13 +272,13 @@
                                                                 style="font-size: 28px;"></i></span></button>
                                                 </div>
                                                 <div class="wxc-in-meeting">
+                                                    <div class="wxc-local-media local-media-in-meeting">
+                                                        <video playsinline="" id="self-view" autoplay="" style="height: 20vh;border-radius:20px" muted></video>
+                                                    </div>
                                                     <div class="wxc-remote-media remote-media-in-meeting">
                                                         <video id="remote-view-video" class="wxc-remote-video" playsinline=""
                                                                autoplay=""></video>
                                                         <audio id="remote-view-audio" autoplay=""></audio>
-                                                    </div>
-                                                    <div class="wxc-local-media local-media-in-meeting">
-                                                        <video playsinline="" id="self-view" autoplay=""></video>
                                                     </div>
                                                 </div>
                                             </div>

@@ -3,3 +3,10 @@
 .nes-btn {
   font-family: "Press Start 2P";
 }
+
+@font-face {
+  font-family: CiscoSans;
+  src: url("./fonts/CiscoSansTTLight.woff2");
+       url("./fonts/CiscoSansTTRegular.woff2");
+       url("./fonts/momentum-ui-icons.woff2");
+}
