@@ -140,11 +140,7 @@
         <h2>Webex loading...</h2>
     {:else}
         {#if (currentMeeting === null)}
-            <form id="connection">
-                <input title="Join call" type="submit" value="join" on:click={prevent_default(startCall)}/>
-            </form>
-        {:else}
-            <div class="widget-demo--widgetSpaceComponentContainer--3L80J">
+            <div class="widget-demo--widgetSpaceComponentContainer--3L80J" style="width: calc( 100% - 30px); height: 100%; right: 0;">
                 <div id="my-ciscospark-space-widget">
                     <div class="widget-demo--wrapper--2FMs0">
                         <div class="ciscospark-space-widget md widget-demo--spaceWidget--3h8bX">
@@ -177,8 +173,8 @@
                                                 <div class="widget-demo--callControls--35xR2 call-controls-container">
                                                     <div class="ciscospark-controls-container widget-demo--controlContainer--1F4XU">
                                                         <div class="md-button__container--small">
-                                                            <button class="md-button md-button--circle md-button--68 md-activity md-activity__camera"
-                                                                   type="button"
+                                                            <button on:click={prevent_default(startCall)} class="md-button md-button--circle md-button--68 md-activity md-activity__camera"
+                                                                    type="button"
                                                                     aria-label="Start Call" tabindex="0"><span
                                                                     class="md-button__children" style="opacity: 1;"><i
                                                                     class="md-icon icon icon-camera_28"
@@ -196,6 +192,8 @@
                     </div>
                 </div>
             </div>
+        {:else}
+
 
 
             <div style="display: flex">
