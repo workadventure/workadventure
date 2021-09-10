@@ -2,9 +2,9 @@ import { NODE_ENV } from "../Enum/EnvironmentVariable";
 
 export class _ServiceWorker {
     constructor() {
-        if ("serviceWorker" in navigator) {
+        /*if ("serviceWorker" in navigator) {
             this.init();
-        }
+        }*/
     }
 
     init() {

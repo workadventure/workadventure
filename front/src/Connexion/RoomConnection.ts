@@ -123,18 +123,18 @@ export class RoomConnection implements RoomConnection {
 
         this.socket.binaryType = "arraybuffer";
 
-        let interval: ReturnType<typeof setInterval> | undefined = undefined;
+        //let interval: ReturnType<typeof setInterval> | undefined = undefined;
 
         this.socket.onopen = (ev) => {
             //we manually ping every 20s to not be logged out by the server, even when the game is in background.
             const pingMessage = new PingMessage();
-            interval = setInterval(() => this.socket.send(pingMessage.serializeBinary().buffer), manualPingDelay);
+            //interval = setInterval(() => this.socket.send(pingMessage.serializeBinary().buffer), manualPingDelay);
         };
 
         this.socket.addEventListener("close", (event) => {
-            if (interval) {
+            /*if (interval) {
                 clearInterval(interval);
-            }
+            }*/
 
             // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
             if (this.userId === null && !this.closed) {

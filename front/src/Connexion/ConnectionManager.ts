@@ -246,13 +246,13 @@ class ConnectionManager {
         }).catch((err) => {
             // Let's retry in 4-6 seconds
             return new Promise<OnConnectInterface>((resolve, reject) => {
-                this.reconnectingTimeout = setTimeout(() => {
-                    //todo: allow a way to break recursion?
-                    //todo: find a way to avoid recursive function. Otherwise, the call stack will grow indefinitely.
-                    this.connectToRoomSocket(roomUrl, name, characterLayers, position, viewport, companion).then(
-                        (connection) => resolve(connection)
-                    );
-                }, 4000 + Math.floor(Math.random() * 2000));
+                //this.reconnectingTimeout = setTimeout(() => {
+                //todo: allow a way to break recursion?
+                //todo: find a way to avoid recursive function. Otherwise, the call stack will grow indefinitely.
+                this.connectToRoomSocket(roomUrl, name, characterLayers, position, viewport, companion).then(
+                    (connection) => resolve(connection)
+                );
+                //}, 4000 + Math.floor(Math.random() * 2000));
             });
         });
     }
