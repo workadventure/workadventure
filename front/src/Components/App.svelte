@@ -26,6 +26,7 @@
     import {soundPlayingStore} from "../Stores/SoundPlayingStore";
     import ErrorDialog from "./UI/ErrorDialog.svelte";
     import Menu from "./Menu/Menu.svelte";
+    import EmoteMenu from "./EmoteMenu/EmoteMenu.svelte";
     import VideoOverlay from "./Video/VideoOverlay.svelte";
     import {gameOverlayVisibilityStore} from "../Stores/GameOverlayStoreVisibility";
     import AdminMessage from "./TypeMessage/BanMessage.svelte";
@@ -109,6 +110,11 @@
     {#if $menuVisiblilityStore}
         <div>
             <Menu></Menu>
+        </div>
+    {/if}
+    {#if $gameOverlayVisibilityStore}
+        <div>
+            <EmoteMenu></EmoteMenu>
         </div>
     {/if}
     {#if $gameOverlayVisibilityStore}

@@ -82,6 +82,7 @@ import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStor
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { playersStore } from "../../Stores/PlayersStore";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
+import { emoteStore } from "../../Stores/EmoteStore";
 import {
     audioManagerFileStore,
     audioManagerVisibilityStore,
@@ -93,7 +94,7 @@ import { userIsAdminStore } from "../../Stores/GameStore";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
 import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
-import type { RadialMenuItem } from "../Components/RadialMenu";
+import { get } from "svelte/store";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -171,6 +172,7 @@ export class GameScene extends DirtyScene {
     private iframeSubscriptionList!: Array<Subscription>;
     private peerStoreUnsubscribe!: () => void;
     private chatVisibilityUnsubscribe!: () => void;
+    private emoteUnsubscribe!: () => void;
     private biggestAvailableAreaStoreUnsubscribe!: () => void;
     MapUrlFile: string;
     roomUrl: string;
@@ -612,6 +614,15 @@ export class GameScene extends DirtyScene {
 
         this.chatVisibilityUnsubscribe = chatVisibilityStore.subscribe((v) => {
             this.openChatIcon.setVisible(!v);
+        });
+
+        this.emoteUnsubscribe = emoteStore.subscribe(() => {
+            const emoteKey = get(emoteStore);
+            if (emoteKey) {
+                this.CurrentPlayer?.playEmote(emoteKey);
+                this.connection?.emitEmoteEvent(emoteKey);
+                emoteStore.set(null);
+            }
         });
 
         Promise.all([this.connectionAnswerPromise as Promise<unknown>, ...scriptPromises]).then(() => {
@@ -1302,6 +1313,7 @@ ${escapedMessage}
         this.emoteManager.destroy();
         this.peerStoreUnsubscribe();
         this.chatVisibilityUnsubscribe();
+        this.emoteUnsubscribe();
         this.biggestAvailableAreaStoreUnsubscribe();
         iframeListener.unregisterAnswerer("getState");
         iframeListener.unregisterAnswerer("loadTileset");

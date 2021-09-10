@@ -3,7 +3,8 @@ import type { GameScene } from "../Game/GameScene";
 import { UserInputEvent, UserInputManager } from "../UserInput/UserInputManager";
 import { Character } from "../Entity/Character";
 import { userMovingStore } from "../../Stores/GameStore";
-import { EmoteMenu, EmoteMenuClickEvent } from "../Components/EmoteMenu";
+import { get } from "svelte/store";
+import { emoteMenuStore } from "../../Stores/EmoteStore";
 
 export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";
@@ -11,8 +12,6 @@ export const requestEmoteEventName = "requestEmote";
 export class Player extends Character {
     private previousDirection: string = PlayerAnimationDirections.Down;
     private wasMoving: boolean = false;
-    private emoteMenu: EmoteMenu | null = null;
-    private updateListener: () => void;
 
     constructor(
         Scene: GameScene,
@@ -30,14 +29,6 @@ export class Player extends Character {
 
         //the current player model should be push away by other players to prevent conflict
         this.getBody().setImmovable(false);
-
-        this.updateListener = () => {
-            if (this.emoteMenu) {
-                this.emoteMenu.x = this.x;
-                this.emoteMenu.y = this.y;
-            }
-        };
-        this.scene.events.addListener("postupdate", this.updateListener);
     }
 
     moveUser(delta: number): void {
@@ -94,43 +85,16 @@ export class Player extends Character {
         return this.wasMoving;
     }
 
+    playEmote(emote: string) {
+        super.playEmote(emote);
+        emoteMenuStore.set(false);
+    }
+
     openOrCloseEmoteMenu() {
-        if (!this.emoteMenu) {
-            this.emoteMenu = new EmoteMenu(this.scene, this.x, this.y, this.userInputManager);
-        }
-
-        if (this.emoteMenu.isOpen()) {
-            this.closeEmoteMenu();
+        if (get(emoteMenuStore)) {
+            emoteMenuStore.set(false);
         } else {
-            this.openEmoteMenu();
+            emoteMenuStore.set(true);
         }
-    }
-
-    openEmoteMenu(): void {
-        this.cancelPreviousEmote();
-        if (!this.emoteMenu) return;
-        this.emoteMenu.openPicker();
-        this.emoteMenu.on(EmoteMenuClickEvent, (emote: string) => {
-            this.closeEmoteMenu();
-            this.emit(requestEmoteEventName, emote);
-            this.playEmote(emote);
-        });
-    }
-
-    isSilent() {
-        super.isSilent();
-    }
-    noSilent() {
-        super.noSilent();
-    }
-
-    closeEmoteMenu(): void {
-        if (!this.emoteMenu) return;
-        this.emoteMenu.closePicker();
-    }
-
-    destroy() {
-        this.scene.events.removeListener("postupdate", this.updateListener);
-        super.destroy();
     }
 }
