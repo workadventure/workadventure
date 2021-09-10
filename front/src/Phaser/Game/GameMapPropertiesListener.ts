@@ -13,9 +13,27 @@ export class GameMapPropertiesListener {
     constructor(private scene: GameScene, private gameMap: GameMap) {}
 
     register() {
-        this.gameMap.onPropertyChange("openTab", (newValue) => {
+        this.gameMap.onPropertyChange("openTab", (newValue, oldvalue, allProps) => {
+            if (newValue === undefined) {
+                layoutManagerActionStore.removeAction("openTab");
+            }
             if (typeof newValue == "string" && newValue.length) {
-                scriptUtils.openTab(newValue);
+                const openWebsiteTriggerValue = allProps.get(TRIGGER_WEBSITE_PROPERTIES);
+                if (openWebsiteTriggerValue && openWebsiteTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
+                    let message = allProps.get(WEBSITE_MESSAGE_PROPERTIES);
+                    if (message === undefined) {
+                        message = "Press SPACE or touch here to open web site in new tab";
+                    }
+                    layoutManagerActionStore.addAction({
+                        uuid: "openTab",
+                        type: "message",
+                        message: message,
+                        callback: () => scriptUtils.openTab(newValue),
+                        userInputManager: this.scene.userInputManager,
+                    });
+                } else {
+                    scriptUtils.openTab(newValue);
+                }
             }
         });
         this.gameMap.onPropertyChange("openWebsite", (newValue, oldValue, allProps) => {
