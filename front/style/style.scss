@@ -44,7 +44,7 @@ body .message-info.warning{
     video {
         width: 100%;
         height: 100%;
-        max-height: 90vh;
+        object-fit: cover;
         cursor: url('./images/cursor_pointer.png'), pointer;
 
         &.mobile{
@@ -76,7 +76,6 @@ body .message-info.warning{
         left: 5px;
         bottom: 5px;
         padding: 10px;
-        z-index: 2;
 
         &.active {
             display: block !important;
@@ -547,6 +546,10 @@ input[type=range]:focus::-ms-fill-upper {
     cursor: url('./images/cursor_pointer.png'), pointer;
     border-radius: 15px 15px 15px 15px;
     pointer-events: auto;
+
+    video {
+        max-height: 21vh;
+    }
 }
 
 .sidebar > div:hover {
