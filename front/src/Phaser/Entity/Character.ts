@@ -32,7 +32,7 @@ export abstract class Character extends Container {
     //private teleportation: Sprite;
     private invisible: boolean;
     public companion?: Companion;
-    private emote: Phaser.GameObjects.Sprite | null = null;
+    private emote: Phaser.GameObjects.Text | null = null;
     private emoteTween: Phaser.Tweens.Tween | null = null;
     scene: GameScene;
 
@@ -282,26 +282,16 @@ export abstract class Character extends Container {
         super.destroy();
     }
 
-    isSilent() {
-        isSilentStore.set(true);
-    }
-    noSilent() {
-        isSilentStore.set(false);
-    }
-
-    playEmote(emoteKey: string) {
+    playEmote(emote: string) {
         this.cancelPreviousEmote();
 
-        const scalingFactor = waScaleManager.uiScalingFactor * 0.05;
-        const emoteY = -30 - scalingFactor * 10;
+        const scalingFactor = waScaleManager.uiScalingFactor;
+        const emoteY = -60;
 
         this.playerName.setVisible(false);
-        this.emote = new Sprite(this.scene, 0, 0, emoteKey);
+        this.emote = new Text(this.scene, -12, 0, emote, { fontFamily: '"Twemoji Mozilla"', fontSize: "24px" });
         this.emote.setAlpha(0);
-        this.emote.setScale(0.1 * scalingFactor);
         this.add(this.emote);
-        this.scene.sys.updateList.add(this.emote);
-
         this.createStartTransition(scalingFactor, emoteY);
     }
 
