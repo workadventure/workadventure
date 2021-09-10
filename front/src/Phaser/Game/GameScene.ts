@@ -549,18 +549,18 @@ export class GameScene extends DirtyScene {
         // Let's pause the scene if the connection is not established yet
         if (!this.room.isDisconnected()) {
             if (this.isReconnecting) {
-                setTimeout(() => {
+                /*setTimeout(() => {
                     this.scene.sleep();
                     this.scene.launch(ReconnectingSceneName);
-                }, 0);
+                }, 0);*/
             } else if (this.connection === undefined) {
                 // Let's wait 1 second before printing the "connecting" screen to avoid blinking
-                setTimeout(() => {
+                /*setTimeout(() => {
                     if (this.connection === undefined) {
                         this.scene.sleep();
                         this.scene.launch(ReconnectingSceneName);
                     }
-                }, 1000);
+                }, 1000);*/
             }
         }
 
@@ -800,18 +800,18 @@ export class GameScene extends DirtyScene {
                     Room.getRoomPathFromExitSceneUrl(newValue as string, window.location.toString(), this.MapUrlFile)
                 );
             } else {
-                setTimeout(() => {
+                /*setTimeout(() => {
                     layoutManagerActionStore.removeAction("roomAccessDenied");
-                }, 2000);
+                }, 2000);*/
             }
         });
         this.gameMap.onPropertyChange("exitUrl", (newValue, oldValue) => {
             if (newValue) {
                 this.onMapExit(Room.getRoomPathFromExitUrl(newValue as string, window.location.toString()));
             } else {
-                setTimeout(() => {
+                /*setTimeout(() => {
                     layoutManagerActionStore.removeAction("roomAccessDenied");
-                }, 2000);
+                }, 2000);*/
             }
         });
 
@@ -927,9 +927,9 @@ ${escapedMessage}
                 domElement.scale = 0;
                 domElement.setClassName("popUpElement");
 
-                setTimeout(() => {
+                /*setTimeout(() => {
                     container.hidden = false;
-                }, 100);
+                }, 100);*/
 
                 id = 0;
                 for (const button of openPopupEvent.buttons) {
@@ -941,9 +941,9 @@ ${escapedMessage}
                         iframeListener.sendButtonClickedEvent(openPopupEvent.popupId, btnId);
                         // Disable for a short amount of time to let time to the script to remove the popup
                         button.disabled = true;
-                        setTimeout(() => {
+                        /*setTimeout(() => {
                             button.disabled = false;
-                        }, 100);
+                        }, 100);*/
                     };
                     id++;
                 }
@@ -1277,7 +1277,7 @@ ${escapedMessage}
             this.startPositionCalculator.initPositionFromLayerName(roomUrl.hash, roomUrl.hash);
             this.CurrentPlayer.x = this.startPositionCalculator.startPosition.x;
             this.CurrentPlayer.y = this.startPositionCalculator.startPosition.y;
-            setTimeout(() => (this.mapTransitioning = false), 500);
+            //setTimeout(() => (this.mapTransitioning = false), 500);
         }
     }
 

@@ -37,9 +37,9 @@ export class MediaManager {
                     });
                 }
                 //remove it after 10 sec
-                setTimeout(() => {
+                /*setTimeout(() => {
                     layoutManagerActionStore.removeAction("cameraAccessDenied");
-                }, 10000);
+                }, 10000);*/
                 return;
             }
         });
@@ -57,9 +57,9 @@ export class MediaManager {
                     userInputManager: this.userInputManager,
                 });
                 //remove it after 10 sec
-                setTimeout(() => {
+                /*setTimeout(() => {
                     layoutManagerActionStore.removeAction("screenSharingAccessDenied");
-                }, 10000);
+                }, 10000);*/
                 return;
             }
         });

@@ -9,7 +9,7 @@ export const menuInputFocusStore = writable(false);
 export const loginUrlStore = writable(false);
 export const userIsConnected = writable(false);
 
-let warningContainerTimeout: Timeout | null = null;
+//let warningContainerTimeout: Timeout | null = null;
 function createWarningContainerStore() {
     const { subscribe, set } = writable<boolean>(false);
 
@@ -17,11 +17,11 @@ function createWarningContainerStore() {
         subscribe,
         activateWarningContainer() {
             set(true);
-            if (warningContainerTimeout) clearTimeout(warningContainerTimeout);
-            warningContainerTimeout = setTimeout(() => {
+            //if (warningContainerTimeout) clearTimeout(warningContainerTimeout);
+            /*warningContainerTimeout = setTimeout(() => {
                 set(false);
                 warningContainerTimeout = null;
-            }, 120000);
+            }, 120000);*/
         },
     };
 }

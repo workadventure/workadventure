@@ -8,7 +8,6 @@
 
     const NB_BARS = 20;
 
-    let timeout: ReturnType<typeof setTimeout>;
     const soundMeter = new SoundMeter();
     let display = false;
 
@@ -17,19 +16,6 @@
             display = true;
             soundMeter.connectToSource(stream, new AudioContext());
 
-            if (timeout) {
-                clearInterval(timeout);
-            }
-
-            timeout = setInterval(() => {
-                try{
-                    volume = parseInt((soundMeter.getVolume() / 100 * NB_BARS).toFixed(0));
-                    //console.log(volume);
-                }catch(err){
-
-                }
-            }, 100);
-
         } else {
             display = false;
         }
@@ -37,9 +23,6 @@
 
     onDestroy(() => {
         soundMeter.stop();
-        if (timeout) {
-            clearInterval(timeout);
-        }
     })
 
 

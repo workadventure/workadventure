@@ -136,7 +136,7 @@ class ConnectionManager {
                 try {
                     await this.checkAuthUserConnexion();
                 } catch (err) {
-                    console.error(err);
+                    console.error("initGameConnexion => checkAuthUserConnexion", err);
                 }
             }
             this.localUser = localUserStore.getLocalUser() as LocalUser; //if authToken exist in localStorage then localUser cannot be null

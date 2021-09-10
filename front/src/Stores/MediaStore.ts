@@ -58,16 +58,16 @@ export const enableCameraSceneVisibilityStore = createEnableCameraSceneVisibilit
  * A store containing whether the webcam was enabled in the last 10 seconds
  */
 const enabledWebCam10secondsAgoStore = readable(false, function start(set) {
-    let timeout: NodeJS.Timeout | null = null;
+    //let timeout: NodeJS.Timeout | null = null;
 
     const unsubscribe = requestedCameraState.subscribe((enabled) => {
         if (enabled === true) {
-            if (timeout) {
+            /*if (timeout) {
                 clearTimeout(timeout);
-            }
-            timeout = setTimeout(() => {
+            }*/
+            /*timeout = setTimeout(() => {
                 set(false);
-            }, 10000);
+            }, 10000);*/
             set(true);
         } else {
             set(false);
@@ -83,18 +83,18 @@ const enabledWebCam10secondsAgoStore = readable(false, function start(set) {
  * A store containing whether the webcam was enabled in the last 5 seconds
  */
 const userMoved5SecondsAgoStore = readable(false, function start(set) {
-    let timeout: NodeJS.Timeout | null = null;
+    //let timeout: NodeJS.Timeout | null = null;
 
     const unsubscribe = userMovingStore.subscribe((moving) => {
         if (moving === true) {
-            if (timeout) {
+            /*if (timeout) {
                 clearTimeout(timeout);
-            }
+            }*/
             set(true);
         } else {
-            timeout = setTimeout(() => {
+            /*timeout = setTimeout(() => {
                 set(false);
-            }, 5000);
+            }, 5000);*/
         }
     });
 
@@ -312,12 +312,12 @@ export const mediaStreamConstraintsStore = derived(
             }
 
             // Let's wait a little bit to avoid sending too many constraint changes.
-            timeout = setTimeout(() => {
+            /*timeout = setTimeout(() => {
                 set({
                     video: currentVideoConstraint,
                     audio: currentAudioConstraint,
                 });
-            }, 100);
+            }, 100);*/
         }
     },
     {

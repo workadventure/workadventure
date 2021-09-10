@@ -264,12 +264,12 @@ export abstract class Character extends Container {
     say(text: string) {
         if (this.bubble) return;
         this.bubble = new SpeechBubble(this.scene, this, text);
-        setTimeout(() => {
+        /*setTimeout(() => {
             if (this.bubble !== null) {
                 this.bubble.destroy();
                 this.bubble = null;
             }
-        }, 3000);
+        }, 3000);*/
     }
 
     destroy(): void {

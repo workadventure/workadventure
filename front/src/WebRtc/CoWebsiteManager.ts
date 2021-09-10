@@ -190,7 +190,7 @@ class CoWebsiteManager {
         }
         this.cowebsiteMainDom.appendChild(iframe);
         const onTimeoutPromise = new Promise<void>((resolve) => {
-            setTimeout(() => resolve(), 2000);
+            //setTimeout(() => resolve(), 2000);
         });
         this.currentOperationPromise = this.currentOperationPromise
             .then(() => Promise.race([onloadPromise, onTimeoutPromise]))
@@ -199,9 +199,9 @@ class CoWebsiteManager {
                 if (widthPercent) {
                     this.widthPercent = widthPercent;
                 }
-                setTimeout(() => {
+                /*setTimeout(() => {
                     this.fire();
-                }, animationTime);
+                }, animationTime);*/
             })
             .catch((err) => {
                 console.error("Error loadCoWebsite => ", err);
@@ -222,9 +222,9 @@ class CoWebsiteManager {
                 if (widthPercent) {
                     this.widthPercent = widthPercent;
                 }
-                setTimeout(() => {
+                /*setTimeout(() => {
                     this.fire();
-                }, animationTime);
+                }, animationTime);*/
             })
             .catch((err) => {
                 console.error("Error insertCoWebsite => ", err);
@@ -243,10 +243,10 @@ class CoWebsiteManager {
                     if (iframe) {
                         iframeListener.unregisterIframe(iframe);
                     }
-                    setTimeout(() => {
+                    /*setTimeout(() => {
                         this.cowebsiteMainDom.innerHTML = ``;
                         resolve();
-                    }, animationTime);
+                    }, animationTime);*/
                 })
         );
         return this.currentOperationPromise;

@@ -15,13 +15,6 @@
     function timeToRead() {
         nbSeconds -= 1;
         nameButton = nbSeconds.toString();
-        if ( nbSeconds > 0 ) {
-            setTimeout( () => {
-                timeToRead();
-            }, 1000);
-        } else {
-            nameButton = NAME_BUTTON;
-        }
     }
 
     function closeBanMessage() {
