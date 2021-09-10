@@ -11,6 +11,7 @@ In order to create Jitsi meet zones:
 
 *   You must create a specific layer.
 *   In layer properties, you MUST add a "`jitsiRoom`" property (of type "`string`"). The value of the property is the name of the room in Jitsi. Note: the name of the room will be "slugified" and prepended with the name of the instance of the map (so that different instances of the map have different rooms)
+*   You may also use "jitsiWidth" property (of type "number" between 0 and 100) to control the width of the iframe containing the meeting room.
 
 ## Triggering of the "Jitsi meet" action
 
