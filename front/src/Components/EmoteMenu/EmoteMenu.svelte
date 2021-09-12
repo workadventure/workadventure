@@ -1,6 +1,5 @@
 <script lang="typescript">
 
-  import { get } from "svelte/store";
   import type { Unsubscriber } from "svelte/store";
   import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
   import { onDestroy, onMount } from "svelte";
