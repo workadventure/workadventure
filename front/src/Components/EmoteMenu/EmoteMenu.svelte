@@ -5,7 +5,7 @@
   import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
   import { onDestroy, onMount } from "svelte";
   import { EmojiButton } from '@joeattardi/emoji-button';
-
+ 
   let emojiContainer: HTMLElement;
   let picker: EmojiButton;
 
@@ -26,11 +26,11 @@
     });
 
     picker.on("hidden", () => {
-      emoteMenuStore.set(false);
+      emoteMenuStore.closeEmoteMenu();
     });
 
-    unsubscriber = emoteMenuStore.subscribe(() => {
-      if (get(emoteMenuStore)) {
+    unsubscriber = emoteMenuStore.subscribe((isEmoteMenuVisible) => {
+      if (isEmoteMenuVisible && !picker.isPickerVisible()) {
         picker.showPicker(emojiContainer);
       } else {
         picker.hidePicker();
@@ -42,6 +42,8 @@
     if (unsubscriber) {
       unsubscriber();
     }
+
+    picker.destroyPicker();
   })
 
 </script>

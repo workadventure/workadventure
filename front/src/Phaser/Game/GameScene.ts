@@ -82,7 +82,7 @@ import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStor
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { playersStore } from "../../Stores/PlayersStore";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
-import { emoteStore } from "../../Stores/EmoteStore";
+import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
 import {
     audioManagerFileStore,
     audioManagerVisibilityStore,
@@ -616,8 +616,7 @@ export class GameScene extends DirtyScene {
             this.openChatIcon.setVisible(!v);
         });
 
-        this.emoteUnsubscribe = emoteStore.subscribe(() => {
-            const emoteKey = get(emoteStore);
+        this.emoteUnsubscribe = emoteStore.subscribe((emoteKey) => {
             if (emoteKey) {
                 this.CurrentPlayer?.playEmote(emoteKey);
                 this.connection?.emitEmoteEvent(emoteKey);
@@ -1445,7 +1444,12 @@ ${escapedMessage}
                     return; //we don't want the menu to open when pinching on a touch screen.
                 }
 
-                this.CurrentPlayer.openOrCloseEmoteMenu();
+                // toggle EmoteMenu
+                if (get(emoteMenuStore)) {
+                    emoteMenuStore.closeEmoteMenu();
+                } else {
+                    emoteMenuStore.openEmoteMenu();
+                }
             });
             this.CurrentPlayer.on(requestEmoteEventName, (emoteKey: string) => {
                 this.connection?.emitEmoteEvent(emoteKey);

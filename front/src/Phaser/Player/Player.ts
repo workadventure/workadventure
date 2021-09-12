@@ -84,17 +84,4 @@ export class Player extends Character {
     public isMoving(): boolean {
         return this.wasMoving;
     }
-
-    playEmote(emote: string) {
-        super.playEmote(emote);
-        emoteMenuStore.set(false);
-    }
-
-    openOrCloseEmoteMenu() {
-        if (get(emoteMenuStore)) {
-            emoteMenuStore.set(false);
-        } else {
-            emoteMenuStore.set(true);
-        }
-    }
 }
