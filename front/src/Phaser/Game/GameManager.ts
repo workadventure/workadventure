@@ -9,6 +9,7 @@ import { get } from "svelte/store";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { helpCameraSettingsVisibleStore } from "../../Stores/HelpCameraSettingsStore";
 import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
+import { emoteMenuVisiblilityStore } from "../../Stores/EmoteStore";
 
 /**
  * This class should be responsible for any scene starting/stopping
@@ -111,6 +112,7 @@ export class GameManager {
     public gameSceneIsCreated(scene: GameScene) {
         this.currentGameSceneName = scene.scene.key;
         menuIconVisiblilityStore.set(true);
+        emoteMenuVisiblilityStore.set(true);
     }
 
     /**
@@ -123,6 +125,7 @@ export class GameManager {
         gameScene.cleanupClosingScene();
         gameScene.createSuccessorGameScene(false, false);
         menuIconVisiblilityStore.set(false);
+        emoteMenuVisiblilityStore.set(false);
         if (!this.scenePlugin.get(targetSceneName)) {
             this.scenePlugin.add(targetSceneName, sceneClass, false);
         }
@@ -136,6 +139,7 @@ export class GameManager {
         if (this.currentGameSceneName) {
             this.scenePlugin.start(this.currentGameSceneName);
             menuIconVisiblilityStore.set(true);
+            emoteMenuVisiblilityStore.set(true);
         } else {
             this.scenePlugin.run(fallbackSceneName);
         }

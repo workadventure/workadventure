@@ -14,5 +14,6 @@ function createEmoteMenuStore() {
     };
 }
 
+export const emoteMenuVisiblilityStore = writable(false);
 export const emoteStore = writable<string | null>(null);
 export const emoteMenuStore = createEmoteMenuStore();
