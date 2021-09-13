@@ -5,11 +5,7 @@ import { blackListManager } from "./BlackListManager";
 import type { Subscription } from "rxjs";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { readable, Readable, Unsubscriber } from "svelte/store";
-import {
-    localStreamStore,
-    obtainedMediaConstraintStore,
-    ObtainedMediaStreamConstraints,
-} from "../Stores/MediaStore";
+import { localStreamStore, obtainedMediaConstraintStore, ObtainedMediaStreamConstraints } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
 import { chatMessagesStore, newChatMessageStore } from "../Stores/ChatStore";
 import { getIceServersConfig } from "../Components/Video/utils";

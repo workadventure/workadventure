@@ -46,29 +46,17 @@ type AnswererCallback<T extends keyof IframeQueryMap> = (
  * Also allows to send messages to those iframes.
  */
 class IframeListener {
-    private readonly _readyStream: Subject<HTMLIFrameElement> = new Subject();
-    public readonly readyStream = this._readyStream.asObservable();
-
-    private readonly _chatStream: Subject<ChatEvent> = new Subject();
-    public readonly chatStream = this._chatStream.asObservable();
-
     private readonly _openPopupStream: Subject<OpenPopupEvent> = new Subject();
     public readonly openPopupStream = this._openPopupStream.asObservable();
 
     private readonly _openTabStream: Subject<OpenTabEvent> = new Subject();
     public readonly openTabStream = this._openTabStream.asObservable();
 
-    private readonly _goToPageStream: Subject<GoToPageEvent> = new Subject();
-    public readonly goToPageStream = this._goToPageStream.asObservable();
-
     private readonly _loadPageStream: Subject<string> = new Subject();
     public readonly loadPageStream = this._loadPageStream.asObservable();
 
     private readonly _openCoWebSiteStream: Subject<OpenCoWebSiteEvent> = new Subject();
     public readonly openCoWebSiteStream = this._openCoWebSiteStream.asObservable();
-
-    private readonly _closeCoWebSiteStream: Subject<void> = new Subject();
-    public readonly closeCoWebSiteStream = this._closeCoWebSiteStream.asObservable();
 
     private readonly _disablePlayerControlStream: Subject<void> = new Subject();
     public readonly disablePlayerControlStream = this._disablePlayerControlStream.asObservable();
@@ -219,7 +207,7 @@ class IframeListener {
                     } else if (payload.type === "setProperty" && isSetPropertyEvent(payload.data)) {
                         this._setPropertyStream.next(payload.data);
                     } else if (payload.type === "chat" && isChatEvent(payload.data)) {
-                        this._chatStream.next(payload.data);
+                        scriptUtils.sendAnonymousChat(payload.data);
                     } else if (payload.type === "openPopup" && isOpenPopupEvent(payload.data)) {
                         this._openPopupStream.next(payload.data);
                     } else if (payload.type === "closePopup" && isClosePopupEvent(payload.data)) {
