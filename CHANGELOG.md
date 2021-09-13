@@ -3,6 +3,9 @@
 ### Updates 
 - New scripting API features : 
   - Use `WA.ui.registerMenuCommand(commandDescriptor: string, options: MenuOptions): Menu` to add a custom menu or an iframe to the menu.
+- New `jitsiWidth` parameter to set the width of Jitsi
+- Refactored the way videos are displayed to better cope for vertical videos (on mobile)
+- Fixing reconnection issues after 5 minutes of an inactive tab on Google Chrome
 
 ## Version 1.4.14
 
