@@ -17,7 +17,7 @@
       styleProperties: {
         '--font': 'Press Start 2P'
       },
-      showSearch : false
+      autoFocusSearch : false
     });
 
     picker.on("emoji", (selection) => {

@@ -173,6 +173,7 @@ export class GameScene extends DirtyScene {
     private peerStoreUnsubscribe!: () => void;
     private chatVisibilityUnsubscribe!: () => void;
     private emoteUnsubscribe!: () => void;
+    private emoteMenuUnsubscribe!: () => void;
     private biggestAvailableAreaStoreUnsubscribe!: () => void;
     MapUrlFile: string;
     roomUrl: string;
@@ -621,6 +622,14 @@ export class GameScene extends DirtyScene {
                 this.CurrentPlayer?.playEmote(emoteKey);
                 this.connection?.emitEmoteEvent(emoteKey);
                 emoteStore.set(null);
+            }
+        });
+
+        this.emoteMenuUnsubscribe = emoteMenuStore.subscribe((emoteMenu) => {
+            if (emoteMenu) {
+                this.userInputManager.disableControls();
+            } else {
+                this.userInputManager.restoreControls();
             }
         });
 
@@ -1313,6 +1322,7 @@ ${escapedMessage}
         this.peerStoreUnsubscribe();
         this.chatVisibilityUnsubscribe();
         this.emoteUnsubscribe();
+        this.emoteMenuUnsubscribe();
         this.biggestAvailableAreaStoreUnsubscribe();
         iframeListener.unregisterAnswerer("getState");
         iframeListener.unregisterAnswerer("loadTileset");
