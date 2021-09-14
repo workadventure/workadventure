@@ -13,7 +13,6 @@
   onMount(() => {
     picker = new EmojiButton({
       rootElement: emojiContainer,
-      style : 'twemoji',
       styleProperties: {
         '--font': 'Press Start 2P'
       },
