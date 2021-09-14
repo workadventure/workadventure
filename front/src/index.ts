@@ -26,16 +26,16 @@ import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
 
 const { width, height } = coWebsiteManager.getGameSize();
 
-const valueGameQuality = localUserStore.getGameQualityValue();
+//const valueGameQuality = localUserStore.getGameQualityValue();
 const fps: Phaser.Types.Core.FPSConfig = {
     /**
      * The minimum acceptable rendering rate, in frames per second.
      */
-    min: valueGameQuality,
+    //min: valueGameQuality,
     /**
      * The optimum rendering rate, in frames per second.
      */
-    target: valueGameQuality,
+    //target: valueGameQuality,
     /**
      * Use setTimeout instead of requestAnimationFrame to run the game loop.
      */

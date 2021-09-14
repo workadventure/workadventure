@@ -10,6 +10,7 @@ import { playersStore } from "../Stores/PlayersStore";
 import { chatMessagesStore, newChatMessageStore } from "../Stores/ChatStore";
 import { getIceServersConfig } from "../Components/Video/utils";
 import { isMobile } from "../Enum/EnvironmentVariable";
+import { localUserStore } from "../Connexion/LocalUserStore";
 
 const Peer: SimplePeerNamespace.SimplePeer = require("simple-peer");
 
@@ -50,6 +51,15 @@ export class VideoPeer extends Peer {
             initiator,
             config: {
                 iceServers: getIceServersConfig(user),
+            },
+            sdpTransform: (sdp) => {
+                const sdp2 = this.setMediaBitrate(
+                    this.setMediaBitrate(sdp, "video", localUserStore.getVideoQuality()),
+                    "audio",
+                    localUserStore.getAudioQuality()
+                );
+                console.log(sdp2);
+                return sdp2;
             },
         });
 
@@ -282,5 +292,28 @@ export class VideoPeer extends Peer {
         } else {
             this.once("connect", destroySoon);
         }
+    }
+
+    private setMediaBitrate(sdp: string, mediaType: string, bitrate: number) {
+        const sdpLines = sdp.split("\n");
+        const mediaLine = "m=" + mediaType;
+        const bitrateLine = "b=AS:" + bitrate;
+        const mediaLineIndex = sdpLines.findIndex((line) => line.startsWith(mediaLine));
+        let bitrateLineIndex = -1;
+
+        if (mediaLineIndex > -1 && mediaLineIndex < sdpLines.length) {
+            bitrateLineIndex = mediaLineIndex + 1;
+
+            while (sdpLines[bitrateLineIndex].startsWith("i=") || sdpLines[bitrateLineIndex].startsWith("c=")) {
+                bitrateLineIndex += 1;
+            }
+
+            if (sdpLines[bitrateLineIndex].startsWith("b=")) {
+                sdpLines[bitrateLineIndex] = bitrateLine;
+            } else {
+                sdpLines.splice(bitrateLineIndex, 0, bitrateLine);
+            }
+        }
+        return sdpLines.join("\n");
     }
 }

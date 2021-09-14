@@ -148,7 +148,7 @@ function createVideoConstraintStore() {
     const { subscribe, set, update } = writable({
         width: { min: 640, ideal: 1280, max: 1920 },
         height: { min: 400, ideal: 720 },
-        frameRate: { ideal: localUserStore.getVideoQualityValue() },
+        //frameRate: { ideal: localUserStore.getVideoQualityValue() },
         facingMode: "user",
         resizeMode: "crop-and-scale",
         aspectRatio: 1.777777778,
@@ -171,7 +171,6 @@ function createVideoConstraintStore() {
         setFrameRate: (frameRate: number) =>
             update((constraints) => {
                 constraints.frameRate = { ideal: frameRate };
-                localUserStore.setVideoQualityValue(frameRate);
                 return constraints;
             }),
     };

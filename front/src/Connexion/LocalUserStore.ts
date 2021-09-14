@@ -7,8 +7,6 @@ const selectedPlayerKey = "selectedPlayer";
 const customCursorPositionKey = "customCursorPosition";
 const characterLayersKey = "characterLayers";
 const companionKey = "companion";
-const gameQualityKey = "gameQuality";
-const videoQualityKey = "videoQuality";
 const audioPlayerVolumeKey = "audioVolume";
 const audioPlayerMuteKey = "audioMute";
 const helpCameraSettingsShown = "helpCameraSettingsShown";
@@ -20,6 +18,9 @@ const nonce = "nonce";
 const notification = "notificationPermission";
 const code = "code";
 const cameraSetup = "cameraSetup";
+const qualityVideoKey = "qualityVideo";
+const qualityAudioKey = "qualityAudio";
+const qualityOptionKey = "qualityOption";
 
 const cacheAPIIndex = "workavdenture-cache";
 
@@ -78,18 +79,28 @@ class LocalUserStore {
         return localStorage.getItem(companionKey) ? true : false;
     }
 
-    setGameQualityValue(value: number): void {
-        localStorage.setItem(gameQualityKey, "" + value);
-    }
-    getGameQualityValue(): number {
-        return parseInt(localStorage.getItem(gameQualityKey) || "60");
+    setQuality(value: string): void {
+        localStorage.setItem(qualityOptionKey, value);
     }
 
-    setVideoQualityValue(value: number): void {
-        localStorage.setItem(videoQualityKey, "" + value);
+    getQuality(): string {
+        return localStorage.getItem(qualityOptionKey) || "Medium";
     }
-    getVideoQualityValue(): number {
-        return parseInt(localStorage.getItem(videoQualityKey) || "20");
+
+    setVideoQuality(value: number): void {
+        localStorage.setItem(qualityVideoKey, value.toString());
+    }
+
+    getVideoQuality(): number {
+        return parseInt(localStorage.getItem(qualityVideoKey) || "2750");
+    }
+
+    setAudioQuality(value: number): void {
+        localStorage.setItem(qualityAudioKey, value.toString());
+    }
+
+    getAudioQuality(): number {
+        return parseInt(localStorage.getItem(qualityAudioKey) || "126");
     }
 
     setAudioPlayerVolume(value: number): void {

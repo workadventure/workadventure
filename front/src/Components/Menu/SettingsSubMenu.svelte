@@ -1,26 +1,32 @@
 <script lang="typescript">
 import {localUserStore} from "../../Connexion/LocalUserStore";
-import {videoConstraintStore} from "../../Stores/MediaStore";
 import {HtmlUtils} from "../../WebRtc/HtmlUtils";
-import {isMobile} from "../../Enum/EnvironmentVariable";
+import {menuVisiblilityStore} from "../../Stores/MenuStore";
+
+const qualityOption: Map<string, {video: number, audio: number}> = new Map([
+    ['Low', { video: 4, audio: 64 }],
+    ['Medium', { video: 275, audio: 126}],
+    ['High', { video: 8000, audio: 256}],
+])
 
 let fullscreen : boolean = localUserStore.getFullscreen();
 let notification : boolean = localUserStore.getNotification() === 'granted';
-let valueGame : number = localUserStore.getGameQualityValue();
-let valueVideo : number = localUserStore.getVideoQualityValue();
-let previewValueGame = valueGame;
-let previewValueVideo =  valueVideo;
+let selectedQuality: string = localUserStore.getQuality();
 
 function saveSetting(){
-    if (valueGame !== previewValueGame) {
-        previewValueGame = valueGame;
-        localUserStore.setGameQualityValue(valueGame);
-        window.location.reload();
+    const qualityValue = qualityOption.get(selectedQuality);
+    if (qualityValue) {
+        localUserStore.setVideoQuality(qualityValue.video);
+        localUserStore.setAudioQuality(qualityValue.audio);
+        localUserStore.setQuality(selectedQuality);
     }
 
-    if (valueVideo !== previewValueVideo) {
-        previewValueVideo = valueVideo;
-        videoConstraintStore.setFrameRate(valueVideo);
+    closeMenu();
+}
+
+function changeQuality() {
+    if (qualityOption.get(selectedQuality)) {
+        console.log(qualityOption.get(selectedQuality));
     }
 }
 
@@ -50,33 +56,24 @@ function changeNotification() {
         })
     }
 }
+
+function closeMenu() {
+    menuVisiblilityStore.set(false);
+}
 </script>
 
 <div class="settings-main" on:submit|preventDefault={saveSetting}>
     <section>
-        <h3>Game quality</h3>
-        <div class="nes-select is-dark">
-            <select bind:value={valueGame}>
-                <option value="{120}">{isMobile() ? 'High (120 fps)' : 'High video quality (120 fps)'}</option>
-                <option value="{60}">{isMobile() ? 'Medium (60 fps)' : 'Medium video quality (60 fps, recommended)'}</option>
-                <option value="{40}">{isMobile() ? 'Minimum (40 fps)' : 'Minimum video quality (40 fps)'}</option>
-                <option value="{20}">{isMobile() ? 'Small (20 fps)' : 'Small video quality (20 fps)'}</option>
-            </select>
-        </div>
-    </section>
-    <section>
         <h3>Video quality</h3>
         <div class="nes-select is-dark">
-            <select bind:value={valueVideo}>
-                <option value="{30}">{isMobile() ? 'High (30 fps)' : 'High video quality (30 fps)'}</option>
-                <option value="{20}">{isMobile() ? 'Medium (20 fps)' : 'Medium video quality (20 fps, recommended)'}</option>
-                <option value="{10}">{isMobile() ? 'Minimum (10 fps)' : 'Minimum video quality (10 fps)'}</option>
-                <option value="{5}">{isMobile() ? 'Small (5 fps)' : 'Small video quality (5 fps)'}</option>
+            <select bind:value="{selectedQuality}" on:change={changeQuality}>
+                {#each [...qualityOption] as [optionKey, ]}
+                    <option value="{optionKey}">{optionKey}</option>
+                {/each}
             </select>
         </div>
     </section>
     <section class="settings-section-save">
-        <p>(Saving these settings will restart the game)</p>
         <button type="button" class="nes-btn is-primary" on:click|preventDefault={saveSetting}>Save</button>
     </section>
     <section class="settings-section-noSaveOption">
@@ -108,9 +105,6 @@ function changeNotification() {
     }
     section.settings-section-save {
       text-align: center;
-      p {
-        margin: 16px 0;
-      }
     }
     section.settings-section-noSaveOption {
       display: flex;
