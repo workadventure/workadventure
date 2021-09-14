@@ -4,9 +4,9 @@ import {HtmlUtils} from "../../WebRtc/HtmlUtils";
 import {menuVisiblilityStore} from "../../Stores/MenuStore";
 
 const qualityOption: Map<string, {video: number, audio: number}> = new Map([
-    ['Low', { video: 4, audio: 64 }],
-    ['Medium', { video: 275, audio: 126}],
-    ['High', { video: 8000, audio: 256}],
+    ['Low', { video: 4000, audio: 64000 }],
+    ['Medium', { video: 27500, audio: 126000}],
+    ['High', { video: 800000, audio: 256000}],
 ])
 
 let fullscreen : boolean = localUserStore.getFullscreen();

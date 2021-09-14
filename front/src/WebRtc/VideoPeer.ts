@@ -53,11 +53,7 @@ export class VideoPeer extends Peer {
                 iceServers: getIceServersConfig(user),
             },
             sdpTransform: (sdp) => {
-                const sdp2 = this.setMediaBitrate(
-                    this.setMediaBitrate(sdp, "video", localUserStore.getVideoQuality()),
-                    "audio",
-                    localUserStore.getAudioQuality()
-                );
+                const sdp2 = this.setMediaBitrate(sdp, "video", localUserStore.getVideoQuality());
                 console.log(sdp2);
                 return sdp2;
             },
@@ -297,7 +293,7 @@ export class VideoPeer extends Peer {
     private setMediaBitrate(sdp: string, mediaType: string, bitrate: number) {
         const sdpLines = sdp.split("\n");
         const mediaLine = "m=" + mediaType;
-        const bitrateLine = "b=AS:" + bitrate;
+        const bitrateLine = "b=TIAS:" + bitrate;
         const mediaLineIndex = sdpLines.findIndex((line) => line.startsWith(mediaLine));
         let bitrateLineIndex = -1;
 
