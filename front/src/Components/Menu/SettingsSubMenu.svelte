@@ -67,7 +67,7 @@ function closeMenu() {
         <h3>Video quality</h3>
         <div class="nes-select is-dark">
             <select bind:value="{selectedQuality}" on:change={changeQuality}>
-                {#each [...qualityOption] as [optionKey, optionValue]}
+                {#each [...qualityOption] as [optionKey, ]}
                     <option value="{optionKey}">{optionKey}</option>
                 {/each}
             </select>
@@ -105,9 +105,6 @@ function closeMenu() {
     }
     section.settings-section-save {
       text-align: center;
-      p {
-        margin: 16px 0;
-      }
     }
     section.settings-section-noSaveOption {
       display: flex;
