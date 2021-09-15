@@ -286,4 +286,15 @@ export class GameMap {
 
         this.triggerAll();
     }
+
+    /**
+     * Trigger all the callbacks (used when exiting a map)
+     */
+    public triggerExitCallbacks(): void {
+        const emptyProps = new Map<string, string | boolean | number>();
+        for (const [oldPropName, oldPropValue] of this.lastProperties.entries()) {
+            // We found a property that disappeared
+            this.trigger(oldPropName, oldPropValue, undefined, emptyProps);
+        }
+    }
 }

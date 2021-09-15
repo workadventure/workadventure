@@ -1236,6 +1236,8 @@ ${escapedMessage}
         if (this.mapTransitioning) return;
         this.mapTransitioning = true;
 
+        this.gameMap.triggerExitCallbacks();
+
         let targetRoom: Room;
         try {
             targetRoom = await Room.createRoom(roomUrl);
