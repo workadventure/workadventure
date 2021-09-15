@@ -1807,17 +1807,18 @@ ${escapedMessage}
         mediaManager.hideGameOverlay();
 
         //permit to stop jitsi when user close iframe
-        mediaManager.addTriggerCloseJitsiFrameButton("close-jisi", () => {
+        mediaManager.addTriggerCloseJitsiFrameButton("close-jitsi", () => {
             this.stopJitsi();
         });
     }
 
     public stopJitsi(): void {
-        this.connection?.setSilent(false);
+        const silent = this.gameMap.getCurrentProperties().get("silent");
+        this.connection?.setSilent(!!silent);
         jitsiFactory.stop();
         mediaManager.showGameOverlay();
 
-        mediaManager.removeTriggerCloseJitsiFrameButton("close-jisi");
+        mediaManager.removeTriggerCloseJitsiFrameButton("close-jitsi");
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
