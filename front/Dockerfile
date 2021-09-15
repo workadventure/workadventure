@@ -1,6 +1,6 @@
 FROM thecodingmachine/workadventure-back-base:latest as builder
-WORKDIR /var/www/messages
 COPY --chown=docker:docker messages .
+WORKDIR /var/www/messages
 RUN yarn install && yarn proto
 
 # we are rebuilding on each deploy to cope with the PUSHER_URL environment URL
