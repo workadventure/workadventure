@@ -54,7 +54,7 @@ export class VideoPeer extends Peer {
             },
             sdpTransform: (sdp) => {
                 const sdp2 = this.setMediaBitrate(sdp, "video", localUserStore.getVideoQuality());
-                console.log(sdp2);
+                //console.log(sdp2);
                 return sdp2;
             },
         });
@@ -214,6 +214,18 @@ export class VideoPeer extends Peer {
                 )
             );
         });
+        //TODO: Not forgot that
+        setInterval(() => {
+            this._pc.getStats(null).then((stats) => {
+                stats.forEach((report) => {
+                    if ((report.type === "inbound-rtp" || report.type === "outbound-rtp") && report.kind === "video") {
+                        Object.keys(report).forEach((statName) => {
+                            console.log(statName + " : " + report[statName]);
+                        });
+                    }
+                });
+            });
+        }, 10000);
     }
 
     private sendBlockMessage(blocking: boolean) {
