@@ -7,6 +7,7 @@ import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import sveltePreprocess from "svelte-preprocess";
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import NodePolyfillPlugin from "node-polyfill-webpack-plugin";
+import {POSTHOG_API_KEY, PROFILE_URL} from "./src/Enum/EnvironmentVariable";
 
 const mode = process.env.NODE_ENV ?? "development";
 const buildNpmTypingsForApi = !!process.env.BUILD_TYPINGS;
@@ -190,6 +191,8 @@ module.exports = {
             PUSHER_URL: undefined,
             UPLOADER_URL: null,
             ADMIN_URL: undefined,
+            CONTACT_URL: null,
+            PROFILE_URL: null,
             DEBUG_MODE: null,
             STUN_SERVER: null,
             TURN_SERVER: null,
@@ -201,6 +204,8 @@ module.exports = {
             MAX_USERNAME_LENGTH: 8,
             MAX_PER_GROUP: 4,
             DISPLAY_TERMS_OF_USE: false,
+            POSTHOG_API_KEY: null,
+            POSTHOG_URL: null,
             NODE_ENV: mode,
         }),
     ],

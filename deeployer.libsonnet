@@ -75,6 +75,9 @@
         "UPLOADER_URL": "//uploader-"+url,
         "ADMIN_URL": "//"+url,
         "JITSI_URL": env.JITSI_URL,
+        #POSTHOG
+        "POSTHOG_API_KEY": if namespace == "master" then env.POSTHOG_API_KEY else "",
+        "POSTHOG_URL": if namespace == "master" then env.POSTHOG_URL else "",
         "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
         "TURN_SERVER": "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443",
         "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
@@ -101,6 +104,7 @@
     },
     "redis": {
       "image": "redis:6",
+      "ports": [6379]
     }
   },
   "config": {

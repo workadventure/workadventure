@@ -1,4 +1,4 @@
-import {writable} from "svelte/store";
+import { writable } from "svelte/store";
 
 /**
  * A store that contains a list of error messages to be displayed.
@@ -8,7 +8,7 @@ function createErrorStore() {
 
     return {
         subscribe,
-        addErrorMessage: (e: string|Error): void => {
+        addErrorMessage: (e: string | Error): void => {
             update((messages: string[]) => {
                 let message: string;
                 if (e instanceof Error) {
@@ -26,7 +26,7 @@ function createErrorStore() {
         },
         clearMessages: (): void => {
             set([]);
-        }
+        },
     };
 }
 

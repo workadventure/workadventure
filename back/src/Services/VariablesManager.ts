@@ -1,7 +1,12 @@
 /**
  * Handles variables shared between the scripting API and the server.
  */
-import { ITiledMap, ITiledMapObject, ITiledMapObjectLayer } from "@workadventure/tiled-map-type-guard/dist";
+import {
+    ITiledMap,
+    ITiledMapLayer,
+    ITiledMapObject,
+    ITiledMapObjectLayer,
+} from "@workadventure/tiled-map-type-guard/dist";
 import { User } from "_Model/User";
 import { variablesRepository } from "./Repository/VariablesRepository";
 import { redisClient } from "./RedisClient";
@@ -83,23 +88,31 @@ export class VariablesManager {
     private static findVariablesInMap(map: ITiledMap): Map<string, Variable> {
         const objects = new Map<string, Variable>();
         for (const layer of map.layers) {
-            if (layer.type === "objectgroup") {
-                for (const object of (layer as ITiledMapObjectLayer).objects) {
-                    if (object.type === "variable") {
-                        if (object.template) {
-                            console.warn(
-                                'Warning, a variable object is using a Tiled "template". WorkAdventure does not support objects generated from Tiled templates.'
-                            );
-                            continue;
-                        }
-
-                        // We store a copy of the object (to make it immutable)
-                        objects.set(object.name, this.iTiledObjectToVariable(object));
-                    }
-                }
-            }
+            this.recursiveFindVariablesInLayer(layer, objects);
         }
         return objects;
+    }
+
+    private static recursiveFindVariablesInLayer(layer: ITiledMapLayer, objects: Map<string, Variable>): void {
+        if (layer.type === "objectgroup") {
+            for (const object of layer.objects) {
+                if (object.type === "variable") {
+                    if (object.template) {
+                        console.warn(
+                            'Warning, a variable object is using a Tiled "template". WorkAdventure does not support objects generated from Tiled templates.'
+                        );
+                        continue;
+                    }
+
+                    // We store a copy of the object (to make it immutable)
+                    objects.set(object.name, this.iTiledObjectToVariable(object));
+                }
+            }
+        } else if (layer.type === "group") {
+            for (const innerLayer of layer.layers) {
+                this.recursiveFindVariablesInLayer(innerLayer, objects);
+            }
+        }
     }
 
     private static iTiledObjectToVariable(object: ITiledMapObject): Variable {

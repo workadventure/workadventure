@@ -22,3 +22,5 @@ RewriteBase /
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule "^[_@]/" "/index.html" [L]
 RewriteRule "^register/" "/index.html" [L]
+RewriteRule "^login" "/index.html" [L]
+RewriteRule "^jwt/" "/index.html" [L]

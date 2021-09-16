@@ -4,7 +4,7 @@ import { writable } from "svelte/store";
  * A store that contains the URL of the sound currently playing
  */
 function createSoundPlayingStore() {
-    const { subscribe, set, update } = writable<string|null>(null);
+    const { subscribe, set, update } = writable<string | null>(null);
 
     return {
         subscribe,
@@ -13,9 +13,7 @@ function createSoundPlayingStore() {
         },
         soundEnded: () => {
             set(null);
-        }
-
-
+        },
     };
 }
 

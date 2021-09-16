@@ -1,4 +1,4 @@
-import { Issuer, Client } from "openid-client";
+import { Issuer, Client, IntrospectionResponse } from "openid-client";
 import { OPID_CLIENT_ID, OPID_CLIENT_SECRET, OPID_CLIENT_ISSUER, FRONT_URL } from "../Enum/EnvironmentVariable";
 
 const opidRedirectUri = FRONT_URL + "/jwt";
@@ -20,22 +20,42 @@ class OpenIDClient {
         return this.issuerPromise;
     }
 
-    public authorizationUrl(state: string, nonce: string) {
+    public authorizationUrl(state: string, nonce: string, playUri?: string) {
         return this.initClient().then((client) => {
             return client.authorizationUrl({
                 scope: "openid email",
                 prompt: "login",
                 state: state,
                 nonce: nonce,
+                playUri: playUri,
             });
         });
     }
 
-    public getUserInfo(code: string, nonce: string): Promise<{ email: string; sub: string }> {
+    public getUserInfo(code: string, nonce: string): Promise<{ email: string; sub: string; access_token: string }> {
         return this.initClient().then((client) => {
             return client.callback(opidRedirectUri, { code }, { nonce }).then((tokenSet) => {
-                return client.userinfo(tokenSet);
+                return client.userinfo(tokenSet).then((res) => {
+                    return {
+                        ...res,
+                        email: res.email as string,
+                        sub: res.sub,
+                        access_token: tokenSet.access_token as string,
+                    };
+                });
             });
+        });
+    }
+
+    public logoutUser(token: string): Promise<void> {
+        return this.initClient().then((client) => {
+            return client.revoke(token);
+        });
+    }
+
+    public checkTokenAuth(token: string): Promise<IntrospectionResponse> {
+        return this.initClient().then((client) => {
+            return client.userinfo(token);
         });
     }
 }

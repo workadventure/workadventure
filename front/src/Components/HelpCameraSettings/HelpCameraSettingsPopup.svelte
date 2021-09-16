@@ -3,10 +3,11 @@
     import {helpCameraSettingsVisibleStore} from "../../Stores/HelpCameraSettingsStore";
     import firefoxImg from "./images/help-setting-camera-permission-firefox.png";
     import chromeImg from "./images/help-setting-camera-permission-chrome.png";
+    import {getNavigatorType, isAndroid as isAndroidFct, NavigatorType} from "../../WebRtc/DeviceUtils";
 
-    let isAndroid = window.navigator.userAgent.includes('Android');
-    let isFirefox = window.navigator.userAgent.includes('Firefox');
-    let isChrome = window.navigator.userAgent.includes('Chrome');
+    let isAndroid = isAndroidFct();
+    let isFirefox = getNavigatorType() === NavigatorType.firefox;
+    let isChrome = getNavigatorType() === NavigatorType.chrome;
 
     function refresh() {
         window.location.reload();

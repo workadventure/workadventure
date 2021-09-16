@@ -13,7 +13,6 @@ import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugi
 import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { EntryScene } from "./Phaser/Login/EntryScene";
 import { coWebsiteManager } from "./WebRtc/CoWebsiteManager";
-import { MenuScene } from "./Phaser/Menu/MenuScene";
 import { localUserStore } from "./Connexion/LocalUserStore";
 import { ErrorScene } from "./Phaser/Reconnecting/ErrorScene";
 import { iframeListener } from "./Api/IframeListener";
@@ -24,9 +23,9 @@ import { Game } from "./Phaser/Game/Game";
 import App from "./Components/App.svelte";
 import { HtmlUtils } from "./WebRtc/HtmlUtils";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
+import {analyticsClient} from "./Administration/AnalyticsClient";
 
 const { width, height } = coWebsiteManager.getGameSize();
-
 const valueGameQuality = localUserStore.getGameQualityValue();
 const fps: Phaser.Types.Core.FPSConfig = {
     /**
@@ -97,7 +96,6 @@ const config: GameConfig = {
         ReconnectingScene,
         ErrorScene,
         CustomizeScene,
-        MenuScene,
     ],
     //resolution: window.devicePixelRatio / 2,
     fps: fps,

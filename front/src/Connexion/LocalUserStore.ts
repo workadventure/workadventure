@@ -1,5 +1,6 @@
 import { areCharacterLayersValid, isUserNameValid, LocalUser } from "./LocalUser";
 import { v4 as uuidv4 } from "uuid";
+import { START_ROOM_URL } from "../Enum/EnvironmentVariable";
 
 const playerNameKey = "playerName";
 const selectedPlayerKey = "selectedPlayer";
@@ -16,6 +17,9 @@ const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
 const state = "state";
 const nonce = "nonce";
+const notification = "notificationPermission";
+const code = "code";
+const cameraSetup = "cameraSetup";
 
 const cacheAPIIndex = "workavdenture-cache";
 
@@ -124,7 +128,9 @@ class LocalUserStore {
         });
     }
     getLastRoomUrl(): string {
-        return localStorage.getItem(lastRoomUrl) ?? "";
+        return (
+            localStorage.getItem(lastRoomUrl) ?? window.location.protocol + "//" + window.location.host + START_ROOM_URL
+        );
     }
     getLastRoomUrlCacheApi(): Promise<string | undefined> {
         return caches.open(cacheAPIIndex).then((cache) => {
@@ -143,6 +149,14 @@ class LocalUserStore {
         return localStorage.getItem(authToken);
     }
 
+    setNotification(value: string): void {
+        localStorage.setItem(notification, value);
+    }
+
+    getNotification(): string | null {
+        return localStorage.getItem(notification);
+    }
+
     generateState(): string {
         const newState = uuidv4();
         localStorage.setItem(state, newState);
@@ -151,19 +165,32 @@ class LocalUserStore {
 
     verifyState(value: string): boolean {
         const oldValue = localStorage.getItem(state);
-        localStorage.removeItem(state);
         return oldValue === value;
+    }
+    getState(): string | null {
+        return localStorage.getItem(state);
     }
     generateNonce(): string {
         const newNonce = uuidv4();
         localStorage.setItem(nonce, newNonce);
         return newNonce;
     }
-
     getNonce(): string | null {
-        const oldValue = localStorage.getItem(nonce);
-        localStorage.removeItem(nonce);
-        return oldValue;
+        return localStorage.getItem(nonce);
+    }
+    setCode(value: string): void {
+        localStorage.setItem(code, value);
+    }
+    getCode(): string | null {
+        return localStorage.getItem(code);
+    }
+
+    setCameraSetup(cameraId: string) {
+        localStorage.setItem(cameraSetup, cameraId);
+    }
+    getCameraSetup(): { video: unknown; audio: unknown } | undefined {
+        const cameraSetupValues = localStorage.getItem(cameraSetup);
+        return cameraSetupValues != undefined ? JSON.parse(cameraSetupValues) : undefined;
     }
 }
 

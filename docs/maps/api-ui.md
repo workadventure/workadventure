@@ -68,25 +68,53 @@ WA.room.onLeaveZone('myZone', () => {
 
 ### Add custom menu
 
-```typescript
-WA.ui.registerMenuCommand(menuCommand: string, callback: (menuCommand: string) => void): void
 ```
-Add a custom menu item containing the text `commandDescriptor` in the main menu. A click on the menu will trigger the `callback`.
+WA.ui.registerMenuCommand(commandDescriptor: string, options: MenuOptions): Menu
+```
+Add a custom menu item containing the text `commandDescriptor` in the navbar of the menu.
+`options` attribute accepts an object with three properties :
+- `callback : (commandDescriptor: string) => void` : A click on the custom menu will trigger the `callback`.
+- `iframe: string` : A click on the custom menu will open the `iframe` inside the menu.
+- `allowApi?: boolean` : Allow the iframe of the custom menu to use the Scripting API.
+
+Important : `options` accepts only `callback` or `iframe` not both.
+
 Custom menu exist only until the map is unloaded, or you leave the iframe zone of the script.
 
-Example:
+<div class="row">
+    <div class="col">
+        <img src="images/custom-menu-navbar.png" class="figure-img img-fluid rounded" alt="" />
+    </div>
+    <div class="col">
+        <img src="images/custom-menu-iframe.png" class="figure-img img-fluid rounded" alt="" />
+    </div>
+</div>
 
+Example: 
 ```javascript
+const menu = WA.ui.registerMenuCommand('menu test',
+    {
+        callback: () => {
+            WA.chat.sendChatMessage('test');
+        }
+    })
 
-WA.ui.registerMenuCommand("test", () => {
-    WA.chat.sendChatMessage("test clicked", "menu cmd")
-})
-
+// Some time later, if you want to remove the menu:
+menu.remove();
 ```
 
-<div class="col">
-    <img src="images/menu-command.png" class="figure-img img-fluid rounded" alt="" />
-</div>
+Please note that `registerMenuCommand` returns an object of the `Menu` class.
+
+The `Menu` class contains a single method: `remove(): void`. This will obviously remove the menu when called.
+
+```javascript
+class Menu {
+	/**
+	* Remove the menu
+	*/
+	remove() {};
+}
+```
 
 
 

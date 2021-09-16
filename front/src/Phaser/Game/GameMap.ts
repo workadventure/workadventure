@@ -80,8 +80,11 @@ export class GameMap {
             return;
         }
         this.key = key;
+        this.triggerAll();
+    }
 
-        const newProps = this.getProperties(key);
+    private triggerAll(): void {
+        const newProps = this.getProperties(this.key ?? 0);
         const oldProps = this.lastProperties;
         this.lastProperties = newProps;
 
@@ -252,5 +255,46 @@ export class GameMap {
             return tile;
         }
         return this.tileNameMap.get(tile);
+    }
+
+    public setLayerProperty(
+        layerName: string,
+        propertyName: string,
+        propertyValue: string | number | undefined | boolean
+    ) {
+        const layer = this.findLayer(layerName);
+        if (layer === undefined) {
+            console.warn('Could not find layer "' + layerName + '" when calling setProperty');
+            return;
+        }
+        if (layer.properties === undefined) {
+            layer.properties = [];
+        }
+        const property = layer.properties.find((property) => property.name === propertyName);
+        if (property === undefined) {
+            if (propertyValue === undefined) {
+                return;
+            }
+            layer.properties.push({ name: propertyName, type: typeof propertyValue, value: propertyValue });
+            return;
+        }
+        if (propertyValue === undefined) {
+            const index = layer.properties.indexOf(property);
+            layer.properties.splice(index, 1);
+        }
+        property.value = propertyValue;
+
+        this.triggerAll();
+    }
+
+    /**
+     * Trigger all the callbacks (used when exiting a map)
+     */
+    public triggerExitCallbacks(): void {
+        const emptyProps = new Map<string, string | boolean | number>();
+        for (const [oldPropName, oldPropValue] of this.lastProperties.entries()) {
+            // We found a property that disappeared
+            this.trigger(oldPropName, oldPropValue, undefined, emptyProps);
+        }
     }
 }

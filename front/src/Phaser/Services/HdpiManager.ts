@@ -1,4 +1,3 @@
-
 interface Size {
     width: number;
     height: number;
@@ -23,14 +22,14 @@ export class HdpiManager {
      *
      * @param realPixelScreenSize
      */
-    public getOptimalGameSize(realPixelScreenSize: Size): { game: Size, real: Size } {
+    public getOptimalGameSize(realPixelScreenSize: Size): { game: Size; real: Size } {
         const realPixelNumber = realPixelScreenSize.width * realPixelScreenSize.height;
         // If the screen has not a definition small enough to match the minimum number of pixels we want to display,
         // let's make the canvas the size of the screen (in real pixels)
         if (realPixelNumber <= this.minRecommendedGamePixelsNumber) {
             return {
                 game: realPixelScreenSize,
-                real: realPixelScreenSize
+                real: realPixelScreenSize,
             };
         }
 
@@ -49,8 +48,8 @@ export class HdpiManager {
                 real: {
                     width: realPixelScreenSize.width,
                     height: realPixelScreenSize.height,
-                }
-            }
+                },
+            };
         }
 
         const gameWidth = Math.ceil(realPixelScreenSize.width / optimalZoomLevel / this._zoomModifier);
@@ -58,8 +57,12 @@ export class HdpiManager {
 
         // Let's ensure we display a minimum of pixels, even if crazily zoomed in.
         if (gameWidth * gameHeight < this.absoluteMinPixelNumber) {
-            const minGameHeight = Math.sqrt(this.absoluteMinPixelNumber * realPixelScreenSize.height / realPixelScreenSize.width);
-            const minGameWidth = Math.sqrt(this.absoluteMinPixelNumber * realPixelScreenSize.width / realPixelScreenSize.height);
+            const minGameHeight = Math.sqrt(
+                (this.absoluteMinPixelNumber * realPixelScreenSize.height) / realPixelScreenSize.width
+            );
+            const minGameWidth = Math.sqrt(
+                (this.absoluteMinPixelNumber * realPixelScreenSize.width) / realPixelScreenSize.height
+            );
 
             // Let's reset the zoom modifier (WARNING this is a SIDE EFFECT in a getter)
             this._zoomModifier = realPixelScreenSize.width / minGameWidth / optimalZoomLevel;
@@ -72,9 +75,8 @@ export class HdpiManager {
                 real: {
                     width: realPixelScreenSize.width,
                     height: realPixelScreenSize.height,
-                }
-            }
-
+                },
+            };
         }
 
         return {
@@ -85,8 +87,8 @@ export class HdpiManager {
             real: {
                 width: Math.ceil(realPixelScreenSize.width / optimalZoomLevel) * optimalZoomLevel,
                 height: Math.ceil(realPixelScreenSize.height / optimalZoomLevel) * optimalZoomLevel,
-            }
-        }
+            },
+        };
     }
 
     /**
@@ -95,7 +97,7 @@ export class HdpiManager {
     private getOptimalZoomLevel(realPixelNumber: number): number {
         const result = Math.sqrt(realPixelNumber / this.minRecommendedGamePixelsNumber);
         if (1.5 <= result && result < 2) {
-            return 1.5
+            return 1.5;
         } else {
             return Math.floor(result);
         }
