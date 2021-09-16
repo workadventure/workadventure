@@ -190,6 +190,8 @@ jobs:
           SECRET_JITSI_KEY: ${{ secrets.SECRET_JITSI_KEY }}
           TURN_STATIC_AUTH_SECRET: ${{ secrets.TURN_STATIC_AUTH_SECRET }}
           DEPLOY_REF: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          POSTHOG_URL: ${{ secrets.POSTHOG_URL }}
         with:
           namespace: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
 
