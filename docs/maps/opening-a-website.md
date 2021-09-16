@@ -12,7 +12,7 @@ In order to create a zone that opens websites:
 
 * You must create a specific layer.
 * In layer properties, you MUST add a "`openWebsite`" property (of type "`string`"). The value of the property is the URL of the website to open (the URL must start with "https://")
-* You may also use "`openWebsiteWidth`" property (of type "`number`" between 0 and 100) to control the width of the iframe.
+* You may also use "`openWebsiteWidth`" property (of type "`int`" or "`float`" between 0 and 100) to control the width of the iframe.
 * You may also use "`openTab`" property (of type "`string`") to open in a new tab instead.
 
 {.alert.alert-warning}

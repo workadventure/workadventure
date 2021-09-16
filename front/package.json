@@ -49,6 +49,7 @@
     "phaser": "^3.54.0",
     "phaser-animated-tiles": "workadventure/phaser-animated-tiles#da68bbededd605925621dd4f03bd27e69284b254",
     "phaser3-rex-plugins": "^1.1.42",
+    "posthog-js": "^1.13.12",
     "queue-typescript": "^1.0.1",
     "quill": "1.3.6",
     "quill-delta-to-html": "^0.12.0",
