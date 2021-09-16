@@ -4,6 +4,7 @@
   import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
   import { onDestroy, onMount } from "svelte";
   import { EmojiButton } from '@joeattardi/emoji-button';
+  import {isMobile} from "../../Enum/EnvironmentVariable";
  
   let emojiContainer: HTMLElement;
   let picker: EmojiButton;
@@ -16,6 +17,7 @@
       styleProperties: {
         '--font': 'Press Start 2P'
       },
+      emojisPerRow: isMobile() ? 6 : 8,
       autoFocusSearch : false
     });
 
@@ -36,6 +38,12 @@
     })
   })
 
+  function onKeyDown(e:KeyboardEvent) {
+    if (e.key === 'Escape') {
+      emoteMenuStore.closeEmoteMenu();
+    }
+  }
+
   onDestroy(() => {
     if (unsubscriber) {
       unsubscriber();
@@ -45,6 +53,8 @@
   })
 
 </script>
+
+<svelte:window on:keydown={onKeyDown}/>
 
 <div class="emote-menu-container">
   <div class="emote-menu" bind:this={emojiContainer}></div>
