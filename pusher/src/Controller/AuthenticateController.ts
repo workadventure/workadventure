@@ -27,12 +27,12 @@ export class AuthenticateController extends BaseController {
                 console.warn("/message request was aborted");
             });
 
-            const { nonce, state, playUri } = parse(req.getQuery());
-            if (!state || !nonce) {
-                res.writeStatus("400 Unauthorized").end("missing state and nonce URL parameters");
-                return;
-            }
             try {
+                const { nonce, state, playUri } = parse(req.getQuery());
+                if (!state || !nonce) {
+                    throw "missing state and nonce URL parameters";
+                }
+
                 const loginUri = await openIDClient.authorizationUrl(
                     state as string,
                     nonce as string,
@@ -42,6 +42,7 @@ export class AuthenticateController extends BaseController {
                 res.writeHeader("Location", loginUri);
                 return res.end();
             } catch (e) {
+                console.error("openIDLogin => e", e);
                 return this.errorToResponse(e, res);
             }
         });
