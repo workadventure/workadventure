@@ -56,6 +56,8 @@ A few things to notice:
 
 ## Building walls and "collidable" areas
 
+[Building your map - Collides](https://www.youtube.com/watch?v=qTK50ymhMIE)
+
 By default, the characters can traverse any tiles. If you want to prevent your character from going through a tile (like a wall or a desktop), you must make this tile "collidable". You can do this by settings the `collides` property on a given tile.
 
 To make a tile "collidable", you should:
