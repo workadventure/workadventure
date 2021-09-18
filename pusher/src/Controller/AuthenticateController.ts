@@ -83,6 +83,7 @@ export class AuthenticateController extends BaseController {
                 this.addCorsHeaders(res);
                 return res.end(JSON.stringify({ authToken }));
             } catch (e) {
+                console.error("openIDCallback => ERROR", e);
                 return this.errorToResponse(e, res);
             }
         });
@@ -153,6 +154,7 @@ export class AuthenticateController extends BaseController {
                         })
                     );
                 } catch (e) {
+                    console.error("register => ERROR", e);
                     this.errorToResponse(e, res);
                 }
             })();
@@ -214,6 +216,7 @@ export class AuthenticateController extends BaseController {
                     }
                 }
             } catch (error) {
+                console.error("profileCallback => ERROR", error);
                 this.errorToResponse(error, res);
             }
         });
