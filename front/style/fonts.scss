@@ -6,7 +6,7 @@
 
 @font-face {
   font-family: CiscoSans;
-  src: url("./fonts/CiscoSansTTLight.woff2");
-       url("./fonts/CiscoSansTTRegular.woff2");
-       url("./fonts/momentum-ui-icons.woff2");
+  src: url("./fonts/CiscoSansTTLight.woff2") format("woff2");
+  src: url("./fonts/CiscoSansTTRegular.woff2") format("woff2");
+  src: url("./fonts/momentum-ui-icons.woff2") format("woff2");
 }
