@@ -26746,7 +26746,7 @@ textarea.md-input {
   width: 28px;
   height: 20px;
   background-color: #ccc;
-  background-image: url(style/images/flags.png);
+  background-image: url(./images/flags.png);
   background-position: 28px 0;
   background-repeat: no-repeat
 }
@@ -26757,7 +26757,7 @@ only screen and (min-device-pixel-ratio:2),
 only screen and (min-resolution:192dpi),
 only screen and (min-resolution:2dppx) {
   .md-flag {
-    background-image: url(style/images/flags@2x.png)
+    background-image: url(./images/flags@2x.png)
   }
 }
 .md-flag {
