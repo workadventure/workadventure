@@ -2,6 +2,19 @@
 # yarn lockfile v1
 
 
-"husky@^6.0.0":
-  "resolved" "https://registry.npmjs.org/husky/-/husky-6.0.0.tgz"
-  "version" "6.0.0"
+"@momentum-ui/core@^19.15.11":
+  "integrity" "sha512-osPODJbdBxDhOEPBlVuwk5BHOWeVMkregXwyzc3Exgmaxz1itD+NY+2geKTycVi3Ru8a9l4x683LbUUNmS4ayw=="
+  "resolved" "https://registry.npmjs.org/@momentum-ui/core/-/core-19.15.11.tgz"
+  "version" "19.15.11"
+  dependencies:
+    "@momentum-ui/icons" "^8.25.0"
+
+"@momentum-ui/icons@^8.25.0":
+  "integrity" "sha512-QTst4jvX4DqvZNQ973j/CcCD1J0f/hPIwFs6xZwob6g9RyVvZj/p+xWIlyHxkyVBoRbscbzhtmTK4yDhMJBqiw=="
+  "resolved" "https://registry.npmjs.org/@momentum-ui/icons/-/icons-8.25.0.tgz"
+  "version" "8.25.0"
+
+"husky@^7.0.1":
+  "integrity" "sha512-8yKEWNX4z2YsofXAMT7KvA1g8p+GxtB1ffV8XtpAEGuXNAbCV5wdNKH+qTpw8SM9fh4aMPDR+yQuKfgnreyZlg=="
+  "resolved" "https://registry.npmjs.org/husky/-/husky-7.0.2.tgz"
+  "version" "7.0.2"

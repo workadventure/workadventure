@@ -1,0 +1,3 @@
+@font-face{font-family:'CiscoSansTT Regular';font-style:normal;font-weight:normal;src:url("~@momentum-ui/core/fonts/CiscoSansTTRegular.woff2") format("woff2"),url("~@momentum-ui/core/fonts/CiscoSansTTRegular.woff") format("woff");font-display:fallback}.md-label{font-family:"CiscoSansTT Regular","Helvetica Neue",Helvetica,Arial,sans-serif;font-size:1rem;line-height:1.5rem;color:#121212;cursor:pointer}.md--dark .md-label,.md-label.md-label--dark{color:#fff}.md-label.right{float:none !important;text-align:right}.md-label.inline{padding:.50391rem 0;margin:0 0 1rem 0}.md-label small{text-transform:capitalize}
+
+/*# sourceMappingURL=label.css.map */

@@ -1,0 +1,3 @@
+.md-list-separator{width:100%;margin:8px 0;overflow:hidden;color:#DEDEDE;border-color:currentColor}.md-list-separator__container{display:inline-flex;width:100%;justify-content:center;align-items:center}.md-list-separator__container::before,.md-list-separator__container::after{border-top:1px solid currentColor;content:'';flex:1 1 auto}.md--dark .md-list-separator{color:rgba(255,255,255,0.12)}.md--dark .md-list-separator__text{color:white}.md-list-separator__text{padding:0 8px;font-family:"CiscoSansTT Regular","Helvetica Neue",Helvetica,Arial,sans-serif;font-size:13px;font-weight:200;line-height:1.5em;letter-spacing:0.015em;color:#545454}
+
+/*# sourceMappingURL=list-separator.css.map */

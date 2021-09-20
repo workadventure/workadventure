@@ -2,6 +2,7 @@
     import {onMount} from 'svelte'
     import {prevent_default} from "svelte/internal";
 
+
     export let meetingRoom = null;
     export let accessToken = null
 
@@ -137,11 +138,17 @@
 </script>
 
 <svelte:head>
-    <link rel="stylesheet" href="./widget-demo-main.css" onerror="this.onerror=null;this.href='https://code.s4d.io/widget-demo/archives/0.2.50/main.css'"/>
-    <link rel="stylesheet" href="./widget-space-main.css" onerror="this.onerror=null;this.href='https://code.s4d.io/widget-space/production/main.css'"/>
-    <link href="./fonts/CiscoSansTTLight.woff2" rel="preload" as="font" onerror="this.onerror=null;this.href='https://code.s4d.io/widget-demo/archives/0.2.50/fonts/CiscoSansTTRegular.woff2'"/>
-    <link href="./fonts/CiscoSansTTRegular.woff2" rel="preload" as="font" onerror="this.onerror=null;this.href='https://code.s4d.io/widget-demo/archives/0.2.50/fonts/CiscoSansTTLight.woff2'"/>
-    <link href="./fonts/momentum-ui-icons.woff2" rel="preload" as="font" onerror="this.onerror=null;this.href='https://code.s4d.io/widget-demo/archives/0.2.50/fonts/momentum-ui-icons.woff2'"/>
+    <link rel="stylesheet" href="./fonts/widget-demo-main.css"
+          onerror="this.onerror=null;this.href='https://code.s4d.io/widget-demo/archives/0.2.50/main.css'"/>
+    <link rel="stylesheet" href="./fonts/widget-space-main.css"
+          onerror="this.onerror=null;this.href='https://code.s4d.io/widget-space/production/main.css'"/>
+    <link href="./fonts/CiscoSansTTLight.woff2" rel="preload" as="font"
+          onerror="this.onerror=null;this.href='https://code.s4d.io/widget-demo/archives/0.2.50/fonts/CiscoSansTTRegular.woff2'"/>
+    <link href="./fonts/CiscoSansTTRegular.woff2" rel="preload" as="font"
+          onerror="this.onerror=null;this.href='https://code.s4d.io/widget-demo/archives/0.2.50/fonts/CiscoSansTTLight.woff2'"/>
+    <link href="./fonts/momentum-ui-icons.woff2" rel="preload" as="font"
+          onerror="this.onerror=null;this.href='https://code.s4d.io/widget-demo/archives/0.2.50/fonts/momentum-ui-icons.woff2'"/>
+    <link rel="stylesheet" href="./css/momentum-ui.min.css">
 </svelte:head>
 
 <main>
@@ -264,19 +271,22 @@
                                                                                style="opacity: 1;"><i
                                                             class="md-icon icon icon-share-screen-presence-stroke_26"
                                                             style="font-size: 28px;"></i></span></button>
-                                                    <button on:click={prevent_default(hangup)} class="md-button md-button--circle md-button--56 md-button--red wxc-meeting-control"
+                                                    <button on:click={prevent_default(hangup)}
+                                                            class="md-button md-button--circle md-button--56 md-button--red wxc-meeting-control"
                                                             id="md-button-28" data-md-event-key="md-button-28"
-                                                            type="button" aria-label="Leave"  tabindex="0">
+                                                            type="button" aria-label="Leave" tabindex="0">
                                                         <span class="md-button__children" style="opacity: 1;"><i
                                                                 class="md-icon icon icon-cancel_28"
                                                                 style="font-size: 28px;"></i></span></button>
                                                 </div>
                                                 <div class="wxc-in-meeting">
                                                     <div class="wxc-local-media local-media-in-meeting">
-                                                        <video playsinline="" id="self-view" autoplay="" style="height: 20vh;border-radius:20px" muted></video>
+                                                        <video playsinline="" id="self-view" autoplay=""
+                                                               style="height: 20vh;border-radius:20px" muted></video>
                                                     </div>
                                                     <div class="wxc-remote-media remote-media-in-meeting">
-                                                        <video id="remote-view-video" class="wxc-remote-video" playsinline=""
+                                                        <video id="remote-view-video" class="wxc-remote-video"
+                                                               playsinline=""
                                                                autoplay=""></video>
                                                         <audio id="remote-view-audio" autoplay=""></audio>
                                                     </div>
