@@ -138,9 +138,9 @@
 </script>
 
 <svelte:head>
-    <link rel="stylesheet" href="./fonts/widget-demo-main.css"
+    <link rel="stylesheet" href="./css/widget-demo-main.css"
           onerror="this.onerror=null;this.href='https://code.s4d.io/widget-demo/archives/0.2.50/main.css'"/>
-    <link rel="stylesheet" href="./fonts/widget-space-main.css"
+    <link rel="stylesheet" href="./css/widget-space-main.css"
           onerror="this.onerror=null;this.href='https://code.s4d.io/widget-space/production/main.css'"/>
     <link href="./fonts/CiscoSansTTLight.woff2" rel="preload" as="font"
           onerror="this.onerror=null;this.href='https://code.s4d.io/widget-demo/archives/0.2.50/fonts/CiscoSansTTRegular.woff2'"/>
