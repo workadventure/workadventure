@@ -326,7 +326,7 @@ class IframeListener {
                     "//" +
                     window.location.host +
                     '/iframe_api.js" ></script>\n' +
-                    '<script src="' +
+                    '<script type="module" src="' +
                     scriptUrl +
                     '" ></script>\n' +
                     "<title></title>\n" +
