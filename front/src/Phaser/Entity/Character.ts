@@ -293,7 +293,7 @@ export abstract class Character extends Container {
         this.cancelPreviousEmote();
         const emoteY = -45;
         this.playerName.setVisible(false);
-        this.emote = new Text(this.scene, -10, 0, emote, { fontFamily: '"twemoji"', fontSize: "20px" });
+        this.emote = new Text(this.scene, -10, 0, emote, { fontFamily: '"Twemoji Mozilla"', fontSize: "20px" });
         this.emote.setAlpha(0);
         this.add(this.emote);
         this.createStartTransition(emoteY);
