@@ -1,9 +1,9 @@
 body {
     font-family: Lato;
-    cursor: url('./images/cursor_normal.png'), auto;
+    cursor: url('public/images/cursor_normal.png'), auto;
 }
 * a, button, select{
-    cursor: url('./images/cursor_pointer.png'), pointer;
+    cursor: url('public/images/cursor_pointer.png'), pointer;
 }
 body{
     overflow: hidden;
@@ -40,13 +40,13 @@ body .message-info.warning{
     position: relative;
     transition: all 0.2s ease;
     background-color: #00000099;
-    cursor: url('./images/cursor_pointer.png'), pointer;
+    cursor: url('public/images/cursor_pointer.png'), pointer;
 
     video {
         width: 100%;
         height: 100%;
         max-height: 90vh;
-        cursor: url('./images/cursor_pointer.png'), pointer;
+        cursor: url('public/images/cursor_pointer.png'), pointer;
 
         &.mobile{
             width: 100%;
@@ -93,7 +93,7 @@ body .message-info.warning{
 
     button.report{
         display: block;
-        cursor: url('./images/cursor_pointer.png'), pointer;
+        cursor: url('public/images/cursor_pointer.png'), pointer;
         background: none;
         background-color: rgba(0, 0, 0, 0);
         border: none;
@@ -116,7 +116,7 @@ body .message-info.warning{
             left: 5px;
             margin: 0;
             padding: 0;
-            cursor: url('./images/cursor_pointer.png'), pointer;
+            cursor: url('public/images/cursor_pointer.png'), pointer;
             width: 25px;
             height: 25px;
         }
@@ -127,7 +127,7 @@ body .message-info.warning{
             left: 36px;
             color: white;
             font-size: 16px;
-            cursor: url('./images/cursor_pointer.png'), pointer;
+            cursor: url('public/images/cursor_pointer.png'), pointer;
         }
 
         img.active {
@@ -230,7 +230,7 @@ video.myCamVideo{
 }
 /*btn animation*/
 .btn-cam-action div{
-    cursor: url('./images/cursor_pointer.png'), pointer;
+    cursor: url('public/images/cursor_pointer.png'), pointer;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -299,7 +299,7 @@ video.myCamVideo{
     height: 22px;
     width: 30px;
     position: relative;
-    cursor: url('./images/cursor_pointer.png'), pointer;
+    cursor: url('public/images/cursor_pointer.png'), pointer;
 }
 
 /* Spinner */
@@ -583,7 +583,7 @@ input[type=range]:focus::-ms-fill-upper {
     margin: 2%;
     flex-basis: 96%;
     transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s, flex-basis 0.2s;
-    cursor: url('./images/cursor_pointer.png'), pointer;
+    cursor: url('public/images/cursor_pointer.png'), pointer;
     pointer-events: auto;
     /*flex-shrink: 2;*/
 }
@@ -601,7 +601,7 @@ input[type=range]:focus::-ms-fill-upper {
 .sidebar > div {
     margin: 2%;
     transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s, max-height 0.2s, max-width 0.2s;
-    cursor: url('./images/cursor_pointer.png'), pointer;
+    cursor: url('public/images/cursor_pointer.png'), pointer;
     border-radius: 15px 15px 15px 15px;
     pointer-events: auto;
 }
@@ -611,7 +611,7 @@ input[type=range]:focus::-ms-fill-upper {
 }
 
 .sidebar > div video {
-    cursor: url('./images/cursor_pointer.png'), pointer;
+    cursor: url('public/images/cursor_pointer.png'), pointer;
 }
 
 /* Let's make sure videos are vertically centered if they need to be cropped */
@@ -635,7 +635,7 @@ input[type=range]:focus::-ms-fill-upper {
     margin: 1%;
     max-height: 96%;
     transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s;
-    cursor: url('./images/cursor_pointer.png'), pointer;
+    cursor: url('public/images/cursor_pointer.png'), pointer;
 }
 
 .chat-mode > div:hover {
@@ -711,7 +711,7 @@ input[type=range]:focus::-ms-fill-upper {
     margin-top: 6px;
     width: 30px;
     height: 30px;
-    cursor: url('./images/cursor_pointer.png'), pointer;
+    cursor: url('public/images/cursor_pointer.png'), pointer;
     padding: 0 5px;
     transition: all .5s ease;
     transform: rotateY(0);
@@ -732,7 +732,7 @@ input[type=range]:focus::-ms-fill-upper {
 }
 
 .message-container div.clear:hover {
-    cursor: url('./images/cursor_pointer.png'), pointer;
+    cursor: url('public/images/cursor_pointer.png'), pointer;
     top: calc(100% + 5px);
     transform: scale(1.2) translateY(3px);
 }
@@ -798,7 +798,7 @@ div.modal-report-user{
     right: 0;
     left: auto;
     top: 0;
-    cursor: url('./images/cursor_pointer.png'), pointer;
+    cursor: url('public/images/cursor_pointer.png'), pointer;
     width: 15px;
     height: 15px;
     margin: 10px;
@@ -817,7 +817,7 @@ div.modal-report-user{
     transition: all .2s ease;
 }
 .modal-report-user button:hover{
-    cursor: url('./images/cursor_pointer.png'), pointer;
+    cursor: url('public/images/cursor_pointer.png'), pointer;
     background-color: #ffda01;
     color: black;
     border: 1px solid black;
@@ -860,7 +860,7 @@ div.modal-report-user{
 }
 .discussion .active-btn{
     display: none;
-    cursor: url('./images/cursor_pointer.png'), pointer;
+    cursor: url('public/images/cursor_pointer.png'), pointer;
     height: 50px;
     width: 50px;
     background-color: #2d2d2dba;
@@ -889,7 +889,7 @@ div.modal-report-user{
     right: 10px;
     background: none;
     border: none;
-    cursor: url('./images/cursor_pointer.png'), pointer;
+    cursor: url('public/images/cursor_pointer.png'), pointer;
 }
 .discussion .close-btn img{
     height: 15px;
@@ -914,7 +914,7 @@ div.modal-report-user{
     background-color: #ffffff69;
     padding: 5px;
     border-radius: 15px;
-    cursor: url('./images/cursor_pointer.png'), pointer;
+    cursor: url('public/images/cursor_pointer.png'), pointer;
 }
 
 .discussion .participants .participant:hover{
@@ -947,7 +947,7 @@ div.modal-report-user{
 }
 
 .discussion .participants .participant button.report-btn{
-    cursor: url('./images/cursor_pointer.png'), pointer;
+    cursor: url('public/images/cursor_pointer.png'), pointer;
     position: absolute;
     background-color: #2d2d2dba;
     right: 34px;
@@ -1061,7 +1061,7 @@ div.action.danger{
     animation-timing-function: ease-in-out;
 }
 div.action p.action-body{
-    cursor: url('./images/cursor_pointer.png'), pointer;
+    cursor: url('public/images/cursor_pointer.png'), pointer;
     padding: 10px;
     background-color: #2d2d2dba;
     color: #fff;
