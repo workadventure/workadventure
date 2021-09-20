@@ -23,7 +23,7 @@ import { Game } from "./Phaser/Game/Game";
 import App from "./Components/App.svelte";
 import { HtmlUtils } from "./WebRtc/HtmlUtils";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
-import {analyticsClient} from "./Administration/AnalyticsClient";
+import { analyticsClient } from "./Administration/AnalyticsClient";
 
 const { width, height } = coWebsiteManager.getGameSize();
 const valueGameQuality = localUserStore.getGameQualityValue();

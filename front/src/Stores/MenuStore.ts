@@ -2,13 +2,13 @@ import { get, writable } from "svelte/store";
 import Timeout = NodeJS.Timeout;
 import { userIsAdminStore } from "./GameStore";
 import { CONTACT_URL } from "../Enum/EnvironmentVariable";
-import {analyticsClient} from "../Administration/AnalyticsClient";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
 menuVisiblilityStore.subscribe((value) => {
     if (value) analyticsClient.openedMenu();
-})
+});
 export const menuInputFocusStore = writable(false);
 export const userIsConnected = writable(false);
 

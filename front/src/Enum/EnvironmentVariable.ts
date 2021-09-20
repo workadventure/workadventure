@@ -20,7 +20,7 @@ export const DISPLAY_TERMS_OF_USE = process.env.DISPLAY_TERMS_OF_USE == "true";
 export const NODE_ENV = process.env.NODE_ENV || "development";
 export const CONTACT_URL = process.env.CONTACT_URL || undefined;
 export const PROFILE_URL = process.env.PROFILE_URL || undefined;
-export const POSTHOG_API_KEY: string = process.env.POSTHOG_API_KEY as string || '';
+export const POSTHOG_API_KEY: string = (process.env.POSTHOG_API_KEY as string) || "";
 export const POSTHOG_URL = process.env.POSTHOG_URL || undefined;
 
 export const isMobile = (): boolean => window.innerWidth <= 800 || window.innerHeight <= 600;
