@@ -19,3 +19,9 @@ ENV NODE_ENV=production
 ENV STARTUP_COMMAND_0="./templater.sh"
 ENV STARTUP_COMMAND_1="yarn run build"
 ENV APACHE_DOCUMENT_ROOT=dist/
+
+RUN cp -R style/css dist/static/css
+RUN cp -R style/images/* dist/static/images
+RUN mkdir -p dist/icons/fonts
+RUN cp -R style/fonts/momentum-ui-icons.woff2 dist/icons/fonts/momentum-ui-icons.woff2
+RUN cp -R style/fonts/ dist/static/css/fonts

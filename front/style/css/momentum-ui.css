@@ -5,7 +5,8 @@
  */
 @font-face {
   font-family: momentum-ui-icons;
-  src: url(../../icons/fonts/momentum-ui-icons.woff2?618af75cc3c1e25f4b85ed59415d7804) format("woff2"),url(../../icons/fonts/momentum-ui-icons.woff?f49ad0f3691d179189d6c03d5dea6686) format("woff");
+    src: url(/fonts/momentum-ui-icons.woff2) format("woff2");
+  /*src: url(../../icons/fonts/momentum-ui-icons.woff2?618af75cc3c1e25f4b85ed59415d7804) format("woff2"),url(../../icons/fonts/momentum-ui-icons.woff?f49ad0f3691d179189d6c03d5dea6686) format("woff");*/
   font-weight: 400;
   font-style: normal
 }
@@ -13188,91 +13189,91 @@ blockquote p {
   font-family: 'CiscoSansTT Thin';
   font-style: normal;
   font-weight: 400;
-  src: url(style/fonts/CiscoSansTTThin.woff2) format("woff2"),url(style/fonts/CiscoSansTTThin.woff) format("woff");
+  src: url(/fonts/CiscoSansTTThin.woff2) format("woff2"),url(/fonts/CiscoSansTTThin.woff) format("woff");
   font-display: fallback
 }
 @font-face {
   font-family: 'CiscoSansTT Thin Oblique';
   font-style: normal;
   font-weight: 400;
-  src: url(style/fonts/CiscoSansTTThinOblique.woff2) format("woff2"),url(style/fonts/CiscoSansTTThinOblique.woff) format("woff");
+  src: url(/fonts/CiscoSansTTThinOblique.woff2) format("woff2"),url(/fonts/CiscoSansTTThinOblique.woff) format("woff");
   font-display: fallback
 }
 @font-face {
   font-family: 'CiscoSansTT Extra Light';
   font-style: normal;
   font-weight: 400;
-  src: url(style/fonts/CiscoSansTTExtraLight.woff2) format("woff2"),url(style/fonts/CiscoSansTTExtraLight.woff) format("woff");
+  src: url(/fonts/CiscoSansTTExtraLight.woff2) format("woff2"),url(/fonts/CiscoSansTTExtraLight.woff) format("woff");
   font-display: fallback
 }
 @font-face {
   font-family: 'CiscoSansTT Extra Light Oblique';
   font-style: normal;
   font-weight: 400;
-  src: url(style/fonts/CiscoSansTTExtraLightOblique.woff2) format("woff2"),url(style/fonts/CiscoSansTTExtraLightOblique.woff) format("woff");
+  src: url(/fonts/CiscoSansTTExtraLightOblique.woff2) format("woff2"),url(/fonts/CiscoSansTTExtraLightOblique.woff) format("woff");
   font-display: fallback
 }
 @font-face {
   font-family: 'CiscoSansTT Light';
   font-style: normal;
   font-weight: 400;
-  src: url(style/fonts/CiscoSansTTLight.woff2) format("woff2"),url(style/fonts/CiscoSansTTLight.woff) format("woff");
+  src: url(/fonts/CiscoSansTTLight.woff2) format("woff2"),url(/fonts/CiscoSansTTLight.woff) format("woff");
   font-display: fallback
 }
 @font-face {
   font-family: 'CiscoSansTT Light Oblique';
   font-style: normal;
   font-weight: 400;
-  src: url(style/fonts/CiscoSansTTLightOblique.woff2) format("woff2"),url(style/fonts/CiscoSansTTLightOblique.woff) format("woff");
+  src: url(/fonts/CiscoSansTTLightOblique.woff2) format("woff2"),url(/fonts/CiscoSansTTLightOblique.woff) format("woff");
   font-display: fallback
 }
 @font-face {
   font-family: 'CiscoSansTT Medium';
   font-style: normal;
   font-weight: 400;
-  src: url(style/fonts/CiscoSansTTRegular.woff2) format("woff2"),url(style/fonts/CiscoSansTTRegular.woff) format("woff");
+  src: url(/fonts/CiscoSansTTRegular.woff2) format("woff2"),url(/fonts/CiscoSansTTRegular.woff) format("woff");
   font-display: fallback
 }
 @font-face {
   font-family: 'CiscoSansTT Regular';
   font-style: normal;
   font-weight: 400;
-  src: url(style/fonts/CiscoSansTTRegular.woff2) format("woff2"),url(style/fonts/CiscoSansTTRegular.woff) format("woff");
+  src: url(/fonts/CiscoSansTTRegular.woff2) format("woff2"),url(/fonts/CiscoSansTTRegular.woff) format("woff");
   font-display: fallback
 }
 @font-face {
   font-family: 'CiscoSansTT Regular Oblique';
   font-style: normal;
   font-weight: 400;
-  src: url(style/fonts/CiscoSansTTRegularOblique.woff2) format("woff2"),url(style/fonts/CiscoSansTTRegularOblique.woff) format("woff");
+  src: url(/fonts/CiscoSansTTRegularOblique.woff2) format("woff2"),url(/fonts/CiscoSansTTRegularOblique.woff) format("woff");
   font-display: fallback
 }
 @font-face {
   font-family: 'CiscoSansTT Bold';
   font-style: normal;
   font-weight: 400;
-  src: url(style/fonts/CiscoSansTTBold.woff2) format("woff2"),url(style/fonts/CiscoSansTTBold.woff) format("woff");
+  src: url(/fonts/CiscoSansTTBold.woff2) format("woff2"),url(/fonts/CiscoSansTTBold.woff) format("woff");
   font-display: fallback
 }
 @font-face {
   font-family: 'CiscoSansTT Bold Oblique';
   font-style: normal;
   font-weight: 400;
-  src: url(style/fonts/CiscoSansTTBoldOblique.woff2) format("woff2"),url(style/fonts/CiscoSansTTBoldOblique.woff) format("woff");
+  src: url(/fonts/CiscoSansTTBoldOblique.woff2) format("woff2"),url(/fonts/CiscoSansTTBoldOblique.woff) format("woff");
   font-display: fallback
 }
 @font-face {
   font-family: 'CiscoSansTT Heavy';
   font-style: normal;
   font-weight: 400;
-  src: url(style/fonts/CiscoSansTTHeavy.woff2) format("woff2"),url(style/fonts/CiscoSansTTHeavy.woff) format("woff");
+  src: url(/fonts/CiscoSansTTHeavy.woff2) format("woff2"),url(/fonts/CiscoSansTTHeavy.woff) format("woff");
   font-display: fallback
 }
 @font-face {
   font-family: 'CiscoSansTT Heavy Oblique';
   font-style: normal;
   font-weight: 400;
-  src: url(style/fonts/CiscoSansTTHeavyOblique.woff2) format("woff2"),url(style/fonts/CiscoSansTTHeavyOblique.woff) format("woff");
+  src: url(/fonts/CiscoSansTTHeavyOblique.woff2) format("woff2"),url(/fonts/CiscoSansTTHeavyOblique.woff) format("woff");
   font-display: fallback
 }
 .debug-grid:after {
@@ -16605,14 +16606,14 @@ nav span {
   font-family: 'CiscoSansTT Light';
   font-style: normal;
   font-weight: 400;
-  src: url(style/fonts/CiscoSansTTLight.woff2) format("woff2"),url(style/fonts/CiscoSansTTLight.woff) format("woff");
+  src: url(/fonts/CiscoSansTTLight.woff2) format("woff2"),url(/fonts/CiscoSansTTLight.woff) format("woff");
   font-display: fallback
 }
 @font-face {
   font-family: 'CiscoSansTT Regular';
   font-style: normal;
   font-weight: 400;
-  src: url(style/fonts/CiscoSansTTRegular.woff2) format("woff2"),url(style/fonts/CiscoSansTTRegular.woff) format("woff");
+  src: url(/fonts/CiscoSansTTRegular.woff2) format("woff2"),url(/fonts/CiscoSansTTRegular.woff) format("woff");
   font-display: fallback
 }
 .md-accordion {
@@ -25250,7 +25251,7 @@ button.md-close:active {
   font-family: 'CiscoSansTT Regular';
   font-style: normal;
   font-weight: 400;
-  src: url(style/fonts/CiscoSansTTRegular.woff2) format("woff2"),url(style/fonts/CiscoSansTTRegular.woff) format("woff");
+  src: url(/fonts/CiscoSansTTRegular.woff2) format("woff2"),url(/fonts/CiscoSansTTRegular.woff) format("woff");
   font-display: fallback
 }
 [class*=md] *,
