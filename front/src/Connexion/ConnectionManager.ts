@@ -9,6 +9,7 @@ import { Room } from "./Room";
 import { _ServiceWorker } from "../Network/ServiceWorker";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { userIsConnected } from "../Stores/MenuStore";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -77,8 +78,10 @@ class ConnectionManager {
         this._currentRoom = null;
         if (connexionType === GameConnexionTypes.login) {
             this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
-            this.loadOpenIDScreen();
-            return Promise.reject(new Error("You will be redirect on login page"));
+            if (this.loadOpenIDScreen() !== null) {
+                return Promise.reject(new Error("You will be redirect on login page"));
+            }
+            urlManager.pushRoomIdToUrl(this._currentRoom);
         } else if (connexionType === GameConnexionTypes.jwt) {
             const urlParams = new URLSearchParams(window.location.search);
             const code = urlParams.get("code");
@@ -93,6 +96,7 @@ class ConnectionManager {
             this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
             try {
                 await this.checkAuthUserConnexion();
+                analyticsClient.loggedWithSso();
             } catch (err) {
                 console.error(err);
                 this.loadOpenIDScreen();
@@ -109,6 +113,7 @@ class ConnectionManager {
             this.authToken = data.authToken;
             localUserStore.saveUser(this.localUser);
             localUserStore.setAuthToken(this.authToken);
+            analyticsClient.loggedWithToken();
 
             const roomUrl = data.roomUrl;
 
@@ -183,6 +188,9 @@ class ConnectionManager {
         }
         if (this._currentRoom == undefined) {
             return Promise.reject(new Error("Invalid URL"));
+        }
+        if (this.localUser) {
+            analyticsClient.identifyUser(this.localUser.uuid);
         }
 
         this.serviceWorker = new _ServiceWorker();

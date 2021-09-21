@@ -5,9 +5,9 @@
         audioManagerFileStore,
         audioManagerVolumeStore,
     } from "../../Stores/AudioManagerStore";
-    import {get} from "svelte/store";
+    import { get } from "svelte/store";
     import type { Unsubscriber } from "svelte/store";
-    import {onDestroy, onMount} from "svelte";
+    import { onDestroy, onMount } from "svelte";
 
     let HTMLAudioPlayer: HTMLAudioElement;
     let audioPlayerVolumeIcon: HTMLElement;
@@ -21,9 +21,9 @@
     onMount(() => {
         volume = localUserStore.getAudioPlayerVolume();
         audioManagerVolumeStore.setMuted(localUserStore.getAudioPlayerMuted());
-        setVolume();
+        changeVolume();
 
-        unsubscriberFileStore = audioManagerFileStore.subscribe(() =>{
+        unsubscriberFileStore = audioManagerFileStore.subscribe(() => {
             HTMLAudioPlayer.pause();
             HTMLAudioPlayer.loop = get(audioManagerVolumeStore).loop;
             HTMLAudioPlayer.volume = get(audioManagerVolumeStore).volume;
@@ -53,13 +53,7 @@
         }
     })
 
-    function onMute() {
-        audioManagerVolumeStore.setMuted(!get(audioManagerVolumeStore).muted);
-        localUserStore.setAudioPlayerMuted(get(audioManagerVolumeStore).muted);
-        setVolume();
-    }
-
-    function setVolume() {
+    function changeVolume() {
         if (get(audioManagerVolumeStore).muted) {
             audioPlayerVolumeIcon.classList.add('muted');
             audioPlayerVol.value = "0";
@@ -76,8 +70,22 @@
                 audioPlayerVolumeIcon.classList.remove('mid');
             }
         }
-        audioManagerVolumeStore.setVolume(volume)
-        localUserStore.setAudioPlayerVolume(get(audioManagerVolumeStore).volume);
+    }
+
+    function onMute() {
+        const muted = !get(audioManagerVolumeStore).muted;
+        audioManagerVolumeStore.setMuted(muted);
+        localUserStore.setAudioPlayerMuted(muted);
+        changeVolume();
+    }
+
+    function setVolume() {
+        volume = parseFloat(audioPlayerVol.value);
+        audioManagerVolumeStore.setVolume(volume);
+        localUserStore.setAudioPlayerVolume(volume);
+        audioManagerVolumeStore.setMuted(false);
+        localUserStore.setAudioPlayerMuted(false);
+        changeVolume();
     }
 
     function setDecrease() {
@@ -108,8 +116,7 @@
                 </g>
             </svg>
         </span>
-        <input type="range" min="0" max="1" step="0.025" bind:value={volume} bind:this={audioPlayerVol}
-            on:change={setVolume}>
+        <input type="range" min="0" max="1" step="0.025" bind:this={audioPlayerVol} on:change={setVolume}>
     </div>
     <div class="audio-manager-reduce-conversation">
         <label>
@@ -135,7 +142,7 @@
         margin-left: auto;
         margin-right: auto;
 
-        background-color: rgb(0,0,0,0.5);
+        background-color: rgb(0, 0, 0, 0.5);
         display: grid;
         grid-template-rows: 50% 50%;
         color: whitesmoke;

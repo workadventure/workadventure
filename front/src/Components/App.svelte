@@ -1,6 +1,7 @@
 <script lang="typescript">
     import MenuIcon from "./Menu/MenuIcon.svelte";
     import {menuIconVisiblilityStore, menuVisiblilityStore} from "../Stores/MenuStore";
+    import {emoteMenuVisiblilityStore} from "../Stores/EmoteStore";
     import {enableCameraSceneVisibilityStore} from "../Stores/MediaStore";
     import CameraControls from "./CameraControls.svelte";
     import MyCamera from "./MyCamera.svelte";
@@ -26,6 +27,7 @@
     import {soundPlayingStore} from "../Stores/SoundPlayingStore";
     import ErrorDialog from "./UI/ErrorDialog.svelte";
     import Menu from "./Menu/Menu.svelte";
+    import EmoteMenu from "./EmoteMenu/EmoteMenu.svelte";
     import VideoOverlay from "./Video/VideoOverlay.svelte";
     import {gameOverlayVisibilityStore} from "../Stores/GameOverlayStoreVisibility";
     import AdminMessage from "./TypeMessage/BanMessage.svelte";
@@ -109,6 +111,11 @@
     {#if $menuVisiblilityStore}
         <div>
             <Menu></Menu>
+        </div>
+    {/if}
+    {#if $emoteMenuVisiblilityStore}
+        <div>
+            <EmoteMenu></EmoteMenu>
         </div>
     {/if}
     {#if $gameOverlayVisibilityStore}

@@ -8,6 +8,12 @@
          "id":1,
          "name":"floor",
          "opacity":1,
+         "properties":[
+                {
+                 "name":"silent",
+                 "type":"bool",
+                 "value":true
+                }],
          "type":"tilelayer",
          "visible":true,
          "width":10,
@@ -37,11 +43,6 @@
                  "name":"jitsiRoom",
                  "type":"string",
                  "value":"myRoom"
-                }, 
-                {
-                 "name":"jitsiUrl",
-                 "type":"string",
-                 "value":"meet.jit.si"
                 }],
          "type":"tilelayer",
          "visible":true,
@@ -55,7 +56,7 @@
          "name":"floorLayer",
          "objects":[
                 {
-                 "height":94.6489098314831,
+                 "height":163.652982988579,
                  "id":1,
                  "name":"",
                  "properties":[
@@ -69,14 +70,14 @@
                     {
                      "fontfamily":"Sans Serif",
                      "pixelsize":8,
-                     "text":"Test:\nWalk on the carpet and press space\nResult:\nJitsi opens on meet.jit.si (check this in the network tab). Note: this test only makes sense if the default configured Jitsi instance is NOT meet.jit.si  (check your .env file)",
+                     "text":"Test:\nThe whole map is silent.\nConnect with 2 users\nResult:\nThe map is silent\n\nTest:\nmove on the carpet with both users\n\nResult:\nA Jitsi opens\n\nTest:\nmove out of the carpet and try to connect both users\nResult:\nThey are still silent\n",
                      "wrap":true
                     },
                  "type":"",
                  "visible":true,
                  "width":317.361946929159,
                  "x":2.32853056864467,
-                 "y":224.602707451482
+                 "y":2.25624950083909
                 }],
          "opacity":1,
          "type":"objectgroup",

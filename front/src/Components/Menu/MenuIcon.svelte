@@ -22,9 +22,9 @@
 
 <style lang="scss">
   .menuIcon {
-    pointer-events: auto;
     margin: 25px;
     img {
+      pointer-events: auto;
       width: 60px;
       padding-top: 0;
     }

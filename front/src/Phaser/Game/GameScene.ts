@@ -82,6 +82,7 @@ import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStor
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { playersStore } from "../../Stores/PlayersStore";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
+import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
 import {
     audioManagerFileStore,
     audioManagerVisibilityStore,
@@ -93,6 +94,8 @@ import { userIsAdminStore } from "../../Stores/GameStore";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
 import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
+import { analyticsClient } from "../../Administration/AnalyticsClient";
+import { get } from "svelte/store";
 import type { RadialMenuItem } from "../Components/RadialMenu";
 import { contactPageStore } from "../../Stores/MenuStore";
 
@@ -172,6 +175,8 @@ export class GameScene extends DirtyScene {
     private iframeSubscriptionList!: Array<Subscription>;
     private peerStoreUnsubscribe!: () => void;
     private chatVisibilityUnsubscribe!: () => void;
+    private emoteUnsubscribe!: () => void;
+    private emoteMenuUnsubscribe!: () => void;
     private biggestAvailableAreaStoreUnsubscribe!: () => void;
     MapUrlFile: string;
     roomUrl: string;
@@ -427,6 +432,7 @@ export class GameScene extends DirtyScene {
 
         gameManager.gameSceneIsCreated(this);
         urlManager.pushRoomIdToUrl(this.room);
+        analyticsClient.enteredRoom(this.room.id);
         contactPageStore.set(this.room.contactPage);
 
         if (touchScreenManager.supportTouchScreen) {
@@ -614,6 +620,22 @@ export class GameScene extends DirtyScene {
 
         this.chatVisibilityUnsubscribe = chatVisibilityStore.subscribe((v) => {
             this.openChatIcon.setVisible(!v);
+        });
+
+        this.emoteUnsubscribe = emoteStore.subscribe((emoteKey) => {
+            if (emoteKey) {
+                this.CurrentPlayer?.playEmote(emoteKey);
+                this.connection?.emitEmoteEvent(emoteKey);
+                emoteStore.set(null);
+            }
+        });
+
+        this.emoteMenuUnsubscribe = emoteMenuStore.subscribe((emoteMenu) => {
+            if (emoteMenu) {
+                this.userInputManager.disableControls();
+            } else {
+                this.userInputManager.restoreControls();
+            }
         });
 
         Promise.all([this.connectionAnswerPromise as Promise<unknown>, ...scriptPromises]).then(() => {
@@ -1238,6 +1260,8 @@ ${escapedMessage}
         if (this.mapTransitioning) return;
         this.mapTransitioning = true;
 
+        this.gameMap.triggerExitCallbacks();
+
         let targetRoom: Room;
         try {
             targetRoom = await Room.createRoom(roomUrl);
@@ -1304,6 +1328,8 @@ ${escapedMessage}
         this.emoteManager.destroy();
         this.peerStoreUnsubscribe();
         this.chatVisibilityUnsubscribe();
+        this.emoteUnsubscribe();
+        this.emoteMenuUnsubscribe();
         this.biggestAvailableAreaStoreUnsubscribe();
         iframeListener.unregisterAnswerer("getState");
         iframeListener.unregisterAnswerer("loadTileset");
@@ -1434,12 +1460,17 @@ ${escapedMessage}
                 if (pointer.wasTouch && (pointer.event as TouchEvent).touches.length > 1) {
                     return; //we don't want the menu to open when pinching on a touch screen.
                 }
-                this.emoteManager
-                    .getMenuImages()
-                    .then((emoteMenuElements) => this.CurrentPlayer.openOrCloseEmoteMenu(emoteMenuElements));
+
+                // toggle EmoteMenu
+                if (get(emoteMenuStore)) {
+                    emoteMenuStore.closeEmoteMenu();
+                } else {
+                    emoteMenuStore.openEmoteMenu();
+                }
             });
             this.CurrentPlayer.on(requestEmoteEventName, (emoteKey: string) => {
                 this.connection?.emitEmoteEvent(emoteKey);
+                analyticsClient.launchEmote(emoteKey);
             });
         } catch (err) {
             if (err instanceof TextureError) {
@@ -1807,19 +1838,21 @@ ${escapedMessage}
         jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl, jitsiWidth);
         this.connection?.setSilent(true);
         mediaManager.hideGameOverlay();
+        analyticsClient.enteredJitsi(roomName, this.room.id);
 
         //permit to stop jitsi when user close iframe
-        mediaManager.addTriggerCloseJitsiFrameButton("close-jisi", () => {
+        mediaManager.addTriggerCloseJitsiFrameButton("close-jitsi", () => {
             this.stopJitsi();
         });
     }
 
     public stopJitsi(): void {
-        this.connection?.setSilent(false);
+        const silent = this.gameMap.getCurrentProperties().get("silent");
+        this.connection?.setSilent(!!silent);
         jitsiFactory.stop();
         mediaManager.showGameOverlay();
 
-        mediaManager.removeTriggerCloseJitsiFrameButton("close-jisi");
+        mediaManager.removeTriggerCloseJitsiFrameButton("close-jitsi");
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)

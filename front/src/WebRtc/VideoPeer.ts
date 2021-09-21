@@ -5,12 +5,7 @@ import { blackListManager } from "./BlackListManager";
 import type { Subscription } from "rxjs";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { readable, Readable, Unsubscriber } from "svelte/store";
-import {
-    localStreamStore,
-    obtainedMediaConstraintIsMobileStore,
-    obtainedMediaConstraintStore,
-    ObtainedMediaStreamConstraints,
-} from "../Stores/MediaStore";
+import { localStreamStore, obtainedMediaConstraintStore, ObtainedMediaStreamConstraints } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
 import { chatMessagesStore, newChatMessageStore } from "../Stores/ChatStore";
 import { getIceServersConfig } from "../Components/Video/utils";
@@ -161,9 +156,6 @@ export class VideoPeer extends Peer {
                     mediaManager.enabledVideoByUserId(this.userId);
                 } else {
                     mediaManager.disabledVideoByUserId(this.userId);
-                }
-                if (message.isMobile != undefined) {
-                    obtainedMediaConstraintIsMobileStore.set(message.isMobile);
                 }
             } else if (message.type === MESSAGE_TYPE_MESSAGE) {
                 if (!blackListManager.isBlackListed(this.userUuid)) {
