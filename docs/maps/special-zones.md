@@ -3,7 +3,7 @@
 
 ## Making a "silent" zone
 
-https://www.youtube.com/watch?v=z7XLo06o-ow
+[Building your map - Special zones](https://www.youtube.com/watch?v=z7XLo06o-ow)
 
 On your map, you can define special silent zones where nobody is allowed to talk. In these zones, users will not speak to each others, even if they are next to each others.
 
