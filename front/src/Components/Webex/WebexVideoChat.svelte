@@ -23,6 +23,7 @@
         sendShare: false
     }
     let criticalError = null;
+    let mute = false;
 
     function importWebex() {
         return new Promise((resolve, reject) => {
@@ -114,8 +115,11 @@
     }
 
     function hangup() {
-        currentMeeting.leave()
-        currentMeeting = null;
+        currentMeeting.leave().then(() => {
+            currentMeeting = null;
+        }).finally(() => {
+            currentMeeting = null;
+        });
     }
 
     onMount(async () => {
