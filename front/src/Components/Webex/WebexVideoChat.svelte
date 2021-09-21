@@ -23,7 +23,8 @@
         sendShare: false
     }
     let criticalError = null;
-    let mute = false;
+    let muted = false;
+    let blinded = false;
 
     function importWebex() {
         return new Promise((resolve, reject) => {
@@ -75,6 +76,37 @@
         });
     }
 
+    // https://github.com/webex/webex-js-sdk/blob/2dc6ec9d6d4a933ad76d2aacc1a19ceb87eb3d52/packages/node_modules/samples/browser-single-party-call-with-mute/app.js#L241
+    // TODO styling changes
+    function mute() {
+        if (!muted) {
+            currentMeeting.muteAudio().then(() => {
+                console.log("Audio muted")
+                muted = true;
+            })
+        } else {
+            currentMeeting.unmuteAudio().then(() => {
+                console.log("Audio unmuted")
+                muted = false;
+            })
+        }
+    }
+
+    // TODO styling changes
+    function blind() {
+        if (!blinded) {
+            currentMeeting.muteVideo().then(()=> {
+                console.log("Video muted")
+                blinded = true
+            })
+        } else {
+            currentMeeting.unmuteVideo().then(() => {
+                console.log("Video unmuted")
+                blinded = false
+            })
+        }
+    }
+
     function joinMeeting(meeting) {
         return meeting.join().then(() => {
             return meeting.getMediaStreams(mediaSettings).then((mediaStreams) => {
@@ -94,6 +126,7 @@
             }).catch(err => {
                 console.error(err);
                 if (err.toString() === "ReconnectionError: Unable to retrieve media streams") {
+                    // TODO try muting video and trying again?
                     criticalError = new Error("Is your webcam blocked? 😅");
                 } else {
                     console.error(err.toString())
@@ -257,7 +290,7 @@
                                                 <div class="wxc-meeting-control-bar widget-space--callControls--2-7gU">
                                                     <button class="md-button md-button--circle md-button--56 wxc-meeting-control"
                                                             id="md-button-25" data-md-event-key="md-button-25"
-                                                            type="button" aria-label="Mute" tabindex="0">
+                                                            type="button" aria-label="Mute" tabindex="0" on:click={prevent_default(mute)}>
                                                         <span class="md-button__children" style="opacity: 1;"><i
                                                                 class="md-icon icon icon-microphone-muted_28"
                                                                 style="font-size: 28px;"></i></span></button>
@@ -265,16 +298,17 @@
                                                             id="md-button-26" data-md-event-key="md-button-26"
                                                             type="button" aria-label="Stop video"
                                                             tabindex="0"><span class="md-button__children"
-                                                                               style="opacity: 1;"><i
+                                                                               style="opacity: 1;" on:click={prevent_default(blind)}><i
                                                             class="md-icon icon icon-camera-muted_28"
                                                             style="font-size: 28px;"></i></span></button>
-                                                    <button class="md-button md-button--circle md-button--56 wxc-meeting-control"
+                                                    <!-- Should users be allowed to share?
+                                                        <button class="md-button md-button--circle md-button--56 wxc-meeting-control"
                                                             id="md-button-27" data-md-event-key="md-button-27"
                                                             type="button" aria-label="Start Share"
                                                             tabindex="0"><span class="md-button__children"
                                                                                style="opacity: 1;"><i
                                                             class="md-icon icon icon-share-screen-presence-stroke_26"
-                                                            style="font-size: 28px;"></i></span></button>
+                                                            style="font-size: 28px;"></i></span></button> -->
                                                     <button on:click={prevent_default(hangup)}
                                                             class="md-button md-button--circle md-button--56 md-button--red wxc-meeting-control"
                                                             id="md-button-28" data-md-event-key="md-button-28"
