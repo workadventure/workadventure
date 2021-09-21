@@ -7,6 +7,7 @@ import {
     WorldFullWarningToRoomMessage,
     RefreshRoomPromptMessage,
 } from "../Messages/generated/messages_pb";
+import { xmppClient } from "../Services/XmppClient";
 
 export class AdminController extends BaseController {
     constructor(private App: TemplatedApp) {
@@ -14,6 +15,22 @@ export class AdminController extends BaseController {
         this.App = App;
         this.receiveGlobalMessagePrompt();
         this.receiveRoomEditionPrompt();
+        this.testXmpp();
+    }
+
+    testXmpp() {
+        this.App.options("/xmpp/test", (res: HttpResponse, req: HttpRequest) => {
+            this.addCorsHeaders(res);
+            res.end();
+        });
+
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        this.App.get("/xmpp/test", async (res: HttpResponse, req: HttpRequest) => {
+            xmppClient.test();
+
+            res.writeStatus("200");
+            res.end("ok");
+        });
     }
 
     receiveRoomEditionPrompt() {
