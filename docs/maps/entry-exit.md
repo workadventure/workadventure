@@ -1,7 +1,7 @@
 {.section-title.accent.text-primary}
 # Entries and exits
 
-https://www.youtube.com/watch?v=MuhVgu8H7U0
+[Building your map - Defined entries and exits](https://www.youtube.com/watch?v=MuhVgu8H7U0)
 
 ## Defining a default entry point
 
