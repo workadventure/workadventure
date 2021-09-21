@@ -1,5 +1,5 @@
 import Axios from "axios";
-import { PUSHER_URL } from "../Enum/EnvironmentVariable";
+import { CONTACT_URL, PUSHER_URL } from "../Enum/EnvironmentVariable";
 import type { CharacterTexture } from "./LocalUser";
 import { localUserStore } from "./LocalUserStore";
 
@@ -20,6 +20,7 @@ export class Room {
     private _textures: CharacterTexture[] | undefined;
     private instance: string | undefined;
     private readonly _search: URLSearchParams;
+    private _contactPage: string | undefined;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -105,6 +106,7 @@ export class Room {
         this._textures = data.textures;
         this._authenticationMandatory = data.authenticationMandatory || false;
         this._iframeAuthentication = data.iframeAuthentication;
+        this._contactPage = data.contactPage || CONTACT_URL;
         return new MapDetail(data.mapUrl, data.textures);
     }
 
@@ -197,5 +199,9 @@ export class Room {
 
     get iframeAuthentication(): string | undefined {
         return this._iframeAuthentication;
+    }
+
+    get contactPage(): string | undefined {
+        return this._contactPage;
     }
 }

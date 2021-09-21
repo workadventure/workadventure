@@ -96,6 +96,8 @@ import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
 import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { get } from "svelte/store";
+import type { RadialMenuItem } from "../Components/RadialMenu";
+import { contactPageStore } from "../../Stores/MenuStore";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -431,6 +433,7 @@ export class GameScene extends DirtyScene {
         gameManager.gameSceneIsCreated(this);
         urlManager.pushRoomIdToUrl(this.room);
         analyticsClient.enteredRoom(this.room.id);
+        contactPageStore.set(this.room.contactPage);
 
         if (touchScreenManager.supportTouchScreen) {
             this.pinchManager = new PinchManager(this);
