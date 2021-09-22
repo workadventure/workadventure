@@ -2,7 +2,6 @@
     import {onMount} from 'svelte'
     import {prevent_default} from "svelte/internal";
 
-
     export let meetingRoom = null;
     export let accessToken = null
 
@@ -11,7 +10,8 @@
     let initials = "👨‍💻";
     let fullName = "iits";
     let personToCall = "Whiteboard";
-    let ready = false
+    let ready = false;
+    let waitingInQueue = false;
     let currentMeeting = null;
     let webex = null;
     let mediaSettings = {
@@ -25,40 +25,74 @@
     let criticalError = null;
     let muted = false;
     let blinded = false;
+    let screenSharing = false;
 
-    function importWebex() {
-        return new Promise((resolve, reject) => {
-            let scriptElement = document.createElement('script');
-            scriptElement.src = webexCDNLink;
-            scriptElement.onload = () => {
-                resolve();
-            }
-            scriptElement.onerror = () => {
-                reject()
-            }
-            document.head.append(scriptElement);
-        })
-    }
+    let localVideoStream = null;
+    let localShareStream = null;
+    let remoteAudioStream = null;
+    let remoteShareStream = null;
+    let remoteVideoStream = null;
 
+    // TODO - Handle older browsers -> https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/srcObject
     function bindMeetingEvents(meeting) {
         meeting.on('error', (err) => {
             console.error(err);
         });
 
+        meeting.on('meeting:self:guestAdmitted', (obj) => {
+            refreshAllStreams()
+            console.log("guest admitted", obj)
+            waitingInQueue = false;
+        })
+
+        meeting.on('meeting:self:lobbyWaiting', (obj) => {
+            console.log("waiting in queue", obj)
+            waitingInQueue = true;
+        })
+
+        meeting.on('meeting:self:mutedByOthers', (obj) => {
+            console.log("Muted by others", obj)
+            muted = false;
+            mute();
+        })
+
+        // Handle screenshare streams
+        meeting.on('meeting:startedSharingRemote', () => {
+            document.getElementById('remote-view-video').srcObject = remoteShareStream;
+        });
+
+        meeting.on('meeting:stoppedSharingRemote', () => {
+            document.getElementById('remote-view-video').srcObject = remoteVideoStream;
+        });
+
+        meeting.on('meeting:startedSharingLocal', () => {
+            document.getElementById('self-view').srcObject = localShareStream;
+        })
+
+        meeting.on('meeting:stoppedSharingLocal', () => {
+            document.getElementById('self-view').srcObject = localVideoStream;
+        })
         // Handle media streams changes to ready state
         meeting.on('media:ready', (media) => {
             if (!media) {
                 return;
             }
             if (media.type === 'local') {
-                document.getElementById('self-view').srcObject = media.stream;
+                localVideoStream = media.stream;
             }
             if (media.type === 'remoteVideo') {
-                document.getElementById('remote-view-video').srcObject = media.stream;
+                remoteVideoStream = media.stream;
             }
             if (media.type === 'remoteAudio') {
-                document.getElementById('remote-view-audio').srcObject = media.stream;
+                remoteAudioStream = media.stream;
             }
+            if (media.type === 'localShare') {
+                localShareStream = media.stream;
+            }
+            if (media.type === 'remoteShare') {
+                remoteShareStream = media.stream;
+            }
+            refreshAllStreams();
         });
 
         // Handle media streams stopping
@@ -73,7 +107,110 @@
             if (media.type === 'remoteAudio') {
                 document.getElementById('remote-view-audio').srcObject = null;
             }
+            if (media.type === 'localShare') {
+                document.getElementById('self-view').srcObject = localVideoStream;
+            }
+            if (media.type === 'remoteShare') {
+                document.getElementById('remote-view-video').srcObject = remoteVideoStream;
+            }
         });
+    }
+
+    function refreshAllStreams() {
+        return new Promise((resolve, reject) => {
+            try {
+                if (!localShareStream) {
+                    document.getElementById('self-view').srcObject = localVideoStream;
+                } else {
+                    document.getElementById('self-view').srcObject = localShareStream;
+                }
+                if (!remoteShareStream) {
+                    document.getElementById('remote-view-video').srcObject = remoteVideoStream;
+                } else {
+                    document.getElementById('remote-view-video').srcObject = remoteShareStream;
+                }
+                document.getElementById('remote-view-audio').srcObject = remoteAudioStream;
+                resolve();
+            } catch (e) {
+                reject(e.toString);
+            }
+        })
+    }
+
+
+    // https://github.com/webex/webex-js-sdk/blob/2dc6ec9d6d4a933ad76d2aacc1a19ceb87eb3d52/packages/node_modules/samples/browser-call-with-screenshare/app.js#L398
+    function waitForMediaReady(meeting) {
+        return new Promise((resolve, reject) => {
+            try {
+                if (meeting.canUpdateMedia()) {
+                    resolve();
+                } else {
+                    console.info('SHARE-SCREEN: Unable to update media, pausing to retry...');
+                    let retryAttempts = 0;
+
+                    const retryInterval = setInterval(() => {
+                        retryAttempts += 1;
+                        console.info('SHARE-SCREEN: Retry update media check');
+
+                        if (meeting.canUpdateMedia()) {
+                            console.info('SHARE-SCREEN: Able to update media, continuing');
+                            clearInterval(retryInterval);
+                            resolve();
+                        }
+                        // If we can't update our media after 15 seconds, something went wrong
+                        else if (retryAttempts > 15) {
+                            console.error('SHARE-SCREEN: Unable to share screen, media was not able to update.');
+                            clearInterval(retryInterval);
+                            reject();
+                        }
+                    }, 10000);
+                }
+            } catch (err) {
+                reject(err.toString())
+            }
+        });
+    }
+
+    function toggleShare() {
+        if (currentMeeting) {
+            if (!screenSharing) {
+                waitForMediaReady(currentMeeting).then(() => {
+                    console.info('SHARE-SCREEN: Sharing screen via `shareScreen()`');
+                    currentMeeting.shareScreen().then(() => {
+                        console.info('SHARE-SCREEN: Screen successfully added to meeting.');
+                        screenSharing = true;
+                    }).catch((e) => {
+                        console.error('SHARE-SCREEN: Unable to share screen, error:');
+                        console.error(e);
+                    });
+                })
+            } else {
+                waitForMediaReady(currentMeeting).then(() => {
+                    currentMeeting.stopShare().then(() => {
+                        console.info('SHARE-SCREEN: Screen sharing stopped');
+                        screenSharing = false;
+                    }).catch((e) => {
+                        console.error('SHARE-SCREEN: Unable to stop sharing screen, error:');
+                        console.error(e);
+                    });
+                });
+            }
+        }
+
+    }
+
+    function importWebex() {
+        return new Promise((resolve, reject) => {
+            let scriptElement = document.createElement('script');
+            scriptElement.src = webexCDNLink;
+            scriptElement.onload = () => {
+                resolve();
+            }
+            scriptElement.onerror = () => {
+                reject()
+            }
+            document.head.append(scriptElement);
+        })
     }
 
     // https://github.com/webex/webex-js-sdk/blob/2dc6ec9d6d4a933ad76d2aacc1a19ceb87eb3d52/packages/node_modules/samples/browser-single-party-call-with-mute/app.js#L241
@@ -306,7 +443,7 @@
                         </div>
 
                     {:else}
-                        {#if true}<!-- TODO Waiting in line?-->
+                        {#if (!waitingInQueue)}
                             <div class="webex-widget-body widget-space--widgetBody--M20il" style="height: 100%;">
                                 <div class="webex-meet-wrapper widget-space--activityComponentWrapper--1-a6y">
                                     <div class="widget-space--wrapper--2FMs0">
@@ -345,14 +482,22 @@
                                                                     style="font-size: 28px;"></i></span>
                                                         {/if}
                                                     </button>
-                                                    <!-- Should users be allowed to share?
-                                                        <button class="md-button md-button--circle md-button--56 wxc-meeting-control"
+                                                    <button class="md-button md-button--circle md-button--56 wxc-meeting-control"
                                                             id="md-button-27" data-md-event-key="md-button-27"
                                                             type="button" aria-label="Start Share"
-                                                            tabindex="0"><span class="md-button__children"
-                                                                               style="opacity: 1;"><i
-                                                            class="md-icon icon icon-share-screen-presence-stroke_26"
-                                                            style="font-size: 28px;"></i></span></button> -->
+                                                            tabindex="0" on:click={prevent_default(toggleShare)}>
+                                                        {#if (!screenSharing)}
+                                                            <span class="md-button__children"
+                                                                  style="opacity: 1;"><i
+                                                                    class="md-icon icon icon-share-screen-presence-stroke_26"
+                                                                    style="font-size: 28px;"></i></span>
+                                                        {:else}
+                                                                <span class="md-button__children"
+                                                                      style="opacity: 1;"><i
+                                                                        class="md-icon icon icon-shape-diagonal-line_20"
+                                                                        style="font-size: 28px;"></i></span>
+                                                        {/if}
+                                                    </button>
                                                     <button on:click={prevent_default(hangup)}
                                                             class="md-button md-button--circle md-button--56 md-button--red wxc-meeting-control"
                                                             id="md-button-28" data-md-event-key="md-button-28"
@@ -403,9 +548,9 @@
                                                 <div class="widget-demo--meetWidgetContainer--1fog_ meet-widget-container">
                                                     <div class="widget-demo--callContainer--3K3TZ call-container">
                                                         <div class="widget-demo--waiting--tZklC participants-waiting">
-                                                            Waiting for others to join...
+                                                            Waiting to be let in...
                                                         </div>
-                                                        <div class="widget-demo--callControls--2-7gU call-controls">
+                                                        <!-- <div class="widget-demo--callControls--2-7gU call-controls">
                                                             <div class="ciscospark-controls-container widget-demo--controlContainer--1F4XU">
                                                                 <button class="md-button md-button--circle md-button--56 md-button--red md-call-control"
                                                                         type="button"
@@ -422,6 +567,13 @@
                                                                         class="md-icon icon icon-camera-muted_24"
                                                                         style="font-size: 24px; color: rgb(255, 255, 255);"></i></span>
                                                                 </button>
+                                                                <button class="md-button md-button--circle md-button--56 wxc-meeting-control"
+                                                                        data-md-event-key="md-button-27"
+                                                                        type="button" aria-label="Start Share"
+                                                                        tabindex="0"><span class="md-button__children"
+                                                                                           style="opacity: 1;"><i
+                                                                        class="md-icon icon icon-share-screen-presence-stroke_26"
+                                                                        style="font-size: 28px;"></i></span></button>
                                                                 <button class="md-button md-button--circle md-button--56 md-button--red md-call-control"
                                                                         type="button" aria-label="Hangup"
                                                                         tabindex="0"><span class="md-button__children"
@@ -430,7 +582,7 @@
                                                                         style="font-size: 24px; color: rgb(255, 255, 255);"></i></span>
                                                                 </button>
                                                             </div>
-                                                        </div>
+                                                        </div> -->
                                                     </div>
                                                 </div>
                                             </div>
