@@ -77,7 +77,6 @@
     }
 
     // https://github.com/webex/webex-js-sdk/blob/2dc6ec9d6d4a933ad76d2aacc1a19ceb87eb3d52/packages/node_modules/samples/browser-single-party-call-with-mute/app.js#L241
-    // TODO styling changes
     function mute() {
         if (!muted) {
             currentMeeting.muteAudio().then(() => {
@@ -92,10 +91,9 @@
         }
     }
 
-    // TODO styling changes
     function blind() {
         if (!blinded) {
-            currentMeeting.muteVideo().then(()=> {
+            currentMeeting.muteVideo().then(() => {
                 console.log("Video muted")
                 blinded = true
             })
@@ -118,7 +116,7 @@
                     mediaSettings
                 }).catch(err => {
                     if (err.toString() === "WebexMeetingsError 30101: Meeting has already Ended or not Active") {
-                        criticalError = new Error("The meeting hasn't started yet ⏰");
+                        errorScreen(new Error("The meeting hasn't started yet ⏰"));
                     } else {
                         console.error(err.toString())
                     }
@@ -126,8 +124,18 @@
             }).catch(err => {
                 console.error(err);
                 if (err.toString() === "ReconnectionError: Unable to retrieve media streams") {
-                    // TODO try muting video and trying again?
-                    criticalError = new Error("Is your webcam blocked? 😅");
+                    if (!blinded) {
+                        blind()
+                    }
+                    if (!muted) {
+                        mute()
+                    }
+                    try {
+                        console.log("Attempting reconnection with disabled streams")
+                        joinMeeting(meeting);
+                    } catch (err) {
+                        errorScreen(new Error("Is your webcam blocked? 😅"));
+                    }
                 } else {
                     console.error(err.toString())
                 }
@@ -135,8 +143,25 @@
         })
     }
 
+    function errorScreen(error) {
+        criticalError = error
+        if (error !== null && currentMeeting !== null) {
+            if (!muted) {
+                mute()
+            }
+            if (!blinded) {
+                blind()
+            }
+            try {
+                hangup();
+            } catch (e) {
+                console.error("While handling " + error.toString() + ", " + e.toString() + " was thrown")
+            }
+        }
+    }
+
     function startCall() {
-        criticalError = null;
+        errorScreen(null)
 
         return webex.meetings.create(meetingRoom).then((meeting) => {
             bindMeetingEvents(meeting);
@@ -192,7 +217,7 @@
     <div class="widget-demo--widgetSpaceComponentContainer--3L80J"
          style="width: calc( 100% - 30px); height: 100%; right: 0;background-color: black;">
         <div id="my-ciscospark-space-widget">
-            {#if criticalError == null}
+            {#if criticalError === null}
                 {#if (!ready)}
                     <div class="widget-demo--wrapper--2FMs0">
                         <div class="ciscospark-space-widget md widget-demo--spaceWidget--3h8bX">
@@ -290,17 +315,36 @@
                                                 <div class="wxc-meeting-control-bar widget-space--callControls--2-7gU">
                                                     <button class="md-button md-button--circle md-button--56 wxc-meeting-control"
                                                             id="md-button-25" data-md-event-key="md-button-25"
-                                                            type="button" aria-label="Mute" tabindex="0" on:click={prevent_default(mute)}>
-                                                        <span class="md-button__children" style="opacity: 1;"><i
-                                                                class="md-icon icon icon-microphone-muted_28"
-                                                                style="font-size: 28px;"></i></span></button>
+                                                            type="button" aria-label="Mute" tabindex="0"
+                                                            on:click={prevent_default(mute)}>
+                                                        {#if (muted)}
+                                                            <span class="md-button__children" style="opacity: 1;"><i
+                                                                    class="md-icon icon icon-microphone-muted_28"
+                                                                    style="font-size: 28px;"></i></span>
+                                                        {:else}
+                                                            <span class="md-button__children" style="opacity: 1;"><i
+                                                                    class="md-icon icon icon-microphone_28"
+                                                                    style="font-size: 28px;"></i></span>
+                                                        {/if}
+                                                    </button>
                                                     <button class="md-button md-button--circle md-button--56 wxc-meeting-control"
                                                             id="md-button-26" data-md-event-key="md-button-26"
                                                             type="button" aria-label="Stop video"
-                                                            tabindex="0"><span class="md-button__children"
-                                                                               style="opacity: 1;" on:click={prevent_default(blind)}><i
-                                                            class="md-icon icon icon-camera-muted_28"
-                                                            style="font-size: 28px;"></i></span></button>
+                                                            tabindex="0">
+                                                        {#if (blinded)}
+                                                            <span class="md-button__children"
+                                                                  style="opacity: 1;"
+                                                                  on:click={prevent_default(blind)}><i
+                                                                    class="md-icon icon icon-camera-muted_28"
+                                                                    style="font-size: 28px;"></i></span>
+                                                        {:else}
+                                                            <span class="md-button__children"
+                                                                  style="opacity: 1;"
+                                                                  on:click={prevent_default(blind)}><i
+                                                                    class="md-icon icon icon-camera_28"
+                                                                    style="font-size: 28px;"></i></span>
+                                                        {/if}
+                                                    </button>
                                                     <!-- Should users be allowed to share?
                                                         <button class="md-button md-button--circle md-button--56 wxc-meeting-control"
                                                             id="md-button-27" data-md-event-key="md-button-27"
