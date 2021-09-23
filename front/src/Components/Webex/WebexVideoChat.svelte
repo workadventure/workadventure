@@ -470,7 +470,7 @@
                                                 <div class="wxc-meeting-control-bar widget-space--callControls--2-7gU">
                                                     <button class="md-button md-button--circle md-button--56 wxc-meeting-control"
                                                             id="md-button-25" data-md-event-key="md-button-25"
-                                                            type="button" aria-label="Mute" tabindex="0"
+                                                            type="button" aria-label="Toggle Microphone" tabindex="0"
                                                             on:click={prevent_default(mute)}>
                                                         {#if (muted)}
                                                             <span class="md-button__children" style="opacity: 1;"><i
@@ -484,7 +484,7 @@
                                                     </button>
                                                     <button class="md-button md-button--circle md-button--56 wxc-meeting-control"
                                                             id="md-button-26" data-md-event-key="md-button-26"
-                                                            type="button" aria-label="Stop video"
+                                                            type="button" aria-label="Toggle video"
                                                             tabindex="0">
                                                         {#if (blinded)}
                                                             <span class="md-button__children"
@@ -502,7 +502,7 @@
                                                     </button>
                                                     <button class="md-button md-button--circle md-button--56 wxc-meeting-control"
                                                             id="md-button-27" data-md-event-key="md-button-27"
-                                                            type="button" aria-label="Start Share"
+                                                            type="button" aria-label="Toggle Share"
                                                             tabindex="0" on:click={prevent_default(toggleShare)}>
                                                         {#if (!screenSharing)}
                                                             <span class="md-button__children"
@@ -519,7 +519,7 @@
                                                     <button on:click={prevent_default(hangup)}
                                                             class="md-button md-button--circle md-button--56 md-button--red wxc-meeting-control"
                                                             id="md-button-28" data-md-event-key="md-button-28"
-                                                            type="button" aria-label="Leave" tabindex="0">
+                                                            type="button" aria-label="Hang up" tabindex="0">
                                                         <span class="md-button__children" style="opacity: 1;"><i
                                                                 class="md-icon icon icon-cancel_28"
                                                                 style="font-size: 28px;"></i></span></button>
@@ -568,39 +568,6 @@
                                                         <div class="widget-demo--waiting--tZklC participants-waiting">
                                                             Waiting to be let in...
                                                         </div>
-                                                        <!-- <div class="widget-demo--callControls--2-7gU call-controls">
-                                                            <div class="ciscospark-controls-container widget-demo--controlContainer--1F4XU">
-                                                                <button class="md-button md-button--circle md-button--56 md-button--red md-call-control"
-                                                                        type="button"
-                                                                        aria-label="Toggle Mute Audio"
-                                                                        tabindex="0"><span
-                                                                        class="md-button__children" style="opacity: 1;"><i
-                                                                        class="md-icon icon icon-microphone-muted_24"
-                                                                        style="font-size: 24px; color: rgb(255, 255, 255);"></i></span>
-                                                                </button>
-                                                                <button class="md-button md-button--circle md-button--56 md-button--red md-call-control"
-                                                                        type="button"
-                                                                        aria-label="Mute Video" tabindex="0"><span
-                                                                        class="md-button__children" style="opacity: 1;"><i
-                                                                        class="md-icon icon icon-camera-muted_24"
-                                                                        style="font-size: 24px; color: rgb(255, 255, 255);"></i></span>
-                                                                </button>
-                                                                <button class="md-button md-button--circle md-button--56 wxc-meeting-control"
-                                                                        data-md-event-key="md-button-27"
-                                                                        type="button" aria-label="Start Share"
-                                                                        tabindex="0"><span class="md-button__children"
-                                                                                           style="opacity: 1;"><i
-                                                                        class="md-icon icon icon-share-screen-presence-stroke_26"
-                                                                        style="font-size: 28px;"></i></span></button>
-                                                                <button class="md-button md-button--circle md-button--56 md-button--red md-call-control"
-                                                                        type="button" aria-label="Hangup"
-                                                                        tabindex="0"><span class="md-button__children"
-                                                                                           style="opacity: 1;"><i
-                                                                        class="md-icon icon icon-cancel_24"
-                                                                        style="font-size: 24px; color: rgb(255, 255, 255);"></i></span>
-                                                                </button>
-                                                            </div>
-                                                        </div> -->
                                                     </div>
                                                 </div>
                                             </div>
