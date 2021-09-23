@@ -3,13 +3,14 @@
     import {prevent_default} from "svelte/internal";
 
     export let meetingRoom = null;
-    export let accessToken = null
+    export let accessToken = null;
+    // TODO get from map
+    export let initials = "👨‍💻";
+    export let fullName = "iits";
+    export let personToCall = "Whiteboard";
 
     let webexCDNLink = "https://unpkg.com/webex/umd/webex.min.js";
 
-    let initials = "👨‍💻";
-    let fullName = "iits";
-    let personToCall = "Whiteboard";
     let ready = false;
     let waitingInQueue = false;
     let currentMeeting = null;
@@ -33,7 +34,20 @@
     let remoteShareStream = null;
     let remoteVideoStream = null;
 
-    // TODO - Handle older browsers -> https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/srcObject
+    function importWebex() {
+        return new Promise((resolve, reject) => {
+            let scriptElement = document.createElement('script');
+            scriptElement.src = webexCDNLink;
+            scriptElement.onload = () => {
+                resolve();
+            }
+            scriptElement.onerror = () => {
+                reject()
+            }
+            document.head.append(scriptElement);
+        })
+    }
+
     function bindMeetingEvents(meeting) {
         meeting.on('error', (err) => {
             console.error(err);
@@ -58,19 +72,19 @@
 
         // Handle screenshare streams
         meeting.on('meeting:startedSharingRemote', () => {
-            document.getElementById('remote-view-video').srcObject = remoteShareStream;
+            assignElementMediaSource(document.getElementById('remote-view-video'),remoteShareStream);
         });
 
         meeting.on('meeting:stoppedSharingRemote', () => {
-            document.getElementById('remote-view-video').srcObject = remoteVideoStream;
+            assignElementMediaSource(document.getElementById('remote-view-video'),remoteVideoStream);
         });
 
         meeting.on('meeting:startedSharingLocal', () => {
-            document.getElementById('self-view').srcObject = localShareStream;
+            assignElementMediaSource(document.getElementById('self-view'),localShareStream);
         })
 
         meeting.on('meeting:stoppedSharingLocal', () => {
-            document.getElementById('self-view').srcObject = localVideoStream;
+            assignElementMediaSource(document.getElementById('self-view'),localVideoStream);
         })
         // Handle media streams changes to ready state
         meeting.on('media:ready', (media) => {
@@ -99,19 +113,19 @@
         meeting.on('media:stopped', (media) => {
             // Remove media streams
             if (media.type === 'local') {
-                document.getElementById('self-view').srcObject = null;
+                assignElementMediaSource(document.getElementById('self-view'), null);
             }
             if (media.type === 'remoteVideo') {
-                document.getElementById('remote-view-video').srcObject = null;
+                assignElementMediaSource(document.getElementById('remote-view-video'), null);
             }
             if (media.type === 'remoteAudio') {
-                document.getElementById('remote-view-audio').srcObject = null;
+                assignElementMediaSource(document.getElementById('remote-view-audio'), null);
             }
             if (media.type === 'localShare') {
-                document.getElementById('self-view').srcObject = localVideoStream;
+                assignElementMediaSource(document.getElementById('self-view'), localVideoStream);
             }
             if (media.type === 'remoteShare') {
-                document.getElementById('remote-view-video').srcObject = remoteVideoStream;
+                assignElementMediaSource(document.getElementById('remote-view-video'), remoteVideoStream);
             }
         });
     }
@@ -120,16 +134,16 @@
         return new Promise((resolve, reject) => {
             try {
                 if (!localShareStream) {
-                    document.getElementById('self-view').srcObject = localVideoStream;
+                    assignElementMediaSource(document.getElementById('self-view'), localVideoStream);
                 } else {
-                    document.getElementById('self-view').srcObject = localShareStream;
+                    assignElementMediaSource(document.getElementById('self-view'), localShareStream);
                 }
                 if (!remoteShareStream) {
-                    document.getElementById('remote-view-video').srcObject = remoteVideoStream;
+                    assignElementMediaSource(document.getElementById('remote-view-video'), remoteVideoStream);
                 } else {
-                    document.getElementById('remote-view-video').srcObject = remoteShareStream;
+                    assignElementMediaSource(document.getElementById('remote-view-video'), remoteShareStream);
                 }
-                document.getElementById('remote-view-audio').srcObject = remoteAudioStream;
+                assignElementMediaSource(document.getElementById('remote-view-audio'), remoteAudioStream);
                 resolve();
             } catch (e) {
                 reject(e.toString);
@@ -199,19 +213,7 @@
 
     }
 
-    function importWebex() {
-        return new Promise((resolve, reject) => {
-            let scriptElement = document.createElement('script');
-            scriptElement.src = webexCDNLink;
-            scriptElement.onload = () => {
-                resolve();
-            }
-            scriptElement.onerror = () => {
-                reject()
-            }
-            document.head.append(scriptElement);
-        })
-    }
+
 
     // https://github.com/webex/webex-js-sdk/blob/2dc6ec9d6d4a933ad76d2aacc1a19ceb87eb3d52/packages/node_modules/samples/browser-single-party-call-with-mute/app.js#L241
     function mute() {
@@ -278,6 +280,22 @@
                 }
             })
         })
+    }
+
+    function assignElementMediaSource(node, mediaSource) {
+        if ('srcObject' in node) {
+            try {
+                node.srcObject = mediaSource;
+            } catch (err) {
+                if (err.name !== 'TypeError') {
+                    console.error(err);
+                    throw err;
+                }
+                node.src = URL.createObjectURL(mediaSource);
+            }
+        } else {
+            node.src = URL.createObjectURL(mediaSource);
+        }
     }
 
     function errorScreen(error) {
