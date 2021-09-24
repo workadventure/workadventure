@@ -7,7 +7,6 @@ import {
     WorldFullWarningToRoomMessage,
     RefreshRoomPromptMessage,
 } from "../Messages/generated/messages_pb";
-import { xmppClient } from "../Services/XmppClient";
 
 export class AdminController extends BaseController {
     constructor(private App: TemplatedApp) {
@@ -26,10 +25,18 @@ export class AdminController extends BaseController {
 
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.App.get("/xmpp/test", async (res: HttpResponse, req: HttpRequest) => {
-            xmppClient.test();
+            //const xmppClient = new XmppClient();
+            try {
+                //await xmppClient.getRoster();
+                //await xmppClient.close();
 
-            res.writeStatus("200");
-            res.end("ok");
+                res.writeStatus("200");
+                res.end("ok");
+            } catch (e) {
+                console.error("error2", e);
+                res.writeStatus("500");
+                res.end("ko");
+            }
         });
     }
 

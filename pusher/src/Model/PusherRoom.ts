@@ -23,6 +23,7 @@ import {
 import Debug from "debug";
 import { ClientReadableStream } from "grpc";
 import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
+import { xmppClient, XmppSocket } from "../Services/XmppClient";
 
 const debug = Debug("room");
 
@@ -40,6 +41,7 @@ export class PusherRoom {
     private backConnection!: ClientReadableStream<BatchToPusherRoomMessage>;
     private isClosing: boolean = false;
     private listeners: Set<ExSocketInterface> = new Set<ExSocketInterface>();
+    private xmppListeners: Map<string, XmppSocket> = new Map();
     //public readonly variables = new Map<string, string>();
 
     constructor(public readonly roomUrl: string, private socketListener: ZoneEventListener) {
@@ -54,13 +56,17 @@ export class PusherRoom {
         this.positionNotifier.setViewport(socket, viewport);
     }
 
-    public join(socket: ExSocketInterface) {
+    public async join(socket: ExSocketInterface) {
         this.listeners.add(socket);
+
+        const xmppSocket = await xmppClient.joinRoom(socket, this.roomUrl);
+        this.xmppListeners.set(socket.userUuid, xmppSocket); //todo remove listeners on disconnect
     }
 
     public leave(socket: ExSocketInterface) {
         this.positionNotifier.removeViewport(socket);
         this.listeners.delete(socket);
+        this.xmppListeners.delete(socket.userUuid);
     }
 
     public canAccess(userTags: string[]): boolean {

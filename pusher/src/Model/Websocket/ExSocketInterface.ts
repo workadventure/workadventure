@@ -25,6 +25,7 @@ export interface ExSocketInterface extends WebSocket, Identificable {
     roomId: string;
     //userId: number;   // A temporary (autoincremented) identifier for this user
     userUuid: string; // A unique identifier for this user
+    userIdentifier: string;
     IPAddress: string; // IP address
     name: string;
     characterLayers: CharacterLayer[];

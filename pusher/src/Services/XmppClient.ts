@@ -1,44 +1,117 @@
+import { ExSocketInterface } from "_Model/Websocket/ExSocketInterface";
+import { uuid } from "uuidv4";
+import { v4 } from "uuid";
+
 const { client, xml, jid } = require("@xmpp/client");
 
+interface JID {
+    _domain: string;
+    _resource: string;
+    _local: string;
+}
+
+export interface XmppSocket {
+    send: Function;
+    stop: Function;
+}
+
 class XmppClient {
-    private xmpp: any;
-    private address: object | null = null;
+    private address!: JID;
+    private clientPromise!: Promise<XmppSocket>;
     constructor() {
-        this.xmpp = client({
-            service: "ws://ejabberd:5443/ws",
-            host: "ejabberd",
-            username: "admin",
-            password: "password",
-        });
+        /*this.clientPromise = new Promise((res, rej) => {
+            const xmpp = client({
+                service: "ws://ejabberd:5443/ws",
+                host: "ejabberd",
+                resource: "pusher1",
+                username: "admin",
+                password: "password",
+            });
 
-        this.xmpp.on("error", (err: string) => {
-            console.error(err);
-        });
+            xmpp.on("error", (err: string) => {
+                console.error(err);
+                rej(err);
+            });
 
-        this.xmpp.on("offline", () => {
-            console.log("offline");
-        });
-        this.xmpp.on("online", (address: object) => {
-            // Makes itself available
-            console.log("online", address);
-            this.address = address;
-            this.xmpp.send(xml("presence"));
+            xmpp.on("offline", () => {
+                console.log("offline");
+            });
+            xmpp.on("online", async (address: JID) => {
+                console.log("online", address);
+                this.address = address;
+                await xmpp.send(xml("presence"));
+                res(xmpp);
 
-            // Sends a chat message to itself
-        });
+            });
 
-        this.xmpp.on("stanza", async (stanza: any) => {
-            console.log("stanza", stanza);
-            if (stanza.is("presence")) {
-            }
-        });
+            xmpp.on("stanza", async (stanza: any) => {
+                console.log("stanza", stanza);
+                if (stanza.attrs.type && stanza.attrs.type === "error") {
+                    console.log('error', stanza.getChild("error"));
+                } else if(stanza.is("message")) {
+                    console.log('message', stanza.getChild("body").text());
+                } else if (stanza.is('presence')) {
+                    console.log('presence', stanza.getChild('x'))
+                }
+            });
 
-        this.xmpp.start().catch(console.error);
+            xmpp.start().catch((e:any) => {
+                rej(e);
+            });
+        })*/
     }
 
-    async test() {
-        const message = xml("message", { type: "chat", to: this.address }, xml("body", {}, "hello world"));
-        await this.xmpp.send(message);
+    sendMessage() {
+        return this.clientPromise.then((xmpp) => {
+            const message = xml("message", { type: "chat", to: this.address }, xml("body", {}, "hello world"));
+            return xmpp.send(message);
+        });
+    }
+
+    getRoster() {
+        return this.clientPromise.then((xmpp) => {
+            const from = "admin@" + this.address._domain + "/" + this.address._resource;
+            const message = xml("iq", { type: "get", from: from }, xml("query", { xmlns: "jabber:iq:roster" }));
+            console.log("my message", message);
+            return xmpp.send(message);
+        });
+    }
+
+    close() {
+        return this.clientPromise.then(async (xmpp) => {
+            await xmpp.send(xml("presence", { type: "unavailable" }));
+            return xmpp.stop();
+        });
+    }
+
+    joinRoom(clientData: ExSocketInterface, roomUrl: string): Promise<XmppSocket> {
+        return new Promise((res, rej) => {
+            const xmpp = client({
+                service: "ws://ejabberd:5443/ws",
+                resource: v4(),
+                username: clientData.userUuid,
+                password: "abc",
+            });
+
+            xmpp.on("error", (err: string) => {
+                console.error("err", err);
+                rej(err);
+            });
+
+            xmpp.on("offline", () => {
+                console.log("offline");
+            });
+            xmpp.on("online", async (address: JID) => {
+                console.log("online", address);
+                await xmpp.send(xml("presence"));
+                res(xmpp);
+            });
+
+            xmpp.start().catch((e: any) => {
+                console.error("err2", e);
+                rej(e);
+            });
+        });
     }
 }
 
