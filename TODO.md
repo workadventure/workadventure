@@ -3,17 +3,27 @@
   - the first person entering the room is the host
   - Figure out how communication should work
     - Global chat channel with server messages in them
-      - Special server-sent messages
-        - [SERVER:START] for starting meetings
-          - needs room ID, meeting link
-        - [SERVER:STOP] for stopping meetings
-          - needs room ID
-      - Client parses through all messages to see if it finds [SERVER:STOP] for it's room ID
-        - Exit conditions for search
-          - One pair of start/stop found 
-            - Start-stop => need to start new meeting
-            - Stop-start => need to join meeting
-          - 
+      - Handle in ChatStore.ts?
+        - Special server-sent messages
+          - [SERVER:START] for starting meetings
+            - 🔥 for testing, otherwise hard to see unicode?
+              - needs room ID, meeting link
+          - [SERVER:STOP] for stopping meetings
+            - 🌊
+              - needs room ID
+        - Client parses through all messages to see if it finds [SERVER:STOP] for it's room ID
+          - Exit conditions for search
+            - One pair of start/stop found 
+              - Start-stop => need to start new meeting
+              - Stop-start => need to join meeting
+            - End of chat history window found
+              - Just start => Join
+              - Just stop => Start
+          - How much history can we read?
+        - Security?????
+          - Only read messages from certain users?
+          - User verification of some sort?
+- Global chat?
 - Get meeting info from map
 - Kill call when co-website closed?
 - Neaten up sign in with webex screen
