@@ -1,17 +1,18 @@
 ![](https://github.com/thecodingmachine/workadventure/workflows/Continuous%20Integration/badge.svg) [![Discord](https://img.shields.io/discord/821338762134290432?label=Discord)](https://discord.gg/YGtngdh9gt)
 
-![WorkAdventure landscape image](README-INTRO.jpg)
+![WorkAdventure logo](README-LOGO.svg)
+![WorkAdventure office image](README-MAP.png)
 
-Demo here : [https://workadventu.re/](https://workadventu.re/).
+Live demo [here](https://play.workadventu.re/@/tcm/workadventure/wa-village).
 
-# Work Adventure
+# WorkAdventure
 
-Work Adventure is a web-based collaborative workspace for small to medium teams (2-100 people) presented in the form of a
+WorkAdventure is a web-based collaborative workspace presented in the form of a
 16-bit video game.
 
-In Work Adventure, you can move around your office and talk to your colleagues (using a video-chat feature that is
-triggered when you move next to a colleague).
+In WorkAdventure you can move around your office and talk to your colleagues (using a video-chat system, triggered when you approach someone).
 
+See more features for your virtual office: https://workadventu.re/virtual-office
 
 ## Setting up a development environment
 
