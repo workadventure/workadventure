@@ -20,6 +20,7 @@ Install Docker.
 Run:
 
 ```
+cp .env.template .env
 docker-compose up -d
 ```
 
