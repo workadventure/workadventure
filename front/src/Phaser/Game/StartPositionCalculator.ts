@@ -51,18 +51,24 @@ export class StartPositionCalculator {
         if (!selectedOrDefaultLayer) {
             selectedOrDefaultLayer = defaultStartLayerName;
         }
+        let foundLayer: ITiledMapLayer | null = null;
         for (const layer of this.gameMap.flatLayers) {
-            if (
-                (selectedOrDefaultLayer === layer.name || layer.name.endsWith("/" + selectedOrDefaultLayer)) &&
-                layer.type === "tilelayer" &&
-                (selectedOrDefaultLayer === defaultStartLayerName || this.isStartLayer(layer))
-            ) {
-                const startPosition = this.startUser(layer, selectedLayer);
-                this.startPosition = {
-                    x: startPosition.x + this.mapFile.tilewidth / 2,
-                    y: startPosition.y + this.mapFile.tileheight / 2,
-                };
+            if (layer.type !== "tilelayer") continue;
+            //we want to prioritize the selectedLayer other the start layer
+            if (selectedOrDefaultLayer === layer.name || layer.name.endsWith("/" + selectedOrDefaultLayer)) {
+                foundLayer = layer;
+                break;
+            } else if (selectedOrDefaultLayer === defaultStartLayerName || this.isStartLayer(layer)) {
+                foundLayer = layer;
+                break;
             }
+        }
+        if (foundLayer) {
+            const startPosition = this.startUser(foundLayer, selectedLayer);
+            this.startPosition = {
+                x: startPosition.x + this.mapFile.tilewidth / 2,
+                y: startPosition.y + this.mapFile.tileheight / 2,
+            };
         }
     }
 
