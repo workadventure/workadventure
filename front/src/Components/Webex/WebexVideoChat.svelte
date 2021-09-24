@@ -352,19 +352,24 @@
 
         ready = true;
     })
+
+    function replaceHref(node, newLink) {
+        node.onerror = null;
+        node.href = newLink;
+    }
 </script>
 
 <svelte:head>
     <link rel="stylesheet" href="./static/css/widget-demo-main.css"
-          onerror="this.onerror=null;this.href='https://code.s4d.io/widget-demo/archives/0.2.50/main.css'"/>
+          onerror="replaceHref(this, 'https://code.s4d.io/widget-demo/archives/0.2.50/main.css');"/>
     <link rel="stylesheet" href="./static/css/widget-space-main.css"
-          onerror="this.onerror=null;this.href='https://code.s4d.io/widget-space/production/main.css'"/>
+          onerror="replaceHref(this, 'https://code.s4d.io/widget-space/production/main.css');"/>
     <link href="./fonts/CiscoSansTTLight.woff2" rel="preload" as="font"
-          onerror="this.onerror=null;this.href='https://code.s4d.io/widget-demo/archives/0.2.50/fonts/CiscoSansTTRegular.woff2'"/>
+          onerror="replaceHref(this, 'https://code.s4d.io/widget-demo/archives/0.2.50/fonts/CiscoSansTTRegular.woff2');"/>
     <link href="./fonts/CiscoSansTTRegular.woff2" rel="preload" as="font"
-          onerror="this.onerror=null;this.href='https://code.s4d.io/widget-demo/archives/0.2.50/fonts/CiscoSansTTLight.woff2'"/>
+          onerror="replaceHref(this, 'https://code.s4d.io/widget-demo/archives/0.2.50/fonts/CiscoSansTTLight.woff2');"/>
     <link href="./fonts/momentum-ui-icons.woff2" rel="preload" as="font"
-          onerror="this.onerror=null;this.href='https://code.s4d.io/widget-demo/archives/0.2.50/fonts/momentum-ui-icons.woff2'"/>
+          onerror="replaceHref(this, 'https://code.s4d.io/widget-demo/archives/0.2.50/fonts/momentum-ui-icons.woff2');"/>
     <link rel="stylesheet" href="./static/css/momentum-ui.min.css">
 </svelte:head>
 
