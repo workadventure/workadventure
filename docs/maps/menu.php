@@ -5,12 +5,12 @@ $extraUtilsMenu = require __DIR__.'/../../scripting_api_extra_doc/menu_functions
 return [
     [
         'title' => 'Getting started',
-        'url' => '/map-building',
+        'url' => '/map-building/',
         'markdown' => 'maps.index'
     ],
     [
         'title' => 'WorkAdventure maps',
-        'url' => '/map-building/wa-maps',
+        'url' => '/map-building/wa-maps.md',
         'markdown' => 'maps.wa-maps'
     ],
     [
