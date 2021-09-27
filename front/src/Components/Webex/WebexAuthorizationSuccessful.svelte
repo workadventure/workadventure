@@ -1,15 +1,15 @@
 
 
 <svelte:head>
-  // @ts-expect-error: OnError's handler is passed as a string
+  // eslint-disable-line
   <link rel="stylesheet" href="./static/css/widget-demo-main.css" onerror="this.onerror=null;this.href='https://code.s4d.io/widget-demo/archives/0.2.50/main.css';"/>
-  // @ts-expect-error: OnError's handler is passed as a string
+  // eslint-disable-line
   <link rel="stylesheet" href="./static/css/widget-space-main.css" onerror="this.onerror=null;this.href='https://code.s4d.io/widget-space/production/main.css';"/>
-  // @ts-expect-error: OnError's handler is passed as a string
+  // eslint-disable-line
   <link href="./fonts/CiscoSansTTLight.woff2" rel="preload" as="font" onerror="this.onerror=null;this.href='https://code.s4d.io/widget-demo/archives/0.2.50/fonts/CiscoSansTTRegular.woff2';"/>
-  // @ts-expect-error: OnError's handler is passed as a string
+  // eslint-disable-line
   <link href="./fonts/CiscoSansTTRegular.woff2" rel="preload" as="font" onerror="this.onerror=null;this.href='https://code.s4d.io/widget-demo/archives/0.2.50/fonts/CiscoSansTTLight.woff2';"/>
-  // @ts-expect-error: OnError's handler is passed as a string
+  // eslint-disable-line
   <link href="./fonts/momentum-ui-icons.woff2" rel="preload" as="font" onerror="this.onerror=null;this.href='https://code.s4d.io/widget-demo/archives/0.2.50/fonts/momentum-ui-icons.woff2';"/>
   <link rel="stylesheet" href="./static/css/momentum-ui.min.css">
 </svelte:head>
