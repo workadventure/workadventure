@@ -94,7 +94,7 @@ import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
 import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
 import type { RadialMenuItem } from "../Components/RadialMenu";
-import {analyticsClient} from "../../Administration/AnalyticsClient";
+import { analyticsClient } from "../../Administration/AnalyticsClient";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -1784,16 +1784,16 @@ ${escapedMessage}
      * Updates the offset of the character compared to the center of the screen according to the layout manager
      * (tries to put the character in the center of the remaining space if there is a discussion going on.
      */
-    private updateCameraOffset(array: Box): void {
-        const xCenter = (array.xEnd - array.xStart) / 2 + array.xStart;
-        const yCenter = (array.yEnd - array.yStart) / 2 + array.yStart;
+    private updateCameraOffset(box: Box): void {
+        const xCenter = (box.xEnd - box.xStart) / 2 + box.xStart;
+        const yCenter = (box.yEnd - box.yStart) / 2 + box.yStart;
 
         const game = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>("#game canvas");
         // Let's put this in Game coordinates by applying the zoom level:
 
         this.cameras.main.setFollowOffset(
             ((xCenter - game.offsetWidth / 2) * window.devicePixelRatio) / this.scale.zoom,
-            ((yCenter - game.offsetHeight / 2) * window.devicePixelRatio) / this.scale.zoom
+            ((yCenter - game.offsetHeight / 2) * window.devicePixelRatio) / this.scale.zoom / 2
         );
     }
 
