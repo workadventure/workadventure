@@ -66,7 +66,7 @@ return [
     $extraMenu,
     [
         'title' => 'Scripting maps',
-        'url' => '/map-building/scripting',
+        'url' => '/map-building/scripting.md',
         'markdown' => 'maps.scripting',
         'children' => [
             [
