@@ -42,10 +42,6 @@ jobs:
         run: yarn run proto && yarn run copy-to-front
         working-directory: "messages"
 
-      - name: "Create index.html"
-        run: ./templater.sh
-        working-directory: "front"
-
       - name: "Build"
         run: yarn run build
         env:

@@ -61,8 +61,7 @@
     "uuidv4": "^6.2.10"
   },
   "scripts": {
-    "start": "run-p templater serve svelte-check-watch",
-    "templater": "cross-env ./templater.sh",
+    "start": "run-p serve svelte-check-watch",
     "serve": "cross-env TS_NODE_PROJECT=\"tsconfig-for-webpack.json\" webpack serve --open",
     "build": "cross-env TS_NODE_PROJECT=\"tsconfig-for-webpack.json\" NODE_ENV=production webpack",
     "build-typings": "cross-env TS_NODE_PROJECT=\"tsconfig-for-webpack.json\" NODE_ENV=production BUILD_TYPINGS=1 webpack",

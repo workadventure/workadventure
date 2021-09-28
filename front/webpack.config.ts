@@ -7,7 +7,6 @@ import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import sveltePreprocess from "svelte-preprocess";
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import NodePolyfillPlugin from "node-polyfill-webpack-plugin";
-import { POSTHOG_API_KEY, PROFILE_URL } from "./src/Enum/EnvironmentVariable";
 
 const mode = process.env.NODE_ENV ?? "development";
 const buildNpmTypingsForApi = !!process.env.BUILD_TYPINGS;
@@ -168,7 +167,7 @@ module.exports = {
         }),
         new MiniCssExtractPlugin({ filename: "[name].[contenthash].css" }),
         new HtmlWebpackPlugin({
-            template: "./dist/index.tmpl.html.tmp",
+            template: "./dist/index.tmpl.html",
             minify: {
                 collapseWhitespace: true,
                 keepClosingSlash: true,
