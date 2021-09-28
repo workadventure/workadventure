@@ -2,8 +2,13 @@
 - Get meetings auto created
   - the first person entering the room is the host
   - Figure out how communication should work
-    - Global chat channel with server messages in them
-      - Handle in ChatStore.ts?
+    - Get backend to track "state" of rooms
+      - Broadcast state to all newly joined users
+        - State => active rooms and meeting links
+      - On connect, backend uses socket lib to let client know about state
+      - As time goes on, client listens for other client's broadcasts
+    - Broadcast to all users on floor
+      - back/SocketManager.ts
         - Special server-sent messages
           - [SERVER:START] for starting meetings
             - 🔥 for testing, otherwise hard to see unicode?
@@ -19,14 +24,14 @@
             - End of chat history window found
               - Just start => Join
               - Just stop => Start
-          - How much history can we read?
-        - Security?????
-          - Only read messages from certain users?
-          - User verification of some sort?
-- Global chat?
-- Get meeting info from map
 - Kill call when co-website closed?
-- Neaten up sign in with webex screen
+- Figure out what exactly the pusher does
+  - gRPC?
+    - Should I copy the new generated messages into the back too?
+    - Do I need a new emitter?
+  - Zone.ts?
+    - What is a zone?
+    - SocketManager emitZoneMessage
 #Bugs
 - SDK keeps sending media stream even when muted????
 - Remote shared view gets stupid small automatically

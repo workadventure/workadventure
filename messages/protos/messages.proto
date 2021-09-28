@@ -1,5 +1,14 @@
 syntax = "proto3";
 
+message WebexSessionStart {
+  string roomId = 1;
+  string meetingLink = 2;
+}
+
+message WebexSessionStop {
+  string roomId = 1;
+}
+
 /*********** PARTIAL MESSAGES **************/
 
 message PositionMessage {
