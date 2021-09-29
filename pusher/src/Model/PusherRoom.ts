@@ -13,7 +13,7 @@ import {
 } from "../Messages/generated/messages_pb";
 import Debug from "debug";
 import { ClientReadableStream } from "grpc";
-import { xmppClient, XmppSocket } from "../Services/XmppClient";
+import { XmppClient } from "../Services/XmppClient";
 
 const debug = Debug("room");
 
@@ -33,7 +33,7 @@ export class PusherRoom {
     private backConnection!: ClientReadableStream<BatchToPusherRoomMessage>;
     private isClosing: boolean = false;
     private listeners: Set<ExSocketInterface> = new Set<ExSocketInterface>();
-    private xmppListeners: Map<string, XmppSocket> = new Map();
+    private xmppListeners: Map<string, XmppClient> = new Map();
 
     constructor(public readonly roomUrl: string, private socketListener: ZoneEventListener) {
         this.tags = [];
@@ -50,14 +50,19 @@ export class PusherRoom {
     public async join(socket: ExSocketInterface) {
         this.listeners.add(socket);
 
-        const xmppSocket = await xmppClient.joinRoom(socket, this.groupId || this.roomUrl);
-        this.xmppListeners.set(socket.userUuid, xmppSocket); //todo remove listeners on disconnect
+        const xmppClient = new XmppClient(socket);
+        await xmppClient.joinRoom(this.groupId || this.roomUrl);
+        this.xmppListeners.set(socket.userUuid, xmppClient);
     }
 
     public leave(socket: ExSocketInterface) {
         this.positionNotifier.removeViewport(socket);
         this.listeners.delete(socket);
-        this.xmppListeners.delete(socket.userUuid);
+        const client = this.xmppListeners.get(socket.userUuid);
+        if (client) {
+            client.close();
+            this.xmppListeners.delete(socket.userUuid);
+        }
     }
 
     public canAccess(userTags: string[]): boolean {

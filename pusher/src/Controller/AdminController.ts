@@ -14,30 +14,6 @@ export class AdminController extends BaseController {
         this.App = App;
         this.receiveGlobalMessagePrompt();
         this.receiveRoomEditionPrompt();
-        this.testXmpp();
-    }
-
-    testXmpp() {
-        this.App.options("/xmpp/test", (res: HttpResponse, req: HttpRequest) => {
-            this.addCorsHeaders(res);
-            res.end();
-        });
-
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.App.get("/xmpp/test", async (res: HttpResponse, req: HttpRequest) => {
-            //const xmppClient = new XmppClient();
-            try {
-                //await xmppClient.getRoster();
-                //await xmppClient.close();
-
-                res.writeStatus("200");
-                res.end("ok");
-            } catch (e) {
-                console.error("error2", e);
-                res.writeStatus("500");
-                res.end("ko");
-            }
-        });
     }
 
     receiveRoomEditionPrompt() {

@@ -14,80 +14,15 @@ export interface XmppSocket {
     stop: Function;
 }
 
-class XmppClient {
+export class XmppClient {
     private address!: JID;
     private clientPromise!: Promise<XmppSocket>;
-    constructor() {
-        /*this.clientPromise = new Promise((res, rej) => {
+    private clientID: string;
+    constructor(clientData: ExSocketInterface) {
+        this.clientID = clientData.userUuid + "@ejabberd";
+        this.clientPromise = new Promise((res, rej) => {
             const xmpp = client({
                 service: "ws://ejabberd:5443/ws",
-                host: "ejabberd",
-                resource: "pusher1",
-                username: "admin",
-                password: "password",
-            });
-
-            xmpp.on("error", (err: string) => {
-                console.error(err);
-                rej(err);
-            });
-
-            xmpp.on("offline", () => {
-                console.log("offline");
-            });
-            xmpp.on("online", async (address: JID) => {
-                console.log("online", address);
-                this.address = address;
-                await xmpp.send(xml("presence"));
-                res(xmpp);
-
-            });
-
-            xmpp.on("stanza", async (stanza: any) => {
-                console.log("stanza", stanza);
-                if (stanza.attrs.type && stanza.attrs.type === "error") {
-                    console.log('error', stanza.getChild("error"));
-                } else if(stanza.is("message")) {
-                    console.log('message', stanza.getChild("body").text());
-                } else if (stanza.is('presence')) {
-                    console.log('presence', stanza.getChild('x'))
-                }
-            });
-
-            xmpp.start().catch((e:any) => {
-                rej(e);
-            });
-        })*/
-    }
-
-    sendMessage() {
-        return this.clientPromise.then((xmpp) => {
-            const message = xml("message", { type: "chat", to: this.address }, xml("body", {}, "hello world"));
-            return xmpp.send(message);
-        });
-    }
-
-    getRoster() {
-        return this.clientPromise.then((xmpp) => {
-            const from = "admin@" + this.address._domain + "/" + this.address._resource;
-            const message = xml("iq", { type: "get", from: from }, xml("query", { xmlns: "jabber:iq:roster" }));
-            console.log("my message", message);
-            return xmpp.send(message);
-        });
-    }
-
-    close() {
-        return this.clientPromise.then(async (xmpp) => {
-            await xmpp.send(xml("presence", { type: "unavailable" }));
-            return xmpp.stop();
-        });
-    }
-
-    joinRoom(clientData: ExSocketInterface, resource: string): Promise<XmppSocket> {
-        return new Promise((res, rej) => {
-            const xmpp = client({
-                service: "ws://ejabberd:5443/ws",
-                //resource,
                 username: clientData.userUuid,
                 password: "abc",
             });
@@ -108,10 +43,50 @@ class XmppClient {
 
             xmpp.start().catch((e: any) => {
                 console.error("err2", e);
+                xmpp.stop();
                 rej(e);
+            });
+
+            xmpp.on("stanza", async (stanza: any) => {
+                console.log("stanza", stanza);
             });
         });
     }
-}
 
-export const xmppClient = new XmppClient();
+    joinRoom(resource: string): Promise<XmppSocket> {
+        return this.clientPromise.then(async (xmpp) => {
+            console.log("join room");
+            const message = xml(
+                "presence",
+                { to: "testRoom@ejabberd", from: this.clientID },
+                xml("x", "http://jabber.org/protocol/muc")
+            );
+            await xmpp.send(message);
+            return xmpp;
+        });
+    }
+
+    /*sendMessage() {
+        return this.clientPromise.then((xmpp) => {
+            const message = xml("message", { type: "chat", to: this.address }, xml("body", {}, "hello world"));
+            return xmpp.send(message);
+        });
+    }
+
+    getRoster() {
+        return this.clientPromise.then((xmpp) => {
+            const from = "admin@" + this.address._domain + "/" + this.address._resource;
+            const message = xml("iq", { type: "get", from: from }, xml("query", { xmlns: "jabber:iq:roster" }));
+            console.log("my message", message);
+            return xmpp.send(message);
+        });
+    }*/
+
+    close() {
+        return this.clientPromise.then(async (xmpp) => {
+            await xmpp.send(xml("presence", { type: "unavailable" }));
+            await xmpp.stop();
+            return xmpp;
+        });
+    }
+}
