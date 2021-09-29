@@ -12,15 +12,12 @@
     let unsubscriberFileStore: Unsubscriber | null = null;
     let unsubscriberVolumeStore: Unsubscriber | null = null;
 
-    let volume: number = 1;
     let decreaseWhileTalking: boolean = true;
 
     onMount(() => {
-        volume = localUserStore.getAudioPlayerVolume();
+        let volume = Math.min(localUserStore.getAudioPlayerVolume(), get(audioManagerVolumeStore).volume);
+        audioManagerVolumeStore.setVolume(volume);
         audioManagerVolumeStore.setMuted(localUserStore.getAudioPlayerMuted());
-        changeVolume();
-
-        loadAudioSettings();
 
         unsubscriberFileStore = audioManagerFileStore.subscribe(() => {
             HTMLAudioPlayer.pause();
@@ -40,6 +37,7 @@
             HTMLAudioPlayer.volume = audioManager.volume;
             HTMLAudioPlayer.muted = audioManager.muted;
             HTMLAudioPlayer.loop = audioManager.loop;
+            updateVolumeUI();
         });
     });
 
@@ -52,11 +50,12 @@
         }
     });
 
-    function changeVolume() {
+    function updateVolumeUI() {
         if (get(audioManagerVolumeStore).muted) {
             audioPlayerVolumeIcon.classList.add("muted");
             audioPlayerVol.value = "0";
         } else {
+            let volume = HTMLAudioPlayer.volume;
             audioPlayerVol.value = "" + volume;
             audioPlayerVolumeIcon.classList.remove("muted");
             if (volume < 0.3) {
@@ -75,21 +74,14 @@
         const muted = !get(audioManagerVolumeStore).muted;
         audioManagerVolumeStore.setMuted(muted);
         localUserStore.setAudioPlayerMuted(muted);
-        changeVolume();
-    }
-
-    function loadAudioSettings() {
-        audioManagerVolumeStore.setVolume(localUserStore.getAudioPlayerVolume());
-        audioManagerVolumeStore.setMuted(localUserStore.getAudioPlayerMuted());
     }
 
     function setVolume() {
-        volume = parseFloat(audioPlayerVol.value);
+        let volume = parseFloat(audioPlayerVol.value);
         audioManagerVolumeStore.setVolume(volume);
         localUserStore.setAudioPlayerVolume(volume);
         audioManagerVolumeStore.setMuted(false);
         localUserStore.setAudioPlayerMuted(false);
-        changeVolume();
     }
 
     function disallowKeys() {
