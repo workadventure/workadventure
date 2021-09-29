@@ -2,27 +2,17 @@ import { ExSocketInterface } from "_Model/Websocket/ExSocketInterface";
 import { PositionDispatcher } from "./PositionDispatcher";
 import { ViewportInterface } from "_Model/Websocket/ViewportMessage";
 import { arrayIntersect } from "../Services/ArrayHelper";
-import { GroupDescriptor, UserDescriptor, ZoneEventListener } from "_Model/Zone";
+import { ZoneEventListener } from "_Model/Zone";
 import { apiClientRepository } from "../Services/ApiClientRepository";
 import {
-    BatchToPusherMessage,
     BatchToPusherRoomMessage,
-    EmoteEventMessage,
     ErrorMessage,
-    GroupLeftZoneMessage,
-    GroupUpdateZoneMessage,
     RoomMessage,
     SubMessage,
-    UserJoinedZoneMessage,
-    UserLeftZoneMessage,
-    UserMovedMessage,
-    VariableMessage,
     VariableWithTagMessage,
-    ZoneMessage,
 } from "../Messages/generated/messages_pb";
 import Debug from "debug";
 import { ClientReadableStream } from "grpc";
-import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
 import { xmppClient, XmppSocket } from "../Services/XmppClient";
 
 const debug = Debug("room");
@@ -37,12 +27,13 @@ export class PusherRoom {
     private readonly positionNotifier: PositionDispatcher;
     public tags: string[];
     public policyType: GameRoomPolicyTypes;
+    public groupId: string | null = null;
+
     private versionNumber: number = 1;
     private backConnection!: ClientReadableStream<BatchToPusherRoomMessage>;
     private isClosing: boolean = false;
     private listeners: Set<ExSocketInterface> = new Set<ExSocketInterface>();
     private xmppListeners: Map<string, XmppSocket> = new Map();
-    //public readonly variables = new Map<string, string>();
 
     constructor(public readonly roomUrl: string, private socketListener: ZoneEventListener) {
         this.tags = [];
@@ -59,7 +50,7 @@ export class PusherRoom {
     public async join(socket: ExSocketInterface) {
         this.listeners.add(socket);
 
-        const xmppSocket = await xmppClient.joinRoom(socket, this.roomUrl);
+        const xmppSocket = await xmppClient.joinRoom(socket, this.groupId || this.roomUrl);
         this.xmppListeners.set(socket.userUuid, xmppSocket); //todo remove listeners on disconnect
     }
 

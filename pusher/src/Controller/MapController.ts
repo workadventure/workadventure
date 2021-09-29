@@ -62,6 +62,7 @@ export class MapController extends BaseController {
                         roomSlug: null, // Deprecated
                         group: null,
                         tags: [],
+                        groupId: null,
                         textures: [],
                         contactPage: null,
                         authenticationMandatory: DISABLE_ANONYMOUS,

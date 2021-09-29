@@ -1,5 +1,4 @@
 import { ExSocketInterface } from "_Model/Websocket/ExSocketInterface";
-import { uuid } from "uuidv4";
 import { v4 } from "uuid";
 
 const { client, xml, jid } = require("@xmpp/client");
@@ -84,11 +83,11 @@ class XmppClient {
         });
     }
 
-    joinRoom(clientData: ExSocketInterface, roomUrl: string): Promise<XmppSocket> {
+    joinRoom(clientData: ExSocketInterface, resource: string): Promise<XmppSocket> {
         return new Promise((res, rej) => {
             const xmpp = client({
                 service: "ws://ejabberd:5443/ws",
-                resource: v4(),
+                //resource,
                 username: clientData.userUuid,
                 password: "abc",
             });

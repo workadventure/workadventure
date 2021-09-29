@@ -435,12 +435,14 @@ export class SocketManager implements ZoneEventListener {
     public async updateRoomWithAdminData(room: PusherRoom): Promise<void> {
         const data = await adminApi.fetchMapDetails(room.roomUrl);
 
+        console.log("data", data);
         if (isRoomRedirect(data)) {
             // TODO: if the updated room data is actually a redirect, we need to take everybody on the map
             // and redirect everybody to the new location (so we need to close the connection for everybody)
         } else {
             room.tags = data.tags;
             room.policyType = Number(data.policy_type);
+            room.groupId = data.groupId as unknown as string;
         }
     }
 
