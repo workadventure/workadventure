@@ -391,12 +391,11 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
 
         async function initStream(constraints: MediaStreamConstraints) {
             try {
-                const newStream = await navigator.mediaDevices.getUserMedia(constraints);
                 if (currentStream) {
                     //we need stop all tracks to make sure the old stream will be garbage collected
                     currentStream.getTracks().forEach((t) => t.stop());
                 }
-                currentStream = newStream;
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
                 set({
                     type: "success",
                     stream: currentStream,
@@ -473,6 +472,7 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                 initStream(constraints);
             }
         } else {
+            console.log(constraints);
             //on bad navigators like chrome, we have to stop the tracks when we mute and reinstantiate the stream when we need to unmute
             if (constraints.audio === false && constraints.video === false) {
                 currentStream = null;
