@@ -46,8 +46,11 @@ class ConnectionManager {
             loginSceneVisibleIframeStore.set(false);
             return null;
         }
-        const redirectUrl = `${this._currentRoom.iframeAuthentication}?state=${state}&nonce=${nonce}&playUri=${this._currentRoom.key}`;
-        window.location.assign(redirectUrl);
+        const redirectUrl = new URL(`${this._currentRoom.iframeAuthentication}`);
+        redirectUrl.searchParams.append("state", state);
+        redirectUrl.searchParams.append("nonce", nonce);
+        redirectUrl.searchParams.append("playUri", this._currentRoom.key);
+        window.location.assign(redirectUrl.toString());
         return redirectUrl;
     }
 
