@@ -148,6 +148,7 @@ export class AuthenticateController extends BaseController {
                         JSON.stringify({
                             authToken,
                             userUuid,
+                            email,
                             roomUrl,
                             mapUrlStart,
                             organizationMemberToken,
