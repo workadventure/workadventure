@@ -1,5 +1,4 @@
 import { ExSocketInterface } from "_Model/Websocket/ExSocketInterface";
-import { v4 } from "uuid";
 
 const { client, xml, jid } = require("@xmpp/client");
 
@@ -14,6 +13,12 @@ export interface XmppSocket {
     stop: Function;
 }
 
+interface XmlElement {
+    name: string;
+    attrs: { string: string };
+    children: XmlElement[];
+}
+
 export class XmppClient {
     private address!: JID;
     private clientPromise!: Promise<XmppSocket>;
@@ -24,6 +29,7 @@ export class XmppClient {
             const xmpp = client({
                 service: "ws://ejabberd:5443/ws",
                 username: clientData.userUuid,
+                resource: "pusher",
                 password: "abc",
             });
 
@@ -36,7 +42,7 @@ export class XmppClient {
                 console.log("offline");
             });
             xmpp.on("online", async (address: JID) => {
-                console.log("online", address);
+                this.address = address;
                 await xmpp.send(xml("presence"));
                 res(xmpp);
             });
@@ -48,18 +54,21 @@ export class XmppClient {
             });
 
             xmpp.on("stanza", async (stanza: any) => {
-                console.log("stanza", stanza);
+                console.log("stanza", stanza.toString());
             });
         });
     }
 
+    private getFullJID() {
+        return this.address._local + "@" + this.address._domain + "/" + this.address._resource;
+    }
+
     joinRoom(resource: string): Promise<XmppSocket> {
         return this.clientPromise.then(async (xmpp) => {
-            console.log("join room");
             const message = xml(
                 "presence",
-                { to: "testRoom@ejabberd", from: this.clientID },
-                xml("x", "http://jabber.org/protocol/muc")
+                { to: "testRoom@ejabberd/toto", from: this.getFullJID() },
+                xml("x", { xmlns: "http://jabber.org/protocol/muc" })
             );
             await xmpp.send(message);
             return xmpp;
