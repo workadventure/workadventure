@@ -7,6 +7,9 @@
     "compose": "docker compose up --build"
   },
   "dependencies": {
-    "@momentum-ui/core": "^19.15.11"
+    "@momentum-ui/core": "^19.15.11",
+    "@types/cookie": "^0.4.1",
+    "@types/node-fetch": "^3.0.3",
+    "cookie-parser": "^1.4.5"
   }
 }
