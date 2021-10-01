@@ -1,4 +1,4 @@
-import {PUSHER_URL, UPLOADER_URL} from "../Enum/EnvironmentVariable";
+import { PUSHER_URL, UPLOADER_URL } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
 import {
     BanUserMessage,
@@ -37,8 +37,8 @@ import {
     WebRtcStartMessage,
 } from "../Messages/generated/messages_pb";
 
-import type {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
-import {ProtobufClientUtils} from "../Network/ProtobufClientUtils";
+import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
+import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
 import {
     EventMessage,
     GroupCreatedUpdatedMessageInterface,
@@ -52,13 +52,13 @@ import {
     WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
-import type {BodyResourceDescriptionInterface} from "../Phaser/Entity/PlayerTextures";
-import {adminMessagesService} from "./AdminMessagesService";
-import {worldFullMessageStream} from "./WorldFullMessageStream";
-import {connectionManager} from "./ConnectionManager";
-import {emoteEventStream} from "./EmoteEventStream";
-import {warningContainerStore} from "../Stores/MenuStore";
-import {WebexIntegration} from "../WebRtc/WebexIntegration";
+import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
+import { adminMessagesService } from "./AdminMessagesService";
+import { worldFullMessageStream } from "./WorldFullMessageStream";
+import { connectionManager } from "./ConnectionManager";
+import { emoteEventStream } from "./EmoteEventStream";
+import { warningContainerStore } from "../Stores/MenuStore";
+import { WebexIntegration } from "../WebRtc/WebexIntegration";
 import Direction = PositionMessage.Direction;
 
 const manualPingDelay = 20000;
@@ -66,19 +66,14 @@ const manualPingDelay = 20000;
 export type UserList = UserListMessage.AsObject["userList"];
 
 export class RoomConnection implements RoomConnection {
+    private static websocketFactory: null | ((url: string) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
     private readonly socket: WebSocket;
     private userId: number | null = null;
     private listeners: Map<string, Function[]> = new Map<string, Function[]>();
-    private static websocketFactory: null | ((url: string) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
     private closed: boolean = false;
     private tags: string[] = [];
     private userList: UserList = [];
     private roomID = null;
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
-        RoomConnection.websocketFactory = websocketFactory;
-    }
 
     /**
      *
@@ -190,13 +185,15 @@ export class RoomConnection implements RoomConnection {
                 const w = new WebexIntegration();
                 // TODO check if meeting room id matches this room => if (message.getWebexsessionstart()!!.getRoomid() === )
                 const meetingLink = message.getWebexsessionstart()!!.getMeetinglink();
-                w.startMeeting(meetingLink).then(() => {
-                    console.log("[BROADCAST] Tried to start meeting at ", meetingLink);
-                }).catch((e) => {
-                    console.error("[BROADCAST] Error trying to start meeting at ", meetingLink);
-                    console.error(e);
-                    throw e;
-                });
+                w.startMeeting(meetingLink)
+                    .then(() => {
+                        console.log("[BROADCAST] Tried to start meeting at ", meetingLink);
+                    })
+                    .catch((e) => {
+                        console.error("[BROADCAST] Error trying to start meeting at ", meetingLink);
+                        console.error(e);
+                        throw e;
+                    });
             } else if (message.hasRoomjoinedmessage()) {
                 const roomJoinedMessage = message.getRoomjoinedmessage() as RoomJoinedMessage;
 
@@ -212,10 +209,10 @@ export class RoomConnection implements RoomConnection {
                     } catch (e) {
                         console.error(
                             'Unable to unserialize value received from server for variable "' +
-                            variable.getName() +
-                            '". Value received: "' +
-                            variable.getValue() +
-                            '". Error: ',
+                                variable.getName() +
+                                '". Value received: "' +
+                                variable.getValue() +
+                                '". Error: ',
                             e
                         );
                     }
@@ -276,14 +273,9 @@ export class RoomConnection implements RoomConnection {
         };
     }
 
-    private dispatch(event: string, payload: unknown): void {
-        const listeners = this.listeners.get(event);
-        if (listeners === undefined) {
-            return;
-        }
-        for (const listener of listeners) {
-            listener(payload);
-        }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
+        RoomConnection.websocketFactory = websocketFactory;
     }
 
     public emitPlayerDetailsMessage(userName: string, characterLayersSelected: BodyResourceDescriptionInterface[]) {
@@ -300,43 +292,6 @@ export class RoomConnection implements RoomConnection {
     public closeConnection(): void {
         this.socket?.close();
         this.closed = true;
-    }
-
-    private toPositionMessage(x: number, y: number, direction: string, moving: boolean): PositionMessage {
-        const positionMessage = new PositionMessage();
-        positionMessage.setX(Math.floor(x));
-        positionMessage.setY(Math.floor(y));
-        let directionEnum: Direction;
-        switch (direction) {
-            case "up":
-                directionEnum = Direction.UP;
-                break;
-            case "down":
-                directionEnum = Direction.DOWN;
-                break;
-            case "left":
-                directionEnum = Direction.LEFT;
-                break;
-            case "right":
-                directionEnum = Direction.RIGHT;
-                break;
-            default:
-                throw new Error("Unexpected direction");
-        }
-        positionMessage.setDirection(directionEnum);
-        positionMessage.setMoving(moving);
-
-        return positionMessage;
-    }
-
-    private toViewportMessage(viewport: ViewportInterface): ViewportMessage {
-        const viewportMessage = new ViewportMessage();
-        viewportMessage.setLeft(Math.floor(viewport.left));
-        viewportMessage.setRight(Math.floor(viewport.right));
-        viewportMessage.setTop(Math.floor(viewport.top));
-        viewportMessage.setBottom(Math.floor(viewport.bottom));
-
-        return viewportMessage;
     }
 
     public sharePosition(x: number, y: number, direction: string, moving: boolean, viewport: ViewportInterface): void {
@@ -392,50 +347,9 @@ export class RoomConnection implements RoomConnection {
         this.onMessage(EventMessage.USER_LIST, callback);
     }
 
-    // TODO: move this to protobuf utils
-    private toMessageUserJoined(message: UserJoinedMessage): MessageUserJoined {
-        const position = message.getPosition();
-        if (position === undefined) {
-            throw new Error("Invalid JOIN_ROOM message");
-        }
-
-        const characterLayers = message
-            .getCharacterlayersList()
-            .map((characterLayer: CharacterLayerMessage): BodyResourceDescriptionInterface => {
-                return {
-                    name: characterLayer.getName(),
-                    img: characterLayer.getUrl(),
-                };
-            });
-
-        const companion = message.getCompanion();
-
-        return {
-            userId: message.getUserid(),
-            name: message.getName(),
-            characterLayers,
-            visitCardUrl: message.getVisitcardurl(),
-            position: ProtobufClientUtils.toPointInterface(position),
-            companion: companion ? companion.getName() : null,
-            userUuid: message.getUseruuid(),
-        };
-    }
-
     public onUserMoved(callback: (message: UserMovedMessage) => void): void {
         this.onMessage(EventMessage.USER_MOVED, callback);
         //this.socket.on(EventMessage.USER_MOVED, callback);
-    }
-
-    /**
-     * Registers a listener on a message that is part of a batch
-     */
-    private onMessage(eventName: string, callback: Function): void {
-        let callbacks = this.listeners.get(eventName);
-        if (callbacks === undefined) {
-            callbacks = new Array<Function>();
-            this.listeners.set(eventName, callbacks);
-        }
-        callbacks.push(callback);
     }
 
     public onUserLeft(callback: (userId: number) => void): void {
@@ -450,19 +364,6 @@ export class RoomConnection implements RoomConnection {
         this.onMessage(EventMessage.GROUP_CREATE_UPDATE, (message: GroupUpdateMessage) => {
             callback(this.toGroupCreatedUpdatedMessage(message));
         });
-    }
-
-    private toGroupCreatedUpdatedMessage(message: GroupUpdateMessage): GroupCreatedUpdatedMessageInterface {
-        const position = message.getPosition();
-        if (position === undefined) {
-            throw new Error("Missing position in GROUP_CREATE_UPDATE");
-        }
-
-        return {
-            groupId: message.getGroupid(),
-            position: position.toObject(),
-            groupSize: message.getGroupsize(),
-        };
     }
 
     public onGroupDeleted(callback: (groupId: number) => void): void {
@@ -485,13 +386,6 @@ export class RoomConnection implements RoomConnection {
         //this.socket.addEventListener('open', callback)
         this.onMessage(EventMessage.CONNECT, callback);
     }
-
-    /**
-     * Triggered when we receive all the details of a room (users, groups, ...)
-     */
-    /*public onStartRoom(callback: (event: RoomJoinedMessageInterface) => void): void {
-        this.onMessage(EventMessage.START_ROOM, callback);
-    }*/
 
     public sendWebrtcSignal(signal: unknown, receiverId: number) {
         const webRtcSignal = new WebRtcSignalToServerMessage();
@@ -562,6 +456,14 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    /**
+     * Triggered when we receive all the details of a room (users, groups, ...)
+     */
+
+    /*public onStartRoom(callback: (event: RoomJoinedMessageInterface) => void): void {
+        this.onMessage(EventMessage.START_ROOM, callback);
+    }*/
+
     public getUserId(): number {
         if (this.userId === null) throw "UserId cannot be null!";
         return this.userId;
@@ -621,16 +523,6 @@ export class RoomConnection implements RoomConnection {
             });
     }
 
-    /*    public receivePlayGlobalMessage(callback: (message: PlayGlobalMessageInterface) => void) {
-        return this.onMessage(EventMessage.PLAY_GLOBAL_MESSAGE, (message: PlayGlobalMessage) => {
-            callback({
-                id: message.getId(),
-                type: message.getType(),
-                message: message.getMessage(),
-            });
-        });
-    }*/
-
     public receiveStopGlobalMessage(callback: (messageId: string) => void) {
         return this.onMessage(EventMessage.STOP_GLOBAL_MESSAGE, (message: StopGlobalMessage) => {
             callback(message.getId());
@@ -685,6 +577,16 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    /*    public receivePlayGlobalMessage(callback: (message: PlayGlobalMessageInterface) => void) {
+        return this.onMessage(EventMessage.PLAY_GLOBAL_MESSAGE, (message: PlayGlobalMessage) => {
+            callback({
+                id: message.getId(),
+                type: message.getType(),
+                message: message.getMessage(),
+            });
+        });
+    }*/
+
     public onSetVariable(callback: (name: string, value: unknown) => void): void {
         this.onMessage(EventMessage.SET_VARIABLE, (message: VariableMessage) => {
             const name = message.getName();
@@ -728,6 +630,107 @@ export class RoomConnection implements RoomConnection {
 
     public getAllTags(): string[] {
         return this.tags;
+    }
+
+    private dispatch(event: string, payload: unknown): void {
+        const listeners = this.listeners.get(event);
+        if (listeners === undefined) {
+            return;
+        }
+        for (const listener of listeners) {
+            listener(payload);
+        }
+    }
+
+    private toPositionMessage(x: number, y: number, direction: string, moving: boolean): PositionMessage {
+        const positionMessage = new PositionMessage();
+        positionMessage.setX(Math.floor(x));
+        positionMessage.setY(Math.floor(y));
+        let directionEnum: Direction;
+        switch (direction) {
+            case "up":
+                directionEnum = Direction.UP;
+                break;
+            case "down":
+                directionEnum = Direction.DOWN;
+                break;
+            case "left":
+                directionEnum = Direction.LEFT;
+                break;
+            case "right":
+                directionEnum = Direction.RIGHT;
+                break;
+            default:
+                throw new Error("Unexpected direction");
+        }
+        positionMessage.setDirection(directionEnum);
+        positionMessage.setMoving(moving);
+
+        return positionMessage;
+    }
+
+    private toViewportMessage(viewport: ViewportInterface): ViewportMessage {
+        const viewportMessage = new ViewportMessage();
+        viewportMessage.setLeft(Math.floor(viewport.left));
+        viewportMessage.setRight(Math.floor(viewport.right));
+        viewportMessage.setTop(Math.floor(viewport.top));
+        viewportMessage.setBottom(Math.floor(viewport.bottom));
+
+        return viewportMessage;
+    }
+
+    // TODO: move this to protobuf utils
+    private toMessageUserJoined(message: UserJoinedMessage): MessageUserJoined {
+        const position = message.getPosition();
+        if (position === undefined) {
+            throw new Error("Invalid JOIN_ROOM message");
+        }
+
+        const characterLayers = message
+            .getCharacterlayersList()
+            .map((characterLayer: CharacterLayerMessage): BodyResourceDescriptionInterface => {
+                return {
+                    name: characterLayer.getName(),
+                    img: characterLayer.getUrl(),
+                };
+            });
+
+        const companion = message.getCompanion();
+
+        return {
+            userId: message.getUserid(),
+            name: message.getName(),
+            characterLayers,
+            visitCardUrl: message.getVisitcardurl(),
+            position: ProtobufClientUtils.toPointInterface(position),
+            companion: companion ? companion.getName() : null,
+            userUuid: message.getUseruuid(),
+        };
+    }
+
+    /**
+     * Registers a listener on a message that is part of a batch
+     */
+    private onMessage(eventName: string, callback: Function): void {
+        let callbacks = this.listeners.get(eventName);
+        if (callbacks === undefined) {
+            callbacks = new Array<Function>();
+            this.listeners.set(eventName, callbacks);
+        }
+        callbacks.push(callback);
+    }
+
+    private toGroupCreatedUpdatedMessage(message: GroupUpdateMessage): GroupCreatedUpdatedMessageInterface {
+        const position = message.getPosition();
+        if (position === undefined) {
+            throw new Error("Missing position in GROUP_CREATE_UPDATE");
+        }
+
+        return {
+            groupId: message.getGroupid(),
+            position: position.toObject(),
+            groupSize: message.getGroupsize(),
+        };
     }
 
     public getUserList(): UserList {

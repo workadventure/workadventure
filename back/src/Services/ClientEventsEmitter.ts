@@ -4,7 +4,7 @@ const clientJoinEvent = "clientJoin";
 const clientLeaveEvent = "clientLeave";
 
 const webexMeetingStartEvent = "webexStart";
-const webexMeetingStopEvent = "webexStop"
+const webexMeetingStopEvent = "webexStop";
 
 class ClientEventsEmitter extends EventEmitter {
     emitMeetingStart(clientUUid: string, roomId: string, meetingLink: string): void {
