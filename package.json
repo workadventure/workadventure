@@ -11,6 +11,7 @@
     "@types/cookie": "^0.4.1",
     "@types/cookie-parser": "^1.4.2",
     "@types/node-fetch": "^3.0.3",
-    "cookie-parser": "^1.4.5"
+    "cookie-parser": "^1.4.5",
+    "node-fetch": "^3.0.0"
   }
 }
