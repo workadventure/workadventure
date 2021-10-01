@@ -1,4 +1,4 @@
-import {GameRoom} from "../Model/GameRoom";
+import { GameRoom } from "../Model/GameRoom";
 import {
     BanUserMessage,
     BatchToPusherMessage,
@@ -37,10 +37,10 @@ import {
     WorldFullWarningMessage,
     Zone as ProtoZone,
 } from "../Messages/generated/messages_pb";
-import {User, UserSocket} from "../Model/User";
-import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
-import {Group} from "../Model/Group";
-import {cpuTracker} from "./CpuTracker";
+import { User, UserSocket } from "../Model/User";
+import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
+import { Group } from "../Model/Group";
+import { cpuTracker } from "./CpuTracker";
 import {
     GROUP_RADIUS,
     JITSI_ISS,
@@ -49,15 +49,15 @@ import {
     SECRET_JITSI_KEY,
     TURN_STATIC_AUTH_SECRET,
 } from "../Enum/EnvironmentVariable";
-import {Movable} from "../Model/Movable";
-import {PositionInterface} from "../Model/PositionInterface";
+import { Movable } from "../Model/Movable";
+import { PositionInterface } from "../Model/PositionInterface";
 import Jwt from "jsonwebtoken";
-import {clientEventsEmitter} from "./ClientEventsEmitter";
-import {gaugeManager} from "./GaugeManager";
-import {RoomSocket, ZoneSocket} from "../RoomManager";
-import {Zone} from "_Model/Zone";
+import { clientEventsEmitter } from "./ClientEventsEmitter";
+import { gaugeManager } from "./GaugeManager";
+import { RoomSocket, ZoneSocket } from "../RoomManager";
+import { Zone } from "_Model/Zone";
 import Debug from "debug";
-import {Admin} from "_Model/Admin";
+import { Admin } from "_Model/Admin";
 import crypto from "crypto";
 
 const debug = Debug("sockermanager");
@@ -89,7 +89,7 @@ export class SocketManager {
         joinRoomMessage: JoinRoomMessage
     ): Promise<{ room: GameRoom; user: User }> {
         //join new previous room
-        const {room, user} = await this.joinRoom(socket, joinRoomMessage);
+        const { room, user } = await this.joinRoom(socket, joinRoomMessage);
 
         this.updateUserList(room);
 
@@ -212,7 +212,7 @@ export class SocketManager {
         webrtcSignalToClient.setSignal(data.getSignal());
         // TODO: only compute credentials if data.signal.type === "offer"
         if (TURN_STATIC_AUTH_SECRET !== "") {
-            const {username, password} = this.getTURNCredentials("" + user.id, TURN_STATIC_AUTH_SECRET);
+            const { username, password } = this.getTURNCredentials("" + user.id, TURN_STATIC_AUTH_SECRET);
             webrtcSignalToClient.setWebrtcusername(username);
             webrtcSignalToClient.setWebrtcpassword(password);
         }
@@ -242,7 +242,7 @@ export class SocketManager {
         webrtcSignalToClient.setSignal(data.getSignal());
         // TODO: only compute credentials if data.signal.type === "offer"
         if (TURN_STATIC_AUTH_SECRET !== "") {
-            const {username, password} = this.getTURNCredentials("" + user.id, TURN_STATIC_AUTH_SECRET);
+            const { username, password } = this.getTURNCredentials("" + user.id, TURN_STATIC_AUTH_SECRET);
             webrtcSignalToClient.setWebrtcusername(username);
             webrtcSignalToClient.setWebrtcpassword(password);
         }
@@ -483,8 +483,8 @@ export class SocketManager {
         if (!room) {
             console.error(
                 "In sendAdminMessage, could not find room with id '" +
-                roomId +
-                "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+                    roomId +
+                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
             );
             return;
         }
@@ -493,8 +493,8 @@ export class SocketManager {
         if (recipients.length === 0) {
             console.error(
                 "In sendAdminMessage, could not find user with id '" +
-                recipientUuid +
-                "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
+                    recipientUuid +
+                    "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
             );
             return;
         }
@@ -516,8 +516,8 @@ export class SocketManager {
         if (!room) {
             console.error(
                 "In banUser, could not find room with id '" +
-                roomId +
-                "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+                    roomId +
+                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
             );
             return;
         }
@@ -526,8 +526,8 @@ export class SocketManager {
         if (recipients.length === 0) {
             console.error(
                 "In banUser, could not find user with id '" +
-                recipientUuid +
-                "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
+                    recipientUuid +
+                    "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
             );
             return;
         }
@@ -555,8 +555,8 @@ export class SocketManager {
             //todo: this should cause the http call to return a 500
             console.error(
                 "In sendAdminRoomMessage, could not find room with id '" +
-                roomId +
-                "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+                    roomId +
+                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
             );
             return;
         }
@@ -579,8 +579,8 @@ export class SocketManager {
             //todo: this should cause the http call to return a 500
             console.error(
                 "In dispatchWorldFullWarning, could not find room with id '" +
-                roomId +
-                "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
+                    roomId +
+                    "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
             );
             return;
         }
@@ -705,7 +705,7 @@ export class SocketManager {
 
         clientEventsEmitter.emitClientJoin(user.uuid, roomId);
         console.log(new Date().toISOString() + " A user joined");
-        return {room, user};
+        return { room, user };
     }
 
     private onZoneEnter(thing: Movable, fromZone: Zone | null, listener: ZoneSocket) {
@@ -835,7 +835,7 @@ export class SocketManager {
             webrtcStartMessage1.setUserid(otherUser.id);
             webrtcStartMessage1.setInitiator(true);
             if (TURN_STATIC_AUTH_SECRET !== "") {
-                const {username, password} = this.getTURNCredentials("" + otherUser.id, TURN_STATIC_AUTH_SECRET);
+                const { username, password } = this.getTURNCredentials("" + otherUser.id, TURN_STATIC_AUTH_SECRET);
                 webrtcStartMessage1.setWebrtcusername(username);
                 webrtcStartMessage1.setWebrtcpassword(password);
             }
@@ -849,7 +849,7 @@ export class SocketManager {
             webrtcStartMessage2.setUserid(user.id);
             webrtcStartMessage2.setInitiator(false);
             if (TURN_STATIC_AUTH_SECRET !== "") {
-                const {username, password} = this.getTURNCredentials("" + user.id, TURN_STATIC_AUTH_SECRET);
+                const { username, password } = this.getTURNCredentials("" + user.id, TURN_STATIC_AUTH_SECRET);
                 webrtcStartMessage2.setWebrtcusername(username);
                 webrtcStartMessage2.setWebrtcpassword(password);
             }
