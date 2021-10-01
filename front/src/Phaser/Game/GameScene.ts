@@ -22,9 +22,8 @@ import {
     JITSI_MESSAGE_PROPERTIES,
     ON_ACTION_TRIGGER_BUTTON,
     TRIGGER_JITSI_PROPERTIES,
-    TRIGGER_WEBSITE_PROPERTIES,
-    WEBSITE_MESSAGE_PROPERTIES,
 } from "../../WebRtc/LayoutManager";
+import { peopleStore } from "../../Stores/PeopleStore";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import type { UserMovedMessage } from "../../Messages/generated/messages_pb";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
@@ -44,7 +43,7 @@ import { RemotePlayer } from "../Entity/RemotePlayer";
 import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
-import type { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapObject, ITiledTileSet } from "../Map/ITiledMap";
+import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapProperty, ITiledTileSet } from "../Map/ITiledMap";
 import { PlayerAnimationDirections } from "../Player/Animation";
 import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
 import { ErrorSceneName } from "../Reconnecting/ErrorScene";
@@ -55,12 +54,6 @@ import { gameManager } from "./GameManager";
 import { GameMap } from "./GameMap";
 import { PlayerMovement } from "./PlayerMovement";
 import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
-import Texture = Phaser.Textures.Texture;
-import Sprite = Phaser.GameObjects.Sprite;
-import CanvasTexture = Phaser.Textures.CanvasTexture;
-import GameObject = Phaser.GameObjects.GameObject;
-import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
-import DOMElement = Phaser.GameObjects.DOMElement;
 import { worldFullMessageStream } from "../../Connexion/WorldFullMessageStream";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
 import { DirtyScene } from "./DirtyScene";
@@ -70,26 +63,19 @@ import { PinchManager } from "../UserInput/PinchManager";
 import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { EmoteManager } from "./EmoteManager";
-import EVENT_TYPE = Phaser.Scenes.Events;
 import type { HasPlayerMovedEvent } from "../../Api/Events/HasPlayerMovedEvent";
 
 import AnimatedTiles from "phaser-animated-tiles";
 import { StartPositionCalculator } from "./StartPositionCalculator";
 import { soundManager } from "./SoundManager";
-import { peerStore, screenSharingPeerStore } from "../../Stores/PeerStore";
-import { videoFocusStore } from "../../Stores/VideoFocusStore";
+import { peerStore } from "../../Stores/PeerStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { playersStore } from "../../Stores/PlayersStore";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
-import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
-import {
-    audioManagerFileStore,
-    audioManagerVisibilityStore,
-    audioManagerVolumeStore,
-} from "../../Stores/AudioManagerStore";
+import { emoteMenuStore, emoteStore } from "../../Stores/EmoteStore";
+import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
 import { PropertyUtils } from "../Map/PropertyUtils";
-import Tileset = Phaser.Tilemaps.Tileset;
 import { userIsAdminStore } from "../../Stores/GameStore";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
@@ -97,8 +83,15 @@ import { webexIntegration } from "../../WebRtc/WebexIntegration";
 import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { get } from "svelte/store";
-import type { RadialMenuItem } from "../Components/RadialMenu";
 import { contactPageStore } from "../../Stores/MenuStore";
+import Texture = Phaser.Textures.Texture;
+import Sprite = Phaser.GameObjects.Sprite;
+import CanvasTexture = Phaser.Textures.CanvasTexture;
+import GameObject = Phaser.GameObjects.GameObject;
+import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
+import DOMElement = Phaser.GameObjects.DOMElement;
+import EVENT_TYPE = Phaser.Scenes.Events;
+import Tileset = Phaser.Tilemaps.Tileset;
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -1836,20 +1829,20 @@ ${escapedMessage}
         );
         const jitsiUrl = allProps.get("jitsiUrl") as string | undefined;
         const webexSpaceId = allProps.get("webexSpace");
-        const webexMeetingUrl = allProps.get("webexMeetingUrl")
+        const webexMeetingUrl = allProps.get("webexMeetingUrl");
         const jitsiWidth = allProps.get("jitsiWidth") as number | undefined;
 
-        console.log("Jitsi: "+jitsiUrl)
-        console.log("webexSpaceId: "+webexSpaceId)
-        console.log("webexMeetingUrl: "+webexMeetingUrl)
+        console.log("Jitsi: " + jitsiUrl);
+        console.log("webexSpaceId: " + webexSpaceId);
+        console.log("webexMeetingUrl: " + webexMeetingUrl);
 
         if (webexMeetingUrl) {
-            console.log("Found webex meeting url")
-            webexIntegration.startMeeting(webexMeetingUrl)
+            console.log("Found webex meeting url");
+            webexIntegration.startMeeting(webexMeetingUrl);
         } else if (webexSpaceId) {
             webexIntegration.start(webexSpaceId as string);
         } else {
-            console.log("Didn't find webex Meeting URl or Space ID")
+            console.log("Didn't find webex Meeting URl or Space ID");
             jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl, jitsiWidth);
         }
         this.connection?.setSilent(true);
