@@ -2,6 +2,7 @@ import { writable } from "svelte/store";
 import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import type { RoomConnection } from "../Connexion/RoomConnection";
 import { getRandomColor } from "../WebRtc/ColorGenerator";
+import { localUserStore } from "../Connexion/LocalUserStore";
 
 let idCount = 0;
 

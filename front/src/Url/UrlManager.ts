@@ -1,4 +1,5 @@
 import type { Room } from "../Connexion/Room";
+import { localUserStore } from "../Connexion/LocalUserStore";
 
 export enum GameConnexionTypes {
     anonymous = 1,
@@ -7,13 +8,16 @@ export enum GameConnexionTypes {
     empty,
     unknown,
     jwt,
+    login,
 }
 
 //this class is responsible with analysing and editing the game's url
 class UrlManager {
     public getGameConnexionType(): GameConnexionTypes {
         const url = window.location.pathname.toString();
-        if (url === "/jwt") {
+        if (url === "/login") {
+            return GameConnexionTypes.login;
+        } else if (url === "/jwt") {
             return GameConnexionTypes.jwt;
         } else if (url.includes("_/")) {
             return GameConnexionTypes.anonymous;
@@ -35,6 +39,8 @@ class UrlManager {
 
     public pushRoomIdToUrl(room: Room): void {
         if (window.location.pathname === room.id) return;
+        //Set last room visited! (connected or nor, must to be saved in localstorage and cache API)
+        localUserStore.setLastRoomUrl(room.key);
         const hash = window.location.hash;
         const search = room.search.toString();
         history.pushState({}, "WorkAdventure", room.id + (search ? "?" + search : "") + hash);

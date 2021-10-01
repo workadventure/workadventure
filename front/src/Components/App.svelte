@@ -1,5 +1,8 @@
 <script lang="typescript">
-    import { enableCameraSceneVisibilityStore } from "../Stores/MediaStore";
+    import MenuIcon from "./Menu/MenuIcon.svelte";
+    import {menuIconVisiblilityStore, menuVisiblilityStore} from "../Stores/MenuStore";
+    import {emoteMenuVisiblilityStore} from "../Stores/EmoteStore";
+    import {enableCameraSceneVisibilityStore} from "../Stores/MediaStore";
     import CameraControls from "./CameraControls.svelte";
     import MyCamera from "./MyCamera.svelte";
     import SelectCompanionScene from "./SelectCompanion/SelectCompanionScene.svelte";
@@ -23,10 +26,11 @@
     import AudioPlaying from "./UI/AudioPlaying.svelte";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
     import ErrorDialog from "./UI/ErrorDialog.svelte";
+    import Menu from "./Menu/Menu.svelte";
+    import EmoteMenu from "./EmoteMenu/EmoteMenu.svelte";
     import VideoOverlay from "./Video/VideoOverlay.svelte";
     import { gameOverlayVisibilityStore } from "../Stores/GameOverlayStoreVisibility";
     import { consoleGlobalMessageManagerVisibleStore } from "../Stores/ConsoleGlobalMessageManagerStore";
-    import ConsoleGlobalMessageManager from "./ConsoleGlobalMessageManager/ConsoleGlobalMessageManager.svelte";
     import AdminMessage from "./TypeMessage/BanMessage.svelte";
     import TextMessage from "./TypeMessage/TextMessage.svelte";
     import { banMessageVisibleStore } from "../Stores/TypeMessageStore/BanMessageStore";
@@ -40,6 +44,8 @@
     import { peopleMenuVisible } from "../Stores/PeopleStore";
     import PeopleMenu from "./People/PeopleMenu.svelte";
     import WebexGlobalChat from "./Webex/WebexGlobalChat.svelte";
+    import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore";
+    import ReportMenu from "./ReportMenu/ReportMenu.svelte";
 
     export let game: Game;
 </script>
@@ -102,23 +108,31 @@
             <WebexGlobalChat />
         </div>
     {/if}
-    <!--
-    {#if $menuIconVisible}
+    {#if $showReportScreenStore !== userReportEmpty}
         <div>
-            <MenuIcon  />
+            <ReportMenu></ReportMenu>
         </div>
     {/if}
-    -->
+    {#if $menuIconVisiblilityStore}
+        <div>
+            <MenuIcon></MenuIcon>
+        </div>
+    {/if}
+    {#if $menuVisiblilityStore}
+        <div>
+            <Menu></Menu>
+        </div>
+    {/if}
+    {#if $emoteMenuVisiblilityStore}
+        <div>
+            <EmoteMenu></EmoteMenu>
+        </div>
+    {/if}
     {#if $gameOverlayVisibilityStore}
         <div>
             <VideoOverlay />
             <MyCamera />
             <CameraControls />
-        </div>
-    {/if}
-    {#if $consoleGlobalMessageManagerVisibleStore}
-        <div>
-            <ConsoleGlobalMessageManager />
         </div>
     {/if}
     {#if $helpCameraSettingsVisibleStore}

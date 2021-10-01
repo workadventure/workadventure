@@ -1,4 +1,7 @@
 import { coWebsiteManager } from "../WebRtc/CoWebsiteManager";
+import { playersStore } from "../Stores/PlayersStore";
+import { chatMessagesStore } from "../Stores/ChatStore";
+import type { ChatEvent } from "./Events/ChatEvent";
 
 class ScriptUtils {
     public openTab(url: string) {
@@ -15,6 +18,11 @@ class ScriptUtils {
 
     public closeCoWebSite() {
         coWebsiteManager.closeCoWebsite();
+    }
+
+    public sendAnonymousChat(chatEvent: ChatEvent) {
+        const userId = playersStore.addFacticePlayer(chatEvent.author);
+        chatMessagesStore.addExternalMessage(userId, chatEvent.message);
     }
 }
 

@@ -1,5 +1,5 @@
 import Axios from "axios";
-import { PUSHER_URL } from "../Enum/EnvironmentVariable";
+import { CONTACT_URL, PUSHER_URL } from "../Enum/EnvironmentVariable";
 import type { CharacterTexture } from "./LocalUser";
 import { localUserStore } from "./LocalUserStore";
 
@@ -14,10 +14,13 @@ export interface RoomRedirect {
 export class Room {
     public readonly id: string;
     public readonly isPublic: boolean;
+    private _authenticationMandatory: boolean = false;
+    private _iframeAuthentication?: string;
     private _mapUrl: string | undefined;
     private _textures: CharacterTexture[] | undefined;
     private instance: string | undefined;
     private readonly _search: URLSearchParams;
+    private _contactPage: string | undefined;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -101,6 +104,9 @@ export class Room {
         console.log("Map ", this.id, " resolves to URL ", data.mapUrl);
         this._mapUrl = data.mapUrl;
         this._textures = data.textures;
+        this._authenticationMandatory = data.authenticationMandatory || false;
+        this._iframeAuthentication = data.iframeAuthentication;
+        this._contactPage = data.contactPage || CONTACT_URL;
         return new MapDetail(data.mapUrl, data.textures);
     }
 
@@ -185,5 +191,17 @@ export class Room {
             throw new Error("Map URL not fetched yet");
         }
         return this._mapUrl;
+    }
+
+    get authenticationMandatory(): boolean {
+        return this._authenticationMandatory;
+    }
+
+    get iframeAuthentication(): string | undefined {
+        return this._iframeAuthentication;
+    }
+
+    get contactPage(): string | undefined {
+        return this._contactPage;
     }
 }

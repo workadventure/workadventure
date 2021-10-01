@@ -4,10 +4,10 @@ import type { RoomConnection } from "../Connexion/RoomConnection";
 import { blackListManager } from "./BlackListManager";
 import type { Subscription } from "rxjs";
 import type { UserSimplePeerInterface } from "./SimplePeer";
-import { get, readable, Readable, Unsubscriber } from "svelte/store";
-import { obtainedMediaConstraintIsMobileStore, obtainedMediaConstraintStore } from "../Stores/MediaStore";
+import { readable, Readable, Unsubscriber } from "svelte/store";
+import { localStreamStore, obtainedMediaConstraintStore, ObtainedMediaStreamConstraints } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
-import { chatMessagesStore, chatVisibilityStore, newChatMessageStore } from "../Stores/ChatStore";
+import { chatMessagesStore, newChatMessageStore } from "../Stores/ChatStore";
 import { getIceServersConfig } from "../Components/Video/utils";
 import { isMobile } from "../Enum/EnvironmentVariable";
 
@@ -34,16 +34,17 @@ export class VideoPeer extends Peer {
     private onUnBlockSubscribe: Subscription;
     public readonly streamStore: Readable<MediaStream | null>;
     public readonly statusStore: Readable<PeerStatus>;
-    public readonly constraintsStore: Readable<MediaStreamConstraints | null>;
+    public readonly constraintsStore: Readable<ObtainedMediaStreamConstraints | null>;
     private newMessageunsubscriber: Unsubscriber | null = null;
     private closing: Boolean = false; //this is used to prevent destroy() from being called twice
+    private localStreamStoreSubscribe: Unsubscriber;
+    private obtainedMediaConstraintStoreSubscribe: Unsubscriber;
 
     constructor(
         public user: UserSimplePeerInterface,
         initiator: boolean,
         public readonly userName: string,
-        private connection: RoomConnection,
-        localStream: MediaStream | null
+        private connection: RoomConnection
     ) {
         super({
             initiator,
@@ -60,27 +61,15 @@ export class VideoPeer extends Peer {
             const onStream = (stream: MediaStream | null) => {
                 set(stream);
             };
-            const onData = (chunk: Buffer) => {
-                this.on("data", (chunk: Buffer) => {
-                    const message = JSON.parse(chunk.toString("utf8"));
-                    if (message.type === MESSAGE_TYPE_CONSTRAINT) {
-                        if (!message.video) {
-                            set(null);
-                        }
-                    }
-                });
-            };
 
             this.on("stream", onStream);
-            this.on("data", onData);
 
             return () => {
                 this.off("stream", onStream);
-                this.off("data", onData);
             };
         });
 
-        this.constraintsStore = readable<MediaStreamConstraints | null>(null, (set) => {
+        this.constraintsStore = readable<ObtainedMediaStreamConstraints | null>(null, (set) => {
             const onData = (chunk: Buffer) => {
                 const message = JSON.parse(chunk.toString("utf8"));
                 if (message.type === MESSAGE_TYPE_CONSTRAINT) {
@@ -168,9 +157,6 @@ export class VideoPeer extends Peer {
                 } else {
                     mediaManager.disabledVideoByUserId(this.userId);
                 }
-                if (message.isMobile != undefined) {
-                    obtainedMediaConstraintIsMobileStore.set(message.isMobile);
-                }
             } else if (message.type === MESSAGE_TYPE_MESSAGE) {
                 if (!blackListManager.isBlackListed(this.userUuid)) {
                     chatMessagesStore.addExternalMessage(this.userId, message.message);
@@ -191,7 +177,6 @@ export class VideoPeer extends Peer {
             this._onFinish();
         });
 
-        this.pushVideoToRemoteUser(localStream);
         this.onBlockSubscribe = blackListManager.onBlockStream.subscribe((userUuid) => {
             if (userUuid === this.userUuid) {
                 this.toggleRemoteStream(false);
@@ -208,6 +193,21 @@ export class VideoPeer extends Peer {
         if (blackListManager.isBlackListed(this.userUuid)) {
             this.sendBlockMessage(true);
         }
+
+        this.localStreamStoreSubscribe = localStreamStore.subscribe((streamValue) => {
+            if (streamValue.type === "success" && streamValue.stream) this.addStream(streamValue.stream);
+        });
+        this.obtainedMediaConstraintStoreSubscribe = obtainedMediaConstraintStore.subscribe((constraints) => {
+            this.write(
+                new Buffer(
+                    JSON.stringify({
+                        type: MESSAGE_TYPE_CONSTRAINT,
+                        ...constraints,
+                        isMobile: isMobile(),
+                    })
+                )
+            );
+        });
     }
 
     private sendBlockMessage(blocking: boolean) {
@@ -264,6 +264,8 @@ export class VideoPeer extends Peer {
             this.onUnBlockSubscribe.unsubscribe();
             if (this.newMessageunsubscriber) this.newMessageunsubscriber();
             chatMessagesStore.addOutcomingUser(this.userId);
+            if (this.localStreamStoreSubscribe) this.localStreamStoreSubscribe();
+            if (this.obtainedMediaConstraintStoreSubscribe) this.obtainedMediaConstraintStoreSubscribe();
             super.destroy();
         } catch (err) {
             console.error("VideoPeer::destroy", err);
@@ -279,30 +281,6 @@ export class VideoPeer extends Peer {
             destroySoon();
         } else {
             this.once("connect", destroySoon);
-        }
-    }
-
-    private pushVideoToRemoteUser(localStream: MediaStream | null) {
-        try {
-            this.write(
-                new Buffer(
-                    JSON.stringify({
-                        type: MESSAGE_TYPE_CONSTRAINT,
-                        ...get(obtainedMediaConstraintStore),
-                        isMobile: isMobile(),
-                    })
-                )
-            );
-
-            if (!localStream) {
-                return;
-            }
-
-            for (const track of localStream.getTracks()) {
-                this.addTrack(track, localStream);
-            }
-        } catch (e) {
-            console.error(`pushVideoToRemoteUser => ${this.userId}`, e);
         }
     }
 }

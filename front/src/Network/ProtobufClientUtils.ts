@@ -1,23 +1,22 @@
-import {PositionMessage} from "../Messages/generated/messages_pb";
+import { PositionMessage } from "../Messages/generated/messages_pb";
 import Direction = PositionMessage.Direction;
-import type {PointInterface} from "../Connexion/ConnexionModels";
+import type { PointInterface } from "../Connexion/ConnexionModels";
 
 export class ProtobufClientUtils {
-
     public static toPointInterface(position: PositionMessage): PointInterface {
         let direction: string;
         switch (position.getDirection()) {
             case Direction.UP:
-                direction = 'up';
+                direction = "up";
                 break;
             case Direction.DOWN:
-                direction = 'down';
+                direction = "down";
                 break;
             case Direction.LEFT:
-                direction = 'left';
+                direction = "left";
                 break;
             case Direction.RIGHT:
-                direction = 'right';
+                direction = "right";
                 break;
             default:
                 throw new Error("Unexpected direction");
