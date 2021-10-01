@@ -1,47 +1,44 @@
-import { PUSHER_URL, UPLOADER_URL } from "../Enum/EnvironmentVariable";
+import {PUSHER_URL, UPLOADER_URL} from "../Enum/EnvironmentVariable";
 import Axios from "axios";
 import {
+    BanUserMessage,
     BatchMessage,
+    CharacterLayerMessage,
     ClientToServerMessage,
+    EmoteEventMessage,
+    EmotePromptMessage,
+    ErrorMessage,
     GroupDeleteMessage,
     GroupUpdateMessage,
     ItemEventMessage,
+    PingMessage,
     PlayGlobalMessage,
     PositionMessage,
+    QueryJitsiJwtMessage,
+    ReportPlayerMessage,
     RoomJoinedMessage,
+    SendJitsiJwtMessage,
+    SendUserMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
     SilentMessage,
     StopGlobalMessage,
+    TeleportMessageMessage,
     UserJoinedMessage,
     UserLeftMessage,
+    UserListMessage,
     UserMovedMessage,
     UserMovesMessage,
+    VariableMessage,
     ViewportMessage,
     WebRtcDisconnectMessage,
     WebRtcSignalToClientMessage,
     WebRtcSignalToServerMessage,
     WebRtcStartMessage,
-    ReportPlayerMessage,
-    TeleportMessageMessage,
-    QueryJitsiJwtMessage,
-    SendJitsiJwtMessage,
-    CharacterLayerMessage,
-    PingMessage,
-    EmoteEventMessage,
-    EmotePromptMessage,
-    SendUserMessage,
-    BanUserMessage,
-    VariableMessage,
-    ErrorMessage,
-    WebexSessionStart,
-    WebexSessionStop,
-    UserListMessage,
 } from "../Messages/generated/messages_pb";
 
-import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
-import Direction = PositionMessage.Direction;
-import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
+import type {UserSimplePeerInterface} from "../WebRtc/SimplePeer";
+import {ProtobufClientUtils} from "../Network/ProtobufClientUtils";
 import {
     EventMessage,
     GroupCreatedUpdatedMessageInterface,
@@ -55,12 +52,14 @@ import {
     WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
-import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
-import { adminMessagesService } from "./AdminMessagesService";
-import { worldFullMessageStream } from "./WorldFullMessageStream";
-import { connectionManager } from "./ConnectionManager";
-import { emoteEventStream } from "./EmoteEventStream";
-import { warningContainerStore } from "../Stores/MenuStore";
+import type {BodyResourceDescriptionInterface} from "../Phaser/Entity/PlayerTextures";
+import {adminMessagesService} from "./AdminMessagesService";
+import {worldFullMessageStream} from "./WorldFullMessageStream";
+import {connectionManager} from "./ConnectionManager";
+import {emoteEventStream} from "./EmoteEventStream";
+import {warningContainerStore} from "../Stores/MenuStore";
+import {WebexIntegration} from "../WebRtc/WebexIntegration";
+import Direction = PositionMessage.Direction;
 
 const manualPingDelay = 20000;
 
@@ -74,6 +73,7 @@ export class RoomConnection implements RoomConnection {
     private closed: boolean = false;
     private tags: string[] = [];
     private userList: UserList = [];
+    private roomID = null;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
@@ -178,7 +178,7 @@ export class RoomConnection implements RoomConnection {
                     } else if (subMessage.hasVariablemessage()) {
                         event = EventMessage.SET_VARIABLE;
                         payload = subMessage.getVariablemessage();
-                    } else if (subMessage) {} else {
+                    } else {
                         throw new Error("Unexpected batch message type");
                     }
 
@@ -186,6 +186,17 @@ export class RoomConnection implements RoomConnection {
                         this.dispatch(event, payload);
                     }
                 }
+            } else if (message.hasWebexsessionstart()) {
+                const w = new WebexIntegration();
+                // TODO check if meeting room id matches this room => if (message.getWebexsessionstart()!!.getRoomid() === )
+                const meetingLink = message.getWebexsessionstart()!!.getMeetinglink();
+                w.startMeeting(meetingLink).then(() => {
+                    console.log("[BROADCAST] Tried to start meeting at ", meetingLink);
+                }).catch((e) => {
+                    console.error("[BROADCAST] Error trying to start meeting at ", meetingLink);
+                    console.error(e);
+                    throw e;
+                });
             } else if (message.hasRoomjoinedmessage()) {
                 const roomJoinedMessage = message.getRoomjoinedmessage() as RoomJoinedMessage;
 
@@ -201,10 +212,10 @@ export class RoomConnection implements RoomConnection {
                     } catch (e) {
                         console.error(
                             'Unable to unserialize value received from server for variable "' +
-                                variable.getName() +
-                                '". Value received: "' +
-                                variable.getValue() +
-                                '". Error: ',
+                            variable.getName() +
+                            '". Value received: "' +
+                            variable.getValue() +
+                            '". Error: ',
                             e
                         );
                     }
