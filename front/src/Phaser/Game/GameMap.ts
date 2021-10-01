@@ -1,7 +1,7 @@
 import type { ITiledMap, ITiledMapLayer, ITiledMapProperty } from "../Map/ITiledMap";
 import { flattenGroupLayersMap } from "../Map/LayersFlattener";
-import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 import { DEPTH_OVERLAY_INDEX } from "./DepthIndexes";
+import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 
 export type PropertyChangeCallback = (
     newValue: string | number | boolean | undefined,

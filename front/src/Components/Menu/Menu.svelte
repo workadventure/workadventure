@@ -15,8 +15,8 @@
         subMenusStore
     } from "../../Stores/MenuStore";
     import {onDestroy, onMount} from "svelte";
-    import {get} from "svelte/store";
     import type {Unsubscriber} from "svelte/store";
+    import {get} from "svelte/store";
     import {sendMenuClickedEvent} from "../../Api/iframe/Ui/MenuItem";
 
     let activeSubMenu: string = SubMenusInterface.settings;

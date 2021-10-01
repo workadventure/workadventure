@@ -3,8 +3,6 @@ import type { GameScene } from "../Game/GameScene";
 import { UserInputEvent, UserInputManager } from "../UserInput/UserInputManager";
 import { Character } from "../Entity/Character";
 import { userMovingStore } from "../../Stores/GameStore";
-import { get } from "svelte/store";
-import { emoteMenuStore } from "../../Stores/EmoteStore";
 
 export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";

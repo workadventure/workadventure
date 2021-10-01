@@ -3,16 +3,14 @@ import type { UserInputManager } from "../Phaser/UserInput/UserInputManager";
 import { localStreamStore } from "../Stores/MediaStore";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { helpCameraSettingsVisibleStore } from "../Stores/HelpCameraSettingsStore";
+import { cowebsiteCloseButtonId } from "./CoWebsiteManager";
+import { gameOverlayVisibilityStore } from "../Stores/GameOverlayStoreVisibility";
+import { layoutManagerActionStore } from "../Stores/LayoutManagerStore";
+import { localUserStore } from "../Connexion/LocalUserStore";
+import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstraintsError";
 
 export type StartScreenSharingCallback = (media: MediaStream) => void;
 export type StopScreenSharingCallback = (media: MediaStream) => void;
-
-import { cowebsiteCloseButtonId } from "./CoWebsiteManager";
-import { gameOverlayVisibilityStore } from "../Stores/GameOverlayStoreVisibility";
-import { layoutManagerActionStore, layoutManagerVisibilityStore } from "../Stores/LayoutManagerStore";
-import { get } from "svelte/store";
-import { localUserStore } from "../Connexion/LocalUserStore";
-import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstraintsError";
 
 export class MediaManager {
     startScreenSharingCallBacks: Set<StartScreenSharingCallback> = new Set<StartScreenSharingCallback>();

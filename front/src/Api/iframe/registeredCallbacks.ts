@@ -1,6 +1,5 @@
 import type { IframeResponseEventMap } from "../../Api/Events/IframeEvent";
-import type { IframeCallback } from "../../Api/iframe/IframeApiContribution";
-import type { IframeCallbackContribution } from "../../Api/iframe/IframeApiContribution";
+import type { IframeCallback, IframeCallbackContribution } from "../../Api/iframe/IframeApiContribution";
 
 export const registeredCallbacks: { [K in keyof IframeResponseEventMap]?: IframeCallback<K> } = {};
 

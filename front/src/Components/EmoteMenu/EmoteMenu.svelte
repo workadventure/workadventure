@@ -1,12 +1,12 @@
 <script lang="typescript">
 
-  import type { Unsubscriber } from "svelte/store";
-  import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
-  import { onDestroy, onMount } from "svelte";
-  import { EmojiButton } from '@joeattardi/emoji-button';
-  import { isMobile } from "../../Enum/EnvironmentVariable";
+    import type {Unsubscriber} from "svelte/store";
+    import {emoteMenuStore, emoteStore} from "../../Stores/EmoteStore";
+    import {onDestroy, onMount} from "svelte";
+    import {EmojiButton} from '@joeattardi/emoji-button';
+    import {isMobile} from "../../Enum/EnvironmentVariable";
 
-  let emojiContainer: HTMLElement;
+    let emojiContainer: HTMLElement;
   let picker: EmojiButton;
 
   let unsubscriber: Unsubscriber | null = null;

@@ -1,7 +1,6 @@
 import { gameManager } from "../Game/GameManager";
 import { ResizableScene } from "./ResizableScene";
 import { enableCameraSceneVisibilityStore } from "../../Stores/MediaStore";
-import { localUserStore } from "../../Connexion/LocalUserStore";
 
 export const EnableCameraSceneName = "EnableCameraScene";
 

@@ -4,10 +4,10 @@
     import ReportSubMenu from "./ReportSubMenu.svelte";
     import {onDestroy, onMount} from "svelte";
     import type {Unsubscriber} from "svelte/store";
+    import {get} from "svelte/store";
     import {playersStore} from "../../Stores/PlayersStore";
     import {connectionManager} from "../../Connexion/ConnectionManager";
     import {GameConnexionTypes} from "../../Url/UrlManager";
-    import {get} from "svelte/store";
 
     let blockActive =  true;
     let reportActive = !blockActive;

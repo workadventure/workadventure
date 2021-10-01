@@ -1,15 +1,15 @@
-import { derived, get, Readable, readable, writable } from "svelte/store";
-import { localUserStore } from "../Connexion/LocalUserStore";
-import { userMovingStore } from "./GameStore";
-import { HtmlUtils } from "../WebRtc/HtmlUtils";
-import { BrowserTooOldError } from "./Errors/BrowserTooOldError";
-import { errorStore } from "./ErrorStore";
-import { getNavigatorType, isIOS, NavigatorType } from "../WebRtc/DeviceUtils";
-import { WebviewOnOldIOS } from "./Errors/WebviewOnOldIOS";
-import { gameOverlayVisibilityStore } from "./GameOverlayStoreVisibility";
-import { peerStore } from "./PeerStore";
-import { privacyShutdownStore } from "./PrivacyShutdownStore";
-import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
+import {derived, get, Readable, readable, writable} from "svelte/store";
+import {localUserStore} from "../Connexion/LocalUserStore";
+import {userMovingStore} from "./GameStore";
+import {HtmlUtils} from "../WebRtc/HtmlUtils";
+import {BrowserTooOldError} from "./Errors/BrowserTooOldError";
+import {errorStore} from "./ErrorStore";
+import {getNavigatorType, isIOS, NavigatorType} from "../WebRtc/DeviceUtils";
+import {WebviewOnOldIOS} from "./Errors/WebviewOnOldIOS";
+import {gameOverlayVisibilityStore} from "./GameOverlayStoreVisibility";
+import {peerStore} from "./PeerStore";
+import {privacyShutdownStore} from "./PrivacyShutdownStore";
+import {MediaStreamConstraintsError} from "./Errors/MediaStreamConstraintsError";
 
 /**
  * A store that contains the camera state requested by the user (on or off).

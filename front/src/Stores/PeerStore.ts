@@ -1,6 +1,6 @@
-import { readable, writable } from "svelte/store";
-import type { VideoPeer } from "../WebRtc/VideoPeer";
-import type { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
+import {readable, writable} from "svelte/store";
+import type {VideoPeer} from "../WebRtc/VideoPeer";
+import type {ScreenSharingPeer} from "../WebRtc/ScreenSharingPeer";
 
 /**
  * A store that contains the list of (video) peers we are connected to.

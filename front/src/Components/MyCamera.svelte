@@ -1,6 +1,5 @@
 <script lang="typescript">
-    import {obtainedMediaConstraintStore} from "../Stores/MediaStore";
-    import {localStreamStore, isSilentStore} from "../Stores/MediaStore";
+    import {isSilentStore, localStreamStore, obtainedMediaConstraintStore} from "../Stores/MediaStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import {onDestroy} from "svelte";
     import {srcObject} from "./Video/utils";

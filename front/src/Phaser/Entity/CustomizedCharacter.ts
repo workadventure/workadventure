@@ -1,6 +1,6 @@
 import Container = Phaser.GameObjects.Container;
-import type { Scene } from "phaser";
 import Sprite = Phaser.GameObjects.Sprite;
+import type { Scene } from "phaser";
 
 /**
  * A sprite of a customized character (used in the Customize Scene only)

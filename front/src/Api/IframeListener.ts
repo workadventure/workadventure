@@ -1,6 +1,5 @@
 import { Subject } from "rxjs";
-import type * as tg from "generic-type-guard";
-import { ChatEvent, isChatEvent } from "./Events/ChatEvent";
+import { isChatEvent } from "./Events/ChatEvent";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
 import { isOpenPopupEvent, OpenPopupEvent } from "./Events/OpenPopupEvent";
@@ -8,18 +7,15 @@ import { isOpenTabEvent, OpenTabEvent } from "./Events/OpenTabEvent";
 import type { ButtonClickedEvent } from "./Events/ButtonClickedEvent";
 import { ClosePopupEvent, isClosePopupEvent } from "./Events/ClosePopupEvent";
 import { scriptUtils } from "./ScriptUtils";
-import { GoToPageEvent, isGoToPageEvent } from "./Events/GoToPageEvent";
+import { isGoToPageEvent } from "./Events/GoToPageEvent";
 import { isOpenCoWebsite, OpenCoWebSiteEvent } from "./Events/OpenCoWebSiteEvent";
 import {
     IframeErrorAnswerEvent,
-    IframeEvent,
-    IframeEventMap,
     IframeQueryMap,
     IframeResponseEvent,
     IframeResponseEventMap,
     isIframeEventWrapper,
     isIframeQueryWrapper,
-    TypedMessageEvent,
 } from "./Events/IframeEvent";
 import type { UserInputChatEvent } from "./Events/UserInputChatEvent";
 import { isPlaySoundEvent, PlaySoundEvent } from "./Events/PlaySoundEvent";
@@ -30,10 +26,9 @@ import { isLayerEvent, LayerEvent } from "./Events/LayerEvent";
 import type { HasPlayerMovedEvent } from "./Events/HasPlayerMovedEvent";
 import { isLoadPageEvent } from "./Events/LoadPageEvent";
 import { isMenuRegisterEvent, isUnregisterMenuEvent } from "./Events/ui/MenuRegisterEvent";
-import { SetTilesEvent, isSetTilesEvent } from "./Events/SetTilesEvent";
+import { isSetTilesEvent, SetTilesEvent } from "./Events/SetTilesEvent";
 import type { SetVariableEvent } from "./Events/SetVariableEvent";
-import { ModifyEmbeddedWebsiteEvent, isEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
-import { EmbeddedWebsite } from "./iframe/Room/EmbeddedWebsite";
+import { isEmbeddedWebsiteEvent, ModifyEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
 import { handleMenuRegistrationEvent, handleMenuUnregisterEvent } from "../Stores/MenuStore";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
@@ -110,7 +105,7 @@ class IframeListener {
     init() {
         window.addEventListener(
             "message",
-            (message: MessageEvent<unknown>) => {
+            (message: MessageEvent) => {
                 // Do we trust the sender of this message?
                 // Let's only accept messages from the iframe that are allowed.
                 // Note: maybe we could restrict on the domain too for additional security (in case the iframe goes to another domain).

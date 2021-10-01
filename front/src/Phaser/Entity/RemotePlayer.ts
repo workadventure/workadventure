@@ -1,8 +1,8 @@
-import type { GameScene } from "../Game/GameScene";
-import type { PointInterface } from "../../Connexion/ConnexionModels";
-import { Character } from "../Entity/Character";
-import type { PlayerAnimationDirections } from "../Player/Animation";
-import { requestVisitCardsStore } from "../../Stores/GameStore";
+import type {GameScene} from "../Game/GameScene";
+import type {PointInterface} from "../../Connexion/ConnexionModels";
+import {Character} from "../Entity/Character";
+import type {PlayerAnimationDirections} from "../Player/Animation";
+import {requestVisitCardsStore} from "../../Stores/GameStore";
 
 /**
  * Class representing the sprite of a remote player (a player that plays on another computer)

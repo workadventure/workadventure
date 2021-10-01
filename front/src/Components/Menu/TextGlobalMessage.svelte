@@ -1,10 +1,10 @@
 <script lang="ts">
-    import { menuInputFocusStore } from "../../Stores/MenuStore";
-    import { onDestroy, onMount } from "svelte";
-    import { gameManager } from "../../Phaser/Game/GameManager";
-    import { AdminMessageEventTypes } from "../../Connexion/AdminMessagesService";
-    import type { Quill } from "quill";
-    import type { PlayGlobalMessageInterface } from "../../Connexion/ConnexionModels";
+    import {menuInputFocusStore} from "../../Stores/MenuStore";
+    import {onDestroy, onMount} from "svelte";
+    import {gameManager} from "../../Phaser/Game/GameManager";
+    import {AdminMessageEventTypes} from "../../Connexion/AdminMessagesService";
+    import type {Quill} from "quill";
+    import type {PlayGlobalMessageInterface} from "../../Connexion/ConnexionModels";
 
     //toolbar
     const toolbarOptions = [

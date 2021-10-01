@@ -1,11 +1,10 @@
 import * as Phaser from "phaser";
-import { Scene } from "phaser";
-import Sprite = Phaser.GameObjects.Sprite;
 import type { ITiledMapObject } from "../../Map/ITiledMap";
 import type { ItemFactoryInterface } from "../ItemFactoryInterface";
 import type { GameScene } from "../../Game/GameScene";
 import { ActionableItem } from "../ActionableItem";
 import * as tg from "generic-type-guard";
+import Sprite = Phaser.GameObjects.Sprite;
 
 const isComputerState = new tg.IsInterface()
     .withProperties({

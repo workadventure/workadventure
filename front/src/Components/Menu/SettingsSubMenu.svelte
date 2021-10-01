@@ -1,11 +1,11 @@
 <script lang="typescript">
-import {localUserStore} from "../../Connexion/LocalUserStore";
-import {videoConstraintStore} from "../../Stores/MediaStore";
-import {HtmlUtils} from "../../WebRtc/HtmlUtils";
-import {isMobile} from "../../Enum/EnvironmentVariable";
-import {menuVisiblilityStore} from "../../Stores/MenuStore";
+    import {localUserStore} from "../../Connexion/LocalUserStore";
+    import {videoConstraintStore} from "../../Stores/MediaStore";
+    import {HtmlUtils} from "../../WebRtc/HtmlUtils";
+    import {isMobile} from "../../Enum/EnvironmentVariable";
+    import {menuVisiblilityStore} from "../../Stores/MenuStore";
 
-let fullscreen : boolean = localUserStore.getFullscreen();
+    let fullscreen : boolean = localUserStore.getFullscreen();
 let notification : boolean = localUserStore.getNotification() === 'granted';
 let valueGame : number = localUserStore.getGameQualityValue();
 let valueVideo : number = localUserStore.getVideoQualityValue();

@@ -9,7 +9,7 @@ import type { OpenCoWebSiteEvent } from "./OpenCoWebSiteEvent";
 import type { OpenPopupEvent } from "./OpenPopupEvent";
 import type { OpenTabEvent } from "./OpenTabEvent";
 import type { UserInputChatEvent } from "./UserInputChatEvent";
-import type { MapDataEvent } from "./MapDataEvent";
+import { isMapDataEvent } from "./MapDataEvent";
 import type { LayerEvent } from "./LayerEvent";
 import type { SetPropertyEvent } from "./setPropertyEvent";
 import type { LoadSoundEvent } from "./LoadSoundEvent";
@@ -18,19 +18,13 @@ import type { MenuItemClickedEvent } from "./ui/MenuItemClickedEvent";
 import type { HasPlayerMovedEvent } from "./HasPlayerMovedEvent";
 import type { SetTilesEvent } from "./SetTilesEvent";
 import type { SetVariableEvent } from "./SetVariableEvent";
-import { isGameStateEvent } from "./GameStateEvent";
-import { isMapDataEvent } from "./MapDataEvent";
 import { isSetVariableEvent } from "./SetVariableEvent";
+import { isGameStateEvent } from "./GameStateEvent";
 import type { EmbeddedWebsite } from "../iframe/Room/EmbeddedWebsite";
 import { isCreateEmbeddedWebsiteEvent } from "./EmbeddedWebsiteEvent";
 import type { LoadTilesetEvent } from "./LoadTilesetEvent";
 import { isLoadTilesetEvent } from "./LoadTilesetEvent";
-import type {
-    MessageReferenceEvent,
-    removeActionMessage,
-    triggerActionMessage,
-    TriggerActionMessageEvent,
-} from "./ui/TriggerActionMessageEvent";
+import type { MessageReferenceEvent } from "./ui/TriggerActionMessageEvent";
 import { isMessageReferenceEvent, isTriggerActionMessageEvent } from "./ui/TriggerActionMessageEvent";
 import type { MenuRegisterEvent, UnregisterMenuEvent } from "./ui/MenuRegisterEvent";
 

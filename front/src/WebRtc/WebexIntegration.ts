@@ -2,8 +2,7 @@ import { coWebsiteManager } from "./CoWebsiteManager";
 import WebexSignIn from "../Components/Webex/WebexSignIn.svelte";
 import { WEBEX_AUTHORIZATION_URL, WEBEX_GLOBAL_SPACE_ID } from "../Enum/EnvironmentVariable";
 //import App from "../Components/App.svelte"; <- Causes peerStore issue
-import App from "svelte"
-import type {SvelteComponentDev} from "svelte/internal";
+import type { SvelteComponentDev } from "svelte/internal";
 import WebexVideoChat from "../Components/Webex/WebexVideoChat.svelte";
 
 interface Webex {
@@ -160,7 +159,7 @@ export class WebexIntegration {
         const [webex] = await Promise.all([await self.loadWebexScripts(), await self.waitForAuthorization()]);
 
         coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
-            self.spaceWidget = webex.widget(cowebsiteDiv).spaceWidget({
+            self.spaceWidget = webex?.widget(cowebsiteDiv).spaceWidget({
                 accessToken: this.accessToken,
                 destinationId: spaceId,
                 destinationType: "spaceId",

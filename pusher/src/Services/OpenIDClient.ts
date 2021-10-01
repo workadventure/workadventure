@@ -1,5 +1,5 @@
-import { Issuer, Client, IntrospectionResponse } from "openid-client";
-import { OPID_CLIENT_ID, OPID_CLIENT_SECRET, OPID_CLIENT_ISSUER, FRONT_URL } from "../Enum/EnvironmentVariable";
+import { Client, IntrospectionResponse, Issuer } from "openid-client";
+import { FRONT_URL, OPID_CLIENT_ID, OPID_CLIENT_ISSUER, OPID_CLIENT_SECRET } from "../Enum/EnvironmentVariable";
 
 const opidRedirectUri = FRONT_URL + "/jwt";
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { gameManager } from "../../Phaser/Game/GameManager";
+    import {gameManager} from "../../Phaser/Game/GameManager";
     import {onMount} from "svelte";
 
     let gameScene = gameManager.getCurrentGameScene();

@@ -1,8 +1,5 @@
-import { ADMIN_API_URL, ALLOW_ARTILLERY, SECRET_KEY } from "../Enum/EnvironmentVariable";
-import { uuid } from "uuidv4";
-import Jwt, { verify } from "jsonwebtoken";
-import { TokenInterface } from "../Controller/AuthenticateController";
-import { adminApi, AdminBannedData } from "../Services/AdminApi";
+import { SECRET_KEY } from "../Enum/EnvironmentVariable";
+import Jwt from "jsonwebtoken";
 
 export interface AuthTokenData {
     identifier: string; //will be a email if logged in or an uuid if anonymous

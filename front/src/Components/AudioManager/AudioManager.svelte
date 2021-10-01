@@ -1,13 +1,10 @@
 <script lang="ts">
-    import { localUserStore } from "../../Connexion/LocalUserStore";
-    import type { audioManagerVolume } from "../../Stores/AudioManagerStore";
-    import {
-        audioManagerFileStore,
-        audioManagerVolumeStore,
-    } from "../../Stores/AudioManagerStore";
-    import { get } from "svelte/store";
-    import type { Unsubscriber } from "svelte/store";
-    import { onDestroy, onMount } from "svelte";
+    import {localUserStore} from "../../Connexion/LocalUserStore";
+    import type {audioManagerVolume} from "../../Stores/AudioManagerStore";
+    import {audioManagerFileStore, audioManagerVolumeStore,} from "../../Stores/AudioManagerStore";
+    import type {Unsubscriber} from "svelte/store";
+    import {get} from "svelte/store";
+    import {onDestroy, onMount} from "svelte";
 
     let HTMLAudioPlayer: HTMLAudioElement;
     let audioPlayerVolumeIcon: HTMLElement;

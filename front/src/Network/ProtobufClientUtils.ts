@@ -1,6 +1,6 @@
 import { PositionMessage } from "../Messages/generated/messages_pb";
-import Direction = PositionMessage.Direction;
 import type { PointInterface } from "../Connexion/ConnexionModels";
+import Direction = PositionMessage.Direction;
 
 export class ProtobufClientUtils {
     public static toPointInterface(position: PositionMessage): PointInterface {

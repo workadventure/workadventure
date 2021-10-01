@@ -1,8 +1,8 @@
 import { get, writable } from "svelte/store";
-import Timeout = NodeJS.Timeout;
 import { userIsAdminStore } from "./GameStore";
 import { CONTACT_URL } from "../Enum/EnvironmentVariable";
 import { analyticsClient } from "../Administration/AnalyticsClient";
+import Timeout = NodeJS.Timeout;
 
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);

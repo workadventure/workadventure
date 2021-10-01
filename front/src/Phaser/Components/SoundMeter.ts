@@ -1,4 +1,4 @@
-import type { IAnalyserNode, IAudioContext, IMediaStreamAudioSourceNode } from "standardized-audio-context";
+import type {IAnalyserNode, IAudioContext, IMediaStreamAudioSourceNode} from "standardized-audio-context";
 
 /**
  * Class to measure the sound volume of a media stream

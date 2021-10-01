@@ -1,6 +1,6 @@
-import { get, writable } from "svelte/store";
-import type { Streamable } from "./StreamableCollectionStore";
-import { peerStore } from "./PeerStore";
+import {get, writable} from "svelte/store";
+import type {Streamable} from "./StreamableCollectionStore";
+import {peerStore} from "./PeerStore";
 
 /**
  * A store that contains the peer / media that has currently the "importance" focus.

@@ -1,16 +1,15 @@
 import { PlayerAnimationDirections, PlayerAnimationTypes } from "../Player/Animation";
 import { SpeechBubble } from "./SpeechBubble";
-import Text = Phaser.GameObjects.Text;
-import Container = Phaser.GameObjects.Container;
-import Sprite = Phaser.GameObjects.Sprite;
 import { TextureError } from "../../Exception/TextureError";
 import { Companion } from "../Companion/Companion";
 import type { GameScene } from "../Game/GameScene";
 import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
-import { waScaleManager } from "../Services/WaScaleManager";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { isSilentStore } from "../../Stores/MediaStore";
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
+import Text = Phaser.GameObjects.Text;
+import Container = Phaser.GameObjects.Container;
+import Sprite = Phaser.GameObjects.Sprite;
 
 const playerNameY = -25;
 

@@ -1,4 +1,4 @@
-import { writable } from "svelte/store";
+import {writable} from "svelte/store";
 
 /**
  * A store that contains a list of error messages to be displayed.

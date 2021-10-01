@@ -1,12 +1,8 @@
 import { Observable, Subject } from "rxjs";
 
-import { EnterLeaveEvent, isEnterLeaveEvent } from "../Events/EnterLeaveEvent";
-
-import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
+import { IframeApiContribution, queryWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 import { isSetVariableEvent, SetVariableEvent } from "../Events/SetVariableEvent";
-
-import type { ITiledMap } from "../../Phaser/Map/ITiledMap";
 
 const setVariableResolvers = new Subject<SetVariableEvent>();
 const variables = new Map<string, unknown>();

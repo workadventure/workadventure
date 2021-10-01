@@ -1,7 +1,6 @@
 import * as tg from "generic-type-guard";
-import { GameRoomPolicyTypes } from "_Model/PusherRoom";
-import { isCharacterTexture } from "./CharacterTexture";
-import { isAny, isNumber } from "generic-type-guard";
+import {isNumber} from "generic-type-guard";
+import {isCharacterTexture} from "./CharacterTexture";
 
 /*const isNumericEnum =
     <T extends { [n: number]: string }>(vs: T) =>

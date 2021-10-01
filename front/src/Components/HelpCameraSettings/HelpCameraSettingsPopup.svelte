@@ -1,5 +1,5 @@
 <script lang="typescript">
-    import { fly } from 'svelte/transition';
+    import {fly} from 'svelte/transition';
     import {helpCameraSettingsVisibleStore} from "../../Stores/HelpCameraSettingsStore";
     import firefoxImg from "./images/help-setting-camera-permission-firefox.png";
     import chromeImg from "./images/help-setting-camera-permission-chrome.png";
