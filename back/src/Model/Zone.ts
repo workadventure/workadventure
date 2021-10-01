@@ -1,9 +1,9 @@
-import { User } from "./User";
-import { PositionInterface } from "_Model/PositionInterface";
-import { Movable } from "./Movable";
-import { Group } from "./Group";
-import { ZoneSocket } from "../RoomManager";
-import { EmoteEventMessage } from "../Messages/generated/messages_pb";
+import {User} from "./User";
+import {PositionInterface} from "_Model/PositionInterface";
+import {Movable} from "./Movable";
+import {Group} from "./Group";
+import {ZoneSocket} from "../RoomManager";
+import {EmoteEventMessage} from "../Messages/generated/messages_pb";
 
 export type EntersCallback = (thing: Movable, fromZone: Zone | null, listener: ZoneSocket) => void;
 export type MovesCallback = (thing: Movable, position: PositionInterface, listener: ZoneSocket) => void;
@@ -13,7 +13,7 @@ export type EmoteCallback = (emoteEventMessage: EmoteEventMessage, listener: Zon
 export class Zone {
     private things: Set<Movable> = new Set<Movable>();
     private listeners: Set<ZoneSocket> = new Set<ZoneSocket>();
-    private meetingLink: String|null = null;
+    private meetingLink: String | null = null;
 
     constructor(
         private onEnters: EntersCallback,
@@ -22,7 +22,8 @@ export class Zone {
         private onEmote: EmoteCallback,
         public readonly x: number,
         public readonly y: number
-    ) {}
+    ) {
+    }
 
     /**
      * A user/thing leaves the zone
@@ -36,49 +37,25 @@ export class Zone {
             if (thing instanceof Group) {
                 throw new Error(
                     "Could not find group " +
-                        thing.getId() +
-                        " in zone (" +
-                        this.x +
-                        "," +
-                        this.y +
-                        "). Position of group: (" +
-                        thing.getPosition().x +
-                        "," +
-                        thing.getPosition().y +
-                        ")"
+                    thing.getId() +
+                    " in zone (" +
+                    this.x +
+                    "," +
+                    this.y +
+                    "). Position of group: (" +
+                    thing.getPosition().x +
+                    "," +
+                    thing.getPosition().y +
+                    ")"
                 );
             }
         }
         this.notifyLeft(thing, newZone);
     }
 
-    /**
-     * Notify listeners of this zone that this user/thing left
-     */
-    private notifyLeft(thing: Movable, newZone: Zone | null) {
-        for (const listener of this.listeners) {
-            this.onLeaves(thing, newZone, listener);
-        }
-    }
-
     public enter(thing: Movable, oldZone: Zone | null, position: PositionInterface) {
         this.things.add(thing);
         this.notifyEnter(thing, oldZone, position);
-    }
-
-    /**
-     * Notify listeners of this zone that this user entered
-     */
-    private notifyEnter(thing: Movable, oldZone: Zone | null, position: PositionInterface) {
-        if (this.meetingLink === null) {
-            // TODO
-            // We need to pass the url to the meeting Zone here, however we don't have it yet
-            // - Should we have the SDK running all the time (not just in the co-window) so we can force the user to gen a new meeting?
-
-        }
-        for (const listener of this.listeners) {
-            this.onEnters(thing, oldZone, listener);
-        }
     }
 
     public move(thing: Movable, position: PositionInterface) {
@@ -111,6 +88,30 @@ export class Zone {
     public emitEmoteEvent(emoteEventMessage: EmoteEventMessage) {
         for (const listener of this.listeners) {
             this.onEmote(emoteEventMessage, listener);
+        }
+    }
+
+    /**
+     * Notify listeners of this zone that this user/thing left
+     */
+    private notifyLeft(thing: Movable, newZone: Zone | null) {
+        for (const listener of this.listeners) {
+            this.onLeaves(thing, newZone, listener);
+        }
+    }
+
+    /**
+     * Notify listeners of this zone that this user entered
+     */
+    private notifyEnter(thing: Movable, oldZone: Zone | null, position: PositionInterface) {
+        if (this.meetingLink === null) {
+            // TODO
+            // We need to pass the url to the meeting Zone here, however we don't have it yet
+            // - Should we have the SDK running all the time (not just in the co-window) so we can force the user to gen a new meeting?
+
+        }
+        for (const listener of this.listeners) {
+            this.onEnters(thing, oldZone, listener);
         }
     }
 }
