@@ -289,7 +289,9 @@ export const mediaStreamConstraintsStore = derived(
         // Disable webcam for energy reasons (the user is not moving and we are talking to no one)
         if ($cameraEnergySavingStore === true) {
             currentVideoConstraint = false;
-            currentAudioConstraint = false;
+            //this optimization is desactivated because of sound issues on chrome
+            //todo: fix this conflicts and reactivate this optimization
+            //currentAudioConstraint = false;
         }
 
         // Let's make the changes only if the new value is different from the old one.
@@ -472,7 +474,6 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                 initStream(constraints);
             }
         } else {
-            console.log(constraints);
             //on bad navigators like chrome, we have to stop the tracks when we mute and reinstantiate the stream when we need to unmute
             if (constraints.audio === false && constraints.video === false) {
                 currentStream = null;
