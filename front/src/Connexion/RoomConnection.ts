@@ -34,6 +34,8 @@ import {
     BanUserMessage,
     VariableMessage,
     ErrorMessage,
+    WebexSessionStart,
+    WebexSessionStop,
     UserListMessage,
 } from "../Messages/generated/messages_pb";
 
@@ -176,7 +178,7 @@ export class RoomConnection implements RoomConnection {
                     } else if (subMessage.hasVariablemessage()) {
                         event = EventMessage.SET_VARIABLE;
                         payload = subMessage.getVariablemessage();
-                    } else {
+                    } else if (subMessage) {} else {
                         throw new Error("Unexpected batch message type");
                     }
 

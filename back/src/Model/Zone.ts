@@ -13,6 +13,7 @@ export type EmoteCallback = (emoteEventMessage: EmoteEventMessage, listener: Zon
 export class Zone {
     private things: Set<Movable> = new Set<Movable>();
     private listeners: Set<ZoneSocket> = new Set<ZoneSocket>();
+    private meetingLink: String|null = null;
 
     constructor(
         private onEnters: EntersCallback,
@@ -69,6 +70,12 @@ export class Zone {
      * Notify listeners of this zone that this user entered
      */
     private notifyEnter(thing: Movable, oldZone: Zone | null, position: PositionInterface) {
+        if (this.meetingLink === null) {
+            // TODO
+            // We need to pass the url to the meeting Zone here, however we don't have it yet
+            // - Should we have the SDK running all the time (not just in the co-window) so we can force the user to gen a new meeting?
+
+        }
         for (const listener of this.listeners) {
             this.onEnters(thing, oldZone, listener);
         }

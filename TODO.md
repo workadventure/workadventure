@@ -7,23 +7,32 @@
         - State => active rooms and meeting links
       - On connect, backend uses socket lib to let client know about state
       - As time goes on, client listens for other client's broadcasts
-    - Broadcast to all users on floor
-      - back/SocketManager.ts
-        - Special server-sent messages
-          - [SERVER:START] for starting meetings
-            - 🔥 for testing, otherwise hard to see unicode?
-              - needs room ID, meeting link
-          - [SERVER:STOP] for stopping meetings
-            - 🌊
-              - needs room ID
-        - Client parses through all messages to see if it finds [SERVER:STOP] for it's room ID
-          - Exit conditions for search
-            - One pair of start/stop found 
-              - Start-stop => need to start new meeting
-              - Stop-start => need to join meeting
-            - End of chat history window found
-              - Just start => Join
-              - Just stop => Start
+    - Get each zone to have an extra info field (the meeting link)
+      - OnEnters => if no saved link, update link with meeting link
+        - else stay the same
+      - How to tell clients to start meeting though?
+      - Where is the webex integration normally called?
+      - Game room vs Zone?
+        - onEnterZone is triggered through script in Tiled
+        - GameRoom is a collection of zones (positionnotifier)
+    - #Deprecated
+      - Broadcast to all users on floor
+        - back/SocketManager.ts
+          - Special server-sent messages
+            - [SERVER:START] for starting meetings
+              - 🔥 for testing, otherwise hard to see unicode?
+                - needs room ID, meeting link
+            - [SERVER:STOP] for stopping meetings
+              - 🌊
+                - needs room ID
+          - Client parses through all messages to see if it finds [SERVER:STOP] for it's room ID
+            - Exit conditions for search
+              - One pair of start/stop found 
+                - Start-stop => need to start new meeting
+                - Stop-start => need to join meeting
+              - End of chat history window found
+                - Just start => Join
+                - Just stop => Start
 - Kill call when co-website closed?
 - Figure out what exactly the pusher does
   - gRPC?

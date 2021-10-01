@@ -33,6 +33,8 @@ export enum EventMessage {
     START_JITSI_ROOM = "start-jitsi-room",
     SET_VARIABLE = "set-variable",
     USER_LIST = "user-list",
+    WEBEX_SESSION_START = "webex-session-start",
+    WEBEX_SESSION_STOP = "webex-session-stop",
 }
 
 export interface PointInterface {

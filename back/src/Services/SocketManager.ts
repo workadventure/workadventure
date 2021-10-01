@@ -33,6 +33,8 @@ import {
     VariableMessage,
     BatchToPusherRoomMessage,
     SubToPusherRoomMessage,
+    WebexSessionStart,
+    WebexSessionStop,
     UserListMessage,
     UserInfoMessage,
 } from "../Messages/generated/messages_pb";
@@ -53,7 +55,7 @@ import Jwt from "jsonwebtoken";
 import { JITSI_URL } from "../Enum/EnvironmentVariable";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
-import { RoomSocket, ZoneSocket } from "../RoomManager";
+import {roomManager, RoomSocket, ZoneSocket} from "../RoomManager";
 import { Zone } from "_Model/Zone";
 import Debug from "debug";
 import { Admin } from "_Model/Admin";
@@ -91,6 +93,8 @@ export class SocketManager {
         const { room, user } = await this.joinRoom(socket, joinRoomMessage);
 
         this.updateUserList(room);
+
+        this.notifyNewMeetOnRoomJoin(room, "TODO"); // TODO
 
         if (!socket.writable) {
             console.warn("Socket was aborted");
@@ -130,6 +134,45 @@ export class SocketManager {
             room,
             user,
         };
+    }
+
+    private notifyNewMeetOnRoomJoin(room: GameRoom, meetingLink: string) {
+        const peopleInRoom = [...room.getUsers().values()];
+
+        const webexSessionStart = new WebexSessionStart();
+        webexSessionStart.setMeetinglink(meetingLink);
+        webexSessionStart.setRoomid(room.roomUrl);
+        const message = new ServerToClientMessage();
+        message.setWebexsessionstart(webexSessionStart);
+
+        for (const person of peopleInRoom) {
+            if (person.socket.writable) {
+                try {
+                    person.socket.write(message);
+                } catch (err) {
+                    console.warn(`Error sending webex join to user ${person.id}. Error: ${err}`);
+                }
+            }
+        }
+    }
+
+    private notifyStopMeetOnRoomLeave(room: GameRoom) {
+        const peopleInRoom = [...room.getUsers().values()];
+
+        const webexSessionStop = new WebexSessionStop();
+        webexSessionStop.setRoomid(room.roomUrl);
+        const message = new ServerToClientMessage();
+        message.setWebexsessionstop(webexSessionStop);
+
+        for (const person of peopleInRoom) {
+            if (person.socket.writable) {
+                try {
+                    person.socket.write(message);
+                } catch (err) {
+                    console.warn(`Error sending webex join to user ${person.id}. Error: ${err}`);
+                }
+            }
+        }
     }
 
     private updateUserList(room: GameRoom) {
@@ -288,6 +331,7 @@ export class SocketManager {
         // leave previous room and world
         try {
             //user leave previous world
+            this.notifyStopMeetOnRoomLeave(room);
             room.leave(user);
             this.updateUserList(room);
 
