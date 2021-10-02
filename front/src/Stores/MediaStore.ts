@@ -378,7 +378,8 @@ function toggleConstraints(track: MediaStreamTrack, constraints: MediaTrackConst
     } else if (constraints === false) {
         track.stop();
     }
-    if (constraints && constraints !== true) {
+    // @ts-ignore
+    if (typeof constraints !== "boolean" && constraints !== true) {
         track.applyConstraints(constraints);
     }
 }
@@ -481,15 +482,10 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                     type: "success",
                     stream: null,
                 });
-            } else if ((constraints.audio && !oldConstraints.audio) || (!oldConstraints.video && constraints.video)) {
+            } //we reemit the stream if it was muted just to be sure
+            else if (constraints.audio /* && !oldConstraints.audio*/ || (!oldConstraints.video && constraints.video)) {
                 initStream(constraints);
-            } /*else if (constraints.audio !== oldConstraints.audio || oldConstraints.video !== constraints.video) {
-                //we reemit the stream if it was muted just to be sure
-                set({
-                    type: "success",
-                    stream: currentStream,
-                });
-            }*/
+            }
             oldConstraints = {
                 video: !!constraints.video,
                 audio: !!constraints.audio,
