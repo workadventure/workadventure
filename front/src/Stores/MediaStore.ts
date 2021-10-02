@@ -395,7 +395,7 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
             try {
                 if (currentStream) {
                     //we need stop all tracks to make sure the old stream will be garbage collected
-                    currentStream.getTracks().forEach((t) => t.stop());
+                    //currentStream.getTracks().forEach((t) => t.stop());
                 }
                 currentStream = await navigator.mediaDevices.getUserMedia(constraints);
                 set({
