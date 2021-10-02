@@ -483,13 +483,13 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                 });
             } else if ((constraints.audio && !oldConstraints.audio) || (!oldConstraints.video && constraints.video)) {
                 initStream(constraints);
-            } else if (constraints.audio !== oldConstraints.audio || oldConstraints.video !== constraints.video) {
+            } /*else if (constraints.audio !== oldConstraints.audio || oldConstraints.video !== constraints.video) {
                 //we reemit the stream if it was muted just to be sure
                 set({
                     type: "success",
                     stream: currentStream,
                 });
-            }
+            }*/
             oldConstraints = {
                 video: !!constraints.video,
                 audio: !!constraints.audio,
