@@ -289,7 +289,9 @@ export const mediaStreamConstraintsStore = derived(
         // Disable webcam for energy reasons (the user is not moving and we are talking to no one)
         if ($cameraEnergySavingStore === true) {
             currentVideoConstraint = false;
-            currentAudioConstraint = false;
+            //this optimization is desactivated because of sound issues on chrome
+            //todo: fix this conflicts and reactivate this optimization
+            //currentAudioConstraint = false;
         }
 
         // Let's make the changes only if the new value is different from the old one.
@@ -376,7 +378,8 @@ function toggleConstraints(track: MediaStreamTrack, constraints: MediaTrackConst
     } else if (constraints === false) {
         track.stop();
     }
-    if (constraints && constraints !== true) {
+    // @ts-ignore
+    if (typeof constraints !== "boolean" && constraints !== true) {
         track.applyConstraints(constraints);
     }
 }
@@ -391,12 +394,11 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
 
         async function initStream(constraints: MediaStreamConstraints) {
             try {
-                const newStream = await navigator.mediaDevices.getUserMedia(constraints);
                 if (currentStream) {
                     //we need stop all tracks to make sure the old stream will be garbage collected
-                    currentStream.getTracks().forEach((t) => t.stop());
+                    //currentStream.getTracks().forEach((t) => t.stop());
                 }
-                currentStream = newStream;
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
                 set({
                     type: "success",
                     stream: currentStream,
@@ -480,7 +482,8 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                     type: "success",
                     stream: null,
                 });
-            } else if ((constraints.audio && !oldConstraints.audio) || (!oldConstraints.video && constraints.video)) {
+            } //we reemit the stream if it was muted just to be sure
+            else if (constraints.audio /* && !oldConstraints.audio*/ || (!oldConstraints.video && constraints.video)) {
                 initStream(constraints);
             }
             oldConstraints = {
