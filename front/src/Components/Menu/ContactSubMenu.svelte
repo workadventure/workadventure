@@ -1,9 +1,8 @@
 <script lang="ts">
-    import {CONTACT_URL} from "../../Enum/EnvironmentVariable";
-
+    import {contactPageStore} from "../../Stores/MenuStore";
 </script>
 
-<iframe title="contact" src="{CONTACT_URL}"></iframe>
+<iframe title="contact" src="{$contactPageStore}" allow="clipboard-read; clipboard-write self {$contactPageStore}" allowfullscreen></iframe>
 
 <style lang="scss">
     iframe {

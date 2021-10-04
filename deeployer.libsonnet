@@ -4,7 +4,7 @@
   local tag = namespace,
   local url = namespace+".test.workadventu.re",
   // develop branch does not use admin because of issue with SSL certificate of admin as of now.
-  local adminUrl = if namespace == "master" || namespace == "develop" || std.startsWith(namespace, "admin") then "https://"+url else null,
+  local adminUrl = if std.startsWith(namespace, "admin") then "https://"+url else null,
   "$schema": "https://raw.githubusercontent.com/thecodingmachine/deeployer/master/deeployer.schema.json",
   "version": "1.0",
   "containers": {
@@ -17,7 +17,6 @@
        "ports": [8080, 50051],
        "env": {
          "SECRET_KEY": "tempSecretKeyNeedsToChange",
-         "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
          "JITSI_ISS": env.JITSI_ISS,
          "JITSI_URL": env.JITSI_URL,
          "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
@@ -25,6 +24,7 @@
          "REDIS_HOST": "redis",
        } + (if adminUrl != null then {
          "ADMIN_API_URL": adminUrl,
+         "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
        } else {})
      },
      "back2": {
@@ -36,7 +36,6 @@
             "ports": [8080, 50051],
             "env": {
               "SECRET_KEY": "tempSecretKeyNeedsToChange",
-              "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
               "JITSI_ISS": env.JITSI_ISS,
               "JITSI_URL": env.JITSI_URL,
               "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
@@ -44,6 +43,7 @@
               "REDIS_HOST": "redis",
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
+              "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
             } else {})
           },
      "pusher": {
@@ -55,13 +55,13 @@
             "ports": [8080],
             "env": {
               "SECRET_KEY": "tempSecretKeyNeedsToChange",
-              "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
               "JITSI_ISS": env.JITSI_ISS,
               "JITSI_URL": env.JITSI_URL,
               "API_URL": "back1:50051,back2:50051",
               "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
+              "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
             } else {})
           },
     "front": {
@@ -81,8 +81,7 @@
         "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
         "TURN_SERVER": "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443",
         "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
-        "START_ROOM_URL": "/_/global/maps-"+url+"/Floor0/floor0.json"
-        //"GA_TRACKING_ID": "UA-10196481-11"
+        "START_ROOM_URL": "/_/global/maps-"+url+"/starter/map.json"
       }
     },
     "uploader": {

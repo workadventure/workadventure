@@ -1102,3 +1102,12 @@ div.is-silent {
 div.is-silent.hide {
     right: 15px;
 }
+
+div.emoji-picker {
+    background-color: #333;
+    border-radius: 1em;
+
+    input.emoji-picker__search {
+        border-radius: 1em;
+    }
+}
