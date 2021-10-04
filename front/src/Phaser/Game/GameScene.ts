@@ -1830,6 +1830,9 @@ ${escapedMessage}
         const jitsiUrl = allProps.get("jitsiUrl") as string | undefined;
         const webexSpaceId = allProps.get("webexSpace");
         const webexMeetingUrl = allProps.get("webexMeetingUrl");
+        const webexMeetingRoomName = allProps.get("webexMeetingRoomName");
+        const webexMeetingRoomInitials = allProps.get("webexMeetingRoomInitials");
+        const webexMeetingRoomFullName = allProps.get("webexMeetingRoomFullName");
         const jitsiWidth = allProps.get("jitsiWidth") as number | undefined;
 
         console.log("Jitsi: " + jitsiUrl);
@@ -1838,7 +1841,12 @@ ${escapedMessage}
 
         if (webexMeetingUrl) {
             console.log("Found webex meeting url");
-            webexIntegration.startMeeting(webexMeetingUrl);
+            webexIntegration.startMeeting(
+                webexMeetingUrl,
+                webexMeetingRoomName,
+                webexMeetingRoomInitials,
+                webexMeetingRoomFullName
+            );
         } else if (webexSpaceId) {
             webexIntegration.start(webexSpaceId as string);
         } else {

@@ -116,15 +116,21 @@ export class WebexIntegration {
             : Promise.reject("WEBEX_GLOBAL_SPACE_ID not configured.");
     }
 
-    public async startMeeting(meetingUrl: string | number | boolean) {
-        if (typeof meetingUrl !== "string") {
-            throw new Error("meetingURL isn't a string!")
+    public async startMeeting(
+        meetingUrl: string | number | boolean,
+        roomName: string | number | undefined | boolean,
+        userInitials: string | number | undefined | boolean,
+        userFullName: string | number | undefined | boolean
+    ) {
+        if (typeof meetingUrl !== "string" || typeof userInitials !== "string" || typeof userFullName !== "string") {
+            console.error("Prop isn't a string!", { meetingUrl, roomName, userInitials, userFullName });
+            throw new Error("Prop isn't a string!");
         }
         const self = this;
         await this.stop();
 
         coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
-            new WebexSignIn({ target: cowebsiteDiv});
+            new WebexSignIn({ target: cowebsiteDiv });
 
             return Promise.resolve();
         });
@@ -132,10 +138,16 @@ export class WebexIntegration {
         await self.waitForAuthorization();
 
         coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
-            new WebexVideoChat({target: cowebsiteDiv, props: {
-                meetingRoom: meetingUrl,
-                accessToken: this.accessToken
-            } })
+            new WebexVideoChat({
+                target: cowebsiteDiv,
+                props: {
+                    meetingRoom: meetingUrl,
+                    initials: userInitials,
+                    personToCall: roomName,
+                    fullName: userFullName,
+                    accessToken: this.accessToken,
+                },
+            });
 
             return Promise.resolve();
         });
@@ -151,7 +163,7 @@ export class WebexIntegration {
         await this.stop();
 
         coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
-            new WebexSignIn({ target: cowebsiteDiv});
+            new WebexSignIn({ target: cowebsiteDiv });
 
             return Promise.resolve();
         });

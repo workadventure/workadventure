@@ -4,10 +4,9 @@
 
     export let meetingRoom = null;
     export let accessToken = null;
-    // TODO get from map
     export let initials = "👨‍💻";
     export let fullName = "iits";
-    export let personToCall = "Whiteboard";
+    export let personToCall = "Meeting Room";
 
     let webexCDNLink = "https://unpkg.com/webex/umd/webex.min.js";
 
