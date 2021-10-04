@@ -118,9 +118,9 @@ export class WebexIntegration {
 
     public async startMeeting(
         meetingUrl: string | number | boolean,
-        roomName: string | number | undefined | boolean,
-        userInitials: string | number | undefined | boolean,
-        userFullName: string | number | undefined | boolean
+        roomName: string | number | undefined | boolean = "Meeting Room",
+        userInitials: string | number | undefined | boolean = "👩‍💻",
+        userFullName: string | number | undefined | boolean = "iits"
     ) {
         if (typeof meetingUrl !== "string" || typeof userInitials !== "string" || typeof userFullName !== "string") {
             console.error("Prop isn't a string!", { meetingUrl, roomName, userInitials, userFullName });
