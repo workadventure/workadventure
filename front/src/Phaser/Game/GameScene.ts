@@ -38,7 +38,6 @@ import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import { mediaManager } from "../../WebRtc/MediaManager";
 import { SimplePeer } from "../../WebRtc/SimplePeer";
 import { addLoader, removeLoader } from "../Components/Loader";
-import { OpenChatIcon, openChatIconName } from "../Components/OpenChatIcon";
 import { lazyLoadPlayerCharacterTextures, loadCustomTexture } from "../Entity/PlayerTexturesLoadingManager";
 import { RemotePlayer } from "../Entity/RemotePlayer";
 import type { ActionableItem } from "../Items/ActionableItem";
@@ -174,7 +173,6 @@ export class GameScene extends DirtyScene {
     private createPromiseResolve!: (value?: void | PromiseLike<void>) => void;
     private iframeSubscriptionList!: Array<Subscription>;
     private peerStoreUnsubscribe!: () => void;
-    private chatVisibilityUnsubscribe!: () => void;
     private emoteUnsubscribe!: () => void;
     private emoteMenuUnsubscribe!: () => void;
     private biggestAvailableAreaStoreUnsubscribe!: () => void;
@@ -197,7 +195,6 @@ export class GameScene extends DirtyScene {
     private outlinedItem: ActionableItem | null = null;
     public userInputManager!: UserInputManager;
     private isReconnecting: boolean | undefined = undefined;
-    private openChatIcon!: OpenChatIcon;
     private playerName!: string;
     private characterLayers!: string[];
     private companion!: string | null;
@@ -245,7 +242,6 @@ export class GameScene extends DirtyScene {
             }
         }
 
-        this.load.image(openChatIconName, "resources/objects/talk.png");
         if (touchScreenManager.supportTouchScreen) {
             this.load.image(joystickBaseKey, joystickBaseImg);
             this.load.image(joystickThumbKey, joystickThumbImg);
@@ -584,8 +580,6 @@ export class GameScene extends DirtyScene {
             this.outlinedItem?.activate();
         });
 
-        this.openChatIcon = new OpenChatIcon(this, 2, this.game.renderer.height - 2);
-
         this.reposition();
 
         // From now, this game scene will be notified of reposition events
@@ -616,10 +610,6 @@ export class GameScene extends DirtyScene {
                 });
             }
             oldPeerNumber = newPeerNumber;
-        });
-
-        this.chatVisibilityUnsubscribe = chatVisibilityStore.subscribe((v) => {
-            this.openChatIcon.setVisible(!v);
         });
 
         this.emoteUnsubscribe = emoteStore.subscribe((emoteKey) => {
@@ -1327,7 +1317,6 @@ ${escapedMessage}
         this.pinchManager?.destroy();
         this.emoteManager.destroy();
         this.peerStoreUnsubscribe();
-        this.chatVisibilityUnsubscribe();
         this.emoteUnsubscribe();
         this.emoteMenuUnsubscribe();
         this.biggestAvailableAreaStoreUnsubscribe();
@@ -1802,8 +1791,6 @@ ${escapedMessage}
         return undefined;
     }
     private reposition(): void {
-        this.openChatIcon.setY(this.game.renderer.height - 2);
-
         // Recompute camera offset if needed
         biggestAvailableAreaStore.recompute();
     }
