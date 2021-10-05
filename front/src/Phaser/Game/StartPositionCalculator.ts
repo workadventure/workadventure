@@ -55,10 +55,13 @@ export class StartPositionCalculator {
         for (const layer of this.gameMap.flatLayers) {
             if (layer.type !== "tilelayer") continue;
             //we want to prioritize the selectedLayer other the start layer
-            if (selectedOrDefaultLayer === layer.name || layer.name.endsWith("/" + selectedOrDefaultLayer)) {
-                foundLayer = layer;
-                break;
-            } else if (selectedOrDefaultLayer === defaultStartLayerName || this.isStartLayer(layer)) {
+            if (
+                (selectedOrDefaultLayer === layer.name ||
+                    selectedOrDefaultLayer === `#${layer.name}` ||
+                    layer.name.endsWith("/" + selectedOrDefaultLayer)) &&
+                layer.type === "tilelayer" &&
+                (selectedOrDefaultLayer === defaultStartLayerName || this.isStartLayer(layer))
+            ) {
                 foundLayer = layer;
                 break;
             }
