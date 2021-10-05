@@ -6,7 +6,7 @@
     }
 
     function goToBuildingMap() {
-        const sparkHost = "https://workadventu.re/map-building";
+        const sparkHost = "https://workadventu.re/map-building/";
         window.open(sparkHost, "_blank");
     }
 

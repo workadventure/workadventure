@@ -137,17 +137,6 @@ class ConnectionManager {
             connexionType === GameConnexionTypes.empty
         ) {
             this.authToken = localUserStore.getAuthToken();
-            //todo: add here some kind of warning if authToken has expired.
-            if (!this.authToken) {
-                await this.anonymousLogin();
-            } else {
-                try {
-                    await this.checkAuthUserConnexion();
-                } catch (err) {
-                    console.error(err);
-                }
-            }
-            this.localUser = localUserStore.getLocalUser() as LocalUser; //if authToken exist in localStorage then localUser cannot be null
 
             let roomPath: string;
             if (connexionType === GameConnexionTypes.empty) {
@@ -172,7 +161,21 @@ class ConnectionManager {
             }
 
             //get detail map for anonymous login and set texture in local storage
+            //before set token of user we must load room and all information. For example the mandatory authentication could be require on current room
             this._currentRoom = await Room.createRoom(new URL(roomPath));
+
+            //todo: add here some kind of warning if authToken has expired.
+            if (!this.authToken && !this._currentRoom.authenticationMandatory) {
+                await this.anonymousLogin();
+            } else {
+                try {
+                    await this.checkAuthUserConnexion();
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+            this.localUser = localUserStore.getLocalUser() as LocalUser; //if authToken exist in localStorage then localUser cannot be null
+
             if (this._currentRoom.textures != undefined && this._currentRoom.textures.length > 0) {
                 //check if texture was changed
                 if (this.localUser.textures.length === 0) {
