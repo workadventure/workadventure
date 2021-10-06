@@ -177,6 +177,11 @@ function createVideoConstraintStore() {
     };
 }
 
+/**
+ * A store containing if user is silent, so if he is in silent zone. This permit to show et hide camera of user
+ */
+export const isSilentStore = writable(false);
+
 export const videoConstraintStore = createVideoConstraintStore();
 
 /**
@@ -234,6 +239,7 @@ export const mediaStreamConstraintsStore = derived(
         audioConstraintStore,
         privacyShutdownStore,
         cameraEnergySavingStore,
+        isSilentStore,
     ],
     (
         [
@@ -245,6 +251,7 @@ export const mediaStreamConstraintsStore = derived(
             $audioConstraintStore,
             $privacyShutdownStore,
             $cameraEnergySavingStore,
+            $isSilentStore,
         ],
         set
     ) => {
@@ -292,6 +299,11 @@ export const mediaStreamConstraintsStore = derived(
             //this optimization is desactivated because of sound issues on chrome
             //todo: fix this conflicts and reactivate this optimization
             //currentAudioConstraint = false;
+        }
+
+        if ($isSilentStore === true) {
+            currentVideoConstraint = false;
+            currentAudioConstraint = false;
         }
 
         // Let's make the changes only if the new value is different from the old one.
@@ -607,13 +619,3 @@ localStreamStore.subscribe((streamResult) => {
         }
     }
 });
-
-/**
- * A store containing the real active media is mobile
- */
-export const obtainedMediaConstraintIsMobileStore = writable(false);
-
-/**
- * A store containing if user is silent, so if he is in silent zone. This permit to show et hide camera of user
- */
-export const isSilentStore = writable(false);
