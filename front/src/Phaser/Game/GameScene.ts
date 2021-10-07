@@ -1284,7 +1284,7 @@ ${escapedMessage}
 
     public cleanupClosingScene(): void {
         // stop playing audio, close any open website, stop any open Jitsi
-        coWebsiteManager.closeCoWebsite();
+        coWebsiteManager.closeCoWebsites();
         // Stop the script, if any
         const scripts = this.getScriptUrls(this.mapFile);
         for (const script of scripts) {

@@ -124,6 +124,7 @@
     top: 10%;
 
     position: relative;
+    z-index: 80;
     margin: auto;
 
     display: grid;

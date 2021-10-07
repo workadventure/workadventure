@@ -181,11 +181,17 @@ class JitsiFactory {
         }, jitsiWidth);
     }
 
-    public async stop(): Promise<void> {
+    public stop() {
         if (!this.jitsiApi) {
             return;
         }
-        await coWebsiteManager.closeCoWebsite();
+
+        const jitsiCoWebsite = coWebsiteManager.searchJitsi();
+
+        if (jitsiCoWebsite) {
+            coWebsiteManager.closeJitsi();
+        }
+
         this.jitsiApi.removeListener("audioMuteStatusChanged", this.audioCallback);
         this.jitsiApi.removeListener("videoMuteStatusChanged", this.videoCallback);
         this.jitsiApi?.dispose();

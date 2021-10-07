@@ -29,6 +29,8 @@
 <style lang="scss">
   .menuIcon {
     display: inline-grid;
+    z-index: 90;
+    position: relative;
     margin: 25px;
     img {
       pointer-events: auto;
