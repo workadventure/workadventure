@@ -1,10 +1,10 @@
-import { ConnectCallback, DisconnectCallback } from "./GameRoom";
+import { ConnectCallback, DisconnectCallback, GameRoom } from "./GameRoom";
 import { User } from "./User";
 import { PositionInterface } from "_Model/PositionInterface";
 import { Movable } from "_Model/Movable";
 import { PositionNotifier } from "_Model/PositionNotifier";
-import { gaugeManager } from "../Services/GaugeManager";
 import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable";
+import type { Zone } from "../Model/Zone";
 
 export class Group implements Movable {
     private static nextId: number = 1;
@@ -13,13 +13,14 @@ export class Group implements Movable {
     private users: Set<User>;
     private x!: number;
     private y!: number;
-    private hasEditedGauge: boolean = false;
     private wasDestroyed: boolean = false;
     private roomId: string;
+    private currentZone: Zone | null = null;
 
     constructor(
         roomId: string,
         users: User[],
+        private groupRadius: number,
         private connectCallback: ConnectCallback,
         private disconnectCallback: DisconnectCallback,
         private positionNotifier: PositionNotifier
@@ -28,13 +29,6 @@ export class Group implements Movable {
         this.users = new Set<User>();
         this.id = Group.nextId;
         Group.nextId++;
-        //we only send a event for prometheus metrics if the group lives more than 5 seconds
-        setTimeout(() => {
-            if (!this.wasDestroyed) {
-                this.hasEditedGauge = true;
-                gaugeManager.incNbGroupsPerRoomGauge(roomId);
-            }
-        }, 5000);
 
         users.forEach((user: User) => {
             this.join(user);
@@ -85,9 +79,22 @@ export class Group implements Movable {
         this.y = y;
 
         if (oldX === undefined) {
-            this.positionNotifier.enter(this);
+            this.currentZone = this.positionNotifier.enter(this);
         } else {
-            this.positionNotifier.updatePosition(this, { x, y }, { x: oldX, y: oldY });
+            this.currentZone = this.positionNotifier.updatePosition(this, { x, y }, { x: oldX, y: oldY });
+        }
+    }
+
+    searchForNearbyUsers(): void {
+        if (!this.currentZone) return;
+
+        for (const user of this.positionNotifier.getAllUsersInSquareAroundZone(this.currentZone)) {
+            if (user.group || this.isFull()) return; //we ignore users that are already in a group.
+            const distance = GameRoom.computeDistanceBetweenPositions(user.getPosition(), this.getPosition());
+            if (distance < this.groupRadius) {
+                this.join(user);
+                this.updatePosition();
+            }
         }
     }
 
@@ -126,7 +133,6 @@ export class Group implements Movable {
      * Usually used when there is only one user left.
      */
     destroy(): void {
-        if (this.hasEditedGauge) gaugeManager.decNbGroupsPerRoomGauge(this.roomId);
         for (const user of this.users) {
             this.leave(user);
         }
