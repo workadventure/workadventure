@@ -52,15 +52,6 @@ class GaugeManager {
         this.nbClientsGauge.dec();
         this.nbClientsPerRoomGauge.dec({ room: roomId });
     }
-
-    incNbGroupsPerRoomGauge(roomId: string): void {
-        this.nbGroupsPerRoomCounter.inc({ room: roomId });
-        this.nbGroupsPerRoomGauge.inc({ room: roomId });
-    }
-
-    decNbGroupsPerRoomGauge(roomId: string): void {
-        this.nbGroupsPerRoomGauge.dec({ room: roomId });
-    }
 }
 
 export const gaugeManager = new GaugeManager();
