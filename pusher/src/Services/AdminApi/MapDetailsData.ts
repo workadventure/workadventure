@@ -1,6 +1,6 @@
 import * as tg from "generic-type-guard";
-import {isNumber} from "generic-type-guard";
-import {isCharacterTexture} from "./CharacterTexture";
+import { isNumber } from "generic-type-guard";
+import { isCharacterTexture } from "./CharacterTexture";
 
 /*const isNumericEnum =
     <T extends { [n: number]: string }>(vs: T) =>
