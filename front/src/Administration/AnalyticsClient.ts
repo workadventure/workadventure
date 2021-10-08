@@ -1,4 +1,6 @@
 import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare let window: any;
 
 class AnalyticsClient {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -8,6 +10,8 @@ class AnalyticsClient {
         if (POSTHOG_API_KEY && POSTHOG_URL) {
             this.posthogPromise = import("posthog-js").then(({ default: posthog }) => {
                 posthog.init(POSTHOG_API_KEY, { api_host: POSTHOG_URL, disable_cookie: true });
+                //the posthog toolbar need a reference in window to be able to work
+                window.posthog = posthog;
                 return posthog;
             });
         } else {
