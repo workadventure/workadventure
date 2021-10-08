@@ -132,7 +132,6 @@ export class WebexIntegration {
 
         coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
             new WebexSignIn({ target: cowebsiteDiv });
-
             return Promise.resolve();
         });
 

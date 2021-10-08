@@ -261,7 +261,7 @@ export class RoomConnection implements RoomConnection {
                 this.userList = message.getUserlistmessage()?.toObject()?.userList ?? [];
                 this.dispatch(EventMessage.USER_LIST, this.userList);
             } else if (message.hasWebexsessionresponse()) {
-                // TODO - is this ok?
+                // TODO - is this webex call ok?
                 this.dispatch(EventMessage.WEBEX_SESSION_RESPONSE, message.getWebexsessionresponse());
             } else {
                 throw new Error("Unknown message received");
@@ -556,7 +556,7 @@ export class RoomConnection implements RoomConnection {
 
     public emitWebexSessionQuery(roomId: string) {
         const webexSessionQuery = new WebexSessionQuery();
-        // TODO make meeting, check if ok here
+        // TODO make webex meeting, check if ok here
         webexSessionQuery.setRoomid(roomId);
         const clientToServerMessage = new ClientToServerMessage();
         clientToServerMessage.setWebexquery(webexSessionQuery);

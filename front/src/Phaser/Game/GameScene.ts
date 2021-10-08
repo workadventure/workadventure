@@ -729,7 +729,7 @@ export class GameScene extends DirtyScene {
                     item.fire(message.event, message.state, message.parameters);
                 });
 
-                // TODO
+                // TODO - test webex session response handling
                 this.connection.onWebexSessionResponse((roomId, meetingLink) => {
                     this.startWebex(roomId, meetingLink);
                 });
@@ -1198,22 +1198,7 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.modifyEmbeddedWebsiteStream.subscribe((embeddedWebsite) => {
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
+                // TODO - Do
             })
         );
     }
@@ -1865,6 +1850,7 @@ ${escapedMessage}
         console.log("webexSpaceId: " + webexSpaceId);
         console.log("webexMeetingUrl: " + webexMeetingUrl);
 
+        // TODO - remove logic for reading webex meeting info from map?
         if (webexMeetingUrl) {
             this.connection?.emitWebexSessionQuery(roomName);
 
@@ -1886,7 +1872,6 @@ ${escapedMessage}
         analyticsClient.enteredJitsi(roomName, this.room.id);
 
         //permit to stop jitsi when user close iframe
-        // TODO webex
         mediaManager.addTriggerCloseJitsiFrameButton("close-jitsi", () => {
             this.stopJitsi();
         });

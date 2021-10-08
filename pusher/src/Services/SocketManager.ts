@@ -395,7 +395,6 @@ export class SocketManager implements ZoneEventListener {
         return this.rooms;
     }
 
-    // TODO handle webex session query
     public handleWebexSessionQuery(client: ExSocketInterface, webexSessionQuery: WebexSessionQuery) {
         try {
             const roomId = webexSessionQuery.getRoomid();
@@ -406,7 +405,7 @@ export class SocketManager implements ZoneEventListener {
             if (link !== undefined) {
                 response.setMeetinglink(link);
             } else {
-                // TODO actually make meeting here
+                // TODO actually make webex meeting here
                 response.setMeetinglink("[TODO] Some Link That's Already Been Generated");
             }
 

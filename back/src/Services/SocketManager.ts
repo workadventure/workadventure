@@ -96,7 +96,11 @@ export class SocketManager {
 
         this.updateUserList(room);
 
-        this.notifyNewMeetOnRoomJoin(room, "TODO"); // TODO
+        // TODO Do room ID's exist? Or are they just urls?
+        const roomId = this.webexMeetings.get(room.roomUrl);
+        if (roomId !== undefined) {
+            this.notifyNewMeetOnRoomJoin(room, roomId);
+        }
 
         if (!socket.writable) {
             console.warn("Socket was aborted");
@@ -346,9 +350,12 @@ export class SocketManager {
         const room = queryJitsiJwtMessage.getJitsiroom();
         const tag = queryJitsiJwtMessage.getTag(); // FIXME: this is not secure. We should load the JSON for the current room and check rights associated to room instead.
 
-        if (SECRET_JITSI_KEY === "") {
-            throw new Error("You must set the SECRET_JITSI_KEY key to the secret to generate JWT tokens for Jitsi.");
-        }
+        if (queryJitsiJwtMessage.getTag() == "")
+            if (SECRET_JITSI_KEY === "") {
+                throw new Error(
+                    "You must set the SECRET_JITSI_KEY key to the secret to generate JWT tokens for Jitsi."
+                );
+            }
 
         // Let's see if the current client has
         const isAdmin = user.tags.includes(tag);
