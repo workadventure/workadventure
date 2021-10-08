@@ -1,10 +1,10 @@
 import type Phaser from "phaser";
 
 export type CursorKey = {
-    isDown: boolean
-}
+    isDown: boolean;
+};
 
-export type Direction =  'left' | 'right' | 'up' | 'down'
+export type Direction = "left" | "right" | "up" | "down";
 
 export interface CursorKeys extends Record<Direction, CursorKey> {
     left: CursorKey;
@@ -21,4 +21,3 @@ export interface IVirtualJoystick extends Phaser.GameObjects.GameObject {
     visible: boolean;
     createCursorKeys: () => CursorKeys;
 }
-

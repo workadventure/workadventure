@@ -1,5 +1,23 @@
 syntax = "proto3";
 
+message WebexSessionStart {
+  string roomId = 1;
+  string meetingLink = 2;
+}
+
+message WebexSessionStop {
+  string roomId = 1;
+}
+
+message WebexSessionQuery {
+  string roomId = 1;
+}
+
+message WebexSessionResponse {
+  string roomId = 1;
+  string meetingLink = 2;
+}
+
 /*********** PARTIAL MESSAGES **************/
 
 message PositionMessage {
@@ -95,9 +113,9 @@ message ClientToServerMessage {
     QueryJitsiJwtMessage queryJitsiJwtMessage = 12;
     EmotePromptMessage emotePromptMessage = 13;
     VariableMessage variableMessage = 14;
+    WebexSessionQuery webexQuery = 15;
   }
 }
-
 
 /************ BI-DIRECTIONAL MESSAGES **************/
 
@@ -292,6 +310,10 @@ message ServerToClientMessage {
     EmoteEventMessage emoteEventMessage = 19;
     TokenExpiredMessage tokenExpiredMessage = 20;
     UserListMessage userListMessage = 30;
+
+    WebexSessionStart webexSessionStart = 31;
+    WebexSessionStop webexSessionStop = 32;
+    WebexSessionResponse webexSessionResponse = 33;
   }
 }
 

@@ -1,6 +1,5 @@
-import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../Enum/EnvironmentVariable";
+import { ADMIN_API_TOKEN, ADMIN_API_URL, ADMIN_URL } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
-import { GameRoomPolicyTypes } from "_Model/PusherRoom";
 import { CharacterTexture } from "./AdminApi/CharacterTexture";
 import { MapDetailsData } from "./AdminApi/MapDetailsData";
 import { RoomRedirect } from "./AdminApi/RoomRedirect";
@@ -140,6 +139,15 @@ class AdminApi {
         }).then((data) => {
             return data.data;
         });
+    }
+
+    /*TODO add constant to use profile companny*/
+    getProfileUrl(accessToken: string): string {
+        if (!ADMIN_URL) {
+            throw new Error("No admin backoffice set!");
+        }
+
+        return ADMIN_URL + `/profile?token=${accessToken}`;
     }
 }
 

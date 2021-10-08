@@ -18,3 +18,4 @@ The list of functions below is **deprecated**. You should not use those but. use
 - Method `WA.onChatMessage` is deprecated. It has been renamed to `WA.chat.onChatMessage`.
 - Method `WA.onEnterZone` is deprecated. It has been renamed to `WA.room.onEnterZone`.
 - Method `WA.onLeaveZone` is deprecated. It has been renamed to `WA.room.onLeaveZone`.
+- Method `WA.ui.registerMenuCommand` parameter `callback` is deprecated. Use `WA.ui.registerMenuCommand(commandDescriptor: string, options: MenuOptions)`.

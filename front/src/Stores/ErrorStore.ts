@@ -8,7 +8,7 @@ function createErrorStore() {
 
     return {
         subscribe,
-        addErrorMessage: (e: string|Error): void => {
+        addErrorMessage: (e: string | Error): void => {
             update((messages: string[]) => {
                 let message: string;
                 if (e instanceof Error) {
@@ -26,7 +26,7 @@ function createErrorStore() {
         },
         clearMessages: (): void => {
             set([]);
-        }
+        },
     };
 }
 

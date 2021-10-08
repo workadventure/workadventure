@@ -1,40 +1,43 @@
 import { GameRoom } from "../Model/GameRoom";
 import {
+    BanUserMessage,
+    BatchToPusherMessage,
+    BatchToPusherRoomMessage,
+    EmoteEventMessage,
+    EmotePromptMessage,
+    GroupLeftZoneMessage,
+    GroupUpdateZoneMessage,
     ItemEventMessage,
     ItemStateMessage,
+    JoinRoomMessage,
     PlayGlobalMessage,
     PointMessage,
+    QueryJitsiJwtMessage,
+    RefreshRoomMessage,
     RoomJoinedMessage,
+    SendJitsiJwtMessage,
+    SendUserMessage,
     ServerToClientMessage,
     SilentMessage,
     SubMessage,
+    SubToPusherMessage,
+    UserInfoMessage,
+    UserJoinedZoneMessage,
+    UserLeftZoneMessage,
+    UserListMessage,
     UserMovedMessage,
     UserMovesMessage,
+    VariableMessage,
+    WebexSessionQuery,
+    WebexSessionResponse,
+    WebexSessionStart,
+    WebexSessionStop,
     WebRtcDisconnectMessage,
     WebRtcSignalToClientMessage,
     WebRtcSignalToServerMessage,
     WebRtcStartMessage,
-    QueryJitsiJwtMessage,
-    SendJitsiJwtMessage,
-    SendUserMessage,
-    JoinRoomMessage,
-    Zone as ProtoZone,
-    BatchToPusherMessage,
-    SubToPusherMessage,
-    UserJoinedZoneMessage,
-    GroupUpdateZoneMessage,
-    GroupLeftZoneMessage,
     WorldFullWarningMessage,
-    UserLeftZoneMessage,
-    EmoteEventMessage,
-    BanUserMessage,
-    RefreshRoomMessage,
-    EmotePromptMessage,
-    VariableMessage,
-    BatchToPusherRoomMessage,
-    SubToPusherRoomMessage,
-    UserListMessage,
-    UserInfoMessage,
+    Zone as ProtoZone,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -43,6 +46,7 @@ import { cpuTracker } from "./CpuTracker";
 import {
     GROUP_RADIUS,
     JITSI_ISS,
+    JITSI_URL,
     MINIMUM_DISTANCE,
     SECRET_JITSI_KEY,
     TURN_STATIC_AUTH_SECRET,
@@ -50,7 +54,6 @@ import {
 import { Movable } from "../Model/Movable";
 import { PositionInterface } from "../Model/PositionInterface";
 import Jwt from "jsonwebtoken";
-import { JITSI_URL } from "../Enum/EnvironmentVariable";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { RoomSocket, ZoneSocket } from "../RoomManager";
@@ -73,6 +76,7 @@ export class SocketManager {
     //private rooms = new Map<string, GameRoom>();
     // List of rooms in process of loading.
     private roomsPromises = new Map<string, PromiseLike<GameRoom>>();
+    private webexMeetings = new Map<string, string>();
 
     constructor() {
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
@@ -91,6 +95,12 @@ export class SocketManager {
         const { room, user } = await this.joinRoom(socket, joinRoomMessage);
 
         this.updateUserList(room);
+
+        // TODO Do room ID's exist? Or are they just urls?
+        const roomId = this.webexMeetings.get(room.roomUrl);
+        if (roomId !== undefined) {
+            this.notifyNewMeetOnRoomJoin(room, roomId);
+        }
 
         if (!socket.writable) {
             console.warn("Socket was aborted");
@@ -132,38 +142,6 @@ export class SocketManager {
         };
     }
 
-    private updateUserList(room: GameRoom) {
-        try {
-            const users = [...room.getUsers().values()];
-            const userListMessage = users.reduce((memo, user) => {
-                const userInfoMessage = new UserInfoMessage();
-                userInfoMessage.setUserid(user.id);
-                userInfoMessage.setName(user.name);
-                userInfoMessage.setCharacterlayername(user.characterLayers[0]?.name ?? "");
-
-                memo.addUser(userInfoMessage);
-                return memo;
-            }, new UserListMessage());
-
-            const message = new ServerToClientMessage();
-            message.setUserlistmessage(userListMessage);
-
-            console.log("user list", userListMessage.toObject());
-
-            for (const user of users) {
-                if (user.socket.writable) {
-                    try {
-                        user.socket.write(message);
-                    } catch (err) {
-                        console.warn(`Error sending user list to user ${user.id}. Error: ${err}`);
-                    }
-                }
-            }
-        } catch (err) {
-            console.error(`Error updating user list. Error: ${err}`);
-        }
-    }
-
     handleUserMovesMessage(room: GameRoom, user: User, userMovesMessage: UserMovesMessage) {
         const userMoves = userMovesMessage.toObject();
         const position = userMovesMessage.getPosition();
@@ -185,21 +163,6 @@ export class SocketManager {
         room.updatePosition(user, ProtobufUtils.toPointInterface(position));
         //room.setViewport(client, client.viewport);
     }
-
-    // Useless now, will be useful again if we allow editing details in game
-    /*handleSetPlayerDetails(client: UserSocket, playerDetailsMessage: SetPlayerDetailsMessage) {
-        const playerDetails = {
-            name: playerDetailsMessage.getName(),
-            characterLayers: playerDetailsMessage.getCharacterlayersList()
-        };
-        //console.log(SocketIoEvent.SET_PLAYER_DETAILS, playerDetails);
-        if (!isSetPlayerDetailsMessage(playerDetails)) {
-            emitError(client, 'Invalid SET_PLAYER_DETAILS message received: ');
-            return;
-        }
-        client.name = playerDetails.name;
-        client.characterLayers = SocketManager.mergeCharacterLayersAndCustomTextures(playerDetails.characterLayers, client.textures);
-    }*/
 
     handleSilentMessage(room: GameRoom, user: User, silentMessage: SilentMessage) {
         room.setSilent(user, silentMessage.getSilent());
@@ -223,6 +186,21 @@ export class SocketManager {
     handleVariableEvent(room: GameRoom, user: User, variableMessage: VariableMessage): Promise<void> {
         return room.setVariable(variableMessage.getName(), variableMessage.getValue(), user);
     }
+
+    // Useless now, will be useful again if we allow editing details in game
+    /*handleSetPlayerDetails(client: UserSocket, playerDetailsMessage: SetPlayerDetailsMessage) {
+        const playerDetails = {
+            name: playerDetailsMessage.getName(),
+            characterLayers: playerDetailsMessage.getCharacterlayersList()
+        };
+        //console.log(SocketIoEvent.SET_PLAYER_DETAILS, playerDetails);
+        if (!isSetPlayerDetailsMessage(playerDetails)) {
+            emitError(client, 'Invalid SET_PLAYER_DETAILS message received: ');
+            return;
+        }
+        client.name = playerDetails.name;
+        client.characterLayers = SocketManager.mergeCharacterLayersAndCustomTextures(playerDetails.characterLayers, client.textures);
+    }*/
 
     emitVideo(room: GameRoom, user: User, data: WebRtcSignalToServerMessage): void {
         //send only at user
@@ -288,6 +266,7 @@ export class SocketManager {
         // leave previous room and world
         try {
             //user leave previous world
+            this.notifyStopMeetOnRoomLeave(room);
             room.leave(user);
             this.updateUserList(room);
 
@@ -334,228 +313,6 @@ export class SocketManager {
         return roomPromise;
     }
 
-    private async joinRoom(
-        socket: UserSocket,
-        joinRoomMessage: JoinRoomMessage
-    ): Promise<{ room: GameRoom; user: User }> {
-        const roomId = joinRoomMessage.getRoomid();
-
-        const room = await socketManager.getOrCreateRoom(roomId);
-
-        //join world
-        const user = room.join(socket, joinRoomMessage);
-
-        clientEventsEmitter.emitClientJoin(user.uuid, roomId);
-        console.log(new Date().toISOString() + " A user joined");
-        return { room, user };
-    }
-
-    private onZoneEnter(thing: Movable, fromZone: Zone | null, listener: ZoneSocket) {
-        if (thing instanceof User) {
-            const userJoinedZoneMessage = new UserJoinedZoneMessage();
-            if (!Number.isInteger(thing.id)) {
-                throw new Error("clientUser.userId is not an integer " + thing.id);
-            }
-            userJoinedZoneMessage.setUserid(thing.id);
-            userJoinedZoneMessage.setUseruuid(thing.uuid);
-            userJoinedZoneMessage.setName(thing.name);
-            userJoinedZoneMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
-            userJoinedZoneMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
-            userJoinedZoneMessage.setFromzone(this.toProtoZone(fromZone));
-            if (thing.visitCardUrl) {
-                userJoinedZoneMessage.setVisitcardurl(thing.visitCardUrl);
-            }
-            userJoinedZoneMessage.setCompanion(thing.companion);
-
-            const subMessage = new SubToPusherMessage();
-            subMessage.setUserjoinedzonemessage(userJoinedZoneMessage);
-
-            emitZoneMessage(subMessage, listener);
-            //listener.emitInBatch(subMessage);
-        } else if (thing instanceof Group) {
-            this.emitCreateUpdateGroupEvent(listener, fromZone, thing);
-        } else {
-            console.error("Unexpected type for Movable.");
-        }
-    }
-
-    private onClientMove(thing: Movable, position: PositionInterface, listener: ZoneSocket): void {
-        if (thing instanceof User) {
-            const userMovedMessage = new UserMovedMessage();
-            userMovedMessage.setUserid(thing.id);
-            userMovedMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
-
-            const subMessage = new SubToPusherMessage();
-            subMessage.setUsermovedmessage(userMovedMessage);
-
-            emitZoneMessage(subMessage, listener);
-            //listener.emitInBatch(subMessage);
-            //console.log("Sending USER_MOVED event");
-        } else if (thing instanceof Group) {
-            this.emitCreateUpdateGroupEvent(listener, null, thing);
-        } else {
-            console.error("Unexpected type for Movable.");
-        }
-    }
-
-    private onClientLeave(thing: Movable, newZone: Zone | null, listener: ZoneSocket) {
-        if (thing instanceof User) {
-            this.emitUserLeftEvent(listener, thing.id, newZone);
-        } else if (thing instanceof Group) {
-            this.emitDeleteGroupEvent(listener, thing.getId(), newZone);
-        } else {
-            console.error("Unexpected type for Movable.");
-        }
-    }
-
-    private onEmote(emoteEventMessage: EmoteEventMessage, client: ZoneSocket) {
-        const subMessage = new SubToPusherMessage();
-        subMessage.setEmoteeventmessage(emoteEventMessage);
-
-        emitZoneMessage(subMessage, client);
-    }
-
-    private emitCreateUpdateGroupEvent(client: ZoneSocket, fromZone: Zone | null, group: Group): void {
-        const position = group.getPosition();
-        const pointMessage = new PointMessage();
-        pointMessage.setX(Math.floor(position.x));
-        pointMessage.setY(Math.floor(position.y));
-        const groupUpdateMessage = new GroupUpdateZoneMessage();
-        groupUpdateMessage.setGroupid(group.getId());
-        groupUpdateMessage.setPosition(pointMessage);
-        groupUpdateMessage.setGroupsize(group.getSize);
-        groupUpdateMessage.setFromzone(this.toProtoZone(fromZone));
-
-        const subMessage = new SubToPusherMessage();
-        subMessage.setGroupupdatezonemessage(groupUpdateMessage);
-
-        emitZoneMessage(subMessage, client);
-        //client.emitInBatch(subMessage);
-    }
-
-    private emitDeleteGroupEvent(client: ZoneSocket, groupId: number, newZone: Zone | null): void {
-        const groupDeleteMessage = new GroupLeftZoneMessage();
-        groupDeleteMessage.setGroupid(groupId);
-        groupDeleteMessage.setTozone(this.toProtoZone(newZone));
-
-        const subMessage = new SubToPusherMessage();
-        subMessage.setGroupleftzonemessage(groupDeleteMessage);
-
-        emitZoneMessage(subMessage, client);
-        //user.emitInBatch(subMessage);
-    }
-
-    private emitUserLeftEvent(client: ZoneSocket, userId: number, newZone: Zone | null): void {
-        const userLeftMessage = new UserLeftZoneMessage();
-        userLeftMessage.setUserid(userId);
-        userLeftMessage.setTozone(this.toProtoZone(newZone));
-
-        const subMessage = new SubToPusherMessage();
-        subMessage.setUserleftzonemessage(userLeftMessage);
-
-        emitZoneMessage(subMessage, client);
-    }
-
-    private toProtoZone(zone: Zone | null): ProtoZone | undefined {
-        if (zone !== null) {
-            const zoneMessage = new ProtoZone();
-            zoneMessage.setX(zone.x);
-            zoneMessage.setY(zone.y);
-            return zoneMessage;
-        }
-        return undefined;
-    }
-
-    private joinWebRtcRoom(user: User, group: Group) {
-        for (const otherUser of group.getUsers()) {
-            if (user === otherUser) {
-                continue;
-            }
-
-            // Let's send 2 messages: one to the user joining the group and one to the other user
-            const webrtcStartMessage1 = new WebRtcStartMessage();
-            webrtcStartMessage1.setUserid(otherUser.id);
-            webrtcStartMessage1.setInitiator(true);
-            if (TURN_STATIC_AUTH_SECRET !== "") {
-                const { username, password } = this.getTURNCredentials("" + otherUser.id, TURN_STATIC_AUTH_SECRET);
-                webrtcStartMessage1.setWebrtcusername(username);
-                webrtcStartMessage1.setWebrtcpassword(password);
-            }
-
-            const serverToClientMessage1 = new ServerToClientMessage();
-            serverToClientMessage1.setWebrtcstartmessage(webrtcStartMessage1);
-
-            user.socket.write(serverToClientMessage1);
-
-            const webrtcStartMessage2 = new WebRtcStartMessage();
-            webrtcStartMessage2.setUserid(user.id);
-            webrtcStartMessage2.setInitiator(false);
-            if (TURN_STATIC_AUTH_SECRET !== "") {
-                const { username, password } = this.getTURNCredentials("" + user.id, TURN_STATIC_AUTH_SECRET);
-                webrtcStartMessage2.setWebrtcusername(username);
-                webrtcStartMessage2.setWebrtcpassword(password);
-            }
-
-            const serverToClientMessage2 = new ServerToClientMessage();
-            serverToClientMessage2.setWebrtcstartmessage(webrtcStartMessage2);
-
-            otherUser.socket.write(serverToClientMessage2);
-        }
-    }
-
-    /**
-     * Computes a unique user/password for the TURN server, using a shared secret between the WorkAdventure API server
-     * and the Coturn server.
-     * The Coturn server should be initialized with parameters: `--use-auth-secret --static-auth-secret=MySecretKey`
-     */
-    private getTURNCredentials(name: string, secret: string): { username: string; password: string } {
-        const unixTimeStamp = Math.floor(Date.now() / 1000) + 4 * 3600; // this credential would be valid for the next 4 hours
-        const username = [unixTimeStamp, name].join(":");
-        const hmac = crypto.createHmac("sha1", secret);
-        hmac.setEncoding("base64");
-        hmac.write(username);
-        hmac.end();
-        const password = hmac.read();
-        return {
-            username: username,
-            password: password,
-        };
-    }
-
-    //disconnect user
-    private disConnectedUser(user: User, group: Group) {
-        // Most of the time, sending a disconnect event to one of the players is enough (the player will close the connection
-        // which will be shut for the other player).
-        // However! In the rare case where the WebRTC connection is not yet established, if we close the connection on one of the player,
-        // the other player will try connecting until a timeout happens (during this time, the connection icon will be displayed for nothing).
-        // So we also send the disconnect event to the other player.
-        for (const otherUser of group.getUsers()) {
-            if (user === otherUser) {
-                continue;
-            }
-
-            const webrtcDisconnectMessage1 = new WebRtcDisconnectMessage();
-            webrtcDisconnectMessage1.setUserid(user.id);
-
-            const serverToClientMessage1 = new ServerToClientMessage();
-            serverToClientMessage1.setWebrtcdisconnectmessage(webrtcDisconnectMessage1);
-
-            //if (!otherUser.socket.disconnecting) {
-            otherUser.socket.write(serverToClientMessage1);
-            //}
-
-            const webrtcDisconnectMessage2 = new WebRtcDisconnectMessage();
-            webrtcDisconnectMessage2.setUserid(otherUser.id);
-
-            const serverToClientMessage2 = new ServerToClientMessage();
-            serverToClientMessage2.setWebrtcdisconnectmessage(webrtcDisconnectMessage2);
-
-            //if (!user.socket.disconnecting) {
-            user.socket.write(serverToClientMessage2);
-            //}
-        }
-    }
-
     emitPlayGlobalMessage(room: GameRoom, playGlobalMessage: PlayGlobalMessage) {
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setPlayglobalmessage(playGlobalMessage);
@@ -569,13 +326,37 @@ export class SocketManager {
         return this.roomsPromises;
     }
 
+    // TODO handle webex session query
+    public handleWebexSessionQuery(user: User, webexSessionQuery: WebexSessionQuery) {
+        console.log("[Back] Got Webex Session Query");
+        const roomId = webexSessionQuery.getRoomid();
+        const response = new WebexSessionResponse();
+        response.setRoomid(roomId);
+
+        const link = this.webexMeetings.get(roomId);
+        if (link !== undefined) {
+            response.setMeetinglink(link);
+        } else {
+            // TODO actually make meeting here
+            response.setMeetinglink("[TODO] Some Link That's Already Been Generated");
+        }
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setWebexsessionresponse(response);
+        console.log("[Back] Responding to query for room " + roomId + " with" + response.getMeetinglink());
+        user.socket.write(serverToClientMessage);
+    }
+
     public handleQueryJitsiJwtMessage(user: User, queryJitsiJwtMessage: QueryJitsiJwtMessage) {
         const room = queryJitsiJwtMessage.getJitsiroom();
         const tag = queryJitsiJwtMessage.getTag(); // FIXME: this is not secure. We should load the JSON for the current room and check rights associated to room instead.
 
-        if (SECRET_JITSI_KEY === "") {
-            throw new Error("You must set the SECRET_JITSI_KEY key to the secret to generate JWT tokens for Jitsi.");
-        }
+        if (queryJitsiJwtMessage.getTag() == "")
+            if (SECRET_JITSI_KEY === "") {
+                throw new Error(
+                    "You must set the SECRET_JITSI_KEY key to the secret to generate JWT tokens for Jitsi."
+                );
+            }
 
         // Let's see if the current client has
         const isAdmin = user.tags.includes(tag);
@@ -869,6 +650,299 @@ export class SocketManager {
         emoteEventMessage.setEmote(emotePromptMessage.getEmote());
         emoteEventMessage.setActoruserid(user.id);
         room.emitEmoteEvent(user, emoteEventMessage);
+    }
+
+    private notifyNewMeetOnRoomJoin(room: GameRoom, meetingLink: string) {
+        const peopleInRoom = [...room.getUsers().values()];
+
+        const webexSessionStart = new WebexSessionStart();
+        webexSessionStart.setMeetinglink(meetingLink);
+        webexSessionStart.setRoomid(room.roomUrl);
+        const message = new ServerToClientMessage();
+        message.setWebexsessionstart(webexSessionStart);
+
+        for (const person of peopleInRoom) {
+            if (person.socket.writable) {
+                try {
+                    person.socket.write(message);
+                } catch (err) {
+                    console.warn(`Error sending webex join to user ${person.id}. Error: ${err}`);
+                }
+            }
+        }
+    }
+
+    private notifyStopMeetOnRoomLeave(room: GameRoom) {
+        const peopleInRoom = [...room.getUsers().values()];
+
+        const webexSessionStop = new WebexSessionStop();
+        webexSessionStop.setRoomid(room.roomUrl);
+        const message = new ServerToClientMessage();
+        message.setWebexsessionstop(webexSessionStop);
+
+        for (const person of peopleInRoom) {
+            if (person.socket.writable) {
+                try {
+                    person.socket.write(message);
+                } catch (err) {
+                    console.warn(`Error sending webex join to user ${person.id}. Error: ${err}`);
+                }
+            }
+        }
+    }
+
+    private updateUserList(room: GameRoom) {
+        try {
+            const users = [...room.getUsers().values()];
+            const userListMessage = users.reduce((memo, user) => {
+                const userInfoMessage = new UserInfoMessage();
+                userInfoMessage.setUserid(user.id);
+                userInfoMessage.setName(user.name);
+                userInfoMessage.setCharacterlayername(user.characterLayers[0]?.name ?? "");
+
+                memo.addUser(userInfoMessage);
+                return memo;
+            }, new UserListMessage());
+
+            const message = new ServerToClientMessage();
+            message.setUserlistmessage(userListMessage);
+
+            console.log("user list", userListMessage.toObject());
+
+            for (const user of users) {
+                if (user.socket.writable) {
+                    try {
+                        user.socket.write(message);
+                    } catch (err) {
+                        console.warn(`Error sending user list to user ${user.id}. Error: ${err}`);
+                    }
+                }
+            }
+        } catch (err) {
+            console.error(`Error updating user list. Error: ${err}`);
+        }
+    }
+
+    private async joinRoom(
+        socket: UserSocket,
+        joinRoomMessage: JoinRoomMessage
+    ): Promise<{ room: GameRoom; user: User }> {
+        const roomId = joinRoomMessage.getRoomid();
+
+        const room = await socketManager.getOrCreateRoom(roomId);
+
+        //join world
+        const user = room.join(socket, joinRoomMessage);
+
+        clientEventsEmitter.emitClientJoin(user.uuid, roomId);
+        console.log(new Date().toISOString() + " A user joined");
+        return { room, user };
+    }
+
+    private onZoneEnter(thing: Movable, fromZone: Zone | null, listener: ZoneSocket) {
+        if (thing instanceof User) {
+            const userJoinedZoneMessage = new UserJoinedZoneMessage();
+            if (!Number.isInteger(thing.id)) {
+                throw new Error("clientUser.userId is not an integer " + thing.id);
+            }
+            userJoinedZoneMessage.setUserid(thing.id);
+            userJoinedZoneMessage.setUseruuid(thing.uuid);
+            userJoinedZoneMessage.setName(thing.name);
+            userJoinedZoneMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
+            userJoinedZoneMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
+            userJoinedZoneMessage.setFromzone(this.toProtoZone(fromZone));
+            if (thing.visitCardUrl) {
+                userJoinedZoneMessage.setVisitcardurl(thing.visitCardUrl);
+            }
+            userJoinedZoneMessage.setCompanion(thing.companion);
+
+            const subMessage = new SubToPusherMessage();
+            subMessage.setUserjoinedzonemessage(userJoinedZoneMessage);
+
+            emitZoneMessage(subMessage, listener);
+            //listener.emitInBatch(subMessage);
+        } else if (thing instanceof Group) {
+            this.emitCreateUpdateGroupEvent(listener, fromZone, thing);
+        } else {
+            console.error("Unexpected type for Movable.");
+        }
+    }
+
+    private onClientMove(thing: Movable, position: PositionInterface, listener: ZoneSocket): void {
+        if (thing instanceof User) {
+            const userMovedMessage = new UserMovedMessage();
+            userMovedMessage.setUserid(thing.id);
+            userMovedMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
+
+            const subMessage = new SubToPusherMessage();
+            subMessage.setUsermovedmessage(userMovedMessage);
+
+            emitZoneMessage(subMessage, listener);
+            //listener.emitInBatch(subMessage);
+            //console.log("Sending USER_MOVED event");
+        } else if (thing instanceof Group) {
+            this.emitCreateUpdateGroupEvent(listener, null, thing);
+        } else {
+            console.error("Unexpected type for Movable.");
+        }
+    }
+
+    private onClientLeave(thing: Movable, newZone: Zone | null, listener: ZoneSocket) {
+        if (thing instanceof User) {
+            this.emitUserLeftEvent(listener, thing.id, newZone);
+        } else if (thing instanceof Group) {
+            this.emitDeleteGroupEvent(listener, thing.getId(), newZone);
+        } else {
+            console.error("Unexpected type for Movable.");
+        }
+    }
+
+    private onEmote(emoteEventMessage: EmoteEventMessage, client: ZoneSocket) {
+        const subMessage = new SubToPusherMessage();
+        subMessage.setEmoteeventmessage(emoteEventMessage);
+
+        emitZoneMessage(subMessage, client);
+    }
+
+    private emitCreateUpdateGroupEvent(client: ZoneSocket, fromZone: Zone | null, group: Group): void {
+        const position = group.getPosition();
+        const pointMessage = new PointMessage();
+        pointMessage.setX(Math.floor(position.x));
+        pointMessage.setY(Math.floor(position.y));
+        const groupUpdateMessage = new GroupUpdateZoneMessage();
+        groupUpdateMessage.setGroupid(group.getId());
+        groupUpdateMessage.setPosition(pointMessage);
+        groupUpdateMessage.setGroupsize(group.getSize);
+        groupUpdateMessage.setFromzone(this.toProtoZone(fromZone));
+
+        const subMessage = new SubToPusherMessage();
+        subMessage.setGroupupdatezonemessage(groupUpdateMessage);
+
+        emitZoneMessage(subMessage, client);
+        //client.emitInBatch(subMessage);
+    }
+
+    private emitDeleteGroupEvent(client: ZoneSocket, groupId: number, newZone: Zone | null): void {
+        const groupDeleteMessage = new GroupLeftZoneMessage();
+        groupDeleteMessage.setGroupid(groupId);
+        groupDeleteMessage.setTozone(this.toProtoZone(newZone));
+
+        const subMessage = new SubToPusherMessage();
+        subMessage.setGroupleftzonemessage(groupDeleteMessage);
+
+        emitZoneMessage(subMessage, client);
+        //user.emitInBatch(subMessage);
+    }
+
+    private emitUserLeftEvent(client: ZoneSocket, userId: number, newZone: Zone | null): void {
+        const userLeftMessage = new UserLeftZoneMessage();
+        userLeftMessage.setUserid(userId);
+        userLeftMessage.setTozone(this.toProtoZone(newZone));
+
+        const subMessage = new SubToPusherMessage();
+        subMessage.setUserleftzonemessage(userLeftMessage);
+
+        emitZoneMessage(subMessage, client);
+    }
+
+    private toProtoZone(zone: Zone | null): ProtoZone | undefined {
+        if (zone !== null) {
+            const zoneMessage = new ProtoZone();
+            zoneMessage.setX(zone.x);
+            zoneMessage.setY(zone.y);
+            return zoneMessage;
+        }
+        return undefined;
+    }
+
+    private joinWebRtcRoom(user: User, group: Group) {
+        for (const otherUser of group.getUsers()) {
+            if (user === otherUser) {
+                continue;
+            }
+
+            // Let's send 2 messages: one to the user joining the group and one to the other user
+            const webrtcStartMessage1 = new WebRtcStartMessage();
+            webrtcStartMessage1.setUserid(otherUser.id);
+            webrtcStartMessage1.setInitiator(true);
+            if (TURN_STATIC_AUTH_SECRET !== "") {
+                const { username, password } = this.getTURNCredentials("" + otherUser.id, TURN_STATIC_AUTH_SECRET);
+                webrtcStartMessage1.setWebrtcusername(username);
+                webrtcStartMessage1.setWebrtcpassword(password);
+            }
+
+            const serverToClientMessage1 = new ServerToClientMessage();
+            serverToClientMessage1.setWebrtcstartmessage(webrtcStartMessage1);
+
+            user.socket.write(serverToClientMessage1);
+
+            const webrtcStartMessage2 = new WebRtcStartMessage();
+            webrtcStartMessage2.setUserid(user.id);
+            webrtcStartMessage2.setInitiator(false);
+            if (TURN_STATIC_AUTH_SECRET !== "") {
+                const { username, password } = this.getTURNCredentials("" + user.id, TURN_STATIC_AUTH_SECRET);
+                webrtcStartMessage2.setWebrtcusername(username);
+                webrtcStartMessage2.setWebrtcpassword(password);
+            }
+
+            const serverToClientMessage2 = new ServerToClientMessage();
+            serverToClientMessage2.setWebrtcstartmessage(webrtcStartMessage2);
+
+            otherUser.socket.write(serverToClientMessage2);
+        }
+    }
+
+    /**
+     * Computes a unique user/password for the TURN server, using a shared secret between the WorkAdventure API server
+     * and the Coturn server.
+     * The Coturn server should be initialized with parameters: `--use-auth-secret --static-auth-secret=MySecretKey`
+     */
+    private getTURNCredentials(name: string, secret: string): { username: string; password: string } {
+        const unixTimeStamp = Math.floor(Date.now() / 1000) + 4 * 3600; // this credential would be valid for the next 4 hours
+        const username = [unixTimeStamp, name].join(":");
+        const hmac = crypto.createHmac("sha1", secret);
+        hmac.setEncoding("base64");
+        hmac.write(username);
+        hmac.end();
+        const password = hmac.read();
+        return {
+            username: username,
+            password: password,
+        };
+    }
+
+    //disconnect user
+    private disConnectedUser(user: User, group: Group) {
+        // Most of the time, sending a disconnect event to one of the players is enough (the player will close the connection
+        // which will be shut for the other player).
+        // However! In the rare case where the WebRTC connection is not yet established, if we close the connection on one of the player,
+        // the other player will try connecting until a timeout happens (during this time, the connection icon will be displayed for nothing).
+        // So we also send the disconnect event to the other player.
+        for (const otherUser of group.getUsers()) {
+            if (user === otherUser) {
+                continue;
+            }
+
+            const webrtcDisconnectMessage1 = new WebRtcDisconnectMessage();
+            webrtcDisconnectMessage1.setUserid(user.id);
+
+            const serverToClientMessage1 = new ServerToClientMessage();
+            serverToClientMessage1.setWebrtcdisconnectmessage(webrtcDisconnectMessage1);
+
+            //if (!otherUser.socket.disconnecting) {
+            otherUser.socket.write(serverToClientMessage1);
+            //}
+
+            const webrtcDisconnectMessage2 = new WebRtcDisconnectMessage();
+            webrtcDisconnectMessage2.setUserid(otherUser.id);
+
+            const serverToClientMessage2 = new ServerToClientMessage();
+            serverToClientMessage2.setWebrtcdisconnectmessage(webrtcDisconnectMessage2);
+
+            //if (!user.socket.disconnecting) {
+            user.socket.write(serverToClientMessage2);
+            //}
+        }
     }
 }
 

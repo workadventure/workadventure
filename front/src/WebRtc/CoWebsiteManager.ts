@@ -49,6 +49,10 @@ class CoWebsiteManager {
         this.cowebsiteDiv.style.width = width + "px";
     }
 
+    set widthPercent(width: number) {
+        this.cowebsiteDiv.style.width = width + "%";
+    }
+
     get height(): number {
         return this.cowebsiteDiv.clientHeight;
     }
@@ -163,7 +167,13 @@ class CoWebsiteManager {
         return iframe;
     }
 
-    public loadCoWebsite(url: string, base: string, allowApi?: boolean, allowPolicy?: string): void {
+    public loadCoWebsite(
+        url: string,
+        base: string,
+        allowApi?: boolean,
+        allowPolicy?: string,
+        widthPercent?: number
+    ): void {
         this.load();
         this.cowebsiteMainDom.innerHTML = ``;
 
@@ -187,6 +197,9 @@ class CoWebsiteManager {
             .then(() => Promise.race([onloadPromise, onTimeoutPromise]))
             .then(() => {
                 this.open();
+                if (widthPercent) {
+                    this.widthPercent = widthPercent;
+                }
                 setTimeout(() => {
                     this.fire();
                 }, animationTime);
@@ -200,13 +213,16 @@ class CoWebsiteManager {
     /**
      * Just like loadCoWebsite but the div can be filled by the user.
      */
-    public insertCoWebsite(callback: (cowebsite: HTMLDivElement) => Promise<void>): void {
+    public insertCoWebsite(callback: (cowebsite: HTMLDivElement) => Promise<void>, widthPercent?: number): void {
         this.load();
         this.cowebsiteMainDom.innerHTML = ``;
         this.currentOperationPromise = this.currentOperationPromise
             .then(() => callback(this.cowebsiteMainDom))
             .then(() => {
                 this.open();
+                if (widthPercent) {
+                    this.widthPercent = widthPercent;
+                }
                 setTimeout(() => {
                     this.fire();
                 }, animationTime);

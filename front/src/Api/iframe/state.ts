@@ -1,12 +1,8 @@
 import { Observable, Subject } from "rxjs";
 
-import { EnterLeaveEvent, isEnterLeaveEvent } from "../Events/EnterLeaveEvent";
-
-import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
+import { IframeApiContribution, queryWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 import { isSetVariableEvent, SetVariableEvent } from "../Events/SetVariableEvent";
-
-import type { ITiledMap } from "../../Phaser/Map/ITiledMap";
 
 const setVariableResolvers = new Subject<SetVariableEvent>();
 const variables = new Map<string, unknown>();
@@ -62,6 +58,10 @@ export class WorkadventureStateCommands extends IframeApiContribution<Workadvent
         return variables.get(key);
     }
 
+    hasVariable(key: string): boolean {
+        return variables.has(key);
+    }
+
     onVariableChange(key: string): Observable<unknown> {
         let subject = variableSubscribers.get(key);
         if (subject === undefined) {
@@ -84,6 +84,12 @@ const proxyCommand = new Proxy(new WorkadventureStateCommands(), {
         // User must use WA.state.saveVariable to have error message.
         target.saveVariable(p.toString(), value);
         return true;
+    },
+    has(target: WorkadventureStateCommands, p: PropertyKey): boolean {
+        if (p in target) {
+            return true;
+        }
+        return target.hasVariable(p.toString());
     },
 }) as WorkadventureStateCommands & { [key: string]: unknown };
 

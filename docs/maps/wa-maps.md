@@ -49,12 +49,14 @@ A few things to notice:
 
 <div>
     <figure class="figure">
-        <img src="https://workadventu.re/img/docs/tiled_screenshot_1.png" class="figure-img img-fluid rounded" alt="" style="width: 70%" />
+        <img src="images/tiled_screenshot_1.png" class="figure-img img-fluid rounded" alt="" style="width: 70%" />
         <figcaption class="figure-caption">"floorLayer" is compulsory</figcaption>
     </figure>
 </div>
 
 ## Building walls and "collidable" areas
+
+[Building your map - Collides](https://www.youtube.com/watch?v=qTK50ymhMIE)
 
 By default, the characters can traverse any tiles. If you want to prevent your character from going through a tile (like a wall or a desktop), you must make this tile "collidable". You can do this by settings the `collides` property on a given tile.
 
@@ -62,21 +64,21 @@ To make a tile "collidable", you should:
 
 1.  select the relevant tileset and switch to "edit" mode:
     
-    ![](https://workadventu.re/img/docs/collides-1.png){.document-img}
+    ![](images/collides-1.png){.document-img}
     
 2.  right click on a tile of the tileset to select it:
 
-    ![](https://workadventu.re/img/docs/collides-2.png){.document-img}
+    ![](images/collides-2.png){.document-img}
     
 3.  on the left pane in the custom properties section, right click and select "Add properties":
 
-    ![](https://workadventu.re/img/docs/collides-3.png){.document-img}
+    ![](images/collides-3.png){.document-img}
 
     Please add a `collides` property. The type of the property must be **bool**.
 
 4.  finally, check the checkbox for the `collides` property:
 
-    ![](https://workadventu.re/img/docs/collides-4.png){.document-img}
+    ![](images/collides-4.png){.document-img}
 
 Repeat for every tile that should be "collidable".
 

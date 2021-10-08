@@ -203,6 +203,7 @@ export class WebexController {
         }
         const result = await tokenResponse.json();
 
+        // @ts-ignore
         return result;
     };
 }

@@ -13,7 +13,6 @@ import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugi
 import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { EntryScene } from "./Phaser/Login/EntryScene";
 import { coWebsiteManager } from "./WebRtc/CoWebsiteManager";
-import { MenuScene } from "./Phaser/Menu/MenuScene";
 import { localUserStore } from "./Connexion/LocalUserStore";
 import { ErrorScene } from "./Phaser/Reconnecting/ErrorScene";
 import { iframeListener } from "./Api/IframeListener";
@@ -26,8 +25,37 @@ import WebexAuthorizationSuccessful from "./Components/Webex/WebexAuthorizationS
 import { HtmlUtils } from "./WebRtc/HtmlUtils";
 import { PeopleScene } from "./Phaser/People/PeopleScene";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
+import { analyticsClient } from "./Administration/AnalyticsClient";
 import { webexIntegration } from "./WebRtc/WebexIntegration";
 
+const { width, height } = coWebsiteManager.getGameSize();
+const valueGameQuality = localUserStore.getGameQualityValue();
+const fps: Phaser.Types.Core.FPSConfig = {
+    /**
+     * The minimum acceptable rendering rate, in frames per second.
+     */
+    min: valueGameQuality,
+    /**
+     * The optimum rendering rate, in frames per second.
+     */
+    target: valueGameQuality,
+    /**
+     * Use setTimeout instead of requestAnimationFrame to run the game loop.
+     */
+    forceSetTimeOut: false,
+    /**
+     * Calculate the average frame delta from this many consecutive frame intervals.
+     */
+    deltaHistory: 120,
+    /**
+     * The amount of frames the time step counts before we trust the delta values again.
+     */
+    panicMax: 20,
+    /**
+     * Apply delta smoothing during the game update to help avoid spikes?
+     */
+    smoothStep: false,
+};
 if (webexIntegration.handleWebexAuthorizationCallback()) {
     new WebexAuthorizationSuccessful({
         target: document.body,
@@ -85,66 +113,64 @@ if (webexIntegration.handleWebexAuthorizationCallback()) {
     const hdpiManager = new HdpiManager(640 * 480, 196 * 196);
     const { game: gameSize, real: realSize } = hdpiManager.getOptimalGameSize({ width, height });
 
-    const config: GameConfig = {
-        type: mode,
-        title: "WorkAdventure",
-        scale: {
-            parent: "game",
-            width: gameSize.width,
-            height: gameSize.height,
-            zoom: realSize.width / gameSize.width,
-            autoRound: true,
-            resizeInterval: 999999999999,
-        },
-        scene: [
-            EntryScene,
-            LoginScene,
-            isMobile() ? SelectCharacterMobileScene : SelectCharacterScene,
-            SelectCompanionScene,
-            EnableCameraScene,
-            ReconnectingScene,
-            ErrorScene,
-            CustomizeScene,
-            MenuScene,
-            PeopleScene,
+const config: GameConfig = {
+    type: mode,
+    title: "WorkAdventure",
+    scale: {
+        parent: "game",
+        width: gameSize.width,
+        height: gameSize.height,
+        zoom: realSize.width / gameSize.width,
+        autoRound: true,
+        resizeInterval: 999999999999,
+    },
+    scene: [
+        EntryScene,
+        LoginScene,
+        isMobile() ? SelectCharacterMobileScene : SelectCharacterScene,
+        SelectCompanionScene,
+        EnableCameraScene,
+        ReconnectingScene,
+        ErrorScene,
+        CustomizeScene,
+    ],
+    //resolution: window.devicePixelRatio / 2,
+    fps: fps,
+    dom: {
+        createContainer: true,
+    },
+    render: {
+        pixelArt: true,
+        roundPixels: true,
+        antialias: false,
+    },
+    plugins: {
+        global: [
+            {
+                key: "rexWebFontLoader",
+                plugin: WebFontLoaderPlugin,
+                start: true,
+            },
         ],
-        //resolution: window.devicePixelRatio / 2,
-        fps: fps,
-        dom: {
-            createContainer: true,
+    },
+    physics: {
+        default: "arcade",
+        arcade: {
+            debug: DEBUG_MODE,
         },
-        render: {
-            pixelArt: true,
-            roundPixels: true,
-            antialias: false,
+    },
+    // Instruct systems with 2 GPU to choose the low power one. We don't need that extra power and we want to save battery
+    powerPreference: "low-power",
+    callbacks: {
+        postBoot: (game) => {
+            // Install rexOutlinePipeline only if the renderer is WebGL.
+            const renderer = game.renderer;
+            if (renderer instanceof WebGLRenderer) {
+                game.plugins.install("rexOutlinePipeline", OutlinePipelinePlugin, true);
+            }
         },
-        plugins: {
-            global: [
-                {
-                    key: "rexWebFontLoader",
-                    plugin: WebFontLoaderPlugin,
-                    start: true,
-                },
-            ],
-        },
-        physics: {
-            default: "arcade",
-            arcade: {
-                debug: DEBUG_MODE,
-            },
-        },
-        // Instruct systems with 2 GPU to choose the low power one. We don't need that extra power and we want to save battery
-        powerPreference: "low-power",
-        callbacks: {
-            postBoot: (game) => {
-                // Install rexOutlinePipeline only if the renderer is WebGL.
-                const renderer = game.renderer;
-                if (renderer instanceof WebGLRenderer) {
-                    game.plugins.install("rexOutlinePipeline", OutlinePipelinePlugin, true);
-                }
-            },
-        },
-    };
+    },
+};
 
     //const game = new Phaser.Game(config);
     const game = new Game(config);

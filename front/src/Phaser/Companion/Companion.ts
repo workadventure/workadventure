@@ -16,7 +16,7 @@ export class Companion extends Container {
     private delta: number;
     private invisible: boolean;
     private updateListener: Function;
-    private target: { x: number, y: number, direction: PlayerAnimationDirections };
+    private target: { x: number; y: number; direction: PlayerAnimationDirections };
 
     private companionName: string;
     private direction: PlayerAnimationDirections;
@@ -36,10 +36,10 @@ export class Companion extends Container {
 
         this.companionName = name;
 
-        texturePromise.then(resource => {
+        texturePromise.then((resource) => {
             this.addResource(resource);
             this.invisible = false;
-        })
+        });
 
         this.scene.physics.world.enableBody(this);
 
@@ -52,7 +52,7 @@ export class Companion extends Container {
         this.setDepth(-1);
 
         this.updateListener = this.step.bind(this);
-        this.scene.events.addListener('update', this.updateListener);
+        this.scene.events.addListener("update", this.updateListener);
 
         this.scene.add.existing(this);
     }
@@ -62,7 +62,7 @@ export class Companion extends Container {
     }
 
     public step(time: number, delta: number) {
-        if (typeof this.target === 'undefined') return;
+        if (typeof this.target === "undefined") return;
 
         this.delta += delta;
         if (this.delta < 128) {
@@ -87,7 +87,10 @@ export class Companion extends Container {
             const yDir = yDist / Math.max(Math.abs(yDist), 1);
 
             const speed = 256;
-            this.getBody().setVelocity(Math.min(Math.abs(xDist * 2.5), speed) * xDir, Math.min(Math.abs(yDist * 2.5), speed) * yDir);
+            this.getBody().setVelocity(
+                Math.min(Math.abs(xDist * 2.5), speed) * xDir,
+                Math.min(Math.abs(yDist * 2.5), speed) * yDir
+            );
 
             if (Math.abs(xDist) > Math.abs(yDist)) {
                 if (xDist < 0) {
@@ -116,8 +119,8 @@ export class Companion extends Container {
             y,
             direction,
             moving: animationType === PlayerAnimationTypes.Walk,
-            name: companionName
-        }
+            name: companionName,
+        };
     }
 
     private playAnimation(direction: PlayerAnimationDirections, type: PlayerAnimationTypes): void {
@@ -133,7 +136,7 @@ export class Companion extends Container {
 
         this.add(sprite);
 
-        this.getAnimations(resource).forEach(animation => {
+        this.getAnimations(resource).forEach((animation) => {
             this.scene.anims.create(animation);
         });
 
@@ -145,60 +148,60 @@ export class Companion extends Container {
         return [
             {
                 key: `${resource}-${PlayerAnimationDirections.Down}-${PlayerAnimationTypes.Idle}`,
-                frames: this.scene.anims.generateFrameNumbers(resource, {frames: [1]}),
+                frames: this.scene.anims.generateFrameNumbers(resource, { frames: [1] }),
                 frameRate: 10,
-                repeat: 1
+                repeat: 1,
             },
             {
                 key: `${resource}-${PlayerAnimationDirections.Left}-${PlayerAnimationTypes.Idle}`,
-                frames: this.scene.anims.generateFrameNumbers(resource, {frames: [4]}),
+                frames: this.scene.anims.generateFrameNumbers(resource, { frames: [4] }),
                 frameRate: 10,
-                repeat: 1
+                repeat: 1,
             },
             {
                 key: `${resource}-${PlayerAnimationDirections.Right}-${PlayerAnimationTypes.Idle}`,
-                frames: this.scene.anims.generateFrameNumbers(resource, {frames: [7]}),
+                frames: this.scene.anims.generateFrameNumbers(resource, { frames: [7] }),
                 frameRate: 10,
-                repeat: 1
+                repeat: 1,
             },
             {
                 key: `${resource}-${PlayerAnimationDirections.Up}-${PlayerAnimationTypes.Idle}`,
-                frames: this.scene.anims.generateFrameNumbers(resource, {frames: [10]}),
+                frames: this.scene.anims.generateFrameNumbers(resource, { frames: [10] }),
                 frameRate: 10,
-                repeat: 1
+                repeat: 1,
             },
             {
                 key: `${resource}-${PlayerAnimationDirections.Down}-${PlayerAnimationTypes.Walk}`,
-                frames: this.scene.anims.generateFrameNumbers(resource, {frames: [0, 1, 2]}),
+                frames: this.scene.anims.generateFrameNumbers(resource, { frames: [0, 1, 2] }),
                 frameRate: 15,
-                repeat: -1
+                repeat: -1,
             },
             {
                 key: `${resource}-${PlayerAnimationDirections.Left}-${PlayerAnimationTypes.Walk}`,
-                frames: this.scene.anims.generateFrameNumbers(resource, {frames: [3, 4, 5]}),
+                frames: this.scene.anims.generateFrameNumbers(resource, { frames: [3, 4, 5] }),
                 frameRate: 15,
-                repeat: -1
+                repeat: -1,
             },
             {
                 key: `${resource}-${PlayerAnimationDirections.Right}-${PlayerAnimationTypes.Walk}`,
-                frames: this.scene.anims.generateFrameNumbers(resource, {frames: [6, 7, 8]}),
+                frames: this.scene.anims.generateFrameNumbers(resource, { frames: [6, 7, 8] }),
                 frameRate: 15,
-                repeat: -1
+                repeat: -1,
             },
             {
                 key: `${resource}-${PlayerAnimationDirections.Up}-${PlayerAnimationTypes.Walk}`,
-                frames: this.scene.anims.generateFrameNumbers(resource, {frames: [9, 10, 11]}),
+                frames: this.scene.anims.generateFrameNumbers(resource, { frames: [9, 10, 11] }),
                 frameRate: 15,
-                repeat: -1
-            }
-        ]
+                repeat: -1,
+            },
+        ];
     }
 
     private getBody(): Phaser.Physics.Arcade.Body {
         const body = this.body;
 
         if (!(body instanceof Phaser.Physics.Arcade.Body)) {
-            throw new Error('Container does not have arcade body');
+            throw new Error("Container does not have arcade body");
         }
 
         return body;
@@ -212,7 +215,7 @@ export class Companion extends Container {
         }
 
         if (this.scene) {
-            this.scene.events.removeListener('update', this.updateListener);
+            this.scene.events.removeListener("update", this.updateListener);
         }
 
         super.destroy();

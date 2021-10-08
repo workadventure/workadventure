@@ -1,7 +1,6 @@
 import * as tg from "generic-type-guard";
-import { GameRoomPolicyTypes } from "_Model/PusherRoom";
+import { isNumber } from "generic-type-guard";
 import { isCharacterTexture } from "./CharacterTexture";
-import { isAny, isNumber } from "generic-type-guard";
 
 /*const isNumericEnum =
     <T extends { [n: number]: string }>(vs: T) =>
@@ -15,6 +14,8 @@ export const isMapDetailsData = new tg.IsInterface()
         policy_type: isNumber, //isNumericEnum(GameRoomPolicyTypes),
         tags: tg.isArray(tg.isString),
         textures: tg.isArray(isCharacterTexture),
+        contactPage: tg.isUnion(tg.isString, tg.isUndefined),
     })
     .get();
+
 export type MapDetailsData = tg.GuardedType<typeof isMapDetailsData>;
