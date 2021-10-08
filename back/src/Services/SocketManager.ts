@@ -28,6 +28,8 @@ import {
     UserMovedMessage,
     UserMovesMessage,
     VariableMessage,
+    WebexSessionQuery,
+    WebexSessionResponse,
     WebexSessionStart,
     WebexSessionStop,
     WebRtcDisconnectMessage,
@@ -74,6 +76,7 @@ export class SocketManager {
     //private rooms = new Map<string, GameRoom>();
     // List of rooms in process of loading.
     private roomsPromises = new Map<string, PromiseLike<GameRoom>>();
+    private webexMeetings = new Map<string, string>();
 
     constructor() {
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
@@ -317,6 +320,26 @@ export class SocketManager {
 
     public getWorlds(): Map<string, PromiseLike<GameRoom>> {
         return this.roomsPromises;
+    }
+
+    // TODO handle webex session query
+    public handleWebexSessionQuery(user: User, webexSessionQuery: WebexSessionQuery) {
+        const roomId = webexSessionQuery.getRoomid();
+        const response = new WebexSessionResponse();
+        response.setRoomid(roomId);
+
+        const link = this.webexMeetings.get(roomId);
+        if (link !== undefined) {
+            response.setMeetinglink(link);
+        } else {
+            // TODO actually make meeting here
+            response.setMeetinglink("[TODO] Some Link That's Already Been Generated");
+        }
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setWebexsessionresponse(response);
+
+        user.socket.write(serverToClientMessage);
     }
 
     public handleQueryJitsiJwtMessage(user: User, queryJitsiJwtMessage: QueryJitsiJwtMessage) {

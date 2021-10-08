@@ -36,6 +36,7 @@ export class WebexIntegration {
     private storage: Storage = window.localStorage;
     private spaceWidget: { remove: () => void } | null = null;
     private meetingWidget: SvelteComponentDev | null = null;
+    private webexMeetingWidget = null;
 
     get accessToken() {
         return this.storage.getItem(accessTokenKey);
@@ -62,7 +63,7 @@ export class WebexIntegration {
 
         const onClose = () => (this.authorizationPopup = null);
 
-        this.authorizationPopup ??= window.open(
+        this.authorizationPopup = window.open(
             WEBEX_AUTHORIZATION_URL,
             "webex",
             `scrollbars=no,resizable=no,status=no,location=no,toolbar=no,menubar=no,width=620,height=680`
@@ -204,7 +205,7 @@ export class WebexIntegration {
     }
 
     private async loadWebexScripts() {
-        this.scriptLoader ??= new Promise<Webex>((resolve, reject) => {
+        this.scriptLoader = new Promise<Webex>((resolve, reject) => {
             const webexStylesheet = document.createElement("link");
             webexStylesheet.rel = "stylesheet";
             webexStylesheet.href = "https://code.s4d.io/widget-space/production/main.css";

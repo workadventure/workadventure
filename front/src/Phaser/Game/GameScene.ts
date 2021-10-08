@@ -729,6 +729,11 @@ export class GameScene extends DirtyScene {
                     item.fire(message.event, message.state, message.parameters);
                 });
 
+                // TODO
+                this.connection.onWebexSessionResponse((roomId, meetingLink) => {
+                    this.startWebex(roomId, meetingLink);
+                });
+
                 /**
                  * Triggered when we receive the JWT token to connect to Jitsi
                  */
@@ -1820,6 +1825,27 @@ ${escapedMessage}
         );
     }
 
+    public startWebex(roomId: string, meetingLink: string): void {
+        const allProps = this.gameMap.getCurrentProperties();
+        const webexMeetingRoomName = allProps.get("webexMeetingRoomName");
+        const webexMeetingRoomInitials = allProps.get("webexMeetingRoomInitials");
+        const webexMeetingRoomFullName = allProps.get("webexMeetingRoomFullName");
+
+        console.log("webexMeetingUrl: " + meetingLink);
+        webexIntegration.startMeeting(
+            meetingLink,
+            webexMeetingRoomName,
+            webexMeetingRoomInitials,
+            webexMeetingRoomFullName
+        );
+        this.connection?.setSilent(true);
+        mediaManager.hideGameOverlay();
+        analyticsClient.enteredJitsi("[WEBEX] " + webexMeetingRoomFullName, meetingLink);
+        mediaManager.addTriggerCloseJitsiFrameButton("close-jitsi", () => {
+            this.stopWebex();
+        });
+    }
+
     public startJitsi(roomName: string, jwt?: string): void {
         const allProps = this.gameMap.getCurrentProperties();
         const jitsiConfig = this.safeParseJSONstring(allProps.get("jitsiConfig") as string | undefined, "jitsiConfig");
@@ -1840,6 +1866,8 @@ ${escapedMessage}
         console.log("webexMeetingUrl: " + webexMeetingUrl);
 
         if (webexMeetingUrl) {
+            this.connection?.emitWebexSessionQuery(roomName);
+
             console.log("Found webex meeting url");
             webexIntegration.startMeeting(
                 webexMeetingUrl,
@@ -1862,6 +1890,15 @@ ${escapedMessage}
         mediaManager.addTriggerCloseJitsiFrameButton("close-jitsi", () => {
             this.stopJitsi();
         });
+    }
+
+    public stopWebex() {
+        const silent = this.gameMap.getCurrentProperties().get("silent");
+        this.connection?.setSilent(!!silent);
+        webexIntegration.stop();
+        mediaManager.showGameOverlay();
+
+        mediaManager.removeTriggerCloseJitsiFrameButton("close-jitsi");
     }
 
     public stopJitsi(): void {

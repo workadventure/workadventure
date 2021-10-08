@@ -8,6 +8,7 @@ import {
     CharacterLayerMessage,
     EmoteEventMessage,
     EmotePromptMessage,
+    ErrorMessage,
     GroupDeleteMessage,
     ItemEventMessage,
     JoinRoomMessage,
@@ -23,16 +24,15 @@ import {
     SetPlayerDetailsMessage,
     SilentMessage,
     SubMessage,
+    TokenExpiredMessage,
     UserJoinedRoomMessage,
     UserLeftMessage,
     UserLeftRoomMessage,
     UserMovesMessage,
+    VariableMessage,
     ViewportMessage,
     WebRtcSignalToServerMessage,
     WorldConnexionMessage,
-    TokenExpiredMessage,
-    VariableMessage,
-    ErrorMessage,
     WorldFullMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -49,6 +49,7 @@ import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface"
 import { WebSocket } from "uWebSockets.js";
 import { isRoomRedirect } from "./AdminApi/RoomRedirect";
 import { CharacterTexture } from "./AdminApi/CharacterTexture";
+import { WebexSessionQuery, WebexSessionResponse } from "../../../back/src/Messages/generated/messages_pb";
 
 const debug = Debug("socket");
 
@@ -66,6 +67,7 @@ export interface AdminSocketData {
 
 export class SocketManager implements ZoneEventListener {
     private rooms: Map<string, PusherRoom> = new Map<string, PusherRoom>();
+    private webexMeetings: Map<string, string> = new Map<string, string>();
 
     constructor() {
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
@@ -391,6 +393,30 @@ export class SocketManager implements ZoneEventListener {
 
     public getWorlds(): Map<string, PusherRoom> {
         return this.rooms;
+    }
+
+    // TODO handle webex session query
+    public handleWebexSessionQuery(client: ExSocketInterface, webexSessionQuery: WebexSessionQuery) {
+        try {
+            const roomId = webexSessionQuery.getRoomid();
+            const response = new WebexSessionResponse();
+            response.setRoomid(roomId);
+
+            const link = this.webexMeetings.get(roomId);
+            if (link !== undefined) {
+                response.setMeetinglink(link);
+            } else {
+                // TODO actually make meeting here
+                response.setMeetinglink("[TODO] Some Link That's Already Been Generated");
+            }
+
+            const serverToClientMessage = new ServerToClientMessage();
+            serverToClientMessage.setWebexsessionresponse(response);
+
+            client.send(serverToClientMessage.serializeBinary().buffer, true);
+        } catch (e) {
+            console.error(e.toString());
+        }
     }
 
     public handleQueryJitsiJwtMessage(client: ExSocketInterface, queryJitsiJwtMessage: QueryJitsiJwtMessage) {

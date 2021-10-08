@@ -35,6 +35,7 @@ export enum EventMessage {
     USER_LIST = "user-list",
     WEBEX_SESSION_START = "webex-session-start",
     WEBEX_SESSION_STOP = "webex-session-stop",
+    WEBEX_SESSION_RESPONSE = "webex-session-response",
 }
 
 export interface PointInterface {

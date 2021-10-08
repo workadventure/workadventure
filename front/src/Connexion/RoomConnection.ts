@@ -31,6 +31,8 @@ import {
     UserMovesMessage,
     VariableMessage,
     ViewportMessage,
+    WebexSessionQuery,
+    WebexSessionResponse,
     WebRtcDisconnectMessage,
     WebRtcSignalToClientMessage,
     WebRtcSignalToServerMessage,
@@ -58,7 +60,6 @@ import { worldFullMessageStream } from "./WorldFullMessageStream";
 import { connectionManager } from "./ConnectionManager";
 import { emoteEventStream } from "./EmoteEventStream";
 import { warningContainerStore } from "../Stores/MenuStore";
-import { WebexIntegration } from "../WebRtc/WebexIntegration";
 import Direction = PositionMessage.Direction;
 
 const manualPingDelay = 20000;
@@ -186,19 +187,6 @@ export class RoomConnection implements RoomConnection {
                         this.dispatch(event, payload);
                     }
                 }
-            } else if (message.hasWebexsessionstart()) {
-                const w = new WebexIntegration();
-                // TODO check if meeting room id matches this room => if (message.getWebexsessionstart()!!.getRoomid() === )
-                const meetingLink = message.getWebexsessionstart()!!.getMeetinglink();
-                w.startMeeting(meetingLink)
-                    .then(() => {
-                        console.log("[BROADCAST] Tried to start meeting at ", meetingLink);
-                    })
-                    .catch((e) => {
-                        console.error("[BROADCAST] Error trying to start meeting at ", meetingLink);
-                        console.error(e);
-                        throw e;
-                    });
             } else if (message.hasRoomjoinedmessage()) {
                 const roomJoinedMessage = message.getRoomjoinedmessage() as RoomJoinedMessage;
 
@@ -272,6 +260,9 @@ export class RoomConnection implements RoomConnection {
             } else if (message.hasUserlistmessage()) {
                 this.userList = message.getUserlistmessage()?.toObject()?.userList ?? [];
                 this.dispatch(EventMessage.USER_LIST, this.userList);
+            } else if (message.hasWebexsessionresponse()) {
+                // TODO - is this ok?
+                this.dispatch(EventMessage.WEBEX_SESSION_RESPONSE, message.getWebexsessionresponse());
             } else {
                 throw new Error("Unknown message received");
             }
@@ -563,6 +554,16 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 
+    public emitWebexSessionQuery(roomId: string) {
+        const webexSessionQuery = new WebexSessionQuery();
+        // TODO make meeting, check if ok here
+        webexSessionQuery.setRoomid(roomId);
+        const clientToServerMessage = new ClientToServerMessage();
+        clientToServerMessage.setWebexquery(webexSessionQuery);
+
+        this.socket.send(clientToServerMessage.serializeBinary().buffer);
+    }
+
     public emitQueryJitsiJwtMessage(jitsiRoom: string, tag: string | undefined): void {
         const queryJitsiJwtMessage = new QueryJitsiJwtMessage();
         queryJitsiJwtMessage.setJitsiroom(jitsiRoom);
@@ -574,6 +575,12 @@ export class RoomConnection implements RoomConnection {
         clientToServerMessage.setQueryjitsijwtmessage(queryJitsiJwtMessage);
 
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
+    }
+
+    public onWebexSessionResponse(callback: (roomId: string, meetingLink: string) => void): void {
+        this.onMessage(EventMessage.WEBEX_SESSION_RESPONSE, (message: WebexSessionResponse) => {
+            callback(message.getRoomid(), message.getMeetinglink());
+        });
     }
 
     public onStartJitsiRoom(callback: (jwt: string, room: string) => void): void {
