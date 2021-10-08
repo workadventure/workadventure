@@ -7,14 +7,14 @@ not overwrite existing ones) and click on the animation editor:
 
 
 <div class="px-5 card rounded d-inline-block">
-    <img class="document-img" src="https://workadventu.re/img/docs/anims/camera.png" alt="" />
+    <img class="document-img" src="images/anims/camera.png" alt="" />
 </div>
 
 You can now add all tiles that should be part of the animation via drag and drop to the "playlist" and adjust the frame duration:
 
 <div>
     <figure class="figure">
-        <img class="figure-img img-fluid rounded" src="https://workadventu.re/img/docs/anims/animation_editor.png" alt="" />
+        <img class="figure-img img-fluid rounded" src="images/anims/animation_editor.png" alt="" />
         <figcaption class="figure-caption">The tile animation editor</figcaption>
     </figure>
 </div>
@@ -24,7 +24,7 @@ You can preview animations directly in Tiled, using the "Show tile animations" o
 
 <div>
     <figure class="figure">
-        <img class="figure-img img-fluid rounded" src="https://workadventu.re/img/docs/anims/settings_show_animations.png" alt="" />
+        <img class="figure-img img-fluid rounded" src="images/anims/settings_show_animations.png" alt="" />
         <figcaption class="figure-caption">The Show Tile Animations option</figcaption>
     </figure>
 </div>

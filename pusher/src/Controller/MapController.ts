@@ -5,9 +5,7 @@ import { adminApi } from "../Services/AdminApi";
 import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 import { GameRoomPolicyTypes } from "../Model/PusherRoom";
 import { MapDetailsData } from "../Services/AdminApi/MapDetailsData";
-import { socketManager } from "../Services/SocketManager";
 import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
-import { v4 } from "uuid";
 
 export class MapController extends BaseController {
     constructor(private App: TemplatedApp) {
@@ -62,6 +60,7 @@ export class MapController extends BaseController {
                         roomSlug: "", // Deprecated
                         tags: [],
                         textures: [],
+                        contactPage: undefined,
                     } as MapDetailsData)
                 );
 

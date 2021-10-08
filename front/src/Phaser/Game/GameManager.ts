@@ -1,7 +1,6 @@
 import { GameScene } from "./GameScene";
 import { connectionManager } from "../../Connexion/ConnectionManager";
 import type { Room } from "../../Connexion/Room";
-import { MenuScene, MenuSceneName } from "../Menu/MenuScene";
 import { LoginSceneName } from "../Login/LoginScene";
 import { SelectCharacterSceneName } from "../Login/SelectCharacterScene";
 import { EnableCameraSceneName } from "../Login/EnableCameraScene";
@@ -9,7 +8,8 @@ import { localUserStore } from "../../Connexion/LocalUserStore";
 import { get } from "svelte/store";
 import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { helpCameraSettingsVisibleStore } from "../../Stores/HelpCameraSettingsStore";
-import { PeopleScene, PeopleSceneName } from "../People/PeopleScene";
+import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
+import { emoteMenuVisiblilityStore } from "../../Stores/EmoteStore";
 
 /**
  * This class should be responsible for any scene starting/stopping
@@ -19,13 +19,16 @@ export class GameManager {
     private characterLayers: string[] | null;
     private companion: string | null;
     private startRoom!: Room;
-    private scenePlugin!: Phaser.Scenes.ScenePlugin;
+    private cameraSetup?: { video: unknown; audio: unknown };
     currentGameSceneName: string | null = null;
+    // Note: this scenePlugin is the scenePlugin of the EntryScene. We should always provide a key in methods called on this scenePlugin.
+    private scenePlugin!: Phaser.Scenes.ScenePlugin;
 
     constructor() {
         this.playerName = localUserStore.getName();
         this.characterLayers = localUserStore.getCharacterLayers();
         this.companion = localUserStore.getCompanion();
+        this.cameraSetup = localUserStore.getCameraSetup();
     }
 
     public async init(scenePlugin: Phaser.Scenes.ScenePlugin): Promise<string> {
@@ -33,12 +36,17 @@ export class GameManager {
         this.startRoom = await connectionManager.initGameConnexion();
         this.loadMap(this.startRoom);
 
-        if (!this.playerName) {
+        //If player name was not set show login scene with player name
+        //If Room si not public and Auth was not set, show login scene to authenticate user (OpenID - SSO - Anonymous)
+        if (!this.playerName || (this.startRoom.authenticationMandatory && !localUserStore.getAuthToken())) {
             return LoginSceneName;
         } else if (!this.characterLayers || !this.characterLayers.length) {
             return SelectCharacterSceneName;
-        } else {
+        } else if (this.cameraSetup == undefined) {
             return EnableCameraSceneName;
+        } else {
+            this.activeMenuSceneAndHelpCameraSettings();
+            return this.startRoom.key;
         }
     }
 
@@ -84,8 +92,14 @@ export class GameManager {
     public goToStartingMap(): void {
         console.log("starting " + (this.currentGameSceneName || this.startRoom.key));
         this.scenePlugin.start(this.currentGameSceneName || this.startRoom.key);
-        this.scenePlugin.launch(MenuSceneName);
+        this.activeMenuSceneAndHelpCameraSettings();
+    }
 
+    /**
+     * @private
+     * @return void
+     */
+    private activeMenuSceneAndHelpCameraSettings(): void {
         if (
             !localUserStore.getHelpCameraSettingsShown() &&
             (!get(requestedMicrophoneState) || !get(requestedCameraState))
@@ -97,10 +111,8 @@ export class GameManager {
 
     public gameSceneIsCreated(scene: GameScene) {
         this.currentGameSceneName = scene.scene.key;
-        const menuScene: MenuScene = scene.scene.get(MenuSceneName) as MenuScene;
-        menuScene.revealMenuIcon();
-        const peopleScene: PeopleScene = scene.scene.get(PeopleSceneName) as PeopleScene;
-        peopleScene.showPeopleMenu();
+        menuIconVisiblilityStore.set(true);
+        emoteMenuVisiblilityStore.set(true);
     }
 
     /**
@@ -111,8 +123,9 @@ export class GameManager {
         if (this.currentGameSceneName === null) throw "No current scene id set!";
         const gameScene: GameScene = this.scenePlugin.get(this.currentGameSceneName) as GameScene;
         gameScene.cleanupClosingScene();
-        this.scenePlugin.stop(this.currentGameSceneName);
-        this.scenePlugin.sleep(MenuSceneName);
+        gameScene.createSuccessorGameScene(false, false);
+        menuIconVisiblilityStore.set(false);
+        emoteMenuVisiblilityStore.set(false);
         if (!this.scenePlugin.get(targetSceneName)) {
             this.scenePlugin.add(targetSceneName, sceneClass, false);
         }
@@ -125,7 +138,8 @@ export class GameManager {
     tryResumingGame(fallbackSceneName: string) {
         if (this.currentGameSceneName) {
             this.scenePlugin.start(this.currentGameSceneName);
-            this.scenePlugin.wake(MenuSceneName);
+            menuIconVisiblilityStore.set(true);
+            emoteMenuVisiblilityStore.set(true);
         } else {
             this.scenePlugin.run(fallbackSceneName);
         }
@@ -134,6 +148,10 @@ export class GameManager {
     public getCurrentGameScene(): GameScene {
         if (this.currentGameSceneName === null) throw "No current scene id set!";
         return this.scenePlugin.get(this.currentGameSceneName) as GameScene;
+    }
+
+    public get currentStartedRoom() {
+        return this.startRoom;
     }
 }
 

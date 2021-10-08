@@ -2,8 +2,7 @@ import { coWebsiteManager } from "./CoWebsiteManager";
 import WebexSignIn from "../Components/Webex/WebexSignIn.svelte";
 import { WEBEX_AUTHORIZATION_URL, WEBEX_GLOBAL_SPACE_ID } from "../Enum/EnvironmentVariable";
 //import App from "../Components/App.svelte"; <- Causes peerStore issue
-import App from "svelte"
-import type {SvelteComponentDev} from "svelte/internal";
+import type { SvelteComponentDev } from "svelte/internal";
 import WebexVideoChat from "../Components/Webex/WebexVideoChat.svelte";
 
 interface Webex {
@@ -37,6 +36,7 @@ export class WebexIntegration {
     private storage: Storage = window.localStorage;
     private spaceWidget: { remove: () => void } | null = null;
     private meetingWidget: SvelteComponentDev | null = null;
+    private webexMeetingWidget = null;
 
     get accessToken() {
         return this.storage.getItem(accessTokenKey);
@@ -63,7 +63,7 @@ export class WebexIntegration {
 
         const onClose = () => (this.authorizationPopup = null);
 
-        this.authorizationPopup ??= window.open(
+        this.authorizationPopup = window.open(
             WEBEX_AUTHORIZATION_URL,
             "webex",
             `scrollbars=no,resizable=no,status=no,location=no,toolbar=no,menubar=no,width=620,height=680`
@@ -117,26 +117,37 @@ export class WebexIntegration {
             : Promise.reject("WEBEX_GLOBAL_SPACE_ID not configured.");
     }
 
-    public async startMeeting(meetingUrl: string | number | boolean) {
-        if (typeof meetingUrl !== "string") {
-            throw new Error("meetingURL isn't a string!")
+    public async startMeeting(
+        meetingUrl: string | number | boolean,
+        roomName: string | number | undefined | boolean = "Meeting Room",
+        userInitials: string | number | undefined | boolean = "👩‍💻",
+        userFullName: string | number | undefined | boolean = "iits"
+    ) {
+        if (typeof meetingUrl !== "string" || typeof userInitials !== "string" || typeof userFullName !== "string") {
+            console.error("Prop isn't a string!", { meetingUrl, roomName, userInitials, userFullName });
+            throw new Error("Prop isn't a string!");
         }
         const self = this;
         await this.stop();
 
         coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
-            new WebexSignIn({ target: cowebsiteDiv});
-
+            new WebexSignIn({ target: cowebsiteDiv });
             return Promise.resolve();
         });
 
         await self.waitForAuthorization();
 
         coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
-            new WebexVideoChat({target: cowebsiteDiv, props: { //
-                meetingRoom: meetingUrl, //
-                accessToken: this.accessToken
-            } })
+            new WebexVideoChat({
+                target: cowebsiteDiv,
+                props: {
+                    meetingRoom: meetingUrl,
+                    initials: userInitials,
+                    personToCall: roomName,
+                    fullName: userFullName,
+                    accessToken: this.accessToken,
+                },
+            });
 
             return Promise.resolve();
         });
@@ -152,7 +163,7 @@ export class WebexIntegration {
         await this.stop();
 
         coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
-            new WebexSignIn({ target: cowebsiteDiv});
+            new WebexSignIn({ target: cowebsiteDiv });
 
             return Promise.resolve();
         });
@@ -160,7 +171,7 @@ export class WebexIntegration {
         const [webex] = await Promise.all([await self.loadWebexScripts(), await self.waitForAuthorization()]);
 
         coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
-            self.spaceWidget = webex.widget(cowebsiteDiv).spaceWidget({
+            self.spaceWidget = webex?.widget(cowebsiteDiv).spaceWidget({
                 accessToken: this.accessToken,
                 destinationId: spaceId,
                 destinationType: "spaceId",
@@ -193,7 +204,7 @@ export class WebexIntegration {
     }
 
     private async loadWebexScripts() {
-        this.scriptLoader ??= new Promise<Webex>((resolve, reject) => {
+        this.scriptLoader = new Promise<Webex>((resolve, reject) => {
             const webexStylesheet = document.createElement("link");
             webexStylesheet.rel = "stylesheet";
             webexStylesheet.href = "https://code.s4d.io/widget-space/production/main.css";

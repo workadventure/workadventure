@@ -2,24 +2,24 @@ import { CharacterLayer, ExSocketInterface } from "../Model/Websocket/ExSocketIn
 import { GameRoomPolicyTypes } from "../Model/PusherRoom";
 import { PointInterface } from "../Model/Websocket/PointInterface";
 import {
-    SetPlayerDetailsMessage,
-    SubMessage,
     BatchMessage,
-    ItemEventMessage,
-    ViewportMessage,
     ClientToServerMessage,
-    SilentMessage,
-    WebRtcSignalToServerMessage,
-    PlayGlobalMessage,
-    ReportPlayerMessage,
-    QueryJitsiJwtMessage,
-    SendUserMessage,
-    ServerToClientMessage,
     CompanionMessage,
     EmotePromptMessage,
+    ItemEventMessage,
+    PlayGlobalMessage,
+    QueryJitsiJwtMessage,
+    ReportPlayerMessage,
+    SendUserMessage,
+    ServerToClientMessage,
+    SetPlayerDetailsMessage,
+    SilentMessage,
+    SubMessage,
+    UserMovesMessage,
     VariableMessage,
+    ViewportMessage,
+    WebRtcSignalToServerMessage,
 } from "../Messages/generated/messages_pb";
-import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { TemplatedApp } from "uWebSockets.js";
 import { parse } from "query-string";
 import { jwtTokenManager, tokenInvalidException } from "../Services/JWTTokenManager";
@@ -29,7 +29,6 @@ import { emitInBatch } from "../Services/IoSocketHelpers";
 import { ADMIN_API_TOKEN, ADMIN_API_URL, SOCKET_IDLE_TIMER } from "../Enum/EnvironmentVariable";
 import { Zone } from "_Model/Zone";
 import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
-import { v4 } from "uuid";
 import { CharacterTexture } from "../Services/AdminApi/CharacterTexture";
 
 export class IoSocketController {
@@ -384,6 +383,10 @@ export class IoSocketController {
                         client,
                         message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage
                     );
+                } else if (message.hasWebexquery()) {
+                    // TODO type assertion (see above)
+                    console.log("[Pusher] Found webex query in message");
+                    socketManager.handleWebexSessionQuery(client, message.getWebexquery()!!);
                 } else if (message.hasEmotepromptmessage()) {
                     socketManager.handleEmotePromptMessage(
                         client,

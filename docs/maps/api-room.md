@@ -7,7 +7,7 @@ If you use group layers in your map, to reference a layer in a group you will ne
 Example :
 <div class="row">
     <div class="col">
-        <img src="https://workadventu.re/img/docs/groupLayer.png" class="figure-img img-fluid rounded" alt="" />
+        <img src="images/groupLayer.png" class="figure-img img-fluid rounded" alt="" />
     </div>
 </div>
 
@@ -28,7 +28,7 @@ Listens to the position of the current user. The event is triggered when the use
 
 <div>
     <figure class="figure">
-        <img src="https://workadventu.re/img/docs/trigger_event.png" class="figure-img img-fluid rounded" alt="" />
+        <img src="images/trigger_event.png" class="figure-img img-fluid rounded" alt="" />
         <figcaption class="figure-caption">The `zone` property, applied on a layer</figcaption>
     </figure>
 </div>
@@ -140,7 +140,7 @@ Replace the tile at the `x` and `y` coordinates in the layer named `layer` by th
 If `tile` is a string, it's not the id of the tile but the value of the property `name`.
 <div class="row">
     <div class="col">
-        <img src="https://workadventu.re/img/docs/nameIndexProperty.png" class="figure-img img-fluid rounded" alt="" />
+        <img src="images/nameIndexProperty.png" class="figure-img img-fluid rounded" alt="" />
     </div>
 </div>
 

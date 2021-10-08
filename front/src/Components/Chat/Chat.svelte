@@ -1,11 +1,11 @@
 <script lang="ts">
-    import { fly } from 'svelte/transition';
-    import { chatMessagesStore, chatVisibilityStore } from "../../Stores/ChatStore";
+    import {fly} from 'svelte/transition';
+    import {chatMessagesStore, chatVisibilityStore} from "../../Stores/ChatStore";
     import ChatMessageForm from './ChatMessageForm.svelte';
     import ChatElement from './ChatElement.svelte';
-    import {afterUpdate, beforeUpdate} from "svelte";
+    import {afterUpdate, beforeUpdate, onMount} from "svelte";
     import {HtmlUtils} from "../../WebRtc/HtmlUtils";
-    
+
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
     let handleFormBlur: { blur():void };
@@ -14,6 +14,10 @@
     beforeUpdate(() => {
         autoscroll = listDom && (listDom.offsetHeight + listDom.scrollTop) > (listDom.scrollHeight - 20);
     });
+
+    onMount(() => {
+        listDom.scrollTo(0, listDom.scrollHeight);
+    })
 
     afterUpdate(() => {
         if (autoscroll) listDom.scrollTo(0, listDom.scrollHeight);
@@ -45,7 +49,7 @@
             <li><p class="system-text">Here is your chat history: </p></li>
         {#each $chatMessagesStore as message, i}
             <li><ChatElement message={message} line={i}></ChatElement></li>
-        {/each} 
+        {/each}
         </ul>
     </section>
     <section class="messageForm">
@@ -62,7 +66,7 @@
       line-height: 25px;
       cursor: pointer;
     }
-    
+
     p.system-text {
       border-radius: 8px;
       margin-bottom: 10px;
@@ -88,10 +92,10 @@
       flex-direction: column;
 
       padding: 10px;
-      
+
       border-bottom-right-radius: 16px;
       border-top-right-radius: 16px;
-      
+
       .messagesList {
         margin-top: 35px;
         overflow-y: auto;

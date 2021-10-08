@@ -40,10 +40,8 @@
   },
   "homepage": "https://github.com/thecodingmachine/workadventure#readme",
   "dependencies": {
-    "@workadventure/tiled-map-type-guard": "^1.0.0",
-    "@types/cookie": "0.4.1",
-    "@types/node-fetch": "2.5.11",
-    "axios": "^0.21.1",
+    "@workadventure/tiled-map-type-guard": "^1.0.2",
+    "axios": "^0.21.2",
     "busboy": "^0.3.1",
     "circular-json": "^0.5.9",
     "debug": "^4.3.1",
@@ -56,8 +54,6 @@
     "prom-client": "^12.0.0",
     "query-string": "^6.13.3",
     "redis": "^3.1.2",
-    "request": "2.88.2",
-    "systeminformation": "^4.31.1",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v18.5.0",
     "uuidv4": "^6.0.7"
   },

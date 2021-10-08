@@ -13,6 +13,7 @@ export type EmoteCallback = (emoteEventMessage: EmoteEventMessage, listener: Zon
 export class Zone {
     private things: Set<Movable> = new Set<Movable>();
     private listeners: Set<ZoneSocket> = new Set<ZoneSocket>();
+    private meetingLink: String | null = null;
 
     constructor(
         private onEnters: EntersCallback,
@@ -51,27 +52,9 @@ export class Zone {
         this.notifyLeft(thing, newZone);
     }
 
-    /**
-     * Notify listeners of this zone that this user/thing left
-     */
-    private notifyLeft(thing: Movable, newZone: Zone | null) {
-        for (const listener of this.listeners) {
-            this.onLeaves(thing, newZone, listener);
-        }
-    }
-
     public enter(thing: Movable, oldZone: Zone | null, position: PositionInterface) {
         this.things.add(thing);
         this.notifyEnter(thing, oldZone, position);
-    }
-
-    /**
-     * Notify listeners of this zone that this user entered
-     */
-    private notifyEnter(thing: Movable, oldZone: Zone | null, position: PositionInterface) {
-        for (const listener of this.listeners) {
-            this.onEnters(thing, oldZone, listener);
-        }
     }
 
     public move(thing: Movable, position: PositionInterface) {
@@ -104,6 +87,24 @@ export class Zone {
     public emitEmoteEvent(emoteEventMessage: EmoteEventMessage) {
         for (const listener of this.listeners) {
             this.onEmote(emoteEventMessage, listener);
+        }
+    }
+
+    /**
+     * Notify listeners of this zone that this user/thing left
+     */
+    private notifyLeft(thing: Movable, newZone: Zone | null) {
+        for (const listener of this.listeners) {
+            this.onLeaves(thing, newZone, listener);
+        }
+    }
+
+    /**
+     * Notify listeners of this zone that this user entered
+     */
+    private notifyEnter(thing: Movable, oldZone: Zone | null, position: PositionInterface) {
+        for (const listener of this.listeners) {
+            this.onEnters(thing, oldZone, listener);
         }
     }
 }

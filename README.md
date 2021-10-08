@@ -20,6 +20,7 @@ Install Docker.
 Run:
 
 ```
+cp .env.template .env
 docker-compose up -d
 ```
 
@@ -34,6 +35,9 @@ Note: on some OSes, you will need to add this line to your `/etc/hosts` file:
 ```
 127.0.0.1 workadventure.localhost
 ```
+
+Note: If on the first run you get a page with "network error". Try to ``docker-compose stop`` , then ``docker-compose start``.
+Note 2: If you are still getting "network error". Make sure you are authorizing the self-signed certificate by entering https://pusher.workadventure.testing and accepting them.
 
 ### MacOS developers, your environment with Vagrant
 

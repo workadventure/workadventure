@@ -1,4 +1,4 @@
-{.section-title.accent.text-primary}
+    {.section-title.accent.text-primary}
 # API Chat functions reference
 
 ### Sending a message in the chat
