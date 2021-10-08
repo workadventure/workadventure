@@ -731,6 +731,7 @@ export class GameScene extends DirtyScene {
 
                 // TODO - test webex session response handling
                 this.connection.onWebexSessionResponse((roomId, meetingLink) => {
+                    console.log("[Front] Got Webex callback! (" + roomId + "," + meetingLink + ")");
                     this.startWebex(roomId, meetingLink);
                 });
 
@@ -1852,6 +1853,7 @@ ${escapedMessage}
 
         // TODO - remove logic for reading webex meeting info from map?
         if (webexMeetingUrl) {
+            console.log("[Front] Found meeting url, sending query for update");
             this.connection?.emitWebexSessionQuery(roomName);
 
             console.log("Found webex meeting url");

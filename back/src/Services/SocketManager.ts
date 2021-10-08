@@ -328,6 +328,7 @@ export class SocketManager {
 
     // TODO handle webex session query
     public handleWebexSessionQuery(user: User, webexSessionQuery: WebexSessionQuery) {
+        console.log("[Back] Got Webex Session Query");
         const roomId = webexSessionQuery.getRoomid();
         const response = new WebexSessionResponse();
         response.setRoomid(roomId);
@@ -342,7 +343,7 @@ export class SocketManager {
 
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setWebexsessionresponse(response);
-
+        console.log("[Back] Responding to query for room " + roomId + " with" + response.getMeetinglink());
         user.socket.write(serverToClientMessage);
     }
 

@@ -262,6 +262,7 @@ export class RoomConnection implements RoomConnection {
                 this.dispatch(EventMessage.USER_LIST, this.userList);
             } else if (message.hasWebexsessionresponse()) {
                 // TODO - is this webex call ok?
+                console.log("[Front] Found session response in message");
                 this.dispatch(EventMessage.WEBEX_SESSION_RESPONSE, message.getWebexsessionresponse());
             } else {
                 throw new Error("Unknown message received");
@@ -560,7 +561,7 @@ export class RoomConnection implements RoomConnection {
         webexSessionQuery.setRoomid(roomId);
         const clientToServerMessage = new ClientToServerMessage();
         clientToServerMessage.setWebexquery(webexSessionQuery);
-
+        console.log("[Front] Sending query for room " + roomId);
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 
@@ -578,7 +579,14 @@ export class RoomConnection implements RoomConnection {
     }
 
     public onWebexSessionResponse(callback: (roomId: string, meetingLink: string) => void): void {
+        console.log("[Front] Found Webex Session Response in message. Sending callback with room ID and Link");
         this.onMessage(EventMessage.WEBEX_SESSION_RESPONSE, (message: WebexSessionResponse) => {
+            console.log(
+                "[Front] Created callback to send with room id of " +
+                    message.getRoomid() +
+                    " and meeting link of " +
+                    message.getMeetinglink()
+            );
             callback(message.getRoomid(), message.getMeetinglink());
         });
     }
