@@ -31,6 +31,8 @@ import {
     UserMovesMessage,
     VariableMessage,
     ViewportMessage,
+    WebexSessionQuery,
+    WebexSessionResponse,
     WebRtcSignalToServerMessage,
     WorldConnexionMessage,
     WorldFullMessage,
@@ -49,7 +51,6 @@ import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface"
 import { WebSocket } from "uWebSockets.js";
 import { isRoomRedirect } from "./AdminApi/RoomRedirect";
 import { CharacterTexture } from "./AdminApi/CharacterTexture";
-import { WebexSessionQuery, WebexSessionResponse } from "../../../back/src/Messages/generated/messages_pb";
 
 const debug = Debug("socket");
 
