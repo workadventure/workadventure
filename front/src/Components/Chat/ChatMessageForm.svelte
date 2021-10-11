@@ -1,5 +1,6 @@
 <script lang="ts">
     import {chatMessagesStore, chatInputFocusStore} from "../../Stores/ChatStore";
+    import {commandManager} from "../../Administration/CommandManager";
 
     export const handleForm = {
         blur() {
@@ -18,7 +19,12 @@
 
     function saveMessage() {
         if (!newMessageText) return;
-        chatMessagesStore.addPersonnalMessage(newMessageText);
+        if (newMessageText.startsWith('/') && newMessageText.length > 1) {
+            const commandParts = newMessageText.slice(1).split(" ");
+            commandManager.doCommand(commandParts.shift() as string, commandParts);
+        } else {
+            chatMessagesStore.addPersonnalMessage(newMessageText);
+        }
         newMessageText = '';
     }
 </script>
