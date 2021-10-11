@@ -1,6 +1,7 @@
 import { writable } from "svelte/store";
 import { playersStore } from "./PlayersStore";
 import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
+import { iframeListener } from "../Api/IframeListener";
 
 export const chatVisibilityStore = writable(false);
 export const chatInputFocusStore = writable(false);
@@ -78,6 +79,8 @@ function createChatMessagesStore() {
                         date: new Date(),
                     });
                 }
+
+                iframeListener.sendUserInputChat(text);
                 return list;
             });
         },
@@ -94,6 +97,8 @@ function createChatMessagesStore() {
                         date: new Date(),
                     });
                 }
+
+                iframeListener.sendUserInputChat(text);
                 return list;
             });
             chatVisibilityStore.set(true);
