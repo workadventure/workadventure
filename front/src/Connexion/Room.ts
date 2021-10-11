@@ -133,25 +133,6 @@ export class Room {
         }
     }
 
-    /**
-     * @deprecated
-     */
-    private parsePrivateUrl(url: string): { organizationSlug: string; worldSlug: string; roomSlug?: string } {
-        const regex = /@\/([^/]+)\/([^/]+)(?:\/([^/]*))?/gm;
-        const match = regex.exec(url);
-        if (!match) {
-            throw new Error("Invalid URL " + url);
-        }
-        const results: { organizationSlug: string; worldSlug: string; roomSlug?: string } = {
-            organizationSlug: match[1],
-            worldSlug: match[2],
-        };
-        if (match[3] !== undefined) {
-            results.roomSlug = match[3];
-        }
-        return results;
-    }
-
     public isDisconnected(): boolean {
         const alone = this._search.get("alone");
         if (alone && alone !== "0" && alone.toLowerCase() !== "false") {

@@ -1,5 +1,10 @@
 ## Version develop
 
+### Bugfix
+- Moving a discussion over a user will now add this user to the discussion
+- Being in a silent zone new forces mediaConstraints to false (#1508)
+- Fixes for the emote menu (#1501)
+
 ## Version 1.5.0
 ### Updates
 - Added support for login with OpenID Connect
