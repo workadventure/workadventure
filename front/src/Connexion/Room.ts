@@ -21,6 +21,7 @@ export class Room {
     private instance: string | undefined;
     private readonly _search: URLSearchParams;
     private _contactPage: string | undefined;
+    private _group: string | null = null;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -104,6 +105,7 @@ export class Room {
         console.log("Map ", this.id, " resolves to URL ", data.mapUrl);
         this._mapUrl = data.mapUrl;
         this._textures = data.textures;
+        this._group = data.group;
         this._authenticationMandatory = data.authenticationMandatory || false;
         this._iframeAuthentication = data.iframeAuthentication;
         this._contactPage = data.contactPage || CONTACT_URL;
@@ -131,25 +133,6 @@ export class Room {
             this.instance = match[1] + "/" + match[2];
             return this.instance;
         }
-    }
-
-    /**
-     * @deprecated
-     */
-    private parsePrivateUrl(url: string): { organizationSlug: string; worldSlug: string; roomSlug?: string } {
-        const regex = /@\/([^/]+)\/([^/]+)(?:\/([^/]*))?/gm;
-        const match = regex.exec(url);
-        if (!match) {
-            throw new Error("Invalid URL " + url);
-        }
-        const results: { organizationSlug: string; worldSlug: string; roomSlug?: string } = {
-            organizationSlug: match[1],
-            worldSlug: match[2],
-        };
-        if (match[3] !== undefined) {
-            results.roomSlug = match[3];
-        }
-        return results;
     }
 
     public isDisconnected(): boolean {
@@ -203,5 +186,9 @@ export class Room {
 
     get contactPage(): string | undefined {
         return this._contactPage;
+    }
+
+    get group(): string | null {
+        return this._group;
     }
 }
