@@ -60,6 +60,7 @@ export class MapController extends BaseController {
                         mapUrl,
                         policy_type: GameRoomPolicyTypes.ANONYMOUS_POLICY,
                         roomSlug: "", // Deprecated
+                        group: null,
                         tags: [],
                         textures: [],
                         contactPage: undefined,

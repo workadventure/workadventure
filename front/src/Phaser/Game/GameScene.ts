@@ -428,7 +428,7 @@ export class GameScene extends DirtyScene {
 
         gameManager.gameSceneIsCreated(this);
         urlManager.pushRoomIdToUrl(this.room);
-        analyticsClient.enteredRoom(this.room.id);
+        analyticsClient.enteredRoom(this.room.id, this.room.group);
         contactPageStore.set(this.room.contactPage);
 
         if (touchScreenManager.supportTouchScreen) {
