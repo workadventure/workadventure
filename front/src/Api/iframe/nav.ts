@@ -1,8 +1,4 @@
-import type { GoToPageEvent } from "../Events/GoToPageEvent";
-import type { OpenTabEvent } from "../Events/OpenTabEvent";
-import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
-import type { OpenCoWebSiteEvent } from "../Events/OpenCoWebSiteEvent";
-import type { LoadPageEvent } from "../Events/LoadPageEvent";
+import { IframeApiContribution, sendToWorkadventure, queryWorkadventure } from "./IframeApiContribution";
 
 export class WorkadventureNavigationCommands extends IframeApiContribution<WorkadventureNavigationCommands> {
     callbacks = [];
@@ -34,21 +30,61 @@ export class WorkadventureNavigationCommands extends IframeApiContribution<Worka
         });
     }
 
-    openCoWebSite(url: string, allowApi: boolean = false, allowPolicy: string = ""): void {
-        sendToWorkadventure({
-            type: "openCoWebSite",
+    /**
+     * @deprecated Use openCoWebsite instead
+     */
+    openCoWebSite(url: string, allowApi?: boolean, allowPolicy?: string) {
+        return queryWorkadventure({
+            type: "openCoWebsite",
             data: {
                 url,
                 allowApi,
                 allowPolicy,
+                position: undefined,
             },
         });
     }
 
-    closeCoWebSite(): void {
-        sendToWorkadventure({
-            type: "closeCoWebSite",
-            data: null,
+    openCoWebsite(url: string, allowApi?: boolean, allowPolicy?: string, position?: number) {
+        return queryWorkadventure({
+            type: "openCoWebsite",
+            data: {
+                url,
+                allowApi,
+                allowPolicy,
+                position,
+            },
+        });
+    }
+
+    getCoWebsites() {
+        return queryWorkadventure({
+            type: "getCoWebsites",
+            data: undefined
+        });
+    }
+
+    /**
+     * @deprecated Use closeCoWebsites instead to close all co-websites
+     */
+    closeCoWebSite() {
+        return queryWorkadventure({
+            type: "closeCoWebsites",
+            data: undefined,
+        });
+    }
+
+    closeCoWebsite(coWebsiteId: string) {
+        return queryWorkadventure({
+            type: "closeCoWebsite",
+            data: coWebsiteId,
+        });
+    }
+
+    closeCoWebsites() {
+        return queryWorkadventure({
+            type: "closeCoWebsites",
+            data: undefined,
         });
     }
 }

@@ -5,11 +5,10 @@ import type { ClosePopupEvent } from "./ClosePopupEvent";
 import type { EnterLeaveEvent } from "./EnterLeaveEvent";
 import type { GoToPageEvent } from "./GoToPageEvent";
 import type { LoadPageEvent } from "./LoadPageEvent";
-import type { OpenCoWebSiteEvent } from "./OpenCoWebSiteEvent";
+import { coWebsite, isOpenCoWebsiteEvent } from "./OpenCoWebsiteEvent";
 import type { OpenPopupEvent } from "./OpenPopupEvent";
 import type { OpenTabEvent } from "./OpenTabEvent";
 import type { UserInputChatEvent } from "./UserInputChatEvent";
-import type { MapDataEvent } from "./MapDataEvent";
 import type { LayerEvent } from "./LayerEvent";
 import type { SetPropertyEvent } from "./setPropertyEvent";
 import type { LoadSoundEvent } from "./LoadSoundEvent";
@@ -27,9 +26,6 @@ import type { LoadTilesetEvent } from "./LoadTilesetEvent";
 import { isLoadTilesetEvent } from "./LoadTilesetEvent";
 import type {
     MessageReferenceEvent,
-    removeActionMessage,
-    triggerActionMessage,
-    TriggerActionMessageEvent,
 } from "./ui/TriggerActionMessageEvent";
 import { isMessageReferenceEvent, isTriggerActionMessageEvent } from "./ui/TriggerActionMessageEvent";
 import type { MenuRegisterEvent, UnregisterMenuEvent } from "./ui/MenuRegisterEvent";
@@ -48,8 +44,6 @@ export type IframeEventMap = {
     closePopup: ClosePopupEvent;
     openTab: OpenTabEvent;
     goToPage: GoToPageEvent;
-    openCoWebSite: OpenCoWebSiteEvent;
-    closeCoWebSite: null;
     disablePlayerControls: null;
     restorePlayerControls: null;
     displayBubble: null;
@@ -117,6 +111,22 @@ export const iframeQueryMapTypeGuards = {
     loadTileset: {
         query: isLoadTilesetEvent,
         answer: tg.isNumber,
+    },
+    openCoWebsite: {
+        query: isOpenCoWebsiteEvent,
+        answer: coWebsite
+    },
+    getCoWebsites: {
+        query: tg.isUndefined,
+        answer:  tg.isArray(coWebsite)
+    },
+    closeCoWebsite: {
+        query: tg.isString,
+        answer: tg.isUndefined
+    },
+    closeCoWebsites: {
+        query: tg.isUndefined,
+        answer: tg.isUndefined
     },
     triggerActionMessage: {
         query: isTriggerActionMessageEvent,

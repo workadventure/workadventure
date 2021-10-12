@@ -27,13 +27,13 @@ interface TouchMoveCoordinates {
     y: number;
 }
 
-export interface CoWebsite {
+export type CoWebsite =  {
     iframe: HTMLIFrameElement,
     icon: HTMLDivElement,
     position: number
 }
 
-interface CoWebsiteSlot {
+type CoWebsiteSlot = {
     container: HTMLElement,
     position: number
 }
@@ -186,6 +186,7 @@ class CoWebsiteManager {
         };
 
         this.cowebsiteAsideDom.addEventListener(touchMode ? "touchstart" : "mousedown", (event) => {
+            this.cowebsiteMainDom.style.display = "none";
             this.resizing = true;
             if (touchMode) {
                 const touchEvent = (event as TouchEvent).touches[0];
@@ -203,6 +204,7 @@ class CoWebsiteManager {
             document.removeEventListener(touchMode ? "touchmove" : "mousemove", movecallback);
             this.cowebsiteMainDom.style.display = "block";
             this.resizing = false;
+            this.cowebsiteMainDom.style.display = "flex";
         });
     }
 
@@ -277,7 +279,11 @@ class CoWebsiteManager {
         });
     }
 
-    private searchCoWebsiteById(coWebsiteId: string): CoWebsite|undefined {
+    public getCoWebsites(): CoWebsite[] {
+        return this.coWebsites;
+    }
+
+    public getCoWebsiteById(coWebsiteId: string): CoWebsite|undefined {
         return this.coWebsites.find((coWebsite: CoWebsite) => coWebsite.iframe.id === coWebsiteId);
     }
 
@@ -449,7 +455,7 @@ class CoWebsiteManager {
 
             do {
                 iframe.id = "cowebsite-iframe-" + (Math.random() + 1).toString(36).substring(7);
-            } while (iframe.id.toLowerCase().includes('jitsi') || this.searchCoWebsiteById(iframe.id));
+            } while (iframe.id.toLowerCase().includes('jitsi') || this.getCoWebsiteById(iframe.id));
 
             iframe.src = new URL(url, base).toString()
 
