@@ -44,6 +44,17 @@
          "id":7,
          "name":"second_cowebsite",
          "opacity":1,
+         "properties":[
+                {
+                 "name":"jitsiRoom",
+                 "type":"string",
+                 "value":"ChillZone"
+                }, 
+                {
+                 "name":"jitsiTrigger",
+                 "type":"string",
+                 "value":"onaction"
+                }],
          "type":"tilelayer",
          "visible":true,
          "width":10,
@@ -56,7 +67,7 @@
          "name":"floorLayer",
          "objects":[
                 {
-                 "height":157.696496283938,
+                 "height":220.405430001517,
                  "id":1,
                  "name":"Tests",
                  "rotation":0,
@@ -64,14 +75,14 @@
                     {
                      "fontfamily":"Sans Serif",
                      "pixelsize":8,
-                     "text":"Test 1:\nEnter \/cowebsite open https:\/\/wikipedia.com on the chat\nResult:\nA cowebsite must have been opened\n\nDo the first test 4 more times\n\nTest 2:\nEnter \/cowebsite close 0 on the chat\nResult:\nThe main co-website has been closed\n\nTest 3:\nEnter \/cowebsite close all on the chat\nResult:\nAll co-websites has been closed",
+                     "text":"Test 1:\nEnter \/cowebsite open https:\/\/wikipedia.com on the chat\nResult:\nA cowebsite must have been opened\n\nDo the first test 4 more times\n\nTest 2:\nEnter \/cowebsite close 0 on the chat\nResult:\nThe main co-website has been closed\n\nTest 3:\nEnter \/cowebsite close all on the chat\nResult:\nAll co-websites has been closed\n\nTest 4:\nGo on the white carpet to open a Jitsi & open a co-website \/cowebsite open https:\/\/wikipedia.com on the chat\nResult:\nThere are two co-websites",
                      "wrap":true
                     },
                  "type":"",
                  "visible":true,
                  "width":316.770833333333,
                  "x":1.64026713939023,
-                 "y":160.264699934273
+                 "y":97.5557662166938
                 }],
          "opacity":1,
          "type":"objectgroup",
