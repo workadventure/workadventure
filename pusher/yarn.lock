@@ -549,6 +549,14 @@
     "@xmpp/jid" "^0.13.0"
     "@xmpp/xml" "^0.13.0"
 
+"@xmpp/debug@^0.13.0":
+  version "0.13.0"
+  resolved "https://registry.yarnpkg.com/@xmpp/debug/-/debug-0.13.0.tgz#5bda39b3aa628719dbab0741c305f8579e73e88f"
+  integrity sha512-4RCN0UsGLmfzzOdDAfzpm8luKprcdo9oRf0cnKqU/TKmbw5PN5F+TqX4we7uc4xHKzpu0rNyEhusKkVOfe3xzw==
+  dependencies:
+    "@xmpp/xml" "^0.13.0"
+    ltx "^3.0.0"
+
 "@xmpp/error@^0.13.0":
   version "0.13.0"
   resolved "https://registry.yarnpkg.com/@xmpp/error/-/error-0.13.0.tgz#32704df7f06b0be7d54fc2d26af62050a83eea6d"

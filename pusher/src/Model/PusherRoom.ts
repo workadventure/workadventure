@@ -51,7 +51,7 @@ export class PusherRoom {
         this.listeners.add(socket);
 
         const xmppClient = new XmppClient(socket);
-        await xmppClient.joinRoom(this.groupId || this.roomUrl);
+        await xmppClient.joinRoom(this.groupId || this.roomUrl, socket.name);
         this.xmppListeners.set(socket.userUuid, xmppClient);
     }
 
@@ -151,5 +151,11 @@ export class PusherRoom {
         debug("Closing connection to room %s on back server", this.roomUrl);
         this.isClosing = true;
         this.backConnection.cancel();
+
+        debug("Closing connections to XMPP server for room %s", this.roomUrl);
+        for (const [id, client] of this.xmppListeners) {
+            client.close();
+        }
+        this.xmppListeners.clear();
     }
 }

@@ -1,6 +1,8 @@
 import { ExSocketInterface } from "_Model/Websocket/ExSocketInterface";
+import {v4} from "uuid";
 
 const { client, xml, jid } = require("@xmpp/client");
+const debug = require("@xmpp/debug");
 
 interface JID {
     _domain: string;
@@ -29,9 +31,10 @@ export class XmppClient {
             const xmpp = client({
                 service: "ws://ejabberd:5443/ws",
                 username: clientData.userUuid,
-                resource: "pusher",
+                resource: v4().toString(), //"pusher",
                 password: "abc",
             });
+            debug(xmpp); // Display XMPP logs if environment variable XMPP_DEBUG is set
 
             xmpp.on("error", (err: string) => {
                 console.error("err", err);
@@ -63,11 +66,12 @@ export class XmppClient {
         return this.address._local + "@" + this.address._domain + "/" + this.address._resource;
     }
 
-    joinRoom(resource: string): Promise<XmppSocket> {
+    joinRoom(resource: string, nickname: string): Promise<XmppSocket> {
         return this.clientPromise.then(async (xmpp) => {
+
             const message = xml(
                 "presence",
-                { to: "testRoom@ejabberd/toto", from: this.getFullJID() },
+                { to: "testroom@conference.ejabberd/"+nickname, from: this.getFullJID() },
                 xml("x", { xmlns: "http://jabber.org/protocol/muc" })
             );
             await xmpp.send(message);
