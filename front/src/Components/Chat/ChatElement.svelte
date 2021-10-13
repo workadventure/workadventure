@@ -62,6 +62,7 @@
 <style lang="scss">
     div.chatElement {
       display: flex;
+      margin-bottom: 6px;
       
       .messagePart {
         flex-grow:1;
