@@ -30,54 +30,59 @@
 <div class="chatElement">
     <div class="messagePart">
         {#if message.type === ChatMessageTypes.userIncoming}
-            &gt;&gt; {#each targets as target, index}<ChatPlayerName player={target} line={line}></ChatPlayerName>{#if !isLastIteration(index)}, {/if}{/each} entered <span class="date">({renderDate(message.date)})</span>
+            <div class="bubble-events">
+            {#each targets as target, index}
+                <ChatPlayerName player={target} line={line}></ChatPlayerName>{#if !isLastIteration(index)}, {/if}{/each} entered <span class="date">{renderDate(message.date)}</span>
+            </div>
         {:else if message.type === ChatMessageTypes.userOutcoming}
-            &lt;&lt; {#each targets as target, index}<ChatPlayerName player={target} line={line}></ChatPlayerName>{#if !isLastIteration(index)}, {/if}{/each} left <span class="date">({renderDate(message.date)})</span>
+            <div class="bubble-events">
+            {#each targets as target, index}
+                <ChatPlayerName player={target} line={line}></ChatPlayerName>{#if !isLastIteration(index)}, {/if}{/each} left <span class="date">{renderDate(message.date)}</span>
+            </div>
         {:else if message.type === ChatMessageTypes.me}
-            <h4>Me: <span class="date">({renderDate(message.date)})</span></h4>
+            <div><span class="author">Me</span> <span class="date">{renderDate(message.date)}</span></div>
             {#each texts as text}
-                <div><p class="my-text">{@html urlifyText(text)}</p></div>
+                <div><p class="message">{@html urlifyText(text)}</p></div>
             {/each}
         {:else}
-            <h4><ChatPlayerName player={author} line={line}></ChatPlayerName>: <span class="date">({renderDate(message.date)})</span></h4>
+            <div><ChatPlayerName player={author} line={line}></ChatPlayerName> <span class="date">{renderDate(message.date)}</span></div>
             {#each texts as text}
-                <div><p class="other-text">{@html urlifyText(text)}</p></div>
+                <div><p>{@html urlifyText(text)}</p></div>
             {/each}
         {/if}
     </div>
 </div>
 
 <style lang="scss">
-    h4, p {
-        font-family: Lato;
-    }
     div.chatElement {
       display: flex;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
       
       .messagePart {
         flex-grow:1;
         max-width: 100%;
+
+        div.bubble-events {
+          font-size: 12px;
+          text-align: center;
+        }
+
+        span.author {
+          font-weight: bold;
+          color: #185186;
+        }
 
         span.date {
           font-size: 80%;
           color: gray;
         }
 
-        div > p {
-          border-radius: 8px;
-          margin-bottom: 10px;
-          padding:6px;
+        p.message {
           overflow-wrap: break-word;
           max-width: 100%;
+          font-size: 15px;
+          margin-bottom: 10px;
           display: inline-block;
-          &.other-text {
-            background: gray; 
-          }
-          
-          &.my-text {
-            background: #6489ff;
-          }
         }
       }
     }

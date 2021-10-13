@@ -24,38 +24,44 @@
 </script>
 
 <form on:submit|preventDefault={saveMessage}>
-    <input type="text" bind:value={newMessageText} placeholder="Enter your message..." on:focus={onFocus} on:blur={onBlur} bind:this={inputElement}>
-    <button type="submit">
-        <img src="/static/images/send.png" alt="Send" width="20">
-    </button>
+    <input type="text" bind:value={newMessageText} placeholder="Message" on:focus={onFocus} on:blur={onBlur} bind:this={inputElement}>
+    <button type="submit">Send</button>
 </form>
 
 <style lang="scss">
     form {
-        display: flex;
-        padding-left: 4px;
-        padding-right: 4px;
-      
+      border: 1px solid #888;
+      border-radius: 2px;
+      display: flex;
+      background: rgba(16, 40, 63, 0.9);
+      line-height: 32px;
+
         input {
           flex: auto;
-          background-color: #254560;
-          color: white;
-          border-bottom-left-radius: 4px;
-          border-top-left-radius: 4px;
           border: none;
-          font-size: 22px;
-          font-family: Lato;
+          color: white;
+          font-size: 14px;
+          background-color: inherit;
           padding-left: 6px;
           min-width: 0; //Needed so that the input doesn't overflow the container in firefox
           outline: none;
+          &:hover {
+            cursor: text;
+          }
+          &::placeholder {
+            padding-left: 6px;
+            color: #c0bebe;
+            font-style: italic;
+            font-size: 14px;
+            opacity: 1; /* Firefox */
+          }
         }
-        
+
         button {
-          background-color: #254560;
-          border-bottom-right-radius: 4px;
-          border-top-right-radius: 4px;
+          background: rgb(62, 148, 234);
           border: none;
-          border-left: solid white 1px;
+          color: white;
+          border-left: 1px solid #888;
           font-size: 16px;
         }
     }

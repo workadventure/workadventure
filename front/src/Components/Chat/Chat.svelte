@@ -43,10 +43,9 @@
 
 
 <aside class="chatWindow" transition:fly="{{ x: -1000, duration: 500 }}" bind:this={chatWindowElement}>
-    <p class="close-icon" on:click={closeChat}>&times</p>
+    <button type="button" class="nes-btn is-error close" on:click={closeChat}>&times</button>
     <section class="messagesList" bind:this={listDom}>
         <ul>
-            <li><p class="system-text">Here is your chat history: </p></li>
         {#each $chatMessagesStore as message, i}
             <li><ChatElement message={message} line={i}></ChatElement></li>
         {/each} 
@@ -58,23 +57,10 @@
 </aside>
 
 <style lang="scss">
-    p.close-icon {
+    .nes-btn.is-error.close {
       position: absolute;
-      padding: 4px;
-      right: 12px;
-      font-size: 30px;
-      line-height: 25px;
-      cursor: pointer;
-    }
-    
-    p.system-text {
-      border-radius: 8px;
-      margin-bottom: 10px;
-      padding:6px;
-      overflow-wrap: break-word;
-      max-width: 100%;
-      background: gray;
-      display: inline-block;
+      top: 0;
+      right: 0;
     }
 
     aside.chatWindow {
@@ -85,16 +71,12 @@
       left: 0;
       height: 100vh;
       width:30vw;
-      min-width: 350px;
-      background: rgb(5, 31, 51, 0.9);
-      color: whitesmoke;
+      min-width: 400px;
+      background: rgb(8, 19, 30, 0.9);
+      color: white;
       display: flex;
       flex-direction: column;
-
       padding: 10px;
-      
-      border-bottom-right-radius: 16px;
-      border-top-right-radius: 16px;
       
       .messagesList {
         margin-top: 35px;
@@ -108,7 +90,7 @@
       }
       .messageForm {
         flex: 0 70px;
-        padding-top: 15px;
+        padding-top: 30px;
       }
     }
 </style>
