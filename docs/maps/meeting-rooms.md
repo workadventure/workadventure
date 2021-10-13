@@ -1,7 +1,7 @@
 {.section-title.accent.text-primary}
 # Meeting rooms
 
-https://www.youtube.com/watch?v=cN9VMWHN0eo
+[Building your map - Meeting room](https://www.youtube.com/watch?v=cN9VMWHN0eo)
 
 ## Opening a Jitsi meet when walking on the map
 

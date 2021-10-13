@@ -15,6 +15,7 @@
     import {onDestroy} from "svelte";
 
     function screenSharingClick(): void {
+        if (isSilent) return;
         if ($requestedScreenSharingState === true) {
             requestedScreenSharingState.disableScreenSharing();
         } else {
@@ -23,6 +24,7 @@
     }
 
     function cameraClick(): void {
+        if (isSilent) return;
         if ($requestedCameraState === true) {
             requestedCameraState.disableWebcam();
         } else {
@@ -31,6 +33,7 @@
     }
 
     function microphoneClick(): void {
+        if (isSilent) return;
         if ($requestedMicrophoneState === true) {
             requestedMicrophoneState.disableMicrophone();
         } else {

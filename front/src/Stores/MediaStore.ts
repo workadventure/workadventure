@@ -177,6 +177,11 @@ function createVideoConstraintStore() {
     };
 }
 
+/**
+ * A store containing if user is silent, so if he is in silent zone. This permit to show et hide camera of user
+ */
+export const isSilentStore = writable(false);
+
 export const videoConstraintStore = createVideoConstraintStore();
 
 /**
@@ -234,6 +239,7 @@ export const mediaStreamConstraintsStore = derived(
         audioConstraintStore,
         privacyShutdownStore,
         cameraEnergySavingStore,
+        isSilentStore,
     ],
     (
         [
@@ -245,6 +251,7 @@ export const mediaStreamConstraintsStore = derived(
             $audioConstraintStore,
             $privacyShutdownStore,
             $cameraEnergySavingStore,
+            $isSilentStore,
         ],
         set
     ) => {
@@ -288,6 +295,13 @@ export const mediaStreamConstraintsStore = derived(
 
         // Disable webcam for energy reasons (the user is not moving and we are talking to no one)
         if ($cameraEnergySavingStore === true) {
+            currentVideoConstraint = false;
+            //this optimization is desactivated because of sound issues on chrome
+            //todo: fix this conflicts and reactivate this optimization
+            //currentAudioConstraint = false;
+        }
+
+        if ($isSilentStore === true) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;
         }
@@ -376,7 +390,8 @@ function toggleConstraints(track: MediaStreamTrack, constraints: MediaTrackConst
     } else if (constraints === false) {
         track.stop();
     }
-    if (constraints && constraints !== true) {
+    // @ts-ignore
+    if (typeof constraints !== "boolean" && constraints !== true) {
         track.applyConstraints(constraints);
     }
 }
@@ -391,12 +406,11 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
 
         async function initStream(constraints: MediaStreamConstraints) {
             try {
-                const newStream = await navigator.mediaDevices.getUserMedia(constraints);
                 if (currentStream) {
                     //we need stop all tracks to make sure the old stream will be garbage collected
-                    currentStream.getTracks().forEach((t) => t.stop());
+                    //currentStream.getTracks().forEach((t) => t.stop());
                 }
-                currentStream = newStream;
+                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
                 set({
                     type: "success",
                     stream: currentStream,
@@ -480,7 +494,8 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                     type: "success",
                     stream: null,
                 });
-            } else if ((constraints.audio && !oldConstraints.audio) || (!oldConstraints.video && constraints.video)) {
+            } //we reemit the stream if it was muted just to be sure
+            else if (constraints.audio /* && !oldConstraints.audio*/ || (!oldConstraints.video && constraints.video)) {
                 initStream(constraints);
             }
             oldConstraints = {
@@ -604,13 +619,3 @@ localStreamStore.subscribe((streamResult) => {
         }
     }
 });
-
-/**
- * A store containing the real active media is mobile
- */
-export const obtainedMediaConstraintIsMobileStore = writable(false);
-
-/**
- * A store containing if user is silent, so if he is in silent zone. This permit to show et hide camera of user
- */
-export const isSilentStore = writable(false);

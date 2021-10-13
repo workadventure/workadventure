@@ -46,8 +46,11 @@ class ConnectionManager {
             loginSceneVisibleIframeStore.set(false);
             return null;
         }
-        const redirectUrl = `${this._currentRoom.iframeAuthentication}?state=${state}&nonce=${nonce}&playUri=${this._currentRoom.key}`;
-        window.location.assign(redirectUrl);
+        const redirectUrl = new URL(`${this._currentRoom.iframeAuthentication}`);
+        redirectUrl.searchParams.append("state", state);
+        redirectUrl.searchParams.append("nonce", nonce);
+        redirectUrl.searchParams.append("playUri", this._currentRoom.key);
+        window.location.assign(redirectUrl.toString());
         return redirectUrl;
     }
 
@@ -109,7 +112,7 @@ class ConnectionManager {
             const data = await Axios.post(`${PUSHER_URL}/register`, { organizationMemberToken }).then(
                 (res) => res.data
             );
-            this.localUser = new LocalUser(data.userUuid, data.textures);
+            this.localUser = new LocalUser(data.userUuid, data.textures, data.email);
             this.authToken = data.authToken;
             localUserStore.saveUser(this.localUser);
             localUserStore.setAuthToken(this.authToken);
@@ -134,17 +137,6 @@ class ConnectionManager {
             connexionType === GameConnexionTypes.empty
         ) {
             this.authToken = localUserStore.getAuthToken();
-            //todo: add here some kind of warning if authToken has expired.
-            if (!this.authToken) {
-                await this.anonymousLogin();
-            } else {
-                try {
-                    await this.checkAuthUserConnexion();
-                } catch (err) {
-                    console.error(err);
-                }
-            }
-            this.localUser = localUserStore.getLocalUser() as LocalUser; //if authToken exist in localStorage then localUser cannot be null
 
             let roomPath: string;
             if (connexionType === GameConnexionTypes.empty) {
@@ -169,7 +161,21 @@ class ConnectionManager {
             }
 
             //get detail map for anonymous login and set texture in local storage
+            //before set token of user we must load room and all information. For example the mandatory authentication could be require on current room
             this._currentRoom = await Room.createRoom(new URL(roomPath));
+
+            //todo: add here some kind of warning if authToken has expired.
+            if (!this.authToken && !this._currentRoom.authenticationMandatory) {
+                await this.anonymousLogin();
+            } else {
+                try {
+                    await this.checkAuthUserConnexion();
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+            this.localUser = localUserStore.getLocalUser() as LocalUser; //if authToken exist in localStorage then localUser cannot be null
+
             if (this._currentRoom.textures != undefined && this._currentRoom.textures.length > 0) {
                 //check if texture was changed
                 if (this.localUser.textures.length === 0) {
@@ -190,7 +196,7 @@ class ConnectionManager {
             return Promise.reject(new Error("Invalid URL"));
         }
         if (this.localUser) {
-            analyticsClient.identifyUser(this.localUser.uuid);
+            analyticsClient.identifyUser(this.localUser.uuid, this.localUser.email);
         }
 
         this.serviceWorker = new _ServiceWorker();

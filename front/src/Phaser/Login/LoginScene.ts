@@ -25,7 +25,7 @@ export class LoginScene extends ResizableScene {
         if (
             localUserStore.getAuthToken() == undefined &&
             gameManager.currentStartedRoom &&
-            gameManager.currentStartedRoom?.authenticationMandatory
+            gameManager.currentStartedRoom.authenticationMandatory
         ) {
             connectionManager.loadOpenIDScreen();
             loginSceneVisibleIframeStore.set(true);

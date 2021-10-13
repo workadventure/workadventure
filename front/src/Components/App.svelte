@@ -1,7 +1,7 @@
 <script lang="typescript">
     import MenuIcon from "./Menu/MenuIcon.svelte";
     import {menuIconVisiblilityStore, menuVisiblilityStore} from "../Stores/MenuStore";
-    import {emoteMenuVisiblilityStore} from "../Stores/EmoteStore";
+    import {emoteMenuStore} from "../Stores/EmoteStore";
     import {enableCameraSceneVisibilityStore} from "../Stores/MediaStore";
     import CameraControls from "./CameraControls.svelte";
     import MyCamera from "./MyCamera.svelte";
@@ -113,7 +113,7 @@
             <Menu></Menu>
         </div>
     {/if}
-    {#if $emoteMenuVisiblilityStore}
+    {#if $emoteMenuStore}
         <div>
             <EmoteMenu></EmoteMenu>
         </div>
