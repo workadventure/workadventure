@@ -52,7 +52,7 @@
             <div class="messageInfos">
                 <ChatPlayerName player={author} line={line}></ChatPlayerName> <span class="date">{renderDate(message.date)}</span>
                 {#each texts as text}
-                    <p>{@html urlifyText(text)}</p>
+                    <p class="message">{@html urlifyText(text)}</p>
                 {/each}
             </div>
         {/if}
@@ -62,7 +62,6 @@
 <style lang="scss">
     div.chatElement {
       display: flex;
-      margin-bottom: 6px;
       
       .messagePart {
         flex-grow:1;
@@ -90,11 +89,10 @@
         }
 
         p.message {
-          overflow-wrap: break-word;
+          word-break: break-all;
           max-width: 100%;
-          font-size: 15px;
-          margin-bottom: 10px;
-          display: inline-block;
+          font-size: 14px;
+          margin-bottom: 6px;
         }
       }
     }
