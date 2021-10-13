@@ -3,6 +3,7 @@
     import type {ChatMessage} from "../../Stores/ChatStore";
     import {HtmlUtils} from "../../WebRtc/HtmlUtils";
     import ChatPlayerName from './ChatPlayerName.svelte';
+    import ChatPlayerAvatar from './ChatPlayerAvatar.svelte';
     import type {PlayerInterface} from "../../Phaser/Game/PlayerInterface";
 
     export let message: ChatMessage;
@@ -40,15 +41,20 @@
                 <ChatPlayerName player={target} line={line}></ChatPlayerName>{#if !isLastIteration(index)}, {/if}{/each} left <span class="date">{renderDate(message.date)}</span>
             </div>
         {:else if message.type === ChatMessageTypes.me}
-            <div><span class="author">Me</span> <span class="date">{renderDate(message.date)}</span></div>
-            {#each texts as text}
-                <div><p class="message">{@html urlifyText(text)}</p></div>
-            {/each}
+            <div class="messageInfos">
+                <span class="author">Me</span> <span class="date">{renderDate(message.date)}</span>
+                {#each texts as text}
+                    <p class="message">{@html urlifyText(text)}</p>
+                {/each}
+            </div>
         {:else}
-            <div><ChatPlayerName player={author} line={line}></ChatPlayerName> <span class="date">{renderDate(message.date)}</span></div>
-            {#each texts as text}
-                <div><p>{@html urlifyText(text)}</p></div>
-            {/each}
+            <ChatPlayerAvatar player={author} line={line}></ChatPlayerAvatar>
+            <div class="messageInfos">
+                <ChatPlayerName player={author} line={line}></ChatPlayerName> <span class="date">{renderDate(message.date)}</span>
+                {#each texts as text}
+                    <p>{@html urlifyText(text)}</p>
+                {/each}
+            </div>
         {/if}
     </div>
 </div>
@@ -56,7 +62,7 @@
 <style lang="scss">
     div.chatElement {
       display: flex;
-      margin-bottom: 10px;
+      margin-bottom: 6px;
       
       .messagePart {
         flex-grow:1;
@@ -67,9 +73,15 @@
           text-align: center;
         }
 
+        div.messageInfos {
+          margin-left: 12px;
+          display: inline-block;
+          float: left;
+        }
+
         span.author {
           font-weight: bold;
-          color: #185186;
+          color: #307abe;
         }
 
         span.date {
