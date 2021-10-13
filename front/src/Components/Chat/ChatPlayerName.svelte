@@ -27,18 +27,18 @@
 
 </script>
 
-<span class="subMenu">
+<div class="subMenu">
     <span class="chatPlayerName" style="color: {player.color || 'white'}" on:click={openSubMenu}>
     {player.name}
     </span>
     {#if isSubMenuOpen}
         <ChatSubMenu player={player}/>
     {/if}
-</span>
+</div>
 
 
 <style lang="scss">
-  span.subMenu {
+  div.subMenu {
     display: inline-block;
   }
   span.chatPlayerName {

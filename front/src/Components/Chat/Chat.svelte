@@ -71,15 +71,31 @@
       left: 0;
       height: 100vh;
       width:30vw;
-      min-width: 400px;
-      background: rgb(8, 19, 30, 0.9);
+      min-width: 350px;
+      background: rgba(8, 19, 30, 0.9);
       color: white;
       display: flex;
       flex-direction: column;
       padding: 10px;
+
+      // Scroll bar design
+      /* width */
+      ::-webkit-scrollbar {
+        width: 12px;
+      }
+      /* Track */
+      ::-webkit-scrollbar-track {
+        background: #1E2427;
+        border-radius: 2px;
+      }
+      /* Handle */
+      ::-webkit-scrollbar-thumb {
+        background: #404547;
+        border-radius: 2px;
+      }
       
       .messagesList {
-        margin-top: 35px;
+        margin-top: 50px;
         overflow-y: auto;
         flex: auto;
 
