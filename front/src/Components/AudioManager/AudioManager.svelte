@@ -23,6 +23,8 @@
         audioManagerVolumeStore.setMuted(localUserStore.getAudioPlayerMuted());
         changeVolume();
 
+        loadAudioSettings();
+
         unsubscriberFileStore = audioManagerFileStore.subscribe(() => {
             HTMLAudioPlayer.pause();
             HTMLAudioPlayer.loop = get(audioManagerVolumeStore).loop;
@@ -79,6 +81,11 @@
         changeVolume();
     }
 
+    function loadAudioSettings() {
+        audioManagerVolumeStore.setVolume(localUserStore.getAudioPlayerVolume());
+        audioManagerVolumeStore.setMuted(localUserStore.getAudioPlayerMuted());
+    }
+
     function setVolume() {
         volume = parseFloat(audioPlayerVol.value);
         audioManagerVolumeStore.setVolume(volume);
@@ -86,6 +93,11 @@
         audioManagerVolumeStore.setMuted(false);
         localUserStore.setAudioPlayerMuted(false);
         changeVolume();
+    }
+
+    function disallowKeys() {
+        audioPlayerVol.blur();
+        return false;
     }
 
     function setDecrease() {
@@ -116,7 +128,7 @@
                 </g>
             </svg>
         </span>
-        <input type="range" min="0" max="1" step="0.025" bind:this={audioPlayerVol} on:change={setVolume}>
+        <input type="range" min="0" max="1" step="0.025" bind:this={audioPlayerVol} on:change={setVolume} on:keydown={disallowKeys}>
     </div>
     <div class="audio-manager-reduce-conversation">
         <label>

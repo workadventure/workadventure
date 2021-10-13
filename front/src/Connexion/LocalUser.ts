@@ -24,5 +24,9 @@ export function areCharacterLayersValid(value: string[] | null): boolean {
 }
 
 export class LocalUser {
-    constructor(public readonly uuid: string, public textures: CharacterTexture[]) {}
+    constructor(
+        public readonly uuid: string,
+        public textures: CharacterTexture[],
+        public email: string | null = null
+    ) {}
 }

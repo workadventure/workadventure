@@ -20,6 +20,8 @@
       emojisPerRow: isMobile() ? 6 : 8,
       autoFocusSearch: false
     });
+    //the timeout is here to prevent the menu from flashing
+    setTimeout(() => picker.showPicker(emojiContainer), 100);
 
     picker.on("emoji", (selection) => {
       emoteStore.set(selection.emoji);
@@ -29,13 +31,6 @@
       emoteMenuStore.closeEmoteMenu();
     });
 
-    unsubscriber = emoteMenuStore.subscribe((isEmoteMenuVisible) => {
-      if (isEmoteMenuVisible && !picker.isPickerVisible()) {
-        picker.showPicker(emojiContainer);
-      } else {
-        picker.hidePicker();
-      }
-    })
   })
 
   function onKeyDown(e:KeyboardEvent) {

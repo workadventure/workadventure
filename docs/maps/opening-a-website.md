@@ -1,7 +1,7 @@
 {.section-title.accent.text-primary}
 # Opening a website when walking on the map
 
-https://www.youtube.com/watch?v=Me8cu5lLN3A
+[Building your map - Opening a website](https://www.youtube.com/watch?v=Me8cu5lLN3A)
 
 ## The openWebsite property
 

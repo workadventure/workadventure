@@ -1,4 +1,6 @@
 import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare let window: any;
 
 class AnalyticsClient {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -8,6 +10,8 @@ class AnalyticsClient {
         if (POSTHOG_API_KEY && POSTHOG_URL) {
             this.posthogPromise = import("posthog-js").then(({ default: posthog }) => {
                 posthog.init(POSTHOG_API_KEY, { api_host: POSTHOG_URL, disable_cookie: true });
+                //the posthog toolbar need a reference in window to be able to work
+                window.posthog = posthog;
                 return posthog;
             });
         } else {
@@ -15,10 +19,10 @@ class AnalyticsClient {
         }
     }
 
-    identifyUser(uuid: string) {
+    identifyUser(uuid: string, email: string | null) {
         this.posthogPromise
             .then((posthog) => {
-                posthog.identify(uuid, { uuid, wa: true });
+                posthog.identify(uuid, { uuid, email, wa: true });
             })
             .catch();
     }
@@ -39,10 +43,10 @@ class AnalyticsClient {
             .catch();
     }
 
-    enteredRoom(roomId: string) {
+    enteredRoom(roomId: string, roomGroup: string | null) {
         this.posthogPromise
             .then((posthog) => {
-                posthog.capture("$pageView", { roomId });
+                posthog.capture("$pageView", { roomId, roomGroup });
             })
             .catch();
     }

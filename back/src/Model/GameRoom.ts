@@ -181,6 +181,7 @@ export class GameRoom {
 
     private updateUserGroup(user: User): void {
         user.group?.updatePosition();
+        user.group?.searchForNearbyUsers();
 
         if (user.silent) {
             return;
@@ -206,6 +207,7 @@ export class GameRoom {
                     const group: Group = new Group(
                         this.roomUrl,
                         [user, closestUser],
+                        this.groupRadius,
                         this.connectCallback,
                         this.disconnectCallback,
                         this.positionNotifier
