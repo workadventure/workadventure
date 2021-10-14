@@ -98,7 +98,7 @@ class ConnectionManager {
             localUserStore.setCode(code);
             this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
             try {
-                await this.checkAuthUserConnexion();
+                await this.checkAuthUserConnexion(this._currentRoom.key);
                 analyticsClient.loggedWithSso();
             } catch (err) {
                 console.error(err);
@@ -169,7 +169,7 @@ class ConnectionManager {
                 await this.anonymousLogin();
             } else {
                 try {
-                    await this.checkAuthUserConnexion();
+                    await this.checkAuthUserConnexion(this._currentRoom.key);
                 } catch (err) {
                     console.error(err);
                 }
@@ -275,7 +275,7 @@ class ConnectionManager {
         return this.connexionType;
     }
 
-    async checkAuthUserConnexion() {
+    async checkAuthUserConnexion(playUri: string) {
         //set connected store for menu at false
         userIsConnected.set(false);
 
@@ -289,10 +289,17 @@ class ConnectionManager {
         }
         const nonce = localUserStore.getNonce();
         const token = localUserStore.getAuthToken();
-        const { authToken } = await Axios.get(`${PUSHER_URL}/login-callback`, { params: { code, nonce, token } }).then(
-            (res) => res.data
-        );
+        const { authToken, userUuid, tags, textures, emails } = await Axios.get(`${PUSHER_URL}/login-callback`, {
+            params: { code, nonce, token, playUri },
+        }).then((res) => res.data);
         localUserStore.setAuthToken(authToken);
+        const localUser: LocalUser = {
+            uuid: userUuid,
+            textures: textures,
+            email: emails,
+        };
+        this.localUser = new LocalUser(userUuid, textures, emails);
+        localUserStore.saveUser(this.localUser);
         this.authToken = authToken;
 
         //user connected, set connected store for menu at true
