@@ -289,11 +289,11 @@ class ConnectionManager {
         }
         const nonce = localUserStore.getNonce();
         const token = localUserStore.getAuthToken();
-        const { authToken, userUuid, tags, textures, emails } = await Axios.get(`${PUSHER_URL}/login-callback`, {
+        const { authToken, userUuid, textures, email } = await Axios.get(`${PUSHER_URL}/login-callback`, {
             params: { code, nonce, token, playUri },
         }).then((res) => res.data);
         localUserStore.setAuthToken(authToken);
-        this.localUser = new LocalUser(userUuid, textures, emails);
+        this.localUser = new LocalUser(userUuid, textures, email);
         localUserStore.saveUser(this.localUser);
         this.authToken = authToken;
 
