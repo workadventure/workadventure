@@ -107,7 +107,7 @@ export abstract class Character extends Container {
         this.setSize(16, 16);
         this.getBody().setSize(16, 16); //edit the hitbox to better match the character model
         this.getBody().setOffset(0, 8);
-        this.setDepth(-1);
+        this.setDepth(0);
 
         this.playAnimation(direction, moving);
 
