@@ -293,11 +293,6 @@ class ConnectionManager {
             params: { code, nonce, token, playUri },
         }).then((res) => res.data);
         localUserStore.setAuthToken(authToken);
-        const localUser: LocalUser = {
-            uuid: userUuid,
-            textures: textures,
-            email: emails,
-        };
         this.localUser = new LocalUser(userUuid, textures, emails);
         localUserStore.saveUser(this.localUser);
         this.authToken = authToken;
