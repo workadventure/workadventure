@@ -36,7 +36,6 @@ export class WebexIntegration {
     private storage: Storage = window.localStorage;
     private spaceWidget: { remove: () => void } | null = null;
     private meetingWidget: SvelteComponentDev | null = null;
-    private webexMeetingWidget = null;
 
     get accessToken() {
         return this.storage.getItem(accessTokenKey);
@@ -97,7 +96,7 @@ export class WebexIntegration {
         const timeout = 5 * 60 * 1000; // 5 min
         const start = Date.now();
 
-        while (this.isAuthorized === false && Date.now() - start < timeout) {
+        while (!this.isAuthorized && Date.now() - start < timeout) {
             await this.delay(1000);
         }
 

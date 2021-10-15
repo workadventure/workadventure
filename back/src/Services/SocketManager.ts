@@ -83,7 +83,6 @@ export class SocketManager {
     private roomsPromises = new Map<string, PromiseLike<GameRoom>>();
     private webexMeetings = new Map<string, MeetingData>();
     private webex = require("webex");
-    private assert = require("assert");
 
     constructor() {
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
@@ -103,7 +102,6 @@ export class SocketManager {
 
         this.updateUserList(room);
 
-        // TODO Do room ID's exist? Or are they just urls?
         const meet = this.webexMeetings.get(room.roomUrl);
         if (meet !== undefined) {
             this.notifyNewMeetOnRoomJoin(room, meet.meetingLink);
@@ -272,6 +270,14 @@ export class SocketManager {
     leaveRoom(room: GameRoom, user: User) {
         // leave previous room and world
         try {
+            // end webex call
+            const meet = this.webexMeetings.get(room.roomUrl);
+            if (meet) {
+                if (meet.userId === user.id) {
+                    this.webexMeetings.delete(room.roomUrl);
+                    // TODO -> Tell pusher the meeting is over
+                }
+            }
             //user leave previous world
             this.notifyStopMeetOnRoomLeave(room);
             room.leave(user);
