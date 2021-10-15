@@ -1,8 +1,9 @@
-import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
+import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
 import type { HasPlayerMovedEvent, HasPlayerMovedEventCallback } from "../Events/HasPlayerMovedEvent";
 import { Subject } from "rxjs";
 import { apiCallback } from "./registeredCallbacks";
 import { isHasPlayerMovedEvent } from "../Events/HasPlayerMovedEvent";
+import type { PlayerPropertyEvent } from "../Events/PlayerPropertyEvent";
 
 const moveStream = new Subject<HasPlayerMovedEvent>();
 
@@ -66,6 +67,20 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
             throw new Error("Player id not initialized yet. You should call WA.player.id within a WA.onInit callback.");
         }
         return uuid;
+    }
+
+    getPlayerProperty(name: string): Promise<PlayerPropertyEvent> {
+        return queryWorkadventure({
+            type: "getPlayerProperty",
+            data: name,
+        });
+    }
+
+    setPlayerProperty(property: PlayerPropertyEvent) {
+        queryWorkadventure({
+            type: "setPlayerProperty",
+            data: property,
+        }).catch((e) => console.error(e));
     }
 }
 
