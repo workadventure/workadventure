@@ -77,6 +77,11 @@ export class SocketManager {
     // List of rooms in process of loading.
     private roomsPromises = new Map<string, PromiseLike<GameRoom>>();
     private webexMeetings = new Map<string, string>();
+    private webex = require("webex");
+    private assert = require("assert");
+    private authString = "TODO"; // TODO -> Store here and get from env var
+    private clientSecret = "TODO"; // TODO -> Generate if doesn't exist, otherwise get from env var
+    private webexHandler = null;
 
     constructor() {
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
@@ -85,6 +90,21 @@ export class SocketManager {
         clientEventsEmitter.registerToClientLeave((clientUUid: string, roomId: string) => {
             gaugeManager.decNbClientPerRoomGauge(roomId);
         });
+        // Webex
+        try {
+            this.webexHandler = this.webex.init({
+                config: {
+                    authorizationString: this.authString, // Is this the link to redirect to to log in?
+                    client_secret: this.clientSecret, // Would it be possible to log in as the user?
+                },
+            });
+            this.webex.config.logger.level = "debug";
+            this.webex.meetings.register().then(() => {
+                // Should we call the user here and then add the others to the call?
+            });
+        } catch (e) {
+            console.error("Error initializing webex! Meeting links generated from now on will not work!", e);
+        }
     }
 
     public async handleJoinRoom(
@@ -337,6 +357,7 @@ export class SocketManager {
         if (link !== undefined) {
             response.setMeetinglink(link);
         } else {
+            this.webexHandler.r;
             // TODO actually make meeting here
             response.setMeetinglink("[TODO] Some Link That's Already Been Generated");
         }

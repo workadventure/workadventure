@@ -555,7 +555,7 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 
-    public emitWebexSessionQuery(roomId: string) {
+    public emitWebexSessionQuery(roomId: string, accessToken: string | null) {
         const webexSessionQuery = new WebexSessionQuery();
         // TODO make webex meeting, check if ok here
         webexSessionQuery.setRoomid(roomId);

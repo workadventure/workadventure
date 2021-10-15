@@ -1854,8 +1854,9 @@ ${escapedMessage}
         // TODO - remove logic for reading webex meeting info from map?
         if (webexMeetingUrl) {
             console.log("[Front] Found meeting url, sending query for update");
-            this.connection?.emitWebexSessionQuery(roomName);
+            this.connection?.emitWebexSessionQuery(roomName, webexIntegration.authWithWebex());
 
+            // TODO - Remove
             console.log("Found webex meeting url");
             webexIntegration.startMeeting(
                 webexMeetingUrl,

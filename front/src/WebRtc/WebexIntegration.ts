@@ -117,6 +117,21 @@ export class WebexIntegration {
             : Promise.reject("WEBEX_GLOBAL_SPACE_ID not configured.");
     }
 
+    // Splitting this up lets us send the auth creds back to the backend which might let us start meetings on this user's behalf!
+    public async authWithWebex(): Promise<string | null> {
+        const self = this;
+        await this.stop();
+
+        coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
+            new WebexSignIn({ target: cowebsiteDiv });
+            return Promise.resolve();
+        });
+
+        await self.waitForAuthorization();
+
+        return this.accessToken;
+    }
+
     public async startMeeting(
         meetingUrl: string | number | boolean,
         roomName: string | number | undefined | boolean = "Meeting Room",
@@ -127,15 +142,10 @@ export class WebexIntegration {
             console.error("Prop isn't a string!", { meetingUrl, roomName, userInitials, userFullName });
             throw new Error("Prop isn't a string!");
         }
-        const self = this;
-        await this.stop();
 
-        coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
-            new WebexSignIn({ target: cowebsiteDiv });
-            return Promise.resolve();
-        });
-
-        await self.waitForAuthorization();
+        if (!this.accessToken) {
+            await this.authWithWebex();
+        }
 
         coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
             new WebexVideoChat({
