@@ -28,6 +28,7 @@ import type { MessageReferenceEvent } from "./ui/TriggerActionMessageEvent";
 import { isMessageReferenceEvent, isTriggerActionMessageEvent } from "./ui/TriggerActionMessageEvent";
 import type { MenuRegisterEvent, UnregisterMenuEvent } from "./ui/MenuRegisterEvent";
 import type { ChangeLayerEvent } from "./ChangeLayerEvent";
+import { isPlayerPropertyEvent } from "./PlayerPropertyEvent";
 import type { ChangeZoneEvent } from "./ChangeZoneEvent";
 import { isColorEvent } from "./ColorEvent";
 
@@ -61,7 +62,7 @@ export type IframeEventMap = {
     registerMenu: MenuRegisterEvent;
     unregisterMenu: UnregisterMenuEvent;
     setTiles: SetTilesEvent;
-    modifyEmbeddedWebsite: Partial<EmbeddedWebsite>; // Note: name should be compulsory in fact
+    modifyEmbeddedWebsite: Partial<EmbeddedWebsite>; // Note: name should be compulsory in fact;
 };
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;
@@ -151,6 +152,14 @@ export const iframeQueryMapTypeGuards = {
     },
     createEmbeddedWebsite: {
         query: isCreateEmbeddedWebsiteEvent,
+        answer: tg.isUndefined,
+    },
+    getPlayerProperty: {
+        query: tg.isString,
+        answer: isPlayerPropertyEvent,
+    },
+    setPlayerProperty: {
+        query: isPlayerPropertyEvent,
         answer: tg.isUndefined,
     },
     setPlayerOutline: {

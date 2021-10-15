@@ -3,6 +3,7 @@ import type { HasPlayerMovedEvent, HasPlayerMovedEventCallback } from "../Events
 import { Subject } from "rxjs";
 import { apiCallback } from "./registeredCallbacks";
 import { isHasPlayerMovedEvent } from "../Events/HasPlayerMovedEvent";
+import type { PlayerPropertyEvent } from "../Events/PlayerPropertyEvent";
 
 const moveStream = new Subject<HasPlayerMovedEvent>();
 
@@ -99,6 +100,20 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
             type: "removePlayerOutline",
             data: undefined,
         });
+    }
+
+    getPlayerProperty(name: string): Promise<PlayerPropertyEvent> {
+        return queryWorkadventure({
+            type: "getPlayerProperty",
+            data: name,
+        });
+    }
+
+    setPlayerProperty(property: PlayerPropertyEvent) {
+        queryWorkadventure({
+            type: "setPlayerProperty",
+            data: property,
+        }).catch((e) => console.error(e));
     }
 }
 

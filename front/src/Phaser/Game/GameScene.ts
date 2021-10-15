@@ -1223,6 +1223,19 @@ ${escapedMessage}
             };
         });
 
+        //TODO : move Player Properties related-code
+        iframeListener.registerAnswerer("setPlayerProperty", (event) => {
+            localUserStore.setUserProperty(event.propertyName, event.propertyValue as string);
+        });
+
+        iframeListener.registerAnswerer("getPlayerProperty", (event) => {
+            return {
+                propertyName: event,
+                propertyValue: localUserStore.getUserProperty(event),
+            };
+        });
+        //END TODO
+
         iframeListener.registerAnswerer("getState", async () => {
             // The sharedVariablesManager is not instantiated before the connection is established. So we need to wait
             // for the connection to send back the answer.
