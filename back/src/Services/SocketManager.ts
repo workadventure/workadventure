@@ -72,16 +72,18 @@ function emitZoneMessage(subMessage: SubToPusherMessage, socket: ZoneSocket): vo
     socket.write(batchMessage);
 }
 
+interface MeetingData {
+    userId: number;
+    meetingLink: string;
+}
+
 export class SocketManager {
     //private rooms = new Map<string, GameRoom>();
     // List of rooms in process of loading.
     private roomsPromises = new Map<string, PromiseLike<GameRoom>>();
-    private webexMeetings = new Map<string, string>();
+    private webexMeetings = new Map<string, MeetingData>();
     private webex = require("webex");
     private assert = require("assert");
-    private authString = "TODO"; // TODO -> Store here and get from env var
-    private clientSecret = "TODO"; // TODO -> Generate if doesn't exist, otherwise get from env var
-    private webexHandler = null;
 
     constructor() {
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
@@ -90,21 +92,6 @@ export class SocketManager {
         clientEventsEmitter.registerToClientLeave((clientUUid: string, roomId: string) => {
             gaugeManager.decNbClientPerRoomGauge(roomId);
         });
-        // Webex
-        try {
-            this.webexHandler = this.webex.init({
-                config: {
-                    authorizationString: this.authString, // Is this the link to redirect to to log in?
-                    client_secret: this.clientSecret, // Would it be possible to log in as the user?
-                },
-            });
-            this.webex.config.logger.level = "debug";
-            this.webex.meetings.register().then(() => {
-                // Should we call the user here and then add the others to the call?
-            });
-        } catch (e) {
-            console.error("Error initializing webex! Meeting links generated from now on will not work!", e);
-        }
     }
 
     public async handleJoinRoom(
@@ -117,9 +104,9 @@ export class SocketManager {
         this.updateUserList(room);
 
         // TODO Do room ID's exist? Or are they just urls?
-        const roomId = this.webexMeetings.get(room.roomUrl);
-        if (roomId !== undefined) {
-            this.notifyNewMeetOnRoomJoin(room, roomId);
+        const meet = this.webexMeetings.get(room.roomUrl);
+        if (meet !== undefined) {
+            this.notifyNewMeetOnRoomJoin(room, meet.meetingLink);
         }
 
         if (!socket.writable) {
@@ -346,20 +333,48 @@ export class SocketManager {
         return this.roomsPromises;
     }
 
-    // TODO handle webex session query
     public handleWebexSessionQuery(user: User, webexSessionQuery: WebexSessionQuery) {
         console.log("[Back] Got Webex Session Query");
         const roomId = webexSessionQuery.getRoomid();
+        const accessToken = webexSessionQuery.getAccesstoken();
         const response = new WebexSessionResponse();
         response.setRoomid(roomId);
 
-        const link = this.webexMeetings.get(roomId);
-        if (link !== undefined) {
-            response.setMeetinglink(link);
+        const meet = this.webexMeetings.get(roomId);
+        if (meet !== undefined) {
+            response.setMeetinglink(meet.meetingLink);
         } else {
-            this.webexHandler.r;
-            // TODO actually make meeting here
-            response.setMeetinglink("[TODO] Some Link That's Already Been Generated");
+            try {
+                this.webex.init({
+                    accessToken: accessToken,
+                });
+
+                this.webex.meetings.register().then(async () => {
+                    // TODO actually make meeting here
+                    const meetingRoom = await this.webex.meetings.getPersonalMeetingRoom();
+                    const meetToStore: MeetingData = {
+                        meetingLink: meetingRoom.link,
+                        userId: user.id,
+                    };
+                    this.webexMeetings.set("roomId", meetToStore);
+                    const meet = this.webexMeetings.get(roomId);
+                    if (meet) {
+                        response.setMeetinglink(meet.meetingLink);
+                    }
+                    await this.webex.meetings.unregister();
+                });
+            } catch (e) {
+                let additionalError = "";
+                try {
+                    this.webex.meetings.unregister();
+                } catch (e) {
+                    additionalError =
+                        ", additionally, while trying to unregister, another error was thrown: " + e.toString();
+                }
+                // TODO -> make message for errors
+                response.setMeetinglink("[Error] " + e.message + additionalError);
+                console.error("[Error] " + e.message + additionalError);
+            }
         }
 
         const serverToClientMessage = new ServerToClientMessage();

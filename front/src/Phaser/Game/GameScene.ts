@@ -1817,7 +1817,7 @@ ${escapedMessage}
         const webexMeetingRoomInitials = allProps.get("webexMeetingRoomInitials");
         const webexMeetingRoomFullName = allProps.get("webexMeetingRoomFullName");
 
-        console.log("webexMeetingUrl: " + meetingLink);
+        console.log("[Front] Starting AdHoc Webex call for " + meetingLink);
         webexIntegration.startMeeting(
             meetingLink,
             webexMeetingRoomName,
@@ -1834,6 +1834,7 @@ ${escapedMessage}
 
     public startJitsi(roomName: string, jwt?: string): void {
         const allProps = this.gameMap.getCurrentProperties();
+
         const jitsiConfig = this.safeParseJSONstring(allProps.get("jitsiConfig") as string | undefined, "jitsiConfig");
         const jitsiInterfaceConfig = this.safeParseJSONstring(
             allProps.get("jitsiInterfaceConfig") as string | undefined,
@@ -1845,18 +1846,27 @@ ${escapedMessage}
         const webexMeetingRoomName = allProps.get("webexMeetingRoomName");
         const webexMeetingRoomInitials = allProps.get("webexMeetingRoomInitials");
         const webexMeetingRoomFullName = allProps.get("webexMeetingRoomFullName");
+        const webexAdHoc = allProps.get("webexAdHoc");
         const jitsiWidth = allProps.get("jitsiWidth") as number | undefined;
 
         console.log("Jitsi: " + jitsiUrl);
         console.log("webexSpaceId: " + webexSpaceId);
         console.log("webexMeetingUrl: " + webexMeetingUrl);
 
-        // TODO - remove logic for reading webex meeting info from map?
-        if (webexMeetingUrl) {
+        // TODO -> throw this into its own clause and stop it from being a function
+        const startAdHoc = () => {
             console.log("[Front] Found meeting url, sending query for update");
-            this.connection?.emitWebexSessionQuery(roomName, webexIntegration.authWithWebex());
+            webexIntegration.authWithWebex().then((accessToken) => {
+                this.connection?.emitWebexSessionQuery(roomName, accessToken);
+            });
+        };
 
+        if (webexAdHoc) {
+            startAdHoc();
+        } else if (webexMeetingUrl) {
             // TODO - Remove
+            startAdHoc();
+
             console.log("Found webex meeting url");
             webexIntegration.startMeeting(
                 webexMeetingUrl,

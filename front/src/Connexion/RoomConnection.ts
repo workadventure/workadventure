@@ -261,7 +261,6 @@ export class RoomConnection implements RoomConnection {
                 this.userList = message.getUserlistmessage()?.toObject()?.userList ?? [];
                 this.dispatch(EventMessage.USER_LIST, this.userList);
             } else if (message.hasWebexsessionresponse()) {
-                // TODO - is this webex call ok?
                 console.log("[Front] Found session response in message");
                 this.dispatch(EventMessage.WEBEX_SESSION_RESPONSE, message.getWebexsessionresponse());
             } else {
@@ -557,8 +556,10 @@ export class RoomConnection implements RoomConnection {
 
     public emitWebexSessionQuery(roomId: string, accessToken: string | null) {
         const webexSessionQuery = new WebexSessionQuery();
-        // TODO make webex meeting, check if ok here
         webexSessionQuery.setRoomid(roomId);
+        if (accessToken) {
+            webexSessionQuery.setAccesstoken(accessToken);
+        }
         const clientToServerMessage = new ClientToServerMessage();
         clientToServerMessage.setWebexquery(webexSessionQuery);
         console.log("[Front] Sending query for room " + roomId);
