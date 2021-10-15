@@ -1186,26 +1186,6 @@ ${escapedMessage}
             layoutManagerActionStore.removeAction(message.uuid);
         });
 
-        this.iframeSubscriptionList.push(
-            iframeListener.modifyEmbeddedWebsiteStream.subscribe((embeddedWebsite) => {
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-                // TODO
-            })
-        );
     }
 
     private setPropertyLayer(
