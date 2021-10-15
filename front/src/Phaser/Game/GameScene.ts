@@ -290,6 +290,12 @@ export class GameScene extends DirtyScene {
                         this.onMapLoad(data);
                     }
                 );
+                // If the map has already been loaded as part of another GameScene, the "on load" event will not be triggered.
+                // In this case, we check in the cache to see if the map is here and trigger the event manually.
+                if (this.cache.tilemap.exists(this.MapUrlFile)) {
+                    const data = this.cache.tilemap.get(this.MapUrlFile);
+                    this.onMapLoad(data);
+                }
                 return;
             }
 
@@ -1185,7 +1191,6 @@ ${escapedMessage}
         iframeListener.registerAnswerer("removeActionMessage", (message) => {
             layoutManagerActionStore.removeAction(message.uuid);
         });
-
     }
 
     private setPropertyLayer(
