@@ -62,11 +62,13 @@ export abstract class Character extends Container {
             .then((textures) => {
                 this.addTextures(textures, frame);
                 this.invisible = false;
+                this.playAnimation(direction, moving);
             })
             .catch(() => {
                 return lazyLoadPlayerCharacterTextures(scene.load, ["color_22", "eyes_23"]).then((textures) => {
                     this.addTextures(textures, frame);
                     this.invisible = false;
+                    this.playAnimation(direction, moving);
                 });
             });
 
@@ -108,8 +110,6 @@ export abstract class Character extends Container {
         this.getBody().setSize(16, 16); //edit the hitbox to better match the character model
         this.getBody().setOffset(0, 8);
         this.setDepth(-1);
-
-        this.playAnimation(direction, moving);
 
         if (typeof companion === "string") {
             this.addCompanion(companion, companionTexturePromise);
