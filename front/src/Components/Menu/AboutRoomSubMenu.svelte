@@ -51,6 +51,7 @@
             await navigator.share(shareData);
         } catch (err) {
             console.error('Error: ' + err);
+            copyLink();
         }
     }
 </script>
@@ -63,6 +64,7 @@
     </section>
     <section class="is-mobile">
         <h3>Share the link of the room !</h3>
+        <input type="hidden" readonly bind:this={HTMLShareLink} value={location.toString()}>
         <button type="button" class="nes-btn is-primary" on:click={shareLink}>Share</button>
     </section>
     <h2>Information on the map</h2>
