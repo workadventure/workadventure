@@ -40,6 +40,7 @@ WA.chat.onChatMessage((message => {
 
 WA.room.onEnterZone('myTrigger', () => {
     WA.chat.sendChatMessage("Don't step on my carpet!", 'Poly Parrot');
+    WA.chat.sendChatMessage("Yeah, don't step on her carpet!", 'Peter Parrot');
 })
 
 WA.room.onLeaveZone('popupZone', () => {
