@@ -194,10 +194,10 @@
     semver "^7.3.2"
     tsutils "^3.17.1"
 
-"@workadventure/tiled-map-type-guard@^1.0.2":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@workadventure/tiled-map-type-guard/-/tiled-map-type-guard-1.0.2.tgz#4171550f6cd71be19791faef48360d65d698bcb0"
-  integrity sha512-RCtygGV5y9cb7QoyGMINBE9arM5pyXjkxvXgA5uXEv4GDbXKorhFim/rHgwbVR+eFnVF3rDgWbRnk3DIaHt+lQ==
+"@workadventure/tiled-map-type-guard@^1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@workadventure/tiled-map-type-guard/-/tiled-map-type-guard-1.0.3.tgz#62c2061cacbe1360b84162af0b7e4639ed8bfa7e"
+  integrity sha512-pUMxBBZHYAFkpnGWZAVAE8+M+Wn9UtzqZhXvBBBbB1gEakHIka7ahdTGfh0DgRaWrVszVXOP3tf49Dhdmn9pDg==
   dependencies:
     generic-type-guard "^3.4.1"
 
