@@ -1,15 +1,18 @@
 import { PlayerAnimationDirections } from "./Animation";
 import type { GameScene } from "../Game/GameScene";
-import { UserInputEvent, UserInputManager } from "../UserInput/UserInputManager";
+import { ActiveEventList, UserInputEvent, UserInputManager } from "../UserInput/UserInputManager";
 import { Character } from "../Entity/Character";
+import type { RemotePlayer } from "../Entity/RemotePlayer";
 import { userMovingStore } from "../../Stores/GameStore";
 
 export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";
 
 export class Player extends Character {
-    private previousDirection: string = PlayerAnimationDirections.Down;
+    private previousDirection: PlayerAnimationDirections = PlayerAnimationDirections.Down;
     private wasMoving: boolean = false;
+    private timeCounter: number = 0;
+    private follow: { followPlayer: RemotePlayer; direction: PlayerAnimationDirections } | null = null;
 
     constructor(
         Scene: GameScene,
@@ -29,17 +32,17 @@ export class Player extends Character {
         this.getBody().setImmovable(false);
     }
 
-    moveUser(delta: number): void {
+    private inputStep(activeEvents: ActiveEventList, delta: number) {
         //if user client on shift, camera and player speed
         let direction = null;
         let moving = false;
 
-        const activeEvents = this.userInputManager.getEventListForGameTick();
         const speedMultiplier = activeEvents.get(UserInputEvent.SpeedUp) ? 25 : 9;
         const moveAmount = speedMultiplier * 20;
 
         let x = 0;
         let y = 0;
+
         if (activeEvents.get(UserInputEvent.MoveUp)) {
             y = -moveAmount;
             direction = PlayerAnimationDirections.Up;
@@ -49,6 +52,7 @@ export class Player extends Character {
             direction = PlayerAnimationDirections.Down;
             moving = true;
         }
+
         if (activeEvents.get(UserInputEvent.MoveLeft)) {
             x = -moveAmount;
             direction = PlayerAnimationDirections.Left;
@@ -58,6 +62,7 @@ export class Player extends Character {
             direction = PlayerAnimationDirections.Right;
             moving = true;
         }
+
         moving = moving || activeEvents.get(UserInputEvent.JoystickMove);
 
         if (x !== 0 || y !== 0) {
@@ -89,8 +94,102 @@ export class Player extends Character {
         if (direction !== null) {
             this.previousDirection = direction;
         }
+
         this.wasMoving = moving;
         userMovingStore.set(moving);
+    }
+
+    private followStep(activeEvents: ActiveEventList, delta: number) {
+        if (this.follow === null) {
+            return;
+        }
+
+        this.timeCounter += delta;
+        if (this.timeCounter < 128) {
+            return;
+        }
+        this.timeCounter = 0;
+
+        const xDist = this.follow.followPlayer.x - this.x;
+        const yDist = this.follow.followPlayer.y - this.y;
+
+        const distance = Math.pow(xDist, 2) + Math.pow(yDist, 2);
+
+        if (distance < 650) {
+            this.stop();
+        } else {
+            const moveAmount = 9 * 20;
+            const xDir = xDist / Math.sqrt(distance);
+            const yDir = yDist / Math.sqrt(distance);
+
+            this.move(xDir * moveAmount, yDir * moveAmount);
+
+            if (Math.abs(xDist) > Math.abs(yDist)) {
+                if (xDist < 0) {
+                    this.follow.direction = PlayerAnimationDirections.Left;
+                } else {
+                    this.follow.direction = PlayerAnimationDirections.Right;
+                }
+            } else {
+                if (yDist < 0) {
+                    this.follow.direction = PlayerAnimationDirections.Up;
+                } else {
+                    this.follow.direction = PlayerAnimationDirections.Down;
+                }
+            }
+        }
+
+        this.emit(hasMovedEventName, {
+            moving: true,
+            direction: this.follow.direction,
+            x: this.x,
+            y: this.y,
+        });
+
+        this.previousDirection = this.follow.direction;
+
+        this.wasMoving = true;
+        userMovingStore.set(true);
+    }
+
+    moveUser(delta: number): void {
+        const activeEvents = this.userInputManager.getEventListForGameTick();
+
+        if (activeEvents.get(UserInputEvent.Interact)) {
+            const sortedPlayers = Array.from(this.scene.MapPlayersByKey.values()).sort((p1, p2) => {
+                const distToP1 = Math.pow(p1.x - this.x, 2) + Math.pow(p1.y - this.y, 2);
+                const distToP2 = Math.pow(p2.x - this.x, 2) + Math.pow(p2.y - this.y, 2);
+                if (distToP1 > distToP2) {
+                    return 1;
+                } else if (distToP1 < distToP2) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            });
+
+            if (typeof sortedPlayers !== "undefined" && sortedPlayers.length > 0) {
+                this.follow = {
+                    followPlayer: sortedPlayers[0],
+                    direction: this.previousDirection,
+                };
+            }
+        }
+
+        if (
+            activeEvents.get(UserInputEvent.MoveUp) ||
+            activeEvents.get(UserInputEvent.MoveDown) ||
+            activeEvents.get(UserInputEvent.MoveLeft) ||
+            activeEvents.get(UserInputEvent.MoveRight)
+        ) {
+            this.follow = null;
+        }
+
+        if (this.follow === null) {
+            this.inputStep(activeEvents, delta);
+        } else {
+            this.followStep(activeEvents, delta);
+        }
     }
 
     public isMoving(): boolean {
