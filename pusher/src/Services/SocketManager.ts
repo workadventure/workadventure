@@ -32,7 +32,6 @@ import {
     VariableMessage,
     ViewportMessage,
     WebexSessionQuery,
-    WebexSessionResponse,
     WebRtcSignalToServerMessage,
     WorldConnexionMessage,
     WorldFullMessage,
@@ -51,7 +50,6 @@ import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface"
 import { WebSocket } from "uWebSockets.js";
 import { isRoomRedirect } from "./AdminApi/RoomRedirect";
 import { CharacterTexture } from "./AdminApi/CharacterTexture";
-import { User } from "../../../back/src/Model/User";
 
 const debug = Debug("socket");
 
@@ -67,16 +65,8 @@ export interface AdminSocketData {
     users: AdminSocketUsersList;
 }
 
-interface MeetingData {
-    userId: number;
-    meetingLink: string;
-}
-
 export class SocketManager implements ZoneEventListener {
     private rooms: Map<string, PusherRoom> = new Map<string, PusherRoom>();
-    private webexMeetings = new Map<string, MeetingData>();
-    private webex = require("webex");
-    private assert = require("assert");
 
     constructor() {
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
@@ -404,54 +394,11 @@ export class SocketManager implements ZoneEventListener {
         return this.rooms;
     }
 
-    public handleWebexSessionQuery(user: User, webexSessionQuery: WebexSessionQuery) {
-        console.log("[Back] Got Webex Session Query");
-        const roomId = webexSessionQuery.getRoomid();
-        const accessToken = webexSessionQuery.getAccesstoken();
-        const response = new WebexSessionResponse();
-        response.setRoomid(roomId);
-
-        const meet = this.webexMeetings.get(roomId);
-        if (meet !== undefined) {
-            response.setMeetinglink(meet.meetingLink);
-        } else {
-            try {
-                this.webex.init({
-                    accessToken: accessToken,
-                });
-
-                this.webex.meetings.register().then(async () => {
-                    // TODO actually make meeting here
-                    const meetingRoom = await this.webex.meetings.getPersonalMeetingRoom();
-                    const meetToStore: MeetingData = {
-                        meetingLink: meetingRoom.link,
-                        userId: user.id,
-                    };
-                    this.webexMeetings.set("roomId", meetToStore);
-                    const meet = this.webexMeetings.get(roomId);
-                    if (meet) {
-                        response.setMeetinglink(meet.meetingLink);
-                    }
-                    await this.webex.meetings.unregister();
-                });
-            } catch (e) {
-                let additionalError = "";
-                try {
-                    this.webex.meetings.unregister();
-                } catch (e) {
-                    additionalError =
-                        ", additionally, while trying to unregister, another error was thrown: " + e.toString();
-                }
-                // TODO -> make message for errors
-                response.setMeetinglink("[Error] " + e.message + additionalError);
-                console.error("[Error] " + e.message + additionalError);
-            }
-        }
-
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setWebexsessionresponse(response);
-        console.log("[Back] Responding to query for room " + roomId + " with" + response.getMeetinglink());
-        user.socket.write(serverToClientMessage);
+    public handleWebexSessionQuery(client: ExSocketInterface, webexSessionQuery: WebexSessionQuery) {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setWebexsessionquery(webexSessionQuery);
+        client.backConnection.write(pusherToBackMessage);
+        return;
     }
 
     public handleQueryJitsiJwtMessage(client: ExSocketInterface, queryJitsiJwtMessage: QueryJitsiJwtMessage) {

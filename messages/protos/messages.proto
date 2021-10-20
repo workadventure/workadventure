@@ -394,6 +394,7 @@ message PusherToBackMessage {
     BanUserMessage banUserMessage = 13;
     EmotePromptMessage emotePromptMessage = 14;
     VariableMessage variableMessage = 15;
+    WebexSessionQuery webexSessionQuery = 16;
   }
 }
 
