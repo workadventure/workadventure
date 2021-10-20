@@ -351,6 +351,13 @@
   resolved "https://registry.yarnpkg.com/@types/long/-/long-4.0.1.tgz#459c65fa1867dafe6a8f322c4c51695663cc55e9"
   integrity sha512-5tXH6Bx/kNGd3MgffdmP4dy2Z+G4eaXw0SE81Tq3BNadtnMR5/ySMzX4SLEzHJzSmPNn4HIdpQsBvXMUykr58w==
 
+"@types/ltx@*":
+  version "2.8.2"
+  resolved "https://registry.yarnpkg.com/@types/ltx/-/ltx-2.8.2.tgz#94b1bcad0db98f7bc5d86cde23f7e4789676d3f5"
+  integrity sha512-5DaqaRC9yFzNlcHptEZWq4rV0JJe2H5/tA9P4QIpSfQobut3g1iV/G2JfbonkcGThHHM2rq7YJ7upxE/j416Ig==
+  dependencies:
+    "@types/node" "*"
+
 "@types/mime@^1":
   version "1.3.2"
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-1.3.2.tgz#93e25bf9ee75fe0fd80b594bc4feb0e862111b5a"
@@ -509,6 +516,19 @@
     "@types/uglify-js" "*"
     "@types/webpack-sources" "*"
     source-map "^0.6.0"
+
+"@types/xmpp__jid@^1.3.1":
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/@types/xmpp__jid/-/xmpp__jid-1.3.1.tgz#1d1ef1d51d6e8396531d5dfaf8f5bd210655aec4"
+  integrity sha512-5Tj9j0tfTdBeiuXN/6RzTGgtl0XnlmkTmvzP3A2vTa3tHT2ydgQGtoIN6f03fgP/lcXlkH4XgSiEm2rAC2lG6g==
+
+"@types/xmpp__xml@^0.6.1":
+  version "0.6.1"
+  resolved "https://registry.yarnpkg.com/@types/xmpp__xml/-/xmpp__xml-0.6.1.tgz#985a4344a6d9a4cec3890b2484b7b3699aed4958"
+  integrity sha512-/O8QvvBrXKyXYOyPe0slIDFFOae8XtPeBF2OW3bUjvdXHL+/G8QuoCXQg5tg2F+SHkZjp9ufieaj64l7q8tePw==
+  dependencies:
+    "@types/ltx" "*"
+    "@types/node" "*"
 
 "@typescript-eslint/eslint-plugin@^5.6.0":
   version "5.6.0"
@@ -717,6 +737,18 @@
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/@webpack-cli/serve/-/serve-1.4.0.tgz#f84fd07bcacefe56ce762925798871092f0f228e"
   integrity sha512-xgT/HqJ+uLWGX+Mzufusl3cgjAcnqYYskaB7o0vRcwOEfuu6hMzSILQpnIzFMGsTaeaX4Nnekl+6fadLbl1/Vg==
+
+"@xmpp/jid@^0.13.0":
+  version "0.13.0"
+  resolved "https://registry.yarnpkg.com/@xmpp/jid/-/jid-0.13.0.tgz#db035d6b2e671732b473e488370bab9cff0eec87"
+  integrity sha512-R8XkQOLK7V+wDiXozc9VzoACb4+XPR6K8zno1fur9le7AnUrX/vUvb8/ZcvenFNWVYplvZS6h9GkZPPEGvmUyQ==
+
+"@xmpp/xml@^0.13.0":
+  version "0.13.0"
+  resolved "https://registry.yarnpkg.com/@xmpp/xml/-/xml-0.13.0.tgz#82193b3d0094c899f11235a1a0865f07f09542de"
+  integrity sha512-bgKaUzzJXp8nXCQPzVRJLy1XZQlLrcmjzUe1V7127NcXJddEgk1Ie/esVhh1BUMlPgRdl7BCRQkYe40S6KuuXw==
+  dependencies:
+    ltx "^3.0.0"
 
 "@xtuc/ieee754@^1.2.0":
   version "1.2.0"
@@ -3791,6 +3823,11 @@ lru-cache@^6.0.0:
   integrity sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==
   dependencies:
     yallist "^4.0.0"
+
+ltx@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/ltx/-/ltx-3.0.0.tgz#f2a2260814165c5e28d455f9f7db2178ed295187"
+  integrity sha512-bu3/4/ApUmMqVNuIkHaRhqVtEi6didYcBDIF56xhPRCzVpdztCipZ62CUuaxMlMBUzaVL93+4LZRqe02fuAG6A==
 
 make-error@^1.1.1:
   version "1.3.6"

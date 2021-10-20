@@ -21,6 +21,7 @@ import {
     FollowConfirmationMessage,
     FollowAbortMessage,
     VariableMessage,
+    XmppMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { TemplatedApp } from "uWebSockets.js";
@@ -493,6 +494,11 @@ export class IoSocketController {
                     );
                 } else if (message.hasFollowabortmessage()) {
                     socketManager.handleFollowAbort(client, message.getFollowabortmessage() as FollowAbortMessage);
+                } else if (message.hasXmppmessage()) {
+                    socketManager.handleXmppMessage(
+                        client,
+                        message.getXmppmessage() as XmppMessage
+                    );
                 }
 
                 /* Ok is false if backpressure was built up, wait for drain */

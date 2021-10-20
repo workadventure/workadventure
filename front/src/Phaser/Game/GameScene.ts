@@ -92,6 +92,9 @@ import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStor
 import { getColorRgbFromHue } from "../../WebRtc/ColorGenerator";
 import Camera = Phaser.Cameras.Scene2D.Camera;
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
+import xml from "@xmpp/xml";
+import {XmppClient} from "../../Xmpp/XmppClient";
+
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -211,6 +214,7 @@ export class GameScene extends DirtyScene {
     private loader: Loader;
     private lastCameraEvent: WasCameraUpdatedEvent | undefined;
     private firstCameraUpdateSent: boolean = false;
+    private xmppClient!: XmppClient;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -871,6 +875,9 @@ export class GameScene extends DirtyScene {
                 //         iframeListener.sendLeaveLayerEvent(layer.name);
                 //     });
                 // });
+
+                // Connect to XMPP
+                this.xmppClient = new XmppClient(this.connection);
             })
             .catch((e) => console.error(e));
     }
@@ -1533,6 +1540,7 @@ ${escapedMessage}
         this.stopJitsi();
         audioManagerFileStore.unloadAudio();
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
+        this.xmppClient?.close();
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
         this.simplePeer?.unregister();

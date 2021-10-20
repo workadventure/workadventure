@@ -38,6 +38,7 @@ import {
     ErrorMessage,
     WorldFullMessage,
     PlayerDetailsUpdatedMessage,
+    XmppMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { ADMIN_API_URL, JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
@@ -441,6 +442,7 @@ export class SocketManager implements ZoneEventListener {
             room.tags = data.tags;
             room.policyType = Number(data.policy_type);
             room.groupId = data.groupId as unknown as string;
+            //room.mucRoomUrls = [  ]
         }
     }
 
@@ -694,6 +696,13 @@ export class SocketManager implements ZoneEventListener {
                 return;
             });
         }
+    }
+
+    handleXmppMessage(client: ExSocketInterface, xmppMessage: XmppMessage) {
+        if (client.xmppClient === undefined) {
+            throw new Error('Trying to send a message from client to server but the XMPP connection is not established yet! There is a race condition.');
+        }
+        client.xmppClient.send(xmppMessage.getStanza()).catch(e => console.error(e));
     }
 }
 

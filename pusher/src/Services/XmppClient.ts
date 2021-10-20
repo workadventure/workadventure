@@ -1,8 +1,10 @@
 import { ExSocketInterface } from "_Model/Websocket/ExSocketInterface";
 import {v4} from "uuid";
+import {ServerToClientMessage, SubMessage, XmppMessage, XmppSettingsMessage} from "../Messages/generated/messages_pb";
 
 const { client, xml, jid } = require("@xmpp/client");
 const debug = require("@xmpp/debug");
+const parse = require("@xmpp/xml/lib/parse");
 
 interface JID {
     _domain: string;
@@ -25,12 +27,12 @@ export class XmppClient {
     private address!: JID;
     private clientPromise!: Promise<XmppSocket>;
     private clientID: string;
-    constructor(clientData: ExSocketInterface) {
-        this.clientID = clientData.userUuid + "@ejabberd";
+    constructor(private clientSocket: ExSocketInterface, initialMucRooms: string[]) {
+        this.clientID = clientSocket.userUuid + "@ejabberd";
         this.clientPromise = new Promise((res, rej) => {
             const xmpp = client({
                 service: "ws://ejabberd:5443/ws",
-                username: clientData.userUuid,
+                username: clientSocket.userUuid,
                 resource: v4().toString(), //"pusher",
                 password: "abc",
             });
@@ -46,7 +48,21 @@ export class XmppClient {
             });
             xmpp.on("online", async (address: JID) => {
                 this.address = address;
+
                 await xmpp.send(xml("presence"));
+
+                const xmppSettings = new XmppSettingsMessage();
+                xmppSettings.setJid(address.toString());
+                xmppSettings.setConferencedomain('conference.ejabberd');
+                xmppSettings.setRoomurlsList(initialMucRooms);
+
+                const serverToClientMessage = new ServerToClientMessage();
+                serverToClientMessage.setXmppsettingsmessage(xmppSettings);
+
+                if (!this.clientSocket.disconnecting) {
+                    this.clientSocket.send(serverToClientMessage.serializeBinary().buffer, true);
+                }
+
                 res(xmpp);
             });
 
@@ -58,26 +74,18 @@ export class XmppClient {
 
             xmpp.on("stanza", async (stanza: any) => {
                 console.log("stanza", stanza.toString());
+
+                const xmppMessage = new XmppMessage();
+                xmppMessage.setStanza(stanza.toString());
+
+                const subMessage = new SubMessage();
+                subMessage.setXmppmessage(xmppMessage);
+
+                this.clientSocket.emitInBatch(subMessage);
             });
         });
     }
 
-    private getFullJID() {
-        return this.address._local + "@" + this.address._domain + "/" + this.address._resource;
-    }
-
-    joinRoom(resource: string, nickname: string): Promise<XmppSocket> {
-        return this.clientPromise.then(async (xmpp) => {
-
-            const message = xml(
-                "presence",
-                { to: "testroom@conference.ejabberd/"+nickname, from: this.getFullJID() },
-                xml("x", { xmlns: "http://jabber.org/protocol/muc" })
-            );
-            await xmpp.send(message);
-            return xmpp;
-        });
-    }
 
     /*sendMessage() {
         return this.clientPromise.then((xmpp) => {
@@ -101,5 +109,11 @@ export class XmppClient {
             await xmpp.stop();
             return xmpp;
         });
+    }
+
+    async send(stanza: string): Promise<void> {
+        const client = await this.clientPromise;
+        const ctx = parse(stanza);
+        return client.send(ctx);
     }
 }

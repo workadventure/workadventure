@@ -28,16 +28,20 @@ export class PusherRoom {
     public tags: string[];
     public policyType: GameRoomPolicyTypes;
     public groupId: string | null = null;
+    public mucRoomUrls: string[];
 
     private versionNumber: number = 1;
     private backConnection!: ClientReadableStream<BatchToPusherRoomMessage>;
     private isClosing: boolean = false;
     private listeners: Set<ExSocketInterface> = new Set<ExSocketInterface>();
-    private xmppListeners: Map<string, XmppClient> = new Map();
+    //private xmppListeners: Map<string, XmppClient> = new Map();
 
     constructor(public readonly roomUrl: string, private socketListener: ZoneEventListener) {
         this.tags = [];
         this.policyType = GameRoomPolicyTypes.ANONYMOUS_POLICY;
+
+        // By default, create a MUC room whose name is the name of the room.
+        this.mucRoomUrls = [ roomUrl ];
 
         // A zone is 10 sprites wide.
         this.positionNotifier = new PositionDispatcher(this.roomUrl, 320, 320, this.socketListener);
@@ -50,19 +54,23 @@ export class PusherRoom {
     public async join(socket: ExSocketInterface) {
         this.listeners.add(socket);
 
-        const xmppClient = new XmppClient(socket);
-        await xmppClient.joinRoom(this.groupId || this.roomUrl, socket.name);
-        this.xmppListeners.set(socket.userUuid, xmppClient);
+        const xmppClient = new XmppClient(socket, this.mucRoomUrls);
+        //await xmppClient.joinRoom(this.groupId || this.roomUrl, socket.name);
+
+        //this.xmppListeners.set(socket.userUuid, xmppClient);
+        socket.xmppClient = xmppClient;
+        socket.pusherRoom = this;
     }
 
     public leave(socket: ExSocketInterface) {
         this.positionNotifier.removeViewport(socket);
         this.listeners.delete(socket);
-        const client = this.xmppListeners.get(socket.userUuid);
-        if (client) {
-            client.close();
-            this.xmppListeners.delete(socket.userUuid);
+        //const client = this.xmppListeners.get(socket.userUuid);
+        if (socket.xmppClient) {
+            socket.xmppClient.close().catch((e) => console.error(e));
+            //this.xmppListeners.delete(socket.userUuid);
         }
+        socket.pusherRoom = undefined;
     }
 
     public canAccess(userTags: string[]): boolean {
@@ -153,9 +161,12 @@ export class PusherRoom {
         this.backConnection.cancel();
 
         debug("Closing connections to XMPP server for room %s", this.roomUrl);
-        for (const [id, client] of this.xmppListeners) {
+        /*for (const [id, client] of this.xmppListeners) {
             client.close();
+        }*/
+        for (const client of this.listeners) {
+            client.xmppClient?.close().catch((e) => console.error(e));
         }
-        this.xmppListeners.clear();
+        //this.xmppListeners.clear();
     }
 }

@@ -45,6 +45,7 @@
     import { followStateStore } from "../Stores/FollowStore";
     import { peerStore } from "../Stores/PeerStore";
     import FollowMenu from "./FollowMenu/FollowMenu.svelte";
+    import {mucRoomsVisibilityStore} from "../Stores/MucRoomsStore";
 
     export let game: Game;
 </script>

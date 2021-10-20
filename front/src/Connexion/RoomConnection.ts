@@ -52,10 +52,14 @@ import {
     PositionMessage_Direction,
     SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
     PingMessage as PingMessageTsProto,
+    XmppMessage,
+    XmppSettingsMessage,
 } from "../Messages/ts-proto-generated/messages";
 import { Subject } from "rxjs";
 import { OpenPopupEvent } from "../Api/Events/OpenPopupEvent";
 import { match } from "assert";
+import type xml from "@xmpp/xml";
+const parse = require("@xmpp/xml/lib/parse");
 
 const manualPingDelay = 20000;
 
@@ -137,6 +141,12 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _playerDetailsUpdatedMessageStream = new Subject<PlayerDetailsUpdatedMessageTsProto>();
     public readonly playerDetailsUpdatedMessageStream = this._playerDetailsUpdatedMessageStream.asObservable();
+
+    private readonly _xmppMessageStream = new Subject<XmppMessage>();
+    public readonly xmppMessageStream = this._playerDetailsUpdatedMessageStream.asObservable();
+
+    private readonly _xmppSettingsMessageStream = new Subject<XmppMessage>();
+    public readonly xmppSettingsMessageStream = this._playerDetailsUpdatedMessageStream.asObservable();
 
     private readonly _connectionErrorStream = new Subject<CloseEvent>();
     public readonly connectionErrorStream = this._connectionErrorStream.asObservable();
@@ -301,6 +311,10 @@ export class RoomConnection implements RoomConnection {
                                 this._variableMessageStream.next({ name, value });
                                 break;
                             }
+                            case "xmppMessage": {
+                                this._xmppMessageStream.next(subMessage.xmppMessage);
+                                break;
+                            }
                             default: {
                                 // Security check: if we forget a "case", the line below will catch the error at compile-time.
                                 const tmp: never = subMessage;
@@ -445,6 +459,10 @@ export class RoomConnection implements RoomConnection {
                     } else {
                         followUsersStore.removeFollower(message.followAbortMessage.follower);
                     }
+                    break;
+                }
+                case "xmppSettingsMessage": {
+                    this._xmppSettingsMessageStream.next(message.xmppSettingsMessage);
                     break;
                 }
                 case "errorMessage": {
@@ -780,6 +798,25 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(bytes);
     }
 
+    public onXmppMessage(callback: (message: xml.Element) => void): void {
+        this.onMessage(EventMessage.XMPP_MESSAGE, (message: XmppMessage) => {
+            const xml = parse(message);
+            callback(xml);
+        });
+    }
+
+    private lastXmppSettings: XmppSettingsMessage|undefined;
+
+    public onXmppSettings(callback: (jid: string, conferenceDomain: string, mucRoomUrls: string[]) => void): void {
+        this.onMessage(EventMessage.XMPP_SETTINGS, (message: XmppSettingsMessage) => {
+            callback(message.getJid(), message.getConferencedomain(), message.getRoomurlsList());
+        });
+        // In case we register AFTER the settings have been saved, let's call the callback anyway.
+        if (this.lastXmppSettings) {
+            callback(this.lastXmppSettings.getJid(), this.lastXmppSettings.getConferencedomain(), this.lastXmppSettings.getRoomurlsList());
+        }
+    }
+
     public hasTag(tag: string): boolean {
         return this.tags.includes(tag);
     }
@@ -862,5 +899,18 @@ export class RoomConnection implements RoomConnection {
 
     public get userRoomToken(): string | undefined {
         return this._userRoomToken;
+    }
+
+    public emitXmlMessage(xml: xml.Element): void {
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "xmppMessage",
+                xmppMessage: {
+                    stanza: xml.toString(),
+                },
+            },
+        }).finish();
+
+        this.socket.send(bytes);
     }
 }
