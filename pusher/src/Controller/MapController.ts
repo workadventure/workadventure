@@ -2,9 +2,9 @@ import { HttpRequest, HttpResponse, TemplatedApp } from "uWebSockets.js";
 import { BaseController } from "./BaseController";
 import { parse } from "query-string";
 import { adminApi } from "../Services/AdminApi";
-import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
+import { ADMIN_API_URL, DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
 import { GameRoomPolicyTypes } from "../Model/PusherRoom";
-import { MapDetailsData } from "../Services/AdminApi/MapDetailsData";
+import { isMapDetailsData, MapDetailsData } from "../Services/AdminApi/MapDetailsData";
 import { socketManager } from "../Services/SocketManager";
 import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { v4 } from "uuid";
@@ -64,6 +64,7 @@ export class MapController extends BaseController {
                         tags: [],
                         textures: [],
                         contactPage: undefined,
+                        authenticationMandatory: DISABLE_ANONYMOUS,
                     } as MapDetailsData)
                 );
 
@@ -86,6 +87,10 @@ export class MapController extends BaseController {
                         }
                     }
                     const mapDetails = await adminApi.fetchMapDetails(query.playUri as string, userId);
+
+                    if (isMapDetailsData(mapDetails) && DISABLE_ANONYMOUS) {
+                        (mapDetails as MapDetailsData).authenticationMandatory = true;
+                    }
 
                     res.writeStatus("200 OK");
                     this.addCorsHeaders(res);
