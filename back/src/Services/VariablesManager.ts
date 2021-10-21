@@ -174,7 +174,16 @@ export class VariablesManager {
         if (this.variableObjects) {
             variableObject = this.variableObjects.get(name);
             if (variableObject === undefined) {
-                throw new Error('Trying to set a variable "' + name + '" that is not defined as an object in the map.');
+                console.log('Trying to set a variable "' + name + '" that is not defined as an object in the map.');
+
+                //Force save variable
+                variablesRepository.saveVariable(this.roomUrl, name, value);
+                variableObject = this.variableObjects.get(name);
+                if (variableObject === undefined) {
+                    throw new Error(
+                        'Trying to set a variable "' + name + '" that is not defined as an object in the map.'
+                    );
+                }
             }
 
             if (variableObject.writableBy && !user.tags.includes(variableObject.writableBy)) {
