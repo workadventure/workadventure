@@ -215,18 +215,13 @@ class ConnectionManager {
     }
 
     public async anonymousLogin(isBenchmark: boolean = false): Promise<void> {
-        try {
-            const data = await Axios.post(`${PUSHER_URL}/anonymLogin`).then((res) => res.data);
-            this.localUser = new LocalUser(data.userUuid, []);
-            this.authToken = data.authToken;
-            if (!isBenchmark) {
-                // In benchmark, we don't have a local storage.
-                localUserStore.saveUser(this.localUser);
-                localUserStore.setAuthToken(this.authToken);
-            }
-        } catch (error) {
-            // anonymous login failed (through 403 DISABLE_ANONYMOUS)
-            this.loadOpenIDScreen();
+        const data = await Axios.post(`${PUSHER_URL}/anonymLogin`).then((res) => res.data);
+        this.localUser = new LocalUser(data.userUuid, []);
+        this.authToken = data.authToken;
+        if (!isBenchmark) {
+            // In benchmark, we don't have a local storage.
+            localUserStore.saveUser(this.localUser);
+            localUserStore.setAuthToken(this.authToken);
         }
     }
 

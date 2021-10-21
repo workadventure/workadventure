@@ -89,7 +89,7 @@ export class MapController extends BaseController {
                     const mapDetails = await adminApi.fetchMapDetails(query.playUri as string, userId);
 
                     if (isMapDetailsData(mapDetails) && DISABLE_ANONYMOUS) {
-                        (mapDetails as MapDetailsData).authenticationMandatory = true;
+                        mapDetails.authenticationMandatory = true;
                     }
 
                     res.writeStatus("200 OK");
