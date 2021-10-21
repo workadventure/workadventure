@@ -194,18 +194,18 @@ export class SocketManager {
 
     // Useless now, will be useful again if we allow editing details in game
     /*handleSetPlayerDetails(client: UserSocket, playerDetailsMessage: SetPlayerDetailsMessage) {
-        const playerDetails = {
-            name: playerDetailsMessage.getName(),
-            characterLayers: playerDetailsMessage.getCharacterlayersList()
-        };
-        //console.log(SocketIoEvent.SET_PLAYER_DETAILS, playerDetails);
-        if (!isSetPlayerDetailsMessage(playerDetails)) {
-            emitError(client, 'Invalid SET_PLAYER_DETAILS message received: ');
-            return;
-        }
-        client.name = playerDetails.name;
-        client.characterLayers = SocketManager.mergeCharacterLayersAndCustomTextures(playerDetails.characterLayers, client.textures);
-    }*/
+      const playerDetails = {
+          name: playerDetailsMessage.getName(),
+          characterLayers: playerDetailsMessage.getCharacterlayersList()
+      };
+      //console.log(SocketIoEvent.SET_PLAYER_DETAILS, playerDetails);
+      if (!isSetPlayerDetailsMessage(playerDetails)) {
+          emitError(client, 'Invalid SET_PLAYER_DETAILS message received: ');
+          return;
+      }
+      client.name = playerDetails.name;
+      client.characterLayers = SocketManager.mergeCharacterLayersAndCustomTextures(playerDetails.characterLayers, client.textures);
+  }*/
 
     emitVideo(room: GameRoom, user: User, data: WebRtcSignalToServerMessage): void {
         //send only at user
@@ -351,13 +351,14 @@ export class SocketManager {
             response.setMeetinglink(meet.meetingLink);
         } else {
             try {
-                this.webex.init({
-                    accessToken: accessToken,
+                const Webex = this.webex.init({
+                    credentials: {
+                        access_token: accessToken, //
+                    },
                 });
 
-                this.webex.meetings.register().then(async () => {
-                    // TODO actually make meeting here
-                    const meetingRoom = await this.webex.meetings.getPersonalMeetingRoom();
+                Webex.meetings.register().then(async () => {
+                    const meetingRoom = await Webex.meetings.getPersonalMeetingRoom();
                     const meetToStore: MeetingData = {
                         meetingLink: meetingRoom.link,
                         userId: user.id,
@@ -367,19 +368,12 @@ export class SocketManager {
                     if (meet) {
                         response.setMeetinglink(meet.meetingLink);
                     }
-                    await this.webex.meetings.unregister();
+                    await Webex.meetings.unregister();
                 });
             } catch (e) {
-                let additionalError = "";
-                try {
-                    this.webex.meetings.unregister();
-                } catch (e) {
-                    additionalError =
-                        ", additionally, while trying to unregister, another error was thrown: " + e.toString();
-                }
                 // TODO -> make message for errors
-                response.setMeetinglink("[Error] " + e.message + additionalError);
-                console.error("[Error] " + e.message + additionalError);
+                response.setMeetinglink("[Error] " + e.message);
+                console.error("[Error] " + e.message);
             }
         }
 
