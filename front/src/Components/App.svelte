@@ -46,6 +46,7 @@
     import { peerStore } from "../Stores/PeerStore";
     import FollowMenu from "./FollowMenu/FollowMenu.svelte";
     import {mucRoomsVisibilityStore} from "../Stores/MucRoomsStore";
+    import MucRooms from "./Chat/MucRooms.svelte";
 
     export let game: Game;
 </script>
@@ -147,6 +148,9 @@
     {/if}
     {#if $chatVisibilityStore}
         <Chat />
+    {/if}
+    {#if $mucRoomsVisibilityStore}
+        <MucRooms></MucRooms>
     {/if}
     {#if $warningContainerStore}
         <WarningContainer />

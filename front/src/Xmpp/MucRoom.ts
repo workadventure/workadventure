@@ -5,12 +5,15 @@ import {gameManager} from "../Phaser/Game/GameManager";
 import type {Readable, Writable} from "svelte/store";
 import {writable} from "svelte/store";
 
+type UserList = Set<string>;
+export type UsersStore = Readable<UserList>;
+
 export class MucRoom {
 
-    private presenceStore: Writable<Set<string>>;
+    private presenceStore: Writable<UserList>;
 
-    constructor(private connection: RoomConnection, private roomJid: JID, private jid: string) {
-        this.presenceStore = writable<Set<string>>(new Set<string>());
+    constructor(private connection: RoomConnection, public readonly name: string, private roomJid: JID, private jid: string) {
+        this.presenceStore = writable<UserList>(new Set<string>());
     }
 
     public connect() {
@@ -64,7 +67,7 @@ export class MucRoom {
         }
     }
 
-    public getPresenceStore(): Readable<Set<string>> {
+    public getPresenceStore(): UsersStore {
         return {
             subscribe: this.presenceStore.subscribe
         }

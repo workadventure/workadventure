@@ -1,6 +1,13 @@
 import { ExSocketInterface } from "_Model/Websocket/ExSocketInterface";
 import {v4} from "uuid";
-import {ServerToClientMessage, SubMessage, XmppMessage, XmppSettingsMessage} from "../Messages/generated/messages_pb";
+import {
+    MucRoomDefinitionMessage,
+    ServerToClientMessage,
+    SubMessage,
+    XmppMessage,
+    XmppSettingsMessage
+} from "../Messages/generated/messages_pb";
+import {MucRoomDefinitionInterface} from "./AdminApi/MucRoomDefinitionInterface";
 
 const { client, xml, jid } = require("@xmpp/client");
 const debug = require("@xmpp/debug");
@@ -27,7 +34,7 @@ export class XmppClient {
     private address!: JID;
     private clientPromise!: Promise<XmppSocket>;
     private clientID: string;
-    constructor(private clientSocket: ExSocketInterface, initialMucRooms: string[]) {
+    constructor(private clientSocket: ExSocketInterface, initialMucRooms: MucRoomDefinitionInterface[]) {
         this.clientID = clientSocket.userUuid + "@ejabberd";
         this.clientPromise = new Promise((res, rej) => {
             const xmpp = client({
@@ -54,7 +61,12 @@ export class XmppClient {
                 const xmppSettings = new XmppSettingsMessage();
                 xmppSettings.setJid(address.toString());
                 xmppSettings.setConferencedomain('conference.ejabberd');
-                xmppSettings.setRoomurlsList(initialMucRooms);
+                xmppSettings.setRoomsList(initialMucRooms.map((definition) => {
+                    const mucRoomDefinitionMessage = new MucRoomDefinitionMessage();
+                    mucRoomDefinitionMessage.setName(definition.name);
+                    mucRoomDefinitionMessage.setUrl(definition.uri);
+                    return mucRoomDefinitionMessage;
+                }));
 
                 const serverToClientMessage = new ServerToClientMessage();
                 serverToClientMessage.setXmppsettingsmessage(xmppSettings);

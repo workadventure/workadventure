@@ -5,6 +5,7 @@ import {Observable, Subject, Subscription} from "rxjs";
 import {MucRoom} from "./MucRoom";
 import type {RoomConnection} from "../Connexion/RoomConnection";
 import {mucRoomsStore} from "../Stores/MucRoomsStore";
+import type {MucRoomDefinitionInterface} from "../Network/ProtobufClientUtils";
 
 export class XmppClient {
     private jid: string|undefined;
@@ -13,14 +14,17 @@ export class XmppClient {
     private rooms = new Map<string, MucRoom>();
 
     constructor(private connection: RoomConnection) {
-        connection.onXmppSettings((jid, conferenceDomain, initialRoomUrls) => {
-            this.jid = jid;
-            this.conferenceDomain = conferenceDomain;
+        connection.xmppSettingsMessageStream.subscribe((settings) => {
+            if (settings === undefined) {
+                return;
+            }
+            this.jid = settings.jid;
+            this.conferenceDomain = settings.conferenceDomain;
 
-            this.onConnect(initialRoomUrls);
+            this.onConnect(settings.rooms);
         });
 
-        connection.onXmppMessage((xml) => {
+        connection.xmppMessageStream.subscribe((xml) => {
             let handledMessage = false;
             const id = xml.getAttr('id');
             if (id) {
@@ -47,10 +51,10 @@ export class XmppClient {
 
     }
 
-    private onConnect(initialRoomUrls: string[]) {
+    private onConnect(initialRoomDefinitions: MucRoomDefinitionInterface[]) {
 
-        for (const roomName of initialRoomUrls) {
-            this.joinMuc(roomName);
+        for (const {name, url} of initialRoomDefinitions) {
+            this.joinMuc(name, url);
         }
     }
 
@@ -91,13 +95,13 @@ export class XmppClient {
         }).join('')
     }
 
-    public joinMuc(name: string): MucRoom {
+    public joinMuc(name: string, waRoomUrl: string): MucRoom {
         if (this.jid === undefined || this.conferenceDomain === undefined) {
             throw new Error('joinRoom called before we received the XMPP connection details. There is a race condition.');
         }
 
-        const roomUrl = jid(name, this.conferenceDomain);
-        const room = new MucRoom(this.connection, roomUrl, this.jid);
+        const roomUrl = jid(waRoomUrl, this.conferenceDomain);
+        const room = new MucRoom(this.connection, name, roomUrl, this.jid);
         room.connect();
         this.rooms.set(roomUrl.toString(), room);
 

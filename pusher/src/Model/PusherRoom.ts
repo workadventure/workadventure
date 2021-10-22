@@ -13,7 +13,8 @@ import {
 } from "../Messages/generated/messages_pb";
 import Debug from "debug";
 import { ClientReadableStream } from "grpc";
-import { XmppClient } from "../Services/XmppClient";
+import {XmppClient} from "../Services/XmppClient";
+import {MucRoomDefinitionInterface} from "../Services/AdminApi/MucRoomDefinitionInterface";
 
 const debug = Debug("room");
 
@@ -28,7 +29,7 @@ export class PusherRoom {
     public tags: string[];
     public policyType: GameRoomPolicyTypes;
     public groupId: string | null = null;
-    public mucRoomUrls: string[];
+    public mucRooms: MucRoomDefinitionInterface[];
 
     private versionNumber: number = 1;
     private backConnection!: ClientReadableStream<BatchToPusherRoomMessage>;
@@ -41,7 +42,10 @@ export class PusherRoom {
         this.policyType = GameRoomPolicyTypes.ANONYMOUS_POLICY;
 
         // By default, create a MUC room whose name is the name of the room.
-        this.mucRoomUrls = [ roomUrl ];
+        this.mucRooms = [ {
+            name: "Connected users",
+            uri: roomUrl
+        } ];
 
         // A zone is 10 sprites wide.
         this.positionNotifier = new PositionDispatcher(this.roomUrl, 320, 320, this.socketListener);
@@ -54,7 +58,7 @@ export class PusherRoom {
     public async join(socket: ExSocketInterface) {
         this.listeners.add(socket);
 
-        const xmppClient = new XmppClient(socket, this.mucRoomUrls);
+        const xmppClient = new XmppClient(socket, this.mucRooms);
         //await xmppClient.joinRoom(this.groupId || this.roomUrl, socket.name);
 
         //this.xmppListeners.set(socket.userUuid, xmppClient);

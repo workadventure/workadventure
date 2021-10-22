@@ -54,6 +54,7 @@ import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface"
 import { WebSocket } from "uWebSockets.js";
 import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import { CharacterTexture } from "../Messages/JsonMessages/CharacterTexture";
+import {isMapDetailsData} from "./AdminApi/MapDetailsData";
 
 const debug = Debug("socket");
 
@@ -438,11 +439,13 @@ export class SocketManager implements ZoneEventListener {
         if (isRoomRedirect(data)) {
             // TODO: if the updated room data is actually a redirect, we need to take everybody on the map
             // and redirect everybody to the new location (so we need to close the connection for everybody)
-        } else {
+        } else if (isMapDetailsData(data)) {
             room.tags = data.tags;
             room.policyType = Number(data.policy_type);
             room.groupId = data.groupId as unknown as string;
-            //room.mucRoomUrls = [  ]
+            room.mucRooms = data.mucRooms;
+        } else {
+            const _exhaustiveCheck: never = data;
         }
     }
 
