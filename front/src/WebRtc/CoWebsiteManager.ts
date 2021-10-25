@@ -442,138 +442,102 @@ class CoWebsiteManager {
         widthPercent?: number,
         position?: number
     ): Promise<CoWebsite> {
-        return new Promise((resolve, reject) => {
-            if (this.coWebsites.length < 1) {
-                this.loadMain();
-            } else if (this.coWebsites.length === 5) {
-                return reject();
-            }
 
+        return this.addCoWebsite((iframeBuffer) => {
             const iframe = document.createElement("iframe");
-
-            iframe?.classList.add("pixel");
-
-            do {
-                iframe.id = "cowebsite-iframe-" + (Math.random() + 1).toString(36).substring(7);
-            } while (iframe.id.toLowerCase().includes('jitsi') || this.getCoWebsiteById(iframe.id));
-
             iframe.src = new URL(url, base).toString()
 
             if (allowPolicy) {
                 iframe.allow = allowPolicy;
             }
 
-            const onloadPromise = new Promise<void>((resolve) => {
-                iframe.onload = () => resolve();
-            });
-
             if (allowApi) {
                 iframeListener.registerIframe(iframe);
             }
 
-            const icon = this.generateCoWebsiteIcon(iframe);
+            iframeBuffer.appendChild(iframe);
 
-            const coWebsite = {
-                iframe,
-                icon,
-                position: position ?? this.coWebsites.length,
-            };
-
-            // Iframe management on mobile
-            icon.addEventListener("click", () => {
-                if (this.isSmallScreen()) {
-                    this.moveRightPreviousCoWebsite(coWebsite, 0);
-                }
-            });
-
-            this.coWebsites.push(coWebsite);
-            this.cowebsiteSubIconsDom.appendChild(icon);
-            this.cowebsiteBufferDom.appendChild(coWebsite.iframe);
-
-            const onTimeoutPromise = new Promise<void>((resolve) => {
-                setTimeout(() => resolve(), 2000);
-            });
-
-            this.currentOperationPromise = this.currentOperationPromise
-                .then(() => Promise.race([onloadPromise, onTimeoutPromise]))
-                .then(() => {
-                    if (coWebsite.position === 0) {
-                        this.openMain();
-                        if (widthPercent) {
-                            this.widthPercent = widthPercent;
-                        }
-
-                        setTimeout(() => {
-                            this.fire();
-                            position ?
-                                this.moveRightPreviousCoWebsite(coWebsite, coWebsite.position) :
-                                this.moveCoWebsite(coWebsite, coWebsite.position);
-                        }, animationTime);
-                    } else {
-                        position ?
-                            this.moveRightPreviousCoWebsite(coWebsite, coWebsite.position) :
-                            this.moveCoWebsite(coWebsite, coWebsite.position);
-                    }
-
-                    return resolve(coWebsite);
-                })
-                .catch((err) => {
-                    console.error("Error loadCoWebsite => ", err);
-                    this.removeCoWebsiteFromStack(coWebsite);
-                    return reject();
-                });
-        });
+            return iframe;
+        }, widthPercent, position);
     }
 
-    /**
-     * Just like loadCoWebsite but the div can be filled by the user.
-     */
-    public insertCoWebsite(callback: (jitsiBuffer: HTMLDivElement) => Promise<void>, widthPercent?: number): void {
-        if (this.coWebsites.length < 1) {
-            this.loadMain();
-        } else if (this.coWebsites.length === 5) {
-            return;
-        }
+    public async addCoWebsite(
+        callback: (iframeBuffer: HTMLDivElement) => PromiseLike<HTMLIFrameElement>|HTMLIFrameElement,
+        widthPercent?: number,
+        position?: number
+    ): Promise<CoWebsite> {
+        return new Promise((resolve, reject) => {
+            if (this.coWebsites.length < 1) {
+                this.loadMain();
+            } else if (this.coWebsites.length === 5) {
+                throw new Error('Too many we')
+            }
 
-        this.currentOperationPromise = this.currentOperationPromise
-            .then(() => callback(this.cowebsiteBufferDom))
-            .then(() => {
-                const iframe = this.cowebsiteBufferDom.querySelector<HTMLIFrameElement>('[id*="jitsi" i]');
+            Promise.resolve(callback(this.cowebsiteBufferDom)).then(iframe =>{
                 iframe?.classList.add("pixel");
 
-                if (!iframe) {
-                    console.error("Error insertCoWebsite => Cannot find Iframe Element on Jitsi DOM");
-                    return;
+                if (!iframe.id) {
+                    do {
+                        iframe.id = "cowebsite-iframe-" + (Math.random() + 1).toString(36).substring(7);
+                    } while (this.getCoWebsiteById(iframe.id));
                 }
+
+                const onloadPromise = new Promise<void>((resolve) => {
+                    iframe.onload = () => resolve();
+                });
 
                 const icon = this.generateCoWebsiteIcon(iframe);
 
                 const coWebsite = {
                     iframe,
                     icon,
-                    position: 0,
+                    position: position ?? this.coWebsites.length,
                 };
+
+                // Iframe management on mobile
+                icon.addEventListener("click", () => {
+                    if (this.isSmallScreen()) {
+                        this.moveRightPreviousCoWebsite(coWebsite, 0);
+                    }
+                });
 
                 this.coWebsites.push(coWebsite);
                 this.cowebsiteSubIconsDom.appendChild(icon);
 
-                if (coWebsite.position === 0) {
-                    this.openMain();
+                const onTimeoutPromise = new Promise<void>((resolve) => {
+                    setTimeout(() => resolve(), 2000);
+                });
 
-                    if (widthPercent) {
-                        this.widthPercent = widthPercent;
-                    }
+                this.currentOperationPromise = this.currentOperationPromise
+                    .then(() => Promise.race([onloadPromise, onTimeoutPromise]))
+                    .then(() => {
+                        if (coWebsite.position === 0) {
+                            this.openMain();
+                            if (widthPercent) {
+                                this.widthPercent = widthPercent;
+                            }
 
-                    setTimeout(() => {
-                        this.fire();
-                    }, animationTime);
-                }
+                            setTimeout(() => {
+                                this.fire();
+                                position !== undefined ?
+                                    this.moveRightPreviousCoWebsite(coWebsite, coWebsite.position) :
+                                    this.moveCoWebsite(coWebsite, coWebsite.position);
+                            }, animationTime);
+                        } else {
+                            position !== undefined ?
+                                this.moveRightPreviousCoWebsite(coWebsite, coWebsite.position) :
+                                this.moveCoWebsite(coWebsite, coWebsite.position);
+                        }
 
-                this.moveRightPreviousCoWebsite(coWebsite, coWebsite.position);
-            })
-            .catch((err) => {
-                console.error("Error insertCoWebsite => ", err);
+                        return resolve(coWebsite);
+                    })
+                    .catch((err) => {
+                        console.error("Error loadCoWebsite => ", err);
+                        this.removeCoWebsiteFromStack(coWebsite);
+                        return reject();
+                    });
             });
+        });
     }
 
     public closeCoWebsite(coWebsite: CoWebsite): Promise<void> {

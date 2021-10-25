@@ -9,7 +9,7 @@ export const isOpenCoWebsiteEvent = new tg.IsInterface()
     })
     .get();
 
-export const coWebsite = new tg.IsInterface()
+export const isCoWebsite = new tg.IsInterface()
     .withProperties({
         id: tg.isString,
         position: tg.isNumber,

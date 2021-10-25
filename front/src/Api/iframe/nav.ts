@@ -1,5 +1,16 @@
 import { IframeApiContribution, sendToWorkadventure, queryWorkadventure } from "./IframeApiContribution";
 
+export class CoWebsite {
+    constructor(private readonly id: string, public readonly position: number) {}
+
+    close() {
+        return queryWorkadventure({
+            type: "closeCoWebsite",
+            data: this.id,
+        });
+    }
+}
+
 export class WorkadventureNavigationCommands extends IframeApiContribution<WorkadventureNavigationCommands> {
     callbacks = [];
 
@@ -45,8 +56,8 @@ export class WorkadventureNavigationCommands extends IframeApiContribution<Worka
         });
     }
 
-    openCoWebsite(url: string, allowApi?: boolean, allowPolicy?: string, position?: number) {
-        return queryWorkadventure({
+    async openCoWebsite(url: string, allowApi?: boolean, allowPolicy?: string, position?: number): Promise<CoWebsite> {
+        const result = await queryWorkadventure({
             type: "openCoWebsite",
             data: {
                 url,
@@ -55,13 +66,15 @@ export class WorkadventureNavigationCommands extends IframeApiContribution<Worka
                 position,
             },
         });
+        return new CoWebsite(result.id, result.position);
     }
 
-    getCoWebsites() {
-        return queryWorkadventure({
+    async getCoWebsites(): Promise<CoWebsite[]> {
+        const result = await queryWorkadventure({
             type: "getCoWebsites",
             data: undefined
         });
+        return result.map((cowebsiteEvent) => new CoWebsite(cowebsiteEvent.id, cowebsiteEvent.position));
     }
 
     /**

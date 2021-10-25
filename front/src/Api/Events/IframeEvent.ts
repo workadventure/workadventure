@@ -5,7 +5,7 @@ import type { ClosePopupEvent } from "./ClosePopupEvent";
 import type { EnterLeaveEvent } from "./EnterLeaveEvent";
 import type { GoToPageEvent } from "./GoToPageEvent";
 import type { LoadPageEvent } from "./LoadPageEvent";
-import { coWebsite, isOpenCoWebsiteEvent } from "./OpenCoWebsiteEvent";
+import { isCoWebsite, isOpenCoWebsiteEvent } from "./OpenCoWebsiteEvent";
 import type { OpenPopupEvent } from "./OpenPopupEvent";
 import type { OpenTabEvent } from "./OpenTabEvent";
 import type { UserInputChatEvent } from "./UserInputChatEvent";
@@ -114,11 +114,11 @@ export const iframeQueryMapTypeGuards = {
     },
     openCoWebsite: {
         query: isOpenCoWebsiteEvent,
-        answer: coWebsite
+        answer: isCoWebsite
     },
     getCoWebsites: {
         query: tg.isUndefined,
-        answer:  tg.isArray(coWebsite)
+        answer:  tg.isArray(isCoWebsite)
     },
     closeCoWebsite: {
         query: tg.isString,

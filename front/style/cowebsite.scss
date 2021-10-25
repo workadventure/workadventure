@@ -170,6 +170,10 @@
     .sub-main {
       pointer-events: all !important;
     }
+
+    .thumbnail {
+      transform: scale(0.5, 0.5);
+    }
   }
 
   .pixel {
