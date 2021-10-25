@@ -14,25 +14,28 @@ import controls from "./Api/iframe/controls";
 import ui from "./Api/iframe/ui";
 import sound from "./Api/iframe/sound";
 import room, { setMapURL, setRoomId } from "./Api/iframe/room";
-import state, { initVariables } from "./Api/iframe/state";
+import { createState } from "./Api/iframe/state";
 import player, { setPlayerName, setTags, setUserRoomToken, setUuid } from "./Api/iframe/player";
 import type { ButtonDescriptor } from "./Api/iframe/Ui/ButtonDescriptor";
 import type { Popup } from "./Api/iframe/Ui/Popup";
 import type { Sound } from "./Api/iframe/Sound/Sound";
 import { answerPromises, queryWorkadventure } from "./Api/iframe/IframeApiContribution";
 
+const globalState = createState("global");
+
 // Notify WorkAdventure that we are ready to receive data
 const initPromise = queryWorkadventure({
     type: "getState",
     data: undefined,
-}).then((state) => {
-    setPlayerName(state.nickname);
-    setRoomId(state.roomId);
-    setMapURL(state.mapUrl);
-    setTags(state.tags);
-    setUuid(state.uuid);
-    initVariables(state.variables as Map<string, unknown>);
-    setUserRoomToken(state.userRoomToken);
+}).then((gameState) => {
+    setPlayerName(gameState.nickname);
+    setRoomId(gameState.roomId);
+    setMapURL(gameState.mapUrl);
+    setTags(gameState.tags);
+    setUuid(gameState.uuid);
+    globalState.initVariables(gameState.variables as Map<string, unknown>);
+    player.state.initVariables(gameState.playerVariables as Map<string, unknown>);
+    setUserRoomToken(gameState.userRoomToken);
 });
 
 const wa = {
@@ -43,7 +46,7 @@ const wa = {
     sound,
     room,
     player,
-    state,
+    state: globalState,
 
     onInit(): Promise<void> {
         return initPromise;
@@ -225,7 +228,5 @@ window.addEventListener(
                 callback?.callback(payloadData);
             }
         }
-
-        // ...
     }
 );

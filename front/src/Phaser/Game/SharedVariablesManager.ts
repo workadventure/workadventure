@@ -3,6 +3,7 @@ import { iframeListener } from "../../Api/IframeListener";
 import type { GameMap } from "./GameMap";
 import type { ITiledMapLayer, ITiledMapObject } from "../Map/ITiledMap";
 import { GameMapProperties } from "./GameMapProperties";
+import type { SetVariableEvent } from "../../Api/Events/SetVariableEvent";
 
 interface Variable {
     defaultValue: unknown;
@@ -48,51 +49,51 @@ export class SharedVariablesManager {
             iframeListener.setVariable({
                 key: name,
                 value: value,
+                target: "global",
             });
         });
+    }
 
-        // When a variable is modified from an iFrame
-        iframeListener.registerAnswerer("setVariable", (event, source) => {
-            const key = event.key;
+    public setVariable(event: SetVariableEvent, source: MessageEventSource | null): void {
+        const key = event.key;
 
-            const object = this.variableObjects.get(key);
+        const object = this.variableObjects.get(key);
 
-            if (object === undefined) {
-                const errMsg =
-                    'A script is trying to modify variable "' +
-                    key +
-                    '" but this variable is not defined in the map.' +
-                    'There should be an object in the map whose name is "' +
-                    key +
-                    '" and whose type is "variable"';
-                console.error(errMsg);
-                throw new Error(errMsg);
-            }
+        if (object === undefined) {
+            const errMsg =
+                'A script is trying to modify variable "' +
+                key +
+                '" but this variable is not defined in the map.' +
+                'There should be an object in the map whose name is "' +
+                key +
+                '" and whose type is "variable"';
+            console.error(errMsg);
+            throw new Error(errMsg);
+        }
 
-            if (object.writableBy && !this.roomConnection.hasTag(object.writableBy)) {
-                const errMsg =
-                    'A script is trying to modify variable "' +
-                    key +
-                    '" but this variable is only writable for users with tag "' +
-                    object.writableBy +
-                    '".';
-                console.error(errMsg);
-                throw new Error(errMsg);
-            }
+        if (object.writableBy && !this.roomConnection.hasTag(object.writableBy)) {
+            const errMsg =
+                'A script is trying to modify variable "' +
+                key +
+                '" but this variable is only writable for users with tag "' +
+                object.writableBy +
+                '".';
+            console.error(errMsg);
+            throw new Error(errMsg);
+        }
 
-            // Let's stop any propagation of the value we set is the same as the existing value.
-            if (JSON.stringify(event.value) === JSON.stringify(this._variables.get(key))) {
-                return;
-            }
+        // Let's stop any propagation of the value we set is the same as the existing value.
+        if (JSON.stringify(event.value) === JSON.stringify(this._variables.get(key))) {
+            return;
+        }
 
-            this._variables.set(key, event.value);
+        this._variables.set(key, event.value);
 
-            // Dispatch to the room connection.
-            this.roomConnection.emitSetVariableEvent(key, event.value);
+        // Dispatch to the room connection.
+        this.roomConnection.emitSetVariableEvent(key, event.value);
 
-            // Dispatch to other iframes
-            iframeListener.dispatchVariableToOtherIframes(key, event.value, source);
-        });
+        // Dispatch to other iframes
+        iframeListener.dispatchVariableToOtherIframes(key, event.value, source);
     }
 
     private static findVariablesInMap(gameMap: GameMap): Map<string, Variable> {
@@ -162,10 +163,6 @@ export class SharedVariablesManager {
         }
 
         return variable;
-    }
-
-    public close(): void {
-        iframeListener.unregisterAnswerer("setVariable");
     }
 
     get variables(): Map<string, unknown> {

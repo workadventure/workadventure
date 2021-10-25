@@ -3,7 +3,7 @@ import type { HasPlayerMovedEvent, HasPlayerMovedEventCallback } from "../Events
 import { Subject } from "rxjs";
 import { apiCallback } from "./registeredCallbacks";
 import { isHasPlayerMovedEvent } from "../Events/HasPlayerMovedEvent";
-import type { PlayerPropertyEvent } from "../Events/PlayerPropertyEvent";
+import { createState } from "./state";
 
 const moveStream = new Subject<HasPlayerMovedEvent>();
 
@@ -32,6 +32,8 @@ export const setUuid = (_uuid: string | undefined) => {
 };
 
 export class WorkadventurePlayerCommands extends IframeApiContribution<WorkadventurePlayerCommands> {
+    readonly state = createState("player");
+
     callbacks = [
         apiCallback({
             type: "hasPlayerMoved",

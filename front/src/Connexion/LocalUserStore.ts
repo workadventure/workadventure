@@ -220,12 +220,26 @@ class LocalUserStore {
         const cameraSetupValues = localStorage.getItem(cameraSetup);
         return cameraSetupValues != undefined ? JSON.parse(cameraSetupValues) : undefined;
     }
-    getUserProperty(name: string): string | null {
-        return localStorage.getItem(userProperties + "_" + name);
+
+    getAllUserProperties(): Map<string, unknown> {
+        const result = new Map<string, string>();
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key) {
+                if (key.startsWith(userProperties + "_")) {
+                    const value = localStorage.getItem(key);
+                    if (value) {
+                        const userKey = key.substr((userProperties + "_").length);
+                        result.set(userKey, JSON.parse(value));
+                    }
+                }
+            }
+        }
+        return result;
     }
 
-    setUserProperty(name: string, value: string): void {
-        localStorage.setItem(userProperties + "_" + name, value);
+    setUserProperty(name: string, value: unknown): void {
+        localStorage.setItem(userProperties + "_" + name, JSON.stringify(value));
     }
 }
 
