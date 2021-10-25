@@ -298,10 +298,17 @@ class CoWebsiteManager {
     private setIframeOffset(coWebsite: CoWebsite, slot: CoWebsiteSlot) {
         const bounding = slot.container.getBoundingClientRect();
 
-        coWebsite.iframe.style.top = bounding.top + 'px';
-        coWebsite.iframe.style.left = bounding.left + 'px';
-        coWebsite.iframe.style.width = (bounding.right - bounding.left) + 'px';
-        coWebsite.iframe.style.height = (bounding.bottom - bounding.top) + 'px';
+        if (coWebsite.iframe.classList.contains('thumbnail')) {
+            coWebsite.iframe.style.width = ((bounding.right - bounding.left) * 2) + 'px';
+            coWebsite.iframe.style.height = ((bounding.bottom - bounding.top) * 2) + 'px';
+            coWebsite.iframe.style.top = (bounding.top - (Math.floor(bounding.height * 0.5))) + 'px';
+            coWebsite.iframe.style.left = (bounding.left - (Math.floor(bounding.width * 0.5))) + 'px';
+        } else {
+            coWebsite.iframe.style.top = bounding.top + 'px';
+            coWebsite.iframe.style.left = bounding.left + 'px';
+            coWebsite.iframe.style.width = (bounding.right - bounding.left) + 'px';
+            coWebsite.iframe.style.height = (bounding.bottom - bounding.top) + 'px';
+        }
     }
 
     private resizeAllIframes() {
@@ -336,6 +343,12 @@ class CoWebsiteManager {
             coWebsite.iframe.classList.add('sub-main');
         } else {
             coWebsite.iframe.classList.remove('sub-main');
+        }
+
+        if (newPosition >= 2) {
+            coWebsite.iframe.classList.add('thumbnail');
+        } else {
+            coWebsite.iframe.classList.remove('thumbnail');
         }
 
         coWebsite.position = newPosition;
