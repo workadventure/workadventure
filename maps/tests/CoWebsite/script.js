@@ -63,7 +63,7 @@ async function openCoWebsite(args) {
         return;
       }
 
-    await WA.nav.openCoWebsite(args[0]).then(() => {
+    await WA.nav.openCoWebSite(args[0]).then(() => {
         wookaSendMessage('Co-website has been opened !');
     }).catch((error) => {
         wookaSendMessage(`Something wrong happen during co-website opening: ${error.message}`);
@@ -76,17 +76,17 @@ async function closeCoWebsite(args) {
         return;
     }
 
+    const coWebsites = await WA.nav.getCoWebSites();
+
     // All
     if (args[0] === "all" || args[0] === "*") {
-        WA.nav.closeCoWebsites().then(() => {
-            wookaSendMessage('All co-websites has been closed !');
-        }).catch((error) => {
-            wookaSendMessage(`Something wrong happen during co-websites closing: ${error.message}`);
+        coWebsites.forEach(coWebsite => {
+            coWebsite.close();
         });
+        wookaSendMessage('All co-websites has been closed !');
         return;
     }
 
-    const coWebsites = await WA.nav.getCoWebsites();
     const position = parseInt(args[0]);
 
     // By ID or Position
@@ -100,7 +100,7 @@ async function closeCoWebsite(args) {
         return;
     }
 
-    await WA.nav.closeCoWebsite(coWebsite.id).then(() => {
+    await coWebsite.close().then(() => {
         wookaSendMessage('This co-websites has been closed !');
     }).catch((error) => {
         wookaSendMessage(`Something wrong happen during co-website closing: ${error.message}`);
