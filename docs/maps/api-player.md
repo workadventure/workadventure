@@ -107,6 +107,27 @@ Example :
 WA.player.onPlayerMove(console.log);
 ```
 
+## Player specific properties
+Similarly to maps (see [API state related functions](api-state.md)), it is possible to store data **related to a specific player** in a "state". Such data will be stored using the local storage from the user's browser.  
+
+Any value that is serializable in JSON can be stored.
+
+### Setting a property
+A player property can be set simply by assigning a value.
+
+Example:
+```javascript
+WA.player.state.toto = "value" //will set the "toto" key to "value"
+```
+
+### Reading a property 
+A player property can be read by calling its key from the player's state. 
+
+Example:
+```javascript
+WA.player.state.toto //will retrieve the property 
+```
+
 ### Set the outline color of the player
 ```
 WA.player.setOutlineColor(red: number, green: number, blue: number): Promise<void>;
