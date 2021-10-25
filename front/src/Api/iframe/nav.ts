@@ -41,22 +41,7 @@ export class WorkadventureNavigationCommands extends IframeApiContribution<Worka
         });
     }
 
-    /**
-     * @deprecated Use openCoWebsite instead
-     */
-    openCoWebSite(url: string, allowApi?: boolean, allowPolicy?: string) {
-        return queryWorkadventure({
-            type: "openCoWebsite",
-            data: {
-                url,
-                allowApi,
-                allowPolicy,
-                position: undefined,
-            },
-        });
-    }
-
-    async openCoWebsite(url: string, allowApi?: boolean, allowPolicy?: string, position?: number): Promise<CoWebsite> {
+    async openCoWebSite(url: string, allowApi?: boolean, allowPolicy?: string, position?: number): Promise<CoWebsite> {
         const result = await queryWorkadventure({
             type: "openCoWebsite",
             data: {
@@ -69,7 +54,7 @@ export class WorkadventureNavigationCommands extends IframeApiContribution<Worka
         return new CoWebsite(result.id, result.position);
     }
 
-    async getCoWebsites(): Promise<CoWebsite[]> {
+    async getCoWebSites(): Promise<CoWebsite[]> {
         const result = await queryWorkadventure({
             type: "getCoWebsites",
             data: undefined
@@ -81,20 +66,6 @@ export class WorkadventureNavigationCommands extends IframeApiContribution<Worka
      * @deprecated Use closeCoWebsites instead to close all co-websites
      */
     closeCoWebSite() {
-        return queryWorkadventure({
-            type: "closeCoWebsites",
-            data: undefined,
-        });
-    }
-
-    closeCoWebsite(coWebsiteId: string) {
-        return queryWorkadventure({
-            type: "closeCoWebsite",
-            data: coWebsiteId,
-        });
-    }
-
-    closeCoWebsites() {
         return queryWorkadventure({
             type: "closeCoWebsites",
             data: undefined,
