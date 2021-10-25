@@ -1153,19 +1153,6 @@ ${escapedMessage}
             };
         });
 
-        //TODO : move Player Properties related-code
-        iframeListener.registerAnswerer("setPlayerProperty", (event) => {
-            localUserStore.setUserProperty(event.propertyName, event.propertyValue as string);
-        });
-
-        iframeListener.registerAnswerer("getPlayerProperty", (event) => {
-            return {
-                propertyName: event,
-                propertyValue: localUserStore.getUserProperty(event),
-            };
-        });
-        //END TODO
-
         iframeListener.registerAnswerer("getState", async () => {
             // The sharedVariablesManager is not instantiated before the connection is established. So we need to wait
             // for the connection to send back the answer.
@@ -1178,6 +1165,7 @@ ${escapedMessage}
                 roomId: this.roomUrl,
                 tags: this.connection ? this.connection.getAllTags() : [],
                 variables: this.sharedVariablesManager.variables,
+                playerVariables: localUserStore.getAllUserProperties(),
             };
         });
         this.iframeSubscriptionList.push(
@@ -1266,6 +1254,22 @@ ${escapedMessage}
                 userInputManager: this.userInputManager,
             })
         );
+
+        iframeListener.registerAnswerer("setVariable", (event, source) => {
+            switch (event.target) {
+                case "global": {
+                    this.sharedVariablesManager.setVariable(event, source);
+                    break;
+                }
+                case "player": {
+                    localUserStore.setUserProperty(event.key, event.value);
+                    break;
+                }
+                default: {
+                    const _exhaustiveCheck: never = event.target;
+                }
+            }
+        });
 
         iframeListener.registerAnswerer("removeActionMessage", (message) => {
             layoutManagerActionStore.removeAction(message.uuid);
@@ -1391,6 +1395,7 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("removeActionMessage");
         iframeListener.unregisterAnswerer("openCoWebsite");
         iframeListener.unregisterAnswerer("getCoWebsites");
+        iframeListener.unregisterAnswerer("setVariable");
         this.sharedVariablesManager?.close();
         this.embeddedWebsiteManager?.close();
 

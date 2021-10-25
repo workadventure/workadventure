@@ -9,6 +9,7 @@ export const isGameStateEvent = new tg.IsInterface()
         startLayerName: tg.isUnion(tg.isString, tg.isNull),
         tags: tg.isArray(tg.isString),
         variables: tg.isObject,
+        playerVariables: tg.isObject,
     })
     .get();
 /**
