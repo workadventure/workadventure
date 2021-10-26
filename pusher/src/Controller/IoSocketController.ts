@@ -26,10 +26,9 @@ import { jwtTokenManager, tokenInvalidException } from "../Services/JWTTokenMana
 import { adminApi, FetchMemberDataByUuidResponse } from "../Services/AdminApi";
 import { SocketManager, socketManager } from "../Services/SocketManager";
 import { emitInBatch } from "../Services/IoSocketHelpers";
-import { ADMIN_API_TOKEN, ADMIN_API_URL, SOCKET_IDLE_TIMER } from "../Enum/EnvironmentVariable";
+import { ADMIN_SOCKETS_TOKEN, ADMIN_API_URL, SOCKET_IDLE_TIMER } from "../Enum/EnvironmentVariable";
 import { Zone } from "_Model/Zone";
 import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
-import { v4 } from "uuid";
 import { CharacterTexture } from "../Services/AdminApi/CharacterTexture";
 
 export class IoSocketController {
@@ -48,7 +47,7 @@ export class IoSocketController {
                 const websocketProtocol = req.getHeader("sec-websocket-protocol");
                 const websocketExtensions = req.getHeader("sec-websocket-extensions");
                 const token = query.token;
-                if (token !== ADMIN_API_TOKEN) {
+                if (token !== ADMIN_SOCKETS_TOKEN) {
                     console.log("Admin access refused for token: " + token);
                     res.writeStatus("401 Unauthorized").end("Incorrect token");
                     return;

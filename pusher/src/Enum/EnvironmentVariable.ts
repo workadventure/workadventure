@@ -4,6 +4,7 @@ const API_URL = process.env.API_URL || "";
 const ADMIN_API_URL = process.env.ADMIN_API_URL || "";
 const ADMIN_URL = process.env.ADMIN_URL || "";
 const ADMIN_API_TOKEN = process.env.ADMIN_API_TOKEN || "myapitoken";
+export const ADMIN_SOCKETS_TOKEN = process.env.ADMIN_SOCKETS_TOKEN || "myapitoken";
 const CPU_OVERHEAT_THRESHOLD = Number(process.env.CPU_OVERHEAT_THRESHOLD) || 80;
 const JITSI_URL: string | undefined = process.env.JITSI_URL === "" ? undefined : process.env.JITSI_URL;
 const JITSI_ISS = process.env.JITSI_ISS || "";
