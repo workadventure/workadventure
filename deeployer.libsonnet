@@ -62,6 +62,7 @@
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
+              "ADMIN_SOCKETS_TOKEN": env.ADMIN_SOCKETS_TOKEN,
             } else {})
           },
     "front": {
