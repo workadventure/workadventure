@@ -438,7 +438,7 @@ class CoWebsiteManager {
         icon.style.display = "none";
 
         const iconImage = document.createElement("img");
-        iconImage.src = `http://www.google.com/s2/favicons?sz=64&domain_url=${iframe.src}`;
+        iconImage.src = `https://www.google.com/s2/favicons?sz=64&domain_url=${iframe.src}`;
         const url = new URL(iframe.src);
         iconImage.alt = url.hostname;
 
