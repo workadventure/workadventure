@@ -164,6 +164,9 @@ class ConnectionManager {
             //before set token of user we must load room and all information. For example the mandatory authentication could be require on current room
             this._currentRoom = await Room.createRoom(new URL(roomPath));
 
+            //defined last room url this room path
+            localUserStore.setLastRoomUrl(this._currentRoom.key);
+
             //todo: add here some kind of warning if authToken has expired.
             if (!this.authToken && !this._currentRoom.authenticationMandatory) {
                 await this.anonymousLogin();
