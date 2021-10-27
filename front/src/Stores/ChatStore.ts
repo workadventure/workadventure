@@ -84,7 +84,12 @@ function createChatMessagesStore() {
         addExternalMessage(authorId: number, text: string) {
             update((list) => {
                 const lastMessage = list[list.length - 1];
-                if (lastMessage && lastMessage.type === ChatMessageTypes.text && lastMessage.text && lastMessage?.author?.userId === authorId) {
+                if (
+                    lastMessage &&
+                    lastMessage.type === ChatMessageTypes.text &&
+                    lastMessage.text &&
+                    lastMessage?.author?.userId === authorId
+                ) {
                     lastMessage.text.push(text);
                 } else {
                     list.push({
@@ -116,4 +121,4 @@ function createChatSubMenuVisibilityStore() {
     };
 }
 
-export const chatSubMenuVisbilityStore = createChatSubMenuVisibilityStore();
+export const chatSubMenuVisibilityStore = createChatSubMenuVisibilityStore();
