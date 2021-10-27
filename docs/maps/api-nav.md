@@ -56,6 +56,7 @@ WA.nav.openCoWebSite(url: string, allowApi: boolean = false, allowPolicy: string
 ```
 
 Opens the webpage at "url" in an iFrame (on the right side of the screen) or close that iFrame. `allowApi` allows the webpage to use the "IFrame API" and execute script (it is equivalent to putting the `openWebsiteAllowApi` property in the map). `allowPolicy` grants additional access rights to the iFrame. The `allowPolicy` parameter is turned into an [`allow` feature policy in the iFrame](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#attr-allow), position in whitch slot the web page will be open.
+You can have only 5 co-wbesites open simultaneously.
 
 Example:
 
@@ -72,7 +73,7 @@ coWebsite.close();
 WA.nav.getCoWebSites(): Promise<CoWebsite[]>
 ```
 
-Get all opened co-websites withe their ids and positions.
+Get all opened co-websites with their ids and positions.
 
 Example:
 
