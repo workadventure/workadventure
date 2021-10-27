@@ -284,7 +284,7 @@ class IframeListener {
 
     registerScript(scriptUrl: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            console.log("Loading map related script at ", scriptUrl);
+            console.info("Loading map related script at ", scriptUrl);
 
             if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") {
                 // Using external iframe mode (
