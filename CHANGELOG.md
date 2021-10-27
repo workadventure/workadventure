@@ -1,5 +1,8 @@
 ## Version develop
 
+### Updates
+- Added multi Co-Website management
+
 ### Bugfix
 - Moving a discussion over a user will now add this user to the discussion
 - Being in a silent zone new forces mediaConstraints to false (#1508)
