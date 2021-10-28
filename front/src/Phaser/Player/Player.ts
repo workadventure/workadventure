@@ -157,22 +157,26 @@ export class Player extends Character {
 
         if (activeEvents.get(UserInputEvent.Interact)) {
             const sortedPlayers = Array.from(this.scene.MapPlayersByKey.values()).sort((p1, p2) => {
-                const distToP1 = Math.pow(p1.x - this.x, 2) + Math.pow(p1.y - this.y, 2);
-                const distToP2 = Math.pow(p2.x - this.x, 2) + Math.pow(p2.y - this.y, 2);
-                if (distToP1 > distToP2) {
+                const sdistToP1 = Math.pow(p1.x - this.x, 2) + Math.pow(p1.y - this.y, 2);
+                const sdistToP2 = Math.pow(p2.x - this.x, 2) + Math.pow(p2.y - this.y, 2);
+                if (sdistToP1 > sdistToP2) {
                     return 1;
-                } else if (distToP1 < distToP2) {
+                } else if (sdistToP1 < sdistToP2) {
                     return -1;
                 } else {
                     return 0;
                 }
             });
 
+            const minFollowDist = 10000;
             if (typeof sortedPlayers !== "undefined" && sortedPlayers.length > 0) {
-                this.follow = {
-                    followPlayer: sortedPlayers[0],
-                    direction: this.previousDirection,
-                };
+                const sdist = Math.pow(sortedPlayers[0].x - this.x, 2) + Math.pow(sortedPlayers[0].y - this.y, 2);
+                if (sdist < minFollowDist) {
+                    this.follow = {
+                        followPlayer: sortedPlayers[0],
+                        direction: this.previousDirection,
+                    };
+                }
             }
         }
 
