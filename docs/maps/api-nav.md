@@ -67,7 +67,7 @@ const coWebsiteWorkAdventure = await WA.nav.openCoWebSite('https://workadventu.r
 coWebsite.close();
 ```
 
-### Opening/closing web page in Co-Websites
+### Get all Co-Websites
 
 ```
 WA.nav.getCoWebSites(): Promise<CoWebsite[]>
