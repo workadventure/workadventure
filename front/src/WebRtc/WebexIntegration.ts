@@ -4,14 +4,18 @@ import { WEBEX_AUTHORIZATION_URL, WEBEX_GLOBAL_SPACE_ID } from "../Enum/Environm
 //import App from "../Components/App.svelte"; <- Causes peerStore issue
 import type { SvelteComponentDev } from "svelte/internal";
 import WebexVideoChat from "../Components/Webex/WebexVideoChat.svelte";
+import WebexLinkGenerator from "../Components/Webex/WebexLinkGenerator.svelte";
 
 interface Webex {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     widget: (el: HTMLElement) => any;
 }
+
 declare global {
     interface Window {
         webex: Webex;
+        webexPersonalMeetingLink: string;
+        webexMeetingLinkPassthrough: (personalMeetingLink: string) => void;
     }
 }
 
@@ -30,6 +34,11 @@ export type SpaceWidgetConfig = {
 const accessTokenKey = "@workadventure/webex_access_token";
 const expiryDateKey = "@workadventure/webex_expiry_date";
 
+window.webexMeetingLinkPassthrough = (token: string) => {
+    // This function should be called by WebexVideoChat.svelte once it's got the personal meeting room information so we can pass it back to the backend.
+    window.webexPersonalMeetingLink = token;
+};
+
 export class WebexIntegration {
     private scriptLoader: Promise<Webex> | null = null;
     private authorizationPopup: Window | null = null;
@@ -40,6 +49,7 @@ export class WebexIntegration {
     get accessToken() {
         return this.storage.getItem(accessTokenKey);
     }
+
     get expiryDate() {
         const isoDate = this.storage.getItem(expiryDateKey);
 
@@ -54,6 +64,7 @@ export class WebexIntegration {
     public get hasGlobalChat() {
         return Boolean(WEBEX_GLOBAL_SPACE_ID);
     }
+
     public openAuthorizationPopup() {
         if (this.isAuthorized) return;
 
@@ -92,24 +103,6 @@ export class WebexIntegration {
         return params.has("accessToken");
     }
 
-    private async waitForAuthorization() {
-        const timeout = 5 * 60 * 1000; // 5 min
-        const start = Date.now();
-
-        while (!this.isAuthorized && Date.now() - start < timeout) {
-            await this.delay(1000);
-        }
-
-        const authorizationPopup = this.authorizationPopup;
-        if (!authorizationPopup?.closed) {
-            setTimeout(() => authorizationPopup?.close(), 3000);
-        }
-    }
-
-    private delay(ms: number): Promise<void> {
-        return new Promise((resolve) => setTimeout(resolve, ms));
-    }
-
     public async startGlobal() {
         return WEBEX_GLOBAL_SPACE_ID
             ? this.start(WEBEX_GLOBAL_SPACE_ID, "message")
@@ -129,6 +122,16 @@ export class WebexIntegration {
         await self.waitForAuthorization();
 
         return this.accessToken;
+    }
+
+    public async startMeetingLinkGenerator() {
+        await this.stop();
+        coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
+            const lg = new WebexLinkGenerator({ target: cowebsiteDiv });
+            // TODO -> There should be a better way around this
+            // TODO -> Wait for resolve using the same logic as waiting for auth
+            return Promise.resolve();
+        });
     }
 
     public async startMeeting(
@@ -210,6 +213,24 @@ export class WebexIntegration {
             this.meetingWidget = null;
             await coWebsiteManager.closeCoWebsite();
         }
+    }
+
+    private async waitForAuthorization() {
+        const timeout = 5 * 60 * 1000; // 5 min
+        const start = Date.now();
+
+        while (!this.isAuthorized && Date.now() - start < timeout) {
+            await this.delay(1000);
+        }
+
+        const authorizationPopup = this.authorizationPopup;
+        if (!authorizationPopup?.closed) {
+            setTimeout(() => authorizationPopup?.close(), 3000);
+        }
+    }
+
+    private delay(ms: number): Promise<void> {
+        return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
     private async loadWebexScripts() {

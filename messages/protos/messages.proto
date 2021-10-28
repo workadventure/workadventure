@@ -12,6 +12,7 @@ message WebexSessionStop {
 message WebexSessionQuery {
   string roomId = 1;
   string accessToken = 2;
+  string personalMeetingLink = 3;
 }
 
 message WebexSessionResponse {

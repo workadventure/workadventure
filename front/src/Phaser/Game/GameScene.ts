@@ -1861,7 +1861,9 @@ ${escapedMessage}
         const startAdHoc = () => {
             console.log("[Front] Found meeting url, sending query for update");
             webexIntegration.authWithWebex().then((accessToken) => {
-                this.connection?.emitWebexSessionQuery(roomName, accessToken);
+                webexIntegration.startMeetingLinkGenerator().then(() => {
+                    this.connection?.emitWebexSessionQuery(roomName, accessToken, window.webexPersonalMeetingLink);
+                });
             });
         };
 

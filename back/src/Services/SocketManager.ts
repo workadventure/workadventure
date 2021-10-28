@@ -275,7 +275,6 @@ export class SocketManager {
             if (meet) {
                 if (meet.userId === user.id) {
                     this.webexMeetings.delete(room.roomUrl);
-                    // TODO -> Tell pusher the meeting is over
                 }
             }
             //user leave previous world
@@ -342,6 +341,7 @@ export class SocketManager {
     public handleWebexSessionQuery(user: User, webexSessionQuery: WebexSessionQuery) {
         console.log("[Back] Got Webex Session Query");
         const roomId = webexSessionQuery.getRoomid();
+        // TODO -> Remove?
         const accessToken = webexSessionQuery.getAccesstoken();
         const response = new WebexSessionResponse();
         response.setRoomid(roomId);
@@ -351,25 +351,21 @@ export class SocketManager {
             response.setMeetinglink(meet.meetingLink);
         } else {
             try {
-                const Webex = this.webex.init({
-                    credentials: {
-                        access_token: accessToken, //
-                    },
-                });
-
-                Webex.meetings.register().then(async () => {
-                    const meetingRoom = await Webex.meetings.getPersonalMeetingRoom();
-                    const meetToStore: MeetingData = {
-                        meetingLink: meetingRoom.link,
-                        userId: user.id,
-                    };
-                    this.webexMeetings.set("roomId", meetToStore);
-                    const meet = this.webexMeetings.get(roomId);
-                    if (meet) {
-                        response.setMeetinglink(meet.meetingLink);
-                    }
-                    await Webex.meetings.unregister();
-                });
+                if (
+                    webexSessionQuery.getPersonalmeetinglink() === null ||
+                    webexSessionQuery.getPersonalmeetinglink() === ""
+                ) {
+                    throw Error("[Back] Personal Meeting Link is empty!");
+                }
+                const meetToStore: MeetingData = {
+                    meetingLink: webexSessionQuery.getPersonalmeetinglink(),
+                    userId: user.id,
+                };
+                this.webexMeetings.set("roomId", meetToStore);
+                const meet = this.webexMeetings.get(roomId);
+                if (meet) {
+                    response.setMeetinglink(meet.meetingLink);
+                }
             } catch (e) {
                 // TODO -> make message for errors
                 response.setMeetinglink("[Error] " + e.message);
