@@ -94,3 +94,43 @@
       }
     }
   }
+
+@media (max-width:960px) and (max-height:768px) {
+  #cowebsite {
+
+    &-container {
+      display: none;
+    }
+
+    aside {
+      #cowebsite-sub-icons {
+        display: inline-flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        margin-top: 0;
+        height: 100%;
+        visibility: visible;
+
+        img {
+          height: 28px;
+          width: 28px;
+          cursor: pointer !important;
+          border-radius: 50%;
+          background-color: whitesmoke;
+        }
+
+        &>div {
+          display: flex;
+          margin-top: 2px;
+          margin-bottom: 2px;
+          transform: rotate(-90deg);
+        }
+      }
+
+      img {
+        cursor: ns-resize;
+      }
+    }
+  }
+}
