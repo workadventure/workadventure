@@ -110,6 +110,9 @@ WA.player.onPlayerMove(console.log);
 ## Player specific properties
 Similarly to maps (see [API state related functions](api-state.md)), it is possible to store data **related to a specific player** in a "state". Such data will be stored using the local storage from the user's browser.  
 
+{.alert.alert-info}
+In the future, player-related variables will be stored on the WorkAdventure server if the current player is logged.
+
 Any value that is serializable in JSON can be stored.
 
 ### Setting a property
