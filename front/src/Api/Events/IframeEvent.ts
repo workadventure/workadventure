@@ -31,6 +31,7 @@ import type { ChangeLayerEvent } from "./ChangeLayerEvent";
 import { isPlayerPropertyEvent } from "./PlayerPropertyEvent";
 import type { ChangeZoneEvent } from "./ChangeZoneEvent";
 import { isColorEvent } from "./ColorEvent";
+import { isPlayerPosition } from "./PlayerPosition";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -169,6 +170,10 @@ export const iframeQueryMapTypeGuards = {
     removePlayerOutline: {
         query: tg.isUndefined,
         answer: tg.isUndefined,
+    },
+    getPlayerPosition: {
+        query: tg.isUndefined,
+        answer: isPlayerPosition,
     },
 };
 

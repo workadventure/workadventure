@@ -77,6 +77,13 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
         return uuid;
     }
 
+    async getPosition(): Promise<Position> {
+        return await queryWorkadventure({
+            type: "getPlayerPosition",
+            data: undefined,
+        });
+    }
+
     get userRoomToken(): string | undefined {
         if (userRoomToken === undefined) {
             throw new Error(
@@ -118,5 +125,11 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
         }).catch((e) => console.error(e));
     }
 }
+
+//TODO: move or delete
+type Position = {
+    x: number;
+    y: number;
+};
 
 export default new WorkadventurePlayerCommands();

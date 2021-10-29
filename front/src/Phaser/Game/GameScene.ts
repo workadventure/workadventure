@@ -1360,6 +1360,14 @@ ${escapedMessage}
             this.CurrentPlayer.removeOutlineColor();
             this.connection?.emitPlayerOutlineColor(null);
         });
+
+
+        iframeListener.registerAnswerer("getPlayerPosition", () => {
+            return {
+                x: this.CurrentPlayer.x,
+                y: this.CurrentPlayer.y,
+            };
+        });
     }
 
     private setPropertyLayer(
