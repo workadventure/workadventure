@@ -25,7 +25,7 @@ import {
     TRIGGER_WEBSITE_PROPERTIES,
     WEBSITE_MESSAGE_PROPERTIES,
 } from "../../WebRtc/LayoutManager";
-import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
+import { CoWebsite, coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import type { UserMovedMessage } from "../../Messages/generated/messages_pb";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import type { RoomConnection } from "../../Connexion/RoomConnection";
@@ -95,7 +95,6 @@ import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
 import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { get } from "svelte/store";
-import type { RadialMenuItem } from "../Components/RadialMenu";
 import { contactPageStore } from "../../Stores/MenuStore";
 
 export interface GameSceneInitInterface {
@@ -1081,6 +1080,58 @@ ${escapedMessage}
             })
         );
 
+        iframeListener.registerAnswerer("openCoWebsite", async (openCoWebsite, source) => {
+            if (!source) {
+                throw new Error("Unknown query source");
+            }
+
+            const coWebsite = await coWebsiteManager.loadCoWebsite(
+                openCoWebsite.url,
+                iframeListener.getBaseUrlFromSource(source),
+                openCoWebsite.allowApi,
+                openCoWebsite.allowPolicy,
+                openCoWebsite.position
+            );
+
+            if (!coWebsite) {
+                throw new Error("Error on opening co-website");
+            }
+
+            return {
+                id: coWebsite.iframe.id,
+                position: coWebsite.position,
+            };
+        });
+
+        iframeListener.registerAnswerer("getCoWebsites", () => {
+            const coWebsites = coWebsiteManager.getCoWebsites();
+
+            return coWebsites.map((coWebsite: CoWebsite) => {
+                return {
+                    id: coWebsite.iframe.id,
+                    position: coWebsite.position,
+                };
+            });
+        });
+
+        iframeListener.registerAnswerer("closeCoWebsite", async (coWebsiteId) => {
+            const coWebsite = coWebsiteManager.getCoWebsiteById(coWebsiteId);
+
+            if (!coWebsite) {
+                throw new Error("Unknown co-website");
+            }
+
+            return coWebsiteManager.closeCoWebsite(coWebsite).catch((error) => {
+                throw new Error("Error on closing co-website");
+            });
+        });
+
+        iframeListener.registerAnswerer("closeCoWebsites", async () => {
+            return await coWebsiteManager.closeCoWebsites().catch((error) => {
+                throw new Error("Error on closing all co-websites");
+            });
+        });
+
         iframeListener.registerAnswerer("getMapData", () => {
             return {
                 data: this.gameMap.getMap(),
@@ -1284,7 +1335,7 @@ ${escapedMessage}
 
     public cleanupClosingScene(): void {
         // stop playing audio, close any open website, stop any open Jitsi
-        coWebsiteManager.closeCoWebsite();
+        coWebsiteManager.closeCoWebsites();
         // Stop the script, if any
         const scripts = this.getScriptUrls(this.mapFile);
         for (const script of scripts) {
@@ -1310,6 +1361,8 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("getMapData");
         iframeListener.unregisterAnswerer("triggerActionMessage");
         iframeListener.unregisterAnswerer("removeActionMessage");
+        iframeListener.unregisterAnswerer("openCoWebsite");
+        iframeListener.unregisterAnswerer("getCoWebsites");
         this.sharedVariablesManager?.close();
         this.embeddedWebsiteManager?.close();
 

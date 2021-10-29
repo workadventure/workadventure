@@ -49,19 +49,34 @@ WA.nav.goToRoom('../otherMap/map.json');
 WA.nav.goToRoom("/_/global/<path to global map>.json#start-layer-2")
 ```
 
-### Opening/closing a web page in an iFrame
+### Opening/closing web page in Co-Websites
 
 ```
-WA.nav.openCoWebSite(url: string, allowApi: boolean = false, allowPolicy: string = ""): void
-WA.nav.closeCoWebSite(): void
+WA.nav.openCoWebSite(url: string, allowApi: boolean = false, allowPolicy: string = "", position: number = 0): Promise<CoWebsite>
 ```
 
-Opens the webpage at "url" in an iFrame (on the right side of the screen) or close that iFrame. `allowApi` allows the webpage to use the "IFrame API" and execute script (it is equivalent to putting the `openWebsiteAllowApi` property in the map). `allowPolicy` grants additional access rights to the iFrame. The `allowPolicy` parameter is turned into an [`allow` feature policy in the iFrame](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#attr-allow).
+Opens the webpage at "url" in an iFrame (on the right side of the screen) or close that iFrame. `allowApi` allows the webpage to use the "IFrame API" and execute script (it is equivalent to putting the `openWebsiteAllowApi` property in the map). `allowPolicy` grants additional access rights to the iFrame. The `allowPolicy` parameter is turned into an [`allow` feature policy in the iFrame](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#attr-allow), position in whitch slot the web page will be open.
+You can have only 5 co-wbesites open simultaneously.
 
 Example:
 
 ```javascript
-WA.nav.openCoWebSite('https://www.wikipedia.org/');
+const coWebsite = await WA.nav.openCoWebSite('https://www.wikipedia.org/');
+const coWebsiteWorkAdventure = await WA.nav.openCoWebSite('https://workadventu.re/', true, "", 1);
 // ...
-WA.nav.closeCoWebSite();
+coWebsite.close();
+```
+
+### Get all Co-Websites
+
+```
+WA.nav.getCoWebSites(): Promise<CoWebsite[]>
+```
+
+Get all opened co-websites with their ids and positions.
+
+Example:
+
+```javascript
+const coWebsites = await WA.nav.getCowebSites();
 ```
