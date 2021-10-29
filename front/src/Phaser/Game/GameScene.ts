@@ -186,6 +186,8 @@ export class GameScene extends DirtyScene {
         moving: false,
         x: -1000,
         y: -1000,
+        oldX: -1000,
+        oldY: -1000,
     };
 
     private gameMap!: GameMap;
@@ -764,6 +766,19 @@ export class GameScene extends DirtyScene {
 
                 //init user position and play trigger to check layers properties
                 this.gameMap.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
+
+                // Init layer change listener
+                this.gameMap.onEnterLayer(layers => {
+                    layers.forEach(layer => {
+                        iframeListener.sendEnterLayerEvent(layer.name);
+                    });
+                });
+
+                this.gameMap.onLeaveLayer(layers => {
+                    layers.forEach(layer => {
+                        iframeListener.sendLeaveLayerEvent(layer.name);
+                    });
+                });
             });
     }
 
@@ -895,6 +910,7 @@ export class GameScene extends DirtyScene {
             audioManagerVisibilityStore.set(!(newValue === undefined));
         });
 
+        // TODO: Legacy functionnality replace by layer change
         this.gameMap.onPropertyChange("zone", (newValue, oldValue) => {
             if (oldValue) {
                 iframeListener.sendLeaveEvent(oldValue as string);
@@ -1749,7 +1765,11 @@ ${escapedMessage}
         const playerMovement = new PlayerMovement(
             { x: player.x, y: player.y },
             this.currentTick,
-            message.position,
+            {
+                ...message.position,
+                oldX: undefined,
+                oldY: undefined,
+            },
             this.currentTick + POSITION_DELAY
         );
         this.playersPositionInterpolator.updatePlayerPosition(player.userId, playerMovement);

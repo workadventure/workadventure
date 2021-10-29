@@ -29,6 +29,7 @@ import type {
 } from "./ui/TriggerActionMessageEvent";
 import { isMessageReferenceEvent, isTriggerActionMessageEvent } from "./ui/TriggerActionMessageEvent";
 import type { MenuRegisterEvent, UnregisterMenuEvent } from "./ui/MenuRegisterEvent";
+import type { ChangeLayerEvent } from "./ChangeLayerEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -75,6 +76,8 @@ export interface IframeResponseEventMap {
     userInputChat: UserInputChatEvent;
     enterEvent: EnterLeaveEvent;
     leaveEvent: EnterLeaveEvent;
+    enterLayerEvent: ChangeLayerEvent;
+    leaveLayerEvent: ChangeLayerEvent;
     buttonClickedEvent: ButtonClickedEvent;
     hasPlayerMoved: HasPlayerMovedEvent;
     menuItemClicked: MenuItemClickedEvent;

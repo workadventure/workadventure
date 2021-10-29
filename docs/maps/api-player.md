@@ -68,7 +68,9 @@ The event has the following attributes :
 *   **moving (boolean):**  **true** when the current player is moving, **false** otherwise.
 *   **direction (string):** **"right"** | **"left"** | **"down"** | **"top"** the direction where the current player is moving.
 *   **x (number):** coordinate X of the current player.
-*    **y (number):** coordinate Y of the current player.
+*   **y (number):** coordinate Y of the current player.
+*   **oldX (number):** old coordinate X of the current player.
+*   **oldY (number):** old coordinate Y of the current player.
 
 **callback:** the function that will be called when the current player is moving. It contains the event.
 
