@@ -126,8 +126,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     }
 }
 
-//TODO: move or delete
-type Position = {
+export type Position = {
     x: number;
     y: number;
 };
