@@ -94,7 +94,7 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
     onEnterLayer(layerName: string): Subject<void> {
         let subject = enterLayerStreams.get(layerName);
         if (subject === undefined) {
-            subject = new Subject<ChangeLayerEvent>();
+            subject = new Subject<void>();
             enterLayerStreams.set(layerName, subject);
         }
 
@@ -104,7 +104,7 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
     onLeaveLayer(layerName: string): Subject<void> {
         let subject = leaveLayerStreams.get(layerName);
         if (subject === undefined) {
-            subject = new Subject<ChangeLayerEvent>();
+            subject = new Subject<void>();
             leaveLayerStreams.set(layerName, subject);
         }
 
