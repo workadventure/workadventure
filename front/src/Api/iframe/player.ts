@@ -70,6 +70,20 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
         }
         return uuid;
     }
+
+    async getPosition(): Promise<Position> {
+        //TODO: type
+        return await queryWorkadventure({
+            type: "getPlayerPosition",
+            data: undefined,
+        });
+    }
 }
+
+//TODO: move or delete
+type Position = {
+    x: number;
+    y: number;
+};
 
 export default new WorkadventurePlayerCommands();
