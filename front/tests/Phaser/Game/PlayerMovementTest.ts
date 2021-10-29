@@ -9,8 +9,8 @@ describe("Interpolation / Extrapolation", () => {
             {
                 x: 200,
                 y: 100,
-                oldX: undefined,
-                oldY: undefined,
+                oldX: 100,
+                oldY: 200,
                 moving: true,
                 direction: "up"
             },
@@ -24,8 +24,8 @@ describe("Interpolation / Extrapolation", () => {
         expect(playerMovement.getPosition(42100)).toEqual({
             x: 150,
             y: 150,
-            oldX: undefined,
-            oldY: undefined,
+            oldX: 100,
+            oldY: 200,
             direction: 'up',
             moving: true
         });
@@ -33,8 +33,8 @@ describe("Interpolation / Extrapolation", () => {
         expect(playerMovement.getPosition(42200)).toEqual({
             x: 200,
             y: 100,
-            oldX: undefined,
-            oldY: undefined,
+            oldX: 100,
+            oldY: 200,
             direction: 'up',
             moving: true
         });
@@ -42,8 +42,8 @@ describe("Interpolation / Extrapolation", () => {
         expect(playerMovement.getPosition(42300)).toEqual({
             x: 250,
             y: 50,
-            oldX: undefined,
-            oldY: undefined,
+            oldX: 100,
+            oldY: 200,
             direction: 'up',
             moving: true
         });
@@ -56,8 +56,8 @@ describe("Interpolation / Extrapolation", () => {
             {
                 x: 200,
                 y: 100,
-                oldX: undefined,
-                oldY: undefined,
+                oldX: 100,
+                oldY: 200,
                 moving: false,
                 direction: "up"
             },
@@ -67,8 +67,8 @@ describe("Interpolation / Extrapolation", () => {
         expect(playerMovement.getPosition(42300)).toEqual({
             x: 200,
             y: 100,
-            oldX: undefined,
-            oldY: undefined,
+            oldX: 100,
+            oldY: 200,
             direction: 'up',
             moving: false
         });
@@ -81,8 +81,8 @@ describe("Interpolation / Extrapolation", () => {
             {
                 x: 200,
                 y: 100,
-                oldX: undefined,
-                oldY: undefined,
+                oldX: 100,
+                oldY: 200,
                 moving: false,
                 direction: "up"
             },
@@ -92,8 +92,8 @@ describe("Interpolation / Extrapolation", () => {
         expect(playerMovement.getPosition(42100)).toEqual({
             x: 150,
             y: 150,
-            oldX: undefined,
-            oldY: undefined,
+            oldX: 100,
+            oldY: 200,
             direction: 'up',
             moving: true
         });
