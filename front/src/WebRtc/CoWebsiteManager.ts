@@ -163,7 +163,8 @@ class CoWebsiteManager {
     }
 
     private isSmallScreen(): boolean {
-        return window.matchMedia("(max-aspect-ratio: 1/1)").matches;
+        return window.matchMedia("(max-aspect-ratio: 1/1)").matches ||
+         window.matchMedia("(max-width:960px) and (max-height:768px)").matches;
     }
 
     private initResizeListeners(touchMode: boolean) {
