@@ -1,6 +1,7 @@
 import { Subject } from "rxjs";
 
 import { EnterLeaveEvent, isEnterLeaveEvent } from "../Events/EnterLeaveEvent";
+import { ChangeLayerEvent, isChangeLayerEvent } from "../Events/ChangeLayerEvent";
 
 import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
@@ -11,6 +12,9 @@ import website from "./website";
 
 const enterStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
 const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
+
+const enterLayerStreams: Map<string, Subject<void>> = new Map<string, Subject<void>>();
+const leaveLayerStreams: Map<string, Subject<void>> = new Map<string, Subject<void>>();
 
 interface TileDescriptor {
     x: number;
@@ -47,8 +51,25 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
                 leaveStreams.get(payloadData.name)?.next();
             },
         }),
+        apiCallback({
+            type: "enterLayerEvent",
+            typeChecker: isChangeLayerEvent,
+            callback: (payloadData: ChangeLayerEvent) => {
+                enterLayerStreams.get(payloadData.name)?.next();
+            },
+        }),
+        apiCallback({
+            type: "leaveLayerEvent",
+            typeChecker: isChangeLayerEvent,
+            callback: (payloadData) => {
+                leaveLayerStreams.get(payloadData.name)?.next();
+            },
+        }),
     ];
 
+    /**
+     * @deprecated Use onEnterLayer instead
+     */
     onEnterZone(name: string, callback: () => void): void {
         let subject = enterStreams.get(name);
         if (subject === undefined) {
@@ -57,6 +78,10 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
         }
         subject.subscribe(callback);
     }
+
+    /**
+     * @deprecated Use onLeaveLayer instead
+     */
     onLeaveZone(name: string, callback: () => void): void {
         let subject = leaveStreams.get(name);
         if (subject === undefined) {
@@ -65,12 +90,35 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
         }
         subject.subscribe(callback);
     }
+
+    onEnterLayer(layerName: string): Subject<void> {
+        let subject = enterLayerStreams.get(layerName);
+        if (subject === undefined) {
+            subject = new Subject<ChangeLayerEvent>();
+            enterLayerStreams.set(layerName, subject);
+        }
+
+        return subject;
+    }
+
+    onLeaveLayer(layerName: string): Subject<void> {
+        let subject = leaveLayerStreams.get(layerName);
+        if (subject === undefined) {
+            subject = new Subject<ChangeLayerEvent>();
+            leaveLayerStreams.set(layerName, subject);
+        }
+
+        return subject;
+    }
+
     showLayer(layerName: string): void {
         sendToWorkadventure({ type: "showLayer", data: { name: layerName } });
     }
+
     hideLayer(layerName: string): void {
         sendToWorkadventure({ type: "hideLayer", data: { name: layerName } });
     }
+
     setProperty(layerName: string, propertyName: string, propertyValue: string | number | boolean | undefined): void {
         sendToWorkadventure({
             type: "setProperty",
@@ -81,10 +129,12 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
             },
         });
     }
+
     async getTiledMap(): Promise<ITiledMap> {
         const event = await queryWorkadventure({ type: "getMapData", data: undefined });
         return event.data as ITiledMap;
     }
+
     setTiles(tiles: TileDescriptor[]) {
         sendToWorkadventure({
             type: "setTiles",

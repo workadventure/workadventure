@@ -14,6 +14,7 @@ The list of functions below is **deprecated**. You should not use those but. use
 - Method `WA.goToRoom` is deprecated. It has been renamed to `WA.nav.goToRoom`.
 - Method `WA.openCoWebSite` is deprecated. It has been renamed to `WA.nav.openCoWebSite`.
 - Method `WA.closeCoWebSite` is deprecated. It has been renamed to `WA.nav.closeCoWebSite`.
+- Method `WA.closeCoWebsite` is deprecated. It has been renamed to `WA.nav.closeCoWebsite`.
 - Method `WA.openPopup` is deprecated. It has been renamed to `WA.ui.openPopup`.
 - Method `WA.onChatMessage` is deprecated. It has been renamed to `WA.chat.onChatMessage`.
 - Method `WA.onEnterZone` is deprecated. It has been renamed to `WA.room.onEnterZone`.
