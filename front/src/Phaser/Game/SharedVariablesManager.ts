@@ -165,6 +165,10 @@ export class SharedVariablesManager {
         return variable;
     }
 
+    public close(): void {
+        iframeListener.unregisterAnswerer("setVariable");
+    }
+
     get variables(): Map<string, unknown> {
         return this._variables;
     }
