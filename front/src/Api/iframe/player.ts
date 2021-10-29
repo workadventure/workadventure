@@ -72,7 +72,6 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     }
 
     async getPosition(): Promise<Position> {
-        //TODO: type
         return await queryWorkadventure({
             type: "getPlayerPosition",
             data: undefined,
@@ -80,8 +79,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     }
 }
 
-//TODO: move or delete
-type Position = {
+export type Position = {
     x: number;
     y: number;
 };
