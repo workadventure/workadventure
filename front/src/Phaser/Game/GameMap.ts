@@ -2,7 +2,7 @@ import type { ITiledMap, ITiledMapLayer, ITiledMapProperty } from "../Map/ITiled
 import { flattenGroupLayersMap } from "../Map/LayersFlattener";
 import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 import { DEPTH_OVERLAY_INDEX } from "./DepthIndexes";
-import { iframeListener } from "../../Api/IframeListener";
+import { GameMapProperties } from "./GameMapProperties";
 
 export type PropertyChangeCallback = (
     newValue: string | number | boolean | undefined,
@@ -59,12 +59,12 @@ export class GameMap {
                 if (tile.properties) {
                     this.tileSetPropertyMap[tileset.firstgid + tile.id] = tile.properties;
                     tile.properties.forEach((prop) => {
-                        if (prop.name == "name" && typeof prop.value == "string") {
+                        if (prop.name == GameMapProperties.NAME && typeof prop.value == "string") {
                             this.tileNameMap.set(prop.value, tileset.firstgid + tile.id);
                         }
-                        if (prop.name == "exitUrl" && typeof prop.value == "string") {
+                        if (prop.name == GameMapProperties.EXIT_URL && typeof prop.value == "string") {
                             this.exitUrls.push(prop.value);
-                        } else if (prop.name == "start") {
+                        } else if (prop.name == GameMapProperties.START) {
                             this.hasStartTile = true;
                         }
                     });
@@ -304,7 +304,7 @@ export class GameMap {
                 this.putTileInFlatLayer(tileIndex, x, y, layer);
                 const phaserTile = phaserLayer.putTileAt(tileIndex, x, y);
                 for (const property of this.getTileProperty(tileIndex)) {
-                    if (property.name === "collides" && property.value) {
+                    if (property.name === GameMapProperties.COLLIDES && property.value) {
                         phaserTile.setCollision(true);
                     }
                 }

@@ -7,10 +7,9 @@ import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { get } from 'svelte/store';
 import {
     ON_ACTION_TRIGGER_BUTTON,
-    TRIGGER_WEBSITE_PROPERTIES,
-    WEBSITE_MESSAGE_PROPERTIES,
 } from "../../WebRtc/LayoutManager";
 import type { ITiledMapLayer } from "../Map/ITiledMap";
+import { GameMapProperties } from "./GameMapProperties";
 
 enum OpenCoWebsiteState {
     LOADING,
@@ -30,14 +29,14 @@ export class GameMapPropertiesListener {
     constructor(private scene: GameScene, private gameMap: GameMap) {}
 
     register() {
-        this.gameMap.onPropertyChange("openTab", (newValue, oldvalue, allProps) => {
+        this.gameMap.onPropertyChange(GameMapProperties.OPEN_TAB, (newValue, oldvalue, allProps) => {
             if (newValue === undefined) {
                 layoutManagerActionStore.removeAction("openTab");
             }
             if (typeof newValue == "string" && newValue.length) {
-                const openWebsiteTriggerValue = allProps.get(TRIGGER_WEBSITE_PROPERTIES);
+                const openWebsiteTriggerValue = allProps.get(GameMapProperties.OPEN_WEBSITE_TRIGGER);
                 if (openWebsiteTriggerValue && openWebsiteTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
-                    let message = allProps.get(WEBSITE_MESSAGE_PROPERTIES);
+                    let message = allProps.get(GameMapProperties.OPEN_WEBSITE_TRIGGER_MESSAGE);
                     if (message === undefined) {
                         message = "Press SPACE or touch here to open web site in new tab";
                     }
@@ -72,25 +71,25 @@ export class GameMapPropertiesListener {
 
                     layer.properties.forEach(property => {
                         switch(property.name) {
-                            case 'openWebsite':
+                            case GameMapProperties.OPEN_WEBSITE:
                                 openWebsiteProperty = property.value as string | undefined;
                                 break;
-                            case 'openWebsiteAllowApi':
+                            case GameMapProperties.OPEN_WEBSITE_ALLOW_API:
                                 allowApiProperty = property.value as boolean | undefined;
                                 break;
-                            case 'openWebsitePolicy':
+                            case GameMapProperties.OPEN_WEBSITE_POLICY:
                                 websitePolicyProperty = property.value as string | undefined;
                                 break;
-                            case 'openWebsiteWidth':
+                            case GameMapProperties.OPEN_WEBSITE_WIDTH:
                                 websiteWidthProperty = property.value as number | undefined;
                                 break;
-                            case 'openWebsitePosition':
+                            case GameMapProperties.OPEN_WEBSITE_POSITION:
                                 websitePositionProperty = property.value as number | undefined;
                                 break;
-                            case TRIGGER_WEBSITE_PROPERTIES:
+                            case GameMapProperties.OPEN_WEBSITE_TRIGGER:
                                 websiteTriggerProperty = property.value as string | undefined;
                                 break;
-                            case WEBSITE_MESSAGE_PROPERTIES:
+                            case GameMapProperties.OPEN_WEBSITE_TRIGGER_MESSAGE:
                                 websiteTriggerMessageProperty = property.value as string | undefined;
                                 break;
                         }
@@ -172,10 +171,10 @@ export class GameMapPropertiesListener {
 
                     layer.properties.forEach(property => {
                         switch(property.name) {
-                            case 'openWebsite':
+                            case GameMapProperties.OPEN_WEBSITE:
                                 openWebsiteProperty = property.value as string | undefined;
                                 break;
-                            case TRIGGER_WEBSITE_PROPERTIES:
+                            case GameMapProperties.OPEN_WEBSITE_TRIGGER:
                                 websiteTriggerProperty = property.value as string | undefined;
                                 break;
                         }
