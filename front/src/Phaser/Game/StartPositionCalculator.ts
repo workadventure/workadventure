@@ -1,6 +1,7 @@
 import type { PositionInterface } from "../../Connexion/ConnexionModels";
 import type { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapTileLayer } from "../Map/ITiledMap";
 import type { GameMap } from "./GameMap";
+import { GameMapProperties } from "./GameMapProperties";
 
 const defaultStartLayerName = "start";
 
@@ -76,7 +77,7 @@ export class StartPositionCalculator {
     }
 
     private isStartLayer(layer: ITiledMapLayer): boolean {
-        return this.getProperty(layer, "startLayer") == true;
+        return this.getProperty(layer, GameMapProperties.START_LAYER) == true;
     }
 
     /**

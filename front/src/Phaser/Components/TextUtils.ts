@@ -1,6 +1,7 @@
 import type { ITiledMapObject } from "../Map/ITiledMap";
 import type { GameScene } from "../Game/GameScene";
 import { type } from "os";
+import { GameMapProperties } from "../Game/GameMapProperties";
 
 export class TextUtils {
     public static createTextFromITiledMapObject(scene: GameScene, object: ITiledMapObject): void {
@@ -32,7 +33,7 @@ export class TextUtils {
         }
         if (object.properties !== undefined) {
             for (const property of object.properties) {
-                if (property.name === "font-family" && typeof property.value === "string") {
+                if (property.name === GameMapProperties.FONT_FAMILY && typeof property.value === "string") {
                     options.fontFamily = property.value;
                 }
             }
