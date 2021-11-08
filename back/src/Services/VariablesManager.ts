@@ -10,6 +10,7 @@ import {
 import { User } from "_Model/User";
 import { variablesRepository } from "./Repository/VariablesRepository";
 import { redisClient } from "./RedisClient";
+import log from "./Logger";
 
 interface Variable {
     defaultValue?: string;
@@ -98,7 +99,7 @@ export class VariablesManager {
             for (const object of layer.objects) {
                 if (object.type === "variable") {
                     if (object.template) {
-                        console.warn(
+                        log.warn(
                             'Warning, a variable object is using a Tiled "template". WorkAdventure does not support objects generated from Tiled templates.'
                         );
                         continue;
@@ -204,7 +205,7 @@ export class VariablesManager {
         if (variableObject !== undefined && variableObject.persist) {
             variablesRepository
                 .saveVariable(this.roomUrl, name, value)
-                .catch((e) => console.error("Error while saving variable in Redis:", e));
+                .catch((e) => log.error("Error while saving variable in Redis:", e));
         }
 
         return readableBy;

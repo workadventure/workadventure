@@ -56,6 +56,7 @@ import { Zone } from "_Model/Zone";
 import Debug from "debug";
 import { Admin } from "_Model/Admin";
 import crypto from "crypto";
+import log from "./Logger";
 
 const debug = Debug("sockermanager");
 
@@ -89,7 +90,7 @@ export class SocketManager {
         const { room, user } = await this.joinRoom(socket, joinRoomMessage);
 
         if (!socket.writable) {
-            console.warn("Socket was aborted");
+            log.warn("Socket was aborted");
             return {
                 room,
                 user,
@@ -156,7 +157,7 @@ export class SocketManager {
             name: playerDetailsMessage.getName(),
             characterLayers: playerDetailsMessage.getCharacterlayersList()
         };
-        //console.log(SocketIoEvent.SET_PLAYER_DETAILS, playerDetails);
+        //log.info(SocketIoEvent.SET_PLAYER_DETAILS, playerDetails);
         if (!isSetPlayerDetailsMessage(playerDetails)) {
             emitError(client, 'Invalid SET_PLAYER_DETAILS message received: ');
             return;
@@ -192,7 +193,7 @@ export class SocketManager {
         //send only at user
         const remoteUser = room.getUsers().get(data.getReceiverid());
         if (remoteUser === undefined) {
-            console.warn(
+            log.warn(
                 "While exchanging a WebRTC signal: client with id ",
                 data.getReceiverid(),
                 " does not exist. This might be a race condition."
@@ -222,7 +223,7 @@ export class SocketManager {
         //send only at user
         const remoteUser = room.getUsers().get(data.getReceiverid());
         if (remoteUser === undefined) {
-            console.warn(
+            log.warn(
                 "While exchanging a WEBRTC_SCREEN_SHARING signal: client with id ",
                 data.getReceiverid(),
                 " does not exist. This might be a race condition."
@@ -260,7 +261,7 @@ export class SocketManager {
             }
         } finally {
             clientEventsEmitter.emitClientLeave(user.uuid, room.roomUrl);
-            console.log("A user left");
+            log.info("A user left");
         }
     }
 
@@ -308,7 +309,7 @@ export class SocketManager {
         const user = room.join(socket, joinRoomMessage);
 
         clientEventsEmitter.emitClientJoin(user.uuid, roomId);
-        console.log(new Date().toISOString() + " user '"+user.uuid+"' joined room '"+roomId+"'");
+        log.info(new Date().toISOString() + " user '" + user.uuid + "' joined room '" + roomId + "'");
         return { room, user };
     }
 
@@ -337,7 +338,7 @@ export class SocketManager {
         } else if (thing instanceof Group) {
             this.emitCreateUpdateGroupEvent(listener, fromZone, thing);
         } else {
-            console.error("Unexpected type for Movable.");
+            log.error("Unexpected type for Movable.");
         }
     }
 
@@ -352,11 +353,11 @@ export class SocketManager {
 
             emitZoneMessage(subMessage, listener);
             //listener.emitInBatch(subMessage);
-            //console.log("Sending USER_MOVED event");
+            //log.info("Sending USER_MOVED event");
         } else if (thing instanceof Group) {
             this.emitCreateUpdateGroupEvent(listener, null, thing);
         } else {
-            console.error("Unexpected type for Movable.");
+            log.error("Unexpected type for Movable.");
         }
     }
 
@@ -366,7 +367,7 @@ export class SocketManager {
         } else if (thing instanceof Group) {
             this.emitDeleteGroupEvent(listener, thing.getId(), newZone);
         } else {
-            console.error("Unexpected type for Movable.");
+            log.error("Unexpected type for Movable.");
         }
     }
 
@@ -635,7 +636,7 @@ export class SocketManager {
 
                 batchMessage.addPayload(subMessage);
             } else {
-                console.error("Unexpected type for Movable returned by setViewport");
+                log.error("Unexpected type for Movable returned by setViewport");
             }
         }
 
@@ -693,7 +694,7 @@ export class SocketManager {
     public async sendAdminMessage(roomId: string, recipientUuid: string, message: string): Promise<void> {
         const room = await this.roomsPromises.get(roomId);
         if (!room) {
-            console.error(
+            log.error(
                 "In sendAdminMessage, could not find room with id '" +
                     roomId +
                     "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
@@ -703,7 +704,7 @@ export class SocketManager {
 
         const recipients = room.getUsersByUuid(recipientUuid);
         if (recipients.length === 0) {
-            console.error(
+            log.error(
                 "In sendAdminMessage, could not find user with id '" +
                     recipientUuid +
                     "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
@@ -726,7 +727,7 @@ export class SocketManager {
     public async banUser(roomId: string, recipientUuid: string, message: string): Promise<void> {
         const room = await this.roomsPromises.get(roomId);
         if (!room) {
-            console.error(
+            log.error(
                 "In banUser, could not find room with id '" +
                     roomId +
                     "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
@@ -736,7 +737,7 @@ export class SocketManager {
 
         const recipients = room.getUsersByUuid(recipientUuid);
         if (recipients.length === 0) {
-            console.error(
+            log.error(
                 "In banUser, could not find user with id '" +
                     recipientUuid +
                     "'. Maybe the user left the room a few milliseconds ago and there was a race condition?"
@@ -765,7 +766,7 @@ export class SocketManager {
         const room = await this.roomsPromises.get(roomId);
         if (!room) {
             //todo: this should cause the http call to return a 500
-            console.error(
+            log.error(
                 "In sendAdminRoomMessage, could not find room with id '" +
                     roomId +
                     "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
@@ -789,7 +790,7 @@ export class SocketManager {
         const room = await this.roomsPromises.get(roomId);
         if (!room) {
             //todo: this should cause the http call to return a 500
-            console.error(
+            log.error(
                 "In dispatchWorldFullWarning, could not find room with id '" +
                     roomId +
                     "'. Maybe the room was closed a few milliseconds ago and there was a race condition?"
