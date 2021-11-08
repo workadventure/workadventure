@@ -87,6 +87,8 @@ class ConnectionManager {
             urlManager.pushRoomIdToUrl(this._currentRoom);
         } else if (connexionType === GameConnexionTypes.jwt) {
             const urlParams = new URLSearchParams(window.location.search);
+
+            //TODO if jwt is defined, state and nonce can to be deleted
             const code = urlParams.get("code");
             const state = urlParams.get("state");
             if (!state || !localUserStore.verifyState(state)) {
@@ -96,6 +98,12 @@ class ConnectionManager {
                 throw "No Auth code provided";
             }
             localUserStore.setCode(code);
+
+            const jwt = urlParams.get("jwt");
+            if (jwt) {
+                this.authToken = jwt;
+                localUserStore.setAuthToken(jwt);
+            }
             this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
             try {
                 await this.checkAuthUserConnexion();
