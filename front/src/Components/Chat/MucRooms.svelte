@@ -1,32 +1,17 @@
 <script lang="ts">
     import { fly } from 'svelte/transition';
-    import {afterUpdate, beforeUpdate, onMount} from "svelte";
-    import {HtmlUtils} from "../../WebRtc/HtmlUtils";
-    import {mucRoomsStore, mucRoomsVisibilityStore} from "../../Stores/MucRoomsStore";
+    import {mucRoomsStore, mucRoomsVisibilityStore, xmppServerConnectionStatusStore} from "../../Stores/MucRoomsStore";
     import UsersList from "./UsersList.svelte";
+    import Spinner from "./Spinner.svelte";
 
-    let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
-    let handleFormBlur: { blur():void };
-    let autoscroll: boolean;
+    //let handleFormBlur: { blur():void };
 
-    beforeUpdate(() => {
-        autoscroll = listDom && (listDom.offsetHeight + listDom.scrollTop) > (listDom.scrollHeight - 20);
-    });
-
-    onMount(() => {
-        listDom.scrollTo(0, listDom.scrollHeight);
-    })
-
-    afterUpdate(() => {
-        if (autoscroll) listDom.scrollTo(0, listDom.scrollHeight);
-    });
-
-    function onClick(event: MouseEvent) {
+    /*function onClick(event: MouseEvent) {
         if (HtmlUtils.isClickedOutside(event, chatWindowElement)) {
             handleFormBlur.blur();
         }
-    }
+    }*/
 
     function closeChat() {
         mucRoomsVisibilityStore.set(false);
@@ -38,20 +23,34 @@
     }
 </script>
 
-<svelte:window on:keydown={onKeyDown} on:click={onClick}/>
+<!-- <svelte:window on:keydown={onKeyDown} on:click={onClick}/> -->
+<svelte:window on:keydown={onKeyDown} />
 
 
 <aside class="chatWindow" transition:fly="{{ x: -1000, duration: 500 }}" bind:this={chatWindowElement}>
     <p class="close-icon" on:click={closeChat}>&times</p>
-    <section class="messagesList" bind:this={listDom}>
+    {#if $xmppServerConnectionStatusStore}
+    <section class="roomsList">
         {#each [...$mucRoomsStore] as mucRoom}
             <p>{ mucRoom.name }</p>
             <UsersList usersListStore={mucRoom.getPresenceStore()} />
         {/each}
     </section>
+    {:else}
+        <div class="reconnecting center">Connection to presence server in progress</div>
+        <div class="center"><Spinner/></div>
+    {/if}
 </aside>
 
 <style lang="scss">
+    div.reconnecting {
+      margin-top: 3rem;
+    }
+
+    div.center {
+      text-align: center;
+    }
+
     p.close-icon {
       position: absolute;
       padding: 4px;
@@ -80,5 +79,10 @@
       border-bottom-right-radius: 16px;
       border-top-right-radius: 16px;
 
+      .roomsList {
+        margin-top: 35px;
+        overflow-y: auto;
+        flex: auto;
+      }
     }
 </style>

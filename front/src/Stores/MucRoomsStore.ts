@@ -3,8 +3,13 @@ import type {MucRoom} from "../Xmpp/MucRoom";
 
 export const mucRoomsVisibilityStore = writable(false);
 
+/**
+ * True if the connection between the pusher and the XMPP server is established, false otherwise.
+ */
+export const xmppServerConnectionStatusStore = writable(false);
+
 function createMucRoomsStore() {
-    const { subscribe, update } = writable<Set<MucRoom>>(new Set<MucRoom>());
+    const { subscribe, update, set } = writable<Set<MucRoom>>(new Set<MucRoom>());
 
     return {
         subscribe,
@@ -20,6 +25,9 @@ function createMucRoomsStore() {
                 return set;
             });
         },
+        reset() {
+            set(new Set<MucRoom>());
+        }
     };
 }
 export const mucRoomsStore = createMucRoomsStore();

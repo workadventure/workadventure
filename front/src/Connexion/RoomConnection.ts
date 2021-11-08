@@ -54,6 +54,7 @@ import {
     PingMessage as PingMessageTsProto,
     XmppMessage,
     XmppSettingsMessage,
+    XmppConnectionStatusChangeMessage, XmppConnectionStatusChangeMessage_Status,
 } from "../Messages/ts-proto-generated/messages";
 import {BehaviorSubject, Subject} from "rxjs";
 import { OpenPopupEvent } from "../Api/Events/OpenPopupEvent";
@@ -148,6 +149,10 @@ export class RoomConnection implements RoomConnection {
     // We use a BehaviorSubject for this stream. This will be re-emited to new subscribers in case the connection is established before the settings are listened to.
     private readonly _xmppSettingsMessageStream = new BehaviorSubject<XmppSettingsMessage|undefined>(undefined);
     public readonly xmppSettingsMessageStream = this._xmppSettingsMessageStream.asObservable();
+
+    // Question: should this not be a BehaviorSubject?
+    private readonly _xmppConnectionStatusChangeMessageStream = new Subject<XmppConnectionStatusChangeMessage_Status>();
+    public readonly xmppConnectionStatusChangeMessageStream = this._xmppConnectionStatusChangeMessageStream.asObservable();
 
     private readonly _connectionErrorStream = new Subject<CloseEvent>();
     public readonly connectionErrorStream = this._connectionErrorStream.asObservable();
@@ -464,6 +469,10 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "xmppSettingsMessage": {
                     this._xmppSettingsMessageStream.next(message.xmppSettingsMessage);
+                    break;
+                }
+                case "xmppConnectionStatusChangeMessage": {
+                    this._xmppConnectionStatusChangeMessageStream.next(message.xmppConnectionStatusChangeMessage.status);
                     break;
                 }
                 case "errorMessage": {

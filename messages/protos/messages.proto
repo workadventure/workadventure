@@ -302,6 +302,18 @@ message XmppSettingsMessage{
 }
 
 /**
+ * Status of the connection to the XMPP server.
+ * In case something goes wrong with the XMPP server, we are notified here.
+ */
+message XmppConnectionStatusChangeMessage{
+  enum Status {
+    DISCONNECTED = 0;
+  }
+
+  Status status = 1;
+}
+
+/**
  * Messages going from back and pusher to the front
  */
 message ServerToClientMessage {
@@ -328,6 +340,7 @@ message ServerToClientMessage {
     FollowConfirmationMessage followConfirmationMessage = 22;
     FollowAbortMessage followAbortMessage = 23;
     XmppSettingsMessage xmppSettingsMessage = 24;
+    XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 25;
   }
 }
 

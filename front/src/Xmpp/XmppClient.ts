@@ -1,11 +1,14 @@
-
 import type xml from "@xmpp/xml";
 import jid from "@xmpp/jid";
-import {Observable, Subject, Subscription} from "rxjs";
+import {Observable, Subject} from "rxjs";
 import {MucRoom} from "./MucRoom";
 import type {RoomConnection} from "../Connexion/RoomConnection";
-import {mucRoomsStore} from "../Stores/MucRoomsStore";
+import {mucRoomsStore, xmppServerConnectionStatusStore} from "../Stores/MucRoomsStore";
 import type {MucRoomDefinitionInterface} from "../Network/ProtobufClientUtils";
+import {
+    XmppConnectionStatusChangeMessage,
+    XmppConnectionStatusChangeMessage_Status as Status
+} from "../Messages/ts-proto-generated/messages";
 
 export class XmppClient {
     private jid: string|undefined;
@@ -49,9 +52,26 @@ export class XmppClient {
             }
         });
 
+        connection.xmppConnectionStatusChangeMessageStream.subscribe((status) => {
+            switch (status) {
+                case Status.DISCONNECTED: {
+                    xmppServerConnectionStatusStore.set(false);
+                    mucRoomsStore.reset();
+                    break;
+                }
+                case Status.UNRECOGNIZED: {
+                    throw new Error('Unexpected status received');
+                }
+                default: {
+                    const _exhaustiveCheck: never = status;
+                }
+            }
+        });
     }
 
     private onConnect(initialRoomDefinitions: MucRoomDefinitionInterface[]) {
+console.log("CONNECTION TO STATUS STORE!");
+        xmppServerConnectionStatusStore.set(true);
 
         for (const {name, url} of initialRoomDefinitions) {
             this.joinMuc(name, url);
