@@ -7,6 +7,7 @@ import {
     WorldFullWarningToRoomMessage,
     RefreshRoomPromptMessage,
 } from "../Messages/generated/messages_pb";
+import log from "../Services/Logger";
 
 export class AdminController extends BaseController {
     constructor(private App: TemplatedApp) {
@@ -25,14 +26,14 @@ export class AdminController extends BaseController {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.App.post("/room/refresh", async (res: HttpResponse, req: HttpRequest) => {
             res.onAborted(() => {
-                console.warn("/message request was aborted");
+                log.warn("/message request was aborted");
             });
 
             const token = req.getHeader("admin-token");
             const body = await res.json();
 
             if (token !== ADMIN_API_TOKEN) {
-                console.error("Admin access refused for token: " + token);
+                log.error("Admin access refused for token: " + token);
                 res.writeStatus("401 Unauthorized").end("Incorrect token");
                 return;
             }
@@ -72,14 +73,14 @@ export class AdminController extends BaseController {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.App.post("/message", async (res: HttpResponse, req: HttpRequest) => {
             res.onAborted(() => {
-                console.warn("/message request was aborted");
+                log.warn("/message request was aborted");
             });
 
             const token = req.getHeader("admin-token");
             const body = await res.json();
 
             if (token !== ADMIN_API_TOKEN) {
-                console.error("Admin access refused for token: " + token);
+                log.error("Admin access refused for token: " + token);
                 res.writeStatus("401 Unauthorized").end("Incorrect token");
                 return;
             }

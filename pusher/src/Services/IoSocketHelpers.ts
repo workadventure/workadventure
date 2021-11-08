@@ -1,6 +1,7 @@
 import { ExSocketInterface } from "_Model/Websocket/ExSocketInterface";
 import { BatchMessage, ErrorMessage, ServerToClientMessage, SubMessage } from "../Messages/generated/messages_pb";
 import { WebSocket } from "uWebSockets.js";
+import log from "./Logger";
 
 export function emitInBatch(socket: ExSocketInterface, payload: SubMessage): void {
     socket.batchedMessages.addPayload(payload);
@@ -31,5 +32,5 @@ export function emitError(Client: WebSocket, message: string): void {
     if (!Client.disconnecting) {
         Client.send(serverToClientMessage.serializeBinary().buffer, true);
     }
-    console.warn(message);
+    log.warn(message);
 }

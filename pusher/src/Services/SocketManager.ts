@@ -49,6 +49,7 @@ import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface"
 import { WebSocket } from "uWebSockets.js";
 import { isRoomRedirect } from "./AdminApi/RoomRedirect";
 import { CharacterTexture } from "./AdminApi/CharacterTexture";
+import log from "./Logger";
 
 const debug = Debug("socket");
 
@@ -115,15 +116,15 @@ export class SocketManager implements ZoneEventListener {
                 }
             })
             .on("end", () => {
-                console.warn("Admin connection lost to back server");
+                log.warn("Admin connection lost to back server");
                 // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                 if (!client.disconnecting) {
                     this.closeWebsocketConnection(client, 1011, "Admin Connection lost to back server");
                 }
-                console.log("A user left");
+                log.info("A user left");
             })
             .on("error", (err: Error) => {
-                console.error("Error in connection to back server:", err);
+                log.error("Error in connection to back server:", err);
                 if (!client.disconnecting) {
                     this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
                 }
@@ -166,7 +167,7 @@ export class SocketManager implements ZoneEventListener {
                 joinRoomMessage.addCharacterlayer(characterLayerMessage);
             }
 
-            console.log("Calling joinRoom '"+client.roomId+"' for client "+client.userUuid);
+            log.info("Calling joinRoom '" + client.roomId + "' for client " + client.userUuid);
             const apiClient = await apiClientRepository.getClient(client.roomId);
             const streamToPusher = apiClient.joinRoom();
             clientEventsEmitter.emitClientJoin(client.userUuid, client.roomId);
@@ -198,12 +199,21 @@ export class SocketManager implements ZoneEventListener {
                     if (!client.disconnecting) {
                         this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
                     }
-                    console.log("Closed connection for user '"+client.userUuid+"' to back server "+apiClient.getChannel().getTarget());
+                    log.info(
+                        "Closed connection for user '" +
+                            client.userUuid +
+                            "' to back server " +
+                            apiClient.getChannel().getTarget()
+                    );
                 })
                 .on("error", (err: Error) => {
-                    console.error("Error in connection to back server '"+apiClient.getChannel().getTarget()+"':", err);
+                    log.error("Error in connection to back server '" + apiClient.getChannel().getTarget() + "':", err);
                     if (!client.disconnecting) {
-                        this.closeWebsocketConnection(client, 1011, "Error while connecting to back server '"+apiClient.getChannel().getTarget()+"'");
+                        this.closeWebsocketConnection(
+                            client,
+                            1011,
+                            "Error while connecting to back server '" + apiClient.getChannel().getTarget() + "'"
+                        );
                     }
                 });
 
@@ -214,8 +224,8 @@ export class SocketManager implements ZoneEventListener {
             const pusherRoom = await this.getOrCreateRoom(client.roomId);
             pusherRoom.join(client);
         } catch (e) {
-            console.error('An error occurred on "join_room" event');
-            console.error(e);
+            log.error('An error occurred on "join_room" event');
+            log.error(e);
         }
     }
 
@@ -232,13 +242,13 @@ export class SocketManager implements ZoneEventListener {
 
             const room = this.rooms.get(client.roomId);
             if (!room) {
-                console.error("In SET_VIEWPORT, could not find world with id '", client.roomId, "'");
+                log.error("In SET_VIEWPORT, could not find world with id '", client.roomId, "'");
                 return;
             }
             room.setViewport(client, client.viewport);
         } catch (e) {
-            console.error('An error occurred on "SET_VIEWPORT" event');
-            console.error(e);
+            log.error('An error occurred on "SET_VIEWPORT" event');
+            log.error(e);
         }
     }
 
@@ -309,8 +319,8 @@ export class SocketManager implements ZoneEventListener {
                 client.roomId
             );
         } catch (e) {
-            console.error('An error occurred on "handleReportMessage"');
-            console.error(e);
+            log.error('An error occurred on "handleReportMessage"');
+            log.error(e);
         }
     }
 
@@ -345,14 +355,14 @@ export class SocketManager implements ZoneEventListener {
                             debug("Room %s is empty. Deleting.", socket.roomId);
                         }
                     } else {
-                        console.error("Could not find the GameRoom the user is leaving!");
+                        log.error("Could not find the GameRoom the user is leaving!");
                     }
                     //user leave previous room
                     //Client.leave(Client.roomId);
                 } finally {
                     //delete Client.roomId;
                     clientEventsEmitter.emitClientLeave(socket.userUuid, socket.roomId);
-                    console.log("User '"+socket.userUuid+"' left");
+                    log.info("User '" + socket.userUuid + "' left");
                 }
             }
         } finally {
@@ -434,7 +444,7 @@ export class SocketManager implements ZoneEventListener {
 
             client.send(serverToClientMessage.serializeBinary().buffer, true);
         } catch (e) {
-            console.error("An error occurred while generating the Jitsi JWT token: ", e);
+            log.error("An error occurred while generating the Jitsi JWT token: ", e);
         }
     }
 
@@ -458,7 +468,7 @@ export class SocketManager implements ZoneEventListener {
         backAdminMessage.setType(type);
         backConnection.sendAdminMessage(backAdminMessage, (error) => {
             if (error !== null) {
-                console.error("Error while sending admin message", error);
+                log.error("Error while sending admin message", error);
             }
         });
     }
@@ -483,7 +493,7 @@ export class SocketManager implements ZoneEventListener {
         banMessage.setType(type);
         backConnection.ban(banMessage, (error) => {
             if (error !== null) {
-                console.error("Error while sending admin message", error);
+                log.error("Error while sending admin message", error);
             }
         });
     }
