@@ -23,26 +23,30 @@ class OpenIDClient {
         return this.issuerPromise;
     }
 
-    public authorizationUrl(playUri?: string, redirect?: string) {
+    public authorizationUrl(state: string, nonce: string, playUri?: string, redirect?: string) {
         return this.initClient().then((client) => {
             return client.authorizationUrl({
                 scope: "openid email",
                 prompt: "login",
+                state: state,
+                nonce: nonce,
                 playUri: playUri,
                 redirect: redirect,
             });
         });
     }
 
-    public getUserInfo(accessToken: string): Promise<{ email: string; sub: string; access_token: string }> {
+    public getUserInfo(code: string, nonce: string): Promise<{ email: string; sub: string; access_token: string }> {
         return this.initClient().then((client) => {
-            return client.userinfo(accessToken).then((res) => {
-                return {
-                    ...res,
-                    email: res.email as string,
-                    sub: res.sub,
-                    access_token: accessToken as string,
-                };
+            return client.callback(OPID_CLIENT_REDIREC_URL, { code }, { nonce }).then((tokenSet) => {
+                return client.userinfo(tokenSet).then((res) => {
+                    return {
+                        ...res,
+                        email: res.email as string,
+                        sub: res.sub,
+                        access_token: tokenSet.access_token as string,
+                    };
+                });
             });
         });
     }
