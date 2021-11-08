@@ -5,7 +5,7 @@ WA.onInit().then(() => {
   WA.room.onEnterLayer("carpet").subscribe(() => {
     message = WA.ui.displayActionMessage({
       message:
-        "This is a bis test message. Press space to display a chat message. Walk out to hide the message.",
+        "This is a test message. Press space to display a chat message. Walk out to hide the message.",
       callback: () => {
         WA.chat.sendChatMessage("Hello world!", "The bot");
       },
