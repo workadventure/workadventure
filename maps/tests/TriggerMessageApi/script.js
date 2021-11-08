@@ -1,6 +1,5 @@
 WA.onInit().then(() => {
   let message;
-  console.log('the right place!')
 
   WA.room.onEnterLayer("carpet").subscribe(() => {
     message = WA.ui.displayActionMessage({
