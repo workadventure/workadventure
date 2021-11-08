@@ -484,7 +484,7 @@ export class GameRoom {
                             for (const roomListener of this.roomListeners) {
                                 emitErrorOnRoomSocket(
                                     roomListener,
-                                    "Your map does not seem accessible from the WorkAdventure servers. Is it behind a firewall or a proxy? Your map should be accessible from the WorkAdventure servers. If you use the scripting API in this map, please be aware that server-side checks and variable persistence is disabled."
+                                    "Your map '"+this.mapUrl+"' does not seem accessible from the WorkAdventure servers. Is it behind a firewall or a proxy? Your map should be accessible from the WorkAdventure servers. If you use the scripting API in this map, please be aware that server-side checks and variable persistence is disabled."
                                 );
                             }
                         }, 1000);

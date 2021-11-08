@@ -166,7 +166,7 @@ export class SocketManager implements ZoneEventListener {
                 joinRoomMessage.addCharacterlayer(characterLayerMessage);
             }
 
-            console.log("Calling joinRoom");
+            console.log("Calling joinRoom '"+client.roomId+"' for client "+client.userUuid);
             const apiClient = await apiClientRepository.getClient(client.roomId);
             const streamToPusher = apiClient.joinRoom();
             clientEventsEmitter.emitClientJoin(client.userUuid, client.roomId);
@@ -194,17 +194,16 @@ export class SocketManager implements ZoneEventListener {
                     }
                 })
                 .on("end", () => {
-                    console.warn("Connection lost to back server");
                     // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                     if (!client.disconnecting) {
                         this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
                     }
-                    console.log("A user left");
+                    console.log("Closed connection for user '"+client.userUuid+"' to back server "+apiClient.getChannel().getTarget());
                 })
                 .on("error", (err: Error) => {
-                    console.error("Error in connection to back server:", err);
+                    console.error("Error in connection to back server '"+apiClient.getChannel().getTarget()+"':", err);
                     if (!client.disconnecting) {
-                        this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
+                        this.closeWebsocketConnection(client, 1011, "Error while connecting to back server '"+apiClient.getChannel().getTarget()+"'");
                     }
                 });
 
@@ -353,7 +352,7 @@ export class SocketManager implements ZoneEventListener {
                 } finally {
                     //delete Client.roomId;
                     clientEventsEmitter.emitClientLeave(socket.userUuid, socket.roomId);
-                    console.log("A user left");
+                    console.log("User '"+socket.userUuid+"' left");
                 }
             }
         } finally {

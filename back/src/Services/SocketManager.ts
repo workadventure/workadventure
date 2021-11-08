@@ -308,7 +308,7 @@ export class SocketManager {
         const user = room.join(socket, joinRoomMessage);
 
         clientEventsEmitter.emitClientJoin(user.uuid, roomId);
-        console.log(new Date().toISOString() + " A user joined");
+        console.log(new Date().toISOString() + " user '"+user.uuid+"' joined room '"+roomId+"'");
         return { room, user };
     }
 
