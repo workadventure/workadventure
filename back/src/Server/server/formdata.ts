@@ -47,7 +47,10 @@ function formData(
             if (typeof options.tmpDir === "string") {
                 if (typeof options.filename === "function") filename = options.filename(filename);
                 const fileToSave = join(options.tmpDir, filename);
-                mkdirp(dirname(fileToSave));
+                mkdirp(dirname(fileToSave)).then(
+                    () => {},
+                    () => {}
+                );
 
                 file.pipe(createWriteStream(fileToSave));
                 value.filePath = fileToSave;
