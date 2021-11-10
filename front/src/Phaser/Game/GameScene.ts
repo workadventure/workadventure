@@ -523,7 +523,9 @@ export class GameScene extends DirtyScene {
                             object.height,
                             object.visible,
                             allowApi ?? false,
-                            ""
+                            "",
+                            "map",
+                            1
                         );
                     }
                 }
