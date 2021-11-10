@@ -30,6 +30,7 @@ services:
       UPLOADER_URL: /uploader
       ADMIN_URL: /admin
       MAPS_URL: /maps
+      ICON_URL: /icon
       STARTUP_COMMAND_1: ./templater.sh
       STARTUP_COMMAND_2: yarn install
       TURN_SERVER: "turn:localhost:3478,turns:localhost:5349"
@@ -176,6 +177,20 @@ services:
 
   redis:
     image: redis:6
+
+  icon:
+    image: matthiasluedtke/iconserver:v3.13.0
+    labels:
+      - "traefik.http.middlewares.strip-icon-prefix.stripprefix.prefixes=/icon"
+      - "traefik.http.routers.icon.rule=PathPrefix(`/icon`)"
+      - "traefik.http.routers.icon.middlewares=strip-icon-prefix@docker"
+      - "traefik.http.routers.icon.entryPoints=web"
+      - "traefik.http.services.icon.loadbalancer.server.port=8080"
+      - "traefik.http.routers.icon-ssl.rule=PathPrefix(`/icon`)"
+      - "traefik.http.routers.icon-ssl.middlewares=strip-icon-prefix@docker"
+      - "traefik.http.routers.icon-ssl.entryPoints=websecure"
+      - "traefik.http.routers.icon-ssl.tls=true"
+      - "traefik.http.routers.icon-ssl.service=icon"
 
 #  coturn:
 #    image: coturn/coturn:4.5.2
