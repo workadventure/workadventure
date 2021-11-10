@@ -193,6 +193,7 @@ module.exports = {
             ADMIN_URL: undefined,
             CONTACT_URL: null,
             PROFILE_URL: null,
+            ICON_URL: null,
             DEBUG_MODE: null,
             STUN_SERVER: null,
             TURN_SERVER: null,
