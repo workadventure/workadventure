@@ -4,6 +4,7 @@ const START_ROOM_URL: string =
 const PUSHER_URL = process.env.PUSHER_URL || "//pusher.workadventure.localhost";
 export const ADMIN_URL = process.env.ADMIN_URL || "//workadventu.re";
 const UPLOADER_URL = process.env.UPLOADER_URL || "//uploader.workadventure.localhost";
+const ICON_URL = process.env.ICON_URL || "//icon.workadventure.localhost";
 const STUN_SERVER: string = process.env.STUN_SERVER || "stun:stun.l.google.com:19302";
 const TURN_SERVER: string = process.env.TURN_SERVER || "";
 const SKIP_RENDER_OPTIMIZATIONS: boolean = process.env.SKIP_RENDER_OPTIMIZATIONS == "true";
@@ -32,6 +33,7 @@ export {
     DISABLE_NOTIFICATIONS,
     PUSHER_URL,
     UPLOADER_URL,
+    ICON_URL,
     POSITION_DELAY,
     MAX_EXTRAPOLATION_TIME,
     STUN_SERVER,
