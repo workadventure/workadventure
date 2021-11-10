@@ -1,5 +1,11 @@
 import { writable } from "svelte/store";
 
+export interface Emoji {
+    unicode: string;
+    url: string;
+    name: string;
+}
+
 function createEmoteMenuStore() {
     const { subscribe, set } = writable(false);
 
@@ -14,5 +20,5 @@ function createEmoteMenuStore() {
     };
 }
 
-export const emoteStore = writable<string | null>(null);
+export const emoteStore = writable<Emoji | null>(null);
 export const emoteMenuStore = createEmoteMenuStore();

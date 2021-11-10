@@ -15,10 +15,7 @@ import type {
 import { DEBUG_MODE, JITSI_PRIVATE_MODE, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
 
 import { Queue } from "queue-typescript";
-import {
-    Box,
-    ON_ACTION_TRIGGER_BUTTON,
-} from "../../WebRtc/LayoutManager";
+import { Box, ON_ACTION_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
 import { CoWebsite, coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import type { UserMovedMessage } from "../../Messages/generated/messages_pb";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
@@ -497,7 +494,10 @@ export class GameScene extends DirtyScene {
                             object.properties,
                             'in the "' + object.name + '" object of type "website"'
                         );
-                        const allowApi = PropertyUtils.findBooleanProperty(GameMapProperties.ALLOW_API, object.properties);
+                        const allowApi = PropertyUtils.findBooleanProperty(
+                            GameMapProperties.ALLOW_API,
+                            object.properties
+                        );
 
                         // TODO: add a "allow" property to iframe
                         this.embeddedWebsiteManager.createEmbeddedWebsite(
@@ -614,10 +614,10 @@ export class GameScene extends DirtyScene {
             oldPeerNumber = newPeerNumber;
         });
 
-        this.emoteUnsubscribe = emoteStore.subscribe((emoteKey) => {
-            if (emoteKey) {
-                this.CurrentPlayer?.playEmote(emoteKey);
-                this.connection?.emitEmoteEvent(emoteKey);
+        this.emoteUnsubscribe = emoteStore.subscribe((emote) => {
+            if (emote) {
+                this.CurrentPlayer?.playEmote(emote.url);
+                this.connection?.emitEmoteEvent(emote.url);
                 emoteStore.set(null);
             }
         });
@@ -763,14 +763,14 @@ export class GameScene extends DirtyScene {
                 this.gameMap.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
 
                 // Init layer change listener
-                this.gameMap.onEnterLayer(layers => {
-                    layers.forEach(layer => {
+                this.gameMap.onEnterLayer((layers) => {
+                    layers.forEach((layer) => {
                         iframeListener.sendEnterLayerEvent(layer.name);
                     });
                 });
 
-                this.gameMap.onLeaveLayer(layers => {
-                    layers.forEach(layer => {
+                this.gameMap.onLeaveLayer((layers) => {
+                    layers.forEach((layer) => {
                         iframeListener.sendLeaveLayerEvent(layer.name);
                     });
                 });
@@ -1868,7 +1868,8 @@ ${escapedMessage}
     public startJitsi(roomName: string, jwt?: string): void {
         const allProps = this.gameMap.getCurrentProperties();
         const jitsiConfig = this.safeParseJSONstring(
-            allProps.get(GameMapProperties.JITSI_CONFIG) as string | undefined, GameMapProperties.JITSI_CONFIG
+            allProps.get(GameMapProperties.JITSI_CONFIG) as string | undefined,
+            GameMapProperties.JITSI_CONFIG
         );
         const jitsiInterfaceConfig = this.safeParseJSONstring(
             allProps.get(GameMapProperties.JITSI_INTERFACE_CONFIG) as string | undefined,
