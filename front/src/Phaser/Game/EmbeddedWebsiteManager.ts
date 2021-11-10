@@ -29,6 +29,7 @@ export class EmbeddedWebsiteManager {
                     width: rect["width"],
                     height: rect["height"],
                 },
+                origin: website.origin,
             };
         });
 
@@ -59,7 +60,9 @@ export class EmbeddedWebsiteManager {
                     createEmbeddedWebsiteEvent.position.height,
                     createEmbeddedWebsiteEvent.visible ?? true,
                     createEmbeddedWebsiteEvent.allowApi ?? false,
-                    createEmbeddedWebsiteEvent.allow ?? ""
+                    createEmbeddedWebsiteEvent.allow ?? "",
+                    createEmbeddedWebsiteEvent.origin ?? "map",
+                    createEmbeddedWebsiteEvent.scale ?? 1
                 );
             }
         );
@@ -112,6 +115,10 @@ export class EmbeddedWebsiteManager {
                 if (embeddedWebsiteEvent?.height !== undefined) {
                     website.iframe.style.height = embeddedWebsiteEvent.height + "px";
                 }
+
+                if (embeddedWebsiteEvent?.scale !== undefined) {
+                    website.phaserObject.scale = embeddedWebsiteEvent.scale;
+                }
             }
         );
     }
@@ -125,7 +132,9 @@ export class EmbeddedWebsiteManager {
         height: number,
         visible: boolean,
         allowApi: boolean,
-        allow: string
+        allow: string,
+        origin: "map" | "player" | undefined,
+        scale: number | undefined
     ): void {
         if (this.embeddedWebsites.has(name)) {
             throw new Error('An embedded website with the name "' + name + '" already exists in your map');
@@ -147,6 +156,8 @@ export class EmbeddedWebsiteManager {
                 width,
                 height,
             },
+            origin,
+            scale,
         };
 
         const embeddedWebsite = this.doCreateEmbeddedWebsite(embeddedWebsiteEvent, visible);
@@ -169,14 +180,41 @@ export class EmbeddedWebsiteManager {
         iframe.style.padding = "0";
         iframe.style.border = "none";
 
-        const embeddedWebsite = {
-            ...embeddedWebsiteEvent,
-            phaserObject: this.gameScene.add
-                .dom(embeddedWebsiteEvent.position.x, embeddedWebsiteEvent.position.y, iframe)
-                .setVisible(visible)
-                .setOrigin(0, 0),
-            iframe: iframe,
-        };
+        let embeddedWebsite;
+        let domElement;
+
+        switch (embeddedWebsiteEvent.origin) {
+            case "player":
+                domElement = new DOMElement(
+                    this.gameScene,
+                    embeddedWebsiteEvent.position.x,
+                    embeddedWebsiteEvent.position.y,
+                    iframe
+                );
+                if (embeddedWebsiteEvent.scale) {
+                    domElement.scale = embeddedWebsiteEvent.scale;
+                }
+                this.gameScene.CurrentPlayer.add(domElement);
+
+                embeddedWebsite = {
+                    ...embeddedWebsiteEvent,
+                    phaserObject: domElement,
+                    iframe: iframe,
+                };
+
+                break;
+            case "map":
+            default:
+                embeddedWebsite = {
+                    ...embeddedWebsiteEvent,
+                    phaserObject: this.gameScene.add
+                        .dom(embeddedWebsiteEvent.position.x, embeddedWebsiteEvent.position.y, iframe)
+                        .setVisible(visible)
+                        .setOrigin(0, 0),
+                    iframe: iframe,
+                };
+        }
+
         if (embeddedWebsiteEvent.allowApi) {
             iframeListener.registerIframe(iframe);
         }
