@@ -91,6 +91,16 @@ class ConnectionManager {
             //TODO if jwt is defined, state and nonce can to be deleted
             const code = urlParams.get("code");
             const state = urlParams.get("state");
+            const jwt = urlParams.get("jwt");
+
+            if (jwt) {
+                this.authToken = jwt;
+                localUserStore.setAuthToken(jwt);
+                //if we use jwt we can update new state from openid provider
+                if (state) {
+                    localUserStore.setState(state);
+                }
+            }
             if (!state || !localUserStore.verifyState(state)) {
                 throw "Could not validate state!";
             }
@@ -98,12 +108,6 @@ class ConnectionManager {
                 throw "No Auth code provided";
             }
             localUserStore.setCode(code);
-
-            const jwt = urlParams.get("jwt");
-            if (jwt) {
-                this.authToken = jwt;
-                localUserStore.setAuthToken(jwt);
-            }
             this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
             try {
                 await this.checkAuthUserConnexion();

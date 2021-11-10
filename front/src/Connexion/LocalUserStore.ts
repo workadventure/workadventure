@@ -171,6 +171,9 @@ class LocalUserStore {
         }
         return oldValue === value;
     }
+    setState(value: string) {
+        localStorage.setItem(state, value);
+    }
     getState(): string | null {
         return localStorage.getItem(state);
     }
