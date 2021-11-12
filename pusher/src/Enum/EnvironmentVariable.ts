@@ -15,6 +15,7 @@ export const FRONT_URL = process.env.FRONT_URL || "http://localhost";
 export const OPID_CLIENT_ID = process.env.OPID_CLIENT_ID || "";
 export const OPID_CLIENT_SECRET = process.env.OPID_CLIENT_SECRET || "";
 export const OPID_CLIENT_ISSUER = process.env.OPID_CLIENT_ISSUER || "";
+export const DISABLE_ANONYMOUS = process.env.DISABLE_ANONYMOUS ? process.env.DISABLE_ANONYMOUS == "true" : false;
 
 export {
     SECRET_KEY,

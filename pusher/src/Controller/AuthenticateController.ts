@@ -5,6 +5,7 @@ import { adminApi } from "../Services/AdminApi";
 import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { parse } from "query-string";
 import { openIDClient } from "../Services/OpenIDClient";
+import { DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
 
 export interface TokenInterface {
     userUuid: string;
@@ -175,16 +176,21 @@ export class AuthenticateController extends BaseController {
                 console.warn("Login request was aborted");
             });
 
-            const userUuid = v4();
-            const authToken = jwtTokenManager.createAuthToken(userUuid);
-            res.writeStatus("200 OK");
-            this.addCorsHeaders(res);
-            res.end(
-                JSON.stringify({
-                    authToken,
-                    userUuid,
-                })
-            );
+            if (DISABLE_ANONYMOUS) {
+                res.writeStatus("403 FORBIDDEN");
+                res.end();
+            } else {
+                const userUuid = v4();
+                const authToken = jwtTokenManager.createAuthToken(userUuid);
+                res.writeStatus("200 OK");
+                this.addCorsHeaders(res);
+                res.end(
+                    JSON.stringify({
+                        authToken,
+                        userUuid,
+                    })
+                );
+            }
         });
     }
 

@@ -42,11 +42,22 @@ class ConnectionManager {
         localUserStore.setAuthToken(null);
 
         //TODO fix me to redirect this URL by pusher
-        if (!this._currentRoom || !this._currentRoom.iframeAuthentication) {
+        if (!this._currentRoom) {
             loginSceneVisibleIframeStore.set(false);
             return null;
         }
-        const redirectUrl = new URL(`${this._currentRoom.iframeAuthentication}`);
+
+        // also allow OIDC login without admin API by using pusher
+        let redirectUrl: URL;
+        if (this._currentRoom.iframeAuthentication) {
+            redirectUrl = new URL(`${this._currentRoom.iframeAuthentication}`);
+        } else {
+            // need origin if PUSHER_URL is relative (in Single-Domain-Deployment)
+            redirectUrl = new URL(
+                `${PUSHER_URL}/login-screen`,
+                !PUSHER_URL.startsWith("http:") || !PUSHER_URL.startsWith("https:") ? window.location.origin : undefined
+            );
+        }
         redirectUrl.searchParams.append("state", state);
         redirectUrl.searchParams.append("nonce", nonce);
         redirectUrl.searchParams.append("playUri", this._currentRoom.key);
