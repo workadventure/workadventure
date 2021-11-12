@@ -122,6 +122,7 @@
 
           span.btn-hover{
             display: none;
+            font-family: "Press Start 2P";
           }
 
           &:hover{
