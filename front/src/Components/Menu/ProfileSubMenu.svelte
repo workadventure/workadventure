@@ -55,54 +55,73 @@
 </script>
 
 <div class="customize-main">
-    {#if $userIsConnected}
+    <div class="submenu">
         <section>
-            {#if PROFILE_URL != undefined}
-                <iframe title="profile" src="{getProfileUrl()}"></iframe>
-            {/if}
+            <button type="button" class="nes-btn" on:click|preventDefault={openEditNameScene}>Edit Name</button>
+            <button type="button" class="nes-btn" on:click|preventDefault={openEditSkinScene}>Edit Skin</button>
+            <button type="button" class="nes-btn" on:click|preventDefault={openEditCompanionScene}>Edit Companion</button>
         </section>
         <section>
-            <button type="button" class="nes-btn" on:click|preventDefault={logOut}>Log out</button>
+            <button type="button" class="nes-btn" on:click|preventDefault={openEnableCameraScene}>Setup camera</button>
         </section>
-    {:else}
-        <section>
-            <a type="button" class="nes-btn" href="/login">Sign in</a>
-        </section>
-    {/if}
-    <section>
-        <button type="button" class="nes-btn" on:click|preventDefault={openEditNameScene}>Edit Name</button>
-        <button type="button" class="nes-btn" on:click|preventDefault={openEditSkinScene}>Edit Skin</button>
-        <button type="button" class="nes-btn" on:click|preventDefault={openEditCompanionScene}>Edit Companion</button>
-    </section>
-    <section>
-        <button type="button" class="nes-btn" on:click|preventDefault={openEnableCameraScene}>Setup camera</button>
-    </section>
+    </div>
+
+    <div class="content">
+        {#if $userIsConnected}
+            <section>
+                {#if PROFILE_URL != undefined}
+                    <iframe title="profile" src="{getProfileUrl()}"></iframe>
+                {/if}
+            </section>
+            <section>
+                <button type="button" class="nes-btn" on:click|preventDefault={logOut}>Log out</button>
+            </section>
+        {:else}
+            <section>
+                <a type="button" class="nes-btn" href="/login">Sign in</a>
+            </section>
+        {/if}
+    </div>
 </div>
 
 <style lang="scss">
+    div.customize-submenu{
+
+    }
     div.customize-main{
-      section {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-wrap: wrap;
-        margin-bottom: 20px;
+      width: 100%;
+      display: inline-flex;
 
-        iframe{
-          width: 100%;
-          height: 50vh;
-          border: none;
-        }
+      div.submenu{
+        height: 100%;
+        width: 180px;
+      }
 
-        button {
-          height: 50px;
-          width: 250px;
+      div.content {
+        width: 100%;
+        section {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-wrap: wrap;
+          margin-bottom: 20px;
+
+          iframe {
+            width: 100%;
+            height: 50vh;
+            border: none;
+          }
+
+          button {
+            height: 50px;
+            width: 250px;
+          }
         }
       }
     }
 
     @media only screen and (max-width: 800px) {
-      div.customize-main section button {
+      div.customize-main.content section button {
         width: 130px;
       }
     }

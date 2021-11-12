@@ -41,7 +41,6 @@ class ConnectionManager {
         const nonce = localUserStore.generateNonce();
         localUserStore.setAuthToken(null);
 
-        //TODO fix me to redirect this URL by pusher
         if (!this._currentRoom || !this._currentRoom.iframeAuthentication) {
             loginSceneVisibleIframeStore.set(false);
             return null;
@@ -79,6 +78,16 @@ class ConnectionManager {
         const connexionType = urlManager.getGameConnexionType();
         this.connexionType = connexionType;
         this._currentRoom = null;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get("token");
+        if (token) {
+            this.authToken = token;
+            localUserStore.setAuthToken(token);
+            //token was saved, clear url
+            urlParams.delete("token");
+        }
+
         if (connexionType === GameConnexionTypes.login) {
             this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
             if (this.loadOpenIDScreen() !== null) {
@@ -88,26 +97,18 @@ class ConnectionManager {
         } else if (connexionType === GameConnexionTypes.jwt) {
             const urlParams = new URLSearchParams(window.location.search);
 
-            //TODO if jwt is defined, state and nonce can to be deleted
-            const code = urlParams.get("code");
-            const state = urlParams.get("state");
-            const jwt = urlParams.get("jwt");
-
-            if (jwt) {
-                this.authToken = jwt;
-                localUserStore.setAuthToken(jwt);
-                //if we use jwt we can update new state from openid provider
-                if (state) {
-                    localUserStore.setState(state);
+            if (!token) {
+                const code = urlParams.get("code");
+                const state = urlParams.get("state");
+                if (!state || !localUserStore.verifyState(state)) {
+                    throw "Could not validate state!";
                 }
+                if (!code) {
+                    throw "No Auth code provided";
+                }
+                localUserStore.setCode(code);
             }
-            if (!state || !localUserStore.verifyState(state)) {
-                throw "Could not validate state!";
-            }
-            if (!code) {
-                throw "No Auth code provided";
-            }
-            localUserStore.setCode(code);
+
             this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
             try {
                 await this.checkAuthUserConnexion();
@@ -291,16 +292,19 @@ class ConnectionManager {
         //set connected store for menu at false
         userIsConnected.set(false);
 
+        const token = localUserStore.getAuthToken();
         const state = localUserStore.getState();
         const code = localUserStore.getCode();
-        if (!state || !localUserStore.verifyState(state)) {
-            throw "Could not validate state!";
-        }
-        if (!code) {
-            throw "No Auth code provided";
-        }
         const nonce = localUserStore.getNonce();
-        const token = localUserStore.getAuthToken();
+
+        if (!token) {
+            if (!state || !localUserStore.verifyState(state)) {
+                throw "Could not validate state!";
+            }
+            if (!code) {
+                throw "No Auth code provided";
+            }
+        }
         const { authToken } = await Axios.get(`${PUSHER_URL}/login-callback`, { params: { code, nonce, token } }).then(
             (res) => res.data
         );
