@@ -1,5 +1,5 @@
 import Axios from "axios";
-import { CONTACT_URL, PUSHER_URL, DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
+import { CONTACT_URL, PUSHER_URL, DISABLE_ANONYMOUS, OPID_LOGIN_SCREEN_PROVIDER } from "../Enum/EnvironmentVariable";
 import type { CharacterTexture } from "./LocalUser";
 import { localUserStore } from "./LocalUserStore";
 
@@ -15,7 +15,7 @@ export class Room {
     public readonly id: string;
     public readonly isPublic: boolean;
     private _authenticationMandatory: boolean = DISABLE_ANONYMOUS as boolean;
-    private _iframeAuthentication?: string;
+    private _iframeAuthentication?: string = OPID_LOGIN_SCREEN_PROVIDER;
     private _mapUrl: string | undefined;
     private _textures: CharacterTexture[] | undefined;
     private instance: string | undefined;
@@ -107,7 +107,7 @@ export class Room {
         this._textures = data.textures;
         this._group = data.group;
         this._authenticationMandatory = data.authenticationMandatory || (DISABLE_ANONYMOUS as boolean);
-        this._iframeAuthentication = data.iframeAuthentication;
+        this._iframeAuthentication = data.iframeAuthentication || OPID_LOGIN_SCREEN_PROVIDER;
         this._contactPage = data.contactPage || CONTACT_URL;
         return new MapDetail(data.mapUrl, data.textures);
     }
