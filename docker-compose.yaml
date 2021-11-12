@@ -43,6 +43,7 @@ services:
       START_ROOM_URL: "$START_ROOM_URL"
       MAX_PER_GROUP: "$MAX_PER_GROUP"
       MAX_USERNAME_LENGTH: "$MAX_USERNAME_LENGTH"
+      DISABLE_ANONYMOUS: "$DISABLE_ANONYMOUS"
     command: yarn run start
     volumes:
       - ./front:/usr/src/app
@@ -71,6 +72,7 @@ services:
       OPID_CLIENT_ID: $OPID_CLIENT_ID
       OPID_CLIENT_SECRET: $OPID_CLIENT_SECRET
       OPID_CLIENT_ISSUER: $OPID_CLIENT_ISSUER
+      OPID_CLIENT_REDIREC_URL: $OPID_CLIENT_REDIREC_URL
       DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
     volumes:
       - ./pusher:/usr/src/app
