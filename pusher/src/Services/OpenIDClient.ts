@@ -1,7 +1,10 @@
 import { Issuer, Client, IntrospectionResponse } from "openid-client";
-import { OPID_CLIENT_ID, OPID_CLIENT_SECRET, OPID_CLIENT_ISSUER, FRONT_URL } from "../Enum/EnvironmentVariable";
-
-const opidRedirectUri = FRONT_URL + "/jwt";
+import {
+    OPID_CLIENT_ID,
+    OPID_CLIENT_SECRET,
+    OPID_CLIENT_ISSUER,
+    OPID_CLIENT_REDIREC_URL,
+} from "../Enum/EnvironmentVariable";
 
 class OpenIDClient {
     private issuerPromise: Promise<Client> | null = null;
@@ -12,7 +15,7 @@ class OpenIDClient {
                 return new issuer.Client({
                     client_id: OPID_CLIENT_ID,
                     client_secret: OPID_CLIENT_SECRET,
-                    redirect_uris: [opidRedirectUri],
+                    redirect_uris: [OPID_CLIENT_REDIREC_URL],
                     response_types: ["code"],
                 });
             });
@@ -35,7 +38,7 @@ class OpenIDClient {
 
     public getUserInfo(code: string, nonce: string): Promise<{ email: string; sub: string; access_token: string }> {
         return this.initClient().then((client) => {
-            return client.callback(opidRedirectUri, { code }, { nonce }).then((tokenSet) => {
+            return client.callback(OPID_CLIENT_REDIREC_URL, { code }, { nonce }).then((tokenSet) => {
                 return client.userinfo(tokenSet).then((res) => {
                     return {
                         ...res,

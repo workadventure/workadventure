@@ -150,6 +150,10 @@ class AdminApi {
 
         return ADMIN_URL + `/profile?token=${accessToken}`;
     }
+
+    async logoutOauth(token: string) {
+        await Axios.get(ADMIN_API_URL + `/oauth/logout?token=${token}`);
+    }
 }
 
 export const adminApi = new AdminApi();
