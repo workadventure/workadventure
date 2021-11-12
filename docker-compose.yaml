@@ -29,6 +29,7 @@ services:
       PUSHER_URL: //pusher.workadventure.localhost
       UPLOADER_URL: //uploader.workadventure.localhost
       ADMIN_URL: //workadventure.localhost
+      ICON_URL: //icon.workadventure.localhost
       STARTUP_COMMAND_1: ./templater.sh
       STARTUP_COMMAND_2: yarn install
       STUN_SERVER: "stun:stun.l.google.com:19302"
@@ -176,6 +177,17 @@ services:
       - "traefik.http.routers.redisinsight-ssl.entryPoints=websecure"
       - "traefik.http.routers.redisinsight-ssl.tls=true"
       - "traefik.http.routers.redisinsight-ssl.service=redisinsight"
+
+  icon:
+    image: matthiasluedtke/iconserver:v3.13.0
+    labels:
+      - "traefik.http.routers.icon.rule=Host(`icon.workadventure.localhost`)"
+      - "traefik.http.routers.icon.entryPoints=web"
+      - "traefik.http.services.icon.loadbalancer.server.port=8080"
+      - "traefik.http.routers.icon-ssl.rule=Host(`icon.workadventure.localhost`)"
+      - "traefik.http.routers.icon-ssl.entryPoints=websecure"
+      - "traefik.http.routers.icon-ssl.tls=true"
+      - "traefik.http.routers.icon-ssl.service=icon"
 
 #  coturn:
 #    image: coturn/coturn:4.5.2

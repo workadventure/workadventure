@@ -11,15 +11,9 @@
     function showChat(){
         chatVisibilityStore.set(true);
     }
-
-    function onKeyDown(e: KeyboardEvent) {
-        if (e.key === "Tab") {
-            showMenu();
-        }
-    }
 </script>
 
-<svelte:window on:keydown={onKeyDown}/>
+<svelte:window/>
 
 <main class="menuIcon">
     <img src={logoWA} alt="open menu" class="nes-pointer" on:click|preventDefault={showMenu}>
