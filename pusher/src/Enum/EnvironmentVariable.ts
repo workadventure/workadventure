@@ -16,6 +16,7 @@ export const OPID_CLIENT_ID = process.env.OPID_CLIENT_ID || "";
 export const OPID_CLIENT_SECRET = process.env.OPID_CLIENT_SECRET || "";
 export const OPID_CLIENT_ISSUER = process.env.OPID_CLIENT_ISSUER || "";
 export const OPID_CLIENT_REDIREC_URL = process.env.OPID_CLIENT_REDIREC_URL || FRONT_URL + "/jwt";
+export const OPID_PROFILE_SCREEN_PROVIDER = process.env.OPID_PROFILE_SCREEN_PROVIDER || ADMIN_URL + "/profile";
 export const DISABLE_ANONYMOUS = process.env.DISABLE_ANONYMOUS || false;
 
 export {
