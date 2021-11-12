@@ -12,6 +12,10 @@
     import {localUserStore} from "../../Connexion/LocalUserStore";
     import {EnableCameraScene, EnableCameraSceneName} from "../../Phaser/Login/EnableCameraScene";
     import {enableCameraSceneVisibilityStore} from "../../Stores/MediaStore";
+    import btnProfileSubMenuCamera from "../images/btn-menu-profile-camera.svg";
+    import btnProfileSubMenuIdentity from "../images/btn-menu-profile-identity.svg";
+    import btnProfileSubMenuCompanion from "../images/btn-menu-profile-companion.svg";
+    import btnProfileSubMenuWoka from "../images/btn-menu-profile-woka.svg";
 
 
     function disableMenuStores(){
@@ -57,12 +61,22 @@
 <div class="customize-main">
     <div class="submenu">
         <section>
-            <button type="button" class="nes-btn" on:click|preventDefault={openEditNameScene}>Edit Name</button>
-            <button type="button" class="nes-btn" on:click|preventDefault={openEditSkinScene}>Edit Skin</button>
-            <button type="button" class="nes-btn" on:click|preventDefault={openEditCompanionScene}>Edit Companion</button>
-        </section>
-        <section>
-            <button type="button" class="nes-btn" on:click|preventDefault={openEnableCameraScene}>Setup camera</button>
+            <button type="button" class="nes-btn" on:click|preventDefault={openEditNameScene}>
+                <img src={btnProfileSubMenuIdentity} alt="Edit your name">
+                <span class="btn-hover">Edit your name</span>
+            </button>
+            <button type="button" class="nes-btn" on:click|preventDefault={openEditSkinScene}>
+                <img src={btnProfileSubMenuWoka} alt="Edit your WOKA">
+                <span class="btn-hover">Edit your WOKA</span>
+            </button>
+            <button type="button" class="nes-btn" on:click|preventDefault={openEditCompanionScene}>
+                <img src={btnProfileSubMenuCompanion} alt="Edit your companion">
+                <span class="btn-hover">Edit your companion</span>
+            </button>
+            <button type="button" class="nes-btn" on:click|preventDefault={openEnableCameraScene}>
+                <img src={btnProfileSubMenuCamera} alt="Edit your camera">
+                <span class="btn-hover">Edit your camera</span>
+            </button>
         </section>
     </div>
 
@@ -85,16 +99,39 @@
 </div>
 
 <style lang="scss">
-    div.customize-submenu{
-
-    }
     div.customize-main{
       width: 100%;
       display: inline-flex;
 
       div.submenu{
         height: 100%;
-        width: 180px;
+        width: 50px;
+
+        button {
+          transition: all .5s ease;
+          text-align: left;
+          white-space: nowrap;
+          margin-bottom: 10px;
+          max-height: 44px;
+
+          img {
+            height: 26px;
+            width: 26px;
+            cursor: pointer;
+          }
+
+          span.btn-hover{
+            display: none;
+          }
+
+          &:hover{
+            width: auto;
+
+            span.btn-hover {
+              display: initial;
+            }
+          }
+        }
       }
 
       div.content {
