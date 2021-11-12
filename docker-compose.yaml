@@ -44,6 +44,7 @@ services:
       MAX_PER_GROUP: "$MAX_PER_GROUP"
       MAX_USERNAME_LENGTH: "$MAX_USERNAME_LENGTH"
       DISABLE_ANONYMOUS: "$DISABLE_ANONYMOUS"
+      OPID_LOGIN_SCREEN_PROVIDER: "$OPID_LOGIN_SCREEN_PROVIDER"
     command: yarn run start
     volumes:
       - ./front:/usr/src/app
