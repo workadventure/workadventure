@@ -175,11 +175,12 @@ export class IoSocketController {
 
                         const tokenData =
                             token && typeof token === "string" ? jwtTokenManager.verifyJWTToken(token) : null;
-                        const userIdentifier = tokenData ? tokenData.identifier : "";
 
                         if (DISABLE_ANONYMOUS && !tokenData) {
                             throw new Error("Expecting token");
                         }
+
+                        const userIdentifier = tokenData ? tokenData.identifier : "";
 
                         let memberTags: string[] = [];
                         let memberVisitCardUrl: string | null = null;

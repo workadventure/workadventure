@@ -5,7 +5,7 @@ import { adminApi } from "../Services/AdminApi";
 import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { parse } from "query-string";
 import { openIDClient } from "../Services/OpenIDClient";
-import { DISABLE_ANONYMOUS } from "_Enum/EnvironmentVariable";
+import { DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
 
 export interface TokenInterface {
     userUuid: string;
