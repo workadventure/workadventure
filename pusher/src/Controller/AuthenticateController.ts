@@ -5,6 +5,7 @@ import { adminApi } from "../Services/AdminApi";
 import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { parse } from "query-string";
 import { openIDClient } from "../Services/OpenIDClient";
+import { DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
 
 export interface TokenInterface {
     userUuid: string;
@@ -61,10 +62,10 @@ export class AuthenticateController extends BaseController {
                 if (token != undefined) {
                     try {
                         const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
-                        if (authTokenData.hydraAccessToken == undefined) {
+                        if (authTokenData.accessToken == undefined) {
                             throw Error("Token cannot to be check on Hydra");
                         }
-                        await openIDClient.checkTokenAuth(authTokenData.hydraAccessToken);
+                        const resCheckTokenAuth = await openIDClient.checkTokenAuth(authTokenData.accessToken);
                         res.writeStatus("200");
                         this.addCorsHeaders(res);
                         return res.end(JSON.stringify({ authToken: token }));
@@ -99,10 +100,10 @@ export class AuthenticateController extends BaseController {
 
             try {
                 const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
-                if (authTokenData.hydraAccessToken == undefined) {
+                if (authTokenData.accessToken == undefined) {
                     throw Error("Token cannot to be logout on Hydra");
                 }
-                await openIDClient.logoutUser(authTokenData.hydraAccessToken);
+                await openIDClient.logoutUser(authTokenData.accessToken);
             } catch (error) {
                 console.error("openIDCallback => logout-callback", error);
             } finally {
@@ -175,16 +176,21 @@ export class AuthenticateController extends BaseController {
                 console.warn("Login request was aborted");
             });
 
-            const userUuid = v4();
-            const authToken = jwtTokenManager.createAuthToken(userUuid);
-            res.writeStatus("200 OK");
-            this.addCorsHeaders(res);
-            res.end(
-                JSON.stringify({
-                    authToken,
-                    userUuid,
-                })
-            );
+            if (DISABLE_ANONYMOUS) {
+                res.writeStatus("403 FORBIDDEN");
+                res.end();
+            } else {
+                const userUuid = v4();
+                const authToken = jwtTokenManager.createAuthToken(userUuid);
+                res.writeStatus("200 OK");
+                this.addCorsHeaders(res);
+                res.end(
+                    JSON.stringify({
+                        authToken,
+                        userUuid,
+                    })
+                );
+            }
         });
     }
 
@@ -196,20 +202,20 @@ export class AuthenticateController extends BaseController {
             res.onAborted(() => {
                 console.warn("/message request was aborted");
             });
-            const { userIdentify, token } = parse(req.getQuery());
+            const { token } = parse(req.getQuery());
             try {
                 //verify connected by token
                 if (token != undefined) {
                     try {
                         const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
-                        if (authTokenData.hydraAccessToken == undefined) {
+                        if (authTokenData.accessToken == undefined) {
                             throw Error("Token cannot to be check on Hydra");
                         }
-                        await openIDClient.checkTokenAuth(authTokenData.hydraAccessToken);
+                        await openIDClient.checkTokenAuth(authTokenData.accessToken);
 
                         //get login profile
                         res.writeStatus("302");
-                        res.writeHeader("Location", adminApi.getProfileUrl(authTokenData.hydraAccessToken));
+                        res.writeHeader("Location", adminApi.getProfileUrl(authTokenData.accessToken));
                         this.addCorsHeaders(res);
                         // eslint-disable-next-line no-unsafe-finally
                         return res.end();

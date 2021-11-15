@@ -1,4 +1,4 @@
-import { ADMIN_API_TOKEN, ADMIN_API_URL, ADMIN_URL } from "../Enum/EnvironmentVariable";
+import { ADMIN_API_TOKEN, ADMIN_API_URL, ADMIN_URL, OPID_PROFILE_SCREEN_PROVIDER } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
 import { GameRoomPolicyTypes } from "_Model/PusherRoom";
 import { CharacterTexture } from "./AdminApi/CharacterTexture";
@@ -142,13 +142,19 @@ class AdminApi {
         });
     }
 
-    /*TODO add constant to use profile companny*/
+    /**
+     *
+     * @param accessToken
+     */
     getProfileUrl(accessToken: string): string {
-        if (!ADMIN_URL) {
+        if (!OPID_PROFILE_SCREEN_PROVIDER) {
             throw new Error("No admin backoffice set!");
         }
+        return `${OPID_PROFILE_SCREEN_PROVIDER}?accessToken=${accessToken}`;
+    }
 
-        return ADMIN_URL + `/profile?token=${accessToken}`;
+    async logoutOauth(token: string) {
+        await Axios.get(ADMIN_API_URL + `/oauth/logout?token=${token}`);
     }
 }
 

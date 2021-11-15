@@ -16,6 +16,7 @@ export const isMapDetailsData = new tg.IsInterface()
         tags: tg.isArray(tg.isString),
         textures: tg.isArray(isCharacterTexture),
         contactPage: tg.isUnion(tg.isString, tg.isUndefined),
+        authenticationMandatory: tg.isUnion(tg.isBoolean, tg.isUndefined),
     })
     .get();
 

@@ -41,7 +41,6 @@ class ConnectionManager {
         const nonce = localUserStore.generateNonce();
         localUserStore.setAuthToken(null);
 
-        //TODO fix me to redirect this URL by pusher
         if (!this._currentRoom || !this._currentRoom.iframeAuthentication) {
             loginSceneVisibleIframeStore.set(false);
             return null;
@@ -79,6 +78,16 @@ class ConnectionManager {
         const connexionType = urlManager.getGameConnexionType();
         this.connexionType = connexionType;
         this._currentRoom = null;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get("token");
+        if (token) {
+            this.authToken = token;
+            localUserStore.setAuthToken(token);
+            //token was saved, clear url
+            urlParams.delete("token");
+        }
+
         if (connexionType === GameConnexionTypes.login) {
             this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
             if (this.loadOpenIDScreen() !== null) {
@@ -87,15 +96,19 @@ class ConnectionManager {
             urlManager.pushRoomIdToUrl(this._currentRoom);
         } else if (connexionType === GameConnexionTypes.jwt) {
             const urlParams = new URLSearchParams(window.location.search);
-            const code = urlParams.get("code");
-            const state = urlParams.get("state");
-            if (!state || !localUserStore.verifyState(state)) {
-                throw "Could not validate state!";
+
+            if (!token) {
+                const code = urlParams.get("code");
+                const state = urlParams.get("state");
+                if (!state || !localUserStore.verifyState(state)) {
+                    throw "Could not validate state!";
+                }
+                if (!code) {
+                    throw "No Auth code provided";
+                }
+                localUserStore.setCode(code);
             }
-            if (!code) {
-                throw "No Auth code provided";
-            }
-            localUserStore.setCode(code);
+
             this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
             try {
                 await this.checkAuthUserConnexion();
@@ -170,8 +183,11 @@ class ConnectionManager {
             } else {
                 try {
                     await this.checkAuthUserConnexion();
+                    analyticsClient.loggedWithSso();
                 } catch (err) {
                     console.error(err);
+                    this.loadOpenIDScreen();
+                    return Promise.reject(new Error("You will be redirect on login page"));
                 }
             }
             this.localUser = localUserStore.getLocalUser() as LocalUser; //if authToken exist in localStorage then localUser cannot be null
@@ -199,6 +215,8 @@ class ConnectionManager {
             analyticsClient.identifyUser(this.localUser.uuid, this.localUser.email);
         }
 
+        //clean history with new URL
+        window.history.pushState({}, document.title, window.location.pathname);
         this.serviceWorker = new _ServiceWorker();
         return Promise.resolve(this._currentRoom);
     }
@@ -279,16 +297,19 @@ class ConnectionManager {
         //set connected store for menu at false
         userIsConnected.set(false);
 
+        const token = localUserStore.getAuthToken();
         const state = localUserStore.getState();
         const code = localUserStore.getCode();
-        if (!state || !localUserStore.verifyState(state)) {
-            throw "Could not validate state!";
-        }
-        if (!code) {
-            throw "No Auth code provided";
-        }
         const nonce = localUserStore.getNonce();
-        const token = localUserStore.getAuthToken();
+
+        if (!token) {
+            if (!state || !localUserStore.verifyState(state)) {
+                throw "Could not validate state!";
+            }
+            if (!code) {
+                throw "No Auth code provided";
+            }
+        }
         const { authToken } = await Axios.get(`${PUSHER_URL}/login-callback`, { params: { code, nonce, token } }).then(
             (res) => res.data
         );
