@@ -26,10 +26,9 @@ import { jwtTokenManager, tokenInvalidException } from "../Services/JWTTokenMana
 import { adminApi, FetchMemberDataByUuidResponse } from "../Services/AdminApi";
 import { SocketManager, socketManager } from "../Services/SocketManager";
 import { emitInBatch } from "../Services/IoSocketHelpers";
-import { ADMIN_API_TOKEN, ADMIN_API_URL, DISABLE_ANONYMOUS, SOCKET_IDLE_TIMER } from "../Enum/EnvironmentVariable";
+import { ADMIN_SOCKETS_TOKEN, ADMIN_API_URL, DISABLE_ANONYMOUS, SOCKET_IDLE_TIMER } from "../Enum/EnvironmentVariable";
 import { Zone } from "_Model/Zone";
 import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
-import { v4 } from "uuid";
 import { CharacterTexture } from "../Services/AdminApi/CharacterTexture";
 
 export class IoSocketController {
@@ -48,15 +47,19 @@ export class IoSocketController {
                 const websocketProtocol = req.getHeader("sec-websocket-protocol");
                 const websocketExtensions = req.getHeader("sec-websocket-extensions");
                 const token = query.token;
-                if (token !== ADMIN_API_TOKEN) {
-                    console.log("Admin access refused for token: " + token);
+                let authorizedRoomIds: string[];
+                try {
+                    const data = jwtTokenManager.verifyAdminSocketToken(token as string);
+                    authorizedRoomIds = data.authorizedRoomIds;
+                } catch (e) {
+                    console.error("Admin access refused for token: " + token);
                     res.writeStatus("401 Unauthorized").end("Incorrect token");
                     return;
                 }
                 const roomId = query.roomId;
-                if (typeof roomId !== "string") {
-                    console.error("Received");
-                    res.writeStatus("400 Bad Request").end("Missing room id");
+                if (typeof roomId !== "string" || !authorizedRoomIds.includes(roomId)) {
+                    console.error("Invalid room id");
+                    res.writeStatus("403 Bad Request").end("Invalid room id");
                     return;
                 }
 
@@ -70,8 +73,6 @@ export class IoSocketController {
             },
             message: (ws, arrayBuffer, isBinary): void => {
                 try {
-                    const roomId = ws.roomId as string;
-
                     //TODO refactor message type and data
                     const message: { event: string; message: { type: string; message: unknown; userUuid: string } } =
                         JSON.parse(new TextDecoder("utf-8").decode(new Uint8Array(arrayBuffer)));

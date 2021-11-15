@@ -111,7 +111,7 @@ class ConnectionManager {
 
             this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
             try {
-                await this.checkAuthUserConnexion();
+                await this.checkAuthUserConnexion(this._currentRoom.key);
                 analyticsClient.loggedWithSso();
             } catch (err) {
                 console.error(err);
@@ -176,6 +176,9 @@ class ConnectionManager {
             //get detail map for anonymous login and set texture in local storage
             //before set token of user we must load room and all information. For example the mandatory authentication could be require on current room
             this._currentRoom = await Room.createRoom(new URL(roomPath));
+
+            //defined last room url this room path
+            localUserStore.setLastRoomUrl(this._currentRoom.key);
 
             //todo: add here some kind of warning if authToken has expired.
             if (!this.authToken && !this._currentRoom.authenticationMandatory) {
@@ -293,7 +296,7 @@ class ConnectionManager {
         return this.connexionType;
     }
 
-    async checkAuthUserConnexion() {
+    async checkAuthUserConnexion(playUri: string) {
         //set connected store for menu at false
         userIsConnected.set(false);
 
@@ -310,10 +313,12 @@ class ConnectionManager {
                 throw "No Auth code provided";
             }
         }
-        const { authToken } = await Axios.get(`${PUSHER_URL}/login-callback`, { params: { code, nonce, token } }).then(
+        const { authToken, userUuid, textures, email } = await Axios.get(`${PUSHER_URL}/login-callback`, { params: { code, nonce, token } }).then(
             (res) => res.data
         );
         localUserStore.setAuthToken(authToken);
+        this.localUser = new LocalUser(userUuid, textures, email);
+        localUserStore.saveUser(this.localUser);
         this.authToken = authToken;
 
         //user connected, set connected store for menu at true

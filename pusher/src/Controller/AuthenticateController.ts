@@ -1,7 +1,7 @@
 import { v4 } from "uuid";
 import { HttpRequest, HttpResponse, TemplatedApp } from "uWebSockets.js";
 import { BaseController } from "./BaseController";
-import { adminApi } from "../Services/AdminApi";
+import { adminApi, FetchMemberDataByUuidResponse } from "../Services/AdminApi";
 import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { parse } from "query-string";
 import { openIDClient } from "../Services/OpenIDClient";
@@ -56,7 +56,8 @@ export class AuthenticateController extends BaseController {
             res.onAborted(() => {
                 console.warn("/message request was aborted");
             });
-            const { code, nonce, token } = parse(req.getQuery());
+            const IPAddress = req.getHeader("x-forwarded-for");
+            const { code, nonce, token, playUri } = parse(req.getQuery());
             try {
                 //verify connected by token
                 if (token != undefined) {
@@ -68,7 +69,7 @@ export class AuthenticateController extends BaseController {
                         const resCheckTokenAuth = await openIDClient.checkTokenAuth(authTokenData.accessToken);
                         res.writeStatus("200");
                         this.addCorsHeaders(res);
-                        return res.end(JSON.stringify({ authToken: token }));
+                        return res.end(JSON.stringify({ ...data, authToken: token }));
                     } catch (err) {
                         console.info("User was not connected", err);
                     }
@@ -81,9 +82,14 @@ export class AuthenticateController extends BaseController {
                     throw new Error("No email in the response");
                 }
                 const authToken = jwtTokenManager.createAuthToken(email, userInfo.access_token);
+
+                //Get user data from Admin Back Office
+                //This is very important to create User Local in LocalStorage in WorkAdventure
+                const data = await this.getUserByUserIdentifier(email, playUri as string, IPAddress);
+
                 res.writeStatus("200");
                 this.addCorsHeaders(res);
-                return res.end(JSON.stringify({ authToken }));
+                return res.end(JSON.stringify({ ...data, authToken }));
             } catch (e) {
                 console.error("openIDCallback => ERROR", e);
                 return this.errorToResponse(e, res);
@@ -228,5 +234,27 @@ export class AuthenticateController extends BaseController {
                 this.errorToResponse(error, res);
             }
         });
+    }
+
+    /**
+     *
+     * @param email
+     * @param playUri
+     * @param IPAddress
+     * @return FetchMemberDataByUuidResponse|object
+     * @private
+     */
+    private async getUserByUserIdentifier(
+        email: string,
+        playUri: string,
+        IPAddress: string
+    ): Promise<FetchMemberDataByUuidResponse | object> {
+        let data: FetchMemberDataByUuidResponse | object = {};
+        try {
+            data = await adminApi.fetchMemberDataByUuid(email, playUri, IPAddress);
+        } catch (err) {
+            console.error("openIDCallback => fetchMemberDataByUuid", err);
+        }
+        return data;
     }
 }
