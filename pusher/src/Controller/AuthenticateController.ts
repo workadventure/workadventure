@@ -203,7 +203,7 @@ export class AuthenticateController extends BaseController {
             res.onAborted(() => {
                 console.warn("/message request was aborted");
             });
-            const { userIdentify, token } = parse(req.getQuery());
+            const { token } = parse(req.getQuery());
             try {
                 //verify connected by token
                 if (token != undefined) {
