@@ -141,7 +141,7 @@ class JitsiFactory {
         jitsiUrl?: string,
         jitsiWidth?: number
     ): void {
-        coWebsiteManager.insertCoWebsite(async (cowebsiteDiv) => {
+        coWebsiteManager.addCoWebsite(async (cowebsiteDiv) => {
             // Jitsi meet external API maintains some data in local storage
             // which is sent via the appData URL parameter when joining a
             // conference. Problem is that this data grows indefinitely. Thus
@@ -170,22 +170,35 @@ class JitsiFactory {
             }
 
             return new Promise((resolve, reject) => {
-                options.onload = () => resolve(); //we want for the iframe to be loaded before triggering animations.
-                setTimeout(() => resolve(), 2000); //failsafe in case the iframe is deleted before loading or too long to load
+                const doResolve = (): void => {
+                    const iframe = cowebsiteDiv.querySelector<HTMLIFrameElement>('[id*="jitsi" i]');
+                    if (iframe === null) {
+                        throw new Error("Could not find Jitsi Iframe");
+                    }
+                    resolve(iframe);
+                }
+                options.onload = () => doResolve(); //we want for the iframe to be loaded before triggering animations.
+                setTimeout(() => doResolve(), 2000); //failsafe in case the iframe is deleted before loading or too long to load
                 this.jitsiApi = new window.JitsiMeetExternalAPI(domain, options);
                 this.jitsiApi.executeCommand("displayName", playerName);
 
                 this.jitsiApi.addListener("audioMuteStatusChanged", this.audioCallback);
                 this.jitsiApi.addListener("videoMuteStatusChanged", this.videoCallback);
             });
-        }, jitsiWidth);
+        }, jitsiWidth, 0);
     }
 
-    public async stop(): Promise<void> {
+    public stop() {
         if (!this.jitsiApi) {
             return;
         }
-        await coWebsiteManager.closeCoWebsite();
+
+        const jitsiCoWebsite = coWebsiteManager.searchJitsi();
+
+        if (jitsiCoWebsite) {
+            coWebsiteManager.closeJitsi();
+        }
+
         this.jitsiApi.removeListener("audioMuteStatusChanged", this.audioCallback);
         this.jitsiApi.removeListener("videoMuteStatusChanged", this.videoCallback);
         this.jitsiApi?.dispose();

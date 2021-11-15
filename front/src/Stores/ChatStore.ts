@@ -82,13 +82,20 @@ function createChatMessagesStore() {
                         date: new Date(),
                     });
                 }
+
+                iframeListener.sendUserInputChat(text);
                 return list;
             });
         },
         addExternalMessage(authorId: number, text: string) {
             update((list) => {
                 const lastMessage = list[list.length - 1];
-                if (lastMessage && lastMessage.type === ChatMessageTypes.text && lastMessage.text) {
+                if (
+                    lastMessage &&
+                    lastMessage.type === ChatMessageTypes.text &&
+                    lastMessage.text &&
+                    lastMessage?.author?.userId === authorId
+                ) {
                     lastMessage.text.push(text);
                 } else {
                     list.push({
@@ -98,6 +105,8 @@ function createChatMessagesStore() {
                         date: new Date(),
                     });
                 }
+
+                iframeListener.sendUserInputChat(text);
                 return list;
             });
             chatVisibilityStore.set(true);
@@ -120,4 +129,4 @@ function createChatSubMenuVisibilityStore() {
     };
 }
 
-export const chatSubMenuVisbilityStore = createChatSubMenuVisibilityStore();
+export const chatSubMenuVisibilityStore = createChatSubMenuVisibilityStore();

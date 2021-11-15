@@ -3,8 +3,6 @@ import type { GameScene } from "../Game/GameScene";
 import { UserInputEvent, UserInputManager } from "../UserInput/UserInputManager";
 import { Character } from "../Entity/Character";
 import { userMovingStore } from "../../Stores/GameStore";
-import { get } from "svelte/store";
-import { emoteMenuStore } from "../../Stores/EmoteStore";
 
 export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";
@@ -64,14 +62,28 @@ export class Player extends Character {
 
         if (x !== 0 || y !== 0) {
             this.move(x, y);
-            this.emit(hasMovedEventName, { moving, direction, x: this.x, y: this.y });
+            this.emit(hasMovedEventName, { moving, direction, x: this.x, y: this.y, oldX: x, oldY: y });
         } else if (this.wasMoving && moving) {
             // slow joystick movement
             this.move(0, 0);
-            this.emit(hasMovedEventName, { moving, direction: this.previousDirection, x: this.x, y: this.y });
+            this.emit(hasMovedEventName, {
+                moving,
+                direction: this.previousDirection,
+                x: this.x,
+                y: this.y,
+                oldX: x,
+                oldY: y,
+            });
         } else if (this.wasMoving && !moving) {
             this.stop();
-            this.emit(hasMovedEventName, { moving, direction: this.previousDirection, x: this.x, y: this.y });
+            this.emit(hasMovedEventName, {
+                moving,
+                direction: this.previousDirection,
+                x: this.x,
+                y: this.y,
+                oldX: x,
+                oldY: y,
+            });
         }
 
         if (direction !== null) {

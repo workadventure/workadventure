@@ -2,6 +2,7 @@ import type { RoomConnection } from "../../Connexion/RoomConnection";
 import { iframeListener } from "../../Api/IframeListener";
 import type { GameMap } from "./GameMap";
 import type { ITiledMapLayer, ITiledMapObject, ITiledMapObjectLayer } from "../Map/ITiledMap";
+import { GameMapProperties } from "./GameMapProperties";
 
 interface Variable {
     defaultValue: unknown;
@@ -133,10 +134,10 @@ export class SharedVariablesManager {
             for (const property of object.properties) {
                 const value = property.value;
                 switch (property.name) {
-                    case "default":
+                    case GameMapProperties.DEFAULT:
                         variable.defaultValue = value;
                         break;
-                    case "writableBy":
+                    case GameMapProperties.WRITABLE_BY:
                         if (typeof value !== "string") {
                             throw new Error(
                                 'The writableBy property of variable "' + object.name + '" must be a string'
@@ -146,7 +147,7 @@ export class SharedVariablesManager {
                             variable.writableBy = value;
                         }
                         break;
-                    case "readableBy":
+                    case GameMapProperties.READABLE_BY:
                         if (typeof value !== "string") {
                             throw new Error(
                                 'The readableBy property of variable "' + object.name + '" must be a string'

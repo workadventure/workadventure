@@ -165,7 +165,14 @@ class LocalUserStore {
 
     verifyState(value: string): boolean {
         const oldValue = localStorage.getItem(state);
+        if (!oldValue) {
+            localStorage.setItem(state, value);
+            return true;
+        }
         return oldValue === value;
+    }
+    setState(value: string) {
+        localStorage.setItem(state, value);
     }
     getState(): string | null {
         return localStorage.getItem(state);

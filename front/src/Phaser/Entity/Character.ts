@@ -3,6 +3,7 @@ import { SpeechBubble } from "./SpeechBubble";
 import Text = Phaser.GameObjects.Text;
 import Container = Phaser.GameObjects.Container;
 import Sprite = Phaser.GameObjects.Sprite;
+import DOMElement = Phaser.GameObjects.DOMElement;
 import { TextureError } from "../../Exception/TextureError";
 import { Companion } from "../Companion/Companion";
 import type { GameScene } from "../Game/GameScene";
@@ -33,7 +34,7 @@ export abstract class Character extends Container {
     //private teleportation: Sprite;
     private invisible: boolean;
     public companion?: Companion;
-    private emote: Phaser.GameObjects.Text | null = null;
+    private emote: Phaser.GameObjects.DOMElement | null = null;
     private emoteTween: Phaser.Tweens.Tween | null = null;
     scene: GameScene;
 
@@ -62,11 +63,13 @@ export abstract class Character extends Container {
             .then((textures) => {
                 this.addTextures(textures, frame);
                 this.invisible = false;
+                this.playAnimation(direction, moving);
             })
             .catch(() => {
                 return lazyLoadPlayerCharacterTextures(scene.load, ["color_22", "eyes_23"]).then((textures) => {
                     this.addTextures(textures, frame);
                     this.invisible = false;
+                    this.playAnimation(direction, moving);
                 });
             });
 
@@ -107,9 +110,7 @@ export abstract class Character extends Container {
         this.setSize(16, 16);
         this.getBody().setSize(16, 16); //edit the hitbox to better match the character model
         this.getBody().setOffset(0, 8);
-        this.setDepth(-1);
-
-        this.playAnimation(direction, moving);
+        this.setDepth(0);
 
         if (typeof companion === "string") {
             this.addCompanion(companion, companionTexturePromise);
@@ -300,8 +301,9 @@ export abstract class Character extends Container {
     playEmote(emote: string) {
         this.cancelPreviousEmote();
         const emoteY = -45;
-        this.playerName.setVisible(false);
-        this.emote = new Text(this.scene, -10, 0, emote, { fontSize: "20px" });
+        const image = new Image(16, 16);
+        image.src = emote;
+        this.emote = new DOMElement(this.scene, -1, 0, image, "z-index:10;");
         this.emote.setAlpha(0);
         this.add(this.emote);
         this.createStartTransition(emoteY);

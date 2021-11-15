@@ -2,11 +2,11 @@
     import {fly} from "svelte/transition";
     import SettingsSubMenu from "./SettingsSubMenu.svelte";
     import ProfileSubMenu from "./ProfileSubMenu.svelte";
-    import CreateMapSubMenu from "./CreateMapSubMenu.svelte";
     import AboutRoomSubMenu from "./AboutRoomSubMenu.svelte";
     import GlobalMessageSubMenu from "./GlobalMessagesSubMenu.svelte";
     import ContactSubMenu from "./ContactSubMenu.svelte";
     import CustomSubMenu from "./CustomSubMenu.svelte"
+    import GuestSubMenu from "./GuestSubMenu.svelte";
     import {
         checkSubMenuToShow,
         customMenuIframe,
@@ -19,21 +19,21 @@
     import type {Unsubscriber} from "svelte/store";
     import {sendMenuClickedEvent} from "../../Api/iframe/Ui/MenuItem";
 
-    let activeSubMenu: string = SubMenusInterface.settings;
-    let activeComponent: typeof SettingsSubMenu | typeof CustomSubMenu = SettingsSubMenu;
+    let activeSubMenu: string = SubMenusInterface.profile;
+    let activeComponent: typeof ProfileSubMenu | typeof CustomSubMenu = ProfileSubMenu;
     let props: { url: string, allowApi: boolean };
     let unsubscriberSubMenuStore: Unsubscriber;
 
     onMount(() => {
         unsubscriberSubMenuStore = subMenusStore.subscribe(() => {
             if(!get(subMenusStore).includes(activeSubMenu)) {
-                switchMenu(SubMenusInterface.settings);
+                switchMenu(SubMenusInterface.profile);
             }
         })
 
         checkSubMenuToShow();
 
-        switchMenu(SubMenusInterface.settings);
+        switchMenu(SubMenusInterface.profile);
     })
 
     onDestroy(() => {
@@ -52,8 +52,8 @@
                 case SubMenusInterface.profile:
                     activeComponent = ProfileSubMenu;
                     break;
-                case SubMenusInterface.createMap:
-                    activeComponent = CreateMapSubMenu;
+                case SubMenusInterface.invite:
+                    activeComponent = GuestSubMenu;
                     break;
                 case SubMenusInterface.aboutRoom:
                     activeComponent = AboutRoomSubMenu;
@@ -124,6 +124,7 @@
     top: 10%;
 
     position: relative;
+    z-index: 80;
     margin: auto;
 
     display: grid;

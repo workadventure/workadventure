@@ -231,12 +231,12 @@ export class SocketManager implements ZoneEventListener {
         try {
             client.viewport = viewport;
 
-            const world = this.rooms.get(client.roomId);
-            if (!world) {
+            const room = this.rooms.get(client.roomId);
+            if (!room) {
                 console.error("In SET_VIEWPORT, could not find world with id '", client.roomId, "'");
                 return;
             }
-            world.setViewport(client, client.viewport);
+            room.setViewport(client, client.viewport);
         } catch (e) {
             console.error('An error occurred on "SET_VIEWPORT" event');
             console.error(e);

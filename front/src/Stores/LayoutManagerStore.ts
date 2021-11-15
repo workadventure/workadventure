@@ -9,7 +9,9 @@ export interface LayoutManagerAction {
     userInputManager: UserInputManager | undefined;
 }
 
+
 function createLayoutManagerAction() {
+
     const { subscribe, set, update } = writable<LayoutManagerAction[]>([]);
 
     return {

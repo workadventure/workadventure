@@ -6,7 +6,7 @@ import { adminApi, AdminBannedData } from "../Services/AdminApi";
 
 export interface AuthTokenData {
     identifier: string; //will be a email if logged in or an uuid if anonymous
-    hydraAccessToken?: string;
+    accessToken?: string;
 }
 export interface AdminSocketTokenData {
     authorizedRoomIds: string[]; //the list of rooms the client is authorized to read from.
@@ -18,8 +18,8 @@ class JWTTokenManager {
         return Jwt.verify(token, ADMIN_SOCKETS_TOKEN) as AdminSocketTokenData;
     }
 
-    public createAuthToken(identifier: string, hydraAccessToken?: string) {
-        return Jwt.sign({ identifier, hydraAccessToken }, SECRET_KEY, { expiresIn: "30d" });
+    public createAuthToken(identifier: string, accessToken?: string) {
+        return Jwt.sign({ identifier, accessToken }, SECRET_KEY, { expiresIn: "30d" });
     }
 
     public verifyJWTToken(token: string, ignoreExpiration: boolean = false): AuthTokenData {
