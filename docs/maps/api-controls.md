@@ -15,7 +15,7 @@ When controls are disabled, the user cannot move anymore using keyboard input. T
 Example:
 
 ```javascript
-WA.room.onEnterZone('myZone', () => {
+WA.room.onEnterLayer('myZone').subscribe(() => {
     WA.controls.disablePlayerControls();
     WA.ui.openPopup("popupRectangle", 'This is an imporant message!', [{
         label: "Got it!",
@@ -25,5 +25,5 @@ WA.room.onEnterZone('myZone', () => {
             popup.close();
         }
     }]);
-});
+})
 ```
