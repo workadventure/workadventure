@@ -66,7 +66,6 @@ export class AuthenticateController extends BaseController {
                             throw Error("Token cannot to be check on Hydra");
                         }
                         const resCheckTokenAuth = await openIDClient.checkTokenAuth(authTokenData.accessToken);
-                        console.log("resCheckTokenAuth", resCheckTokenAuth);
                         res.writeStatus("200");
                         this.addCorsHeaders(res);
                         return res.end(JSON.stringify({ authToken: token }));

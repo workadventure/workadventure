@@ -44,37 +44,37 @@ export class OpenIdProfileController extends BaseController {
     }
 
     buildHtml(domain: string, email: string, pictureUrl?: string) {
-        return (
-            "<!DOCTYPE html>" +
-            `
-                <header>
-                    <style>
-                        *{
-                            font-family: PixelFont-7, monospace;
-                        }
-                        body{
-                            text-align: center;
-                            color: white;
-                        }
-                        section{
-                            margin: 20px;
-                        }
-                    </style>
-                </header>
-                <body>
-                    <div class="container">
-                        <section>
-                            <img src="${pictureUrl ? pictureUrl : "/images/profile"}"> 
-                        </section>
-                        <section>
-                            Profile validated by domain: <span style="font-weight: bold">${domain}</span>
-                        </section>    
-                        <section>
-                            Your email: <span style="font-weight: bold">${email}</span>   
-                        </section>
-                    </div>
-                </body>
-            `
-        );
+        return `
+                <!DOCTYPE>
+                <html>
+                    <head>
+                        <style>
+                            *{
+                                font-family: PixelFont-7, monospace;
+                            }
+                            body{
+                                text-align: center;
+                                color: white;
+                            }
+                            section{
+                                margin: 20px;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            <section>
+                                <img src="${pictureUrl ? pictureUrl : "/images/profile"}"> 
+                            </section>
+                            <section>
+                                Profile validated by domain: <span style="font-weight: bold">${domain}</span>
+                            </section>    
+                            <section>
+                                Your email: <span style="font-weight: bold">${email}</span>   
+                            </section>
+                        </div>
+                    </body>
+                </html>
+            `;
     }
 }

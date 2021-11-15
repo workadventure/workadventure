@@ -183,8 +183,11 @@ class ConnectionManager {
             } else {
                 try {
                     await this.checkAuthUserConnexion();
+                    analyticsClient.loggedWithSso();
                 } catch (err) {
                     console.error(err);
+                    this.loadOpenIDScreen();
+                    return Promise.reject(new Error("You will be redirect on login page"));
                 }
             }
             this.localUser = localUserStore.getLocalUser() as LocalUser; //if authToken exist in localStorage then localUser cannot be null
