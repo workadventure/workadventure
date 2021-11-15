@@ -69,7 +69,7 @@ export class AuthenticateController extends BaseController {
                         const resCheckTokenAuth = await openIDClient.checkTokenAuth(authTokenData.accessToken);
                         res.writeStatus("200");
                         this.addCorsHeaders(res);
-                        return res.end(JSON.stringify({ ...data, authToken: token }));
+                        return res.end(JSON.stringify({ ...resCheckTokenAuth, authToken: token }));
                     } catch (err) {
                         console.info("User was not connected", err);
                     }
