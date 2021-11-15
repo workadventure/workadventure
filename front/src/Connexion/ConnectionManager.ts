@@ -212,6 +212,8 @@ class ConnectionManager {
             analyticsClient.identifyUser(this.localUser.uuid, this.localUser.email);
         }
 
+        //clean history with new URL
+        window.history.pushState({}, document.title, window.location.pathname);
         this.serviceWorker = new _ServiceWorker();
         return Promise.resolve(this._currentRoom);
     }
