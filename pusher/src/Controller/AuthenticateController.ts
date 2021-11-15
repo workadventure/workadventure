@@ -62,10 +62,11 @@ export class AuthenticateController extends BaseController {
                 if (token != undefined) {
                     try {
                         const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
-                        if (authTokenData.hydraAccessToken == undefined) {
+                        if (authTokenData.accessToken == undefined) {
                             throw Error("Token cannot to be check on Hydra");
                         }
-                        await openIDClient.checkTokenAuth(authTokenData.hydraAccessToken);
+                        const resCheckTokenAuth = await openIDClient.checkTokenAuth(authTokenData.accessToken);
+                        console.log("resCheckTokenAuth", resCheckTokenAuth);
                         res.writeStatus("200");
                         this.addCorsHeaders(res);
                         return res.end(JSON.stringify({ authToken: token }));
@@ -100,10 +101,10 @@ export class AuthenticateController extends BaseController {
 
             try {
                 const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
-                if (authTokenData.hydraAccessToken == undefined) {
+                if (authTokenData.accessToken == undefined) {
                     throw Error("Token cannot to be logout on Hydra");
                 }
-                await openIDClient.logoutUser(authTokenData.hydraAccessToken);
+                await openIDClient.logoutUser(authTokenData.accessToken);
             } catch (error) {
                 console.error("openIDCallback => logout-callback", error);
             } finally {
@@ -208,14 +209,14 @@ export class AuthenticateController extends BaseController {
                 if (token != undefined) {
                     try {
                         const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
-                        if (authTokenData.hydraAccessToken == undefined) {
+                        if (authTokenData.accessToken == undefined) {
                             throw Error("Token cannot to be check on Hydra");
                         }
-                        await openIDClient.checkTokenAuth(authTokenData.hydraAccessToken);
+                        await openIDClient.checkTokenAuth(authTokenData.accessToken);
 
                         //get login profile
                         res.writeStatus("302");
-                        res.writeHeader("Location", adminApi.getProfileUrl(authTokenData.hydraAccessToken));
+                        res.writeHeader("Location", adminApi.getProfileUrl(authTokenData.accessToken));
                         this.addCorsHeaders(res);
                         // eslint-disable-next-line no-unsafe-finally
                         return res.end();
