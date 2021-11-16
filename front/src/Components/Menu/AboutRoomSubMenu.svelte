@@ -4,7 +4,6 @@
 
     let gameScene = gameManager.getCurrentGameScene();
 
-    let HTMLShareLink: HTMLInputElement;
     let expandedMapCopyright = false;
     let expandedTilesetCopyright = false;
 
@@ -38,37 +37,9 @@
             }
         }
     })
-
-    function copyLink() {
-        const input: HTMLInputElement = document.getElementById('input-share-link') as HTMLInputElement;
-        input.focus();
-        input.select();
-        document.execCommand('copy');
-    }
-
-    async function shareLink() {
-        const shareData = {url: location.toString()};
-
-        try {
-            await navigator.share(shareData);
-        } catch (err) {
-            console.error('Error: ' + err);
-            copyLink();
-        }
-    }
 </script>
 
 <div class="about-room-main">
-    <section class="share-url not-mobile">
-        <h3>Share the link of the room !</h3>
-        <input type="text" readonly id="input-share-link" bind:this={HTMLShareLink} value={location.toString()}>
-        <button type="button" class="nes-btn is-primary" on:click={copyLink}>Copy</button>
-    </section>
-    <section class="is-mobile">
-        <h3>Share the link of the room !</h3>
-        <input type="hidden" readonly id="input-share-link" bind:this={HTMLShareLink} value={location.toString()}>
-        <button type="button" class="nes-btn is-primary" on:click={shareLink}>Share</button>
-    </section>
     <h2>Information on the map</h2>
     <section class="container-overflow">
         <h3>{mapName}</h3>
@@ -95,24 +66,6 @@
   div.about-room-main {
     height: calc(100% - 56px);
 
-    section.share-url {
-      text-align: center;
-      margin-bottom: 20px;
-
-      input {
-        width: 85%;
-        border-radius: 32px;
-        padding: 3px;
-      }
-      input::selection {
-        background-color: #209cee;
-      }
-    }
-
-    section.is-mobile {
-      display: none;
-    }
-
     h2, h3 {
       width: 100%;
       text-align: center;
@@ -128,21 +81,11 @@
       margin: 0;
       padding: 0;
       overflow-y: auto;
-      }
+    }
   }
 
   @media only screen and (max-width: 800px), only screen and (max-height: 800px) {
     div.about-room-main {
-      section.share-url.not-mobile {
-        display: none;
-      }
-
-      section.is-mobile {
-        display: block;
-        text-align: center;
-        margin-bottom: 20px;
-      }
-
       section.container-overflow {
         height: calc(100% - 120px);
       }

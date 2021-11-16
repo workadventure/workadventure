@@ -1,6 +1,4 @@
 <script lang="ts">
-    let HTMLShareLink: HTMLInputElement;
-
     function copyLink() {
         const input: HTMLInputElement = document.getElementById('input-share-link') as HTMLInputElement;
         input.focus();
@@ -24,12 +22,12 @@
     <section class="container-overflow">
         <section class="share-url not-mobile">
             <h3>Share the link of the room !</h3>
-            <input type="text" readonly id="input-share-link" bind:this={HTMLShareLink} value={location.toString()}>
+            <input type="text" readonly id="input-share-link" value={location.toString()}>
             <button type="button" class="nes-btn is-primary" on:click={copyLink}>Copy</button>
         </section>
         <section class="is-mobile">
             <h3>Share the link of the room !</h3>
-            <input type="hidden" readonly id="input-share-link" bind:this={HTMLShareLink} value={location.toString()}>
+            <input type="hidden" readonly id="input-share-link" value={location.toString()}>
             <button type="button" class="nes-btn is-primary" on:click={shareLink}>Share</button>
         </section>
     </section>
