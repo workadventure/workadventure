@@ -14,7 +14,7 @@ export interface RoomRedirect {
 export class Room {
     public readonly id: string;
     public readonly isPublic: boolean;
-    private _authenticationMandatory: boolean = DISABLE_ANONYMOUS as boolean;
+    private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
     private _iframeAuthentication?: string = OPID_LOGIN_SCREEN_PROVIDER;
     private _mapUrl: string | undefined;
     private _textures: CharacterTexture[] | undefined;
@@ -107,7 +107,7 @@ export class Room {
             this._mapUrl = data.mapUrl;
             this._textures = data.textures;
             this._group = data.group;
-            this._authenticationMandatory = data.authenticationMandatory || (DISABLE_ANONYMOUS as boolean);
+            this._authenticationMandatory = data.authenticationMandatory || DISABLE_ANONYMOUS;
             this._iframeAuthentication = data.iframeAuthentication || OPID_LOGIN_SCREEN_PROVIDER;
             this._contactPage = data.contactPage || CONTACT_URL;
             return new MapDetail(data.mapUrl, data.textures);
