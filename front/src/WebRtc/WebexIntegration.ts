@@ -127,7 +127,12 @@ export class WebexIntegration {
     public async startMeetingLinkGenerator() {
         await this.stop();
         coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
-            const lg = new WebexLinkGenerator({ target: cowebsiteDiv });
+            const lg = new WebexLinkGenerator({
+                target: cowebsiteDiv,
+                props: {
+                    accessToken: this.accessToken,
+                },
+            });
             // TODO -> There should be a better way around this
             // TODO -> Wait for resolve using the same logic as waiting for auth
             return Promise.resolve();

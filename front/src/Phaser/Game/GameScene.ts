@@ -1862,7 +1862,9 @@ ${escapedMessage}
             console.log("[Front] Found meeting url, sending query for update");
             webexIntegration.authWithWebex().then((accessToken) => {
                 webexIntegration.startMeetingLinkGenerator().then(() => {
-                    this.connection?.emitWebexSessionQuery(roomName, accessToken, window.webexPersonalMeetingLink);
+                    setTimeout(() => {
+                        this.connection?.emitWebexSessionQuery(roomName, accessToken, window.webexPersonalMeetingLink);
+                    }, 3000);
                 });
             });
         };

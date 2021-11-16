@@ -1,10 +1,10 @@
 <!-- This file exists solely to generate a personal meeting link that can be sent off to the backend -->
 <script>
   import { onMount } from "svelte";
-  import { accessToken, meetingRoom } from "./WebexVideoChat.svelte";
 
   let webexCDNLink = "https://unpkg.com/webex/umd/webex.min.js";
   let webex = null;
+  export let accessToken = null
 
   function importWebex() {
     return new Promise((resolve, reject) => {
@@ -29,13 +29,14 @@
     });
     webex.config.logger.level = 'debug';
     webex.meetings.register().then(() => {
-      if (window.webexMeetingLinkPassthrough) {
-        window.webexMeetingLinkPassthrough(webex.meetings.getPersonalMeetingRoom().link)
-      } else {
-        throw Error("webexAccessTokenPassthrough() is not present on Window!")
-      }
+        let meetingObject = webex.meetings.getPersonalMeetingRoom();
+        window.webexMeetingLinkPassthrough(meetingObject.link);
+        console.log("[Front] Generated and sent webex meeting link", meetingObject)
+        if (meetingObject.link !== window.webexPersonalMeetingLink) {
+          throw Error("[Front] Meeting link in window ("+ window.webexPersonalMeetingLink+") doesn't match meeting object link ("+meetingObject.link+")")
+        }
     }).catch(err => {
-      console.error("Error: " + err + "\nmeetingRoom: " + meetingRoom + "\n" + "accessToken: " + accessToken);
+      console.error("Error: " + err + "accessToken: " + accessToken);
     });
   })
 </script>
