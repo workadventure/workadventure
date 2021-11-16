@@ -5,7 +5,7 @@ export class BaseController {
     protected addCorsHeaders(res: HttpResponse): void {
         res.writeHeader("access-control-allow-headers", "Origin, X-Requested-With, Content-Type, Accept");
         res.writeHeader("access-control-allow-methods", "GET, POST, OPTIONS, PUT, PATCH, DELETE");
-        res.writeHeader("access-control-allow-origin", "*");
+        res.writeHeader("access-control-allow-origin", FRONT_URL);
     }
 
     /**
@@ -13,7 +13,6 @@ export class BaseController {
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected errorToResponse(e: any, res: HttpResponse): void {
-        res.writeHeader("Access-Control-Allow-Origin", FRONT_URL);
         if (e && e.message) {
             let url = e?.config?.url;
             if (url !== undefined) {
