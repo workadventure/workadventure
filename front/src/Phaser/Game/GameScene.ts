@@ -88,6 +88,7 @@ import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { get } from "svelte/store";
 import { contactPageStore } from "../../Stores/MenuStore";
 import { GameMapProperties } from "./GameMapProperties";
+import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -293,7 +294,8 @@ export class GameScene extends DirtyScene {
             }
 
             //once preloading is over, we don't want loading errors to crash the game, so we need to disable this behavior after preloading.
-            if (this.preloading) {
+            //if SpriteSheetFile (WOKA file) don't display error and give an access for user
+            if (this.preloading && !(file instanceof SpriteSheetFile)) {
                 //remove loader in progress
                 removeLoader(this);
 

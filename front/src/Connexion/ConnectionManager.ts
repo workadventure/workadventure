@@ -314,7 +314,7 @@ class ConnectionManager {
             }
         }
         const { authToken, userUuid, textures, email } = await Axios.get(`${PUSHER_URL}/login-callback`, {
-            params: { code, nonce, token },
+            params: { code, nonce, token, playUri: this.currentRoom?.key },
         }).then((res) => res.data);
         localUserStore.setAuthToken(authToken);
         this.localUser = new LocalUser(userUuid, textures, email);
