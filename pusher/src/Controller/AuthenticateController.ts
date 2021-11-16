@@ -63,25 +63,30 @@ export class AuthenticateController extends BaseController {
                 if (token != undefined) {
                     try {
                         const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
+
+                        //Get user data from Admin Back Office
+                        //This is very important to create User Local in LocalStorage in WorkAdventure
+                        const resUserData = await this.getUserByUserIdentifier(
+                            authTokenData.identifier,
+                            playUri as string,
+                            IPAddress
+                        );
+
                         if (authTokenData.accessToken == undefined) {
                             //if not nonce and code, user connected in anonymous
                             //get data with identifier and return token
                             if (!code && !nonce) {
-                                const data = await this.getUserByUserIdentifier(
-                                    authTokenData.identifier,
-                                    playUri as string,
-                                    IPAddress
-                                );
                                 res.writeStatus("200");
                                 this.addCorsHeaders(res);
-                                return res.end(JSON.stringify({ ...data, authToken: token }));
+                                return res.end(JSON.stringify({ ...resUserData, authToken: token }));
                             }
                             throw Error("Token cannot to be check on Hydra");
                         }
+
                         const resCheckTokenAuth = await openIDClient.checkTokenAuth(authTokenData.accessToken);
                         res.writeStatus("200");
                         this.addCorsHeaders(res);
-                        return res.end(JSON.stringify({ ...resCheckTokenAuth, authToken: token }));
+                        return res.end(JSON.stringify({ ...resCheckTokenAuth, ...resUserData, authToken: token }));
                     } catch (err) {
                         console.info("User was not connected", err);
                     }
@@ -261,7 +266,14 @@ export class AuthenticateController extends BaseController {
         playUri: string,
         IPAddress: string
     ): Promise<FetchMemberDataByUuidResponse | object> {
-        let data: FetchMemberDataByUuidResponse | object = {};
+        let data: FetchMemberDataByUuidResponse = {
+            email: email,
+            userUuid: email,
+            tags: [],
+            messages: [],
+            visitCardUrl: null,
+            textures: [],
+        };
         try {
             data = await adminApi.fetchMemberDataByUuid(email, playUri, IPAddress);
         } catch (err) {

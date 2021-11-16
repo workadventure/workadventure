@@ -22,6 +22,7 @@ export interface AdminBannedData {
 }
 
 export interface FetchMemberDataByUuidResponse {
+    email: string;
     userUuid: string;
     tags: string[];
     visitCardUrl: string | null;
