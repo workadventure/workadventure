@@ -1,4 +1,5 @@
 import { HttpResponse } from "uWebSockets.js";
+import { FRONT_URL } from "../Enum/EnvironmentVariable";
 
 export class BaseController {
     protected addCorsHeaders(res: HttpResponse): void {
@@ -12,6 +13,7 @@ export class BaseController {
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected errorToResponse(e: any, res: HttpResponse): void {
+        res.writeHeader("Access-Control-Allow-Origin", FRONT_URL);
         if (e && e.message) {
             let url = e?.config?.url;
             if (url !== undefined) {
