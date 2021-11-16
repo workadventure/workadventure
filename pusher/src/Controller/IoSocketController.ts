@@ -189,6 +189,7 @@ export class IoSocketController {
                         let memberTextures: CharacterTexture[] = [];
                         const room = await socketManager.getOrCreateRoom(roomId);
                         let userData: FetchMemberDataByUuidResponse = {
+                            email: userIdentifier,
                             userUuid: userIdentifier,
                             tags: [],
                             visitCardUrl: null,
