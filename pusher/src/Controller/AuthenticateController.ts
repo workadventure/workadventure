@@ -64,6 +64,18 @@ export class AuthenticateController extends BaseController {
                     try {
                         const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
                         if (authTokenData.accessToken == undefined) {
+                            //if not nonce and code, user connected in anonymous
+                            //get data with identifier and return token
+                            if (!code && !nonce) {
+                                const data = await this.getUserByUserIdentifier(
+                                    authTokenData.identifier,
+                                    playUri as string,
+                                    IPAddress
+                                );
+                                res.writeStatus("200");
+                                this.addCorsHeaders(res);
+                                return res.end(JSON.stringify({ ...data, authToken: token }));
+                            }
                             throw Error("Token cannot to be check on Hydra");
                         }
                         const resCheckTokenAuth = await openIDClient.checkTokenAuth(authTokenData.accessToken);
@@ -81,7 +93,7 @@ export class AuthenticateController extends BaseController {
                 if (!email) {
                     throw new Error("No email in the response");
                 }
-                const authToken = jwtTokenManager.createAuthToken(email, userInfo.access_token);
+                const authToken = jwtTokenManager.createAuthToken(email, userInfo?.access_token);
 
                 //Get user data from Admin Back Office
                 //This is very important to create User Local in LocalStorage in WorkAdventure
