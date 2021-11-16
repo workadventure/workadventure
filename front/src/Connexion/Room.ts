@@ -112,7 +112,7 @@ export class Room {
             this._contactPage = data.contactPage || CONTACT_URL;
             return new MapDetail(data.mapUrl, data.textures);
         } catch (e) {
-            console.log("Error => getMapDetail", e, e.response);
+            console.error("Error => getMapDetail", e, e.response);
             //TODO fix me and manage Error class
             if (e.response?.data === "Token decrypted error") {
                 localUserStore.setAuthToken(null);
