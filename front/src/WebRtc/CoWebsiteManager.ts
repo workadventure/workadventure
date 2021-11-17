@@ -361,11 +361,21 @@ class CoWebsiteManager {
             oldSlot.container.style.display = "none";
         }
 
+        this.displayCowebsiteContainer();
+
         newSlot.container.style.display = "block";
 
         coWebsite.iframe.classList.remove("pixel");
 
         this.resizeAllIframes();
+    }
+
+    private displayCowebsiteContainer() {
+        if (this.coWebsites.find((cowebsite) => cowebsite.position > 0)) {
+            this.cowebsiteContainerDom.style.display = "block";
+        } else {
+            this.cowebsiteContainerDom.style.display = "none";
+        }
     }
 
     private moveLeftPreviousCoWebsite(coWebsite: CoWebsite, newPosition: number) {
@@ -421,6 +431,8 @@ class CoWebsiteManager {
         if (previousCoWebsite) {
             this.moveLeftPreviousCoWebsite(previousCoWebsite, coWebsite.position);
         }
+
+        this.displayCowebsiteContainer();
 
         coWebsite.icon.remove();
         coWebsite.iframe.remove();
