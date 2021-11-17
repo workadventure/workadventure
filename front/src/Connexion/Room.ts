@@ -14,7 +14,7 @@ export interface RoomRedirect {
 export class Room {
     public readonly id: string;
     public readonly isPublic: boolean;
-    private _authenticationMandatory: boolean = DISABLE_ANONYMOUS as boolean;
+    private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
     private _iframeAuthentication?: string = OPID_LOGIN_SCREEN_PROVIDER;
     private _mapUrl: string | undefined;
     private _textures: CharacterTexture[] | undefined;
@@ -89,27 +89,37 @@ export class Room {
     }
 
     private async getMapDetail(): Promise<MapDetail | RoomRedirect> {
-        const result = await Axios.get(`${PUSHER_URL}/map`, {
-            params: {
-                playUri: this.roomUrl.toString(),
-                authToken: localUserStore.getAuthToken(),
-            },
-        });
+        try {
+            const result = await Axios.get(`${PUSHER_URL}/map`, {
+                params: {
+                    playUri: this.roomUrl.toString(),
+                    authToken: localUserStore.getAuthToken(),
+                },
+            });
 
-        const data = result.data;
-        if (data.redirectUrl) {
-            return {
-                redirectUrl: data.redirectUrl as string,
-            };
+            const data = result.data;
+            if (data.redirectUrl) {
+                return {
+                    redirectUrl: data.redirectUrl as string,
+                };
+            }
+            console.log("Map ", this.id, " resolves to URL ", data.mapUrl);
+            this._mapUrl = data.mapUrl;
+            this._textures = data.textures;
+            this._group = data.group;
+            this._authenticationMandatory = data.authenticationMandatory || DISABLE_ANONYMOUS;
+            this._iframeAuthentication = data.iframeAuthentication || OPID_LOGIN_SCREEN_PROVIDER;
+            this._contactPage = data.contactPage || CONTACT_URL;
+            return new MapDetail(data.mapUrl, data.textures);
+        } catch (e) {
+            console.error("Error => getMapDetail", e, e.response);
+            //TODO fix me and manage Error class
+            if (e.response?.data === "Token decrypted error") {
+                localUserStore.setAuthToken(null);
+                window.location.assign("/login");
+            }
+            throw e;
         }
-        console.log("Map ", this.id, " resolves to URL ", data.mapUrl);
-        this._mapUrl = data.mapUrl;
-        this._textures = data.textures;
-        this._group = data.group;
-        this._authenticationMandatory = data.authenticationMandatory || (DISABLE_ANONYMOUS as boolean);
-        this._iframeAuthentication = data.iframeAuthentication || OPID_LOGIN_SCREEN_PROVIDER;
-        this._contactPage = data.contactPage || CONTACT_URL;
-        return new MapDetail(data.mapUrl, data.textures);
     }
 
     /**

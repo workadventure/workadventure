@@ -226,7 +226,7 @@ class ConnectionManager {
 
     public async anonymousLogin(isBenchmark: boolean = false): Promise<void> {
         const data = await Axios.post(`${PUSHER_URL}/anonymLogin`).then((res) => res.data);
-        this.localUser = new LocalUser(data.userUuid, []);
+        this.localUser = new LocalUser(data.userUuid, [], data.email);
         this.authToken = data.authToken;
         if (!isBenchmark) {
             // In benchmark, we don't have a local storage.
@@ -314,7 +314,7 @@ class ConnectionManager {
             }
         }
         const { authToken, userUuid, textures, email } = await Axios.get(`${PUSHER_URL}/login-callback`, {
-            params: { code, nonce, token },
+            params: { code, nonce, token, playUri: this.currentRoom?.key },
         }).then((res) => res.data);
         localUserStore.setAuthToken(authToken);
         this.localUser = new LocalUser(userUuid, textures, email);
