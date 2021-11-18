@@ -14,6 +14,7 @@ import { waScaleManager } from "../Services/WaScaleManager";
 import { isMobile } from "../../Enum/EnvironmentVariable";
 import { CustomizedCharacter } from "../Entity/CustomizedCharacter";
 import { get } from "svelte/store";
+import { analyticsClient } from "../../Administration/AnalyticsClient";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -277,6 +278,8 @@ export class CustomizeScene extends AbstractCharacterScene {
         if (!areCharacterLayersValid(layers)) {
             return;
         }
+
+        analyticsClient.validationWoka("CustomizeWoka");
 
         gameManager.setCharacterLayers(layers);
         this.scene.sleep(CustomizeSceneName);
