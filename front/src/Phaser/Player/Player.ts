@@ -100,6 +100,8 @@ export class Player extends Character {
     }
 
     private followStep(activeEvents: ActiveEventList, delta: number) {
+        let moving = false;
+
         if (this.follow === null) {
             return;
         }
@@ -137,10 +139,12 @@ export class Player extends Character {
                     this.follow.direction = PlayerAnimationDirections.Down;
                 }
             }
+
+            moving = true;
         }
 
         this.emit(hasMovedEventName, {
-            moving: true,
+            moving: moving,
             direction: this.follow.direction,
             x: this.x,
             y: this.y,
@@ -148,8 +152,8 @@ export class Player extends Character {
 
         this.previousDirection = this.follow.direction;
 
-        this.wasMoving = true;
-        userMovingStore.set(true);
+        this.wasMoving = moving;
+        userMovingStore.set(moving);
     }
 
     moveUser(delta: number): void {
