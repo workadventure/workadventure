@@ -383,6 +383,7 @@ export class GameRoom {
 
                 // Reset the variable manager
                 this.variableManagerPromise = undefined;
+                this.mapPromise = undefined;
 
                 console.log(
                     'An error occurred while setting the "' + name + "\" variable. Let's reload the map and try again"
