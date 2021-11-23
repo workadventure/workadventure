@@ -20,6 +20,7 @@ import type { ButtonDescriptor } from "./Api/iframe/Ui/ButtonDescriptor";
 import type { Popup } from "./Api/iframe/Ui/Popup";
 import type { Sound } from "./Api/iframe/Sound/Sound";
 import { answerPromises, queryWorkadventure } from "./Api/iframe/IframeApiContribution";
+import camera from "./Api/iframe/camera";
 
 const globalState = createState("global");
 
@@ -46,6 +47,7 @@ const wa = {
     sound,
     room,
     player,
+    camera,
     state: globalState,
 
     onInit(): Promise<void> {

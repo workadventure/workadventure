@@ -97,7 +97,7 @@ You need to wait for the end of the initialization before calling `WA.player.get
 
 ```typescript
 WA.onInit().then(() => {
-    console.log('Tags: ', WA.player.getPosition());
+    console.log('Position: ', WA.player.getPosition());
 })
 ```
 
