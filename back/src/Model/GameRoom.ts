@@ -485,9 +485,9 @@ export class GameRoom {
 
     private getVariableManager(): Promise<VariablesManager> {
         if (!this.variableManagerPromise) {
+            this.variableManagerLastLoad = new Date();
             this.variableManagerPromise = this.getMap()
                 .then((map) => {
-                    this.variableManagerLastLoad = new Date();
                     const variablesManager = new VariablesManager(this.roomUrl, map);
                     return variablesManager.init();
                 })
