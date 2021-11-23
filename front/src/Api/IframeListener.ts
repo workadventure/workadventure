@@ -31,6 +31,7 @@ import type { SetVariableEvent } from "./Events/SetVariableEvent";
 import { ModifyEmbeddedWebsiteEvent, isEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
 import { handleMenuRegistrationEvent, handleMenuUnregisterEvent } from "../Stores/MenuStore";
 import type { ChangeLayerEvent } from "./Events/ChangeLayerEvent";
+import type { HasCameraMovedEvent } from "./Events/HasCameraMovedEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -94,6 +95,7 @@ class IframeListener {
     private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
     private sendPlayerMove: boolean = false;
+    private sendCameraMove: boolean = false;
 
     // Note: we are forced to type this in unknown and later cast with "as" because of https://github.com/microsoft/TypeScript/issues/31904
     private answerers: {
@@ -225,6 +227,8 @@ class IframeListener {
                         this._removeBubbleStream.next();
                     } else if (payload.type == "onPlayerMove") {
                         this.sendPlayerMove = true;
+                    } else if (payload.type == "onCameraMove") {
+                        this.sendCameraMove = true;
                     } else if (payload.type == "setTiles" && isSetTilesEvent(payload.data)) {
                         this._setTilesStream.next(payload.data);
                     } else if (payload.type == "modifyEmbeddedWebsite" && isEmbeddedWebsiteEvent(payload.data)) {
@@ -418,6 +422,15 @@ class IframeListener {
         if (this.sendPlayerMove) {
             this.postMessage({
                 type: "hasPlayerMoved",
+                data: event,
+            });
+        }
+    }
+
+    hasCameraMoved(event: HasCameraMovedEvent) {
+        if (this.sendCameraMove) {
+            this.postMessage({
+                type: "hasCameraMoved",
                 data: event,
             });
         }

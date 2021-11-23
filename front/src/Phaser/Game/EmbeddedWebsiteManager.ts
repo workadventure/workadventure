@@ -30,6 +30,7 @@ export class EmbeddedWebsiteManager {
                     height: rect["height"],
                 },
                 origin: website.origin,
+                scale: website.scale,
             };
         });
 
@@ -144,9 +145,9 @@ export class EmbeddedWebsiteManager {
             name,
             url,
             /*x,
-            y,
-            width,
-            height,*/
+      y,
+      width,
+      height,*/
             allow,
             allowApi,
             visible,

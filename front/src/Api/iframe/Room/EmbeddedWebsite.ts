@@ -13,7 +13,7 @@ export class EmbeddedWebsite {
     private _allowApi: boolean;
     private _position: Rectangle;
     private readonly origin: "map" | "player" | undefined;
-    private _scale: number | undefined;
+    private _scale: number;
 
     constructor(private config: CreateEmbeddedWebsiteEvent) {
         this.name = config.name;
@@ -23,7 +23,7 @@ export class EmbeddedWebsite {
         this._allowApi = config.allowApi ?? false;
         this._position = config.position;
         this.origin = config.origin;
-        this._scale = config.scale;
+        this._scale = config.scale ?? 1;
     }
 
     public get url() {
@@ -116,7 +116,7 @@ export class EmbeddedWebsite {
         });
     }
 
-    public get scale() {
+    public get scale(): number {
         return this._scale;
     }
 
