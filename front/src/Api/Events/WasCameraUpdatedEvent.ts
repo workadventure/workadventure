@@ -1,6 +1,6 @@
 import * as tg from "generic-type-guard";
 
-export const isHasCameraMovedEvent = new tg.IsInterface()
+export const isWasCameraUpdatedEvent = new tg.IsInterface()
     .withProperties({
         x: tg.isNumber,
         y: tg.isNumber,
@@ -13,6 +13,6 @@ export const isHasCameraMovedEvent = new tg.IsInterface()
  * A message sent from the game to the iFrame to notify a movement from the camera.
  */
 
-export type HasCameraMovedEvent = tg.GuardedType<typeof isHasCameraMovedEvent>;
+export type WasCameraUpdatedEvent = tg.GuardedType<typeof isWasCameraUpdatedEvent>;
 
-export type HasCameraMovedEventCallback = (event: HasCameraMovedEvent) => void;
+export type WasCameraUpdatedEventCallback = (event: WasCameraUpdatedEvent) => void;

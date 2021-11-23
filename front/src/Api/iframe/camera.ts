@@ -1,26 +1,26 @@
 import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
 import { Subject } from "rxjs";
-import type { HasCameraMovedEvent, HasCameraMovedEventCallback } from "../Events/HasCameraMovedEvent";
+import type { WasCameraUpdatedEvent, WasCameraUpdatedEventCallback } from "../Events/WasCameraUpdatedEvent";
 import { apiCallback } from "./registeredCallbacks";
-import { isHasCameraMovedEvent } from "../Events/HasCameraMovedEvent";
+import { isWasCameraUpdatedEvent } from "../Events/WasCameraUpdatedEvent";
 
-const moveStream = new Subject<HasCameraMovedEvent>();
+const moveStream = new Subject<WasCameraUpdatedEvent>();
 
 export class WorkAdventureCameraCommands extends IframeApiContribution<WorkAdventureCameraCommands> {
     callbacks = [
         apiCallback({
-            type: "hasCameraMoved",
-            typeChecker: isHasCameraMovedEvent,
+            type: "wasCameraUpdated",
+            typeChecker: isWasCameraUpdatedEvent,
             callback: (payloadData) => {
                 moveStream.next(payloadData);
             },
         }),
     ];
 
-    onCameraMove(callback: HasCameraMovedEventCallback): void {
+    onCameraUpdate(callback: WasCameraUpdatedEventCallback): void {
         moveStream.subscribe(callback);
         sendToWorkadventure({
-            type: "onCameraMove",
+            type: "onCameraUpdate",
             data: null,
         });
     }
