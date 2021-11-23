@@ -94,7 +94,7 @@ import { SetPlayerDetailsMessage } from "../../Messages/generated/messages_pb";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { getColorRgbFromHue } from "../../WebRtc/ColorGenerator";
 import Camera = Phaser.Cameras.Scene2D.Camera;
-import type { HasCameraMovedEvent } from "../../Api/Events/HasCameraMovedEvent";
+import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -787,13 +787,13 @@ export class GameScene extends DirtyScene {
 
                 //listen event to share the actual worldView when the camera is updated
                 this.cameras.main.on("followupdate", (camera: Camera) => {
-                    const worldView: HasCameraMovedEvent = {
+                    const worldView: WasCameraUpdatedEvent = {
                         x: camera.worldView.x,
                         y: camera.worldView.y,
                         width: camera.worldView.width,
                         height: camera.worldView.height,
                     };
-                    iframeListener.hasCameraMoved(worldView);
+                    iframeListener.sendCameraUpdated(worldView);
                 });
 
                 // Set up variables manager

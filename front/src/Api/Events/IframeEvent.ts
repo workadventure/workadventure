@@ -32,7 +32,7 @@ import { isPlayerPropertyEvent } from "./PlayerPropertyEvent";
 import type { ChangeZoneEvent } from "./ChangeZoneEvent";
 import { isColorEvent } from "./ColorEvent";
 import { isPlayerPosition } from "./PlayerPosition";
-import type { HasCameraMovedEvent } from "./HasCameraMovedEvent";
+import type { WasCameraUpdatedEvent } from "./WasCameraUpdatedEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -53,7 +53,7 @@ export type IframeEventMap = {
     displayBubble: null;
     removeBubble: null;
     onPlayerMove: undefined;
-    onCameraMove: undefined;
+    onCameraUpdate: undefined;
     showLayer: LayerEvent;
     hideLayer: LayerEvent;
     setProperty: SetPropertyEvent;
@@ -86,7 +86,7 @@ export interface IframeResponseEventMap {
     leaveZoneEvent: ChangeZoneEvent;
     buttonClickedEvent: ButtonClickedEvent;
     hasPlayerMoved: HasPlayerMovedEvent;
-    hasCameraMoved: HasCameraMovedEvent;
+    wasCameraUpdated: WasCameraUpdatedEvent;
     menuItemClicked: MenuItemClickedEvent;
     setVariable: SetVariableEvent;
     messageTriggered: MessageReferenceEvent;
