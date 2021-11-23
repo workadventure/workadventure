@@ -30,4 +30,4 @@ jobs:
         run: docker-compose logs -f --tail=0 front | grep -m 1 "Compiled successfully"
 
       - name: "Run tests"
-        run: docker-compose -f docker-compose.testcafe.yml --exit-code-from testcafe up
+        run: docker-compose -f docker-compose.testcafe.yml up --exit-code-from testcafe
