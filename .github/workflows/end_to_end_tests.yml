@@ -1,0 +1,30 @@
+# https://help.github.com/en/categories/automating-your-workflow-with-github-actions
+
+name: "End to end tests"
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+
+jobs:
+
+  end-to-end-tests:
+    name: "End-to-end testcafe tests"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2.0.0"
+
+      - name: "Setup .env file"
+        run: cp .env.template .env
+
+      - name: "Start environment"
+        run: docker-compose up -d
+
+      - name: "Run tests"
+        run: docker-compose -f docker-compose.testcafe.yml up
