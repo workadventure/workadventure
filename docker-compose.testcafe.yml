@@ -7,7 +7,8 @@ services:
       BROWSER: "chromium --use-fake-device-for-media-stream"
     volumes:
       - ./tests:/tests
-      - ./tests/.testcaferc.json:/.testcaferc.json
       - ./maps:/maps
+    user: "${UID}:${GID}"
+
   #  security_opt:
   #    - seccomp:unconfined
