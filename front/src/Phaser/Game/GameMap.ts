@@ -12,8 +12,7 @@ export type PropertyChangeCallback = (
 
 export type layerChangeCallback = (
     layersChangedByAction: Array<ITiledMapLayer>,
-    allLayersOnNewPosition:  Array<ITiledMapLayer>,
-
+    allLayersOnNewPosition: Array<ITiledMapLayer>
 ) => void;
 
 /**
@@ -81,7 +80,7 @@ export class GameMap {
     }
 
     private getLayersByKey(key: number): Array<ITiledMapLayer> {
-        return this.flatLayers.filter(flatLayer => flatLayer.type === 'tilelayer' && flatLayer.data[key] !== 0);
+        return this.flatLayers.filter((flatLayer) => flatLayer.type === "tilelayer" && flatLayer.data[key] !== 0);
     }
 
     /**
@@ -134,13 +133,12 @@ export class GameMap {
         const enterLayers = new Set(layersByNewKey);
         const leaveLayers = new Set(layersByOldKey);
 
-        enterLayers.forEach(layer => {
+        enterLayers.forEach((layer) => {
             if (leaveLayers.has(layer)) {
                 leaveLayers.delete(layer);
                 enterLayers.delete(layer);
             }
         });
-
 
         if (enterLayers.size > 0) {
             const layerArray = Array.from(enterLayers);

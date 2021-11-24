@@ -2,7 +2,7 @@ import * as tg from "generic-type-guard";
 
 export const isCloseCoWebsite = new tg.IsInterface()
     .withProperties({
-        id: tg.isOptional(tg.isString)
+        id: tg.isOptional(tg.isString),
     })
     .get();
 
