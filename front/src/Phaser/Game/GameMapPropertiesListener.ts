@@ -27,7 +27,7 @@ export class GameMapPropertiesListener {
     constructor(private scene: GameScene, private gameMap: GameMap) {}
 
     register() {
-        this.gameMap.onPropertyChange(GameMapProperties.OPEN_TAB, (newValue, oldvalue, allProps) => {
+        this.gameMap.onPropertyChange(GameMapProperties.OPEN_TAB, (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
                 layoutManagerActionStore.removeAction("openTab");
             }
@@ -192,11 +192,6 @@ export class GameMapPropertiesListener {
 
                     if (coWebsiteOpen.state === OpenCoWebsiteState.LOADING) {
                         coWebsiteOpen.state = OpenCoWebsiteState.MUST_BE_CLOSE;
-                        return;
-                    }
-
-                    if (coWebsiteOpen.state !== OpenCoWebsiteState.OPENED) {
-                        return;
                     }
 
                     if (coWebsiteOpen.coWebsite !== undefined) {

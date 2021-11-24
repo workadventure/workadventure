@@ -107,7 +107,8 @@ export class Room {
             this._mapUrl = data.mapUrl;
             this._textures = data.textures;
             this._group = data.group;
-            this._authenticationMandatory = data.authenticationMandatory || DISABLE_ANONYMOUS;
+            this._authenticationMandatory =
+                data.authenticationMandatory != null ? data.authenticationMandatory : DISABLE_ANONYMOUS;
             this._iframeAuthentication = data.iframeAuthentication || OPID_LOGIN_SCREEN_PROVIDER;
             this._contactPage = data.contactPage || CONTACT_URL;
             return new MapDetail(data.mapUrl, data.textures);
