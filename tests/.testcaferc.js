@@ -7,6 +7,7 @@ module.exports = {
   "src": "tests/",
   "screenshots": {
     "path": "screenshots/",
-    "takeOnFails": true
+    "takeOnFails": true,
+    "thumbnails": false,
   }
 }

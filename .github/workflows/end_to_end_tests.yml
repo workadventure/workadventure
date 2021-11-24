@@ -24,7 +24,7 @@ jobs:
         run: cp .env.template .env
 
       - name: "Edit ownership of file for test cases"
-        run: sudo chown 1000:1000 -R maps/tests/Variables/Cache
+        run: sudo chown 1000:1000 -R .
 
       - name: "Start environment"
         run: docker-compose up -d
@@ -34,3 +34,11 @@ jobs:
 
       - name: "Run tests"
         run: docker-compose -f docker-compose.testcafe.yml up --exit-code-from testcafe
+
+      - name: Upload failed tests
+        if: ${{ failure() }}
+        uses: edunad/action-image@v1.0.0
+        with:
+          path: './tests/screenshots/**/*.png'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          title: 'Failed E2E tests 🙀'
