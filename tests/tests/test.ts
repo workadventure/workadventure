@@ -38,7 +38,7 @@ test("Test that variables cache in the back don't prevent setting a variable in 
     const logs = messages['log'];
 
     // Let's check we successfully manage to save the variable value.
-    await t.expect(logs).contains('SUCCESS!');
+    await assertLogMessage(t, 'SUCCESS!');
 
     t.ctx.passed = true;
 }).after(async t => {
@@ -47,3 +47,22 @@ test("Test that variables cache in the back don't prevent setting a variable in 
         console.log(await t.getBrowserConsoleMessages());
     }
 });
+
+/**
+ * Tries to find a given log message in the logs (for 10 seconds)
+ */
+async function assertLogMessage(t, message: string): Promise<void> {
+    let i = 0;
+    let logs: string[]|undefined;
+    do {
+        const messages = await t.getBrowserConsoleMessages();
+        logs = messages['log'];
+        if (logs.find((str) => str === message)) {
+            break;
+        }
+        await t.wait(1000);
+        i++;
+    } while (i < 10);
+
+    await t.expect(logs).contains(message);
+}
