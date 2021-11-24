@@ -29,8 +29,7 @@ test("Test that variables cache in the back don't prevent setting a variable in 
         .click('button.selectCharacterButtonRight')
         .click('button.selectCharacterButtonRight')
         .click('button.selectCharacterSceneFormSubmit')
-        .click('button.letsgo')
-        .wait(1000);
+        .click('button.letsgo');
         //.takeScreenshot('after_switch.png');
 
     const messages = await t.getBrowserConsoleMessages();
