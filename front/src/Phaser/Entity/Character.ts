@@ -3,6 +3,7 @@ import { SpeechBubble } from "./SpeechBubble";
 import Text = Phaser.GameObjects.Text;
 import Container = Phaser.GameObjects.Container;
 import Sprite = Phaser.GameObjects.Sprite;
+import DOMElement = Phaser.GameObjects.DOMElement;
 import { TextureError } from "../../Exception/TextureError";
 import { Companion } from "../Companion/Companion";
 import type { GameScene } from "../Game/GameScene";
@@ -10,6 +11,7 @@ import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
 import { waScaleManager } from "../Services/WaScaleManager";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { isSilentStore } from "../../Stores/MediaStore";
+import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 
 const playerNameY = -25;
 
@@ -32,7 +34,7 @@ export abstract class Character extends Container {
     //private teleportation: Sprite;
     private invisible: boolean;
     public companion?: Companion;
-    private emote: Phaser.GameObjects.Sprite | null = null;
+    private emote: Phaser.GameObjects.DOMElement | null = null;
     private emoteTween: Phaser.Tweens.Tween | null = null;
     scene: GameScene;
 
@@ -57,10 +59,19 @@ export abstract class Character extends Container {
         this.sprites = new Map<string, Sprite>();
 
         //textures are inside a Promise in case they need to be lazyloaded before use.
-        texturesPromise.then((textures) => {
-            this.addTextures(textures, frame);
-            this.invisible = false;
-        });
+        texturesPromise
+            .then((textures) => {
+                this.addTextures(textures, frame);
+                this.invisible = false;
+                this.playAnimation(direction, moving);
+            })
+            .catch(() => {
+                return lazyLoadPlayerCharacterTextures(scene.load, ["color_22", "eyes_23"]).then((textures) => {
+                    this.addTextures(textures, frame);
+                    this.invisible = false;
+                    this.playAnimation(direction, moving);
+                });
+            });
 
         this.playerName = new Text(scene, 0, playerNameY, name, {
             fontFamily: '"Press Start 2P"',
@@ -99,9 +110,7 @@ export abstract class Character extends Container {
         this.setSize(16, 16);
         this.getBody().setSize(16, 16); //edit the hitbox to better match the character model
         this.getBody().setOffset(0, 8);
-        this.setDepth(-1);
-
-        this.playAnimation(direction, moving);
+        this.setDepth(0);
 
         if (typeof companion === "string") {
             this.addCompanion(companion, companionTexturePromise);
@@ -289,53 +298,49 @@ export abstract class Character extends Container {
         isSilentStore.set(false);
     }
 
-    playEmote(emoteKey: string) {
+    playEmote(emote: string) {
         this.cancelPreviousEmote();
-
-        const scalingFactor = waScaleManager.uiScalingFactor * 0.05;
-        const emoteY = -30 - scalingFactor * 10;
-
-        this.playerName.setVisible(false);
-        this.emote = new Sprite(this.scene, 0, 0, emoteKey);
+        const emoteY = -45;
+        const image = new Image(16, 16);
+        image.src = emote;
+        this.emote = new DOMElement(this.scene, -1, 0, image, "z-index:10;");
         this.emote.setAlpha(0);
-        this.emote.setScale(0.1 * scalingFactor);
         this.add(this.emote);
-        this.scene.sys.updateList.add(this.emote);
-
-        this.createStartTransition(scalingFactor, emoteY);
+        this.createStartTransition(emoteY);
     }
 
-    private createStartTransition(scalingFactor: number, emoteY: number) {
+    private createStartTransition(emoteY: number) {
         this.emoteTween = this.scene?.tweens.add({
             targets: this.emote,
             props: {
-                scale: scalingFactor,
                 alpha: 1,
                 y: emoteY,
             },
             ease: "Power2",
             duration: 500,
             onComplete: () => {
-                this.startPulseTransition(emoteY, scalingFactor);
+                this.startPulseTransition(emoteY);
             },
         });
     }
 
-    private startPulseTransition(emoteY: number, scalingFactor: number) {
-        this.emoteTween = this.scene?.tweens.add({
-            targets: this.emote,
-            props: {
-                y: emoteY * 1.3,
-                scale: scalingFactor * 1.1,
-            },
-            duration: 250,
-            yoyo: true,
-            repeat: 1,
-            completeDelay: 200,
-            onComplete: () => {
-                this.startExitTransition(emoteY);
-            },
-        });
+    private startPulseTransition(emoteY: number) {
+        if (this.emote) {
+            this.emoteTween = this.scene?.tweens.add({
+                targets: this.emote,
+                props: {
+                    y: emoteY * 1.3,
+                    scale: this.emote.scale * 1.1,
+                },
+                duration: 250,
+                yoyo: true,
+                repeat: 1,
+                completeDelay: 200,
+                onComplete: () => {
+                    this.startExitTransition(emoteY);
+                },
+            });
+        }
     }
 
     private startExitTransition(emoteY: number) {

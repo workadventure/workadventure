@@ -3,7 +3,7 @@
     import { chatMessagesStore, chatVisibilityStore } from "../../Stores/ChatStore";
     import ChatMessageForm from './ChatMessageForm.svelte';
     import ChatElement from './ChatElement.svelte';
-    import {afterUpdate, beforeUpdate} from "svelte";
+    import {afterUpdate, beforeUpdate, onMount} from "svelte";
     import {HtmlUtils} from "../../WebRtc/HtmlUtils";
     
     let listDom: HTMLElement;
@@ -14,6 +14,10 @@
     beforeUpdate(() => {
         autoscroll = listDom && (listDom.offsetHeight + listDom.scrollTop) > (listDom.scrollHeight - 20);
     });
+
+    onMount(() => {
+        listDom.scrollTo(0, listDom.scrollHeight);
+    })
 
     afterUpdate(() => {
         if (autoscroll) listDom.scrollTo(0, listDom.scrollHeight);

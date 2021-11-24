@@ -9,6 +9,7 @@ import { Room } from "./Room";
 import { _ServiceWorker } from "../Network/ServiceWorker";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { userIsConnected } from "../Stores/MenuStore";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -40,13 +41,15 @@ class ConnectionManager {
         const nonce = localUserStore.generateNonce();
         localUserStore.setAuthToken(null);
 
-        //TODO fix me to redirect this URL by pusher
         if (!this._currentRoom || !this._currentRoom.iframeAuthentication) {
             loginSceneVisibleIframeStore.set(false);
             return null;
         }
-        const redirectUrl = `${this._currentRoom.iframeAuthentication}?state=${state}&nonce=${nonce}&playUri=${this._currentRoom.key}`;
-        window.location.assign(redirectUrl);
+        const redirectUrl = new URL(`${this._currentRoom.iframeAuthentication}`);
+        redirectUrl.searchParams.append("state", state);
+        redirectUrl.searchParams.append("nonce", nonce);
+        redirectUrl.searchParams.append("playUri", this._currentRoom.key);
+        window.location.assign(redirectUrl.toString());
         return redirectUrl;
     }
 
@@ -75,24 +78,41 @@ class ConnectionManager {
         const connexionType = urlManager.getGameConnexionType();
         this.connexionType = connexionType;
         this._currentRoom = null;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get("token");
+        if (token) {
+            this.authToken = token;
+            localUserStore.setAuthToken(token);
+            //token was saved, clear url
+            urlParams.delete("token");
+        }
+
         if (connexionType === GameConnexionTypes.login) {
             this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
-            this.loadOpenIDScreen();
-            return Promise.reject(new Error("You will be redirect on login page"));
+            if (this.loadOpenIDScreen() !== null) {
+                return Promise.reject(new Error("You will be redirect on login page"));
+            }
+            urlManager.pushRoomIdToUrl(this._currentRoom);
         } else if (connexionType === GameConnexionTypes.jwt) {
             const urlParams = new URLSearchParams(window.location.search);
-            const code = urlParams.get("code");
-            const state = urlParams.get("state");
-            if (!state || !localUserStore.verifyState(state)) {
-                throw "Could not validate state!";
+
+            if (!token) {
+                const code = urlParams.get("code");
+                const state = urlParams.get("state");
+                if (!state || !localUserStore.verifyState(state)) {
+                    throw "Could not validate state!";
+                }
+                if (!code) {
+                    throw "No Auth code provided";
+                }
+                localUserStore.setCode(code);
             }
-            if (!code) {
-                throw "No Auth code provided";
-            }
-            localUserStore.setCode(code);
+
             this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
             try {
                 await this.checkAuthUserConnexion();
+                analyticsClient.loggedWithSso();
             } catch (err) {
                 console.error(err);
                 this.loadOpenIDScreen();
@@ -105,10 +125,11 @@ class ConnectionManager {
             const data = await Axios.post(`${PUSHER_URL}/register`, { organizationMemberToken }).then(
                 (res) => res.data
             );
-            this.localUser = new LocalUser(data.userUuid, data.textures);
+            this.localUser = new LocalUser(data.userUuid, data.textures, data.email);
             this.authToken = data.authToken;
             localUserStore.saveUser(this.localUser);
             localUserStore.setAuthToken(this.authToken);
+            analyticsClient.loggedWithToken();
 
             const roomUrl = data.roomUrl;
 
@@ -129,17 +150,6 @@ class ConnectionManager {
             connexionType === GameConnexionTypes.empty
         ) {
             this.authToken = localUserStore.getAuthToken();
-            //todo: add here some kind of warning if authToken has expired.
-            if (!this.authToken) {
-                await this.anonymousLogin();
-            } else {
-                try {
-                    await this.checkAuthUserConnexion();
-                } catch (err) {
-                    console.error(err);
-                }
-            }
-            this.localUser = localUserStore.getLocalUser() as LocalUser; //if authToken exist in localStorage then localUser cannot be null
 
             let roomPath: string;
             if (connexionType === GameConnexionTypes.empty) {
@@ -164,7 +174,27 @@ class ConnectionManager {
             }
 
             //get detail map for anonymous login and set texture in local storage
+            //before set token of user we must load room and all information. For example the mandatory authentication could be require on current room
             this._currentRoom = await Room.createRoom(new URL(roomPath));
+
+            //defined last room url this room path
+            localUserStore.setLastRoomUrl(this._currentRoom.key);
+
+            //todo: add here some kind of warning if authToken has expired.
+            if (!this.authToken && !this._currentRoom.authenticationMandatory) {
+                await this.anonymousLogin();
+            } else {
+                try {
+                    await this.checkAuthUserConnexion();
+                    analyticsClient.loggedWithSso();
+                } catch (err) {
+                    console.error(err);
+                    this.loadOpenIDScreen();
+                    return Promise.reject(new Error("You will be redirect on login page"));
+                }
+            }
+            this.localUser = localUserStore.getLocalUser() as LocalUser; //if authToken exist in localStorage then localUser cannot be null
+
             if (this._currentRoom.textures != undefined && this._currentRoom.textures.length > 0) {
                 //check if texture was changed
                 if (this.localUser.textures.length === 0) {
@@ -184,14 +214,19 @@ class ConnectionManager {
         if (this._currentRoom == undefined) {
             return Promise.reject(new Error("Invalid URL"));
         }
+        if (this.localUser) {
+            analyticsClient.identifyUser(this.localUser.uuid, this.localUser.email);
+        }
 
+        //clean history with new URL
+        window.history.pushState({}, document.title, window.location.pathname);
         this.serviceWorker = new _ServiceWorker();
         return Promise.resolve(this._currentRoom);
     }
 
     public async anonymousLogin(isBenchmark: boolean = false): Promise<void> {
         const data = await Axios.post(`${PUSHER_URL}/anonymLogin`).then((res) => res.data);
-        this.localUser = new LocalUser(data.userUuid, []);
+        this.localUser = new LocalUser(data.userUuid, [], data.email);
         this.authToken = data.authToken;
         if (!isBenchmark) {
             // In benchmark, we don't have a local storage.
@@ -265,20 +300,25 @@ class ConnectionManager {
         //set connected store for menu at false
         userIsConnected.set(false);
 
+        const token = localUserStore.getAuthToken();
         const state = localUserStore.getState();
         const code = localUserStore.getCode();
-        if (!state || !localUserStore.verifyState(state)) {
-            throw "Could not validate state!";
-        }
-        if (!code) {
-            throw "No Auth code provided";
-        }
         const nonce = localUserStore.getNonce();
-        const token = localUserStore.getAuthToken();
-        const { authToken } = await Axios.get(`${PUSHER_URL}/login-callback`, { params: { code, nonce, token } }).then(
-            (res) => res.data
-        );
+
+        if (!token) {
+            if (!state || !localUserStore.verifyState(state)) {
+                throw "Could not validate state!";
+            }
+            if (!code) {
+                throw "No Auth code provided";
+            }
+        }
+        const { authToken, userUuid, textures, email } = await Axios.get(`${PUSHER_URL}/login-callback`, {
+            params: { code, nonce, token, playUri: this.currentRoom?.key },
+        }).then((res) => res.data);
         localUserStore.setAuthToken(authToken);
+        this.localUser = new LocalUser(userUuid, textures, email);
+        localUserStore.saveUser(this.localUser);
         this.authToken = authToken;
 
         //user connected, set connected store for menu at true

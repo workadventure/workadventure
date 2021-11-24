@@ -14,7 +14,7 @@ WorkAdventure comes with a "map starter kit" that we recommend using to start de
 {.alert.alert-info}
 If you are looking to host your maps on your own webserver, be sure to read the [Self-hosting your map](hosting.md) guide.
 
-[](https://www.youtube.com/watch?v=lu1IZgBJJD4)
+[Building your map - Create your map](https://www.youtube.com/watch?v=lu1IZgBJJD4)
 
 ## Getting started
 

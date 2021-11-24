@@ -1,5 +1,5 @@
 import Axios from "axios";
-import { PUSHER_URL } from "../Enum/EnvironmentVariable";
+import { CONTACT_URL, PUSHER_URL, DISABLE_ANONYMOUS, OPID_LOGIN_SCREEN_PROVIDER } from "../Enum/EnvironmentVariable";
 import type { CharacterTexture } from "./LocalUser";
 import { localUserStore } from "./LocalUserStore";
 
@@ -14,12 +14,14 @@ export interface RoomRedirect {
 export class Room {
     public readonly id: string;
     public readonly isPublic: boolean;
-    private _authenticationMandatory: boolean = false;
-    private _iframeAuthentication?: string;
+    private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
+    private _iframeAuthentication?: string = OPID_LOGIN_SCREEN_PROVIDER;
     private _mapUrl: string | undefined;
     private _textures: CharacterTexture[] | undefined;
     private instance: string | undefined;
     private readonly _search: URLSearchParams;
+    private _contactPage: string | undefined;
+    private _group: string | null = null;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -87,25 +89,37 @@ export class Room {
     }
 
     private async getMapDetail(): Promise<MapDetail | RoomRedirect> {
-        const result = await Axios.get(`${PUSHER_URL}/map`, {
-            params: {
-                playUri: this.roomUrl.toString(),
-                authToken: localUserStore.getAuthToken(),
-            },
-        });
+        try {
+            const result = await Axios.get(`${PUSHER_URL}/map`, {
+                params: {
+                    playUri: this.roomUrl.toString(),
+                    authToken: localUserStore.getAuthToken(),
+                },
+            });
 
-        const data = result.data;
-        if (data.redirectUrl) {
-            return {
-                redirectUrl: data.redirectUrl as string,
-            };
+            const data = result.data;
+            if (data.redirectUrl) {
+                return {
+                    redirectUrl: data.redirectUrl as string,
+                };
+            }
+            console.log("Map ", this.id, " resolves to URL ", data.mapUrl);
+            this._mapUrl = data.mapUrl;
+            this._textures = data.textures;
+            this._group = data.group;
+            this._authenticationMandatory = data.authenticationMandatory || DISABLE_ANONYMOUS;
+            this._iframeAuthentication = data.iframeAuthentication || OPID_LOGIN_SCREEN_PROVIDER;
+            this._contactPage = data.contactPage || CONTACT_URL;
+            return new MapDetail(data.mapUrl, data.textures);
+        } catch (e) {
+            console.error("Error => getMapDetail", e, e.response);
+            //TODO fix me and manage Error class
+            if (e.response?.data === "Token decrypted error") {
+                localUserStore.setAuthToken(null);
+                window.location.assign("/login");
+            }
+            throw e;
         }
-        console.log("Map ", this.id, " resolves to URL ", data.mapUrl);
-        this._mapUrl = data.mapUrl;
-        this._textures = data.textures;
-        this._authenticationMandatory = data.authenticationMandatory || false;
-        this._iframeAuthentication = data.iframeAuthentication;
-        return new MapDetail(data.mapUrl, data.textures);
     }
 
     /**
@@ -129,25 +143,6 @@ export class Room {
             this.instance = match[1] + "/" + match[2];
             return this.instance;
         }
-    }
-
-    /**
-     * @deprecated
-     */
-    private parsePrivateUrl(url: string): { organizationSlug: string; worldSlug: string; roomSlug?: string } {
-        const regex = /@\/([^/]+)\/([^/]+)(?:\/([^/]*))?/gm;
-        const match = regex.exec(url);
-        if (!match) {
-            throw new Error("Invalid URL " + url);
-        }
-        const results: { organizationSlug: string; worldSlug: string; roomSlug?: string } = {
-            organizationSlug: match[1],
-            worldSlug: match[2],
-        };
-        if (match[3] !== undefined) {
-            results.roomSlug = match[3];
-        }
-        return results;
     }
 
     public isDisconnected(): boolean {
@@ -197,5 +192,13 @@ export class Room {
 
     get iframeAuthentication(): string | undefined {
         return this._iframeAuthentication;
+    }
+
+    get contactPage(): string | undefined {
+        return this._contactPage;
+    }
+
+    get group(): string | null {
+        return this._group;
     }
 }

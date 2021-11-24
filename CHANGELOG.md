@@ -1,11 +1,50 @@
 ## Version develop
 
+### Updates
+- Added multi Co-Website management
+
+### Bugfix
+- Moving a discussion over a user will now add this user to the discussion
+- Being in a silent zone new forces mediaConstraints to false (#1508)
+- Fixes for the emote menu (#1501)
+- Fixing chat message attributed to wrong user (#1507 #1528)
+
+## Version 1.5.0
+### Updates
+- Added support for login with OpenID Connect
+- New scripting library available to extend WorkAdventure: see [Scripting API Extra](https://github.com/workadventure/scripting-api-extra/)  
+- New menu design!
+- New `openTab` property (#1419)
+- Possible integration with Posthog (#1458)
+
+### Bugfix
+- Fixing layers flattened several times (#1427 @Lurkars)
+- Fixing CSS of video elements
+- Chat now scrolls to bottom when opened (#1450)
+- Fixing silent zone not respected when exiting from Jitsi (#1456)
+- Fixing "yarn install" failing because of missing rights on some Docker installs (#1457)
+- Fixing audio not shut down when exiting a room (#1459)
+
+### Misc
+- Finished migrating "Build your map" documentation into the "/docs" directory of this repository (#1417 #1385)
+- Refactoring documentation (dedicated page for variables) (#1414)
+- Front container code is now completely linted (#1413)
+
+## Version 1.4.15
+
 ### Updates 
 - New scripting API features : 
   - Use `WA.ui.registerMenuCommand(commandDescriptor: string, options: MenuOptions): Menu` to add a custom menu or an iframe to the menu.
-- New `jitsiWidth` parameter to set the width of Jitsi
+- New `jitsiWidth` parameter to set the width of Jitsi and Cowebsite (#1398 @tabascoeye)
 - Refactored the way videos are displayed to better cope for vertical videos (on mobile)
 - Fixing reconnection issues after 5 minutes of an inactive tab on Google Chrome
+- Changes performed in `WA.room.setPropertyLayer` now have a real-time impact (#1395)
+
+### Bugfixes
+- Fixing streams in bubbles sometimes improperly muted when there are more than 2 people in the bubble (#1400 #1402)
+- Properly displaying carriage returns in popups (#1388)
+- `WA.state` now answers correctly to "in" keyword (#1393)
+- Variables can now be nested in group layers (#1406)
 
 ## Version 1.4.14
 

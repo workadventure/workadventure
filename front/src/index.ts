@@ -23,9 +23,9 @@ import { Game } from "./Phaser/Game/Game";
 import App from "./Components/App.svelte";
 import { HtmlUtils } from "./WebRtc/HtmlUtils";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
+import { analyticsClient } from "./Administration/AnalyticsClient";
 
 const { width, height } = coWebsiteManager.getGameSize();
-
 const valueGameQuality = localUserStore.getGameQualityValue();
 const fps: Phaser.Types.Core.FPSConfig = {
     /**
@@ -141,7 +141,7 @@ const game = new Game(config);
 waScaleManager.setGame(game);
 
 window.addEventListener("resize", function (event) {
-    coWebsiteManager.resetStyle();
+    coWebsiteManager.resetStyleMain();
 
     waScaleManager.applyNewSize();
 });

@@ -10,6 +10,7 @@ import {
 import { User } from "_Model/User";
 import { variablesRepository } from "./Repository/VariablesRepository";
 import { redisClient } from "./RedisClient";
+import { VariableError } from "./VariableError";
 
 interface Variable {
     defaultValue?: string;
@@ -174,11 +175,13 @@ export class VariablesManager {
         if (this.variableObjects) {
             variableObject = this.variableObjects.get(name);
             if (variableObject === undefined) {
-                throw new Error('Trying to set a variable "' + name + '" that is not defined as an object in the map.');
+                throw new VariableError(
+                    'Trying to set a variable "' + name + '" that is not defined as an object in the map.'
+                );
             }
 
             if (variableObject.writableBy && !user.tags.includes(variableObject.writableBy)) {
-                throw new Error(
+                throw new VariableError(
                     'Trying to set a variable "' +
                         name +
                         '". User "' +

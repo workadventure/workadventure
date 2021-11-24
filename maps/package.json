@@ -35,7 +35,6 @@
   },
   "homepage": "https://github.com/thecodingmachine/workadventure#readme",
   "dependencies": {
-    "phaser": "^3.24.1",
     "ts-node-dev": "^1.0.0-pre.44",
     "typescript": "^3.8.3"
   },
@@ -44,6 +43,7 @@
     "@typescript-eslint/eslint-plugin": "^2.26.0",
     "@typescript-eslint/parser": "^2.26.0",
     "eslint": "^6.8.0",
-    "jasmine": "^3.5.0"
+    "jasmine": "^3.5.0",
+    "@workadventure/iframe-api-typings": "^1.4.15"
   }
 }

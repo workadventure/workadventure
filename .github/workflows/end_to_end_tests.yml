@@ -1,0 +1,51 @@
+# https://help.github.com/en/categories/automating-your-workflow-with-github-actions
+
+name: "End to end tests"
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+
+jobs:
+
+  end-to-end-tests:
+    name: "End-to-end testcafe tests"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2.0.0"
+
+      - name: "Setup .env file"
+        run: cp .env.template .env
+
+      - name: "Edit ownership of file for test cases"
+        run: sudo chown 1000:1000 -R .
+
+      - name: "Start environment"
+        run: docker-compose up -d
+
+      - name: "Wait for environment to build (and downloading testcafe image)"
+        run: (docker-compose -f docker-compose.testcafe.yml pull &) && docker-compose logs -f --tail=0 front | grep -m 1 "Compiled successfully"
+
+      - name: "Run tests"
+        run: docker-compose -f docker-compose.testcafe.yml up --exit-code-from testcafe
+
+      - name: Upload failed tests
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: my-artifact
+          path: './tests/screenshots/'
+
+      - name: Display state
+        if: ${{ failure() }}
+        run: docker-compose ps
+
+      - name: Display logs
+        if: ${{ failure() }}
+        run: docker-compose logs

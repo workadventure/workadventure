@@ -3,6 +3,7 @@ import {localUserStore} from "../../Connexion/LocalUserStore";
 import {videoConstraintStore} from "../../Stores/MediaStore";
 import {HtmlUtils} from "../../WebRtc/HtmlUtils";
 import {isMobile} from "../../Enum/EnvironmentVariable";
+import {menuVisiblilityStore} from "../../Stores/MenuStore";
 
 let fullscreen : boolean = localUserStore.getFullscreen();
 let notification : boolean = localUserStore.getNotification() === 'granted';
@@ -22,6 +23,8 @@ function saveSetting(){
         previewValueVideo = valueVideo;
         videoConstraintStore.setFrameRate(valueVideo);
     }
+
+    closeMenu();
 }
 
 function changeFullscreen() {
@@ -49,6 +52,10 @@ function changeNotification() {
             }
         })
     }
+}
+
+function closeMenu() {
+    menuVisiblilityStore.set(false);
 }
 </script>
 

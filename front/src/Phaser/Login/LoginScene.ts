@@ -4,6 +4,7 @@ import { loginSceneVisibleIframeStore, loginSceneVisibleStore } from "../../Stor
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { connectionManager } from "../../Connexion/ConnectionManager";
 import { gameManager } from "../Game/GameManager";
+import { analyticsClient } from "../../Administration/AnalyticsClient";
 
 export const LoginSceneName = "LoginScene";
 
@@ -25,7 +26,7 @@ export class LoginScene extends ResizableScene {
         if (
             localUserStore.getAuthToken() == undefined &&
             gameManager.currentStartedRoom &&
-            gameManager.currentStartedRoom?.authenticationMandatory
+            gameManager.currentStartedRoom.authenticationMandatory
         ) {
             connectionManager.loadOpenIDScreen();
             loginSceneVisibleIframeStore.set(true);
@@ -34,6 +35,8 @@ export class LoginScene extends ResizableScene {
     }
 
     public login(name: string): void {
+        analyticsClient.validationName();
+
         name = name.trim();
         gameManager.setPlayerName(name);
 

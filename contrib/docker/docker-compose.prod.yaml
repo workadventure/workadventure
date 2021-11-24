@@ -38,6 +38,7 @@ services:
       JITSI_URL: $JITSI_URL
       JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
       PUSHER_URL: //pusher.${DOMAIN}
+      ICON_URL: //icon.${DOMAIN}
       TURN_SERVER: "${TURN_SERVER}"
       TURN_USER: "${TURN_USER}"
       TURN_PASSWORD: "${TURN_PASSWORD}"
@@ -98,3 +99,15 @@ services:
       - "traefik.http.routers.back-ssl.service=back"
       - "traefik.http.routers.back-ssl.tls.certresolver=myresolver"
     restart: unless-stopped
+
+  icon:
+    image: matthiasluedtke/iconserver:v3.13.0
+    labels:
+      - "traefik.http.routers.icon.rule=Host(`icon.${DOMAIN}`)"
+      - "traefik.http.routers.icon.entryPoints=web,traefik"
+      - "traefik.http.services.icon.loadbalancer.server.port=8080"
+      - "traefik.http.routers.icon-ssl.rule=Host(`icon.${DOMAIN}`)"
+      - "traefik.http.routers.icon-ssl.entryPoints=websecure"
+      - "traefik.http.routers.icon-ssl.tls=true"
+      - "traefik.http.routers.icon-ssl.service=icon"
+      - "traefik.http.routers.icon-ssl.tls.certresolver=myresolver"
