@@ -14,6 +14,7 @@ export const MAX_PER_GROUP = parseInt(process.env.MAX_PER_GROUP || "4");
 export const REDIS_HOST = process.env.REDIS_HOST || undefined;
 export const REDIS_PORT = parseInt(process.env.REDIS_PORT || "6379") || 6379;
 export const REDIS_PASSWORD = process.env.REDIS_PASSWORD || undefined;
+export const STORE_VARIABLES_FOR_LOCAL_MAPS = process.env.STORE_VARIABLES_FOR_LOCAL_MAPS === "true";
 
 export {
     MINIMUM_DISTANCE,

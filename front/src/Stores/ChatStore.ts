@@ -67,6 +67,9 @@ function createChatMessagesStore() {
             });
         },
         addPersonnalMessage(text: string) {
+            //post message iframe listener
+            iframeListener.sendUserInputChat(text);
+
             newChatMessageStore.set(text);
             update((list) => {
                 const lastMessage = list[list.length - 1];

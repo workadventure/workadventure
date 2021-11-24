@@ -4,7 +4,7 @@ import { EnableCameraSceneName } from "./EnableCameraScene";
 import { CustomizeSceneName } from "./CustomizeScene";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { loadAllDefaultModels } from "../Entity/PlayerTexturesLoadingManager";
-import { addLoader } from "../Components/Loader";
+import { Loader } from "../Components/Loader";
 import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
 import { AbstractCharacterScene } from "./AbstractCharacterScene";
 import { areCharacterLayersValid } from "../../Connexion/LocalUser";
@@ -13,6 +13,7 @@ import { PinchManager } from "../UserInput/PinchManager";
 import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { isMobile } from "../../Enum/EnvironmentVariable";
+import { analyticsClient } from "../../Administration/AnalyticsClient";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
@@ -30,11 +31,13 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     protected pointerTimer: number = 0;
 
     protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
+    private loader: Loader;
 
     constructor() {
         super({
             key: SelectCharacterSceneName,
         });
+        this.loader = new Loader(this);
     }
 
     preload() {
@@ -48,7 +51,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.lazyloadingAttempt = false;
 
         //this function must stay at the end of preload function
-        addLoader(this);
+        this.loader.addLoader();
     }
 
     create() {
@@ -98,6 +101,9 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         if (!this.selectedPlayer) {
             return;
         }
+
+        analyticsClient.validationWoka("SelectWoka");
+
         this.scene.stop(SelectCharacterSceneName);
         waScaleManager.restoreZoom();
         gameManager.setCharacterLayers([this.selectedPlayer.texture.key]);

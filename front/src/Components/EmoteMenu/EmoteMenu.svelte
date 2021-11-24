@@ -18,13 +18,18 @@
         '--font': 'Press Start 2P'
       },
       emojisPerRow: isMobile() ? 6 : 8,
-      autoFocusSearch: false
+      autoFocusSearch: false,
+      style: 'twemoji',
     });
     //the timeout is here to prevent the menu from flashing
     setTimeout(() => picker.showPicker(emojiContainer), 100);
 
     picker.on("emoji", (selection) => {
-      emoteStore.set(selection.emoji);
+      emoteStore.set({
+        unicode: selection.emoji,
+        url: selection.url,
+        name: selection.name
+      });
     });
 
     picker.on("hidden", () => {

@@ -1,0 +1,12 @@
+version: "3"
+services:
+  testcafe:
+    image: testcafe/testcafe:1.17.1
+    working_dir: /tests
+    environment:
+      BROWSER: "chromium --use-fake-device-for-media-stream"
+    volumes:
+      - ./tests:/tests
+      - ./maps:/maps
+  #  security_opt:
+  #    - seccomp:unconfined

@@ -4,7 +4,7 @@ import { loadAllLayers } from "../Entity/PlayerTexturesLoadingManager";
 import Sprite = Phaser.GameObjects.Sprite;
 import { gameManager } from "../Game/GameManager";
 import { localUserStore } from "../../Connexion/LocalUserStore";
-import { addLoader } from "../Components/Loader";
+import { Loader } from "../Components/Loader";
 import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
 import { AbstractCharacterScene } from "./AbstractCharacterScene";
 import { areCharacterLayersValid } from "../../Connexion/LocalUser";
@@ -14,6 +14,7 @@ import { waScaleManager } from "../Services/WaScaleManager";
 import { isMobile } from "../../Enum/EnvironmentVariable";
 import { CustomizedCharacter } from "../Entity/CustomizedCharacter";
 import { get } from "svelte/store";
+import { analyticsClient } from "../../Administration/AnalyticsClient";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -29,10 +30,13 @@ export class CustomizeScene extends AbstractCharacterScene {
     private moveHorizontally: number = 0;
     private moveVertically: number = 0;
 
+    private loader: Loader;
+
     constructor() {
         super({
             key: CustomizeSceneName,
         });
+        this.loader = new Loader(this);
     }
 
     preload() {
@@ -54,7 +58,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.lazyloadingAttempt = false;
 
         //this function must stay at the end of preload function
-        addLoader(this);
+        this.loader.addLoader();
     }
 
     create() {
@@ -277,6 +281,8 @@ export class CustomizeScene extends AbstractCharacterScene {
         if (!areCharacterLayersValid(layers)) {
             return;
         }
+
+        analyticsClient.validationWoka("CustomizeWoka");
 
         gameManager.setCharacterLayers(layers);
         this.scene.sleep(CustomizeSceneName);

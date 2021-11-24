@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "testcafe": "^1.17.1"
+  },
+  "scripts": {
+    "test": "testcafe"
+  }
+}

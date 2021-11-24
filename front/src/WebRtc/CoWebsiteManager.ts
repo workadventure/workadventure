@@ -3,6 +3,7 @@ import { Subject } from "rxjs";
 import { iframeListener } from "../Api/IframeListener";
 import { touchScreenManager } from "../Touch/TouchScreenManager";
 import { waScaleManager } from "../Phaser/Services/WaScaleManager";
+import { ICON_URL } from "../Enum/EnvironmentVariable";
 
 enum iframeStates {
     closed = 1,
@@ -27,16 +28,16 @@ interface TouchMoveCoordinates {
     y: number;
 }
 
-export type CoWebsite =  {
-    iframe: HTMLIFrameElement,
-    icon: HTMLDivElement,
-    position: number
-}
+export type CoWebsite = {
+    iframe: HTMLIFrameElement;
+    icon: HTMLDivElement;
+    position: number;
+};
 
 type CoWebsiteSlot = {
-    container: HTMLElement,
-    position: number
-}
+    container: HTMLElement;
+    position: number;
+};
 
 class CoWebsiteManager {
     private openedMain: iframeStates = iframeStates.closed;
@@ -61,7 +62,7 @@ class CoWebsiteManager {
 
     private slots: CoWebsiteSlot[];
 
-    private resizeObserver = new ResizeObserver(entries => {
+    private resizeObserver = new ResizeObserver((entries) => {
         this.resizeAllIframes();
     });
 
@@ -108,23 +109,23 @@ class CoWebsiteManager {
         this.slots = [
             {
                 container: this.cowebsiteMainDom,
-                position: 0
+                position: 0,
             },
             {
-                container: HtmlUtils.getElementByIdOrFail<HTMLDivElement>('cowebsite-slot-1'),
-                position: 1
+                container: HtmlUtils.getElementByIdOrFail<HTMLDivElement>("cowebsite-slot-1"),
+                position: 1,
             },
             {
-                container: HtmlUtils.getElementByIdOrFail<HTMLDivElement>('cowebsite-slot-2'),
-                position: 2
+                container: HtmlUtils.getElementByIdOrFail<HTMLDivElement>("cowebsite-slot-2"),
+                position: 2,
             },
             {
-                container: HtmlUtils.getElementByIdOrFail<HTMLDivElement>('cowebsite-slot-3'),
-                position: 3
+                container: HtmlUtils.getElementByIdOrFail<HTMLDivElement>("cowebsite-slot-3"),
+                position: 3,
             },
             {
-                container: HtmlUtils.getElementByIdOrFail<HTMLDivElement>('cowebsite-slot-4'),
-                position: 4
+                container: HtmlUtils.getElementByIdOrFail<HTMLDivElement>("cowebsite-slot-4"),
+                position: 4,
             },
         ];
 
@@ -163,8 +164,10 @@ class CoWebsiteManager {
     }
 
     private isSmallScreen(): boolean {
-        return window.matchMedia("(max-aspect-ratio: 1/1)").matches ||
-         window.matchMedia("(max-width:960px) and (max-height:768px)").matches;
+        return (
+            window.matchMedia("(max-aspect-ratio: 1/1)").matches ||
+            window.matchMedia("(max-width:960px) and (max-height:768px)").matches
+        );
     }
 
     private initResizeListeners(touchMode: boolean) {
@@ -235,12 +238,12 @@ class CoWebsiteManager {
 
     private initActionsListeners() {
         this.slots.forEach((slot: CoWebsiteSlot) => {
-            const expandButton = slot.container.querySelector('.expand');
-            const highlightButton = slot.container.querySelector('.hightlight');
-            const closeButton = slot.container.querySelector('.close');
+            const expandButton = slot.container.querySelector(".expand");
+            const highlightButton = slot.container.querySelector(".hightlight");
+            const closeButton = slot.container.querySelector(".close");
 
             if (expandButton) {
-                expandButton.addEventListener('click', (event) => {
+                expandButton.addEventListener("click", (event) => {
                     event.preventDefault();
                     const coWebsite = this.getCoWebsiteByPosition(slot.position);
 
@@ -253,7 +256,7 @@ class CoWebsiteManager {
             }
 
             if (highlightButton) {
-                highlightButton.addEventListener('click', (event) => {
+                highlightButton.addEventListener("click", (event) => {
                     event.preventDefault();
                     const coWebsite = this.getCoWebsiteByPosition(slot.position);
 
@@ -266,7 +269,7 @@ class CoWebsiteManager {
             }
 
             if (closeButton) {
-                closeButton.addEventListener('click', (event) => {
+                closeButton.addEventListener("click", (event) => {
                     event.preventDefault();
                     const coWebsite = this.getCoWebsiteByPosition(slot.position);
 
@@ -284,37 +287,37 @@ class CoWebsiteManager {
         return this.coWebsites;
     }
 
-    public getCoWebsiteById(coWebsiteId: string): CoWebsite|undefined {
+    public getCoWebsiteById(coWebsiteId: string): CoWebsite | undefined {
         return this.coWebsites.find((coWebsite: CoWebsite) => coWebsite.iframe.id === coWebsiteId);
     }
 
-    private getSlotByPosition(position: number): CoWebsiteSlot|undefined {
+    private getSlotByPosition(position: number): CoWebsiteSlot | undefined {
         return this.slots.find((slot: CoWebsiteSlot) => slot.position === position);
     }
 
-    private getCoWebsiteByPosition(position: number): CoWebsite|undefined {
+    private getCoWebsiteByPosition(position: number): CoWebsite | undefined {
         return this.coWebsites.find((coWebsite: CoWebsite) => coWebsite.position === position);
     }
 
     private setIframeOffset(coWebsite: CoWebsite, slot: CoWebsiteSlot) {
         const bounding = slot.container.getBoundingClientRect();
 
-        if (coWebsite.iframe.classList.contains('thumbnail')) {
-            coWebsite.iframe.style.width = ((bounding.right - bounding.left) * 2) + 'px';
-            coWebsite.iframe.style.height = ((bounding.bottom - bounding.top) * 2) + 'px';
-            coWebsite.iframe.style.top = (bounding.top - (Math.floor(bounding.height * 0.5))) + 'px';
-            coWebsite.iframe.style.left = (bounding.left - (Math.floor(bounding.width * 0.5))) + 'px';
+        if (coWebsite.iframe.classList.contains("thumbnail")) {
+            coWebsite.iframe.style.width = (bounding.right - bounding.left) * 2 + "px";
+            coWebsite.iframe.style.height = (bounding.bottom - bounding.top) * 2 + "px";
+            coWebsite.iframe.style.top = bounding.top - Math.floor(bounding.height * 0.5) + "px";
+            coWebsite.iframe.style.left = bounding.left - Math.floor(bounding.width * 0.5) + "px";
         } else {
-            coWebsite.iframe.style.top = bounding.top + 'px';
-            coWebsite.iframe.style.left = bounding.left + 'px';
-            coWebsite.iframe.style.width = (bounding.right - bounding.left) + 'px';
-            coWebsite.iframe.style.height = (bounding.bottom - bounding.top) + 'px';
+            coWebsite.iframe.style.top = bounding.top + "px";
+            coWebsite.iframe.style.left = bounding.left + "px";
+            coWebsite.iframe.style.width = bounding.right - bounding.left + "px";
+            coWebsite.iframe.style.height = bounding.bottom - bounding.top + "px";
         }
     }
 
     private resizeAllIframes() {
         this.coWebsites.forEach((coWebsite: CoWebsite) => {
-            const slot =  this.getSlotByPosition(coWebsite.position);
+            const slot = this.getSlotByPosition(coWebsite.position);
 
             if (slot) {
                 this.setIframeOffset(coWebsite, slot);
@@ -333,36 +336,46 @@ class CoWebsiteManager {
         coWebsite.iframe.scrolling = newPosition === 0 || newPosition === 1 ? "yes" : "no";
 
         if (newPosition === 0) {
-            coWebsite.iframe.classList.add('main');
+            coWebsite.iframe.classList.add("main");
             coWebsite.icon.style.display = "none";
         } else {
-            coWebsite.iframe.classList.remove('main');
+            coWebsite.iframe.classList.remove("main");
             coWebsite.icon.style.display = "flex";
         }
 
         if (newPosition === 1) {
-            coWebsite.iframe.classList.add('sub-main');
+            coWebsite.iframe.classList.add("sub-main");
         } else {
-            coWebsite.iframe.classList.remove('sub-main');
+            coWebsite.iframe.classList.remove("sub-main");
         }
 
         if (newPosition >= 2) {
-            coWebsite.iframe.classList.add('thumbnail');
+            coWebsite.iframe.classList.add("thumbnail");
         } else {
-            coWebsite.iframe.classList.remove('thumbnail');
+            coWebsite.iframe.classList.remove("thumbnail");
         }
 
         coWebsite.position = newPosition;
 
         if (oldSlot && !this.getCoWebsiteByPosition(oldSlot.position)) {
-            oldSlot.container.style.display = 'none';
+            oldSlot.container.style.display = "none";
         }
 
-        newSlot.container.style.display = 'block';
+        this.displayCowebsiteContainer();
 
-        coWebsite.iframe.classList.remove('pixel');
+        newSlot.container.style.display = "block";
+
+        coWebsite.iframe.classList.remove("pixel");
 
         this.resizeAllIframes();
+    }
+
+    private displayCowebsiteContainer() {
+        if (this.coWebsites.find((cowebsite) => cowebsite.position > 0)) {
+            this.cowebsiteContainerDom.style.display = "block";
+        } else {
+            this.cowebsiteContainerDom.style.display = "none";
+        }
     }
 
     private moveLeftPreviousCoWebsite(coWebsite: CoWebsite, newPosition: number) {
@@ -384,11 +397,7 @@ class CoWebsiteManager {
 
         this.moveCoWebsite(coWebsite, newPosition);
 
-        if (newPosition === 4 ||
-            !currentCoWebsite ||
-            currentCoWebsite.iframe.id === coWebsite.iframe.id
-            )
-        {
+        if (newPosition === 4 || !currentCoWebsite || currentCoWebsite.iframe.id === coWebsite.iframe.id) {
             return;
         }
 
@@ -411,26 +420,26 @@ class CoWebsiteManager {
         if (coWebsite.position > 0) {
             const slot = this.getSlotByPosition(coWebsite.position);
             if (slot) {
-                slot.container.style.display = 'none';
+                slot.container.style.display = "none";
             }
         }
 
-        const previousCoWebsite = this.coWebsites.find((coWebsiteToCheck: CoWebsite) =>
-            coWebsite.position + 1 === coWebsiteToCheck.position
+        const previousCoWebsite = this.coWebsites.find(
+            (coWebsiteToCheck: CoWebsite) => coWebsite.position + 1 === coWebsiteToCheck.position
         );
 
         if (previousCoWebsite) {
             this.moveLeftPreviousCoWebsite(previousCoWebsite, coWebsite.position);
         }
 
+        this.displayCowebsiteContainer();
+
         coWebsite.icon.remove();
         coWebsite.iframe.remove();
     }
 
-    public searchJitsi(): CoWebsite|undefined {
-        return this.coWebsites.find((coWebsite : CoWebsite) =>
-            coWebsite.iframe.id.toLowerCase().includes('jitsi')
-        );
+    public searchJitsi(): CoWebsite | undefined {
+        return this.coWebsites.find((coWebsite: CoWebsite) => coWebsite.iframe.id.toLowerCase().includes("jitsi"));
     }
 
     private generateCoWebsiteIcon(iframe: HTMLIFrameElement): HTMLDivElement {
@@ -439,7 +448,7 @@ class CoWebsiteManager {
         icon.style.display = "none";
 
         const iconImage = document.createElement("img");
-        iconImage.src = `https://www.google.com/s2/favicons?sz=64&domain_url=${iframe.src}`;
+        iconImage.src = `${ICON_URL}/icon?url=${iframe.src}&size=16..30..256`;
         const url = new URL(iframe.src);
         iconImage.alt = url.hostname;
 
@@ -456,27 +465,30 @@ class CoWebsiteManager {
         widthPercent?: number,
         position?: number
     ): Promise<CoWebsite> {
+        return this.addCoWebsite(
+            (iframeBuffer) => {
+                const iframe = document.createElement("iframe");
+                iframe.src = new URL(url, base).toString();
 
-        return this.addCoWebsite((iframeBuffer) => {
-            const iframe = document.createElement("iframe");
-            iframe.src = new URL(url, base).toString()
+                if (allowPolicy) {
+                    iframe.allow = allowPolicy;
+                }
 
-            if (allowPolicy) {
-                iframe.allow = allowPolicy;
-            }
+                if (allowApi) {
+                    iframeListener.registerIframe(iframe);
+                }
 
-            if (allowApi) {
-                iframeListener.registerIframe(iframe);
-            }
+                iframeBuffer.appendChild(iframe);
 
-            iframeBuffer.appendChild(iframe);
-
-            return iframe;
-        }, widthPercent, position);
+                return iframe;
+            },
+            widthPercent,
+            position
+        );
     }
 
     public async addCoWebsite(
-        callback: (iframeBuffer: HTMLDivElement) => PromiseLike<HTMLIFrameElement>|HTMLIFrameElement,
+        callback: (iframeBuffer: HTMLDivElement) => PromiseLike<HTMLIFrameElement> | HTMLIFrameElement,
         widthPercent?: number,
         position?: number
     ): Promise<CoWebsite> {
@@ -484,10 +496,10 @@ class CoWebsiteManager {
             if (this.coWebsites.length < 1) {
                 this.loadMain();
             } else if (this.coWebsites.length === 5) {
-                throw new Error('Too many we')
+                throw new Error("Too many we");
             }
 
-            Promise.resolve(callback(this.cowebsiteBufferDom)).then(iframe =>{
+            Promise.resolve(callback(this.cowebsiteBufferDom)).then((iframe) => {
                 iframe?.classList.add("pixel");
 
                 if (!iframe.id) {
@@ -533,14 +545,14 @@ class CoWebsiteManager {
 
                             setTimeout(() => {
                                 this.fire();
-                                position !== undefined ?
-                                    this.moveRightPreviousCoWebsite(coWebsite, coWebsite.position) :
-                                    this.moveCoWebsite(coWebsite, coWebsite.position);
+                                position !== undefined
+                                    ? this.moveRightPreviousCoWebsite(coWebsite, coWebsite.position)
+                                    : this.moveCoWebsite(coWebsite, coWebsite.position);
                             }, animationTime);
                         } else {
-                            position !== undefined ?
-                                this.moveRightPreviousCoWebsite(coWebsite, coWebsite.position) :
-                                this.moveCoWebsite(coWebsite, coWebsite.position);
+                            position !== undefined
+                                ? this.moveRightPreviousCoWebsite(coWebsite, coWebsite.position)
+                                : this.moveCoWebsite(coWebsite, coWebsite.position);
                         }
 
                         return resolve(coWebsite);
@@ -583,8 +595,7 @@ class CoWebsiteManager {
     }
 
     public closeCoWebsites(): Promise<void> {
-        this.currentOperationPromise = this.currentOperationPromise
-        .then(() => {
+        this.currentOperationPromise = this.currentOperationPromise.then(() => {
             this.coWebsites.forEach((coWebsite: CoWebsite) => {
                 this.closeCoWebsite(coWebsite);
             });

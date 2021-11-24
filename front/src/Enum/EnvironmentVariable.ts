@@ -4,6 +4,7 @@ const START_ROOM_URL: string =
 const PUSHER_URL = process.env.PUSHER_URL || "//pusher.workadventure.localhost";
 export const ADMIN_URL = process.env.ADMIN_URL || "//workadventu.re";
 const UPLOADER_URL = process.env.UPLOADER_URL || "//uploader.workadventure.localhost";
+const ICON_URL = process.env.ICON_URL || "//icon.workadventure.localhost";
 const STUN_SERVER: string = process.env.STUN_SERVER || "stun:stun.l.google.com:19302";
 const TURN_SERVER: string = process.env.TURN_SERVER || "";
 const SKIP_RENDER_OPTIMIZATIONS: boolean = process.env.SKIP_RENDER_OPTIMIZATIONS == "true";
@@ -22,6 +23,8 @@ export const CONTACT_URL = process.env.CONTACT_URL || undefined;
 export const PROFILE_URL = process.env.PROFILE_URL || undefined;
 export const POSTHOG_API_KEY: string = (process.env.POSTHOG_API_KEY as string) || "";
 export const POSTHOG_URL = process.env.POSTHOG_URL || undefined;
+export const DISABLE_ANONYMOUS: boolean = process.env.DISABLE_ANONYMOUS === "true";
+export const OPID_LOGIN_SCREEN_PROVIDER = process.env.OPID_LOGIN_SCREEN_PROVIDER;
 
 export const isMobile = (): boolean => window.innerWidth <= 800 || window.innerHeight <= 600;
 
@@ -32,6 +35,7 @@ export {
     DISABLE_NOTIFICATIONS,
     PUSHER_URL,
     UPLOADER_URL,
+    ICON_URL,
     POSITION_DELAY,
     MAX_EXTRAPOLATION_TIME,
     STUN_SERVER,

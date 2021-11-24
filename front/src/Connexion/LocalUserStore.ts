@@ -122,10 +122,12 @@ class LocalUserStore {
 
     setLastRoomUrl(roomUrl: string): void {
         localStorage.setItem(lastRoomUrl, roomUrl.toString());
-        caches.open(cacheAPIIndex).then((cache) => {
-            const stringResponse = new Response(JSON.stringify({ roomUrl }));
-            cache.put(`/${lastRoomUrl}`, stringResponse);
-        });
+        if ("caches" in window) {
+            caches.open(cacheAPIIndex).then((cache) => {
+                const stringResponse = new Response(JSON.stringify({ roomUrl }));
+                cache.put(`/${lastRoomUrl}`, stringResponse);
+            });
+        }
     }
     getLastRoomUrl(): string {
         return (
@@ -133,6 +135,9 @@ class LocalUserStore {
         );
     }
     getLastRoomUrlCacheApi(): Promise<string | undefined> {
+        if (!("caches" in window)) {
+            return Promise.resolve(undefined);
+        }
         return caches.open(cacheAPIIndex).then((cache) => {
             return cache.match(`/${lastRoomUrl}`).then((res) => {
                 return res?.json().then((data) => {
@@ -165,7 +170,14 @@ class LocalUserStore {
 
     verifyState(value: string): boolean {
         const oldValue = localStorage.getItem(state);
+        if (!oldValue) {
+            localStorage.setItem(state, value);
+            return true;
+        }
         return oldValue === value;
+    }
+    setState(value: string) {
+        localStorage.setItem(state, value);
     }
     getState(): string | null {
         return localStorage.getItem(state);

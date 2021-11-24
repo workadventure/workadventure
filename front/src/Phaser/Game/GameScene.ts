@@ -15,10 +15,7 @@ import type {
 import { DEBUG_MODE, JITSI_PRIVATE_MODE, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
 
 import { Queue } from "queue-typescript";
-import {
-    Box,
-    ON_ACTION_TRIGGER_BUTTON,
-} from "../../WebRtc/LayoutManager";
+import { Box, ON_ACTION_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
 import { CoWebsite, coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import type { UserMovedMessage } from "../../Messages/generated/messages_pb";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
@@ -31,7 +28,7 @@ import { localUserStore } from "../../Connexion/LocalUserStore";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import { mediaManager } from "../../WebRtc/MediaManager";
 import { SimplePeer } from "../../WebRtc/SimplePeer";
-import { addLoader, removeLoader } from "../Components/Loader";
+import { Loader } from "../Components/Loader";
 import { lazyLoadPlayerCharacterTextures, loadCustomTexture } from "../Entity/PlayerTexturesLoadingManager";
 import { RemotePlayer } from "../Entity/RemotePlayer";
 import type { ActionableItem } from "../Items/ActionableItem";
@@ -91,6 +88,7 @@ import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { get } from "svelte/store";
 import { contactPageStore } from "../../Stores/MenuStore";
 import { GameMapProperties } from "./GameMapProperties";
+import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -205,6 +203,7 @@ export class GameScene extends DirtyScene {
     private sharedVariablesManager!: SharedVariablesManager;
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
+    private loader: Loader;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -223,6 +222,7 @@ export class GameScene extends DirtyScene {
         this.connectionAnswerPromise = new Promise<RoomJoinedMessageInterface>((resolve, reject): void => {
             this.connectionAnswerPromiseResolve = resolve;
         });
+        this.loader = new Loader(this);
     }
 
     //hook preload scene
@@ -296,9 +296,10 @@ export class GameScene extends DirtyScene {
             }
 
             //once preloading is over, we don't want loading errors to crash the game, so we need to disable this behavior after preloading.
-            if (this.preloading) {
+            //if SpriteSheetFile (WOKA file) don't display error and give an access for user
+            if (this.preloading && !(file instanceof SpriteSheetFile)) {
                 //remove loader in progress
-                removeLoader(this);
+                this.loader.removeLoader();
 
                 //display an error scene
                 this.scene.start(ErrorSceneName, {
@@ -332,7 +333,7 @@ export class GameScene extends DirtyScene {
         });
 
         //this function must stay at the end of preload function
-        addLoader(this);
+        this.loader.addLoader();
     }
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
@@ -497,7 +498,10 @@ export class GameScene extends DirtyScene {
                             object.properties,
                             'in the "' + object.name + '" object of type "website"'
                         );
-                        const allowApi = PropertyUtils.findBooleanProperty(GameMapProperties.ALLOW_API, object.properties);
+                        const allowApi = PropertyUtils.findBooleanProperty(
+                            GameMapProperties.ALLOW_API,
+                            object.properties
+                        );
 
                         // TODO: add a "allow" property to iframe
                         this.embeddedWebsiteManager.createEmbeddedWebsite(
@@ -614,10 +618,10 @@ export class GameScene extends DirtyScene {
             oldPeerNumber = newPeerNumber;
         });
 
-        this.emoteUnsubscribe = emoteStore.subscribe((emoteKey) => {
-            if (emoteKey) {
-                this.CurrentPlayer?.playEmote(emoteKey);
-                this.connection?.emitEmoteEvent(emoteKey);
+        this.emoteUnsubscribe = emoteStore.subscribe((emote) => {
+            if (emote) {
+                this.CurrentPlayer?.playEmote(emote.url);
+                this.connection?.emitEmoteEvent(emote.url);
                 emoteStore.set(null);
             }
         });
@@ -763,14 +767,14 @@ export class GameScene extends DirtyScene {
                 this.gameMap.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
 
                 // Init layer change listener
-                this.gameMap.onEnterLayer(layers => {
-                    layers.forEach(layer => {
+                this.gameMap.onEnterLayer((layers) => {
+                    layers.forEach((layer) => {
                         iframeListener.sendEnterLayerEvent(layer.name);
                     });
                 });
 
-                this.gameMap.onLeaveLayer(layers => {
-                    layers.forEach(layer => {
+                this.gameMap.onLeaveLayer((layers) => {
+                    layers.forEach((layer) => {
                         iframeListener.sendLeaveLayerEvent(layer.name);
                     });
                 });
@@ -1830,6 +1834,8 @@ ${escapedMessage}
             right: camera.scrollX + camera.width,
             bottom: camera.scrollY + camera.height,
         });
+
+        this.loader.resize();
     }
     private getObjectLayerData(objectName: string): ITiledMapObject | undefined {
         for (const layer of this.mapFile.layers) {
@@ -1868,7 +1874,8 @@ ${escapedMessage}
     public startJitsi(roomName: string, jwt?: string): void {
         const allProps = this.gameMap.getCurrentProperties();
         const jitsiConfig = this.safeParseJSONstring(
-            allProps.get(GameMapProperties.JITSI_CONFIG) as string | undefined, GameMapProperties.JITSI_CONFIG
+            allProps.get(GameMapProperties.JITSI_CONFIG) as string | undefined,
+            GameMapProperties.JITSI_CONFIG
         );
         const jitsiInterfaceConfig = this.safeParseJSONstring(
             allProps.get(GameMapProperties.JITSI_INTERFACE_CONFIG) as string | undefined,

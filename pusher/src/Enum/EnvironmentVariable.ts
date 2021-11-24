@@ -4,6 +4,7 @@ const API_URL = process.env.API_URL || "";
 const ADMIN_API_URL = process.env.ADMIN_API_URL || "";
 const ADMIN_URL = process.env.ADMIN_URL || "";
 const ADMIN_API_TOKEN = process.env.ADMIN_API_TOKEN || "myapitoken";
+export const ADMIN_SOCKETS_TOKEN = process.env.ADMIN_SOCKETS_TOKEN || "myapitoken";
 const CPU_OVERHEAT_THRESHOLD = Number(process.env.CPU_OVERHEAT_THRESHOLD) || 80;
 const JITSI_URL: string | undefined = process.env.JITSI_URL === "" ? undefined : process.env.JITSI_URL;
 const JITSI_ISS = process.env.JITSI_ISS || "";
@@ -15,6 +16,9 @@ export const FRONT_URL = process.env.FRONT_URL || "http://localhost";
 export const OPID_CLIENT_ID = process.env.OPID_CLIENT_ID || "";
 export const OPID_CLIENT_SECRET = process.env.OPID_CLIENT_SECRET || "";
 export const OPID_CLIENT_ISSUER = process.env.OPID_CLIENT_ISSUER || "";
+export const OPID_CLIENT_REDIRECT_URL = process.env.OPID_CLIENT_REDIRECT_URL || FRONT_URL + "/jwt";
+export const OPID_PROFILE_SCREEN_PROVIDER = process.env.OPID_PROFILE_SCREEN_PROVIDER || ADMIN_URL + "/profile";
+export const DISABLE_ANONYMOUS: boolean = process.env.DISABLE_ANONYMOUS === "true";
 
 export {
     SECRET_KEY,
