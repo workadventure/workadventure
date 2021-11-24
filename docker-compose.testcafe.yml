@@ -8,7 +8,5 @@ services:
     volumes:
       - ./tests:/tests
       - ./maps:/maps
-    user: "${DOCKER_UID}:${DOCKER_GID}"
-
   #  security_opt:
   #    - seccomp:unconfined

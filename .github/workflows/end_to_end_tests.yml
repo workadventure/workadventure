@@ -23,6 +23,9 @@ jobs:
       - name: "Setup .env file"
         run: cp .env.template .env
 
+      - name: "Edit ownership of file for test cases"
+        run: sudo chown 1000:1000 -R maps/tests/Variables/Cache
+
       - name: "Start environment"
         run: docker-compose up -d
 
@@ -30,4 +33,4 @@ jobs:
         run: (docker-compose -f docker-compose.testcafe.yml pull &) && docker-compose logs -f --tail=0 front | grep -m 1 "Compiled successfully"
 
       - name: "Run tests"
-        run: DOCKER_UID=$(id -u) DOCKER_UID=$(id -g) docker-compose -f docker-compose.testcafe.yml up --exit-code-from testcafe
+        run: docker-compose -f docker-compose.testcafe.yml up --exit-code-from testcafe
