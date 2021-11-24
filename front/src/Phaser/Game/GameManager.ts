@@ -45,6 +45,7 @@ export class GameManager {
             return EnableCameraSceneName;
         } else {
             this.activeMenuSceneAndHelpCameraSettings();
+            //TODO fix to return href with # saved in localstorage
             return this.startRoom.key;
         }
     }
