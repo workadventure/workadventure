@@ -162,6 +162,7 @@ export class EmbeddedWebsiteManager {
 
         const iframe = document.createElement("iframe");
         iframe.src = absoluteUrl;
+        iframe.tabIndex = -1;
         iframe.style.width = embeddedWebsiteEvent.position.width + "px";
         iframe.style.height = embeddedWebsiteEvent.position.height + "px";
         iframe.style.margin = "0";
