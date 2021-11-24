@@ -35,7 +35,9 @@ test("Test that variables cache in the back don't prevent setting a variable in 
     const messages = await t.getBrowserConsoleMessages();
 
     const logs = messages['log'];
+    console.log(logs);
     const lastMessage = logs.pop();
+
     // Let's check we successfully manage to save the variable value.
     await t.expect(lastMessage).eql('SUCCESS!');
 });

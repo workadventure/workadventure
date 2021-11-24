@@ -3,7 +3,7 @@ const BROWSER = process.env.BROWSER || "chrome --use-fake-device-for-media-strea
 module.exports = {
   "browsers": BROWSER,
   "hostname": "localhost",
-  "skipJsErrors": true,
+  //"skipJsErrors": true,
   "src": "tests/",
   "screenshots": {
     "path": "screenshots/",
