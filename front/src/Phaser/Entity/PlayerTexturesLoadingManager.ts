@@ -69,13 +69,11 @@ export const lazyLoadPlayerCharacterTextures = (
     }
 
     //If the loading fail, we render the default model instead.
-    return returnPromise
-        .then((keys) =>
-            keys.map((key) => {
-                return typeof key !== "string" ? key.name : key;
-            })
-        )
-        .catch(() => lazyLoadPlayerCharacterTextures(loadPlugin, ["color_22", "eyes_23"]));
+    return returnPromise.then((keys) =>
+        keys.map((key) => {
+            return typeof key !== "string" ? key.name : key;
+        })
+    );
 };
 
 export const getRessourceDescriptor = (
