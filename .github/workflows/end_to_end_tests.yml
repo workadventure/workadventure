@@ -32,14 +32,14 @@ jobs:
       - name: "Wait for environment to build (and downloading testcafe image)"
         run: (docker-compose -f docker-compose.testcafe.yml pull &) && docker-compose logs -f --tail=0 front | grep -q "Compiled successfully"
 
-      - name: "temp debug: display logs"
-        run: docker-compose logs
-
-      - name: "Wait for back start"
-        run: docker-compose logs -f back | grep -q "WorkAdventure HTTP API starting on port"
-
-      - name: "Wait for pusher start"
-        run: docker-compose logs -f pusher | grep -q "WorkAdventure starting on port"
+#      - name: "temp debug: display logs"
+#        run: docker-compose logs
+#
+#      - name: "Wait for back start"
+#        run: docker-compose logs -f back | grep -q "WorkAdventure HTTP API starting on port"
+#
+#      - name: "Wait for pusher start"
+#        run: docker-compose logs -f pusher | grep -q "WorkAdventure starting on port"
 
       - name: "Run tests"
         run: docker-compose -f docker-compose.testcafe.yml up --exit-code-from testcafe
