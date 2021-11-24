@@ -13,11 +13,10 @@ export class Loader {
     private progressContainer!: Phaser.GameObjects.Graphics;
     private progress!: Phaser.GameObjects.Graphics;
     private progressAmount: number = 0;
-    private logo: Phaser.GameObjects.Image|undefined;
+    private logo: Phaser.GameObjects.Image | undefined;
     private loadingText: Phaser.GameObjects.Text | null = null;
 
-    public constructor(private scene: Phaser.Scene) {
-    }
+    public constructor(private scene: Phaser.Scene) {}
 
     public addLoader(): void {
         // If there is nothing to load, do not display the loader.
@@ -30,11 +29,19 @@ export class Loader {
         const promiseLoadLogoTexture = new Promise<Phaser.GameObjects.Image>((res) => {
             if (this.scene.load.textureManager.exists(LogoNameIndex)) {
                 return res(
-                    this.logo = this.scene.add.image(this.scene.game.renderer.width / 2, this.scene.game.renderer.height / 2 - 150, LogoNameIndex)
+                    (this.logo = this.scene.add.image(
+                        this.scene.game.renderer.width / 2,
+                        this.scene.game.renderer.height / 2 - 150,
+                        LogoNameIndex
+                    ))
                 );
             } else {
                 //add loading if logo image is not ready
-                this.loadingText = this.scene.add.text(this.scene.game.renderer.width / 2, this.scene.game.renderer.height / 2 - 50, TextName);
+                this.loadingText = this.scene.add.text(
+                    this.scene.game.renderer.width / 2,
+                    this.scene.game.renderer.height / 2 - 50,
+                    TextName
+                );
             }
             this.scene.load.spritesheet(LogoNameIndex, LogoResource, LogoFrame);
             this.scene.load.once(`filecomplete-spritesheet-${LogoNameIndex}`, () => {
@@ -42,7 +49,11 @@ export class Loader {
                     this.loadingText.destroy();
                 }
                 return res(
-                    this.logo = this.scene.add.image(this.scene.game.renderer.width / 2, this.scene.game.renderer.height / 2 - 150, LogoNameIndex)
+                    (this.logo = this.scene.add.image(
+                        this.scene.game.renderer.width / 2,
+                        this.scene.game.renderer.height / 2 - 150,
+                        LogoNameIndex
+                    ))
                 );
             });
         });
@@ -71,7 +82,6 @@ export class Loader {
             }
         });
     }
-
 
     public removeLoader(): void {
         if (this.scene.load.textureManager.exists(LogoNameIndex)) {
