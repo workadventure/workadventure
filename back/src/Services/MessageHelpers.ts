@@ -9,6 +9,7 @@ import {
 } from "../Messages/generated/messages_pb";
 import { UserSocket } from "_Model/User";
 import { RoomSocket, ZoneSocket } from "../RoomManager";
+import log from "./Logger";
 
 export function emitError(Client: UserSocket, message: string): void {
     const errorMessage = new ErrorMessage();
@@ -20,11 +21,11 @@ export function emitError(Client: UserSocket, message: string): void {
     //if (!Client.disconnecting) {
     Client.write(serverToClientMessage);
     //}
-    console.warn(message);
+    log.warn(message);
 }
 
 export function emitErrorOnRoomSocket(Client: RoomSocket, message: string): void {
-    console.error(message);
+    log.error(message);
 
     const errorMessage = new ErrorMessage();
     errorMessage.setMessage(message);
@@ -38,11 +39,11 @@ export function emitErrorOnRoomSocket(Client: RoomSocket, message: string): void
     //if (!Client.disconnecting) {
     Client.write(batchToPusherMessage);
     //}
-    console.warn(message);
+    log.warn(message);
 }
 
 export function emitErrorOnZoneSocket(Client: ZoneSocket, message: string): void {
-    console.error(message);
+    log.error(message);
 
     const errorMessage = new ErrorMessage();
     errorMessage.setMessage(message);
@@ -56,5 +57,5 @@ export function emitErrorOnZoneSocket(Client: ZoneSocket, message: string): void
     //if (!Client.disconnecting) {
     Client.write(batchToPusherMessage);
     //}
-    console.warn(message);
+    log.warn(message);
 }

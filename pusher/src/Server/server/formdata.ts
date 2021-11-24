@@ -2,6 +2,7 @@ import { createWriteStream } from "fs";
 import { join, dirname } from "path";
 import Busboy from "busboy";
 import mkdirp from "mkdirp";
+import log from "../../Services/Logger";
 
 function formData(
     contType: string,
@@ -19,7 +20,7 @@ function formData(
         filename?: (oldName: string) => string;
     } = {}
 ) {
-    console.log("Enter form data");
+    log.info("Enter form data");
     options.headers = {
         "content-type": contType,
     };

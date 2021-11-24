@@ -1,5 +1,6 @@
 import { HttpResponse } from "uWebSockets.js";
 import { FRONT_URL } from "../Enum/EnvironmentVariable";
+import log from "../Services/Logger";
 
 export class BaseController {
     protected addCorsHeaders(res: HttpResponse): void {
@@ -20,12 +21,12 @@ export class BaseController {
             } else {
                 url = "";
             }
-            console.error("ERROR: " + e.message + url);
+            log.error("ERROR: " + e.message + url);
         } else if (typeof e === "string") {
-            console.error(e);
+            log.error(e);
         }
         if (e.stack) {
-            console.error(e.stack);
+            log.error(e.stack);
         }
         if (e.response) {
             res.writeStatus(e.response.status + " " + e.response.statusText);

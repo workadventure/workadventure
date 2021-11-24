@@ -6,6 +6,7 @@ import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { parse } from "query-string";
 import { openIDClient } from "../Services/OpenIDClient";
 import { DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
+import log from "../Services/Logger";
 
 export interface TokenInterface {
     userUuid: string;
@@ -25,7 +26,7 @@ export class AuthenticateController extends BaseController {
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.App.get("/login-screen", async (res: HttpResponse, req: HttpRequest) => {
             res.onAborted(() => {
-                console.warn("/message request was aborted");
+                log.warn("/message request was aborted");
             });
 
             try {
@@ -44,7 +45,7 @@ export class AuthenticateController extends BaseController {
                 res.writeHeader("Location", loginUri);
                 return res.end();
             } catch (e) {
-                console.error("openIDLogin => e", e);
+                log.error("openIDLogin => e", e);
                 return this.errorToResponse(e, res);
             }
         });
@@ -54,7 +55,7 @@ export class AuthenticateController extends BaseController {
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.App.get("/login-callback", async (res: HttpResponse, req: HttpRequest) => {
             res.onAborted(() => {
-                console.warn("/message request was aborted");
+                log.warn("/message request was aborted");
             });
             const IPAddress = req.getHeader("x-forwarded-for");
             const { code, nonce, token, playUri } = parse(req.getQuery());
@@ -88,7 +89,7 @@ export class AuthenticateController extends BaseController {
                         this.addCorsHeaders(res);
                         return res.end(JSON.stringify({ ...resCheckTokenAuth, ...resUserData, authToken: token }));
                     } catch (err) {
-                        console.info("User was not connected", err);
+                        log.info("User was not connected", err);
                     }
                 }
 
@@ -108,7 +109,7 @@ export class AuthenticateController extends BaseController {
                 this.addCorsHeaders(res);
                 return res.end(JSON.stringify({ ...data, authToken }));
             } catch (e) {
-                console.error("openIDCallback => ERROR", e);
+                log.error("openIDCallback => ERROR", e);
                 return this.errorToResponse(e, res);
             }
         });
@@ -116,7 +117,7 @@ export class AuthenticateController extends BaseController {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.App.get("/logout-callback", async (res: HttpResponse, req: HttpRequest) => {
             res.onAborted(() => {
-                console.warn("/message request was aborted");
+                log.warn("/message request was aborted");
             });
 
             const { token } = parse(req.getQuery());
@@ -128,7 +129,7 @@ export class AuthenticateController extends BaseController {
                 }
                 await openIDClient.logoutUser(authTokenData.accessToken);
             } catch (error) {
-                console.error("openIDCallback => logout-callback", error);
+                log.error("openIDCallback => logout-callback", error);
             } finally {
                 res.writeStatus("200");
                 this.addCorsHeaders(res);
@@ -149,7 +150,7 @@ export class AuthenticateController extends BaseController {
         this.App.post("/register", (res: HttpResponse, req: HttpRequest) => {
             (async () => {
                 res.onAborted(() => {
-                    console.warn("Login request was aborted");
+                    log.warn("Login request was aborted");
                 });
                 const param = await res.json();
 
@@ -180,7 +181,7 @@ export class AuthenticateController extends BaseController {
                         })
                     );
                 } catch (e) {
-                    console.error("register => ERROR", e);
+                    log.error("register => ERROR", e);
                     this.errorToResponse(e, res);
                 }
             })();
@@ -196,7 +197,7 @@ export class AuthenticateController extends BaseController {
 
         this.App.post("/anonymLogin", (res: HttpResponse, req: HttpRequest) => {
             res.onAborted(() => {
-                console.warn("Login request was aborted");
+                log.warn("Login request was aborted");
             });
 
             if (DISABLE_ANONYMOUS) {
@@ -223,7 +224,7 @@ export class AuthenticateController extends BaseController {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.App.get("/profile-callback", async (res: HttpResponse, req: HttpRequest) => {
             res.onAborted(() => {
-                console.warn("/message request was aborted");
+                log.warn("/message request was aborted");
             });
             const { token } = parse(req.getQuery());
             try {
@@ -247,7 +248,7 @@ export class AuthenticateController extends BaseController {
                     }
                 }
             } catch (error) {
-                console.error("profileCallback => ERROR", error);
+                log.error("profileCallback => ERROR", error);
                 this.errorToResponse(error, res);
             }
         });

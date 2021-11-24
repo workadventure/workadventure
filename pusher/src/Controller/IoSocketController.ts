@@ -30,6 +30,7 @@ import { ADMIN_SOCKETS_TOKEN, ADMIN_API_URL, DISABLE_ANONYMOUS, SOCKET_IDLE_TIME
 import { Zone } from "_Model/Zone";
 import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
 import { CharacterTexture } from "../Services/AdminApi/CharacterTexture";
+import log from "../Services/Logger";
 
 export class IoSocketController {
     private nextUserId: number = 1;
@@ -52,13 +53,13 @@ export class IoSocketController {
                     const data = jwtTokenManager.verifyAdminSocketToken(token as string);
                     authorizedRoomIds = data.authorizedRoomIds;
                 } catch (e) {
-                    console.error("Admin access refused for token: " + token);
+                    log.info("Admin access refused for token: " + token);
                     res.writeStatus("401 Unauthorized").end("Incorrect token");
                     return;
                 }
                 const roomId = query.roomId;
                 if (typeof roomId !== "string" || !authorizedRoomIds.includes(roomId)) {
-                    console.error("Invalid room id");
+                    log.error("Invalid room id");
                     res.writeStatus("403 Bad Request").end("Invalid room id");
                     return;
                 }
@@ -66,7 +67,7 @@ export class IoSocketController {
                 res.upgrade({ roomId }, websocketKey, websocketProtocol, websocketExtensions, context);
             },
             open: (ws) => {
-                console.log("Admin socket connect for room: " + ws.roomId);
+                log.info("Admin socket connect for room: " + ws.roomId);
                 ws.disconnecting = false;
 
                 socketManager.handleAdminRoom(ws as ExAdminSocketInterface, ws.roomId as string);
@@ -97,7 +98,7 @@ export class IoSocketController {
                         }
                     }
                 } catch (err) {
-                    console.error(err);
+                    log.error(err);
                 }
             },
             close: (ws, code, message) => {
@@ -106,8 +107,8 @@ export class IoSocketController {
                     Client.disconnecting = true;
                     socketManager.leaveAdminRoom(Client);
                 } catch (e) {
-                    console.error('An error occurred on admin "disconnect"');
-                    console.error(e);
+                    log.error('An error occurred on admin "disconnect"');
+                    log.error(e);
                 }
             },
         });
@@ -205,7 +206,7 @@ export class IoSocketController {
                                     if (err?.response?.status == 404) {
                                         // If we get an HTTP 404, the token is invalid. Let's perform an anonymous login!
 
-                                        console.warn(
+                                        log.warn(
                                             'Cannot find user with email "' +
                                                 (userIdentifier || "anonymous") +
                                                 '". Performing an anonymous login instead.'
@@ -245,13 +246,13 @@ export class IoSocketController {
                                     throw new Error("Use the login URL to connect");
                                 }
                             } catch (e) {
-                                console.log(
+                                log.info(
                                     "access not granted for user " +
                                         (userIdentifier || "anonymous") +
                                         " and room " +
                                         roomId
                                 );
-                                console.error(e);
+                                log.error(e);
                                 throw new Error("User cannot access this world");
                             }
                         }
@@ -261,7 +262,7 @@ export class IoSocketController {
                             SocketManager.mergeCharacterLayersAndCustomTextures(characterLayers, memberTextures);
 
                         if (upgradeAborted.aborted) {
-                            console.log("Ouch! Client disconnected before we could upgrade it!");
+                            log.info("Ouch! Client disconnected before we could upgrade it!");
                             /* You must not upgrade now */
                             return;
                         }
@@ -402,7 +403,7 @@ export class IoSocketController {
                 //let ok = ws.send(message, isBinary);
             },
             drain: (ws) => {
-                console.log("WebSocket backpressure: " + ws.getBufferedAmount());
+                log.info("WebSocket backpressure: " + ws.getBufferedAmount());
             },
             close: (ws, code, message) => {
                 const Client = ws as ExSocketInterface;
@@ -411,8 +412,8 @@ export class IoSocketController {
                     //leave room
                     socketManager.leaveRoom(Client);
                 } catch (e) {
-                    console.error('An error occurred on "disconnect"');
-                    console.error(e);
+                    log.error('An error occurred on "disconnect"');
+                    log.error(e);
                 }
             },
         });

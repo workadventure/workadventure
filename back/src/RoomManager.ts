@@ -31,6 +31,7 @@ import { User, UserSocket } from "./Model/User";
 import { GameRoom } from "./Model/GameRoom";
 import Debug from "debug";
 import { Admin } from "./Model/Admin";
+import log from "./Services/Logger";
 
 const debug = Debug("roommanager");
 
@@ -40,7 +41,7 @@ export type RoomSocket = ServerWritableStream<RoomMessage, BatchToPusherRoomMess
 
 const roomManager: IRoomManagerServer = {
     joinRoom: (call: UserSocket): void => {
-        console.log("joinRoom called");
+        log.info("joinRoom called");
 
         let room: GameRoom | null = null;
         let user: User | null = null;
@@ -131,11 +132,11 @@ const roomManager: IRoomManagerServer = {
                         }
                     }
                 } catch (e) {
-                    console.error(e);
+                    log.error(e);
                     emitError(call, e);
                     call.end();
                 }
-            })().catch((e) => console.error(e));
+            })().catch((e) => log.error(e));
         });
 
         call.on("end", () => {
@@ -149,7 +150,7 @@ const roomManager: IRoomManagerServer = {
         });
 
         call.on("error", (err: Error) => {
-            console.error("An error occurred in joinRoom stream:", err);
+            log.error("An error occurred in joinRoom stream:", err);
         });
     },
 
@@ -167,7 +168,7 @@ const roomManager: IRoomManagerServer = {
             debug("listenZone cancelled");
             socketManager
                 .removeZoneListener(call, zoneMessage.getRoomid(), zoneMessage.getX(), zoneMessage.getY())
-                .catch((e) => console.error(e));
+                .catch((e) => log.error(e));
             call.end();
         });
 
@@ -175,12 +176,12 @@ const roomManager: IRoomManagerServer = {
             debug("listenZone connection closed");
             socketManager
                 .removeZoneListener(call, zoneMessage.getRoomid(), zoneMessage.getX(), zoneMessage.getY())
-                .catch((e) => console.error(e));
+                .catch((e) => log.error(e));
         }).on("error", (e) => {
-            console.error("An error occurred in listenZone stream:", e);
+            log.error("An error occurred in listenZone stream:", e);
             socketManager
                 .removeZoneListener(call, zoneMessage.getRoomid(), zoneMessage.getX(), zoneMessage.getY())
-                .catch((e) => console.error(e));
+                .catch((e) => log.error(e));
             call.end();
         });
     },
@@ -195,22 +196,22 @@ const roomManager: IRoomManagerServer = {
 
         call.on("cancelled", () => {
             debug("listenRoom cancelled");
-            socketManager.removeRoomListener(call, roomMessage.getRoomid()).catch((e) => console.error(e));
+            socketManager.removeRoomListener(call, roomMessage.getRoomid()).catch((e) => log.error(e));
             call.end();
         });
 
         call.on("close", () => {
             debug("listenRoom connection closed");
-            socketManager.removeRoomListener(call, roomMessage.getRoomid()).catch((e) => console.error(e));
+            socketManager.removeRoomListener(call, roomMessage.getRoomid()).catch((e) => log.error(e));
         }).on("error", (e) => {
-            console.error("An error occurred in listenRoom stream:", e);
-            socketManager.removeRoomListener(call, roomMessage.getRoomid()).catch((e) => console.error(e));
+            log.error("An error occurred in listenRoom stream:", e);
+            socketManager.removeRoomListener(call, roomMessage.getRoomid()).catch((e) => log.error(e));
             call.end();
         });
     },
 
     adminRoom(call: AdminSocket): void {
-        console.log("adminRoom called");
+        log.info("adminRoom called");
 
         const admin = new Admin(call);
         let room: GameRoom | null = null;
@@ -225,7 +226,7 @@ const roomManager: IRoomManagerServer = {
                             .then((gameRoom: GameRoom) => {
                                 room = gameRoom;
                             })
-                            .catch((e) => console.error(e));
+                            .catch((e) => log.error(e));
                     } else {
                         throw new Error("The first message sent MUST be of type JoinRoomMessage");
                     }
@@ -246,13 +247,13 @@ const roomManager: IRoomManagerServer = {
         });
 
         call.on("error", (err: Error) => {
-            console.error("An error occurred in joinAdminRoom stream:", err);
+            log.error("An error occurred in joinAdminRoom stream:", err);
         });
     },
     sendAdminMessage(call: ServerUnaryCall<AdminMessage>, callback: sendUnaryData<EmptyMessage>): void {
         socketManager
             .sendAdminMessage(call.request.getRoomid(), call.request.getRecipientuuid(), call.request.getMessage())
-            .catch((e) => console.error(e));
+            .catch((e) => log.error(e));
 
         callback(null, new EmptyMessage());
     },
@@ -265,7 +266,7 @@ const roomManager: IRoomManagerServer = {
         // FIXME Work in progress
         socketManager
             .banUser(call.request.getRoomid(), call.request.getRecipientuuid(), call.request.getMessage())
-            .catch((e) => console.error(e));
+            .catch((e) => log.error(e));
 
         callback(null, new EmptyMessage());
     },
@@ -273,7 +274,7 @@ const roomManager: IRoomManagerServer = {
         // FIXME: we could improve return message by returning a Success|ErrorMessage message
         socketManager
             .sendAdminRoomMessage(call.request.getRoomid(), call.request.getMessage(), call.request.getType())
-            .catch((e) => console.error(e));
+            .catch((e) => log.error(e));
         callback(null, new EmptyMessage());
     },
     sendWorldFullWarningToRoom(
@@ -281,7 +282,7 @@ const roomManager: IRoomManagerServer = {
         callback: sendUnaryData<EmptyMessage>
     ): void {
         // FIXME: we could improve return message by returning a Success|ErrorMessage message
-        socketManager.dispatchWorldFullWarning(call.request.getRoomid()).catch((e) => console.error(e));
+        socketManager.dispatchWorldFullWarning(call.request.getRoomid()).catch((e) => log.error(e));
         callback(null, new EmptyMessage());
     },
     sendRefreshRoomPrompt(
@@ -289,7 +290,7 @@ const roomManager: IRoomManagerServer = {
         callback: sendUnaryData<EmptyMessage>
     ): void {
         // FIXME: we could improve return message by returning a Success|ErrorMessage message
-        socketManager.dispatchRoomRefresh(call.request.getRoomid()).catch((e) => console.error(e));
+        socketManager.dispatchRoomRefresh(call.request.getRoomid()).catch((e) => log.error(e));
         callback(null, new EmptyMessage());
     },
 };

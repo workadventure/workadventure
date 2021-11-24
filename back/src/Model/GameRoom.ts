@@ -27,6 +27,7 @@ import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 import { LocalUrlError } from "../Services/LocalUrlError";
 import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { VariableError } from "../Services/VariableError";
+import log from "../Services/Logger";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -152,7 +153,7 @@ export class GameRoom {
     public leave(user: User) {
         const userObj = this.users.get(user.id);
         if (userObj === undefined) {
-            console.warn("User ", user.id, "does not belong to this game room! It should!");
+            log.warn("User ", user.id, "does not belong to this game room! It should!");
         }
         if (userObj !== undefined && typeof userObj.group !== "undefined") {
             this.leaveGroup(userObj);
@@ -444,7 +445,7 @@ export class GameRoom {
 
             const match = /\/_\/[^/]+\/(.+)/.exec(roomUrlObj.pathname);
             if (!match) {
-                console.error("Unexpected room URL", roomUrl);
+                log.error("Unexpected room URL", roomUrl);
                 throw new Error('Unexpected room URL "' + roomUrl + '"');
             }
 
@@ -460,7 +461,7 @@ export class GameRoom {
 
         const result = await adminApi.fetchMapDetails(roomUrl);
         if (!isMapDetailsData(result)) {
-            console.error("Unexpected room details received from server", result);
+            log.error("Unexpected room details received from server", result);
             throw new Error("Unexpected room details received from server");
         }
         return result;
@@ -519,7 +520,9 @@ export class GameRoom {
                             for (const roomListener of this.roomListeners) {
                                 emitErrorOnRoomSocket(
                                     roomListener,
-                                    "Your map does not seem accessible from the WorkAdventure servers. Is it behind a firewall or a proxy? Your map should be accessible from the WorkAdventure servers. If you use the scripting API in this map, please be aware that server-side checks and variable persistence is disabled."
+                                    "Your map '" +
+                                        this.mapUrl +
+                                        "' does not seem accessible from the WorkAdventure servers. Is it behind a firewall or a proxy? Your map should be accessible from the WorkAdventure servers. If you use the scripting API in this map, please be aware that server-side checks and variable persistence is disabled."
                                 );
                             }
                         }, 1000);
