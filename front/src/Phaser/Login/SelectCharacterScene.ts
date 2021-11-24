@@ -4,7 +4,7 @@ import { EnableCameraSceneName } from "./EnableCameraScene";
 import { CustomizeSceneName } from "./CustomizeScene";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { loadAllDefaultModels } from "../Entity/PlayerTexturesLoadingManager";
-import { addLoader } from "../Components/Loader";
+import { Loader } from "../Components/Loader";
 import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
 import { AbstractCharacterScene } from "./AbstractCharacterScene";
 import { areCharacterLayersValid } from "../../Connexion/LocalUser";
@@ -31,11 +31,13 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     protected pointerTimer: number = 0;
 
     protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
+    private loader: Loader;
 
     constructor() {
         super({
             key: SelectCharacterSceneName,
         });
+        this.loader = new Loader(this);
     }
 
     preload() {
@@ -49,7 +51,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.lazyloadingAttempt = false;
 
         //this function must stay at the end of preload function
-        addLoader(this);
+        this.loader.addLoader();
     }
 
     create() {

@@ -128,6 +128,10 @@ export abstract class Character extends Container {
     }
 
     public addTextures(textures: string[], frame?: string | number): void {
+        if (textures.length < 1) {
+            throw new TextureError("no texture given");
+        }
+
         for (const texture of textures) {
             if (this.scene && !this.scene.textures.exists(texture)) {
                 throw new TextureError("texture not found");

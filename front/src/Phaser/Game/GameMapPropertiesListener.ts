@@ -4,10 +4,8 @@ import { scriptUtils } from "../../Api/ScriptUtils";
 import type { CoWebsite } from "../../WebRtc/CoWebsiteManager";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
-import { get } from 'svelte/store';
-import {
-    ON_ACTION_TRIGGER_BUTTON,
-} from "../../WebRtc/LayoutManager";
+import { get } from "svelte/store";
+import { ON_ACTION_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
 import type { ITiledMapLayer } from "../Map/ITiledMap";
 import { GameMapProperties } from "./GameMapProperties";
 
@@ -18,8 +16,8 @@ enum OpenCoWebsiteState {
 }
 
 interface OpenCoWebsite {
-    coWebsite: CoWebsite | undefined,
-    state: OpenCoWebsiteState
+    coWebsite: CoWebsite | undefined;
+    state: OpenCoWebsiteState;
 }
 
 export class GameMapPropertiesListener {
@@ -29,7 +27,7 @@ export class GameMapPropertiesListener {
     constructor(private scene: GameScene, private gameMap: GameMap) {}
 
     register() {
-        this.gameMap.onPropertyChange(GameMapProperties.OPEN_TAB, (newValue, oldvalue, allProps) => {
+        this.gameMap.onPropertyChange(GameMapProperties.OPEN_TAB, (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
                 layoutManagerActionStore.removeAction("openTab");
             }
@@ -53,10 +51,10 @@ export class GameMapPropertiesListener {
             }
         });
 
-         // Open a new co-website by the property.
+        // Open a new co-website by the property.
         this.gameMap.onEnterLayer((newLayers) => {
             const handler = () => {
-                newLayers.forEach(layer => {
+                newLayers.forEach((layer) => {
                     if (!layer.properties) {
                         return;
                     }
@@ -69,8 +67,8 @@ export class GameMapPropertiesListener {
                     let websiteTriggerProperty: string | undefined;
                     let websiteTriggerMessageProperty: string | undefined;
 
-                    layer.properties.forEach(property => {
-                        switch(property.name) {
+                    layer.properties.forEach((property) => {
+                        switch (property.name) {
                             case GameMapProperties.OPEN_WEBSITE:
                                 openWebsiteProperty = property.value as string | undefined;
                                 break;
@@ -111,26 +109,28 @@ export class GameMapPropertiesListener {
                     });
 
                     const openWebsiteFunction = () => {
-                        coWebsiteManager.loadCoWebsite(
-                            openWebsiteProperty as string,
-                            this.scene.MapUrlFile,
-                            allowApiProperty,
-                            websitePolicyProperty,
-                            websiteWidthProperty,
-                            websitePositionProperty,
-                        ).then(coWebsite => {
-                            const coWebsiteOpen = this.coWebsitesOpenByLayer.get(layer);
-                            if (coWebsiteOpen && coWebsiteOpen.state === OpenCoWebsiteState.MUST_BE_CLOSE) {
-                                coWebsiteManager.closeCoWebsite(coWebsite);
-                                this.coWebsitesOpenByLayer.delete(layer);
-                                this.coWebsitesActionTriggerByLayer.delete(layer);
-                            } else {
-                                this.coWebsitesOpenByLayer.set(layer, {
-                                    coWebsite,
-                                    state: OpenCoWebsiteState.OPENED
-                                });
-                            }
-                        });
+                        coWebsiteManager
+                            .loadCoWebsite(
+                                openWebsiteProperty as string,
+                                this.scene.MapUrlFile,
+                                allowApiProperty,
+                                websitePolicyProperty,
+                                websiteWidthProperty,
+                                websitePositionProperty
+                            )
+                            .then((coWebsite) => {
+                                const coWebsiteOpen = this.coWebsitesOpenByLayer.get(layer);
+                                if (coWebsiteOpen && coWebsiteOpen.state === OpenCoWebsiteState.MUST_BE_CLOSE) {
+                                    coWebsiteManager.closeCoWebsite(coWebsite);
+                                    this.coWebsitesOpenByLayer.delete(layer);
+                                    this.coWebsitesActionTriggerByLayer.delete(layer);
+                                } else {
+                                    this.coWebsitesOpenByLayer.set(layer, {
+                                        coWebsite,
+                                        state: OpenCoWebsiteState.OPENED,
+                                    });
+                                }
+                            });
 
                         layoutManagerActionStore.removeAction(actionUuid);
                     };
@@ -161,7 +161,7 @@ export class GameMapPropertiesListener {
         // Close opened co-websites on leave the layer who contain the property.
         this.gameMap.onLeaveLayer((oldLayers) => {
             const handler = () => {
-                oldLayers.forEach(layer => {
+                oldLayers.forEach((layer) => {
                     if (!layer.properties) {
                         return;
                     }
@@ -169,8 +169,8 @@ export class GameMapPropertiesListener {
                     let openWebsiteProperty: string | undefined;
                     let websiteTriggerProperty: string | undefined;
 
-                    layer.properties.forEach(property => {
-                        switch(property.name) {
+                    layer.properties.forEach((property) => {
+                        switch (property.name) {
                             case GameMapProperties.OPEN_WEBSITE:
                                 openWebsiteProperty = property.value as string | undefined;
                                 break;
@@ -192,11 +192,6 @@ export class GameMapPropertiesListener {
 
                     if (coWebsiteOpen.state === OpenCoWebsiteState.LOADING) {
                         coWebsiteOpen.state = OpenCoWebsiteState.MUST_BE_CLOSE;
-                        return;
-                    }
-
-                    if (coWebsiteOpen.state !== OpenCoWebsiteState.OPENED) {
-                        return;
                     }
 
                     if (coWebsiteOpen.coWebsite !== undefined) {
@@ -216,9 +211,10 @@ export class GameMapPropertiesListener {
                         return;
                     }
 
-                    const action = actionStore && actionStore.length > 0 ?
-                        actionStore.find(action => action.uuid === actionTriggerUuid) : undefined;
-
+                    const action =
+                        actionStore && actionStore.length > 0
+                            ? actionStore.find((action) => action.uuid === actionTriggerUuid)
+                            : undefined;
 
                     if (action) {
                         layoutManagerActionStore.removeAction(actionTriggerUuid);

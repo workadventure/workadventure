@@ -5,7 +5,7 @@ export const isOpenCoWebsiteEvent = new tg.IsInterface()
         url: tg.isString,
         allowApi: tg.isOptional(tg.isBoolean),
         allowPolicy: tg.isOptional(tg.isString),
-        position: tg.isOptional(tg.isNumber)
+        position: tg.isOptional(tg.isNumber),
     })
     .get();
 
