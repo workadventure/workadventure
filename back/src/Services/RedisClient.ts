@@ -1,6 +1,5 @@
 import { ClientOpts, createClient, RedisClient } from "redis";
 import { REDIS_HOST, REDIS_PASSWORD, REDIS_PORT } from "../Enum/EnvironmentVariable";
-import log from "./Logger";
 
 let redisClient: RedisClient | null = null;
 
@@ -17,7 +16,7 @@ if (REDIS_HOST !== undefined) {
     redisClient = createClient(config);
 
     redisClient.on("error", (err) => {
-        log.error("Error connecting to Redis:", err);
+        console.error("Error connecting to Redis:", err);
     });
 }
 

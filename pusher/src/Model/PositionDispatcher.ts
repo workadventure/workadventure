@@ -11,7 +11,6 @@
 import { Zone, ZoneEventListener } from "./Zone";
 import { ViewportInterface } from "_Model/Websocket/ViewportMessage";
 import { ExSocketInterface } from "_Model/Websocket/ExSocketInterface";
-import log from "../Services/Logger";
 //import Debug from "debug";
 
 //const debug = Debug('positiondispatcher');
@@ -45,7 +44,7 @@ export class PositionDispatcher {
      */
     public setViewport(socket: ExSocketInterface, viewport: ViewportInterface): void {
         if (viewport.left > viewport.right || viewport.top > viewport.bottom) {
-            log.warn("Invalid viewport received: ", viewport);
+            console.warn("Invalid viewport received: ", viewport);
             return;
         }
 

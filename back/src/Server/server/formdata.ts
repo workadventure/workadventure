@@ -2,7 +2,6 @@ import { createWriteStream } from "fs";
 import { join, dirname } from "path";
 import Busboy from "busboy";
 import mkdirp from "mkdirp";
-import log from "../../Services/Logger";
 
 function formData(
     contType: string,
@@ -20,7 +19,7 @@ function formData(
         filename?: (oldName: string) => string;
     } = {}
 ) {
-    log.info("Enter form data");
+    console.log("Enter form data");
     options.headers = {
         "content-type": contType,
     };
@@ -48,10 +47,7 @@ function formData(
             if (typeof options.tmpDir === "string") {
                 if (typeof options.filename === "function") filename = options.filename(filename);
                 const fileToSave = join(options.tmpDir, filename);
-                mkdirp(dirname(fileToSave)).then(
-                    () => {},
-                    () => {}
-                );
+                mkdirp(dirname(fileToSave));
 
                 file.pipe(createWriteStream(fileToSave));
                 value.filePath = fileToSave;
