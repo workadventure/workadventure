@@ -8,7 +8,6 @@ import { isMapDetailsData, MapDetailsData } from "../Services/AdminApi/MapDetail
 import { socketManager } from "../Services/SocketManager";
 import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { v4 } from "uuid";
-import log from "../Services/Logger";
 
 export class MapController extends BaseController {
     constructor(private App: TemplatedApp) {
@@ -26,13 +25,13 @@ export class MapController extends BaseController {
 
         this.App.get("/map", (res: HttpResponse, req: HttpRequest) => {
             res.onAborted(() => {
-                log.warn("/map request was aborted");
+                console.warn("/map request was aborted");
             });
 
             const query = parse(req.getQuery());
 
             if (typeof query.playUri !== "string") {
-                log.error("Expected playUri parameter in /map endpoint");
+                console.error("Expected playUri parameter in /map endpoint");
                 res.writeStatus("400 Bad request");
                 this.addCorsHeaders(res);
                 res.end("Expected playUri parameter");
@@ -84,7 +83,7 @@ export class MapController extends BaseController {
                                 // Decode token, in this case we don't need to create new token.
                                 authTokenData = jwtTokenManager.verifyJWTToken(query.authToken as string, true);
                                 userId = authTokenData.identifier;
-                                log.info("JWT expire, but decoded", userId);
+                                console.info("JWT expire, but decoded", userId);
                             } catch (e) {
                                 // The token was not good, redirect user on login page
                                 res.writeStatus("500");

@@ -20,7 +20,6 @@ import {
 import { ClientReadableStream } from "grpc";
 import { PositionDispatcher } from "_Model/PositionDispatcher";
 import Debug from "debug";
-import log from "../Services/Logger";
 
 const debug = Debug("zone");
 
@@ -210,7 +209,7 @@ export class Zone {
                     const userDescriptor = this.users.get(userId);
 
                     if (userDescriptor === undefined) {
-                        log.error('Unexpected move message received for user "' + userId + '"');
+                        console.error('Unexpected move message received for user "' + userId + '"');
                         return;
                     }
 

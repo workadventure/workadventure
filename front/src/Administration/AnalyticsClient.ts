@@ -4,7 +4,7 @@ declare let window: any;
 
 class AnalyticsClient {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private posthogPromise: Promise<any> | undefined;
+    private posthogPromise: Promise<any>|undefined;
 
     constructor() {
         if (POSTHOG_API_KEY && POSTHOG_URL) {
@@ -18,64 +18,74 @@ class AnalyticsClient {
     }
 
     identifyUser(uuid: string, email: string | null) {
-        this.posthogPromise?.then((posthog) => {
-            posthog.identify(uuid, { uuid, email, wa: true });
-        });
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.identify(uuid, { uuid, email, wa: true });
+            });
     }
 
     loggedWithSso() {
-        this.posthogPromise?.then((posthog) => {
-            posthog.capture("wa-logged-sso");
-        });
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa-logged-sso");
+            });
     }
 
     loggedWithToken() {
-        this.posthogPromise?.then((posthog) => {
-            posthog.capture("wa-logged-token");
-        });
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa-logged-token");
+            });
     }
 
     enteredRoom(roomId: string, roomGroup: string | null) {
-        this.posthogPromise?.then((posthog) => {
-            posthog.capture("$pageView", { roomId, roomGroup });
-            posthog.capture("enteredRoom");
-        });
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("$pageView", { roomId, roomGroup });
+                posthog.capture("enteredRoom");
+            });
     }
 
     openedMenu() {
-        this.posthogPromise?.then((posthog) => {
-            posthog.capture("wa-opened-menu");
-        });
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa-opened-menu");
+            });
     }
 
     launchEmote(emote: string) {
-        this.posthogPromise?.then((posthog) => {
-            posthog.capture("wa-emote-launch", { emote });
-        });
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa-emote-launch", { emote });
+            });
     }
 
     enteredJitsi(roomName: string, roomId: string) {
-        this.posthogPromise?.then((posthog) => {
-            posthog.capture("wa-entered-jitsi", { roomName, roomId });
-        });
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa-entered-jitsi", { roomName, roomId });
+            });
     }
 
     validationName() {
-        this.posthogPromise?.then((posthog) => {
-            posthog.capture("wa-name-validation");
-        });
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa-name-validation");
+            });
     }
 
     validationWoka(scene: string) {
-        this.posthogPromise?.then((posthog) => {
-            posthog.capture("wa-woka-validation", { scene });
-        });
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa-woka-validation", { scene });
+            });
     }
 
     validationVideo() {
-        this.posthogPromise?.then((posthog) => {
-            posthog.capture("wa-video-validation");
-        });
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa-video-validation");
+            });
     }
 }
 export const analyticsClient = new AnalyticsClient();

@@ -4,7 +4,7 @@ import { EnableCameraSceneName } from "./EnableCameraScene";
 import { CustomizeSceneName } from "./CustomizeScene";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { loadAllDefaultModels } from "../Entity/PlayerTexturesLoadingManager";
-import { Loader } from "../Components/Loader";
+import { Loader} from "../Components/Loader";
 import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
 import { AbstractCharacterScene } from "./AbstractCharacterScene";
 import { areCharacterLayersValid } from "../../Connexion/LocalUser";
