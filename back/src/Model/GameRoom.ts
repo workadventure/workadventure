@@ -26,6 +26,7 @@ import { VariablesManager } from "../Services/VariablesManager";
 import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 import { LocalUrlError } from "../Services/LocalUrlError";
 import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
+import { VariableError } from "../Services/VariableError";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -336,30 +337,62 @@ export class GameRoom {
         // First, let's check if "user" is allowed to modify the variable.
         const variableManager = await this.getVariableManager();
 
-        const readableBy = variableManager.setVariable(name, value, user);
+        try {
+            const readableBy = variableManager.setVariable(name, value, user);
 
-        // If the variable was not changed, let's not dispatch anything.
-        if (readableBy === false) {
-            return;
-        }
+            // If the variable was not changed, let's not dispatch anything.
+            if (readableBy === false) {
+                return;
+            }
 
-        // TODO: should we batch those every 100ms?
-        const variableMessage = new VariableWithTagMessage();
-        variableMessage.setName(name);
-        variableMessage.setValue(value);
-        if (readableBy) {
-            variableMessage.setReadableby(readableBy);
-        }
+            // TODO: should we batch those every 100ms?
+            const variableMessage = new VariableWithTagMessage();
+            variableMessage.setName(name);
+            variableMessage.setValue(value);
+            if (readableBy) {
+                variableMessage.setReadableby(readableBy);
+            }
 
-        const subMessage = new SubToPusherRoomMessage();
-        subMessage.setVariablemessage(variableMessage);
+            const subMessage = new SubToPusherRoomMessage();
+            subMessage.setVariablemessage(variableMessage);
 
-        const batchMessage = new BatchToPusherRoomMessage();
-        batchMessage.addPayload(subMessage);
+            const batchMessage = new BatchToPusherRoomMessage();
+            batchMessage.addPayload(subMessage);
 
-        // Dispatch the message on the room listeners
-        for (const socket of this.roomListeners) {
-            socket.write(batchMessage);
+            // Dispatch the message on the room listeners
+            for (const socket of this.roomListeners) {
+                socket.write(batchMessage);
+            }
+        } catch (e) {
+            if (e instanceof VariableError) {
+                // Ok, we have an error setting a variable. Either the user is trying to hack the map... or the map
+                // is not up to date. So let's try to reload the map from scratch.
+                if (this.variableManagerLastLoad === undefined) {
+                    throw e;
+                }
+                const lastLoaded = new Date().getTime() - this.variableManagerLastLoad.getTime();
+                if (lastLoaded < 10000) {
+                    console.log(
+                        'An error occurred while setting the "' +
+                            name +
+                            "\" variable. But we tried to reload the map less than 10 seconds ago, so let's fail."
+                    );
+                    // Do not try to reload if we tried to reload less than 10 seconds ago.
+                    throw e;
+                }
+
+                // Reset the variable manager
+                this.variableManagerPromise = undefined;
+                this.mapPromise = undefined;
+
+                console.log(
+                    'An error occurred while setting the "' + name + "\" variable. Let's reload the map and try again"
+                );
+                // Try to set the variable again!
+                await this.setVariable(name, value, user);
+            } else {
+                throw e;
+            }
         }
     }
 
@@ -449,9 +482,11 @@ export class GameRoom {
     }
 
     private variableManagerPromise: Promise<VariablesManager> | undefined;
+    private variableManagerLastLoad: Date | undefined;
 
     private getVariableManager(): Promise<VariablesManager> {
         if (!this.variableManagerPromise) {
+            this.variableManagerLastLoad = new Date();
             this.variableManagerPromise = this.getMap()
                 .then((map) => {
                     const variablesManager = new VariablesManager(this.roomUrl, map);
