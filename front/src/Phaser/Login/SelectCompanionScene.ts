@@ -1,4 +1,4 @@
-import { addLoader } from "../Components/Loader";
+import { Loader } from "../Components/Loader";
 import { gameManager } from "../Game/GameManager";
 import { ResizableScene } from "./ResizableScene";
 import { EnableCameraSceneName } from "./EnableCameraScene";
@@ -22,11 +22,13 @@ export class SelectCompanionScene extends ResizableScene {
     private currentCompanion = 0;
     private pointerClicked: boolean = false;
     private pointerTimer: number = 0;
+    private loader: Loader;
 
     constructor() {
         super({
             key: SelectCompanionSceneName,
         });
+        this.loader = new Loader(this);
     }
 
     preload() {
@@ -35,7 +37,7 @@ export class SelectCompanionScene extends ResizableScene {
         });
 
         //this function must stay at the end of preload function
-        addLoader(this);
+        this.loader.addLoader();
     }
 
     create() {
