@@ -42,6 +42,7 @@ class AnalyticsClient {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("$pageView", { roomId, roomGroup });
+                posthog.capture("enteredRoom");
             });
     }
 
@@ -63,6 +64,27 @@ class AnalyticsClient {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa-entered-jitsi", { roomName, roomId });
+            });
+    }
+
+    validationName() {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa-name-validation");
+            });
+    }
+
+    validationWoka(scene: string) {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa-woka-validation", { scene });
+            });
+    }
+
+    validationVideo() {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa-video-validation");
             });
     }
 }
