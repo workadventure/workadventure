@@ -24,9 +24,7 @@ import type { EmbeddedWebsite } from "../iframe/Room/EmbeddedWebsite";
 import { isCreateEmbeddedWebsiteEvent } from "./EmbeddedWebsiteEvent";
 import type { LoadTilesetEvent } from "./LoadTilesetEvent";
 import { isLoadTilesetEvent } from "./LoadTilesetEvent";
-import type {
-    MessageReferenceEvent,
-} from "./ui/TriggerActionMessageEvent";
+import type { MessageReferenceEvent } from "./ui/TriggerActionMessageEvent";
 import { isMessageReferenceEvent, isTriggerActionMessageEvent } from "./ui/TriggerActionMessageEvent";
 import type { MenuRegisterEvent, UnregisterMenuEvent } from "./ui/MenuRegisterEvent";
 import type { ChangeLayerEvent } from "./ChangeLayerEvent";
@@ -117,19 +115,19 @@ export const iframeQueryMapTypeGuards = {
     },
     openCoWebsite: {
         query: isOpenCoWebsiteEvent,
-        answer: isCoWebsite
+        answer: isCoWebsite,
     },
     getCoWebsites: {
         query: tg.isUndefined,
-        answer:  tg.isArray(isCoWebsite)
+        answer: tg.isArray(isCoWebsite),
     },
     closeCoWebsite: {
         query: tg.isString,
-        answer: tg.isUndefined
+        answer: tg.isUndefined,
     },
     closeCoWebsites: {
         query: tg.isUndefined,
-        answer: tg.isUndefined
+        answer: tg.isUndefined,
     },
     triggerActionMessage: {
         query: isTriggerActionMessageEvent,

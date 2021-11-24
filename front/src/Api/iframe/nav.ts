@@ -57,7 +57,7 @@ export class WorkadventureNavigationCommands extends IframeApiContribution<Worka
     async getCoWebSites(): Promise<CoWebsite[]> {
         const result = await queryWorkadventure({
             type: "getCoWebsites",
-            data: undefined
+            data: undefined,
         });
         return result.map((cowebsiteEvent) => new CoWebsite(cowebsiteEvent.id, cowebsiteEvent.position));
     }

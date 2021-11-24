@@ -122,7 +122,7 @@ class LocalUserStore {
 
     setLastRoomUrl(roomUrl: string): void {
         localStorage.setItem(lastRoomUrl, roomUrl.toString());
-        if ('caches' in window) {
+        if ("caches" in window) {
             caches.open(cacheAPIIndex).then((cache) => {
                 const stringResponse = new Response(JSON.stringify({ roomUrl }));
                 cache.put(`/${lastRoomUrl}`, stringResponse);
@@ -135,7 +135,7 @@ class LocalUserStore {
         );
     }
     getLastRoomUrlCacheApi(): Promise<string | undefined> {
-        if (!('caches' in window)) {
+        if (!("caches" in window)) {
             return Promise.resolve(undefined);
         }
         return caches.open(cacheAPIIndex).then((cache) => {

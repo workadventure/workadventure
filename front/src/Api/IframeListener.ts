@@ -49,7 +49,7 @@ class IframeListener {
     public readonly openTabStream = this._openTabStream.asObservable();
 
     private readonly _loadPageStream: Subject<string> = new Subject();
-    public readonly loadPageStream = this._loadPageStream.asObservable()
+    public readonly loadPageStream = this._loadPageStream.asObservable();
 
     private readonly _disablePlayerControlStream: Subject<void> = new Subject();
     public readonly disablePlayerControlStream = this._disablePlayerControlStream.asObservable();
