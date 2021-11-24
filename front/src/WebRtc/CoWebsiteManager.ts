@@ -1,7 +1,6 @@
 import { HtmlUtils } from "./HtmlUtils";
 import { Subject } from "rxjs";
 import { iframeListener } from "../Api/IframeListener";
-import { touchScreenManager } from "../Touch/TouchScreenManager";
 import { waScaleManager } from "../Phaser/Services/WaScaleManager";
 import { ICON_URL } from "../Enum/EnvironmentVariable";
 
@@ -101,7 +100,7 @@ class CoWebsiteManager {
         this.cowebsiteBufferDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteBufferDomId);
         this.cowebsiteAsideDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteAsideDomId);
         this.cowebsiteSubIconsDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteSubIconsDomId);
-        this.initResizeListeners(touchScreenManager.supportTouchScreen);
+        this.initResizeListeners();
 
         this.resizeObserver.observe(this.cowebsiteDom);
         this.resizeObserver.observe(this.cowebsiteContainerDom);
@@ -170,7 +169,7 @@ class CoWebsiteManager {
         );
     }
 
-    private initResizeListeners(touchMode: boolean) {
+    private initResizeListeners() {
         const movecallback = (event: MouseEvent | TouchEvent) => {
             let x, y;
             if (event.type === "mousemove") {
@@ -189,23 +188,32 @@ class CoWebsiteManager {
             this.fire();
         };
 
-        this.cowebsiteAsideDom.addEventListener(touchMode ? "touchstart" : "mousedown", (event) => {
+        this.cowebsiteAsideDom.addEventListener("mousedown", (event) => {
             this.cowebsiteMainDom.style.display = "none";
             this.resizing = true;
-            if (touchMode) {
-                const touchEvent = (event as TouchEvent).touches[0];
-                this.previousTouchMoveCoordinates = { x: touchEvent.pageX, y: touchEvent.pageY };
-            }
-
-            document.addEventListener(touchMode ? "touchmove" : "mousemove", movecallback);
+            document.addEventListener("mousemove", movecallback);
         });
 
-        document.addEventListener(touchMode ? "touchend" : "mouseup", (event) => {
+        document.addEventListener("mouseup", (event) => {
             if (!this.resizing) return;
-            if (touchMode) {
-                this.previousTouchMoveCoordinates = null;
-            }
-            document.removeEventListener(touchMode ? "touchmove" : "mousemove", movecallback);
+            document.removeEventListener("mousemove", movecallback);
+            this.cowebsiteMainDom.style.display = "block";
+            this.resizing = false;
+            this.cowebsiteMainDom.style.display = "flex";
+        });
+
+        this.cowebsiteAsideDom.addEventListener("touchstart", (event) => {
+            this.cowebsiteMainDom.style.display = "none";
+            this.resizing = true;
+            const touchEvent = event.touches[0];
+            this.previousTouchMoveCoordinates = { x: touchEvent.pageX, y: touchEvent.pageY };
+            document.addEventListener("touchmove", movecallback);
+        });
+
+        document.addEventListener("touchend", (event) => {
+            if (!this.resizing) return;
+            this.previousTouchMoveCoordinates = null;
+            document.removeEventListener("touchmove", movecallback);
             this.cowebsiteMainDom.style.display = "block";
             this.resizing = false;
             this.cowebsiteMainDom.style.display = "flex";
