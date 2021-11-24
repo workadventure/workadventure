@@ -176,6 +176,10 @@ export class Room {
         return newUrl.toString();
     }
 
+    public get href(): string {
+        return this.roomUrl.toString();
+    }
+
     get textures(): CharacterTexture[] | undefined {
         return this._textures;
     }
