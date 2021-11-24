@@ -42,3 +42,10 @@ jobs:
           name: my-artifact
           path: './tests/screenshots/'
 
+      - name: Display state
+        if: ${{ failure() }}
+        run: docker-compose ps
+
+      - name: Display logs
+        if: ${{ failure() }}
+        run: docker-compose logs
