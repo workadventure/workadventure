@@ -5,7 +5,7 @@ import { adminApi, FetchMemberDataByUuidResponse } from "../Services/AdminApi";
 import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { parse } from "query-string";
 import { openIDClient } from "../Services/OpenIDClient";
-import { DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
+import { DISABLE_ANONYMOUS, FRONT_URL } from "../Enum/EnvironmentVariable";
 
 export interface TokenInterface {
     userUuid: string;
@@ -80,7 +80,11 @@ export class AuthenticateController extends BaseController {
                                 this.addCorsHeaders(res);
                                 return res.end(JSON.stringify({ ...resUserData, authToken: token }));
                             }
-                            throw Error("Token cannot to be check on Hydra");
+                            console.error("Token cannot to be check on OpenId provider");
+                            res.writeStatus("500");
+                            res.writeHeader("Access-Control-Allow-Origin", FRONT_URL);
+                            res.end("User cannot to be connected on openid provier");
+                            return;
                         }
 
                         const resCheckTokenAuth = await openIDClient.checkTokenAuth(authTokenData.accessToken);
@@ -93,7 +97,17 @@ export class AuthenticateController extends BaseController {
                 }
 
                 //user have not token created, check data on hydra and create token
-                const userInfo = await openIDClient.getUserInfo(code as string, nonce as string);
+                let userInfo = null;
+                try {
+                    userInfo = await openIDClient.getUserInfo(code as string, nonce as string);
+                } catch (err) {
+                    //if no access on openid provider, return error
+                    console.error("User cannot to be connected on OpenId provider => ", err);
+                    res.writeStatus("500");
+                    res.writeHeader("Access-Control-Allow-Origin", FRONT_URL);
+                    res.end("User cannot to be connected on openid provier");
+                    return;
+                }
                 const email = userInfo.email || userInfo.sub;
                 if (!email) {
                     throw new Error("No email in the response");

@@ -176,8 +176,9 @@ class ConnectionManager {
             //before set token of user we must load room and all information. For example the mandatory authentication could be require on current room
             this._currentRoom = await Room.createRoom(new URL(roomPath));
 
-            //defined last room url this room path
-            localUserStore.setLastRoomUrl(this._currentRoom.key);
+            //Set last room visited! (connected or nor, must to be saved in localstorage and cache API)
+            //use href to keep # value
+            localUserStore.setLastRoomUrl(this._currentRoom.href);
 
             //todo: add here some kind of warning if authToken has expired.
             if (!this.authToken && !this._currentRoom.authenticationMandatory) {
@@ -188,8 +189,15 @@ class ConnectionManager {
                     analyticsClient.loggedWithSso();
                 } catch (err) {
                     console.error(err);
-                    this.loadOpenIDScreen();
-                    return Promise.reject(new Error("You will be redirect on login page"));
+                    //if user must to be connect in current room or pusher error is not openid provier access error
+                    //try to connected with function loadOpenIDScreen
+                    if (
+                        this._currentRoom.authenticationMandatory ||
+                        (err.response?.data && err.response.data !== "User cannot to be connected on openid provier")
+                    ) {
+                        this.loadOpenIDScreen();
+                        return Promise.reject(new Error("You will be redirect on login page"));
+                    }
                 }
             }
             this.localUser = localUserStore.getLocalUser() as LocalUser; //if authToken exist in localStorage then localUser cannot be null
