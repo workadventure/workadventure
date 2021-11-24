@@ -29,15 +29,21 @@ test("Test that variables cache in the back don't prevent setting a variable in 
         .click('button.selectCharacterButtonRight')
         .click('button.selectCharacterButtonRight')
         .click('button.selectCharacterSceneFormSubmit')
-        .click('button.letsgo');
+        .click('button.letsgo')
+        .wait(1000);
         //.takeScreenshot('after_switch.png');
 
     const messages = await t.getBrowserConsoleMessages();
 
     const logs = messages['log'];
-    console.log(logs);
-    const lastMessage = logs.pop();
 
     // Let's check we successfully manage to save the variable value.
-    await t.expect(lastMessage).eql('SUCCESS!');
+    await t.expect(logs).contains('SUCCESS!');
+
+    t.ctx.passed = true;
+}).after(async t => {
+    if (!t.ctx.passed) {
+        console.log("Test failed. Browser logs:")
+        console.log(await t.getBrowserConsoleMessages());
+    }
 });
