@@ -4,7 +4,7 @@ declare let window: any;
 
 class AnalyticsClient {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private posthogPromise: Promise<any>;
+    private posthogPromise: Promise<any>|undefined;
 
     constructor() {
         if (POSTHOG_API_KEY && POSTHOG_URL) {
@@ -14,65 +14,56 @@ class AnalyticsClient {
                 window.posthog = posthog;
                 return posthog;
             });
-        } else {
-            this.posthogPromise = Promise.reject();
         }
     }
 
     identifyUser(uuid: string, email: string | null) {
         this.posthogPromise
-            .then((posthog) => {
+            ?.then((posthog) => {
                 posthog.identify(uuid, { uuid, email, wa: true });
-            })
-            .catch();
+            });
     }
 
     loggedWithSso() {
         this.posthogPromise
-            .then((posthog) => {
+            ?.then((posthog) => {
                 posthog.capture("wa-logged-sso");
-            })
-            .catch();
+            });
     }
 
     loggedWithToken() {
         this.posthogPromise
-            .then((posthog) => {
+            ?.then((posthog) => {
                 posthog.capture("wa-logged-token");
-            })
-            .catch();
+            });
     }
 
     enteredRoom(roomId: string, roomGroup: string | null) {
         this.posthogPromise
-            .then((posthog) => {
+            ?.then((posthog) => {
                 posthog.capture("$pageView", { roomId, roomGroup });
-            })
-            .catch();
+            });
     }
 
     openedMenu() {
         this.posthogPromise
-            .then((posthog) => {
+            ?.then((posthog) => {
                 posthog.capture("wa-opened-menu");
-            })
-            .catch();
+            });
     }
 
     launchEmote(emote: string) {
         this.posthogPromise
-            .then((posthog) => {
+            ?.then((posthog) => {
                 posthog.capture("wa-emote-launch", { emote });
-            })
-            .catch();
+            });
     }
 
     enteredJitsi(roomName: string, roomId: string) {
         this.posthogPromise
-            .then((posthog) => {
+            ?.then((posthog) => {
                 posthog.capture("wa-entered-jitsi", { roomName, roomId });
-            })
-            .catch();
+            });
     }
 }
 export const analyticsClient = new AnalyticsClient();
