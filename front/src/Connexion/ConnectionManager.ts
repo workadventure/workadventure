@@ -84,7 +84,8 @@ class ConnectionManager {
         if (token) {
             this.authToken = token;
             localUserStore.setAuthToken(token);
-            //token was saved, clear url
+
+            //clean token of url
             urlParams.delete("token");
         }
 
@@ -95,8 +96,6 @@ class ConnectionManager {
             }
             urlManager.pushRoomIdToUrl(this._currentRoom);
         } else if (connexionType === GameConnexionTypes.jwt) {
-            const urlParams = new URLSearchParams(window.location.search);
-
             if (!token) {
                 const code = urlParams.get("code");
                 const state = urlParams.get("state");
@@ -139,7 +138,7 @@ class ConnectionManager {
                         "//" +
                         window.location.host +
                         roomUrl +
-                        window.location.search +
+                        urlParams.toString() + //use urlParams because the token param must be deleted
                         window.location.hash
                 )
             );
@@ -169,7 +168,7 @@ class ConnectionManager {
                     "//" +
                     window.location.host +
                     window.location.pathname +
-                    window.location.search +
+                    urlParams.toString() + //use urlParams because the token param must be deleted
                     window.location.hash;
             }
 
@@ -218,8 +217,6 @@ class ConnectionManager {
             analyticsClient.identifyUser(this.localUser.uuid, this.localUser.email);
         }
 
-        //clean history with new URL
-        window.history.pushState({}, document.title, window.location.pathname);
         this.serviceWorker = new _ServiceWorker();
         return Promise.resolve(this._currentRoom);
     }
