@@ -37,8 +37,8 @@ jobs:
 
       - name: Upload failed tests
         if: ${{ failure() }}
-        uses: edunad/actions-image@v1.0.0
+        uses: actions/upload-artifact@v2
         with:
-          path: './tests/screenshots/**/*.png'
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          title: 'Failed E2E tests 🙀'
+          name: my-artifact
+          path: './tests/screenshots/'
+
