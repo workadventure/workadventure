@@ -13,6 +13,7 @@ import { PinchManager } from "../UserInput/PinchManager";
 import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { isMobile } from "../../Enum/EnvironmentVariable";
+import { analyticsClient } from "../../Administration/AnalyticsClient";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
@@ -98,6 +99,9 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         if (!this.selectedPlayer) {
             return;
         }
+
+        analyticsClient.validationWoka("SelectWoka");
+
         this.scene.stop(SelectCharacterSceneName);
         waScaleManager.restoreZoom();
         gameManager.setCharacterLayers([this.selectedPlayer.texture.key]);
