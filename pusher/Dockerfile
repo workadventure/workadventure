@@ -9,7 +9,6 @@ FROM node:14.15.4-buster-slim@sha256:cbae886186467bbfd274b82a234a1cdfbbd31201c2a
 WORKDIR /usr/src
 COPY pusher/yarn.lock pusher/package.json ./
 RUN yarn install
-RUN yarn add cookie-parser @types/cookie @types/node-fetch
 COPY pusher .
 COPY --from=builder /usr/src/generated src/Messages/generated
 ENV NODE_ENV=production
