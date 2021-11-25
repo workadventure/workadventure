@@ -234,6 +234,9 @@ class CoWebsiteManager {
         this.openedMain = iframeStates.loading;
     }
     private openMain(): void {
+        this.cowebsiteDom.addEventListener("transitionend", () => {
+            this.resizeAllIframes();
+        });
         this.cowebsiteDom.classList.remove("loading", "hidden"); //edit the css class to trigger the transition
         this.openedMain = iframeStates.opened;
         this.resetStyleMain();
