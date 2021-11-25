@@ -40,9 +40,12 @@
   },
   "homepage": "https://github.com/thecodingmachine/workadventure#readme",
   "dependencies": {
+    "@types/cookie": "^0.4.1",
+    "@types/node-fetch": "^3.0.3",
     "axios": "^0.21.2",
     "busboy": "^0.3.1",
     "circular-json": "^0.5.9",
+    "cookie-parser": "^1.4.5",
     "debug": "^4.3.1",
     "generic-type-guard": "^3.2.0",
     "google-protobuf": "^3.13.0",
@@ -52,10 +55,8 @@
     "openid-client": "^4.7.4",
     "prom-client": "^12.0.0",
     "query-string": "^6.13.3",
-    "uWebSockets.js": "uNetworking/uWebSockets.js#v18.5.0",
     "uuidv4": "^6.0.7",
-    "@types/cookie": "^0.4.1",
-    "cookie-parser": "^1.4.5"
+    "uWebSockets.js": "uNetworking/uWebSockets.js#v18.5.0"
   },
   "devDependencies": {
     "@types/busboy": "^0.2.3",
