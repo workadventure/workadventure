@@ -44,26 +44,26 @@ jobs:
     steps:
       - name: Write env variables to file
         run: |
-          echo "ACME_EMAIL=`echo $ACME_EMAIL`\n" >> .env
-          echo "ADMIN_API_TOKEN=`echo $ADMIN_API_TOKEN`\n" >> .env
-          echo "DEBUG_MODE=`echo $DEBUG_MODE`\n" >> .env
-          echo "DISABLE_NOTIFICATIONS=`echo $DISABLE_NOTIFICATIONS`\n" >> .env
-          echo "JITSI_ISS=`echo $JITSI_ISS`\n" >> .env
-          echo "JITSI_PRIVATE_MODE=`echo $JITSI_PRIVATE_MODE`\n" >> .env
-          echo "JITSI_URL=`echo $JITSI_URL`\n" >> .env
-          echo "MAX_PER_GROUP=`echo $MAX_PER_GROUP`\n" >> .env
-          echo "MAX_USERNAME_LENGTH=`echo $MAX_USERNAME_LENGTH`\n" >> .env
-          echo "SECRET_JITSI_KEY=`echo $SECRET_JITSI_KEY`\n" >> .env
-          echo "SKIP_RENDER_OPTIMIZATIONS=`echo $SKIP_RENDER_OPTIMIZATIONS`\n" >> .env
-          echo "START_ROOM_URL=`echo $START_ROOM_URL`\n" >> .env
-          echo "TURN_STATIC_AUTH_SECRET=`echo $TURN_STATIC_AUTH_SECRET`\n" >> .env
-          echo "WEBEX_CLIENT_ID=`echo $WEBEX_CLIENT_ID`\n" >> .env
-          echo "WEBEX_CLIENT_SECRET=`echo $WEBEX_CLIENT_SECRET`\n" >> .env
-          echo "WEBEX_GLOBAL_SPACE_ID=`echo $WEBEX_GLOBAL_SPACE_ID`\n" >> .env
-          echo "WEBEX_REDIRECT_URL=`echo $WEBEX_REDIRECT_URL`\n" >> .env
-          echo "OPID_CLIENT_ID=`echo $OPID_CLIENT_ID`\n" >> .env
-          echo "OPID_CLIENT_ISSUER=`echo $OPID_CLIENT_ISSUER`\n" >> .env
-          echo "OPID_CLIENT_SECRET=`echo $OPID_CLIENT_SECRET`\n" >> .env
+          { echo "ACME_EMAIL=`echo $ACME_EMAIL`\n"
+            echo "ADMIN_API_TOKEN=`echo $ADMIN_API_TOKEN`\n"
+            echo "DEBUG_MODE=`echo $DEBUG_MODE`\n"
+            echo "DISABLE_NOTIFICATIONS=`echo $DISABLE_NOTIFICATIONS`\n"
+            echo "JITSI_ISS=`echo $JITSI_ISS`\n"
+            echo "JITSI_PRIVATE_MODE=`echo $JITSI_PRIVATE_MODE`\n"
+            echo "JITSI_URL=`echo $JITSI_URL`\n"
+            echo "MAX_PER_GROUP=`echo $MAX_PER_GROUP`\n"
+            echo "MAX_USERNAME_LENGTH=`echo $MAX_USERNAME_LENGTH`\n"
+            echo "SECRET_JITSI_KEY=`echo $SECRET_JITSI_KEY`\n"
+            echo "SKIP_RENDER_OPTIMIZATIONS=`echo $SKIP_RENDER_OPTIMIZATIONS`\n"
+            echo "START_ROOM_URL=`echo $START_ROOM_URL`\n"
+            echo "TURN_STATIC_AUTH_SECRET=`echo $TURN_STATIC_AUTH_SECRET`\n"
+            echo "WEBEX_CLIENT_ID=`echo $WEBEX_CLIENT_ID`\n"
+            echo "WEBEX_CLIENT_SECRET=`echo $WEBEX_CLIENT_SECRET`\n"
+            echo "WEBEX_GLOBAL_SPACE_ID=`echo $WEBEX_GLOBAL_SPACE_ID`\n"
+            echo "WEBEX_REDIRECT_URL=`echo $WEBEX_REDIRECT_URL`\n"
+            echo "OPID_CLIENT_ID=`echo $OPID_CLIENT_ID`\n"
+            echo "OPID_CLIENT_ISSUER=`echo $OPID_CLIENT_ISSUER`\n"
+            echo "OPID_CLIENT_SECRET=`echo $OPID_CLIENT_SECRET`\n" } >> .env
 
   build-front:
     needs:
