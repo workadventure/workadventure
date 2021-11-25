@@ -64,7 +64,6 @@ jobs:
           echo "OPID_CLIENT_ISSUER=`echo $OPID_CLIENT_ISSUER`\n" >> .env
           echo "OPID_CLIENT_SECRET=`echo $OPID_CLIENT_SECRET`\n" >> .env
           echo "CONTACT_URL=`echo $CONTACT_URL`\n" >> .env
-      shell: bash
 
   build-front:
     needs:
