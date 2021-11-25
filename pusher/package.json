@@ -40,8 +40,6 @@
   },
   "homepage": "https://github.com/thecodingmachine/workadventure#readme",
   "dependencies": {
-    "@types/cookie": "^0.4.1",
-    "@types/node-fetch": "^3.0.3",
     "axios": "^0.21.2",
     "busboy": "^0.3.1",
     "circular-json": "^0.5.9",
@@ -59,6 +57,8 @@
     "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js/archive/v19.5.0.tar.gz"
   },
   "devDependencies": {
+    "@types/cookie": "^0.4.1",
+    "@types/node-fetch": "^3.0.3",
     "@types/busboy": "^0.2.3",
     "@types/circular-json": "^0.4.0",
     "@types/debug": "^4.1.5",
