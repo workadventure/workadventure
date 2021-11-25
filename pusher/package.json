@@ -56,7 +56,7 @@
     "prom-client": "^12.0.0",
     "query-string": "^6.13.3",
     "uuidv4": "^6.0.7",
-    "uWebSockets.js": "uNetworking/uWebSockets.js#v18.5.0"
+    "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js/archive/v19.5.0.tar.gz"
   },
   "devDependencies": {
     "@types/busboy": "^0.2.3",

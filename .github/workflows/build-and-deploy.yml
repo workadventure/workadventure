@@ -1,13 +1,13 @@
 name: Build, push and deploy Docker image
 
 on:
+  workflow_dispatch:
   push:
     branches: [master, develop]
   release:
     types: [created]
   pull_request:
     types: [labeled, synchronize]
-  workflow_dispatch:
 
 
 # Enables BuildKit
@@ -39,6 +39,7 @@ env:
 jobs:
 
   make-env-file:
+    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
     steps:
       - name: Write env variables to file
@@ -63,7 +64,6 @@ jobs:
           echo "OPID_CLIENT_ID=`echo $OPID_CLIENT_ID`\n" >> .env
           echo "OPID_CLIENT_ISSUER=`echo $OPID_CLIENT_ISSUER`\n" >> .env
           echo "OPID_CLIENT_SECRET=`echo $OPID_CLIENT_SECRET`\n" >> .env
-          echo "CONTACT_URL=`echo $CONTACT_URL`\n" >> .env
 
   build-front:
     needs:
