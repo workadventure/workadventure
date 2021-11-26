@@ -67,11 +67,13 @@ import EVENT_TYPE = Phaser.Scenes.Events;
 import AnimatedTiles from "phaser-animated-tiles";
 import { StartPositionCalculator } from "./StartPositionCalculator";
 import { soundManager } from "./SoundManager";
+
 import { peerStore, screenSharingPeerStore } from "../../Stores/PeerStore";
 import { videoFocusStore } from "../../Stores/VideoFocusStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { playersStore } from "../../Stores/PlayersStore";
+import { userWokaPictureStore } from "../../Stores/UserWokaPictureStore";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
 import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
 import {
@@ -79,6 +81,7 @@ import {
     audioManagerVisibilityStore,
     audioManagerVolumeStore,
 } from "../../Stores/AudioManagerStore";
+
 import { PropertyUtils } from "../Map/PropertyUtils";
 import Tileset = Phaser.Tilemaps.Tileset;
 import { userIsAdminStore } from "../../Stores/GameStore";
@@ -665,6 +668,7 @@ export class GameScene extends DirtyScene {
                 this.connection = onConnect.connection;
 
                 playersStore.connectToRoomConnection(this.connection);
+                userWokaPictureStore.connectToRoomConnection(this.connection);
 
                 userIsAdminStore.set(this.connection.hasTag("admin"));
 
@@ -1499,7 +1503,8 @@ ${escapedMessage}
                 this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
             this.CurrentPlayer.once('textures-loaded', () => {
-                this.savePlayerAvatarPicture(this.CurrentPlayer, 'hero-avatar');
+                // TODO: How to be sure we always get hero id?
+                this.savePlayerWokaPicture(this.CurrentPlayer, -1);
             });
             this.CurrentPlayer.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
                 if (pointer.wasTouch && (pointer.event as TouchEvent).touches.length > 1) {
@@ -1528,10 +1533,9 @@ ${escapedMessage}
         this.createCollisionWithPlayer();
     }
 
-    private savePlayerAvatarPicture(character: Character, key: string): void {
-        character.saveCharacterToTexture(key);
-        console.log(key);
-        this.add.image(200, 200, key);
+    private async savePlayerWokaPicture(character: Character, userId: number): Promise<void> {
+        const htmlImageElement = await character.getSnapshot();
+        userWokaPictureStore.setWokaPicture(userId, htmlImageElement.src);
     }
 
     pushPlayerPosition(event: HasPlayerMovedEvent) {
@@ -1635,11 +1639,9 @@ ${escapedMessage}
                     break;
                 case "AddPlayerEvent":
                     this.doAddPlayer(event.event);
-                    console.log('ADD PLAYER');
                     break;
                 case "RemovePlayerEvent":
                     this.doRemovePlayer(event.userId);
-                    console.log('REMOVE PLAYER');
                     break;
                 case "UserMovedEvent":
                     this.doUpdatePlayerPosition(event.event);
@@ -1679,7 +1681,6 @@ ${escapedMessage}
      */
     private doInitUsersPosition(usersPosition: MessageUserPositionInterface[]): void {
         const currentPlayerId = this.connection?.getUserId();
-        console.log(currentPlayerId);
         this.removeAllRemotePlayers();
         // load map
         usersPosition.forEach((userPosition: MessageUserPositionInterface) => {
@@ -1725,7 +1726,7 @@ ${escapedMessage}
             addPlayerData.companion !== null ? lazyLoadCompanionResource(this.load, addPlayerData.companion) : undefined
         );
         player.once('textures-loaded', () => {
-            this.savePlayerAvatarPicture(player, `${addPlayerData.userId}-player-avatar`);
+            this.savePlayerWokaPicture(player, addPlayerData.userId);
         });
         this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);
