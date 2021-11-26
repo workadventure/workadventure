@@ -1,7 +1,4 @@
 import type { Subscription } from "rxjs";
-import { userMessageManager } from "../../Administration/UserMessageManager";
-import { iframeListener } from "../../Api/IframeListener";
-import { connectionManager } from "../../Connexion/ConnectionManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
     MessageUserJoined,
@@ -12,14 +9,23 @@ import type {
     PositionInterface,
     RoomJoinedMessageInterface,
 } from "../../Connexion/ConnexionModels";
-import { DEBUG_MODE, JITSI_PRIVATE_MODE, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
+import type { UserMovedMessage } from "../../Messages/generated/messages_pb";
+import type { RoomConnection } from "../../Connexion/RoomConnection";
+import type { ActionableItem } from "../Items/ActionableItem";
+import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
+import type { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapObject, ITiledTileSet } from "../Map/ITiledMap";
+import type { AddPlayerInterface } from "./AddPlayerInterface";
+import type { HasPlayerMovedEvent } from "../../Api/Events/HasPlayerMovedEvent";
+import type { Character } from '../Entity/Character';
 
+import { userMessageManager } from "../../Administration/UserMessageManager";
+import { iframeListener } from "../../Api/IframeListener";
+import { connectionManager } from "../../Connexion/ConnectionManager";
+import { DEBUG_MODE, JITSI_PRIVATE_MODE, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
 import { Queue } from "queue-typescript";
 import { Box, ON_ACTION_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
 import { CoWebsite, coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
-import type { UserMovedMessage } from "../../Messages/generated/messages_pb";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
-import type { RoomConnection } from "../../Connexion/RoomConnection";
 import { Room } from "../../Connexion/Room";
 import { jitsiFactory } from "../../WebRtc/JitsiFactory";
 import { urlManager } from "../../Url/UrlManager";
@@ -31,16 +37,12 @@ import { SimplePeer } from "../../WebRtc/SimplePeer";
 import { Loader } from "../Components/Loader";
 import { lazyLoadPlayerCharacterTextures, loadCustomTexture } from "../Entity/PlayerTexturesLoadingManager";
 import { RemotePlayer } from "../Entity/RemotePlayer";
-import type { ActionableItem } from "../Items/ActionableItem";
-import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
-import type { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapObject, ITiledTileSet } from "../Map/ITiledMap";
 import { PlayerAnimationDirections } from "../Player/Animation";
 import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
 import { ErrorSceneName } from "../Reconnecting/ErrorScene";
 import { ReconnectingSceneName } from "../Reconnecting/ReconnectingScene";
 import { UserInputManager } from "../UserInput/UserInputManager";
-import type { AddPlayerInterface } from "./AddPlayerInterface";
 import { gameManager } from "./GameManager";
 import { GameMap } from "./GameMap";
 import { PlayerMovement } from "./PlayerMovement";
@@ -61,7 +63,6 @@ import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } 
 import { waScaleManager } from "../Services/WaScaleManager";
 import { EmoteManager } from "./EmoteManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
-import type { HasPlayerMovedEvent } from "../../Api/Events/HasPlayerMovedEvent";
 
 import AnimatedTiles from "phaser-animated-tiles";
 import { StartPositionCalculator } from "./StartPositionCalculator";
@@ -89,7 +90,6 @@ import { get } from "svelte/store";
 import { contactPageStore } from "../../Stores/MenuStore";
 import { GameMapProperties } from "./GameMapProperties";
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
-
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -1498,6 +1498,9 @@ ${escapedMessage}
                 this.companion,
                 this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
+            this.CurrentPlayer.once('textures-loaded', () => {
+                this.savePlayerAvatarPicture(this.CurrentPlayer, 'hero-avatar');
+            });
             this.CurrentPlayer.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
                 if (pointer.wasTouch && (pointer.event as TouchEvent).touches.length > 1) {
                     return; //we don't want the menu to open when pinching on a touch screen.
@@ -1523,6 +1526,12 @@ ${escapedMessage}
 
         //create collision
         this.createCollisionWithPlayer();
+    }
+
+    private savePlayerAvatarPicture(character: Character, key: string): void {
+        character.saveCharacterToTexture(key);
+        console.log(key);
+        this.add.image(200, 200, key);
     }
 
     pushPlayerPosition(event: HasPlayerMovedEvent) {
@@ -1626,9 +1635,11 @@ ${escapedMessage}
                     break;
                 case "AddPlayerEvent":
                     this.doAddPlayer(event.event);
+                    console.log('ADD PLAYER');
                     break;
                 case "RemovePlayerEvent":
                     this.doRemovePlayer(event.userId);
+                    console.log('REMOVE PLAYER');
                     break;
                 case "UserMovedEvent":
                     this.doUpdatePlayerPosition(event.event);
@@ -1668,6 +1679,7 @@ ${escapedMessage}
      */
     private doInitUsersPosition(usersPosition: MessageUserPositionInterface[]): void {
         const currentPlayerId = this.connection?.getUserId();
+        console.log(currentPlayerId);
         this.removeAllRemotePlayers();
         // load map
         usersPosition.forEach((userPosition: MessageUserPositionInterface) => {
@@ -1712,6 +1724,9 @@ ${escapedMessage}
             addPlayerData.companion,
             addPlayerData.companion !== null ? lazyLoadCompanionResource(this.load, addPlayerData.companion) : undefined
         );
+        player.once('textures-loaded', () => {
+            this.savePlayerAvatarPicture(player, `${addPlayerData.userId}-player-avatar`);
+        });
         this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);
         player.updatePosition(addPlayerData.position);
