@@ -67,5 +67,6 @@
         top: calc(50% - 45px);
         width: 90px;
         height: 90px;
+        image-rendering: pixelated;
     }
 </style>
