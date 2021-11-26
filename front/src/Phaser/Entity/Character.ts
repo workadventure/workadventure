@@ -64,6 +64,7 @@ export abstract class Character extends Container {
                 this.addTextures(textures, frame);
                 this.invisible = false;
                 this.playAnimation(direction, moving);
+                this.emit('textures-loaded');
             })
             .catch(() => {
                 return lazyLoadPlayerCharacterTextures(scene.load, ["color_22", "eyes_23"]).then((textures) => {
@@ -117,8 +118,15 @@ export abstract class Character extends Container {
         }
     }
 
-    private getOutlinePlugin(): OutlinePipelinePlugin | undefined {
-        return this.scene.plugins.get("rexOutlinePipeline") as unknown as OutlinePipelinePlugin | undefined;
+    public saveCharacterToTexture(saveAs: string): void {
+        const bounds = this.getBounds();
+        const rt = this.scene.make.renderTexture({ x: 300, y: 300, width: bounds.width, height: bounds.height}, true);
+        for (const sprite of this.sprites.values()) {
+            rt.draw(sprite, sprite.displayWidth * 0.5, sprite.displayHeight * 0.5);
+        }
+        // P.H. NOTE: Change of avatar will update saved texture. We can then send it again to the backend
+        rt.saveTexture(saveAs);
+        rt.destroy();
     }
 
     public addCompanion(name: string, texturePromise?: Promise<string>): void {
@@ -152,6 +160,10 @@ export abstract class Character extends Container {
             }
             this.sprites.set(texture, sprite);
         }
+    }
+
+    private getOutlinePlugin(): OutlinePipelinePlugin | undefined {
+        return this.scene.plugins.get("rexOutlinePipeline") as unknown as OutlinePipelinePlugin | undefined;
     }
 
     private getPlayerAnimations(name: string): AnimationData[] {
