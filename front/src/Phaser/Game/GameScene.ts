@@ -787,13 +787,13 @@ export class GameScene extends DirtyScene {
 
                 //listen event to share the actual worldView when the camera is updated
                 this.cameras.main.on("followupdate", (camera: Camera) => {
-                    const worldView: WasCameraUpdatedEvent = {
+                    const cameraEvent: WasCameraUpdatedEvent = {
                         x: camera.worldView.x,
                         y: camera.worldView.y,
                         width: camera.worldView.width,
                         height: camera.worldView.height,
                     };
-                    iframeListener.sendCameraUpdated(worldView);
+                    iframeListener.sendCameraUpdated(cameraEvent);
                 });
 
                 // Set up variables manager

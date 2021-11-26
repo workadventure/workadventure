@@ -26,8 +26,8 @@ export class EmbeddedWebsiteManager {
                 position: {
                     x: website.phaserObject.x,
                     y: website.phaserObject.y,
-                    width: rect["width"],
-                    height: rect["height"],
+                    width: website.phaserObject.width,
+                    height: website.phaserObject.height,
                 },
                 origin: website.origin,
                 scale: website.scale,
@@ -111,14 +111,18 @@ export class EmbeddedWebsiteManager {
                     website.phaserObject.y = embeddedWebsiteEvent.y;
                 }
                 if (embeddedWebsiteEvent?.width !== undefined) {
-                    website.iframe.style.width = embeddedWebsiteEvent.width + "px";
+                    website.position.width = embeddedWebsiteEvent.width;
+                    website.iframe.style.width = embeddedWebsiteEvent.width / website.phaserObject.scale + "px";
                 }
                 if (embeddedWebsiteEvent?.height !== undefined) {
-                    website.iframe.style.height = embeddedWebsiteEvent.height + "px";
+                    website.position.height = embeddedWebsiteEvent.height;
+                    website.iframe.style.height = embeddedWebsiteEvent.height / website.phaserObject.scale + "px";
                 }
 
                 if (embeddedWebsiteEvent?.scale !== undefined) {
                     website.phaserObject.scale = embeddedWebsiteEvent.scale;
+                    website.iframe.style.width = website.position.width / embeddedWebsiteEvent.scale + "px";
+                    website.iframe.style.height = website.position.height / embeddedWebsiteEvent.scale + "px";
                 }
             }
         );
@@ -145,9 +149,9 @@ export class EmbeddedWebsiteManager {
             name,
             url,
             /*x,
-      y,
-      width,
-      height,*/
+y,
+width,
+height,*/
             allow,
             allowApi,
             visible,
@@ -173,48 +177,42 @@ export class EmbeddedWebsiteManager {
         const absoluteUrl = new URL(embeddedWebsiteEvent.url, this.gameScene.MapUrlFile).toString();
 
         const iframe = document.createElement("iframe");
+        const scale = embeddedWebsiteEvent.scale ?? 1;
+
         iframe.src = absoluteUrl;
         iframe.tabIndex = -1;
-        iframe.style.width = embeddedWebsiteEvent.position.width + "px";
-        iframe.style.height = embeddedWebsiteEvent.position.height + "px";
+        iframe.style.width = embeddedWebsiteEvent.position.width / scale + "px";
+        iframe.style.height = embeddedWebsiteEvent.position.height / scale + "px";
         iframe.style.margin = "0";
         iframe.style.padding = "0";
         iframe.style.border = "none";
 
-        let embeddedWebsite;
-        let domElement;
+        const domElement = new DOMElement(
+            this.gameScene,
+            embeddedWebsiteEvent.position.x,
+            embeddedWebsiteEvent.position.y,
+            iframe
+        );
+        domElement.setOrigin(0, 0);
+        if (embeddedWebsiteEvent.scale) {
+            domElement.scale = embeddedWebsiteEvent.scale;
+        }
+        domElement.setVisible(visible);
 
         switch (embeddedWebsiteEvent.origin) {
             case "player":
-                domElement = new DOMElement(
-                    this.gameScene,
-                    embeddedWebsiteEvent.position.x,
-                    embeddedWebsiteEvent.position.y,
-                    iframe
-                );
-                if (embeddedWebsiteEvent.scale) {
-                    domElement.scale = embeddedWebsiteEvent.scale;
-                }
                 this.gameScene.CurrentPlayer.add(domElement);
-
-                embeddedWebsite = {
-                    ...embeddedWebsiteEvent,
-                    phaserObject: domElement,
-                    iframe: iframe,
-                };
-
                 break;
             case "map":
             default:
-                embeddedWebsite = {
-                    ...embeddedWebsiteEvent,
-                    phaserObject: this.gameScene.add
-                        .dom(embeddedWebsiteEvent.position.x, embeddedWebsiteEvent.position.y, iframe)
-                        .setVisible(visible)
-                        .setOrigin(0, 0),
-                    iframe: iframe,
-                };
+                this.gameScene.add.existing(domElement);
         }
+
+        const embeddedWebsite = {
+            ...embeddedWebsiteEvent,
+            phaserObject: domElement,
+            iframe: iframe,
+        };
 
         if (embeddedWebsiteEvent.allowApi) {
             iframeListener.registerIframe(iframe);
