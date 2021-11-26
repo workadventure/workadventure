@@ -3,7 +3,9 @@
     import logoTalk from "../images/logo-message-pixel.png"
     import {menuVisiblilityStore} from "../../Stores/MenuStore";
     import {chatVisibilityStore} from "../../Stores/ChatStore";
+    import {userWokaPictureStore} from "../../Stores/UserWokaPictureStore";
     import {get} from "svelte/store";
+    import {onDestroy} from "svelte";
 
     function showMenu(){
         menuVisiblilityStore.set(!get(menuVisiblilityStore))
@@ -11,12 +13,22 @@
     function showChat(){
         chatVisibilityStore.set(true);
     }
+
+    let heroWokaPictureSrc = logoWA;
+
+    const unsubscribeFromUserWokaPictureStore = userWokaPictureStore.subscribe(playersAvatars => {
+      heroWokaPictureSrc = playersAvatars.get(-1) ?? logoWA;
+    });
+
+    onDestroy(unsubscribeFromUserWokaPictureStore);
+
+
 </script>
 
 <svelte:window/>
 
 <main class="menuIcon">
-    <img src={logoWA} alt="open menu" class="nes-pointer" on:click|preventDefault={showMenu}>
+    <img src={heroWokaPictureSrc} alt="open menu" class="nes-pointer" on:click|preventDefault={showMenu}>
     <img src={logoTalk} alt="open menu" class="nes-pointer" on:click|preventDefault={showChat}>
 </main>
 

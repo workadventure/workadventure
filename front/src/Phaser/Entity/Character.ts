@@ -118,15 +118,21 @@ export abstract class Character extends Container {
         }
     }
 
-    public saveCharacterToTexture(saveAs: string): void {
+    public async getSnapshot(): Promise<HTMLImageElement> {
         const bounds = this.getBounds();
-        const rt = this.scene.make.renderTexture({ x: 300, y: 300, width: bounds.width, height: bounds.height}, true);
+        const rt = this.scene.make.renderTexture({}, false);
         for (const sprite of this.sprites.values()) {
             rt.draw(sprite, sprite.displayWidth * 0.5, sprite.displayHeight * 0.5);
         }
-        // P.H. NOTE: Change of avatar will update saved texture. We can then send it again to the backend
-        rt.saveTexture(saveAs);
-        rt.destroy();
+        // TODO: Any way for this to fail? What fallback?
+        return new Promise<HTMLImageElement>((resolve) => {
+            rt.snapshot((url) => {
+                resolve(url as HTMLImageElement); // P.H. NOTE: Exclude Color type
+                // rt.destroy();
+            },
+            'image/png',
+            1);
+        })
     }
 
     public addCompanion(name: string, texturePromise?: Promise<string>): void {
