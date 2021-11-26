@@ -42,7 +42,8 @@
       pointer-events: auto;
       width: 60px;
       padding-top: 0;
-      margin: 3px
+      margin: 3px;
+      image-rendering: pixelated;
     }
   }
   .menuIcon img:hover{
