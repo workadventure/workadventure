@@ -53,14 +53,13 @@
     "openid-client": "^4.7.4",
     "prom-client": "^12.0.0",
     "query-string": "^6.13.3",
-    "uuidv4": "^6.0.7",
-    "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js/archive/v18.5.0.tar.gz"
+    "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js/archive/v18.5.0.tar.gz",
+    "uuidv4": "^6.0.7"
   },
   "devDependencies": {
-    "@types/cookie": "^0.4.1",
-    "@types/node-fetch": "^3.0.3",
     "@types/busboy": "^0.2.3",
     "@types/circular-json": "^0.4.0",
+    "@types/cookie": "^0.4.1",
     "@types/debug": "^4.1.5",
     "@types/google-protobuf": "^3.7.3",
     "@types/http-status-codes": "^1.2.0",
