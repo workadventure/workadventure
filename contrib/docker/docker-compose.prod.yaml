@@ -34,6 +34,7 @@ services:
       dockerfile: front/Dockerfile
     #image: thecodingmachine/workadventure-front:master
     environment:
+      ADMIN_URL: //${Domain}
       DEBUG_MODE: "$DEBUG_MODE"
       JITSI_URL: $JITSI_URL
       JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
@@ -67,6 +68,9 @@ services:
       JITSI_URL: $JITSI_URL
       JITSI_ISS: $JITSI_ISS
     labels:
+      - "traefik.http.middlewares.cors-headers.headers.accesscontrolallowmethods=GET,OPTIONS,POST"
+      - "traefik.http.middlewares.cors-headers.headers.accesscontrolalloworiginlist=https://play.${DOMAIN}"
+      - "traefik.http.routers.pusher-ssl.middlewares=cors-headers"
       - "traefik.http.routers.pusher.rule=Host(`pusher.${DOMAIN}`)"
       - "traefik.http.routers.pusher.entryPoints=web,traefik"
       - "traefik.http.services.pusher.loadbalancer.server.port=8080"
