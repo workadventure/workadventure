@@ -119,19 +119,21 @@ export abstract class Character extends Container {
     }
 
     public async getSnapshot(): Promise<HTMLImageElement> {
-        const bounds = this.getBounds();
         const rt = this.scene.make.renderTexture({}, false);
         for (const sprite of this.sprites.values()) {
             rt.draw(sprite, sprite.displayWidth * 0.5, sprite.displayHeight * 0.5);
         }
-        // TODO: Any way for this to fail? What fallback?
-        return new Promise<HTMLImageElement>((resolve) => {
-            rt.snapshot((url) => {
-                resolve(url as HTMLImageElement); // P.H. NOTE: Exclude Color type
-                // rt.destroy();
-            },
-            'image/png',
-            1);
+        return new Promise<HTMLImageElement>((resolve, reject) => {
+            try {
+                rt.snapshot((url) => {
+                    resolve(url as HTMLImageElement);
+                    rt.destroy();
+                },
+                'image/png',
+                1);
+            } catch (error) {
+                reject(error);
+            }
         })
     }
 

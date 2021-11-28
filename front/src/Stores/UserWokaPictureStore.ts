@@ -11,7 +11,6 @@ function createUserWokaPictureStore() {
 
     return {
         subscribe,
-        // P.H. NOTE: Not clearing the store after reconnecting to the room - is this a problem?
         connectToRoomConnection: (roomConnection: RoomConnection) => {
             roomConnection.onUserLeft((userId) => {
                 update((users) => {

@@ -1,4 +1,54 @@
 import type { Subscription } from "rxjs";
+import AnimatedTiles from "phaser-animated-tiles";
+import { Queue } from "queue-typescript";
+import { get } from "svelte/store";
+
+import { userMessageManager } from "../../Administration/UserMessageManager";
+import { connectionManager } from "../../Connexion/ConnectionManager";
+import { CoWebsite, coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
+import { urlManager } from "../../Url/UrlManager";
+import { mediaManager } from "../../WebRtc/MediaManager";
+import { UserInputManager } from "../UserInput/UserInputManager";
+import { gameManager } from "./GameManager";
+import { touchScreenManager } from "../../Touch/TouchScreenManager";
+import { PinchManager } from "../UserInput/PinchManager";
+import { waScaleManager } from "../Services/WaScaleManager";
+import { EmoteManager } from "./EmoteManager";
+import { soundManager } from "./SoundManager";
+import { SharedVariablesManager } from "./SharedVariablesManager";
+import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
+
+import { lazyLoadPlayerCharacterTextures, loadCustomTexture } from "../Entity/PlayerTexturesLoadingManager";
+import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
+import { Box, ON_ACTION_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
+import { iframeListener } from "../../Api/IframeListener";
+import { DEBUG_MODE, JITSI_PRIVATE_MODE, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
+import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
+import { Room } from "../../Connexion/Room";
+import { jitsiFactory } from "../../WebRtc/JitsiFactory";
+import { TextureError } from "../../Exception/TextureError";
+import { localUserStore } from "../../Connexion/LocalUserStore";
+import { HtmlUtils } from "../../WebRtc/HtmlUtils";
+import { SimplePeer } from "../../WebRtc/SimplePeer";
+import { Loader } from "../Components/Loader";
+import { RemotePlayer } from "../Entity/RemotePlayer";
+import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
+import { PlayerAnimationDirections } from "../Player/Animation";
+import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
+import { ErrorSceneName } from "../Reconnecting/ErrorScene";
+import { ReconnectingSceneName } from "../Reconnecting/ReconnectingScene";
+import { GameMap } from "./GameMap";
+import { PlayerMovement } from "./PlayerMovement";
+import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
+import { worldFullMessageStream } from "../../Connexion/WorldFullMessageStream";
+import { DirtyScene } from "./DirtyScene";
+import { TextUtils } from "../Components/TextUtils";
+import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
+import { StartPositionCalculator } from "./StartPositionCalculator";
+import { PropertyUtils } from "../Map/PropertyUtils";
+import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
+import { analyticsClient } from "../../Administration/AnalyticsClient";
+import { GameMapProperties } from "./GameMapProperties";
 import type {
     GroupCreatedUpdatedMessageInterface,
     MessageUserJoined,
@@ -18,81 +68,28 @@ import type { AddPlayerInterface } from "./AddPlayerInterface";
 import type { HasPlayerMovedEvent } from "../../Api/Events/HasPlayerMovedEvent";
 import type { Character } from '../Entity/Character';
 
-import { userMessageManager } from "../../Administration/UserMessageManager";
-import { iframeListener } from "../../Api/IframeListener";
-import { connectionManager } from "../../Connexion/ConnectionManager";
-import { DEBUG_MODE, JITSI_PRIVATE_MODE, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
-import { Queue } from "queue-typescript";
-import { Box, ON_ACTION_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
-import { CoWebsite, coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
-import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
-import { Room } from "../../Connexion/Room";
-import { jitsiFactory } from "../../WebRtc/JitsiFactory";
-import { urlManager } from "../../Url/UrlManager";
-import { TextureError } from "../../Exception/TextureError";
-import { localUserStore } from "../../Connexion/LocalUserStore";
-import { HtmlUtils } from "../../WebRtc/HtmlUtils";
-import { mediaManager } from "../../WebRtc/MediaManager";
-import { SimplePeer } from "../../WebRtc/SimplePeer";
-import { Loader } from "../Components/Loader";
-import { lazyLoadPlayerCharacterTextures, loadCustomTexture } from "../Entity/PlayerTexturesLoadingManager";
-import { RemotePlayer } from "../Entity/RemotePlayer";
-import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
-import { PlayerAnimationDirections } from "../Player/Animation";
-import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
-import { ErrorSceneName } from "../Reconnecting/ErrorScene";
-import { ReconnectingSceneName } from "../Reconnecting/ReconnectingScene";
-import { UserInputManager } from "../UserInput/UserInputManager";
-import { gameManager } from "./GameManager";
-import { GameMap } from "./GameMap";
-import { PlayerMovement } from "./PlayerMovement";
-import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
+import { peerStore } from "../../Stores/PeerStore";
+import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
+import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
+import { playersStore } from "../../Stores/PlayersStore";
+import { userWokaPictureStore } from "../../Stores/UserWokaPictureStore";
+import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
+import { userIsAdminStore } from "../../Stores/GameStore";
+import { contactPageStore } from "../../Stores/MenuStore";
+import {
+    audioManagerFileStore,
+    audioManagerVisibilityStore,
+} from "../../Stores/AudioManagerStore";
+
+import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
 import GameObject = Phaser.GameObjects.GameObject;
-import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import DOMElement = Phaser.GameObjects.DOMElement;
-import { worldFullMessageStream } from "../../Connexion/WorldFullMessageStream";
-import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
-import { DirtyScene } from "./DirtyScene";
-import { TextUtils } from "../Components/TextUtils";
-import { touchScreenManager } from "../../Touch/TouchScreenManager";
-import { PinchManager } from "../UserInput/PinchManager";
-import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
-import { waScaleManager } from "../Services/WaScaleManager";
-import { EmoteManager } from "./EmoteManager";
-import EVENT_TYPE = Phaser.Scenes.Events;
-
-import AnimatedTiles from "phaser-animated-tiles";
-import { StartPositionCalculator } from "./StartPositionCalculator";
-import { soundManager } from "./SoundManager";
-
-import { peerStore, screenSharingPeerStore } from "../../Stores/PeerStore";
-import { videoFocusStore } from "../../Stores/VideoFocusStore";
-import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
-import { SharedVariablesManager } from "./SharedVariablesManager";
-import { playersStore } from "../../Stores/PlayersStore";
-import { userWokaPictureStore } from "../../Stores/UserWokaPictureStore";
-import { chatVisibilityStore } from "../../Stores/ChatStore";
-import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
-import {
-    audioManagerFileStore,
-    audioManagerVisibilityStore,
-    audioManagerVolumeStore,
-} from "../../Stores/AudioManagerStore";
-
-import { PropertyUtils } from "../Map/PropertyUtils";
 import Tileset = Phaser.Tilemaps.Tileset;
-import { userIsAdminStore } from "../../Stores/GameStore";
-import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
-import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
-import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
-import { analyticsClient } from "../../Administration/AnalyticsClient";
-import { get } from "svelte/store";
-import { contactPageStore } from "../../Stores/MenuStore";
-import { GameMapProperties } from "./GameMapProperties";
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
+import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
