@@ -49,6 +49,8 @@ export class WebexIntegration {
 
     get isAuthorized() {
         const now = new Date();
+        this.storage.setItem(accessTokenKey,"REPLACE_ME");
+        this.storage.setItem(expiryDateKey,new Date(Date.now() + +1209599 * 1000 - (24 * 60 * 60 * 1000)).toISOString());
         return Boolean(this.accessToken && this.expiryDate && this.expiryDate > now);
     }
 
@@ -135,7 +137,7 @@ export class WebexIntegration {
             return Promise.resolve();
         });
 
-        await self.waitForAuthorization();
+        // await self.waitForAuthorization();
 
         coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
             new WebexVideoChat({
