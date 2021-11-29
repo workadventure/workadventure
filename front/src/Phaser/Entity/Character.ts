@@ -64,7 +64,7 @@ export abstract class Character extends Container {
                 this.addTextures(textures, frame);
                 this.invisible = false;
                 this.playAnimation(direction, moving);
-                this.emit('textures-loaded');
+                this.emit("textures-loaded");
             })
             .catch(() => {
                 return lazyLoadPlayerCharacterTextures(scene.load, ["color_22", "eyes_23"]).then((textures) => {
@@ -125,16 +125,18 @@ export abstract class Character extends Container {
         }
         return new Promise<HTMLImageElement>((resolve, reject) => {
             try {
-                rt.snapshot((url) => {
-                    resolve(url as HTMLImageElement);
-                    rt.destroy();
-                },
-                'image/png',
-                1);
+                rt.snapshot(
+                    (url) => {
+                        resolve(url as HTMLImageElement);
+                        rt.destroy();
+                    },
+                    "image/png",
+                    1
+                );
             } catch (error) {
                 reject(error);
             }
-        })
+        });
     }
 
     public addCompanion(name: string, texturePromise?: Promise<string>): void {
