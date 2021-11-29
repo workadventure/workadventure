@@ -66,7 +66,7 @@ import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import type { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapObject, ITiledTileSet } from "../Map/ITiledMap";
 import type { AddPlayerInterface } from "./AddPlayerInterface";
 import type { HasPlayerMovedEvent } from "../../Api/Events/HasPlayerMovedEvent";
-import type { Character } from '../Entity/Character';
+import type { Character } from "../Entity/Character";
 
 import { peerStore } from "../../Stores/PeerStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
@@ -76,10 +76,7 @@ import { userWokaPictureStore } from "../../Stores/UserWokaPictureStore";
 import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
 import { userIsAdminStore } from "../../Stores/GameStore";
 import { contactPageStore } from "../../Stores/MenuStore";
-import {
-    audioManagerFileStore,
-    audioManagerVisibilityStore,
-} from "../../Stores/AudioManagerStore";
+import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
 
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
@@ -1499,7 +1496,7 @@ ${escapedMessage}
                 this.companion,
                 this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
-            this.CurrentPlayer.once('textures-loaded', () => {
+            this.CurrentPlayer.once("textures-loaded", () => {
                 // TODO: How to be sure we always get hero id?
                 this.savePlayerWokaPicture(this.CurrentPlayer, -1);
             });
@@ -1722,7 +1719,7 @@ ${escapedMessage}
             addPlayerData.companion,
             addPlayerData.companion !== null ? lazyLoadCompanionResource(this.load, addPlayerData.companion) : undefined
         );
-        player.once('textures-loaded', () => {
+        player.once("textures-loaded", () => {
             this.savePlayerWokaPicture(player, addPlayerData.userId);
         });
         this.MapPlayers.add(player);
