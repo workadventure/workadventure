@@ -28,7 +28,7 @@
     justify-content: space-between;
 
     #cowebsite-aside-holder {
-      pointer-events: none;
+      background: gray;
       height: 20px;
       flex: 1;
       display: flex;
@@ -38,6 +38,7 @@
 
       img {
         width: 80%;
+        pointer-events: none;
       }
     }
 
@@ -206,12 +207,14 @@
 
     aside {
       width: 30px;
-      cursor: ew-resize;
 
       img {
-        cursor: ew-resize;
         transform: rotate(90deg);
       }
+    }
+
+    &-aside-holder {
+      cursor: ew-resize;
     }
   }
 }
