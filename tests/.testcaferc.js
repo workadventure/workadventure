@@ -9,5 +9,7 @@ module.exports = {
     "path": "screenshots/",
     "takeOnFails": true,
     "thumbnails": false,
-  }
+  },
+  "assertionTimeout": 10000,
+  "selectorTimeout": 20000,
 }
