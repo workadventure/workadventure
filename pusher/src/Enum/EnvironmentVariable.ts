@@ -1,5 +1,4 @@
 const SECRET_KEY = process.env.SECRET_KEY || "THECODINGMACHINE_SECRET_KEY";
-const ALLOW_ARTILLERY = process.env.ALLOW_ARTILLERY ? process.env.ALLOW_ARTILLERY == "true" : false;
 const API_URL = process.env.API_URL || "";
 const ADMIN_API_URL = process.env.ADMIN_API_URL || "";
 const ADMIN_URL = process.env.ADMIN_URL || "";
@@ -26,7 +25,6 @@ export {
     ADMIN_API_URL,
     ADMIN_URL,
     ADMIN_API_TOKEN,
-    ALLOW_ARTILLERY,
     CPU_OVERHEAT_THRESHOLD,
     JITSI_URL,
     JITSI_ISS,
