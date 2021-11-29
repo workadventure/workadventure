@@ -43,7 +43,7 @@
                 {
                  "name":"openWebsite",
                  "type":"string",
-                 "value":"setTiles.html"
+                 "value":"setTiles.php"
                 },
                 {
                  "name":"openWebsiteAllowApi",

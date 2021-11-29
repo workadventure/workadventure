@@ -7,7 +7,7 @@ WA.ui.registerMenuCommand('custom callback menu', () => {
 WA.ui.registerMenuCommand('custom iframe menu', {iframe: 'customIframeMenu.html'});
 
 WA.room.onEnterZone('iframeMenu', () => {
-    menuIframeApi = WA.ui.registerMenuCommand('IFRAME USE API', {iframe: 'customIframeMenuApi.html', allowApi: true});
+    menuIframeApi = WA.ui.registerMenuCommand('IFRAME USE API', {iframe: 'customIframeMenuApi.php', allowApi: true});
 })
 
 WA.room.onLeaveZone('iframeMenu', () => {

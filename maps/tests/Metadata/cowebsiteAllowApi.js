@@ -1,1 +1,1 @@
-WA.nav.openCoWebSite("cowebsiteAllowApi.html", true, "");
+WA.nav.openCoWebSite("cowebsiteAllowApi.php", true, "");
