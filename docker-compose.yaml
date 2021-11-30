@@ -34,7 +34,7 @@ services:
       NODE_ENV: development
       PUSHER_URL: //pusher.workadventure.localhost
       UPLOADER_URL: //uploader.workadventure.localhost
-      ADMIN_URL: //workadventure.localhost
+      #ADMIN_URL: //workadventure.localhost
       ICON_URL: //icon.workadventure.localhost
       STARTUP_COMMAND_1: ./templater.sh
       STARTUP_COMMAND_2: yarn install
