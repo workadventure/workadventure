@@ -132,13 +132,14 @@ class ConnectionManager {
 
             const roomUrl = data.roomUrl;
 
+            const query = urlParams.toString();
             this._currentRoom = await Room.createRoom(
                 new URL(
                     window.location.protocol +
                         "//" +
                         window.location.host +
                         roomUrl +
-                        urlParams.toString() + //use urlParams because the token param must be deleted
+                        (query ? "?" + query : "") + //use urlParams because the token param must be deleted
                         window.location.hash
                 )
             );
