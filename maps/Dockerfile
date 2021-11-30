@@ -1,4 +1,4 @@
-FROM thecodingmachine/nodejs:12-apache
+FROM thecodingmachine/php:8.1-v4-apache-node12
 
 COPY --chown=docker:docker . .
 #RUN yarn install
