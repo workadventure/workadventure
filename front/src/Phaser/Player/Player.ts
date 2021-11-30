@@ -117,7 +117,7 @@ export class Player extends Character {
 
         const distance = Math.pow(xDist, 2) + Math.pow(yDist, 2);
 
-        if (distance < 650) {
+        if (distance < 2000) {
             this.stop();
         } else {
             const moveAmount = 9 * 20;
