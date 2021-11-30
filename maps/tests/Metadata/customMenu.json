@@ -54,7 +54,7 @@
         {
           "name":"openWebsite",
           "type":"string",
-          "value":"customMenu.html"
+          "value":"customMenu.php"
         },
         {
           "name":"openWebsiteAllowApi",

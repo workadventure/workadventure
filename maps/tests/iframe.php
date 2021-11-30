@@ -1,13 +1,7 @@
 <!doctype html>
 <html lang="en">
     <head>
-        <script>
-            var script = document.createElement('script');
-            // Don't do this at home kids! The "document.referrer" part is actually inserting a XSS security.
-            // We are OK in this precise case because the HTML page is hosted on the "maps" domain that contains only static files.
-            script.setAttribute('src', document.referrer + 'iframe_api.js');
-            document.head.appendChild(script);
-        </script>
+        <script src="<?php echo $_SERVER["FRONT_URL"] ?>/iframe_api.js"></script>
     </head>
     <body>
         <button id="sendchat">Send chat message</button>
