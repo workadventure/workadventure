@@ -28,7 +28,7 @@ services:
       NODE_ENV: development
       PUSHER_URL: /pusher
       UPLOADER_URL: /uploader
-      ADMIN_URL: /admin
+      #ADMIN_URL: /admin
       MAPS_URL: /maps
       ICON_URL: /icon
       STARTUP_COMMAND_1: ./templater.sh

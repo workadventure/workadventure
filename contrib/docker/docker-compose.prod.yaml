@@ -66,6 +66,7 @@ services:
       API_URL: back:50051
       JITSI_URL: $JITSI_URL
       JITSI_ISS: $JITSI_ISS
+      FRONT_URL: https://play.${DOMAIN}
     labels:
       - "traefik.http.routers.pusher.rule=Host(`pusher.${DOMAIN}`)"
       - "traefik.http.routers.pusher.entryPoints=web,traefik"
