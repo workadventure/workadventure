@@ -4,8 +4,9 @@ const fs = require('fs')
 import { Selector } from 'testcafe';
 import {userAlice} from "./utils/roles";
 
+// Note: we are also testing that we can connect if the URL contains a random query string
 fixture `Variables`
-    .page `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json`;
+    .page `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json?somerandomparam=1`;
 
 test("Test that variables cache in the back don't prevent setting a variable in case the map changes", async (t: TestController) => {
     // Let's start by visiting a map that DOES not have the variable.
