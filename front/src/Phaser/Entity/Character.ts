@@ -8,7 +8,6 @@ import { TextureError } from "../../Exception/TextureError";
 import { Companion } from "../Companion/Companion";
 import type { GameScene } from "../Game/GameScene";
 import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
-import { waScaleManager } from "../Services/WaScaleManager";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { isSilentStore } from "../../Stores/MediaStore";
 import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";

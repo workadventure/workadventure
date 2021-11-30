@@ -72,11 +72,11 @@ import { peerStore } from "../../Stores/PeerStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { playersStore } from "../../Stores/PlayersStore";
-import { userWokaPictureStore } from "../../Stores/UserWokaPictureStore";
 import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
 import { userIsAdminStore } from "../../Stores/GameStore";
 import { contactPageStore } from "../../Stores/MenuStore";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
+import { UserWokaPictureStore } from "../../Stores/UserWokaPictureStore";
 
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
@@ -201,6 +201,7 @@ export class GameScene extends DirtyScene {
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
     private loader: Loader;
+    private userWokaPictureStores: Map<number, UserWokaPictureStore> = new Map<number, any>();
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -331,6 +332,15 @@ export class GameScene extends DirtyScene {
 
         //this function must stay at the end of preload function
         this.loader.addLoader();
+    }
+
+    public getUserWokaPictureStore(userId: number) {
+        let store = this.userWokaPictureStores.get(userId);
+        if (!store) {
+            store = new UserWokaPictureStore();
+            this.userWokaPictureStores.set(userId, store);
+        }
+        return store;
     }
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
@@ -662,8 +672,6 @@ export class GameScene extends DirtyScene {
                 this.connection = onConnect.connection;
 
                 playersStore.connectToRoomConnection(this.connection);
-                userWokaPictureStore.connectToRoomConnection(this.connection);
-
                 userIsAdminStore.set(this.connection.hasTag("admin"));
 
                 this.connection.onUserJoins((message: MessageUserJoined) => {
@@ -1497,7 +1505,6 @@ ${escapedMessage}
                 this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
             this.CurrentPlayer.once("textures-loaded", () => {
-                // TODO: How to be sure we always get hero id?
                 this.savePlayerWokaPicture(this.CurrentPlayer, -1);
             });
             this.CurrentPlayer.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
@@ -1529,7 +1536,7 @@ ${escapedMessage}
 
     private async savePlayerWokaPicture(character: Character, userId: number): Promise<void> {
         const htmlImageElement = await character.getSnapshot();
-        userWokaPictureStore.setWokaPicture(userId, htmlImageElement.src);
+        this.getUserWokaPictureStore(userId).picture.set(htmlImageElement);
     }
 
     pushPlayerPosition(event: HasPlayerMovedEvent) {

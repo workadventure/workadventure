@@ -1,11 +1,9 @@
 <script lang="typescript">
-    import logoWA from "../images/logo-WA-pixel.png"
     import logoTalk from "../images/logo-message-pixel.png"
     import {menuVisiblilityStore} from "../../Stores/MenuStore";
     import {chatVisibilityStore} from "../../Stores/ChatStore";
-    import {userWokaPictureStore} from "../../Stores/UserWokaPictureStore";
     import {get} from "svelte/store";
-    import {onDestroy} from "svelte";
+    import Woka from '../Woka/Woka.svelte';
 
     function showMenu(){
         menuVisiblilityStore.set(!get(menuVisiblilityStore))
@@ -13,22 +11,12 @@
     function showChat(){
         chatVisibilityStore.set(true);
     }
-
-    let heroWokaPictureSrc = logoWA;
-
-    const unsubscribeFromUserWokaPictureStore = userWokaPictureStore.subscribe(playersAvatars => {
-      heroWokaPictureSrc = playersAvatars.get(-1) ?? logoWA;
-    });
-
-    onDestroy(unsubscribeFromUserWokaPictureStore);
-
-
 </script>
 
 <svelte:window/>
 
 <main class="menuIcon">
-    <img src={heroWokaPictureSrc} alt="open menu" class="nes-pointer" on:click|preventDefault={showMenu}>
+    <div class="nes-pointer woka" on:click|preventDefault={showMenu}><Woka userId={-1}/></div>
     <img src={logoTalk} alt="open menu" class="nes-pointer" on:click|preventDefault={showChat}>
 </main>
 
@@ -47,6 +35,10 @@
     }
   }
   .menuIcon img:hover{
+    transform: scale(1.2);
+  }
+
+  .menuIcon .woka:hover{
     transform: scale(1.2);
   }
   @media only screen and (max-width: 800px), only screen and (max-height: 800px) {

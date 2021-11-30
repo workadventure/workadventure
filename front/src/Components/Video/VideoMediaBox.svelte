@@ -6,9 +6,9 @@
     import blockSignImg from "./images/blockSign.svg";
     import { videoFocusStore } from "../../Stores/VideoFocusStore";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
-    import { userWokaPictureStore } from "../../Stores/UserWokaPictureStore";
     import { getColorByString, srcObject } from "./utils";
-    import { onDestroy } from "svelte";
+
+    import Woka from '../Woka/Woka.svelte';
 
     export let peer: VideoPeer;
     let streamStore = peer.streamStore;
@@ -16,18 +16,9 @@
     let statusStore = peer.statusStore;
     let constraintStore = peer.constraintsStore;
 
-    let userWokaPictureSrc: string | undefined = undefined;
-
-    const unsubscribeFromUserWokaPictureStore = userWokaPictureStore.subscribe((playersAvatars) => {
-        userWokaPictureSrc = playersAvatars.get(peer.userId);
-        console.log(userWokaPictureSrc);
-    });
-
     function openReport(peer: VideoPeer): void {
         showReportScreenStore.set({ userId: peer.userId, userName: peer.userName });
     }
-
-    onDestroy(unsubscribeFromUserWokaPictureStore);
 </script>
 
 <div class="video-container">
@@ -39,11 +30,7 @@
     {/if}
     {#if !$constraintStore || $constraintStore.video === false}
         <i style="background-color: {getColorByString(name)};">
-            {#if !userWokaPictureSrc}
-                {name}
-            {:else}
-                <img src={userWokaPictureSrc} class="user-woka-picture" alt="player avatar" />
-            {/if}
+            <Woka userId={peer.userId}/>
         </i>
     {/if}
     {#if $constraintStore && $constraintStore.audio === false}
@@ -61,12 +48,10 @@
 </div>
 
 <style lang="scss">
-    .user-woka-picture {
+    .video-container i img {
         display: block;
-        left: calc(50% - 45px);
-        top: calc(50% - 45px);
-        width: 90px;
-        height: 90px;
-        image-rendering: pixelated;
+        // left: calc(50% - 45px);
+        // top: calc(50% - 45px);
+        padding: 30;
     }
 </style>
