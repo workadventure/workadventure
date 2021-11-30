@@ -189,7 +189,7 @@ module.exports = {
             DISABLE_NOTIFICATIONS: false,
             PUSHER_URL: undefined,
             UPLOADER_URL: null,
-            ADMIN_URL: undefined,
+            ADMIN_URL: null,
             CONTACT_URL: null,
             PROFILE_URL: null,
             ICON_URL: null,
