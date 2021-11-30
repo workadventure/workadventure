@@ -163,12 +163,13 @@ class ConnectionManager {
                     console.error(err);
                 }
             } else {
+                const query = urlParams.toString();
                 roomPath =
                     window.location.protocol +
                     "//" +
                     window.location.host +
                     window.location.pathname +
-                    urlParams.toString() + //use urlParams because the token param must be deleted
+                    (query ? "?" + query : "") + //use urlParams because the token param must be deleted
                     window.location.hash;
             }
 
