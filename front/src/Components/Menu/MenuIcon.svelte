@@ -16,7 +16,9 @@
 <svelte:window/>
 
 <main class="menuIcon">
-    <div class="nes-pointer woka" on:click|preventDefault={showMenu}><Woka userId={-1}/></div>
+    <div class="nes-pointer woka" on:click|preventDefault={showMenu}>
+      <Woka userId={-1}/>
+    </div>
     <img src={logoTalk} alt="open menu" class="nes-pointer" on:click|preventDefault={showChat}>
 </main>
 
@@ -32,6 +34,12 @@
       padding-top: 0;
       margin: 3px;
       image-rendering: pixelated;
+    }
+    .woka {
+      pointer-events: auto;
+      width: 60px;
+      padding-top: 0;
+      margin: 3px;
     }
   }
   .menuIcon img:hover{
