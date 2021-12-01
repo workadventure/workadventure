@@ -5,7 +5,6 @@ import {
     ITiledMap,
     ITiledMapLayer,
     ITiledMapObject,
-    ITiledMapObjectLayer,
 } from "@workadventure/tiled-map-type-guard/dist";
 import { User } from "_Model/User";
 import { variablesRepository } from "./Repository/VariablesRepository";

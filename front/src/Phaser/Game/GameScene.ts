@@ -778,6 +778,28 @@ export class GameScene extends DirtyScene {
                         iframeListener.sendLeaveLayerEvent(layer.name);
                     });
                 });
+
+                this.gameMap.onEnterZone((zones) => {
+                    console.log('enter zones');
+                    console.log(zones);
+                    // zones.forEach((zone) => {
+                    //     iframeListener.sendEnterLayerEvent(zone.name);
+                    // });
+                });
+
+                this.gameMap.onLeaveZone((zones) => {
+                    console.log('leave zones');
+                    console.log(zones);
+                    // zones.forEach((zone) => {
+                    //     iframeListener.sendEnterLayerEvent(zone.name);
+                    // });
+                });
+
+                // this.gameMap.onLeaveLayer((layers) => {
+                //     layers.forEach((layer) => {
+                //         iframeListener.sendLeaveLayerEvent(layer.name);
+                //     });
+                // });
             });
     }
 

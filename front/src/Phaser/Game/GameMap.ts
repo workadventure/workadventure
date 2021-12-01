@@ -1,8 +1,9 @@
-import type { ITiledMap, ITiledMapLayer, ITiledMapProperty } from "../Map/ITiledMap";
+import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapObjectLayer, ITiledMapProperty } from "../Map/ITiledMap";
 import { flattenGroupLayersMap } from "../Map/LayersFlattener";
 import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 import { DEPTH_OVERLAY_INDEX } from "./DepthIndexes";
 import { GameMapProperties } from "./GameMapProperties";
+import { MathUtils } from '../../Utils/MathUtils';
 
 export type PropertyChangeCallback = (
     newValue: string | number | boolean | undefined,
@@ -15,23 +16,46 @@ export type layerChangeCallback = (
     allLayersOnNewPosition: Array<ITiledMapLayer>
 ) => void;
 
+export type zoneChangeCallback = (
+    zonesChangedByAction: Array<ITiledMapObject>,
+    allZonesOnNewPosition: Array<ITiledMapObject>
+) => void;
+
 /**
  * A wrapper around a ITiledMap interface to provide additional capabilities.
  * It is used to handle layer properties.
  */
 export class GameMap {
-    // oldKey is the index of the previous tile.
+    /**
+     * oldKey is the index of the previous tile.
+    */
     private oldKey: number | undefined;
-    // key is the index of the current tile.
+    /**
+     * key is the index of the current tile.
+    */
     private key: number | undefined;
+    /**
+     * oldPosition is the previous position of the player.
+     */
+    private oldPosition: { x: number, y: number } | undefined;
+    /**
+     * position is the current position of the player.
+     */
+    private position: { x: number, y: number } | undefined;
+
     private lastProperties = new Map<string, string | boolean | number>();
     private propertiesChangeCallbacks = new Map<string, Array<PropertyChangeCallback>>();
+
     private enterLayerCallbacks = Array<layerChangeCallback>();
     private leaveLayerCallbacks = Array<layerChangeCallback>();
+    private enterZoneCallbacks = Array<zoneChangeCallback>();
+    private leaveZoneCallbacks = Array<zoneChangeCallback>();
+
     private tileNameMap = new Map<string, number>();
 
     private tileSetPropertyMap: { [tile_index: number]: Array<ITiledMapProperty> } = {};
     public readonly flatLayers: ITiledMapLayer[];
+    public readonly tiledObjects: ITiledMapObject[];
     public readonly phaserLayers: TilemapLayer[] = [];
 
     public exitUrls: Array<string> = [];
@@ -44,6 +68,8 @@ export class GameMap {
         terrains: Array<Phaser.Tilemaps.Tileset>
     ) {
         this.flatLayers = flattenGroupLayersMap(map);
+        this.tiledObjects = this.getObjectsFromLayers(this.flatLayers);
+
         let depth = -2;
         for (const layer of this.flatLayers) {
             if (layer.type === "tilelayer") {
@@ -88,6 +114,9 @@ export class GameMap {
      * This will trigger events if properties are changing.
      */
     public setPosition(x: number, y: number) {
+        this.oldPosition = this.position;
+        this.position = { x, y };
+
         this.oldKey = this.key;
 
         const xMap = Math.floor(x / this.map.tilewidth);
@@ -102,6 +131,7 @@ export class GameMap {
 
         this.triggerAllProperties();
         this.triggerLayersChange();
+        this.triggerZonesChange();
     }
 
     private triggerAllProperties(): void {
@@ -126,7 +156,7 @@ export class GameMap {
         }
     }
 
-    private triggerLayersChange() {
+    private triggerLayersChange(): void {
         const layersByOldKey = this.oldKey ? this.getLayersByKey(this.oldKey) : [];
         const layersByNewKey = this.key ? this.getLayersByKey(this.key) : [];
 
@@ -151,6 +181,54 @@ export class GameMap {
             const layerArray = Array.from(leaveLayers);
             for (const callback of this.leaveLayerCallbacks) {
                 callback(layerArray, layersByNewKey);
+            }
+        }
+    }
+
+    /**
+     * We user Tiled Objects with type "zone" as zones with defined x, y, width and height for easier event triggering.
+     */
+    private triggerZonesChange(): void {
+        const zones = this.tiledObjects.filter(object => object.type === "zone");
+
+        // P.H. NOTE: We could also get all of the zones and add properties of occupied tiles to them, so we could later on check collision by using tileKeys
+        const zonesByOldPosition = this.oldPosition ?
+            zones.filter((zone) => {
+                if (!this.oldPosition) {
+                    return false;
+                }
+                return MathUtils.isOverlappingWithRectangle(this.oldPosition, zone);
+            }) : [];
+
+        const zonesByNewPosition = this.position ?
+            zones.filter((zone) => {
+                if (!this.position) {
+                    return false;
+                }
+                return MathUtils.isOverlappingWithRectangle(this.position, zone);
+            }) : [];
+
+        const enterZones = new Set(zonesByNewPosition);
+        const leaveZones = new Set(zonesByOldPosition);
+
+        enterZones.forEach((zone) => {
+            if (leaveZones.has(zone)) {
+                leaveZones.delete(zone);
+                enterZones.delete(zone);
+            }
+        });
+
+        if (enterZones.size > 0) {
+            const zonesArray = Array.from(enterZones);
+            for (const callback of this.enterZoneCallbacks) {
+                callback(zonesArray, zonesByNewPosition);
+            }
+        }
+
+        if (leaveZones.size > 0) {
+            const zonesArray = Array.from(leaveZones);
+            for (const callback of this.leaveZoneCallbacks) {
+                callback(zonesArray, zonesByNewPosition);
             }
         }
     }
@@ -249,6 +327,20 @@ export class GameMap {
      */
     public onLeaveLayer(callback: layerChangeCallback) {
         this.leaveLayerCallbacks.push(callback);
+    }
+
+    /**
+     * Registers a callback called when the user moves inside another zone.
+     */
+    public onEnterZone(callback: zoneChangeCallback) {
+        this.enterZoneCallbacks.push(callback);
+    }
+
+    /**
+     * Registers a callback called when the user moves outside another zone.
+     */
+    public onLeaveZone(callback: zoneChangeCallback) {
+        this.leaveZoneCallbacks.push(callback);
     }
 
     public findLayer(layerName: string): ITiledMapLayer | undefined {
@@ -361,5 +453,23 @@ export class GameMap {
             // We found a property that disappeared
             this.trigger(oldPropName, oldPropValue, undefined, emptyProps);
         }
+    }
+
+    private getObjectsFromLayers(layers: ITiledMapLayer[]): ITiledMapObject[] {
+        const objects: ITiledMapObject[] = [];
+
+        const objectLayers = layers.filter(layer => layer.type === "objectgroup");
+        for (const objectLayer of objectLayers) {
+            if (this.isOfTypeITiledMapObjectLayer(objectLayer)) {
+                objects.push(...objectLayer.objects);
+            }
+        }
+
+        return objects;
+    }
+
+    // NOTE: Simple typeguard for Objects Layer.
+    private isOfTypeITiledMapObjectLayer(obj: ITiledMapLayer): obj is ITiledMapObjectLayer {
+        return (obj as ITiledMapObjectLayer).objects !== undefined;
     }
 }
