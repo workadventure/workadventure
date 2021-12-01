@@ -201,7 +201,7 @@ export class GameScene extends DirtyScene {
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
     private loader: Loader;
-    private userWokaPictureStores: Map<number, UserWokaPictureStore> = new Map<number, any>();
+    private userWokaPictureStores: Map<number, UserWokaPictureStore> = new Map<number, UserWokaPictureStore>();
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
