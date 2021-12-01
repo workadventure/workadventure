@@ -11,5 +11,5 @@ module.exports = {
     "thumbnails": false,
   },
   "assertionTimeout": 10000,
-  "selectorTimeout": 20000,
+  "selectorTimeout": 40000,
 }

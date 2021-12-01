@@ -20,6 +20,15 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v2.0.0"
 
+      - name: "Setup NodeJS"
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
+
+      - name: "Install dependencies"
+        run: yarn install
+        working-directory: "tests"
+
       - name: "Setup .env file"
         run: cp .env.template .env
 

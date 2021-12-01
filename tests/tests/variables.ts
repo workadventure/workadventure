@@ -22,7 +22,6 @@ test("Test that variables storage works", async (t: TestController) => {
 
     await t.useRole(userAlice)
         .switchToIframe("#cowebsite-buffer iframe")
-        .debug()
         .expect(variableInput.value).eql('default value')
         .typeText(variableInput, 'new value')
         .switchToPreviousWindow()
