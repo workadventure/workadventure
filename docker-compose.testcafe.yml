@@ -8,5 +8,6 @@ services:
     volumes:
       - ./tests:/tests
       - ./maps:/maps
+      - /var/run/docker.sock:/var/run/docker.sock
   #  security_opt:
   #    - seccomp:unconfined

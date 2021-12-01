@@ -26,7 +26,7 @@ jobs:
           node-version: '14.x'
 
       - name: "Install dependencies"
-        run: yarn install
+        run: npm install
         working-directory: "tests"
 
       - name: "Setup .env file"
