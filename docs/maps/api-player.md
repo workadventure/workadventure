@@ -58,6 +58,29 @@ WA.onInit().then(() => {
 })
 ```
 
+### Get the user-room token of the player
+
+```
+WA.player.userRoomToken: string;
+```
+
+The user-room token is available from the `WA.player.userRoomToken` property.
+This token is generated in WorkAdventure and contains information such as the player's room ID and its associated membership ID.
+
+{.alert.alert-warn}
+This token is used when you change your logo using a configured variable.
+Indeed, to change your logo you need to perform an upload in order to get a file URL. This type of actions must be validated on our side.
+If you are using a self-hosted version of WorkAdventure you will not have the possibility to perform actions that depends on the user-room token, unless you create an API that support it.
+
+{.alert.alert-info}
+You need to wait for the end of the initialization before accessing `WA.player.userRoomToken`
+
+```typescript
+WA.onInit().then(() => {
+    console.log('Token: ', WA.player.userRoomToken);
+})
+```
+
 ### Listen to player movement
 ```
 WA.player.onPlayerMove(callback: HasPlayerMovedEventCallback): void;

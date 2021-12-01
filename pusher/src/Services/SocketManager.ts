@@ -151,6 +151,11 @@ export class SocketManager implements ZoneEventListener {
             joinRoomMessage.setName(client.name);
             joinRoomMessage.setPositionmessage(ProtobufUtils.toPositionMessage(client.position));
             joinRoomMessage.setTagList(client.tags);
+
+            if (client.userRoomToken) {
+                joinRoomMessage.setUserroomtoken(client.userRoomToken);
+            }
+
             if (client.visitCardUrl) {
                 joinRoomMessage.setVisitcardurl(client.visitCardUrl);
             }

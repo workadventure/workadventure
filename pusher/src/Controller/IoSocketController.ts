@@ -186,6 +186,7 @@ export class IoSocketController {
                         let memberTags: string[] = [];
                         let memberVisitCardUrl: string | null = null;
                         let memberMessages: unknown;
+                        let memberUserRoomToken: string | undefined;
                         let memberTextures: CharacterTexture[] = [];
                         const room = await socketManager.getOrCreateRoom(roomId);
                         let userData: FetchMemberDataByUuidResponse = {
@@ -196,6 +197,7 @@ export class IoSocketController {
                             textures: [],
                             messages: [],
                             anonymous: true,
+                            userRoomToken: undefined,
                         };
                         if (ADMIN_API_URL) {
                             try {
@@ -232,6 +234,8 @@ export class IoSocketController {
                                 memberTags = userData.tags;
                                 memberVisitCardUrl = userData.visitCardUrl;
                                 memberTextures = userData.textures;
+                                memberUserRoomToken = userData.userRoomToken;
+
                                 if (
                                     room.policyType === GameRoomPolicyTypes.USE_TAGS_POLICY &&
                                     (userData.anonymous === true || !room.canAccess(memberTags))
@@ -281,6 +285,7 @@ export class IoSocketController {
                                 messages: memberMessages,
                                 tags: memberTags,
                                 visitCardUrl: memberVisitCardUrl,
+                                userRoomToken: memberUserRoomToken,
                                 textures: memberTextures,
                                 position: {
                                     x: x,

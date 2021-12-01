@@ -20,6 +20,12 @@ export const setTags = (_tags: string[]) => {
 
 let uuid: string | undefined;
 
+let userRoomToken: string | undefined;
+
+export const setUserRoomToken = (token: string | undefined) => {
+    userRoomToken = token;
+};
+
 export const setUuid = (_uuid: string | undefined) => {
     uuid = _uuid;
 };
@@ -66,6 +72,13 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
             throw new Error("Player id not initialized yet. You should call WA.player.id within a WA.onInit callback.");
         }
         return uuid;
+    }
+
+    get userRoomToken(): string | undefined {
+        if (userRoomToken === undefined) {
+            throw new Error("User-room token not initialized yet. You should call WA.player.userRoomToken within a WA.onInit callback.");
+        }
+        return userRoomToken;
     }
 }
 
