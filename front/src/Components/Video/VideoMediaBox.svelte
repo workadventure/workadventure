@@ -30,7 +30,7 @@
     {/if}
     {#if !$constraintStore || $constraintStore.video === false}
         <i style="background-color: {getColorByString(name)};">
-            <Woka userId={peer.userId}/>
+            <Woka userId={peer.userId} placeholderSrc={""}/>
         </i>
     {/if}
     {#if $constraintStore && $constraintStore.audio === false}
