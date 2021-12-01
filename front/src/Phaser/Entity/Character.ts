@@ -120,6 +120,7 @@ export abstract class Character extends Container {
     public async getSnapshot(): Promise<HTMLImageElement> {
         const rt = this.scene.make.renderTexture({}, false);
         for (const sprite of this.sprites.values()) {
+            sprite.setFrame(1);
             rt.draw(sprite, sprite.displayWidth * 0.5, sprite.displayHeight * 0.5);
         }
         return new Promise<HTMLImageElement>((resolve, reject) => {
