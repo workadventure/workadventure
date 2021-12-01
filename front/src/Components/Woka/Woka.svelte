@@ -25,7 +25,10 @@ import { onDestroy } from 'svelte';
         pointer-events: auto;
         width: 60px;
         height: 60px;
-        margin: 3px;
+        left: calc(50% - 30px);
+        top: calc(50% - 30px);
+        margin: 0;
+        padding: 0;
         image-rendering: pixelated;
     }
 </style>

@@ -46,12 +46,3 @@
         <SoundMeterWidget stream={$streamStore} />
     {/if}
 </div>
-
-<style lang="scss">
-    .video-container i img {
-        display: block;
-        // left: calc(50% - 45px);
-        // top: calc(50% - 45px);
-        padding: 30;
-    }
-</style>
