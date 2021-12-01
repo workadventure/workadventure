@@ -2,22 +2,22 @@
 import { onDestroy } from 'svelte';
 
     import { gameManager } from '../../Phaser/Game/GameManager';
-    import logoWA from "../images/logo-WA-pixel.png"; // placeholder
 
     export let userId: number;
+    export let placeholderSrc: string;
 
     const gameScene = gameManager.getCurrentGameScene();
     const playerWokaPictureStore = gameScene.getUserWokaPictureStore(userId);
 
-    let src = logoWA;
+    let src = placeholderSrc;
     const unsubscribe = playerWokaPictureStore.picture.subscribe((htmlElement) => {
-        src = htmlElement?.src ?? logoWA;
+        src = htmlElement?.src ?? placeholderSrc;
     });
 
     onDestroy(unsubscribe);
 </script>
 
-<img src={src} alt="woka" class="nes-pointer">
+<img src={src} alt="" class="nes-pointer">
 
 <style>
     img {

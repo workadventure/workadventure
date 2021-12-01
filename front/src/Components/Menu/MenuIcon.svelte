@@ -1,9 +1,11 @@
 <script lang="typescript">
     import logoTalk from "../images/logo-message-pixel.png"
+    import logoWA from "../images/logo-WA-pixel.png";
     import {menuVisiblilityStore} from "../../Stores/MenuStore";
     import {chatVisibilityStore} from "../../Stores/ChatStore";
     import {get} from "svelte/store";
     import Woka from '../Woka/Woka.svelte';
+
 
     function showMenu(){
         menuVisiblilityStore.set(!get(menuVisiblilityStore))
@@ -17,7 +19,7 @@
 
 <main class="menuIcon">
     <div class="nes-pointer woka" on:click|preventDefault={showMenu}>
-      <Woka userId={-1}/>
+      <Woka userId={-1} placeholderSrc={logoWA}/>
     </div>
     <img src={logoTalk} alt="open menu" class="nes-pointer" on:click|preventDefault={showChat}>
 </main>
