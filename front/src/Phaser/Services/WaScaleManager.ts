@@ -12,8 +12,6 @@ export class WaScaleManager {
     private actualZoom: number = 1;
     private _saveZoom: number = 1;
 
-    private zoomingViaPlayerInputLocked: boolean = false;
-
     public constructor(private minGamePixelsNumber: number, private absoluteMinPixelNumber: number) {
         this.hdpiManager = new HdpiManager(minGamePixelsNumber, absoluteMinPixelNumber);
     }
@@ -21,14 +19,6 @@ export class WaScaleManager {
     public setGame(game: Game): void {
         this.scaleManager = game.scale;
         this.game = game;
-    }
-
-    public isZoomingViaPlayerInputLocked(): boolean {
-        return this.zoomingViaPlayerInputLocked;
-    }
-
-    public lockZoomingViaPlayerInput(lock: boolean = true): void {
-        this.zoomingViaPlayerInputLocked = lock;
     }
 
     public applyNewSize() {
@@ -80,6 +70,10 @@ export class WaScaleManager {
 
     public saveZoom(): void {
         this._saveZoom = this.hdpiManager.zoomModifier;
+    }
+
+    public getSaveZoom(): number {
+        return this._saveZoom;
     }
 
     public restoreZoom(): void {

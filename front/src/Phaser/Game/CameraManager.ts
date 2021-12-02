@@ -1,16 +1,26 @@
 import { Easing } from '../../types';
 import { HtmlUtils } from '../../WebRtc/HtmlUtils';
 import type { Box } from '../../WebRtc/LayoutManager';
+import type { Player } from '../Player/Player';
 import type { WaScaleManager } from '../Services/WaScaleManager';
 import type { GameScene } from './GameScene';
+
+export enum CameraMode {
+    Free = 'Free',
+    Follow = 'Follow',
+    Focus = 'Focus',
+}
 
 export class CameraManager extends Phaser.Events.EventEmitter {
 
     private scene: GameScene;
     private camera: Phaser.Cameras.Scene2D.Camera;
+    private cameraBounds: { x: number, y: number };
     private waScaleManager: WaScaleManager;
 
-    private cameraBounds: { x: number, y: number };
+    private cameraMode: CameraMode = CameraMode.Free;
+
+    private restoreZoomTween?: Phaser.Tweens.Tween;
 
     constructor(scene: GameScene, cameraBounds: { x: number, y: number }, waScaleManager: WaScaleManager) {
         super();
@@ -28,11 +38,13 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         return this.camera;
     }
 
-    public changeCameraFocus(
+    public enterFocusMode(
         focusOn: { x: number, y: number, width: number, height: number }, duration: number = 1000,
     ): void {
+        this.setCameraMode(CameraMode.Focus);
         this.waScaleManager.saveZoom();
-        this.waScaleManager.lockZoomingViaPlayerInput();
+
+        this.restoreZoomTween?.stop();
         const maxZoomModifier = 2.84; // How to get max zoom value?
         const currentZoomModifier = this.waScaleManager.zoomModifier;
         const zoomModifierChange = maxZoomModifier - currentZoomModifier;
@@ -46,9 +58,15 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         });
     }
 
+    public leaveFocusMode(player: Player): void {
+        // We are forcing camera.pan to kill previous pan animation on EnterFocusMode
+        this.camera.pan(player.x, player.y, 1, Easing.SineEaseOut, true);
+        this.startFollow(player);
+        this.restoreZoom();
+    }
+
     public startFollow(target: object | Phaser.GameObjects.GameObject): void {
-        this.waScaleManager.lockZoomingViaPlayerInput(false);
-        this.waScaleManager.restoreZoom();
+        this.setCameraMode(CameraMode.Follow);
         this.camera.startFollow(target, true);
     }
 
@@ -67,6 +85,30 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             ((xCenter - game.offsetWidth / 2) * window.devicePixelRatio) / this.scene.scale.zoom,
             ((yCenter - game.offsetHeight / 2) * window.devicePixelRatio) / this.scene.scale.zoom
         );
+    }
+
+    public isCameraLocked(): boolean {
+        return this.cameraMode === CameraMode.Focus;
+    }
+
+    private setCameraMode(mode: CameraMode): void {
+        if (this.cameraMode === mode) {
+            return;
+        }
+        this.cameraMode = mode;
+    }
+
+    private restoreZoom(): void {
+        this.restoreZoomTween?.stop();
+        this.restoreZoomTween = this.scene.tweens.addCounter({
+            from: this.waScaleManager.zoomModifier,
+            to: this.waScaleManager.getSaveZoom(),
+            duration: 1000,
+            ease: Easing.SineEaseOut,
+            onUpdate: (tween: Phaser.Tweens.Tween) => {
+                this.waScaleManager.zoomModifier = tween.getValue();
+            }
+        });
     }
 
     private initCamera() {
