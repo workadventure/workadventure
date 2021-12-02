@@ -24,10 +24,7 @@ export class WaScaleManager {
     public applyNewSize() {
         const { width, height } = coWebsiteManager.getGameSize();
 
-        let devicePixelRatio = 1;
-        if (window.devicePixelRatio) {
-            devicePixelRatio = window.devicePixelRatio;
-        }
+        const devicePixelRatio = window.devicePixelRatio ?? 1;
 
         const { game: gameSize, real: realSize } = this.hdpiManager.getOptimalGameSize({
             width: width * devicePixelRatio,
@@ -57,6 +54,19 @@ export class WaScaleManager {
         }
 
         this.game.markDirty();
+    }
+
+    public getTargetZoomModifierFor(viewportWidth: number, viewportHeight: number) {
+        const { width: gameWidth, height: gameHeight } = coWebsiteManager.getGameSize();
+        const devicePixelRatio = window.devicePixelRatio ?? 1;
+
+        const { game: gameSize, real: realSize } = this.hdpiManager.getOptimalGameSize({
+            width: gameWidth * devicePixelRatio,
+            height: gameHeight * devicePixelRatio,
+        });
+        // P.H. Note: Dunno where this magic 2 comes from
+        // Always return lowest possible value. Need to add MAX ZOOM MODIFIER value into this.
+        return Math.min(realSize.width / viewportWidth / 2, realSize.height / viewportHeight / 2);
     }
 
     public get zoomModifier(): number {

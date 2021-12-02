@@ -1961,10 +1961,6 @@ ${escapedMessage}
         biggestAvailableAreaStore.recompute();
     }
 
-    public setZoomModifierTo(value: number): void {
-        waScaleManager.zoomModifier = value;
-    }
-
     public createSuccessorGameScene(autostart: boolean, reconnecting: boolean) {
         const gameSceneKey = "somekey" + Math.round(Math.random() * 10000);
         const game = new GameScene(this.room, this.MapUrlFile, gameSceneKey);

@@ -45,16 +45,16 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.waScaleManager.saveZoom();
 
         this.restoreZoomTween?.stop();
-        const maxZoomModifier = 2.84; // How to get max zoom value?
+        const targetZoomModifier = this.waScaleManager.getTargetZoomModifierFor(focusOn.width, focusOn.height);
         const currentZoomModifier = this.waScaleManager.zoomModifier;
-        const zoomModifierChange = maxZoomModifier - currentZoomModifier;
+        const zoomModifierChange = targetZoomModifier - currentZoomModifier;
         this.camera.stopFollow();
         this.camera.pan(
             focusOn.x + focusOn.width * 0.5,
             focusOn.y + focusOn.height * 0.5,
             duration,
             Easing.SineEaseOut, false, (camera, progress, x, y) => {
-                this.scene.setZoomModifierTo(currentZoomModifier + progress * zoomModifierChange);
+                this.waScaleManager.zoomModifier = currentZoomModifier + progress * zoomModifierChange;
         });
     }
 
