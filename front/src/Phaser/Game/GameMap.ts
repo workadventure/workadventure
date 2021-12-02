@@ -116,22 +116,22 @@ export class GameMap {
     public setPosition(x: number, y: number) {
         this.oldPosition = this.position;
         this.position = { x, y };
-
+        this.triggerZonesChange();
+        
         this.oldKey = this.key;
-
+        
         const xMap = Math.floor(x / this.map.tilewidth);
         const yMap = Math.floor(y / this.map.tileheight);
         const key = xMap + yMap * this.map.width;
-
+        
         if (key === this.key) {
             return;
         }
-
+        
         this.key = key;
-
+        
         this.triggerAllProperties();
         this.triggerLayersChange();
-        this.triggerZonesChange();
     }
 
     private triggerAllProperties(): void {
