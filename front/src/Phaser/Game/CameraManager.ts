@@ -28,7 +28,11 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         return this.camera;
     }
 
-    public changeCameraFocus(focusOn: { x: number, y: number, width: number, height: number }, duration: number = 1000): void {
+    public changeCameraFocus(
+        focusOn: { x: number, y: number, width: number, height: number }, duration: number = 1000,
+    ): void {
+        this.waScaleManager.saveZoom();
+        this.waScaleManager.lockZoomingViaPlayerInput();
         const maxZoomModifier = 2.84; // How to get max zoom value?
         const currentZoomModifier = this.waScaleManager.zoomModifier;
         const zoomModifierChange = maxZoomModifier - currentZoomModifier;
@@ -43,6 +47,8 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     }
 
     public startFollow(target: object | Phaser.GameObjects.GameObject): void {
+        this.waScaleManager.lockZoomingViaPlayerInput(false);
+        this.waScaleManager.restoreZoom();
         this.camera.startFollow(target, true);
     }
 

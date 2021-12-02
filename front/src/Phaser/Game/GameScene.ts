@@ -1954,6 +1954,9 @@ ${escapedMessage}
     }
 
     zoomByFactor(zoomFactor: number) {
+        if (waScaleManager.isZoomingViaPlayerInputLocked()) {
+            return;
+        }
         waScaleManager.zoomModifier *= zoomFactor;
         biggestAvailableAreaStore.recompute();
     }

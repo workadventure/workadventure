@@ -172,14 +172,14 @@
                  "y":96
                 }, 
                 {
-                 "height":64,
+                 "height":352,
                  "id":11,
-                 "name":"coffeeZone",
+                 "name":"meetingZone",
                  "properties":[
                         {
                          "name":"display_name",
                          "type":"string",
-                         "value":"Coffee Time!"
+                         "value":"Brainstorm Zone!"
                         }, 
                         {
                          "name":"focusable",
@@ -189,9 +189,9 @@
                  "rotation":0,
                  "type":"zone",
                  "visible":true,
-                 "width":64,
-                 "x":64,
-                 "y":288
+                 "width":224,
+                 "x":736,
+                 "y":96
                 }],
          "opacity":1,
          "type":"objectgroup",
