@@ -5,7 +5,7 @@ import type { Game } from "../Game/Game";
 import { ResizableScene } from "../Login/ResizableScene";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 
-class WaScaleManager {
+export class WaScaleManager {
     private hdpiManager: HdpiManager;
     private scaleManager!: ScaleManager;
     private game!: Game;

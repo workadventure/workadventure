@@ -192,6 +192,7 @@ export class GameMap {
         const zones = this.tiledObjects.filter(object => object.type === "zone");
 
         // P.H. NOTE: We could also get all of the zones and add properties of occupied tiles to them, so we could later on check collision by using tileKeys
+        // TODO: Change this to an array with currently occupied sone instead of doing elimination process
         const zonesByOldPosition = this.oldPosition ?
             zones.filter((zone) => {
                 if (!this.oldPosition) {
