@@ -788,7 +788,7 @@ export class GameScene extends DirtyScene {
                     for (const zone of zones) {
                         for (const property of zone.properties ?? []) {
                             if (property.name === 'focusable' && property.value === true) {
-                                this.cameraManager.changeCameraFocus(zone);
+                                this.cameraManager.enterFocusMode(zone);
                                 break;
                             }
                         }
@@ -802,7 +802,7 @@ export class GameScene extends DirtyScene {
                     for (const zone of zones) {
                         for (const property of zone.properties ?? []) {
                             if (property.name === 'focusable' && property.value === true) {
-                                this.cameraManager.startFollow(this.CurrentPlayer);
+                                this.cameraManager.leaveFocusMode(this.CurrentPlayer);
                                 break;
                             }
                         }
@@ -1954,7 +1954,7 @@ ${escapedMessage}
     }
 
     zoomByFactor(zoomFactor: number) {
-        if (waScaleManager.isZoomingViaPlayerInputLocked()) {
+        if (this.cameraManager.isCameraLocked()) {
             return;
         }
         waScaleManager.zoomModifier *= zoomFactor;
