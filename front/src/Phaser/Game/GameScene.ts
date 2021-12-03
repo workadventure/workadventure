@@ -60,7 +60,7 @@ import { PinchManager } from "../UserInput/PinchManager";
 import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { EmoteManager } from "./EmoteManager";
-import { CameraManager } from './CameraManager';
+import { CameraManager } from "./CameraManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
 import type { HasPlayerMovedEvent } from "../../Api/Events/HasPlayerMovedEvent";
 
@@ -551,7 +551,11 @@ export class GameScene extends DirtyScene {
         this.createCurrentPlayer();
         this.removeAllRemotePlayers(); //cleanup the list  of remote players in case the scene was rebooted
 
-        this.cameraManager = new CameraManager(this, { x: this.Map.widthInPixels, y: this.Map.heightInPixels }, waScaleManager);
+        this.cameraManager = new CameraManager(
+            this,
+            { x: this.Map.widthInPixels, y: this.Map.heightInPixels },
+            waScaleManager
+        );
         biggestAvailableAreaStore.recompute();
         this.cameraManager.startFollow(this.CurrentPlayer);
 
@@ -787,7 +791,7 @@ export class GameScene extends DirtyScene {
                 this.gameMap.onEnterZone((zones) => {
                     for (const zone of zones) {
                         for (const property of zone.properties ?? []) {
-                            if (property.name === 'focusable' && property.value === true) {
+                            if (property.name === "focusable" && property.value === true) {
                                 this.cameraManager.enterFocusMode(zone);
                                 break;
                             }
@@ -801,7 +805,7 @@ export class GameScene extends DirtyScene {
                 this.gameMap.onLeaveZone((zones) => {
                     for (const zone of zones) {
                         for (const property of zone.properties ?? []) {
-                            if (property.name === 'focusable' && property.value === true) {
+                            if (property.name === "focusable" && property.value === true) {
                                 this.cameraManager.leaveFocusMode(this.CurrentPlayer);
                                 break;
                             }

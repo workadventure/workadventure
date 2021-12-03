@@ -1,28 +1,27 @@
-import { Easing } from '../../types';
-import { HtmlUtils } from '../../WebRtc/HtmlUtils';
-import type { Box } from '../../WebRtc/LayoutManager';
-import type { Player } from '../Player/Player';
-import type { WaScaleManager } from '../Services/WaScaleManager';
-import type { GameScene } from './GameScene';
+import { Easing } from "../../types";
+import { HtmlUtils } from "../../WebRtc/HtmlUtils";
+import type { Box } from "../../WebRtc/LayoutManager";
+import type { Player } from "../Player/Player";
+import type { WaScaleManager } from "../Services/WaScaleManager";
+import type { GameScene } from "./GameScene";
 
 export enum CameraMode {
-    Free = 'Free',
-    Follow = 'Follow',
-    Focus = 'Focus',
+    Free = "Free",
+    Follow = "Follow",
+    Focus = "Focus",
 }
 
 export class CameraManager extends Phaser.Events.EventEmitter {
-
     private scene: GameScene;
     private camera: Phaser.Cameras.Scene2D.Camera;
-    private cameraBounds: { x: number, y: number };
+    private cameraBounds: { x: number; y: number };
     private waScaleManager: WaScaleManager;
 
     private cameraMode: CameraMode = CameraMode.Free;
 
     private restoreZoomTween?: Phaser.Tweens.Tween;
 
-    constructor(scene: GameScene, cameraBounds: { x: number, y: number }, waScaleManager: WaScaleManager) {
+    constructor(scene: GameScene, cameraBounds: { x: number; y: number }, waScaleManager: WaScaleManager) {
         super();
         this.scene = scene;
 
@@ -39,7 +38,8 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     }
 
     public enterFocusMode(
-        focusOn: { x: number, y: number, width: number, height: number }, duration: number = 1000,
+        focusOn: { x: number; y: number; width: number; height: number },
+        duration: number = 1000
     ): void {
         this.setCameraMode(CameraMode.Focus);
         this.waScaleManager.saveZoom();
@@ -53,9 +53,12 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             focusOn.x + focusOn.width * 0.5,
             focusOn.y + focusOn.height * 0.5,
             duration,
-            Easing.SineEaseOut, false, (camera, progress, x, y) => {
+            Easing.SineEaseOut,
+            false,
+            (camera, progress, x, y) => {
                 this.waScaleManager.zoomModifier = currentZoomModifier + progress * zoomModifierChange;
-        });
+            }
+        );
     }
 
     public leaveFocusMode(player: Player): void {
@@ -107,7 +110,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             ease: Easing.SineEaseOut,
             onUpdate: (tween: Phaser.Tweens.Tween) => {
                 this.waScaleManager.zoomModifier = tween.getValue();
-            }
+            },
         });
     }
 
