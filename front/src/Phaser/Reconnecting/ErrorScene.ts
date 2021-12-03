@@ -105,9 +105,7 @@ export class ErrorScene extends Phaser.Scene {
             // client never received a response, or request never left
             console.error(
                 "Axios error. No full HTTP response received. Request to URL:",
-                error.request?.responseURL,
-                " - Details: ",
-                error.request?.details
+                error.config.url
             );
             scene.start(ErrorSceneName, {
                 title: "Network error",
