@@ -13,7 +13,7 @@ import {
     startContainer,
     stopContainer, stopRedis, startRedis
 } from "./utils/containers";
-import {getPusherDump} from "./utils/debug";
+import {getBackDump, getPusherDump} from "./utils/debug";
 
 // Note: we are also testing that passing a random query parameter does not cause any issue.
 fixture `Variables`
@@ -78,13 +78,21 @@ test("Test that variables storage works", async (t: TestController) => {
     startRedis();
 
     // Navigate to some other map so that the pusher connection is freed.
-    await t.navigateTo('http://maps.workadventure.localhost/tests/');
+    await t.navigateTo('http://maps.workadventure.localhost/tests/')
+        .wait(3000);
 
-    // TODO: check that Back and Pusher rooms are unloaded
-    // TODO: check that Back and Pusher rooms are unloaded
-    // TODO: check that Back and Pusher rooms are unloaded
-    // TODO: check that Back and Pusher rooms are unloaded
-    console.log(await getPusherDump());
+
+    const backDump = await getBackDump();
+    //console.log('backDump', backDump);
+    for (const room of backDump) {
+        if (room.roomUrl === 'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json') {
+            throw new Error('Room still found in back');
+        }
+    }
+
+    const pusherDump = await getPusherDump();
+    //console.log('pusherDump', pusherDump);
+    await t.expect(pusherDump['http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json']).eql(undefined);
 
     await t.navigateTo('http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json')
         .switchToIframe("#cowebsite-buffer iframe")
@@ -94,6 +102,43 @@ test("Test that variables storage works", async (t: TestController) => {
         .switchToMainWindow()
 
 
+    // Now, let's try to kill / reboot the back
+    await rebootBack();
+
+    await t.navigateTo('http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json')
+        .switchToIframe("#cowebsite-buffer iframe")
+        .expect(variableInput.value).eql('value set while Redis stopped')
+        .selectText(variableInput)
+        .pressKey('delete')
+        .typeText(variableInput, 'value set after back restart')
+        .pressKey('tab')
+        .switchToMainWindow()
+
+        .navigateTo('http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json')
+        .switchToIframe("#cowebsite-buffer iframe")
+        // Redis will reconnect automatically and will store the variable on reconnect!
+        // So we should see the new value.
+        .expect(variableInput.value).eql('value set after back restart')
+        .switchToMainWindow()
+
+    // Now, let's try to kill / reboot the back
+    await rebootPusher();
+
+    await t.navigateTo('http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json')
+        .switchToIframe("#cowebsite-buffer iframe")
+        .expect(variableInput.value).eql('value set after back restart')
+        .selectText(variableInput)
+        .pressKey('delete')
+        .typeText(variableInput, 'value set after pusher restart')
+        .pressKey('tab')
+        .switchToMainWindow()
+
+        .navigateTo('http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json')
+        .switchToIframe("#cowebsite-buffer iframe")
+        // Redis will reconnect automatically and will store the variable on reconnect!
+        // So we should see the new value.
+        .expect(variableInput.value).eql('value set after pusher restart')
+        .switchToMainWindow()
 
 
     /*
@@ -113,7 +158,7 @@ test("Test that variables storage works", async (t: TestController) => {
     }
 });
 
-/*
+
 test("Test that variables cache in the back don't prevent setting a variable in case the map changes", async (t: TestController) => {
     // Let's start by visiting a map that DOES not have the variable.
     fs.copyFileSync('../maps/tests/Variables/Cache/variables_cache_1.json', '../maps/tests/Variables/Cache/variables_tmp.json');
@@ -140,4 +185,4 @@ test("Test that variables cache in the back don't prevent setting a variable in 
     }
 });
 
-*/
+
