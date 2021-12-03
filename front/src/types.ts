@@ -50,5 +50,5 @@ export enum Easing {
     ExpoEaseInOut = "Expo.easeInOut",
     CircEaseInOut = "Circ.easeInOut",
     BackEaseInOut = "Back.easeInOut",
-    BounceEaseInOut = "Bounce.easeInOut"
+    BounceEaseInOut = "Bounce.easeInOut",
 }

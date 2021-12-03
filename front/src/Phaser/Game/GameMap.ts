@@ -1,9 +1,15 @@
-import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapObjectLayer, ITiledMapProperty } from "../Map/ITiledMap";
+import type {
+    ITiledMap,
+    ITiledMapLayer,
+    ITiledMapObject,
+    ITiledMapObjectLayer,
+    ITiledMapProperty,
+} from "../Map/ITiledMap";
 import { flattenGroupLayersMap } from "../Map/LayersFlattener";
 import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 import { DEPTH_OVERLAY_INDEX } from "./DepthIndexes";
 import { GameMapProperties } from "./GameMapProperties";
-import { MathUtils } from '../../Utils/MathUtils';
+import { MathUtils } from "../../Utils/MathUtils";
 
 export type PropertyChangeCallback = (
     newValue: string | number | boolean | undefined,
@@ -28,20 +34,20 @@ export type zoneChangeCallback = (
 export class GameMap {
     /**
      * oldKey is the index of the previous tile.
-    */
+     */
     private oldKey: number | undefined;
     /**
      * key is the index of the current tile.
-    */
+     */
     private key: number | undefined;
     /**
      * oldPosition is the previous position of the player.
      */
-    private oldPosition: { x: number, y: number } | undefined;
+    private oldPosition: { x: number; y: number } | undefined;
     /**
      * position is the current position of the player.
      */
-    private position: { x: number, y: number } | undefined;
+    private position: { x: number; y: number } | undefined;
 
     private lastProperties = new Map<string, string | boolean | number>();
     private propertiesChangeCallbacks = new Map<string, Array<PropertyChangeCallback>>();
@@ -117,19 +123,19 @@ export class GameMap {
         this.oldPosition = this.position;
         this.position = { x, y };
         this.triggerZonesChange();
-        
+
         this.oldKey = this.key;
-        
+
         const xMap = Math.floor(x / this.map.tilewidth);
         const yMap = Math.floor(y / this.map.tileheight);
         const key = xMap + yMap * this.map.width;
-        
+
         if (key === this.key) {
             return;
         }
-        
+
         this.key = key;
-        
+
         this.triggerAllProperties();
         this.triggerLayersChange();
     }
@@ -189,25 +195,27 @@ export class GameMap {
      * We user Tiled Objects with type "zone" as zones with defined x, y, width and height for easier event triggering.
      */
     private triggerZonesChange(): void {
-        const zones = this.tiledObjects.filter(object => object.type === "zone");
+        const zones = this.tiledObjects.filter((object) => object.type === "zone");
 
         // P.H. NOTE: We could also get all of the zones and add properties of occupied tiles to them, so we could later on check collision by using tileKeys
         // TODO: Change this to an array with currently occupied sone instead of doing elimination process
-        const zonesByOldPosition = this.oldPosition ?
-            zones.filter((zone) => {
-                if (!this.oldPosition) {
-                    return false;
-                }
-                return MathUtils.isOverlappingWithRectangle(this.oldPosition, zone);
-            }) : [];
+        const zonesByOldPosition = this.oldPosition
+            ? zones.filter((zone) => {
+                  if (!this.oldPosition) {
+                      return false;
+                  }
+                  return MathUtils.isOverlappingWithRectangle(this.oldPosition, zone);
+              })
+            : [];
 
-        const zonesByNewPosition = this.position ?
-            zones.filter((zone) => {
-                if (!this.position) {
-                    return false;
-                }
-                return MathUtils.isOverlappingWithRectangle(this.position, zone);
-            }) : [];
+        const zonesByNewPosition = this.position
+            ? zones.filter((zone) => {
+                  if (!this.position) {
+                      return false;
+                  }
+                  return MathUtils.isOverlappingWithRectangle(this.position, zone);
+              })
+            : [];
 
         const enterZones = new Set(zonesByNewPosition);
         const leaveZones = new Set(zonesByOldPosition);
@@ -459,7 +467,7 @@ export class GameMap {
     private getObjectsFromLayers(layers: ITiledMapLayer[]): ITiledMapObject[] {
         const objects: ITiledMapObject[] = [];
 
-        const objectLayers = layers.filter(layer => layer.type === "objectgroup");
+        const objectLayers = layers.filter((layer) => layer.type === "objectgroup");
         for (const objectLayer of objectLayers) {
             if (this.isOfTypeITiledMapObjectLayer(objectLayer)) {
                 objects.push(...objectLayer.objects);
