@@ -12,6 +12,11 @@ module.exports = {
   "assertionTimeout": 10000,
   "selectorTimeout": 40000,
 
+
+  "videoPath": "screenshots/videos",
+  "videoOptions": {
+    "failedOnly": true,
+  }
   /*"skipJsErrors": true,
   "clientScripts": [ { "content": `
     window.addEventListener('error', function (e) {

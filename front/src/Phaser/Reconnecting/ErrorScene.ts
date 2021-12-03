@@ -4,6 +4,7 @@ import Sprite = Phaser.GameObjects.Sprite;
 import Text = Phaser.GameObjects.Text;
 import ScenePlugin = Phaser.Scenes.ScenePlugin;
 import { WAError } from "./WAError";
+import Axios from "axios";
 
 export const ErrorSceneName = "ErrorScene";
 enum Textures {
@@ -71,8 +72,7 @@ export class ErrorScene extends Phaser.Scene {
     /**
      * Displays the error page, with an error message matching the "error" parameters passed in.
      */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public static showError(error: any, scene: ScenePlugin): void {
+    public static showError(error: unknown, scene: ScenePlugin): void {
         console.error(error);
 
         if (typeof error === "string" || error instanceof String) {
@@ -86,9 +86,10 @@ export class ErrorScene extends Phaser.Scene {
                 subTitle: error.subTitle,
                 message: error.details,
             });
-        } else if (error.response) {
+        } else if (Axios.isAxiosError(error) && error.response) {
             // Axios HTTP error
             // client received an error response (5xx, 4xx)
+            console.error("Axios error", error.toJSON());
             scene.start(ErrorSceneName, {
                 title:
                     "HTTP " +
@@ -98,9 +99,10 @@ export class ErrorScene extends Phaser.Scene {
                 subTitle: "An error occurred while accessing URL:",
                 message: error.response.config.url,
             });
-        } else if (error.request) {
+        } else if (Axios.isAxiosError(error)) {
             // Axios HTTP error
             // client never received a response, or request never left
+            console.error("Axios error", error.toJSON());
             scene.start(ErrorSceneName, {
                 title: "Network error",
                 subTitle: error.message,
