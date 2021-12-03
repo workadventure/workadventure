@@ -35,7 +35,7 @@ export async function startContainer(container: Dockerode.ContainerInfo): Promis
 }
 
 export async function rebootBack(): Promise<void> {
-    let stdout = execSync('docker-compose up --force-recreate -d back', {
+    let stdout = execSync('docker-compose restart back', {
         cwd: __dirname + '/../../../'
     });
     /*const container = await findContainer('back');
@@ -44,7 +44,7 @@ export async function rebootBack(): Promise<void> {
 }
 
 export function rebootTraefik(): void {
-    let stdout = execSync('docker-compose up --force-recreate -d reverse-proxy', {
+    let stdout = execSync('docker-compose restart reverse-proxy', {
         cwd: __dirname + '/../../../'
     });
 
@@ -52,7 +52,7 @@ export function rebootTraefik(): void {
 }
 
 export async function rebootPusher(): Promise<void> {
-    let stdout = execSync('docker-compose up --force-recreate -d pusher', {
+    let stdout = execSync('docker-compose restart pusher', {
         cwd: __dirname + '/../../../'
     });
     /*const container = await findContainer('pusher');
