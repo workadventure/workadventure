@@ -3,7 +3,7 @@ import Image = Phaser.GameObjects.Image;
 import Sprite = Phaser.GameObjects.Sprite;
 
 export const ReconnectingSceneName = "ReconnectingScene";
-enum ReconnectingTextures {
+export enum ReconnectingTextures {
     icon = "icon",
     mainFont = "main_font",
 }

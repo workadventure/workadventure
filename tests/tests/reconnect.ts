@@ -4,7 +4,7 @@ const fs = require('fs');
 const Docker = require('dockerode');
 import { Selector } from 'testcafe';
 import {userAlice} from "./utils/roles";
-import {findContainer, rebootBack, rebootPusher, rebootRedis, startContainer, stopContainer} from "./utils/containers";
+import {findContainer, rebootBack, rebootPusher, resetRedis, startContainer, stopContainer} from "./utils/containers";
 
 fixture `Reconnection`
     .page `http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/mousewheel.json`;

@@ -3,8 +3,17 @@ import {assertLogMessage} from "./utils/log";
 const fs = require('fs');
 const Docker = require('dockerode');
 import { Selector } from 'testcafe';
-import {userAlice} from "./utils/roles";
-import {findContainer, rebootBack, rebootPusher, rebootRedis, startContainer, stopContainer} from "./utils/containers";
+import {userAlice, userAliceOnPage} from "./utils/roles";
+import {
+    findContainer,
+    rebootBack,
+    rebootPusher,
+    resetRedis,
+    rebootTraefik,
+    startContainer,
+    stopContainer, stopRedis, startRedis
+} from "./utils/containers";
+import {getPusherDump} from "./utils/debug";
 
 // Note: we are also testing that passing a random query parameter does not cause any issue.
 fixture `Variables`
@@ -14,21 +23,75 @@ test("Test that variables storage works", async (t: TestController) => {
 
     const variableInput = Selector('#textField');
 
+    await resetRedis();
+
     await Promise.all([
         rebootBack(),
-        rebootRedis(),
         rebootPusher(),
     ]);
 
-    await t.useRole(userAlice)
+    //const mainWindow = await t.getCurrentWindow();
+
+    await t.useRole(userAliceOnPage('http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json?somerandomparam=1'))
         .switchToIframe("#cowebsite-buffer iframe")
         .expect(variableInput.value).eql('default value')
+        .selectText(variableInput)
+        .pressKey('delete')
         .typeText(variableInput, 'new value')
-        .switchToPreviousWindow()
+        .pressKey('tab')
+        .switchToMainWindow()
+        //.switchToWindow(mainWindow)
+        .wait(500)
         // reload
-        /*.navigateTo('http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json')
+        .navigateTo('http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json')
         .switchToIframe("#cowebsite-buffer iframe")
-        .expect(variableInput.value).eql('new value')*/
+        .expect(variableInput.value).eql('new value')
+        //.debug()
+        .switchToMainWindow()
+        //.switchToWindow(mainWindow)
+/*
+        .wait(5000)
+        //.debug()
+        .switchToIframe("#cowebsite-buffer iframe")
+        .expect(variableInput.value).eql('new value')
+        .switchToMainWindow();*/
+
+    // Now, let's kill the reverse proxy to cut the connexion
+    //console.log('Rebooting traefik');
+    await rebootTraefik();
+    //console.log('Rebooting done');
+
+
+    await t
+        .switchToIframe("#cowebsite-buffer iframe")
+        .expect(variableInput.value).eql('new value')
+
+    stopRedis();
+
+    // Redis is stopped, let's try to modify a variable.
+    await t.selectText(variableInput)
+        .pressKey('delete')
+        .typeText(variableInput, 'value set while Redis stopped')
+        .pressKey('tab')
+        .switchToMainWindow()
+
+    startRedis();
+
+    // Navigate to some other map so that the pusher connection is freed.
+    await t.navigateTo('http://maps.workadventure.localhost/tests/');
+
+    // TODO: check that Back and Pusher rooms are unloaded
+    // TODO: check that Back and Pusher rooms are unloaded
+    // TODO: check that Back and Pusher rooms are unloaded
+    // TODO: check that Back and Pusher rooms are unloaded
+    console.log(await getPusherDump());
+
+    await t.navigateTo('http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json')
+        .switchToIframe("#cowebsite-buffer iframe")
+        // Redis will reconnect automatically and will store the variable on reconnect!
+        // So we should see the new value.
+        .expect(variableInput.value).eql('value set while Redis stopped')
+        .switchToMainWindow()
 
 
 
@@ -50,7 +113,7 @@ test("Test that variables storage works", async (t: TestController) => {
     }
 });
 
-
+/*
 test("Test that variables cache in the back don't prevent setting a variable in case the map changes", async (t: TestController) => {
     // Let's start by visiting a map that DOES not have the variable.
     fs.copyFileSync('../maps/tests/Variables/Cache/variables_cache_1.json', '../maps/tests/Variables/Cache/variables_tmp.json');
@@ -77,3 +140,4 @@ test("Test that variables cache in the back don't prevent setting a variable in 
     }
 });
 
+*/
