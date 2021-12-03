@@ -1,12 +1,14 @@
 version: "3"
 services:
   testcafe:
-    image: testcafe/testcafe:1.17.1
-    working_dir: /tests
+    build: tests/
+    working_dir: /project/tests
+    # Run as root to have the right to access /var/run/docker.sock
+    user: root
     environment:
       BROWSER: "chromium --use-fake-device-for-media-stream"
     volumes:
-      - ./tests:/tests
+      - ./:/project
       - ./maps:/maps
       - /var/run/docker.sock:/var/run/docker.sock
   #  security_opt:
