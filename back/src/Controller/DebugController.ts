@@ -11,7 +11,7 @@ export class DebugController {
     }
 
     getDump() {
-        this.App.get("/dump", (res: HttpResponse, req: HttpRequest) => {
+        this.App.get("/dump", async (res: HttpResponse, req: HttpRequest) => {
             const query = parse(req.getQuery());
 
             if (query.token !== ADMIN_API_TOKEN) {
@@ -22,7 +22,7 @@ export class DebugController {
                 .writeStatus("200 OK")
                 .writeHeader("Content-Type", "application/json")
                 .end(
-                    stringify(socketManager.getWorlds(), (key: unknown, value: unknown) => {
+                    stringify(await Promise.all(socketManager.getWorlds().values()), (key: unknown, value: unknown) => {
                         if (key === "listeners") {
                             return "Listeners";
                         }
