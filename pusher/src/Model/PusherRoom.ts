@@ -100,11 +100,11 @@ export class PusherRoom {
 
                     // Let's dispatch this variable to all the listeners
                     for (const listener of this.listeners) {
-                        const subMessage = new SubMessage();
                         if (!readableBy || listener.tags.includes(readableBy)) {
+                            const subMessage = new SubMessage();
                             subMessage.setVariablemessage(variableMessage);
+                            listener.emitInBatch(subMessage);
                         }
-                        listener.emitInBatch(subMessage);
                     }
                 } else if (message.hasErrormessage()) {
                     const errorMessage = message.getErrormessage() as ErrorMessage;
