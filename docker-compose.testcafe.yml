@@ -7,13 +7,10 @@ services:
     user: root
     environment:
       BROWSER: "chromium --use-fake-device-for-media-stream"
+      PROJECT_DIR: ${PROJECT_DIR}
     volumes:
       - ./:/project
       - ./maps:/maps
       - /var/run/docker.sock:/var/run/docker.sock
   #  security_opt:
   #    - seccomp:unconfined
-
-networks:
-  default:
-    name: workadventure_dev

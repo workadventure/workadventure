@@ -239,7 +239,3 @@ services:
 #      #- --cert=/root/letsencrypt/fullchain.pem
 #      #- --pkey=/root/letsencrypt/privkey.pem
 #    network_mode: host
-
-networks:
-  default:
-    name: workadventure_dev

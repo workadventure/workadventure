@@ -4,6 +4,30 @@ import Dockerode = require( 'dockerode')
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
 const { execSync } = require('child_process');
+const path = require("path");
+const fs = require('fs');
+
+/**
+ * Execute Docker compose, passing the correct host directory (in case this is run from the TestCafe container)
+ */
+export function dockerCompose(command: string): void {
+    let param = '';
+    const projectDir = process.env.PROJECT_DIR;
+
+    if (!projectDir && fs.existsSync('/project')) {
+        // We are probably in the docker-image AND we did not pass PROJECT_DIR env variable
+        throw new Error('Incorrect docker-compose command used to fire testcafe tests. You need to add a PROJECT_DIR environment variable. Please refer to the CONTRIBUTING.md guide');
+    }
+
+    if (projectDir) {
+        const dirName = path.basename(projectDir);
+        param = '--project-name '+dirName+' --project-directory '+projectDir;
+    }
+
+    let stdout = execSync('docker-compose '+param+' '+command, {
+        cwd: __dirname + '/../../../'
+    });
+}
 
 /**
  * Returns a container ID based on the container name.
@@ -35,81 +59,27 @@ export async function startContainer(container: Dockerode.ContainerInfo): Promis
 }
 
 export async function rebootBack(): Promise<void> {
-    let stdout = execSync('docker-compose up --force-recreate -d back', {
-        cwd: __dirname + '/../../../'
-    });
-    /*const container = await findContainer('back');
-    await stopContainer(container);
-    await startContainer(container);*/
+    dockerCompose('up --force-recreate -d back');
 }
 
 export function rebootTraefik(): void {
-    let stdout = execSync('docker-compose up --force-recreate -d reverse-proxy', {
-        cwd: __dirname + '/../../../'
-    });
-
-    //console.log('rebootTraefik', stdout);
+    dockerCompose('up --force-recreate -d reverse-proxy');
 }
 
 export async function rebootPusher(): Promise<void> {
-    let stdout = execSync('docker-compose up --force-recreate -d pusher', {
-        cwd: __dirname + '/../../../'
-    });
-    /*const container = await findContainer('pusher');
-    await stopContainer(container);
-    await startContainer(container);*/
+    dockerCompose('up --force-recreate -d pusher');
 }
 
 export async function resetRedis(): Promise<void> {
-    let stdout = execSync('docker-compose stop redis', {
-        cwd: __dirname + '/../../../'
-    });
-    //console.log('rebootRedis', stdout);
-
-    stdout = execSync('docker-compose rm -f redis', {
-        cwd: __dirname + '/../../../'
-    });
-    //console.log('rebootRedis', stdout);
-
-    stdout = execSync('docker-compose up --force-recreate -d redis', {
-        cwd: __dirname + '/../../../'
-    });
-
-    //console.log('rebootRedis', stdout);
-/*
-    let stdout = execSync('docker-compose stop redis', {
-        cwd: __dirname + '/../../../'
-    });
-    console.log('stdout:', stdout);
-    stdout = execSync('docker-compose rm redis', {
-        cwd: __dirname + '/../../../'
-    });
-    //const { stdout, stderr } = await exec('docker-compose down redis');
-    console.log('stdout:', stdout);
-    //console.log('stderr:', stderr);
-    const { stdout2, stderr2 } = await exec('docker-compose up -d redis');
-    console.log('stdout:', stdout2);
-    console.log('stderr:', stderr2);
-*/
-    /*const container = await findContainer('redis');
-    //await stopContainer(container);
-    //await startContainer(container);
-
-    const docker = new Dockerode();
-    await docker.getContainer(container.Id).stop();
-    await docker.getContainer(container.Id).remove();
-    const newContainer = await docker.createContainer(container);
-    await newContainer.start();*/
+    dockerCompose('stop redis');
+    dockerCompose('rm -f redis');
+    dockerCompose('up --force-recreate -d redis');
 }
 
 export function stopRedis(): void {
-    let stdout = execSync('docker-compose stop redis', {
-        cwd: __dirname + '/../../../'
-    });
+    dockerCompose('stop redis');
 }
 
 export function startRedis(): void {
-    let stdout = execSync('docker-compose start redis', {
-        cwd: __dirname + '/../../../'
-    });
+    dockerCompose('start redis');
 }

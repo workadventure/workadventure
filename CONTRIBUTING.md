@@ -97,5 +97,5 @@ the local tests).
 ```console
 $ LIVE_RELOAD=0 docker-compose up -d
 # Wait 2-3 minutes for the environment to start, then:
-$ docker-compose -f docker-compose.testcafe.yaml up 
+$ PROJECT_DIR=$(pwd) docker-compose -f docker-compose.testcafe.yml up
 ```
