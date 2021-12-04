@@ -10,8 +10,8 @@ import { onDestroy } from 'svelte';
     const playerWokaPictureStore = gameScene.getUserWokaPictureStore(userId);
 
     let src = placeholderSrc;
-    const unsubscribe = playerWokaPictureStore.picture.subscribe((htmlElement) => {
-        src = htmlElement?.src ?? placeholderSrc;
+    const unsubscribe = playerWokaPictureStore.picture.subscribe((source) => {
+        src = source ?? placeholderSrc;
     });
 
     onDestroy(unsubscribe);

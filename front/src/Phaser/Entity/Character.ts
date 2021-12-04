@@ -10,7 +10,7 @@ import type { GameScene } from "../Game/GameScene";
 import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { isSilentStore } from "../../Stores/MediaStore";
-import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
+import { lazyLoadPlayerCharacterTextures, loadAllDefaultModels } from "./PlayerTexturesLoadingManager";
 
 const playerNameY = -25;
 
@@ -117,17 +117,26 @@ export abstract class Character extends Container {
         }
     }
 
-    public async getSnapshot(): Promise<HTMLImageElement> {
+    public async getSnapshot(): Promise<string> {
         const rt = this.scene.make.renderTexture({}, false);
+        if (rt.renderer instanceof Phaser.Renderer.Canvas.CanvasRenderer) {
+            rt.destroy();
+            for (const sprite of this.sprites.values()) {
+                // we can be sure that either predefined woka or body texture is at this point loaded
+                if (sprite.texture.key.includes("color") || sprite.texture.key.includes("male")) {
+                    return this.scene.textures.getBase64(sprite.texture.key);
+                }
+            }
+        }
         for (const sprite of this.sprites.values()) {
             sprite.setFrame(1);
             rt.draw(sprite, sprite.displayWidth * 0.5, sprite.displayHeight * 0.5);
         }
-        return new Promise<HTMLImageElement>((resolve, reject) => {
+        return new Promise<string>((resolve, reject) => {
             try {
                 rt.snapshot(
                     (url) => {
-                        resolve(url as HTMLImageElement);
+                        resolve((url as HTMLImageElement).src);
                         rt.destroy();
                     },
                     "image/png",

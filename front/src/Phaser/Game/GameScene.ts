@@ -1535,8 +1535,8 @@ ${escapedMessage}
     }
 
     private async savePlayerWokaPicture(character: Character, userId: number): Promise<void> {
-        const htmlImageElement = await character.getSnapshot();
-        this.getUserWokaPictureStore(userId).picture.set(htmlImageElement);
+        const htmlImageElementSrc = await character.getSnapshot();
+        this.getUserWokaPictureStore(userId).picture.set(htmlImageElementSrc);
     }
 
     pushPlayerPosition(event: HasPlayerMovedEvent) {
