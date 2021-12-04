@@ -1,4 +1,4 @@
-version: "3"
+version: "3.5"
 services:
   testcafe:
     build: tests/
@@ -13,3 +13,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
   #  security_opt:
   #    - seccomp:unconfined
+
+networks:
+  default:
+    name: workadventure_dev

@@ -1,4 +1,4 @@
-version: "3"
+version: "3.5"
 services:
   reverse-proxy:
     image: traefik:v2.5
@@ -239,3 +239,7 @@ services:
 #      #- --cert=/root/letsencrypt/fullchain.pem
 #      #- --pkey=/root/letsencrypt/privkey.pem
 #    network_mode: host
+
+networks:
+  default:
+    name: workadventure_dev
