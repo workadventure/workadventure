@@ -148,50 +148,6 @@
                  "width":128,
                  "x":512,
                  "y":0
-                }, 
-                {
-                 "height":128,
-                 "id":9,
-                 "name":"chillZone",
-                 "properties":[
-                        {
-                         "name":"display_name",
-                         "type":"string",
-                         "value":"Chilling Room"
-                        }, 
-                        {
-                         "name":"focusable",
-                         "type":"bool",
-                         "value":true
-                        }],
-                 "rotation":0,
-                 "type":"zone",
-                 "visible":true,
-                 "width":192,
-                 "x":32,
-                 "y":96
-                }, 
-                {
-                 "height":416,
-                 "id":11,
-                 "name":"meetingZone",
-                 "properties":[
-                        {
-                         "name":"display_name",
-                         "type":"string",
-                         "value":"Brainstorm Zone!"
-                        }, 
-                        {
-                         "name":"focusable",
-                         "type":"bool",
-                         "value":true
-                        }],
-                 "rotation":0,
-                 "type":"zone",
-                 "visible":true,
-                 "width":224,
-                 "x":736,
-                 "y":32
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -236,41 +192,41 @@
          "y":0
         }],
  "nextlayerid":39,
- "nextobjectid":12,
+ "nextobjectid":9,
  "orientation":"orthogonal",
  "properties":[
         {
          "name":"mapCopyright",
          "type":"string",
          "value":"Credits: Valdo Romao https:\/\/www.linkedin.com\/in\/valdo-romao\/ \nLicense: CC-BY-SA 3.0 (http:\/\/creativecommons.org\/licenses\/by-sa\/3.0\/)"
-        }, 
-        {
-         "name":"mapDescription",
-         "type":"string",
-         "value":"A perfect virtual office to get started with WorkAdventure!"
-        }, 
-        {
-         "name":"mapImage",
-         "type":"string",
-         "value":"map.png"
-        }, 
-        {
-         "name":"mapLink",
-         "type":"string",
-         "value":"https:\/\/thecodingmachine.github.io\/workadventure-map-starter-kit\/map.json"
-        }, 
-        {
-         "name":"mapName",
-         "type":"string",
-         "value":"Starter kit"
-        }, 
+        },
+   {
+     "name":"mapDescription",
+     "type":"string",
+     "value":"A perfect virtual office to get started with WorkAdventure!"
+   },
+   {
+     "name":"mapImage",
+     "type":"string",
+     "value":"map.png"
+   },
+   {
+     "name":"mapLink",
+     "type":"string",
+     "value":"https:\/\/thecodingmachine.github.io\/workadventure-map-starter-kit\/map.json"
+   },
+   {
+     "name":"mapName",
+     "type":"string",
+     "value":"Starter kit"
+   },
         {
          "name":"script",
          "type":"string",
          "value":"..\/dist\/script.js"
         }],
  "renderorder":"right-down",
- "tiledversion":"1.7.2",
+ "tiledversion":"1.7.0",
  "tileheight":32,
  "tilesets":[
         {
