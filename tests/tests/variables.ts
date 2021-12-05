@@ -63,6 +63,7 @@ test("Test that variables storage works", async (t: TestController) => {
 
 
     await t
+        .wait(10000) // Note sure why but maybe this will solve problem in CI/CD env
         .switchToIframe("#cowebsite-buffer iframe")
         .expect(variableInput.value).eql('new value')
 
