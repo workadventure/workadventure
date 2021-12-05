@@ -51,7 +51,7 @@ jobs:
 #        run: docker-compose logs -f pusher | grep -q "WorkAdventure starting on port"
 
       - name: "Run tests"
-        run: docker-compose -f docker-compose.testcafe.yml up --exit-code-from testcafe
+        run: PROJECT_DIR=$(pwd) docker-compose -f docker-compose.testcafe.yml up --exit-code-from testcafe
 
       - name: Upload failed tests
         if: ${{ failure() }}
