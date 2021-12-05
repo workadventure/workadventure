@@ -158,6 +158,12 @@ test("Test that variables storage works", async (t: TestController) => {
             console.log(await t.getBrowserConsoleMessages());
         } catch (e) {
             console.error('Error while fetching browser logs (maybe linked to a closed iframe?)', e);
+            try {
+                console.log('Logs from main window:');
+                console.log(await t.switchToMainWindow().getBrowserConsoleMessages());
+            } catch (e) {
+                console.error('Unable to retrieve logs', e);
+            }
         }
     }
 });
