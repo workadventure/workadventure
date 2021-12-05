@@ -3,6 +3,8 @@ services:
   testcafe:
     build: tests/
     working_dir: /project/tests
+    command:
+      - --dev
     # Run as root to have the right to access /var/run/docker.sock
     user: root
     environment:

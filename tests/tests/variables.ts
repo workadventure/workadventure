@@ -154,7 +154,11 @@ test("Test that variables storage works", async (t: TestController) => {
 }).after(async t => {
     if (!t.ctx.passed) {
         console.log("Test failed. Browser logs:")
-        console.log(await t.getBrowserConsoleMessages());
+        try {
+            console.log(await t.getBrowserConsoleMessages());
+        } catch (e) {
+            console.error('Error while fetching browser logs (maybe linked to a closed iframe?)', e);
+        }
     }
 });
 
