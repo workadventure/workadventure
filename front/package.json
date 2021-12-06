@@ -69,8 +69,8 @@
     "build": "cross-env TS_NODE_PROJECT=\"tsconfig-for-webpack.json\" NODE_ENV=production webpack",
     "build-typings": "cross-env TS_NODE_PROJECT=\"tsconfig-for-webpack.json\" NODE_ENV=production BUILD_TYPINGS=1 webpack",
     "test": "cross-env TS_NODE_PROJECT=\"tsconfig-for-jasmine.json\" ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
-    "lint": "node_modules/.bin/eslint src/ . --ext .ts,.svelte",
-    "fix": "node_modules/.bin/eslint --fix src/ . --ext .ts,.svelte",
+    "lint": "node_modules/.bin/eslint src/ tests/ --ext .ts,.svelte",
+    "fix": "node_modules/.bin/eslint --fix src/ tests/ --ext .ts,.svelte",
     "precommit": "lint-staged",
     "svelte-check-watch": "svelte-check --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore,a11y-media-has-caption:ignore\" --watch",
     "svelte-check": "svelte-check --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore,a11y-media-has-caption:ignore\"",
@@ -78,8 +78,10 @@
     "pretty-check": "yarn prettier --check 'src/**/*.{ts,svelte}'"
   },
   "lint-staged": {
+    "*.svelte": [
+      "yarn run svelte-check"
+    ],
     "*.{ts,svelte}": [
-      "yarn run svelte-check",
       "yarn run fix",
       "yarn run pretty"
     ]
