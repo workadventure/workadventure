@@ -26,31 +26,31 @@
             const selectedFile = inputAudio.files ? inputAudio.files[0] : null;
             if (!selectedFile) {
                 errorFile = true;
-                throw 'no file selected';
+                throw "no file selected";
             }
 
             const fd = new FormData();
-            fd.append('file', selectedFile);
+            fd.append("file", selectedFile);
             const res = await gameScene.connection?.uploadAudio(fd);
 
             const audioGlobalMessage: PlayGlobalMessageInterface = {
                 content: (res as { path: string }).path,
                 type: AUDIO_TYPE,
-                broadcastToWorld: broadcast
-            }
-            inputAudio.value = '';
+                broadcastToWorld: broadcast,
+            };
+            inputAudio.value = "";
             gameScene.connection?.emitGlobalMessage(audioGlobalMessage);
-        }
-    }
+        },
+    };
 
     function inputAudioFile(event: Event) {
-        const eventTarget : EventTargetFiles = (event.target as EventTargetFiles);
-        if(!eventTarget || !eventTarget.files || eventTarget.files.length === 0){
+        const eventTarget: EventTargetFiles = event.target as EventTargetFiles;
+        if (!eventTarget || !eventTarget.files || eventTarget.files.length === 0) {
             return;
         }
 
         const file = eventTarget.files[0];
-        if(!file) {
+        if (!file) {
             return;
         }
 
@@ -61,52 +61,65 @@
 
     function getFileSize(number: number) {
         if (number < 1024) {
-            return number + 'bytes';
+            return number + "bytes";
         } else if (number >= 1024 && number < 1048576) {
-            return (number / 1024).toFixed(1) + 'KB';
+            return (number / 1024).toFixed(1) + "KB";
         } else if (number >= 1048576) {
-            return (number / 1048576).toFixed(1) + 'MB';
+            return (number / 1048576).toFixed(1) + "MB";
         } else {
-            return '';
+            return "";
         }
     }
 </script>
 
-
 <section class="section-input-send-audio">
-    <img class="nes-pointer" src="{uploadFile}" alt="Upload a file" on:click|preventDefault={ () => {fileInput.click();}}>
+    <img
+        class="nes-pointer"
+        src={uploadFile}
+        alt="Upload a file"
+        on:click|preventDefault={() => {
+            fileInput.click();
+        }}
+    />
     {#if fileName !== undefined}
         <p>{fileName} : {fileSize}</p>
     {/if}
     {#if errorFile}
         <p class="err">No file selected. You need to upload a file before sending it.</p>
     {/if}
-    <input type="file" id="input-send-audio" bind:this={fileInput} on:change={(e) => {inputAudioFile(e)}}>
+    <input
+        type="file"
+        id="input-send-audio"
+        bind:this={fileInput}
+        on:change={(e) => {
+            inputAudioFile(e);
+        }}
+    />
 </section>
 
 <style lang="scss">
-  section.section-input-send-audio {
-    display: flex;
-    flex-direction: column;
+    section.section-input-send-audio {
+        display: flex;
+        flex-direction: column;
 
-    height: 100%;
-    text-align: center;
+        height: 100%;
+        text-align: center;
 
-    img {
-      flex: 1 1 auto;
-      max-height: 80%;
-      margin-bottom: 20px;
+        img {
+            flex: 1 1 auto;
+            max-height: 80%;
+            margin-bottom: 20px;
+        }
+        p {
+            margin-bottom: 5px;
+            color: whitesmoke;
+            font-size: 1rem;
+            &.err {
+                color: #ce372b;
+            }
+        }
+        input {
+            display: none;
+        }
     }
-    p {
-      margin-bottom: 5px;
-      color: whitesmoke;
-      font-size: 1rem;
-      &.err {
-        color: #ce372b;
-      }
-    }
-    input {
-      display: none;
-    }
-  }
 </style>

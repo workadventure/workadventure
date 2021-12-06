@@ -1,22 +1,22 @@
 <script lang="typescript">
-    import type {Game} from "../../Phaser/Game/Game";
-    import {EnableCameraScene, EnableCameraSceneName} from "../../Phaser/Login/EnableCameraScene";
+    import type { Game } from "../../Phaser/Game/Game";
+    import { EnableCameraScene, EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
     import {
         audioConstraintStore,
         cameraListStore,
         localStreamStore,
         microphoneListStore,
-        videoConstraintStore
+        videoConstraintStore,
     } from "../../Stores/MediaStore";
-    import {onDestroy} from "svelte";
+    import { onDestroy } from "svelte";
     import HorizontalSoundMeterWidget from "./HorizontalSoundMeterWidget.svelte";
     import cinemaCloseImg from "../images/cinema-close.svg";
     import cinemaImg from "../images/cinema.svg";
     import microphoneImg from "../images/microphone.svg";
 
     export let game: Game;
-    let selectedCamera : string|undefined = undefined;
-    let selectedMicrophone : string|undefined = undefined;
+    let selectedCamera: string | undefined = undefined;
+    let selectedMicrophone: string | undefined = undefined;
 
     const enableCameraScene = game.scene.getScene(EnableCameraSceneName) as EnableCameraScene;
 
@@ -29,16 +29,16 @@
         return {
             update(newStream: MediaStream) {
                 if (node.srcObject != newStream) {
-                    node.srcObject = newStream
+                    node.srcObject = newStream;
                 }
-            }
-        }
+            },
+        };
     }
 
     let stream: MediaStream | null;
 
-    const unsubscribe = localStreamStore.subscribe(value => {
-        if (value.type === 'success') {
+    const unsubscribe = localStreamStore.subscribe((value) => {
+        if (value.type === "success") {
             stream = value.stream;
 
             if (stream !== null) {
@@ -62,7 +62,7 @@
 
     function normalizeDeviceName(label: string): string {
         // remove IDs (that can appear in Chrome, like: "HD Pro Webcam (4df7:4eda)"
-        return label.replace(/(\([[0-9a-f]{4}:[0-9a-f]{4}\))/g, '').trim();
+        return label.replace(/(\([[0-9a-f]{4}:[0-9a-f]{4}\))/g, "").trim();
     }
 
     function selectCamera() {
@@ -72,28 +72,27 @@
     function selectMicrophone() {
         audioConstraintStore.setDeviceId(selectedMicrophone);
     }
-
 </script>
 
 <form class="enableCameraScene" on:submit|preventDefault={submit}>
     <section class="text-center">
         <h2>Turn on your camera and microphone</h2>
     </section>
-        {#if $localStreamStore.type === 'success' && $localStreamStore.stream}
-            <video class="myCamVideoSetup" use:srcObject={$localStreamStore.stream} autoplay muted playsinline></video>
-        {:else }
-            <div class="webrtcsetup">
-                <img class="background-img" src={cinemaCloseImg} alt="">
-            </div>
-        {/if}
-    <HorizontalSoundMeterWidget stream={stream}></HorizontalSoundMeterWidget>
+    {#if $localStreamStore.type === "success" && $localStreamStore.stream}
+        <video class="myCamVideoSetup" use:srcObject={$localStreamStore.stream} autoplay muted playsinline />
+    {:else}
+        <div class="webrtcsetup">
+            <img class="background-img" src={cinemaCloseImg} alt="" />
+        </div>
+    {/if}
+    <HorizontalSoundMeterWidget {stream} />
 
     <section class="selectWebcamForm">
-
-        {#if $cameraListStore.length > 1 }
+        {#if $cameraListStore.length > 1}
             <div class="control-group">
                 <img src={cinemaImg} alt="Camera" />
                 <div class="nes-select is-dark">
+                    <!-- svelte-ignore a11y-no-onchange -->
                     <select bind:value={selectedCamera} on:change={selectCamera}>
                         {#each $cameraListStore as camera}
                             <option value={camera.deviceId}>
@@ -105,10 +104,11 @@
             </div>
         {/if}
 
-        {#if $microphoneListStore.length > 1 }
+        {#if $microphoneListStore.length > 1}
             <div class="control-group">
                 <img src={microphoneImg} alt="Microphone" />
                 <div class="nes-select is-dark">
+                    <!-- svelte-ignore a11y-no-onchange -->
                     <select bind:value={selectedMicrophone} on:change={selectMicrophone}>
                         {#each $microphoneListStore as microphone}
                             <option value={microphone.deviceId}>
@@ -119,111 +119,109 @@
                 </div>
             </div>
         {/if}
-
     </section>
     <section class="action">
-        <button type="submit" class="nes-btn is-primary letsgo" >Let's go!</button>
+        <button type="submit" class="nes-btn is-primary letsgo">Let's go!</button>
     </section>
 </form>
 
 <style lang="scss">
     .enableCameraScene {
-      pointer-events: auto;
-      margin: 20px auto 0;
-      color: #ebeeee;
+        pointer-events: auto;
+        margin: 20px auto 0;
+        color: #ebeeee;
 
-      section.selectWebcamForm {
-        margin-top: 3vh;
-        margin-bottom: 3vh;
-        min-height: 10vh;
-        width: 50vw;
-        margin-left: auto;
-        margin-right: auto;
+        section.selectWebcamForm {
+            margin-top: 3vh;
+            margin-bottom: 3vh;
+            min-height: 10vh;
+            width: 50vw;
+            margin-left: auto;
+            margin-right: auto;
 
-        select {
-          font-family: "Press Start 2P";
-          margin-top: 1vh;
-          margin-bottom: 1vh;
+            select {
+                font-family: "Press Start 2P";
+                margin-top: 1vh;
+                margin-bottom: 1vh;
+            }
+
+            option {
+                font-family: "Press Start 2P";
+            }
         }
 
-        option {
+        section.action {
+            text-align: center;
+            margin: 0;
+            width: 100%;
+        }
+
+        h2 {
             font-family: "Press Start 2P";
-          }
+            margin: 1px;
         }
 
-      section.action{
-        text-align: center;
-        margin: 0;
-        width: 100%;
-      }
-
-      h2{
-        font-family: "Press Start 2P";
-        margin: 1px;
-      }
-
-      section.text-center{
-        text-align: center;
-      }
-
-      button.letsgo {
-        font-size: 200%;
-      }
-
-      .control-group {
-        display: flex;
-        flex-direction: row;
-        max-height: 60px;
-        margin-top: 10px;
-
-        img {
-          width: 30px;
-          margin-right: 10px;
+        section.text-center {
+            text-align: center;
         }
-      }
 
-      .webrtcsetup{
-        margin-top: 2vh;
-        margin-left: auto;
-        margin-right: auto;
-        height: 28.125vw;
-        width: 50vw;
-        border: white 6px solid;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        img.background-img {
-          width: 40%;
+        button.letsgo {
+            font-size: 200%;
         }
-      }
-      .myCamVideoSetup {
-        margin-top: 2vh;
-        margin-left: auto;
-        margin-right: auto;
-        max-height: 50vh;
-        width: 50vw;
-        border: white 6px solid;
-        -webkit-transform: scaleX(-1);
-        transform: scaleX(-1);
 
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
+        .control-group {
+            display: flex;
+            flex-direction: row;
+            max-height: 60px;
+            margin-top: 10px;
+
+            img {
+                width: 30px;
+                margin-right: 10px;
+            }
+        }
+
+        .webrtcsetup {
+            margin-top: 2vh;
+            margin-left: auto;
+            margin-right: auto;
+            height: 28.125vw;
+            width: 50vw;
+            border: white 6px solid;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            img.background-img {
+                width: 40%;
+            }
+        }
+        .myCamVideoSetup {
+            margin-top: 2vh;
+            margin-left: auto;
+            margin-right: auto;
+            max-height: 50vh;
+            width: 50vw;
+            border: white 6px solid;
+            -webkit-transform: scaleX(-1);
+            transform: scaleX(-1);
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
     }
 
     @media only screen and (max-width: 800px) {
-      .enableCameraScene h2 {
-        font-size: 80%;
-      }
-      .enableCameraScene .control-group .nes-select {
-        font-size: 80%;
-      }
-      .enableCameraScene button.letsgo {
-        font-size: 160%;
-      }
+        .enableCameraScene h2 {
+            font-size: 80%;
+        }
+        .enableCameraScene .control-group .nes-select {
+            font-size: 80%;
+        }
+        .enableCameraScene button.letsgo {
+            font-size: 160%;
+        }
     }
 </style>
-
