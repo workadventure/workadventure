@@ -37,7 +37,11 @@ export class ErrorScene extends Phaser.Scene {
     preload() {
         this.load.image(Textures.icon, "static/images/favicons/favicon-32x32.png");
         // Note: arcade.png from the Phaser 3 examples at: https://github.com/photonstorm/phaser3-examples/tree/master/public/assets/fonts/bitmap
-        this.load.bitmapFont(Textures.mainFont, "resources/fonts/arcade.png", "resources/fonts/arcade.xml");
+        if (!this.cache.bitmapFont.has("main_font")) {
+            // We put this inside a "if" because despite the cache, Phaser will make a query to the XML file. And if there is no connection (which
+            // is not unlikely given the fact we are in an error scene), this will cause an error.
+            this.load.bitmapFont(Textures.mainFont, "resources/fonts/arcade.png", "resources/fonts/arcade.xml");
+        }
         this.load.spritesheet("cat", "resources/characters/pipoya/Cat 01-1.png", { frameWidth: 32, frameHeight: 32 });
     }
 
