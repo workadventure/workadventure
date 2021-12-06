@@ -206,6 +206,8 @@ export class GameScene extends DirtyScene {
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
     private loader: Loader;
+    private lastCameraEvent: WasCameraUpdatedEvent | undefined;
+    private firstCameraUpdateSent: boolean = false;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -752,17 +754,6 @@ export class GameScene extends DirtyScene {
                     this.gameMap.setPosition(event.x, event.y);
                 });
 
-                //listen event to share the actual worldView when the camera is updated
-                this.cameras.main.on("followupdate", (camera: Camera) => {
-                    const cameraEvent: WasCameraUpdatedEvent = {
-                        x: camera.worldView.x,
-                        y: camera.worldView.y,
-                        width: camera.worldView.width,
-                        height: camera.worldView.height,
-                    };
-                    iframeListener.sendCameraUpdated(cameraEvent);
-                });
-
                 // Set up variables manager
                 this.sharedVariablesManager = new SharedVariablesManager(
                     this.connection,
@@ -1045,9 +1036,33 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
-            iframeListener.stopSoundStream.subscribe((stopSoundEvent) => {
-                const url = new URL(stopSoundEvent.url, this.MapUrlFile);
-                soundManager.stopSound(this.sound, url.toString());
+            iframeListener.trackCameraUpdateStream.subscribe(() => {
+                if (!this.firstCameraUpdateSent) {
+                    this.cameras.main.on("followupdate", (camera: Camera) => {
+                        const cameraEvent: WasCameraUpdatedEvent = {
+                            x: camera.worldView.x,
+                            y: camera.worldView.y,
+                            width: camera.worldView.width,
+                            height: camera.worldView.height,
+                            zoom: camera.scaleManager.zoom,
+                        };
+                        if (
+                            this.lastCameraEvent?.x == cameraEvent.x &&
+                            this.lastCameraEvent?.y == cameraEvent.y &&
+                            this.lastCameraEvent?.width == cameraEvent.width &&
+                            this.lastCameraEvent?.height == cameraEvent.height &&
+                            this.lastCameraEvent?.zoom == cameraEvent.zoom
+                        ) {
+                            return;
+                        }
+
+                        this.lastCameraEvent = cameraEvent;
+                        iframeListener.sendCameraUpdated(cameraEvent);
+                        this.firstCameraUpdateSent = true;
+                    });
+
+                    iframeListener.sendCameraUpdated(this.cameras.main);
+                }
             })
         );
 
@@ -1101,6 +1116,12 @@ ${escapedMessage}
         this.iframeSubscriptionList.push(
             iframeListener.hideLayerStream.subscribe((layerEvent) => {
                 this.setLayerVisibility(layerEvent.name, false);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.setPropertyStream.subscribe((setProperty) => {
+                this.setPropertyLayer(setProperty.layerName, setProperty.propertyName, setProperty.propertyValue);
             })
         );
 
@@ -1877,6 +1898,7 @@ ${escapedMessage}
 
         this.loader.resize();
     }
+
     private getObjectLayerData(objectName: string): ITiledMapObject | undefined {
         for (const layer of this.mapFile.layers) {
             if (layer.type === "objectgroup" && layer.name === "floorLayer") {
@@ -1889,6 +1911,7 @@ ${escapedMessage}
         }
         return undefined;
     }
+
     private reposition(): void {
         // Recompute camera offset if needed
         biggestAvailableAreaStore.recompute();

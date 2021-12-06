@@ -16,7 +16,8 @@ export class EmbeddedWebsiteManager {
             if (website === undefined) {
                 throw new Error('Cannot find embedded website with name "' + name + '"');
             }
-            const rect = website.iframe.getBoundingClientRect();
+
+            const scale = website.scale ?? 1;
             return {
                 url: website.url,
                 name: website.name,
@@ -26,8 +27,8 @@ export class EmbeddedWebsiteManager {
                 position: {
                     x: website.phaserObject.x,
                     y: website.phaserObject.y,
-                    width: website.phaserObject.width,
-                    height: website.phaserObject.height,
+                    width: website.phaserObject.width * scale,
+                    height: website.phaserObject.height * scale,
                 },
                 origin: website.origin,
                 scale: website.scale,
