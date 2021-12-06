@@ -270,7 +270,7 @@ export class GameScene extends DirtyScene {
             // So if we are in https, we can still try to load a HTTP local resource (can be useful for testing purposes)
             // See https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure
             const base = new URL(window.location.href);
-            base.pathname = '';
+            base.pathname = "";
             const url = new URL(file.src, base.toString());
             const host = url.host.split(":")[0];
             if (

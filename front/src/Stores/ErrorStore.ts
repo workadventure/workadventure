@@ -1,7 +1,7 @@
-import {derived, writable} from "svelte/store";
+import { derived, writable } from "svelte/store";
 
 interface ErrorMessage {
-    id: string|undefined;
+    id: string | undefined;
     closable: boolean; // Whether it can be closed by a user action or not
     message: string | number | boolean | undefined;
 }
@@ -14,10 +14,13 @@ function createErrorStore() {
 
     return {
         subscribe,
-        addErrorMessage: (e: string | Error, options?: {
-            closable?: boolean,
-            id?: string
-        }): void => {
+        addErrorMessage: (
+            e: string | Error,
+            options?: {
+                closable?: boolean;
+                id?: string;
+            }
+        ): void => {
             update((messages: ErrorMessage[]) => {
                 let message: string;
                 if (e instanceof Error) {
@@ -26,11 +29,11 @@ function createErrorStore() {
                     message = e;
                 }
 
-                if (!messages.find(errorMessage => errorMessage.message === message)) {
+                if (!messages.find((errorMessage) => errorMessage.message === message)) {
                     messages.push({
                         message,
                         closable: options?.closable ?? true,
-                        id: options?.id
+                        id: options?.id,
                     });
                 }
 
@@ -39,13 +42,13 @@ function createErrorStore() {
         },
         clearMessageById: (id: string): void => {
             update((messages: ErrorMessage[]) => {
-                messages = messages.filter(message => message.id !== id);
+                messages = messages.filter((message) => message.id !== id);
                 return messages;
             });
         },
         clearClosableMessages: (): void => {
             update((messages: ErrorMessage[]) => {
-                messages = messages.filter(message => message.closable);
+                messages = messages.filter((message) => message.closable);
                 return messages;
             });
         },
@@ -54,8 +57,7 @@ function createErrorStore() {
 
 export const errorStore = createErrorStore();
 
-
 export const hasClosableMessagesInErrorStore = derived(errorStore, ($errorStore) => {
-    const closableMessage = $errorStore.find(errorMessage => errorMessage.closable);
+    const closableMessage = $errorStore.find((errorMessage) => errorMessage.closable);
     return !!closableMessage;
 });

@@ -1,10 +1,10 @@
-import * as rax from 'retry-axios';
+import * as rax from "retry-axios";
 import Axios from "axios";
 import { CONTACT_URL, PUSHER_URL, DISABLE_ANONYMOUS, OPID_LOGIN_SCREEN_PROVIDER } from "../Enum/EnvironmentVariable";
 import type { CharacterTexture } from "./LocalUser";
 import { localUserStore } from "./LocalUserStore";
 import axios from "axios";
-import {axiosWithRetry} from "./AxiosUtils";
+import { axiosWithRetry } from "./AxiosUtils";
 
 export class MapDetail {
     constructor(public readonly mapUrl: string, public readonly textures: CharacterTexture[] | undefined) {}
