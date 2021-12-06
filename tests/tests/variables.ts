@@ -3,7 +3,7 @@ import {assertLogMessage} from "./utils/log";
 const fs = require('fs');
 const Docker = require('dockerode');
 import { Selector } from 'testcafe';
-import {userAlice, userAliceOnPage} from "./utils/roles";
+import {login} from "./utils/roles";
 import {
     findContainer,
     rebootBack,
@@ -32,7 +32,9 @@ test("Test that variables storage works", async (t: TestController) => {
 
     //const mainWindow = await t.getCurrentWindow();
 
-    await t.useRole(userAliceOnPage('http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json?somerandomparam=1'))
+    login(t, 'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json?somerandomparam=1');
+
+    await t //.useRole(userAliceOnPage('http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json?somerandomparam=1'))
         .switchToIframe("#cowebsite-buffer iframe")
         .expect(variableInput.value).eql('default value')
         .selectText(variableInput)
@@ -48,6 +50,7 @@ test("Test that variables storage works", async (t: TestController) => {
         .expect(variableInput.value).eql('new value')
         //.debug()
         .switchToMainWindow()
+        //.wait(5000)
         //.switchToWindow(mainWindow)
 /*
         .wait(5000)
@@ -58,12 +61,16 @@ test("Test that variables storage works", async (t: TestController) => {
 
     // Now, let's kill the reverse proxy to cut the connexion
     //console.log('Rebooting traefik');
-    await rebootTraefik();
+    rebootTraefik();
     //console.log('Rebooting done');
+
+    // Maybe we should:
+    // 1: stop Traefik
+    // 2: detect reconnecting screen
+    // 3: start Traefik again
 
 
     await t
-        .wait(10000) // Note sure why but maybe this will solve problem in CI/CD env
         .switchToIframe("#cowebsite-buffer iframe")
         .expect(variableInput.value).eql('new value')
 
@@ -142,19 +149,10 @@ test("Test that variables storage works", async (t: TestController) => {
         .switchToMainWindow()
 
 
-    /*
-    const backContainer = await findContainer('back');
-
-    await stopContainer(backContainer);
-
-    await startContainer(backContainer);
-*/
-
-
     t.ctx.passed = true;
 }).after(async t => {
     if (!t.ctx.passed) {
-        console.log("Test failed. Browser logs:")
+        console.log("Test 'Test that variables storage works' failed. Browser logs:")
         try {
             console.log(await t.getBrowserConsoleMessages());
         } catch (e) {
@@ -174,7 +172,10 @@ test("Test that variables cache in the back don't prevent setting a variable in 
     // Let's start by visiting a map that DOES not have the variable.
     fs.copyFileSync('../maps/tests/Variables/Cache/variables_cache_1.json', '../maps/tests/Variables/Cache/variables_tmp.json');
 
-    await t.useRole(userAlice);
+    //const aliceOnPageTmp = userAliceOnPage('http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json');
+
+    await login(t, 'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json', 'Alice', 2);
+
         //.takeScreenshot('before_switch.png');
 
     // Let's REPLACE the map by a map that has a new variable
@@ -182,7 +183,9 @@ test("Test that variables cache in the back don't prevent setting a variable in 
     fs.copyFileSync('../maps/tests/Variables/Cache/variables_cache_2.json', '../maps/tests/Variables/Cache/variables_tmp.json');
     await t.openWindow('http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json')
         .resizeWindow(960, 800)
-        .useRole(userAlice);
+
+    await login(t, 'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json', 'Bob', 3);
+
         //.takeScreenshot('after_switch.png');
 
     // Let's check we successfully manage to save the variable value.
@@ -191,7 +194,7 @@ test("Test that variables cache in the back don't prevent setting a variable in 
     t.ctx.passed = true;
 }).after(async t => {
     if (!t.ctx.passed) {
-        console.log("Test failed. Browser logs:")
+        console.log("Test 'Test that variables cache in the back don't prevent setting a variable in case the map changes' failed. Browser logs:")
         console.log(await t.getBrowserConsoleMessages());
     }
 });

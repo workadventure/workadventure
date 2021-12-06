@@ -3,7 +3,7 @@ import {assertLogMessage} from "./utils/log";
 const fs = require('fs');
 const Docker = require('dockerode');
 import { Selector } from 'testcafe';
-import {userAlice} from "./utils/roles";
+import {login} from "./utils/roles";
 import {findContainer, rebootBack, rebootPusher, resetRedis, startContainer, stopContainer} from "./utils/containers";
 
 fixture `Reconnection`
@@ -22,7 +22,7 @@ test("Test that connection can succeed even if WorkAdventure starts while pusher
 
     await startContainer(container);
 
-    await t.useRole(userAlice);
+    await login(t, 'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/mousewheel.json');
 
     t.ctx.passed = true;
 }).after(async t => {

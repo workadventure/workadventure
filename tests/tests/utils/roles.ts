@@ -1,31 +1,15 @@
 import { Role } from 'testcafe';
 
-export const userAliceOnPage = (url: string) => Role(url, async t => {
-    await t
-        .typeText('input[name="loginSceneName"]', 'Alice')
-        .click('button.loginSceneFormSubmit')
-        .click('button.selectCharacterButtonRight')
-        .click('button.selectCharacterButtonRight')
-        .click('button.selectCharacterSceneFormSubmit')
-        .click('button.letsgo');
-});
+export function login(t: TestController, url: string, userName: string = "Alice", characterNumber: number = 2) {
+    t = t
+        .navigateTo(url)
+        .typeText('input[name="loginSceneName"]', userName)
+        .click('button.loginSceneFormSubmit');
 
+    for (let i = 0; i < characterNumber; i++) {
+        t = t.click('button.selectCharacterButtonRight');
+    }
 
-export const userAlice = Role('http://play.workadventure.localhost/', async t => {
-    await t
-        .typeText('input[name="loginSceneName"]', 'Alice')
-        .click('button.loginSceneFormSubmit')
-        .click('button.selectCharacterButtonRight')
-        .click('button.selectCharacterButtonRight')
-        .click('button.selectCharacterSceneFormSubmit')
+    return t.click('button.selectCharacterSceneFormSubmit')
         .click('button.letsgo');
-});
-
-export const userBob = Role('http://play.workadventure.localhost/', async t => {
-    await t
-        .typeText('input[name="loginSceneName"]', 'Bob')
-        .click('button.loginSceneFormSubmit')
-        .click('button.selectCharacterButtonRight')
-        .click('button.selectCharacterSceneFormSubmit')
-        .click('button.letsgo');
-});
+}
