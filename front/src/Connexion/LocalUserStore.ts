@@ -13,6 +13,7 @@ const audioPlayerVolumeKey = "audioVolume";
 const audioPlayerMuteKey = "audioMute";
 const helpCameraSettingsShown = "helpCameraSettingsShown";
 const fullscreenKey = "fullscreen";
+const forceCowebsiteTriggerKey = "forceCowebsiteTrigger";
 const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
 const state = "state";
@@ -118,6 +119,13 @@ class LocalUserStore {
     }
     getFullscreen(): boolean {
         return localStorage.getItem(fullscreenKey) === "true";
+    }
+
+    setForceCowebsiteTrigger(value: boolean): void {
+        localStorage.setItem(forceCowebsiteTriggerKey, value.toString());
+    }
+    getForceCowebsiteTrigger(): boolean {
+        return localStorage.getItem(forceCowebsiteTriggerKey) === "true";
     }
 
     setLastRoomUrl(roomUrl: string): void {

@@ -4,6 +4,7 @@ import { scriptUtils } from "../../Api/ScriptUtils";
 import type { CoWebsite } from "../../WebRtc/CoWebsiteManager";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
+import { localUserStore } from "../../Connexion/LocalUserStore";
 import { get } from "svelte/store";
 import { ON_ACTION_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
 import type { ITiledMapLayer } from "../Map/ITiledMap";
@@ -33,7 +34,8 @@ export class GameMapPropertiesListener {
             }
             if (typeof newValue == "string" && newValue.length) {
                 const openWebsiteTriggerValue = allProps.get(GameMapProperties.OPEN_WEBSITE_TRIGGER);
-                if (openWebsiteTriggerValue && openWebsiteTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
+                const forceTrigger = localUserStore.getForceCowebsiteTrigger();
+                if (forceTrigger || openWebsiteTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                     let message = allProps.get(GameMapProperties.OPEN_WEBSITE_TRIGGER_MESSAGE);
                     if (message === undefined) {
                         message = "Press SPACE or touch here to open web site in new tab";
@@ -135,7 +137,8 @@ export class GameMapPropertiesListener {
                         layoutManagerActionStore.removeAction(actionUuid);
                     };
 
-                    if (websiteTriggerProperty && websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON) {
+                    const forceTrigger = localUserStore.getForceCowebsiteTrigger();
+                    if (forceTrigger || websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON) {
                         if (!websiteTriggerMessageProperty) {
                             websiteTriggerMessageProperty = "Press SPACE or touch here to open web site";
                         }

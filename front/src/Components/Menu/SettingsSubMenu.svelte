@@ -7,6 +7,7 @@
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification() === "granted";
+    let forceCowebsiteTrigger: boolean = localUserStore.getForceCowebsiteTrigger();
     let valueGame: number = localUserStore.getGameQualityValue();
     let valueVideo: number = localUserStore.getVideoQualityValue();
     let previewValueGame = valueGame;
@@ -52,6 +53,10 @@
                 }
             });
         }
+    }
+
+    function changeForceCowebsiteTrigger() {
+        localUserStore.setForceCowebsiteTrigger(forceCowebsiteTrigger);
     }
 
     function closeMenu() {
@@ -108,6 +113,15 @@
                 on:change={changeNotification}
             />
             <span>Notifications</span>
+        </label>
+        <label>
+            <input
+                type="checkbox"
+                class="nes-checkbox is-dark"
+                bind:checked={forceCowebsiteTrigger}
+                on:change={changeForceCowebsiteTrigger}
+            />
+            <span>Always ask before opening websites and Jitsi Meet rooms</span>
         </label>
     </section>
 </div>
