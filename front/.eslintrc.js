@@ -1,4 +1,4 @@
-{
+module.exports = {
     "root": true,
     "env": {
         "browser": true,
@@ -18,10 +18,18 @@
     "parserOptions": {
         "ecmaVersion": 2018,
         "sourceType": "module",
-        "project": "./tsconfig.json"
+        "project": "./tsconfig.json",
+        "extraFileExtensions": [".svelte"]
     },
     "plugins": [
-        "@typescript-eslint"
+        "@typescript-eslint",
+        "svelte3"
+    ],
+    "overrides": [
+        {
+          "files": ["*.svelte"],
+          "processor": "svelte3/svelte3"
+        }
     ],
     "rules": {
         "no-unused-vars": "off",
@@ -34,5 +42,9 @@
         "@typescript-eslint/no-unsafe-return": "off",
         "@typescript-eslint/no-unsafe-member-access": "off",
         "@typescript-eslint/restrict-template-expressions": "off"
+    },
+    "settings": {
+        "svelte3/typescript": true,
+        "svelte3/ignore-styles": () => true
     }
 }
