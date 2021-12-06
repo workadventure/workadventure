@@ -87,6 +87,9 @@ class IframeListener {
     private readonly _loadSoundStream: Subject<LoadSoundEvent> = new Subject();
     public readonly loadSoundStream = this._loadSoundStream.asObservable();
 
+    private readonly _trackCameraUpdateStream: Subject<LoadSoundEvent> = new Subject();
+    public readonly trackCameraUpdateStream = this._trackCameraUpdateStream.asObservable();
+
     private readonly _setTilesStream: Subject<SetTilesEvent> = new Subject();
     public readonly setTilesStream = this._setTilesStream.asObservable();
 
@@ -97,7 +100,6 @@ class IframeListener {
     private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
     private sendPlayerMove: boolean = false;
-    private sendCameraUpdate: boolean = false;
 
     // Note: we are forced to type this in unknown and later cast with "as" because of https://github.com/microsoft/TypeScript/issues/31904
     private answerers: {
@@ -230,7 +232,7 @@ class IframeListener {
                     } else if (payload.type == "onPlayerMove") {
                         this.sendPlayerMove = true;
                     } else if (payload.type == "onCameraUpdate") {
-                        this.sendCameraUpdate = true;
+                        this._trackCameraUpdateStream.next();
                     } else if (payload.type == "setTiles" && isSetTilesEvent(payload.data)) {
                         this._setTilesStream.next(payload.data);
                     } else if (payload.type == "modifyEmbeddedWebsite" && isEmbeddedWebsiteEvent(payload.data)) {
@@ -448,12 +450,10 @@ class IframeListener {
     }
 
     sendCameraUpdated(event: WasCameraUpdatedEvent) {
-        if (this.sendCameraUpdate) {
-            this.postMessage({
-                type: "wasCameraUpdated",
-                data: event,
-            });
-        }
+        this.postMessage({
+            type: "wasCameraUpdated",
+            data: event,
+        });
     }
 
     sendButtonClickedEvent(popupId: number, buttonId: number): void {

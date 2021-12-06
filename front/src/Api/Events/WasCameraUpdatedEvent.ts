@@ -6,6 +6,7 @@ export const isWasCameraUpdatedEvent = new tg.IsInterface()
         y: tg.isNumber,
         width: tg.isNumber,
         height: tg.isNumber,
+        zoom: tg.isNumber,
     })
     .get();
 
