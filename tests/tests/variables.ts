@@ -32,7 +32,7 @@ test("Test that variables storage works", async (t: TestController) => {
 
     //const mainWindow = await t.getCurrentWindow();
 
-    login(t, 'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json?somerandomparam=1');
+    await login(t, 'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json?somerandomparam=1');
 
     await t //.useRole(userAliceOnPage('http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json?somerandomparam=1'))
         .switchToIframe("#cowebsite-buffer iframe")
