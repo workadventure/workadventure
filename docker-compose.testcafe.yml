@@ -10,6 +10,7 @@ services:
     environment:
       BROWSER: "chromium --use-fake-device-for-media-stream"
       PROJECT_DIR: ${PROJECT_DIR}
+      ADMIN_API_TOKEN: ${ADMIN_API_TOKEN}
     volumes:
       - ./:/project
       - ./maps:/maps
