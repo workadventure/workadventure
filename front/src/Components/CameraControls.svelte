@@ -1,6 +1,6 @@
 <script lang="typescript">
-    import {requestedScreenSharingState, screenSharingAvailableStore} from "../Stores/ScreenSharingStore";
-    import {isSilentStore, requestedCameraState, requestedMicrophoneState} from "../Stores/MediaStore";
+    import { requestedScreenSharingState, screenSharingAvailableStore } from "../Stores/ScreenSharingStore";
+    import { isSilentStore, requestedCameraState, requestedMicrophoneState } from "../Stores/MediaStore";
     import monitorImg from "./images/monitor.svg";
     import monitorCloseImg from "./images/monitor-close.svg";
     import cinemaImg from "./images/cinema.svg";
@@ -9,10 +9,10 @@
     import microphoneCloseImg from "./images/microphone-close.svg";
     import layoutPresentationImg from "./images/layout-presentation.svg";
     import layoutChatImg from "./images/layout-chat.svg";
-    import {layoutModeStore} from "../Stores/StreamableCollectionStore";
-    import {LayoutMode} from "../WebRtc/LayoutManager";
-    import {peerStore} from "../Stores/PeerStore";
-    import {onDestroy} from "svelte";
+    import { layoutModeStore } from "../Stores/StreamableCollectionStore";
+    import { LayoutMode } from "../WebRtc/LayoutManager";
+    import { peerStore } from "../Stores/PeerStore";
+    import { onDestroy } from "svelte";
 
     function screenSharingClick(): void {
         if (isSilent) return;
@@ -50,7 +50,7 @@
     }
 
     let isSilent: boolean;
-    const unsubscribeIsSilent = isSilentStore.subscribe(value => {
+    const unsubscribeIsSilent = isSilentStore.subscribe((value) => {
         isSilent = value;
     });
     onDestroy(unsubscribeIsSilent);
@@ -59,31 +59,36 @@
 <div>
     <div class="btn-cam-action">
         <div class="btn-layout" on:click={switchLayoutMode} class:hide={$peerStore.size === 0}>
-            {#if $layoutModeStore === LayoutMode.Presentation }
-                <img src={layoutPresentationImg} style="padding: 2px" alt="Switch to mosaic mode">
+            {#if $layoutModeStore === LayoutMode.Presentation}
+                <img src={layoutPresentationImg} style="padding: 2px" alt="Switch to mosaic mode" />
             {:else}
-                <img src={layoutChatImg} style="padding: 2px" alt="Switch to presentation mode">
+                <img src={layoutChatImg} style="padding: 2px" alt="Switch to presentation mode" />
             {/if}
         </div>
-        <div class="btn-monitor" on:click={screenSharingClick} class:hide={!$screenSharingAvailableStore || isSilent} class:enabled={$requestedScreenSharingState}>
+        <div
+            class="btn-monitor"
+            on:click={screenSharingClick}
+            class:hide={!$screenSharingAvailableStore || isSilent}
+            class:enabled={$requestedScreenSharingState}
+        >
             {#if $requestedScreenSharingState && !isSilent}
-                <img src={monitorImg} alt="Start screen sharing">
+                <img src={monitorImg} alt="Start screen sharing" />
             {:else}
-                <img src={monitorCloseImg} alt="Stop screen sharing">
+                <img src={monitorCloseImg} alt="Stop screen sharing" />
             {/if}
         </div>
         <div class="btn-video" on:click={cameraClick} class:disabled={!$requestedCameraState || isSilent}>
             {#if $requestedCameraState && !isSilent}
-                <img src={cinemaImg} alt="Turn on webcam">
+                <img src={cinemaImg} alt="Turn on webcam" />
             {:else}
-                <img src={cinemaCloseImg} alt="Turn off webcam">
+                <img src={cinemaCloseImg} alt="Turn off webcam" />
             {/if}
         </div>
         <div class="btn-micro" on:click={microphoneClick} class:disabled={!$requestedMicrophoneState || isSilent}>
             {#if $requestedMicrophoneState && !isSilent}
-                <img src={microphoneImg} alt="Turn on microphone">
+                <img src={microphoneImg} alt="Turn on microphone" />
             {:else}
-                <img src={microphoneCloseImg} alt="Turn off microphone">
+                <img src={microphoneCloseImg} alt="Turn off microphone" />
             {/if}
         </div>
     </div>
