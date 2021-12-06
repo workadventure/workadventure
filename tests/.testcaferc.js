@@ -9,8 +9,8 @@ module.exports = {
     "takeOnFails": true,
     "thumbnails": false,
   },
-  "assertionTimeout": 10000,
-  "selectorTimeout": 40000,
+  "assertionTimeout": 20000,
+  "selectorTimeout": 60000,
 
 
   "videoPath": "screenshots/videos",
