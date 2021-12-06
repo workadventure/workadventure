@@ -98,13 +98,13 @@ The exception is the "collides" property that can only be set on tiles, but not 
 By setting properties on the map itself, you can help visitors know more about the creators of the map.
 
 The following *map* properties are supported:
-* `mapName` (string)
-* `mapDescription` (string)
-* `mapCopyright` (string)
+* `mapName` (string): The name of your map
+* `mapLink` (string): A link to your map, for example a repository
+* `mapDescription` (string): A short description of your map
+* `mapCopyright` (string): Copyright notice
 
 And *each tileset* can also have a property called `tilesetCopyright` (string). 
 
 Resulting in a "credit" page in the menu looking like this:
 
 ![](images/mapProperties.png){.document-img}
-

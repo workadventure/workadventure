@@ -8,6 +8,7 @@
     let expandedTilesetCopyright = false;
 
     let mapName: string = "";
+    let mapLink: string = "";
     let mapDescription: string = "";
     let mapCopyright: string = "The map creator did not declare a copyright for the map.";
     let tilesetCopyright: string[] = [];
@@ -17,6 +18,10 @@
             const propertyName = gameScene.mapFile.properties.find((property) => property.name === "mapName");
             if (propertyName !== undefined && typeof propertyName.value === "string") {
                 mapName = propertyName.value;
+            }
+            const propertyLink = gameScene.mapFile.properties.find((property) => property.name === "mapLink");
+            if (propertyLink !== undefined && typeof propertyLink.value === "string") {
+                mapLink = propertyLink.value;
             }
             const propertyDescription = gameScene.mapFile.properties.find(
                 (property) => property.name === "mapDescription"
@@ -48,6 +53,9 @@
     <section class="container-overflow">
         <h3>{mapName}</h3>
         <p class="string-HTML">{mapDescription}</p>
+        {#if mapLink}
+            <p class="string-HTML">&gt; <a href={mapLink} target="_blank">link to this map</a> &lt;</p>
+        {/if}
         <h3 class="nes-pointer hoverable" on:click={() => (expandedMapCopyright = !expandedMapCopyright)}>
             Copyrights of the map
         </h3>
