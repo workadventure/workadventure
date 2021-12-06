@@ -274,12 +274,12 @@ message ServerToClientMessage {
     SendJitsiJwtMessage sendJitsiJwtMessage = 11;
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
-    AdminRoomMessage adminRoomMessage = 14;
+    //AdminRoomMessage adminRoomMessage = 14;
     WorldFullWarningMessage worldFullWarningMessage = 15;
     WorldFullMessage worldFullMessage = 16;
     RefreshRoomMessage refreshRoomMessage = 17;
     WorldConnexionMessage worldConnexionMessage = 18;
-    EmoteEventMessage emoteEventMessage = 19;
+    //EmoteEventMessage emoteEventMessage = 19;
     TokenExpiredMessage tokenExpiredMessage = 20;
   }
 }

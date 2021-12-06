@@ -269,7 +269,9 @@ export class GameScene extends DirtyScene {
             // 127.0.0.1, localhost and *.localhost are considered secure, even on HTTP.
             // So if we are in https, we can still try to load a HTTP local resource (can be useful for testing purposes)
             // See https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts#when_is_a_context_considered_secure
-            const url = new URL(file.src);
+            const base = new URL(window.location.href);
+            base.pathname = "";
+            const url = new URL(file.src, base.toString());
             const host = url.host.split(":")[0];
             if (
                 window.location.protocol === "https:" &&
@@ -322,7 +324,6 @@ export class GameScene extends DirtyScene {
             this.onMapLoad(data);
         }
 
-        this.load.bitmapFont("main_font", "resources/fonts/arcade.png", "resources/fonts/arcade.xml");
         //eslint-disable-next-line @typescript-eslint/no-explicit-any
         (this.load as any).rexWebFont({
             custom: {

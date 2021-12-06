@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { errorStore } from "../../Stores/ErrorStore";
+    import { errorStore, hasClosableMessagesInErrorStore } from "../../Stores/ErrorStore";
 
     function close(): boolean {
-        errorStore.clearMessages();
+        errorStore.clearClosableMessages();
         return false;
     }
 </script>
@@ -11,12 +11,14 @@
     <p class="nes-text is-error title">Error</p>
     <div class="body">
         {#each $errorStore as error}
-            <p>{error}</p>
+            <p>{error.message}</p>
         {/each}
     </div>
-    <div class="button-bar">
-        <button class="nes-btn is-error" on:click={close}>Close</button>
-    </div>
+    {#if $hasClosableMessagesInErrorStore}
+        <div class="button-bar">
+            <button class="nes-btn is-error" on:click={close}>Close</button>
+        </div>
+    {/if}
 </div>
 
 <style lang="scss">
