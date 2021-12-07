@@ -10,6 +10,7 @@ import { _ServiceWorker } from "../Network/ServiceWorker";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { userIsConnected } from "../Stores/MenuStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
+import { axiosWithRetry } from "./AxiosUtils";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -232,7 +233,7 @@ class ConnectionManager {
     }
 
     public async anonymousLogin(isBenchmark: boolean = false): Promise<void> {
-        const data = await Axios.post(`${PUSHER_URL}/anonymLogin`).then((res) => res.data);
+        const data = await axiosWithRetry.post(`${PUSHER_URL}/anonymLogin`).then((res) => res.data);
         this.localUser = new LocalUser(data.userUuid, [], data.email);
         this.authToken = data.authToken;
         if (!isBenchmark) {

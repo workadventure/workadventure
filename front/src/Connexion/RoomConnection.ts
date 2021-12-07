@@ -255,6 +255,9 @@ export class RoomConnection implements RoomConnection {
                 warningContainerStore.activateWarningContainer();
             } else if (message.hasRefreshroommessage()) {
                 //todo: implement a way to notify the user the room was refreshed.
+            } else if (message.hasErrormessage()) {
+                const errorMessage = message.getErrormessage() as ErrorMessage;
+                console.error("An error occurred server side: " + errorMessage.getMessage());
             } else {
                 throw new Error("Unknown message received");
             }

@@ -1,14 +1,15 @@
 <script lang="typescript">
-    import { AudioContext } from 'standardized-audio-context';
-    import {SoundMeter} from "../Phaser/Components/SoundMeter";
-    import {onDestroy} from "svelte";
+    import { AudioContext } from "standardized-audio-context";
+    import { SoundMeter } from "../Phaser/Components/SoundMeter";
+    import { onDestroy } from "svelte";
 
-    export let stream: MediaStream|null;
+    export let stream: MediaStream | null;
     let volume = 0;
 
     let timeout: ReturnType<typeof setTimeout>;
     const soundMeter = new SoundMeter();
     let display = false;
+    let error = false;
 
     $: {
         if (stream && stream.getAudioTracks().length > 0) {
@@ -17,17 +18,19 @@
 
             if (timeout) {
                 clearInterval(timeout);
+                error = false;
             }
 
             timeout = setInterval(() => {
-                try{
+                try {
                     volume = soundMeter.getVolume();
-                    //console.log(volume);
-                }catch(err){
-
+                } catch (err) {
+                    if (!error) {
+                        console.error(err);
+                        error = true;
+                    }
                 }
             }, 100);
-
         } else {
             display = false;
         }
@@ -38,14 +41,13 @@
         if (timeout) {
             clearInterval(timeout);
         }
-    })
+    });
 </script>
 
-
 <div class="sound-progress" class:active={display}>
-    <span class:active={volume > 5}></span>
-    <span class:active={volume > 10}></span>
-    <span class:active={volume > 15}></span>
-    <span class:active={volume > 40}></span>
-    <span class:active={volume > 70}></span>
+    <span class:active={volume > 5} />
+    <span class:active={volume > 10} />
+    <span class:active={volume > 15} />
+    <span class:active={volume > 40} />
+    <span class:active={volume > 70} />
 </div>

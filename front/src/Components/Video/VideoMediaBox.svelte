@@ -8,7 +8,7 @@
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import { getColorByString, srcObject } from "./utils";
 
-    import Woka from '../Woka/Woka.svelte';
+    import Woka from "../Woka/Woka.svelte";
 
     export let peer: VideoPeer;
     let streamStore = peer.streamStore;
@@ -30,7 +30,7 @@
     {/if}
     {#if !$constraintStore || $constraintStore.video === false}
         <i style="background-color: {getColorByString(name)};">
-            <Woka userId={peer.userId} placeholderSrc={""}/>
+            <Woka userId={peer.userId} placeholderSrc={""} />
         </i>
     {/if}
     {#if $constraintStore && $constraintStore.audio === false}
@@ -40,6 +40,7 @@
         <img alt="Report this user" src={reportImg} />
         <span>Report/Block</span>
     </button>
+    <!-- svelte-ignore a11y-media-has-caption -->
     <video use:srcObject={$streamStore} autoplay playsinline on:click={() => videoFocusStore.toggleFocus(peer)} />
     <img src={blockSignImg} class="block-logo" alt="Block" />
     {#if $constraintStore && $constraintStore.audio !== false}
