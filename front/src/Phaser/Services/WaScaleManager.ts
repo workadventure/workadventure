@@ -12,6 +12,8 @@ export class WaScaleManager {
     private actualZoom: number = 1;
     private _saveZoom: number = 1;
 
+    private focusTarget?: { x: number; y: number; width: number; height: number };
+
     public constructor(private minGamePixelsNumber: number, private absoluteMinPixelNumber: number) {
         this.hdpiManager = new HdpiManager(minGamePixelsNumber, absoluteMinPixelNumber);
     }
@@ -23,15 +25,14 @@ export class WaScaleManager {
 
     public applyNewSize() {
         const { width, height } = coWebsiteManager.getGameSize();
-
         const devicePixelRatio = window.devicePixelRatio ?? 1;
-
         const { game: gameSize, real: realSize } = this.hdpiManager.getOptimalGameSize({
             width: width * devicePixelRatio,
             height: height * devicePixelRatio,
         });
 
         this.actualZoom = realSize.width / gameSize.width / devicePixelRatio;
+
         this.scaleManager.setZoom(realSize.width / gameSize.width / devicePixelRatio);
         this.scaleManager.resize(gameSize.width, gameSize.height);
 
@@ -56,6 +57,25 @@ export class WaScaleManager {
         this.game.markDirty();
     }
 
+    /**
+     * Use this in case of resizing while focusing on something
+     */
+    public refreshFocusOnTarget(): void {
+        if (!this.focusTarget) {
+            return;
+        }
+        this.zoomModifier = this.getTargetZoomModifierFor(this.focusTarget.width, this.focusTarget.height);
+        this.game.events.emit("wa-scale-manager:refresh-focus-on-target");
+    }
+
+    public setFocusTarget(targetDimensions?: { x: number; y: number; width: number; height: number }): void {
+        this.focusTarget = targetDimensions;
+    }
+
+    public getFocusTarget(): { x: number; y: number; width: number; height: number } | undefined {
+        return this.focusTarget;
+    }
+
     public getTargetZoomModifierFor(viewportWidth: number, viewportHeight: number) {
         const { width: gameWidth, height: gameHeight } = coWebsiteManager.getGameSize();
         const devicePixelRatio = window.devicePixelRatio ?? 1;
@@ -64,9 +84,9 @@ export class WaScaleManager {
             width: gameWidth * devicePixelRatio,
             height: gameHeight * devicePixelRatio,
         });
-        // P.H. Note: Dunno where this magic 2 comes from
-        // Always return lowest possible value. Need to add MAX ZOOM MODIFIER value into this.
-        return Math.min(realSize.width / viewportWidth / 2, realSize.height / viewportHeight / 2);
+        const desiredZoom = Math.min(realSize.width / viewportWidth, realSize.height / viewportHeight);
+        const realPixelNumber = gameWidth * devicePixelRatio * gameHeight * devicePixelRatio;
+        return desiredZoom / (this.hdpiManager.getOptimalZoomLevel(realPixelNumber) || 1);
     }
 
     public get zoomModifier(): number {

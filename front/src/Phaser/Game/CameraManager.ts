@@ -31,6 +31,14 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.waScaleManager = waScaleManager;
 
         this.initCamera();
+
+        this.scene.game.events.on("wa-scale-manager:refresh-focus-on-target", () => {
+            const focusOn = this.waScaleManager.getFocusTarget();
+            if (!focusOn) {
+                return;
+            }
+            this.camera.centerOn(focusOn.x + focusOn.width * 0.5, focusOn.y + focusOn.height * 0.5);
+        });
     }
 
     public getCamera(): Phaser.Cameras.Scene2D.Camera {
@@ -43,6 +51,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     ): void {
         this.setCameraMode(CameraMode.Focus);
         this.waScaleManager.saveZoom();
+        this.waScaleManager.setFocusTarget(focusOn);
 
         this.restoreZoomTween?.stop();
         const targetZoomModifier = this.waScaleManager.getTargetZoomModifierFor(focusOn.width, focusOn.height);
@@ -62,6 +71,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     }
 
     public leaveFocusMode(player: Player): void {
+        this.waScaleManager.setFocusTarget();
         // We are forcing camera.pan to kill previous pan animation on EnterFocusMode
         this.camera.pan(player.x, player.y, 1, Easing.SineEaseOut, true);
         this.startFollow(player);
