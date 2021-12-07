@@ -29,8 +29,8 @@
         <div class="rtc-error" />
     {/if}
     {#if !$constraintStore || $constraintStore.video === false}
-        <i style="background-color: {getColorByString(name)};">
-            <Woka userId={peer.userId} placeholderSrc={""} />
+        <i class="container" style="background-color: {getColorByString(name)};">
+            <div class="woka-icon"><Woka userId={peer.userId} placeholderSrc={""} /></div>
         </i>
     {/if}
     {#if $constraintStore && $constraintStore.audio === false}
@@ -47,3 +47,15 @@
         <SoundMeterWidget stream={$streamStore} />
     {/if}
 </div>
+
+<style>
+    .container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .woka-icon {
+        margin-right: 3px;
+    }
+</style>
