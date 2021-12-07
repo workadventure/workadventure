@@ -1,9 +1,8 @@
 <script lang="ts">
-    import type {PlayerInterface} from "../../Phaser/Game/PlayerInterface";
-    import {requestVisitCardsStore} from "../../Stores/GameStore";
+    import type { PlayerInterface } from "../../Phaser/Game/PlayerInterface";
+    import { requestVisitCardsStore } from "../../Stores/GameStore";
 
     export let player: PlayerInterface;
-
 
     function openVisitCard() {
         if (player.visitCardUrl) {
@@ -17,17 +16,16 @@
     <li><button class="text-btn" disabled>Add friend</button></li>
 </ul>
 
-
 <style lang="scss">
-  ul.selectMenu {
-    background-color: whitesmoke;
-    position: absolute;
-    padding: 5px;
-    border-radius: 4px;
-    list-style-type: none;
+    ul.selectMenu {
+        background-color: whitesmoke;
+        position: absolute;
+        padding: 5px;
+        border-radius: 4px;
+        list-style-type: none;
 
-    li {
-      text-align: center;
+        li {
+            text-align: center;
+        }
     }
-  }
 </style>

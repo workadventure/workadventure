@@ -1,7 +1,7 @@
 <script lang="ts">
-    import {blackListManager} from "../../WebRtc/BlackListManager";
-    import {showReportScreenStore, userReportEmpty} from "../../Stores/ShowReportScreenStore";
-    import {onMount} from "svelte";
+    import { blackListManager } from "../../WebRtc/BlackListManager";
+    import { showReportScreenStore, userReportEmpty } from "../../Stores/ShowReportScreenStore";
+    import { onMount } from "svelte";
 
     export let userUUID: string | undefined;
     export let userName: string;
@@ -14,7 +14,7 @@
         } else {
             userIsBlocked = blackListManager.isBlackListed(userUUID);
         }
-    })
+    });
 
     function blockUser(): void {
         if (userUUID === undefined) {
@@ -32,13 +32,12 @@
     <h3>Block</h3>
     <p>Block any communication from and to {userName}. This can be reverted.</p>
     <button type="button" class="nes-btn is-error" on:click|preventDefault={blockUser}>
-        {userIsBlocked ? 'Unblock this user' : 'Block this user'}
+        {userIsBlocked ? "Unblock this user" : "Block this user"}
     </button>
 </div>
 
-
 <style lang="scss">
     div.block-container {
-      text-align: center;
+        text-align: center;
     }
 </style>

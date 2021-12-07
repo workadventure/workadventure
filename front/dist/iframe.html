@@ -11,6 +11,7 @@
         const scriptUrl = urlParams.get('script');
         const script = document.createElement('script');
         script.src = scriptUrl;
+        script.type = "module";
         document.head.append(script);
     </script>
     </head>
