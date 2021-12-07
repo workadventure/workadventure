@@ -1,7 +1,7 @@
 <script lang="typescript">
-import { onDestroy } from 'svelte';
+    import { onDestroy } from "svelte";
 
-    import { gameManager } from '../../Phaser/Game/GameManager';
+    import { gameManager } from "../../Phaser/Game/GameManager";
 
     export let userId: number;
     export let placeholderSrc: string;
@@ -17,7 +17,7 @@ import { onDestroy } from 'svelte';
     onDestroy(unsubscribe);
 </script>
 
-<img src={src} alt="" class="nes-pointer">
+<img {src} alt="" class="nes-pointer" />
 
 <style>
     img {

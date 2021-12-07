@@ -4,7 +4,6 @@
     import { menuVisiblilityStore } from "../../Stores/MenuStore";
     import { chatVisibilityStore } from "../../Stores/ChatStore";
     import { get } from "svelte/store";
-    import Woka from "../Woka/Woka.svelte";
 
     function showMenu() {
         menuVisiblilityStore.set(!get(menuVisiblilityStore));
@@ -17,9 +16,7 @@
 <svelte:window />
 
 <main class="menuIcon">
-    <div class="nes-pointer woka" on:click|preventDefault={showMenu}>
-        <Woka userId={-1} placeholderSrc={logoWA} />
-    </div>
+    <img src={logoWA} alt="open menu" class="nes-pointer" on:click|preventDefault={showMenu} />
     <img src={logoTalk} alt="open menu" class="nes-pointer" on:click|preventDefault={showChat} />
 </main>
 
@@ -36,18 +33,8 @@
             margin: 3px;
             image-rendering: pixelated;
         }
-        .woka {
-            pointer-events: auto;
-            width: 60px;
-            padding-top: 0;
-            margin: 3px;
-        }
     }
     .menuIcon img:hover {
-        transform: scale(1.2);
-    }
-
-    .menuIcon .woka:hover {
         transform: scale(1.2);
     }
     @media only screen and (max-width: 800px), only screen and (max-height: 800px) {
