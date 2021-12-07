@@ -32,13 +32,12 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
         this.initCamera();
 
-        this.scene.game.events.on("wa-scale-manager:refresh-focus-on-target", () => {
-            const focusOn = this.waScaleManager.getFocusTarget();
-            if (!focusOn) {
-                return;
-            }
-            this.camera.centerOn(focusOn.x + focusOn.width * 0.5, focusOn.y + focusOn.height * 0.5);
-        });
+        this.bindEventHandlers();
+    }
+
+    public destroy(): void {
+        this.scene.game.events.off("wa-scale-manager:refresh-focus-on-target");
+        super.destroy();
     }
 
     public getCamera(): Phaser.Cameras.Scene2D.Camera {
@@ -127,5 +126,17 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     private initCamera() {
         this.camera = this.scene.cameras.main;
         this.camera.setBounds(0, 0, this.cameraBounds.x, this.cameraBounds.y);
+    }
+
+    private bindEventHandlers(): void {
+        this.scene.game.events.on(
+            "wa-scale-manager:refresh-focus-on-target",
+            (focusOn: { x: number; y: number; width: number; height: number }) => {
+                if (!focusOn) {
+                    return;
+                }
+                this.camera.centerOn(focusOn.x + focusOn.width * 0.5, focusOn.y + focusOn.height * 0.5);
+            }
+        );
     }
 }

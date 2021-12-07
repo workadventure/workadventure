@@ -65,15 +65,11 @@ export class WaScaleManager {
             return;
         }
         this.zoomModifier = this.getTargetZoomModifierFor(this.focusTarget.width, this.focusTarget.height);
-        this.game.events.emit("wa-scale-manager:refresh-focus-on-target");
+        this.game.events.emit("wa-scale-manager:refresh-focus-on-target", this.focusTarget);
     }
 
     public setFocusTarget(targetDimensions?: { x: number; y: number; width: number; height: number }): void {
         this.focusTarget = targetDimensions;
-    }
-
-    public getFocusTarget(): { x: number; y: number; width: number; height: number } | undefined {
-        return this.focusTarget;
     }
 
     public getTargetZoomModifierFor(viewportWidth: number, viewportHeight: number) {

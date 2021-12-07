@@ -1410,6 +1410,7 @@ ${escapedMessage}
         this.userInputManager.destroy();
         this.pinchManager?.destroy();
         this.emoteManager.destroy();
+        this.cameraManager.destroy();
         this.peerStoreUnsubscribe();
         this.emoteUnsubscribe();
         this.emoteMenuUnsubscribe();
