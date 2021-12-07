@@ -7,7 +7,7 @@
 WA.camera.onCameraUpdate(callback: WasCameraUpdatedEventCallback): void
 ```
 
-Listens to the updating of the camera linked to the player. It will trigger for every update of the camera's properties (position or scale for instance) or of the Game Object it is linked to (undestand: if the player moves). An event will then be sent.
+Listens to the updating of the camera linked to the player. It will trigger for every update of the camera's properties (position or scale for instance). An event will then be sent.
 
 The event has the following attributes :
 *   **x (number):** coordinate X of the camera's world view (the area looked at by the camera).
