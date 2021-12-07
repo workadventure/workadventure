@@ -868,7 +868,8 @@ export class GameScene extends DirtyScene {
                 };
 
                 const jitsiTriggerValue = allProps.get(GameMapProperties.JITSI_TRIGGER);
-                if (jitsiTriggerValue && jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
+                const forceTrigger = localUserStore.getForceCowebsiteTrigger();
+                if (forceTrigger || jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                     let message = allProps.get(GameMapProperties.JITSI_TRIGGER_MESSAGE);
                     if (message === undefined) {
                         message = "Press SPACE or touch here to enter Jitsi Meet room";
