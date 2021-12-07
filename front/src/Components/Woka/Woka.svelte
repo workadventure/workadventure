@@ -5,6 +5,8 @@
 
     export let userId: number;
     export let placeholderSrc: string;
+    export let width: string = "62px";
+    export let height: string = "62px";
 
     const gameScene = gameManager.getCurrentGameScene();
     const playerWokaPictureStore = gameScene.getUserWokaPictureStore(userId);
@@ -17,16 +19,14 @@
     onDestroy(unsubscribe);
 </script>
 
-<img {src} alt="" class="nes-pointer" />
+<img {src} alt="" class="nes-pointer" style="--theme-width: {width}; --theme-height: {height}" />
 
 <style>
     img {
-        display: block;
+        display: inline-block;
         pointer-events: auto;
-        width: 60px;
-        height: 60px;
-        left: calc(50% - 30px);
-        top: calc(50% - 30px);
+        width: var(--theme-width);
+        height: var(--theme-height);
         margin: 0;
         padding: 0;
         image-rendering: pixelated;
