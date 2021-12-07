@@ -28,11 +28,15 @@
     {#if $statusStore === "error"}
         <div class="rtc-error" />
     {/if}
-    {#if !$constraintStore || $constraintStore.video === false}
-        <i class="container" style="background-color: {getColorByString(name)};">
-            <div class="woka-icon"><Woka userId={peer.userId} placeholderSrc={""} /></div>
-        </i>
-    {/if}
+    <!-- {#if !$constraintStore || $constraintStore.video === false} -->
+    <i
+        class="container {!$constraintStore || $constraintStore.video === false ? '' : 'minimized'}"
+        style="background-color: {getColorByString(name)};"
+    >
+        <span>{peer.userName}</span>
+        <div class="woka-icon"><Woka userId={peer.userId} placeholderSrc={""} /></div>
+    </i>
+    <!-- {/if} -->
     {#if $constraintStore && $constraintStore.audio === false}
         <img src={microphoneCloseImg} class="active" alt="Muted" />
     {/if}
@@ -51,8 +55,14 @@
 <style>
     .container {
         display: flex;
-        justify-content: center;
-        align-items: center;
+        flex-direction: column;
+        padding-top: 15px;
+    }
+
+    .minimized {
+        left: auto;
+        transform: scale(0.5);
+        opacity: 0.5;
     }
 
     .woka-icon {
