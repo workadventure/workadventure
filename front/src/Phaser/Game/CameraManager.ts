@@ -73,13 +73,29 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.waScaleManager.setFocusTarget();
         // We are forcing camera.pan to kill previous pan animation on EnterFocusMode
         this.camera.pan(player.x, player.y, 1, Easing.SineEaseOut, true);
-        this.startFollow(player);
-        this.restoreZoom();
+        this.startFollow(player, 1000);
+        this.restoreZoom(1000);
     }
 
-    public startFollow(target: object | Phaser.GameObjects.GameObject): void {
+    public startFollow(target: object | Phaser.GameObjects.GameObject, duration: number = 0): void {
         this.setCameraMode(CameraMode.Follow);
-        this.camera.startFollow(target, true);
+        if (duration === 0) {
+            this.camera.startFollow(target, true);
+            return;
+        }
+        // duck typing hack
+        this.camera.pan(
+            (target as { x: number; y: number }).x,
+            (target as { x: number; y: number }).y,
+            duration,
+            Easing.Linear,
+            true,
+            (camera, progress) => {
+                if (progress === 1) {
+                    this.camera.startFollow(target, true);
+                }
+            }
+        );
     }
 
     /**
@@ -110,12 +126,16 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.cameraMode = mode;
     }
 
-    private restoreZoom(): void {
+    private restoreZoom(duration: number = 0): void {
+        if (duration === 0) {
+            this.waScaleManager.zoomModifier = this.waScaleManager.getSaveZoom();
+            return;
+        }
         this.restoreZoomTween?.stop();
         this.restoreZoomTween = this.scene.tweens.addCounter({
             from: this.waScaleManager.zoomModifier,
             to: this.waScaleManager.getSaveZoom(),
-            duration: 1000,
+            duration,
             ease: Easing.SineEaseOut,
             onUpdate: (tween: Phaser.Tweens.Tween) => {
                 this.waScaleManager.zoomModifier = tween.getValue();
