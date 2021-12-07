@@ -132,6 +132,12 @@ export class SocketManager implements ZoneEventListener {
         const message = new AdminPusherToBackMessage();
         message.setSubscribetoroom(roomId);
 
+        console.log(
+            `Admin socket handle room ${roomId} connections for a client on ${Buffer.from(
+                client.getRemoteAddressAsText()
+            ).toString()}`
+        );
+
         adminRoomStream.write(message);
     }
 

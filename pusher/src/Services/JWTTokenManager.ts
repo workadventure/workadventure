@@ -1,5 +1,6 @@
 import { ADMIN_SOCKETS_TOKEN, SECRET_KEY } from "../Enum/EnvironmentVariable";
 import Jwt from "jsonwebtoken";
+import { InvalidTokenError } from "../Controller/InvalidTokenError";
 
 export interface AuthTokenData {
     identifier: string; //will be a email if logged in or an uuid if anonymous
@@ -23,7 +24,12 @@ class JWTTokenManager {
         try {
             return Jwt.verify(token, SECRET_KEY, { ignoreExpiration }) as AuthTokenData;
         } catch (e) {
-            throw { reason: tokenInvalidException, message: e.message };
+            if (e instanceof Error) {
+                // FIXME: we are loosing the stacktrace here.
+                throw new InvalidTokenError(e.message);
+            } else {
+                throw e;
+            }
         }
     }
 }
