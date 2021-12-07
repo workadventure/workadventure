@@ -63,7 +63,7 @@ export abstract class Character extends Container {
                 this.addTextures(textures, frame);
                 this.invisible = false;
                 this.playAnimation(direction, moving);
-                this.emit("textures-loaded");
+                this.emit("woka-textures-loaded");
             })
             .catch(() => {
                 return lazyLoadPlayerCharacterTextures(scene.load, ["color_22", "eyes_23"]).then((textures) => {
@@ -151,6 +151,9 @@ export abstract class Character extends Container {
     public addCompanion(name: string, texturePromise?: Promise<string>): void {
         if (typeof texturePromise !== "undefined") {
             this.companion = new Companion(this.scene, this.x, this.y, name, texturePromise);
+            this.companion.once("texture-loaded", () => {
+                this.emit("companion-texture-loaded", this.companion?.getSnapshot());
+            });
         }
     }
 

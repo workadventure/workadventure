@@ -39,6 +39,7 @@ export class Companion extends Container {
         texturePromise.then((resource) => {
             this.addResource(resource);
             this.invisible = false;
+            this.emit("texture-loaded");
         });
 
         this.scene.physics.world.enableBody(this);
@@ -121,6 +122,37 @@ export class Companion extends Container {
             moving: animationType === PlayerAnimationTypes.Walk,
             name: companionName,
         };
+    }
+
+    public async getSnapshot(): Promise<string> {
+        const rt = this.scene.make.renderTexture({}, false);
+        if (rt.renderer instanceof Phaser.Renderer.Canvas.CanvasRenderer) {
+            rt.destroy();
+            for (const sprite of this.sprites.values()) {
+                // we can be sure that either predefined woka or body texture is at this point loaded
+                if (sprite.texture.key.includes("cat") || sprite.texture.key.includes("dog")) {
+                    return this.scene.textures.getBase64(sprite.texture.key);
+                }
+            }
+        }
+        for (const sprite of this.sprites.values()) {
+            sprite.setFrame(1);
+            rt.draw(sprite, sprite.displayWidth * 0.5, sprite.displayHeight * 0.5);
+        }
+        return new Promise<string>((resolve, reject) => {
+            try {
+                rt.snapshot(
+                    (url) => {
+                        resolve((url as HTMLImageElement).src);
+                        rt.destroy();
+                    },
+                    "image/png",
+                    1
+                );
+            } catch (error) {
+                reject(error);
+            }
+        });
     }
 
     private playAnimation(direction: PlayerAnimationDirections, type: PlayerAnimationTypes): void {

@@ -77,6 +77,7 @@ import { userIsAdminStore } from "../../Stores/GameStore";
 import { contactPageStore } from "../../Stores/MenuStore";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
 import { UserWokaPictureStore } from "../../Stores/UserWokaPictureStore";
+import { UserCompanionPictureStore } from "../../Stores/UserCompanionPictureStore";
 
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
@@ -202,6 +203,10 @@ export class GameScene extends DirtyScene {
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
     private loader: Loader;
     private userWokaPictureStores: Map<number, UserWokaPictureStore> = new Map<number, UserWokaPictureStore>();
+    private userCompanionPictureStores: Map<number, UserCompanionPictureStore> = new Map<
+        number,
+        UserCompanionPictureStore
+    >();
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -340,6 +345,15 @@ export class GameScene extends DirtyScene {
         if (!store) {
             store = new UserWokaPictureStore();
             this.userWokaPictureStores.set(userId, store);
+        }
+        return store;
+    }
+
+    public getUserCompanionPictureStore(userId: number) {
+        let store = this.userCompanionPictureStores.get(userId);
+        if (!store) {
+            store = new UserCompanionPictureStore();
+            this.userCompanionPictureStores.set(userId, store);
         }
         return store;
     }
@@ -1506,8 +1520,13 @@ ${escapedMessage}
                 this.companion,
                 this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
-            this.CurrentPlayer.once("textures-loaded", () => {
+            this.CurrentPlayer.once("woka-textures-loaded", () => {
                 this.savePlayerWokaPicture(this.CurrentPlayer, -1);
+            });
+            this.CurrentPlayer.once("companion-texture-loaded", (snapshotPromise: Promise<string>) => {
+                snapshotPromise.then((snapshot: string) => {
+                    this.savePlayerCompanionPicture(-1, snapshot);
+                });
             });
             this.CurrentPlayer.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
                 if (pointer.wasTouch && (pointer.event as TouchEvent).touches.length > 1) {
@@ -1539,6 +1558,10 @@ ${escapedMessage}
     private async savePlayerWokaPicture(character: Character, userId: number): Promise<void> {
         const htmlImageElementSrc = await character.getSnapshot();
         this.getUserWokaPictureStore(userId).picture.set(htmlImageElementSrc);
+    }
+
+    private savePlayerCompanionPicture(userId: number, snapshot: string): void {
+        this.getUserCompanionPictureStore(userId).picture.set(snapshot);
     }
 
     pushPlayerPosition(event: HasPlayerMovedEvent) {
@@ -1728,7 +1751,7 @@ ${escapedMessage}
             addPlayerData.companion,
             addPlayerData.companion !== null ? lazyLoadCompanionResource(this.load, addPlayerData.companion) : undefined
         );
-        player.once("textures-loaded", () => {
+        player.once("woka-textures-loaded", () => {
             this.savePlayerWokaPicture(player, addPlayerData.userId);
         });
         this.MapPlayers.add(player);
