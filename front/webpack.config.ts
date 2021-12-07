@@ -161,11 +161,12 @@ module.exports = {
     },
     plugins: [
         new webpack.HotModuleReplacementPlugin(),
-        new ForkTsCheckerWebpackPlugin({
-            eslint: {
-                files: "./src/**/*.ts",
-            },
-        }),
+        // ToDo find out about parallel process in Docker, which does not work currently
+        // new ForkTsCheckerWebpackPlugin({
+        //     eslint: {
+        //         files: "./src/**/*.ts",
+        //     },
+        // }),
         new MiniCssExtractPlugin({ filename: "[name].[contenthash].css" }),
         new HtmlWebpackPlugin({
             template: "./dist/index.tmpl.html.tmp",

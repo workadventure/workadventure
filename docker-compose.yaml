@@ -44,7 +44,7 @@ services:
       MAX_USERNAME_LENGTH: "$MAX_USERNAME_LENGTH"
       WEBEX_AUTHORIZATION_URL: $WEBEX_AUTHORIZATION_URL
       WEBEX_GLOBAL_SPACE_ID: $WEBEX_GLOBAL_SPACE_ID
-    command: yarn run start
+    command: yarn run serve
     volumes:
       - ./front:/usr/src/app
     labels:

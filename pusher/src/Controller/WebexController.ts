@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import cookie from "cookie";
-import fetch from "node-fetch";
+import Axios from "axios";
 import { HttpRequest, HttpResponse } from "uWebSockets.js";
 import { App } from "../Server/sifrr.server";
 
@@ -161,14 +161,14 @@ export class WebexController {
             redirect_uri: redirectUri,
         };
 
-        const tokenResponse = await fetch("https://api.ciscospark.com/v1/access_token", {
-            method: "POST",
+        const res = await Axios.post("https://api.ciscospark.com/v1/access_token", {
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
             },
             body: urlEncode(data),
         });
-
+        // todo error handling on no res
+        const tokenResponse = res?.data
         if (!tokenResponse.ok) {
             throw Error(await tokenResponse.text());
         }
@@ -190,14 +190,13 @@ export class WebexController {
             refresh_token: refreshToken,
         };
 
-        const tokenResponse = await fetch("https://api.ciscospark.com/v1/access_token", {
-            method: "POST",
+        const res = await Axios.post("https://api.ciscospark.com/v1/access_token", {
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
             },
             body: urlEncode(data),
         });
-
+        const tokenResponse = res?.data
         if (!tokenResponse.ok) {
             throw Error(await tokenResponse.text());
         }

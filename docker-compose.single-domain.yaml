@@ -32,7 +32,8 @@ services:
       MAPS_URL: /maps
       STARTUP_COMMAND_1: ./templater.sh
       STARTUP_COMMAND_2: yarn install
-      TURN_SERVER: "turn:localhost:3478,turns:localhost:5349"
+      STUN_SERVER: "stun:stun.l.google.com:19302"
+      TURN_SERVER: "turn:coturn.workadventure.localhost:3478,turns:coturn.workadventure.localhost:5349"
       DISABLE_NOTIFICATIONS: "$DISABLE_NOTIFICATIONS"
       SKIP_RENDER_OPTIMIZATIONS: "$SKIP_RENDER_OPTIMIZATIONS"
       # Use TURN_USER/TURN_PASSWORD if your Coturn server is secured via hard coded credentials.
@@ -40,6 +41,8 @@ services:
       TURN_USER: ""
       TURN_PASSWORD: ""
       START_ROOM_URL: "$START_ROOM_URL"
+      WEBEX_AUTHORIZATION_URL: $WEBEX_AUTHORIZATION_URL
+      WEBEX_GLOBAL_SPACE_ID: $WEBEX_GLOBAL_SPACE_ID
     command: yarn run start
     volumes:
       - ./front:/usr/src/app
@@ -70,6 +73,10 @@ services:
       OPID_CLIENT_ID: $OPID_CLIENT_ID
       OPID_CLIENT_SECRET: $OPID_CLIENT_SECRET
       OPID_CLIENT_ISSUER: $OPID_CLIENT_ISSUER
+      WEBEX_CLIENT_ID: $WEBEX_CLIENT_ID
+      WEBEX_CLIENT_SECRET: $WEBEX_CLIENT_SECRET
+      WEBEX_REDIRECT_URL: $WEBEX_REDIRECT_URL
+      WEBEX_TOKEN_REDIRECT_URL: $WEBEX_TOKEN_REDIRECT_URL
     volumes:
       - ./pusher:/usr/src/app
     labels:
@@ -123,9 +130,14 @@ services:
       ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
       JITSI_URL: $JITSI_URL
       JITSI_ISS: $JITSI_ISS
-      MAX_PER_GROUP: "$MAX_PER_GROUP"
+      TURN_STATIC_AUTH_SECRET: SomeStaticAuthSecret
+      MAX_PER_GROUP: "MAX_PER_GROUP"
       REDIS_HOST: redis
       NODE_ENV: development
+      WEBEX_CLIENT_ID: $WEBEX_CLIENT_ID
+      WEBEX_CLIENT_SECRET: $WEBEX_CLIENT_SECRET
+      WEBEX_REDIRECT_URL: $WEBEX_REDIRECT_URL
+      WEBEX_TOKEN_REDIRECT_URL: $WEBEX_TOKEN_REDIRECT_URL
     volumes:
       - ./back:/usr/src/app
     labels:
