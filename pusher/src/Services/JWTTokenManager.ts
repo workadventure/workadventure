@@ -3,6 +3,7 @@ import { uuid } from "uuidv4";
 import Jwt, { verify } from "jsonwebtoken";
 import { TokenInterface } from "../Controller/AuthenticateController";
 import { adminApi, AdminBannedData } from "../Services/AdminApi";
+import { InvalidTokenError } from "../Controller/InvalidTokenError";
 
 export interface AuthTokenData {
     identifier: string; //will be a email if logged in or an uuid if anonymous
@@ -26,7 +27,12 @@ class JWTTokenManager {
         try {
             return Jwt.verify(token, SECRET_KEY, { ignoreExpiration }) as AuthTokenData;
         } catch (e) {
-            throw { reason: tokenInvalidException, message: e.message };
+            if (e instanceof Error) {
+                // FIXME: we are loosing the stacktrace here.
+                throw new InvalidTokenError(e.message);
+            } else {
+                throw e;
+            }
         }
     }
 }
