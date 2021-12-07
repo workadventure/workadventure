@@ -77,7 +77,7 @@ export class Room {
         const currentRoom = new Room(baseUrl);
         let instance: string = "global";
         if (currentRoom.isPublic) {
-            instance = currentRoom.instance as string;
+            instance = currentRoom.getInstance();
         }
 
         baseUrl.pathname = "/_/" + instance + "/" + absoluteExitSceneUrl.host + absoluteExitSceneUrl.pathname;
