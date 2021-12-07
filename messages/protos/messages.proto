@@ -67,12 +67,12 @@ message ReportPlayerMessage {
 }
 
 message EmotePromptMessage {
-    string emote = 2;
+  string emote = 2;
 }
 
 message EmoteEventMessage {
-    int32 actorUserId = 1;
-    string emote = 2;
+  int32 actorUserId = 1;
+  string emote = 2;
 }
 
 message QueryJitsiJwtMessage {
@@ -236,14 +236,14 @@ message SendUserMessage{
 message WorldFullWarningMessage{
 }
 message WorldFullWarningToRoomMessage{
-    string roomId = 1;
+  string roomId = 1;
 }
 message RefreshRoomPromptMessage{
-    string roomId = 1;
+  string roomId = 1;
 }
 message RefreshRoomMessage{
-    string roomId = 1;
-    int32 versionNumber = 2;
+  string roomId = 1;
+  int32 versionNumber = 2;
 }
 
 message WorldFullMessage{
