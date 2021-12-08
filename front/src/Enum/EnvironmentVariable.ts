@@ -25,6 +25,7 @@ export const POSTHOG_API_KEY: string = (process.env.POSTHOG_API_KEY as string) |
 export const POSTHOG_URL = process.env.POSTHOG_URL || undefined;
 export const DISABLE_ANONYMOUS: boolean = process.env.DISABLE_ANONYMOUS === "true";
 export const OPID_LOGIN_SCREEN_PROVIDER = process.env.OPID_LOGIN_SCREEN_PROVIDER;
+const FALLBACK_LANGUAGE: string = process.env.FALLBACK_LANGUAGE || "en-US";
 
 export const isMobile = (): boolean => window.innerWidth <= 800 || window.innerHeight <= 600;
 
@@ -44,4 +45,5 @@ export {
     TURN_PASSWORD,
     JITSI_URL,
     JITSI_PRIVATE_MODE,
+    FALLBACK_LANGUAGE,
 };
