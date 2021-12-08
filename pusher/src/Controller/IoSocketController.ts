@@ -31,6 +31,7 @@ import { ADMIN_API_TOKEN, ADMIN_API_URL, SOCKET_IDLE_TIMER } from "../Enum/Envir
 import { Zone } from "_Model/Zone";
 import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
 import { CharacterTexture } from "../Services/AdminApi/CharacterTexture";
+import { DEBUG_MODE } from '../../../front/src/Enum/EnvironmentVariable'
 
 export class IoSocketController {
     private nextUserId: number = 1;
@@ -384,10 +385,9 @@ export class IoSocketController {
                         client,
                         message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage
                     );
-                } else if (message.hasWebexquery()) {
-                    // TODO type assertion (see above)
-                    console.log("[Pusher] Found webex query in message");
-                    socketManager.handleWebexSessionQuery(client, message.getWebexquery() as WebexSessionQuery);
+                } else if (message.hasWebexsessionquery()) {
+                    DEBUG_MODE && console.log("[Pusher] Found webex query in message");
+                    socketManager.handleWebexSessionQuery(client, message.getWebexsessionquery() as WebexSessionQuery);
                 } else if (message.hasEmotepromptmessage()) {
                     socketManager.handleEmotePromptMessage(
                         client,

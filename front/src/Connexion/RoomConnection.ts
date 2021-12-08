@@ -563,7 +563,7 @@ export class RoomConnection implements RoomConnection {
             webexSessionQuery.setAccesstoken(accessToken);
         }
         const clientToServerMessage = new ClientToServerMessage();
-        clientToServerMessage.setWebexquery(webexSessionQuery);
+        clientToServerMessage.setWebexsessionquery(webexSessionQuery);
         console.log("[Front] Sending query for room " + roomId);
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
