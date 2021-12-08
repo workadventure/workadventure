@@ -386,7 +386,7 @@ export class IoSocketController {
                         message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage
                     );
                 } else if (message.hasWebexsessionquery()) {
-                    DEBUG_MODE && console.log("[Pusher] Found webex query in message");
+                    console.log("[Pusher] Found webex query in message");
                     socketManager.handleWebexSessionQuery(client, message.getWebexsessionquery() as WebexSessionQuery);
                 } else if (message.hasEmotepromptmessage()) {
                     socketManager.handleEmotePromptMessage(
