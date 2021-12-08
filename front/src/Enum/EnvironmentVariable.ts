@@ -20,6 +20,7 @@ export const DISPLAY_TERMS_OF_USE = process.env.DISPLAY_TERMS_OF_USE == "true";
 export const NODE_ENV = process.env.NODE_ENV || "development";
 export const WEBEX_AUTHORIZATION_URL = process.env.WEBEX_AUTHORIZATION_URL ?? "/pusher/webex/authorize";
 export const WEBEX_GLOBAL_SPACE_ID = process.env.WEBEX_GLOBAL_SPACE_ID;
+export const WEBEX_ACCESS_TOKEN = process.env.WEBEX_ACCESS_TOKEN;
 export const CONTACT_URL = process.env.CONTACT_URL || undefined;
 export const PROFILE_URL = process.env.PROFILE_URL || undefined;
 export const POSTHOG_API_KEY: string = (process.env.POSTHOG_API_KEY as string) || "";

@@ -261,7 +261,8 @@ export class RoomConnection implements RoomConnection {
                 this.userList = message.getUserlistmessage()?.toObject()?.userList ?? [];
                 this.dispatch(EventMessage.USER_LIST, this.userList);
             } else if (message.hasWebexsessionresponse()) {
-                console.log("[Front] Found session response in message");
+                // TODO - is this webex call ok?
+                console.log("[Front] Found session response in message:", message);
                 this.dispatch(EventMessage.WEBEX_SESSION_RESPONSE, message.getWebexsessionresponse());
             } else {
                 throw new Error("Unknown message received");
