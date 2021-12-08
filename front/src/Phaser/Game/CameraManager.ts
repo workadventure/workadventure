@@ -20,6 +20,9 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     private cameraMode: CameraMode = CameraMode.Free;
 
     private restoreZoomTween?: Phaser.Tweens.Tween;
+    private startFollowTween?: Phaser.Tweens.Tween;
+
+    private cameraFollowTarget?: { x: number; y: number };
 
     constructor(scene: GameScene, cameraBounds: { x: number; y: number }, waScaleManager: WaScaleManager) {
         super();
@@ -53,16 +56,18 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.waScaleManager.setFocusTarget(focusOn);
 
         this.restoreZoomTween?.stop();
+        this.startFollowTween?.stop();
         const targetZoomModifier = this.waScaleManager.getTargetZoomModifierFor(focusOn.width, focusOn.height);
         const currentZoomModifier = this.waScaleManager.zoomModifier;
         const zoomModifierChange = targetZoomModifier - currentZoomModifier;
         this.camera.stopFollow();
+        this.cameraFollowTarget = undefined;
         this.camera.pan(
             focusOn.x + focusOn.width * 0.5,
             focusOn.y + focusOn.height * 0.5,
             duration,
             Easing.SineEaseOut,
-            false,
+            true,
             (camera, progress, x, y) => {
                 this.waScaleManager.zoomModifier = currentZoomModifier + progress * zoomModifierChange;
             }
@@ -71,31 +76,37 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     public leaveFocusMode(player: Player): void {
         this.waScaleManager.setFocusTarget();
-        // We are forcing camera.pan to kill previous pan animation on EnterFocusMode
-        this.camera.pan(player.x, player.y, 1, Easing.SineEaseOut, true);
         this.startFollow(player, 1000);
         this.restoreZoom(1000);
     }
 
     public startFollow(target: object | Phaser.GameObjects.GameObject, duration: number = 0): void {
+        this.cameraFollowTarget = target as { x: number; y: number };
         this.setCameraMode(CameraMode.Follow);
         if (duration === 0) {
             this.camera.startFollow(target, true);
             return;
         }
-        // duck typing hack
-        this.camera.pan(
-            (target as { x: number; y: number }).x,
-            (target as { x: number; y: number }).y,
+        const oldPos = { x: this.camera.scrollX, y: this.camera.scrollY };
+        this.startFollowTween = this.scene.tweens.addCounter({
+            from: 0,
+            to: 1,
             duration,
-            Easing.Linear,
-            true,
-            (camera, progress) => {
-                if (progress === 1) {
-                    this.camera.startFollow(target, true);
+            ease: Easing.SineEaseOut,
+            onUpdate: (tween: Phaser.Tweens.Tween) => {
+                if (!this.cameraFollowTarget) {
+                    return;
                 }
-            }
-        );
+                const shiftX =
+                    (this.cameraFollowTarget.x - this.camera.worldView.width * 0.5 - oldPos.x) * tween.getValue();
+                const shiftY =
+                    (this.cameraFollowTarget.y - this.camera.worldView.height * 0.5 - oldPos.y) * tween.getValue();
+                this.camera.setScroll(oldPos.x + shiftX, oldPos.y + shiftY);
+            },
+            onComplete: () => {
+                this.camera.startFollow(target, true);
+            },
+        });
     }
 
     /**
