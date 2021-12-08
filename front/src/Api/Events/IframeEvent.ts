@@ -65,7 +65,7 @@ export type IframeEventMap = {
     registerMenu: MenuRegisterEvent;
     unregisterMenu: UnregisterMenuEvent;
     setTiles: SetTilesEvent;
-    modifyEmbeddedWebsite: Partial<EmbeddedWebsite>; // Note: name should be compulsory in fact;
+    modifyEmbeddedWebsite: Partial<EmbeddedWebsite>; // Note: name should be compulsory in fact
 };
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;
