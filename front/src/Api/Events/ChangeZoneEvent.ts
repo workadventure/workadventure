@@ -6,6 +6,6 @@ export const isChangeZoneEvent = new tg.IsInterface()
     })
     .get();
 /**
- * A message sent from the game to the iFrame when a user enters or leaves a layer.
+ * A message sent from the game to the iFrame when a user enters or leaves a zone.
  */
 export type ChangeZoneEvent = tg.GuardedType<typeof isChangeZoneEvent>;

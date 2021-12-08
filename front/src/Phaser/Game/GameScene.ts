@@ -788,7 +788,6 @@ export class GameScene extends DirtyScene {
                     });
                 });
 
-                // P.H. TODO: Send those events to the iframe?
                 this.gameMap.onEnterZone((zones) => {
                     for (const zone of zones) {
                         const focusable = zone.properties?.find((property) => property.name === "focusable");
