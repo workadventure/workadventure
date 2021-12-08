@@ -49,6 +49,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     public enterFocusMode(
         focusOn: { x: number; y: number; width: number; height: number },
+        margin: number = 0,
         duration: number = 1000
     ): void {
         this.setCameraMode(CameraMode.Focus);
@@ -57,14 +58,18 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
         this.restoreZoomTween?.stop();
         this.startFollowTween?.stop();
-        const targetZoomModifier = this.waScaleManager.getTargetZoomModifierFor(focusOn.width, focusOn.height);
+        const marginMult = 1 + margin;
+        const targetZoomModifier = this.waScaleManager.getTargetZoomModifierFor(
+            focusOn.width * marginMult,
+            focusOn.height * marginMult
+        );
         const currentZoomModifier = this.waScaleManager.zoomModifier;
         const zoomModifierChange = targetZoomModifier - currentZoomModifier;
         this.camera.stopFollow();
         this.cameraFollowTarget = undefined;
         this.camera.pan(
-            focusOn.x + focusOn.width * 0.5,
-            focusOn.y + focusOn.height * 0.5,
+            focusOn.x + focusOn.width * 0.5 * marginMult,
+            focusOn.y + focusOn.height * 0.5 * marginMult,
             duration,
             Easing.SineEaseOut,
             true,

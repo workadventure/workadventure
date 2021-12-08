@@ -791,11 +791,11 @@ export class GameScene extends DirtyScene {
                 // P.H. TODO: Send those events to the iframe?
                 this.gameMap.onEnterZone((zones) => {
                     for (const zone of zones) {
-                        for (const property of zone.properties ?? []) {
-                            if (property.name === "focusable" && property.value === true) {
-                                this.cameraManager.enterFocusMode(zone);
-                                break;
-                            }
+                        const focusable = zone.properties?.find((property) => property.name === "focusable");
+                        if (focusable && focusable.value === true) {
+                            const zoomMargin = zone.properties?.find((property) => property.name === "zoom_margin");
+                            this.cameraManager.enterFocusMode(zone, Number(zoomMargin?.value));
+                            break;
                         }
                     }
                     // zones.forEach((zone) => {
@@ -805,11 +805,10 @@ export class GameScene extends DirtyScene {
 
                 this.gameMap.onLeaveZone((zones) => {
                     for (const zone of zones) {
-                        for (const property of zone.properties ?? []) {
-                            if (property.name === "focusable" && property.value === true) {
-                                this.cameraManager.leaveFocusMode(this.CurrentPlayer);
-                                break;
-                            }
+                        const focusable = zone.properties?.find((property) => property.name === "focusable");
+                        if (focusable && focusable.value === true) {
+                            this.cameraManager.leaveFocusMode(this.CurrentPlayer);
+                            break;
                         }
                     }
                     // zones.forEach((zone) => {

@@ -163,6 +163,11 @@
                          "name":"focusable",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"zoom_margin",
+                         "type":"float",
+                         "value":0.5
                         }],
                  "rotation":0,
                  "type":"zone",
@@ -185,6 +190,11 @@
                          "name":"focusable",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"zoom_margin",
+                         "type":"float",
+                         "value":0
                         }],
                  "rotation":0,
                  "type":"zone",
