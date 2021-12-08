@@ -18,6 +18,7 @@ import {
     UserMovesMessage,
     VariableMessage,
     ViewportMessage,
+    WebexSessionQuery,
     WebRtcSignalToServerMessage,
 } from "../Messages/generated/messages_pb";
 import { TemplatedApp } from "uWebSockets.js";
@@ -386,7 +387,7 @@ export class IoSocketController {
                 } else if (message.hasWebexquery()) {
                     // TODO type assertion (see above)
                     console.log("[Pusher] Found webex query in message");
-                    socketManager.handleWebexSessionQuery(client, message.getWebexquery()!!);
+                    socketManager.handleWebexSessionQuery(client, message.getWebexquery() as WebexSessionQuery);
                 } else if (message.hasEmotepromptmessage()) {
                     socketManager.handleEmotePromptMessage(
                         client,
