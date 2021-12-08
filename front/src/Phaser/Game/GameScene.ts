@@ -798,9 +798,9 @@ export class GameScene extends DirtyScene {
                             break;
                         }
                     }
-                    // zones.forEach((zone) => {
-                    //     iframeListener.sendEnterLayerEvent(zone.name);
-                    // });
+                    zones.forEach((zone) => {
+                        iframeListener.sendEnterZoneEvent(zone.name);
+                    });
                 });
 
                 this.gameMap.onLeaveZone((zones) => {
@@ -811,9 +811,9 @@ export class GameScene extends DirtyScene {
                             break;
                         }
                     }
-                    // zones.forEach((zone) => {
-                    //     iframeListener.sendEnterLayerEvent(zone.name);
-                    // });
+                    zones.forEach((zone) => {
+                        iframeListener.sendLeaveZoneEvent(zone.name);
+                    });
                 });
 
                 // this.gameMap.onLeaveLayer((layers) => {
