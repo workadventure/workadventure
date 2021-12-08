@@ -62,7 +62,7 @@ export type IframeEventMap = {
     registerMenu: MenuRegisterEvent;
     unregisterMenu: UnregisterMenuEvent;
     setTiles: SetTilesEvent;
-    modifyEmbeddedWebsite: Partial<EmbeddedWebsite>; // Note: name should be compulsory in fact;
+    modifyEmbeddedWebsite: Partial<EmbeddedWebsite>; // Note: name should be compulsory in fact
 };
 export interface IframeEvent<T extends keyof IframeEventMap> {
     type: T;
@@ -197,7 +197,6 @@ export const isIframeQuery = (event: any): event is IframeQuery<keyof IframeQuer
     const result = iframeQueryMapTypeGuards[type].query(event.data);
     if (!result) {
         console.warn('Received a query with type "' + type + '" but the payload is invalid.');
-        console.log(event);
     }
     return result;
 };
