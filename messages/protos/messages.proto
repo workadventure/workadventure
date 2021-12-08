@@ -259,6 +259,9 @@ message BanUserMessage{
   string message = 2;
 }
 
+/**
+ * Messages going from back and pusher to the front
+ */
 message ServerToClientMessage {
   oneof message {
     BatchMessage batchMessage = 1;
