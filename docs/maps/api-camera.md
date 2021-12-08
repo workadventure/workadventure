@@ -1,7 +1,7 @@
 {.section-title.accent.text-primary}
 # API Camera functions Reference
 
-### Listen to the camera update
+### Listen to camera updates
 
 ```
 WA.camera.onCameraUpdate(callback: WasCameraUpdatedEventCallback): void
