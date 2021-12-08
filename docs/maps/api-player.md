@@ -36,6 +36,23 @@ WA.onInit().then(() => {
 })
 ```
 
+### Get the player language
+
+```
+WA.player.language: string;
+```
+
+The current language of player is available from the `WA.player.language` property.
+
+{.alert.alert-info}
+You need to wait for the end of the initialization before accessing `WA.player.language`
+
+```typescript
+WA.onInit().then(() => {
+    console.log('Player language: ', WA.player.language);
+})
+```
+
 ### Get the tags of the player
 
 ```
