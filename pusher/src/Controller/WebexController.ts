@@ -168,7 +168,7 @@ export class WebexController {
             body: urlEncode(data),
         });
         // todo error handling on no res
-        const tokenResponse = res?.data
+        const tokenResponse = res?.data;
         if (!tokenResponse.ok) {
             throw Error(await tokenResponse.text());
         }
@@ -196,7 +196,7 @@ export class WebexController {
             },
             body: urlEncode(data),
         });
-        const tokenResponse = res?.data
+        const tokenResponse = res?.data;
         if (!tokenResponse.ok) {
             throw Error(await tokenResponse.text());
         }

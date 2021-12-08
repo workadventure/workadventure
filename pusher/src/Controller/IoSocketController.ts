@@ -31,7 +31,7 @@ import { ADMIN_API_TOKEN, ADMIN_API_URL, SOCKET_IDLE_TIMER } from "../Enum/Envir
 import { Zone } from "_Model/Zone";
 import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
 import { CharacterTexture } from "../Services/AdminApi/CharacterTexture";
-import { DEBUG_MODE } from '../../../front/src/Enum/EnvironmentVariable'
+import { DEBUG_MODE } from "../../../front/src/Enum/EnvironmentVariable";
 
 export class IoSocketController {
     private nextUserId: number = 1;
