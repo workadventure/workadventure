@@ -39,6 +39,28 @@ Note: on some OSes, you will need to add this line to your `/etc/hosts` file:
 Note: If on the first run you get a page with "network error". Try to ``docker-compose stop`` , then ``docker-compose start``.
 Note 2: If you are still getting "network error". Make sure you are authorizing the self-signed certificate by entering https://pusher.workadventure.testing and accepting them.
 
+### Development environment for webex
+
+Install Docker.
+Run:
+
+```
+cp .env.template .env
+```
+
+Make sure you have webex variables.
+You can copy and paste WEBEX_ACCESS_TOKEN from real webex request.
+We recommend to set DEBUG_MODE to `true`
+
+Run:
+
+```
+docker-compose -f docker-compose.single-domain.yaml up --build
+```
+
+You should now be able to browse to http://play.workadventure.localhost/ 
+You can set your favorite/custom map in Url like following: http://play.workadventure.localhost/_/pathToYourMap/map.json
+
 ### MacOS developers, your environment with Vagrant
 
 If you are using MacOS, you can increase Docker performance using Vagrant. If you want more explanations, you can read [this medium article](https://medium.com/better-programming/vagrant-to-increase-docker-performance-with-macos-25b354b0c65c).

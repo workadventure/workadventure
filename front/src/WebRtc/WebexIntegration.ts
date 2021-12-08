@@ -1,6 +1,11 @@
 import { coWebsiteManager } from "./CoWebsiteManager";
 import WebexSignIn from "../Components/Webex/WebexSignIn.svelte";
-import { WEBEX_AUTHORIZATION_URL, WEBEX_GLOBAL_SPACE_ID } from "../Enum/EnvironmentVariable";
+import {
+    DEBUG_MODE,
+    WEBEX_ACCESS_TOKEN,
+    WEBEX_AUTHORIZATION_URL,
+    WEBEX_GLOBAL_SPACE_ID,
+} from "../Enum/EnvironmentVariable";
 //import App from "../Components/App.svelte"; <- Causes peerStore issue
 import type { SvelteComponentDev } from "svelte/internal";
 import WebexVideoChat from "../Components/Webex/WebexVideoChat.svelte";
@@ -49,8 +54,11 @@ export class WebexIntegration {
 
     get isAuthorized() {
         const now = new Date();
-        this.storage.setItem(accessTokenKey,"REPLACE_ME");
-        this.storage.setItem(expiryDateKey,new Date(Date.now() + +1209599 * 1000 - (24 * 60 * 60 * 1000)).toISOString());
+        // set webex token for development
+        if (WEBEX_ACCESS_TOKEN && DEBUG_MODE) {
+            this.storage.setItem(accessTokenKey,"REPLACE_ME");
+            this.storage.setItem(expiryDateKey,new Date(Date.now() + +1209599 * 1000 - (24 * 60 * 60 * 1000)).toISOString());
+        }
         return Boolean(this.accessToken && this.expiryDate && this.expiryDate > now);
     }
 

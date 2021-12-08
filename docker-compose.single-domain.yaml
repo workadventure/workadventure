@@ -43,7 +43,8 @@ services:
       START_ROOM_URL: "$START_ROOM_URL"
       WEBEX_AUTHORIZATION_URL: $WEBEX_AUTHORIZATION_URL
       WEBEX_GLOBAL_SPACE_ID: $WEBEX_GLOBAL_SPACE_ID
-    command: yarn run start
+      WEBEX_ACCESS_TOKEN: $WEBEX_ACCESS_TOKEN
+    command: yarn run serve
     volumes:
       - ./front:/usr/src/app
     labels:
