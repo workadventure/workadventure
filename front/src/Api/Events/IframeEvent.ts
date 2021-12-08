@@ -218,7 +218,6 @@ export const isIframeQuery = (event: any): event is IframeQuery<keyof IframeQuer
     const result = iframeQueryMapTypeGuards[type].query(event.data);
     if (!result) {
         console.warn('Received a query with type "' + type + '" but the payload is invalid.');
-        console.log(event);
     }
     return result;
 };
