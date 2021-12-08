@@ -560,7 +560,7 @@ export class RoomConnection implements RoomConnection {
         // TODO make webex meeting, check if ok here
         webexSessionQuery.setRoomid(roomId);
         const clientToServerMessage = new ClientToServerMessage();
-        clientToServerMessage.setWebexquery(webexSessionQuery);
+        clientToServerMessage.setWebexsessionquery(webexSessionQuery);
         console.log("[Front] Sending query for room " + roomId);
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }

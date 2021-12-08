@@ -384,10 +384,9 @@ export class IoSocketController {
                         client,
                         message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage
                     );
-                } else if (message.hasWebexquery()) {
-                    // TODO type assertion (see above)
+                } else if (message.hasWebexsessionquery()) {
                     console.log("[Pusher] Found webex query in message");
-                    socketManager.handleWebexSessionQuery(client, message.getWebexquery() as WebexSessionQuery);
+                    socketManager.handleWebexSessionQuery(client, message.getWebexsessionquery() as WebexSessionQuery);
                 } else if (message.hasEmotepromptmessage()) {
                     socketManager.handleEmotePromptMessage(
                         client,

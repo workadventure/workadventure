@@ -113,7 +113,7 @@ message ClientToServerMessage {
     QueryJitsiJwtMessage queryJitsiJwtMessage = 12;
     EmotePromptMessage emotePromptMessage = 13;
     VariableMessage variableMessage = 14;
-    WebexSessionQuery webexQuery = 15;
+    WebexSessionQuery webexSessionQuery = 15;
   }
 }
 
