@@ -18,8 +18,9 @@ import {
     UserMovesMessage,
     VariableMessage,
     ViewportMessage,
+    WebexSessionQuery,
     WebRtcSignalToServerMessage,
-} from "../Messages/generated/messages_pb";
+} from "../Messages/generated/messages_pb"
 import { TemplatedApp } from "uWebSockets.js";
 import { parse } from "query-string";
 import { jwtTokenManager, tokenInvalidException } from "../Services/JWTTokenManager";
@@ -383,10 +384,10 @@ export class IoSocketController {
                         client,
                         message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage
                     );
-                } else if (message.hasWebexquery()) {
+                } else if (message.hasWebexsessionquery()) {
                     // TODO type assertion (see above)
                     console.log("[Pusher] Found webex query in message");
-                    socketManager.handleWebexSessionQuery(client, message.getWebexquery()!!);
+                    socketManager.handleWebexSessionQuery(client, message.getWebexsessionquery() as WebexSessionQuery);
                 } else if (message.hasEmotepromptmessage()) {
                     socketManager.handleEmotePromptMessage(
                         client,
