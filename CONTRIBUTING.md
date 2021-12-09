@@ -10,6 +10,10 @@ We love to receive contributions from our community — you!
 There are many ways to contribute, from writing tutorials or blog posts, improving the documentation, 
 submitting bug reports and feature requests or writing code which can be incorporated into WorkAdventure itself.
 
+## Developer documentation
+
+Documentation targeted at developers can be found in the [`/docs/dev`](docs/dev/) 
+
 ## Using the issue tracker
 
 First things first: **Do NOT report security vulnerabilities in public issues!**.
