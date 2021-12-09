@@ -10,6 +10,10 @@ We love to receive contributions from our community — you!
 There are many ways to contribute, from writing tutorials or blog posts, improving the documentation, 
 submitting bug reports and feature requests or writing code which can be incorporated into WorkAdventure itself.
 
+## Contributing external resources
+
+You can share your work on maps / articles / videos related to WorkAdventure on our [awesome-workadventure](https://github.com/workadventure/awesome-workadventure) list.
+
 ## Developer documentation
 
 Documentation targeted at developers can be found in the [`/docs/dev`](docs/dev/) 
