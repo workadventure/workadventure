@@ -20,7 +20,7 @@ import {
     ViewportMessage,
     WebexSessionQuery,
     WebRtcSignalToServerMessage,
-} from "../Messages/generated/messages_pb"
+} from "../Messages/generated/messages_pb";
 import { TemplatedApp } from "uWebSockets.js";
 import { parse } from "query-string";
 import { jwtTokenManager, tokenInvalidException } from "../Services/JWTTokenManager";
