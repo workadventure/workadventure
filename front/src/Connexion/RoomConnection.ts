@@ -590,6 +590,7 @@ export class RoomConnection implements RoomConnection {
                     " and meeting link of " +
                     message.getMeetinglink()
             );
+            console.log(message);
             callback(message.getRoomid(), message.getMeetinglink());
         });
     }
