@@ -1,6 +1,7 @@
 import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
 import { PlayerAnimationDirections, PlayerAnimationTypes } from "../Player/Animation";
+import { TexturesHelper } from "../Helpers/TexturesHelper";
 
 export interface CompanionStatus {
     x: number;
@@ -125,33 +126,18 @@ export class Companion extends Container {
     }
 
     public async getSnapshot(): Promise<string> {
-        const rt = this.scene.make.renderTexture({}, false);
-        if (rt.renderer instanceof Phaser.Renderer.Canvas.CanvasRenderer) {
-            rt.destroy();
+        const sprites = Array.from(this.sprites.values()).map((sprite) => {
+            return { sprite, frame: 1 };
+        });
+        return TexturesHelper.getSnapshot(this.scene, ...sprites).catch((reason) => {
+            console.warn(reason);
             for (const sprite of this.sprites.values()) {
-                // we can be sure that either predefined woka or body texture is at this point loaded
+                // it can be either cat or dog prefix
                 if (sprite.texture.key.includes("cat") || sprite.texture.key.includes("dog")) {
                     return this.scene.textures.getBase64(sprite.texture.key);
                 }
             }
-        }
-        for (const sprite of this.sprites.values()) {
-            sprite.setFrame(1);
-            rt.draw(sprite, sprite.displayWidth * 0.5, sprite.displayHeight * 0.5);
-        }
-        return new Promise<string>((resolve, reject) => {
-            try {
-                rt.snapshot(
-                    (url) => {
-                        resolve((url as HTMLImageElement).src);
-                        rt.destroy();
-                    },
-                    "image/png",
-                    1
-                );
-            } catch (error) {
-                reject(error);
-            }
+            return "cat1";
         });
     }
 
