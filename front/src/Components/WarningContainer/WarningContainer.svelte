@@ -8,8 +8,8 @@
 </script>
 
 <main class="warningMain" transition:fly={{ y: -200, duration: 500 }}>
-    <h2>Warning!</h2>
     {#if $userIsAdminStore}
+        <h2>Warning!</h2>
         <p>
             This world is close to its limit!. You can upgrade its capacity <a href={upgradeLink} target="_blank"
                 >here</a
@@ -22,6 +22,7 @@
             >!
         </p>
     {:else}
+        <h2>Warning!</h2>
         <p>This world is close to its limit!</p>
     {/if}
 </main>
