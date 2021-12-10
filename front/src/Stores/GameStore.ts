@@ -5,3 +5,5 @@ export const userMovingStore = writable(false);
 export const requestVisitCardsStore = writable<string | null>(null);
 
 export const userIsAdminStore = writable(false);
+
+export const limitMap = writable(false);

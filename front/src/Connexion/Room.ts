@@ -32,7 +32,7 @@ export class Room {
         if (this.id.startsWith("/")) {
             this.id = this.id.substr(1);
         }
-        if (this.id.startsWith("_/")) {
+        if (this.id.startsWith("_/") || this.id.startsWith("*/")) {
             this.isPublic = true;
         } else if (this.id.startsWith("@/")) {
             this.isPublic = false;
@@ -138,7 +138,7 @@ export class Room {
         }
 
         if (this.isPublic) {
-            const match = /_\/([^/]+)\/.+/.exec(this.id);
+            const match = /[_*]\/([^/]+)\/.+/.exec(this.id);
             if (!match) throw new Error('Could not extract instance from "' + this.id + '"');
             this.instance = match[1];
             return this.instance;

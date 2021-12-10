@@ -8,9 +8,10 @@ import { CharacterTexture, LocalUser } from "./LocalUser";
 import { Room } from "./Room";
 import { _ServiceWorker } from "../Network/ServiceWorker";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
-import { userIsConnected } from "../Stores/MenuStore";
+import { userIsConnected, warningContainerStore } from "../Stores/MenuStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { axiosWithRetry } from "./AxiosUtils";
+import { limitMap } from "../Stores/GameStore";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -148,6 +149,7 @@ class ConnectionManager {
         } else if (
             connexionType === GameConnexionTypes.organization ||
             connexionType === GameConnexionTypes.anonymous ||
+            connexionType === GameConnexionTypes.limit ||
             connexionType === GameConnexionTypes.empty
         ) {
             this.authToken = localUserStore.getAuthToken();
@@ -226,6 +228,12 @@ class ConnectionManager {
         }
         if (this.localUser) {
             analyticsClient.identifyUser(this.localUser.uuid, this.localUser.email);
+        }
+
+        //if limit room active test headband
+        if (connexionType === GameConnexionTypes.limit) {
+            warningContainerStore.activateWarningContainer();
+            limitMap.set(true);
         }
 
         this.serviceWorker = new _ServiceWorker();

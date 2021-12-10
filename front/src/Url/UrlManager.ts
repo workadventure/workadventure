@@ -9,6 +9,7 @@ export enum GameConnexionTypes {
     unknown,
     jwt,
     login,
+    limit,
 }
 
 //this class is responsible with analysing and editing the game's url
@@ -19,6 +20,8 @@ class UrlManager {
             return GameConnexionTypes.login;
         } else if (url === "/jwt") {
             return GameConnexionTypes.jwt;
+        } else if (url.includes("*/")) {
+            return GameConnexionTypes.limit;
         } else if (url.includes("_/")) {
             return GameConnexionTypes.anonymous;
         } else if (url.includes("@/")) {
