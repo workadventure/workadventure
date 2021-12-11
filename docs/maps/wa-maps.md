@@ -103,7 +103,8 @@ The following *map* properties are supported:
 * `mapDescription` (string): A short description of your map
 * `mapCopyright` (string): Copyright notice
 
-And *each tileset* can also have a property called `tilesetCopyright` (string). 
+Each *tileset* can also have a property called `tilesetCopyright` (string). 
+If you are using audio files in your map, you can declare a layer property `audioCopyright` (string).
 
 Resulting in a "credit" page in the menu looking like this:
 
