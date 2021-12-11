@@ -30,6 +30,7 @@ import {
     PingMessage,
     EmoteEventMessage,
     EmotePromptMessage,
+    FollowMeRequestMessage,
     SendUserMessage,
     BanUserMessage,
     VariableMessage,
@@ -257,6 +258,9 @@ export class RoomConnection implements RoomConnection {
                 warningContainerStore.activateWarningContainer();
             } else if (message.hasRefreshroommessage()) {
                 //todo: implement a way to notify the user the room was refreshed.
+            } else if (message.hasFollowmerequestmessage()) {
+                const requestMessage = message.getFollowmerequestmessage() as FollowMeRequestMessage;
+                console.log("Follow me request from " + requestMessage.getPlayername());
             } else if (message.hasErrormessage()) {
                 const errorMessage = message.getErrormessage() as ErrorMessage;
                 console.error("An error occurred server side: " + errorMessage.getMessage());
@@ -709,6 +713,14 @@ export class RoomConnection implements RoomConnection {
         const clientToServerMessage = new ClientToServerMessage();
         clientToServerMessage.setEmotepromptmessage(emoteMessage);
 
+        this.socket.send(clientToServerMessage.serializeBinary().buffer);
+    }
+
+    public emitFollowMeRequest(): void {
+        console.log("Emitting follow me request");
+        const message = new FollowMeRequestMessage();
+        const clientToServerMessage = new ClientToServerMessage();
+        clientToServerMessage.setFollowmerequestmessage(message);
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 

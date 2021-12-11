@@ -8,6 +8,7 @@ import {
     BatchToPusherMessage,
     BatchToPusherRoomMessage,
     EmotePromptMessage,
+    FollowMeRequestMessage,
     EmptyMessage,
     ItemEventMessage,
     JoinRoomMessage,
@@ -115,6 +116,12 @@ const roomManager: IRoomManagerServer = {
                                 room,
                                 user,
                                 message.getEmotepromptmessage() as EmotePromptMessage
+                            );
+                        } else if (message.hasFollowmerequestmessage()) {
+                            socketManager.handleFollowMeRequestMessage(
+                                room,
+                                user,
+                                message.getFollowmerequestmessage() as FollowMeRequestMessage
                             );
                         } else if (message.hasSendusermessage()) {
                             const sendUserMessage = message.getSendusermessage();

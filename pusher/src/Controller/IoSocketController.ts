@@ -17,6 +17,7 @@ import {
     ServerToClientMessage,
     CompanionMessage,
     EmotePromptMessage,
+    FollowMeRequestMessage,
     VariableMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
@@ -468,6 +469,11 @@ export class IoSocketController {
                     socketManager.handleEmotePromptMessage(
                         client,
                         message.getEmotepromptmessage() as EmotePromptMessage
+                    );
+                } else if (message.hasFollowmerequestmessage()) {
+                    socketManager.handleFollowMeRequest(
+                        client,
+                        message.getFollowmerequestmessage() as FollowMeRequestMessage
                     );
                 }
 

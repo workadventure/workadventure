@@ -8,6 +8,7 @@ import {
     CharacterLayerMessage,
     EmoteEventMessage,
     EmotePromptMessage,
+    FollowMeRequestMessage,
     GroupDeleteMessage,
     ItemEventMessage,
     JoinRoomMessage,
@@ -267,6 +268,12 @@ export class SocketManager implements ZoneEventListener {
 
         // Now, we need to listen to the correct viewport.
         this.handleViewport(client, viewport.toObject());
+    }
+
+    handleFollowMeRequest(client: ExSocketInterface, requestMessage: FollowMeRequestMessage): void {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setFollowmerequestmessage(requestMessage);
+        client.backConnection.write(pusherToBackMessage);
     }
 
     onEmote(emoteMessage: EmoteEventMessage, listener: ExSocketInterface): void {

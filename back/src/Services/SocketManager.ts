@@ -30,6 +30,7 @@ import {
     BanUserMessage,
     RefreshRoomMessage,
     EmotePromptMessage,
+    FollowMeRequestMessage,
     VariableMessage,
     BatchToPusherRoomMessage,
     SubToPusherRoomMessage,
@@ -832,6 +833,17 @@ export class SocketManager {
         emoteEventMessage.setEmote(emotePromptMessage.getEmote());
         emoteEventMessage.setActoruserid(user.id);
         room.emitEmoteEvent(user, emoteEventMessage);
+    }
+
+    handleFollowMeRequestMessage(room: GameRoom, user: User, requestMessage: FollowMeRequestMessage) {
+        console.log("Handling follow me request message");
+        console.log(user.name);
+        requestMessage.setPlayername(user.name);
+        room.getUsers().forEach((recipient) => {
+            const clientMessage = new ServerToClientMessage();
+            clientMessage.setFollowmerequestmessage(requestMessage);
+            recipient.socket.write(clientMessage);
+        });
     }
 }
 
