@@ -80,13 +80,18 @@ message QueryJitsiJwtMessage {
   string tag = 2; // FIXME: rather than reading the tag from the query, we should read it from the current map!
 }
 
-message FollowMeRequestMessage {
+message FollowRequestMessage {
   string playerName = 1;
 }
 
-message FollowMeResponseMessage {
-  string playerName = 1;
-  bool accepted = 2;
+message FollowConfirmationMessage {
+  string leader = 1;
+  string follower = 2;
+}
+
+message FollowAbortMessage {
+  string role = 1;
+  string playerName = 2;
 }
 
 message ClientToServerMessage {
@@ -104,8 +109,9 @@ message ClientToServerMessage {
     QueryJitsiJwtMessage queryJitsiJwtMessage = 12;
     EmotePromptMessage emotePromptMessage = 13;
     VariableMessage variableMessage = 14;
-    FollowMeRequestMessage followMeRequestMessage = 15;
-    FollowMeResponseMessage followMeResponseMessage = 16;
+    FollowRequestMessage followRequestMessage = 15;
+    FollowConfirmationMessage followConfirmationMessage = 16;
+    FollowAbortMessage followAbortMessage = 17;
   }
 }
 
@@ -296,8 +302,9 @@ message ServerToClientMessage {
     WorldConnexionMessage worldConnexionMessage = 18;
     //EmoteEventMessage emoteEventMessage = 19;
     TokenExpiredMessage tokenExpiredMessage = 20;
-    FollowMeRequestMessage followMeRequestMessage = 21;
-    FollowMeResponseMessage followMeResponseMessage = 22;
+    FollowRequestMessage followRequestMessage = 21;
+    FollowConfirmationMessage followConfirmationMessage = 22;
+    FollowAbortMessage followAbortMessage = 23;
   }
 }
 
@@ -378,8 +385,9 @@ message PusherToBackMessage {
     BanUserMessage banUserMessage = 13;
     EmotePromptMessage emotePromptMessage = 14;
     VariableMessage variableMessage = 15;
-    FollowMeRequestMessage followMeRequestMessage = 16;
-    FollowMeResponseMessage followMeResponseMessage = 17;
+    FollowRequestMessage followRequestMessage = 16;
+    FollowConfirmationMessage followConfirmationMessage = 17;
+    FollowAbortMessage followAbortMessage = 18;
   }
 }
 

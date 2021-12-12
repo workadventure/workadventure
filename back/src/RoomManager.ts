@@ -8,7 +8,9 @@ import {
     BatchToPusherMessage,
     BatchToPusherRoomMessage,
     EmotePromptMessage,
-    FollowMeRequestMessage,
+    FollowRequestMessage,
+    FollowConfirmationMessage,
+    FollowAbortMessage,
     EmptyMessage,
     ItemEventMessage,
     JoinRoomMessage,
@@ -117,11 +119,23 @@ const roomManager: IRoomManagerServer = {
                                 user,
                                 message.getEmotepromptmessage() as EmotePromptMessage
                             );
-                        } else if (message.hasFollowmerequestmessage()) {
-                            socketManager.handleFollowMeRequestMessage(
+                        } else if (message.hasFollowrequestmessage()) {
+                            socketManager.handleFollowRequestMessage(
                                 room,
                                 user,
-                                message.getFollowmerequestmessage() as FollowMeRequestMessage
+                                message.getFollowrequestmessage() as FollowRequestMessage
+                            );
+                        } else if (message.hasFollowconfirmationmessage()) {
+                            socketManager.handleFollowConfirmationMessage(
+                                room,
+                                user,
+                                message.getFollowconfirmationmessage() as FollowConfirmationMessage
+                            );
+                        } else if (message.hasFollowabortmessage()) {
+                            socketManager.handleFollowAbortMessage(
+                                room,
+                                user,
+                                message.getFollowabortmessage() as FollowAbortMessage
                             );
                         } else if (message.hasSendusermessage()) {
                             const sendUserMessage = message.getSendusermessage();

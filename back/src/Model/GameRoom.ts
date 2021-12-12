@@ -14,6 +14,7 @@ import {
     SubToPusherRoomMessage,
     VariableMessage,
     VariableWithTagMessage,
+    ServerToClientMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { RoomSocket, ZoneSocket } from "src/RoomManager";
@@ -95,10 +96,20 @@ export class GameRoom {
         return Array.from(this.groups.values());
     }
 
+    public getGroupIncludingUser(user: User): Group | undefined {
+        const foundGroups = this.getGroups().filter((grp) => grp.includes(user));
+        return foundGroups[0];
+    }
+
     public getUsers(): Map<number, User> {
         return this.users;
     }
 
+    public getUserByName(name: string): User | undefined {
+        let foundUsers = Array.from(this.users.values());
+        foundUsers = foundUsers.filter((user: User) => user.name === name);
+        return foundUsers[0];
+    }
     public getUserByUuid(uuid: string): User | undefined {
         return this.usersByUuid.get(uuid);
     }
@@ -224,6 +235,20 @@ export class GameRoom {
                 this.leaveGroup(user);
             }
         }
+    }
+
+    public sendToOthersInGroupIncludingUser(user: User, message: ServerToClientMessage): void {
+        this.getGroupIncludingUser(user)
+            ?.getUsers()
+            .forEach((currentUser: User) => {
+                if (currentUser.name !== user.name) {
+                    currentUser.socket.write(message);
+                }
+            });
+    }
+
+    public sendToUserWithName(name: string, message: ServerToClientMessage): void {
+        this.getUserByName(name)?.socket.write(message);
     }
 
     setSilent(user: User, silent: boolean) {

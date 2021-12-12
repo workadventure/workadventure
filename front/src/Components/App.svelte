@@ -42,6 +42,8 @@
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore";
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
+    import { followStateStore, followStates } from "../Stores/InteractStore";
+    import InteractMenu from "./InteractMenu/InteractMenu.svelte";
 
     export let game: Game;
 </script>
@@ -100,6 +102,11 @@
     {#if $showReportScreenStore !== userReportEmpty}
         <div>
             <ReportMenu />
+        </div>
+    {/if}
+    {#if $followStateStore !== followStates.off}
+        <div>
+            <InteractMenu />
         </div>
     {/if}
     {#if $menuIconVisiblilityStore}

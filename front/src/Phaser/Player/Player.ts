@@ -3,7 +3,16 @@ import type { GameScene } from "../Game/GameScene";
 import { ActiveEventList, UserInputEvent, UserInputManager } from "../UserInput/UserInputManager";
 import { Character } from "../Entity/Character";
 import type { RemotePlayer } from "../Entity/RemotePlayer";
+
+import { get } from "svelte/store";
 import { userMovingStore } from "../../Stores/GameStore";
+import {
+    followStateStore,
+    followRoleStore,
+    followUsersStore,
+    followRoles,
+    followStates,
+} from "../../Stores/InteractStore";
 
 export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";
@@ -156,44 +165,34 @@ export class Player extends Character {
         userMovingStore.set(moving);
     }
 
-    moveUser(delta: number): void {
+    public enableFollowing() {
+        Array.from(this.scene.MapPlayersByKey.values()).forEach((player) => {
+            if (player.PlayerValue !== get(followUsersStore)[0]) {
+                return;
+            }
+            this.follow = {
+                followPlayer: player,
+                direction: this.previousDirection,
+            };
+            followStateStore.set(followStates.active);
+        });
+    }
+
+    public moveUser(delta: number): void {
         const activeEvents = this.userInputManager.getEventListForGameTick();
+        const state = get(followStateStore);
+        const role = get(followRoleStore);
 
         if (activeEvents.get(UserInputEvent.Interact)) {
-            const sortedPlayers = Array.from(this.scene.MapPlayersByKey.values()).sort((p1, p2) => {
-                const sdistToP1 = Math.pow(p1.x - this.x, 2) + Math.pow(p1.y - this.y, 2);
-                const sdistToP2 = Math.pow(p2.x - this.x, 2) + Math.pow(p2.y - this.y, 2);
-                if (sdistToP1 > sdistToP2) {
-                    return 1;
-                } else if (sdistToP1 < sdistToP2) {
-                    return -1;
-                } else {
-                    return 0;
-                }
-            });
-
-            const minFollowDist = 10000;
-            if (typeof sortedPlayers !== "undefined" && sortedPlayers.length > 0) {
-                const sdist = Math.pow(sortedPlayers[0].x - this.x, 2) + Math.pow(sortedPlayers[0].y - this.y, 2);
-                if (sdist < minFollowDist) {
-                    this.follow = {
-                        followPlayer: sortedPlayers[0],
-                        direction: this.previousDirection,
-                    };
-                }
+            if (state === followStates.off && this.scene.groups.size > 0) {
+                followStateStore.set(followStates.requesting);
+                followRoleStore.set(followRoles.leader);
+            } else if (state === followStates.active) {
+                followStateStore.set(followStates.ending);
             }
         }
 
-        if (
-            activeEvents.get(UserInputEvent.MoveUp) ||
-            activeEvents.get(UserInputEvent.MoveDown) ||
-            activeEvents.get(UserInputEvent.MoveLeft) ||
-            activeEvents.get(UserInputEvent.MoveRight)
-        ) {
-            this.follow = null;
-        }
-
-        if (this.follow === null) {
+        if ((state !== followStates.active && state !== followStates.ending) || role !== followRoles.follower) {
             this.inputStep(activeEvents, delta);
         } else {
             this.followStep(activeEvents, delta);

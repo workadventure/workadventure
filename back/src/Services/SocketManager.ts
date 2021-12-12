@@ -30,7 +30,9 @@ import {
     BanUserMessage,
     RefreshRoomMessage,
     EmotePromptMessage,
-    FollowMeRequestMessage,
+    FollowRequestMessage,
+    FollowConfirmationMessage,
+    FollowAbortMessage,
     VariableMessage,
     BatchToPusherRoomMessage,
     SubToPusherRoomMessage,
@@ -835,24 +837,30 @@ export class SocketManager {
         room.emitEmoteEvent(user, emoteEventMessage);
     }
 
-    handleFollowMeRequestMessage(room: GameRoom, user: User, requestMessage: FollowMeRequestMessage) {
-        // Find group including the requesting user
-        let foundGroups = room.getGroups().filter((grp) => grp.includes(user));
-        if (!foundGroups[0]) {
-            return;
-        }
-        let group = foundGroups[0];
-
-        // Send invitations to other group members
-        requestMessage.setPlayername(user.name);
+    handleFollowRequestMessage(room: GameRoom, user: User, message: FollowRequestMessage) {
         const clientMessage = new ServerToClientMessage();
-        clientMessage.setFollowmerequestmessage(requestMessage);
-        group.getUsers().forEach((currentUser: User) => {
-            if (user.name !== currentUser.name) {
-                console.log("Inviting " + currentUser.name + " to follow " + user.name);
-                currentUser.socket.write(clientMessage);
-            }
-        });
+        clientMessage.setFollowrequestmessage(message);
+        room.sendToOthersInGroupIncludingUser(user, clientMessage);
+    }
+
+    handleFollowConfirmationMessage(room: GameRoom, user: User, message: FollowConfirmationMessage) {
+        const clientMessage = new ServerToClientMessage();
+        clientMessage.setFollowconfirmationmessage(message);
+        room.sendToUserWithName(message.getLeader(), clientMessage);
+    }
+
+    handleFollowAbortMessage(room: GameRoom, user: User, message: FollowAbortMessage) {
+        if (message.getRole() === "leader") {
+            const clientMessage = new ServerToClientMessage();
+            clientMessage.setFollowabortmessage(message);
+            room.sendToOthersInGroupIncludingUser(user, clientMessage);
+        } else {
+            const recipient = message.getPlayername();
+            message.setPlayername(user.name);
+            const clientMessage = new ServerToClientMessage();
+            clientMessage.setFollowabortmessage(message);
+            room.sendToUserWithName(recipient, clientMessage);
+        }
     }
 }
 

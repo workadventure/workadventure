@@ -30,7 +30,9 @@ import {
     PingMessage,
     EmoteEventMessage,
     EmotePromptMessage,
-    FollowMeRequestMessage,
+    FollowRequestMessage,
+    FollowConfirmationMessage,
+    FollowAbortMessage,
     SendUserMessage,
     BanUserMessage,
     VariableMessage,
@@ -58,7 +60,15 @@ import { adminMessagesService } from "./AdminMessagesService";
 import { worldFullMessageStream } from "./WorldFullMessageStream";
 import { connectionManager } from "./ConnectionManager";
 import { emoteEventStream } from "./EmoteEventStream";
+import { get } from "svelte/store";
 import { warningContainerStore } from "../Stores/MenuStore";
+import {
+    followStateStore,
+    followRoleStore,
+    followUsersStore,
+    followRoles,
+    followStates,
+} from "../Stores/InteractStore";
 
 const manualPingDelay = 20000;
 
@@ -258,9 +268,32 @@ export class RoomConnection implements RoomConnection {
                 warningContainerStore.activateWarningContainer();
             } else if (message.hasRefreshroommessage()) {
                 //todo: implement a way to notify the user the room was refreshed.
-            } else if (message.hasFollowmerequestmessage()) {
-                const requestMessage = message.getFollowmerequestmessage() as FollowMeRequestMessage;
-                console.log("Follow me request from " + requestMessage.getPlayername());
+            } else if (message.hasFollowrequestmessage()) {
+                const requestMessage = message.getFollowrequestmessage() as FollowRequestMessage;
+                console.log("Got follow request from " + requestMessage.getPlayername());
+                followStateStore.set(followStates.requesting);
+                followRoleStore.set(followRoles.follower);
+                followUsersStore.set([requestMessage.getPlayername()]);
+            } else if (message.hasFollowconfirmationmessage()) {
+                const responseMessage = message.getFollowconfirmationmessage() as FollowConfirmationMessage;
+                console.log("Got follow response from " + responseMessage.getFollower());
+                followUsersStore.set([...get(followUsersStore), responseMessage.getFollower()]);
+            } else if (message.hasFollowabortmessage()) {
+                const abortMessage = message.getFollowabortmessage() as FollowAbortMessage;
+                console.log("Got follow abort message from", abortMessage.getRole());
+                if (abortMessage.getRole() === followRoles.leader) {
+                    followStateStore.set(followStates.off);
+                    followRoleStore.set(followRoles.leader);
+                    followUsersStore.set([]);
+                } else {
+                    let followers = get(followUsersStore);
+                    followers = followers.filter((name) => name !== abortMessage.getPlayername());
+                    followUsersStore.set(followers);
+                    if (followers.length === 0) {
+                        followStateStore.set(followStates.off);
+                        followRoleStore.set(followRoles.leader);
+                    }
+                }
             } else if (message.hasErrormessage()) {
                 const errorMessage = message.getErrormessage() as ErrorMessage;
                 console.error("An error occurred server side: " + errorMessage.getMessage());
@@ -716,11 +749,41 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 
-    public emitFollowMeRequest(): void {
-        console.log("Emitting follow me request");
-        const message = new FollowMeRequestMessage();
+    public emitFollowRequest(user: string | null): void {
+        if (!user) {
+            return;
+        }
+        console.log("Emitting follow request");
+        const message = new FollowRequestMessage();
+        message.setPlayername(user);
         const clientToServerMessage = new ClientToServerMessage();
-        clientToServerMessage.setFollowmerequestmessage(message);
+        clientToServerMessage.setFollowrequestmessage(message);
+        this.socket.send(clientToServerMessage.serializeBinary().buffer);
+    }
+
+    public emitFollowConfirmation(leader: string, follower: string | null): void {
+        if (!follower) {
+            return;
+        }
+        console.log("Emitting follow confirmation");
+        const message = new FollowConfirmationMessage();
+        message.setLeader(leader);
+        message.setFollower(follower);
+        const clientToServerMessage = new ClientToServerMessage();
+        clientToServerMessage.setFollowconfirmationmessage(message);
+        this.socket.send(clientToServerMessage.serializeBinary().buffer);
+    }
+
+    public emitFollowAbort(role: string, user: string | null): void {
+        if (!user) {
+            return;
+        }
+        console.log("Emitting follow abort");
+        const message = new FollowAbortMessage();
+        message.setRole(role);
+        message.setPlayername(user);
+        const clientToServerMessage = new ClientToServerMessage();
+        clientToServerMessage.setFollowabortmessage(message);
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 
