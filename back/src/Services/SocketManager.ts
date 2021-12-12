@@ -836,13 +836,22 @@ export class SocketManager {
     }
 
     handleFollowMeRequestMessage(room: GameRoom, user: User, requestMessage: FollowMeRequestMessage) {
-        console.log("Handling follow me request message");
-        console.log(user.name);
+        // Find group including the requesting user
+        let foundGroups = room.getGroups().filter((grp) => grp.includes(user));
+        if (!foundGroups[0]) {
+            return;
+        }
+        let group = foundGroups[0];
+
+        // Send invitations to other group members
         requestMessage.setPlayername(user.name);
-        room.getUsers().forEach((recipient) => {
-            const clientMessage = new ServerToClientMessage();
-            clientMessage.setFollowmerequestmessage(requestMessage);
-            recipient.socket.write(clientMessage);
+        const clientMessage = new ServerToClientMessage();
+        clientMessage.setFollowmerequestmessage(requestMessage);
+        group.getUsers().forEach((currentUser: User) => {
+            if (user.name !== currentUser.name) {
+                console.log("Inviting " + currentUser.name + " to follow " + user.name);
+                currentUser.socket.write(clientMessage);
+            }
         });
     }
 }

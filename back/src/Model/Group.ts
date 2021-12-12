@@ -106,6 +106,16 @@ export class Group implements Movable {
         return this.users.size <= 1;
     }
 
+    includes(user: User): boolean {
+        let found = false;
+        this.users.forEach((currentUser: User) => {
+            if (currentUser.name === user.name) {
+                found = true;
+            }
+        });
+        return found;
+    }
+
     join(user: User): void {
         // Broadcast on the right event
         this.connectCallback(user, this);
