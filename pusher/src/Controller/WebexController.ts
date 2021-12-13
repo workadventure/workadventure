@@ -190,7 +190,7 @@ export class WebexController {
             refresh_token: refreshToken,
         };
 
-        const res = await Axios.post("https://api.ciscospark.com/v1/access_token", {
+        const res = await Axios.post("https://webexapis.com/v1/access_token", {
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
             },
