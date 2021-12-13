@@ -145,7 +145,7 @@
                 assignElementMediaSource(document.getElementById('remote-view-audio'), remoteAudioStream);
                 resolve();
             } catch (e) {
-                reject(e.toString);
+                reject(e.toString());
             }
         })
     }
