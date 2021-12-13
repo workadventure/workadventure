@@ -1,0 +1,30 @@
+name: Deploy to workadventure.iits.tech
+on:
+  push:
+    branches: [master, develop]
+jobs:
+  deploy-iits-cluster:
+    name: "Deploy to azure iits cluster"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2.0.0"
+      - name: Push new Git Version
+        env:
+         APP: "workadventure"
+         CI_ENVIRONMENT_NAME: "azure"
+        run: |
+          ARGOCD_PROJECT_NAME=azure-charts
+          APP=$(echo "${PWD##*/}")
+
+          git clone -b master https://ARGO_CD_WITH_DEPLOYMENT:${{ secrets.DOCKERHUB_USERNAME }}@github.com/iits-consulting/azure-charts.git
+          cd $ARGOCD_PROJECT_NAME
+          cd projects/azure-charts/$APP
+
+          printf "helm:\n  parameters:\n  - name: image.tag\n    value: ${{ github.sha }}" > .argocd-source-$APP.yaml
+
+          git config user.email "github@iits-consulting.de"
+          git config user.name "Github"
+          git add .
+          git commit -m "$CI_ENVIRONMENT_NAME: $APP updated to ${{ github.sha }}"
+          git push
