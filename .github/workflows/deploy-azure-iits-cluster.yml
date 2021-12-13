@@ -17,7 +17,7 @@ jobs:
           ARGOCD_PROJECT_NAME=azure-charts
           APP=$(echo "${PWD##*/}")
 
-          git clone -b master https://ARGO_CD_WITH_DEPLOYMENT:${{ secrets.DOCKERHUB_USERNAME }}@github.com/iits-consulting/azure-charts.git
+          git clone -b master https://victorgetz:${{ secrets.ARGO_CD_WITH_DEPLOYMENT_TOKEN }}@github.com/iits-consulting/azure-charts.git
           cd $ARGOCD_PROJECT_NAME
           cd projects/azure-charts/$APP
 
