@@ -1817,23 +1817,30 @@ ${escapedMessage}
         const webexMeetingRoomInitials = allProps.get("webexMeetingRoomInitials");
         const webexMeetingRoomFullName = allProps.get("webexMeetingRoomFullName");
 
-        console.log("webexMeetingUrl: " + meetingLink);
-        webexIntegration.startMeeting(
-            meetingLink,
-            webexMeetingRoomName,
-            webexMeetingRoomInitials,
-            webexMeetingRoomFullName
-        );
-        this.connection?.setSilent(true);
-        mediaManager.hideGameOverlay();
-        analyticsClient.enteredJitsi("[WEBEX] " + webexMeetingRoomFullName, meetingLink);
-        mediaManager.addTriggerCloseJitsiFrameButton("close-jitsi", () => {
-            this.stopWebex();
-        });
+        if (meetingLink.startsWith("[Error]")) {
+            console.error("[Front] Got error from backend: " + meetingLink);
+        } else if (meetingLink === "") {
+            console.error("[Error] No meeting link gotten from backend");
+        } else {
+            console.log("[Front] Starting AdHoc Webex call for " + meetingLink);
+            webexIntegration.startMeeting(
+                meetingLink,
+                webexMeetingRoomName,
+                webexMeetingRoomInitials,
+                webexMeetingRoomFullName
+            );
+            this.connection?.setSilent(true);
+            mediaManager.hideGameOverlay();
+            analyticsClient.enteredJitsi("[WEBEX] " + webexMeetingRoomFullName, meetingLink);
+            mediaManager.addTriggerCloseJitsiFrameButton("close-jitsi", () => {
+                this.stopWebex();
+            });
+        }
     }
 
     public startJitsi(roomName: string, jwt?: string): void {
         const allProps = this.gameMap.getCurrentProperties();
+
         const jitsiConfig = this.safeParseJSONstring(allProps.get("jitsiConfig") as string | undefined, "jitsiConfig");
         const jitsiInterfaceConfig = this.safeParseJSONstring(
             allProps.get("jitsiInterfaceConfig") as string | undefined,
@@ -1842,27 +1849,39 @@ ${escapedMessage}
         const jitsiUrl = allProps.get("jitsiUrl") as string | undefined;
         const webexSpaceId = allProps.get("webexSpace");
         const webexMeetingUrl = allProps.get("webexMeetingUrl");
-        const webexMeetingRoomName = allProps.get("webexMeetingRoomName");
-        const webexMeetingRoomInitials = allProps.get("webexMeetingRoomInitials");
-        const webexMeetingRoomFullName = allProps.get("webexMeetingRoomFullName");
+        const webexAdHoc = allProps.get("webexAdHoc");
         const jitsiWidth = allProps.get("jitsiWidth") as number | undefined;
 
         console.log("Jitsi: " + jitsiUrl);
         console.log("webexSpaceId: " + webexSpaceId);
+        console.log("webexAdHoc: " + webexAdHoc);
         console.log("webexMeetingUrl: " + webexMeetingUrl);
 
-        // TODO - remove logic for reading webex meeting info from map?
-        if (webexMeetingUrl) {
+        // TODO -> throw this into its own clause and stop it from being a function
+        const startAdHoc = () => {
             console.log("[Front] Found meeting url, sending query for update");
-            this.connection?.emitWebexSessionQuery(roomName);
+            webexIntegration.authWithWebex().then((accessToken) => {
+                webexIntegration.startMeetingLinkGenerator().then(() => {
+                    setTimeout(() => {
+                        this.connection?.emitWebexSessionQuery(roomName, accessToken, window.webexPersonalMeetingLink);
+                    }, 3000);
+                });
+            });
+        };
 
-            console.log("Found webex meeting url");
+        if (webexAdHoc) {
+            startAdHoc();
+        } else if (webexMeetingUrl) {
+            // TODO - Remove
+            startAdHoc();
+            console.log("Found webex meeting url, ignoring");
+            /*
             webexIntegration.startMeeting(
                 webexMeetingUrl,
                 webexMeetingRoomName,
                 webexMeetingRoomInitials,
                 webexMeetingRoomFullName
-            );
+            );*/
         } else if (webexSpaceId) {
             webexIntegration.start(webexSpaceId as string);
         } else {

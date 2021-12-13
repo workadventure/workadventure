@@ -72,11 +72,17 @@ function emitZoneMessage(subMessage: SubToPusherMessage, socket: ZoneSocket): vo
     socket.write(batchMessage);
 }
 
+interface MeetingData {
+    userId: number;
+    meetingLink: string;
+}
+
 export class SocketManager {
     //private rooms = new Map<string, GameRoom>();
     // List of rooms in process of loading.
     private roomsPromises = new Map<string, PromiseLike<GameRoom>>();
-    private webexMeetings = new Map<string, string>();
+    private webexMeetings = new Map<string, MeetingData>();
+    private webex = require("webex");
 
     constructor() {
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
@@ -96,10 +102,9 @@ export class SocketManager {
 
         this.updateUserList(room);
 
-        // TODO Do room ID's exist? Or are they just urls?
-        const roomId = this.webexMeetings.get(room.roomUrl);
-        if (roomId !== undefined) {
-            this.notifyNewMeetOnRoomJoin(room, roomId);
+        const meet = this.webexMeetings.get(room.roomUrl);
+        if (meet !== undefined) {
+            this.notifyNewMeetOnRoomJoin(room, meet.meetingLink);
         }
 
         if (!socket.writable) {
@@ -189,18 +194,18 @@ export class SocketManager {
 
     // Useless now, will be useful again if we allow editing details in game
     /*handleSetPlayerDetails(client: UserSocket, playerDetailsMessage: SetPlayerDetailsMessage) {
-        const playerDetails = {
-            name: playerDetailsMessage.getName(),
-            characterLayers: playerDetailsMessage.getCharacterlayersList()
-        };
-        //console.log(SocketIoEvent.SET_PLAYER_DETAILS, playerDetails);
-        if (!isSetPlayerDetailsMessage(playerDetails)) {
-            emitError(client, 'Invalid SET_PLAYER_DETAILS message received: ');
-            return;
-        }
-        client.name = playerDetails.name;
-        client.characterLayers = SocketManager.mergeCharacterLayersAndCustomTextures(playerDetails.characterLayers, client.textures);
-    }*/
+      const playerDetails = {
+          name: playerDetailsMessage.getName(),
+          characterLayers: playerDetailsMessage.getCharacterlayersList()
+      };
+      //console.log(SocketIoEvent.SET_PLAYER_DETAILS, playerDetails);
+      if (!isSetPlayerDetailsMessage(playerDetails)) {
+          emitError(client, 'Invalid SET_PLAYER_DETAILS message received: ');
+          return;
+      }
+      client.name = playerDetails.name;
+      client.characterLayers = SocketManager.mergeCharacterLayersAndCustomTextures(playerDetails.characterLayers, client.textures);
+  }*/
 
     emitVideo(room: GameRoom, user: User, data: WebRtcSignalToServerMessage): void {
         //send only at user
@@ -265,6 +270,13 @@ export class SocketManager {
     leaveRoom(room: GameRoom, user: User) {
         // leave previous room and world
         try {
+            // end webex call
+            const meet = this.webexMeetings.get(room.roomUrl);
+            if (meet) {
+                if (meet.userId === user.id) {
+                    this.webexMeetings.delete(room.roomUrl);
+                }
+            }
             //user leave previous world
             this.notifyStopMeetOnRoomLeave(room);
             room.leave(user);
@@ -326,19 +338,39 @@ export class SocketManager {
         return this.roomsPromises;
     }
 
-    // TODO handle webex session query
     public handleWebexSessionQuery(user: User, webexSessionQuery: WebexSessionQuery) {
         console.log("[Back] Got Webex Session Query");
         const roomId = webexSessionQuery.getRoomid();
+        // TODO -> Remove?
+        const accessToken = webexSessionQuery.getAccesstoken();
         const response = new WebexSessionResponse();
         response.setRoomid(roomId);
 
-        const link = this.webexMeetings.get(roomId);
-        if (link !== undefined) {
-            response.setMeetinglink(link);
+        const meet = this.webexMeetings.get(roomId);
+        if (meet !== undefined) {
+            response.setMeetinglink(meet.meetingLink);
         } else {
-            // TODO actually make meeting here
-            response.setMeetinglink("[TODO] Some Link That's Already Been Generated");
+            try {
+                if (
+                    webexSessionQuery.getPersonalmeetinglink() === null ||
+                    webexSessionQuery.getPersonalmeetinglink() === ""
+                ) {
+                    throw Error("[Back] Personal Meeting Link is empty!");
+                }
+                const meetToStore: MeetingData = {
+                    meetingLink: webexSessionQuery.getPersonalmeetinglink(),
+                    userId: user.id,
+                };
+                this.webexMeetings.set("roomId", meetToStore);
+                const meet = this.webexMeetings.get(roomId);
+                if (meet) {
+                    response.setMeetinglink(meet.meetingLink);
+                }
+            } catch (e) {
+                // TODO -> make message for errors
+                response.setMeetinglink("[Error] " + e.message);
+                console.error("[Error] " + e.message);
+            }
         }
 
         const serverToClientMessage = new ServerToClientMessage();

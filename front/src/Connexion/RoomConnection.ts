@@ -555,10 +555,13 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 
-    public emitWebexSessionQuery(roomId: string) {
+    public emitWebexSessionQuery(roomId: string, accessToken: string | null, personalMeetingLink: string) {
         const webexSessionQuery = new WebexSessionQuery();
-        // TODO make webex meeting, check if ok here
         webexSessionQuery.setRoomid(roomId);
+        webexSessionQuery.setPersonalmeetinglink(personalMeetingLink);
+        if (accessToken) {
+            webexSessionQuery.setAccesstoken(accessToken);
+        }
         const clientToServerMessage = new ClientToServerMessage();
         clientToServerMessage.setWebexsessionquery(webexSessionQuery);
         console.log("[Front] Sending query for room " + roomId);
@@ -587,6 +590,7 @@ export class RoomConnection implements RoomConnection {
                     " and meeting link of " +
                     message.getMeetinglink()
             );
+            console.log(message);
             callback(message.getRoomid(), message.getMeetinglink());
         });
     }

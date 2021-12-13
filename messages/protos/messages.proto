@@ -11,6 +11,8 @@ message WebexSessionStop {
 
 message WebexSessionQuery {
   string roomId = 1;
+  string accessToken = 2;
+  string personalMeetingLink = 3;
 }
 
 message WebexSessionResponse {
@@ -393,6 +395,7 @@ message PusherToBackMessage {
     BanUserMessage banUserMessage = 13;
     EmotePromptMessage emotePromptMessage = 14;
     VariableMessage variableMessage = 15;
+    WebexSessionQuery webexSessionQuery = 16;
   }
 }
 

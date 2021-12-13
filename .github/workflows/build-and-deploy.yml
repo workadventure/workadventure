@@ -1,6 +1,7 @@
 name: Build, push and deploy Docker image
 
 on:
+  workflow_dispatch:
   push:
     branches: [master, develop]
   release:
@@ -12,10 +13,61 @@ on:
 # Enables BuildKit
 env:
   DOCKER_BUILDKIT: 1
+  # Workadventure env file
+  ACME_EMAIL: ${{ secrets.ACME_EMAIL }}
+  ADMIN_API_TOKEN: ${{ secrets.ADMIN_API_TOKEN }}
+  DEBUG_MODE: ${{ secrets.DEBUG_MODE }}
+  DISABLE_NOTIFICATIONS: ${{ secrets.DISABLE_NOTIFICATIONS }}
+  JITSI_ISS: ${{ secrets.JITSI_ISS }}
+  JITSI_PRIVATE_MODE: ${{ secrets.JITSI_PRIVATE_MODE }}
+  JITSI_URL: ${{ secrets.JITSI_URL }}
+  MAX_PER_GROUP: ${{ secrets.MAX_PER_GROUP }}
+  MAX_USERNAME_LENGTH: ${{ secrets.MAX_USERNAME_LENGTH }}
+  SECRET_JITSI_KEY: ${{ secrets.SECRET_JITSI_KEY }}
+  SKIP_RENDER_OPTIMIZATIONS: ${{ secrets.SKIP_RENDER_OPTIMIZATIONS }}
+  START_ROOM_URL: ${{ secrets.START_ROOM_URL }}
+  TURN_STATIC_AUTH_SECRET: ${{ secrets.TURN_STATIC_AUTH_SECRET }}
+  WEBEX_CLIENT_ID: ${{ secrets.WEBEX_CLIENT_ID }}
+  WEBEX_CLIENT_SECRET: ${{ secrets.WEBEX_CLIENT_SECRET }}
+  WEBEX_GLOBAL_SPACE_ID: ${{ secrets.WEBEX_GLOBAL_SPACE_ID }}
+  WEBEX_REDIRECT_URL: ${{ secrets.WEBEX_REDIRECT_URL }}
+  OPID_CLIENT_ID: ${{ secrets.OPID_CLIENT_ID }}
+  OPID_CLIENT_ISSUER: ${{ secrets.OPID_CLIENT_ISSUER }}
+  OPID_CLIENT_SECRET: ${{ secrets.OPID_CLIENT_SECRET }}
+  CONTACT_URL: ${{ secrets.CONTACT_URL }}
 
 jobs:
 
+  make-env-file:
+    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write env variables to file
+        run: |
+          { echo "ACME_EMAIL=`echo $ACME_EMAIL`\n"
+            echo "ADMIN_API_TOKEN=`echo $ADMIN_API_TOKEN`\n"
+            echo "DEBUG_MODE=`echo $DEBUG_MODE`\n"
+            echo "DISABLE_NOTIFICATIONS=`echo $DISABLE_NOTIFICATIONS`\n"
+            echo "JITSI_ISS=`echo $JITSI_ISS`\n"
+            echo "JITSI_PRIVATE_MODE=`echo $JITSI_PRIVATE_MODE`\n"
+            echo "JITSI_URL=`echo $JITSI_URL`\n"
+            echo "MAX_PER_GROUP=`echo $MAX_PER_GROUP`\n"
+            echo "MAX_USERNAME_LENGTH=`echo $MAX_USERNAME_LENGTH`\n"
+            echo "SECRET_JITSI_KEY=`echo $SECRET_JITSI_KEY`\n"
+            echo "SKIP_RENDER_OPTIMIZATIONS=`echo $SKIP_RENDER_OPTIMIZATIONS`\n"
+            echo "START_ROOM_URL=`echo $START_ROOM_URL`\n"
+            echo "TURN_STATIC_AUTH_SECRET=`echo $TURN_STATIC_AUTH_SECRET`\n"
+            echo "WEBEX_CLIENT_ID=`echo $WEBEX_CLIENT_ID`\n"
+            echo "WEBEX_CLIENT_SECRET=`echo $WEBEX_CLIENT_SECRET`\n"
+            echo "WEBEX_GLOBAL_SPACE_ID=`echo $WEBEX_GLOBAL_SPACE_ID`\n"
+            echo "WEBEX_REDIRECT_URL=`echo $WEBEX_REDIRECT_URL`\n"
+            echo "OPID_CLIENT_ID=`echo $OPID_CLIENT_ID`\n"
+            echo "OPID_CLIENT_ISSUER=`echo $OPID_CLIENT_ISSUER`\n"
+            echo "OPID_CLIENT_SECRET=`echo $OPID_CLIENT_SECRET`\n" } >> .env
+
   build-front:
+    needs:
+      - make-env-file
     if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
@@ -40,6 +92,8 @@ jobs:
           add_git_labels: true
 
   build-back:
+    needs:
+      - make-env-file
     if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
@@ -63,6 +117,8 @@ jobs:
           add_git_labels: true
 
   build-pusher:
+    needs:
+      - make-env-file
     if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
@@ -86,6 +142,8 @@ jobs:
           add_git_labels: true
 
   build-uploader:
+    needs:
+      - make-env-file
     if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
@@ -109,6 +167,8 @@ jobs:
           add_git_labels: true
 
   build-maps:
+    needs:
+      - make-env-file
     if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
@@ -132,73 +192,20 @@ jobs:
           tags: ${{ env.GITHUB_SHA_SHORT }},${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           add_git_labels: true
 
-  deeploy:
-    needs:
-      - build-front
-      - build-back
-      - build-pusher
-      - build-maps
-      - build-uploader
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      # Create a slugified value of the branch
-      - uses: rlespinasse/github-slug-action@3.1.0
-
-      - name: Write certificate
-        run: echo "${CERTS_PRIVATE_KEY}" > secret.key && chmod 0600 secret.key
-        env:
-          CERTS_PRIVATE_KEY: ${{ secrets.CERTS_PRIVATE_KEY }}
-
-      - name: Download certificate
-        run: mkdir secrets && scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i secret.key ubuntu@cert.workadventu.re:./config/live/workadventu.re/* secrets/
-
-      - name: Create namespace
-        uses: steebchen/kubectl@v1.0.0
-        env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
-        with:
-          args: create namespace workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-        continue-on-error: true
-
-      - name: Delete old certificates in namespace
-        uses: steebchen/kubectl@v1.0.0
-        env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
-        with:
-          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} delete secret certificate-tls
-        continue-on-error: true
-
-      - name: Install certificates in namespace
-        uses: steebchen/kubectl@v1.0.0
-        env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_FILE_BASE64 }}
-        with:
-          args: -n workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }} create secret tls certificate-tls --key="secrets/privkey.pem" --cert="secrets/fullchain.pem"
-
-      - name: Deploy
-        uses: thecodingmachine/deeployer-action@master
-        env:
-          KUBE_CONFIG_FILE: ${{ secrets.KUBE_CONFIG_FILE }}
-          ADMIN_API_TOKEN: ${{ secrets.ADMIN_API_TOKEN }}
-          JITSI_ISS: ${{ secrets.JITSI_ISS }}
-          JITSI_URL: ${{ secrets.JITSI_URL }}
-          SECRET_JITSI_KEY: ${{ secrets.SECRET_JITSI_KEY }}
-          TURN_STATIC_AUTH_SECRET: ${{ secrets.TURN_STATIC_AUTH_SECRET }}
-          DEPLOY_REF: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
-          POSTHOG_URL: ${{ secrets.POSTHOG_URL }}
-        with:
-          namespace: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-
-      - name: Add a comment in PR
-        uses: unsplash/comment-on-pr@v1.2.0
-        if: ${{ github.event_name == 'pull_request' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          msg: "Environment deployed at https://play-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re \nTests available at https://maps-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re/tests"
+# TODO -> Ping ARGOCD and tell it that there are new containers to pull
+#  deeploy:
+#    needs:
+#      - build-front
+#      - build-back
+#      - build-pusher
+#      - build-maps
+#      - build-uploader
+#    runs-on: ubuntu-latest
+#    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}#
+#
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v2
+#
+#      # Create a slugified value of the branch
+#      - uses: rlespinasse/github-slug-action@3.1.0

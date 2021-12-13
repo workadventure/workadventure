@@ -20,6 +20,7 @@ import {
     SilentMessage,
     UserMovesMessage,
     VariableMessage,
+    WebexSessionQuery,
     WebRtcSignalToServerMessage,
     WorldFullWarningToRoomMessage,
     ZoneMessage,
@@ -104,6 +105,11 @@ const roomManager: IRoomManagerServer = {
                             socketManager.emitPlayGlobalMessage(
                                 room,
                                 message.getPlayglobalmessage() as PlayGlobalMessage
+                            );
+                        } else if (message.hasWebexsessionquery()) {
+                            socketManager.handleWebexSessionQuery(
+                                user,
+                                message.getWebexsessionquery() as WebexSessionQuery
                             );
                         } else if (message.hasQueryjitsijwtmessage()) {
                             socketManager.handleQueryJitsiJwtMessage(

@@ -212,8 +212,6 @@
 
     }
 
-
-
     // https://github.com/webex/webex-js-sdk/blob/2dc6ec9d6d4a933ad76d2aacc1a19ceb87eb3d52/packages/node_modules/samples/browser-single-party-call-with-mute/app.js#L241
     function mute() {
         if (!muted) {
@@ -344,8 +342,7 @@
         webex.config.logger.level = 'debug';
         webex.meetings.register().then(() => {
             startCall()
-        })
-            .catch(err => {
+        }).catch(err => {
                 console.error("Error: " + err + "\nmeetingRoom: " + meetingRoom + "\n" + "accessToken: " + accessToken);
             });
 
