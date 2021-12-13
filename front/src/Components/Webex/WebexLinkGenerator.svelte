@@ -22,6 +22,7 @@
 
   onMount(async () => {
     await importWebex();
+    console.log("[Webex] Webex onMount Access token", accessToken)
     webex = window.Webex.init({
       credentials: {
         access_token: accessToken //
@@ -29,6 +30,7 @@
     });
     webex.config.logger.level = 'debug';
     webex.meetings.register().then(() => {
+      // TODO -> Redo
         let meetingObject = webex.meetings.getPersonalMeetingRoom();
         window.webexMeetingLinkPassthrough(meetingObject.link);
         console.log("[Front] Generated and sent webex meeting link", meetingObject)

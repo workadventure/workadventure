@@ -729,7 +729,7 @@ export class GameScene extends DirtyScene {
                     item.fire(message.event, message.state, message.parameters);
                 });
 
-                // TODO - test webex session response handling
+                // TODO -> test webex session response handling
                 this.connection.onWebexSessionResponse((roomId, meetingLink) => {
                     console.log("[Front] Got Webex callback! (" + roomId + "," + meetingLink + ")");
                     this.startWebex(roomId, meetingLink);
@@ -1862,6 +1862,7 @@ ${escapedMessage}
             console.log("[Front] Found meeting url, sending query for update");
             webexIntegration.authWithWebex().then((accessToken) => {
                 webexIntegration.startMeetingLinkGenerator().then(() => {
+                    // TODO -> Localstorage
                     setTimeout(() => {
                         this.connection?.emitWebexSessionQuery(roomName, accessToken, window.webexPersonalMeetingLink);
                     }, 3000);

@@ -19,6 +19,7 @@ interface Webex {
 declare global {
     interface Window {
         webex: Webex;
+        // TODO -> LS
         webexPersonalMeetingLink: string;
         webexMeetingLinkPassthrough: (personalMeetingLink: string) => void;
     }
@@ -39,6 +40,7 @@ export type SpaceWidgetConfig = {
 const accessTokenKey = "@workadventure/webex_access_token";
 const expiryDateKey = "@workadventure/webex_expiry_date";
 
+// TODO -> LS
 window.webexMeetingLinkPassthrough = (token: string) => {
     // This function should be called by WebexVideoChat.svelte once it's got the personal meeting room information so we can pass it back to the backend.
     window.webexPersonalMeetingLink = token;
@@ -65,8 +67,11 @@ export class WebexIntegration {
         const now = new Date();
         // set webex token for development
         if (WEBEX_ACCESS_TOKEN && DEBUG_MODE) {
-            this.storage.setItem(accessTokenKey,"REPLACE_ME");
-            this.storage.setItem(expiryDateKey,new Date(Date.now() + +1209599 * 1000 - (24 * 60 * 60 * 1000)).toISOString());
+            this.storage.setItem(accessTokenKey, "REPLACE_ME");
+            this.storage.setItem(
+                expiryDateKey,
+                new Date(Date.now() + +1209599 * 1000 - 24 * 60 * 60 * 1000).toISOString()
+            );
         }
         return Boolean(this.accessToken && this.expiryDate && this.expiryDate > now);
     }

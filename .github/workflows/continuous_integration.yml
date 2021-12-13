@@ -97,10 +97,6 @@ jobs:
         run: yarn install
         working-directory: "pusher"
 
-      - name: "Install cookie"
-        run: yarn add cookie-parser @types/cookie @types/node-fetch
-        working-directory: "pusher"
-
       - name: "Install messages dependencies"
         run: yarn install
         working-directory: "messages"

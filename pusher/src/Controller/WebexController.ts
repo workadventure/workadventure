@@ -80,7 +80,7 @@ export class WebexController {
             }
         } catch (err) {
             if (!aborted) {
-                this.error(res, (err as Error)?.message ?? err);
+                this.error(res, (err as Error)?.message ?? err, 502);
             }
         }
     };
@@ -109,7 +109,7 @@ export class WebexController {
         }
 
         if (error) {
-            this.error(res, error);
+            this.error(res, error, 501);
             return;
         }
 
@@ -121,13 +121,13 @@ export class WebexController {
             }
         } catch (err) {
             if (!aborted) {
-                this.error(res, (err as Error)?.message ?? err);
+                this.error(res, (err as Error)?.message ?? err, 503);
             }
         }
     };
 
-    private error(res: HttpResponse, error: string) {
-        res.writeStatus("500");
+    private error(res: HttpResponse, error: string, status = 500) {
+        res.writeStatus(`${status}`);
         res.end(error);
     }
     private redirect(res: HttpResponse, location: string, ...cookies: string[]) {
