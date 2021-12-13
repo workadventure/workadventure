@@ -21,7 +21,7 @@ jobs:
           APP=$(echo "${PWD##*/}")
 
           ls
-          cd $ARGOCD_PROJECT_NAME/projects/azure-charts/$APP
+          cd projects/azure-charts/helm-charts/$APP
 
           printf "helm:\n  parameters:\n  - name: image.tag\n    value: ${{ github.sha }}" > .argocd-source-$APP.yaml
 
