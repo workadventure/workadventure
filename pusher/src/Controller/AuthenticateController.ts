@@ -287,7 +287,7 @@ export class AuthenticateController extends BaseController {
             messages: [],
             visitCardUrl: null,
             textures: [],
-            userRoomToken: undefined
+            userRoomToken: undefined,
         };
         try {
             data = await adminApi.fetchMemberDataByUuid(email, playUri, IPAddress);
