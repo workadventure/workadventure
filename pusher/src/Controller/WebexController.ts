@@ -10,9 +10,10 @@ const redirectUri = process.env.WEBEX_REDIRECT_URL ?? "/pusher/webex/callback";
 const tokenRedirectUri = process.env.WEBEX_TOKEN_REDIRECT_URL ?? "/";
 const scopes = "spark:all";
 const state = "workadventure-webex";
+const api = "https://webexapis.com/v1";
 
 const authorizeUrl =
-    "https://webexapis.com/v1/authorize?" +
+    `${api}/authorize?` +
     "client_id=" +
     clientId +
     "&response_type=code" +
@@ -161,7 +162,7 @@ export class WebexController {
             redirect_uri: redirectUri,
         };
 
-        const res = await Axios.post("https://api.ciscospark.com/v1/access_token", {
+        const res = await Axios.post(`${api}/access_token`, {
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
             },
@@ -190,7 +191,7 @@ export class WebexController {
             refresh_token: refreshToken,
         };
 
-        const res = await Axios.post("https://webexapis.com/v1/access_token", {
+        const res = await Axios.post(`${api}/access_token`, {
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
             },

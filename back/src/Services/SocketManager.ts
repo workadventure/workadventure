@@ -372,7 +372,7 @@ export class SocketManager {
                 console.error("[Error] " + e.message);
             }
         }
-
+        console.log(response);
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setWebexsessionresponse(response);
         console.log("[Back] Responding to query for room " + roomId + " with" + response.getMeetinglink());
