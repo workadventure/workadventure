@@ -76,7 +76,9 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
 
     get userRoomToken(): string | undefined {
         if (userRoomToken === undefined) {
-            throw new Error("User-room token not initialized yet. You should call WA.player.userRoomToken within a WA.onInit callback.");
+            throw new Error(
+                "User-room token not initialized yet. You should call WA.player.userRoomToken within a WA.onInit callback."
+            );
         }
         return userRoomToken;
     }
