@@ -139,6 +139,7 @@ export class GameRoom {
             joinRoomMessage.getIpaddress(),
             position,
             false,
+            [],
             this.positionNotifier,
             socket,
             joinRoomMessage.getTagList(),
@@ -231,7 +232,7 @@ export class GameRoom {
             // If the user is part of a group:
             //  should he leave the group?
             const distance = GameRoom.computeDistanceBetweenPositions(user.getPosition(), user.group.getPosition());
-            if (distance > this.groupRadius) {
+            if (user.following.length === 0 && distance > this.groupRadius) {
                 this.leaveGroup(user);
             }
         }

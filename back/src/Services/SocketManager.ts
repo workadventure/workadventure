@@ -847,19 +847,35 @@ export class SocketManager {
         const clientMessage = new ServerToClientMessage();
         clientMessage.setFollowconfirmationmessage(message);
         room.sendToUserWithName(message.getLeader(), clientMessage);
+
+        room.getUserByName(message.getLeader())?.addFollower(user.name);
+        user.addFollower(message.getLeader());
     }
 
     handleFollowAbortMessage(room: GameRoom, user: User, message: FollowAbortMessage) {
         if (message.getRole() === "leader") {
+            // Forward message
             const clientMessage = new ServerToClientMessage();
             clientMessage.setFollowabortmessage(message);
             room.sendToOthersInGroupIncludingUser(user, clientMessage);
+
+            // Update followers
+            room.getGroupIncludingUser(user)
+                ?.getUsers()
+                .forEach((user) => {
+                    user.following = [];
+                });
         } else {
+            // Forward message
             const recipient = message.getPlayername();
             message.setPlayername(user.name);
             const clientMessage = new ServerToClientMessage();
             clientMessage.setFollowabortmessage(message);
             room.sendToUserWithName(recipient, clientMessage);
+
+            // Update followers
+            room.getUserByName(recipient)?.delFollower(user.name);
+            user.following = [];
         }
     }
 }

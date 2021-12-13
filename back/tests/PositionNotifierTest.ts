@@ -26,14 +26,14 @@ describe("PositionNotifier", () => {
             y: 500,
             moving: false,
             direction: 'down'
-        }, false, positionNotifier, {} as UserSocket, [], null, 'foo', []);
+        }, false, [], positionNotifier, {} as UserSocket, [], null, 'foo', []);
 
         const user2 = new User(2, 'test', '10.0.0.2', {
             x: -9999,
             y: -9999,
             moving: false,
             direction: 'down'
-        }, false, positionNotifier, {} as UserSocket, [], null, 'foo', []);
+        }, false, [], positionNotifier, {} as UserSocket, [], null, 'foo', []);
 
         positionNotifier.addZoneListener({} as ZoneSocket, 0, 0);
         positionNotifier.addZoneListener({} as ZoneSocket, 0, 1);
@@ -101,14 +101,14 @@ describe("PositionNotifier", () => {
             y: 500,
             moving: false,
             direction: 'down'
-        }, false, positionNotifier, {} as UserSocket, [], null, 'foo', []);
+        }, false, [], positionNotifier, {} as UserSocket, [], null, 'foo', []);
 
         const user2 = new User(2, 'test', '10.0.0.2', {
             x: 0,
             y: 0,
             moving: false,
             direction: 'down'
-        }, false, positionNotifier, {} as UserSocket, [], null, 'foo', []);
+        }, false, [], positionNotifier, {} as UserSocket, [], null, 'foo', []);
 
         const listener = {} as ZoneSocket;
         positionNotifier.addZoneListener(listener, 0, 0);
