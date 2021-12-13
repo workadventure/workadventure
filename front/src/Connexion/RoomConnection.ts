@@ -265,7 +265,7 @@ export class RoomConnection implements RoomConnection {
                 console.log("[Front] Found session response in message:", message);
                 this.dispatch(EventMessage.WEBEX_SESSION_RESPONSE, message.getWebexsessionresponse());
             } else {
-                throw new Error("Unknown message received");
+                console.warn("Unknown message received", message);
             }
         };
     }
