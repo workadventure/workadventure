@@ -7,8 +7,11 @@ jobs:
     name: "Deploy to azure iits cluster"
     runs-on: "ubuntu-latest"
     steps:
-      - name: "Checkout"
-        uses: "actions/checkout@v2.0.0"
+      - name: Check out argocd azure
+        uses: actions/checkout@master
+        with:
+          repository: iits-consulting/azure-charts
+          token: ${{ secrets.ARGO_CD_WITH_DEPLOYMENT_TOKEN }}
       - name: Push new Git Version
         env:
          APP: "workadventure"
@@ -17,8 +20,6 @@ jobs:
           ARGOCD_PROJECT_NAME=azure-charts
           APP=$(echo "${PWD##*/}")
 
-          git clone -b master https://victorgetz:${{ secrets.ARGO_CD_WITH_DEPLOYMENT_TOKEN }}@github.com/iits-consulting/azure-charts.git
-          cd $ARGOCD_PROJECT_NAME
           cd projects/azure-charts/$APP
 
           printf "helm:\n  parameters:\n  - name: image.tag\n    value: ${{ github.sha }}" > .argocd-source-$APP.yaml
