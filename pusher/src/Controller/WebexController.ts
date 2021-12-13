@@ -12,7 +12,7 @@ const scopes = "spark:all";
 const state = "workadventure-webex";
 
 const authorizeUrl =
-    "https://api.ciscospark.com/v1/authorize?" +
+    "https://webexapis.com/v1/authorize?" +
     "client_id=" +
     clientId +
     "&response_type=code" +
