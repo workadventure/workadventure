@@ -1167,6 +1167,7 @@ ${escapedMessage}
                 roomId: this.roomUrl,
                 tags: this.connection ? this.connection.getAllTags() : [],
                 variables: this.sharedVariablesManager.variables,
+                userRoomToken: this.connection ? this.connection.userRoomToken : "",
             };
         });
         this.iframeSubscriptionList.push(
