@@ -189,10 +189,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_DEPLOY_TOKEN }}
           repository: iits/workadventure-maps
-          tags: ${{ env.GITHUB_SHA_SHORT }},${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          tags: ${{ env.GITHUB_SHA_SHORT }},${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }},${{ github.sha }}
           add_git_labels: true
 
-  deeploy:
+  deploy:
     needs:
       - build-front
       - build-back
@@ -208,9 +208,6 @@ jobs:
         with:
           repository: iits-consulting/azure-charts
           token: ${{ secrets.ARGO_CD_WITH_DEPLOYMENT_TOKEN }}
-      - name: Set outputs
-        id: vars
-        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
       - name: Push new Git Version
         env:
           APP: "workadventure"
@@ -222,10 +219,10 @@ jobs:
           ls
           cd projects/azure-charts/helm-charts/$APP
 
-          printf "helm:\n  parameters:\n  - name: image.tag\n    value: ${{ steps.vars.outputs.sha_short }}" > .argocd-source-$APP.yaml
+          printf "helm:\n  parameters:\n  - name: image.tag\n    value: ${{ github.sha }}" > .argocd-source-$APP.yaml
 
           git config user.email "github@iits-consulting.de"
           git config user.name "Github"
           git add .
-          git commit -m "$CI_ENVIRONMENT_NAME: $APP updated to ${{ steps.vars.outputs.sha_short }}"
+          git commit -m "$CI_ENVIRONMENT_NAME: $APP updated to ${{ github.sha }}"
           git push
