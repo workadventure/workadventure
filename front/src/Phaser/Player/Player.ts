@@ -18,11 +18,6 @@ export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";
 
 export class Player extends Character {
-    private previousDirection: PlayerAnimationDirections = PlayerAnimationDirections.Down;
-    private wasMoving: boolean = false;
-    private timeCounter: number = 0;
-    private follow: { followPlayer: RemotePlayer; direction: PlayerAnimationDirections } | null = null;
-
     constructor(
         Scene: GameScene,
         x: number,
@@ -41,9 +36,9 @@ export class Player extends Character {
         this.getBody().setImmovable(false);
     }
 
-    private inputStep(activeEvents: ActiveEventList, delta: number) {
+    private inputStep(activeEvents: ActiveEventList) {
         //if user client on shift, camera and player speed
-        let direction = null;
+        let direction = this.lastDirection;
         let moving = false;
 
         const speedMultiplier = activeEvents.get(UserInputEvent.SpeedUp) ? 25 : 9;
@@ -77,22 +72,22 @@ export class Player extends Character {
         if (x !== 0 || y !== 0) {
             this.move(x, y);
             this.emit(hasMovedEventName, { moving, direction, x: this.x, y: this.y, oldX: x, oldY: y });
-        } else if (this.wasMoving && moving) {
+        } else if (get(userMovingStore) && moving) {
             // slow joystick movement
             this.move(0, 0);
             this.emit(hasMovedEventName, {
                 moving,
-                direction: this.previousDirection,
+                direction: direction,
                 x: this.x,
                 y: this.y,
                 oldX: x,
                 oldY: y,
             });
-        } else if (this.wasMoving && !moving) {
+        } else if (get(userMovingStore) && !moving) {
             this.stop();
             this.emit(hasMovedEventName, {
                 moving,
-                direction: this.previousDirection,
+                direction: direction,
                 x: this.x,
                 y: this.y,
                 oldX: x,
@@ -100,35 +95,27 @@ export class Player extends Character {
             });
         }
 
-        if (direction !== null) {
-            this.previousDirection = direction;
-        }
-
-        this.wasMoving = moving;
         userMovingStore.set(moving);
     }
 
-    private followStep(activeEvents: ActiveEventList, delta: number) {
-        let moving = false;
-
-        if (this.follow === null) {
+    private followStep(delta: number) {
+        const player = this.scene.findPlayer((p) => p.PlayerValue === get(followUsersStore)[0]);
+        if (!player) {
+            this.scene.connection?.emitFollowAbort(get(followUsersStore)[0], this.PlayerValue);
+            followStateStore.set(followStates.off);
             return;
         }
 
-        this.timeCounter += delta;
-        if (this.timeCounter < 128) {
-            return;
-        }
-        this.timeCounter = 0;
-
-        const xDist = this.follow.followPlayer.x - this.x;
-        const yDist = this.follow.followPlayer.y - this.y;
-
+        const xDist = player.x - this.x;
+        const yDist = player.y - this.y;
         const distance = Math.pow(xDist, 2) + Math.pow(yDist, 2);
 
+        let moving = false;
+        let direction = this.lastDirection;
         if (distance < 2000) {
             this.stop();
         } else {
+            moving = true;
             const moveAmount = 9 * 20;
             const xDir = xDist / Math.sqrt(distance);
             const yDir = yDist / Math.sqrt(distance);
@@ -136,46 +123,24 @@ export class Player extends Character {
             this.move(xDir * moveAmount, yDir * moveAmount);
 
             if (Math.abs(xDist) > Math.abs(yDist)) {
-                if (xDist < 0) {
-                    this.follow.direction = PlayerAnimationDirections.Left;
-                } else {
-                    this.follow.direction = PlayerAnimationDirections.Right;
-                }
+                direction = xDist < 0 ? PlayerAnimationDirections.Left : PlayerAnimationDirections.Right;
             } else {
-                if (yDist < 0) {
-                    this.follow.direction = PlayerAnimationDirections.Up;
-                } else {
-                    this.follow.direction = PlayerAnimationDirections.Down;
-                }
+                direction = yDist < 0 ? PlayerAnimationDirections.Up : PlayerAnimationDirections.Down;
             }
-
-            moving = true;
         }
 
         this.emit(hasMovedEventName, {
             moving: moving,
-            direction: this.follow.direction,
+            direction: direction,
             x: this.x,
             y: this.y,
         });
 
-        this.previousDirection = this.follow.direction;
-
-        this.wasMoving = moving;
         userMovingStore.set(moving);
     }
 
     public enableFollowing() {
-        Array.from(this.scene.MapPlayersByKey.values()).forEach((player) => {
-            if (player.PlayerValue !== get(followUsersStore)[0]) {
-                return;
-            }
-            this.follow = {
-                followPlayer: player,
-                direction: this.previousDirection,
-            };
-            followStateStore.set(followStates.active);
-        });
+        followStateStore.set(followStates.active);
     }
 
     public moveUser(delta: number): void {
@@ -193,13 +158,9 @@ export class Player extends Character {
         }
 
         if ((state !== followStates.active && state !== followStates.ending) || role !== followRoles.follower) {
-            this.inputStep(activeEvents, delta);
+            this.inputStep(activeEvents);
         } else {
-            this.followStep(activeEvents, delta);
+            this.followStep(delta);
         }
-    }
-
-    public isMoving(): boolean {
-        return this.wasMoving;
     }
 }
