@@ -63,6 +63,7 @@ export class GameMap {
     public readonly flatLayers: ITiledMapLayer[];
     public readonly tiledObjects: ITiledMapObject[];
     public readonly phaserLayers: TilemapLayer[] = [];
+    public readonly zones: ITiledMapObject[] = [];
 
     public exitUrls: Array<string> = [];
 
@@ -75,6 +76,7 @@ export class GameMap {
     ) {
         this.flatLayers = flattenGroupLayersMap(map);
         this.tiledObjects = this.getObjectsFromLayers(this.flatLayers);
+        this.zones = this.tiledObjects.filter((object) => object.type === "zone");
 
         let depth = -2;
         for (const layer of this.flatLayers) {
@@ -192,12 +194,11 @@ export class GameMap {
     }
 
     /**
-     * We user Tiled Objects with type "zone" as zones with defined x, y, width and height for easier event triggering.
+     * We use Tiled Objects with type "zone" as zones with defined x, y, width and height for easier event triggering.
      */
     private triggerZonesChange(): void {
-        const zones = this.tiledObjects.filter((object) => object.type === "zone");
         const zonesByOldPosition = this.oldPosition
-            ? zones.filter((zone) => {
+            ? this.zones.filter((zone) => {
                   if (!this.oldPosition) {
                       return false;
                   }
@@ -206,7 +207,7 @@ export class GameMap {
             : [];
 
         const zonesByNewPosition = this.position
-            ? zones.filter((zone) => {
+            ? this.zones.filter((zone) => {
                   if (!this.position) {
                       return false;
                   }
@@ -466,16 +467,11 @@ export class GameMap {
 
         const objectLayers = layers.filter((layer) => layer.type === "objectgroup");
         for (const objectLayer of objectLayers) {
-            if (this.isOfTypeITiledMapObjectLayer(objectLayer)) {
+            if (objectLayer.type === "objectgroup") {
                 objects.push(...objectLayer.objects);
             }
         }
 
         return objects;
-    }
-
-    // NOTE: Simple typeguard for Objects Layer.
-    private isOfTypeITiledMapObjectLayer(obj: ITiledMapLayer): obj is ITiledMapObjectLayer {
-        return (obj as ITiledMapObjectLayer).objects !== undefined;
     }
 }
