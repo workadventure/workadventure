@@ -12,7 +12,7 @@ let idCount = 0;
 function createPlayersStore() {
     let players = new Map<number, PlayerInterface>();
 
-    const { subscribe, set, update } = writable(players);
+    const { subscribe, set, update } = writable<Map<number, PlayerInterface>>(players);
 
     return {
         subscribe,
