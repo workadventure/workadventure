@@ -60,6 +60,7 @@ import { PinchManager } from "../UserInput/PinchManager";
 import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { EmoteManager } from "./EmoteManager";
+import { CameraManager } from "./CameraManager";
 import EVENT_TYPE = Phaser.Scenes.Events;
 import type { HasPlayerMovedEvent } from "../../Api/Events/HasPlayerMovedEvent";
 
@@ -198,6 +199,7 @@ export class GameScene extends DirtyScene {
     private pinchManager: PinchManager | undefined;
     private mapTransitioning: boolean = false; //used to prevent transitions happening at the same time.
     private emoteManager!: EmoteManager;
+    private cameraManager!: CameraManager;
     private preloading: boolean = true;
     private startPositionCalculator!: StartPositionCalculator;
     private sharedVariablesManager!: SharedVariablesManager;
@@ -550,7 +552,13 @@ export class GameScene extends DirtyScene {
         this.createCurrentPlayer();
         this.removeAllRemotePlayers(); //cleanup the list  of remote players in case the scene was rebooted
 
-        this.initCamera();
+        this.cameraManager = new CameraManager(
+            this,
+            { x: this.Map.widthInPixels, y: this.Map.heightInPixels },
+            waScaleManager
+        );
+        biggestAvailableAreaStore.recompute();
+        this.cameraManager.startFollow(this.CurrentPlayer);
 
         this.animatedTiles.init(this.Map);
         this.events.on("tileanimationupdate", () => (this.dirty = true));
@@ -591,7 +599,7 @@ export class GameScene extends DirtyScene {
 
         // From now, this game scene will be notified of reposition events
         this.biggestAvailableAreaStoreUnsubscribe = biggestAvailableAreaStore.subscribe((box) =>
-            this.updateCameraOffset(box)
+            this.cameraManager.updateCameraOffset(box)
         );
 
         new GameMapPropertiesListener(this, this.gameMap).register();
@@ -644,7 +652,7 @@ export class GameScene extends DirtyScene {
      * Initializes the connection to Pusher.
      */
     private connect(): void {
-        const camera = this.cameras.main;
+        const camera = this.cameraManager.getCamera();
 
         connectionManager
             .connectToRoomSocket(
@@ -779,6 +787,42 @@ export class GameScene extends DirtyScene {
                         iframeListener.sendLeaveLayerEvent(layer.name);
                     });
                 });
+
+                this.gameMap.onEnterZone((zones) => {
+                    for (const zone of zones) {
+                        const focusable = zone.properties?.find((property) => property.name === "focusable");
+                        if (focusable && focusable.value === true) {
+                            const zoomMargin = zone.properties?.find((property) => property.name === "zoom_margin");
+                            this.cameraManager.enterFocusMode(
+                                zone,
+                                zoomMargin ? Math.max(0, Number(zoomMargin.value)) : undefined
+                            );
+                            break;
+                        }
+                    }
+                    zones.forEach((zone) => {
+                        iframeListener.sendEnterZoneEvent(zone.name);
+                    });
+                });
+
+                this.gameMap.onLeaveZone((zones) => {
+                    for (const zone of zones) {
+                        const focusable = zone.properties?.find((property) => property.name === "focusable");
+                        if (focusable && focusable.value === true) {
+                            this.cameraManager.leaveFocusMode(this.CurrentPlayer);
+                            break;
+                        }
+                    }
+                    zones.forEach((zone) => {
+                        iframeListener.sendLeaveZoneEvent(zone.name);
+                    });
+                });
+
+                // this.gameMap.onLeaveLayer((layers) => {
+                //     layers.forEach((layer) => {
+                //         iframeListener.sendLeaveLayerEvent(layer.name);
+                //     });
+                // });
             });
     }
 
@@ -1370,6 +1414,7 @@ ${escapedMessage}
         this.userInputManager.destroy();
         this.pinchManager?.destroy();
         this.emoteManager.destroy();
+        this.cameraManager.destroy();
         this.peerStoreUnsubscribe();
         this.emoteUnsubscribe();
         this.emoteMenuUnsubscribe();
@@ -1457,13 +1502,6 @@ ${escapedMessage}
         } catch (e /*: unknown*/) {
             console.warn('Error while pre-loading exit room "' + exitRoomPath.toString() + '"', e);
         }
-    }
-
-    //todo: in a dedicated class/function?
-    initCamera() {
-        this.cameras.main.setBounds(0, 0, this.Map.widthInPixels, this.Map.heightInPixels);
-        this.cameras.main.startFollow(this.CurrentPlayer, true);
-        biggestAvailableAreaStore.recompute();
     }
 
     createCollisionWithPlayer() {
@@ -1857,23 +1895,6 @@ ${escapedMessage}
         biggestAvailableAreaStore.recompute();
     }
 
-    /**
-     * Updates the offset of the character compared to the center of the screen according to the layout manager
-     * (tries to put the character in the center of the remaining space if there is a discussion going on.
-     */
-    private updateCameraOffset(array: Box): void {
-        const xCenter = (array.xEnd - array.xStart) / 2 + array.xStart;
-        const yCenter = (array.yEnd - array.yStart) / 2 + array.yStart;
-
-        const game = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>("#game canvas");
-        // Let's put this in Game coordinates by applying the zoom level:
-
-        this.cameras.main.setFollowOffset(
-            ((xCenter - game.offsetWidth / 2) * window.devicePixelRatio) / this.scale.zoom,
-            ((yCenter - game.offsetHeight / 2) * window.devicePixelRatio) / this.scale.zoom
-        );
-    }
-
     public startJitsi(roomName: string, jwt?: string): void {
         const allProps = this.gameMap.getCurrentProperties();
         const jitsiConfig = this.safeParseJSONstring(
@@ -1942,6 +1963,9 @@ ${escapedMessage}
     }
 
     zoomByFactor(zoomFactor: number) {
+        if (this.cameraManager.isCameraLocked()) {
+            return;
+        }
         waScaleManager.zoomModifier *= zoomFactor;
         biggestAvailableAreaStore.recompute();
     }

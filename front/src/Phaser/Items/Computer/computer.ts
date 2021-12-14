@@ -1,5 +1,4 @@
 import * as Phaser from "phaser";
-import { Scene } from "phaser";
 import Sprite = Phaser.GameObjects.Sprite;
 import type { ITiledMapObject } from "../../Map/ITiledMap";
 import type { ItemFactoryInterface } from "../ItemFactoryInterface";
