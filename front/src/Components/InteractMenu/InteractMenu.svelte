@@ -67,9 +67,9 @@ vim: ft=typescript
 
     function reset() {
         if (followRole === followRoles.leader && followUsers.length > 0) {
-            gameScene.connection?.emitFollowAbort(followRole, gameManager.getPlayerName());
+            gameScene.connection?.emitFollowAbort(gameManager.getPlayerName(), "*");
         } else {
-            gameScene.connection?.emitFollowAbort(followRole, followUsers[0]);
+            gameScene.connection?.emitFollowAbort(followUsers[0], gameManager.getPlayerName());
         }
         followStateStore.set(followStates.off);
         followRoleStore.set(followRoles.leader);

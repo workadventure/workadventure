@@ -270,26 +270,27 @@ export class RoomConnection implements RoomConnection {
                 //todo: implement a way to notify the user the room was refreshed.
             } else if (message.hasFollowrequestmessage()) {
                 const requestMessage = message.getFollowrequestmessage() as FollowRequestMessage;
-                console.log("Got follow request from " + requestMessage.getPlayername());
+                console.log("Got follow request from " + requestMessage.getLeader());
                 followStateStore.set(followStates.requesting);
                 followRoleStore.set(followRoles.follower);
-                followUsersStore.set([requestMessage.getPlayername()]);
+                followUsersStore.set([requestMessage.getLeader()]);
             } else if (message.hasFollowconfirmationmessage()) {
                 const responseMessage = message.getFollowconfirmationmessage() as FollowConfirmationMessage;
                 console.log("Got follow response from " + responseMessage.getFollower());
                 followUsersStore.set([...get(followUsersStore), responseMessage.getFollower()]);
             } else if (message.hasFollowabortmessage()) {
                 const abortMessage = message.getFollowabortmessage() as FollowAbortMessage;
-                console.log("Got follow abort message from", abortMessage.getRole());
-                if (abortMessage.getRole() === followRoles.leader) {
+                console.log("Got follow abort message");
+                if (get(followRoleStore) === followRoles.follower) {
                     followStateStore.set(followStates.off);
                     followRoleStore.set(followRoles.leader);
                     followUsersStore.set([]);
                 } else {
                     let followers = get(followUsersStore);
-                    followers = followers.filter((name) => name !== abortMessage.getPlayername());
+                    const oldFollowerCount = followers.length;
+                    followers = followers.filter((name) => name !== abortMessage.getFollower());
                     followUsersStore.set(followers);
-                    if (followers.length === 0) {
+                    if (followers.length === 0 && oldFollowerCount > 0) {
                         followStateStore.set(followStates.off);
                         followRoleStore.set(followRoles.leader);
                     }
@@ -755,14 +756,14 @@ export class RoomConnection implements RoomConnection {
         }
         console.log("Emitting follow request");
         const message = new FollowRequestMessage();
-        message.setPlayername(user);
+        message.setLeader(user);
         const clientToServerMessage = new ClientToServerMessage();
         clientToServerMessage.setFollowrequestmessage(message);
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 
-    public emitFollowConfirmation(leader: string, follower: string | null): void {
-        if (!follower) {
+    public emitFollowConfirmation(leader: string | null, follower: string | null): void {
+        if (!leader || !follower) {
             return;
         }
         console.log("Emitting follow confirmation");
@@ -774,14 +775,14 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 
-    public emitFollowAbort(role: string, user: string | null): void {
-        if (!user) {
+    public emitFollowAbort(leader: string | null, follower: string | null): void {
+        if (!leader || !follower) {
             return;
         }
         console.log("Emitting follow abort");
         const message = new FollowAbortMessage();
-        message.setRole(role);
-        message.setPlayername(user);
+        message.setLeader(leader);
+        message.setFollower(follower);
         const clientToServerMessage = new ClientToServerMessage();
         clientToServerMessage.setFollowabortmessage(message);
         this.socket.send(clientToServerMessage.serializeBinary().buffer);

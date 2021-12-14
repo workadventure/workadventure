@@ -81,7 +81,7 @@ message QueryJitsiJwtMessage {
 }
 
 message FollowRequestMessage {
-  string playerName = 1;
+  string leader = 1;
 }
 
 message FollowConfirmationMessage {
@@ -90,8 +90,8 @@ message FollowConfirmationMessage {
 }
 
 message FollowAbortMessage {
-  string role = 1;
-  string playerName = 2;
+  string leader = 1;
+  string follower = 2;
 }
 
 message ClientToServerMessage {

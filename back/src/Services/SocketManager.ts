@@ -853,28 +853,23 @@ export class SocketManager {
     }
 
     handleFollowAbortMessage(room: GameRoom, user: User, message: FollowAbortMessage) {
-        if (message.getRole() === "leader") {
+        const clientMessage = new ServerToClientMessage();
+        clientMessage.setFollowabortmessage(message);
+        if (user.name === message.getLeader()) {
             // Forward message
-            const clientMessage = new ServerToClientMessage();
-            clientMessage.setFollowabortmessage(message);
             room.sendToOthersInGroupIncludingUser(user, clientMessage);
 
             // Update followers
-            room.getGroupIncludingUser(user)
-                ?.getUsers()
-                .forEach((user) => {
-                    user.following = [];
-                });
+            const group = room.getGroupIncludingUser(user);
+            group?.getUsers().forEach((user) => {
+                user.following = [];
+            });
         } else {
             // Forward message
-            const recipient = message.getPlayername();
-            message.setPlayername(user.name);
-            const clientMessage = new ServerToClientMessage();
-            clientMessage.setFollowabortmessage(message);
-            room.sendToUserWithName(recipient, clientMessage);
+            room.sendToUserWithName(message.getLeader(), clientMessage);
 
             // Update followers
-            room.getUserByName(recipient)?.delFollower(user.name);
+            room.getUserByName(message.getLeader())?.delFollower(user.name);
             user.following = [];
         }
     }
