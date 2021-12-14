@@ -1,6 +1,7 @@
 <script lang="typescript">
     import { gameManager } from "../../Phaser/Game/GameManager";
     import type { PictureStore } from "../../Stores/PictureStore";
+    import { onDestroy } from "svelte";
 
     export let userId: number;
     export let placeholderSrc: string;
@@ -17,14 +18,19 @@
             (item) => item.companion?.pictureStore
         );
     }
+
+    let src = placeholderSrc;
+
+    if (companionWokaPictureStore) {
+        const unsubscribe = companionWokaPictureStore.subscribe((source) => {
+            src = source ?? placeholderSrc;
+        });
+
+        onDestroy(unsubscribe);
+    }
 </script>
 
-<img
-    src={$companionWokaPictureStore ?? placeholderSrc}
-    alt=""
-    class="nes-pointer"
-    style="--theme-width: {width}; --theme-height: {height}"
-/>
+<img {src} alt="" class="nes-pointer" style="--theme-width: {width}; --theme-height: {height}" />
 
 <style>
     img {

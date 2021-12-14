@@ -2,7 +2,6 @@
     import { onDestroy } from "svelte";
 
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { playersStore } from "../../Stores/PlayersStore";
 
     export let userId: number;
     export let placeholderSrc: string;
