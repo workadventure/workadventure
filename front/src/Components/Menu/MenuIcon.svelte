@@ -1,6 +1,6 @@
 <script lang="typescript">
-    import logoWA from "../images/logo-WA-pixel.png";
     import logoTalk from "../images/logo-message-pixel.png";
+    import logoWA from "../images/logo-WA-pixel.png";
     import { menuVisiblilityStore } from "../../Stores/MenuStore";
     import { chatVisibilityStore } from "../../Stores/ChatStore";
     import { get } from "svelte/store";
@@ -31,6 +31,7 @@
             width: 60px;
             padding-top: 0;
             margin: 3px;
+            image-rendering: pixelated;
         }
     }
     .menuIcon img:hover {
@@ -38,9 +39,26 @@
     }
     @media only screen and (max-width: 800px), only screen and (max-height: 800px) {
         .menuIcon {
-            margin: 3px;
+            display: inline-grid;
+            z-index: 90;
+            position: relative;
+            margin: 25px;
             img {
-                width: 50px;
+                pointer-events: auto;
+                width: 60px;
+                padding-top: 0;
+                margin: 3px;
+            }
+        }
+        .menuIcon img:hover {
+            transform: scale(1.2);
+        }
+        @media only screen and (max-width: 800px), only screen and (max-height: 800px) {
+            .menuIcon {
+                margin: 3px;
+                img {
+                    width: 50px;
+                }
             }
         }
     }

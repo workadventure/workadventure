@@ -1,6 +1,7 @@
 import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
 import { PlayerAnimationDirections, PlayerAnimationTypes } from "../Player/Animation";
+import { TexturesHelper } from "../Helpers/TexturesHelper";
 
 export interface CompanionStatus {
     x: number;
@@ -39,6 +40,7 @@ export class Companion extends Container {
         texturePromise.then((resource) => {
             this.addResource(resource);
             this.invisible = false;
+            this.emit("texture-loaded");
         });
 
         this.scene.physics.world.enableBody(this);
@@ -121,6 +123,22 @@ export class Companion extends Container {
             moving: animationType === PlayerAnimationTypes.Walk,
             name: companionName,
         };
+    }
+
+    public async getSnapshot(): Promise<string> {
+        const sprites = Array.from(this.sprites.values()).map((sprite) => {
+            return { sprite, frame: 1 };
+        });
+        return TexturesHelper.getSnapshot(this.scene, ...sprites).catch((reason) => {
+            console.warn(reason);
+            for (const sprite of this.sprites.values()) {
+                // it can be either cat or dog prefix
+                if (sprite.texture.key.includes("cat") || sprite.texture.key.includes("dog")) {
+                    return this.scene.textures.getBase64(sprite.texture.key);
+                }
+            }
+            return "cat1";
+        });
     }
 
     private playAnimation(direction: PlayerAnimationDirections, type: PlayerAnimationTypes): void {

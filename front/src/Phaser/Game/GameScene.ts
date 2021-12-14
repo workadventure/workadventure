@@ -1,7 +1,54 @@
 import type { Subscription } from "rxjs";
+import AnimatedTiles from "phaser-animated-tiles";
+import { Queue } from "queue-typescript";
+import { get } from "svelte/store";
+
 import { userMessageManager } from "../../Administration/UserMessageManager";
-import { iframeListener } from "../../Api/IframeListener";
 import { connectionManager } from "../../Connexion/ConnectionManager";
+import { CoWebsite, coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
+import { urlManager } from "../../Url/UrlManager";
+import { mediaManager } from "../../WebRtc/MediaManager";
+import { UserInputManager } from "../UserInput/UserInputManager";
+import { gameManager } from "./GameManager";
+import { touchScreenManager } from "../../Touch/TouchScreenManager";
+import { PinchManager } from "../UserInput/PinchManager";
+import { waScaleManager } from "../Services/WaScaleManager";
+import { EmoteManager } from "./EmoteManager";
+import { soundManager } from "./SoundManager";
+import { SharedVariablesManager } from "./SharedVariablesManager";
+import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
+
+import { lazyLoadPlayerCharacterTextures, loadCustomTexture } from "../Entity/PlayerTexturesLoadingManager";
+import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
+import { ON_ACTION_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
+import { iframeListener } from "../../Api/IframeListener";
+import { DEBUG_MODE, JITSI_PRIVATE_MODE, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
+import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
+import { Room } from "../../Connexion/Room";
+import { jitsiFactory } from "../../WebRtc/JitsiFactory";
+import { TextureError } from "../../Exception/TextureError";
+import { localUserStore } from "../../Connexion/LocalUserStore";
+import { HtmlUtils } from "../../WebRtc/HtmlUtils";
+import { SimplePeer } from "../../WebRtc/SimplePeer";
+import { Loader } from "../Components/Loader";
+import { RemotePlayer } from "../Entity/RemotePlayer";
+import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
+import { PlayerAnimationDirections } from "../Player/Animation";
+import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
+import { ErrorSceneName } from "../Reconnecting/ErrorScene";
+import { ReconnectingSceneName } from "../Reconnecting/ReconnectingScene";
+import { GameMap } from "./GameMap";
+import { PlayerMovement } from "./PlayerMovement";
+import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
+import { worldFullMessageStream } from "../../Connexion/WorldFullMessageStream";
+import { DirtyScene } from "./DirtyScene";
+import { TextUtils } from "../Components/TextUtils";
+import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
+import { StartPositionCalculator } from "./StartPositionCalculator";
+import { PropertyUtils } from "../Map/PropertyUtils";
+import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
+import { analyticsClient } from "../../Administration/AnalyticsClient";
+import { GameMapProperties } from "./GameMapProperties";
 import type {
     GroupCreatedUpdatedMessageInterface,
     MessageUserJoined,
@@ -12,85 +59,36 @@ import type {
     PositionInterface,
     RoomJoinedMessageInterface,
 } from "../../Connexion/ConnexionModels";
-import { DEBUG_MODE, JITSI_PRIVATE_MODE, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
-
-import { Queue } from "queue-typescript";
-import { Box, ON_ACTION_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
-import { CoWebsite, coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import type { UserMovedMessage } from "../../Messages/generated/messages_pb";
-import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import type { RoomConnection } from "../../Connexion/RoomConnection";
-import { Room } from "../../Connexion/Room";
-import { jitsiFactory } from "../../WebRtc/JitsiFactory";
-import { urlManager } from "../../Url/UrlManager";
-import { TextureError } from "../../Exception/TextureError";
-import { localUserStore } from "../../Connexion/LocalUserStore";
-import { HtmlUtils } from "../../WebRtc/HtmlUtils";
-import { mediaManager } from "../../WebRtc/MediaManager";
-import { SimplePeer } from "../../WebRtc/SimplePeer";
-import { Loader } from "../Components/Loader";
-import { lazyLoadPlayerCharacterTextures, loadCustomTexture } from "../Entity/PlayerTexturesLoadingManager";
-import { RemotePlayer } from "../Entity/RemotePlayer";
 import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
-import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
 import type { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapObject, ITiledTileSet } from "../Map/ITiledMap";
-import { PlayerAnimationDirections } from "../Player/Animation";
-import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
-import { ErrorSceneName } from "../Reconnecting/ErrorScene";
-import { ReconnectingSceneName } from "../Reconnecting/ReconnectingScene";
-import { UserInputManager } from "../UserInput/UserInputManager";
 import type { AddPlayerInterface } from "./AddPlayerInterface";
-import { gameManager } from "./GameManager";
-import { GameMap } from "./GameMap";
-import { PlayerMovement } from "./PlayerMovement";
-import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
+import { CameraManager } from "./CameraManager";
+import type { HasPlayerMovedEvent } from "../../Api/Events/HasPlayerMovedEvent";
+import type { Character } from "../Entity/Character";
+
+import { peerStore } from "../../Stores/PeerStore";
+import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
+import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
+import { playersStore } from "../../Stores/PlayersStore";
+import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
+import { userIsAdminStore } from "../../Stores/GameStore";
+import { contactPageStore } from "../../Stores/MenuStore";
+import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
+import { UserWokaPictureStore } from "../../Stores/UserWokaPictureStore";
+import { UserCompanionPictureStore } from "../../Stores/UserCompanionPictureStore";
+
+import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
 import Sprite = Phaser.GameObjects.Sprite;
 import CanvasTexture = Phaser.Textures.CanvasTexture;
 import GameObject = Phaser.GameObjects.GameObject;
-import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import DOMElement = Phaser.GameObjects.DOMElement;
-import { worldFullMessageStream } from "../../Connexion/WorldFullMessageStream";
-import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
-import { DirtyScene } from "./DirtyScene";
-import { TextUtils } from "../Components/TextUtils";
-import { touchScreenManager } from "../../Touch/TouchScreenManager";
-import { PinchManager } from "../UserInput/PinchManager";
-import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
-import { waScaleManager } from "../Services/WaScaleManager";
-import { EmoteManager } from "./EmoteManager";
-import { CameraManager } from "./CameraManager";
-import EVENT_TYPE = Phaser.Scenes.Events;
-import type { HasPlayerMovedEvent } from "../../Api/Events/HasPlayerMovedEvent";
-
-import AnimatedTiles from "phaser-animated-tiles";
-import { StartPositionCalculator } from "./StartPositionCalculator";
-import { soundManager } from "./SoundManager";
-import { peerStore, screenSharingPeerStore } from "../../Stores/PeerStore";
-import { videoFocusStore } from "../../Stores/VideoFocusStore";
-import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
-import { SharedVariablesManager } from "./SharedVariablesManager";
-import { playersStore } from "../../Stores/PlayersStore";
-import { chatVisibilityStore } from "../../Stores/ChatStore";
-import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
-import {
-    audioManagerFileStore,
-    audioManagerVisibilityStore,
-    audioManagerVolumeStore,
-} from "../../Stores/AudioManagerStore";
-import { PropertyUtils } from "../Map/PropertyUtils";
 import Tileset = Phaser.Tilemaps.Tileset;
-import { userIsAdminStore } from "../../Stores/GameStore";
-import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
-import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
-import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
-import { analyticsClient } from "../../Administration/AnalyticsClient";
-import { get } from "svelte/store";
-import { contactPageStore } from "../../Stores/MenuStore";
-import { GameMapProperties } from "./GameMapProperties";
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
-
+import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -206,6 +204,11 @@ export class GameScene extends DirtyScene {
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
     private loader: Loader;
+    private userWokaPictureStores: Map<number, UserWokaPictureStore> = new Map<number, UserWokaPictureStore>();
+    private userCompanionPictureStores: Map<number, UserCompanionPictureStore> = new Map<
+        number,
+        UserCompanionPictureStore
+    >();
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -337,6 +340,24 @@ export class GameScene extends DirtyScene {
 
         //this function must stay at the end of preload function
         this.loader.addLoader();
+    }
+
+    public getUserWokaPictureStore(userId: number) {
+        let store = this.userWokaPictureStores.get(userId);
+        if (!store) {
+            store = new UserWokaPictureStore();
+            this.userWokaPictureStores.set(userId, store);
+        }
+        return store;
+    }
+
+    public getUserCompanionPictureStore(userId: number) {
+        let store = this.userCompanionPictureStores.get(userId);
+        if (!store) {
+            store = new UserCompanionPictureStore();
+            this.userCompanionPictureStores.set(userId, store);
+        }
+        return store;
     }
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
@@ -674,7 +695,6 @@ export class GameScene extends DirtyScene {
                 this.connection = onConnect.connection;
 
                 playersStore.connectToRoomConnection(this.connection);
-
                 userIsAdminStore.set(this.connection.hasTag("admin"));
 
                 this.connection.onUserJoins((message: MessageUserJoined) => {
@@ -1539,6 +1559,14 @@ ${escapedMessage}
                 this.companion,
                 this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
+            this.CurrentPlayer.once("woka-textures-loaded", () => {
+                this.savePlayerWokaPicture(this.CurrentPlayer, -1);
+            });
+            this.CurrentPlayer.once("companion-texture-loaded", (snapshotPromise: Promise<string>) => {
+                snapshotPromise.then((snapshot: string) => {
+                    this.savePlayerCompanionPicture(-1, snapshot);
+                });
+            });
             this.CurrentPlayer.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
                 if (pointer.wasTouch && (pointer.event as TouchEvent).touches.length > 1) {
                     return; //we don't want the menu to open when pinching on a touch screen.
@@ -1564,6 +1592,15 @@ ${escapedMessage}
 
         //create collision
         this.createCollisionWithPlayer();
+    }
+
+    private async savePlayerWokaPicture(character: Character, userId: number): Promise<void> {
+        const htmlImageElementSrc = await character.getSnapshot();
+        this.getUserWokaPictureStore(userId).picture.set(htmlImageElementSrc);
+    }
+
+    private savePlayerCompanionPicture(userId: number, snapshot: string): void {
+        this.getUserCompanionPictureStore(userId).picture.set(snapshot);
     }
 
     pushPlayerPosition(event: HasPlayerMovedEvent) {
@@ -1753,6 +1790,9 @@ ${escapedMessage}
             addPlayerData.companion,
             addPlayerData.companion !== null ? lazyLoadCompanionResource(this.load, addPlayerData.companion) : undefined
         );
+        player.once("woka-textures-loaded", () => {
+            this.savePlayerWokaPicture(player, addPlayerData.userId);
+        });
         this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);
         player.updatePosition(addPlayerData.position);

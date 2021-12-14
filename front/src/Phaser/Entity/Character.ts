@@ -8,10 +8,10 @@ import { TextureError } from "../../Exception/TextureError";
 import { Companion } from "../Companion/Companion";
 import type { GameScene } from "../Game/GameScene";
 import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
-import { waScaleManager } from "../Services/WaScaleManager";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { isSilentStore } from "../../Stores/MediaStore";
-import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
+import { lazyLoadPlayerCharacterTextures, loadAllDefaultModels } from "./PlayerTexturesLoadingManager";
+import { TexturesHelper } from "../Helpers/TexturesHelper";
 
 const playerNameY = -25;
 
@@ -64,6 +64,7 @@ export abstract class Character extends Container {
                 this.addTextures(textures, frame);
                 this.invisible = false;
                 this.playAnimation(direction, moving);
+                this.emit("woka-textures-loaded");
             })
             .catch(() => {
                 return lazyLoadPlayerCharacterTextures(scene.load, ["color_22", "eyes_23"]).then((textures) => {
@@ -117,13 +118,28 @@ export abstract class Character extends Container {
         }
     }
 
-    private getOutlinePlugin(): OutlinePipelinePlugin | undefined {
-        return this.scene.plugins.get("rexOutlinePipeline") as unknown as OutlinePipelinePlugin | undefined;
+    public async getSnapshot(): Promise<string> {
+        const sprites = Array.from(this.sprites.values()).map((sprite) => {
+            return { sprite, frame: 1 };
+        });
+        return TexturesHelper.getSnapshot(this.scene, ...sprites).catch((reason) => {
+            console.warn(reason);
+            for (const sprite of this.sprites.values()) {
+                // we can be sure that either predefined woka or body texture is at this point loaded
+                if (sprite.texture.key.includes("color") || sprite.texture.key.includes("male")) {
+                    return this.scene.textures.getBase64(sprite.texture.key);
+                }
+            }
+            return "male1";
+        });
     }
 
     public addCompanion(name: string, texturePromise?: Promise<string>): void {
         if (typeof texturePromise !== "undefined") {
             this.companion = new Companion(this.scene, this.x, this.y, name, texturePromise);
+            this.companion.once("texture-loaded", () => {
+                this.emit("companion-texture-loaded", this.companion?.getSnapshot());
+            });
         }
     }
 
@@ -152,6 +168,10 @@ export abstract class Character extends Container {
             }
             this.sprites.set(texture, sprite);
         }
+    }
+
+    private getOutlinePlugin(): OutlinePipelinePlugin | undefined {
+        return this.scene.plugins.get("rexOutlinePipeline") as unknown as OutlinePipelinePlugin | undefined;
     }
 
     private getPlayerAnimations(name: string): AnimationData[] {
