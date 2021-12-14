@@ -2,6 +2,7 @@
     import { onDestroy } from "svelte";
 
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { playersStore } from "../../Stores/PlayersStore";
 
     export let userId: number;
     export let placeholderSrc: string;
@@ -9,10 +10,16 @@
     export let height: string = "62px";
 
     const gameScene = gameManager.getCurrentGameScene();
-    const playerWokaPictureStore = gameScene.getUserWokaPictureStore(userId);
+    let playerWokaPictureStore;
+    if (userId === -1) {
+        playerWokaPictureStore = gameScene.CurrentPlayer.pictureStore;
+    } else {
+        playerWokaPictureStore = gameScene.MapPlayersByKey.getNestedStore(userId, (item) => item.pictureStore);
+    }
 
     let src = placeholderSrc;
-    const unsubscribe = playerWokaPictureStore.picture.subscribe((source) => {
+
+    const unsubscribe = playerWokaPictureStore.subscribe((source) => {
         src = source ?? placeholderSrc;
     });
 

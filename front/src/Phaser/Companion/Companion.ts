@@ -2,6 +2,8 @@ import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
 import { PlayerAnimationDirections, PlayerAnimationTypes } from "../Player/Animation";
 import { TexturesHelper } from "../Helpers/TexturesHelper";
+import { Writable, writable } from "svelte/store";
+import type { PictureStore } from "../../Stores/PictureStore";
 
 export interface CompanionStatus {
     x: number;
@@ -22,6 +24,7 @@ export class Companion extends Container {
     private companionName: string;
     private direction: PlayerAnimationDirections;
     private animationType: PlayerAnimationTypes;
+    private readonly _pictureStore: Writable<string | undefined>;
 
     constructor(scene: Phaser.Scene, x: number, y: number, name: string, texturePromise: Promise<string>) {
         super(scene, x + 14, y + 4);
@@ -36,11 +39,14 @@ export class Companion extends Container {
         this.animationType = PlayerAnimationTypes.Idle;
 
         this.companionName = name;
+        this._pictureStore = writable(undefined);
 
         texturePromise.then((resource) => {
             this.addResource(resource);
             this.invisible = false;
-            this.emit("texture-loaded");
+            return this.getSnapshot().then((htmlImageElementSrc) => {
+                this._pictureStore.set(htmlImageElementSrc);
+            });
         });
 
         this.scene.physics.world.enableBody(this);
@@ -237,5 +243,9 @@ export class Companion extends Container {
         }
 
         super.destroy();
+    }
+
+    public get pictureStore(): PictureStore {
+        return this._pictureStore;
     }
 }
