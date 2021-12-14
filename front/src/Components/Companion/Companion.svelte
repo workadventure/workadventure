@@ -1,7 +1,7 @@
 <script lang="typescript">
-    import { onDestroy } from "svelte";
-
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import type { PictureStore } from "../../Stores/PictureStore";
+    import { onDestroy } from "svelte";
 
     export let userId: number;
     export let placeholderSrc: string;
@@ -9,14 +9,25 @@
     export let height: string = "62px";
 
     const gameScene = gameManager.getCurrentGameScene();
-    const playerWokaPictureStore = gameScene.getUserCompanionPictureStore(userId);
+    let companionWokaPictureStore: PictureStore | undefined;
+    if (userId === -1) {
+        companionWokaPictureStore = gameScene.CurrentPlayer.companion?.pictureStore;
+    } else {
+        companionWokaPictureStore = gameScene.MapPlayersByKey.getNestedStore(
+            userId,
+            (item) => item.companion?.pictureStore
+        );
+    }
 
     let src = placeholderSrc;
-    const unsubscribe = playerWokaPictureStore.picture.subscribe((source) => {
-        src = source ?? placeholderSrc;
-    });
 
-    onDestroy(unsubscribe);
+    if (companionWokaPictureStore) {
+        const unsubscribe = companionWokaPictureStore.subscribe((source) => {
+            src = source ?? placeholderSrc;
+        });
+
+        onDestroy(unsubscribe);
+    }
 </script>
 
 <img {src} alt="" class="nes-pointer" style="--theme-width: {width}; --theme-height: {height}" />

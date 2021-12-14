@@ -12,6 +12,8 @@ import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipel
 import { isSilentStore } from "../../Stores/MediaStore";
 import { lazyLoadPlayerCharacterTextures, loadAllDefaultModels } from "./PlayerTexturesLoadingManager";
 import { TexturesHelper } from "../Helpers/TexturesHelper";
+import type { PictureStore } from "../../Stores/PictureStore";
+import { Writable, writable } from "svelte/store";
 
 const playerNameY = -25;
 
@@ -37,6 +39,7 @@ export abstract class Character extends Container {
     private emote: Phaser.GameObjects.DOMElement | null = null;
     private emoteTween: Phaser.Tweens.Tween | null = null;
     scene: GameScene;
+    private readonly _pictureStore: Writable<string | undefined>;
 
     constructor(
         scene: GameScene,
@@ -57,6 +60,7 @@ export abstract class Character extends Container {
         this.invisible = true;
 
         this.sprites = new Map<string, Sprite>();
+        this._pictureStore = writable(undefined);
 
         //textures are inside a Promise in case they need to be lazyloaded before use.
         texturesPromise
@@ -64,7 +68,9 @@ export abstract class Character extends Container {
                 this.addTextures(textures, frame);
                 this.invisible = false;
                 this.playAnimation(direction, moving);
-                this.emit("woka-textures-loaded");
+                return this.getSnapshot().then((htmlImageElementSrc) => {
+                    this._pictureStore.set(htmlImageElementSrc);
+                });
             })
             .catch(() => {
                 return lazyLoadPlayerCharacterTextures(scene.load, ["color_22", "eyes_23"]).then((textures) => {
@@ -118,7 +124,7 @@ export abstract class Character extends Container {
         }
     }
 
-    public async getSnapshot(): Promise<string> {
+    private async getSnapshot(): Promise<string> {
         const sprites = Array.from(this.sprites.values()).map((sprite) => {
             return { sprite, frame: 1 };
         });
@@ -137,9 +143,6 @@ export abstract class Character extends Container {
     public addCompanion(name: string, texturePromise?: Promise<string>): void {
         if (typeof texturePromise !== "undefined") {
             this.companion = new Companion(this.scene, this.x, this.y, name, texturePromise);
-            this.companion.once("texture-loaded", () => {
-                this.emit("companion-texture-loaded", this.companion?.getSnapshot());
-            });
         }
     }
 
@@ -393,5 +396,9 @@ export abstract class Character extends Container {
         this.emote?.destroy();
         this.emote = null;
         this.playerName.setVisible(true);
+    }
+
+    public get pictureStore(): PictureStore {
+        return this._pictureStore;
     }
 }
