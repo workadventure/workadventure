@@ -642,6 +642,7 @@ class CoWebsiteManager {
     private fire(): void {
         this._onResize.next();
         waScaleManager.applyNewSize();
+        waScaleManager.refreshFocusOnTarget();
     }
 
     private fullscreen(): void {

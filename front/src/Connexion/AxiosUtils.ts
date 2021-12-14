@@ -13,6 +13,12 @@ axiosWithRetry.defaults.raxConfig = {
 
     maxRetryAfter: 60_000,
 
+    statusCodesToRetry: [
+        [100, 199],
+        [429, 429],
+        [501, 599],
+    ],
+
     // You can detect when a retry is happening, and figure out how many
     // retry attempts have been made
     onRetryAttempt: (err) => {
