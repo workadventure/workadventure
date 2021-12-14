@@ -191,7 +191,18 @@ jobs:
           repository: iits/workadventure-maps
           tags: ${{ env.GITHUB_SHA_SHORT }},${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           add_git_labels: true
-# iits deployment
+
+  deeploy:
+    needs:
+      - build-front
+      - build-back
+      - build-pusher
+      - build-maps
+      - build-uploader
+    runs-on: ubuntu-latest
+
+    steps:
+      # iits deployment
       - name: Check out iizs argocd azure
         uses: actions/checkout@master
         with:
