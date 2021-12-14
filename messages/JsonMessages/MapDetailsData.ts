@@ -2,10 +2,10 @@ import * as tg from "generic-type-guard";
 import { isCharacterTexture } from "./CharacterTexture";
 import { isNumber } from "generic-type-guard";
 
-/*const isNumericEnum =
-    <T extends { [n: number]: string }>(vs: T) =>
-    (v: any): v is T =>
-        typeof v === "number" && v in vs;*/
+/*
+ * WARNING! The original file is in /messages/JsonMessages.
+ * All other files are automatically copied from this file on container startup / build
+ */
 
 export const isMapDetailsData = new tg.IsInterface()
     .withProperties({
