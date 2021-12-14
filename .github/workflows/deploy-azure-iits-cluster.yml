@@ -23,10 +23,10 @@ jobs:
           ls
           cd projects/azure-charts/helm-charts/$APP
 
-          printf "helm:\n  parameters:\n  - name: image.tag\n    value: ${{ github.sha }}" > .argocd-source-$APP.yaml
+          printf "helm:\n  parameters:\n  - name: image.tag\n    value: ${{ env.GITHUB_SHA_SHORT }}" > .argocd-source-$APP.yaml
 
           git config user.email "github@iits-consulting.de"
           git config user.name "Github"
           git add .
-          git commit -m "$CI_ENVIRONMENT_NAME: $APP updated to ${{ github.sha }}"
+          git commit -m "$CI_ENVIRONMENT_NAME: $APP updated to ${{ env.GITHUB_SHA_SHORT }}"
           git push
