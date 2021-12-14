@@ -793,7 +793,10 @@ export class GameScene extends DirtyScene {
                         const focusable = zone.properties?.find((property) => property.name === "focusable");
                         if (focusable && focusable.value === true) {
                             const zoomMargin = zone.properties?.find((property) => property.name === "zoom_margin");
-                            this.cameraManager.enterFocusMode(zone, Number(zoomMargin?.value));
+                            this.cameraManager.enterFocusMode(
+                                zone,
+                                zoomMargin ? Math.max(0, Number(zoomMargin.value)) : undefined
+                            );
                             break;
                         }
                     }

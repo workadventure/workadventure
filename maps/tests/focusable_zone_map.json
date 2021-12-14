@@ -150,15 +150,10 @@
                  "y":0
                 }, 
                 {
-                 "height":128,
+                 "height":146.081567555252,
                  "id":9,
                  "name":"chillZone",
                  "properties":[
-                        {
-                         "name":"display_name",
-                         "type":"string",
-                         "value":"Chilling Room"
-                        }, 
                         {
                          "name":"focusable",
                          "type":"bool",
@@ -167,14 +162,14 @@
                         {
                          "name":"zoom_margin",
                          "type":"float",
-                         "value":0.5
+                         "value":3
                         }],
                  "rotation":0,
                  "type":"zone",
                  "visible":true,
                  "width":192,
                  "x":32,
-                 "y":96
+                 "y":77.9184324447482
                 }, 
                 {
                  "height":416,
@@ -194,7 +189,7 @@
                         {
                          "name":"zoom_margin",
                          "type":"float",
-                         "value":0
+                         "value":0.35
                         }],
                  "rotation":0,
                  "type":"zone",
@@ -202,26 +197,6 @@
                  "width":224,
                  "x":736,
                  "y":32
-                }, 
-                {
-                 "height":66.6667,
-                 "id":12,
-                 "name":"",
-                 "rotation":0,
-                 "text":
-                    {
-                     "fontfamily":"Sans Serif",
-                     "halign":"center",
-                     "pixelsize":11,
-                     "text":"Step inside to focus on the chilling zone",
-                     "valign":"center",
-                     "wrap":true
-                    },
-                 "type":"",
-                 "visible":true,
-                 "width":155.104,
-                 "x":52.6352863978128,
-                 "y":125.784444486216
                 }, 
                 {
                  "height":66.6667,
@@ -286,7 +261,7 @@
          "y":0
         }],
  "nextlayerid":39,
- "nextobjectid":14,
+ "nextobjectid":18,
  "orientation":"orthogonal",
  "properties":[
         {
