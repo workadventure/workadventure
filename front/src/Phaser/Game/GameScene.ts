@@ -76,8 +76,6 @@ import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
 import { userIsAdminStore } from "../../Stores/GameStore";
 import { contactPageStore } from "../../Stores/MenuStore";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
-import { UserWokaPictureStore } from "../../Stores/UserWokaPictureStore";
-import { UserCompanionPictureStore } from "../../Stores/UserCompanionPictureStore";
 
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
@@ -88,6 +86,7 @@ import DOMElement = Phaser.GameObjects.DOMElement;
 import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
+import { MapStore } from "../../Stores/Utils/MapStore";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -127,7 +126,7 @@ export class GameScene extends DirtyScene {
     Terrains: Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer!: Player;
     MapPlayers!: Phaser.Physics.Arcade.Group;
-    MapPlayersByKey: Map<number, RemotePlayer> = new Map<number, RemotePlayer>();
+    MapPlayersByKey: MapStore<number, RemotePlayer> = new MapStore<number, RemotePlayer>();
     Map!: Phaser.Tilemaps.Tilemap;
     Objects!: Array<Phaser.Physics.Arcade.Sprite>;
     mapFile!: ITiledMap;
@@ -202,11 +201,6 @@ export class GameScene extends DirtyScene {
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
     private loader: Loader;
-    private userWokaPictureStores: Map<number, UserWokaPictureStore> = new Map<number, UserWokaPictureStore>();
-    private userCompanionPictureStores: Map<number, UserCompanionPictureStore> = new Map<
-        number,
-        UserCompanionPictureStore
-    >();
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -338,24 +332,6 @@ export class GameScene extends DirtyScene {
 
         //this function must stay at the end of preload function
         this.loader.addLoader();
-    }
-
-    public getUserWokaPictureStore(userId: number) {
-        let store = this.userWokaPictureStores.get(userId);
-        if (!store) {
-            store = new UserWokaPictureStore();
-            this.userWokaPictureStores.set(userId, store);
-        }
-        return store;
-    }
-
-    public getUserCompanionPictureStore(userId: number) {
-        let store = this.userCompanionPictureStores.get(userId);
-        if (!store) {
-            store = new UserCompanionPictureStore();
-            this.userCompanionPictureStores.set(userId, store);
-        }
-        return store;
     }
 
     // FIXME: we need to put a "unknown" instead of a "any" and validate the structure of the JSON we are receiving.
@@ -1420,7 +1396,7 @@ ${escapedMessage}
 
             this.MapPlayers.remove(player);
         });
-        this.MapPlayersByKey = new Map<number, RemotePlayer>();
+        this.MapPlayersByKey.clear();
     }
 
     private getExitUrl(layer: ITiledMapLayer): string | undefined {
@@ -1520,14 +1496,6 @@ ${escapedMessage}
                 this.companion,
                 this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
-            this.CurrentPlayer.once("woka-textures-loaded", () => {
-                this.savePlayerWokaPicture(this.CurrentPlayer, -1);
-            });
-            this.CurrentPlayer.once("companion-texture-loaded", (snapshotPromise: Promise<string>) => {
-                snapshotPromise.then((snapshot: string) => {
-                    this.savePlayerCompanionPicture(-1, snapshot);
-                });
-            });
             this.CurrentPlayer.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
                 if (pointer.wasTouch && (pointer.event as TouchEvent).touches.length > 1) {
                     return; //we don't want the menu to open when pinching on a touch screen.
@@ -1553,15 +1521,6 @@ ${escapedMessage}
 
         //create collision
         this.createCollisionWithPlayer();
-    }
-
-    private async savePlayerWokaPicture(character: Character, userId: number): Promise<void> {
-        const htmlImageElementSrc = await character.getSnapshot();
-        this.getUserWokaPictureStore(userId).picture.set(htmlImageElementSrc);
-    }
-
-    private savePlayerCompanionPicture(userId: number, snapshot: string): void {
-        this.getUserCompanionPictureStore(userId).picture.set(snapshot);
     }
 
     pushPlayerPosition(event: HasPlayerMovedEvent) {
@@ -1751,9 +1710,6 @@ ${escapedMessage}
             addPlayerData.companion,
             addPlayerData.companion !== null ? lazyLoadCompanionResource(this.load, addPlayerData.companion) : undefined
         );
-        player.once("woka-textures-loaded", () => {
-            this.savePlayerWokaPicture(player, addPlayerData.userId);
-        });
         this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);
         player.updatePosition(addPlayerData.position);
