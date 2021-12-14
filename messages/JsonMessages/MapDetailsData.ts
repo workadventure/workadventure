@@ -16,7 +16,10 @@ export const isMapDetailsData = new tg.IsInterface()
         textures: tg.isArray(isCharacterTexture),
         contactPage: tg.isUnion(tg.isString, tg.isUndefined),
         authenticationMandatory: tg.isUnion(tg.isBoolean, tg.isUndefined),
-        group: tg.isString,
+        group: tg.isNullable(tg.isString),
+    })
+    .withOptionalProperties({
+        iframeAuthentication: tg.isNullable(tg.isString),
     })
     .get();
 
