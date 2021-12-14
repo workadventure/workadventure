@@ -7,10 +7,13 @@
     "copy-to-back": "rm -rf ../back/src/Messages/generated && cp -rf generated/ ../back/src/Messages/generated",
     "copy-to-front": "rm -rf ../front/src/Messages/generated && cp -rf generated/ ../front/src/Messages/generated",
     "copy-to-pusher": "rm -rf ../pusher/src/Messages/generated && cp -rf generated/ ../pusher/src/Messages/generated",
-    "proto-all": "yarn run proto && yarn run copy-to-back && yarn run copy-to-front && yarn run copy-to-pusher",
-    "proto:watch": "yarn run proto-all; inotifywait -q -m -e close_write protos/messages.proto | while read -r filename event; do yarn run proto-all; done"
+    "json-copy-to-pusher": "rm -rf ../pusher/src/Messages/JsonMessages/* && cp -rf JsonMessages/* ../pusher/src/Messages/JsonMessages/",
+    "json-copy-to-front": "rm -rf ../front/src/Messages/JsonMessages/* && cp -rf JsonMessages/* ../front/src/Messages/JsonMessages/",
+    "proto-all": "yarn run proto && yarn run copy-to-back && yarn run copy-to-front && yarn run copy-to-pusher && yarn run json-copy-to-pusher && yarn run json-copy-to-front",
+    "proto:watch": "yarn run proto-all; inotifywait -q -m -e close_write protos/messages.proto JsonMessages/ | while read -r filename event; do yarn run proto-all; done"
   },
   "dependencies": {
+    "generic-type-guard": "^3.5.0",
     "google-protobuf": "^3.13.0",
     "grpc": "^1.24.4"
   },

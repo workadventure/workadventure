@@ -1788,6 +1788,11 @@ gauge@~2.7.3:
     strip-ansi "^3.0.1"
     wide-align "^1.1.0"
 
+generic-type-guard@^3.5.0:
+  version "3.5.0"
+  resolved "https://registry.yarnpkg.com/generic-type-guard/-/generic-type-guard-3.5.0.tgz#39de9f8fceee65d79e7540959f0e7b23210c07b6"
+  integrity sha512-OpgXv/sbRobhFboaSyN/Tsh97Sxt5pcfLLxCiYZgYIIWFFp+kn2EzAXiaQZKEVRlq1rOE/zh8cYhJXEwplbJiQ==
+
 get-caller-file@^2.0.1:
   version "2.0.5"
   resolved "https://registry.yarnpkg.com/get-caller-file/-/get-caller-file-2.0.5.tgz#4f94412a82db32f36e3b0b9741f8a97feb031f7e"

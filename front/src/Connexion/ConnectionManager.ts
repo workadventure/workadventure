@@ -11,6 +11,7 @@ import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { userIsConnected } from "../Stores/MenuStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { axiosWithRetry } from "./AxiosUtils";
+import axios from "axios";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -192,11 +193,11 @@ class ConnectionManager {
                     analyticsClient.loggedWithSso();
                 } catch (err) {
                     console.error(err);
-                    //if user must to be connect in current room or pusher error is not openid provier access error
-                    //try to connected with function loadOpenIDScreen
+                    // if the user must be connected in the current room or if the pusher error is not openid provider access error
+                    // try to connect with function loadOpenIDScreen
                     if (
                         this._currentRoom.authenticationMandatory ||
-                        (err.response?.data && err.response.data !== "User cannot to be connected on openid provier")
+                        (axios.isAxiosError(err) && err.response?.data && err.response.data !== "User cannot to be connected on openid provider")
                     ) {
                         this.loadOpenIDScreen();
                         return Promise.reject(new Error("You will be redirect on login page"));
