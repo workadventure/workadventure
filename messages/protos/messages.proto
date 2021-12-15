@@ -81,17 +81,17 @@ message QueryJitsiJwtMessage {
 }
 
 message FollowRequestMessage {
-  string leader = 1;
+  int32 leader = 1;
 }
 
 message FollowConfirmationMessage {
-  string leader = 1;
-  string follower = 2;
+  int32 leader = 1;
+  int32 follower = 2;
 }
 
 message FollowAbortMessage {
-  string leader = 1;
-  string follower = 2;
+  int32 leader = 1;
+  int32 follower = 2;
 }
 
 message ClientToServerMessage {

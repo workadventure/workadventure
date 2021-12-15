@@ -1715,10 +1715,6 @@ ${escapedMessage}
         });
     }
 
-    public findPlayer(testFunction: (player: RemotePlayer) => boolean): RemotePlayer | undefined {
-        return Array.from(this.MapPlayersByKey.values()).find(testFunction);
-    }
-
     /**
      * Called by the connexion when a new player arrives on a map
      */

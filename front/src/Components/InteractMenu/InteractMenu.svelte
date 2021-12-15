@@ -19,7 +19,7 @@ vim: ft=typescript
 
     let followState: string;
     let followRole: string;
-    let followUsers: string[];
+    let followUsers: number[];
     let stateUnsubscriber: Unsubscriber;
     let roleUnsubscriber: Unsubscriber;
     let nameUnsubscriber: Unsubscriber;
@@ -51,14 +51,18 @@ vim: ft=typescript
         }
     });
 
+    function name(userId: number): string | undefined {
+        return gameScene.MapPlayersByKey.get(userId)?.PlayerValue;
+    }
+
     function sendFollowRequest() {
-        gameScene.connection?.emitFollowRequest(gameManager.getPlayerName());
+        gameScene.connection?.emitFollowRequest();
         followStateStore.set(followStates.active);
     }
 
     function acceptFollowRequest() {
         gameScene.CurrentPlayer.enableFollowing();
-        gameScene.connection?.emitFollowConfirmation(followUsers[0], gameManager.getPlayerName());
+        gameScene.connection?.emitFollowConfirmation();
     }
 
     function abortEnding() {
@@ -66,11 +70,7 @@ vim: ft=typescript
     }
 
     function reset() {
-        if (followRole === followRoles.leader && followUsers.length > 0) {
-            gameScene.connection?.emitFollowAbort(gameManager.getPlayerName(), "*");
-        } else {
-            gameScene.connection?.emitFollowAbort(followUsers[0], gameManager.getPlayerName());
-        }
+        gameScene.connection?.emitFollowAbort();
         followStateStore.set(followStates.off);
         followRoleStore.set(followRoles.leader);
         followUsersStore.set([]);
@@ -92,7 +92,7 @@ vim: ft=typescript
         </section>
         {#if followRole === followRoles.follower}
             <section class="interact-menu-question">
-                <p>Do you want to follow {followUsers[0]}?</p>
+                <p>Do you want to follow {name(followUsers[0])}?</p>
             </section>
             <section class="interact-menu-action">
                 <button type="button" class="accept" on:click|preventDefault={acceptFollowRequest}>Yes</button>
@@ -117,7 +117,7 @@ vim: ft=typescript
         </section>
         {#if followRole === followRoles.follower}
             <section class="interact-menu-question">
-                <p>Do you want to stop following {followUsers[0]}?</p>
+                <p>Do you want to stop following {name(followUsers[0])}?</p>
             </section>
         {:else if followRole === followRoles.leader}
             <section class="interact-menu-question">
@@ -135,15 +135,15 @@ vim: ft=typescript
     <div class="interact-status nes-container is-rounded">
         <section class="interact-status">
             {#if followRole === followRoles.follower}
-                <p>Following {followUsers[0]}</p>
+                <p>Following {name(followUsers[0])}</p>
             {:else if followUsers.length === 0}
                 <p>Waiting for followers' confirmation</p>
             {:else if followUsers.length === 1}
-                <p>{followUsers[0]} is following you</p>
+                <p>{name(followUsers[0])} is following you</p>
             {:else if followUsers.length === 2}
-                <p>{followUsers[0]} and {followUsers[1]} are following you</p>
+                <p>{name(followUsers[0])} and {name(followUsers[1])} are following you</p>
             {:else}
-                <p>{followUsers[0]}, {followUsers[1]} and {followUsers[2]} are following you</p>
+                <p>{name(followUsers[0])}, {name(followUsers[1])} and {name(followUsers[2])} are following you</p>
             {/if}
         </section>
     </div>

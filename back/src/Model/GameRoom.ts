@@ -96,11 +96,6 @@ export class GameRoom {
         return this.users;
     }
 
-    public getUserByName(name: string): User | undefined {
-        let foundUsers = Array.from(this.users.values());
-        foundUsers = foundUsers.filter((user: User) => user.name === name);
-        return foundUsers[0];
-    }
     public getUserByUuid(uuid: string): User | undefined {
         return this.usersByUuid.get(uuid);
     }
@@ -235,10 +230,6 @@ export class GameRoom {
                 currentUser.socket.write(message);
             }
         });
-    }
-
-    public sendToUserWithName(name: string, message: ServerToClientMessage): void {
-        this.getUserByName(name)?.socket.write(message);
     }
 
     setSilent(user: User, silent: boolean) {

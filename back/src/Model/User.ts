@@ -25,7 +25,7 @@ export class User implements Movable {
         public readonly IPAddress: string,
         private position: PointInterface,
         public silent: boolean,
-        public following: string[],
+        public following: number[],
         private positionNotifier: PositionNotifier,
         public readonly socket: UserSocket,
         public readonly tags: string[],
@@ -49,15 +49,15 @@ export class User implements Movable {
         this.positionNotifier.updatePosition(this, position, oldPosition);
     }
 
-    public addFollower(name: string): void {
-        if (this.following.includes(name)) {
+    public addFollower(userId: number): void {
+        if (this.following.includes(userId)) {
             return;
         }
-        this.following.push(name);
+        this.following.push(userId);
     }
 
-    public delFollower(name: string): void {
-        const idx = this.following.indexOf(name);
+    public delFollower(userId: number): void {
+        const idx = this.following.indexOf(userId);
         if (idx === -1) {
             return;
         }

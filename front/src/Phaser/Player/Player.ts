@@ -86,9 +86,9 @@ export class Player extends Character {
 
     private computeFollowMovement(): number[] {
         // Find followed WOKA and abort following if we lost it
-        const player = this.scene.findPlayer((p) => p.PlayerValue === get(followUsersStore)[0]);
+        const player = this.scene.MapPlayersByKey.get(get(followUsersStore)[0]);
         if (!player) {
-            this.scene.connection?.emitFollowAbort(get(followUsersStore)[0], this.PlayerValue);
+            this.scene.connection?.emitFollowAbort();
             followStateStore.set(followStates.off);
             return [0, 0];
         }

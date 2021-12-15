@@ -750,39 +750,41 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 
-    public emitFollowRequest(user: string | null): void {
-        if (!user) {
+    public emitFollowRequest(): void {
+        if (!this.userId) {
             return;
         }
         console.log("Emitting follow request");
         const message = new FollowRequestMessage();
-        message.setLeader(user);
+        message.setLeader(this.userId);
         const clientToServerMessage = new ClientToServerMessage();
         clientToServerMessage.setFollowrequestmessage(message);
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 
-    public emitFollowConfirmation(leader: string | null, follower: string | null): void {
-        if (!leader || !follower) {
+    public emitFollowConfirmation(): void {
+        if (!this.userId) {
             return;
         }
         console.log("Emitting follow confirmation");
         const message = new FollowConfirmationMessage();
-        message.setLeader(leader);
-        message.setFollower(follower);
+        message.setLeader(get(followUsersStore)[0]);
+        message.setFollower(this.userId);
         const clientToServerMessage = new ClientToServerMessage();
         clientToServerMessage.setFollowconfirmationmessage(message);
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 
-    public emitFollowAbort(leader: string | null, follower: string | null): void {
-        if (!leader || !follower) {
+    public emitFollowAbort(): void {
+        const isLeader = get(followRoleStore) === followRoles.leader;
+        const hasFollowers = get(followUsersStore).length > 0;
+        if (!this.userId || (isLeader && !hasFollowers)) {
             return;
         }
         console.log("Emitting follow abort");
         const message = new FollowAbortMessage();
-        message.setLeader(leader);
-        message.setFollower(follower);
+        message.setLeader(isLeader ? this.userId : get(followUsersStore)[0]);
+        message.setFollower(isLeader ? 0 : this.userId);
         const clientToServerMessage = new ClientToServerMessage();
         clientToServerMessage.setFollowabortmessage(message);
         this.socket.send(clientToServerMessage.serializeBinary().buffer);

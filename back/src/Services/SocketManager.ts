@@ -846,16 +846,17 @@ export class SocketManager {
     handleFollowConfirmationMessage(room: GameRoom, user: User, message: FollowConfirmationMessage) {
         const clientMessage = new ServerToClientMessage();
         clientMessage.setFollowconfirmationmessage(message);
-        room.sendToUserWithName(message.getLeader(), clientMessage);
+        const leader = room.getUserById(message.getLeader());
+        leader?.socket.write(clientMessage);
 
-        room.getUserByName(message.getLeader())?.addFollower(user.name);
+        leader?.addFollower(user.id);
         user.addFollower(message.getLeader());
     }
 
     handleFollowAbortMessage(room: GameRoom, user: User, message: FollowAbortMessage) {
         const clientMessage = new ServerToClientMessage();
         clientMessage.setFollowabortmessage(message);
-        if (user.name === message.getLeader()) {
+        if (user.id === message.getLeader()) {
             // Forward message
             room.sendToOthersInGroupIncludingUser(user, clientMessage);
 
@@ -865,10 +866,11 @@ export class SocketManager {
             });
         } else {
             // Forward message
-            room.sendToUserWithName(message.getLeader(), clientMessage);
+            const leader = room.getUserById(message.getLeader());
+            leader?.socket.write(clientMessage);
 
             // Update followers
-            room.getUserByName(message.getLeader())?.delFollower(user.name);
+            leader?.delFollower(user.id);
             user.following = [];
         }
     }
