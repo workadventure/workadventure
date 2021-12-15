@@ -63,6 +63,7 @@ import { emoteEventStream } from "./EmoteEventStream";
 import { get } from "svelte/store";
 import { warningContainerStore } from "../Stores/MenuStore";
 import { followStateStore, followRoleStore, followUsersStore, followRoles, followStates } from "../Stores/FollowStore";
+import { localUserStore } from "./LocalUserStore";
 
 const manualPingDelay = 20000;
 
@@ -264,17 +265,16 @@ export class RoomConnection implements RoomConnection {
                 //todo: implement a way to notify the user the room was refreshed.
             } else if (message.hasFollowrequestmessage()) {
                 const requestMessage = message.getFollowrequestmessage() as FollowRequestMessage;
-                console.log("Got follow request from " + requestMessage.getLeader());
-                followStateStore.set(followStates.requesting);
-                followRoleStore.set(followRoles.follower);
-                followUsersStore.set([requestMessage.getLeader()]);
+                if (!localUserStore.getIgnoreFollowRequests()) {
+                    followStateStore.set(followStates.requesting);
+                    followRoleStore.set(followRoles.follower);
+                    followUsersStore.set([requestMessage.getLeader()]);
+                }
             } else if (message.hasFollowconfirmationmessage()) {
                 const responseMessage = message.getFollowconfirmationmessage() as FollowConfirmationMessage;
-                console.log("Got follow response from " + responseMessage.getFollower());
                 followUsersStore.set([...get(followUsersStore), responseMessage.getFollower()]);
             } else if (message.hasFollowabortmessage()) {
                 const abortMessage = message.getFollowabortmessage() as FollowAbortMessage;
-                console.log("Got follow abort message");
                 if (get(followRoleStore) === followRoles.follower) {
                     followStateStore.set(followStates.off);
                     followRoleStore.set(followRoles.leader);
