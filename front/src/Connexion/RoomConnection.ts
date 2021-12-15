@@ -748,7 +748,6 @@ export class RoomConnection implements RoomConnection {
         if (!this.userId) {
             return;
         }
-        console.log("Emitting follow request");
         const message = new FollowRequestMessage();
         message.setLeader(this.userId);
         const clientToServerMessage = new ClientToServerMessage();
@@ -760,7 +759,6 @@ export class RoomConnection implements RoomConnection {
         if (!this.userId) {
             return;
         }
-        console.log("Emitting follow confirmation");
         const message = new FollowConfirmationMessage();
         message.setLeader(get(followUsersStore)[0]);
         message.setFollower(this.userId);
@@ -775,7 +773,6 @@ export class RoomConnection implements RoomConnection {
         if (!this.userId || (isLeader && !hasFollowers)) {
             return;
         }
-        console.log("Emitting follow abort");
         const message = new FollowAbortMessage();
         message.setLeader(isLeader ? this.userId : get(followUsersStore)[0]);
         message.setFollower(isLeader ? 0 : this.userId);
