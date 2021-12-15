@@ -92,15 +92,6 @@ export class GameRoom {
         return gameRoom;
     }
 
-    public getGroups(): Group[] {
-        return Array.from(this.groups.values());
-    }
-
-    public getGroupIncludingUser(user: User): Group | undefined {
-        const foundGroups = this.getGroups().filter((grp) => grp.includes(user));
-        return foundGroups[0];
-    }
-
     public getUsers(): Map<number, User> {
         return this.users;
     }
@@ -239,13 +230,11 @@ export class GameRoom {
     }
 
     public sendToOthersInGroupIncludingUser(user: User, message: ServerToClientMessage): void {
-        this.getGroupIncludingUser(user)
-            ?.getUsers()
-            .forEach((currentUser: User) => {
-                if (currentUser.name !== user.name) {
-                    currentUser.socket.write(message);
-                }
-            });
+        user.group?.getUsers().forEach((currentUser: User) => {
+            if (currentUser.name !== user.name) {
+                currentUser.socket.write(message);
+            }
+        });
     }
 
     public sendToUserWithName(name: string, message: ServerToClientMessage): void {

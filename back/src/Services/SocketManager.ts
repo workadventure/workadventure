@@ -860,8 +860,7 @@ export class SocketManager {
             room.sendToOthersInGroupIncludingUser(user, clientMessage);
 
             // Update followers
-            const group = room.getGroupIncludingUser(user);
-            group?.getUsers().forEach((user) => {
+            user.group?.getUsers().forEach((user) => {
                 user.following = [];
             });
         } else {
