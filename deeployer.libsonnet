@@ -101,7 +101,10 @@
       "host": {
         "url": "maps-"+url
       },
-      "ports": [80]
+      "ports": [80],
+      "env": {
+          "FRONT_URL": "https://play-"+url
+      }
     },
     "redis": {
       "image": "redis:6",

@@ -20,6 +20,15 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v2.0.0"
 
+      - name: "Setup NodeJS"
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
+
+      - name: "Install dependencies"
+        run: npm install
+        working-directory: "tests"
+
       - name: "Setup .env file"
         run: cp .env.template .env
 
@@ -27,10 +36,10 @@ jobs:
         run: sudo chown 1000:1000 -R .
 
       - name: "Start environment"
-        run: docker-compose up -d
+        run: LIVE_RELOAD=0 docker-compose up -d
 
       - name: "Wait for environment to build (and downloading testcafe image)"
-        run: (docker-compose -f docker-compose.testcafe.yml pull &) && docker-compose logs -f --tail=0 front | grep -q "Compiled successfully"
+        run: (docker-compose -f docker-compose.testcafe.yml build &) && docker-compose logs -f --tail=0 front | grep -q "Compiled successfully"
 
 #      - name: "temp debug: display logs"
 #        run: docker-compose logs
@@ -42,7 +51,7 @@ jobs:
 #        run: docker-compose logs -f pusher | grep -q "WorkAdventure starting on port"
 
       - name: "Run tests"
-        run: docker-compose -f docker-compose.testcafe.yml up --exit-code-from testcafe
+        run: PROJECT_DIR=$(pwd) docker-compose -f docker-compose.testcafe.yml up --exit-code-from testcafe
 
       - name: Upload failed tests
         if: ${{ failure() }}

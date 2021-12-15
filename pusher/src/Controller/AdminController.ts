@@ -44,7 +44,7 @@ export class AdminController extends BaseController {
                 const roomId: string = body.roomId;
 
                 await apiClientRepository.getClient(roomId).then((roomClient) => {
-                    return new Promise((res, rej) => {
+                    return new Promise<void>((res, rej) => {
                         const roomMessage = new RefreshRoomPromptMessage();
                         roomMessage.setRoomid(roomId);
 
@@ -101,7 +101,7 @@ export class AdminController extends BaseController {
                 await Promise.all(
                     targets.map((roomId) => {
                         return apiClientRepository.getClient(roomId).then((roomClient) => {
-                            return new Promise((res, rej) => {
+                            return new Promise<void>((res, rej) => {
                                 if (type === "message") {
                                     const roomMessage = new AdminRoomMessage();
                                     roomMessage.setMessage(text);

@@ -10,6 +10,7 @@ import { _ServiceWorker } from "../Network/ServiceWorker";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { userIsConnected } from "../Stores/MenuStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
+import { axiosWithRetry } from "./AxiosUtils";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -132,13 +133,14 @@ class ConnectionManager {
 
             const roomUrl = data.roomUrl;
 
+            const query = urlParams.toString();
             this._currentRoom = await Room.createRoom(
                 new URL(
                     window.location.protocol +
                         "//" +
                         window.location.host +
                         roomUrl +
-                        urlParams.toString() + //use urlParams because the token param must be deleted
+                        (query ? "?" + query : "") + //use urlParams because the token param must be deleted
                         window.location.hash
                 )
             );
@@ -163,12 +165,13 @@ class ConnectionManager {
                     console.error(err);
                 }
             } else {
+                const query = urlParams.toString();
                 roomPath =
                     window.location.protocol +
                     "//" +
                     window.location.host +
                     window.location.pathname +
-                    urlParams.toString() + //use urlParams because the token param must be deleted
+                    (query ? "?" + query : "") + //use urlParams because the token param must be deleted
                     window.location.hash;
             }
 
@@ -230,7 +233,7 @@ class ConnectionManager {
     }
 
     public async anonymousLogin(isBenchmark: boolean = false): Promise<void> {
-        const data = await Axios.post(`${PUSHER_URL}/anonymLogin`).then((res) => res.data);
+        const data = await axiosWithRetry.post(`${PUSHER_URL}/anonymLogin`).then((res) => res.data);
         this.localUser = new LocalUser(data.userUuid, [], data.email);
         this.authToken = data.authToken;
         if (!isBenchmark) {

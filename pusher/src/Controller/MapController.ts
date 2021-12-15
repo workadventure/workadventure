@@ -8,6 +8,7 @@ import { isMapDetailsData, MapDetailsData } from "../Services/AdminApi/MapDetail
 import { socketManager } from "../Services/SocketManager";
 import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { v4 } from "uuid";
+import { InvalidTokenError } from "./InvalidTokenError";
 
 export class MapController extends BaseController {
     constructor(private App: TemplatedApp) {
@@ -85,11 +86,15 @@ export class MapController extends BaseController {
                                 userId = authTokenData.identifier;
                                 console.info("JWT expire, but decoded", userId);
                             } catch (e) {
-                                // The token was not good, redirect user on login page
-                                res.writeStatus("500");
-                                res.writeHeader("Access-Control-Allow-Origin", FRONT_URL);
-                                res.end("Token decrypted error");
-                                return;
+                                if (e instanceof InvalidTokenError) {
+                                    // The token was not good, redirect user on login page
+                                    res.writeStatus("401 Unauthorized");
+                                    res.writeHeader("Access-Control-Allow-Origin", FRONT_URL);
+                                    res.end("Token decrypted error");
+                                    return;
+                                } else {
+                                    return this.errorToResponse(e, res);
+                                }
                             }
                         }
                     }

@@ -32,6 +32,7 @@ module.exports = {
             rewrites: [{ from: /^_\/.*$/, to: "/index.html" }],
             disableDotRule: true,
         },
+        liveReload: process.env.LIVE_RELOAD != "0" && process.env.LIVE_RELOAD != "false",
     },
     module: {
         rules: [
@@ -189,7 +190,7 @@ module.exports = {
             DISABLE_NOTIFICATIONS: false,
             PUSHER_URL: undefined,
             UPLOADER_URL: null,
-            ADMIN_URL: undefined,
+            ADMIN_URL: null,
             CONTACT_URL: null,
             PROFILE_URL: null,
             ICON_URL: null,

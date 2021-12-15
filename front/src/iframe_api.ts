@@ -15,7 +15,7 @@ import ui from "./Api/iframe/ui";
 import sound from "./Api/iframe/sound";
 import room, { setMapURL, setRoomId } from "./Api/iframe/room";
 import { createState } from "./Api/iframe/state";
-import player, { setPlayerName, setTags, setUuid } from "./Api/iframe/player";
+import player, { setPlayerName, setTags, setUserRoomToken, setUuid } from "./Api/iframe/player";
 import type { ButtonDescriptor } from "./Api/iframe/Ui/ButtonDescriptor";
 import type { Popup } from "./Api/iframe/Ui/Popup";
 import type { Sound } from "./Api/iframe/Sound/Sound";
@@ -34,6 +34,7 @@ const initPromise = queryWorkadventure({
     setMapURL(gameState.mapUrl);
     setTags(gameState.tags);
     setUuid(gameState.uuid);
+    setUserRoomToken(gameState.userRoomToken);
     globalState.initVariables(gameState.variables as Map<string, unknown>);
     player.state.initVariables(gameState.playerVariables as Map<string, unknown>);
 });

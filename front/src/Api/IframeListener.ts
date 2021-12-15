@@ -32,6 +32,7 @@ import { ModifyEmbeddedWebsiteEvent, isEmbeddedWebsiteEvent } from "./Events/Emb
 import { handleMenuRegistrationEvent, handleMenuUnregisterEvent } from "../Stores/MenuStore";
 import type { ChangeLayerEvent } from "./Events/ChangeLayerEvent";
 import type { WasCameraUpdatedEvent } from "./Events/WasCameraUpdatedEvent";
+import type { ChangeZoneEvent } from "./Events/ChangeZoneEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -317,7 +318,7 @@ class IframeListener {
                     "//" +
                     window.location.host +
                     '/iframe_api.js" ></script>\n' +
-                    '<script src="' +
+                    '<script type="module" src="' +
                     scriptUrl +
                     '" ></script>\n' +
                     "<title></title>\n" +
@@ -417,6 +418,24 @@ class IframeListener {
             data: {
                 name: layerName,
             } as ChangeLayerEvent,
+        });
+    }
+
+    sendEnterZoneEvent(zoneName: string) {
+        this.postMessage({
+            type: "enterZoneEvent",
+            data: {
+                name: zoneName,
+            } as ChangeZoneEvent,
+        });
+    }
+
+    sendLeaveZoneEvent(zoneName: string) {
+        this.postMessage({
+            type: "leaveZoneEvent",
+            data: {
+                name: zoneName,
+            } as ChangeZoneEvent,
         });
     }
 

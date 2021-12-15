@@ -15,6 +15,7 @@ const cowebsiteContainerDomId = "cowebsite-container"; // the id of the whole co
 const cowebsiteMainDomId = "cowebsite-slot-0"; // the id of the parent div of the iframe.
 const cowebsiteBufferDomId = "cowebsite-buffer"; // the id of the container who contains cowebsite iframes.
 const cowebsiteAsideDomId = "cowebsite-aside"; // the id of the parent div of the iframe.
+const cowebsiteAsideHolderDomId = "cowebsite-aside-holder";
 const cowebsiteSubIconsDomId = "cowebsite-sub-icons";
 export const cowebsiteCloseButtonId = "cowebsite-close";
 const cowebsiteFullScreenButtonId = "cowebsite-fullscreen";
@@ -54,6 +55,7 @@ class CoWebsiteManager {
     private cowebsiteMainDom: HTMLDivElement;
     private cowebsiteBufferDom: HTMLDivElement;
     private cowebsiteAsideDom: HTMLDivElement;
+    private cowebsiteAsideHolderDom: HTMLDivElement;
     private cowebsiteSubIconsDom: HTMLDivElement;
     private previousTouchMoveCoordinates: TouchMoveCoordinates | null = null; //only use on touchscreens to track touch movement
 
@@ -99,6 +101,7 @@ class CoWebsiteManager {
         this.cowebsiteMainDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteMainDomId);
         this.cowebsiteBufferDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteBufferDomId);
         this.cowebsiteAsideDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteAsideDomId);
+        this.cowebsiteAsideHolderDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteAsideHolderDomId);
         this.cowebsiteSubIconsDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteSubIconsDomId);
         this.initResizeListeners();
 
@@ -188,21 +191,23 @@ class CoWebsiteManager {
             this.fire();
         };
 
-        this.cowebsiteAsideDom.addEventListener("mousedown", (event) => {
+        this.cowebsiteAsideHolderDom.addEventListener("mousedown", (event) => {
+            if (this.isFullScreen) return;
             this.cowebsiteMainDom.style.display = "none";
             this.resizing = true;
             document.addEventListener("mousemove", movecallback);
         });
 
         document.addEventListener("mouseup", (event) => {
-            if (!this.resizing) return;
+            if (!this.resizing || this.isFullScreen) return;
             document.removeEventListener("mousemove", movecallback);
             this.cowebsiteMainDom.style.display = "block";
             this.resizing = false;
             this.cowebsiteMainDom.style.display = "flex";
         });
 
-        this.cowebsiteAsideDom.addEventListener("touchstart", (event) => {
+        this.cowebsiteAsideHolderDom.addEventListener("touchstart", (event) => {
+            if (this.isFullScreen) return;
             this.cowebsiteMainDom.style.display = "none";
             this.resizing = true;
             const touchEvent = event.touches[0];
@@ -211,7 +216,7 @@ class CoWebsiteManager {
         });
 
         document.addEventListener("touchend", (event) => {
-            if (!this.resizing) return;
+            if (!this.resizing || this.isFullScreen) return;
             this.previousTouchMoveCoordinates = null;
             document.removeEventListener("touchmove", movecallback);
             this.cowebsiteMainDom.style.display = "block";
@@ -234,6 +239,9 @@ class CoWebsiteManager {
         this.openedMain = iframeStates.loading;
     }
     private openMain(): void {
+        this.cowebsiteDom.addEventListener("transitionend", () => {
+            this.resizeAllIframes();
+        });
         this.cowebsiteDom.classList.remove("loading", "hidden"); //edit the css class to trigger the transition
         this.openedMain = iframeStates.opened;
         this.resetStyleMain();
@@ -634,20 +642,26 @@ class CoWebsiteManager {
     private fire(): void {
         this._onResize.next();
         waScaleManager.applyNewSize();
+        waScaleManager.refreshFocusOnTarget();
     }
 
     private fullscreen(): void {
+        const openFullscreenImage = HtmlUtils.getElementByIdOrFail(cowebsiteOpenFullScreenImageId);
+        const closeFullScreenImage = HtmlUtils.getElementByIdOrFail(cowebsiteCloseFullScreenImageId);
+
         if (this.isFullScreen) {
             this.resetStyleMain();
             this.fire();
             //we don't trigger a resize of the phaser game since it won't be visible anyway.
-            HtmlUtils.getElementByIdOrFail(cowebsiteOpenFullScreenImageId).style.display = "inline";
-            HtmlUtils.getElementByIdOrFail(cowebsiteCloseFullScreenImageId).style.display = "none";
+            this.cowebsiteAsideHolderDom.style.visibility = "visible";
+            openFullscreenImage.style.display = "inline";
+            closeFullScreenImage.style.display = "none";
         } else {
             this.verticalMode ? (this.height = window.innerHeight) : (this.width = window.innerWidth);
             //we don't trigger a resize of the phaser game since it won't be visible anyway.
-            HtmlUtils.getElementByIdOrFail(cowebsiteOpenFullScreenImageId).style.display = "none";
-            HtmlUtils.getElementByIdOrFail(cowebsiteCloseFullScreenImageId).style.display = "inline";
+            this.cowebsiteAsideHolderDom.style.visibility = "hidden";
+            openFullscreenImage.style.display = "none";
+            closeFullScreenImage.style.display = "inline";
         }
     }
 }
