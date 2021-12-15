@@ -12,7 +12,7 @@ import {
     followUsersStore,
     followRoles,
     followStates,
-} from "../../Stores/InteractStore";
+} from "../../Stores/FollowStore";
 
 export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";

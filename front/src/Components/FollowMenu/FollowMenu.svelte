@@ -13,7 +13,7 @@ vim: ft=typescript
         followUsersStore,
         followRoles,
         followStates,
-    } from "../../Stores/InteractStore";
+    } from "../../Stores/FollowStore";
 
     const gameScene = gameManager.getCurrentGameScene();
 

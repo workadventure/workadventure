@@ -62,13 +62,7 @@ import { connectionManager } from "./ConnectionManager";
 import { emoteEventStream } from "./EmoteEventStream";
 import { get } from "svelte/store";
 import { warningContainerStore } from "../Stores/MenuStore";
-import {
-    followStateStore,
-    followRoleStore,
-    followUsersStore,
-    followRoles,
-    followStates,
-} from "../Stores/InteractStore";
+import { followStateStore, followRoleStore, followUsersStore, followRoles, followStates } from "../Stores/FollowStore";
 
 const manualPingDelay = 20000;
 
