@@ -5,8 +5,8 @@ import type { CharacterTexture } from "./LocalUser";
 import { localUserStore } from "./LocalUserStore";
 import axios from "axios";
 import { axiosWithRetry } from "./AxiosUtils";
-import {isMapDetailsData} from "../../../pusher/src/Messages/JsonMessages/MapDetailsData";
-import {isRoomRedirect} from "../Messages/JsonMessages/RoomRedirect";
+import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
+import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 
 export class MapDetail {
     constructor(public readonly mapUrl: string, public readonly textures: CharacterTexture[] | undefined) {}
@@ -119,9 +119,8 @@ export class Room {
                 this._contactPage = data.contactPage || CONTACT_URL;
                 return new MapDetail(data.mapUrl, data.textures);
             } else {
-                throw new Error('Data received by the /map endpoint of the Pusher is not in a valid format.');
+                throw new Error("Data received by the /map endpoint of the Pusher is not in a valid format.");
             }
-
         } catch (e) {
             if (axios.isAxiosError(e) && e.response?.status == 401 && e.response?.data === "Token decrypted error") {
                 console.warn("JWT token sent could not be decrypted. Maybe it expired?");

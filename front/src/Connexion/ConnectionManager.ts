@@ -197,7 +197,9 @@ class ConnectionManager {
                     // try to connect with function loadOpenIDScreen
                     if (
                         this._currentRoom.authenticationMandatory ||
-                        (axios.isAxiosError(err) && err.response?.data && err.response.data !== "User cannot to be connected on openid provider")
+                        (axios.isAxiosError(err) &&
+                            err.response?.data &&
+                            err.response.data !== "User cannot to be connected on openid provider")
                     ) {
                         this.loadOpenIDScreen();
                         return Promise.reject(new Error("You will be redirect on login page"));
