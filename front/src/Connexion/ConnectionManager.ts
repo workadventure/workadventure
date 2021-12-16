@@ -12,6 +12,8 @@ import { userIsConnected } from "../Stores/MenuStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { axiosWithRetry } from "./AxiosUtils";
 import axios from "axios";
+import { isRegisterData } from "../Messages/JsonMessages/RegisterData";
+import { isAdminApiData } from "../Messages/JsonMessages/AdminApiData";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -126,6 +128,10 @@ class ConnectionManager {
             const data = await Axios.post(`${PUSHER_URL}/register`, { organizationMemberToken }).then(
                 (res) => res.data
             );
+            if (!isRegisterData(data)) {
+                console.error("Invalid data received from /register route. Data: ", data);
+                throw new Error("Invalid data received from /register route.");
+            }
             this.localUser = new LocalUser(data.userUuid, data.textures, data.email);
             this.authToken = data.authToken;
             localUserStore.saveUser(this.localUser);
@@ -326,7 +332,9 @@ class ConnectionManager {
         }
         const { authToken, userUuid, textures, email } = await Axios.get(`${PUSHER_URL}/login-callback`, {
             params: { code, nonce, token, playUri: this.currentRoom?.key },
-        }).then((res) => res.data);
+        }).then((res) => {
+            return res.data;
+        });
         localUserStore.setAuthToken(authToken);
         this.localUser = new LocalUser(userUuid, textures, email);
         localUserStore.saveUser(this.localUser);

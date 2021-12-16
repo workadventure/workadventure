@@ -6,6 +6,7 @@ import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { parse } from "query-string";
 import { openIDClient } from "../Services/OpenIDClient";
 import { DISABLE_ANONYMOUS, FRONT_URL } from "../Enum/EnvironmentVariable";
+import { RegisterData } from "../../../messages/JsonMessages/RegisterData";
 
 export interface TokenInterface {
     userUuid: string;
@@ -191,7 +192,7 @@ export class AuthenticateController extends BaseController {
                             mapUrlStart,
                             organizationMemberToken,
                             textures,
-                        })
+                        } as RegisterData)
                     );
                 } catch (e) {
                     console.error("register => ERROR", e);
