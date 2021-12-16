@@ -17,6 +17,27 @@ export class WorkAdventureCameraCommands extends IframeApiContribution<WorkAdven
         }),
     ];
 
+    public setPosition(x: number, y: number, width: number, height: number, smooth: boolean = false): void {
+        sendToWorkadventure({
+            type: "cameraSetPosition",
+            data: { x, y, width, height, smooth },
+        });
+    }
+
+    public focusOn(x: number, y: number, width: number, height: number, smooth: boolean = false): void {
+        sendToWorkadventure({
+            type: "cameraFocusOn",
+            data: { x, y, width, height, smooth },
+        });
+    }
+
+    public followPlayer(smooth: boolean = false): void {
+        sendToWorkadventure({
+            type: "cameraFollowPlayer",
+            data: { smooth },
+        });
+    }
+
     onCameraUpdate(callback: WasCameraUpdatedEventCallback): void {
         moveStream.subscribe(callback);
         sendToWorkadventure({

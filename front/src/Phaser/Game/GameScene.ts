@@ -1071,6 +1071,29 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
+            iframeListener.cameraSetPositionStream.subscribe((cameraSetPositionEvent) => {
+                // this.cameraManager.enterFocusMode({ ...cameraSetPositionEvent }, undefined, cameraSetPositionEvent.smooth ? 1000 : 0);
+                console.log("camera set position");
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.cameraFocusOnStream.subscribe((cameraFocusOnEvent) => {
+                this.cameraManager.enterFocusMode(
+                    { ...cameraFocusOnEvent },
+                    undefined,
+                    cameraFocusOnEvent.smooth ? 1000 : 0
+                );
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.cameraFollowPlayerStream.subscribe((cameraFollowPlayerEvent) => {
+                this.cameraManager.leaveFocusMode(this.CurrentPlayer, cameraFollowPlayerEvent.smooth ? 1000 : 0);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
             iframeListener.playSoundStream.subscribe((playSoundEvent) => {
                 const url = new URL(playSoundEvent.url, this.MapUrlFile);
                 soundManager.playSound(this.load, this.sound, url.toString(), playSoundEvent.config);

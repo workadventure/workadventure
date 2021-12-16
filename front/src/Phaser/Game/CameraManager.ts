@@ -79,10 +79,10 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         );
     }
 
-    public leaveFocusMode(player: Player): void {
+    public leaveFocusMode(player: Player, duration: number = 1000): void {
         this.waScaleManager.setFocusTarget();
-        this.startFollow(player, 1000);
-        this.restoreZoom(1000);
+        this.startFollow(player, duration);
+        this.restoreZoom(duration);
     }
 
     public startFollow(target: object | Phaser.GameObjects.GameObject, duration: number = 0): void {
