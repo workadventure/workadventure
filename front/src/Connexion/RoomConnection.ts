@@ -349,6 +349,8 @@ export class RoomConnection implements RoomConnection {
                         this.mapCharacterLayerToBodyResourceDescription.bind(this)
                     );
 
+                    this.setSilent(localUserStore.getAlwaysSilent());
+
                     this._roomJoinedMessageStream.next({
                         connection: this,
                         room: {

@@ -143,13 +143,9 @@ export class GameMapPropertiesListener {
         });
 
         this.gameMap.onPropertyChange(GameMapProperties.SILENT, (newValue, oldValue) => {
-            if (newValue === undefined || newValue === false || newValue === "") {
-                this.scene.connection?.setSilent(false);
-                this.scene.CurrentPlayer.noSilent();
-            } else {
-                this.scene.connection?.setSilent(true);
-                this.scene.CurrentPlayer.isSilent();
-            }
+            const silent = !!newValue || localUserStore.getAlwaysSilent();
+            this.scene.connection?.setSilent(silent);
+            this.scene.CurrentPlayer.setSilent(silent);
         });
 
         this.gameMap.onPropertyChange(GameMapProperties.PLAY_AUDIO, (newValue, oldValue, allProps) => {

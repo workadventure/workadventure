@@ -76,6 +76,7 @@ import { contactPageStore } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore } from "../../Stores/AudioManagerStore";
 import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
+import { isSilentStore } from "../../Stores/MediaStore";
 
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
@@ -561,6 +562,9 @@ export class GameScene extends DirtyScene {
                 ?.requestFullscreen()
                 .catch((e) => console.error(e));
         }
+
+        // Force silent state if requested
+        isSilentStore.set(localUserStore.getAlwaysSilent());
 
         this.pathfindingManager = new PathfindingManager(
             this,
@@ -2113,9 +2117,12 @@ ${escapedMessage}
         biggestAvailableAreaStore.recompute();
     }
 
+    public isSilentZone(): boolean {
+        return !!this.gameMap.getCurrentProperties().get(GameMapProperties.SILENT);
+    }
+
     public enableMediaBehaviors() {
-        const silent = this.gameMap.getCurrentProperties().get(GameMapProperties.SILENT);
-        this.connection?.setSilent(!!silent);
+        this.connection?.setSilent(this.isSilentZone() || localUserStore.getAlwaysSilent());
         mediaManager.showMyCamera();
     }
 

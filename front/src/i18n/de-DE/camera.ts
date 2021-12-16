@@ -19,6 +19,7 @@ const camera: NonNullable<Translation["camera"]> = {
         },
     },
     my: {
+        silentMode: "Stiller Modus",
         silentZone: "Stiller Bereich",
     },
 };

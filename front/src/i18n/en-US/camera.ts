@@ -19,6 +19,7 @@ const camera: BaseTranslation = {
         },
     },
     my: {
+        silentMode: "Silent mode",
         silentZone: "Silent zone",
     },
 };
