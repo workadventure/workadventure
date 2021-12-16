@@ -26,7 +26,7 @@ export class ActionMessage {
         this.message = actionMessageOptions.message;
         this.type = actionMessageOptions.type ?? "message";
         this.callback = actionMessageOptions.callback;
-        this.create();
+        this.create().catch(e => console.error(e));
     }
 
     private async create() {
