@@ -4,7 +4,7 @@ import { parse } from "query-string";
 import { adminApi } from "../Services/AdminApi";
 import { ADMIN_API_URL, DISABLE_ANONYMOUS, FRONT_URL } from "../Enum/EnvironmentVariable";
 import { GameRoomPolicyTypes } from "../Model/PusherRoom";
-import { isMapDetailsData, MapDetailsData } from "../Services/AdminApi/MapDetailsData";
+import { isMapDetailsData, MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { socketManager } from "../Services/SocketManager";
 import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { v4 } from "uuid";

@@ -426,7 +426,7 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                     // TODO: does it make sense to pop this error when retrying?
                     set({
                         type: "error",
-                        error: e,
+                        error: e instanceof Error ? e : new Error("An unknown error happened"),
                     });
                     // Let's try without video constraints
                     if (constraints.video !== false) {
@@ -444,7 +444,7 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                     console.info("Error. Unable to get microphone and/or camera access.", constraints, e);
                     set({
                         type: "error",
-                        error: e,
+                        error: e instanceof Error ? e : new Error("An unknown error happened"),
                     });
                 }
             }

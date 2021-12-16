@@ -47,8 +47,8 @@ import { GroupDescriptor, UserDescriptor, ZoneEventListener } from "_Model/Zone"
 import Debug from "debug";
 import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
 import { WebSocket } from "uWebSockets.js";
-import { isRoomRedirect } from "./AdminApi/RoomRedirect";
-import { CharacterTexture } from "./AdminApi/CharacterTexture";
+import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
+import { CharacterTexture } from "../Messages/JsonMessages/CharacterTexture";
 
 const debug = Debug("socket");
 

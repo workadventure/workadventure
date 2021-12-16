@@ -29,7 +29,7 @@ import { emitInBatch } from "../Services/IoSocketHelpers";
 import { ADMIN_API_URL, DISABLE_ANONYMOUS, SOCKET_IDLE_TIMER } from "../Enum/EnvironmentVariable";
 import { Zone } from "_Model/Zone";
 import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
-import { CharacterTexture } from "../Services/AdminApi/CharacterTexture";
+import { CharacterTexture } from "../Messages/JsonMessages/CharacterTexture";
 import { isAdminMessageInterface } from "../Model/Websocket/Admin/AdminMessages";
 import Axios from "axios";
 import { InvalidTokenError } from "../Controller/InvalidTokenError";

@@ -11,6 +11,9 @@ import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { userIsConnected } from "../Stores/MenuStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { axiosWithRetry } from "./AxiosUtils";
+import axios from "axios";
+import { isRegisterData } from "../Messages/JsonMessages/RegisterData";
+import { isAdminApiData } from "../Messages/JsonMessages/AdminApiData";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -125,6 +128,10 @@ class ConnectionManager {
             const data = await Axios.post(`${PUSHER_URL}/register`, { organizationMemberToken }).then(
                 (res) => res.data
             );
+            if (!isRegisterData(data)) {
+                console.error("Invalid data received from /register route. Data: ", data);
+                throw new Error("Invalid data received from /register route.");
+            }
             this.localUser = new LocalUser(data.userUuid, data.textures, data.email);
             this.authToken = data.authToken;
             localUserStore.saveUser(this.localUser);
@@ -192,11 +199,13 @@ class ConnectionManager {
                     analyticsClient.loggedWithSso();
                 } catch (err) {
                     console.error(err);
-                    //if user must to be connect in current room or pusher error is not openid provier access error
-                    //try to connected with function loadOpenIDScreen
+                    // if the user must be connected in the current room or if the pusher error is not openid provider access error
+                    // try to connect with function loadOpenIDScreen
                     if (
                         this._currentRoom.authenticationMandatory ||
-                        (err.response?.data && err.response.data !== "User cannot to be connected on openid provier")
+                        (axios.isAxiosError(err) &&
+                            err.response?.data &&
+                            err.response.data !== "User cannot to be connected on openid provider")
                     ) {
                         this.loadOpenIDScreen();
                         return Promise.reject(new Error("You will be redirect on login page"));
@@ -323,7 +332,9 @@ class ConnectionManager {
         }
         const { authToken, userUuid, textures, email } = await Axios.get(`${PUSHER_URL}/login-callback`, {
             params: { code, nonce, token, playUri: this.currentRoom?.key },
-        }).then((res) => res.data);
+        }).then((res) => {
+            return res.data;
+        });
         localUserStore.setAuthToken(authToken);
         this.localUser = new LocalUser(userUuid, textures, email);
         localUserStore.saveUser(this.localUser);

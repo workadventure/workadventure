@@ -153,7 +153,7 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
                 console.info("Error. Unable to share screen.", e);
                 set({
                     type: "error",
-                    error: e,
+                    error: e instanceof Error ? e : new Error("An unknown error happened"),
                 });
             }
         })();
