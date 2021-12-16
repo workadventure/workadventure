@@ -1,4 +1,5 @@
 <script lang="typescript">
+    import { localUserStore } from "../Connexion/LocalUserStore";
     import { obtainedMediaConstraintStore } from "../Stores/MediaStore";
     import { localStreamStore, isSilentStore } from "../Stores/MediaStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
@@ -32,5 +33,6 @@
             <SoundMeterWidget {stream} />
         {/if}
     </div>
-    <div class="is-silent" class:hide={isSilent}>Silent zone</div>
+    <div class="is-silent" class:hide={isSilent && localUserStore.getAlwaysSilent()}>Silent mode</div>
+    <div class="is-silent" class:hide={isSilent && !localUserStore.getAlwaysSilent()}>Silent zone</div>
 </div>

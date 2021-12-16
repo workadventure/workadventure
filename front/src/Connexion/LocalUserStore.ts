@@ -15,6 +15,7 @@ const helpCameraSettingsShown = "helpCameraSettingsShown";
 const fullscreenKey = "fullscreen";
 const forceCowebsiteTriggerKey = "forceCowebsiteTrigger";
 const ignoreFollowRequests = "ignoreFollowRequests";
+const alwaysSilent = "alwaysSilent";
 const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
 const state = "state";
@@ -134,6 +135,13 @@ class LocalUserStore {
     }
     getIgnoreFollowRequests(): boolean {
         return localStorage.getItem(ignoreFollowRequests) === "true";
+    }
+
+    setAlwaysSilent(value: boolean): void {
+        localStorage.setItem(alwaysSilent, value.toString());
+    }
+    getAlwaysSilent(): boolean {
+        return localStorage.getItem(alwaysSilent) === "true";
     }
 
     setLastRoomUrl(roomUrl: string): void {

@@ -220,6 +220,7 @@ export class RoomConnection implements RoomConnection {
                         );
                     }
                 }
+                this.setSilent(localUserStore.getAlwaysSilent());
 
                 this.userId = roomJoinedMessage.getCurrentuserid();
                 this.tags = roomJoinedMessage.getTagList();

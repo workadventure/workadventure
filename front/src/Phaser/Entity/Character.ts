@@ -326,11 +326,8 @@ export abstract class Character extends Container {
         super.destroy();
     }
 
-    isSilent() {
-        isSilentStore.set(true);
-    }
-    noSilent() {
-        isSilentStore.set(false);
+    setSilent(silent: boolean) {
+        isSilentStore.set(silent);
     }
 
     playEmote(emote: string) {
