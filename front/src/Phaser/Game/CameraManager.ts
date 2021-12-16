@@ -1,13 +1,22 @@
 import { Easing } from "../../types";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import type { Box } from "../../WebRtc/LayoutManager";
-import type { Player } from "../Player/Player";
+import { hasMovedEventName, Player } from "../Player/Player";
 import type { WaScaleManager } from "../Services/WaScaleManager";
 import type { GameScene } from "./GameScene";
 
 export enum CameraMode {
-    Free = "Free",
+    /**
+     * Camera looks at certain point but is not locked and will start following the player on his movement
+     */
+    Positioned = "Positioned",
+    /**
+     * Camera is actively following the player
+     */
     Follow = "Follow",
+    /**
+     * Camera is focusing on certain point and will not break this focus even on player movement
+     */
     Focus = "Focus",
 }
 
@@ -17,12 +26,12 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     private cameraBounds: { x: number; y: number };
     private waScaleManager: WaScaleManager;
 
-    private cameraMode: CameraMode = CameraMode.Free;
+    private cameraMode: CameraMode = CameraMode.Positioned;
 
     private restoreZoomTween?: Phaser.Tweens.Tween;
     private startFollowTween?: Phaser.Tweens.Tween;
 
-    private cameraFollowTarget?: { x: number; y: number };
+    private playerToFollow?: Player;
 
     constructor(scene: GameScene, cameraBounds: { x: number; y: number }, waScaleManager: WaScaleManager) {
         super();
@@ -47,6 +56,51 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         return this.camera;
     }
 
+    /**
+     * Set camera view to specific destination without changing current camera mode. Won't work if camera mode is set to Focus.
+     * @param setTo Viewport on which the camera should set the position
+     * @param duration Time for the transition im MS. If set to 0, transition will occur immediately
+     */
+    public setPosition(setTo: { x: number; y: number; width: number; height: number }, duration: number = 1000): void {
+        if (this.cameraMode === CameraMode.Focus) {
+            return;
+        }
+        this.setCameraMode(CameraMode.Positioned);
+        const currentZoomModifier = this.waScaleManager.zoomModifier;
+        const zoomModifierChange = this.getZoomModifierChange(setTo.width, setTo.height);
+        this.camera.stopFollow();
+        this.camera.pan(
+            setTo.x + setTo.width * 0.5,
+            setTo.y + setTo.height * 0.5,
+            duration,
+            Easing.SineEaseOut,
+            true,
+            (camera, progress, x, y) => {
+                if (this.cameraMode === CameraMode.Positioned) {
+                    this.waScaleManager.zoomModifier = currentZoomModifier + progress * zoomModifierChange;
+                }
+                if (progress === 1) {
+                    this.playerToFollow?.once(hasMovedEventName, () => {
+                        if (this.playerToFollow) {
+                            this.startFollowPlayer(this.playerToFollow, duration);
+                        }
+                    });
+                }
+            }
+        );
+    }
+
+    private getZoomModifierChange(width: number, height: number): number {
+        const targetZoomModifier = this.waScaleManager.getTargetZoomModifierFor(width, height);
+        const currentZoomModifier = this.waScaleManager.zoomModifier;
+        return targetZoomModifier - currentZoomModifier;
+    }
+
+    /**
+     * Set camera to focus mode. As long as the camera is in the Focus mode, its view cannot be changed.
+     * @param setTo Viewport on which the camera should focus on
+     * @param duration Time for the transition im MS. If set to 0, transition will occur immediately
+     */
     public enterFocusMode(
         focusOn: { x: number; y: number; width: number; height: number },
         margin: number = 0,
@@ -59,14 +113,10 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.restoreZoomTween?.stop();
         this.startFollowTween?.stop();
         const marginMult = 1 + margin;
-        const targetZoomModifier = this.waScaleManager.getTargetZoomModifierFor(
-            focusOn.width * marginMult,
-            focusOn.height * marginMult
-        );
         const currentZoomModifier = this.waScaleManager.zoomModifier;
-        const zoomModifierChange = targetZoomModifier - currentZoomModifier;
+        const zoomModifierChange = this.getZoomModifierChange(focusOn.width * marginMult, focusOn.height * marginMult);
         this.camera.stopFollow();
-        this.cameraFollowTarget = undefined;
+        this.playerToFollow = undefined;
         this.camera.pan(
             focusOn.x + focusOn.width * 0.5 * marginMult,
             focusOn.y + focusOn.height * 0.5 * marginMult,
@@ -81,15 +131,15 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     public leaveFocusMode(player: Player, duration: number = 1000): void {
         this.waScaleManager.setFocusTarget();
-        this.startFollow(player, duration);
+        this.startFollowPlayer(player, duration);
         this.restoreZoom(duration);
     }
 
-    public startFollow(target: object | Phaser.GameObjects.GameObject, duration: number = 0): void {
-        this.cameraFollowTarget = target as { x: number; y: number };
+    public startFollowPlayer(player: Player, duration: number = 0): void {
+        this.playerToFollow = player;
         this.setCameraMode(CameraMode.Follow);
         if (duration === 0) {
-            this.camera.startFollow(target, true);
+            this.camera.startFollow(player, true);
             return;
         }
         const oldPos = { x: this.camera.scrollX, y: this.camera.scrollY };
@@ -99,17 +149,17 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             duration,
             ease: Easing.SineEaseOut,
             onUpdate: (tween: Phaser.Tweens.Tween) => {
-                if (!this.cameraFollowTarget) {
+                if (!this.playerToFollow) {
                     return;
                 }
                 const shiftX =
-                    (this.cameraFollowTarget.x - this.camera.worldView.width * 0.5 - oldPos.x) * tween.getValue();
+                    (this.playerToFollow.x - this.camera.worldView.width * 0.5 - oldPos.x) * tween.getValue();
                 const shiftY =
-                    (this.cameraFollowTarget.y - this.camera.worldView.height * 0.5 - oldPos.y) * tween.getValue();
+                    (this.playerToFollow.y - this.camera.worldView.height * 0.5 - oldPos.y) * tween.getValue();
                 this.camera.setScroll(oldPos.x + shiftX, oldPos.y + shiftY);
             },
             onComplete: () => {
-                this.camera.startFollow(target, true);
+                this.camera.startFollow(player, true);
             },
         });
     }
@@ -131,8 +181,8 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         );
     }
 
-    public isCameraLocked(): boolean {
-        return this.cameraMode === CameraMode.Focus;
+    public isCameraZoomLocked(): boolean {
+        return [CameraMode.Focus, CameraMode.Positioned].includes(this.cameraMode);
     }
 
     private setCameraMode(mode: CameraMode): void {

@@ -561,7 +561,7 @@ export class GameScene extends DirtyScene {
             waScaleManager
         );
         biggestAvailableAreaStore.recompute();
-        this.cameraManager.startFollow(this.CurrentPlayer);
+        this.cameraManager.startFollowPlayer(this.CurrentPlayer);
 
         this.animatedTiles.init(this.Map);
         this.events.on("tileanimationupdate", () => (this.dirty = true));
@@ -1072,8 +1072,7 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.cameraSetPositionStream.subscribe((cameraSetPositionEvent) => {
-                // this.cameraManager.enterFocusMode({ ...cameraSetPositionEvent }, undefined, cameraSetPositionEvent.smooth ? 1000 : 0);
-                console.log("camera set position");
+                this.cameraManager.setPosition({ ...cameraSetPositionEvent }, cameraSetPositionEvent.smooth ? 1000 : 0);
             })
         );
 
@@ -2045,7 +2044,7 @@ ${escapedMessage}
     }
 
     zoomByFactor(zoomFactor: number) {
-        if (this.cameraManager.isCameraLocked()) {
+        if (this.cameraManager.isCameraZoomLocked()) {
             return;
         }
         waScaleManager.zoomModifier *= zoomFactor;
