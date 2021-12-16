@@ -1,5 +1,5 @@
 import * as tg from "generic-type-guard";
-import { isCharacterTexture} from "./CharacterTexture";
+import { isCharacterTexture } from "./CharacterTexture";
 
 /*
  * WARNING! The original file is in /messages/JsonMessages.

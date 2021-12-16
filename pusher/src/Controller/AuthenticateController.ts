@@ -6,7 +6,7 @@ import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { parse } from "query-string";
 import { openIDClient } from "../Services/OpenIDClient";
 import { DISABLE_ANONYMOUS, FRONT_URL } from "../Enum/EnvironmentVariable";
-import { RegisterData } from "../../../messages/JsonMessages/RegisterData";
+import { RegisterData } from "../Messages/JsonMessages/RegisterData";
 
 export interface TokenInterface {
     userUuid: string;
